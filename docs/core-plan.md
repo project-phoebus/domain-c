@@ -28,8 +28,8 @@ the translators; headings and cells should not need to change.
 | target_properties | `lang/lang/source/target_properties.pas` | 3 | 294 | done (fields named by offset) |
 | il | `lang/lang/source/il.pas` | 1 | 580 | done (globals named by offset) |
 | token | `lang/lang/source/token.pas` (+ `lang/common/source/token.pas`) | 12 (+8) | 1946 | headings and tables (lang/common's adds nothing to the core) |
-| inc_list | `lang/lang/source/inc_list.pas` | 5 | 916 | headings |
-| error_listing | `lang/lang/source/error_listing.pas` | 6 | 894 | headings, +0xC |
+| inc_list | `lang/lang/source/inc_list.pas` | 5 | 916 | done (lists declared) |
+| error_listing | `lang/lang/source/error_listing.pas` | 6 | 894 | done (+0x8, +0xC, the saved error) |
 | il_utils | `lang/lang/source/il_utils.pas` | 14 | 3412 | headings |
 | gen_utils | `lang/lang/source/gen_utils.pas` | 21 | 4248 | headings |
 | cargs | `lang/lang/source/cargs.pas` | 24 | 9064 | headings, the options record, shared cells |
