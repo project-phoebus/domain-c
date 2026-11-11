@@ -75,14 +75,9 @@
 
   TODO(pascal) c_syntax is translated in part
 
-  Not written yet: parse_attributes, get_options, declaration_stmts,
-  declaration, function_prototype, array_decl, data_init, dynm_init, array_init,
-  array_dim_init, struct_init, init_with_string, get_constant
-  (check_addr_init, varn_from_addr_con, address_exposed), abstract_decl,
-  c_type_name; declaration_stmts, declaration and parse_attributes are
-  declared extern meanwhile.  The
-  headings of the routines not written (c_syntax.ins.pas) are still
-  those read off the frames.
+  Not written yet: the initializers, data_init, dynm_init, array_init,
+  array_dim_init, struct_init, init_with_string and get_constant
+  (check_addr_init, varn_from_addr_con, address_exposed).
 
   The routines other units call load A5; the others are internal.
   check_addr_init, varn_from_addr_con and address_exposed are nested
@@ -189,15 +184,11 @@ type
 
 var
   legal_specs: array [0..12] of c_specs_t;  { +0x0 }
-  kw_save_db: il_$node_ptr_t;           { +0x20: `save_db' }
-  kw_abnormal: il_$node_ptr_t;          { +0x24: `abnormal' }
-  kwu_abnormal: il_$node_ptr_t;         { +0x28: `__abnormal' }
-  kw_nosave: il_$node_ptr_t;            { +0x2C: `nosave' }
-  kwu_nosave: il_$node_ptr_t;           { +0x30: `__nosave' }
-  kw_noreturn: il_$node_ptr_t;          { +0x34: `noreturn' }
-  kwu_noreturn: il_$node_ptr_t;         { +0x38: `__noreturn' }
-  kw_a0_return: il_$node_ptr_t;         { +0x3C: `a0_return' }
-  kwu_a0_return: il_$node_ptr_t;        { +0x40: `__a0_return' }
+  opt_kw: array [0..8] of il_$node_ptr_t;  { +0x20: the routine option
+                                          keywords (syntax): save_db,
+                                          abnormal, __abnormal, nosave,
+                                          __nosave, noreturn, __noreturn,
+                                          a0_return, __a0_return }
   csyn_44: il_$node_ptr_t;              { +0x44: il_178 (syntax) }
   csyn_1ec: c_tag_ptr_t;                { +0x1EC: a tag declared before
                                           a block's scope is made
@@ -222,17 +213,35 @@ procedure program_; internal; forward;
 procedure declaration_stmts(
     ctx: integer;
     first: boolean;
-    out more: boolean); options(val_param); extern;   { TODO(pascal) not written yet }
+    out more: boolean); options(val_param); internal; forward;
+
+procedure declaration_specifiers(
+    ctx: integer;
+    first: boolean;
+    var res: boolean;
+    var d: c_decl_t;
+    var conv: integer;
+    var sc: integer); options(val_param); internal; forward;
 
 procedure declaration(
     ctx: integer;
     in md: c_decl_t;
     conv: integer;
     out d: c_decl_t;
-    out name: c_name_t); options(val_param); extern;   { TODO(pascal) not written yet }
+    out name: c_name_t); options(val_param); internal; forward;
 
-procedure parse_attributes(
-    var d: c_decl_t); extern;   { TODO(pascal) not written yet }
+procedure function_prototype(
+    out protos: c_parlist_ptr_t;
+    out parms: c_parm_ptr_t;
+    out scope: c_blk_ptr_t); internal; forward;
+
+procedure function_def(
+    promote: boolean); options(val_param); internal; forward;
+
+procedure array_decl(
+    in src: c_decl_t;
+    out dst: c_decl_t;
+    last: boolean); options(val_param); internal; forward;
 
 procedure struct_union_type(
     ctx: integer;
@@ -317,15 +326,15 @@ procedure init_refvar(
 procedure syntax;
 begin
   cdef_fwd_ptrs := nil;
-  kw_save_db := idntk(76, 'save_db', 7);
-  kw_abnormal := idntk(76, 'abnormal', 8);
-  kwu_abnormal := idntk(76, '__abnormal', 10);
-  kw_nosave := idntk(76, 'nosave', 6);
-  kwu_nosave := idntk(76, '__nosave', 8);
-  kw_noreturn := idntk(76, 'noreturn', 8);
-  kwu_noreturn := idntk(76, '__noreturn', 10);
-  kw_a0_return := idntk(76, 'a0_return', 9);
-  kwu_a0_return := idntk(76, '__a0_return', 11);
+  opt_kw[0] := idntk(76, 'save_db', 7);
+  opt_kw[1] := idntk(76, 'abnormal', 8);
+  opt_kw[2] := idntk(76, '__abnormal', 10);
+  opt_kw[3] := idntk(76, 'nosave', 6);
+  opt_kw[4] := idntk(76, '__nosave', 8);
+  opt_kw[5] := idntk(76, 'noreturn', 8);
+  opt_kw[6] := idntk(76, '__noreturn', 10);
+  opt_kw[7] := idntk(76, 'a0_return', 9);
+  opt_kw[8] := idntk(76, '__a0_return', 11);
   csyn_44 := il_178;
   initialize_legal_specs(cargs_$options.xansi);
   program_;
@@ -477,6 +486,140 @@ begin
   def_final_res_fwd_ptrs;
 end;
 
+{ parse_attributes - a declaration's attributes, `#attribute [...]' or
+  `__attribute((...))' (diagnostics 163..166 for the brackets), to
+  d.attr (add_attribute; the operand -10 when there is none): volatile
+  (0), device (3 and 4; device(read, write) each), address(n) (5),
+  section(name) (16, x16 the name), aligned(n) (12) or aligned(natural)
+  (13), atomic (2); anything else diagnostic 4 (50 inside device),
+  each skipped to its `)' or the next `,'.
+
+  0x060E88, 0x414 bytes, link #-28: the follow set (`]', `(', `)',
+  `,', identifier) copied to the frame; lex_token's address kept in A2;
+  the arms' diagnostics share one call (docs/rev889-patterns.md 23).
+
+  Not known from the original:
+  - the names; the structure of the jumps (written with goto). }
+
+procedure parse_attributes(
+    var d: c_decl_t); internal;
+label
+  paren, again, close;
+var
+  s: c_tokset_t;
+  gnu: boolean;
+begin
+  s := [ctk_rbracket, ctk_lparen, ctk_rparen, ctk_comma, ctk_identifier];
+  gnu := token_kind <> ctk_attribute;
+  get;
+  if gnu then begin
+    if token_kind = ctk_lparen then begin
+      get;
+      if token_kind <> ctk_lparen then
+        error(165, s);
+    end
+    else
+      error(165, s);
+  end
+  else if token_kind <> ctk_lbracket then
+    error(163, s);
+  repeat
+    get;
+    if (lex_token = id_volatile) or (lex_token = idu_volatile) then
+      add_attribute(0, d.attr, -10, lex_token)
+    else if (lex_token = id_device) or (lex_token = idu_device) then begin
+      get;
+      if token_kind = ctk_lparen then begin
+        repeat
+          get;
+          if (lex_token = id_read) or (lex_token = idu_read) then
+            add_attribute(3, d.attr, -10, lex_token)
+          else if (lex_token = id_write) or (lex_token = idu_write) then
+            add_attribute(4, d.attr, -10, lex_token)
+          else begin
+            error(50, s);
+            goto paren;
+          end;
+          get;
+        until token_kind <> ctk_comma;
+      paren:
+        if token_kind <> ctk_rparen then
+          error(166, s);
+      end
+      else begin
+        add_attribute(3, d.attr, -10, id_device);
+        add_attribute(4, d.attr, -10, id_device);
+        if token_kind = ctk_comma then
+          goto again;
+        if (not gnu and (token_kind = ctk_rbracket)) or
+           (gnu and (token_kind = ctk_rparen)) then
+          goto close;
+        error(4, s);
+      end;
+    end
+    else if (lex_token = id_address) or (lex_token = idu_address) then begin
+      get;
+      if token_kind <> ctk_lparen then
+        error(165, s);
+      get;
+      if token_kind in [80..86, 200] then
+        add_attribute(5, d.attr, lex_token^.int_value, id_address)
+      else
+        error(4, s);
+      get;
+      if token_kind <> ctk_rparen then
+        error(4, s);
+    end
+    else if (lex_token = id_section) or (lex_token = idu_section) then begin
+      get;
+      if token_kind <> ctk_lparen then
+        error(165, s);
+      get;
+      if token_kind <> ctk_identifier then
+        error(117, s);
+      add_attribute(16, d.attr, -10, id_section);
+      d.attr.x16 := integer32(lex_token);
+      get;
+      if token_kind <> ctk_rparen then
+        error(4, s);
+    end
+    else if (lex_token = id_aligned) or (lex_token = idu_aligned) then begin
+      get;
+      if token_kind <> ctk_lparen then
+        error(165, s);
+      get;
+      if token_kind in [77..87, 101, 200] then
+        add_attribute(12, d.attr, lex_token^.int_value, lex_token)
+      else if (lex_token = id_natural) or (lex_token = idu_natural) then
+        add_attribute(13, d.attr, -10, lex_token)
+      else
+        error(4, s);
+      get;
+      if token_kind <> ctk_rparen then
+        error(4, s);
+    end
+    else if (lex_token = id_atomic) or (lex_token = idu_atomic) then
+      add_attribute(2, d.attr, -10, lex_token)
+    else
+      error(4, s);
+    get;
+  again:
+  until token_kind <> ctk_comma;
+close:
+  if gnu then begin
+    if token_kind = ctk_rparen then begin
+      get;
+      if token_kind <> ctk_rparen then
+        error(166, s);
+    end
+    else
+      error(166, s);
+  end
+  else if token_kind <> ctk_rbracket then
+    error(164, s);
+  get;
+end;
+
 { avoid_void - d's type is void (the callers test it): unless the void
   is reached through a pointer or a function (the last of the pointers,
   functions and arrays d's type is made of), it becomes int (the type,
@@ -519,6 +662,432 @@ begin
   d.name := lex_tokens[ctk_int];
   d.line := lex_line;
   d.flags := [];
+end;
+
+{ get_options - a routine's options, `#options(...)' or
+  `__options((...))' (diagnostic 165 for the parentheses): save_db 2,
+  abnormal 4, nosave 32, noreturn 64, a0_return 512 (each also with two
+  leading underscores; another name diagnostic 217); 0 after diagnostic
+  184 (no `,' or `)') or 4 (not an identifier).
+
+  0x061394, 0x1BE bytes, link #-40: the keywords compared through
+  opt_kw (+0x20 of c_syntax's data) in a loop of 10 (the tenth
+  diagnostic 217), the bits by a jump table; the follow set copied to
+  the frame.
+
+  Not known from the original:
+  - the names. }
+
+function get_options: integer32; internal;
+var
+  s: c_tokset_t;
+  opts: integer32;
+  gnu: boolean;
+  i: integer;
+begin
+  s := [ctk_lparen, ctk_rparen, ctk_comma, ctk_identifier];
+  get_options := 0;
+  opts := 0;
+  gnu := token_kind <> ctk_options;
+  get;
+  if token_kind <> ctk_lparen then begin
+    error(165, s);
+    return;
+  end;
+  get;
+  if gnu then
+    if token_kind <> ctk_lparen then
+      error(165, s)
+    else
+      get;
+  while token_kind in s do begin
+    if token_kind = ctk_rparen then begin
+      get;
+      if gnu then
+        if token_kind <> ctk_rparen then
+          error(165, s)
+        else
+          get;
+      get_options := opts;
+      return;
+    end;
+    if token_kind = ctk_identifier then begin
+      for i := 0 to 9 do begin
+        if i = 9 then begin
+          error(217, s);
+          get;
+          exit;
+        end;
+        if lex_token = opt_kw[i] then begin
+          case i of
+            0: opts := opts ! 2;
+            1: opts := opts ! 4;
+            2: opts := opts ! 4;
+            3: opts := opts ! 32;
+            4: opts := opts ! 32;
+            5: opts := opts ! 64;
+            6: opts := opts ! 64;
+            7: opts := opts ! 512;
+            8: opts := opts ! 512;
+          end;
+          get;
+          exit;
+        end;
+      end;
+      if token_kind = ctk_comma then
+        get
+      else if token_kind <> ctk_rparen then begin
+        error(184, s);
+        return;
+      end;
+    end;
+  end;
+  error(4, s);
+end;
+
+{ add_top_node - a top-level node of kind and size bytes, linked
+  (c_stmt_sem's link_top).
+
+  0x061560, 0x36 bytes, link #-12; A0.
+
+  Not known from the original:
+  - the names (c_stmt_sem has an internal routine of the same name). }
+
+function add_top_node(
+    kind: integer;
+    size: integer): il_$node_ptr_t; options(val_param); internal;
+var
+  n: il_$node_ptr_t;
+begin
+  n := gspace(size);
+  n^.kind := kind;
+  link_top(n);
+  add_top_node := n;
+end;
+
+{ declaration_stmts - one declaration (ctx: 0 at file level, 2 the
+  parameters of an old-style definition, 3 a function body's, 4 a
+  compound statement's): more is cleared when none begins here (at file
+  level a declaration without specifiers is int).  The first of a
+  compound statement's makes its scope block (172) and the scope's
+  start node (148), the tag declared before it (csyn_1ec) entered in
+  its tags.  Each declarator: a typedef (def_typn; diagnostic 162 for
+  an address attribute), a function (its result not an array or a
+  function, diagnostic 200; void made int, else diagnostic 27; its
+  block made by def_blk_skeleton, with a copy of the prototype's scope
+  when the declarator is not the function type itself; a definition
+  follows unless `;' or `,' does: function_def, diagnostic 74 inside a
+  block), an old-style parameter's type (diagnostics 30, 36, 193), or a
+  variable: its allocation by storage class (dynm; stat, ext, extdef
+  at file level, abs for an address attribute; a section attribute on
+  a static is dropped with warning 236), a reference at file level or
+  static is diagnostic 220, then def_varn, the initializer (data_init)
+  or the allocation (def_alloc_var; an uninitialized reference
+  diagnostic 219), diagnostic 15 for a variable of a section without a
+  name.  A missing `=' is warning 13 (diagnostic 101 when a declaration
+  seems to begin).
+
+  0x061596, 0x8BC bytes, link #-352: the follow set (the declaration
+  starters; for a body the statement starters too, less identifier;
+  for parameters `{') in the frame, the tests with the register holding
+  3 (docs/rev889-patterns.md 24); avoid_void's report flag a byte
+  constant (false for a function, true for a variable); the section
+  flag cleared with `bclr #0' of the flags' second byte.
+
+  Not known from the original:
+  - the names; the structure of the jumps (written with goto). }
+
+procedure declaration_stmts;
+label
+  next, check_init, done;
+var
+  s: c_tokset_t;
+  nm2: c_name_t;
+  te2: type_exp_t;
+  te: type_exp_t;
+  nm: c_name_t;
+  sd: c_decl_t;
+  fd: c_decl_t;
+  d: c_decl_t;
+  n: il_$node_ptr_t;
+  conv: integer;
+  vat: c_vat_t;
+  cls: integer;
+  sc: integer;
+  is_static: boolean;
+  res: boolean;
+  err: boolean;
+  t: c_type_ptr_t;
+  b, nb: c_blk_ptr_t;
+  p: c_parm_ptr_t;
+  v: c_sym_ptr_t;
+  sym: il_$node_ptr_t;
+begin
+  lex_fatal := false;
+  more := true;
+  d.line := lex_line;
+  d.flags := [];
+  fd.flags := [];
+  conv := 3;
+  sc := 216;
+  s := [ctk_enum, ctk_void, ctk_int, ctk_char, ctk_float, ctk_double,
+        ctk_union, ctk_struct, ctk_auto, ctk_register, ctk_typedef,
+        ctk_static, ctk_extern, ctk_long, ctk_short, ctk_unsigned,
+        ctk_identifier, 102, 103, 104];
+  if ctx = 3 then
+    s := (s + [ctk_if, ctk_switch, ctk_lbrace, ctk_do, ctk_while, ctk_for,
+               ctk_incr, ctk_decr, ctk_not, ctk_goto, ctk_tilde,
+               ctk_sizeof, ctk_return, ctk_lparen, ctk_star, ctk_plus,
+               ctk_minus, ctk_amp, ctk_identifier, 77..89, ctk_string,
+               ctk_wstring, 101]) - [ctk_identifier];
+  if ctx = 2 then
+    s := s + [ctk_lbrace];
+  err := false;
+  if not (token_kind in [ctk_enum, ctk_void, ctk_int, ctk_char, ctk_float,
+                         ctk_double, ctk_union, ctk_struct, ctk_auto,
+                         ctk_register, ctk_typedef, ctk_std_call,
+                         ctk_static, ctk_extern, ctk_long, ctk_short,
+                         ctk_unsigned, ctk_identifier, 102, 103,
+                         104]) then begin
+    if ctx <> 0 then begin
+      more := false;
+      return;
+    end;
+    sc := 216;
+    d.dtype := int_type;
+    d.name := lex_tokens[ctk_int];
+    d.tag := nil;
+  end
+  else begin
+    d.name := nil;
+    declaration_specifiers(ctx, first, res, d, conv, sc);
+    if ctx <> 0 then
+      if not res then begin
+        more := false;
+        return;
+      end;
+  end;
+  if first and (ctx = 4) then begin
+    nm.id := il_178;
+    nm.line := lex_line;
+    sd.dtype := il_178;
+    sd.name := il_178;
+    sd.line := lex_line;
+    sd.flags := [];
+    def_blk_skeleton(172, nm, 0, sd, nil, nil, false, 3, 0, nil);
+    n := add_top_node(148, 52);
+    c_top_ptr_t(n)^.blk := il_180;
+    c_blk_ptr_t(il_180)^.entry_lab := n;
+    c_top_ptr_t(n)^.line := lex_line;
+    if csyn_1ec <> nil then begin
+      add_su(csyn_1ec, c_blk_ptr_t(il_180)^.tags);
+      csyn_1ec := nil;
+    end;
+  end;
+  if token_kind = ctk_semicolon then begin
+    get;
+    return;
+  end;
+next:
+  if token_kind = ctk_semicolon then begin
+    error1(73, lex_line, d.name);
+    get;
+    return;
+  end;
+  if token_kind = ctk_comma then begin
+    error1(73, lex_line, d.name);
+    get;
+    goto next;
+  end;
+  declaration(ctx, d, conv, fd, nm);
+  if (token_kind = ctk_attribute) or (lex_token = idu_attribute) then
+    parse_attributes(fd);
+  type_exp(fd.dtype, addr(te));
+  if te.base^.kind = 131 then begin
+    t := te.base;
+    while t^.kind = 131 do begin
+      t := t^.arr_elem;
+      type_exp(t, addr(te));
+      t := te.base;
+    end;
+    if t^.kind = 234 then begin
+      error1(203, nm.line, nm.id);
+      fd.dtype := il_178;
+    end;
+    if cargs_$options.type_opt then
+      if t^.kind = 130 then
+        if t^.ptr_reference then begin
+          error1(218, nm.line, nm.id);
+          fd.dtype := il_178;
+        end;
+  end;
+  if ctx = 2 then begin
+    type_exp(fd.dtype, addr(te));
+    if te.base^.kind in [131, 127] then
+      fd.dtype := def_ptr(te.base^.arr_elem, nil)
+    else if te.base^.kind = 234 then begin
+      fd.dtype := def_ptr(te.base, nil);
+      type_exp(fd.dtype, addr(te));
+    end;
+  end;
+  if sc = ctk_typedef then begin
+    if 5 in fd.flags then
+      error1(162, lex_line, id_address);
+    def_typn(nm, fd);
+    goto done;
+  end;
+  if te.base^.kind = 234 then begin
+    if c_type_ptr_t(d.dtype)^.kind = 210 then
+      if not avoid_void(fd, nm, false) then
+        error0(27, nm.line);
+    type_exp(te.base^.fn_result, addr(te2));
+    if te2.base^.kind in [131, 127] then begin
+      error1(200, nm.line, nm.id);
+      te.base^.fn_result := c_type_ptr_t(il_178);
+    end;
+    if te2.base^.kind = 234 then begin
+      error1(200, nm.line, nm.id);
+      te.base^.fn_result := c_type_ptr_t(il_178);
+    end;
+    is_static := false;
+    if sc = ctk_static then
+      is_static := true;
+    if (token_kind = ctk_semicolon) or (token_kind = ctk_comma) then
+      cls := 2
+    else
+      cls := 0;
+    if conv = 4 then
+      te.base^.fn_unused_16 := 0;
+    b := c_blk_ptr_t(te.base^.fn_unused_20);
+    if b <> nil then
+      if te.base <> fd.dtype then begin
+        nb := gspace(396);
+        nb^.kind := b^.kind;
+        nb^.tags := b^.tags;
+        b := nb;
+      end;
+    def_blk_skeleton(108, nm, cls, fd, c_parm_ptr_t(te.base^.fn_unused_16),
+                     te.base^.fn_params, is_static, conv, te.base^.fn_unused_4,
+                     b);
+    if (token_kind = ctk_semicolon) or (token_kind = ctk_comma) then
+      goto done;
+    cdef_50 := c_blk_ptr_t(il_180);
+    if ctx <> 0 then
+      error2(74, lex_line, nm.id, lex_token);
+    function_def(te.base^.fn_params <> nil);
+    return;
+  end;
+  if c_type_ptr_t(d.dtype)^.kind = 210 then
+    discard(avoid_void(fd, nm, true));
+  if ctx = 2 then begin
+    p := fnd_param(nm, c_blk_ptr_t(il_180)^.old_parms);
+    if p = c_parm_ptr_t(il_178) then
+      error1(30, lex_line, nm.id)
+    else if p^.ptype <> c_type_ptr_t(il_178) then
+      error1(36, lex_line, nm.id)
+    else begin
+      p^.attr.flags := fd.flags;
+      if 5 in fd.flags then
+        error1(193, lex_line, id_address);
+      p^.ptype := fd.dtype;
+      if sc = ctk_register then
+        p^.reg := true;
+    end;
+    goto done;
+  end;
+  vat := vat_dynm;
+  case sc of
+    ctk_register:
+      ;
+    ctk_static:
+      vat := vat_stat;
+    ctk_extern:
+      vat := vat_ext;
+    216, ctk_std_call:
+      if ctx = 0 then
+        vat := vat_extdef;
+    otherwise
+      ;
+  end;
+  if 5 in fd.flags then
+    vat := vat_abs;
+  if 16 in fd.flags then
+    if vat = vat_stat then begin
+      warning(236);
+      fd.flags := fd.flags - [16];
+    end;
+  if cargs_$options.type_opt then
+    if fd.dtype <> il_178 then
+      if c_type_ptr_t(fd.dtype)^.kind = 130 then
+        if c_type_ptr_t(fd.dtype)^.ptr_reference then
+          if (ctx = 0) or (vat = vat_stat) then begin
+            error1(220, nm.line, nm.id);
+            while not ((token_kind = ctk_semicolon) or
+                       (token_kind = ctk_comma)) do
+              get;
+            goto done;
+          end;
+  v := def_varn(nm, fd, vat, (token_kind <> ctk_semicolon) and
+                             (token_kind <> ctk_comma));
+  if sc = ctk_register then
+    add_reg_var(v);
+  def_resolve_fwd_ptrs;
+check_init:
+  if (token_kind = ctk_semicolon) or err or (token_kind = ctk_comma) then begin
+    if cargs_$options.type_opt then
+      if fd.dtype <> il_178 then
+        if c_type_ptr_t(fd.dtype)^.kind = 130 then
+          if c_type_ptr_t(fd.dtype)^.ptr_reference then
+            error1(219, nm.line, nm.id);
+    type_exp(fd.dtype, addr(te));
+    def_alloc_var(v, te.bytes);
+  end
+  else begin
+    if token_kind = ctk_assign then
+      get
+    else if token_kind = ctk_identifier then begin
+      nm2.id := lex_token;
+      nm2.line := lex_line;
+      sym := fnd_name(nm2, false, false);
+      if (sym <> il_178) and (sym^.kind = 118) then
+        err := true
+      else
+        warning(13);
+    end
+    else if token_kind in s then
+      err := true
+    else
+      warning(13);
+    if err then begin
+      error1(101, lex_line, lex_token);
+      if token_kind in [ctk_if, ctk_switch, ctk_lbrace, ctk_do, ctk_while,
+                        ctk_for, ctk_incr, ctk_decr, ctk_not, ctk_goto,
+                        ctk_tilde, ctk_sizeof, ctk_return, ctk_lparen,
+                        ctk_star, ctk_plus, ctk_minus, ctk_amp, 77..89,
+                        ctk_string, ctk_wstring, 101, 200] then
+        return;
+      goto check_init;
+    end;
+    data_init(ctx, v, fd.dtype, vat);
+  end;
+  if v^.kind = 109 then
+    if v^.var_vat = vat_sect then
+      if v^.var_sect^.xp[5] = nil then
+        error1(15, v^.line, v^.name);
+done:
+  if token_kind = ctk_semicolon then begin
+    get;
+    return;
+  end;
+  if (ctx <> 1) and (token_kind = ctk_comma) then begin
+    get;
+    goto next;
+  end;
+  if not err then
+    if (ctx <> 3) and (token_kind in s) then
+      error1(101, lex_line, lex_token)
+    else
+      error1(14, lex_line, lex_token);
 end;
 
 { storage_class - the storage class specifiers to sc (std_call makes
@@ -828,6 +1397,411 @@ begin
     d.flags := d.flags + [20];
 end;
 
+{ declaration - a declarator: d is md's declaration with its type
+  derived, name the identifier (il_178 after diagnostic 14).  `*'
+  (and, under -TYPE, `&' a reference) makes a pointer (to a structure
+  not yet complete, or a tag not yet declared, a forward pointer;
+  diagnostic 262 when the pointer's storage size differs from the
+  type's), its qualifiers then follow; `( declarator )' then `[' or
+  `(' puts the array or function inside the inner declarator's
+  derivations (the pointer, array or function it stopped at refilled:
+  def_arr, def_ptr); `[' an array (array_decl); an identifier then
+  `(' a function: under -TYPE a prototype (function_prototype) when a
+  type or `)' follows, else the parameters by name (add_parm; promote
+  without -TYPE), only a definition may have them (diagnostic 29), the
+  options (get_options), def_func; a prototyped definition's parameters
+  must be named (diagnostic 215).  In a prototype (ctx 1) the name may
+  be omitted and `()' is a function of no parameters.
+
+  0x0623EC, 0x70C bytes, link #-192: the token's case a jump table from
+  `[' to `&' (60..76); the inner declarator's place in the derivations
+  (`hole') kept in the frame; strtk(`<index>') names a refilled
+  array's index; the result's typedef names looked through in place.
+
+  Not known from the original:
+  - the names; the structure of the loop (written with goto). }
+
+procedure declaration;
+label
+  again;
+var
+  te: type_exp_t;
+  ix: c_decl_t;
+  tmp: c_decl_t;
+  inner: c_decl_t;
+  pn: c_name_t;
+  x: c_blk_ptr_t;
+  parms: c_parm_ptr_t;
+  opts: integer32;
+  protos: c_parlist_ptr_t;
+  hole: ^c_type_ptr_t;
+  old: c_type_ptr_t;
+  promote: boolean;
+  plist: c_parm_ptr_t;
+  last: c_type_ptr_t;
+  f: c_type_ptr_t;
+  r: ^c_type_ptr_t;
+  sym: il_$node_ptr_t;
+  i: integer;
+begin
+  lex_fatal := false;
+  d := md;
+  plist := nil;
+  x := nil;
+again:
+  case token_kind of
+    ctk_lbracket:
+      if ctx = 1 then
+        array_decl(d, d, true)
+      else begin
+        error1(14, lex_line, lex_token);
+        if token_kind <> ctk_semicolon then
+          get;
+        name.id := il_178;
+      end;
+    ctk_lparen: begin
+      get;
+      if (ctx = 1) and (token_kind = ctk_rparen) then begin
+        d.dtype := def_func(d, nil, conv, 0, nil, 0, 0);
+        get;
+        return;
+      end;
+      inner := d;
+      declaration(ctx, inner, conv, d, name);
+      if token_kind <> ctk_rparen then
+        error0(11, lex_line)
+      else
+        get;
+      if not ((token_kind = ctk_lparen) or (token_kind = ctk_lbracket)) then
+        return;
+      if inner.dtype = d.dtype then begin
+        hole := addr(d.dtype);
+        last := nil;
+      end
+      else begin
+        f := d.dtype;
+        while f <> inner.dtype do begin
+          last := f;
+          case f^.kind of
+            127, 131: begin
+              hole := addr(f^.arr_elem);
+              f := f^.arr_elem;
+            end;
+            234: begin
+              hole := addr(f^.fn_result);
+              f := f^.fn_result;
+            end;
+            130: begin
+              hole := addr(f^.ptr_to);
+              f := f^.ptr_to;
+            end;
+            otherwise
+              exit;
+          end;
+        end;
+      end;
+      if token_kind = ctk_lbracket then begin
+        array_decl(inner, tmp, true);
+        hole^ := tmp.dtype;
+        if last <> nil then
+          case last^.kind of
+            127, 131: begin
+              ix.dtype := last^.arr_index;
+              ix.line := lex_line;
+              ix.name := strtk('<index>', 7);
+              ix.flags := [];
+              discard(def_arr(ix, tmp, last, attr_curr_align_env = 0));
+            end;
+            234:
+              ;
+            130:
+              discard(def_ptr(tmp.dtype, last));
+            otherwise
+              ;
+          end;
+      end
+      else begin
+        get;
+        if cargs_$options.type_opt then
+          if token_kind = ctk_rparen then
+            protos := nil
+          else begin
+            function_prototype(protos, parms, x);
+            plist := parms;
+          end
+        else
+          protos := nil;
+        f := def_func(inner, nil, conv, 0, protos, integer32(plist),
+                      integer32(x));
+        r := addr(f^.fn_result);
+        while r^^.kind = 118 do
+          r^ := c_sym_ptr_t(r^)^.td_type;
+        hole^ := f;
+        if last <> nil then
+          if last^.kind = 130 then
+            discard(def_ptr(f, last));
+        if f^.fn_result = c_type_ptr_t(il_178) then
+          if inner.tag <> nil then
+            f^.fn_result := def_fwd_ptr(inner);
+        if token_kind = ctk_rparen then
+          get
+        else
+          error(29, [ctk_rparen, ctk_semicolon]);
+      end;
+    end;
+    ctk_rparen, ctk_comma:
+      if ctx <> 1 then begin
+        error1(14, lex_line, lex_token);
+        if token_kind <> ctk_semicolon then
+          get;
+        name.id := il_178;
+      end;
+    ctk_star, ctk_amp: begin
+      f := def_drop_tnames(d.dtype);
+      if (d.dtype = il_178) and (d.tag <> nil) then
+        d.dtype := def_fwd_ptr(d)
+      else if (f <> nil) and (f^.kind = 132) and
+              ((f^.su_fields = nil) or
+               (f^.su_fields = c_field_ptr_t(il_178))) then
+        d.dtype := def_fwd_ptr(d)
+      else begin
+        old := d.dtype;
+        d.dtype := def_ptr(d.dtype, nil);
+        type_exp(old, addr(te));
+        if c_type_ptr_t(d.dtype)^.ptr_attr.size_bits div 8 <> te.bytes then
+          error2(262, lex_line,
+                 smcontk(81, c_type_ptr_t(d.dtype)^.ptr_attr.size_bits div 8),
+                 smcontk(81, te.size));
+      end;
+      if cargs_$options.type_opt then
+        c_type_ptr_t(d.dtype)^.ptr_reference := token_kind = ctk_amp
+      else begin
+        c_type_ptr_t(d.dtype)^.ptr_reference := false;
+        if token_kind = ctk_amp then begin
+          error1(14, lex_line, lex_token);
+          name.id := il_178;
+        end;
+      end;
+      c_type_ptr_t(d.dtype)^.ptr_attr.bits :=
+        c_type_ptr_t(d.dtype)^.ptr_attr.bits + d.flags;
+      d.flags := [];
+      get;
+      type_qualifiers(d.flags);
+      goto again;
+    end;
+    ctk_identifier: begin
+      identifier([], 0, name);
+      if token_kind = ctk_lbracket then begin
+        array_decl(d, d, true);
+        return;
+      end;
+      if token_kind <> ctk_lparen then
+        return;
+      get;
+      pn.id := lex_token;
+      pn.line := lex_line;
+      sym := il_178;
+      if token_kind = ctk_identifier then
+        sym := fnd_name(pn, false, false);
+      protos := nil;
+      if cargs_$options.type_opt and
+         ((token_kind in [ctk_enum, ctk_void, ctk_int, ctk_char, ctk_float,
+                          ctk_double, ctk_union, ctk_struct, ctk_auto,
+                          ctk_register, ctk_typedef, ctk_ellipsis,
+                          ctk_static, ctk_extern, ctk_long, ctk_short,
+                          ctk_unsigned, ctk_rparen, 102, 103, 104]) or
+          (sym^.kind = 118)) then begin
+        if token_kind <> ctk_rparen then begin
+          function_prototype(protos, parms, x);
+          plist := parms;
+        end;
+      end
+      else begin
+        promote := not cargs_$options.type_opt;
+        while not ((token_kind = ctk_eof) or (token_kind = ctk_semicolon) or
+                   (token_kind = ctk_rparen)) do begin
+          identifier([ctk_rparen, ctk_comma, ctk_semicolon, ctk_eof], 39,
+                     pn);
+          tmp.flags := [];
+          tmp.dtype := il_178;
+          parms := plist;
+          add_parm(parms, pn, tmp, 0, promote);
+          plist := parms;
+          if token_kind = ctk_rparen then
+            exit;
+          if token_kind = ctk_comma then
+            get
+          else
+            error(39, [ctk_rparen, ctk_comma, ctk_semicolon, ctk_eof]);
+        end;
+      end;
+      if ctx <> 0 then
+        if plist <> nil then begin
+          if protos = nil then
+            error0(29, lex_line);
+          plist := nil;
+        end;
+      if token_kind = ctk_rparen then
+        get
+      else
+        error(29, [ctk_rparen, ctk_semicolon]);
+      if (token_kind = ctk_options) or (lex_token = idu_options) then
+        opts := get_options
+      else
+        opts := 0;
+      d.dtype := def_func(d, nil, conv, opts, protos, integer32(plist),
+                          integer32(x));
+      f := d.dtype;
+      if cargs_$options.type_opt then
+        if f^.fn_params <> nil then
+          if f^.fn_unused_16 <> 0 then
+            if token_kind = ctk_lbrace then begin
+              plist := c_parm_ptr_t(f^.fn_unused_16);
+              i := 1;
+              while plist <> nil do begin
+                if plist^.pname.id = il_178 then
+                  error2(215, lex_line, smcontk(81, i), name.id);
+                i := i + 1;
+                plist := plist^.next;
+              end;
+            end;
+    end;
+    otherwise begin
+      error1(14, lex_line, lex_token);
+      if token_kind <> ctk_semicolon then
+        get;
+      name.id := il_178;
+    end;
+  end;
+end;
+
+{ function_prototype - a prototype's parameter declarations up to `)'
+  (at most 256: diagnostic 210) in a scope block of its own (108, its
+  outer block il_180 while they are read): each an ellipsis (its token
+  the type) or specifiers and an optional declarator (none for a lone
+  void); a reference to an array, an array or a function is made a
+  pointer (an array's pointer takes its attributes); the named ones
+  added to parms (add_parm).  protos gets the types (gspace(4 + 4n);
+  a lone `...' when there are none) unless one is unknown (il_178), a
+  void is not alone (diagnostic 208) or an ellipsis is not last (209).
+  A `,' before `)' is diagnostic 326.
+
+  0x062B38, 0x350 bytes, link #-1196: the types in a frame array of 256;
+  il_178's and lex_line's addresses kept in registers; the specifiers
+  called with the context 2 and false as one longword (0x00020000).
+
+  Not known from the original:
+  - the names. }
+
+procedure function_prototype(
+    out protos: c_parlist_ptr_t;
+    out parms: c_parm_ptr_t;
+    out scope: c_blk_ptr_t); internal;
+label
+  cleanup;
+var
+  te: type_exp_t;
+  pn: c_name_t;
+  d: c_decl_t;
+  pd: c_decl_t;
+  types: array [1..256] of c_type_ptr_t;
+  w: integer;
+  conv: integer;
+  sc: integer;
+  res: boolean;
+  n: integer;
+  save: il_$node_ptr_t;
+  i: integer;
+begin
+  n := 0;
+  protos := nil;
+  parms := nil;
+  w := n;
+  save := il_180;
+  scope := gspace(396);
+  scope^.kind := 108;
+  scope^.outer := c_blk_ptr_t(il_180);
+  il_180 := il_$node_ptr_t(scope);
+  while n <= 256 do begin
+    pn.id := il_178;
+    pd.line := lex_line;
+    pd.name := nil;
+    pd.flags := [];
+    sc := 216;
+    if token_kind = ctk_ellipsis then begin
+      d.dtype := lex_token;
+      get;
+    end
+    else begin
+      declaration_specifiers(2, false, res, pd, conv, sc);
+      if not res then
+        goto cleanup;
+      d := pd;
+      if not ((c_type_ptr_t(d.dtype)^.kind = 210) and
+              (token_kind = ctk_rparen)) then
+        if res or (token_kind <> ctk_comma) then begin
+          declaration(1, pd, 3, d, pn);
+          if (token_kind = ctk_attribute) or (lex_token = idu_attribute) then
+            parse_attributes(d);
+        end;
+    end;
+    n := n + 1;
+    if n <= 256 then begin
+      if (c_type_ptr_t(d.dtype)^.kind = 130) and
+         c_type_ptr_t(d.dtype)^.ptr_reference then begin
+        type_exp(c_type_ptr_t(d.dtype)^.ptr_to, addr(te));
+        if te.base^.kind in [131, 127] then
+          c_type_ptr_t(d.dtype)^.ptr_to := def_ptr(te.base^.arr_elem, nil);
+      end
+      else begin
+        type_exp(d.dtype, addr(te));
+        if te.base^.kind in [131, 127] then begin
+          d.dtype := def_ptr(te.base^.arr_elem, nil);
+          c_type_ptr_t(d.dtype)^.ptr_attr.bits := te.base^.arr_attr.bits;
+        end
+        else if te.base^.kind = 234 then
+          d.dtype := def_ptr(te.base, nil);
+      end;
+      types[n] := d.dtype;
+      if not ((types[n]^.kind = 210) or (types[n]^.kind = 31)) then
+        add_parm(parms, pn, d, w, false);
+    end;
+    if token_kind <> ctk_comma then
+      exit;
+    get;
+    if token_kind = ctk_rparen then
+      error0(326, lex_line);
+  end;
+  if n > 256 then begin
+    error0(210, lex_line);
+    return;
+  end;
+  if n = 0 then begin
+    n := 1;
+    types[1] := c_type_ptr_t(lex_tokens[ctk_ellipsis]);
+  end;
+  for i := 1 to n do
+    if types[i] = c_type_ptr_t(il_178) then
+      goto cleanup;
+  type_exp(types[1], addr(te));
+  if (te.base^.kind = 210) and (n > 1) then begin
+    error0(208, lex_line);
+    goto cleanup;
+  end;
+  for i := 1 to n do
+    if (types[i]^.kind = 31) and (i < n) then begin
+      error0(209, lex_line);
+      goto cleanup;
+    end;
+  protos := gspace(n * 4 + 4);
+  protos^.count := n;
+  for i := 1 to n do
+    protos^.types[i] := types[i];
+cleanup:
+  c_blk_ptr_t(il_180)^.outer := nil;
+  il_180 := save;
+end;
+
 { function_def - a function's definition after its declarator: the
   parameter declarations of an old-style definition (declaration_stmts
   with ctx 2), the parameters made variables (def_blk_params; promote
@@ -849,6 +1823,75 @@ begin
   until not more;
   def_blk_params(promote);
   body([]);
+end;
+
+{ array_decl - `[' [bound] `]' and the dimensions after it: dst is src
+  with its type the array (def_arr of the index subrange def_subr makes,
+  0 .. bound - 1, and the element src's type of the rest; the flags
+  cleared).  A bound must be a positive integer constant (diagnostics
+  18, 19); a missing one makes the subrange 0 .. -1, only allowed in
+  the first dimension (last; diagnostic 178).
+
+  0x062ECA, 0x1C0 bytes, link #-120: the bounds' records initialized
+  from int_type, con_zero and the line, the upper made the lower with
+  con_minus_one for no bound; the bound less one kept in the frame.
+
+  Not known from the original:
+  - the names. }
+
+procedure array_decl(
+    in src: c_decl_t;
+    out dst: c_decl_t;
+    last: boolean); options(val_param); internal;
+label
+  subr;
+var
+  elem: c_decl_t;
+  hi: c_cexp_t;
+  lo: c_cexp_t;
+  ix: c_decl_t;
+  v: integer32;
+begin
+  lex_fatal := false;
+  elem := src;
+  dst := src;
+  get;
+  ix.line := lex_line;
+  ix.name := lex_token;
+  ix.flags := [];
+  lo.ctype := int_type;
+  lo.value := con_zero;
+  lo.line := lex_line;
+  lo.sym := con_zero;
+  if token_kind <> ctk_rbracket then begin
+    constant_expr([ctk_sizeof, ctk_rbracket, ctk_plus, ctk_minus,
+                   ctk_identifier, 77..89, ctk_string, ctk_wstring, 101],
+                  hi);
+    if not (hi.value^.kind in [80..86, 200]) then
+      error1(18, lex_line, hi.sym)
+    else if hi.value^.int_value <= 0 then
+      error1(19, lex_line, hi.sym)
+    else begin
+      v := hi.value^.int_value - 1;
+      hi.value := smcontk(81, v);
+      goto subr;
+    end;
+  end
+  else if not last then
+    error0(178, lex_line);
+  hi := lo;
+  hi.value := con_minus_one;
+  hi.sym := con_minus_one;
+subr:
+  def_subr(lo, hi, ix);
+  if token_kind = ctk_rbracket then
+    get
+  else
+    error1(18, lex_line, lex_token);
+  if token_kind = ctk_lbracket then
+    array_decl(src, elem, false);
+  dst.dtype := def_arr(ix, elem, nil, attr_curr_align_env = 0);
+  dst.flags := [];
 end;
 
 { struct_union_type - struct or union (kind 17 or 16), a tag, members
@@ -1002,7 +2045,8 @@ body:
   tag^.body.stype := d.dtype;
 end;
 
-{ member_list - the members of a structure or union up to the closing brace: each
+{ member_list - the members of a structure or union up to the closing
+  brace: each
   declaration's specifiers (diagnostic 41 when there are none) and its
   declarators or `: width' bit fields (named by id_at), laid out by
   def_fld; a function member is diagnostic 42, a member of an unknown
@@ -1275,7 +2319,8 @@ begin
   end;
 end;
 
-{ enum_list - the enumerators up to the closing brace to es, each a constant of t
+{ enum_list - the enumerators up to the closing brace to es, each a
+  constant of t
   (def_conn) with the value given (`= constant'; diagnostic 26 for a
   value not an integer constant, naming a tree's first operand) or the
   one after the last; past 1024 the last entry is overwritten
@@ -1339,26 +2384,6 @@ begin
   end;
   get;
   es.count := n;
-end;
-
-{ add_top_node - a top-level node of kind and size bytes, linked
-  (c_stmt_sem's link_top).
-
-  0x061560, 0x36 bytes, link #-12; A0.
-
-  Not known from the original:
-  - the names (c_stmt_sem has an internal routine of the same name). }
-
-function add_top_node(
-    kind: integer;
-    size: integer): il_$node_ptr_t; options(val_param); internal;
-var
-  n: il_$node_ptr_t;
-begin
-  n := gspace(size);
-  n^.kind := kind;
-  link_top(n);
-  add_top_node := n;
 end;
 
 { body - a function's body: an opening brace, its declarations, the dynamic
@@ -1580,8 +2605,9 @@ again:
   end;
 end;
 
-{ compound_stat - an opening brace, declarations (a scope block made when there are
-  any), the dynamic initializers, the statements and the closing brace; the scope's
+{ compound_stat - an opening brace, declarations (a scope block made
+  when there are any), the dynamic initializers, the statements and the
+  closing brace; the scope's
   end node (149) closes it.
 
   0x065668, 0x10C bytes, link #-20: the end node add_top_node(149, 52)
@@ -2477,4 +3503,195 @@ begin
         v := cx.value^.int_value;
     end;
   pp_constant := v;
+end;
+
+{ abstract_decl - an abstract declarator (a type name's, without an
+  identifier): d is md's declaration with its type derived as
+  declaration derives it (pointers and references, `( abstract )'
+  with an array or function after it put inside, arrays, `()' and
+  prototyped functions); diagnostic 14 (with follow) for anything else
+  but `)'.
+
+  0x066F12, 0x374 bytes, link #-172: the token's case a jump table from
+  `[' to `&' (60..69); the inner declarator's place kept in the frame;
+  the pointer takes d's qualifiers (stored, not or-ed as declaration
+  does); the parameter list by name is not set when no prototype is
+  read.
+
+  Not known from the original:
+  - the names; the structure of the loop (written with goto). }
+
+procedure abstract_decl(
+    in follow: c_tokset_t;
+    in md: c_decl_t;
+    conv: integer;
+    out d: c_decl_t); options(val_param); internal;
+label
+  again;
+var
+  ix: c_decl_t;
+  tmp: c_decl_t;
+  inner: c_decl_t;
+  scope: c_blk_ptr_t;
+  parms: c_parm_ptr_t;
+  protos: c_parlist_ptr_t;
+  hole: ^c_type_ptr_t;
+  last: c_type_ptr_t;
+  f: c_type_ptr_t;
+begin
+  d := md;
+again:
+  case token_kind of
+    ctk_lbracket:
+      array_decl(d, d, true);
+    ctk_lparen: begin
+      get;
+      if token_kind = ctk_rparen then begin
+        d.dtype := def_func(d, nil, conv, 0, nil, 0, 0);
+        get;
+        return;
+      end;
+      inner := d;
+      abstract_decl(follow, inner, conv, d);
+      if token_kind <> ctk_rparen then
+        error0(11, lex_line)
+      else
+        get;
+      if not ((token_kind = ctk_lparen) or (token_kind = ctk_lbracket)) then
+        return;
+      if inner.dtype = d.dtype then begin
+        hole := addr(d.dtype);
+        last := nil;
+      end
+      else begin
+        f := d.dtype;
+        while f <> inner.dtype do begin
+          last := f;
+          case f^.kind of
+            127, 131: begin
+              hole := addr(f^.arr_elem);
+              f := f^.arr_elem;
+            end;
+            234: begin
+              hole := addr(f^.fn_result);
+              f := f^.fn_result;
+            end;
+            130: begin
+              hole := addr(f^.ptr_to);
+              f := f^.ptr_to;
+            end;
+            otherwise
+              exit;
+          end;
+        end;
+      end;
+      if token_kind = ctk_lbracket then begin
+        array_decl(inner, tmp, true);
+        hole^ := tmp.dtype;
+        if last <> nil then
+          case last^.kind of
+            127, 131: begin
+              ix.dtype := last^.arr_index;
+              ix.line := lex_line;
+              ix.name := strtk('<index>', 7);
+              ix.flags := [];
+              discard(def_arr(ix, tmp, last, attr_curr_align_env = 0));
+            end;
+            234:
+              ;
+            130:
+              discard(def_ptr(tmp.dtype, last));
+            otherwise
+              ;
+          end;
+      end
+      else begin
+        get;
+        scope := nil;
+        if cargs_$options.type_opt then
+          if token_kind = ctk_rparen then
+            protos := nil
+          else
+            function_prototype(protos, parms, scope)
+        else
+          protos := nil;
+        f := def_func(inner, nil, conv, 0, protos, integer32(parms),
+                      integer32(scope));
+        hole^ := f;
+        if last <> nil then
+          if last^.kind = 130 then
+            discard(def_ptr(f, last));
+        if token_kind = ctk_rparen then
+          get
+        else
+          error(29, [ctk_rparen, ctk_semicolon]);
+      end;
+    end;
+    ctk_rparen:
+      ;
+    ctk_star, ctk_amp: begin
+      if (d.dtype = il_178) and (d.tag <> nil) then
+        d.dtype := def_fwd_ptr(d)
+      else if (c_type_ptr_t(d.dtype)^.kind = 132) and (d.tag <> nil) and
+              ((c_type_ptr_t(d.dtype)^.su_fields = nil) or
+               (c_type_ptr_t(d.dtype)^.su_fields =
+                c_field_ptr_t(il_178))) then
+        d.dtype := def_fwd_ptr(d)
+      else
+        d.dtype := def_ptr(d.dtype, nil);
+      if cargs_$options.type_opt then
+        c_type_ptr_t(d.dtype)^.ptr_reference := token_kind = ctk_amp
+      else if token_kind = ctk_amp then
+        error(14, follow);
+      c_type_ptr_t(d.dtype)^.ptr_attr.bits := d.flags;
+      d.flags := [];
+      get;
+      type_qualifiers(d.flags);
+      goto again;
+    end;
+    otherwise
+      error(14, follow);
+  end;
+end;
+
+{ c_type_name - see c_syntax.ins.pas: the specifiers (none: is_type
+  false; no storage class: sc 36), then `)' or an abstract declarator
+  and `)' (diagnostic 11).
+
+  0x067286, 0xF2 bytes, link #-92; A5: the specifiers called with the
+  context 3 and false as one longword (0x00030000); follow + [`)']
+  formed in a temporary and copied to the frame.
+
+  Not known from the original:
+  - the names. }
+
+procedure c_type_name;
+var
+  fs: c_tokset_t;
+  md: c_decl_t;
+  conv: integer;
+  sc: integer;
+  res: boolean;
+begin
+  md.line := lex_line;
+  md.name := nil;
+  md.flags := [];
+  sc := ctk_extern;
+  declaration_specifiers(3, false, res, md, conv, sc);
+  if not res then begin
+    is_type := false;
+    return;
+  end;
+  is_type := true;
+  d := md;
+  if token_kind = ctk_rparen then begin
+    get;
+    return;
+  end;
+  fs := follow + [ctk_rparen];
+  abstract_decl(fs, md, conv, d);
+  if token_kind = ctk_rparen then
+    get
+  else
+    error0(11, lex_line);
 end;

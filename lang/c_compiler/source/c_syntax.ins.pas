@@ -9,12 +9,15 @@
 
 { TODO(pascal) read off the frames only (see c_externs.ins.pas) }
 
-{ DATA_INIT - c_syntax.pas 0x063C6C (cc.a88k 0x063EEC). }
+{ DATA_INIT - the initializer of the variable v of type t, allocated as
+  vat, in the declaration context ctx (0 at file level).  c_syntax.pas
+  0x063C6C (cc.a88k 0x063EEC): c_syntax's declaration_stmts and
+  c_expr_syn's do_c_string (a string's array, vat_stat). }
 procedure data_init(
-    p8: integer;
-    p10: univ_ptr;
-    p14: univ_ptr;
-    p18: integer); options(val_param); extern;
+    ctx: integer;
+    v: c_sym_ptr_t;
+    t: c_type_ptr_t;
+    vat: c_vat_t); options(val_param); extern;
 
 { C_TYPE_NAME - after a `(', a type name to d (d.dtype the type,
   d.flags its qualifiers) and is_type true, or is_type false when what
