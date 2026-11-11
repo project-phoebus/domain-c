@@ -164,6 +164,30 @@ type
       3: (c: array [0..255] of char);
   end;
 
+  { An assignment statement (kind 140) seen from its +4, as codegen
+    passes it to cg_assign's assign_proc (and cg_tree's generate passes
+    multi_assign_proc a record of the same layout in its data, +0x248):
+    the statements' chain (+4 the next statement: a register list,
+    191, when one follows), the value's descriptor (+48: its size in
+    bytes, rlen, w6 and w8 a bit field's offset and width or a shift
+    count's class, flags), the destination (+64), the source (+68), a
+    third tree walked first (+72: strncpy's count) and the assignment's
+    operator (+76: 0 a plain store, 1 add, 2 subtract, 3 and, 4 or, 5
+    exclusive or, 6 an aggregate, 7..9 sets, 10 and 12 bit fields, 11 a
+    floating store, 13 and 14 the unary operators, 15 and 16 shifts, 19
+    .. 22 floating arithmetic, 25 an aggregate of a length, 27 .. 30
+    strcat, strcpy, strncat, strncpy; list_tree's names SCALAR ..). }
+  cg_asn_t = record
+    prev: il_$node_ptr_t;               { +4 }
+    next: il_$node_ptr_t;               { +8 }
+    unused_12: array [3..11] of integer32;  { +12 }
+    desc: cg_desc_t;                    { +48 }
+    left: il_$node_ptr_t;               { +64 }
+    right: il_$node_ptr_t;              { +68 }
+    extra: il_$node_ptr_t;              { +72 }
+    asnop: integer;                     { +76 }
+  end;
+
 var
   { cg_fp's cells (A5 0x3552F8 + 0x1000..0x1014). }
   cg_fp_1000: extern il_$node_ptr_t;    { +0x1000: f_compare_proc sets it
@@ -588,14 +612,20 @@ procedure edit_register(
 
 { ---- cg_assign ---- }
 
-{ ASSIGN_PROC - the code of an assignment statement s (node kind 140,
-  passed from its +4).  cg_assign 0x0F469E: the address. }
-procedure assign_proc(
-    in out s: univ cg_stmt_t); extern;
+{ The headings are checked against cg_assign.pas's bodies. }
+
+{ CG_ASN_$INLINE_MOVE_IS_BEST - whether count moves inline take no
+  more than half again a loop's code (the unit size is passed but not
+  read).  cg_assign 0x0F30AE: 8 a longword, 12 a word; D0 (reg_save's
+  registers_consumed_by_agg_aop, agg_assign_proc). }
+function cg_asn_$inline_move_is_best(
+    count: integer32;
+    size: integer): boolean; options(val_param); extern;
 
 { CG_ASN_$BLOCK_MOVE - a loop moving count units of size from src to
-  dst (two more descriptors for the loop's registers).  cg_assign
-  0x0F30FA: 8 a longword, 12 a word, then four descriptors' addresses. }
+  dst (r1 and r2 the loop's counter register and label, agg_loop_start's).
+  cg_assign 0x0F30FA: 8 a longword, 12 a word, then four descriptors'
+  addresses. }
 procedure cg_asn_$block_move(
     count: integer32;
     size: integer;
@@ -604,13 +634,25 @@ procedure cg_asn_$block_move(
     in out r1: codegen_$uads_t;
     in out r2: codegen_$uads_t); options(val_param); extern;
 
-{ FAULT_FREE_ASSIGN - a move of size size from src to dst that cannot
-  fault.  cg_assign 0x0F36F4: 8 a word, 10 and 14 the descriptors'
-  addresses. }
+{ FAULT_FREE_ASSIGN - a move of size size from src to dst (src copied
+  first, as a value parameter is).  cg_assign 0x0F36F4: 8 a word, 10
+  and 14 the descriptors' addresses. }
 procedure fault_free_assign(
     size: integer;
     in out dst: codegen_$uads_t;
     in out src: codegen_$uads_t); options(val_param); extern;
+
+{ MULTI_ASSIGN_PROC - a store of s's source to its destination: an
+  aggregate's moves past 4 bytes (agg_assign_proc), else one move.
+  cg_assign 0x0F3F28: the record's address (cg_tree's generate passes
+  its data +0x248). }
+procedure multi_assign_proc(
+    in out s: univ cg_asn_t); extern;
+
+{ ASSIGN_PROC - the code of an assignment statement s (node kind 140,
+  passed from its +4).  cg_assign 0x0F469E: the address. }
+procedure assign_proc(
+    in out s: univ cg_asn_t); extern;
 
 { ---- cg_top ---- }
 
