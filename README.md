@@ -161,4 +161,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/reg_alloc.pas` | 15 | translated (cc.m68k only; best effort; statements and blocks through g_opt.ins.pas, variables and the routine block by offset; dpc gaps 4, 8) |
 | `lang/lang/source/reg_color_68k.pas` | 16 | translated (cc.m68k only; best effort; ranges and conflicts through reg_alloc.ins.pas; dpc gap 21) |
 | `lang/lang/source/reg_life.pas` | 17 | translated (cc.m68k only; best effort; statements, blocks and cses through g_opt.ins.pas, variables by offset) |
+| `lang/lang/source/reg_save.pas` | 23 | started: 17 of 23 (the asserts, the extra temporaries, the routine and call kinds, the reg_save_$ routines and reg_save; registers_consumed_by_tree_operator, _agg_aop, _assign_operator, assert_tree_result_depends_on_operands, registers_consumed_by_object and registers_preserved_by_statement not written; cc.m68k only; dpc gaps 8, 30) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

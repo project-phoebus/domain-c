@@ -459,3 +459,8 @@ lang/lang/source/reg_alloc.pas	s{((?:\w+(?:\[[^\]]*\])?\^?\.)*\w+)\s+in\s+\[([^\
 lang/lang/source/reg_color_68k.pas	s/^(\s*)procedure p\(var x: reg_range_t\);/$1p: rc_walk_t; { gap 21 }/
 lang/lang/source/reg_color_68k.pas	s/^(\s*)p\(reg_ranges\^\[c\^\.num\]\);/$1p^(reg_ranges^[c^.num]); { gap 21 }/
 lang/lang/source/reg_color_68k.pas	s/walkconflicts\((checkout|targetfunctionresult|computecommonregs|setcommonregs), /walkconflicts(nil, /
+# gap 8 (reg_save): in on the top-level kinds set (spans two lines: one comparison, for the check)
+lang/lang/source/reg_save.pas	s/n\^\.kind in \[139\.\.142, 144, 148\.\.151, 188,$/(n^.kind = 139) or (n^.kind = 188) { gap 8 }/
+lang/lang/source/reg_save.pas	s/^\s*191, 214\.\.215, 223\.\.225, 227\.\.228, 231, 233\]$//
+# gap 30 (reg_save): `in' on a set parameter held in a register as an operand of `and' (the parameter's test dropped, for the check)
+lang/lang/source/reg_save.pas	s/\(b in s\) and \(b in \[/(b in [/

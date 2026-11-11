@@ -372,3 +372,10 @@ checks a copy with a routine pointer (rc_walk_t) and nil.
 Translator EE, reg_life: reg_life.pas declares get_rlen (c_get_rlen;
 c_externs.ins.pas is not opened); the reg_life headings in
 reg_alloc.ins.pas are checked against the bodies.
+Translator EE, reg_save (started, 17 of 23): reg_save's heading moved
+to globals_from_backend.ins.pas (reg_save_$regs_t, a set of 0..31;
+cg.ins.pas's, opt_livevar's and add_node's removed, cg_call converts
+the set).  registers_consumed_by_tree_operator, _agg_aop,
+_assign_operator, assert_tree_result_depends_on_operands,
+registers_consumed_by_object and registers_preserved_by_statement are
+declared extern in the unit (a TODO in its header).

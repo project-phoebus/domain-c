@@ -862,3 +862,20 @@ revisited.
    returns hi + 1, not 31 (docs/rev889-patterns.md 80's sharing, here
    for a result set before the loop).  Not met (color_graph calls it
    after availcolors found one); written as returning 31.
+
+114. Translator EE: reg_save's registers_consumed_by_fortran_symbol
+   (cc.m68k 0x0EC0B0) compares a Fortran routine with the longword at
+   0x2D2ED8, opt_livevar's data +0, which opt_livevar.pas declares as
+   unused_0 (opt_livevar never addresses it) but opt_general and
+   opt_main (assert_is_call_to_abnormal_routine 0x0DC462, ...) reach
+   absolutely: a routine whose calls disturb every register but
+   FP2..FP7 ([0..17]).  reg_save.pas declares it `opt_abnormal_routine:
+   extern il_$node_ptr_t' until opt_main (or whichever unit owns it) is
+   translated; opt_livevar's cell should then be defined by name.
+
+115. Translator EE: reg_save's heading is now the prelude's
+   (globals_from_backend.ins.pas, reg_save_$regs_t = set of 0..31):
+   add_node calls it and opens no back-end insert, and cc.a88k's
+   target_at_dummies has the routine too.  cg_call's local integer32
+   `regs' takes it through a type transfer; a set type there would
+   read better.
