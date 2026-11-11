@@ -102,10 +102,8 @@
   points, deluse, delparent, walkuses; cc.a88k's empty strengthreduce),
   opt_str_$is_loop_constant_integer, opt_str_$opmod1_of_multiplier,
   transformtemps .. ptrsub, match_rlens_srtemp_and_assign .. autoinc,
-  elimuses, add_assign, getval, opt_str_$make_name ..
-  minimally_size_sr_temp and the module's data.
-  Not written yet: findvalues (with not_on_ud_chain and noincfound,
-  0x0E8FFC..0x0E9C50), reduce (0x0EACC8, 0xE28 bytes) and cc.m68k's
+  elimuses .. minimally_size_sr_temp and the module's data.
+  Not written yet: reduce (0x0EACC8, 0xE28 bytes) and cc.m68k's
   strengthreduce (0x0EBAF0, 0x35C bytes). }
 
 module opt_strength;
@@ -2171,15 +2169,15 @@ begin
           if n in e^.vset^ then
             if (e^.vars^[n]^.flags & 16#200) = 0 then
               if not walkuses(s, v) then begin
-                c := opt_4009c[r]^.vars^[n]^.ud;
+                c := e^.vars^[n]^.ud;
                 while c <> nil do begin
                   vr := opt_4009c[c^.stmt^.hdr.region]^.vars^[n];
                   vr^.flags := vr^.flags ! 16#100;
                   c := c^.next;
                 end;
-                opt_4009c[r]^.vars^[n]^.ud := nil;
+                e^.vars^[n]^.ud := nil;
                 one := [n];
-                opt_4009c[r]^.vset^ := opt_4009c[r]^.vset^ - one;
+                e^.vset^ := e^.vset^ - one;
               end;
       end;
       s := il_$node_ptr_t(g_opt_stmt_ptr_t(s)^.next);
@@ -2428,6 +2426,356 @@ begin
                 end;
     end;
   getval := r;
+end;
+
+{ findvalues - the assignments giving temporary temp (= iv * factor,
+  of descriptor d) its values, for induction variable iv (number v)
+  used at region statement r in the loop headed by block h: along the
+  use-def chain of v at r, a definition in the loop steps temp after
+  it (add_assign of getval's step, unless a neighbouring statement
+  already assigns temp); for the only definition, when it does not
+  reach itself, temp is first assigned in the preheader and assigned
+  the definition's value again at the loop's back edge; a definition
+  outside the loop gives the first value in the preheader (at the
+  preheader's last region statement, or after it unless it branches),
+  given a use-def entry there when all of r's other definitions are
+  in the loop; a 188 likewise; another kind is cgerr 3.  An only
+  definition in the loop whose region uses v has its own chain
+  followed instead when one of those definitions is outside.  Then
+  every assignment of v in the loop not reached otherwise
+  (not_on_ud_chain) or without a step of temp near it (noincfound)
+  steps temp too; without a first value one is put in the preheader.
+
+  0x0E90F6, 0xB5A bytes: d by address, passed on; the chain, the
+  region numbers, the operator and the flags in frame words (-16 ..
+  -64); the walk of the chains a loop entered again by branches
+  (written with labels); a dead call with operator 0 for a step (the
+  image's: its operator is 1 or 2 there); the loop's predecessor
+  search leaves k past the predecessors when none is in the loop. }
+
+procedure findvalues(
+    r: integer;
+    v: integer;
+    h: g_opt_block_ptr_t;
+    temp: il_$node_ptr_t;
+    factor: il_$node_ptr_t;
+    in d: add_node_$desc_t;
+    iv: il_$node_ptr_t); options(val_param); internal;
+label
+  10, 20, 30, 40;
+var
+  c, q, cell: g_opt_chain_ptr_t;
+  e, x, y, p, lt: g_opt_stmt_ptr_t;
+  l: g_opt_block_ptr_t;
+  rhs: g_opt_tree_ptr_t;
+  val, nv: il_$node_ptr_t;
+  reg, lastreg, cr, op, op2, k, j: integer;
+  single, done, ok, found, f, a: boolean;
+
+  { not_on_ud_chain - no definition on v's use-def chain at region
+    statement r is region statement k.
+
+    0x0E8FFC, 0x66 bytes: nested, the parent's frame not used. }
+
+  function not_on_ud_chain(
+      k: integer;
+      r: integer;
+      v: integer): boolean; options(val_param);
+  var
+    c: g_opt_chain_ptr_t;
+    res: boolean;
+  begin
+    res := true;
+    c := opt_4009c[r]^.vars^[v]^.ud;
+    while c <> nil do begin
+      if c^.stmt^.hdr.region = k then begin
+        res := false;
+        exit;
+      end;
+      c := c^.next;
+    end;
+    not_on_ud_chain := res;
+  end;
+
+  { noincfound - no assignment to temp among the statements of no
+    region before and after region statement k.
+
+    0x0E9062, 0x94 bytes: nested, the parent's frame not used. }
+
+  function noincfound(
+      k: integer;
+      temp: il_$node_ptr_t): boolean; options(val_param);
+  var
+    p: g_opt_stmt_ptr_t;
+  begin
+    noincfound := true;
+    p := opt_4009c[k]^.prev;
+    while p^.hdr.region = 0 do begin
+      if p^.kind = 140 then
+        if p^.asg_lhs = temp then begin
+          noincfound := false;
+          return;
+        end;
+      p := p^.prev;
+    end;
+    p := opt_4009c[k]^.next;
+    while p^.hdr.region = 0 do begin
+      if p^.kind = 140 then
+        if p^.asg_lhs = temp then begin
+          noincfound := false;
+          return;
+        end;
+      p := p^.next;
+    end;
+  end;
+
+begin
+  lastreg := g_opt_blocks_ptr_t(il_11c)^[preheader_num]^.last_stmt^.hdr.region;
+  reg := r;
+  if v = 0 then
+    return;
+  if opt_4009c[reg]^.vars^[v] = nil then
+    return;
+  if opt_4009c[reg]^.vars^[v]^.ud = nil then
+    return;
+  c := opt_4009c[reg]^.vars^[v]^.ud;
+  if c <> nil then
+    single := c^.next = nil
+  else
+    single := false;
+  done := false;
+  goto 30;
+10:
+  cr := c^.stmt^.hdr.region;
+  e := opt_4009c[cr];
+  if e^.kind = 140 then begin
+    if e^.hdr.vnum <> v then
+      goto 20;
+    val := getval(e^.asg_rhs, v, opt_4009c[cr]);
+    if e^.block^.serial = h^.serial then begin
+      op2 := 1;
+      if e^.asg_op = 2 then
+        op2 := 2;
+      if e^.prev^.kind = 140 then
+        if (e^.prev^.asg_op = 2) or (e^.prev^.asg_op = 1) then
+          if e^.prev^.asg_lhs = temp then
+            goto 20;
+      if e^.next^.kind = 140 then
+        if (e^.next^.asg_op = 2) or (e^.next^.asg_op = 1) then
+          if e^.next^.hdr.region = 0 then begin
+            if e^.next^.asg_lhs = temp then
+              goto 20;
+            p := e^.next;
+            found := false;
+            repeat
+              if p^.kind = 140 then
+                if p^.asg_lhs = temp then
+                  found := true;
+              p := p^.next;
+            until p^.hdr.region <> 0;
+            if found then
+              goto 20;
+          end;
+      if single and not done and (c^.next = nil) and
+         not ((e^.vset <> nil) and (v in e^.vset^)) then begin
+        op := 0;
+        x := opt_4009c[lastreg];
+        if (x^.kind = 141) or (x^.kind = 150) or (x^.kind = 142) then
+          add_assign(opt_4009c[lastreg], temp, iv, nil, factor, op, d)
+        else
+          add_assign(opt_4009c[lastreg]^.next, temp, iv, nil, factor, op, d);
+        op := 1;
+        e^.hdr.no_prune := true;
+        for k := 1 to h^.npreds do
+          if h^.pred[k]^.serial = h^.serial then
+            exit;
+        lt := h^.pred[k]^.last_stmt;
+        rhs := g_opt_tree_ptr_t(e^.asg_rhs);
+        nv := e^.asg_rhs;
+        if rhs^.kind = 137 then begin
+          nv := buildtreenode(rhs^.op, sr_tree_view_ptr_t(rhs)^.desc,
+                              rhs^.opnd, rhs^.count);
+          for j := 1 to rhs^.count do
+            opt_str_$add_substitution_point(rhs^.opnd[j], nv);
+        end;
+        add_assign(lt, temp, nil, nv, factor, op, d);
+        lt^.prev^.asg_op := 0;
+        done := true;
+        goto 20;
+      end;
+      if op2 = 0 then
+        add_assign(opt_4009c[cr], temp, iv, nil, factor, op2, d)
+      else if (op2 = 2) or (op2 = 1) then
+        add_assign(e^.next, temp, nil, val, factor, op2, d);
+      goto 20;
+    end;
+    op := 0;
+    if not done then begin
+      ok := true;
+      q := opt_4009c[reg]^.vars^[v]^.ud;
+      while q <> nil do begin
+        if q <> c then
+          if h^.serial <> q^.stmt^.block^.serial then begin
+            ok := false;
+            exit;
+          end;
+        q := q^.next;
+      end;
+      x := opt_4009c[lastreg];
+      if (x^.kind = 141) or (x^.kind = 150) or (x^.kind = 142) then
+        add_assign(opt_4009c[lastreg], temp, iv, nil, factor, op, d)
+      else
+        add_assign(opt_4009c[lastreg]^.next, temp, iv, nil, factor, op, d);
+      if ok then begin
+        y := opt_4009c[lastreg]^.next;
+        if y^.vars <> nil then
+          if y^.vars^[v] = nil then begin
+            y^.vars^[v] := mem_$alloc(opt_main_18, 18);
+            if y^.vars^[v] = nil then
+              cgerr_no_source(9, 0);
+            y^.vars^[v]^ := opt_4009c[reg]^.vars^[v]^;
+            q := y^.vars^[v]^.ud;
+            if q <> nil then begin
+              y^.vars^[v]^.ud := mem_$alloc(opt_main_18, 8);
+              if y^.vars^[v]^.ud = nil then
+                cgerr_no_source(9, 0);
+              y^.vars^[v]^.ud^.next := nil;
+              while q <> nil do begin
+                if q^.stmt^.block^.serial <> h^.serial then begin
+                  y^.vars^[v]^.ud^.stmt := q^.stmt;
+                  exit;
+                end;
+                q := q^.next;
+              end;
+            end;
+          end;
+      end;
+    end;
+    done := true;
+    goto 20;
+  end;
+  if e^.kind = 188 then
+    if e^.block^.serial <> h^.serial then begin
+      if not done then begin
+        op := 0;
+        x := opt_4009c[lastreg];
+        if (x^.kind = 141) or (x^.kind = 150) or (x^.kind = 142) then
+          add_assign(opt_4009c[lastreg], temp, iv, nil, factor, op, d)
+        else
+          add_assign(opt_4009c[lastreg]^.next, temp, iv, nil, factor, op, d);
+        done := true;
+      end;
+      goto 20;
+    end;
+  cgerr(3, opt_4009c[runbackend_16]^.line, opt_4009c[runbackend_16]);
+20:
+  c := c^.next;
+  if c <> nil then
+    goto 10;
+  if single and not done then begin
+    e := opt_4009c[cr];
+    if e^.vset <> nil then
+      if v in e^.vset^ then
+        if e^.block^.serial = h^.serial then
+          if (opt_4009c[r]^.vars^[v]^.flags & 16#400) = 0 then
+            if (e^.vars^[v]^.flags & 16#400) = 0 then begin
+              c := e^.vars^[v]^.ud;
+              reg := cr;
+              f := false;
+              q := c;
+              while q <> nil do begin
+                if q^.stmt^.block^.serial <> h^.serial then begin
+                  f := true;
+                  exit;
+                end;
+                q := q^.next;
+                if q = nil then
+                  c := nil;
+              end;
+              if c = nil then
+                goto 40;
+              cell := c;
+              while cell <> nil do begin
+                if f then
+                  goto 30;
+                reg := cell^.stmt^.hdr.region;
+                q := opt_4009c[reg]^.vars^[v]^.ud;
+                while q <> nil do begin
+                  if q^.stmt^.block^.serial <> h^.serial then begin
+                    f := true;
+                    exit;
+                  end;
+                  q := q^.next;
+                end;
+                if f then begin
+                  c := opt_4009c[reg]^.vars^[v]^.ud;
+                  goto 30;
+                end;
+                cell := cell^.next;
+              end;
+            end;
+  end;
+30:
+  if c <> nil then
+    goto 10;
+40:
+  l := select_loop(h^.num);
+  while l <> nil do begin
+    p := l^.first_stmt;
+    while p^.hdr.region = 0 do
+      p := p^.next;
+    k := p^.hdr.region;
+    repeat
+      x := opt_4009c[k];
+      if not x^.hdr.deleted then
+        if x^.hdr.vnum = v then
+          if x^.kind = 140 then begin
+            if x^.vset <> nil then
+              a := noincfound(k, temp) and (v in x^.vset^)
+            else
+              a := false;
+            if not_on_ud_chain(k, r, v) or a then begin
+              val := getval(x^.asg_rhs, v, opt_4009c[k]);
+              op := 1;
+              if x^.asg_op = 2 then
+                op := 2;
+              if not ((x^.prev^.kind = 140) and
+                      ((x^.prev^.asg_op = 2) or (x^.prev^.asg_op = 1)) and
+                      (x^.prev^.asg_lhs = temp)) then
+                if (x^.next^.kind = 140) and
+                   ((x^.next^.asg_op = 2) or (x^.next^.asg_op = 1)) and
+                   (x^.next^.hdr.region = 0) then begin
+                  if x^.next^.asg_lhs <> temp then begin
+                    p := x^.next;
+                    found := false;
+                    repeat
+                      if p^.kind = 140 then
+                        if p^.asg_lhs = temp then
+                          found := true;
+                      p := p^.next;
+                    until p^.hdr.region <> 0;
+                    if not found then
+                      add_assign(x^.next, temp, nil, val, factor, op, d);
+                  end;
+                end
+                else
+                  add_assign(x^.next, temp, nil, val, factor, op, d);
+            end;
+          end;
+      k := k + 1;
+    until opt_4009c[k]^.block <> l;
+    l := l^.link;
+  end;
+  if not done then begin
+    op := 0;
+    x := g_opt_blocks_ptr_t(il_11c)^[preheader_num]^.last_stmt;
+    if (x^.kind = 141) or (x^.kind = 150) or (x^.kind = 142) then
+      add_assign(g_opt_blocks_ptr_t(il_11c)^[preheader_num]^.last_stmt,
+                 temp, iv, nil, factor, op, d)
+    else
+      add_assign(g_opt_blocks_ptr_t(il_11c)^[preheader_num]^.last_stmt^.next,
+                 temp, iv, nil, factor, op, d);
+  end;
 end;
 
 { opt_str_$make_name - s the name of temporary n: `<OSR$n>' (n five
