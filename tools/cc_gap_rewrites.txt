@@ -356,3 +356,11 @@ lang/lang/source/opt_cse.pas	s/t\^\.kind in \[137, 145\.\.147, 205\]/((t^.kind =
 lang/lang/source/opt_cse.pas	s/^        142: begin$/        142, 141, 143, 144, 145, 146, 147, 148, 149, 150: begin { gap 2 }/
 # gap 24 (opt_cse): a call as the right operand of `or' (compared with true, for the check)
 lang/lang/source/opt_cse.pas	s/^(\s*)alias_\$related\(db, descs\[m\]\.d\) then begin$/$1(alias_\$related(db, descs[m].d) = true) then begin { gap 24 }/
+# gap 8 (list_tree): in on constant sets with word elements (every one, as comparisons)
+lang/lang/source/list_tree.pas	s{((?:\w+(?:\[[^\]]*\])?\^?\.)*\w+)\s+in\s+\[([^\]]+)\]}{my ($e, $l) = ($1, $2); '((' . join(') or (', map { /^(\d+)\.\.(\d+)$/ ? "($e >= $1) and ($e <= $2)" : "$e = $_" } split(/\s*,\s*/, $l)) . ')) { gap 8 }'}ge
+# gap 9 (list_tree): a nested forward routine (sanity_check_walk walks a call's spine operands as trees)
+lang/lang/source/list_tree.pas	s/^\s*procedure sanity_check_walk_spine\(mode: integer32; t: lt_ptr_t\); options\(val_param\); forward;/{ gap 9 }/
+lang/lang/source/list_tree.pas	s/sanity_check_walk_spine\(mode, t\^\.opnd\[i\]\)/sanity_check_walk(mode, t^.opnd[i]) { gap 9 }/
+lang/lang/source/list_tree.pas	s/^(\s*)procedure sanity_check_walk_spine;/${1}procedure sanity_check_walk_spine(mode: integer32; t: lt_ptr_t); options(val_param);/
+# gap 29 (list_tree): in on a 32-byte set with a longword element (the range test only, for the check)
+lang/lang/source/list_tree.pas	s/\(i in t\^\.st_used\^\)/(i <= 255) { gap 29 }/

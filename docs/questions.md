@@ -681,3 +681,22 @@ revisited.
    kfold's node_number); its entries (g_opt_ent_t) hold a region's
    block (+16) and variables (+22); +0x9C is 65536 row pointers and
    +0x4009C 65536 entries, which fills opt_main's 0x8009C bytes.
+92. Translator W, list_tree.pas: the dumps print several enumerations
+   and sets by name (string literals in `case' arms and bit tests, not
+   name tables): the tree operators (+36 of a tree node, 0 NOP .. 89
+   ILLEGAL; question 82's operator codes: the 0..95 sets agree), the
+   assignment operators (+76 of 140: 0 SCALAR .. 37 ILLEGAL), the phase
+   bits (add_node_$phase_t: 0 ATM .. 22 lcl_cse), a variable's
+   attributes (+32 of 109: 0 var_$volatile .. 31 var_$withrecord, the
+   var_$ prefix the original's), the register classes (print_rlen: 0
+   null, 1 byte, 2 word, 4 long, 5 addr, 6 r4, 7 r8, 8 c8, 9 cs, 10
+   vcs, 11 agg, 12 c16), the condition codes, the math functions, a
+   block's attributes (+374..+379), allocation (local_bat ..) and
+   calling convention (call_unk, call_pas, call_ftn, call_c,
+   call_c_std, call_ada), the label classes and a statement's flags.
+   The lists are in list_tree.pas's routine headers.  Should they name
+   the shared types' elements (an enumeration for the operators and
+   rlen, set elements as constants), as question 78 proposes for the
+   kinds?  Also: list_tree_$print_tree's second parameter is the
+   routine the lines go to (univ_ptr in list_tree.ins.pas, since
+   iosub's line type is not declared where the insert is opened).

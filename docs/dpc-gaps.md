@@ -579,3 +579,21 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
    and its constant folding are left out of the check (two conditional
    regions); the gap 8 rule for add_node rewrites every `in' on a
    constant set into comparisons with one perl substitution (`/e').
+
+29. **`in` on a 32-byte set variable with an element beyond 0..255.**
+   list_tree.pas print_top_node (cc.m68k 0x08356A): `i in
+   t^.st_used^' with i a longword loop index and the set `set of
+   0..255' behind a pointer, tested as `move.w #255,D0; sub.w D4,D0;
+   bcs; lsr.w #3,D0; btst D4,(A0,D0.w)' (the guarded test).  dpc:
+   "`in` on a 32-byte set with an element whose type reaches beyond
+   the set's 256 bits (the guarded test, NAME_$INIT 0xE3183E,
+   codegen-patterns 5.1) is not supported yet".  The check replaces
+   the test with `i <= 255'.  Reproducer:
+
+       module g29;
+       type s_t = set of 0..255;
+       var s: ^s_t; i: integer32; b: boolean;
+       procedure p;
+       begin
+         b := i in s^;
+       end;

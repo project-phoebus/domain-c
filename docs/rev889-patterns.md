@@ -540,3 +540,19 @@ cc.m68k unless marked.
     test, the first index shifted by 2 and the second doubled
     (cse_$is_cseable 0x0D52DC): `array [boolean, boolean] of integer'
     with false the first element.
+## Calls and data (translator W, list_tree.pas)
+
+72. **A register variable passed to a `var' parameter through a frame
+    temporary.**  list_tree_$print_whole_il keeps the listing's line
+    in D2 and calls advance_and_print(t, line) as `move.l D2,(-16,A6);
+    pea (-16,A6); pea (A2); bsr', reloading D2 from the temporary after
+    the call (cc.m68k 0x085B96..0x085BAA, three call sites); D2 also
+    stands for nil in the same routine (`cmpa.l D2,A2' while it is 0).
+    dpc keeps such a variable in memory.
+73. **A varying string's initial blanks.**  list_tree's module line
+    (+0x18, varying [256] of char) is initialized with length 0 and 256
+    blanks in .data, and 24 blanks precede it (the names' padding, +0);
+    the module's other initialized cells (+0x11C = 3, +0x120..+0x12B =
+    0, the size letters at +0x130) are as declared.  dpc refuses '' as
+    a varying string's initializer, so the line is declared without
+    one.
