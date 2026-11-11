@@ -11,6 +11,12 @@
   strings.pas (cc.m68k 0x0987BC..0x098A8C) and its callers: lengths and
   counts by value (val_param), the strings by address. }
 
+var
+  { strings.pas's data, A5 0x19DB8C (cc.m68k), 0x400 bytes: the
+    identifier entries chained by hash; il.pas's initialize_module clears
+    it. }
+  idnt_table: extern array [0..255] of il_$node_ptr_t;
+
 type
   { Characters as STRINGS takes them; the length is a separate
     argument.  Not known from the original: the name. }

@@ -10,7 +10,7 @@ back to back, so each absolutely referenced address belongs to the unit whose
 block (its A5 up to the next unit's A5) contains it: the unit that defines
 it.  For each such cell this prints the owning unit, the offset from its A5,
 the access widths seen (b/w/l from the instruction's size; `a' an address
-taken by lea/pea/movea #) and the units and routines that reference it.
+taken by lea/pea/movea #; `P' loaded into an address register: a pointer) and the units and routines that reference it.
 
 The disassembly of every routine (m68k-elf-objdump) is cached under
 $TMPDIR/cc_globals.<binary>.<size>.txt.
@@ -72,6 +72,8 @@ def width(text):
         return 'a'
     if op.startswith(('bset', 'bclr', 'btst', 'bchg', 'st', 'sf', 'sne', 'seq')) and not op.startswith('sub'):
         return 'b'
+    if re.match(r'moveal 0x[0-9a-f]+,%a\d', text):
+        return 'P'                      # loaded into an address register
     if op[-1:] in SIZE and op not in ('bsr', 'bra'):
         return SIZE[op[-1]]
     return '?'

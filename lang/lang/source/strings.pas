@@ -23,9 +23,8 @@ module strings;
 
 %include 'lang/lang/source/globals.ins.pas';
 
-var
-  { +0: the identifier entries, chained by hash. }
-  idnt_table: array [0..255] of il_$node_ptr_t;
+define
+  idnt_table;                           { +0 (strings.ins.pas) }
 
 { compare_bytes_case - a (alen characters) against b (blen): -1, 0 or 1,
   with a-z taken as A-Z when nocase; the shorter taken as padded with

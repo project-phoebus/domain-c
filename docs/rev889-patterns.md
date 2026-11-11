@@ -55,3 +55,13 @@ cc.m68k unless marked.
    #4,-(SP)`, `addq.w #4,SP`), gspace32's `cgerr_no_source(28, 0)`
    0x07D530 (`subq.l #2,SP; clr.l -(SP); move.w #28,-(SP)`, `addq.w
    #8,SP`), compare_bytes 0x0988B4.  SR10.2/dpc push only the arguments.
+
+## Data layout
+
+9. **Module-level byte variables packed.**  il.pas's data has four
+   booleans at +0xC0..+0xC3 (each read as a byte by other units), then a
+   word at +0xC4; dpc gives each boolean its own word, so every later
+   global of the module lies 4 bytes higher in dpc's layout than in the
+   image.  The layout is internal to the program, so best effort keeps
+   separate variables; a dpc profile would pack them.  (The image also
+   leaves +0x142..+0x143 unused, where dpc puts the next word.)

@@ -26,12 +26,12 @@ the translators; headings and cells should not need to change.
 | strings | `lang/lang/source/strings.pas` | 7 | 702 | done |
 | prtsub | `lang/lang/source/prtsub.pas` | 7 | 632 | done |
 | target_properties | `lang/lang/source/target_properties.pas` | 3 | 294 | done (fields named by offset) |
-| il | `lang/lang/source/il.pas` | 1 | 580 | |
-| token | `lang/lang/source/token.pas` (+ `lang/common/source/token.pas`) | 12 (+8) | 1946 | |
+| il | `lang/lang/source/il.pas` | 1 | 580 | done (globals named by offset) |
+| token | `lang/lang/source/token.pas` (+ `lang/common/source/token.pas`) | 12 (+8) | 1946 | headings and tables |
 | inc_list | `lang/lang/source/inc_list.pas` | 5 | 916 | |
 | error_listing | `lang/lang/source/error_listing.pas` | 6 | 894 | |
 | il_utils | `lang/lang/source/il_utils.pas` | 14 | 3412 | |
-| gen_utils | `lang/lang/source/gen_utils.pas` | 21 | 4248 | |
+| gen_utils | `lang/lang/source/gen_utils.pas` | 21 | 4248 | headings |
 | cargs | `lang/lang/source/cargs.pas` | 24 | 9064 | |
 | add_node | `lang/lang/source/add_node.pas` | 23 | 18204 | headings first |
 | debug_sym_dmp | `lang/lang/source/debug_sym_dmp.pas` | 56 | 15050 | headings first |
@@ -48,3 +48,13 @@ the translators; headings and cells should not need to change.
   (`lang/c_compiler/source/c_globals.ins.pas`, not the prelude).
 - `target_properties.pas` (+0x10, +0x7F), `runbackend.pas` (+0xC, +0x16),
   `spos.pas` (+0x2EFC, a word, 15 units), `error_listing.pas` (+0xC).
+
+## Method change (2026-11-10)
+
+To settle the core sooner, the remaining providers get their **headings,
+global cells and types** first (`tools/cc_params.py` gives each routine's
+frame slots, A5 load, and whether callers read D0/A0 after the call); their
+bodies are translated in the parallel phase like any other unit.  Types the
+headings cannot decide are `univ_ptr` (any pointer) or the width's integer;
+translators narrow them, which is the one kind of core change expected
+later.
