@@ -48,3 +48,9 @@ procedure opt_str_$set_substitution_point(
 procedure opt_str_$add_substitution_point(
     var new: il_$node_ptr_t;
     var old: il_$node_ptr_t); extern;
+
+{ SORTIDENTIFIERS - every identifier of strings's table in one chain
+  (+4) sorted by name; the chains are re-linked.  sortidntk.pas
+  0x0986FE (cc.m68k): no parameters, the first identifier in A0;
+  c_sym_map's sym_map calls it. }
+function sortidentifiers: il_$node_ptr_t; extern;

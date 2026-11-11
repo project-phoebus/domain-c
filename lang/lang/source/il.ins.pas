@@ -34,7 +34,11 @@ type
           idnt_unused_8: integer32;     { +8: cleared by idntk }
           idnt_unused_12: integer32;    { +12: cleared by idntk }
           idnt_len: integer;            { +16 }
-          idnt_name: array [1..1024] of char);  { +18 }
+          idnt_name: array [1..4096] of char);  { +18: sortidntk's qsort
+                                          compares 4096 bytes (cmpm.b,
+                                          dbne 4095), sortidentifiers
+                                          puts a NUL after a name of
+                                          fewer than 4096 }
       { An integer constant (smcontk; 12 bytes). }
       2: (int_next: il_$node_ptr_t;     { +4: the sorted chain }
           int_value: integer32);        { +8 }
