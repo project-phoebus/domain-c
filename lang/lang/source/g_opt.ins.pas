@@ -549,6 +549,32 @@ procedure add_constant(
     in t: il_$node_ptr_t;
     in b: g_opt_block_ptr_t); extern;
 
+{ LOOPOPT - move the loops' invariant trees to their preheaders' marks
+  (under opt_on 16..18), then checkcses (opt_main's g_opt). }
+procedure loopopt; extern;
+
+{ MOTION_CONSTANTS - move the loops' real constants out (under opt_on
+  17; opt_main's g_opt). }
+procedure motion_constants; extern;
+
+{ opt_main.pas (cc.m68k 0x0DB2C6 for opt_main_$ensure_var_set). }
+
+{ OPT_MAIN_$ENSURE_VAR_SET - give s a set (32 bytes from mem_$alloc of
+  opt_main's +0x1C pool) when it has none (opt_loop's fixupchildren
+  passes a statement's vset). }
+procedure opt_main_$ensure_var_set(
+    var s: g_opt_varset_ptr_t); extern;
+
+{ opt_reachdef.pas (cc.m68k 0x0E2868 for make_motioned_ud_chain). }
+
+{ MAKE_MOTIONED_UD_CHAIN - the use-def chain of variable v at
+  statement s, region r (make_ud_chain of r's block number, s and v;
+  opt_loop's fixupchildren: all three by address, v and r words). }
+procedure make_motioned_ud_chain(
+    in v: integer;
+    in r: integer;
+    in s: g_opt_stmt_ptr_t); extern;
+
 { opt_strength.pas (cc.m68k 0x0E78B8 for delparent). }
 
 { DELPARENT - take the cse parent p (190) off its statement's list of
