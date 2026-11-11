@@ -2,7 +2,7 @@
   (opt_*), opened by kfold.
 
   No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binaries.
-  A stub: only what kfold needs is declared.
+  A stub: only what kfold and cg_call need is declared.
 
   Not known from the original: every name here.
 }
@@ -31,3 +31,11 @@ var
     reached absolutely): kfold's node_number reads entry w (from 1).
     opt_main defines it. }
   opt_4009c: extern array [1..16383] of g_opt_ent_ptr_t;
+
+{ PARAMCLASS - the class of argument k of call n (cg_call's
+  kill_any_param_alias tests 1, 3 and 4: the arguments passed by
+  reference).  opt_reachdef 0x0E235C: 8 a pointer, 12 a word; D0 a
+  word. }
+function paramclass(
+    n: il_$node_ptr_t;
+    k: integer): integer; options(val_param); extern;

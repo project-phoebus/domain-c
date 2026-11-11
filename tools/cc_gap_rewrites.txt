@@ -273,3 +273,13 @@ lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s#\n(  legal_specs: )#\n 
 # gap 7 (c_syntax): an integer converted to a double, a real truncated (dropped; the high longword taken, for the check)
 lang/c_compiler/source/c_syntax.pas	s/^(\s*)(?:tmp := n\^\.int_value|r := n\^\.real_value|r := tmp)(;?)$/${1}kind := kind${2} { gap 7 }/
 lang/c_compiler/source/c_syntax.pas	s/^(\s*)v := trunc\(orig\^\.real_value\);/${1}v := orig^.bits[1]; { gap 7 }/
+# gap 8 (cg_fp): in on constant sets with word elements (the comparisons)
+lang/lang/source/cg_fp.pas	s{\b([a-z_]\w*(?:\^\.\w+)?) in \[([\d., ]+)\]}{my $v=$1; "(".join(" or ", map { /^(\d+)\.\.(\d+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $_)" } split(/,\s*/, $2)).") { gap 8 }"}ge
+# gap 22 (cg_call): ord of a boolean (0, for the check)
+lang/lang/source/cg_call.pas	s/ord\(pass_len\)/0 { gap 22 }/
+# gap 8 (cg_call): in on constant sets with word elements (the comparisons)
+lang/lang/source/cg_call.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d., ]+)\]}{my $v=$1; "(".join(" or ", map { /^(\d+)\.\.(\d+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $_)" } split(/,\s*/, $2)).") { gap 8 }"}ge
+# gap 28 (cg_call): gen_call's values exceed dpc's registers (the registers' and aliases' loop after the call dropped)
+lang/lang/source/cg_call.pas	if ((/^  \{ The registers and objects the call may change\. \}/ .. /^  \{ The result.s register\. \}/) && !/The result.s register/) { $_ = "  { gap 28 }\n" }
+# gap 8 (cg_misc): in on constant sets with word elements (the comparisons)
+lang/lang/source/cg_misc.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d., ]+)\]}{my $v=$1; "(".join(" or ", map { /^(\d+)\.\.(\d+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $_)" } split(/,\s*/, $2)).") { gap 8 }"}ge

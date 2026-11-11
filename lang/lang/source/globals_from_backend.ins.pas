@@ -38,12 +38,33 @@ var
   runbackend_16: extern integer;        { +0x16: opt_main sets it; opt_*,
                                           reg_*, cc.a88k's at_backend
                                           and dmp read it }
+  runbackend_18: extern array [0..13] of integer;  { +0x18 (cc.m68k
+                                          0x2C33C8): .rwdi's 0, 1, 2, 4,
+                                          6, 7, 8, 9, 1, 2, 4, 5, 0, 12;
+                                          cg_call's alias_size_expand
+                                          (by a variable's +10 low
+                                          nibble), the optimizer's
+                                          add_range and add_con_range }
 
   { A back-end cell: cc.a88k's at_backend.pas, A5 0x485830, +0x506
     (rewrite clears it); cc.m68k's cg_top.pas, A5 0x356314, +0x148
     (0x35645C: emit, fpa, cg_addr, cg_call, cg_fp test it).  runbackend
     sets it and clears it (run_backend, optimize_and_code). }
   at_backend_506: extern boolean;
+
+var (std_lib)
+  { The section std_lib (cc.m68k 0x2D2B68, 0x2DC bytes: 183 longwords),
+    shared by the units that declare it: the nodes of the run-time
+    library's routines the code generator calls (cg_fp's purge_fp
+    passes +0x48..+0x58 to gen_call; cg_top, cg_tree and opt_vector read
+    others).  The unit ivory/.../std_lib.mac/.../std_lib.pas (a DSEE
+    derived object, no routines) opens only the prelude, so the
+    section is declared here.
+
+    Not known from the original: the section's variables (one per
+    routine, named after it, most likely); they are taken as one
+    array, element k at +4k. }
+  std_lib_rtns: array [0..182] of il_$node_ptr_t;
 
 { The back end's entry points runbackend calls: cc.m68k's in lang/lang
   (cg_top, final, opt_inline, opt_main) and empty a88k ones in

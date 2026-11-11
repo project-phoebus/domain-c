@@ -543,3 +543,15 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
    address) and gap 7 (a real compared with 0.0, an integer converted
    to a double, trunc, double assignments); its rules are generic over
    the whole file (BEGIN { undef $/ }, the sets span lines).
+28. **A routine whose values outlive dpc's registers and spill slots.**
+   cg_call.pas gen_call (cc.m68k 0x0F720A, 0x15D2 bytes, some 750
+   lines of Pascal in one body with two nested routines that use its
+   locals): dpc reports "more values live at once than there are
+   registers" at the routine's heading (regs.rs's colouring, then
+   spill.rs's `choose' finding nothing to spill).  No one region is to
+   blame: dropping either the call's code (the static link and the
+   five ways of calling) or the loop over the registers after it
+   (reg_save's set, the aliases of the arguments) lets it compile, any
+   smaller cut does not.  The rewrite drops the loop over the
+   registers.  Reproducer: gen_call itself (no small one found; the
+   size of the routine seems to matter, as in gap 25's wr_instr).

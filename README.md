@@ -134,4 +134,7 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/kfold.pas` | 14 | translated (best effort; nodes through kf_tree_t and il views; dpc gaps 7, 8, 19, 25) |
 | `lang/lang/source/outbin.pas` | 70 | translated (cc.m68k only; best effort; nodes by offset, cells through codegen's variants; dpc gaps 3, 4, 8, 9, 19, 24, 26, 25) |
 | `lang/c_compiler/source/c_syntax.pas` | 59 | translated (best effort; IL nodes through c_objtype views; dpc gaps 7, 8, 20, 21, 27) |
+| `lang/lang/source/cg_fp.pas` | 9 | translated (cc.m68k only; best effort; nodes by offset and cg.ins.pas's tree view; dpc gap 8) |
+| `lang/lang/source/cg_call.pas` | 10 | translated (cc.m68k only; best effort; nodes by offset and cg.ins.pas's views; dpc gaps 8, 22, 28) |
+| `lang/lang/source/cg_misc.pas` | 24 | started: 13 of 24 (show_state .. genmask in address order, cbuiltin_strcpy, cg_misc_$strcmp_can_use_longs; shift, agg_opr, fill and the other string builtins not written; cc.m68k only; dpc gap 8) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

@@ -210,3 +210,16 @@ are called with addresses of c_name_t records (addr(...)) as their
 univ_ptr headings stand; def_func's x4, x16 and x20 are the options, the
 parameters by name (c_parm_ptr_t) and the prototype's scope block
 (c_blk_ptr_t), passed as integer32 (docs/questions.md).
+
+Translator T (2026-11-11), the m68k code generator (cg_fp, cg_call,
+cg_misc started): lang/lang/source/cg.ins.pas (new) holds the code
+generator's tree view (cg_tree_t, cg_desc_t: kfold's kf_tree_t layout),
+block views (cg_words_t, cg_level_t), cg_addr's tables (cg_reg_t,
+cg_cache_t), the cells of cg_fp, cg_top, cg_misc, cg_tree and cg_addr
+that other units read absolutely, and the headings of the cg_addr,
+cg_assign, cg_call, cg_fp, cg_misc, cg_tree, reg_save and emit routines
+the translated units call (docs/questions.md 69-72).  Core changes:
+globals_from_backend.ins.pas declares the section std_lib (the library
+routines' nodes, std_lib_rtns) and runbackend_18 (runbackend.pas's
+table at +0x18, now defined there); g_opt.ins.pas declares paramclass.
+fpa.ins.pas is a new empty stub.  cg_top is not started.

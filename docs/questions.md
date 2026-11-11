@@ -509,3 +509,41 @@ revisited.
    records (body: addr(id_main), the cell pair).  If translator P
    narrows them to `in [univ] c_name_t', c_syntax's 11 calls lose the
    addr( ).
+
+74. Translator T: codegen.ins.pas's address descriptor fields are still
+   f1..f6 (not renamed: a shared declaration).  From prtads, gen_ea_bits
+   and the cg_ units they are: f1 the mode (0 none, 1 register, 2 d(An),
+   3 immediate, 4/6 indexed, 7 label, 8 (An)+, 9 -(An), 10 SR, 11 a PEB
+   or FPA operation, 12/16 absolute, 13 a floating register, 14 a pair,
+   15 the object), f2 the register (31 none), f3 the index register, f4
+   the scale, f5 flags (bit 1 a long index; 5 for the PEB's operations),
+   f6 the immediate's or absolute's form; x the node, y the displacement
+   (or the PEB/FPA operation, or a label's reference cell).  Rename them
+   (mode, reg, xreg, scale, flags, form) at the merge?
+
+75. Translator T: the named section std_lib (cc.m68k 0x2D2B68, 183
+   longwords) is declared in globals_from_backend.ins.pas as one array
+   std_lib_rtns of node pointers (std_lib.pas opens only the prelude).
+   cg_fp's purge_fp calls gen_call with elements 18..22 (+0x48 the
+   general floating routine with inline operation words, +0x4C for
+   operation 0, +0x50 for 1, +0x54 the extended one, +0x58 for 2); the
+   original probably had one variable per library routine.  Which
+   routine each is is not known (opt_vector and cg_tree read others).
+
+76. Translator T: delay.pas's word tables at +0x378 and +0x398 (delay_378,
+   delay_398) are declared again in cg_fp.pas and cg_call.pas, as
+   outbin.pas does (question 66).  cg_tree opens
+   lang/lang/source/delay.ins.pas, the likely home; it does not exist yet.
+
+77. Translator T: cg.ins.pas names cg_top's +0x144 cg_line (cgerr's line,
+   read by cg_addr, cg_assign, cg_call, cg_fp, cg_misc, cg_tree) and
+   declares cg_top_142, cg_tree's +0x188 (cg_tree_188), +0x1A0
+   (cg_null_ads: .rwdi gives f2 = f3 = 31) and +0x1B4 (cg_tree_1b4),
+   cg_misc's +0 (cg_misc_label), and cg_addr's tables (+0 the object
+   cache, +0xC0, +0xE0 the locks, +0x120 the register records, +0x2B6).
+   cg_top.pas, cg_tree.pas and cg_addr.pas must `define' them under
+   these names (or the names change with them).  emit's generic
+   instructions (emit's first parameter: 0 move, 1 add, 2 subtract, 4,
+   18, 20, 22, 23 push an address, 24 jsr, 28 dbf, 30 ext, 31 bsr, 32
+   lea of a label, 36, 39, 61 extb) are numbers here; fnl_slct maps them
+   with the size to opinfo's instructions.

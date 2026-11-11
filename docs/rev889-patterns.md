@@ -470,3 +470,20 @@ cc.m68k unless marked.
     passes avoid_void's `in report: boolean' as `pea' of a byte after
     another routine's constant (0x061E7A, 0xFF true; 0x061E7C, 0x00
     false): constants by address are pooled across routines (item 30).
+## Calls (translator T, cg_call.pas)
+
+63. **One pushed longword shared by two calls' arguments.**  gen_call
+    (cc.m68k 0x0F81A4) builds address(make_new_addr_con(10, s, v,
+    sect, false), 0, op1) as `subq.l #2,SP; pea op1; clr.l -(SP);
+    move.l sect; move.l v; move.l s; move.w #10; jsr; lea (16,SP)':
+    the `clr.l' is make_new_addr_con's boolean (its high word) and
+    address's size 0 (its low word, left on the stack by the 16-byte
+    pop).  Item 51 for an argument of the outer call pushed inside the
+    inner call's arguments.  dpc pushes each argument.
+64. **A record value parameter copied by the callee, its fields put
+    back.**  cg_misc's agg_len_loop_start (0x0F9DB8) copies its 20-byte
+    descriptor parameter to a local (five `move.l'), changes its mode
+    and displacement for one emit and stores the saved ones back after
+    it, though the copy is not used again.  (A record value parameter
+    without val_param is passed by address and copied, which dpc does
+    too; the restore is the source's.)
