@@ -16,6 +16,11 @@ procedure list_tree_$print_tree(
     t: il_$node_ptr_t;
     p2: integer32); options(val_param); extern;
 
+{ LIST_TREE_$PRINT_WHOLE_IL - the whole IL to the listing (-TREE).
+  cc.m68k 0x085ABA (cc.a88k 0x08749A): no parameters (runbackend,
+  commit_top_node, ...). }
+procedure list_tree_$print_whole_il; extern;
+
 { TODO(pascal) list_tree.ins.pas is incomplete
 
   The rest of LIST_TREE's interface is added when list_tree.pas is
