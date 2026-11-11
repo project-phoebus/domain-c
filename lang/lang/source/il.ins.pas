@@ -109,11 +109,18 @@ var
   il_c3: extern boolean;                               { +0xC3 }
   il_c4: extern integer;                               { +0xC4 }
   il_c6: extern integer;                               { +0xC6 }
-  il_c8: extern univ_ptr;                              { +0xC8 }
+  il_c8: extern il_$node_ptr_t;                        { +0xC8: c_stmt_sem's
+                                                         pending label chain
+                                                         (through +48) }
   il_cc: extern il_$node_ptr_t;                        { +0xCC }
   il_d0: extern integer;                               { +0xD0 }
-  il_d4: extern univ_ptr;                              { +0xD4 }
-  il_d8: extern univ_ptr;                              { +0xD8 }
+  il_d4: extern il_$node_ptr_t;                        { +0xD4: the first
+                                                         top-level node
+                                                         (c_stmt_sem) }
+  il_d8: extern il_$node_ptr_t;                        { +0xD8: the last one
+                                                         (link_top chains
+                                                         them: +4 back, +8
+                                                         on) }
   il_node_155: extern il_$node_ptr_t;                  { +0xDC }
   il_node_154: extern il_$node_ptr_t;                  { +0xE0 }
   il_node_153: extern il_$node_ptr_t;                  { +0xE4 }
