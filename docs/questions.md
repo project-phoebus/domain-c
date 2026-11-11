@@ -734,3 +734,21 @@ revisited.
    (the image's).  unlock's test of the index register compares the
    base register with the data register (kept).
 
+97. Translator AA (2026-11-11), cg_assign: assign_proc passes the
+   string builtins (cbuiltin_strcpy, _strncpy, _strcat, _strncat) the
+   address of its statement (`pea (A2)', the node's +4), not a node:
+   cg_misc reads their operands at +60, +64, +68 of it, which are
+   cg_asn_t's left, right and extra.  cg.ins.pas declares them
+   `n: il_$node_ptr_t' by value, so cg_assign passes
+   il_$node_ptr_t(addr(s)).  Retype them `in out s: univ cg_asn_t'
+   (and cg_misc's bodies through it)?
+98. cg_assign: emit_assign (0x0B7F54) lies in fpa.pas's range
+   (0x0B7A8C..), not emit's, though cg.ins.pas declares it under emit;
+   emit_mul_add, emit_div_sub and push_fpa_opr are fpa's too and are
+   in fpa.ins.pas.  Move emit_assign there?
+99. cg_assign: its module data has +0 and +24 two operand descriptors
+   (opa, opb) 24 bytes apart (20 used), the operators' instruction
+   table at +0x30 and the target at +0x7C, with +0x62..+0x7B and
+   +0x80..+0x83 never addressed: perhaps unused variables, or the
+   descriptors' type is 24 bytes (questions 90's opt_cse also spaces
+   descriptors 24 apart).

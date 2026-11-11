@@ -495,6 +495,13 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
   parameter's own parameters (the routines passed are val_param; the
   only trace is the error "Incompatible routine OPTIONS"), so the
   headings give none (a TODO in spos.ins.pas).
+   Also cg_assign.pas (translator AA): `and not (k in getphase(n))',
+   `and not check_use(...)', `or unaligned(...)', `and
+   register_tickle(...)', `and zero_check(...)' and `(rlen = 5) and
+   ((peek(...) <> 31) or ...)' (assign_proc 0x0F469E, agg_assign_proc
+   0x0F3826): the rewrites compare the results with true or false, or
+   put the call first.
+
 25. **A routine needing more virtual registers than dpc numbers.**
    c_expr_sem.pas expr_op (cc.m68k 0x04CDBA, 0x2B7A bytes of code, some
    900 lines of Pascal in one body) exhausts dpc's virtual register
@@ -527,6 +534,12 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
       The rewrite drops the listing `case' from the scratch copy.  No small
       reproducer found (the size of the routine seems to matter).
 
+
+   Also cg_assign.pas assign_proc (cc.m68k 0x0F469E, 0x2224 bytes):
+   three conditional regions are left out of the check (the memory
+   path's constant masks, unary operators and shifts; the register
+   path's record of the register's new contents; the floating store
+   through a floating register).
 
 26. **`substr`** (reference 4-189, an extension).  outbin.pas
    assert_is_an_fpx_command_instr (cc.m68k 0x0BBE28): `substr(chars, 1,

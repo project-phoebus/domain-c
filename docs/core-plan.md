@@ -283,3 +283,11 @@ for getobjcache, weight, register_tickle, get_agg_temp,
 get_childs_agg_temp, load_result and load_fp_result (cg_assign and
 cg_tree call them).  cg_call, cg_misc and cg_top follow the renames.
 
+Translator AA (2026-11-11), the m68k code generator (cg_assign
+translated): cg.ins.pas gets cg_asn_t (an assignment statement from
+its +4: next, desc at +48, left +64, right +68, extra +72, asnop
++76), assign_proc takes it (`in out s: univ cg_asn_t', cg_top's call
+unchanged), and headings for cg_asn_$inline_move_is_best (reg_save
+calls it; a second, unread word parameter) and multi_assign_proc
+(cg_tree's generate); fault_free_assign checked.  fpa.ins.pas:
+emit_mul_add, emit_div_sub, push_fpa_opr.

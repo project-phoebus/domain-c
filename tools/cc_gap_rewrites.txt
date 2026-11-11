@@ -370,3 +370,22 @@ lang/lang/source/cg_addr.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\
 lang/lang/source/cg_addr.pas	s/(\w+)\^\.real_value = 0\.0/(($1^.bits[1] = 0) and ($1^.bits[2] = 0)) { gap 7 }/g
 # gap 2 (cg_addr): address's case of 46 labels over the kinds 77..212 (the kinds of its otherwise added, for the check)
 lang/lang/source/cg_addr.pas	BEGIN { undef $/ } s{(\n    otherwise\n      cgerr\(3, cg_line, n\);\n  end;\ntail:)}{\n    91, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 139, 140, 141, 142, 148, 149, 150, 151, 157, 158, 159, 160, 161, 162, 166, 168, 169, 170, 171, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 184, 185, 186, 187, 188, 191, 193, 194, 196, 197, 199, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211: { gap 2 }\n      cgerr(3, cg_line, n);$1}
+# gap 8 (cg_assign): in on constant sets with word elements, over the whole file (the comparisons)
+lang/lang/source/cg_assign.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
+# gap 7 (cg_assign): real arithmetic (count * 2 <= body * 1.5 compared in integers, for the check)
+lang/lang/source/cg_assign.pas	s/if count \* 2 <= \(cg_asn_\$block_move_body_size\(count\) \* 2 \+ 8\) \* 1\.5 then/if count * 4 <= (cg_asn_\$block_move_body_size(count) * 2 + 8) * 3 then { gap 7 }/
+# gap 24 (cg_assign): `and not (k in getphase(...))' (the set test compared with false, for the check)
+lang/lang/source/cg_assign.pas	s/and not \((\d) in getphase\(([^()]*)\)\)/and (($1 in getphase($2)) = false) { gap 24 }/g
+# gap 25 (cg_assign): assign_proc exceeds the virtual registers: its constant masks (and, or, exclusive or in memory), unary operators and shifts left out of the check (a conditional variable not set)
+lang/lang/source/cg_assign.pas	s/^(    \{ Constant masks: and, or, exclusive or\. \})$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
+lang/lang/source/cg_assign.pas	s/^(    \{ Aggregates, sets, bit fields, the floating operators\. \})$/%endif { gap 25 }\n$1/
+# gap 25 (cg_assign): and the register path's record of the register's new contents
+lang/lang/source/cg_assign.pas	s/^(  \{ The register.s new contents\. \})$/%var gap25d;\n%if gap25d %then { gap 25 }\n$1/
+lang/lang/source/cg_assign.pas	s/^(  \{ In memory\. \})$/%endif { gap 25 }\n$1/
+# gap 24 (cg_assign): boolean functions as right operands of and/or (compared with true or false, for the check)
+lang/lang/source/cg_assign.pas	s/\b(and|or) (not )?(check_use|register_tickle|zero_check|unaligned)\(([^()]*)\)/"$1 ($3($4) = " . ($2 ? "false" : "true") . ")"/ge
+lang/lang/source/cg_assign.pas	s/^  if \(rlen = 5\) and \(\(peek\(s\.right, 4\) <> 31\) or \(s\.asnop <> 0\)\) then$/  if ((peek(s.right, 4) <> 31) or (s.asnop <> 0)) and (rlen = 5) then { gap 24 }/
+# gap 25 (cg_assign): and the floating store through a floating register
+lang/lang/source/cg_assign.pas	s/^(  \{ Through a floating register when one holds either side\. \})$/%var gap25e;\n%if gap25e %then { gap 25 }\n$1/
+lang/lang/source/cg_assign.pas	s/^(  \{ Else moved, or through the floating stack or the FPA\. \})$/%endif { gap 25 }\n$1/
+lang/lang/source/cg_assign.pas	s/^(\s+)not \((\d) in getphase\(([^()]*)\)\) then$/$1(($2 in getphase($3)) = false) then { gap 24 }/
