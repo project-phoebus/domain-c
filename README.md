@@ -79,4 +79,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/c_compiler/source/c_get_rlen.pas` | 1 | translated (best effort) |
 | `lang/c_compiler/source/frontend_cc_dummies.pas` | 4 | translated (best effort) |
 | `lang/c_compiler/source/fe_cc_hooks_to_backend.pas` | 3 | translated (best effort) |
+| `lang/c_compiler/source/c_general_utl.pas` | 10 | translated (best effort) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
