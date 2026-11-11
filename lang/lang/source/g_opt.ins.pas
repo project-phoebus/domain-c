@@ -34,7 +34,13 @@ type
     c_top_t): 139 evaluate, 140 assign, 141/142/150 branches, 144 a
     label, ...  hdr's second byte (+41): deleted (.0) set when
     general_opts merges an assignment into the one before it,
-    no_prune (.1) keeps an evaluation's operands. }
+    no_prune (.1) keeps an evaluation's operands (make_cse_parent
+    sets it on a statement given a cse); region (+43, a word) its
+    entry of opt_4009c, 0 for a statement of no region (cse looks
+    for the nearest one); block (+16) the basic block of an empty
+    evaluation (a loop's mark, cse); cses (+26) the cse parents (190)
+    made at it. }
+  g_opt_block_ptr_t = ^g_opt_block_t;
   g_opt_stmt_ptr_t = ^g_opt_stmt_t;
   g_opt_stmt_t = record
     unused_0: integer;                  { +0 }
@@ -42,17 +48,23 @@ type
     prev: g_opt_stmt_ptr_t;             { +4 }
     next: g_opt_stmt_ptr_t;             { +8 }
     unused_12: integer32;               { +12 }
-    unused_16: integer32;               { +16 }
+    block: g_opt_block_ptr_t;           { +16 }
     line: integer;                      { +20 }
     unused_22: integer;                 { +22 }
-    unused_24: array [6..9] of integer32;  { +24..+39 }
+    unused_24: integer;                 { +24 }
+    cses: il_$node_ptr_t;               { +26 }
+    unused_30: integer;                 { +30 }
+    unused_32: array [8..9] of integer32;  { +32..+39 }
     hdr: packed record                  { +40 }
       b40: 0..255;
       b7, b6, b5, b4, b3, b2: boolean;  { +41 }
       no_prune: boolean;                { .1 }
       deleted: boolean;                 { .0 }
+      b42: 0..255;                      { +42 }
+      region: 0..65535;                 { +43 }
+      b45: 0..255;                      { +45 }
     end;
-    unused_42: array [1..3] of integer; { +42..+47 }
+    unused_46: integer;                 { +46 }
     case integer of
       { 139: the operands evaluated. }
       1: (eval_unused_48: integer;      { +48 }
@@ -89,9 +101,11 @@ type
   { An IL tree node (137 an operator, 143, ...; kfold's kf_tree_t, cg's
     cg_tree_t): flags the longword at +4 (element k its bit k: 3, 4 and
     12 mark a tree to keep, 6 that the node stands for its statement,
-    whose number is stmt), uses the use count, rlen the value's
-    register class (6 single, 7 double), op the operator (36, 37 the
-    multiplication and division is_scale_candidate looks for). }
+    whose number is stmt; 2 a node not to be made a cse), owner its
+    statement, uses the use count, size .. dflags its value's
+    descriptor (rlen the register class: 6 single, 7 double), op the
+    operator (36, 37 the multiplication and division
+    is_scale_candidate looks for). }
   g_opt_tree_ptr_t = ^g_opt_tree_t;
   g_opt_tree_t = record
     unused_0: integer;                  { +0 }
@@ -99,12 +113,20 @@ type
     flags: set of 0..31;                { +4 }
     unused_8: integer;                  { +8 }
     stmt: g_opt_num_t;                  { +10 }
-    unused_12: integer32;               { +12 }
+    owner: g_opt_stmt_ptr_t;            { +12 }
     uses: integer;                      { +16 }
     unused_18: integer;                 { +18 }
     size: integer32;                    { +20 }
     rlen: integer;                      { +24 }
-    unused_26: array [1..5] of integer; { +26..+35 }
+    w26: g_opt_num_t;                   { +26 }
+    w28: g_opt_num_t;                   { +28 }
+    dflags: packed record               { +30 }
+      b7: boolean;
+      signed: boolean;                  { .6 }
+      b5, b4, b3, b2, b1, b0: boolean;
+      b31: 0..255;                      { +31 }
+    end;
+    unused_32: integer32;               { +32 }
     op: integer;                        { +36 }
     count: integer;                     { +38 }
     opnd: array [1..64] of il_$node_ptr_t;  { +40 }
@@ -130,7 +152,6 @@ type
     numbers (depth_first_dom); link and serial: select_loop's and
     select_block_list's lists; succ: the successors (dfs), pred: the
     predecessors (512 at most for find_loops). }
-  g_opt_block_ptr_t = ^g_opt_block_t;
   g_opt_blocks_t = array [1..16383] of g_opt_block_ptr_t;
   g_opt_blocks_ptr_t = ^g_opt_blocks_t;
   g_opt_block_t = record
@@ -169,10 +190,12 @@ type
     post_no: g_opt_num_t;               { +78 }
     pre_depth: g_opt_num_t;             { +80 }
     num: g_opt_num_t;                   { +82 }
-    unused_84: array [21..22] of integer32;  { +84..+91 }
+    first_stmt: g_opt_stmt_ptr_t;       { +84 }
+    last_stmt: g_opt_stmt_ptr_t;        { +88 }
     link: g_opt_block_ptr_t;            { +92 }
     serial: integer;                    { +96 }
-    unused_98: array [1..4] of integer; { +98..+105 }
+    cse_serial: integer;                { +98: cse's walk }
+    unused_100: array [1..3] of integer;  { +100..+105 }
     nsucc: integer;                     { +106 }
     succ: g_opt_blocks_ptr_t;           { +108 }
     nfwd: integer;                      { +112: predecessors not
@@ -231,6 +254,33 @@ type
     vars: g_opt_vars_ptr_t;             { +22 }
   end;
 
+  { cse's nodes: a use (189, 36 bytes; +4..+15 copied from the tree it
+    stands for, flag 6 set, stmt its number) of a common
+    subexpression whose value a parent (190, 28 bytes) keeps; the
+    parent stands for the tree in il_120 and is listed at its
+    statement (cses, next). }
+  g_opt_cse_ptr_t = ^g_opt_cse_t;
+  g_opt_cse_t = record
+    unused_0: integer;                  { +0 }
+    kind: integer;                      { +2 }
+    case integer of
+      { 189 }
+      1: (u_hdr: array [1..3] of integer32;  { +4..+15 }
+          u_parent: g_opt_cse_ptr_t;    { +16 }
+          u_tree: il_$node_ptr_t;       { +20 }
+          u_ent: g_opt_ent_ptr_t;       { +24: opt_4009c's entry }
+          u_next: g_opt_cse_ptr_t;      { +28: the parent's next use }
+          u_x: il_$node_ptr_t);         { +32 }
+      { 190 }
+      2: (p_tree: il_$node_ptr_t;       { +4 }
+          p_next: g_opt_cse_ptr_t;      { +8: the statement's next }
+          p_stmt: g_opt_stmt_ptr_t;     { +12 }
+          p_num: g_opt_num_t;           { +16: the tree's number }
+          p_unused_18: integer;         { +18 }
+          p_uses: g_opt_cse_ptr_t;      { +20 }
+          p_24: integer32);             { +24 }
+  end;
+
 var
   { opt_main.pas's cells (A5 0x2D2EF0 in cc.m68k, 0x49389C in cc.a88k)
     read by the other units, absolutely.  opt_main defines them. }
@@ -252,7 +302,17 @@ var
                                           (0x2D2F8C, 0x493938): by block
                                           number, its row of the dominance
                                           matrix (dom; opt_main) }
-  opt_4009c: extern array [0..65535] of g_opt_ent_ptr_t;  { +0x4009C
+  opt_4009c: extern array [0..65535] of g_opt_ent_ptr_t;
+
+  { opt_loop.pas's +4 (cc.m68k 0x2D2EE4, cc.a88k 0x493890): by node
+    number, the block the node could be hoisted to (opt_cse's
+    cse_$set_hoistability and cse, opt_main). }
+  opt_loop_hoist: extern g_opt_nums_ptr_t;
+
+  { opt_cse.pas's +0x88 (cc.m68k 0x2D2ED0, cc.a88k 0x49387C): how many
+    nodes cse looks back from each candidate (opt_main's g_opt sets
+    it). }
+  cse_limit: extern integer;  { +0x4009C
                                           (0x312F8C, 0x4D3938, reached
                                           absolutely, from 0: `lea
                                           (0,A1,D3.l)'; 13 units) }
@@ -340,3 +400,19 @@ procedure find_loops; extern;
   dead_assignments). }
 procedure assign_opt(
     start: g_opt_stmt_ptr_t); options(val_param); extern;
+
+{ opt_cse.pas (cc.m68k 0x0D4748, cc.a88k 0x2A1938). }
+
+{ CSECLEANUP - make the common subexpressions found explicit: each
+  tree standing for an earlier one gets a parent (190) and uses (189)
+  (opt_main's g_opt). }
+procedure csecleanup; extern;
+
+{ MOVED_CHECK - t, or the statement node it stands for (flag 6)
+  (opt_loop's do_move_check, checkcses). }
+procedure moved_check(
+    var t: il_$node_ptr_t); extern;
+
+{ CSE - find the common subexpressions of the routine's blocks
+  (opt_main's g_opt). }
+procedure cse; extern;

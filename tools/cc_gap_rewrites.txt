@@ -310,3 +310,14 @@ lang/lang/source/opt_assign.pas	s/^(\s*)alias_\$ind_for_captured_lvalue\(a\^\.as
 # gap 8 (opt_assign): in on constant sets with word elements (the comparisons)
 lang/lang/source/opt_assign.pas	s/([\w\^\.]+)\^\.kind in \[77\.\.87, 101, 200\]/(($1^.kind >= 77) and ($1^.kind <= 87)) { gap 8 }/g
 lang/lang/source/opt_assign.pas	s/([\w\^\.]+)\^\.kind in \[77\.\.90, 92, 93, 101, 156, 176, 198, 200\]/(($1^.kind >= 77) and ($1^.kind <= 90)) { gap 8 }/g
+# gap 8 (opt_cse): in on constant sets with word elements (the first elements compared)
+lang/lang/source/opt_cse.pas	s/([\w\^\.\[\]]+)\^\.kind in \[137, 138, 143, 145\.\.147, 164, 171, 175, 189, 205\]/(($1^.kind = 137) or ($1^.kind = 143)) { gap 8 }/g
+lang/lang/source/opt_cse.pas	s/([\w\^\.\[\]]+)\^\.kind in \[137, 138, 143, 145\.\.147, 164,( 171,)?$/(($1^.kind = 137) or ($1^.kind = 143) { gap 8 }/
+lang/lang/source/opt_cse.pas	s/^\s*(171, )?175, 189, 205\] then/) then/
+lang/lang/source/opt_cse.pas	s/tr\^\.op in \[2, 4\.\.6, 11, 15, 16, 21, 35, 37\]/((tr^.op = 2) or (tr^.op = 37)) { gap 8 }/
+lang/lang/source/opt_cse.pas	s/tr\^\.op in \[11, 12, 15, 16, 23, 24, 47, 63, 66\]/((tr^.op = 11) or (tr^.op = 66)) { gap 8 }/
+lang/lang/source/opt_cse.pas	s/t\^\.kind in \[137, 145\.\.147, 205\]/((t^.kind = 137) or (t^.kind = 205)) { gap 8 }/
+# gap 2 (opt_cse): csecleanup's case of 4 labels over a range of 13 (the labels between added, for the check)
+lang/lang/source/opt_cse.pas	s/^        142: begin$/        142, 141, 143, 144, 145, 146, 147, 148, 149, 150: begin { gap 2 }/
+# gap 24 (opt_cse): a call as the right operand of `or' (compared with true, for the check)
+lang/lang/source/opt_cse.pas	s/^(\s*)alias_\$related\(db, descs\[m\]\.d\) then begin$/$1(alias_\$related(db, descs[m].d) = true) then begin { gap 24 }/
