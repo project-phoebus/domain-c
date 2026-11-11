@@ -864,7 +864,7 @@ begin
         normalize_il(t^.xp2[i + 7], fold);
     140: begin
       if not (8 in cargs_$options.opt_on) then
-        if odd(getphase(t^.xp[16])) then begin
+        if 0 in getphase(t^.xp[16]) then begin
           q := t^.xp[17];
           commit_top_$convert_aops_to__aop_to_mem(t);
           if t^.xp[17] <> q then begin

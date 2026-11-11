@@ -38,9 +38,14 @@
 
 { GETPHASE - 0x09FAD4, cc.a88k 0x0A14B4; frame 8:l/a; 69 call sites
   (alias, c_expr_sem, cg_addr, cg_assign, cg_tree, commit_top_node,
-  ...); result in D0. }
+  ...); result in D0, a set: callers test its elements (commit_top_
+  node's `lsr.b #1' for 0, `btst #20,D0' for 20; runbackend's
+  normalize_il). }
+type
+  add_node_$phase_t = set of 0..31;
+
 function getphase(
-    p1: univ_ptr): integer32; options(val_param); extern;
+    p1: univ_ptr): add_node_$phase_t; options(val_param); extern;
 
 { COPY_TREE - 0x09FF08, cc.a88k 0x0A18E8; frame 8:p/a; 30 call sites
   (opt_main, opt_vector); result in A0. }
