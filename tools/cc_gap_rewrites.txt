@@ -3,3 +3,9 @@
 # Each line names its gap in docs/dpc-gaps.md.
 # gap 1: whole varying assignment (copy the length only, for the check)
 lang/common/source/diag.pas	s/^(\s*)line_prefix := prefix;/$1line_prefix.length := prefix.length; { gap 1 }/
+# gap 2: real arithmetic (drop the reciprocal, store 0 for the conversions)
+lang/lang/source/token.pas	s/^(\s*)r := 1\.0 \/ t\^\.real_value;/${1}{ gap 2 }/
+lang/lang/source/token.pas	s/floating_token\(r, t\^\.kind\)/floating_token(t^.real_value, t^.kind)/
+lang/lang/source/token.pas	s/^(\s*)s([ab])\.r := ([ab]);/$1s$2.i := 0; { gap 2 }/
+# gap 3: in on a constant set with a word element (the comparisons)
+lang/lang/source/token.pas	s/t\^\.kind in \[77\.\.87, 101, 200\]/((t^.kind >= 77) and (t^.kind <= 87)) or (t^.kind = 101) or (t^.kind = 200) { gap 3 }/

@@ -20,3 +20,34 @@ when this tree is merged).
        begin
          a := b;
        end;
+
+2. **Real arithmetic.**  A real constant (`1.0`), real division, and
+   the assignment of a double to a single (`real := double`, the
+   conversion Rev 8.89 does with `jsr fpp_$`): token.pas get_reciprocal
+   0x098E48 (`r := 1.0 / t^.real_value'), token_$make_real_lit_pair
+   0x098F2E (`sa.r := a').  dpc: "a real constant is not supported
+   yet", "real arithmetic is not supported yet", "Assignment statement
+   expression is not compatible with the assignment variable (real :=
+   double)".  Reproducer:
+
+       module g2;
+       var d, e: double; s: real;
+       procedure p;
+       begin
+         d := 1.0 / e;
+         s := d;
+       end;
+
+3. **`in` on a constant set with a word element.**  `t^.kind in [77..87,
+   101, 200]` (token.pas set_is_nil 0x09930E: `move.w #207,D0; sub.w
+   kind,D0; bcs; lsr.w #3,D0; btst kind,(set,D0.w); ble', the set a
+   26-byte constant after the routine).  dpc: "`in` on a constant set of
+   more than a longword with an element of more than a byte ... is not
+   supported yet" (it names the `ble').  Reproducer:
+
+       module g3;
+       var k: integer; b: boolean;
+       procedure p;
+       begin
+         b := k in [77..87, 101, 200];
+       end;
