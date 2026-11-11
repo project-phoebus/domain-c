@@ -369,3 +369,6 @@ Translator EE, reg_color_68k: reg_alloc.ins.pas gets add_conflict's
 heading (reg_life's run_interference calls it).  The four routines
 passed to walkconflicts are nested (docs/dpc-gaps.md 21); the gate
 checks a copy with a routine pointer (rc_walk_t) and nil.
+Translator EE, reg_life: reg_life.pas declares get_rlen (c_get_rlen;
+c_externs.ins.pas is not opened); the reg_life headings in
+reg_alloc.ins.pas are checked against the bodies.
