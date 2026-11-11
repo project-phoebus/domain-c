@@ -405,3 +405,13 @@ lang/lang/source/opt_vector.pas	s/if r\^\.real_value = 0\.0 then/if r^.xl[3] = 0
 lang/lang/source/opt_vector.pas	s/((?:\w+\(\w+\))?\w*(?:\^\.\w+(?:\[\w+\])?)*)\^\.kind in \[77\.\.87, 101, 200\]/((($1^.kind >= 77) and ($1^.kind <= 87)) or ($1^.kind = 101) or ($1^.kind = 200)) { gap 8 }/g
 lang/lang/source/opt_vector.pas	s/(\w+)\^\.kind in \[77\.\.90, 92, 93, 101, 156, 176, 198, 200\]/((($1^.kind >= 77) and ($1^.kind <= 90)) or ($1^.kind = 92) or ($1^.kind = 93) or ($1^.kind = 101) or ($1^.kind = 156) or ($1^.kind = 176) or ($1^.kind = 198) or ($1^.kind = 200)) { gap 8 }/
 lang/lang/source/opt_vector.pas	s/(\w+)\^\.kind in \[110, 137, 146, 147, 205\]/(($1^.kind = 110) or ($1^.kind = 137) or ($1^.kind = 146) or ($1^.kind = 147) or ($1^.kind = 205)) { gap 8 }/
+# gap 8 (reg_cost_68k): in on constant sets with word elements (comparisons, for the check)
+lang/lang/source/reg_cost_68k.pas	s/\(t\^\.kind in \[88\.\.89, 145\.\.147, 163, 190, 195\]\)/((t^.kind = 88) or (t^.kind = 190)) { gap 8 }/
+lang/lang/source/reg_cost_68k.pas	s/\(rr\^\.node\^\.kind in \[88\.\.89, 145\.\.147, 163, 195\]\)/((rr^.node^.kind = 88) or (rr^.node^.kind = 195)) { gap 8 }/
+lang/lang/source/reg_cost_68k.pas	s/if t2\^\.kind in \[137\.\.138, 143, 145\.\.147, 164, 171, 175,$/if (t2^.kind = 137) or (t2^.kind = 143) { gap 8 }/
+lang/lang/source/reg_cost_68k.pas	s/^\s*189, 205\] then$/ then/
+# gap 25 (reg_cost_68k): compute_costs exceeds the virtual registers: the constants' classes left out of the check (a conditional variable not set)
+lang/lang/source/reg_cost_68k.pas	s/^(      \{ The constants' classes\. \})$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
+lang/lang/source/reg_cost_68k.pas	s/^(      \{ No register for a variable of no cost\. \})$/%endif { gap 25 }\n$1/
+lang/lang/source/reg_cost_68k.pas	s/^(            \{ The class of register\. \})$/%var gap25d;\n%if gap25d %then { gap 25 }\n$1/
+lang/lang/source/reg_cost_68k.pas	s/^(            \{ A cse parent's uses and its assignment at s\. \})$/%endif { gap 25 }\n$1/
