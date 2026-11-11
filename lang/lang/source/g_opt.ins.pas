@@ -650,10 +650,45 @@ procedure make_motioned_ud_chain(
     in r: integer;
     in s: g_opt_stmt_ptr_t); extern;
 
-{ opt_strength.pas (cc.m68k 0x0E78B8 for delparent). }
+{ opt_strength.pas (cc.m68k 0x0E5E8C, cc.a88k 0x2B307C). }
+
+{ OPT_STR_$OPMOD_OF_OPERAND - the bytes t is used as an operand of (2
+  or 4 mostly; size for an index, contents or displacement; sgn: a
+  constant is signed) (opt_main's possible_rlens_of_operand,
+  opt_strength).  0x0E606C: D0 a longword (callers compare it with
+  `cmpi.l'). }
+function opt_str_$opmod_of_operand(
+    t: il_$node_ptr_t;
+    size: integer;
+    sgn: boolean): integer32; options(val_param); extern;
+
+{ OPT_STR_$PRODUCT_OF - the tree a op b (3 a product, 27 a left shift)
+  of register class rlen, the operands' classes rlen_a and rlen_b, sgn
+  signed; reuse (when not nil) is the tree to fill (opt_main's
+  distrib_mul, opt_strength).  0x0E63D2: the result in A0. }
+function opt_str_$product_of(
+    op: integer;
+    a: il_$node_ptr_t;
+    b: il_$node_ptr_t;
+    rlen: integer;
+    rlen_a: integer;
+    rlen_b: integer;
+    sgn: boolean;
+    reuse: g_opt_tree_ptr_t): il_$node_ptr_t; options(val_param); extern;
+
+{ WALKUSES - variable r occurs in the statement or tree t (opt_main's
+  reviseuses, opt_strength).  0x0E852A: both by address, r only read;
+  D0. }
+function walkuses(
+    var t: il_$node_ptr_t;
+    in r: il_$node_ptr_t): boolean; extern;
+
+{ STRENGTHREDUCE - strength reduction of the routine's loops (opt_main's
+  g_opt; cc.a88k's does nothing). }
+procedure strengthreduce; extern;
 
 { DELPARENT - take the cse parent p (190) off its statement's list of
   parents (opt_livevar's check_cse_uses: p by address, a frame copy;
-  `in' until opt_strength is translated). }
+  opt_strength 0x0E78B8 only reads it: `in'). }
 procedure delparent(
     in p: g_opt_cse_ptr_t); extern;
