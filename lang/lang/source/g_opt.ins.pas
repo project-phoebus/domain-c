@@ -135,6 +135,13 @@ type
       4: (asg_desc: add_node_$desc_t);  { +48 }
       { 148 (a call): the routine called; 151, 188: the operand. }
       5: (x48: il_$node_ptr_t);         { +48 }
+      { 188: x48 a variable passed to argument arg_num (from 1) of the
+        call tree arg_call (opt_reachdef: paramclass(arg_call, arg_num -
+        1); a nil arg_call is tested too). }
+      6: (arg_unused_48: il_$node_ptr_t;  { +48: x48 }
+          arg_unused_52: integer32;     { +52 }
+          arg_call: il_$node_ptr_t;     { +56 }
+          arg_num: integer);            { +60 }
   end;
 
   { An IL tree node (137 an operator, 143, ...; kfold's kf_tree_t, cg's
@@ -281,6 +288,30 @@ type
   g_opt_nums_t = array [1..32767] of g_opt_num_t;
   g_opt_nums_ptr_t = ^g_opt_nums_t;
 
+  { A variable's type as opt_main's compute_variable_type_descriptors
+    keeps it (opt_var_types): type_exp's result (c_objtype.ins.pas
+    type_exp_t, 28 bytes, which this insert cannot name), by variable
+    number from 0.  low < 0 or a base of kind 124: signed
+    (opt_reachdef narrows a constant stored to the variable to size
+    bytes); ranged (+25.6): low and high are known. }
+  g_opt_vtype_t = record
+    base: il_$node_ptr_t;               { +0: the type, names expanded }
+    node: il_$node_ptr_t;               { +4 }
+    low: integer32;                     { +8 }
+    high: integer32;                    { +12 }
+    size: integer32;                    { +16: bytes }
+    bytes: integer32;                   { +20 }
+    flags: packed record                { +24 }
+      b24: 0..255;                      { +24 }
+      b25_7: boolean;                   { +25.7 }
+      ranged: boolean;                  { .6 }
+      b25_5, b25_4, b25_3, b25_2, b25_1, b25_0: boolean;
+    end;
+    unused_26: integer;                 { +26 }
+  end;
+  g_opt_vtypes_t = array [0..255] of g_opt_vtype_t;
+  g_opt_vtypes_ptr_t = ^g_opt_vtypes_t;
+
   { A def-use or use-def chain's cell (8 bytes from mem_$alloc of
     opt_main_18): the statement defining or using a variable. }
   g_opt_chain_ptr_t = ^g_opt_chain_t;
@@ -388,6 +419,24 @@ var
     (mem_$pool_t) the chains are allocated from (opt_livevar's
     build_du_chains, opt_loop, opt_reachdef, opt_strength). }
   opt_main_18: extern univ_ptr;
+
+  { opt_main.pas's +0x14 (cc.m68k 0x2D2F04): the memory pool
+    opt_reachdef's tables and sets come from (initrd; releaserd empties
+    it). }
+  opt_main_14: extern univ_ptr;
+
+  { opt_main.pas's +0x4C (cc.m68k 0x2D2F3C): the variables' types, by
+    number from 0 (compute_variable_type_descriptors; opt_reachdef,
+    opt_strength, reg_alloc, reg_cost_68k, reg_life). }
+  opt_var_types: extern g_opt_vtypes_ptr_t;
+
+  { opt_main.pas's +0x5A, +0x60, +0x62 (cc.m68k 0x2D2F4A, 0x2D2F50,
+    0x2D2F52): the routine's basic blocks, and the most region
+    statements and variables of a routine (opt_main; opt_reachdef's
+    tables are allocated for them; reg_vars). }
+  opt_nblocks: extern g_opt_num_t;
+  opt_max_stmts: extern g_opt_num_t;
+  opt_max_vars: extern integer;
 
   { opt_main.pas's +0x40, +0x44, +0x48 (cc.m68k 0x2D2F30, 0x2D2F34,
     0x2D2F38): by block number (from 1), the variables live at the
@@ -565,7 +614,33 @@ procedure motion_constants; extern;
 procedure opt_main_$ensure_var_set(
     var s: g_opt_varset_ptr_t); extern;
 
-{ opt_reachdef.pas (cc.m68k 0x0E2868 for make_motioned_ud_chain). }
+{ opt_reachdef.pas (cc.m68k 0x0E18E0, cc.a88k 0x2AEAD0). }
+
+{ ADJUST_PTR - p moved back opt_first_block - 1 elements of k bytes:
+  a table of the routine's blocks from 1 indexed by block number
+  (opt_main's g_opt, reachingdefinitions).  0x0E1DDC: the result in A0
+  (a pointer of any table: univ_ptr). }
+function adjust_ptr(
+    p: univ_ptr;
+    k: integer): univ_ptr; options(val_param); extern;
+
+{ RELEASERD - opt_reachdef's tables given back (opt_main_14 emptied)
+  (opt_main's g_opt, recompute_node_lists). }
+procedure releaserd; extern;
+
+{ INITRD - opt_reachdef's tables allocated for opt_max_vars variables
+  and opt_max_stmts statements (opt_main's g_opt,
+  recompute_node_lists). }
+procedure initrd; extern;
+
+{ MARKUSES - each region statement's set of the variables it uses
+  (vset) (opt_main's recompute_node_lists, reachingdefinitions). }
+procedure markuses; extern;
+
+{ REACHINGDEFINITIONS - the reaching definitions, the constants they
+  give propagated, the use-def chains and the warnings of variables
+  used before being assigned (opt_main's g_opt, recompute_node_lists). }
+procedure reachingdefinitions; extern;
 
 { MAKE_MOTIONED_UD_CHAIN - the use-def chain of variable v at
   statement s, region r (make_ud_chain of r's block number, s and v;
