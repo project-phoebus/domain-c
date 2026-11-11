@@ -228,7 +228,7 @@ begin
     diag_$write('<NIL token_$char_string>%$')
   else if node^.kind <> 92 then begin
     diag_$write('<not a token_$char_string>%$');
-    list_tree_$print_tree(node, 0);
+    list_tree_$print_tree(node, nil);
   end
   else begin
     if bracketed then
