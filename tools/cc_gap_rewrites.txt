@@ -363,3 +363,18 @@ lang/lang/source/opt_livevar.pas	s/(\w+)\^\.kind in \[137, 138, 143, 145\.\.147,
 lang/lang/source/opt_livevar.pas	s/^      151:$/      141, 143, 144, 145, 146, 147, 148, 149, 150: ; { gap 2 }\n      151:/
 # gap 24 (opt_livevar): a call as the right operand of `and' (compared with true, for the check)
 lang/lang/source/opt_livevar.pas	s/il_utils_\$is_strength_reduction_temp\((s\^\.\w+\^\.asg_lhs)\) then/(il_utils_\$is_strength_reduction_temp($1) = true) then { gap 24 }/
+# gap 3 (opt_loop): add_constant's new (the PAS_$NEW call it compiles to, for the check)
+lang/lang/source/opt_loop.pas	s/^(\s*)new\(q\);/$1pas_\$new(q, 10); { gap 3 }/
+# gap 7 (opt_loop): walkt's real constants (nil and the high longword tested, for the check)
+lang/lang/source/opt_loop.pas	s/walkt\(rlcontk\((0\.5|1\.0)\)\);/walkt(nil); { gap 7 }/
+lang/lang/source/opt_loop.pas	s/if t\^\.real_value = 0\.0 then/if t^.xl[3] = 0 then { gap 7 }/
+# gap 8 (opt_loop): in on constant sets with word elements (the comparisons)
+lang/lang/source/opt_loop.pas	s/(\w+)\^\.kind in \[137, 138, 143, 145\.\.147, 164, 171, 175, 189, 205\]/(($1^.kind = 137) or ($1^.kind = 138) or ($1^.kind = 143) or (($1^.kind >= 145) and ($1^.kind <= 147)) or ($1^.kind = 164) or ($1^.kind = 171) or ($1^.kind = 175) or ($1^.kind = 189) or ($1^.kind = 205)) { gap 8 }/
+lang/lang/source/opt_loop.pas	s/(\w+)\^\.kind in \[137, 143, 145\.\.147, 205\]/(($1^.kind = 137) or ($1^.kind = 143) or (($1^.kind >= 145) and ($1^.kind <= 147)) or ($1^.kind = 205)) { gap 8 }/
+lang/lang/source/opt_loop.pas	s/(\w+)\^\.kind in \[88, 89, 195, 163\]/(($1^.kind = 88) or ($1^.kind = 89) or ($1^.kind = 195) or ($1^.kind = 163)) { gap 8 }/
+lang/lang/source/opt_loop.pas	s/g_opt_tree_ptr_t\(t\)\^\.op in \[4\.\.6, 37, 41\]/((g_opt_tree_ptr_t(t)^.op >= 4) and (g_opt_tree_ptr_t(t)^.op <= 6) or (g_opt_tree_ptr_t(t)^.op = 37) or (g_opt_tree_ptr_t(t)^.op = 41)) { gap 8 }/
+lang/lang/source/opt_loop.pas	s/s\^\.eval_opnd\[k\]\^\.kind in \[77\.\.90, 92, 93, 101, 156, 163,$/((s^.eval_opnd[k]^.kind >= 77) and (s^.eval_opnd[k]^.kind <= 90) or (s^.eval_opnd[k]^.kind = 92) or (s^.eval_opnd[k]^.kind = 93) or (s^.eval_opnd[k]^.kind = 101) or (s^.eval_opnd[k]^.kind = 156) or (s^.eval_opnd[k]^.kind = 163) { gap 8 }/
+lang/lang/source/opt_loop.pas	s/^\s*176, 195, 198, 200\]\) then begin$/ or (s^.eval_opnd[k]^.kind = 176) or (s^.eval_opnd[k]^.kind = 195) or (s^.eval_opnd[k]^.kind = 198) or (s^.eval_opnd[k]^.kind = 200))) then begin/
+# gap 2 (opt_loop): motion_constants' case of 4 labels over a range of 13 (empty labels added, for the check)
+lang/lang/source/opt_loop.pas	s/^            151:$/            141, 143, 144, 145, 146, 147, 148, 149, 150: ; { gap 2 }\n            151:/
+lang/lang/source/opt_loop.pas	s/^        151:$/        141, 143, 144, 145, 146, 147, 148, 149, 150: ; { gap 2 }\n        151:/
