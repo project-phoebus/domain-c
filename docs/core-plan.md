@@ -318,3 +318,19 @@ is declared by both inserts under `%if not codegen_uads_declared', a
 conditional variable globals.ins.pas declares; opt_vector reads the
 statements and trees through its own views (it does not open
 g_opt.ins.pas) and declares inline_$mark_reference_params (opt_inline).
+
+Translator BB (2026-11-11), the m68k register allocator (reg_cost_68k,
+reg_action): lang/lang/source/reg_alloc.ins.pas (new) is the
+allocator's insert: the live range (reg_range_t, 64 bytes: node,
+blocks, first and last statements, register, preferred registers,
+uses, defs, flags (the register class: 0 none, 2 address, 3 data, 4
+floating), cost, depth, priority, bit vector of the statements' points
+2s and 2s + 1), its blocks (reg_blk_t), reg_alloc's pool (reg_chunk_t)
+and cells (reg_pool, reg_ranges, reg_nranges, reg_nest, reg_words),
+and the headings of initpool, test_stmt, compute_costs and
+insert_reg_stmts.  It is opened before codegen.ins.pas and
+g_opt.ins.pas by all but reg_life, so it uses only the prelude's types.
+Core changes: g_opt.ins.pas declares opt_main's +0x20, +0x24 (the
+allocator's pools) and +0x4C (opt_main_4c, the variables' table,
+g_opt_vinfo_t), and the 191 statement (g_opt_stmt_t variant 6,
+g_opt_act_t: the loads and stores reg_action puts in).
