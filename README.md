@@ -146,4 +146,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/opt_assign.pas` | 9 | translated (best effort; nodes through g_opt.ins.pas's views and il.ins.pas's by offset; dpc gaps 8, 12, 19, 23) |
 | `lang/lang/source/opt_cse.pas` | 16 | translated (best effort; nodes through g_opt.ins.pas's views (cse's 189/190 nodes) and il.ins.pas's by offset; dpc gaps 2, 8, 24) |
 | `lang/lang/source/list_tree.pas` | 42 | translated (best effort; nodes through lt_node_t views and by offset; dpc gaps 8, 9, 29) |
+| `lang/lang/source/gen_unwind.pas` | 21 | translated (best effort; the unwind records as a packed record by kind; the scope's PA and a88k fields; prelude types declared in the unit, docs/questions.md 93) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
