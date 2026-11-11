@@ -44,8 +44,8 @@ function smcontk(
     value: integer32): il_$node_ptr_t; options(val_param); extern;
 
 { RLCONTK - the node of a single-precision real (kind 88), the value
-  first rounded to single precision when the option at cargs +0x27F bit
-  6 is set.  0x098D82. }
+  first rounded to single precision when cargs_$options.frnd (-FRND,
+  cargs +0x27F bit 6) is set.  0x098D82. }
 function rlcontk(
     in value: double): il_$node_ptr_t; extern;
 
