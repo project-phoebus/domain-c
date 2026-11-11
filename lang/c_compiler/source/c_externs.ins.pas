@@ -439,5 +439,7 @@ procedure initdate; extern;
 
 { c_sym_map.pas: the symbol map (c_main). }
 
-{ SYM_MAP - c_sym_map.pas 0x060584 (cc.a88k 0x060804). }
+{ SYM_MAP - the listing's symbol map (-MAP): c_main's cc calls it at
+  the end.  c_sym_map.pas 0x060584 (cc.a88k 0x060804); checked
+  against its body. }
 procedure sym_map; extern;
