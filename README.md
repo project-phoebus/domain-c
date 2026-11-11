@@ -105,4 +105,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/cargs.pas` | 24 | translated (best effort; the binaries' variants by `%if cc_a88k`; dpc gaps 3, 11) |
 | `lang/lang/source/prfpkg.pas` | 11 | translated (best effort; dpc gaps 4, 7) |
 | `lang/lang/source/target_68k_dummies.pas` | 8 | translated (cc.m68k only) |
+| `ivory/volume_4/report/source/do_report.pas` | 1 | translated (best effort) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
