@@ -81,9 +81,10 @@ function dpcmplxtk(
     im: univ_ptr): il_$node_ptr_t; options(val_param); extern;
 
 { STRTK - the string constant node (kind 92) of the len characters s.
-  0x0990F0. }
+  0x0990F0: s by address (callers push a string's or a buffer's
+  address, `pea'). }
 function strtk(
-    s: univ_ptr;
+    in s: univ strings_$bytes_t;
     len: integer): il_$node_ptr_t; options(val_param); extern;
 
 { TOKEN_$MAKE_STRING_TOKEN - strtk of a varying string.  0x0991A6. }

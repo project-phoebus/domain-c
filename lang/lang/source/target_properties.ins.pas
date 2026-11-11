@@ -55,7 +55,8 @@ type
     p_6c: integer32;                    { +0x6C: 32767 }
     p_70: integer32;                    { +0x70: -32768 }
     p_74: array [0..10] of char;        { +0x74 }
-    p_7f: char;                         { +0x7F: a byte, 7 units }
+    p_7f: boolean;                      { +0x7F: a boolean (tst.b, bmi), 7
+                                          units }
     p_80: array [0..3] of char;         { +0x80 }
     p_84: char;                         { +0x84 }
     p_85: char;                         { +0x85 }

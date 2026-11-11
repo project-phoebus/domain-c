@@ -88,3 +88,10 @@ procedure debug_sym_dmp_$init; extern;
 { DEBUG_SYM_DMP_$FINALIZE - 0x0AC5E4, cc.a88k 0x0ADFC4; 1 call site
   (unix_objmod). }
 procedure debug_sym_dmp_$finalize; extern;
+
+var
+  { debug_sym_dmp.pas's data (A5 0x2C20CC cc.m68k) + 0x1090: a boolean
+    gen_utils's make_new_addr_con clears and sets when OBJUTIL_ finds a
+    symbol or section in an -inlib library.  Its meaning here is not
+    known. }
+  debug_sym_dmp_1090: extern boolean;
