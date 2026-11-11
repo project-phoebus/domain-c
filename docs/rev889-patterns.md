@@ -621,3 +621,15 @@ cc.m68k unless marked.
     0x0C3644) likewise.  (Item 67's threading, for a test at a loop's
     head.)  dpc tests b each time round.
 
+## Stores of zero (translator CC, opt_reachdef.pas)
+
+82. **Zero stored by `move #0' into an indexed element.**  A nil or 0
+    stored into an array element reached by an index register, or into
+    a field of a record whose pointer was just read from such an
+    element, is `move.l #0' / `move.w #0' / `move.b #0' (opt_reachdef:
+    value^[v] := nil 0x0E3964 `move.l #0,(0,A0,D6.w)', 19 such stores;
+    last_def^[v].stmt := 0 0x0E2928 `move.w #0,(0,A2,D0.w)';
+    defs^[v]^.stmt := 0 0x0E46D6 `move.w #0,(A1)'), while the same
+    stores through a pointer variable are `clr' (p^.stmt := 0 0x0E4BE6
+    `clr.w (A0)', e^.ud^.next := nil 0x0E27F4 `clr.l (A0)').  dpc emits
+    `clr' for both.

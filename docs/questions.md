@@ -843,3 +843,57 @@ revisited.
    that set them (reg_life, reg_color_68k, reg_alloc) are not
    translated yet.  Name them when they are.
 
+
+111. Translator CC (2026-11-11), opt_reachdef: g_opt.ins.pas names
+   opt_main's cells the unit reads by use: opt_main_14 (+0x14, the pool
+   of opt_reachdef's tables), opt_var_types (+0x4C, the variables' types
+   from compute_variable_type_descriptors: type_exp_t's layout as
+   g_opt_vtype_t, since g_opt.ins.pas cannot name c_objtype's type),
+   opt_nblocks (+0x5A), opt_max_stmts (+0x60), opt_max_vars (+0x62).
+   opt_main.pas must `define' them.  A 188 statement gets a variant of
+   its own (arg_call +56, arg_num +60: a variable passed to argument
+   arg_num of the call tree arg_call, paramclass's first parameter).
+112. Translator CC, opt_reachdef: ftn_data_init (nested in
+   reachingdefinitions) sets seen^[v] and value^[v] for
+   reachingdefinitions' own local v (frame -32).  reachingdefinitions
+   calls it with v the definition's variable, but init_block calls it
+   (with the static link) for a definition of its own variable (D3)
+   while v still holds whatever reachingdefinitions' previous loop
+   left (nvars + 1 after the clearing loop).  Kept as the image has it;
+   an original slip?
+113. Translator CC, opt_reachdef: when opt_track_lines (opt_main +0x6C)
+   is set, reachingdefinitions clears il_d0 and returns before the
+   uninitialized-use warnings (and without putting il_d0 back).  The
+   cell's name (translator V's, from opt_general) may not say what it
+   is.  The rd sets are allocated for opt_max_stmts + opt_max_vars + 1
+   bits (rd_words) and used for runbackend_16 - opt_region + nvars + 34
+   (rd_used), though only region numbers are ever set.
+114. Translator CC, opt_reachdef: the gap 8 rewrites for this unit
+   replace each kind set by a range holding it (`>= 137 and <= 205'):
+   the full comparison chains exhaust dpc's virtual registers in
+   evalforeffect (gap 25) even with a call's operands left out.  The
+   check of the unit is thus looser than the other units' (only the
+   scratch copy; the tree keeps the sets).
+115. Translator CC, opt_strength: opt_str_$opmod_of_operand,
+   opt_str_$opmod1_of_multiplier and opt_str_$product_of read delay.pas's
+   class_size (its +888, cc.m68k 0x169968, cc.a88k 0x2E99D8) absolutely;
+   opt_strength.pas declares it extern, and delay.pas (which declares it
+   as a module variable with its initializer) must `define' it.
+   delparent only reads its parameter: g_opt.ins.pas's `in p' stays
+   (question 102).
+116. Translator CC, opt_strength: cc.a88k's unit holds 12 routines (the
+   products, the substitution points, deluse, delparent, walkuses and an
+   empty strengthreduce, 2 bytes); opt_strength.pas leaves the others to
+   `%if cc_a88k'.  It also holds usewalk's code (0x2B3868, 0x10E bytes:
+   the routine nested in cc.m68k's used_outside_loop, here taking its
+   parent's frame from the dynamic link) with no .blocks entry and no
+   caller, and 0x24A bytes between walkuses' end (0x2B3C8A) and
+   strengthreduce (0x2B3ED4) not looked at.  How the original's
+   conditional compilation left them is not known.
+117. Translator CC: tools/cc_typecheck.sh's `-config cc_a88k' pass
+   fails for every unit with `%var cc_a88k' (dpc: "-config: `FILE' is
+   not a conditional variable name"): the option seems to need its
+   value placed differently (iosub.pas shows the same).
+   Lead (2026-11-11): fixed; the -config pass now ends the variable list
+   with `--' before the file (dpc read the file as another variable).
+   iosub and opt_strength type-check clean under -config cc_a88k.

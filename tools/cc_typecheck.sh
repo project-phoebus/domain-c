@@ -30,7 +30,7 @@ for f in "$@"; do
   for cfg in cc_a88k; do
     if grep -q "%var cc_a88k" "$f"; then
       echo "== $f (-config $cfg)"
-      (cd "$scratch" && "$DPC" --check-only --root "$root" -I "$here" -config $cfg "$here/$f" 2>&1) |
+      (cd "$scratch" && "$DPC" --check-only --root "$root" -I "$here" -config $cfg -- "$here/$f" 2>&1) |
         grep -a 'error:' | sed "s|$here/||"
     fi
   done

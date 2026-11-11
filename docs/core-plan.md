@@ -354,3 +354,17 @@ Translator BB, reg_vars: g_opt.ins.pas declares opt_main's +0x60
 reg_alloc.ins.pas gets store_debug_info's heading.  reg_vars's own
 records (the debugger's 28-byte ranges, the blocks' availability
 vectors, the variables by debugger index) are declared in the unit.
+Translator CC (2026-11-11), the global optimizer (opt_reachdef
+translated): g_opt.ins.pas gets opt_main's opt_main_14 (+0x14),
+opt_var_types (+0x4C, g_opt_vtype_t: type_exp_t's layout),
+opt_nblocks (+0x5A), opt_max_stmts (+0x60) and opt_max_vars (+0x62),
+a 188 statement's variant (arg_call, arg_num), and the headings of
+adjust_ptr, releaserd, initrd, markuses and reachingdefinitions (opt_main
+calls them); paramclass and make_motioned_ud_chain are checked against
+their bodies (unchanged).  opt_reachdef declares kfold as opt_general
+does (docs/questions.md 104-107).
+Translator CC, opt_strength (started: cc.a88k's 12 routines and two
+small cc.m68k ones): g_opt.ins.pas gets the headings of
+opt_str_$opmod_of_operand, opt_str_$product_of, walkuses and
+strengthreduce (opt_main calls them); delparent's `in' confirmed
+(docs/questions.md 108-110).
