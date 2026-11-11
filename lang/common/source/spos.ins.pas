@@ -161,11 +161,23 @@ function spos_$number_of_marked_source_files: integer32; extern;
 
 { SPOS_$APPLY_OVER_SOURCE_FILES, SPOS_$APPLY_OVER_MARKED_SOURCE_FILES -
   proc of each root region (of each marked one, with its mark).
-  0x072CC2, 0x072D14. }
+  0x072CC2, 0x072D14.  proc is a routine parameter (reference 5.4):
+  debug_sym_dmp's write_files and debug_sym_dmp_$init pass routines
+  nested in them (`pea' of a trampoline in their frame,
+  docs/rev889-patterns.md 12), which a routine pointer cannot hold
+  (the address of a nested routine cannot be taken, reference 3.13.3);
+  spos calls it with the values pushed (`jsr (A0)' of the parameter's
+  value).  dpc refuses routine parameters (docs/dpc-gaps.md 21): the
+  gate checks a copy with spos_$region_proc_t and
+  spos_$marked_region_proc_t (tools/cc_gap_rewrites.txt).
+
+  TODO(pascal) the passed routines take their parameters by value
+  (val_param); the reference gives no syntax for a routine parameter's
+  options (only the error "Incompatible routine OPTIONS"). }
 procedure spos_$apply_over_source_files(
-    proc: spos_$region_proc_t); options(val_param); extern;
+    procedure proc(region: integer32)); extern;
 procedure spos_$apply_over_marked_source_files(
-    proc: spos_$marked_region_proc_t); options(val_param); extern;
+    procedure proc(region: integer32; mark: integer32)); extern;
 
 { SPOS_$CAPTURE_FILE_MARKS - the marks kept as the base table.
   0x072D68. }
