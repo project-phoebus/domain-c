@@ -19,6 +19,10 @@ type
   { A printed line, as PRTSUB builds it (prtsub_$line_t's layout). }
   iosub_$line_t = varying [256] of char;
 
+  { A name's characters (cargs_$chars_t's size: gen_debug opens this
+    insert without cargs.ins.pas). }
+  iosub_$chars_t = array [1..1024] of char;
+
 { IO_TERM - close the outputs at the end of the run, with severity.
   0x0B5B10: by address (c_error's cgerr passes a frame word holding 5). }
 procedure io_term(
@@ -51,8 +55,15 @@ procedure listln(
   name was built on the first directory of its list, false for a name
   taken as it is), c_lex_pp's open_file_to_get_info (false). }
 function open_include_file(
-    in name: univ cargs_$chars_t;
+    in name: univ iosub_$chars_t;
     len: integer;
     var sid: integer;
     in_first: boolean;
     unused: boolean): boolean; options(val_param); extern;
+
+{ FREEOBJ - the object file's bytes mapped by putobj
+  (globals_from_general.ins.pas) dropped.  0x0B6094: the address by
+  value (its slot passed on by address); 70 call sites (gen_debug,
+  coff_syms, debug_sym_dmp, outbin, ...). }
+procedure freeobj(
+    p: univ_ptr); options(val_param); extern;
