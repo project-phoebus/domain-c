@@ -334,3 +334,8 @@ Core changes: g_opt.ins.pas declares opt_main's +0x20, +0x24 (the
 allocator's pools) and +0x4C (opt_main_4c, the variables' table,
 g_opt_vinfo_t), and the 191 statement (g_opt_stmt_t variant 6,
 g_opt_act_t: the loads and stores reg_action puts in).
+Translator BB, reg_vars: g_opt.ins.pas declares opt_main's +0x60
+(opt_main_60, the routine's statements from opt_region);
+reg_alloc.ins.pas gets store_debug_info's heading.  reg_vars's own
+records (the debugger's 28-byte ranges, the blocks' availability
+vectors, the variables by debugger index) are declared in the unit.
