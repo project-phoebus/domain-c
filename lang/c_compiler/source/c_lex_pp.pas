@@ -504,7 +504,7 @@ var
     var
       b: lex_block_ptr_t;
     begin
-      b := il_180;
+      b := lex_block_ptr_t(il_180);
       if (b = nil) or else not ((b^.kind = 108) or (b^.kind = 107)) then
         error0(156, lex_line)
       else

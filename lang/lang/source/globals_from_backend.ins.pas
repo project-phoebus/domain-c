@@ -32,12 +32,17 @@ var
   runbackend_0c: extern univ_ptr;       { +0xC: c_main, gen_utils,
                                           opt_strength, reg_alloc }
   runbackend_10: extern univ_ptr;       { +0x10: c_main, opt_strength }
+  runbackend_14: extern integer;        { +0x14: the source language
+                                          run_backend is given; cc.a88k's
+                                          post reads it }
   runbackend_16: extern integer;        { +0x16: opt_main sets it; opt_*,
                                           reg_*, cc.a88k's at_backend
                                           and dmp read it }
 
-  { cc.a88k's at_backend.pas, A5 0x485830, +0x506: runbackend sets and
-    clears it (rewrite clears it).  Not in cc.m68k. }
+  { A back-end cell: cc.a88k's at_backend.pas, A5 0x485830, +0x506
+    (rewrite clears it); cc.m68k's cg_top.pas, A5 0x356314, +0x148
+    (0x35645C: emit, fpa, cg_addr, cg_call, cg_fp test it).  runbackend
+    sets it and clears it (run_backend, optimize_and_code). }
   at_backend_506: extern boolean;
 
 { The back end's entry points runbackend calls: cc.m68k's in lang/lang
@@ -59,12 +64,21 @@ procedure bin_$emit_compilation_pure_text; extern;  { cc.a88k bin 0x224314; unix
   passes 1 from its literals), the routine that lists the source up to
   a line (c_main passes do_lex_for_listings' address, `move.l #'; it
   is called with `jsr (A0)'), the last line (by address) and a pointer
-  by address (c_main's literal nil). }
+  by address (c_main's literal nil: `pea' of a constant in the code,
+  cc.m68k 0x05B95C).  The parameter names are runbackend.pas's (dpc
+  takes a routine's parameters from its first declaration). }
+type
+  { The routine run_backend is given to list the source up to a line
+    (c_main's do_lex_for_listings), called with `jsr (A0)'.  Here
+    because the prelude's heading needs it; unix_objmod.ins.pas's
+    unix_objmod_$lex_proc_t is this type. }
+  runbackend_$lex_proc_t = ^procedure;
+
 procedure run_backend(
-    in compiler: integer;
-    listing: univ_ptr;
-    in last_line: integer;
-    in p4: univ_ptr); options(val_param); extern;
+    in lang: univ integer;
+    do_lex: runbackend_$lex_proc_t;
+    in line: univ integer;
+    in hook: univ runbackend_$lex_proc_t); options(val_param); extern;
 
 { AT_BACKEND_$BEGIN_COMPILATION - cc.a88k 0x221D3C: a word by value. }
 procedure at_backend_$begin_compilation(

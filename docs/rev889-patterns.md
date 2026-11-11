@@ -306,3 +306,13 @@ cc.m68k unless marked.
     except do_lex_for_listings (0x05A380), whose address cc passes to
     run_backend (`move.l #0x05A380,-(SP)') and which runbackend calls
     with `jsr (A0)'.  The others are written `internal'.
+## Sets (translator J, runbackend.pas)
+
+41. **No range check for a set test that spans the node kinds.**  A
+    test of a node's kind (+2) against a constant set of 0..207 or
+    0..223 checks the range first (`move.w #207,D0; sub.w kind,D0; bcs
+    ...; lsr.w #3,D0; btst kind,(set,D0.w)': runbackend
+    build_call_graph_walk_il 0x0B0F5E, unconditionally_add_call_graph_
+    edge 0x0B0B5E), but normalize_il's set of 0..239 (0x0B17D4) has
+    no `bcs': the kinds' type may be 0..239 (a set as large as the
+    type needs no check).  Not decided; noted for the node types.

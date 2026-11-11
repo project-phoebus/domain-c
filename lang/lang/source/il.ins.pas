@@ -112,7 +112,7 @@ var
   il_c8: extern univ_ptr;                              { +0xC8 }
   il_cc: extern il_$node_ptr_t;                        { +0xCC }
   il_d0: extern integer;                               { +0xD0 }
-  il_d4: extern univ_ptr;                              { +0xD4 }
+  il_d4: extern il_$node_ptr_t;                        { +0xD4 }
   il_d8: extern univ_ptr;                              { +0xD8 }
   il_node_155: extern il_$node_ptr_t;                  { +0xDC }
   il_node_154: extern il_$node_ptr_t;                  { +0xE0 }
@@ -121,9 +121,9 @@ var
   il_node_226: extern il_$node_ptr_t;                  { +0xEC }
   il_f0: extern array [0..6] of univ_ptr;              { +0xF0 }
   il_10c: extern univ_ptr;                             { +0x10C }
-  il_110: extern univ_ptr;                             { +0x110 }
+  il_110: extern il_$node_ptr_t;                       { +0x110 }
   il_114: extern integer32;                            { +0x114 }
-  il_118: extern univ_ptr;                             { +0x118 }
+  il_118: extern il_$node_ptr_t;                       { +0x118 }
   il_11c: extern univ_ptr;                             { +0x11C }
   il_120: extern univ_ptr;                             { +0x120 }
   il_124: extern integer;                              { +0x124 }
@@ -141,8 +141,8 @@ var
   il_174: extern il_$node_ptr_t;                       { +0x174 }
   il_178: extern il_$node_ptr_t;                       { +0x178 }
   il_17c: extern univ_ptr;                             { +0x17C }
-  il_180: extern univ_ptr;                             { +0x180: 37 units }
-  il_184: extern univ_ptr;                             { +0x184 }
+  il_180: extern il_$node_ptr_t;                       { +0x180: 37 units }
+  il_184: extern il_$node_ptr_t;                       { +0x184 }
 
 { INITIALIZE_MODULE - set up IL's and TOKEN's tables and globals for a
   compilation.  il.pas 0x07D74C. }

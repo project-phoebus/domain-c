@@ -28,7 +28,8 @@ when this tree is merged).
    'L', 'R') over the range '0'..'R'.  dpc: "a `case` of 12 labels over
    a range of 35 (between the sparsest jump table and the densest
    compare chain seen, codegen-patterns 7.3) is not supported yet".
-   Rev 8.89 builds the table.  Reproducer:
+   Rev 8.89 builds the table (also runbackend.pas normalize_il, cc.m68k
+   0x0B1AC0: 10, 11, 15, 21 over 10..21, a table of 12).  Reproducer:
 
        module g2;
        var n: integer;
@@ -312,4 +313,24 @@ when this tree is merged).
        procedure p;
        begin
          s := '-D__apollo';
+       end;
+
+18. **A string constant passed to a varying parameter.**
+   commit_top_node.pas commit_top_$convert_aops_to__aop_to_mem (cc.m68k
+   0x0760B8) passes 'Compiler may not guarantee atomic behavior.' to
+   token_$make_string_token's `in s: univ token_$vstring_t': the image
+   passes a varying constant (the word 43, then the text, at 0x07613A).
+   The reference converts a string constant to a varying string in
+   assignments and value/`in' arguments (3.11.4).  dpc refuses it for a
+   varying parameter ("Assignment statement expression is not
+   compatible with the assignment variable (v_t := string of 16
+   characters)") and passes the characters alone (no length word) for a
+   univ one, which the translation uses (no rewrite).  Reproducer:
+
+       module g18;
+       type v_t = varying [32767] of char;
+       procedure f(in s: v_t); extern;
+       procedure p;
+       begin
+         f('Compiler may not');
        end;

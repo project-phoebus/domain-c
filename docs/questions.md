@@ -230,3 +230,20 @@ revisited.
    time_$line_t' (and time.pas's definition the same), so that c_main
    can pass its PRTSUB line (dpc refuses a type transfer of a
    variable passed by reference).
+38. Translator J (2026-11-11): runbackend.pas run_backend's frame has
+   8 (the language), 16 (a line) and 20 (a hook routine pointer) by
+   address and 12 (c_main's do_lex_for_listings, `move.l #addr,-(SP)')
+   by value; c_main passes constants for 8 and 20.  That is what a
+   routine parameter gives (ref 5.4: `procedure do_lex' in a routine
+   without options), which dpc refuses ("a routine parameter (ref 5.4)
+   is not supported yet"); unix_obj_gen, which run_backend passes it to,
+   would then take one too.  Written as val_param with a routine pointer
+   (unix_objmod_$lex_proc_t) by value and the others `in ... univ'
+   (Table 5-1: univ cancels val_param), which compiles to the same
+   frame.  If routine parameters are wanted, dpc needs them first
+   (reproducer: `procedure p(procedure q); begin q; end;').
+39. Translator J: runbackend's data has fourteen words at +0x18..+0x33
+   that .rwdi initializes (0, 1, 2, 4, 6, 7, 8, 9, 1, 2, 4, 5, 0, 12)
+   and no routine of either binary reaches; declared as an initialized
+   array (table_18) so the values are kept.  The original may have been
+   two tables or a constant record.
