@@ -62,6 +62,19 @@ type
           str_unused_12: integer32;     { +12: cleared }
           str_len: integer;             { +16 }
           str_chars: array [1..1024] of char);  { +18 }
+      { The longwords of a real (88, 89: high, low), a pair (90) or a
+        double complex (198: re high, re low, im high, im low) as
+        token.pas compares them (signed, high first). }
+      7: (bits_next: il_$node_ptr_t;    { +4 }
+          bits_unused_8: integer32;     { +8 }
+          bits: array [1..4] of integer32);  { +12 }
+      { A set constant of more than 4 bytes (setcontk, kind 156; len + 18
+        bytes): the bytes as words. }
+      8: (set_next: il_$node_ptr_t;     { +4: its chain, by size }
+          set_unused_8: integer32;      { +8: cleared }
+          set_unused_12: integer32;     { +12 }
+          set_len: integer;             { +16: bytes }
+          set_words: array [1..2048] of integer);  { +18 }
   end;
 
 var

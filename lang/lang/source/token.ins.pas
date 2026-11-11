@@ -65,13 +65,14 @@ function cmplxtk(
     in im: real): il_$node_ptr_t; extern;
 
 { TOKEN_$MAKE_REAL_LIT_PAIR - the kind 90 node of two doubles converted
-  to single precision; found_swapped is set when the pair is found only
-  the other way round and swapped_ok allows that.  0x098F2E. }
+  to single precision; unless exact, a node of the pair the other way
+  round is taken too and found_swapped set.  0x098F2E: found_swapped by
+  address (cc.a88k's fit_instr passes a local boolean and exact false). }
 function token_$make_real_lit_pair(
     in a: double;
     in b: double;
-    swapped_ok: boolean;
-    found_swapped: univ_ptr): il_$node_ptr_t; options(val_param); extern;
+    exact: boolean;
+    var found_swapped: boolean): il_$node_ptr_t; options(val_param); extern;
 
 { DPCMPLXTK - the node of a double-precision complex (kind 198).
   0x099020: im's address passed as a value. }
@@ -89,13 +90,13 @@ function strtk(
 function token_$make_string_token(
     in s: univ token_$vstring_t): il_$node_ptr_t; extern;
 
-{ SETCONTK - the node of the set constant whose bits are lo..hi of bits
-  (a word array): an integer constant node when it fits in 32 bits.
-  0x0991D0. }
+{ SETCONTK - the node of the set constant of len bytes from byte first
+  of bits (a word array; first even): an integer constant node (kind
+  81) when it takes one or two words, else a kind 156 node.  0x0991D0. }
 function setcontk(
     in bits: univ token_$set_bits_t;
-    lo: integer;
-    hi: integer): il_$node_ptr_t; options(val_param); extern;
+    first: integer;
+    len: integer): il_$node_ptr_t; options(val_param); extern;
 
 { SET_IS_NIL - whether the set constant node has no members.
   0x09930E. }
