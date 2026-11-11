@@ -201,3 +201,8 @@ lang/lang/source/outbin.pas	s/not \(p\^\.kind in \[107\.\.111, 167, 183, 192, 19
 lang/lang/source/outbin.pas	s/not \(p\^\.kind in \[0, 24, 32, 33\]\)/not ((p^.kind = 0) or (p^.kind = 24) or (p^.kind = 32) or (p^.kind = 33)) { gap 8 }/
 # gap 24 (outbin): a function call as a right operand of `and' (compared with false, for the check)
 lang/lang/source/outbin.pas	s/^(\s*)not pc_disp_ok\(il_\$node_ptr_t\(a\.x\)\^\.xp\[2\]\^\.xl\[3\]\) then/$1(pc_disp_ok(il_\$node_ptr_t(a.x)^.xp[2]^.xl[3]) = false) then { gap 24 }/
+lang/lang/source/outbin.pas	s/if c\^\.kind in \[54\.\.58\] then/if (c^.kind >= 54) and (c^.kind <= 58) then { gap 8 }/
+lang/lang/source/outbin.pas	s/\(n\^\.kind in \[77\.\.87, 101, 200\]\)/(((n^.kind >= 77) and (n^.kind <= 87)) or (n^.kind = 101) or (n^.kind = 200)) { gap 8 }/
+# gap 24 (outbin): calls as operands of `and'/`or' (compared with true, for the check)
+lang/lang/source/outbin.pas	s/\bnot (executable_insts_follow_prev_lineno|assert_inline_block_start_follows|assert_is_inline_block_start|assert_is_line_no_instyp|fardisp)\(([^()]*)\)/(($1($2)) = false)/g
+lang/lang/source/outbin.pas	s/\b(executable_insts_follow_prev_lineno|assert_inline_block_start_follows|assert_is_inline_block_start|assert_is_line_no_instyp|fardisp)\(([^()]*)\)/(($1($2)) = true)/g

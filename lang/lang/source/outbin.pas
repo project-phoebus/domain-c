@@ -157,10 +157,11 @@ function dbl_to_real(
 
 type
   { The current block's line table (cg_top's +0x130, set from a block's
-    +120): an address and a line, 8 bytes apart, the first at the
+    +120): a basic block and its first line, 8 bytes apart, the first at the
     pointer's target; its count is IL's +0x124. }
   outbin_ln_bb_t = record
-    addr: integer32;                    { +0 }
+    blk_no: unix_objmod_$count_t;       { +0: a basic block (show_assign
+                                          is given its low word) }
     line: integer;                      { +4 }
     pad: integer;                       { +6 }
   end;
@@ -1033,8 +1034,8 @@ end;
   IL's +0x124 entries).
 
   0x0BCA98, 0xAE bytes: the gap halved (`lsr.w #1' first, then `asr.l'
-  with the rounding of a signed division); the entries swapped as an
-  address and a line (6 bytes). }
+  with the rounding of a signed division); the entries swapped as a
+  block and a line (6 bytes). }
 
 procedure sort_ln_bb; internal;
 var
@@ -1048,11 +1049,11 @@ begin
       while j > 0 do begin
         k := j + gap;
         if cg_top_130^[j].line > cg_top_130^[k].line then begin
-          t.addr := cg_top_130^[j].addr;
+          t.blk_no.l := cg_top_130^[j].blk_no.l;
           t.line := cg_top_130^[j].line;
-          cg_top_130^[j].addr := cg_top_130^[k].addr;
+          cg_top_130^[j].blk_no.l := cg_top_130^[k].blk_no.l;
           cg_top_130^[j].line := cg_top_130^[k].line;
-          cg_top_130^[k].addr := t.addr;
+          cg_top_130^[k].blk_no.l := t.blk_no.l;
           cg_top_130^[k].line := t.line;
         end;
         j := j - gap;
@@ -2620,12 +2621,60 @@ var
   end;
 
 
-  { wr_instr - code cell c written: TODO }
+  { wr_instr - code cell c written: a line number cell or a routine's start or end
+    (block_start_instyp, block_end_instyp) updates the line state, the
+    .lines statements (coff_lines_...), the expanded listing's hints and
+    source lines (advance_listing_to_line) and the COFF line entries
+    (ln_begin, ln_end, ln_number); a label checks its address; an inline
+    constant goes to define_constant; any other instruction marks the
+    pending entry and return, defines a statement, is rewritten when an
+    address constant lies too far (to an indexed form off the data base
+    register: `DB not valid' when the routine has none), and is
+    assembled (its operation word, the 68881's and 68020's extension
+    words, the operands' extensions), then listed under -EXP.
+
+    0x0C0464, 0x171A bytes, no A5: outcode's frame from the dynamic link
+    (the section at -8, passed to ln_begin and ln_number, and in A1 to
+    define_constant); the 68020 bit field instructions (kinds 45, 46)
+    take a field (140) or a common subexpression (138) in a descriptor's
+    x, replaced by its +64 or +40 for the assembly (the node kept in
+    D3); IL's +0xC4 gets bit 3 with the 68020, bit 8 for the FPA kinds
+    (54..58, a set of 0..63 after the routine), 4 or bit 4 for the
+    68881's (cpu 2); the instructions' cases by a jump table of 53 from
+    kind 2 (kinds out of range write both operands' extensions); the
+    statement's last address (the location less 1, in an inlined block
+    from its frame's start) kept at A5 + 0xD94.
+
+    Not known from the original:
+    - the locals' names (-56 and -54 the saved line and statement for
+      coff_equiv_lines). }
+
+  { TODO(pascal) wr_instr's listing of the instruction's operands under
+    -EXP (0x0C1458..0x0C1B54: tab 40, the name, then a jump table of 56
+    on kind 3.. for the operand forms, prtads of each descriptor,
+    prt_int_regs and prt_fp_regs for the MOVEMs, the bit fields through
+    prt_bit_field and prt_expr_bit_field, the FPA and FPX forms with the
+    register names at A5 + 0xD40 and fp_names, then listln) is not
+    translated yet: only the name is put in the line and the line
+    listed. }
 
   procedure wr_instr(
       c: codegen_$cell_ptr_t); options(val_param);
+  label
+    9;
   var
-  save_line, save_stmt: integer;
+    save_line: integer;                 { -56 }
+    save_stmt: integer;                 { -54 }
+    saved: il_$node_ptr_t;
+    p: codegen_$cell_ptr_t;
+    t: il_$node_ptr_t;
+    u: codegen_$uads_t;
+    n: il_$node_ptr_t;
+    i: integer;
+    w: integer;
+    off: integer;
+    have_w: boolean;
+    d: integer32;
 
     { check_addressing_mode - displacement d beyond 16 bits (cgerr 24)
       or a scaled index (cgerr 28) on a 68000.
@@ -2983,8 +3032,436 @@ var
     end;
 
   begin
-    { TODO(pascal) wr_instr not translated yet }
-    coff_lines_proc_start;
+    saved := nil;
+    if (c^.kind = m020_dest2_instyp) or (c^.kind = m020_src2_instyp) then
+      if (c^.ads2.x <> 0) and (il_$node_ptr_t(c^.ads2.x)^.kind = 140)
+          then begin
+        saved := il_$node_ptr_t(c^.ads2.x);
+        c^.ads2.x := saved^.xl[16];
+      end
+      else if (c^.ads1.x <> 0) and
+          (il_$node_ptr_t(c^.ads1.x)^.kind = 138) then begin
+        saved := il_$node_ptr_t(c^.ads1.x);
+        c^.ads1.x := saved^.xl[10];
+      end;
+    if 3 in cargs_$options.cpu then
+      il_c4 := il_c4 ! 8;
+    if c^.kind in [54..58] then
+      il_c4 := il_c4 ! 16#100;
+    if (c^.kind = line_no_instyp) or (c^.kind = block_end_instyp) or
+        (c^.kind = block_start_instyp) then begin
+      if not lines_pending then
+        if (c^.kind = line_no_instyp) or (c^.blk^.kind <> 172) then
+          coff_lines_instruction;
+      if (c^.kind = line_no_instyp) and (c^.line = cur_line) and
+          (not at_block_start or (first_line = c^.line)) and
+          executable_insts_follow_prev_lineno(c) then
+        stmt_no.l := stmt_no.l + 1
+      else begin
+        if (c^.line < list_line) and (c^.line >= 0) and
+            not assert_inline_block_start_follows(c^.next) then begin
+          if in_inline_end then begin
+            in_inline_end := false;
+            list_line := c^.line;
+          end;
+        end
+        else
+          list_line := c^.line;
+        if assert_are_producing_68k_expanded_listing then
+          if assert_is_line_no_instyp(c) then
+            if assert_is_inline_block_start(c^.next) then
+              inline_depth := inline_depth + 1;
+        if assert_are_producing_68k_expanded_listing then
+          if inline_depth <> 0 then
+            if assert_is_interesting_line_no_instyp(c) then
+              emit_hint_for_inlined_routine_line_no_instyp(c);
+        if assert_are_producing_68k_expanded_listing then
+          if inline_depth <> 0 then
+            if assert_is_inline_block_end(c) then begin
+              inline_depth := inline_depth - 1;
+              if inline_depth = 0 then
+                if assert_is_interesting_line_no_instyp(c^.next) then
+                  if not assert_is_inline_block_start(c^.next^.next) then
+                    emit_hint_for_line_number(c^.next^.line);
+            end;
+        if c^.line <> 0 then begin
+          cur_line := c^.line;
+          stmt_no.l := 0;
+        end;
+      end;
+      if c^.kind = block_start_instyp then begin
+        in_inline_end := false;
+        coff_lines_proc_start;
+      end
+      else if c^.kind = block_end_instyp then begin
+        if (ord(c^.blk^.xc[374]) & 4) <> 0 then
+          in_inline_end := true;
+        coff_lines_proc_end;
+      end
+      else if c^.kind = line_no_instyp then begin
+        if c^.ret or (c^.next = nil) or (c^.next^.kind <> line_no_instyp)
+            or assert_inline_block_start_follows(c^.next^.next) then begin
+          p := c^.next;
+          while p <> nil do begin
+            if (p^.kind = line_no_instyp) and
+                assert_inline_block_start_follows(p^.next) then begin
+              lines_pending := false;
+              exit;
+            end;
+            if (p^.kind = line_no_instyp) or (p^.kind = block_end_instyp) or
+                (p^.kind = block_start_instyp) then
+              exit;
+            if p^.kind <> def_lbl_instyp then begin
+              lines_pending := false;
+              exit;
+            end;
+            p := p^.next;
+          end;
+        end;
+        equiv := outbin_equiv_ptr_t(c^.blk);
+        if entry_seen and scope_open then
+          entry_pending := true;
+        if c^.ret and return_seen then
+          return_pending := true;
+      end;
+      if cargs_$options.exp then begin
+        error_listing_0c := true;
+        if c^.kind = line_no_instyp then begin
+          if assert_inline_block_start_follows(c^.next) or
+              assert_is_inline_block_start(c^.next) then
+            list_depth := list_depth + 1;
+        end
+        else if assert_is_inline_block_start(c) then
+          if not ((c^.prev <> nil) and (c^.prev^.kind = line_no_instyp))
+              then
+            if not ((c^.prev <> nil) and (c^.prev^.kind = def_lbl_instyp)
+                and (c^.prev^.prev <> nil) and
+                (c^.prev^.prev^.kind = line_no_instyp)) then
+              list_depth := list_depth + 1;
+        if list_depth = 0 then
+          advance_listing_to_line(list_line);
+        if (c^.kind = block_end_instyp) and (c^.blk^.kind = 172) and
+            ((ord(c^.blk^.xc[374]) & 4) <> 0) then
+          list_depth := list_depth - 1;
+        error_listing_0c := false;
+        if cg_top_130 <> nil then
+          while (show_index <= il_124) and
+              (cg_top_130^[show_index].line <= cur_line) do begin
+            if cg_top_130^[show_index].line <> 0 then
+              show_assign(cg_top_130^[show_index].blk_no.low);
+            show_index := show_index + 1;
+          end;
+      end;
+      if c^.kind = block_start_instyp then begin
+        if (c^.blk^.kind <> 172) and (c^.blk^.kind <> 167) then
+          ln_begin(c^.blk, sect, c^.blk^.xw[133]);
+      end
+      else if c^.kind = block_end_instyp then begin
+        if c^.blk^.kind <> 172 then begin
+          ln_end(c^.blk);
+          for i := 0 to 31 do
+            shown[i] := nil;
+        end;
+      end
+      else if c^.kind = line_no_instyp then
+        if ln_line <> c^.line then begin
+          if ln_line <> 0 then
+            if ln_line > c^.line then
+              ln_flag.l := ln_flag.l + 1
+            else
+              ln_flag.l := ln_flag.l + (c^.line - ln_line);
+          ln_number(sect, obj_off + direct_base, cur_line);
+        end;
+      goto 9;
+    end;
+    if cargs_$options.exp then begin
+      line.length := 0;
+      prttab(line, 6);
+      prthex(line, emit_108.e110.l - sect_base, 4);
+      prtcatc(line, ':');
+    end;
+    if c^.kind = def_lbl_instyp then begin
+      if emit_108.e110.l - sect_base <> c^.addr then
+        cgerr(16, cur_line, smcontk(81, c^.addr));
+      if c^.ads2.x <> 0 then
+        il_$node_ptr_t(c^.ads2.x)^.xl[14] := emit_108.e110.l - sect_base;
+      if cargs_$options.exp then begin
+        prttab(line, 30);
+        unpack_ads(c^.ads2, u);
+        prtlabel(line, u);
+        listln(line);
+      end;
+      goto 9;
+    end;
+    if c^.kind = inline_instyp then begin
+      n := il_$node_ptr_t(c^.ads2.x);
+      case n^.kind of
+        88: define_constant(n, 3);
+        89: define_constant(n, 4);
+        90: define_constant(n, 5);
+        198: define_constant(n, 9);
+        157: case n^.xw[10] of
+          1: define_constant(n, 0);
+          2: define_constant(n, 1);
+          4: define_constant(n, 2);
+          otherwise
+            cgerr(3, cur_line, nil);
+        end;
+        92: define_constant(n, 6);
+        156, 212: define_constant(n, 7);
+        195: define_constant(n, 8);
+        otherwise
+          cgerr(3, cur_line, nil);
+      end;
+      goto 9;
+    end;
+    if entry_pending then begin
+      if range_depth = 0 then
+        gen_debug_$lines_entry
+      else
+        stack_debug_$lines_entry;
+      entry_seen := false;
+      entry_pending := false;
+      return_seen := true;
+      at_block_start := false;
+    end;
+    if return_pending then begin
+      if range_depth = 0 then
+        gen_debug_$lines_return
+      else
+        stack_debug_$lines_return;
+      return_pending := false;
+      return_seen := false;
+    end;
+    stmt_open := true;
+    coff_lines_instruction;
+    t := nil;
+    if (c^.kind = a_instyp) and (c^.op = 12) and fardisp(c^.ads1) then begin
+      if (ord(il_180^.xc[375]) & 8) = 0 then
+        cgerr_no_source(28, integer32(strtk('DB not valid ', 13)));
+      c^.op := 5;
+      t := get_proc_addr_con(6, il_$node_ptr_t(c^.ads1.x),
+          integer32(cur_sect), code_sect);
+    end
+    else if (c^.kind = dest1_instyp) and (c^.op = 13) and
+        fardisp(c^.ads2) then begin
+      if (ord(il_180^.xc[375]) & 8) = 0 then
+        cgerr_no_source(28, integer32(strtk('DB not valid ', 13)));
+      c^.kind := move_instyp;
+      c^.op := 2;
+      t := get_proc_addr_con(6, il_$node_ptr_t(c^.ads2.x),
+          integer32(cur_sect), code_sect);
+      c^.ads2.f1 := 9;
+      c^.ads2.f2 := 15;
+    end;
+    if t <> nil then begin
+      c^.ads1.f1 := 2;
+      c^.ads1.f2 := 13;
+      c^.ads1.y := t^.xl[4];
+      c^.ads1.x := 0;
+    end;
+    if c^.kind <> casejmp_instyp then
+      write_proc(assemble(c));
+    case c^.kind of
+      movemr_instyp: begin
+        write_proc(il_$node_ptr_t(c^.ads2.x)^.xw[5]);
+        wr_addr_ext(c^.ads1);
+      end;
+      moverm_instyp: begin
+        write_proc(il_$node_ptr_t(c^.ads1.x)^.xw[5]);
+        wr_addr_ext(c^.ads2);
+      end;
+      br_instyp, cbr_instyp, bsr_instyp:
+        if c^.size > 2 then
+          wr_addr_ext(c^.ads2);
+      dest1_sz_instyp, q_instyp, dest2_sz_instyp, shft_mem_instyp,
+          dest2_instyp, dest1_instyp, logicize_instyp, dbcc_instyp,
+          case_instyp, fpa_reg_reg_instyp:
+        wr_addr_ext(c^.ads2);
+      casejmp_instyp: begin
+        d := codegen_$cell_ptr_t(c^.ads2.y)^.owner^.addr -
+            codegen_$cell_ptr_t(c^.ads1.y)^.owner^.addr;
+        if (d < -32768) or (d > 32767) then
+          cgerr(10, cur_line, nil);
+        write_proc(d);
+      end;
+      link_instyp: begin
+        if scope_open then begin
+          end_unwind_scope(il_180, emit_108.e110.l - sect_base, scope);
+          entry_seen := true;
+        end
+        else
+          scope_open := true;
+        wr_addr_ext(c^.ads2);
+        begin_unwind_scope(il_180, emit_108.e110.l - sect_base, scope);
+      end;
+      unlk_instyp: begin
+        wr_addr_ext(c^.ads2);
+        end_unwind_scope(il_180, emit_108.e110.l - sect_base, scope);
+        scope_closed := true;
+      end;
+      tern_32u_instyp:
+        il_c4 := 4;
+      src2_instyp: begin
+        if (c^.op = 220) or (c^.op = 222) then
+          il_c4 := 4;
+        wr_addr_ext(c^.ads1);
+      end;
+      tern_src_ext_instyp, m68881_src_ext_instyp: begin
+        write_proc(genfpinst(c));
+        wr_addr_ext(c^.ads1);
+        if 2 in cargs_$options.cpu then
+          il_c4 := 4
+        else
+          il_c4 := il_c4 ! 16;
+      end;
+      m68881_dst_ext_instyp: begin
+        write_proc(genfpinst(c));
+        wr_addr_ext(c^.ads2);
+        if 2 in cargs_$options.cpu then
+          il_c4 := 4
+        else
+          il_c4 := il_c4 ! 16;
+      end;
+      tern_reg_reg_instyp, m68881_reg_reg_instyp: begin
+        write_proc(genfpinst(c));
+        if 2 in cargs_$options.cpu then
+          il_c4 := 4
+        else
+          il_c4 := il_c4 ! 16;
+      end;
+      m68881_tst_reg_instyp: begin
+        write_proc(genfpinst(c));
+        if 2 in cargs_$options.cpu then
+          il_c4 := 4
+        else
+          il_c4 := il_c4 ! 16;
+      end;
+      m68881_dest1_instyp: begin
+        write_proc(genfpinst(c));
+        wr_addr_ext(c^.ads2);
+        if 2 in cargs_$options.cpu then
+          il_c4 := 4
+        else
+          il_c4 := il_c4 ! 16;
+      end;
+      m68881_i_instyp: begin
+        write_proc(genfpinst(c));
+        il_c4 := il_c4 ! 16;
+      end;
+      m881_nop_instyp: begin
+        wr_addr_ext(c^.ads2);
+        il_c4 := il_c4 ! 16;
+      end;
+      fbr_instyp: begin
+        wr_addr_ext(c^.ads2);
+        if 2 in cargs_$options.cpu then
+          il_c4 := 4
+        else
+          il_c4 := il_c4 ! 16;
+      end;
+      m68881_set_byte_instyp: begin
+        write_proc(opinfo_opword[c^.op]);
+        wr_addr_ext(c^.ads2);
+        if 2 in cargs_$options.cpu then
+          il_c4 := 4
+        else
+          il_c4 := il_c4 ! 16;
+      end;
+      m020_src2_instyp: begin
+        have_w := true;
+        case c^.op of
+          55: w := lshft(c^.ads2.f2, 12) + 2048;
+          57: w := lshft(c^.ads2.f2, 12);
+          49: w := lshft(c^.ads2.f2, 12) + c^.ads2.f2 + 2048;
+          52: w := lshft(c^.ads2.f2, 12) + c^.ads2.f2;
+          50: w := lshft(c^.ads2.f2, 12) + c^.ads2.f3 + 2048;
+          53: w := lshft(c^.ads2.f2, 12) + c^.ads2.f3;
+          214, 215: begin
+            if c^.ads2.f1 = 14 then
+              off := c^.ads2.f3 + 32
+            else begin
+              off := saved^.xp[11]^.xw[5];
+              if (off >= 8) and (saved^.xw[14] + off <= 16) then
+                off := off - 8;
+            end;
+            if saved^.xw[14] <> 32 then
+              w := lshft(c^.ads2.f2, 12) + lshft(off, 6) + saved^.xw[14]
+            else
+              w := lshft(c^.ads2.f2, 12) + lshft(off, 6);
+          end;
+          otherwise
+            have_w := false;
+        end;
+        if have_w then
+          write_proc(w);
+        wr_addr_ext(c^.ads1);
+      end;
+      m020_cmp2_instyp: begin
+        wr_addr_ext(c^.ads1);
+        if c^.ads2.f2 >= 8 then
+          write_proc(lshft(c^.ads2.f2, 12) + 4096)
+        else
+          write_proc(lshft(c^.ads2.f2, 12));
+      end;
+      m020_dest2_instyp: begin
+        if (saved^.xw[27] >= 8) and (saved^.xw[27] + saved^.xw[28] <= 16)
+            and (c^.ads2.f1 <> 1) then
+          off := saved^.xw[27] - 8
+        else
+          off := saved^.xw[27];
+        if saved^.xw[28] <> 32 then
+          write_proc(lshft(c^.ads1.f2, 12) + lshft(off, 6) + saved^.xw[28])
+        else
+          write_proc(lshft(c^.ads1.f2, 12) + lshft(off, 6));
+        wr_addr_ext(c^.ads2);
+      end;
+      m020_dest1_instyp: begin
+        n := il_$node_ptr_t(c^.ads1.x);
+        if (n <> nil) and (n^.kind in [77..87, 101, 200]) then
+          write_proc(lshft(n^.int_value, 6) + 1)
+        else
+          write_proc(lshft(c^.ads1.f2, 6) + 2049);
+        wr_addr_ext(c^.ads2);
+      end;
+      m881_movemr_instyp: begin
+        write_proc(opinfo_opword[c^.op] +
+            il_$node_ptr_t(c^.ads2.x)^.int_value);
+        wr_addr_ext(c^.ads1);
+        il_c4 := il_c4 ! 16;
+      end;
+      m881_moverm_instyp: begin
+        write_proc(opinfo_opword[c^.op] +
+            il_$node_ptr_t(c^.ads1.x)^.int_value);
+        wr_addr_ext(c^.ads2);
+        il_c4 := il_c4 ! 16;
+      end;
+      moveq_instyp, shft_d_instyp, shft_cnt_instyp, rts_instyp,
+          fop_instyp, align_instyp:
+        ;
+      otherwise begin
+        wr_addr_ext(c^.ads1);
+        wr_addr_ext(c^.ads2);
+      end;
+    end;
+    if range_depth = 0 then
+      stmt_pc := emit_108.e110.l - sect_base - 1
+    else
+      stmt_pc := emit_108.e110.l - stack^.start - 1;
+    if cargs_$options.exp then begin
+      prttab(line, 40);
+      if c^.kind = fop_instyp then
+        prtcats(line, fpa_ops[c^.op], 6)
+      else
+        prtcats(line, opinfo_names[c^.op], 9);
+      listln(line);
+    end;
+  9:
+    if saved <> nil then
+      if saved^.kind = 140 then
+        c^.ads2.x := integer32(saved)
+      else
+        c^.ads1.x := integer32(saved);
   end;
 
   { wr_section - under -EXP, section s's listing lines: its name and
