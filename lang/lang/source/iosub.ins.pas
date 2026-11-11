@@ -23,11 +23,17 @@ type
     this insert, does not open). }
   iosub_$name_t = array [1..1024] of char;
 
+  { A status (status_$t's longword; the units opening this insert need
+    not have base's types). }
+  iosub_$status_t = integer32;
+
 var
   { iosub.pas's data, A5 0x2CD7E4 (cc.m68k): the source file's full
     pathname (+0x428, its length +0x930) and whether a library is being
     generated (+0x936, outputs element 4: open_plb_file). }
   iosub_$source_pathname: extern array [1..1024] of char;
+  iosub_$source_stream: extern integer; { +0x92E: the source file's
+                                          stream (c_lex_pp's init_lex) }
   iosub_$source_pathname_length: extern integer;
   iosub_$generating_library: extern boolean;
 
@@ -73,3 +79,37 @@ function open_include_file(
     var sid: integer;
     in_first: boolean;
     unused: boolean): boolean; options(val_param); extern;
+
+{ ERROR_EXIT - report status (with the len characters of msg after
+  error_$std_format's text when len is not 0) and end the run with
+  severity 3.  0x0B5024: status and msg by address, len a word by
+  value (c_lex_pp's ppio_$lookahead passes an empty text and 0). }
+procedure error_exit(
+    in status: univ iosub_$status_t;
+    in msg: univ iosub_$name_t;
+    len: integer); options(val_param); extern;
+
+{ READ_LN - the next line of stream into buf (at most max characters;
+  len the number read, a final newline dropped); true at the end of
+  the file.  0x0B5D4A: stream and max words by value, buf and len by
+  address (c_lex_pp's ppio_$get_line). }
+function read_ln(
+    stream: integer;
+    out buf: univ iosub_$name_t;
+    max: integer;
+    out len: integer): boolean; options(val_param); extern;
+
+{ IOSUB_$GET_DTM - the date-time modified of stream's object
+  (ios_$inq_file_attr).  0x0B61EA: a word by value; c_lex_pp. }
+function iosub_$get_dtm(
+    stream: integer): integer32; options(val_param); extern;
+
+{ IOSUB_$GET_FULL_PATH_NAME - the full pathname of stream's object
+  (a string node).  0x0B6238: a word by value; c_lex_pp reads A0. }
+function iosub_$get_full_path_name(
+    stream: integer): univ_ptr; options(val_param); extern;
+
+{ CLOSE_INCLUDE_FILE - ios_$close of stream.  0x0B6306: a word by
+  value; c_lex_pp's open_file_to_get_info and ppio_$get_line. }
+procedure close_include_file(
+    stream: integer); options(val_param); extern;
