@@ -82,4 +82,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/il_utils.pas` | 14 | translated (best effort; nodes by offset; dpc gaps 3, 4) |
 | `lang/lang/source/gen_utils.pas` | 21 | translated (best effort; nodes by offset; dpc gap 3) |
 | `lang/lang/source/time.pas` | 2 | translated (best effort) |
+| `lang/lang/source/sortidntk.pas` | 3 | translated (best effort; dpc gap 5) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

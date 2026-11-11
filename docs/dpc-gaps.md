@@ -73,3 +73,17 @@ when this tree is merged).
        begin
          a(3);
        end;
+
+5. **Ordering arrays of char.**  `a[i]^.idnt_name > pivot^.idnt_name`,
+   two `array [1..4096] of char` (sortidntk.pas qsort 0x098598: `move.w
+   #4095,D0; cmpm.b (A0)+,(A1)+; dbne D0' then `bhi', `bcs', `bls').
+   dpc: "ordering records is not supported yet" (with a best-effort
+   warning on comparing arrays).  Reproducer:
+
+       module g5;
+       type n_t = record len: integer; name: array [1..4096] of char; end;
+       var a, b: ^n_t; r: boolean;
+       procedure p;
+       begin
+         r := a^.name > b^.name;
+       end;

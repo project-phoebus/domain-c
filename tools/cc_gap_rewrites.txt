@@ -21,3 +21,5 @@ lang/lang/source/il_utils.pas	s/if op in \[0\.\.10, 13, 14, 17, 18, 27\.\.29, 33
 lang/lang/source/il_utils.pas	s/^\s*57, 59\.\.62, 74\.\.77, 86\] then begin$/ then begin/
 # gap 3 (gen_utils): in on a constant set with word elements
 lang/lang/source/gen_utils.pas	s/if sym\^\.kind in \[77\.\.87, 101, 200\] then/if sym^.kind = 81 then { gap 3 }/
+# gap 5: ordering arrays of char (compare the lengths instead)
+lang/lang/source/sortidntk.pas	s/\^\.idnt_name ([<>]) pivot\^\.idnt_name/^.idnt_len $1 pivot^.idnt_len { gap 5 }/g
