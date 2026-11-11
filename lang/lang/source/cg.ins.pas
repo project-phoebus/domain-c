@@ -97,6 +97,58 @@ type
                                           object (kill_any_param_alias) }
   end;
 
+  { A set of register numbers (0..7 D0-D7, 8..15 A0-A7, 16..23 the
+    floating registers): element k is bit k of the longword (`btst'
+    with the number in a register).  The callee-saved registers are
+    [2..7, 10..13, 18..23]. }
+  cg_regset_t = set of 0..31;
+
+  { A routine block's register sets as the code generator keeps them
+    (cg_top): +216 the callee-saved registers the routine leaves alone
+    (block_entry_proc removes those cg_addr_killed marks), +220 those
+    its entry saves and its return restores (updatestacksize: the
+    callee-saved less +216's), +224 and +228 the frame offsets of the
+    saved general and floating registers. }
+  cg_blk_regs_ptr_t = ^cg_blk_regs_t;
+  cg_blk_regs_t = record
+    pad: array [1..54] of integer32;    { +0 }
+    unused: cg_regset_t;                { +216 }
+    saved: cg_regset_t;                 { +220 }
+    save_off: integer32;                { +224 }
+    fp_save_off: integer32;             { +228 }
+  end;
+
+  { A label's register state (a label node's +64: a node of kind 161,
+    264 bytes, or with the floating registers 180, 396 bytes, from
+    gspace; cg_top's label_proc and cg_misc's show_label): two bytes
+    cg_addr_2b8 and cg_addr_2b6 take, +7 set when the label is
+    reached, the registers' records as cg_addr's table (+8: D0..A7;
+    +268: the floating registers). }
+  cg_state_ptr_t = ^cg_state_t;
+  cg_state_t = record
+    unused_0: integer;                  { +0 }
+    kind: integer;                      { +2 }
+    b4: char;                           { +4 }
+    b5: char;                           { +5 }
+    b6: char;                           { +6 }
+    b7: boolean;                        { +7 }
+    regs: array [0..15] of cg_reg_t;    { +8 }
+    w264: integer;                      { +264 }
+    w266: integer;                      { +266: cg_addr_2b4's }
+    fp_regs: array [16..23] of cg_reg_t;  { +268 }
+  end;
+
+  { An IL statement node seen from its +4, as codegen passes it to the
+    statement routines (`pea (4,An)': cg_assign's assign_proc): p[k]
+    the pointer at node offset 4 + 4k, w[k] the word at 4 + 2k, c[k]
+    the byte at 4 + k. }
+  cg_stmt_t = record
+    case integer of
+      1: (p: array [0..63] of il_$node_ptr_t);
+      2: (w: array [0..127] of integer);
+      3: (c: array [0..255] of char);
+  end;
+
 var
   { cg_fp's cells (A5 0x3552F8 + 0x1000..0x1014). }
   cg_fp_1000: extern il_$node_ptr_t;    { +0x1000: f_compare_proc sets it
@@ -126,11 +178,40 @@ var
                                           calls the extended library
                                           routine }
 
-  { cg_top's cells. }
-  cg_top_142: extern integer;           { +0x142 (0x356456): gen_call
-                                          tests it for 1 }
+  { cg_top's cells (A5 0x356314), defined in cg_top.pas (+0x130, the
+    line table, outbin.pas declares itself as cg_top_130). }
+  cg_stmt: extern il_$node_ptr_t;       { +0x12C (0x356440): the statement
+                                          node being compiled (cg_addr,
+                                          cg_assign, cg_tree) }
+  cg_code_bytes: extern integer32;      { +0x134 (0x356448): emit's
+                                          fnl_slct adds each instruction's
+                                          length; codegen gives a routine
+                                          past 5000 its own frame for A5
+                                          (+375 bit 3) }
+  cg_top_13a: extern integer;           { +0x13A (0x35644E): cleared at a
+                                          routine's entry, counted up at
+                                          a label (label_proc); cg_addr's
+                                          allocate_temp keeps it in a
+                                          temporary }
+  cg_data_reg: extern integer;          { +0x140 (0x356454): the address
+                                          register the module's data is
+                                          reached through: 13 (A5), 8 (A0)
+                                          when the entry copies A0 there
+                                          (block_entry_proc); cg_addr's
+                                          address, emit's chk_imd }
+  cg_pass: extern integer;              { +0x142 (0x356456): the pass over
+                                          the routine (codegen counts from
+                                          1; show_state prints it, gen_call
+                                          tests it for 1) }
   cg_line: extern integer;              { +0x144 (0x356458): the line
                                           being compiled (cgerr's) }
+  cg_settled: extern boolean;           { +0x146 (0x35645A): set at each
+                                          pass's start, cleared by
+                                          cg_addr's merge_register when a
+                                          label's state changes; a pass
+                                          that leaves it set is followed
+                                          by the last one, which emits
+                                          (at_backend_506, +0x148) }
 
   { cg_misc's cell (A5 0x356310). }
   cg_misc_label: extern il_$node_ptr_t; { +0: the label templabel gives
@@ -164,9 +245,27 @@ var
   cg_addr_regs: extern array [0..31] of cg_reg_t;   { +0x120
                                           (0x3550D8); stack_fp tests FP0's
                                           w14 (0x3551E6) for 2 }
+  cg_addr_2a8: extern univ_ptr;         { +0x2A8 (0x355260): cleared at
+                                          a routine's entry
+                                          (block_entry_proc) }
+  cg_addr_2ac: extern il_$node_ptr_t;   { +0x2AC (0x355264): a node of
+                                          kind 181 (cg_top's
+                                          f_initialize) }
+  cg_addr_2b0: extern cg_regset_t;      { +0x2B0 (0x355268): set to
+                                          0..23 at a routine's first pass,
+                                          less each basic block's
+                                          registers (initialize_tree) }
+  cg_addr_2b4: extern integer;          { +0x2B4 (0x35526C): from a
+                                          label's state +266 }
   cg_addr_2b6: extern integer;          { +0x2B6 (0x35526E): gen_call
                                           stores 8 before a call through
-                                          a routine variable }
+                                          a routine variable; from a
+                                          label's state +6 }
+  cg_addr_2b8: extern integer;          { +0x2B8 (0x355270): from a
+                                          label's state +4 }
+  cg_addr_2ba: extern integer;          { +0x2BA (0x355272): cleared by
+                                          cg_top's initialize; a register
+                                          record's w8 at a basic block }
 
 { ---- cg_addr ---- }
 
@@ -328,7 +427,45 @@ procedure load_modifiable(
     in size: integer;
     in out a: codegen_$uads_t); extern;
 
+{ MERGE_STATE - the register state at label lab merged with the
+  current one (its state saved at the label's first branch).  cg_addr
+  0x0F2BA8: a pointer by value. }
+procedure merge_state(
+    lab: il_$node_ptr_t); options(val_param); extern;
+
+{ CG_ADDR_$MERGE_STATE_OF_ASSIGNED_GOTO_TARGETS - merge_state for every
+  label a goto through a label variable (statement n) may reach.
+  cg_addr 0x0F2D50: a pointer by value. }
+procedure cg_addr_$merge_state_of_assigned_goto_targets(
+    n: il_$node_ptr_t); options(val_param); extern;
+
+{ CG_ADDR_$INIT_REGS - every register's contents forgotten (keep: the
+  ones holding variables kept, cg_top passes true for -FRND...).
+  cg_addr 0x0F2EAA: a boolean by address (cg_top passes the constants
+  at 0x0FBE62 and 0x0FEFB6). }
+procedure cg_addr_$init_regs(
+    in keep: boolean); extern;
+
+{ EDIT_REGISTER - register r's record from a label's state reg
+  checked against what is still valid.  cg_addr 0x0F2F6C: 8 a word,
+  10 the record's address. }
+procedure edit_register(
+    r: integer;
+    in out reg: cg_reg_t); options(val_param); extern;
+
+{ LOAD_LIVE_REGISTERS, INIT_TEMP - the registers a register list marks
+  live loaded; no temporaries in use.  cg_addr 0x0EFD68, 0x0F00F4: no
+  parameters. }
+procedure load_live_registers; extern;
+
+procedure init_temp; extern;
+
 { ---- cg_assign ---- }
+
+{ ASSIGN_PROC - the code of an assignment statement s (node kind 140,
+  passed from its +4).  cg_assign 0x0F469E: the address. }
+procedure assign_proc(
+    in out s: univ cg_stmt_t); extern;
 
 { CG_ASN_$BLOCK_MOVE - a loop moving count units of size from src to
   dst (two more descriptors for the loop's registers).  cg_assign
@@ -348,6 +485,13 @@ procedure fault_free_assign(
     size: integer;
     in out dst: codegen_$uads_t;
     in out src: codegen_$uads_t); options(val_param); extern;
+
+{ ---- cg_top ---- }
+
+{ UPDATEREGASSIGN - cg_top's saved object cache entries (reg_list_proc's,
+  for a register list before an assignment) put back into cg_addr's
+  cache.  cg_top 0x0FBC5E: no parameters (cg_assign's assign_proc). }
+procedure updateregassign; extern;
 
 { ---- cg_call ---- }
 
@@ -544,6 +688,12 @@ procedure s_extend(
 procedure tree_walk(
     n: il_$node_ptr_t); options(val_param); extern;
 
+{ WALKER - the code of a comparison tree n whose condition a branch
+  tests (cg_top's cbranch_proc for a 143).  cg_tree 0x108484: a
+  pointer. }
+procedure walker(
+    n: il_$node_ptr_t); options(val_param); extern;
+
 { ---- reg_save ---- }
 
 { REG_SAVE - the registers a call of routine r preserves (a set of
@@ -560,6 +710,14 @@ function pass_char_len_diff(
     in r: univ il_$node_ptr_t): boolean; extern;
 
 { ---- emit ---- }
+
+{ EMIT_LINE_EOP - a line number cell for line (a and b: the routine
+  or block whose line it is, or no operand).  emit 0x0B79DE: 8 and 12
+  the descriptors' addresses, 16 a word. }
+procedure emit_line_eop(
+    in a: codegen_$uads_t;
+    in b: codegen_$uads_t;
+    line: integer); options(val_param); extern;
 
 { EMIT_ASSIGN - a move of size size from src to dst (FPA1).  emit
   0x0B7F54: 8 a word, 10 and 14 the descriptors' addresses. }

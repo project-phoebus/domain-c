@@ -953,7 +953,7 @@ begin
 
   { The arguments popped. }
   if (4 in cargs_$options.flags_286) and (n <> nil) then
-    if (n^.kind = 137) and (cg_top_142 = 1) then begin
+    if (n^.kind = 137) and (cg_pass = 1) then begin
       if (pushed & 3) <> 0 then
         n^.xc[7] := chr(ord(n^.xc[7]) ! 16#80)
       else

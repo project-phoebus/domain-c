@@ -137,4 +137,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/cg_fp.pas` | 9 | translated (cc.m68k only; best effort; nodes by offset and cg.ins.pas's tree view; dpc gap 8) |
 | `lang/lang/source/cg_call.pas` | 10 | translated (cc.m68k only; best effort; nodes by offset and cg.ins.pas's views; dpc gaps 8, 22, 28) |
 | `lang/lang/source/cg_misc.pas` | 24 | translated (cc.m68k only; best effort; nodes by offset and cg.ins.pas's tree view; dpc gaps 7, 8) |
+| `lang/lang/source/cg_top.pas` | 18 | translated (cc.m68k only; best effort; nodes by offset, statements from their +4 through univ records; dpc gaps 8, 12) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

@@ -60,19 +60,6 @@ module cg_misc;
 %include 'lang/lang/source/codegen.ins.pas';
 %include 'lang/lang/source/cg.ins.pas';
 
-type
-  { A label's saved register state (show_label: a label node's +64):
-    two bytes, then the registers' records as cg_addr's table. }
-  misc_state_ptr_t = ^misc_state_t;
-  misc_state_t = record
-    unused_0: integer32;                { +0 }
-    b4: char;                           { +4 }
-    b5: char;                           { +5 }
-    b6: char;                           { +6 }
-    b7: char;                           { +7 }
-    regs: array [0..15] of cg_reg_t;    { +8 }
-  end;
-
 define
   cg_misc_label,
   show_state, show_label, templabel, reverse_cc, unaligned, zero_check,
@@ -101,7 +88,7 @@ var
 begin
   line.length := 0;
   prtcats(line, 'PASS = ', 7);
-  prtint(line, cg_top_142, 2, false);
+  prtint(line, cg_pass, 2, false);
   prtcats(line, '  LINE = ', 9);
   spos_$decode_source_position(cg_line, region, lno);
   prtint(line, lno, 5, false);
@@ -154,19 +141,19 @@ procedure show_label(
     lab: il_$node_ptr_t); options(val_param);
 var
   line: prtsub_$line_t;
-  s: misc_state_ptr_t;
+  s: cg_state_ptr_t;
   k: integer;
 begin
   line.length := 0;
   prtobj(line, lab);
   if lab^.xp[16] <> nil then begin
     prtcatc(line, ',');
-    prtint(line, ord(misc_state_ptr_t(lab^.xp[16])^.b4), 2, false);
+    prtint(line, ord(cg_state_ptr_t(lab^.xp[16])^.b4), 2, false);
     prtcatc(line, ',');
-    prtint(line, ord(misc_state_ptr_t(lab^.xp[16])^.b6), 2, false);
+    prtint(line, ord(cg_state_ptr_t(lab^.xp[16])^.b6), 2, false);
   end;
   listln(line);
-  s := misc_state_ptr_t(lab^.xp[16]);
+  s := cg_state_ptr_t(lab^.xp[16]);
   if s <> nil then begin
     line.length := 0;
     for k := 0 to 15 do begin

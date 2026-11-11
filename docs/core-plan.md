@@ -223,3 +223,19 @@ globals_from_backend.ins.pas declares the section std_lib (the library
 routines' nodes, std_lib_rtns) and runbackend_18 (runbackend.pas's
 table at +0x18, now defined there); g_opt.ins.pas declares paramclass.
 fpa.ins.pas is a new empty stub.  cg_top is not started.
+
+Translator U (2026-11-11), the m68k code generator (cg_misc finished,
+cg_top): cg.ins.pas gets cg_regset_t (registers as a set of 0..31),
+cg_blk_regs_t (a routine block's +216..+228: the saved registers and
+their offsets), cg_state_t (a label's register state, cg_misc's former
+misc_state_t), cg_stmt_t (a statement from its +4, as codegen passes
+it), cg_count_t (0..65535: shift's and fill's unsigned words), the
+headings of cg_misc's remaining routines, cg_addr's merge_state,
+edit_register, init_regs, load_live_registers, init_temp, cg_assign's
+assign_proc, cg_top's updateregassign, cg_tree's walker and emit's
+emit_line_eop, and cg_top's cells by name (cg_stmt, cg_code_bytes,
+cg_top_13a, cg_data_reg, cg_pass (was cg_top_142), cg_line, cg_settled)
+and cg_addr's +0x2A8..+0x2BA; cg_tree_188 is cg_zero_ads (the
+immediate 0).  Core change: g_opt.ins.pas declares the basic block
+record (g_opt_bb_t), opt_main_8, select_block_list and select_loop;
+final.ins.pas peepholer and jmp_br_setup; fpa.ins.pas emit_load_store.

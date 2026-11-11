@@ -567,3 +567,29 @@ revisited.
    and compares them unsigned.  A parameter's type must be a type name
    in dpc (and the reference), so the subrange is named.  Keep, or
    use a base type of the original's (linteger-like)?
+
+80. Translator U, cg_top: cg.ins.pas names cg_top's cells other units
+   read: cg_stmt (+0x12C, the statement compiled), cg_code_bytes
+   (+0x134, emit's fnl_slct adds to it), cg_top_13a (+0x13A), cg_data_reg
+   (+0x140: 13, or 8 when the data is reached through A0), cg_pass
+   (+0x142, was cg_top_142: show_state prints it as PASS), cg_line,
+   cg_settled (+0x146: cg_addr's merge_register clears it; at_backend_506
+   at +0x148 is the last, emitting pass).  cg_addr.pas must define
+   cg_addr_2a8 .. cg_addr_2ba (new), cg_tree.pas cg_zero_ads and
+   cg_tree_1b4.  outbin.pas's cg_top_130 is defined by cg_top with a
+   type of its own (top_line_ptr_t, the same layout as outbin's
+   outbin_ln_bb_ptr_t): move the type to an insert both open?
+
+81. cg_top: codegen passes the statement routines the address of the
+   node's +4 (`pea (4,A0)': assign_proc, cbranch_proc, block_entry_proc,
+   return_proc), so the original's routines probably took the node's
+   variant part by reference.  cg_top's take univ records laid out from
+   +4 (top_cbranch_t, ...); cg.ins.pas's assign_proc takes `in out s:
+   univ cg_stmt_t' (a view by offset from +4).  Keep, or give the IL
+   node type named statement variants?
+
+82. cg_top: the routine block's flags at +374..+377 are tested as a
+   longword (`(+374 >> 11) & 258 = 258': +375 bit 3 and +376 bit 4,
+   both set: the block keeps A5 in a register of its own) and written
+   as bytes (cg_call's +375 bit 3); cg_top writes the longword test with
+   il_$node_t's xl2[93].  The two flags' names are not known.
