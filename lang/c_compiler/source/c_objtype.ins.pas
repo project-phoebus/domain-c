@@ -34,19 +34,13 @@ type
     case integer of
       { Integral (122) and floating (123) types. }
       1: (len: integer;                 { +4: integral: 1, 2 or 4
-                                          bytes; floating: 6 the
-                                          single (type_exp: size 4),
-                                          else the double }
-          sign_flags: packed record     { +6 }
-            signed: boolean;            { .7: type_exp's range test }
-            b6_6: boolean;
-            b6_5: boolean;
-            b6_4: boolean;
-            b6_3: boolean;
-            b6_2: boolean;
-            b6_1: boolean;
-            b6_0: boolean;
-          end);
+                                          bytes; floating: 6 float,
+                                          7 double (init_basic_types;
+                                          type_exp: size 4, 8) }
+          signed: boolean);             { +6: integral: signed
+                                          (init_basic_types `st',
+                                          `clr.b'; type_exp `tst.b;
+                                          bpl') }
   end;
 
   { What type_exp (c_def_sem.pas 0x04590A) makes of a type node: the
