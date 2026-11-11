@@ -327,3 +327,8 @@ adjust_ptr, releaserd, initrd, markuses and reachingdefinitions (opt_main
 calls them); paramclass and make_motioned_ud_chain are checked against
 their bodies (unchanged).  opt_reachdef declares kfold as opt_general
 does (docs/questions.md 104-107).
+Translator CC, opt_strength (started: cc.a88k's 12 routines and two
+small cc.m68k ones): g_opt.ins.pas gets the headings of
+opt_str_$opmod_of_operand, opt_str_$product_of, walkuses and
+strengthreduce (opt_main calls them); delparent's `in' confirmed
+(docs/questions.md 108-110).

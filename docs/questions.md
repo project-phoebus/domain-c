@@ -829,3 +829,23 @@ revisited.
    evalforeffect (gap 25) even with a call's operands left out.  The
    check of the unit is thus looser than the other units' (only the
    scratch copy; the tree keeps the sets).
+108. Translator CC, opt_strength: opt_str_$opmod_of_operand,
+   opt_str_$opmod1_of_multiplier and opt_str_$product_of read delay.pas's
+   class_size (its +888, cc.m68k 0x169968, cc.a88k 0x2E99D8) absolutely;
+   opt_strength.pas declares it extern, and delay.pas (which declares it
+   as a module variable with its initializer) must `define' it.
+   delparent only reads its parameter: g_opt.ins.pas's `in p' stays
+   (question 102).
+109. Translator CC, opt_strength: cc.a88k's unit holds 12 routines (the
+   products, the substitution points, deluse, delparent, walkuses and an
+   empty strengthreduce, 2 bytes); opt_strength.pas leaves the others to
+   `%if cc_a88k'.  It also holds usewalk's code (0x2B3868, 0x10E bytes:
+   the routine nested in cc.m68k's used_outside_loop, here taking its
+   parent's frame from the dynamic link) with no .blocks entry and no
+   caller, and 0x24A bytes between walkuses' end (0x2B3C8A) and
+   strengthreduce (0x2B3ED4) not looked at.  How the original's
+   conditional compilation left them is not known.
+110. Translator CC: tools/cc_typecheck.sh's `-config cc_a88k' pass
+   fails for every unit with `%var cc_a88k' (dpc: "-config: `FILE' is
+   not a conditional variable name"): the option seems to need its
+   value placed differently (iosub.pas shows the same).

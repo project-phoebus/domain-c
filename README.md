@@ -154,4 +154,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/opt_loop.pas` | 12 | translated (best effort; statements and trees through g_opt.ins.pas's views, other nodes by offset; dpc gaps 2, 3, 7, 8) |
 | `lang/lang/source/opt_vector.pas` | 20 | translated (best effort; statements and trees through the unit's views ov_stmt_t, ov_tree_t, other nodes by offset; dpc gaps 7, 8) |
 | `lang/lang/source/opt_reachdef.pas` | 37 | translated (best effort; statements and trees through g_opt.ins.pas's views, other nodes by offset; dpc gaps 8, 12, 24, 25) |
+| `lang/lang/source/opt_strength.pas` | 59 | started: 13 of 59 (cc.a88k's 12 complete: the products, the substitution points, deluse, delparent, walkuses, its empty strengthreduce; is_loop_constant_integer, opmod1_of_multiplier; the cc.m68k-only rest in a header TODO; dpc gap 8) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
