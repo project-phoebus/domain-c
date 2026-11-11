@@ -37,6 +37,10 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
   `cc_dis.py` (disassemble a routine by name), `cc_check.sh` (the gate),
   `cc_gap_rewrites.txt` (scratch rewrites for dpc gaps).
 - `pilot/`: the first experiment (`get_rlen`).
+- `docs/core-plan.md`: the common prelude (`lang/lang/source/globals.ins.pas`
+  and the inserts it includes) and the order it is being reconstructed in.
+- `docs/globals-cc.*.md`: shared global cells by owning unit
+  (`tools/cc_globals.py`).
 - `lang/`, `lang2/`, ...: the reconstructed source.
 
 ## Conventions
@@ -65,3 +69,4 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 |------|----------|-------|
 | `lang/common/source/std.pas` | 11 | translated (best effort) |
 | `lang/common/source/diag.pas` | 13 | translated (best effort; dpc gap 1) |
+| `lang/lang/source/gspace.pas` | 6 | translated (best effort) |
