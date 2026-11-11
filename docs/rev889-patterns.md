@@ -199,3 +199,28 @@ cc.m68k unless marked.
     print_10, print_type).  tools/cc_params.py marks the first kind
     `nested'.  dpc passes the static link in A1 to every nested
     routine.
+## Nested routines and literals (translator F, cargs.pas)
+
+26. **The static link.**  A nested routine called only from its parent
+    takes the parent's frame from its dynamic link (`movea.l (A6),A2':
+    cargs.pas match 0x0B2788, arg_option_parameter_numeric 0x0B2854,
+    parse_opt_on_or_off 0x0B29B6); one called from several depths gets
+    it in A1 (`movea.l A6,A1; bsr' at each parent call,
+    arg_option_parameter 0x0B27AC, called from parse_options and three
+    of its nested routines; fill_array_with_args passes the parent's
+    frame on).  dpc passes the static link its own way.
+27. **String literals sharing a tail.**  cargs.pas build_my_version_string
+    passes 'C compiler' (no terminator: its length is passed) at
+    0x0B49DE and '(%JUWD)%$' at 0x0B49E8, laid out end to end; 'Illegal
+    or missing parameter to "%UA" option.%$' (0x0B2824) is one copy for
+    the whole unit, and option patterns are reused across routines.
+28. **A by-address constant in a frame word.**  build_my_version_string
+    stores 10 in a frame word (`move.w #10,(-10,A6)') to pass it by
+    address, while 6 and 9 come from the literal pool as longwords
+    (0x0B4A10, 0x0B4A14); gspace_$close's nil is likewise a frame
+    temporary.  Which constants go where is not known.
+29. **`a or b or c` of calls evaluated whole.**  parse_options
+    (0x0B3BDC: match('-NPEB.') or match('-CPUANY.') or ...) or-s the
+    results in a frame byte (`move.b D0,(-54,A6); ... or.b (-54,A6),D0')
+    and branches once; cc.a88k's -VENDOR/-PRASM (0x0B794A) branches
+    after the first (`bmi').

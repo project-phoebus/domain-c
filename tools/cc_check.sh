@@ -32,7 +32,11 @@ for f in "$@"; do
     printf '%s\n' "$rules" | while IFS= read -r r; do perl -pi -e "$r" "$src"; done
   fi
   for bin in $m68k $a88k; do
-    out=$(python3 tools/coff_compare.py --binary "$bin" --unit "${f%.pas}" "$src" -- -I "$here" 2>&1)
+    # a unit whose source differs between the binaries tests the
+    # conditional variable cc_a88k (%var cc_a88k; %if cc_a88k %then ...)
+    config=
+    [ "$bin" = "$a88k" ] && config="-config cc_a88k"
+    out=$(python3 tools/coff_compare.py --binary "$bin" --unit "${f%.pas}" "$src" -- -I "$here" $config 2>&1)
     rc=$?
     case "$out" in
       *"no single unit"*) continue ;;

@@ -57,14 +57,17 @@ procedure name_$strip_leaf(in path: univ name_$long_pname_t;
                            out leaf_len: pinteger;
                            out status: status_$t); extern;
 
-{ NAME_$STRIP_LEAF_LC - split a pathname's last component off.  aqdev
+{ NAME_$STRIP_LEAF_LC - split a pathname's last component off.
+  dir_len is a word: cc's cargs.pas build_my_name_string passes the
+  frame word at (-18,A6), between a word at -20 and a pointer at -16
+  (cc.m68k 0x0B4854); the source repository's heading had integer32.  aqdev
   passes a pathname and its length, 255, a longword it never reads, the
   text and the length word of an argument record, and a status it never
   tests. }
 procedure name_$strip_leaf_lc(in path: univ name_$long_pname_t;
                               in path_len: integer;
                               in max_len: integer;
-                              out dir_len: integer32;
+                              out dir_len: integer;
                               out leaf: univ name_$long_name_t;
                               out leaf_len: integer;
                               out status: status_$t); extern;

@@ -133,3 +133,28 @@ revisited.
    '>'), and cr_$get_cooked_line tests it with `tst.b; sne'.  It is
    now mr_open_quote: char, and c_cond_read reads mr_open_quote <>
    chr(0).
+22. Translator F (2026-11-11): cargs.pas and iosub.pas differ between
+   the binaries.  One source tests a conditional variable, `%var
+   cc_a88k;' declared in the unit, and tools/cc_check.sh passes
+   `-config cc_a88k' for cc.a88k.  The original's mechanism (a
+   conditional variable, a different insert, separate files) is not
+   known; rename or move the variable (e.g. into globals.ins.pas) if a
+   convention emerges.
+23. cargs.pas cargs_$init_option_defaults clears l_name's length but
+   blanks name_e92's characters (0x0B4C42: `clr.w (2704,A5); lea
+   (3732,A5),A0'), and build_my_name_string blanks the compiler's name
+   right after name_$strip_leaf_lc filled it (0x0B4872).  Both are kept
+   as the image has them (probable bugs of the original).
+24. cargs.pas: the cargs.ins.pas fields named by position are not set
+   by parse_options (only by the defaults), so none could be renamed
+   from it; parse_options confirms every named field's option.
+25. prfpkg.pas reads cargs_$options (meter, -STAT, the code-generation
+   options, -SYSTYPE) and IL's globals +0x10C, +0x110, +0x118 by
+   absolute address, but its include list (docs/routines-cc.*.md) has
+   neither cargs.ins.pas nor il.ins.pas nor anything that includes them.
+   The unit keeps the list and declares what it reads itself (a copy of
+   cargs.ins.pas's options record; the three IL cells by use).  Perhaps
+   one of its inserts (prfpkg.ins.pas, prtobj.ins.pas) declared them in
+   the original.  Its print_meter_results also reads perfsummary's
+   parameter, the source line count, which perfsummary itself never
+   reads (c_main passes it).

@@ -14,7 +14,34 @@ var
   prf_gspace_in_use: extern integer32;
   prf_gspace_peak: extern integer32;
 
-{ TODO(pascal) prfpkg.ins.pas is incomplete
+{ The compiler's phases are numbered 0..42 (prfpkg.pas's names: 0
+  Syntax ... 19 Code Generation ... 42 Library Generation); 43 is no
+  phase (and the totals' name). }
 
-  The rest of PRFPKG's interface is added when prfpkg.pas is
-  translated. }
+{ PERFINIT - clear the statistics.  0x0968D4. }
+procedure perfinit; extern;
+
+{ PERFSTART - start timing phase.  0x096960: a word by value. }
+procedure perfstart(
+    phase: integer); options(val_param); extern;
+
+{ PERFSTOP - stop timing phase and add its times and counts.  0x0969FA:
+  a word by value. }
+procedure perfstop(
+    phase: integer); options(val_param); extern;
+
+{ PRFPKG_$ACTIVATE_PHASE - stop the active phase, if any, and start
+  phase.  0x096B00: a word by value (35 call sites). }
+procedure prfpkg_$activate_phase(
+    phase: integer); options(val_param); extern;
+
+{ PRFPKG_$STOP_ACTIVE_PHASE - stop the active phase, if any.
+  0x096B32. }
+procedure prfpkg_$stop_active_phase; extern;
+
+{ PERFSUMMARY - the statistics into the listing (-STAT) and, with
+  -METER, to standard output.  0x097648: c_main's cc passes the source
+  line count, a longword by value, which only the nested
+  print_meter_results reads. }
+procedure perfsummary(
+    source_line_count: integer32); options(val_param); extern;

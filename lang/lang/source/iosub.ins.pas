@@ -19,6 +19,18 @@ type
   { A printed line, as PRTSUB builds it (prtsub_$line_t's layout). }
   iosub_$line_t = varying [256] of char;
 
+  { A name (cargs.ins.pas's cargs_$chars_t, which prfpkg.pas, opening
+    this insert, does not open). }
+  iosub_$name_t = array [1..1024] of char;
+
+var
+  { iosub.pas's data, A5 0x2CD7E4 (cc.m68k): the source file's full
+    pathname (+0x428, its length +0x930) and whether a library is being
+    generated (+0x936, outputs element 4: open_plb_file). }
+  iosub_$source_pathname: extern array [1..1024] of char;
+  iosub_$source_pathname_length: extern integer;
+  iosub_$generating_library: extern boolean;
+
 { IO_TERM - close the outputs at the end of the run, with severity.
   0x0B5B10: by address (c_error's cgerr passes a frame word holding 5). }
 procedure io_term(
@@ -56,7 +68,7 @@ procedure ejctln; extern;
   name was built on the first directory of its list, false for a name
   taken as it is), c_lex_pp's open_file_to_get_info (false). }
 function open_include_file(
-    in name: univ cargs_$chars_t;
+    in name: univ iosub_$name_t;
     len: integer;
     var sid: integer;
     in_first: boolean;

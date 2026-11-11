@@ -167,3 +167,20 @@ when this tree is merged).
        begin
          r := a^.name > b^.name;
        end;
+
+11. **`nil` as a pointer function's result.**  cargs.pas
+   arg_option_parameter (cc.m68k 0x0B27AC): `arg_option_parameter :=
+   nil' on one path (the image `suba.l A0,A0', 0x0B27F2).  dpc: "`nil`
+   as a pointer result where every assignment of the result is the last
+   statement of a path ... is not supported yet".  Reproducer:
+
+       module g11;
+       type p_t = ^integer;
+       var q: p_t; b: boolean;
+       function f: p_t;
+       begin
+         if b then
+           f := q
+         else
+           f := nil;
+       end;

@@ -28,6 +28,9 @@ const
 type
   obj_$string_t = array[1..256] of char;
   obj_$pname_t = array[1..1024] of char;  { a pathname }
+  { The running compiler image's name, as obj_$get_my_obj_info gives it
+    (cargs.pas's my_name, 32 characters). }
+  obj_$image_name_t = array [1..32] of char;
 
 { OBJ_$INIT_IO - start the module: no channels open; the channels are
   cleaned up when the program ends. }
