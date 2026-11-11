@@ -362,9 +362,18 @@ a 188 statement's variant (arg_call, arg_num), and the headings of
 adjust_ptr, releaserd, initrd, markuses and reachingdefinitions (opt_main
 calls them); paramclass and make_motioned_ud_chain are checked against
 their bodies (unchanged).  opt_reachdef declares kfold as opt_general
-does (docs/questions.md 104-107).
+does (docs/questions.md 111-114).
 Translator CC, opt_strength (started: cc.a88k's 12 routines and two
 small cc.m68k ones): g_opt.ins.pas gets the headings of
 opt_str_$opmod_of_operand, opt_str_$product_of, walkuses and
 strengthreduce (opt_main calls them); delparent's `in' confirmed
-(docs/questions.md 108-110).
+(docs/questions.md 115-117).
+Translator DD, cg_tree (finished, 44 of 44): generate and its 21 nested
+routines; the module's data declared (peb_ads +0x58, tree_fn_inst
++0x70, tree_op_inst +0xA0, tree_fn_rtn +0x158, the operands opw .. opr
++0x1B8 .. +0x230, tree_asn +0x248, tree_rlen +0x294).  fpa.ins.pas
+gets emit_neg, emit_fmath_top, emit_extend, emit_compare, emit_jsr,
+emit_clr_fp1, fpa_fop_proc and fpa_temp (headings read off frames and
+generate's calls).  The unit declares add_node's swap_cc (0x2C2080)
+and opt_loop's is_scale_candidate (g_opt.ins.pas's, an insert cg_tree
+does not open) itself.

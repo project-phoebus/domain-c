@@ -633,3 +633,18 @@ cc.m68k unless marked.
     stores through a pointer variable are `clr' (p^.stmt := 0 0x0E4BE6
     `clr.w (A0)', e^.ud^.next := nil 0x0E27F4 `clr.l (A0)').  dpc emits
     `clr' for both.
+
+## Conditions (translator DD, cg_tree.pas generate)
+
+83. **A dead compare before moves that set the condition codes.**
+    generate's scales (cc.m68k 0x105AAC, 0x105D46): `cmpi.w #88,(2,A1)'
+    of the constant, then `movea', `lea' and two `move.l' of its double
+    to the frame, then `bne': the branch takes the last move's
+    condition (the double's low longword zero), not the compare's.
+    Written as the test of the low longword the code makes.
+84. **A register variable read before any assignment on a path.**
+    mul_proc (0x101D38) assigns its routine index (D2) on two of the
+    classes' arms only and uses it on all; the conversions of arm 39
+    (0x107976) assign the routine on 4 of the 11 entries of a jump
+    table.  The registers keep their callers' values; the translation
+    leaves the variable unset there too.
