@@ -269,3 +269,5 @@ lang/lang/source/cg_call.pas	s/ord\(pass_len\)/0 { gap 22 }/
 lang/lang/source/cg_call.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d., ]+)\]}{my $v=$1; "(".join(" or ", map { /^(\d+)\.\.(\d+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $_)" } split(/,\s*/, $2)).") { gap 8 }"}ge
 # gap 27 (cg_call): gen_call's values exceed dpc's registers (the registers' and aliases' loop after the call dropped)
 lang/lang/source/cg_call.pas	if ((/^  \{ The registers and objects the call may change\. \}/ .. /^  \{ The result.s register\. \}/) && !/The result.s register/) { $_ = "  { gap 27 }\n" }
+# gap 8 (cg_misc): in on constant sets with word elements (the comparisons)
+lang/lang/source/cg_misc.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d., ]+)\]}{my $v=$1; "(".join(" or ", map { /^(\d+)\.\.(\d+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $_)" } split(/,\s*/, $2)).") { gap 8 }"}ge

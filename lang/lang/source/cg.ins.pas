@@ -128,6 +128,12 @@ var
   cg_line: extern integer;              { +0x144 (0x356458): the line
                                           being compiled (cgerr's) }
 
+  { cg_misc's cell (A5 0x356310). }
+  cg_misc_label: extern il_$node_ptr_t; { +0: the label templabel gives
+                                          while at_backend_506 is false
+                                          (cg_top's f_initialize sets
+                                          it) }
+
   { cg_tree's cells (A5 0x356460). }
   cg_tree_188: extern codegen_$uads_t;  { +0x188 (0x3565E8): set at run
                                           time; the PEB's status operand
@@ -380,6 +386,29 @@ procedure fop_proc(
     op2: integer); options(val_param); extern;
 
 { ---- cg_misc ---- }
+
+{ SHOW_STATE, SHOW_LABEL - the register state, and label lab with its
+  saved state, listed (debugging dumps).  cg_misc 0x0F973C (no
+  parameters), 0x0F99EC (a pointer). }
+procedure show_state; extern;
+
+procedure show_label(
+    lab: il_$node_ptr_t); options(val_param); extern;
+
+{ REVERSE_CC - the opposite condition of cc.  cg_misc 0x0F9BEE: a word;
+  D0. }
+function reverse_cc(
+    cc: integer): integer; options(val_param); extern;
+
+{ UNALIGNED - node n's storage may be at an odd address.  cg_misc
+  0x0F9C16: a longword; D0. }
+function unaligned(
+    n: il_$node_ptr_t): boolean; options(val_param); extern;
+
+{ ZERO_CHECK - node n is the integer constant 0.  cg_misc 0x0F9CD0: a
+  pointer; D0. }
+function zero_check(
+    n: il_$node_ptr_t): boolean; options(val_param); extern;
 
 { TEMPLABEL - a new temporary label node.  cg_misc 0x0F9BC8: no
   parameters, the node in A0; 48 call sites. }
