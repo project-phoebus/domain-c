@@ -89,7 +89,7 @@ begin
       target_properties.p_c4[1] := 16#77FF;
       target_properties.p_c4[2] := 16#7FFF;
       target_properties.p_58 := 0;
-      target_properties.p_84 := chr(0);
+      target_properties.p_84 := false;
     end
     else begin
       if (flags & 8) = 0 then
