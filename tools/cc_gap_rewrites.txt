@@ -474,3 +474,5 @@ lang/lang/source/opt_strength.pas	s/if g_opt_tree_ptr_t\(t\)\^\.op in \[0\.\.10,
 lang/lang/source/opt_strength.pas	s/^\s*43\.\.46, 49\.\.53, 57, 59\.\.62, 74\.\.77,$/ or ((g_opt_tree_ptr_t(t)^.op >= 43) and (g_opt_tree_ptr_t(t)^.op <= 46)) or ((g_opt_tree_ptr_t(t)^.op >= 49) and (g_opt_tree_ptr_t(t)^.op <= 53)) or (g_opt_tree_ptr_t(t)^.op = 57) or ((g_opt_tree_ptr_t(t)^.op >= 59) and (g_opt_tree_ptr_t(t)^.op <= 62)) or ((g_opt_tree_ptr_t(t)^.op >= 74) and (g_opt_tree_ptr_t(t)^.op <= 77))/
 lang/lang/source/opt_strength.pas	s/^\s*86\] then begin$/ or (g_opt_tree_ptr_t(t)^.op = 86) then begin/
 lang/lang/source/opt_strength.pas	s/if op in \[1, 3, 9, 10, 19, 20, 34, 36, 44\.\.46\] then begin/if (op = 1) or (op = 3) or (op = 9) or (op = 10) or (op = 19) or (op = 20) or (op = 34) or (op = 36) or ((op >= 44) and (op <= 46)) then begin { gap 8 }/
+# gap 2 (opt_strength): ptrsub's case of 4 labels over a range of 13 (empty labels added, for the check)
+lang/lang/source/opt_strength.pas	s/^(\s+)s\^\.br_cond, 1\);$/$1s^.br_cond, 1);\n        141, 143, 144, 145, 146, 147, 148, 149, 150: ; { gap 2 }/

@@ -100,11 +100,11 @@
 
   Written: the routines cc.a88k shares (the products, the substitution
   points, deluse, delparent, walkuses; cc.a88k's empty strengthreduce),
-  opt_str_$is_loop_constant_integer and opt_str_$opmod1_of_multiplier.
-  Not written yet: transformtemps .. ptrsub, match_rlens_srtemp_and_
-  assign .. autoinc, elimuses .. minimally_size_sr_temp, reduce and
-  cc.m68k's strengthreduce (0x0EBAF0, 0x35C bytes), and the module's
-  data they use (A5 +32 .. +160). }
+  opt_str_$is_loop_constant_integer, opt_str_$opmod1_of_multiplier,
+  transformtemps .. ptrsub and the module's data.
+  Not written yet: match_rlens_srtemp_and_assign .. autoinc, elimuses
+  .. minimally_size_sr_temp, reduce and cc.m68k's strengthreduce
+  (0x0EBAF0, 0x35C bytes). }
 
 module opt_strength;
 
@@ -136,17 +136,97 @@ type
   end;
   { What a temporary's node leads to (+46 of a kind 110 with +24 bit
     17, +52 of a kind 109 with +32 bit 17; il_utils.pas's sr_info_t
-    from its +4). }
+    from its +4; 18 bytes from gspace, create_sr_temp_var): tree the
+    expression it stands for (reduce), points its substitution points,
+    incs the statements that step it (add_assign), asg the statement in
+    the loop's preheader giving its first value, header the number of
+    the loop's header block. }
+  sr_inc_ptr_t = ^sr_inc_t;
   sr_temp_ptr_t = ^sr_temp_t;
   sr_temp_t = record
-    unused_0: integer32;                { +0 }
+    tree: g_opt_tree_ptr_t;             { +0 }
     points: sr_point_ptr_t;             { +4 }
+    incs: sr_inc_ptr_t;                 { +8 }
+    asg: g_opt_stmt_ptr_t;              { +12 }
+    header: integer;                    { +16 }
+  end;
+  { A statement stepping a temporary (8 bytes). }
+  sr_inc_t = record
+    stmt: g_opt_stmt_ptr_t;             { +0 }
+    next: sr_inc_ptr_t;                 { +4 }
+  end;
+  { The module's lists (8 bytes from new): the induction variables
+    (newindvar) and the candidate expressions (newexpr). }
+  sr_list_ptr_t = ^sr_list_t;
+  sr_list_t = record
+    node: il_$node_ptr_t;               { +0 }
+    next: sr_list_ptr_t;                { +4 }
+  end;
+  { A tree's header (+4..+15) and descriptor (+20..+35) as wholes
+    (stmtfound and verify_increments compare them with `cmpm.l' loops). }
+  sr_tree_view_ptr_t = ^sr_tree_view_t;
+  sr_tree_view_t = record
+    unused_0: integer;                  { +0 }
+    kind: integer;                      { +2 }
+    hdr: array [1..3] of integer32;     { +4 }
+    uses: integer;                      { +16 }
+    unused_18: integer;                 { +18 }
+    desc: add_node_$desc_t;             { +20 }
   end;
 
 var
   { delay.pas's +888 (cc.m68k 0x169968, cc.a88k 0x2E99D8): the bytes of
     each register class (delay.pas's class_size). }
   class_size: extern array [0..12] of integer;
+
+%if cc_a88k %then
+%else
+var
+  { The module's data (cc.m68k A5 0x3530D8), by variable number of
+    opt_region's table: invariant the variables no statement of the
+    loop assigns, excluded those strengthreduce rules out for the
+    routine (a 109 of storage class 5, without a type number at +74 or
+    with a bit of 16#201101 at +32; a 110 without +16 or with such a bit
+    at +24), others those excluded or assigned in the loop other than
+    as an induction variable, ivset the induction variables
+    (recognize_induction_variables). }
+  invariant: g_opt_varset_t;            { +0 }
+  excluded: g_opt_varset_t;             { +32 }
+  others: g_opt_varset_t;               { +64 }
+  ivset: g_opt_varset_t;                { +96 }
+  auto_desc: add_node_$desc_t;          { +128: autoinc's descriptor of
+                                          the addresses it forms }
+  cur_loop: g_opt_block_ptr_t;          { +144: the loop's blocks
+                                          (select_loop) }
+  ivs: sr_list_ptr_t;                   { +148: the induction variables }
+  exprs: sr_list_ptr_t;                 { +152: the candidate expressions }
+  ntemps: integer;                      { +156: the temporaries made }
+  preheader_num: g_opt_num_t;           { +158: the loop's preheader }
+  header_num: g_opt_num_t;              { +160: the loop's header }
+
+{ FIXUPCHILDREN - opt_loop.pas 0x0D93E4 (only opt_loop's insert-less
+  heading): tree t now evaluated at statement r (opt_loop.pas). }
+procedure fixupchildren(
+    var t: il_$node_ptr_t;
+    in r: integer;
+    in f: boolean); extern;
+
+{ FIXUP_BLOCKS - opt_main.pas 0x0DF2B6: the basic blocks' first and
+  last statements after statements were added (no parameters). }
+procedure fixup_blocks; extern;
+
+{ OPT_MAIN_$SYMIDX_OF_VARN_OR_FSYM - opt_main.pas 0x0DE630: the number
+  in opt_region's table of the variable a reference t stands for (D0, a
+  word compared with a statement's vnum). }
+function opt_main_$symidx_of_varn_or_fsym(
+    t: il_$node_ptr_t): integer; options(val_param); extern;
+
+{ KFOLD - kfold.pas 0x0AF444: fold the constants of tree t, a tree of
+  statement stmt (opt_general's heading). }
+procedure kfold(
+    in stmt: il_$node_ptr_t;
+    var t: il_$node_ptr_t); extern;
+%endif
 
 %if cc_a88k %then
 define
@@ -577,7 +657,823 @@ begin
   t^.points := p;
 end;
 
-{ deluse - use u (189) taken off cse parent p's (190) list of uses.
+%if cc_a88k %then
+%else
+{ transformtemps - t's operand temp (a strength reduction temporary,
+  operand 2 of a 137, the index of a 145) and the invariant temporary
+  inv added there: temp's first value (its preheader assignment) gets
+  inv added (operator 1), both recorded as substitution points of the
+  sum, and t's operand becomes temp alone.
+
+  0x0E676A, 0xD6 bytes: the operands in the frame (-264); temp and t
+  passed on by address (`pea (12,A6)', `pea (16,A6)'). }
+
+procedure transformtemps(
+    inv: il_$node_ptr_t;
+    temp: il_$node_ptr_t;
+    t: il_$node_ptr_t); options(val_param); internal;
+var
+  ops: add_node_$opnds_t;
+  s: g_opt_stmt_ptr_t;
+begin
+  if temp = nil then
+    return;
+  case temp^.kind of
+    109: begin
+      if (temp^.xl[8] & 16#20000) = 0 then
+        return;
+      s := sr_temp_ptr_t(temp^.xp[13])^.asg;
+    end;
+    110: begin
+      if (temp^.xl[6] & 16#20000) = 0 then
+        return;
+      s := sr_temp_ptr_t(temp^.xp2[11])^.asg;
+    end;
+    otherwise
+      return;
+  end;
+  ops[1] := s^.asg_rhs;
+  ops[2] := inv;
+  s^.asg_rhs := buildtreenode(1, s^.asg_desc, ops, 2);
+  opt_str_$add_substitution_point(ops[1], s^.asg_rhs);
+  opt_str_$add_substitution_point(ops[2], s^.asg_rhs);
+  if t^.kind = 137 then
+    g_opt_tree_ptr_t(t)^.opnd[2] := temp
+  else if t^.kind = 145 then
+    t^.xp[9] := temp
+  else
+    return;
+  opt_str_$add_substitution_point(temp, t);
+end;
+
+{ is_invariant_srtemp - temporary t was not made for a loop whose header
+  is a block of the loop headed by block h.
+
+  0x0E6840, 0x5C bytes: the header's number in a frame word; the result
+  in D2 (`st' first). }
+
+function is_invariant_srtemp(
+    t: il_$node_ptr_t;
+    h: integer): boolean; options(val_param); internal;
+var
+  hn: integer;
+  b: g_opt_block_ptr_t;
+  r: boolean;
+begin
+  if t^.kind = 110 then
+    hn := sr_temp_ptr_t(t^.xp2[11])^.header
+  else
+    hn := sr_temp_ptr_t(t^.xp[13])^.header;
+  r := true;
+  b := select_loop(h);
+  while b <> nil do begin
+    if hn = b^.num then begin
+      r := false;
+      exit;
+    end;
+    b := b^.link;
+  end;
+  is_invariant_srtemp := r;
+end;
+
+{ multidim - the address t (a 145, or a 137 of operator 13) whose
+  operand (index or operand 2) is a sum, used once, of two strength
+  reduction temporaries of which one is invariant in the loop headed by
+  block h: the invariant one folded into the other's first value
+  (transformtemps).
+
+  0x0E689C, 0x104 bytes: the two kinds tested whole (`seq', `or.b'). }
+
+procedure multidim(
+    t: il_$node_ptr_t;
+    h: integer); options(val_param); internal;
+var
+  x: g_opt_tree_ptr_t;
+begin
+  if t = nil then
+    return;
+  if not ((t^.kind = 145) or (t^.kind = 137)) then
+    return;
+  if t^.kind = 137 then
+    if g_opt_tree_ptr_t(t)^.op <> 13 then
+      return;
+  if t^.kind = 137 then
+    x := g_opt_tree_ptr_t(g_opt_tree_ptr_t(t)^.opnd[2])
+  else
+    x := g_opt_tree_ptr_t(t^.xp[9]);
+  if x^.kind <> 137 then
+    return;
+  if x^.uses > 1 then
+    return;
+  if x^.op <> 1 then
+    return;
+  if not il_utils_$is_strength_reduction_temp(x^.opnd[1]) then
+    return;
+  if not il_utils_$is_strength_reduction_temp(x^.opnd[2]) then
+    return;
+  if is_invariant_srtemp(x^.opnd[1], h) and
+     not is_invariant_srtemp(x^.opnd[2], h) then
+    transformtemps(x^.opnd[1], x^.opnd[2], t)
+  else if is_invariant_srtemp(x^.opnd[2], h) and
+          not is_invariant_srtemp(x^.opnd[1], h) then
+    transformtemps(x^.opnd[2], x^.opnd[1], t);
+end;
+
+{ unlinkstmts - the assignments to temporary t taken out of the
+  preheader (from its first statement to the next block's first) and
+  t's stepping statements out of the loop: use counts given back, a
+  region statement marked deleted.
+
+  0x0E69A0, 0x104 bytes: the region tested as `(+42 & 0xFFFF00) >> 8'
+  (g_opt.ins.pas's hdr). }
+
+procedure unlinkstmts(
+    t: il_$node_ptr_t); options(val_param); internal;
+var
+  p: sr_inc_ptr_t;
+  b: g_opt_block_ptr_t;
+  s, n: g_opt_stmt_ptr_t;
+begin
+  if t^.kind = 110 then
+    p := sr_temp_ptr_t(t^.xp2[11])^.incs
+  else if t^.kind = 109 then
+    p := sr_temp_ptr_t(t^.xp[13])^.incs
+  else
+    return;
+  b := g_opt_blocks_ptr_t(il_11c)^[preheader_num];
+  s := b^.first_stmt;
+  while s <> g_opt_blocks_ptr_t(il_11c)^[preheader_num + 1]^.first_stmt do begin
+    n := s^.next;
+    if n^.kind = 140 then
+      if n^.asg_lhs = t then begin
+        il_utils_$adjust_uc(il_$node_ptr_t(n), -1);
+        s^.next := n^.next;
+        n^.next^.prev := s;
+        if n^.hdr.region <> 0 then
+          n^.hdr.deleted := true;
+      end;
+    s := s^.next;
+  end;
+  while p <> nil do begin
+    il_utils_$adjust_uc(il_$node_ptr_t(p^.stmt), -1);
+    n := p^.stmt;
+    n^.prev^.next := n^.next;
+    n^.next^.prev := n^.prev;
+    if n^.hdr.region <> 0 then
+      n^.hdr.deleted := true;
+    p := p^.next;
+  end;
+end;
+
+{ substitute - temporary new put for temporary old at each of old's
+  substitution points, whose list is then put in front of new's.
+
+  0x0E6AA4, 0x1CA bytes: the kinds compared in turn; 164's second
+  operand shares 146's code; another kind cgerr_no_source(28, 0).  Of
+  a 109 the list is joined to old's own (+52 of old, then new's: the
+  image's), and the last point is not set when old has none. }
+
+procedure substitute(
+    new: il_$node_ptr_t;
+    old: il_$node_ptr_t); options(val_param); internal;
+var
+  p, q, last: sr_point_ptr_t;
+  n: il_$node_ptr_t;
+  k: integer;
+begin
+  if old^.kind = 110 then
+    p := sr_temp_ptr_t(old^.xp2[11])^.points
+  else
+    p := sr_temp_ptr_t(old^.xp[13])^.points;
+  q := p;
+  while q <> nil do begin
+    last := q;
+    n := q^.point;
+    if n <> nil then
+      case n^.kind of
+        143, 137:
+          for k := 1 to g_opt_tree_ptr_t(n)^.count do
+            if g_opt_tree_ptr_t(n)^.opnd[k] = old then
+              g_opt_tree_ptr_t(n)^.opnd[k] := new;
+        205, 147, 146:
+          if n^.xp[6] = old then
+            n^.xp[6] := new;
+        145: begin
+          if n^.xp[6] = old then
+            n^.xp[6] := new;
+          if n^.xp[9] = old then
+            n^.xp[9] := new;
+        end;
+        164: begin
+          if n^.xp[5] = old then
+            n^.xp[5] := new;
+          if n^.xp[6] = old then
+            n^.xp[6] := new;
+        end;
+        175, 171:
+          if n^.xp[4] = old then
+            n^.xp[4] := new;
+        140: begin
+          if g_opt_stmt_ptr_t(n)^.asg_rhs = old then
+            g_opt_stmt_ptr_t(n)^.asg_rhs := new;
+          if g_opt_stmt_ptr_t(n)^.asg_x <> nil then
+            if g_opt_stmt_ptr_t(n)^.asg_x = old then
+              g_opt_stmt_ptr_t(n)^.asg_x := new;
+        end;
+        139:
+          for k := 1 to g_opt_stmt_ptr_t(n)^.eval_count do
+            if g_opt_stmt_ptr_t(n)^.eval_opnd[k] = old then
+              g_opt_stmt_ptr_t(n)^.eval_opnd[k] := new;
+        142:
+          if g_opt_stmt_ptr_t(n)^.br_cond = old then
+            g_opt_stmt_ptr_t(n)^.br_cond := new;
+        151:
+          if g_opt_stmt_ptr_t(n)^.x48 <> nil then
+            if g_opt_stmt_ptr_t(n)^.x48 = old then
+              g_opt_stmt_ptr_t(n)^.x48 := new;
+        otherwise
+          cgerr_no_source(28, 0);
+      end;
+    q := q^.next;
+  end;
+  if new^.kind = 110 then begin
+    last^.next := sr_temp_ptr_t(new^.xp2[11])^.points;
+    sr_temp_ptr_t(new^.xp2[11])^.points := p;
+  end
+  else begin
+    last^.next := sr_temp_ptr_t(old^.xp[13])^.points;
+    sr_temp_ptr_t(new^.xp[13])^.points := p;
+  end;
+end;
+
+{ stmtfound - assignment b lies before a (or at it) or after it in the
+  run of assignments around a, and assigns the same as a (same
+  operator, width and value: the same tree, or before a an equal tree
+  of operator 137 with the same operands).
+
+  0x0E6C6E, 0x110 bytes: the trees' header (+4..+15, three longwords)
+  and descriptor (+20..+35) compared with `cmpm.l' loops, then count,
+  operator, uses and the two operands. }
+
+function stmtfound(
+    a: g_opt_stmt_ptr_t;
+    b: g_opt_stmt_ptr_t): boolean; options(val_param); internal;
+var
+  s: g_opt_stmt_ptr_t;
+  x, y: g_opt_tree_ptr_t;
+begin
+  stmtfound := false;
+  s := a;
+  while s^.kind = 140 do begin
+    if s = b then begin
+      if (s^.asg_op = a^.asg_op) and (s^.asg_rlen = a^.asg_rlen) then
+        if s^.asg_rhs = a^.asg_rhs then
+          stmtfound := true
+        else if (s^.asg_rhs^.kind = 137) and (a^.asg_rhs^.kind = 137) then begin
+          x := g_opt_tree_ptr_t(a^.asg_rhs);
+          y := g_opt_tree_ptr_t(s^.asg_rhs);
+          if (sr_tree_view_ptr_t(x)^.hdr = sr_tree_view_ptr_t(y)^.hdr) and
+             (sr_tree_view_ptr_t(x)^.desc = sr_tree_view_ptr_t(y)^.desc) and
+             (x^.count = y^.count) and (x^.op = y^.op) and
+             (x^.uses = y^.uses) and (x^.opnd[1] = y^.opnd[1]) and
+             (x^.opnd[2] = y^.opnd[2]) then
+            stmtfound := true;
+        end;
+      return;
+    end;
+    s := s^.prev;
+  end;
+  s := a;
+  while s^.kind = 140 do begin
+    if s = b then begin
+      if (s^.asg_rhs = a^.asg_rhs) and (s^.asg_op = a^.asg_op) and
+         (s^.asg_rlen = a^.asg_rlen) then
+        stmtfound := true;
+      return;
+    end;
+    s := s^.next;
+  end;
+end;
+
+{ verify_increments - temporaries a and b are stepped alike: one
+  stepping statement each, assigning the same (stmtfound), or every
+  stepping statement of a matched by one of b's.  No stepping
+  statement for either is cgerr 3 at opt_region's statement.
+
+  0x0E6D7E, 0x1B2 bytes: the result in D2 (`st' first); the trees
+  compared as in stmtfound. }
+
+function verify_increments(
+    a: il_$node_ptr_t;
+    b: il_$node_ptr_t): boolean; options(val_param); internal;
+var
+  p, q, r: sr_inc_ptr_t;
+  x, y: g_opt_tree_ptr_t;
+  ok, found: boolean;
+begin
+  ok := true;
+  if a^.kind = 110 then begin
+    p := sr_temp_ptr_t(a^.xp2[11])^.incs;
+    q := sr_temp_ptr_t(b^.xp2[11])^.incs;
+  end
+  else begin
+    p := sr_temp_ptr_t(a^.xp[13])^.incs;
+    q := sr_temp_ptr_t(b^.xp[13])^.incs;
+  end;
+  if (p = nil) or (q = nil) then
+    cgerr(3, opt_4009c[opt_region]^.line, opt_4009c[opt_region]);
+  if (p^.next = nil) and (q^.next = nil) and
+     (p^.stmt^.asg_rhs = q^.stmt^.asg_rhs) and
+     (p^.stmt^.asg_op = q^.stmt^.asg_op) then begin
+    if not stmtfound(p^.stmt, q^.stmt) then
+      ok := false;
+  end
+  else begin
+    if (p^.next = nil) and (q^.next = nil) then begin
+      if p^.stmt^.asg_op <> q^.stmt^.asg_op then begin
+        verify_increments := false;
+        return;
+      end;
+      if (p^.stmt^.asg_rhs^.kind <> 137) or
+         (q^.stmt^.asg_rhs^.kind <> 137) then begin
+        verify_increments := false;
+        return;
+      end;
+      x := g_opt_tree_ptr_t(p^.stmt^.asg_rhs);
+      y := g_opt_tree_ptr_t(q^.stmt^.asg_rhs);
+      if not ((sr_tree_view_ptr_t(x)^.hdr = sr_tree_view_ptr_t(y)^.hdr) and
+              (sr_tree_view_ptr_t(x)^.desc = sr_tree_view_ptr_t(y)^.desc) and
+              (x^.count = y^.count) and (x^.op = y^.op) and
+              (x^.uses = y^.uses) and (x^.opnd[1] = y^.opnd[1]) and
+              (x^.opnd[2] = y^.opnd[2])) then begin
+        verify_increments := false;
+        return;
+      end;
+      if not stmtfound(p^.stmt, q^.stmt) then begin
+        verify_increments := false;
+        return;
+      end;
+    end;
+    while p <> nil do begin
+      found := false;
+      r := q;
+      while r <> nil do begin
+        if stmtfound(p^.stmt, r^.stmt) then begin
+          found := true;
+          exit;
+        end;
+        r := r^.next;
+      end;
+      if not found then begin
+        ok := false;
+        exit;
+      end;
+      p := p^.next;
+    end;
+  end;
+  verify_increments := ok;
+end;
+
+{ opt_str_$trees_equivalent - trees a and b compute the same: the same
+  node, or of one kind: a 137 of the same operator, descriptor, flags,
+  uses and count, not a load (15, 16), with none of flags 0..4, 12, 16,
+  19 unless an operator 26, and equivalent operands (in_index passed
+  down for an operator 26); a 145 with equivalent indexes, the same base
+  (+24) and +32, +4, +40, +42, in_index set, and the same +28 unless
+  the base is of kind 153, 154, 163 or 195.
+
+  0x0E6F30, 0x176 bytes: the flags as a longword (`andi.l #0x9101F');
+  145's conditions evaluated whole (`seq', `and.b'), the call first. }
+
+function opt_str_$trees_equivalent(
+    a: il_$node_ptr_t;
+    b: il_$node_ptr_t;
+    in_index: boolean): boolean; options(val_param); internal;
+var
+  x, y: g_opt_tree_ptr_t;
+  k: integer;
+begin
+  if a = b then begin
+    opt_str_$trees_equivalent := true;
+    return;
+  end;
+  if a^.kind <> b^.kind then begin
+    opt_str_$trees_equivalent := false;
+    return;
+  end;
+  x := g_opt_tree_ptr_t(a);
+  y := g_opt_tree_ptr_t(b);
+  case a^.kind of
+    137: begin
+      if (x^.op <> y^.op) or
+         (sr_tree_view_ptr_t(x)^.desc <> sr_tree_view_ptr_t(y)^.desc) or
+         (x^.flags <> y^.flags) or (x^.uses <> y^.uses) or
+         (x^.count <> y^.count) then begin
+        opt_str_$trees_equivalent := false;
+        return;
+      end;
+      if (x^.op = 16) or (x^.op = 15) then begin
+        opt_str_$trees_equivalent := false;
+        return;
+      end;
+      if x^.op <> 26 then
+        if x^.flags * [0..4, 12, 16, 19] <> [] then begin
+          opt_str_$trees_equivalent := false;
+          return;
+        end;
+      for k := 1 to x^.count do
+        if not opt_str_$trees_equivalent(x^.opnd[k], y^.opnd[k],
+                                         x^.op = 26) then begin
+          opt_str_$trees_equivalent := false;
+          return;
+        end;
+      opt_str_$trees_equivalent := true;
+    end;
+    145:
+      opt_str_$trees_equivalent :=
+        opt_str_$trees_equivalent(a^.xp[9], b^.xp[9], false) and
+        (a^.xp[6] = b^.xp[6]) and in_index and (a^.xl[8] = b^.xl[8]) and
+        (a^.xl[1] = b^.xl[1]) and (a^.xw[21] = b^.xw[21]) and
+        (a^.xw[20] = b^.xw[20]) and
+        ((a^.xp[6]^.kind = 195) or (a^.xp[6]^.kind = 163) or
+         (a^.xp[6]^.kind = 154) or (a^.xp[6]^.kind = 153) or
+         (a^.xp[7] = b^.xp[7]));
+    otherwise
+      opt_str_$trees_equivalent := false;
+  end;
+end;
+
+{ combine_temps - in each loop's preheader, two temporaries assigned
+  alike (op 0, the same width, size and operator, equivalent values)
+  and stepped alike (verify_increments), the second made for this loop
+  (its tree's statement's block in the loop: serial), are made one:
+  the second's points get the first (substitute) and its statements go
+  (unlinkstmts).
+
+  0x0E70A6, 0x1F6 bytes: the blocks in depth-first order
+  (opt_dfs_block); the loop in cur_loop, the preheader's number in
+  preheader_num; both walks end at the first statement of the block
+  numbered after the preheader, and stop at nil after a statement. }
+
+procedure combine_temps; internal;
+var
+  i: integer;
+  bn: g_opt_num_t;
+  b: g_opt_block_ptr_t;
+  s, s2: g_opt_stmt_ptr_t;
+  n: il_$node_ptr_t;
+  t: sr_temp_ptr_t;
+begin
+  for i := opt_first_block to opt_last_block do begin
+    bn := opt_dfs_block^[i];
+    b := g_opt_blocks_ptr_t(il_11c)^[bn];
+    if b^.flags.header and (b^.preheader <> nil) then begin
+      cur_loop := select_loop(bn);
+      preheader_num := b^.preheader^.num;
+      s := b^.preheader^.first_stmt;
+      while s <> g_opt_blocks_ptr_t(il_11c)^[preheader_num + 1]^.first_stmt do begin
+        if s^.kind = 140 then
+          if il_utils_$is_strength_reduction_temp(s^.asg_lhs) then
+            if s^.asg_op = 0 then begin
+              s2 := s^.next;
+              while s2 <> g_opt_blocks_ptr_t(il_11c)^[preheader_num + 1]^.first_stmt do begin
+                if s2^.kind = 140 then begin
+                  n := s2^.asg_lhs;
+                  t := nil;
+                  if n^.kind = 109 then begin
+                    if (n^.xl[8] & 16#20000) <> 0 then
+                      t := sr_temp_ptr_t(n^.xp[13]);
+                  end
+                  else if n^.kind = 110 then
+                    if (n^.xl[6] & 16#20000) <> 0 then
+                      t := sr_temp_ptr_t(n^.xp2[11]);
+                  if t <> nil then
+                    if (t^.tree^.owner^.block^.serial = cur_loop^.serial) and
+                       (s2^.asg_op = 0) and (s^.asg_rlen = s2^.asg_rlen) and
+                       (s^.asg_size = s2^.asg_size) and
+                       (s^.asg_op = s2^.asg_op) then
+                      if opt_str_$trees_equivalent(s^.asg_rhs, s2^.asg_rhs,
+                                                   false) then
+                        if verify_increments(s^.asg_lhs, s2^.asg_lhs) then begin
+                          substitute(s^.asg_lhs, s2^.asg_lhs);
+                          unlinkstmts(s2^.asg_lhs);
+                        end;
+                end;
+                if s2 = nil then
+                  exit;
+                if s2 = g_opt_blocks_ptr_t(il_11c)^[preheader_num + 1]^.first_stmt then
+                  exit;
+                s2 := s2^.next;
+              end;
+            end;
+        if s = nil then
+          exit;
+        if s = g_opt_blocks_ptr_t(il_11c)^[preheader_num + 1]^.first_stmt then
+          exit;
+        s := s^.next;
+      end;
+    end;
+  end;
+end;
+
+{ used_outside_loop - tree t (a 137 or 143) is an operand of a
+  statement of a block outside cur_loop (serial), or of a tree there.
+
+  0x0E73BE, 0x1A6 bytes: the blocks by number (il_11c), each from its
+  first statement to its last's next; found in the frame (-20), set by
+  usewalk through its static link (A1) and tested after each walk; the
+  result in D0. }
+
+function used_outside_loop(
+    t: il_$node_ptr_t): boolean; options(val_param); internal;
+var
+  found: boolean;
+  b: g_opt_block_ptr_t;
+  s: g_opt_stmt_ptr_t;
+  i, k: integer;
+
+  { usewalk - found set when t is an operand of tree n or of a tree
+    below it.
+
+    0x0E729C, 0x122 bytes: nested, the static link in A1 (passed on to
+    itself); the kinds compared in turn; 171 and 175 separate copies. }
+
+  procedure usewalk(
+      n: il_$node_ptr_t;
+      t: il_$node_ptr_t); options(val_param);
+  var
+    k: integer;
+  begin
+    case n^.kind of
+      137, 143:
+        for k := 1 to g_opt_tree_ptr_t(n)^.count do
+          if g_opt_tree_ptr_t(n)^.opnd[k] = t then begin
+            found := true;
+            return;
+          end
+          else
+            usewalk(g_opt_tree_ptr_t(n)^.opnd[k], t);
+      147, 205, 146:
+        if n^.xp[6] = t then
+          found := true
+        else
+          usewalk(n^.xp[6], t);
+      145:
+        if n^.xp[6] = t then
+          found := true
+        else begin
+          usewalk(n^.xp[6], t);
+          if n^.xp[9] = t then
+            found := true
+          else
+            usewalk(n^.xp[9], t);
+        end;
+      175:
+        if n^.xp[4] = t then
+          found := true
+        else
+          usewalk(n^.xp[4], t);
+      171:
+        if n^.xp[4] = t then
+          found := true
+        else
+          usewalk(n^.xp[4], t);
+      164:
+        if n^.xp[5] = t then
+          found := true
+        else begin
+          usewalk(n^.xp[5], t);
+          if n^.xp[6] = t then
+            found := true
+          else
+            usewalk(n^.xp[6], t);
+        end;
+      otherwise
+    end;
+  end;
+
+begin
+  used_outside_loop := false;
+  found := false;
+  if not ((t^.kind = 143) or (t^.kind = 137)) then
+    return;
+  for i := opt_first_block to opt_last_block do begin
+    b := g_opt_blocks_ptr_t(il_11c)^[i];
+    if b^.serial <> cur_loop^.serial then begin
+      s := b^.first_stmt;
+      while s <> b^.last_stmt^.next do begin
+        case s^.kind of
+          139:
+            for k := 1 to s^.eval_count do
+              if s^.eval_opnd[k] = t then begin
+                used_outside_loop := true;
+                return;
+              end
+              else
+                usewalk(s^.eval_opnd[k], t);
+          140: begin
+            if s^.asg_rhs = t then begin
+              used_outside_loop := true;
+              return;
+            end;
+            usewalk(s^.asg_rhs, t);
+            used_outside_loop := found;
+            if found then
+              return;
+            if s^.asg_x <> nil then begin
+              if s^.asg_x = t then begin
+                used_outside_loop := true;
+                return;
+              end;
+              usewalk(s^.asg_x, t);
+            end;
+            used_outside_loop := found;
+            if found then
+              return;
+            if s^.asg_lhs = t then begin
+              used_outside_loop := true;
+              return;
+            end;
+            usewalk(s^.asg_lhs, t);
+          end;
+          142: begin
+            if s^.br_cond = t then begin
+              used_outside_loop := true;
+              return;
+            end;
+            usewalk(s^.br_cond, t);
+          end;
+          151:
+            if s^.x48 <> nil then begin
+              if s^.x48 = t then begin
+                used_outside_loop := true;
+                return;
+              end;
+              usewalk(s^.x48, t);
+            end;
+          188: begin
+            if s^.x48 = t then begin
+              used_outside_loop := true;
+              return;
+            end;
+            usewalk(s^.x48, t);
+          end;
+          otherwise
+        end;
+        used_outside_loop := found;
+        if found then
+          return;
+        s := s^.next;
+      end;
+    end;
+  end;
+end;
+
+procedure subwalk(
+    n: il_$node_ptr_t;
+    ptr: il_$node_ptr_t;
+    target: il_$node_ptr_t); options(val_param); internal; forward;
+
+{ substitute_ptr_for_target - slot (an operand of parent) holding
+  target gets ptr (target a 145: ptr itself, its uses up by n; else
+  ptr's base, recorded as a substitution point of parent), and a 137
+  target used more than once gives its use back (from an address
+  parent: its operand's when n > 1, the uses down by n but kept at 1
+  at least); another slot is walked into (subwalk).  A slot then of
+  kind 137, 164 or 143 is folded (kfold) and recorded as a
+  substitution point of parent.
+
+  0x0E7564, 0x104 bytes: parent passed on by address (`pea (8,A6)');
+  the kinds compared in turn. }
+
+procedure substitute_ptr_for_target(
+    parent: il_$node_ptr_t;
+    ptr: il_$node_ptr_t;
+    target: il_$node_ptr_t;
+    var slot: il_$node_ptr_t;
+    n: integer32); options(val_param); internal;
+var
+  k: integer;
+begin
+  if slot = target then begin
+    if target^.kind = 145 then begin
+      slot := ptr;
+      g_opt_tree_ptr_t(ptr)^.uses := g_opt_tree_ptr_t(ptr)^.uses + n;
+    end
+    else begin
+      slot := ptr^.xp[6];
+      opt_str_$add_substitution_point(ptr^.xp[6], parent);
+    end;
+    if target^.kind = 137 then
+      if g_opt_tree_ptr_t(target)^.uses > 1 then begin
+        k := parent^.kind;
+        if (k = 145) or (k = 147) or (k = 146) or (k = 205) then begin
+          if n > 1 then begin
+            g_opt_tree_ptr_t(target)^.uses :=
+              g_opt_tree_ptr_t(target)^.uses - n;
+            il_utils_$adjust_uc(g_opt_tree_ptr_t(target)^.opnd[1], -1);
+          end
+          else
+            il_utils_$adjust_uc(target, -1);
+          if g_opt_tree_ptr_t(target)^.uses < 1 then
+            g_opt_tree_ptr_t(target)^.uses := 1;
+        end
+        else
+          il_utils_$adjust_uc(target, -1);
+      end;
+  end
+  else
+    subwalk(slot, ptr, target);
+  k := slot^.kind;
+  if (k = 137) or (k = 164) or (k = 143) then begin
+    kfold(parent, slot);
+    opt_str_$add_substitution_point(slot, parent);
+  end;
+end;
+
+{ subwalk - substitute_ptr_for_target over the operands of n (the uses
+  of an address node passed for its base and index).
+
+  0x0E7668, 0x102 bytes: the kinds compared in turn; 145's index and
+  164's second operand share the base's call. }
+
+procedure subwalk;
+var
+  k: integer;
+begin
+  case n^.kind of
+    137, 143:
+      for k := 1 to g_opt_tree_ptr_t(n)^.count do
+        substitute_ptr_for_target(n, ptr, target,
+                                  g_opt_tree_ptr_t(n)^.opnd[k], 1);
+    147, 146, 205:
+      substitute_ptr_for_target(n, ptr, target, n^.xp[6],
+                                g_opt_tree_ptr_t(n)^.uses);
+    145: begin
+      substitute_ptr_for_target(n, ptr, target, n^.xp[6],
+                                g_opt_tree_ptr_t(n)^.uses);
+      substitute_ptr_for_target(n, ptr, target, n^.xp[9],
+                                g_opt_tree_ptr_t(n)^.uses);
+    end;
+    171, 175:
+      substitute_ptr_for_target(n, ptr, target, n^.xp[4], 1);
+    164: begin
+      substitute_ptr_for_target(n, ptr, target, n^.xp[5], 1);
+      substitute_ptr_for_target(n, ptr, target, n^.xp[6], 1);
+    end;
+    otherwise
+  end;
+end;
+
+{ ptrsub - substitute_ptr_for_target over the operands of every
+  statement of the loop's blocks (loop, linked through link).
+
+  0x0E776A, 0xFA bytes: each block from its first statement's
+  predecessor's next to its last statement. }
+
+procedure ptrsub(
+    loop: g_opt_block_ptr_t;
+    ptr: il_$node_ptr_t;
+    target: il_$node_ptr_t); options(val_param); internal;
+var
+  b: g_opt_block_ptr_t;
+  s: g_opt_stmt_ptr_t;
+  k: integer;
+begin
+  b := loop;
+  while b <> nil do begin
+    s := b^.first_stmt^.prev;
+    repeat
+      s := s^.next;
+      case s^.kind of
+        140: begin
+          substitute_ptr_for_target(il_$node_ptr_t(s), ptr, target,
+                                    s^.asg_rhs, 1);
+          if s^.asg_x <> nil then
+            substitute_ptr_for_target(il_$node_ptr_t(s), ptr, target,
+                                      s^.asg_x, 1);
+          substitute_ptr_for_target(il_$node_ptr_t(s), ptr, target,
+                                    s^.asg_lhs, 1);
+        end;
+        139:
+          for k := 1 to s^.eval_count do
+            substitute_ptr_for_target(il_$node_ptr_t(s), ptr, target,
+                                      s^.eval_opnd[k], 1);
+        142:
+          substitute_ptr_for_target(il_$node_ptr_t(s), ptr, target,
+                                    s^.br_cond, 1);
+        151:
+          substitute_ptr_for_target(il_$node_ptr_t(s), ptr, target,
+                                    s^.x48, 1);
+        otherwise
+      end;
+    until s = b^.last_stmt;
+    b := b^.link;
+  end;
+end;
+%endif
+
+{ deluse -use u (189) taken off cse parent p's (190) list of uses.
 
   0x0E7864, 0x54 bytes (cc.a88k 0x2B3976): both by address; no caller
   in either binary. }
