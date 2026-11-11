@@ -158,3 +158,30 @@ revisited.
    the original.  Its print_meter_results also reads perfsummary's
    parameter, the source line count, which perfsummary itself never
    reads (c_main passes it).
+
+26. Translator H (2026-11-11): question 9 settled: lex_text is varying
+   [520] of char (8 characters of the listing's number field and 512
+   of text, as lex_listing_line), c_globals.ins.pas changed.
+27. unix_objmod's +0x5DD0 and +0x5E16, which c_lex_pp and c_main set,
+   are declared in c_globals.ins.pas (uobj_hp_standard,
+   uobj_systype_2) because neither unit opens unix_objmod.ins.pas;
+   unix_objmod.pas must `define' them under these names (or the
+   declarations move to an insert all three open).
+28. The tokens' table (c_lex_pp +0x26E8) is declared lex_tokens:
+   array [-10..236] so that lex_tokens[k] is the token of class k
+   (c_main's rword_init fills [0..75] from +0x2710, [-10..-1] are the
+   compound assignments); the original may have had two arrays or an
+   offset index.  The upper bound comes only from the next cell
+   (+0x2AC4).  The ctk_ class names are the spellings of c_data.asm's
+   table.  Rename if the original's names turn up.
+29. c_lex_pp's parse_directive has locals no instruction of its own
+   touches: they are used only by the routines nested in it
+   (module_sem, section_sem, systype_sem reach them through A1), and
+   line_sem is a function whose result its two callers drop (written
+   discard(line_sem)).  Kept as the image has them.
+30. us/us/ins/c.ins.pas declares mbstowcs (the C library's, called by
+   c_lex_pp's get_wstring through the transfer vector) and
+   c_$map_to_apollo_cond; c.ins.pas now declares its own c_$chars_t
+   (c_lex_pp opens it before the prelude) instead of cargs_$chars_t.
+   iosub.ins.pas's error_exit takes a univ iosub_$status_t for the
+   same reason (c_error and c_sym_map open it without base's types).

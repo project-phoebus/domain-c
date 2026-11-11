@@ -184,3 +184,64 @@ when this tree is merged).
          else
            f := nil;
        end;
+
+12. **A non-local `goto`.**  c_lex_pp.pas: get_character (cc.m68k
+   0x054DBA), get_comment (0x054DFA) and get_identifier (0x055336),
+   nested in get, leave get for its end (0x055F20) at the end of the
+   source: `pea label; move.l frame,-(SP); jsr pas_$nlg2' with get's
+   frame (from A1, kept at (-4,A6), or the routine's dynamic link);
+   get keeps A5 at (-16,A6) and reloads it at the label.  dpc: "a
+   `goto` to a label of an enclosing routine (a non-local `goto`, ref
+   p. 4-97; its frame unwinding has not been looked for in the image)
+   is not supported yet".  Reproducer:
+
+       module g12;
+       var n: integer;
+       procedure p;
+       label 9;
+         procedure q;
+         begin
+           if n > 0 then goto 9;
+           n := 1;
+         end;
+       begin
+         q;
+         n := 2;
+       9:
+         n := 3;
+       end;
+
+13. **A pointer function's result compared with a variable.**
+   c_lex_pp.pas ppio_$get_line (0x0562AE): `if
+   spos_$region_user_name(spos_$region) = std_include_tok' (`jsr;
+   addq.w #4,SP; cmpa.l (10972,A5),A0').  dpc: "comparing the value of
+   a function whose result is in A0 other than `=` / `<>` with a
+   constant is not supported yet".  Reproducer:
+
+       module g13;
+       var p: univ_ptr; b: boolean;
+       function f(n: integer32): univ_ptr; options(val_param); extern;
+       procedure q;
+       begin
+         b := f(1) = p;
+       end;
+
+14. **A pointer result assigned from a parameter.**  c_lex_pp.pas
+   clex_$catstring (0x055FE4): `clex_$catstring := s1' (or s2) on the
+   paths that give up (`movea.l A2,A0' / `movea.l A3,A0' and a branch
+   to the epilogue).  dpc: "a pointer result in a body of several
+   statements assigned other than a pointer function's result, a
+   variable or `nil` ... is not supported yet".  Reproducer:
+
+       module g14;
+       type p_t = ^integer;
+       var n: integer;
+       function f(a: p_t; b: p_t): p_t; options(val_param);
+       begin
+         if a = nil then begin
+           f := b;
+           return;
+         end;
+         n := 1;
+         f := a;
+       end;

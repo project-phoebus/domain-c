@@ -60,23 +60,32 @@ procedure warning_text(
   when each owner is translated: c_def_sem, c_expr_sem, c_stmt_sem,
   c_syntax, c_lex_pp, c_sym_map. }
 
-{ c_lex_pp.pas: the lexer. }
+{ c_lex_pp.pas: the lexer (checked against its bodies). }
 
-{ INIT_LEX - c_lex_pp.pas 0x05351A (cc.a88k 0x05379A). }
+{ INIT_LEX - start reading the source file.  c_lex_pp.pas 0x05351A
+  (cc.a88k 0x05379A); c_main's cc and do_lex_for_listings. }
 procedure init_lex; extern;
 
-{ GET - c_lex_pp.pas 0x0557EA (cc.a88k 0x055A6A). }
+{ GET - the next token to lex_token, its class to token_kind.
+  c_lex_pp.pas 0x0557EA (cc.a88k 0x055A6A); 188 call sites. }
 procedure get; extern;
 
-{ CLEX_$UNGET - c_lex_pp.pas 0x055FB0 (cc.a88k 0x056230). }
+{ CLEX_$UNGET - make tok (of class kind) the current token, the current
+  one to come back from the next get.  c_lex_pp.pas 0x055FB0 (cc.a88k
+  0x056230); c_expr_syn's primary_expr and c_syntax's array_dim_init
+  pass a node's kind and the node. }
 procedure clex_$unget(
-    p8: integer;
-    p10: univ_ptr); options(val_param); extern;
+    kind: integer;
+    tok: il_$node_ptr_t); options(val_param); extern;
 
-{ CLEX_$CATSTRING - c_lex_pp.pas 0x055FE4 (cc.a88k 0x056264). }
+{ CLEX_$CATSTRING - the string of s1's characters (less its final NUL)
+  then s2's, of s1's kind (adjacent string literals); s1 when s2 is not
+  a string (92, 93) or the result would pass 4095 characters, s2 when
+  s1 is nil or not a string.  c_lex_pp.pas 0x055FE4 (cc.a88k
+  0x056264); primary_expr and array_dim_init read A0. }
 function clex_$catstring(
-    p8: univ_ptr;
-    p12: univ_ptr): univ_ptr; options(val_param); extern;
+    s1: il_$node_ptr_t;
+    s2: il_$node_ptr_t): il_$node_ptr_t; options(val_param); extern;
 
 { c_def_sem.pas: declarations (called from c_expr_sem, c_expr_syn,
   c_main, c_stmt_sem, c_syntax and runbackend). }
