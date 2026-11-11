@@ -828,10 +828,10 @@ end;
 
   0x061596, 0x8BC bytes, link #-352: the follow set (the declaration
   starters; for a body the statement starters too, less identifier;
-  for parameters the opening brace) in the frame, the tests with the register holding
-  3 (docs/rev889-patterns.md 24); avoid_void's report flag a byte
-  constant (false for a function, true for a variable); the section
-  flag cleared with `bclr #0' of the flags' second byte.
+  for parameters the opening brace) in the frame, the tests with the
+  register holding 3 (docs/rev889-patterns.md 24); avoid_void's report
+  flag a byte constant (false for a function, true for a variable);
+  the section flag cleared with `bclr #0' of the flags' second byte.
 
   Not known from the original:
   - the names; the structure of the jumps (written with goto). }
@@ -2433,8 +2433,8 @@ end;
   brace left open); def_data and the variable's flag 6 (initialized).
 
   0x063C6C, 0x19C bytes, link #-56; A5: typedef names looked through
-  (kind 118); the follow set the members' (0x06373E) with the closing brace added for
-  a braced scalar.
+  (kind 118); the follow set the members' (0x06373E) with the closing
+  brace added for a braced scalar.
 
   Not known from the original:
   - the names. }
