@@ -378,4 +378,52 @@ when this tree is merged).
        procedure q(t: p_t); options(val_param);
        begin
          walk(t, kf, false);
+22. **`ord` of a boolean.**  attributes.pas attr_curr_align_env
+   (cc.m68k 0x0A63F6: `moveq #1,D0; and.b 0x2C3677,D0', the packed
+   boolean cargs_$options.b28b_0 as 0 or 1 in a word result).  The
+   reference defines `ord' for any ordinal type, boolean included
+   (false 0, true 1).  dpc: "this predeclared function is not
+   supported yet" (for an unpacked boolean too).  Reproducer:
+
+       module g22;
+       var r: packed record a: boolean; b: boolean; end;
+         b: boolean; n: integer;
+       procedure p;
+       begin
+         n := ord(b);
+         n := ord(r.b);
+       end;
+
+23. **`in` on a one-word constant set with a byte element.**  The
+   alias descriptor's class, a byte of a packed record (0..255):
+   alias.pas alias_ptr_node `d.class in [alias_xdb_relative,
+   alias_xsf_relative]' (cc.m68k 0x073BC8: `clr.w D0; move.l #0xC000,D1;
+   move.b (18,A3),D0; btst D0,D1'), check_the_ind, get_alias_desc,
+   alias_$ind_for_captured_lvalue, formal_may_alias_actual.  dpc: "`in`
+   on a one-word constant set with a one-byte element (boolean, char,
+   `[byte]`: no site ...) is not supported yet" (the longword sets of
+   the same element pass).  Reproducer:
+
+       module g23;
+       var r: packed record c: 0..255; f: boolean; end; b: boolean;
+       procedure p;
+       begin
+         b := r.c in [14, 15];
+       end;
+
+24. **A function call as a right operand of `or'.**  alias.pas
+   get_alias_desc (cc.m68k 0x0740CA: `cmpi.w #153; beq; cmpi.w #211;
+   beq; cmpi.w #154; beq; pea; bsr.w is_display_ptr; tst.b D0; bpl'):
+   `(y^.kind = 153) or (y^.kind = 211) or (y^.kind = 154) or
+   is_display_ptr(y)'.  dpc: "a right operand of a plain `and`/`or`
+   with a call other than a comparison of the function's result is not
+   supported yet" (`... or (is_display_ptr(y) = true)' passes).
+   Reproducer:
+
+       module g24;
+       var k: integer; b: boolean;
+       function f(n: integer): boolean; options(val_param); extern;
+       procedure p;
+       begin
+         if (k = 1) or f(k) then b := true;
        end;

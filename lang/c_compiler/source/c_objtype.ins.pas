@@ -304,13 +304,27 @@ type
                                           bytes (from a bit size, +7
                                           div 8), else size }
     flags: packed record
-      align: -16..15;                   { +24.7..3: an alignment
-                                          (attr_set_align_dsc may raise
-                                          it; type_exp lowers it back) }
-      b24_2: boolean;                   { .2 }
-      b24_1: boolean;                   { .1: set by type_exp, cleared
-                                          when align is lowered }
-      b24_0: boolean;                   { .0 }
+      align: -16..15;                   { +24.7..3: the alignment (log2
+                                          of bytes; attr_set_align_dsc
+                                          sets it from the attributes
+                                          and may lower it to the
+                                          type's; type_exp lowers it
+                                          back) }
+      align_attr: boolean;              { .2: an Aligned attribute set
+                                          it (attr_set_align_dsc);
+                                          attr_check_align warns of it
+                                          only at -INFO 4 and above }
+      align_ok: boolean;                { .1: aligned at least
+                                          naturally, or not worth a
+                                          warning (set by type_exp and
+                                          attr_set_align_dsc, and by
+                                          attr_check_align once it has
+                                          warned) }
+      b24_0: boolean;                   { .0: cleared by
+                                          attr_set_align_dsc for
+                                          variables, kind 121, 108 and
+                                          174; attr_check_align does not
+                                          warn while it is set }
       b25_7: boolean;                   { +25.7 }
       ranged: boolean;                  { .6: low and high are known
                                           (integral kinds) }

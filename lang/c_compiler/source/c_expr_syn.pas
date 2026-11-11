@@ -854,7 +854,7 @@ begin
             else begin
               item := il_$node_ptr_t(t^.ptr_to);
               node := add_pn(node, item, typ.base^.ptr_attr.align, 0);
-              attr_set_align_dsc(typ.base, addr(typ));
+              attr_set_align_dsc(il_$node_ptr_t(typ.base), addr(typ));
               type_exp(item, addr(typ));
             end;
           end
@@ -872,7 +872,7 @@ begin
               body_opr(5, addr(nm));
               item := il_$node_ptr_t(typ.base^.ptr_to);
               node := add_pn(node, item, typ.base^.ptr_attr.align, 0);
-              attr_set_align_dsc(typ.base, addr(typ));
+              attr_set_align_dsc(il_$node_ptr_t(typ.base), addr(typ));
               type_exp(item, addr(typ));
             end;
           end;
@@ -938,7 +938,7 @@ begin
        typ.base^.ptr_reference then begin
       item := il_$node_ptr_t(typ.base^.ptr_to);
       node := add_pn(node, item, typ.base^.ptr_attr.align, 0);
-      attr_set_align_dsc(typ.base, addr(typ));
+      attr_set_align_dsc(il_$node_ptr_t(typ.base), addr(typ));
       type_exp(item, addr(typ));
     end;
 end;
@@ -1029,7 +1029,7 @@ begin
         node := add_pn(node, item, typ.base^.ptr_attr.align, 0);
         typ.flags.b25_5 := 19 in typ.base^.ptr_attr.bits;
         typ.flags.b25_4 := 0 in typ.base^.ptr_attr.bits;
-        attr_set_align_dsc(typ.base, addr(typ));
+        attr_set_align_dsc(il_$node_ptr_t(typ.base), addr(typ));
         t := typ.base;
         type_exp(item, addr(typ));
         typ.bytes := (t^.ptr_attr.size_bits + 7) div 8;
@@ -1223,7 +1223,7 @@ begin
            typ.base^.ptr_reference then begin
           item := il_$node_ptr_t(typ.base^.ptr_to);
           node := add_pn(node, item, typ.base^.ptr_attr.align, 0);
-          attr_set_align_dsc(typ.base, addr(typ));
+          attr_set_align_dsc(il_$node_ptr_t(typ.base), addr(typ));
           type_exp(item, addr(typ));
         end;
       end;

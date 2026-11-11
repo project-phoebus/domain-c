@@ -368,3 +368,24 @@ cc.m68k unless marked.
     is indexed `lsl.w #6' (64 bytes apart): the entry record is 62
     bytes and the array pads its elements to a multiple of 4.
     c_objtype.ins.pas declares the entry as 64 bytes.
+## Packed fields (translator M, attributes.pas)
+
+49. **A bit of a byte set or cleared with the word's bit number.**
+    attr_check_align (cc.m68k 0x0A4F22) sets a type_exp_t's align_ok
+    flag, bit 1 of the byte at +24 (+52 of the expression stack entry,
+    tested `btst #1,(-0xc,A0,D3.l)' just before), with `bset
+    #9,(-0xc,A0,D3.l)': 9 is the flag's bit in the word at +24, and
+    the 68000 takes a memory operand's bit number modulo 8, so the
+    byte's bit 1 is set.  Elsewhere the unit uses the byte's own bit
+    numbers (`bset #1,(24,A0)' in attr_set_align_dsc 0x0A51E0).  dpc
+    emits `bset #1'.
+
+## Data layout (translator M, alias.pas)
+
+50. **Large module arrays start on a multiple of 8.**  alias.pas's
+    data (A5 0x168D8C, all initialized): a 340-byte array of names at
+    +0, then three 578-byte tables (17 x 17 words) at +0x158, +0x3A0
+    and +0x5E8 and a 34-byte one at +0x830: each starts on the next
+    multiple of 8, leaving 4 or 6 bytes of zeros between.  (Elsewhere
+    module variables follow each other at word alignment: item 9,
+    il.pas +0x142.)  dpc lays them out end to end.
