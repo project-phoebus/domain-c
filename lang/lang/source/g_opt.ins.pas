@@ -59,6 +59,18 @@ type
   g_opt_vars_ptr_t = ^g_opt_vars_t;
   g_opt_varset_ptr_t = ^g_opt_varset_t;
   g_opt_regs_t = set of 0..31;
+
+  { An action of a 191 statement (12 bytes): load (action bits 0, 1)
+    or store (bits 3, 5) the value of node in register reg (reg_action;
+    reg2 and rlen the range's +24 and +32). }
+  g_opt_act_t = record
+    node: il_$node_ptr_t;               { +0 }
+    reg: integer;                       { +4 }
+    reg2: integer;                      { +6 }
+    rlen: integer;                      { +8 }
+    action: integer;                    { +10 }
+  end;
+
   g_opt_stmt_t = record
     unused_0: integer;                  { +0 }
     kind: integer;                      { +2 }
@@ -135,6 +147,11 @@ type
       4: (asg_desc: add_node_$desc_t);  { +48 }
       { 148 (a call): the routine called; 151, 188: the operand. }
       5: (x48: il_$node_ptr_t);         { +48 }
+      { 191: the register allocator's loads and stores (reg_action's
+        alloc_stmt and add_actions). }
+      6: (act_unused_48: integer;       { +48 }
+          act_count: integer;           { +50 }
+          acts: array [1..8] of g_opt_act_t);  { +52 }
   end;
 
   { An IL tree node (137 an operator, 143, ...; kfold's kf_tree_t, cg's
