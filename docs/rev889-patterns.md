@@ -65,3 +65,18 @@ cc.m68k unless marked.
    image.  The layout is internal to the program, so best effort keeps
    separate variables; a dpc profile would pack them.  (The image also
    leaves +0x142..+0x143 unused, where dpc puts the next word.)
+10. **Consecutive stores of one constant to packed fields merged.**
+    Statements that store the same constant to fields of one byte, word
+    or longword become one `andi` (false, 0) or `ori` (true), the mask
+    the union of the fields, adjacent or not:
+    cargs_$init_option_defaults (cc.m68k 0x0B4AA8 `andi.w #0xFFE0`
+    clears +0x27B bits 4..0, five booleans; cc.a88k, whose default sets
+    bit 3, has `bclr #4; bset #3; andi.w #0xFFF8`), 0x0B4ABE `andi.w
+    #0xF17F` (+0x27C bits 3..1 and +0x27D bit 7, +0x27C bit 0 not
+    stored), 0x0B4A94 `andi.l #0x7FF` (a 6-bit field and 15 booleans);
+    parse_options -IMAP `ori.w #0x180` (map and imap), -ANSI `or.w`
+    0x34, -NANSI `andi.w #0xFFEB` after a separate `bclr` and `bset` of
+    the same word (the run breaks at a store of the other value).  The
+    language reference (3.15.3 p. 3-57) documents the merging for whole
+    objects (dpc `--merge-constant-stores`), not for packed fields.  dpc
+    stores each field.
