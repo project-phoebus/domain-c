@@ -297,3 +297,7 @@ lang/lang/source/opt_general.pas	s/^\s*223\.\.225, 227, 228, 231, 233\]\) and$/)
 lang/lang/source/opt_general.pas	s/\(t\^\.kind in \[137, 138, 143, 145\.\.147, 164, 171, 175, 189, 205\]\)/((t^.kind = 137) or (t^.kind = 143)) { gap 8 }/
 lang/lang/source/opt_general.pas	s/\((\w+(?:\^\.\w+)*)\^\.kind in \[77\.\.87, 101, 200\]\)/(($1^.kind >= 77) and ($1^.kind <= 87)) { gap 8 }/
 lang/lang/source/opt_general.pas	s/if c\^\.kind in \[77\.\.87, 101, 200\] then/if (c^.kind >= 77) and (c^.kind <= 87) then { gap 8 }/
+# gap 3 (opt_select): new (the PAS_$NEW call it compiles to, for the check)
+lang/lang/source/opt_select.pas	s/^(\s*)new\(c\);/$1pas_\$new(c, 16); { gap 3 }/
+# gap 15 (opt_select): a pointer result assigned from a parameter (a field of it, for the check)
+lang/lang/source/opt_select.pas	s/^(\s*)eval := v$/$1eval := v^.lbl { gap 15 }/
