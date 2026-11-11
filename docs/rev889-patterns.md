@@ -148,3 +148,21 @@ cc.m68k unless marked.
     0x0078 <double> 0x00A4 (3).  The operation words are not decoded
     further here.  Write the arithmetic (`/', assignment); dpc has no
     real arithmetic yet (docs/dpc-gaps.md 2).
+
+## Data layout (large module variables)
+
+20. **A module variable whose extent passes 32K addressed absolutely.**
+    spos.pas's regions' database (108044 bytes from A5+0x2F04, cc.m68k
+    0x14E778) is reached by its absolute address everywhere, even its
+    first words (`move.w 0x14E778,D2', `cmp.l 0x14E77A,D2', `movea.l
+    #0x14E778,A0' as the base of the indexed regions; spos_$start_
+    include_file 0x071F0E `move.l (12020,A5),0x14E794'), while the
+    module's smaller cells around it stay A5-relative.  dpc refuses a
+    static variable beyond 32K into the data area; spos.pas declares the
+    database after the module's other cells so that dpc can address it
+    from A5.
+21. **An array of records after a word and a longword starts at +8.**
+    In the same database the regions (36-byte records holding
+    longwords) follow a word (+0) and a longword (+2) at +8 (+6..+7 not
+    used); dpc puts them at +6.  Taken as a record of three fields; the
+    image's alignment rule for the array is not known.
