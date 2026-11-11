@@ -3,3 +3,6 @@
 # Each line names its gap in docs/dpc-gaps.md.
 # gap 1: whole varying assignment (copy the length only, for the check)
 lang/common/source/diag.pas	s/^(\s*)line_prefix := prefix;/$1line_prefix.length := prefix.length; { gap 1 }/
+# gap 2: a real passed to an in double parameter (pass an unset double local, for the check)
+lang/common/source/token.pas	s/^    r: real\): token_\$t;$/    r: real): token_\$t;\nvar\n  r_gap2: double; { gap 2 }/
+lang/common/source/token.pas	s/rlcontk\(r\);/rlcontk(r_gap2); { gap 2 }/

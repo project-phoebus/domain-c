@@ -27,6 +27,11 @@ type
     where this insert is). }
   ass_$status_t = integer32;
 
+  { A length: a non-negative longword (base's linteger).  ASS_$INITIALISE
+    compares it with the name's length unsigned (`bcs', 0x0674AA), as a
+    0..2147483647 value is compared. }
+  ass_$length_t = 0..2147483647;
+
   { The text ASS_$DESCRIBE puts in the diagnostic prefix (DIAG_'s
     varying [200] of char). }
   ass_$description_t = varying [200] of char;
@@ -45,7 +50,7 @@ type
   (12,A6). }
 procedure ass_$initialise(
     in name: univ ass_$string_t;
-    len: integer32); options(val_param); extern;
+    len: ass_$length_t); options(val_param); extern;
 
 { The failures: the context call-backs, then BUG_CHECK of the message
   (UNIMPLEMENTED for ASS_$NOT_IMPLEMENTED).  0x0674E4..0x067724: the

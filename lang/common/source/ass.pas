@@ -89,20 +89,20 @@ end;
   (+216) := 0; while program_name.length < 80 (`cmpi.w #80; bcc' out:
   the second test only when the first holds, `and then') and
   program_name.length < len (zero-extended, `cmp.l D2,D0; bcs': an
-  unsigned compare), the length grows by one and the character is
-  copied from name[length] (`move.b (-1,A2,D1.l)').  Then described :=
-  false, current_call_back := nil, and ERROR_$INIT_STD_FORMAT (0x0674CA)
-  of the word 2 (0x0674E2, stream_$errout), the byte `?' (0x0674E0),
-  name and len as a word (stored back to (12,A6), `pea (14,A6)').
+  unsigned compare, so len is a non-negative subrange, ass_$length_t),
+  the length grows by one and the character is copied from name[length]
+  (`move.b (-1,A2,D1.l)').  Then described := false, current_call_back
+  := nil, and ERROR_$INIT_STD_FORMAT (0x0674CA) of the word 2
+  (0x0674E2, stream_$errout), the byte `?' (0x0674E0), name and len as
+  a word (stored back to (12,A6), `pea (14,A6)').
 
   Not known from the original:
-  - why the second compare is unsigned (dpc's is signed, `blt'; they
-    differ only for a negative len); len's type may be a non-negative
-    subrange. }
+  - whether the name's length was converted through a local (the image
+    stores len back to its own slot and passes the low word). }
 
 procedure ass_$initialise(
     in name: univ ass_$string_t;
-    len: integer32);
+    len: ass_$length_t);
 var
   name_length: integer;
 begin
