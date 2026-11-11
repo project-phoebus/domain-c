@@ -130,3 +130,14 @@ lang/common/source/spos.ins.pas	s/^(\s*)procedure proc\(region: integer32; mark:
 lang/common/source/spos.pas	s/^(\s*)procedure proc\(region: integer32\)\);/$1proc: spos_\$region_proc_t); { gap 21 }/
 lang/common/source/spos.pas	s/^(\s*)procedure proc\(region: integer32; mark: integer32\)\);/$1proc: spos_\$marked_region_proc_t); { gap 21 }/
 lang/common/source/spos.pas	s/^(\s*)proc\((r|r, db\.regions\[r\]\.mark)\);/$1proc^($2); { gap 21 }/
+# gap 21 (debug_sym_dmp): nested routines passed as routine parameters (nil, for the check)
+lang/lang/source/debug_sym_dmp.pas	s/spos_\$apply_over_(marked_)?source_files\((add_file_table_entry|write_string_for_file_table_entry|add_unit_table_entry|add_file_entry)\);/spos_\$apply_over_$1source_files(nil); { gap 21 }/
+# gap 3 (debug_sym_dmp): new and dispose (the PAS_$NEW and PAS_$DISPOSE calls they compile to)
+lang/lang/source/debug_sym_dmp.pas	s/^(\s*)new\((reloc_cur|reloc_cur\^\.next)\);/$1pas_\$new($2, 136); { gap 3 }/
+lang/lang/source/debug_sym_dmp.pas	s/^(\s*)new\(e\);/$1pas_\$new(e, 8); { gap 3 }/
+lang/lang/source/debug_sym_dmp.pas	s/^(\s*)dispose\(old\);/$1pas_\$dispose(old, 8); { gap 3 }/
+# gap 8 (debug_sym_dmp): in on constant sets with word elements (the comparisons)
+lang/lang/source/debug_sym_dmp.pas	s/t\^\.kind in \[122\.\.126, 135, 136, 210, 234\]/(((t^.kind >= 122) and (t^.kind <= 126)) or (t^.kind = 135) or (t^.kind = 136) or (t^.kind = 210) or (t^.kind = 234)) { gap 8 }/
+lang/lang/source/debug_sym_dmp.pas	s/v\^\.kind in \[77\.\.87, 101, 200\]/(((v^.kind >= 77) and (v^.kind <= 87)) or (v^.kind = 101) or (v^.kind = 200)) { gap 8 }/
+# gap 12 (debug_sym_dmp): a pointer function's result compared with a variable (the operands swapped)
+lang/lang/source/debug_sym_dmp.pas	s/\(idntk\(76, '\.some_symbol_section', 20\) <> s\^\.xp\[1\]\)/(s^.xp[1] <> idntk(76, '.some_symbol_section', 20)) { gap 12 }/
