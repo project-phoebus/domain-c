@@ -71,12 +71,14 @@ function modify_m2_native_external_name(
     name: univ_ptr): univ_ptr; options(val_param); extern;
 
 { ISC_$INIT_WELL_KNOWN_TYPES - fe_cc_hooks_to_backend.pas 0x06737C
-  (cc.a88k 0x0675FC): three pointers (cc.a88k's lir passes three
-  longwords); no caller in cc.m68k. }
+  (cc.a88k 0x0675FC): stores the front end's int, float and double
+  type nodes through its three by-address parameters (cc.a88k's
+  lir_$begin_compilation 0x2429B2 passes the addresses of three
+  longwords of its data); no caller in cc.m68k. }
 procedure isc_$init_well_known_types(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr); options(val_param); extern;
+    out int_type_node: univ_ptr;
+    out float_type_node: univ_ptr;
+    out double_type_node: univ_ptr); extern;
 
 { GET_ALIGNMENT - frontend_cc_dummies.pas 0x0673B4 (cc.a88k 0x067634):
   the C front end's dummy returns a longword in D0; cc.a88k's
