@@ -579,7 +579,8 @@ begin
     s^.lab_bits.used := false;
     s^.name := name.id;
     s^.line := name.line;
-    s^.unused_10 := name.unused_6;
+    s^.uplevel := name.uplevel;
+    s^.unused_11 := name.unused_7;
     s^.block := il_$node_ptr_t(cdef_50);
     s^.blk_next := il_$node_ptr_t(cdef_50^.labels);
     cdef_50^.labels := s;
@@ -1080,12 +1081,12 @@ var
     cargs_$options.type_opt := false;
     mc.id := idntk(ctk_identifier, 'mcount', 6);
     mc.line := lex_line;
-    if fnd_name(addr(mc), true, false) = il_178 then begin
+    if fnd_name(mc, true, false) = il_178 then begin
       d2.flags := [];
       d2.dtype := int_type;
       d2.name := mc.id;
       d2.line := mc.line;
-      def_blk_skeleton(108, addr(mc), 2, addr(d2), nil, nil, false, 3, 0,
+      def_blk_skeleton(108, mc, 2, d2, nil, nil, false, 3, 0,
                        nil);
     end;
     body_opr(1, addr(mc));
@@ -1133,12 +1134,12 @@ var
     decl.flags := [];
     decl.size_bits := tt.size;
     decl.unused_8 := 0;
-    if fnd_name(addr(ms), true, false) = il_178 then begin
+    if fnd_name(ms, true, false) = il_178 then begin
       d2.flags := [];
       d2.dtype := int_type;
       d2.name := ms.id;
       d2.line := ms.line;
-      def_blk_skeleton(108, addr(ms), 2, addr(d2), nil, nil, false, 3, 0,
+      def_blk_skeleton(108, ms, 2, d2, nil, nil, false, 3, 0,
                        nil);
     end;
     body_opr(1, addr(ms));
@@ -1218,13 +1219,13 @@ var
     cargs_$options.type_opt := false;
     mx.id := idntk(ctk_identifier, 'monexit', 7);
     mx.line := lex_line;
-    n := fnd_name(addr(mx), true, false);
+    n := fnd_name(mx, true, false);
     if n = il_178 then begin
       decl.flags := [];
       decl.dtype := int_type;
       decl.name := mx.id;
       decl.line := mx.line;
-      def_blk_skeleton(108, addr(mx), 2, addr(decl), nil, nil, false, 3, 0,
+      def_blk_skeleton(108, mx, 2, decl, nil, nil, false, 3, 0,
                        nil);
     end;
     body_opr(1, addr(mx));

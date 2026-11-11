@@ -377,3 +377,31 @@ revisited.
    of nested or exported routines in 27, the static variables' and the
    other routines' in 28) is read off block_dmp and get_memory_loc, the
    meaning of the kinds is not known.
+55. Translator O (2026-11-11), c_def_sem: c_field_t's bit-field names
+   are the wrong way round: def_fld stores the bit offset in +48's low
+   6 bits (`width') and the width in +49 (`at'); type_exp adds the two.
+   c_sym_map prints them in that order.  Rename (c_objtype.ins.pas and
+   c_sym_map's two uses) or keep?
+56. c_def_sem: probable slips of the original kept: add_parm and def_fld
+   set the earlier parameter's or field's type to il_178 when a name
+   comes twice (as well as the new one's name); def_virt_varn allocates
+   28 bytes and stores at +28; redecl_as_static does not step past an
+   address constant it redirected when the variable's type has no
+   size (it would loop); def_blk_params' frame offset is 8 on both arms
+   of its test of the block's +376 bit 4; check_oldef_proto never reads
+   its first parameter (the routine's name).  Keep as is?
+57. c_def_sem: def_blk_skeleton stores its `prototyped' boolean (0 or
+   0xFF) in the block's byte +293, which def_blk_params then sets to the
+   count of parameters by name and check_oldef_proto reads as that
+   count; c_blk_t declares it a 0..255 (nparms) and the translation
+   stores 255 for true.  Two meanings, or a variant in the original?
+58. c_def_sem's def_enum_list compares the enumeration's unsigned
+   extremes (+36, +40) unsigned; Domain Pascal has no unsigned 32-bit
+   type, so they are integer32 and the comparisons signed (a TODO in
+   the body).  A dpc profile or a linteger declaration (which cannot
+   hold the 16#FFFFFFFF starting value) would be needed.
+59. c_def_sem's blk_fnd_name and fnd_name take the name as `in univ
+   c_name_t' (runbackend passes a parameter node's +8, c_main id_main's
+   cell, c_def_sem a symbol's +4) and return il_$node_ptr_t (a symbol
+   or il_178); c_stmt_sem's two comparisons of fnd_name's result with
+   il_178 are now dpc gap 12 (a rewrite in tools/cc_gap_rewrites.txt).

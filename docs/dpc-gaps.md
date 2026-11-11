@@ -366,8 +366,9 @@ when this tree is merged).
 21. **A routine parameter** (reference 5.4).  c_syntax's cc_walk_it
    takes a routine (c_stmt_sem's add_cbranch and c_expr_sem pass
    call_kfold: `move.l #0x066162,-(SP)'), declared in c_externs.ins.pas
-   as a univ_ptr and given addr(call_kfold), which dpc compiles the
-   same way.  dpc: "a routine parameter (ref 5.4) is not supported
+   as a routine pointer by value (c_walker_t, `^procedure(var n:
+   il_$node_ptr_t)', called as walker^(t)) and given addr(call_kfold),
+   which dpc compiles the same way.  dpc: "a routine parameter (ref 5.4) is not supported
    yet".  Reproducer:
 
        module g21;

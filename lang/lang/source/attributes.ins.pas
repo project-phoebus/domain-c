@@ -12,7 +12,10 @@
   (the unit is the same in both).  Every heading is read off the
   routine's frame and its callers (tools/cc_params.py); attr_packed_size
   and the internal find_conflict and attr_calc_align are called only
-  within attributes.pas and are declared there.
+  within attributes.pas and are declared there.  The records taken by
+  address are univ: the front end passes its own records of the same
+  bytes (c_objtype's c_dattr_t and c_attr_t for attr_tattr_t, c_blk_t's
+  ropts for attr_rtn_opts_t).
 
   Not known from the original: every name but the routines'.
 }
@@ -129,7 +132,7 @@ procedure attr_set_align_dsc(
   ...). }
 procedure add_attribute(
     code: integer;
-    var attr: attr_tattr_t;
+    var attr: univ attr_tattr_t;
     value: integer32;
     name: il_$node_ptr_t); options(val_param); extern;
 
@@ -137,14 +140,14 @@ procedure add_attribute(
   not take.  0x0A564E (cc.a88k 0x0A702E): attr by address, node by value
   (9 callers: update_attr, def_typn, ...). }
 procedure attr_validate(
-    in attr: attr_tattr_t;
+    in attr: univ attr_tattr_t;
     node: il_$node_ptr_t); options(val_param); extern;
 
 { ATTR_TATTR_TO_VATTR - a type's attributes in a variable's form.
   0x0A59F0 (cc.a88k 0x0A73D0): both by address, t first (8 callers:
   def_resolve_incomplete_types, update_attr, ...). }
 procedure attr_tattr_to_vattr(
-    in t: attr_tattr_t;
+    in t: univ attr_tattr_t;
     out v: univ attr_vattr_t); extern;
 
 { MERGE_ATTRIBS_NATURAL - add typ's attributes to attr and settle its
@@ -152,14 +155,14 @@ procedure attr_tattr_to_vattr(
   0x0A5A26 (cc.a88k 0x0A7406): attr by address, typ by value, the result
   in D0 (9 callers: def_resolve_incomplete_types, def_typn, ...). }
 function merge_attribs_natural(
-    var attr: attr_tattr_t;
+    var attr: univ attr_tattr_t;
     typ: il_$node_ptr_t): attr_bits_t; options(val_param); extern;
 
 { MERGE_ATTRIBS - merge_attribs_natural, the alignment then limited
   under word alignment.  0x0A628C (cc.a88k 0x0A7C6C) (8 callers:
   update_attr, ...). }
 function merge_attribs(
-    var attr: attr_tattr_t;
+    var attr: univ attr_tattr_t;
     typ: il_$node_ptr_t): attr_bits_t; options(val_param); extern;
 
 { ATTR_PUSH_ALIGN - save the alignment environment (#pragma
@@ -191,5 +194,5 @@ function attr_curr_align_env: integer; extern;
   opts by address, parent by value (c_def_sem def_blk_skeleton: the new
   block's +332 and il_180). }
 procedure attr_compute_routine_options(
-    var opts: attr_rtn_opts_t;
+    var opts: univ attr_rtn_opts_t;
     parent: il_$node_ptr_t); options(val_param); extern;
