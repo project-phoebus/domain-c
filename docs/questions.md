@@ -488,3 +488,16 @@ revisited.
    +706 + 2 * the call's result class; declared in add_node.pas as an
    extern array named after the section until std_lib's contents are
    reconstructed (best effort: the name does not bind to the section).
+70. Translator S, delay.pas: the image calls delay (and delay_sets)
+   for their side effects 49 times without using the result; Domain
+   Pascal has no function call statement, so these are written
+   discard(...) (reference ch. 4, DISCARD), which dpc accepts.  Is
+   that how the house style should write such calls elsewhere?
+   delay.ins.pas is new (delay_$splice, delay_$divide_attributes, which
+   the back end calls, and the unit's other global delay_$ routines);
+   delay_$propagate_index_long and delay_$shrink_tree_node do not load
+   A5 and are internal despite their names.  dfetch (kfold.pas) is
+   declared in delay.pas.  The operators' `in' tests in delay use sets
+   of 0..95 and 0..79 without a range check (docs/rev889-patterns.md
+   41): the operator codes may be an enumeration of 96 values, as the
+   node kinds are of 237.

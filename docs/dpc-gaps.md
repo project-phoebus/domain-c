@@ -43,6 +43,12 @@ when this tree is merged).
          end;
        end;
 
+   Also delay.pas delay_$shrink_top_level_node (0x07907E): a case on a
+   node's kind of 4 labels (140, 139, 142, 151) over a range of 13, a
+   compare chain in the image (`cmpi.w #140; beq; cmpi.w #139; ...').
+   dpc: "a `case` of 4 labels over a range of 13 ... is not supported
+   yet"; the check adds empty labels for the other 9.
+
 3. **`new` and `dispose`.**  c_macro_utl's mu_$enter_name (cc.m68k
    0x058FDC: PAS_$NEW with 0x100E), mu_$alloc_tle (0x05993C, 134182)
    and mu_$initialize (0x059220, PAS_$DISPOSE).  dpc: "undefined

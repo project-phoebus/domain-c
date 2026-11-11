@@ -257,3 +257,9 @@ lang/lang/source/add_node.pas	s/^(  \{ The registers, and the operands swapped f
 lang/lang/source/add_node.pas	s/^(\s*)make(_char)?_temp := nil;/$1make$2_temp := il_178; { gap 11 }/
 # gap 15 (add_node): a pointer result assigned from a parameter (nil, for the check)
 lang/lang/source/add_node.pas	s/^(\s*)add_disp_node := base;/$1add_disp_node := nil; { gap 15 }/
+# gap 8 (delay): in on constant sets with word elements (every one, as comparisons)
+lang/lang/source/delay.pas	s{((?:\w+(?:\[[^\]]*\])?\^?\.)*\w+)\s+in\s+\[([^\]]+)\]}{my ($e, $l) = ($1, $2); '((' . join(') or (', map { /^(\d+)\.\.(\d+)$/ ? "($e >= $1) and ($e <= $2)" : "$e = $_" } split(/\s*,\s*/, $l)) . ')) { gap 8 }'}ge
+# gap 15 (delay): a pointer result assigned from a parameter (nil, for the check)
+lang/lang/source/delay.pas	s/^(\s*)delay_\$splice := n;/$1delay_\$splice := nil; { gap 15 }/
+# gap 2 (delay): a case of 4 labels over a range of 13 (the other labels added, empty, for the check)
+lang/lang/source/delay.pas	s/^(      )151:$/${1}141, 143, 144, 145, 146, 147, 148, 149, 150: ; { gap 2 }\n${1}151:/

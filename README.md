@@ -133,4 +133,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/c_compiler/source/c_expr_sem.pas` | 43 | translated (best effort; tables initialized; dpc gaps 6, 7, 8, 14, 25) |
 | `lang/lang/source/kfold.pas` | 14 | translated (best effort; nodes through kf_tree_t and il views; dpc gaps 7, 8, 19, 25) |
 | `lang/lang/source/add_node.pas` | 23 | translated (best effort; nodes through an_node_t, the kinds' names from the image; dpc gaps 4, 7, 8, 11, 15, 25) |
+| `lang/lang/source/delay.pas` | 15 | translated (best effort; nodes through dl_node_t, tables initialized; dpc gaps 2, 8, 15) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
