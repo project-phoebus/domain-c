@@ -153,3 +153,14 @@ procedure compute_costs(
 procedure insert_reg_stmts(
     r: reg_ranges_ptr_t;
     n: integer); options(val_param); extern;
+
+{ reg_vars.pas (cc.m68k 0x0C8B28). }
+
+{ STORE_DEBUG_INFO - under -DBS or -DBA, the debugger's ranges of the
+  variables and parameters: where each lives in a register and where in
+  memory, by source lines.  0x0C9E58 (reg_alloc: r by address, then
+  reg_words and reg_nranges). }
+procedure store_debug_info(
+    var r: reg_ranges_ptr_t;
+    words: integer;
+    n: integer); options(val_param); extern;
