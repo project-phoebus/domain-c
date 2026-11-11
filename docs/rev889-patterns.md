@@ -412,3 +412,20 @@ cc.m68k unless marked.
     get_var_location_rep 0x0A902C loads target_properties' address
     (`move.l #0x2CE528,D7') before its loop, whose tests of the target
     (+0x12) are absolute (`move.w 0x2CE53A,D0').
+## Records and statics (translator Q, outbin.pas)
+
+54. **Stores of zero to adjacent record fields merged across field
+    boundaries.**  ln_begin (cc.m68k 0x0BCCE8) clears a line entry's
+    line (a word at +12) and next (a longword at +14) with `clr.l
+    (12,A2); clr.w (16,A2)'; dump_proc_reloc (0x0BF260) stores a
+    node's kind (193, +2) and link (nil, +4) with `move.l
+    #0x00C10000,(2,A0); clr.w (6,A0)'.  The merged stores do not follow
+    the fields' widths (item 10's merging, for unpacked fields).  dpc
+    stores each field.
+
+55. **Routines' static tables in the module's data.**  Four identical
+    16-entry tables of register names lie in outbin's data (A5 +
+    0xCD0, 0xCF0, 0xD10, 0xD40), each read by one routine only
+    (prt_int_regs, prtads, dbcod, wr_instr): static variables with
+    initializers, laid out in the order of the routines.
+

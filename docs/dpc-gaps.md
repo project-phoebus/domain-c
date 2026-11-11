@@ -468,3 +468,29 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
   parameter's own parameters (the routines passed are val_param; the
   only trace is the error "Incompatible routine OPTIONS"), so the
   headings give none (a TODO in spos.ins.pas).
+
+25. **`substr`** (reference 4-189, an extension).  outbin.pas
+   assert_is_an_fpx_command_instr (cc.m68k 0x0BBE28): `substr(chars, 1,
+   len) = 'CommandCIR'' of a string constant's characters (pas_$ctov of
+   120 characters into a varying temporary, pas_$substr from 1,
+   pas_$str_compare with the varying constant at 0x0BBEE2).  dpc:
+   "undefined identifier `substr`".  The rewrite compares the length.
+   Reproducer:
+
+       module g25;
+       type c_t = array [1..120] of char;
+       var b: boolean; a: c_t; n: integer;
+       procedure p;
+       begin
+         b := substr(a, 1, n) = 'CommandCIR';
+       end;
+
+26. **A routine needing more registers than dpc allocates.**  outbin.pas
+   wr_instr (cc.m68k 0x0C0464, 0x171A bytes, nested in outcode): with
+   its listing of the operands (a `case' of 56 kinds at the end) dpc
+   reports "a routine needing this many registers is not supported yet"
+   at whatever statement comes last (moving with the code; reusing
+   locals does not help); without that `case' the routine compiles.
+   The rewrite drops the listing `case' from the scratch copy.  No small
+   reproducer found (the size of the routine seems to matter).
+
