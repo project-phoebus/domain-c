@@ -205,6 +205,23 @@ procedure unpack_ads(
     in p: codegen_$ads_t;
     out u: codegen_$uads_t); extern;
 
+{ ILENGTH - the length in bytes of code cell c's instruction.  emit.pas
+  0x0B70A0: a pointer by value, a word in D0 (jmp_br_resolve). }
+function ilength(
+    c: codegen_$cell_ptr_t): integer; options(val_param); extern;
+
+{ FNL_SLCT - a code cell of the machine instruction for op and size on
+  operands dst and src (x the extra longword).  emit.pas 0x0B738E: two
+  words, a longword, the descriptors' addresses; the cell in A0
+  (jmp_br_resolve passes 37, 5, 0, a branch's descriptor and
+  cg_null_ads). }
+function fnl_slct(
+    op: integer;
+    size: integer;
+    x: integer32;
+    in dst: codegen_$uads_t;
+    in src: codegen_$uads_t): codegen_$cell_ptr_t; options(val_param); extern;
+
 { CREATE_TEMP_LABEL - a new temporary label node (kind 144).
   0x0B68AA: no parameters, the node in A0. }
 function create_temp_label: il_$node_ptr_t; extern;

@@ -568,3 +568,29 @@ cc.m68k unless marked.
     D5,0x2C3670' where D5 holds 0x2002, the set [1, 13] it tested
     just before (0x0F25DE): bit numbers of a memory `btst' are taken
     modulo 8 (item 49), so 0x2002 tests bit 2.  dpc loads the bit.
+## Packed fields (translator Z, gen_unwind.pas)
+
+76. **A packed field stored from a shifted mask without a mask of its
+    own.**  write_unwind_info_rec (cc.m68k 0x07AFF6: `lsr.l #8; lsr.l
+    #2; lsl.w #2; or.w' into a 14-bit field after `andi.w #3'; 0x07B280
+    `lsr.l #10', the low word into a 12-bit field after `andi.l
+    #0xFF000FFF'; 0x07B052 `lsr.l #4; or.b' into a nibble): the bits of
+    the value beyond the field are not cleared, as if the value's type
+    already fit (a set of 10..21 copied from a set of 0..31?); other
+    stores of the same routine mask (`andi.b #15').  The 12-bit field
+    then gets registers added as a set: `subi.w #10', a range check
+    (`moveq #15; sub.w; bcs'), `bset' in a word temporary and `or.w'
+    with the field's old value (0x07B2FC).  dpc masks every store and
+    refuses sets not based at 0 in packed records.
+77. **A word field read as its low byte.**  The a88k scope's word at
+    +34 (the return register, cc.a88k bin.pas `move.w D7,(-22,A6)') and
+    +38, +40 are read as the bytes +35, +39, +41 (`move.b (59,A3),D3;
+    add.b D3,D3; andi.b #0x3E' for a 5-bit field, 0x07B094) where only
+    their low bits are stored.  dpc reads the word.
+78. **case arms sharing their code.**  write_unwind_info_rec's SR10.0
+    kinds 2 and 3 do their own stores and branch into the code of kinds
+    0 and 1 after the allocation (0x07AFE0 `bra' to 0x07AFF6, 0x07B1B4
+    to 0x07B1CA); scope_rec_dump's sizes keep 7, 8 and 9 on one arm
+    (`moveq #4') but 11, 15 and 16 on arms of their own with the same
+    constant (0x07BD62..0x07BD76).  (Item 23 for case arms.)  Written
+    here as one arm for 0 and 2 (and 1 and 3) with an `if'.

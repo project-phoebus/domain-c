@@ -734,3 +734,36 @@ revisited.
    (the image's).  unlock's test of the index register compares the
    base register with the data register (kept).
 
+97. Translator Z, gen_unwind.pas: the unit opens none of the prelude but
+   opens unix_objmod.ins.pas, whose records and headings name the
+   prelude's il_$node_ptr_t and runbackend_$lex_proc_t (dpc stops on
+   them).  The original insert evidently did not need them.
+   gen_unwind.pas declares the two (il_$node_ptr_t as univ_ptr) between
+   objmod.ins.pas and unix_objmod.ins.pas, as gen_debug
+   declares putobj itself.  Alternatively unix_objmod.ins.pas could
+   use univ_ptr for the nodes it only passes on (add_reloc's sect and
+   target, the reloc and lnno records' sect, ...).
+98. Translator Z, gen_unwind.pas: several unwind record fields are
+   stored from a shifted register mask with no mask of their own
+   (`lsr.l #10' into 12 or 14 bits, the second a88k FP mask `lsr.l #4'
+   into 4 bits, PA floating registers 24..39 from the 64-bit mask), and
+   registers are added to the 12-bit field with `bset' in a word
+   temporary after subtracting 10: the original probably used sets of
+   10..21, 10..23 and 24..39 in the packed records (copied from a set of
+   0..31 or 0..63).  dpc refuses a set not based at 0 in a packed
+   record, so the fields are integer subranges assigned with rshft and
+   `!' (the stores masked).  gen_unwind.ins.pas's scope has the m68k
+   fields as they were (outbin's names) and new PA and a88k arms named
+   from cc.a88k bin.pas's prints; gen_unwind_$add_scope's second
+   parameter is the base's address (univ_ptr; outbin passes nil).
+99. Translator Z, jmp_br_resolve.pas: its module data (A5 0x2CE8BC,
+   +0..+24: the branch's reference cell and label, the cell at hand, the
+   pass count, the label being numbered, the section) is also
+   instr_reorder.pas's A5; instr_reorder has no data and reads none
+   of it (cc_globals' +0 for instr_reorder is its A5 load), so the
+   block is jmp_br_resolve's (Rev 8.89 gives a module without data the
+   next module's A5, as do_report has gen_debug's).  It also copies celpkg.pas's empty
+   address descriptor (celpkg +24, 0x2CE68C), which celpkg does not
+   export: jmp_br_resolve keeps a copy of its own rather than moving
+   celpkg's variables (`define' would reorder celpkg's data).  Should
+   codegen.ins.pas export celpkg's descriptors?

@@ -370,3 +370,10 @@ lang/lang/source/cg_addr.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\
 lang/lang/source/cg_addr.pas	s/(\w+)\^\.real_value = 0\.0/(($1^.bits[1] = 0) and ($1^.bits[2] = 0)) { gap 7 }/g
 # gap 2 (cg_addr): address's case of 46 labels over the kinds 77..212 (the kinds of its otherwise added, for the check)
 lang/lang/source/cg_addr.pas	BEGIN { undef $/ } s{(\n    otherwise\n      cgerr\(3, cg_line, n\);\n  end;\ntail:)}{\n    91, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 139, 140, 141, 142, 148, 149, 150, 151, 157, 158, 159, 160, 161, 162, 166, 168, 169, 170, 171, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 184, 185, 186, 187, 188, 191, 193, 194, 196, 197, 199, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211: { gap 2 }\n      cgerr(3, cg_line, n);$1}
+# gap 8 (instr_reorder): in on constant sets of 0..63 with word elements (compare chains)
+lang/lang/source/instr_reorder.pas	s/c\^\.kind in \[54\.\.58\]/(c^.kind >= 54) and (c^.kind <= 58) { gap 8 }/
+lang/lang/source/instr_reorder.pas	s/c\^\.kind in \[39\.\.44, 48, 50\.\.52\]/((c^.kind >= 39) and (c^.kind <= 44)) or (c^.kind = 48) or ((c^.kind >= 50) and (c^.kind <= 52)) { gap 8 }/
+lang/lang/source/instr_reorder.pas	s/\(c\^\.kind in \[0, 17, 18, 20\.\.27, 30\.\.34, 39, 51, 52\]\)/((c^.kind = 0) or (c^.kind = 17) or (c^.kind = 18) or ((c^.kind >= 20) and (c^.kind <= 27)) or ((c^.kind >= 30) and (c^.kind <= 34)) or (c^.kind = 39) or (c^.kind = 51) or (c^.kind = 52)) { gap 8 }/
+lang/lang/source/instr_reorder.pas	s/k in \[3, 16, 19, 28, 29, 43, 44, 47, 50\]/(k = 3) or (k = 16) or (k = 19) or (k = 28) or (k = 29) or (k = 43) or (k = 44) or (k = 47) or (k = 50) { gap 8 }/
+lang/lang/source/instr_reorder.pas	s/not \(c\^\.kind in \[22, 24, 27, 32, 33, 34\]\)/not ((c^.kind = 22) or (c^.kind = 24) or (c^.kind = 27) or ((c^.kind >= 32) and (c^.kind <= 34))) { gap 8 }/
+lang/lang/source/instr_reorder.pas	s/while p\^\.kind in \[0, 24, 32, 33\] do/while (p^.kind = 0) or (p^.kind = 24) or (p^.kind = 32) or (p^.kind = 33) do { gap 8 }/

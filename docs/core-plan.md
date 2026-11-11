@@ -283,3 +283,15 @@ for getobjcache, weight, register_tickle, get_agg_temp,
 get_childs_agg_temp, load_result and load_fp_result (cg_assign and
 cg_tree call them).  cg_call, cg_misc and cg_top follow the renames.
 
+Translator Z (2026-11-11), gen_unwind, jmp_br_resolve, instr_reorder:
+gen_unwind.ins.pas is complete (the scope's PA and a88k variants,
+every global heading; gen_unwind_$add_scope's second parameter a
+univ_ptr, outbin passes nil); gen_unwind.pas declares the two prelude
+types unix_objmod.ins.pas names, since it opens no prelude
+(docs/questions.md 93).  Core changes: final.ins.pas gets final.pas's
+detach, nxtcc, nxtlcc, makejump, moverefcell, reversecond,
+final_$is_unmoveable_fp_inst, sameaddr, involves, testcc and
+instr_reorder's heading (jmp_br_setup's first parameter renamed psect);
+codegen.ins.pas gets emit's ilength and fnl_slct.  jmp_br_resolve and
+instr_reorder read cells through views of their own (jb_cell_t,
+jb_sect_t; codegen_$cell_t and ir_sect_t); banshee.pas is not started.

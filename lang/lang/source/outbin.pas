@@ -926,8 +926,8 @@ end;
 
 { end_unwind_scope - scope s closed at pc and added to the unwind table.
 
-  0x0BC76A, 0x44 bytes: gen_unwind_$add_scope(s, 0, the section's
-  +64). }
+  0x0BC76A, 0x44 bytes: gen_unwind_$add_scope(s, nil (`clr.l'), the
+  section's +64). }
 
 procedure end_unwind_scope(
     blk: il_$node_ptr_t;
@@ -935,7 +935,7 @@ procedure end_unwind_scope(
     in out s: gen_unwind_$scope_t); options(val_param); internal;
 begin
   s.len := pc + blk^.xp[47]^.xl[14] - s.start;
-  gen_unwind_$add_scope(s, 0, blk^.xp[47]^.xw[32]);
+  gen_unwind_$add_scope(s, nil, blk^.xp[47]^.xw[32]);
 end;
 
 { bit_fld_op - op is a bit field instruction (70..77).
