@@ -75,6 +75,20 @@ type
           set_unused_12: integer32;     { +12 }
           set_len: integer;             { +16: bytes }
           set_words: array [1..2048] of integer);  { +18 }
+      { A node seen by offset, for the kinds whose variants are not
+        declared yet (il_utils.pas: the tree nodes 137..233, the
+        variables 109 and 110, the blocks 105 and 172): xp[k] the pointer
+        and xl[k] the longword at +4k, xp2[k] and xl2[k] those at +4k+2,
+        xw[k] the word at +2k, xc[k] the byte at +k.  Replace uses with
+        named variants as the kinds are identified. }
+      9: (xp: array [1..94] of il_$node_ptr_t);     { +4 }
+      10: (xp2_pad: integer;                        { +4 }
+           xp2: array [1..93] of il_$node_ptr_t);   { +6 }
+      11: (xl: array [1..94] of integer32);         { +4 }
+      12: (xl2_pad: integer;                        { +4 }
+           xl2: array [1..93] of integer32);        { +6 }
+      13: (xw: array [2..189] of integer);          { +4 }
+      14: (xc: array [4..379] of char);             { +4 }
   end;
 
 var

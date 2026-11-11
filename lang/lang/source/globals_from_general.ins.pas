@@ -32,3 +32,19 @@
 function putobj(
     len: integer32;
     p: univ_ptr): univ_ptr; options(val_param); extern;
+
+{ OPT_STR_$SET_SUBSTITUTION_POINT, OPT_STR_$ADD_SUBSTITUTION_POINT -
+  opt_strength.pas 0x0E6656, 0x0E66B6 (cc.m68k): two addresses;
+  il_utils's il_utils_$do_substitution, which opens no opt_strength
+  insert, passes the new operand's and the old node's frame slots
+  (`pea (16,A6); pea (8,A6)'); the callers there read neither D0 nor A0.
+
+  Not known from the original: the parameter names; whether either is a
+  function. }
+procedure opt_str_$set_substitution_point(
+    var new: il_$node_ptr_t;
+    var old: il_$node_ptr_t); extern;
+
+procedure opt_str_$add_substitution_point(
+    var new: il_$node_ptr_t;
+    var old: il_$node_ptr_t); extern;
