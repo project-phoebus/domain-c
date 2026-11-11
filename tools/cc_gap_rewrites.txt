@@ -5,3 +5,12 @@
 lang/common/source/diag.pas	s/^(\s*)line_prefix := prefix;/$1line_prefix.length := prefix.length; { gap 1 }/
 # gap 2: a case of 12 labels over a range of 35 (six labels added, for the check)
 lang/c_compiler/source/c_error.pas	s/^(\s*)'L':$/$1'A', 'B', 'C', 'D', 'E', 'F', 'L': { gap 2 }/
+# gap 3: new and dispose (the PAS_$NEW and PAS_$DISPOSE calls they compile to, for the check)
+lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)new\(m\);/$1pas_\$new(m, 4110); { gap 3 }/
+lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)new\(b\);/$1pas_\$new(b, 134182); { gap 3 }/
+lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)dispose\(b\);/$1pas_\$dispose(b, 134182); { gap 3 }/
+# gap 4: write and writeln (dropped, for the check)
+lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
+# gap 5: displacements beyond 16 bits (the block shrunk to two elements, for the check)
+lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)tles: array \[0\.\.255\] of mu_\$tle_t;/$1tles: array [0..1] of mu_\$tle_t; { gap 5 }/
+lang/c_compiler/source/c_macro_utl.pas	s/tles\[255\]/tles[1] { gap 5 }/

@@ -25,6 +25,13 @@ var
     without looking at directives while it is set. }
   mr_632: extern boolean;
 
+  { c_macro_read.pas's data +0x600 and +0x608: the compilation's time
+    ('hh:mm:ss') and date ('Mmm dd yyyy'), filled by c_initdate.c's
+    initdate (strncpy from asctime) and quoted into __TIME__ and
+    __DATE__ by mu_$initialize. }
+  mr_time: extern array [1..8] of char;
+  mr_date: extern array [1..11] of char;
+
 { MR_$INITIALIZE - start reading a source file.  0x05641C; called by
   cr_$initialize with its own flag. }
 procedure mr_$initialize(
