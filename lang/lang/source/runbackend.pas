@@ -1168,7 +1168,7 @@ begin
     if (f^.xw[22] = 0) and (f^.xp[12] <> nil) then
       v := f^.xp[12]
     else
-      v := blk_fnd_name(addr(f^.xp[2]), false, false, integer32(blk));
+      v := blk_fnd_name(addr(f^.xp[2]), false, false, blk);
     if v^.kind = 109 then
       v^.xl[14] := v^.xl[14] + 4;
     f := f^.xp[1];

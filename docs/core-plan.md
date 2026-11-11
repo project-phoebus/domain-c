@@ -105,7 +105,8 @@ later.
 | `lang/c_compiler/source/macro_read.ins.pas` | done (c_macro_read): MR_ headings, mr_open_quote (was mr_632), mr_date, mr_time |
 | `lang/c_compiler/source/macro_utl.ins.pas` | done (c_macro_utl, c_macro_read): text list elements (pos, kind), macros, 64 actuals |
 | `lang/c_compiler/source/c_lex_pp.pvt.pas` | done (c_lex_pp, translator H): PPIO_ headings, the file stack (lex_file_t complete, lex_files, lex_depth), lex_listing_line (number field and text), lex_macro_expanded |
-| `lang/c_compiler/source/c_syntax.ins.pas`, `c_expr_syn.ins.pas`, `cppansi.ins.pas` | headings read off frames and call sites (TODO) |
+| `lang/c_compiler/source/c_expr_syn.ins.pas` | done (c_expr_syn, translator L): the parsing levels' (follow, lab, ctx) |
+| `lang/c_compiler/source/c_syntax.ins.pas`, `cppansi.ins.pas` | headings read off frames and call sites (TODO; c_type_name narrowed from c_expr_syn's calls) |
 
 Translator H (2026-11-11), c_lex_pp: c_globals.ins.pas now has the
 token classes (ctk_ constants: k in 0..75 the class of the k-th name
@@ -133,3 +134,19 @@ def_blk_skeleton, def_blk_params, body_s, body_opr, expr_op, call_s,
 body_e, ...) are left as read off the frames: their owners narrow
 them.
 
+
+Translator L (2026-11-11), c_expr_syn: c_objtype.ins.pas names the
+expression stack entry (c_exp_t: node, sym, item, disp, typ, line),
+adds c_tokset_t (follow sets), c_parlist_t, c_cexp_t, c_blk_t and
+c_reglist_t, the pointer type's ptr_reference and the function type's
+fn_params and fn_conv; c_decl_t's +12 is flags; c_globals' csyn_60 is
+the calling contexts' stack (csyn_202 its top) and cdef_50 the current
+block (docs/questions.md 38-42).
+
+Translator L, c_stmt_sem: c_externs.ins.pas's c_stmt_sem headings are
+checked against the bodies; c_objtype.ins.pas gets c_top_t,
+c_tree_t, c_desc_t, c_case_t and c_caselist_t, c_sym_t's blk_next and
+label fields, c_blk_t's labels, return label and frame fields.  dpc
+lays out `0..255' in a record as a word and aligns a packed record to
+a word: byte fields at odd offsets are written as char or inside a
+packed record that starts at an even offset.

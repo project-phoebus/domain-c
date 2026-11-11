@@ -33,3 +33,29 @@ function attr_al_stk_empty: boolean; extern;
   0x0A7DA4): a word by value. }
 procedure attr_set_align_env(
     env: integer); options(val_param); extern;
+
+{ ATTR_SET_ALIGN_DSC - adjust t's alignment in d (type_exp_t's align)
+  for the node n.  0x0A503C (cc.a88k 0x0A6A1C): the node and the
+  descriptor's address by value (type_exp, c_expr_syn; c_main and
+  c_lex_pp open this insert before c_objtype.ins.pas, so the
+  descriptor is a univ_ptr). }
+procedure attr_set_align_dsc(
+    n: univ_ptr;
+    d: univ_ptr); options(val_param); extern;
+
+{ ATTR_CHECK_ALIGN - check the alignment of the expression stack's
+  entry top.  0x0A4E9E (cc.a88k 0x0A687E): a word by value (c_expr_sem,
+  c_expr_syn's func_call_stat). }
+procedure attr_check_align(
+    top: integer); options(val_param); extern;
+
+{ ATTR_CURR_ALIGN_ENV - the alignment environment: cargs_$options'
+  b28b_0 as 0 or 1 (`moveq #1; and.b').  0x0A63F6 (cc.a88k 0x0A7DD6);
+  callers `tst.w D0; seq'. }
+function attr_curr_align_env: integer; extern;
+
+{ ATTR_NATURAL_ALIGN_FROM_BYTES - the natural alignment of an object of
+  n bytes.  0x0A4F38 (cc.a88k 0x0A6918): a longword by value; D0 read as
+  a word (c_stmt_sem's temp_alloc). }
+function attr_natural_align_from_bytes(
+    n: integer32): integer; options(val_param); extern;

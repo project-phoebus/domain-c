@@ -103,6 +103,10 @@ Language reference:
     `tools/cc_dis.py` now rewrites the indexed ones as `0x12`/`-0x11`;
     if you read raw objdump output (or your own scripts' output), mind
     the difference.
+  - Keep your helper scripts and scratch files in a subdirectory of the
+    session scratchpad named after you (e.g. `scratchpad/transN/`); the
+    scratchpad is shared and translators have overwritten each other's
+    files.
   - Do not hand units to subagents of your own: do the work yourself.
     (In the second wave a translator's subagent reported a unit done and
     committed when nothing existed.)  Report only what `git log` and the

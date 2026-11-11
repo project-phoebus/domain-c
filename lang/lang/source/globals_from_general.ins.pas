@@ -55,3 +55,12 @@ procedure opt_str_$add_substitution_point(
   0x0986FE (cc.m68k): no parameters, the first identifier in A0;
   c_sym_map's sym_map calls it. }
 function sortidentifiers: il_$node_ptr_t; extern;
+
+{ DELAY_$SHRINK_TOP_LEVEL_NODE - delay.pas 0x07907E (cc.m68k): a
+  top-level node by value; c_stmt_sem, which opens no delay insert,
+  calls it after building an evaluation node (add_eval, build_assign,
+  ...) and reads neither D0 nor A0.
+
+  Not known from the original: the parameter name. }
+procedure delay_$shrink_top_level_node(
+    n: il_$node_ptr_t); options(val_param); extern;

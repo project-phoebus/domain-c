@@ -152,7 +152,8 @@ procedure pas_$ctov(
   the address constant's offset (-68); the -TYPE flag in D2 (`sne',
   put back with `lsr.b #7; lsl.b #5; andi.b #-33; or.b').  The top
   entry of the expression stack (0x140440 + 64 * cexs_23bc - 64) gets
-  get_addr_con(4, its +28, offset, cdef_data_sect, false).  The sections
+  get_addr_con(4, its type (+28: main's block), offset, cdef_data_sect,
+  false).  The sections
   come from main's block (+188, +192).
 
   Not known from the original:
@@ -188,16 +189,16 @@ begin
   decl.dtype := int_type;
   decl.name := name1.id;
   decl.line := name1.line;
-  decl.unused_12 := 0;
-  def_blk_skeleton(108, addr(name1), 2, addr(decl), nil, 0, false, 3, 0, nil);
+  decl.flags := [];
+  def_blk_skeleton(108, addr(name1), 2, addr(decl), nil, nil, false, 3, 0, nil);
   name2.id := idntk(ctk_identifier, '<apollo_c_startup>', 18);
   name2.line := 31999;
   decl.dtype := il_178;
   decl.name := name2.id;
   decl.line := name2.line;
-  decl.unused_12 := 0;
-  def_blk_skeleton(105, addr(name2), 0, addr(decl), nil, 0, false, 3, 0, nil);
-  cdef_50 := il_180;
+  decl.flags := [];
+  def_blk_skeleton(105, addr(name2), 0, addr(decl), nil, nil, false, 3, 0, nil);
+  cdef_50 := c_blk_ptr_t(il_180);
   def_blk_params(false);
   il_d0 := 31999;
   il_c3 := true;
@@ -206,7 +207,8 @@ begin
   body_opr(1, addr(id_main));
   with cexs_stack[cexs_23bc] do begin
     offset := 0;
-    node := get_addr_con(4, sym, offset, cdef_data_sect, false);
+    node := get_addr_con(4, il_$node_ptr_t(typ.base), offset,
+                         cdef_data_sect, false);
   end;
   amp.id := lex_tokens[ctk_amp];
   amp.line := 31999;
@@ -823,8 +825,8 @@ begin
   outer_decl.dtype := il_178;
   outer_decl.name := il_178;
   outer_decl.line := 0;
-  outer_decl.unused_12 := 0;
-  def_blk_skeleton(106, addr(outer_name), 0, addr(outer_decl), nil, 0,
+  outer_decl.flags := [];
+  def_blk_skeleton(106, addr(outer_name), 0, addr(outer_decl), nil, nil,
                    false, 3, 0, nil);
   il_184 := il_180;
   cdef_outer_block := il_180;
@@ -935,7 +937,7 @@ begin
   cexs_23bc := 0;
   cst_5fa := 0;
   csyn_202 := 1;
-  csyn_60 := 3;
+  csyn_60[1] := 3;
   cst_stack_size := as_info_$stack_size;
   c_expr_syn_$begin_compilation;
   if cargs_$options.ansi or cargs_$options.xansi then

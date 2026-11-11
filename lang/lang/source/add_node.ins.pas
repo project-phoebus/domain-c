@@ -102,10 +102,11 @@ function add_dindexn(
 
 { ADD_PN - 0x0A1652, cc.a88k 0x0A3032; frame 8:l/a 12:l/l 16:w/w 18:w/w;
   10 call sites (c_expr_sem, c_expr_syn, c_stmt_sem, opt_inline,
-  opt_strength); result in A0. }
+  opt_strength); result in A0.  p2 is a type node (c_expr_syn passes
+  the type a dereferenced pointer points to). }
 function add_pn(
     p1: univ_ptr;
-    p2: integer32;
+    p2: univ_ptr;
     p3: integer;
     p4: integer): univ_ptr; options(val_param); extern;
 
