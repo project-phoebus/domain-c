@@ -814,7 +814,7 @@ begin
   if procvar then begin
     if keep or not cargs_$options.xrs or odd(ord(il_180^.xc[375])) then
         begin
-      cg_addr_2b6 := 8;
+      cg_addr_next_areg := 8;
       address(callee, 5, op1);
       emit(22, 5, areg, op1, 0);
       release(op1);
@@ -976,8 +976,8 @@ begin
   for r := 0 to 23 do
     if (regs & lshft(1, r)) = 0 then begin
       kill_register(r);
-      cg_addr_killed[r] := true;
-      cg_addr_cache[r].param_alias := false;
+      cg_addr_used[r] := true;
+      cg_addr_cache[r].live := false;
     end
     else if not lib then begin
       with cg_addr_regs[r] do begin
@@ -987,9 +987,9 @@ begin
             if (cg_addr_cache[r].obj <> nil) and
                 (cg_addr_cache[r].obj = obj) and
                 (cg_addr_cache[r].size = size) and
-                cg_addr_cache[r].param_alias then
+                cg_addr_cache[r].live then
               cg_call_$kill_any_param_alias(n, d,
-                  cg_addr_cache[r].param_alias, obj)
+                  cg_addr_cache[r].live, obj)
             else if alias_$related_call(d, n) then
               obj := nil;
           end;
@@ -999,18 +999,18 @@ begin
             if (cg_addr_cache[r].obj <> nil) and
                 (cg_addr_cache[r].obj = obj2) and
                 (cg_addr_cache[r].size = size) and
-                cg_addr_cache[r].param_alias then
+                cg_addr_cache[r].live then
               cg_call_$kill_any_param_alias(n, d,
-                  cg_addr_cache[r].param_alias, obj2)
+                  cg_addr_cache[r].live, obj2)
             else if alias_$related_call(d, n) then
               obj2 := nil;
           end;
       end;
       with cg_addr_cache[r] do
-        if (obj <> nil) and param_alias then
+        if (obj <> nil) and live then
           if cg_call_$obj_is_modifiable_by_param(obj) then begin
             alias_$alias_desc_with_size(obj, delay_378[size], d);
-            cg_call_$kill_any_param_alias(n, d, param_alias, dummy);
+            cg_call_$kill_any_param_alias(n, d, live, dummy);
           end;
     end;
 
