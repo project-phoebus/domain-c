@@ -104,6 +104,32 @@ later.
 | `lang/c_compiler/source/general_utl.ins.pas` | done (c_general_utl) |
 | `lang/c_compiler/source/macro_read.ins.pas` | done (c_macro_read): MR_ headings, mr_open_quote (was mr_632), mr_date, mr_time |
 | `lang/c_compiler/source/macro_utl.ins.pas` | done (c_macro_utl, c_macro_read): text list elements (pos, kind), macros, 64 actuals |
-| `lang/c_compiler/source/c_lex_pp.pvt.pas` | PPIO_ headings narrowed, the file stack (lex_file_t, lex_files, lex_depth) and the cells c_macro_read uses; c_lex_pp's side TODO |
+| `lang/c_compiler/source/c_lex_pp.pvt.pas` | done (c_lex_pp, translator H): PPIO_ headings, the file stack (lex_file_t complete, lex_files, lex_depth), lex_listing_line (number field and text), lex_macro_expanded |
 | `lang/c_compiler/source/c_syntax.ins.pas`, `c_expr_syn.ins.pas`, `cppansi.ins.pas` | headings read off frames and call sites (TODO) |
+
+Translator H (2026-11-11), c_lex_pp: c_globals.ins.pas now has the
+token classes (ctk_ constants: k in 0..75 the class of the k-th name
+of c_data.asm's table, which c_main's rword_init enters with idntk(k,
+...); 76 identifiers, 81/82/85 integer constants, 92/93 strings) and
+lex_tokens [-10..236] (the token of class k at [k], the compound
+assignments at [-10..-1], the lex_add_assign.. constants); csyn_200 is
+token_kind, lex_2ae4 lex_token, lex_49a/lex_14b2 the kw_options and
+kw_attribute nodes, lex_2ae0/2af0/2af2/2afe lex_total_lines,
+lex_systype_state, lex_inline_state, lex_module_seen; lex_text is
+varying [520] (questions 9); cdef_38/3c/54 are cdef_data_sect,
+cdef_code_sect and cdef_outer_block; unix_objmod's two cells the front
+end sets are uobj_hp_standard and uobj_systype_2.  c_externs: init_lex,
+get, clex_$unget, clex_$catstring checked.
+
+Translator H, c_main: c_objtype.ins.pas gets c_name_t (identifier and
+line, 8 bytes), c_decl_t (def_blk_skeleton's declaration, by offset),
+c_exp_t (an expression stack entry, by offset) and c_kw_node_t;
+c_globals.ins.pas names the identifiers cc enters (id_main, the
+attribute keywords id_/idu_, idu_options, idu_attribute, c_def_sem's
+cdef_id_ names), con_zero and con_minus_one, cexs_stack (was
+cexs_390), cst_stack_size, c_rword_table; kw_options and kw_attribute
+are c_kw_node_t.  The c_externs headings c_main calls (fnd_name,
+def_blk_skeleton, def_blk_params, body_s, body_opr, expr_op, call_s,
+body_e, ...) are left as read off the frames: their owners narrow
+them.
 

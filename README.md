@@ -109,6 +109,8 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/sortidntk.pas` | 3 | translated (best effort; dpc gap 10) |
 | `lang/c_compiler/source/c_sym_map.pas` | 11 | translated (best effort; blocks by offset) |
 | `lang/c_compiler/source/c_macro_read.pas` | 23 | translated (best effort) |
+| `lang/c_compiler/source/c_lex_pp.pas` | 38 | translated (best effort; dpc gaps 2, 7, 8, 12, 13, 14) |
+| `lang/c_compiler/source/c_main.pas` | 13 | translated (best effort; program cc; dpc gaps 1, 3, 15, 16) |
 | `lang/lang/source/cargs.pas` | 24 | translated (best effort; the binaries' variants by `%if cc_a88k`; dpc gaps 3, 11) |
 | `lang/lang/source/prfpkg.pas` | 11 | translated (best effort; dpc gaps 4, 7) |
 | `lang/lang/source/target_68k_dummies.pas` | 8 | translated (cc.m68k only) |

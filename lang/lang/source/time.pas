@@ -59,7 +59,7 @@ end;
     insert, declares s with its own type). }
 
 procedure cat_time_info(
-    in out s: time_$line_t);
+    in out s: univ time_$line_t);
 type
   day_names_t = array [0..6] of array [1..4] of char;
 var

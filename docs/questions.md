@@ -188,3 +188,45 @@ revisited.
    every use (debug_sym_dmp passes them back and pds.pas dereferences
    them) and it spares a type transfer at each call.  Keep, or make
    them integer32?
+
+30. Translator H (2026-11-11): question 9 settled: lex_text is varying
+   [520] of char (8 characters of the listing's number field and 512
+   of text, as lex_listing_line), c_globals.ins.pas changed.
+31. unix_objmod's +0x5DD0 and +0x5E16, which c_lex_pp and c_main set,
+   are declared in c_globals.ins.pas (uobj_hp_standard,
+   uobj_systype_2) because neither unit opens unix_objmod.ins.pas;
+   unix_objmod.pas must `define' them under these names (or the
+   declarations move to an insert all three open).
+32. The tokens' table (c_lex_pp +0x26E8) is declared lex_tokens:
+   array [-10..236] so that lex_tokens[k] is the token of class k
+   (c_main's rword_init fills [0..75] from +0x2710, [-10..-1] are the
+   compound assignments); the original may have had two arrays or an
+   offset index.  The upper bound comes only from the next cell
+   (+0x2AC4).  The ctk_ class names are the spellings of c_data.asm's
+   table.  Rename if the original's names turn up.
+33. c_lex_pp's parse_directive has locals no instruction of its own
+   touches: they are used only by the routines nested in it
+   (module_sem, section_sem, systype_sem reach them through A1), and
+   line_sem is a function whose result its two callers drop (written
+   discard(line_sem)).  Kept as the image has them.
+34. us/us/ins/c.ins.pas declares mbstowcs (the C library's, called by
+   c_lex_pp's get_wstring through the transfer vector) and
+   c_$map_to_apollo_cond; c.ins.pas now declares its own c_$chars_t
+   (c_lex_pp opens it before the prelude) instead of cargs_$chars_t.
+   iosub.ins.pas's error_exit takes a univ iosub_$status_t for the
+   same reason (c_error and c_sym_map open it without base's types).
+35. c_main: cc enters `_longjmp', `longjmp' and `sigsetjmp' with the
+   lengths 7, 6 and 6 (copied from `_setjmp' and `setjmp', it seems),
+   so c_def_sem's special names are the prefixes `_longjm', `longjm'
+   and `sigset'.  Kept as the image has it (a probable slip of the
+   original).
+36. c_main calls pas_$ctov through the transfer vector (preprocess:
+   the C string cpp_path into a varying string, three arguments); the
+   reference documents ptoc and ctop but no ctov, so it is written as
+   a call of an extern declared in c_main.  do_report's heading is in
+   c_main too (report.ins.pas would clash with do_report.pas's own
+   report_$word_t parameter).
+37. time.ins.pas's cat_time_info now takes `in out s: univ
+   time_$line_t' (and time.pas's definition the same), so that c_main
+   can pass its PRTSUB line (dpc refuses a type transfer of a
+   variable passed by reference).

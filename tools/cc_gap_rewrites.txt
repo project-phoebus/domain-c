@@ -66,3 +66,24 @@ lang/common/source/pds.pas	s/\(get_bucket\(main_index\) <> p\^\.bucket\)/(p^.buc
 lang/common/source/pds.pas	s/if \((\w+) <> (\w+)\) and (\w+)\^\.refs\^\[i\] then begin/if ($1 <> $2) and ($3^.refs <> nil) then begin { gap 13 }/
 lang/common/source/pds.pas	s/if \(i <> main_index\) and scope_refs\^\[i\] then begin/if (i <> main_index) and (scope_refs <> nil) then begin { gap 13 }/
 lang/common/source/pds.pas	s/^(\s*)m\^\.refs\^\[i\] := m\^\.refs\^\[i\] or node\^\.bucket\^\.refs\^\[i\];/$1m^.refs^[i] := true; { gap 13 }/
+# gap 7 (c_lex_pp): real constants in a comparison (the single-range flag tested instead, for the check)
+lang/c_compiler/source/c_lex_pp.pas	s/^(\s*)if \(lex_token\^\.real_value > 3\.402823466e38\) or$/$1if not lex_token^.real_single_range { gap 7 }/
+lang/c_compiler/source/c_lex_pp.pas	s/^\s*\(lex_token\^\.real_value < -3\.402823466e38\) then$/ then/
+# gap 14: a non-local goto (an assignment instead, for the check)
+lang/c_compiler/source/c_lex_pp.pas	s/goto 99;  \{ non-local \}/ch := chr(0); { gap 14 }/
+# gap 8 (c_lex_pp): in on a constant set with a word element (the comparisons)
+lang/c_compiler/source/c_lex_pp.pas	s/token_kind in \[77\.\.87, 101, 200\]/((token_kind >= 77) and (token_kind <= 87)) or (token_kind = 101) or (token_kind = 200) { gap 8 }/
+# gap 2 (c_lex_pp): a case of 8 labels over a range of 24 (the other letters added, for the check)
+lang/c_compiler/source/c_lex_pp.pas	s/^(\s*)'a': get_backslash_char := chr\(7\);/$1'a', 'c', 'd', 'e', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'o', 'p', 'q', 's', 'u', 'w': get_backslash_char := chr(7); { gap 2 }/
+# gap 12: an A0 function result compared with a variable (compared with nil, for the check)
+lang/c_compiler/source/c_lex_pp.pas	s/if spos_\$region_user_name\(spos_\$region\) = std_include_tok then/if std_include_tok = nil then { gap 12 }/
+# gap 15: a pointer result assigned from a parameter (nil, for the check)
+lang/c_compiler/source/c_lex_pp.pas	s/^(\s*)clex_\$catstring := s([12]);/$1clex_\$catstring := nil; { gap 15 }/
+# gap 3 (c_main): new (the PAS_$NEW call it compiles to, for the check)
+lang/c_compiler/source/c_main.pas	s/^(\s*)new\(argv\^\[argc\]\);/$1pas_\$new(argv^[argc], 1024); { gap 3 }/
+# gap 16: ptoc and ctop (dropped, for the check)
+lang/c_compiler/source/c_main.pas	s/^(\s*)(ptoc|ctop)\((\w+)\);/${1}{ gap 16 }/
+# gap 17: a string constant assigned to a varying string (the length cleared instead, for the check)
+lang/c_compiler/source/c_main.pas	s/^(\s*)arg := '[^']*';/${1}arg.length := 0; { gap 17 }/
+# gap 1 (c_main): whole varying assignment (the length only, for the check)
+lang/c_compiler/source/c_main.pas	s/^(\s*)arg := tmp;/${1}arg.length := tmp.length; { gap 1 }/

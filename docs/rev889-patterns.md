@@ -269,3 +269,40 @@ cc.m68k unless marked.
     (`pea 0x06F152', in make_type_ref's constants) instead of a copy of
     its own; every other literal of the unit follows its routine.
     dpc keeps one copy per routine.
+## Non-local gotos and module data (translator H, c_lex_pp.pas)
+
+35. **A routine whose nested routines leave it by goto keeps A5 in its
+    frame.**  c_lex_pp's get (0x0557EA) saves all of D2-D7/A2-A5, then
+    `move.l A5,(-16,A6)' after its `lea abs.l,A5', and at the label the
+    nested routines' `jsr pas_$nlg2' (label address, get's frame) reach
+    (0x055F20) reloads it (`movea.l (-16,A6),A5').  get_character takes
+    get's frame in A1 and keeps it at (-4,A6) for the goto.  dpc refuses
+    the goto (docs/dpc-gaps.md 12).
+36. **An address constant in the literal pool passed by address.**
+    c_lex_pp line_sem's lib_$data_move (0x053962) passes `pea
+    (0x053C44,PC)', a longword holding iosub_$source_pathname's
+    address (0x2CDC0C), for an `in' univ_ptr parameter given
+    addr(iosub_$source_pathname); the other pointer arguments are frame
+    temporaries.  Which addresses go to the pool is not known.
+37. **A 16K module array addressed absolutely though inside 32K.**
+    c_lex_pp's wide characters (4096 longwords at +0x2B54, the end of
+    the module's 0x6B54 bytes: `move.l #0x14507C,-(SP)', `movea.l
+    #0x14507C,A0') are never reached from A5, while every other cell
+    of the module is; item 20's variable passed 32K.  The rule (by
+    size?) is not known.
+38. **objdump prints index displacements in hexadecimal.**  Not a code
+    difference, a reading trap: `move.b (11,A2,D0.w),D3' at 0x0551AC
+    is displacement 0x11 (the extension word 0x0011), a string node's
+    characters at +18 indexed from 1; `(fffffffffffffffc,A0,D2.l)' is
+    -4.  Plain displacements `(9439,A0)' are decimal.
+39. **Varying string constants laid out as varying strings.**  c_main's
+    preprocess assigns string constants to a varying [1024] (`arg :=
+    '-Dunix''): the pool holds the length word and the characters
+    (0x05AD1E: `00 06 -Dunix'), copied whole with `move.l (A0)+,(A1)+'
+    (and a final `move.w' or `move.b'), not the 1026 bytes of the
+    variable (docs/dpc-gaps.md 16).
+40. **A program's routine passed as a parameter loads A5.**  c_main is
+    the program cc; its routines run on cc's A5 and do not load it,
+    except do_lex_for_listings (0x05A380), whose address cc passes to
+    run_backend (`move.l #0x05A380,-(SP)') and which runbackend calls
+    with `jsr (A0)'.  The others are written `internal'.
