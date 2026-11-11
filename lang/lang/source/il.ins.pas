@@ -54,6 +54,14 @@ type
           dcx_unused_8: integer32;      { +8: cleared }
           dcx_re: double;               { +12 }
           dcx_im: double);              { +20 }
+      { A string constant (strtk, kind 92; len + 18 bytes): laid out as
+        an identifier.  inc_list reads an include file's name, ending in
+        its closing delimiter, from such a node. }
+      6: (str_next: il_$node_ptr_t;     { +4: the sorted chain }
+          str_unused_8: integer32;      { +8: cleared }
+          str_unused_12: integer32;     { +12: cleared }
+          str_len: integer;             { +16 }
+          str_chars: array [1..1024] of char);  { +18 }
   end;
 
 var
