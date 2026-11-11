@@ -158,3 +158,13 @@ revisited.
    the original.  Its print_meter_results also reads perfsummary's
    parameter, the source line count, which perfsummary itself never
    reads (c_main passes it).
+26. Translator I (2026-11-11): iosub.pas open_listing_file, with -USRCH
+   and no -L name, splits the -B name's leaf (strl_$copy of b_name,
+   name_$strip_leaf_lc) and takes two characters off the name and the
+   leaf before naming the listing from the leaf (cc.m68k 0x0B54BA).
+   Kept as the image has it; the -B name may be intended (the listing
+   beside the object file) or a slip for the source name.
+27. Translator I: ios_$inq_name (iosub's stream_error) is not in the
+   customer /sys/ins/ios.ins.pas; it is declared in
+   us/us/ins/ios_nr.ins.pas, one of the internal inserts iosub opens.
+   Move it if a better home is known.
