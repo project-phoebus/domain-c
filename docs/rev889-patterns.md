@@ -608,3 +608,18 @@ cc.m68k unless marked.
     with a `for' of 32 counted by `dbf D3' and stores the bit's index
     in D3 when it leaves: the result is not set on the other path, so
     the allocator gives it the trip count's register.
+
+## Conditions (translator DD, cg_tree.pas generate)
+
+81. **A dead compare before moves that set the condition codes.**
+    generate's scales (cc.m68k 0x105AAC, 0x105D46): `cmpi.w #88,(2,A1)'
+    of the constant, then `movea', `lea' and two `move.l' of its double
+    to the frame, then `bne': the branch takes the last move's
+    condition (the double's low longword zero), not the compare's.
+    Written as the test of the low longword the code makes.
+82. **A register variable read before any assignment on a path.**
+    mul_proc (0x101D38) assigns its routine index (D2) on two of the
+    classes' arms only and uses it on all; the conversions of arm 39
+    (0x107976) assign the routine on 4 of the 11 entries of a jump
+    table.  The registers keep their callers' values; the translation
+    leaves the variable unset there too.

@@ -333,3 +333,13 @@ the headings of cg_tree_$needs_lib_support (t and rtn by address) and
 cg_tree_$is_decomposable_const_mul, which reg_save calls.  generate and
 its 21 nested routines are not written (declared extern in the unit
 for walker; a TODO in its header).
+
+Translator DD, cg_tree (finished, 44 of 44): generate and its 21 nested
+routines; the module's data declared (peb_ads +0x58, tree_fn_inst
++0x70, tree_op_inst +0xA0, tree_fn_rtn +0x158, the operands opw .. opr
++0x1B8 .. +0x230, tree_asn +0x248, tree_rlen +0x294).  fpa.ins.pas
+gets emit_neg, emit_fmath_top, emit_extend, emit_compare, emit_jsr,
+emit_clr_fp1, fpa_fop_proc and fpa_temp (headings read off frames and
+generate's calls).  The unit declares add_node's swap_cc (0x2C2080)
+and opt_loop's is_scale_candidate (g_opt.ins.pas's, an insert cg_tree
+does not open) itself.

@@ -823,3 +823,17 @@ revisited.
    bug_check message ends `support!%.' (not `%$').  cg_tree's operands
    at +0x1B8 .. +0x230 lie 24 bytes apart, as cg_assign's (question
    99) and do_const_mul's frame operands (-432, -456).
+108. Translator DD, cg_tree's generate: probable slips of the original
+   kept: mul_proc leaves its routine index (D2) unset for a signed long
+   by long multiplication (mdmcase 3 or 5 with the signed flag), which
+   the PEB path and gen_call then use; the floating conversions (arm
+   39) leave the routine (D2) unset for classes 3, 5, 9..11;
+   unpack_proc's 68020 bit field size is unset for a variable offset;
+   bit_test_proc's `bftst' offset for a constant element is the set's
+   last bit less the element's complement (`not.l'), and its range
+   check then compares the complement.  generate's scales test `cmpi.w
+   #88' of the constant and then branch on the condition codes of the
+   double's moves.  The three word tables at +0x70, +0xA0, +0x158 have
+   holes in .rwdi (their zero words left out): the declarations write
+   zeros there.  Is +0xA0 a table of its own (92 words, by operator)
+   or the end of +0x70's (generate indexes it from +0xA0)?

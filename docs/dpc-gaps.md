@@ -55,6 +55,10 @@ when this tree is merged).
    ... is not supported yet"; the check adds the otherwise's 90 kinds
    as labels of the cgerr.
 
+   Also cg_tree.pas compare_proc (cc.m68k 0x10386E, translator DD):
+   `case n^.desc.w6 of 2, 3, 12, 13' as a jump table of 12 from 2
+   (six labels added for the check).
+
 3. **`new` and `dispose`.**  c_macro_utl's mu_$enter_name (cc.m68k
    0x058FDC: PAS_$NEW with 0x100E), mu_$alloc_tle (0x05993C, 134182)
    and mu_$initialize (0x059220, PAS_$DISPOSE).  dpc: "undefined
@@ -497,7 +501,9 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
   headings give none (a TODO in spos.ins.pas).
    Also cg_tree.pas (translator AA): `or assert_is_f_math_op(...)',
    `and consecutivebits(...)' (needs_lib_support 0x0FF0AA, const_mul
-   0x0FFF22).
+   0x0FFF22).  And (translator DD) `or unaligned(...)' (agg_compare_proc
+   0x101674) and `and (peek(...) in [16..23])' (generate's floating
+   negation, 0x10606E: the check keeps the lower bound).
    Also cg_assign.pas (translator AA): `and not (k in getphase(n))',
    `and not check_use(...)', `or unaligned(...)', `and
    register_tickle(...)', `and zero_check(...)' and `(rlen = 5) and
@@ -537,6 +543,11 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
       The rewrite drops the listing `case' from the scratch copy.  No small
       reproducer found (the size of the routine seems to matter).
 
+
+   Also cg_tree.pas generate (cc.m68k 0x10484E, 0x3B38 bytes, a
+   `case' of 74 operators; translator DD): its floating operators'
+   arms (34 .. 42) are left out of the check (a conditional variable
+   that is not set); tools/cc_typecheck.sh type-checks them.
 
    Also cg_assign.pas assign_proc (cc.m68k 0x0F469E, 0x2224 bytes):
    three conditional regions are left out of the check (the memory
