@@ -722,3 +722,14 @@ revisited.
    fields as they were (outbin's names) and new PA and a88k arms named
    from cc.a88k bin.pas's prints; gen_unwind_$add_scope's second
    parameter is the base's address (univ_ptr; outbin passes nil).
+95. Translator Z, jmp_br_resolve.pas: its module data (A5 0x2CE8BC,
+   +0..+24: the branch's reference cell and label, the cell at hand, the
+   pass count, the label being numbered, the section) is also
+   instr_reorder.pas's A5, and instr_reorder reads +0: one of the two
+   has no data of its own, or the cells are shared (an insert's extern
+   cells defined by one of them).  jmp_br_resolve.pas declares them as
+   its own variables for now.  It also copies celpkg.pas's empty
+   address descriptor (celpkg +24, 0x2CE68C), which celpkg does not
+   export: jmp_br_resolve keeps a copy of its own rather than moving
+   celpkg's variables (`define' would reorder celpkg's data).  Should
+   codegen.ins.pas export celpkg's descriptors?
