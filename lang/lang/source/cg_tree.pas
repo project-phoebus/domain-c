@@ -79,11 +79,12 @@
 
   TODO(pascal) generate is begun: its frame, the operands' temporaries
   and its end are translated, and of its nested routines shift_proc,
-  copy_set_aggregate, proto_set, set_ops, round_fp_to_ieee, ld_addr and
+  copy_set_aggregate, proto_set, set_ops, compare_proc,
+  round_fp_to_ieee, switch, f_compare_proc, ld_addr and
   restore_alloc_temps; not yet bit_test_proc, bit_set_proc,
   unpack_proc, agg_compare_proc, mdmcase, ldsqr, mul_proc,
   extend_div_proc_result, div_proc, set_range_in_set_proc,
-  set_bit_in_set_proc, compare_proc, switch, f_compare_proc, nor the
+  set_bit_in_set_proc, nor the
   `case' arms of operators other than 19..21, 27, 28, 49, 50 (they fall
   to cgerr 0 meanwhile).
 
@@ -114,6 +115,10 @@ var
   { delay.pas's data (cc.m68k 0x169968, absolute): a word for each
     register class, its width in bytes. }
   delay_378: extern array [0..15] of integer;
+
+  { add_node.pas's swap_cc (cc.m68k 0x2C2080, absolute): a comparison's
+    condition with its operands swapped. }
+  swap_cc: extern array [0..15] of integer;
 
   tree_math: array [0..21] of tree_math_t := [
     [false, 115], [true, 115], [true, 117], [true, 119], [true, 127],
@@ -1078,6 +1083,7 @@ var
   t1: il_$node_ptr_t;
   w8: integer;
   w6: integer;
+  k: integer;
   temps: boolean;
   rlen: integer;
 
@@ -1241,6 +1247,139 @@ var
     cg_addr_next_areg := save;
   end;
 
+  { compare_proc - an integer comparison (emit 18, a `cmp') of n's
+    operands of class size: an operand a register variable's statement
+    changes (register_tickle) loaded first; a constant kept on the right
+    (the operands swapped, the condition by swap_cc), the left
+    addressed with the class (4 or 5) a register holds it in; else the
+    operand a register holds put on the left (inquire); a comparison
+    with 0 by a `tst' (size 0, not for an address register) and its
+    condition made a sign test (2, 3, 12, 13 to 6, 7, 10, 11); a word
+    constant compared with an address register as a word.
+
+    0x10386E, 0x572 bytes: two constants' sets after the code (0x103DE0:
+    77..88, 101, 200; 0x103DFA: those and 195), movewlx's (0x0FFE4C)
+    for the word constant; add_node.pas's swap_cc (0x2C2080, absolute);
+    the register number compared unsigned (`bcc'); the sign tests by a
+    jump table of 12 from 2; the operands swapped through opt. }
+
+  procedure compare_proc(
+      n: cg_tree_ptr_t;
+      size: integer); options(val_param);
+  var
+    c: codegen_$uads_t;
+    l: il_$node_ptr_t;
+    r: il_$node_ptr_t;
+  begin
+    if register_tickle(n^.opnd[1], true) then begin
+      load_operand(n^.opnd[1], size, opr);
+      unlock(opr);
+    end;
+    if register_tickle(n^.opnd[2], true) then begin
+      load_operand(n^.opnd[2], size, opr);
+      unlock(opr);
+    end;
+    r := n^.opnd[2];
+    l := n^.opnd[1];
+    if r^.kind in [77..88, 101, 200] then begin
+      if (l^.kind in [77..88, 101, 195, 200]) or (l^.kind = 93) or
+          (l^.kind = 92) then
+        load_operand(n^.opnd[1], size, opr)
+      else begin
+        if (size = 5) and (peek(l, 5) = 31) and
+            (peek(n^.opnd[1], 4) <> 31) then
+          size := 4
+        else if (size = 4) and (peek(n^.opnd[1], 4) = 31) and
+            (peek(n^.opnd[1], 5) <> 31) then
+          size := 5;
+        address(n^.opnd[1], size, opr);
+      end;
+    end
+    else if l^.kind in [77..88, 101, 200] then begin
+      n^.opnd[2] := l;
+      n^.opnd[1] := r;
+      n^.desc.w8 := swap_cc[n^.desc.w8];
+      if n^.opnd[1]^.kind = 195 then
+        load_operand(n^.opnd[1], size, opr)
+      else if zero_check(n^.opnd[2]) and (size = 5) and
+          (peek(n^.opnd[1], 5) = 31) and (peek(n^.opnd[1], 4) <> 31) then
+        address(n^.opnd[1], 4, opr)
+      else
+        address(n^.opnd[1], size, opr);
+    end
+    else begin
+      inquire(l, size, opr);
+      if opr.f1 = 0 then begin
+        if (size = 4) and (peek(n^.opnd[1], 5) <> 31) then begin
+          size := 5;
+          inquire(n^.opnd[1], size, opr);
+        end
+        else if (size = 5) and (peek(n^.opnd[1], 4) <> 31) then begin
+          size := 4;
+          inquire(n^.opnd[1], size, opr);
+        end
+        else begin
+          inquire(n^.opnd[2], size, opr);
+          if opr.f1 = 0 then
+            if (size = 4) and (peek(n^.opnd[2], 5) <> 31) then begin
+              size := 5;
+              inquire(n^.opnd[2], size, opr);
+            end
+            else if (size = 5) and (peek(n^.opnd[2], 4) <> 31) then begin
+              size := 4;
+              inquire(n^.opnd[2], size, opr);
+            end;
+          if opr.f1 = 0 then
+            load_operand(n^.opnd[1], size, opr)
+          else begin
+            l := n^.opnd[2];
+            n^.opnd[2] := n^.opnd[1];
+            n^.opnd[1] := l;
+            n^.desc.w8 := swap_cc[n^.desc.w8];
+          end;
+        end;
+      end;
+    end;
+    if zero_check(n^.opnd[2]) and not ((opr.f1 = 1) and (opr.f2 >= 8)) then
+      address(n^.opnd[2], 0, ops)
+    else if peek(n^.opnd[2], size) = 31 then begin
+      if (size = 4) and (peek(n^.opnd[2], 5) <> 31) then
+        address(n^.opnd[2], 5, ops)
+      else if (size = 5) and (peek(n^.opnd[2], 4) <> 31) then
+        address(n^.opnd[2], 4, ops)
+      else
+        address(n^.opnd[2], size, ops);
+    end
+    else
+      address(n^.opnd[2], size, ops);
+    if (opr.f1 <> 1) and (ops.f1 = 1) then begin
+      opt := ops;
+      ops := opr;
+      opr := opt;
+      n^.desc.w8 := swap_cc[n^.desc.w8];
+    end;
+    release(opr);
+    release(ops);
+    r := il_$node_ptr_t(ops.x);
+    if (opr.f1 = 1) and (opr.f2 >= 8) and (ops.f1 = 3) and
+        (r^.kind in [77..87, 101, 200]) and (r^.xl[2] <= 32767) and
+        (r^.xl[2] >= -32768) then begin
+      anyconst(r^.xl[2], 2, c);
+      emit(18, 2, opr, c, 0);
+      unlock(c);
+    end
+    else
+      emit(18, size, opr, ops, 0);
+    if zero_check(n^.opnd[2]) then
+      case n^.desc.w6 of
+        2: n^.desc.w6 := 6;
+        3: n^.desc.w6 := 7;
+        13: n^.desc.w6 := 11;
+        12: n^.desc.w6 := 10;
+        otherwise ;
+      end;
+  end;
+
   { round_fp_to_ieee - a value in a floating register (mode 13) rounded
     to its IEEE size by a store to memory and a load back: to n's own
     storage for a variable (109, 110), else to the temporary t (made
@@ -1269,6 +1408,200 @@ var
       emit(0, size, m, a, 0);
       emit(0, size, a, m, 0);
       unlock(m);
+    end;
+  end;
+
+  { f_compare_proc - a floating comparison of n's operands (class w6, the
+    condition w8): a constant left operand put on the right (switch);
+    with a floating unit (cpu 2, 4, 8, 9, 10) and class 6 or 7 by
+    emit_compare (FPA1) or the 68881's compare (emit 47), the operand
+    a register variable's statement changes loaded first, a comparison
+    with 0.0 a test (size 0), the operand a floating register holds put
+    on the left; with -FRND (and not FPA1) both operands rounded to
+    their IEEE size first (round_fp_to_ieee, the left one unless
+    loaded); cg_fp_1000 set to n.  Else by the FPA (push_fpa_opr,
+    emit_jsr 145 a test, 86 a compare) or the floating stack
+    (stack_fp, the operand on the stack first; -FRND rounds the
+    stacked value: 157 and 143), then purge_fp.  A comparison switched
+    without its operands swapped (FPA1, classes 7, 13, 14) switched
+    back after.
+
+    0x103F8E, 0x6B2 bytes: generate's frame from the dynamic link (its
+    -46, k, the operand put first); the constant tests evaluated whole
+    (`seq', `or.b'); the comparisons with 0.0 by `jsr fpp_$' (0x0074
+    0xFF34, then `bne': docs/rev889-patterns.md 19); the class compared
+    unsigned (`bcs', `bls'); the operand by `move.l (0x24,A0,D2.w)' of
+    k * 4; frnd the bit 6 of cargs +0x27F; cg_fp_result (0x356300)
+    tested with check_use.
+
+    Not known from the original:
+    - what the 80 bytes of the frame above -84 held (not addressed). }
+
+  procedure f_compare_proc(
+      n: cg_tree_ptr_t); options(val_param);
+  var
+    tmp: il_$node_ptr_t;
+    t: il_$node_ptr_t;
+    sz: integer;
+    swapped: boolean;
+    loaded: boolean;
+
+    { switch - n's operands swapped (the condition by swap_cc, generate's
+      t1 and t2 with them), or, for FPA1 and classes 7, 13, 14, only
+      noted; swapped toggled.
+
+      0x103EE6, 0xA8 bytes: f_compare_proc's frame from the dynamic link
+      and generate's from its; FPA1 (cpu 8) bit 2 of 0x2C3670. }
+
+    procedure switch;
+    begin
+      if (8 in cargs_$options.cpu) and ((n^.desc.w6 = 7) or
+          (n^.desc.w6 = 14) or (n^.desc.w6 = 13)) then
+        swapped := not swapped
+      else begin
+        tmp := n^.opnd[1];
+        n^.opnd[1] := n^.opnd[2];
+        n^.opnd[2] := tmp;
+        n^.desc.w8 := swap_cc[n^.desc.w8];
+        tmp := t1;
+        t1 := t2;
+        t2 := tmp;
+        swapped := not swapped;
+      end;
+    end;
+
+  begin
+    swapped := false;
+    if not ((n^.opnd[2]^.kind = 198) or (n^.opnd[2]^.kind = 90) or
+        (n^.opnd[2]^.kind = 89) or (n^.opnd[2]^.kind = 88)) then
+      if (n^.opnd[1]^.kind = 88) or (n^.opnd[1]^.kind = 89) or
+          (n^.opnd[1]^.kind = 198) or (n^.opnd[1]^.kind = 90) then
+        switch;
+    if (cargs_$options.cpu * [2, 4, 8, 9, 10] <> []) and
+        ((n^.desc.w6 = 7) or (n^.desc.w6 = 6)) then begin
+      if cg_fp_count <> 0 then
+        purge_fp;
+      loaded := false;
+      if register_tickle(n^.opnd[1], loaded) then begin
+        load_operand(n^.opnd[1], n^.desc.w6, opr);
+        loaded := true;
+        address(n^.opnd[2], n^.desc.w6, ops);
+      end
+      else if register_tickle(n^.opnd[2], loaded) then begin
+        switch;
+        load_operand(n^.opnd[1], n^.desc.w6, opr);
+        loaded := true;
+        address(n^.opnd[2], n^.desc.w6, ops);
+      end
+      else if ((n^.opnd[2]^.kind = 89) or (n^.opnd[2]^.kind = 88)) and
+          (n^.opnd[2]^.real_value = 0.0) then begin
+        address(n^.opnd[1], n^.desc.w6, opr);
+        address(n^.opnd[2], 0, ops);
+      end
+      else if 8 in cargs_$options.cpu then begin
+        address(n^.opnd[1], n^.desc.w6, opr);
+        address(n^.opnd[2], n^.desc.w6, ops);
+      end
+      else begin
+        inquire(n^.opnd[1], n^.desc.w6, opr);
+        if opr.f1 in [0, 1] then begin
+          unlock(opr);
+          inquire(n^.opnd[2], n^.desc.w6, opr);
+          if opr.f1 in [0, 1] then begin
+            unlock(opr);
+            load_operand(n^.opnd[1], n^.desc.w6, opr);
+            loaded := true;
+          end
+          else
+            switch;
+        end;
+        address(n^.opnd[2], n^.desc.w6, ops);
+      end;
+      if cargs_$options.frnd and not (8 in cargs_$options.cpu) then begin
+        t := il_$node_ptr_t(n);
+        if not loaded then
+          round_fp_to_ieee(opr, n^.opnd[1], t, n^.desc.w6);
+        t := il_$node_ptr_t(n);
+        round_fp_to_ieee(ops, n^.opnd[2], t, n^.desc.w6);
+      end;
+      if 8 in cargs_$options.cpu then
+        emit_compare(n^.desc.w6, opr, ops, n^.desc.w8)
+      else
+        emit(47, n^.desc.w6, opr, ops, n^.desc.w6);
+      cg_fp_1000 := il_$node_ptr_t(n);
+      if (8 in cargs_$options.cpu) and swapped then begin
+        unlock(opr);
+        unlock(ops);
+      end
+      else begin
+        release(opr);
+        release(ops);
+      end;
+    end
+    else begin
+      if ((n^.opnd[2]^.kind = 89) or (n^.opnd[2]^.kind = 88)) and
+          (n^.opnd[2]^.real_value = 0.0) then begin
+        if 8 in cargs_$options.cpu then begin
+          push_fpa_opr(n^.opnd[1], 1, n^.desc.w6, 16);
+          emit_jsr(145, n^.desc.w6, 0);
+          setresult(16, il_$node_ptr_t(n), n^.desc.w6);
+          if n^.desc.w6 >= 8 then
+            setresult(17, il_$node_ptr_t(n), n^.desc.w6);
+        end
+        else begin
+          if not check_use(cg_fp_result, n^.opnd[1]) then
+            stack_fp(1, n^.desc.w6, n^.opnd[1]);
+          stack_fp(145, n^.desc.w6, nil);
+        end;
+      end
+      else if 8 in cargs_$options.cpu then begin
+        if peek(n^.opnd[2], n^.desc.w6) = 16 then begin
+          k := 2;
+          n^.desc.w8 := swap_cc[n^.desc.w8];
+        end
+        else
+          k := 1;
+        push_fpa_opr(n^.opnd[k], 1, n^.desc.w6, 16);
+        if n^.desc.w6 > 7 then
+          push_fpa_opr(n^.opnd[3 - k], 1, n^.desc.w6, 31)
+        else
+          push_fpa_opr(n^.opnd[3 - k], 1, n^.desc.w6, 17);
+        emit_jsr(86, n^.desc.w6, n^.desc.w8);
+        setresult(16, il_$node_ptr_t(n), n^.desc.w6);
+        if n^.desc.w6 >= 8 then
+          setresult(17, il_$node_ptr_t(n), n^.desc.w6);
+      end
+      else begin
+        if check_use(cg_fp_result, n^.opnd[2]) then begin
+          k := 2;
+          n^.desc.w8 := swap_cc[n^.desc.w8];
+        end
+        else
+          k := 1;
+        if check_use(cg_fp_result, n^.opnd[k]) then begin
+          if cargs_$options.frnd then
+            if (n^.desc.w6 = 12) or (n^.desc.w6 = 8) then begin
+              if n^.desc.w6 = 8 then
+                sz := 6
+              else
+                sz := 7;
+              stack_fp(157, sz, nil);
+              stack_fp(143, sz, nil);
+              stack_fp(157, sz, nil);
+              stack_fp(143, sz, nil);
+            end
+            else
+              stack_fp(157, n^.desc.w6, nil);
+        end
+        else
+          stack_fp(1, n^.desc.w6, n^.opnd[k]);
+        stack_fp(86, n^.desc.w6, n^.opnd[3 - k]);
+      end;
+      purge_fp;
+    end;
+    if swapped then begin
+      switch;
+      n^.desc.w8 := swap_cc[n^.desc.w8];
     end;
   end;
 
