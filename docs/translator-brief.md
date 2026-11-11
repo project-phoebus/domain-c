@@ -93,6 +93,10 @@ Language reference:
     other branches' numbers; that is fine, the lead renumbers at merge.
     Cite them in unit comments as `docs/dpc-gaps.md N` so they can be
     found.
+  - Do not hand units to subagents of your own: do the work yourself.
+    (In the second wave a translator's subagent reported a unit done and
+    committed when nothing existed.)  Report only what `git log` and the
+    files on your branch show.
   - The full gate takes several minutes: run `tools/cc_check.sh FILE.pas`
     for the units you touch, and the full gate once before your report
     (in the background if your tool times out).
