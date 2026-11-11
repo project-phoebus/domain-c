@@ -1,6 +1,7 @@
 { lang/lang/source/iosub.ins.pas - IOSUB, the compilers' input and
   output: the listing, the terminal, ending the run
-  (lang/lang/source/iosub.pas).  Opened after prtsub.ins.pas.
+  (lang/lang/source/iosub.pas).  c_lex_pp and c_macro_read open it
+  before prtsub.ins.pas, so it declares its own line type.
 
   No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binaries.
   Only what the translated units use is declared so far; the headings
@@ -13,6 +14,10 @@
 
   The rest of IOSUB's interface is added when iosub.pas and its
   callers are translated. }
+
+type
+  { A printed line, as PRTSUB builds it (prtsub_$line_t's layout). }
+  iosub_$line_t = varying [256] of char;
 
 { IO_TERM - close the outputs at the end of the run, with severity.
   0x0B5B10: by address (c_error's cgerr passes a frame word holding 5). }
@@ -29,8 +34,8 @@ procedure write_ln(
 
 { TYPELN - s to the terminal.  0x0B5EBA. }
 procedure typeln(
-    in s: prtsub_$line_t); extern;
+    in s: univ iosub_$line_t); extern;
 
 { LISTLN - s to the listing.  0x0B5F42 (62 call sites). }
 procedure listln(
-    in s: prtsub_$line_t); extern;
+    in s: univ iosub_$line_t); extern;
