@@ -102,10 +102,11 @@
   points, deluse, delparent, walkuses; cc.a88k's empty strengthreduce),
   opt_str_$is_loop_constant_integer, opt_str_$opmod1_of_multiplier,
   transformtemps .. ptrsub, match_rlens_srtemp_and_assign .. autoinc,
-  opt_str_$make_name .. minimally_size_sr_temp and the module's data.
-  Not written yet: elimuses, add_assign, getval, findvalues (with
-  not_on_ud_chain and noincfound), reduce and cc.m68k's strengthreduce
-  (0x0EBAF0, 0x35C bytes). }
+  elimuses, add_assign, getval, opt_str_$make_name ..
+  minimally_size_sr_temp and the module's data.
+  Not written yet: findvalues (with not_on_ud_chain and noincfound,
+  0x0E8FFC..0x0E9C50), reduce (0x0EACC8, 0xE28 bytes) and cc.m68k's
+  strengthreduce (0x0EBAF0, 0x35C bytes). }
 
 module opt_strength;
 
@@ -2131,6 +2132,304 @@ end;
 
 %if cc_a88k %then
 %else
+{ elimuses - induction variable v (its number: a 109's +74, a 110's
+  +16) no longer used at the loop's region statements that had it in
+  their sets but do not use it (walkuses) nor take its address (flag
+  bit 9): its use-def chains there cut (each defining statement's
+  entry flagged 16#100), its set bit cleared.
+
+  0x0E8798, 0x17A bytes: the block and the statement in frame words
+  (-16, -12; the statement passed to walkuses by address, v by its
+  parameter's); the variable as a one-element frame set (-96). }
+
+procedure elimuses(
+    loop: g_opt_block_ptr_t;
+    v: il_$node_ptr_t); options(val_param); internal;
+var
+  one: g_opt_varset_t;
+  e: g_opt_stmt_ptr_t;
+  b: g_opt_block_ptr_t;
+  s: il_$node_ptr_t;
+  c: g_opt_chain_ptr_t;
+  n, r: integer;
+  vr: g_opt_var_ptr_t;
+begin
+  if v^.kind = 109 then
+    n := v^.xw[37]
+  else
+    n := v^.xw[8];
+  if n <= 0 then
+    return;
+  b := loop;
+  while b <> nil do begin
+    s := il_$node_ptr_t(b^.first_stmt);
+    repeat
+      r := g_opt_stmt_ptr_t(s)^.hdr.region;
+      if r <> 0 then begin
+        e := opt_4009c[r];
+        if e^.vset <> nil then
+          if n in e^.vset^ then
+            if (e^.vars^[n]^.flags & 16#200) = 0 then
+              if not walkuses(s, v) then begin
+                c := opt_4009c[r]^.vars^[n]^.ud;
+                while c <> nil do begin
+                  vr := opt_4009c[c^.stmt^.hdr.region]^.vars^[n];
+                  vr^.flags := vr^.flags ! 16#100;
+                  c := c^.next;
+                end;
+                opt_4009c[r]^.vars^[n]^.ud := nil;
+                one := [n];
+                opt_4009c[r]^.vset^ := opt_4009c[r]^.vset^ - one;
+              end;
+      end;
+      s := il_$node_ptr_t(g_opt_stmt_ptr_t(s)^.next);
+    until g_opt_stmt_ptr_t(s) = b^.last_stmt^.next;
+    b := b^.link;
+  end;
+end;
+
+{ add_assign - a new assignment (140, 80 bytes from gspace) to
+  temporary temp before statement s: with op 0 its first value init *
+  factor (opt_str_$product_of, of d's classes and sign), recorded as
+  temp's asg; else temp op= step * factor (recorded among temp's
+  incs) or temp op= factor without a step; d its descriptor (a word
+  class's size 2, a longword's 4; a word typed temporary of class 4
+  made a longword).  A region statement for it: s's, for op 0 the one
+  before s in a latch block, else the nearest before (op 0) or after
+  (op <> 0; s moved on) that has one, for op 0 backed out of cur_loop
+  and past deleted ones; the new value's tree evaluated there
+  (fixupchildren).  Of a region, the assignment is linked before s
+  (s's region, no flags, null position), and takes the place of s
+  when s is that region's empty evaluation (one constant operand) in a
+  latch block: s's header copied, the region's entry, the block's
+  first or last statement and il_120's node replaced.
+
+  0x0E8912, 0x506 bytes: d by address; vnum and num cleared with
+  `andi.l #0xFF' of +38, the flags of +41, +42 with `andi.l
+  #0xFF0000FF' of +40 (docs/rev889-patterns.md 10); the registers
+  16#7FFF1FFF; the variables' table from mem_$alloc of opt_main_18;
+  fixupchildren's flag the byte at 0x0E7BFC (false, as in doinsert);
+  the header copy ten longwords and a word (+4..+45). }
+
+procedure add_assign(
+    s: g_opt_stmt_ptr_t;
+    temp: il_$node_ptr_t;
+    init: il_$node_ptr_t;
+    step: il_$node_ptr_t;
+    factor: il_$node_ptr_t;
+    op: integer;
+    in d: add_node_$desc_t); options(val_param); internal;
+type
+  head_t = record
+    w: array [1..10] of integer32;      { +4..+43 }
+    h: integer;                         { +44 }
+  end;
+  head_ptr_t = ^head_t;
+var
+  p, n: g_opt_stmt_ptr_t;
+  x: il_$node_ptr_t;
+  blk: g_opt_block_ptr_t;
+  q: sr_inc_ptr_t;
+  reg, rr, k: integer;
+begin
+  if op = 0 then begin
+    if temp^.kind = 109 then
+      if sr_temp_ptr_t(temp^.xp[13])^.asg <> nil then
+        return;
+    if temp^.kind = 110 then
+      if sr_temp_ptr_t(temp^.xp2[11])^.asg <> nil then
+        return;
+  end;
+  p := s;
+  reg := s^.hdr.region;
+  if reg <> 0 then begin
+    blk := opt_4009c[reg]^.block;
+    if blk^.flags.latch and (op = 0) and (s <> blk^.first_stmt) then begin
+      p := s^.prev;
+      reg := p^.hdr.region;
+    end;
+  end;
+  if reg = 0 then begin
+    if op = 0 then
+      while p^.hdr.region = 0 do begin
+        p := p^.prev;
+        reg := p^.hdr.region;
+      end
+    else
+      while s^.hdr.region = 0 do begin
+        s := s^.next;
+        reg := s^.hdr.region;
+      end;
+  end
+  else if op = 0 then
+    if opt_4009c[reg]^.block^.serial = cur_loop^.serial then
+      while (opt_4009c[reg]^.block^.serial = cur_loop^.serial) or
+            opt_4009c[reg]^.hdr.deleted do
+        reg := reg - 1;
+  n := gspace(80);
+  if n = nil then
+    cgerr_no_source(9, 0);
+  n^.kind := 140;
+  n^.hdr.vnum := 0;
+  n^.hdr.num := 0;
+  if n^.vset <> nil then
+    n^.vset^ := [];
+  n^.block := nil;
+  n^.vars := mem_$alloc(opt_main_18, il_180^.xw[145] * 4);
+  if n^.vars = nil then
+    cgerr_no_source(9, 0);
+  for k := 1 to il_180^.xw[145] do
+    n^.vars^[k] := nil;
+  n^.cses := nil;
+  n^.regs := [0..12, 16..30];
+  n^.hdr.b7 := false;
+  n^.hdr.b6 := false;
+  n^.hdr.b5 := false;
+  n^.hdr.b4 := false;
+  n^.hdr.b3 := false;
+  n^.hdr.counted := false;
+  n^.hdr.no_prune := false;
+  n^.hdr.deleted := false;
+  n^.hdr.b42_7 := false;
+  n^.hdr.b42_6 := false;
+  n^.hdr.kills := false;
+  n^.hdr.b42_4 := false;
+  n^.hdr.last := false;
+  n^.hdr.b42_2 := false;
+  n^.hdr.first := false;
+  n^.hdr.b42_0 := false;
+  n^.asg_x := nil;
+  n^.asg_op := op;
+  if op = 0 then begin
+    if temp^.kind = 109 then
+      sr_temp_ptr_t(temp^.xp[13])^.asg := n;
+    if temp^.kind = 110 then
+      sr_temp_ptr_t(temp^.xp2[11])^.asg := n;
+    il_utils_$do_substitution(il_$node_ptr_t(n), n^.asg_rhs,
+      opt_str_$product_of(3, init, factor, d.rlen, d.w6, d.w8,
+                          d.flags.signed, nil));
+    x := il_$node_ptr_t(n);
+    opt_str_$add_substitution_point(init, x);
+    x := il_$node_ptr_t(n);
+    opt_str_$add_substitution_point(factor, x);
+  end
+  else if step <> nil then begin
+    if temp^.kind = 109 then begin
+      q := gspace(8);
+      q^.stmt := n;
+      q^.next := sr_temp_ptr_t(temp^.xp[13])^.incs;
+      sr_temp_ptr_t(temp^.xp[13])^.incs := q;
+    end;
+    if temp^.kind = 110 then begin
+      q := gspace(8);
+      q^.stmt := n;
+      q^.next := sr_temp_ptr_t(temp^.xp2[11])^.incs;
+      sr_temp_ptr_t(temp^.xp2[11])^.incs := q;
+    end;
+    il_utils_$do_substitution(il_$node_ptr_t(n), n^.asg_rhs,
+      opt_str_$product_of(3, step, factor, d.rlen, d.w6, d.w8,
+                          d.flags.signed, nil));
+    opt_str_$add_substitution_point(factor, n^.asg_rhs);
+    opt_str_$add_substitution_point(step, n^.asg_rhs);
+  end
+  else
+    il_utils_$do_substitution(il_$node_ptr_t(n), n^.asg_rhs, factor);
+  rr := reg;
+  fixupchildren(n^.asg_rhs, rr, false);
+  n^.asg_lhs := temp;
+  if reg <> 0 then begin
+    n^.hdr.region := 0;
+    n^.next := s;
+    n^.prev := s^.prev;
+    n^.hdr.b45 := 0;
+    n^.line := spos_$null_position;
+  end;
+  n^.asg_desc := d;
+  if n^.asg_rlen = 2 then
+    n^.asg_size := 2
+  else if n^.asg_rlen = 4 then
+    n^.asg_size := 4;
+  if temp^.kind = 109 then
+    if temp^.xp[7] = il_$node_ptr_t(runbackend_10) then
+      if (d.w6 = 2) and (d.rlen = 4) then
+        temp^.xp[7] := il_$node_ptr_t(runbackend_0c);
+  n^.asg_w54 := 0;
+  n^.asg_w56 := 0;
+  if reg <> 0 then
+    if s^.hdr.region = reg then
+      if s^.kind = 139 then
+        if s^.eval_count = 1 then
+          if s^.eval_opnd[1]^.kind = 81 then
+            if opt_4009c[reg]^.block^.flags.latch then begin
+              head_ptr_t(addr(n^.prev))^ := head_ptr_t(addr(s^.prev))^;
+              if n^.hdr.first then
+                opt_4009c[reg]^.block^.first_stmt := n;
+              opt_4009c[reg] := n;
+              if opt_4009c[reg]^.next^.hdr.first then
+                opt_4009c[reg]^.block^.last_stmt := n;
+              n^.prev^.next := n;
+              n^.next^.prev := n;
+              g_opt_nodes_ptr_t(il_120)^[opt_4009c[reg]^.hdr.num] :=
+                il_$node_ptr_t(n);
+              return;
+            end;
+  s^.prev^.next := n;
+  s^.prev := n;
+end;
+
+{ getval - the step an assignment s (140) gives induction variable v
+  (number v of opt_region's table) through tree t: in a statement of
+  another loop's region (serial) s's variable; for v := v + c or v - c
+  (v or a 147 of v first, c a constant) c, negated for a subtraction;
+  for v := a + b or a - b where s's region uses v the other operand;
+  else t itself (a constant stored directly too).
+
+  0x0E8E18, 0x1CA bytes: the constants by a set of 0..207; the result
+  in D2, then A0. }
+
+function getval(
+    t: il_$node_ptr_t;
+    v: integer;
+    s: g_opt_stmt_ptr_t): il_$node_ptr_t; options(val_param); internal;
+var
+  r, vn: il_$node_ptr_t;
+  e: g_opt_stmt_ptr_t;
+  x: g_opt_tree_ptr_t;
+begin
+  r := t;
+  x := g_opt_tree_ptr_t(t);
+  if s^.kind = 140 then
+    if not ((t^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200]) and
+            (s^.asg_op = 0)) then begin
+      e := opt_4009c[s^.hdr.region];
+      if e^.block^.serial <> cur_loop^.serial then
+        r := s^.asg_lhs
+      else if not (t^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200]) then
+        if (t^.kind = 137) and ((x^.op = 2) or (x^.op = 1)) and
+           (x^.opnd[2]^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200]) then begin
+          vn := opt_4009c[opt_region]^.vars^[v]^.node;
+          if (x^.opnd[1] = vn) or
+             ((x^.opnd[1]^.kind = 147) and (x^.opnd[1]^.xp[6] = vn)) then begin
+            r := x^.opnd[2];
+            if x^.op = 2 then
+              r := smcontk(81, -r^.int_value);
+          end;
+        end
+        else if t^.kind = 137 then
+          if s^.kind = 140 then
+            if e^.vset <> nil then
+              if v in e^.vset^ then
+                if (x^.op = 2) or (x^.op = 1) then begin
+                  vn := opt_4009c[opt_region]^.vars^[v]^.node;
+                  if x^.opnd[2] = vn then
+                    r := x^.opnd[1]
+                  else if x^.opnd[1] = vn then
+                    r := x^.opnd[2];
+                end;
+    end;
+  getval := r;
+end;
+
 { opt_str_$make_name - s the name of temporary n: `<OSR$n>' (n five
   digits, zero filled).
 
@@ -2843,6 +3142,7 @@ begin
   else
     v^.xl[9] := 32;
 end;
+
 %endif
 
 %if cc_a88k %then
