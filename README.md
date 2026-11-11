@@ -119,6 +119,8 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/prtobj.pas` | 4 | translated (best effort; nodes by offset; dpc gap 8) |
 | `lang/lang/source/celpkg.pas` | 11 | translated (cc.m68k only; best effort; dpc gaps 4, 8) |
 | `lang/lang/source/gen_exception.pas` | 8 | translated (best effort; frames and records by offset; dpc gap 4) |
+| `lang/lang/source/unix_objmod.pas` | 46 | translated (best effort; nodes by offset; cells in unix_objmod.ins.pas, uobj_; dpc gaps 8, 9, 12, 19) |
+| `lang/lang/source/coff_syms.pas` | 16 | translated (best effort; nodes by offset; unix_objmod's cells; dpc gap 8) |
 | `lang/lang/source/runbackend.pas` | 24 | translated (best effort; nodes by offset; dpc gaps 2, 8) |
 | `lang/lang/source/commit_top_node.pas` | 7 | translated (best effort; nodes by offset; dpc gaps 2, 8, 12) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
