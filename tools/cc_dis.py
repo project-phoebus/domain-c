@@ -22,6 +22,21 @@ sys.path.insert(0, HERE)
 import coff_compare as cc  # noqa: E402
 
 
+def hexindex(line):
+    """objdump prints a plain displacement in decimal (`%fp@(12)') but an
+    indexed one in hex without a prefix (`%a5@(12,%d1:l)' is 0x12, and
+    `%fp@(ffffffffffffffef,%d6:l)' is -0x11).  Rewrite the indexed ones as
+    explicit signed hex so they cannot be misread."""
+    def fix(m):
+        v = int(m.group(2), 16)
+        if v >= 1 << 63:
+            v -= 1 << 64
+        elif v >= 1 << 31 and len(m.group(2)) == 8:
+            v -= 1 << 32
+        return '%s@(%s0x%x,' % (m.group(1), '-' if v < 0 else '', abs(v))
+    return re.sub(r'(%[a-z0-9]+)@\(([0-9a-f]+),(?=%)', fix, line)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('binary')
@@ -65,6 +80,7 @@ def main():
         m = re.match(r'\s*([0-9a-f]+):', line)
         if not m:
             continue
+        line = hexindex(line)
         t = re.search(r'(jsr|jmp|bsr\w*|pea|lea)\s.*?0x([0-9a-f]+)', line)
         if t and int(t.group(2), 16) in names:
             line += '    ; ' + names[int(t.group(2), 16)]

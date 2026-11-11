@@ -93,6 +93,11 @@ Language reference:
     other branches' numbers; that is fine, the lead renumbers at merge.
     Cite them in unit comments as `docs/dpc-gaps.md N` so they can be
     found.
+  - **objdump prints indexed displacements in hex without `0x`**:
+    `%a5@(12,%d1:l)` is 0x12, while a plain `%fp@(12)` is decimal 12.
+    `tools/cc_dis.py` now rewrites the indexed ones as `0x12`/`-0x11`;
+    if you read raw objdump output (or your own scripts' output), mind
+    the difference.
   - Do not hand units to subagents of your own: do the work yourself.
     (In the second wave a translator's subagent reported a unit done and
     committed when nothing existed.)  Report only what `git log` and the
