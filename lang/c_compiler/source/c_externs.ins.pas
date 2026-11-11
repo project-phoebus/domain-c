@@ -432,6 +432,11 @@ procedure cc_walk_it(
 { PP_CONSTANT - c_syntax.pas 0x066E54 (cc.a88k 0x0670D4). }
 function pp_constant: integer32; extern;
 
+{ INITDATE - c_initdate.c 0x053354 (cc.a88k 0x0535D4): fills
+  macro_read.ins.pas's mr_date and mr_time; c_main's cc calls it with
+  no arguments. }
+procedure initdate; extern;
+
 { c_sym_map.pas: the symbol map (c_main). }
 
 { SYM_MAP - c_sym_map.pas 0x060584 (cc.a88k 0x060804). }
