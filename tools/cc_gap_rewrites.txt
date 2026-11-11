@@ -44,3 +44,9 @@ lang/lang/source/cargs.pas	s/^(\s*)dispose\(argv\^\[j\]\);/$1pas_\$dispose(argv^
 lang/lang/source/cargs.pas	s/^(\s*)dispose\(argv\);/$1pas_\$dispose(argv, 512); { gap 3 }/
 # gap 11: nil as a pointer function's result (return another pointer, for the check)
 lang/lang/source/cargs.pas	s/^(\s*)arg_option_parameter := nil$/$1arg_option_parameter := argv^[0] { gap 11 }/
+# gap 4 (prfpkg): write and writeln (dropped, for the check)
+lang/lang/source/prfpkg.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
+# gap 7 (prfpkg): real arithmetic (the hundredths printed as 0)
+lang/lang/source/prfpkg.pas	s/^(\s*)seconds := d;/${1}{ gap 7 }/
+lang/lang/source/prfpkg.pas	s/prtint\(s, trunc\(\(seconds - trunc\(seconds\)\) \* 100\.0\), 2, true\)/prtint(s, 0, 2, true) { gap 7 }/
+lang/lang/source/prfpkg.pas	s/^(\s*)if last_mrh = mrh_bytes then begin$/${1}if last_mrh = mrh_bytes then begin cpu_seconds := 0; { gap 4 }/

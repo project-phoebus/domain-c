@@ -1079,7 +1079,7 @@ procedure cargs_$identify_self;
   procedure build_my_name_string;
   var
     argc: integer;                      { -20 }
-    p4: integer;                        { -18 }
+    dir_length: integer;                { -18 }
     argv: pgm_$argv_ptr;                { -16 }
     status: status_$t;                  { -8 }
     arg0: cargs_arg_ptr_t;
@@ -1113,7 +1113,7 @@ procedure cargs_$identify_self;
     if argc > 0 then begin
       arg0 := cargs_arg_ptr_t(argv^[0]);
       if arg0 <> nil then begin
-        name_$strip_leaf_lc(arg0^.chars, arg0^.len, 32, p4, my_name,
+        name_$strip_leaf_lc(arg0^.chars, arg0^.len, 32, dir_length, my_name,
                             my_name_length, status);
         if status.all = status_$ok then begin
           my_name := ' ';
