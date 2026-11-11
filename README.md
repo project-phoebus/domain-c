@@ -147,4 +147,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/opt_cse.pas` | 16 | translated (best effort; nodes through g_opt.ins.pas's views (cse's 189/190 nodes) and il.ins.pas's by offset; dpc gaps 2, 8, 24) |
 | `lang/lang/source/opt_livevar.pas` | 19 | translated (best effort; statements through g_opt.ins.pas's views (opt_4009c's entries), other nodes by offset; dpc gaps 2, 8, 24) |
 | `lang/lang/source/opt_loop.pas` | 12 | translated (best effort; statements and trees through g_opt.ins.pas's views, other nodes by offset; dpc gaps 2, 3, 7, 8) |
+| `lang/lang/source/opt_vector.pas` | 20 | translated (best effort; statements and trees through the unit's views ov_stmt_t, ov_tree_t, other nodes by offset; dpc gaps 7, 8) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
