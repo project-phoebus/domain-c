@@ -911,35 +911,35 @@ begin
         ((m^.xp[6] = o) and
          (delay_378[size] + m^.xl[8] = delay_378[cg_addr_regs[a.f2].size]) and
          (m^.kind = 147)) then begin
-        if cg_addr_regs[a.f2].w14 = 2 then begin
-          r := 31;
-          if (size = 4) or (size = 6) or (size = 5) then begin
-            r := chk_assign(m, 5);
-            if r = 31 then
-              r := chk_assign(m, 6);
-            if r = 31 then
-              r := chk_assign(m, 4);
-          end;
-          if (r <> 31) and cg_addr_cache[r].live then begin
-            address_reg(r, b);
-            cg_addr_locks[r] := cg_addr_locks[r] + 1;
-          end
-          else
-            address(o, 0, b);
-          address_reg(a.f2, c);
-          if (8 in cargs_$options.cpu) and ((b.f1 = 13) or (c.f1 = 13)) then
-            emit_assign(cg_addr_regs[a.f2].size, c, b)
-          else
-            emit(0, cg_addr_regs[a.f2].size, c, b, 0);
-          unlock(b);
-          if cg_addr_cache[a.f2].obj = m then
-            cg_addr_cache[a.f2].live := true;
+      if cg_addr_regs[a.f2].w14 = 2 then begin
+        r := 31;
+        if (size = 4) or (size = 6) or (size = 5) then begin
+          r := chk_assign(m, 5);
+          if r = 31 then
+            r := chk_assign(m, 6);
+          if r = 31 then
+            r := chk_assign(m, 4);
         end;
-        cg_addr_regs[a.f2].w14 := 0;
-        cg_addr_regs[a.f2].w12 := cg_addr_2ba;
-      end
-      else
-        cg_addr_regs[a.f2].w8 := cg_addr_2ba;
+        if (r <> 31) and cg_addr_cache[r].live then begin
+          address_reg(r, b);
+          cg_addr_locks[r] := cg_addr_locks[r] + 1;
+        end
+        else
+          address(o, 0, b);
+        address_reg(a.f2, c);
+        if (8 in cargs_$options.cpu) and ((b.f1 = 13) or (c.f1 = 13)) then
+          emit_assign(cg_addr_regs[a.f2].size, c, b)
+        else
+          emit(0, cg_addr_regs[a.f2].size, c, b, 0);
+        unlock(b);
+        if cg_addr_cache[a.f2].obj = m then
+          cg_addr_cache[a.f2].live := true;
+      end;
+      cg_addr_regs[a.f2].w14 := 0;
+      cg_addr_regs[a.f2].w12 := cg_addr_2ba;
+    end
+    else
+      cg_addr_regs[a.f2].w8 := cg_addr_2ba;
     if a.f2 in [16..23] then
       a.f1 := 13
     else
