@@ -531,7 +531,7 @@ begin { kfold_$general }
            (y^.int_value >= target_properties.p_60) then begin
           if (1 < kf_tree_ptr_t(x)^.uses) or (1 < t^.uses) then begin
             d := kf_tree_ptr_t(x)^.desc;
-            x := buildtreenode(26, addr(d), addr(kf_tree_ptr_t(x)^.opnd[1]), 1);
+            x := buildtreenode(26, d, kf_tree_ptr_t(x)^.opnd[1], 1);
             kf_tree_ptr_t(x)^.uses := 0;
             kf_tree_ptr_t(x)^.w18 := t^.w18;
             kf_hdr_ptr_t(addr(kf_tree_ptr_t(x)^.h4))^ := kf_hdr_ptr_t(addr(t^.h4))^;
@@ -595,7 +595,7 @@ begin { kfold_$general }
         d := t^.desc;
         ops[1] := kf_tree_ptr_t(x)^.opnd[1];
         ops[2] := kf_tree_ptr_t(y)^.opnd[1];
-        o := buildtreenode(1, addr(d), addr(ops), 2);
+        o := buildtreenode(1, d, ops, 2);
         kf_tree_ptr_t(o)^.uses := 0;
         kf_tree_ptr_t(o)^.w18 := 0;
         kf_hdr_ptr_t(addr(kf_tree_ptr_t(o)^.h4))^ :=
@@ -603,7 +603,7 @@ begin { kfold_$general }
         d := kf_tree_ptr_t(t^.opnd[1])^.desc;
         ops[1] := o;
         ops[2] := kf_tree_ptr_t(t^.opnd[1])^.opnd[2];
-        res := buildtreenode(27, addr(d), addr(ops), 2);
+        res := buildtreenode(27, d, ops, 2);
         kf_tree_ptr_t(res)^.uses := 0;
         kf_tree_ptr_t(res)^.w18 := t^.w18;
         kf_hdr_ptr_t(addr(kf_tree_ptr_t(res)^.h4))^ := kf_hdr_ptr_t(addr(t^.h4))^;
@@ -1247,7 +1247,7 @@ begin { kfold_$general }
       ops[1] := x^.xp[6];
       ops[2] := smcontk(81, lshft(dfetch(y^.int_value, x^.xw[21], true),
                                   x^.xw[20]) + v2);
-      res := buildtreenode(13, addr(sum_desc), addr(ops), 2);
+      res := buildtreenode(13, sum_desc, ops, 2);
       kf_tree_ptr_t(res)^.uses := 0;
     end
     else begin
@@ -1255,7 +1255,7 @@ begin { kfold_$general }
         goto 90;
       ops[1] := x^.xp[6];
       ops[2] := y;
-      res := buildtreenode(13, addr(sum_desc), addr(ops), 2);
+      res := buildtreenode(13, sum_desc, ops, 2);
       kf_tree_ptr_t(res)^.uses := 0;
     end;
     kf_tree_ptr_t(res)^.w18 := t^.w18;

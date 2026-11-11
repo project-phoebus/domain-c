@@ -283,3 +283,32 @@ lang/lang/source/cg_call.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d.
 lang/lang/source/cg_call.pas	if ((/^  \{ The registers and objects the call may change\. \}/ .. /^  \{ The result.s register\. \}/) && !/The result.s register/) { $_ = "  { gap 28 }\n" }
 # gap 8 (cg_misc): in on constant sets with word elements (the comparisons)
 lang/lang/source/cg_misc.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d., ]+)\]}{my $v=$1; "(".join(" or ", map { /^(\d+)\.\.(\d+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $_)" } split(/,\s*/, $2)).") { gap 8 }"}ge
+# gap 8 (add_node): in on constant sets with word elements (every one, as comparisons)
+lang/lang/source/add_node.pas	s{((?:\w+(?:\[[^\]]*\])?\^?\.)*\w+)\s+in\s+\[([^\]]+)\]}{my ($e, $l) = ($1, $2); '((' . join(') or (', map { /^(\d+)\.\.(\d+)$/ ? "($e >= $1) and ($e <= $2)" : "$e = $_" } split(/\s*,\s*/, $l)) . ')) { gap 8 }'}ge
+# gap 4 (add_node): writeln (dropped, for the check)
+lang/lang/source/add_node.pas	s/^(\s*)writeln\('Compiler internal warning.*,$/$1; { gap 4 }/
+lang/lang/source/add_node.pas	s/^\s*an_kind_t\(.*\), '\) is not top-level\.'\);$//
+# gap 7 (add_node): real conversions and constants (dropped or zero, for the check)
+lang/lang/source/add_node.pas	s/^(\s*)v1 := trunc\(node\^\.real_value\)$/$1v1 := 0/
+lang/lang/source/add_node.pas	s/^(\s*)else if node\^\.real_value <= 2147483647\.0 then/$1else if v1 = 0 then { gap 7 }/
+lang/lang/source/add_node.pas	s/^(\s*)v1 := trunc\(node\^\.real_value - 2147483647\.0 - 1\.0\) - 16#80000000;/$1v1 := 0; { gap 7 }/
+lang/lang/source/add_node.pas	s/^(\s*)if d\.flags\.signed then rr := v1 else if v1 < 0 then rr := v1 \+ 4294967296\.0 else rr := v1;/${1}{ gap 7 }/
+lang/lang/source/add_node.pas	s/^(\s*)a := rr;$/${1}{ gap 7 }/
+# gap 7 (add_node): the real operators left out of the check (a conditional variable not set)
+lang/lang/source/add_node.pas	s/^(    \{ The real constants\. \})$/    v1 := 0; { gap 7 }\n%var gap7a;\n%if gap7a %then { gap 7 }\n$1/
+lang/lang/source/add_node.pas	s/^(    \{ The end of the real operators\. \})$/%endif { gap 7 }\n$1/
+# gap 25 (add_node): add_tn exceeds the virtual registers: its constant folding left out of the check (a conditional variable not set)
+lang/lang/source/add_node.pas	s/^(  \{ Constant folding\. \})$/%var gap25a;\n%if gap25a %then { gap 25 }\n$1/
+lang/lang/source/add_node.pas	s/^(  \{ Calls entered in the routine's references\. \})$/%endif { gap 25 }\n$1/
+lang/lang/source/add_node.pas	s/^(  \{ Constants moved out of trees of the same operator\. \})$/%var gap25b;\n%if gap25b %then { gap 25 }\n$1/
+lang/lang/source/add_node.pas	s/^(  \{ The registers, and the operands swapped for the costlier first\. \})$/%endif { gap 25 }\n$1/
+# gap 11 (add_node): a pointer function of the one statement `f := nil' (il_178, for the check)
+lang/lang/source/add_node.pas	s/^(\s*)make(_char)?_temp := nil;/$1make$2_temp := il_178; { gap 11 }/
+# gap 15 (add_node): a pointer result assigned from a parameter (nil, for the check)
+lang/lang/source/add_node.pas	s/^(\s*)add_disp_node := base;/$1add_disp_node := nil; { gap 15 }/
+# gap 8 (delay): in on constant sets with word elements (every one, as comparisons)
+lang/lang/source/delay.pas	s{((?:\w+(?:\[[^\]]*\])?\^?\.)*\w+)\s+in\s+\[([^\]]+)\]}{my ($e, $l) = ($1, $2); '((' . join(') or (', map { /^(\d+)\.\.(\d+)$/ ? "($e >= $1) and ($e <= $2)" : "$e = $_" } split(/\s*,\s*/, $l)) . ')) { gap 8 }'}ge
+# gap 15 (delay): a pointer result assigned from a parameter (nil, for the check)
+lang/lang/source/delay.pas	s/^(\s*)delay_\$splice := n;/$1delay_\$splice := nil; { gap 15 }/
+# gap 2 (delay): a case of 4 labels over a range of 13 (the other labels added, empty, for the check)
+lang/lang/source/delay.pas	s/^(      )151:$/${1}141, 143, 144, 145, 146, 147, 148, 149, 150: ; { gap 2 }\n${1}151:/

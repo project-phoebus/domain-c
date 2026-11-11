@@ -487,3 +487,21 @@ cc.m68k unless marked.
     it, though the copy is not used again.  (A record value parameter
     without val_param is passed by address and copied, which dpc does
     too; the restore is the source's.)
+## Write and data (translator S, add_node.pas)
+
+65. **An enumeration's name table once per unit.**  `write' of an
+    enumerated value is PAS_$WRITE code 3877 with the value by address,
+    the width (0) and the type's name table: a word (the count, 237)
+    and the names as length-prefixed strings in upper case, laid out
+    after the first routine that writes the type
+    (add_node_$dispose_top_level, cc.m68k 0x0A06A6, 0xAEA bytes with
+    the messages' strings) and pointed at by later ones
+    (add_node_$new_top_level `pea (0x0A06A6,PC)').  This is how the IL
+    node kinds' names survive (END_OB 0 .. UNION_OB 236; cc.a88k has
+    the table in several isc units too).  A value parameter written
+    this way is first stored back into its frame slot (`move.w
+    D2,(8,A6)') to pass it by address.
+66. **A module's initialized data not read.**  add_node's data (56
+    bytes) holds swap_cc (16 words at +0, read indexed) and four
+    longwords 127, 32767, 255, 65535 at +0x28 that no instruction of
+    the unit addresses; kept as a module array.

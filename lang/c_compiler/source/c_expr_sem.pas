@@ -403,7 +403,7 @@ begin
         init_aux(desc, typ);
         desc.w6 := size;
         desc.flags.b6 := sgn;
-        add_tn(39, addr(desc), k, k);
+        add_tn(39, desc, k, k);
       end;
 end;
 
@@ -499,7 +499,7 @@ begin
       init_aux(desc, tt);
       desc.w6 := typ.size;
       desc.flags.b6 := sgn;
-      add_tn(18, addr(desc), top, top);
+      add_tn(18, desc, top, top);
       op := 0;
     end;
     ok := true;
@@ -590,7 +590,7 @@ begin
     init_aux(desc, tt);
     desc.w6 := get_rlen(cexs_stack[top].typ);
     desc.flags.b6 := t.base^.signed;
-    add_tn(39, addr(desc), top, top);
+    add_tn(39, desc, top, top);
     op := 18;
     init_aux(desc, t);
     desc.w6 := 4;
@@ -776,7 +776,7 @@ begin { coerce }
           otherwise ;
         end;
       if op <> 0 then begin
-        add_tn(op, addr(desc), top, top);
+        add_tn(op, desc, top, top);
         typ.size := t.size;
       end;
     end;
@@ -911,7 +911,7 @@ begin
           init_aux(desc, typ);
           desc.size := 4;
           desc.rlen := 5;
-          add_tn(26, addr(desc), cexs_23bc, cexs_23bc);
+          add_tn(26, desc, cexs_23bc, cexs_23bc);
         end;
         if not fold then
           bits.is_addr := true;
@@ -944,9 +944,9 @@ begin
             type_exp(int_type, addr(cexs_stack[cexs_23bc].typ));
           push_con(n^.xw[20]);
           init_aux(desc2, cexs_stack[cexs_23bc - 1].typ);
-          add_tn(27, addr(desc2), cexs_23bc - 1, cexs_23bc);
+          add_tn(27, desc2, cexs_23bc - 1, cexs_23bc);
         end;
-        add_tn(13, addr(desc), cexs_23bc - 1, cexs_23bc);
+        add_tn(13, desc, cexs_23bc - 1, cexs_23bc);
         bits.is_addr := true;
       end;
     end;
@@ -977,7 +977,7 @@ begin
         desc.rlen := 5;
         cexs_23bc := cexs_23bc + 1;
         cexs_stack[cexs_23bc].node := index;
-        add_tn(13, addr(desc), cexs_23bc - 1, cexs_23bc);
+        add_tn(13, desc, cexs_23bc - 1, cexs_23bc);
       end;
       if hit and
          (node^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205])
@@ -995,7 +995,7 @@ begin
         desc.size := 0;
         cexs_23bc := cexs_23bc + 1;
         cexs_stack[cexs_23bc].node := smcontk(81, offset);
-        add_tn(13, addr(desc), cexs_23bc - 1, cexs_23bc);
+        add_tn(13, desc, cexs_23bc - 1, cexs_23bc);
         c_tree_ptr_t(cexs_stack[cexs_23bc].node)^.bits.post := true;
         offset := 0;
       end;
@@ -2199,7 +2199,7 @@ begin { build_builtin_tree }
       desc.size := sz;
       desc.rlen := szc;
     end;
-    add_tn(tnop, addr(desc), k, save);
+    add_tn(tnop, desc, k, save);
     last := k;
     if op = 60 then
       opc := 30
@@ -2256,7 +2256,7 @@ begin { build_builtin_tree }
       if op <> 61 then
         de_ref(k + 1);
     end;
-    add_tn(tnop, addr(desc), k, save);
+    add_tn(tnop, desc, k, save);
     last := k;
     swap_top;
     cexs_stack[first].typ := cexs_stack[last].typ;
@@ -2381,7 +2381,7 @@ begin { expr_op }
               p^.ptr_attr.bits := p^.ptr_attr.bits + [0];
             type_exp(p, addr(typ));
             init_aux(desc, typ);
-            add_tn(26, addr(desc), i, i);
+            add_tn(26, desc, i, i);
           end;
         if ((cexs_stack[i].typ.base^.kind = 234) or
             (cexs_stack[i].typ.base^.kind = 108)) and
@@ -2420,12 +2420,12 @@ begin { expr_op }
             cexs_23bc := cexs_23bc + 1;
             cexs_stack[cexs_23bc] := cexs_stack[cexs_23bc - 1];
             cexs_stack[cexs_23bc - 1] := cexs_stack[i];
-            add_tn(14, addr(desc), cexs_23bc - 1, cexs_23bc);
+            add_tn(14, desc, cexs_23bc - 1, cexs_23bc);
             cexs_stack[i] := cexs_stack[cexs_23bc];
             cexs_23bc := cexs_23bc - 1;
           end
           else
-            add_tn(14, addr(desc), i, cexs_23bc);
+            add_tn(14, desc, i, cexs_23bc);
         end;
 
   if op = 22 then
@@ -2531,8 +2531,8 @@ begin { expr_op }
               k := cexs_23bc
             else
               k := bas;
-            add_tn(8, addr(desc), k, k);
-            add_tn(9, addr(desc), bas, cexs_23bc);
+            add_tn(8, desc, k, k);
+            add_tn(9, desc, bas, cexs_23bc);
             push_con(0);
             desc.w6 := cexs_cond[0];
           end;
@@ -2732,7 +2732,7 @@ begin { expr_op }
           end;
         1: begin
           do_coerce;
-          add_tn(8, addr(desc), cexs_23bc, cexs_23bc);
+          add_tn(8, desc, cexs_23bc, cexs_23bc);
           tnop := 9;
         end;
         2: begin
@@ -3068,7 +3068,7 @@ begin { expr_op }
           build_builtin_tree(op, bas, cexs_23bc);
           goto 96;
         end;
-        add_tn(tnop, addr(desc), bas, top);
+        add_tn(tnop, desc, bas, top);
         cexs_23bc := bas;
         t := cexs_stack[cexs_23bc].node;
         n := gspace((c_tree_ptr_t(t)^.count - 1) * 4 + 20);
@@ -3447,7 +3447,7 @@ begin { expr_op }
 
 98:
   if tnop <> 0 then
-    add_tn(tnop, addr(desc), bas, cexs_23bc);
+    add_tn(tnop, desc, bas, cexs_23bc);
   if (cexs_stack[bas].node^.kind = 137) and (tnop = 51) then
     cexs_stack[bas].node^.xl[1] := 0;
   cexs_23bc := bas;
@@ -3583,7 +3583,7 @@ begin
     desc.w6 := desc.rlen;
     desc.w8 := 6;
     desc.rlen := 1;
-    add_tn(op, addr(desc), cexs_23bc - 1, cexs_23bc);
+    add_tn(op, desc, cexs_23bc - 1, cexs_23bc);
     with cexs_stack[cexs_23bc] do begin
       typ.base := char_type;
       typ.low := 0;

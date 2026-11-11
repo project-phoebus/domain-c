@@ -43,6 +43,12 @@ when this tree is merged).
          end;
        end;
 
+   Also delay.pas delay_$shrink_top_level_node (0x07907E): a case on a
+   node's kind of 4 labels (140, 139, 142, 151) over a range of 13, a
+   compare chain in the image (`cmpi.w #140; beq; cmpi.w #139; ...').
+   dpc: "a `case` of 4 labels over a range of 13 ... is not supported
+   yet"; the check adds empty labels for the other 9.
+
 3. **`new` and `dispose`.**  c_macro_utl's mu_$enter_name (cc.m68k
    0x058FDC: PAS_$NEW with 0x100E), mu_$alloc_tle (0x05993C, 134182)
    and mu_$initialize (0x059220, PAS_$DISPOSE).  dpc: "undefined
@@ -184,6 +190,20 @@ when this tree is merged).
            f := q
          else
            f := nil;
+
+   Also met by translator S in add_node.pas: a pointer function whose
+   body is the one statement `f := nil' (make_temp 0x09F9BC,
+   make_char_temp 0x09F9D6: `movea.l #0,A0' between the A5 load and
+   the restore).  dpc: "a pointer function body of the one statement
+   `f := nil` (no site; ...) is not supported yet".  Reproducer:
+
+       module g11s;
+       type p_t = ^integer;
+       function f(n: integer): p_t; options(val_param);
+       begin
+         f := nil;
+       end;
+
 12. **A pointer function's result compared with a variable.**
    `get_bucket(main_index) = b` (pds.pas append_root_rec_to_bucket,
    cc.m68k 0x06CF9C: `bsr.w get_bucket; cmpa.l A3,A0; bne'; also
@@ -555,3 +575,7 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
    smaller cut does not.  The rewrite drops the loop over the
    registers.  Reproducer: gen_call itself (no small one found; the
    size of the routine seems to matter, as in gap 25's wr_instr).
+   Also add_node.pas add_tn (0x0A1ABC, 0x30AE bytes): its reassociations
+   and its constant folding are left out of the check (two conditional
+   regions); the gap 8 rule for add_node rewrites every `in' on a
+   constant set into comparisons with one perl substitution (`/e').
