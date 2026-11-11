@@ -433,12 +433,15 @@ type
   end;
 
   { What def_blk_skeleton takes as its fourth argument (c_main's cc,
-    +0x400 of its data, and make_main_pgm, a frame record): 40 bytes,
-    of which these are set.
+    +0x400 of its data, and make_main_pgm, a frame record): 34 bytes
+    (c_syntax's member_list copies 34; c_main's next variable, a large
+    one, at +0x428), of which these are set.
 
     +12..+31 are the attributes (c_dattr_t, the variant attr: c_def_sem
-    copies them whole); def_fwd_ptr takes +8, when set, as the
-    structure tag a pointer is declared to.
+    copies them whole).  The declaration specifiers leave in name the
+    token that named the type (diagnostics), in tag a structure, union
+    or enumeration tag's identifier (def_fwd_ptr takes it, when set, as
+    the tag a pointer is declared to).
 
     Not known from the original: everything but the offsets. }
   c_decl_t = record
@@ -446,7 +449,7 @@ type
                                           type (def_subr, def_arr and
                                           c_type_name fill it) }
     name: univ_ptr;                     { +4 }
-    unused_8: integer32;                { +8 }
+    tag: il_$node_ptr_t;                { +8 }
     case integer of
     1: (
     flags: c_flags_t;                   { +12: cleared; c_type_name's
@@ -463,9 +466,7 @@ type
     unused_28: integer32;               { +28: cleared by do_c_string
                                           (add_varn copies +12..+31,
                                           the attributes) }
-    line: integer;                      { +32 }
-    unused_34: integer;                 { +34 }
-    unused_36: integer32);              { +36 }
+    line: integer);                     { +32 }
     2: (
     attr: c_dattr_t);                   { +12..+31 }
   end;

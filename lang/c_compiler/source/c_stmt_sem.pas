@@ -1072,7 +1072,7 @@ var
     decl.line := lex_line;
     decl.flags := [];
     decl.size_bits := tt.bytes;
-    decl.unused_8 := 0;
+    decl.tag := nil;
     v := def_varn(hm, decl, vat_stat, true);
     type_exp(v^.var_type, addr(tt));
     def_alloc_var(v, tt.bytes);
@@ -1133,7 +1133,7 @@ var
     decl.line := lex_line;
     decl.flags := [];
     decl.size_bits := tt.size;
-    decl.unused_8 := 0;
+    decl.tag := nil;
     if fnd_name(ms, true, false) = il_178 then begin
       d2.flags := [];
       d2.dtype := int_type;
