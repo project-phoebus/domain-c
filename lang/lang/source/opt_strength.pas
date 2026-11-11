@@ -101,10 +101,10 @@
   Written: the routines cc.a88k shares (the products, the substitution
   points, deluse, delparent, walkuses; cc.a88k's empty strengthreduce),
   opt_str_$is_loop_constant_integer, opt_str_$opmod1_of_multiplier,
-  transformtemps .. ptrsub and the module's data.
-  Not written yet: match_rlens_srtemp_and_assign .. autoinc, elimuses
-  .. minimally_size_sr_temp, reduce and cc.m68k's strengthreduce
-  (0x0EBAF0, 0x35C bytes). }
+  transformtemps .. ptrsub, match_rlens_srtemp_and_assign .. autoinc
+  and the module's data.
+  Not written yet: elimuses .. minimally_size_sr_temp, reduce and
+  cc.m68k's strengthreduce (0x0EBAF0, 0x35C bytes). }
 
 module opt_strength;
 
@@ -172,6 +172,14 @@ type
     uses: integer;                      { +16 }
     unused_18: integer;                 { +18 }
     desc: add_node_$desc_t;             { +20 }
+  end;
+  { An indexed reference (145) as doinsert reads it for add_pn: +22 a
+    signed byte (`ext.w'), +23 an unsigned one. }
+  sr_index_ptr_t = ^sr_index_t;
+  sr_index_t = packed record
+    unused_0: array [0..21] of char;    { +0 }
+    align: -128..127;                   { +22 }
+    b23: 0..255;                        { +23 }
   end;
 
 var
@@ -1526,6 +1534,520 @@ begin
         q := r;
       end;
 end;
+
+%if cc_a88k %then
+%else
+{ match_rlens_srtemp_and_assign - assignment s of an auto-increment
+  address for t: an index t scaled (+40 a shift count) has s's value
+  multiplied by 1 shifted left that many (opt_str_$product_of, the old
+  value a substitution point of the new); a word product stored at
+  width class 4 or 5 made a longword one; a variable (109) of +36 16
+  stored at class 5 given 32.
+
+  0x0E790A, 0xF2 bytes: the product's operand classes s's width and
+  the constant's operand size (opt_str_$opmod_of_operand of it, 2,
+  signed: the image's), rlen pushed twice (`move.w (SP),-(SP)'). }
+
+procedure match_rlens_srtemp_and_assign(
+    t: il_$node_ptr_t;
+    s: g_opt_stmt_ptr_t); options(val_param); internal;
+var
+  old, c: il_$node_ptr_t;
+  r: g_opt_tree_ptr_t;
+begin
+  if t^.kind = 145 then
+    if t^.xw[20] <> 0 then begin
+      old := s^.asg_rhs;
+      c := smcontk(81, lshft(1, t^.xw[20]));
+      il_utils_$do_substitution(il_$node_ptr_t(s), s^.asg_rhs,
+        opt_str_$product_of(3, s^.asg_rhs, c, s^.asg_rlen, s^.asg_rlen,
+                            opt_str_$opmod_of_operand(c, 2, true), true,
+                            nil));
+      opt_str_$add_substitution_point(old, s^.asg_rhs);
+    end;
+  if (s^.asg_rlen = 5) or (s^.asg_rlen = 4) then begin
+    r := g_opt_tree_ptr_t(s^.asg_rhs);
+    if r^.kind = 137 then
+      if r^.rlen = 2 then
+        if r^.op = 3 then
+          r^.rlen := 4;
+  end;
+  if s^.asg_rlen = 5 then
+    if s^.asg_lhs^.kind = 109 then
+      if s^.asg_lhs^.xl[9] = 16 then
+        s^.asg_lhs^.xl[9] := 32;
+end;
+
+{ doinsert - the address t (a 137 sum, or a 145 made a 26 of it with
+  auto_desc) becomes an auto-increment of temporary s1's (asg the
+  preheader's assignment, s2 the loop's stepping one): t's operand
+  takes s1's first value, s1 assigns t (or the 26) as an address
+  (auto_desc), r the dereference of s1's temporary (add_pn: of t's
+  item, align and +23 for a 145), used once; s2 and every assignment
+  of the temporary in the region with another descriptor get auto_desc
+  (match_rlens_srtemp_and_assign); the new value's tree then evaluated
+  at the region statement before s1 (fixupchildren).
+
+  0x0E79FC, 0x200 bytes: all four by address; a 110 temporary's +10
+  low nibble set to 11; the region walk a repeat from opt_region's
+  statement to runbackend_16's; fixupchildren's flag the byte at
+  0x0E7BFC (the next routine's first, 0x4E: false to its `bpl'). }
+
+procedure doinsert(
+    var s1: g_opt_stmt_ptr_t;
+    var s2: g_opt_stmt_ptr_t;
+    var t: il_$node_ptr_t;
+    var r: il_$node_ptr_t); internal;
+var
+  ops: add_node_$opnds_t;
+  x, lhs: il_$node_ptr_t;
+  q, s: g_opt_stmt_ptr_t;
+  reg: integer;
+begin
+  if t^.kind = 145 then begin
+    ops[1] := t;
+    x := buildtreenode(26, auto_desc, ops, 1);
+    opt_str_$add_substitution_point(t, x);
+  end;
+  lhs := s1^.asg_lhs;
+  if lhs^.kind = 110 then
+    lhs^.xc[10] := chr(ord(lhs^.xc[10]) & 16#F0 ! 11);
+  if t^.kind = 137 then
+    g_opt_tree_ptr_t(t)^.opnd[2] := s1^.asg_rhs;
+  if t^.kind = 145 then
+    t^.xp[9] := s1^.asg_rhs;
+  if t^.kind = 145 then
+    s1^.asg_rhs := x
+  else
+    s1^.asg_rhs := t;
+  s1^.asg_desc := auto_desc;
+  if t^.kind = 145 then
+    r := add_pn(s1^.asg_lhs, t^.xp[7], sr_index_ptr_t(t)^.align,
+                sr_index_ptr_t(t)^.b23)
+  else
+    r := add_pn(s1^.asg_lhs, s1^.asg_lhs, 0, 0);
+  opt_str_$add_substitution_point(r^.xp[6], r);
+  g_opt_tree_ptr_t(r)^.uses := 1;
+  s2^.asg_desc := auto_desc;
+  match_rlens_srtemp_and_assign(t, s2);
+  q := opt_4009c[opt_region];
+  repeat
+    if q <> s2 then
+      if q^.kind = 140 then
+        if q^.asg_lhs = s2^.asg_lhs then
+          if q^.asg_desc <> auto_desc then begin
+            q^.asg_desc := auto_desc;
+            match_rlens_srtemp_and_assign(t, q);
+          end;
+    q := q^.next;
+  until q = opt_4009c[runbackend_16];
+  reg := 0;
+  s := s1;
+  while reg = 0 do begin
+    reg := s^.hdr.region;
+    s := s^.prev;
+  end;
+  fixupchildren(s1^.asg_rhs, reg, false);
+end;
+
+{ check_tree_node - t is a 137 of operator 13 (an address sum) of a
+  strength reduction temporary (operand 2) and a constant or variable
+  base that is not one (operand 1), not used outside the loop, the
+  base not a variable whose type (opt_var_types, else type_exp) is of
+  kind 130.
+
+  0x0E7BFE, 0xD2 bytes: the base's kind by a set of 0..207; find_var
+  called before the base's kind is tested; the result in D2. }
+
+function check_tree_node(
+    t: il_$node_ptr_t): boolean; options(val_param); internal;
+var
+  te: g_opt_vtype_t;
+  x: g_opt_tree_ptr_t;
+  v: integer;
+  r: boolean;
+begin
+  r := false;
+  x := g_opt_tree_ptr_t(t);
+  if x^.kind = 137 then
+    if x^.op = 13 then
+      if il_utils_$is_strength_reduction_temp(x^.opnd[2]) then
+        if x^.opnd[1]^.kind in [77..90, 92, 93, 101, 109, 110, 153, 154, 156,
+                                163, 176, 195, 198, 200] then
+          if not il_utils_$is_strength_reduction_temp(x^.opnd[1]) then
+            if not used_outside_loop(t) then begin
+              v := find_var(x^.opnd[1]);
+              if x^.opnd[1]^.kind = 109 then begin
+                if v > 0 then begin
+                  if opt_var_types^[v].base^.kind <> 130 then
+                    r := true;
+                end
+                else begin
+                  type_exp(x^.opnd[1], addr(te));
+                  if te.base^.kind <> 130 then
+                    r := true;
+                end;
+              end
+              else
+                r := true;
+            end;
+  check_tree_node := r;
+end;
+
+{ opt_str_$is_loop_invariant - t is a constant, a variable marked
+  constant (bit 11 of a 109's +32, a 110's +24) or a variable no
+  statement of loop assigns (vnum), not a strength reduction temporary
+  (bit 17).  f and x are not read.
+
+  0x0E7CEA, 0xB0 bytes: the constants by a set of 0..207; loop at
+  (18,A6) (f a word at 12, x a longword at 14); each block from its
+  first statement to its last's next, stopping at nil. }
+
+function opt_str_$is_loop_invariant(
+    t: il_$node_ptr_t;
+    f: boolean;
+    x: il_$node_ptr_t;
+    loop: g_opt_block_ptr_t): boolean; options(val_param); internal;
+var
+  fl: integer32;
+  v: integer;
+  b: g_opt_block_ptr_t;
+  s: g_opt_stmt_ptr_t;
+begin
+  if t^.kind in [77..90, 92, 93, 101, 153, 154, 156, 163, 176, 195, 198,
+                 200] then begin
+    opt_str_$is_loop_invariant := true;
+    return;
+  end;
+  case t^.kind of
+    109:
+      fl := t^.xl[8];
+    110:
+      fl := t^.xl[6];
+    otherwise begin
+      opt_str_$is_loop_invariant := false;
+      return;
+    end;
+  end;
+  if (fl & 16#800) <> 0 then begin
+    opt_str_$is_loop_invariant := true;
+    return;
+  end;
+  if (fl & 16#20000) <> 0 then begin
+    opt_str_$is_loop_invariant := false;
+    return;
+  end;
+  v := find_var(t);
+  if v > 0 then begin
+    b := loop;
+    while b <> nil do begin
+      s := b^.first_stmt;
+      while s <> nil do begin
+        if s = b^.last_stmt^.next then
+          exit;
+        if s^.hdr.vnum = v then begin
+          opt_str_$is_loop_invariant := false;
+          return;
+        end;
+        s := s^.next;
+      end;
+      b := b^.link;
+    end;
+  end;
+  opt_str_$is_loop_invariant := true;
+end;
+
+{ check_dindex - the indexed reference t (145) has a strength reduction
+  temporary for index and a loop invariant base that is not a
+  variable whose type is of kind 130 assigned in the loop (a use-def
+  chain of the base at t's statement's region reaching from a block of
+  cur_loop: serial), nor, without a number, of such a type.
+
+  0x0E7DB4, 0xF4 bytes: the result in D2, passed (false) for
+  opt_str_$is_loop_invariant's f. }
+
+function check_dindex(
+    t: il_$node_ptr_t): boolean; options(val_param); internal;
+var
+  te: g_opt_vtype_t;
+  c: g_opt_chain_ptr_t;
+  v: integer;
+  r: boolean;
+begin
+  r := false;
+  if il_utils_$is_strength_reduction_temp(t^.xp[9]) then
+    if opt_str_$is_loop_invariant(t^.xp[6], r, nil, cur_loop) then begin
+      if t^.xp[6]^.kind = 109 then begin
+        v := find_var(t^.xp[6]);
+        if v > 0 then begin
+          if opt_var_types^[v].base^.kind = 130 then begin
+            c := opt_4009c[g_opt_tree_ptr_t(t)^.owner^.hdr.region]^.vars^[v]^.ud;
+            while c <> nil do begin
+              if c^.stmt^.block^.serial = cur_loop^.serial then begin
+                check_dindex := false;
+                return;
+              end;
+              c := c^.next;
+            end;
+          end;
+          r := true;
+        end
+        else begin
+          type_exp(t^.xp[6], addr(te));
+          if te.base^.kind <> 130 then
+            r := true;
+        end;
+      end
+      else
+        r := true;
+    end;
+  check_dindex := r;
+end;
+
+{ find_assigns - s1 the preheader assignment of temporary t (nil when
+  t is none, when the run of assignments before it starts no region
+  statement, or when that statement is not in the preheader), s2 the
+  first assignment of t in cur_loop's blocks (nil when none).
+
+  0x0E7EA8, 0xCC bytes: s1 and s2 by address; the blocks' walk stops
+  at a block without statements. }
+
+procedure find_assigns(
+    var s1: g_opt_stmt_ptr_t;
+    var s2: g_opt_stmt_ptr_t;
+    t: il_$node_ptr_t); internal;
+var
+  p, s: g_opt_stmt_ptr_t;
+  b: g_opt_block_ptr_t;
+begin
+  if t^.kind = 110 then
+    s1 := sr_temp_ptr_t(t^.xp2[11])^.asg
+  else if t^.kind = 109 then
+    s1 := sr_temp_ptr_t(t^.xp[13])^.asg
+  else
+    s1 := nil;
+  s2 := nil;
+  if s1 = nil then
+    return;
+  p := s1;
+  while p^.kind = 140 do
+    p := p^.prev;
+  if p^.hdr.region = 0 then
+    return;
+  if p^.block^.num <> preheader_num then begin
+    s1 := nil;
+    return;
+  end;
+  b := cur_loop;
+  while b <> nil do begin
+    s := b^.first_stmt;
+    if s = nil then
+      return;
+    while s <> b^.last_stmt^.next do begin
+      if s^.kind = 140 then
+        if s^.asg_lhs = t then begin
+          s2 := s;
+          return;
+        end;
+      s := s^.next;
+      if s = nil then
+        exit;
+    end;
+    b := b^.link;
+  end;
+end;
+
+{ checkauto - the operand slot of parent, an address sum of a
+  temporary (check_tree_node) or an indexed reference by one
+  (check_dindex) whose temporary has its assignments (find_assigns),
+  made an auto-increment (doinsert): the base variable marked (bit 12
+  of a 110's +24, a 109's +32), slot given the new dereference (its
+  uses parent's for an address parent), recorded as a substitution
+  point of parent; other uses of t rewritten (ptrsub) when t was
+  shared, and t's use given back as in substitute_ptr_for_target.
+
+  0x0E7F74, 0x202 bytes: parent passed on by address (`pea (8,A6)');
+  t copied to a frame word for doinsert. }
+
+procedure checkauto(
+    parent: il_$node_ptr_t;
+    var slot: il_$node_ptr_t); options(val_param); internal;
+var
+  s1, s2: g_opt_stmt_ptr_t;
+  t, v, ptr: il_$node_ptr_t;
+  k: integer;
+begin
+  t := slot;
+  if (t^.kind = 137) and check_tree_node(t) then begin
+    find_assigns(s1, s2, g_opt_tree_ptr_t(t)^.opnd[2]);
+    if (s1 = nil) or (s2 = nil) then
+      return;
+    v := g_opt_tree_ptr_t(t)^.opnd[1];
+  end
+  else begin
+    if t^.kind <> 145 then
+      return;
+    if not check_dindex(t) then
+      return;
+    find_assigns(s1, s2, t^.xp[9]);
+    if (s1 = nil) or (s2 = nil) then
+      return;
+    v := t^.xp[7];
+  end;
+  if v^.kind = 110 then
+    v^.xc[26] := chr(ord(v^.xc[26]) ! 16#10)
+  else if v^.kind = 109 then
+    v^.xc[34] := chr(ord(v^.xc[34]) ! 16#10)
+  else
+    return;
+  doinsert(s1, s2, t, ptr);
+  k := parent^.kind;
+  if (k = 145) or (k = 146) or (k = 205) or (k = 147) then
+    if t^.kind = 145 then
+      g_opt_tree_ptr_t(ptr)^.uses := g_opt_tree_ptr_t(parent)^.uses;
+  if t^.kind = 145 then
+    slot := ptr
+  else
+    slot := ptr^.xp[6];
+  opt_str_$add_substitution_point(slot, parent);
+  k := parent^.kind;
+  if (k = 145) or (k = 146) or (k = 205) or (k = 147) then
+    if g_opt_tree_ptr_t(parent)^.uses > 1 then
+      g_opt_tree_ptr_t(ptr)^.uses := g_opt_tree_ptr_t(parent)^.uses;
+  if (g_opt_tree_ptr_t(t)^.uses > 1) or
+     ((g_opt_tree_ptr_t(slot)^.uses > 1) and (slot^.kind = 137) and
+      (g_opt_tree_ptr_t(slot)^.op = 26)) then
+    ptrsub(cur_loop, ptr, t);
+  if t^.kind = 137 then
+    if g_opt_tree_ptr_t(t)^.uses > 1 then begin
+      k := parent^.kind;
+      if (k = 145) or (k = 146) or (k = 205) or (k = 147) then begin
+        if g_opt_tree_ptr_t(parent)^.uses > 1 then begin
+          g_opt_tree_ptr_t(t)^.uses :=
+            g_opt_tree_ptr_t(t)^.uses - g_opt_tree_ptr_t(parent)^.uses;
+          il_utils_$adjust_uc(g_opt_tree_ptr_t(t)^.opnd[1], -1);
+        end
+        else
+          il_utils_$adjust_uc(t, -1);
+        if g_opt_tree_ptr_t(t)^.uses < 1 then
+          g_opt_tree_ptr_t(t)^.uses := 1;
+      end
+      else
+        il_utils_$adjust_uc(t, -1);
+    end;
+end;
+
+{ autoinc - auto-increment addressing: in each loop (the blocks in
+  reverse depth-first order; a header with a latch preheader that
+  dominates it) every address operand of every node of the loop's
+  blocks offered to checkauto, after multidim for the address sums of
+  two temporaries; a node standing for its statement (flag 6) followed
+  to it, a tree of no uses skipped.
+
+  0x0E8176, 0x39A bytes: auto_desc set first (size 4, class 5, 0, 0);
+  the tree kinds by a set of 0..207; a 139's operands from the last;
+  146, 147, 205 and 145's index share 164's last call. }
+
+procedure autoinc; internal;
+var
+  i: integer;
+  bn: g_opt_num_t;
+  b, l: g_opt_block_ptr_t;
+  n: integer32;
+  t: il_$node_ptr_t;
+  x: g_opt_tree_ptr_t;
+  k: integer;
+begin
+  auto_desc.rlen := 5;
+  auto_desc.w6 := 0;
+  auto_desc.w8 := 0;
+  auto_desc.size := 4;
+  for i := opt_last_block downto opt_first_block do begin
+    bn := opt_dfs_block^[i];
+    b := g_opt_blocks_ptr_t(il_11c)^[bn];
+    if b^.flags.header and (b^.preheader <> nil) then
+      if b^.preheader^.num <> bn then
+        if b^.preheader^.flags.latch then
+          if dom(b^.preheader, b) then begin
+            l := select_loop(bn);
+            preheader_num := b^.preheader^.num;
+            cur_loop := l;
+            while l <> nil do begin
+              for n := l^.first to l^.last do begin
+                t := g_opt_nodes_ptr_t(il_120)^[n];
+                if t^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189,
+                               205] then
+                  if 6 in g_opt_tree_ptr_t(t)^.flags then
+                    while 6 in g_opt_tree_ptr_t(t)^.flags do
+                      t := g_opt_nodes_ptr_t(il_120)^[g_opt_tree_ptr_t(t)^.stmt];
+                if not ((t^.kind in [137, 138, 143, 145..147, 164, 171, 175,
+                                     189, 205]) and
+                        (g_opt_tree_ptr_t(t)^.uses = 0)) then
+                  case t^.kind of
+                    140: begin
+                      if (g_opt_stmt_ptr_t(t)^.asg_lhs^.kind = 145) or
+                         (g_opt_stmt_ptr_t(t)^.asg_lhs^.kind = 137) then
+                        checkauto(t, g_opt_stmt_ptr_t(t)^.asg_lhs);
+                      if (g_opt_stmt_ptr_t(t)^.asg_rhs^.kind = 145) or
+                         (g_opt_stmt_ptr_t(t)^.asg_rhs^.kind = 137) then
+                        checkauto(t, g_opt_stmt_ptr_t(t)^.asg_rhs);
+                      if g_opt_stmt_ptr_t(t)^.asg_x <> nil then
+                        if (g_opt_stmt_ptr_t(t)^.asg_x^.kind = 145) or
+                           (g_opt_stmt_ptr_t(t)^.asg_x^.kind = 137) then
+                          checkauto(t, g_opt_stmt_ptr_t(t)^.asg_x);
+                    end;
+                    139:
+                      for k := g_opt_stmt_ptr_t(t)^.eval_count downto 1 do
+                        if (g_opt_stmt_ptr_t(t)^.eval_opnd[k]^.kind = 145) or
+                           (g_opt_stmt_ptr_t(t)^.eval_opnd[k]^.kind = 137) then
+                          checkauto(t, g_opt_stmt_ptr_t(t)^.eval_opnd[k]);
+                    137, 143: begin
+                      x := g_opt_tree_ptr_t(g_opt_tree_ptr_t(t)^.opnd[2]);
+                      if g_opt_tree_ptr_t(t)^.op = 13 then
+                        if x^.kind = 137 then
+                          if x^.op = 1 then
+                            if (x^.opnd[1]^.kind = 110) or
+                               (x^.opnd[1]^.kind = 109) then
+                              if (x^.opnd[2]^.kind = 110) or
+                                 (x^.opnd[2]^.kind = 109) then
+                                multidim(t, bn);
+                      for k := 1 to g_opt_tree_ptr_t(t)^.count do
+                        if (g_opt_tree_ptr_t(t)^.opnd[k]^.kind = 145) or
+                           (g_opt_tree_ptr_t(t)^.opnd[k]^.kind = 137) then
+                          checkauto(t, g_opt_tree_ptr_t(t)^.opnd[k]);
+                    end;
+                    151:
+                      if g_opt_stmt_ptr_t(t)^.x48 <> nil then
+                        if (g_opt_stmt_ptr_t(t)^.x48^.kind = 145) or
+                           (g_opt_stmt_ptr_t(t)^.x48^.kind = 137) then
+                          checkauto(t, g_opt_stmt_ptr_t(t)^.x48);
+                    147, 146, 205:
+                      checkauto(t, t^.xp[6]);
+                    145: begin
+                      x := g_opt_tree_ptr_t(t^.xp[9]);
+                      if x^.kind = 137 then
+                        if x^.op = 1 then
+                          if (x^.opnd[1]^.kind = 110) or
+                             (x^.opnd[1]^.kind = 109) then
+                            if (x^.opnd[2]^.kind = 110) or
+                               (x^.opnd[2]^.kind = 109) then
+                              multidim(t, bn);
+                      checkauto(t, t^.xp[6]);
+                      checkauto(t, t^.xp[9]);
+                    end;
+                    164: begin
+                      checkauto(t, t^.xp[5]);
+                      checkauto(t, t^.xp[6]);
+                    end;
+                    otherwise
+                  end;
+              end;
+              l := l^.link;
+            end;
+          end;
+  end;
+end;
+%endif
 
 { walkuses - see g_opt.ins.pas: whether variable r occurs in t (a
   statement or a tree, through a cse parent to its tree; the operands
