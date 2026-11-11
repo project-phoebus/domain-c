@@ -405,3 +405,36 @@ revisited.
    cell, c_def_sem a symbol's +4) and return il_$node_ptr_t (a symbol
    or il_178); c_stmt_sem's two comparisons of fnd_name's result with
    il_178 are now dpc gap 12 (a rewrite in tools/cc_gap_rewrites.txt).
+60. Translator R (2026-11-11), c_syntax: question 55 holds for c_syntax
+   too: struct_init reads c_field_t's +48 low 6 bits (`width') as the
+   bit field's position and +49 (`at') as its width; c_syntax uses the
+   names by offset and says so.  A rename would touch c_objtype,
+   c_def_sem's def_fld and c_sym_map.
+61. c_syntax: def_func's x4, x16 and x20 (c_externs.ins.pas) are the
+   routine options (get_options), the parameters by name (c_parm_ptr_t)
+   and the prototype's scope block (function_prototype's, c_blk_ptr_t;
+   declaration_stmts copies its tags into the block def_blk_skeleton
+   fills).  c_type_t's fn_unused_4/16/20 hold them.  c_syntax passes
+   integer32(...) and casts back; narrowing the heading (and c_def_sem's
+   def_func, c_expr_sem's call) would be cleaner but c_expr_sem is
+   being translated in parallel.  Narrow at the merge?
+62. c_syntax: id_at and csyn_54 (+0x50, +0x54) are one c_name_t in the
+   original (member_list copies 8 bytes from +0x50 for an unnamed bit
+   field), as id_main and csyn_4c (+0x48; body passes its address to
+   body_opr).  c_globals declares the pointer and a word; member_list
+   assigns the two fields.  Retype as c_name_t (c_def_sem, c_main and
+   c_sym_map compare id_at as a pointer)?
+63. c_syntax: probable slips of the original kept: constant_expr's
+   address loop never ends for an index (op 13) of a constant whose
+   operand is not a variable's address (154); abstract_decl passes an
+   unset parameter list to def_func when no prototype is read;
+   dynm_init gives its static's declaration the line of a name record
+   not yet set; get_options loops for ever on `(' or `,' that is not
+   followed by an identifier or `)'; function_prototype returns without
+   restoring il_180 after diagnostic 210; get_constant's check_addr_init
+   is passed name but reads the parent's.  Keep as is?
+64. c_syntax: body_opr and expr_op (c_expr_sem) take their names as
+   univ_ptr in c_externs.ins.pas; c_syntax passes addr() of c_name_t
+   records (body: addr(id_main), the cell pair).  If translator P
+   narrows them to `in [univ] c_name_t', c_syntax's 11 calls lose the
+   addr( ).

@@ -196,3 +196,6 @@ lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{([(]|,\s+)(\w+)((?:\s*\
 lang/c_compiler/source/c_syntax.pas	s/cx\.value\^\.real_value <> 0\.0/cx.value^.bits[1] <> 0 { gap 7 }/
 # gap 25 (c_syntax): set constants passed to in parameters (a module variable gap25_s passed, for the check)
 lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s#\n(  legal_specs: )#\n  gap25_s: c_tokset_t;\n$1#; s#(\(|, +)\[[^\]\[]*\](?=\s*[,)])#${1}gap25_s#g
+# gap 7 (c_syntax): an integer converted to a double, a real truncated (dropped; the high longword taken, for the check)
+lang/c_compiler/source/c_syntax.pas	s/^(\s*)(?:tmp := n\^\.int_value|r := n\^\.real_value|r := tmp)(;?)$/${1}kind := kind${2} { gap 7 }/
+lang/c_compiler/source/c_syntax.pas	s/^(\s*)v := trunc\(orig\^\.real_value\);/${1}v := orig^.bits[1]; { gap 7 }/

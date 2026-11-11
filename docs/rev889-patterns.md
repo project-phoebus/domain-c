@@ -412,3 +412,27 @@ cc.m68k unless marked.
     get_var_location_rep 0x0A902C loads target_properties' address
     (`move.l #0x2CE528,D7') before its loop, whose tests of the target
     (+0x12) are absolute (`move.w 0x2CE53A,D0').
+
+## Sets, frames and data (translator R, c_syntax.pas)
+
+54. **A set constant with an element past the follow sets' bound
+    widens the test.**  c_syntax's stat (0x065492) and stat_list
+    (0x065378) test `token_kind in cases + [... 200]': the 14-byte
+    cases is copied into the low end of a 30-byte temporary (16 bytes
+    cleared, `move.w #239' for the bound) and the constant (the
+    statement starters with 200, a constant node kind) or-ed in.
+55. **Initialized data holding addresses.**  c_syntax's table at
+    +0x208 of its data (declaration_specifiers 0x0623C4: `lea
+    (0x208,A5,D6.w); movea.l (A4),A3; move.l (A3),(A2)') is
+    initialized with the addresses of c_expr_sem's basic type cells
+    (char_type, uchar_type, short_type, ... double_type twice):
+    `array [0..4, 0..1] of ^c_type_ptr_t := [[addr(char_type), ...]]',
+    which dpc compiles.
+56. **Locals laid out downward in declaration order.**  The first
+    local declared is nearest the frame pointer: pp_constant (0x066E54)
+    has its constant record at -16 and its follow set at -32; dpc does
+    the same, so the declarations follow the image's frame offsets.
+57. **A boolean constant passed by address.**  declaration_stmts
+    passes avoid_void's `in report: boolean' as `pea' of a byte after
+    another routine's constant (0x061E7A, 0xFF true; 0x061E7C, 0x00
+    false): constants by address are pooled across routines (item 30).

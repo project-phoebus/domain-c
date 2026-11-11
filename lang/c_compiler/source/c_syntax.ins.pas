@@ -7,8 +7,6 @@
   Not known from the original: the parameter names.
 }
 
-{ TODO(pascal) read off the frames only (see c_externs.ins.pas) }
-
 { DATA_INIT - the initializer of the variable v of type t, allocated as
   vat, in the declaration context ctx (0 at file level).  c_syntax.pas
   0x063C6C (cc.a88k 0x063EEC): c_syntax's declaration_stmts and

@@ -69,17 +69,22 @@
     0x067286  0x067506  c_type_name
     A5 0x14AC94 (cc.m68k), 0x2CAC94 (cc.a88k; c_sym_map has no data of
     its own and runs on the same address): the legal type specifier
-    combinations (+0x0, 13 words), the routine attribute keywords
-    syntax enters (+0x20..+0x40), +0x44 (il_178), and the cells
-    c_globals.ins.pas declares (+0x48..+0x204).
+    combinations (+0x0, 13 words), the routine option keywords syntax
+    enters (+0x20..+0x40), +0x44 (il_178), the cells c_globals.ins.pas
+    declares (+0x48..+0x204; but +0x1EC, csyn_1ec, declared here),
+    and the basic types' cells by specifier (+0x208, initialized data:
+    the addresses of char_type .. double_type).
 
-  TODO(pascal) c_syntax is translated in part
+  The declaration contexts (ctx, the declaration routines' first
+  parameter): 0 file level, 1 a prototype's parameters, 2 an old-style
+  definition's parameters, 3 a function body, 4 a compound statement.
 
-  Not written yet: the initializers, data_init, dynm_init, array_init,
-  array_dim_init, struct_init, init_with_string and get_constant
-  (check_addr_init, varn_from_addr_con, address_exposed).
-
-  The routines other units call load A5; the others are internal.
+  The routines other units call (syntax, cc_walk_it, call_kfold,
+  pp_constant, data_init, c_type_name) load A5, and so do
+  call_kfold_fold_addrs (passed to cc_walk_it), avoid_void and
+  enum_list, which no other unit calls; the others are internal.
+  Routines are defined in address order, the ones called before their
+  definition declared forward (not known from the original).
   check_addr_init, varn_from_addr_con and address_exposed are nested
   in get_constant, push_switch and pop_switch in switch_stat,
   type_specifier in declaration_specifiers and check_add_spec in
@@ -182,6 +187,8 @@ type
     an identifier that is not a type name ends them). }
   c_specs_t = set of 0..15;
 
+  c_decl_ptr_t = ^c_decl_t;
+
 var
   legal_specs: array [0..12] of c_specs_t;  { +0x0 }
   opt_kw: array [0..8] of il_$node_ptr_t;  { +0x20: the routine option
@@ -263,6 +270,38 @@ procedure member_list(
 procedure enum_list(
     var es: c_enumset_t;
     in t: c_type_ptr_t); forward;
+
+procedure dynm_init(
+    v: c_sym_ptr_t); options(val_param); internal; forward;
+
+procedure array_init(
+    v: c_sym_ptr_t;
+    t: c_type_ptr_t); options(val_param); internal; forward;
+
+procedure array_dim_init(
+    v: c_sym_ptr_t;
+    et: c_type_ptr_t;
+    off: integer32;
+    var count: integer32;
+    var last: integer); options(val_param); internal; forward;
+
+procedure struct_init(
+    v: c_sym_ptr_t;
+    t: c_type_ptr_t;
+    base: integer32;
+    var last: integer); options(val_param); internal; forward;
+
+procedure init_with_string(
+    v: c_sym_ptr_t;
+    off: integer32;
+    var count: integer32;
+    var last: integer); options(val_param); internal; forward;
+
+procedure get_constant(
+    in follow: c_tokset_t;
+    name: il_$node_ptr_t;
+    t: c_type_ptr_t;
+    out c: il_$node_ptr_t); options(val_param); internal; forward;
 
 procedure body(
     in follow: c_tokset_t); internal; forward;
@@ -789,7 +828,7 @@ end;
 
   0x061596, 0x8BC bytes, link #-352: the follow set (the declaration
   starters; for a body the statement starters too, less identifier;
-  for parameters `{') in the frame, the tests with the register holding
+  for parameters the opening brace) in the frame, the tests with the register holding
   3 (docs/rev889-patterns.md 24); avoid_void's report flag a byte
   constant (false for a function, true for a variable); the section
   flag cleared with `bclr #0' of the flags' second byte.
@@ -2384,6 +2423,942 @@ begin
   end;
   get;
   es.count := n;
+end;
+
+{ data_init - see c_syntax.ins.pas.  Not a variable (a redeclaration):
+  skipped to `;'.  In a block (ctx 3, 4) anything but a static is a
+  dynamic initializer (dynm_init); an array (array_init) or a structure
+  (struct_init, an opening brace expected: diagnostic 99) is laid out, else a
+  scalar in any number of braces (get_constant, diagnostic 100 for a
+  brace left open); def_data and the variable's flag 6 (initialized).
+
+  0x063C6C, 0x19C bytes, link #-56; A5: typedef names looked through
+  (kind 118); the follow set the members' (0x06373E) with the closing brace added for
+  a braced scalar.
+
+  Not known from the original:
+  - the names. }
+
+procedure data_init;
+var
+  te: type_exp_t;
+  s: c_tokset_t;
+  c: il_$node_ptr_t;
+  last: integer;
+  n: integer;
+begin
+  if v^.kind <> 109 then begin
+    while not ((token_kind = ctk_eof) or (token_kind = ctk_semicolon)) do
+      get;
+    return;
+  end;
+  while t^.kind = 118 do
+    t := c_sym_ptr_t(t)^.td_type;
+  type_exp(t, addr(te));
+  if vat <> vat_stat then
+    if (ctx = 3) or (ctx = 4) then begin
+      dynm_init(v);
+      return;
+    end;
+  if t^.kind in [131, 127] then begin
+    array_init(v, t);
+    v^.var_flags := v^.var_flags + [6];
+  end
+  else if t^.kind = 132 then begin
+    if token_kind <> ctk_lbrace then
+      error1(99, lex_line, lex_token);
+    def_alloc_var(v, te.bytes);
+    struct_init(v, t, 0, last);
+    v^.var_flags := v^.var_flags + [6];
+  end
+  else begin
+    n := 0;
+    while token_kind = ctk_lbrace do begin
+      n := n + 1;
+      get;
+    end;
+    def_alloc_var(v, te.bytes);
+    s := [ctk_sizeof, ctk_comma, ctk_semicolon, ctk_plus, ctk_minus,
+          ctk_eof, ctk_identifier, 77..89, ctk_string, ctk_wstring, 101];
+    if n <> 0 then
+      s := s + [ctk_rbrace];
+    get_constant(s, v^.name, t, c);
+    if n <> 0 then begin
+      if token_kind = ctk_comma then
+        get;
+      while (n <> 0) and (token_kind = ctk_rbrace) do begin
+        n := n - 1;
+        get;
+      end;
+      if n <> 0 then
+        error1(100, lex_line, lex_token);
+    end;
+    def_data(v, 0, c);
+    v^.var_flags := v^.var_flags + [6];
+  end;
+end;
+
+{ dynm_init - a block variable's initializer, evaluated when the block
+  is entered (def_dynm_data keeps the assignment `v = value'
+  expr_op(65) leaves on the expression stack): an array, or a braced
+  structure, is laid out in a static `<string-constant>' variable
+  (flags 6 and 14) assigned as a whole (body_opr 11 of it; an array of
+  no size takes its size); anything else an assignment expression in
+  any number of braces (check 116; diagnostic 100), a reference bound
+  through init_refvar.
+
+  0x063E08, 0x298 bytes, link #-140: the static's declaration copies
+  the line of the name record before it is set (`move.w (-116,A6),
+  (-8,A6)'); the name record is the variable's +4..+11.
+
+  Not known from the original:
+  - the names. }
+
+procedure dynm_init(
+    v: c_sym_ptr_t); options(val_param); internal;
+var
+  dd: c_decl_t;
+  nm2: c_name_t;
+  te: type_exp_t;
+  lab: c_name_t;
+  op: c_name_t;
+  s: c_tokset_t;
+  nm: c_name_t;
+  last: integer;
+  ctx: integer;
+  n: integer;
+  t: c_type_ptr_t;
+  sv: c_sym_ptr_t;
+begin
+  op.line := lex_line;
+  sv := nil;
+  t := def_drop_tnames(v^.var_type);
+  if (t^.kind in [131, 127]) or
+     ((t^.kind = 132) and (token_kind = ctk_lbrace)) then begin
+    dd.dtype := v^.var_type;
+    dd.flags := [];
+    dd.unused_28 := 0;
+    dd.line := nm.line;
+    sv := add_varn(id_string_constant, dd, vat_stat);
+    if t^.kind = 132 then begin
+      type_exp(v^.var_type, addr(te));
+      def_alloc_var(sv, te.bytes);
+      struct_init(sv, t, 0, last);
+    end
+    else
+      array_init(sv, t);
+    sv^.var_flags := sv^.var_flags + [6, 14];
+  end;
+  type_exp(v, addr(te));
+  if te.bytes = 0 then
+    if sv <> nil then
+      v^.var_attr.size_bits := sv^.var_attr.size_bits;
+  type_exp(v, addr(te));
+  def_alloc_var(v, te.bytes);
+  nm.id := v^.name;
+  nm.line := v^.line;
+  nm.uplevel := v^.uplevel;
+  nm.unused_7 := v^.unused_11;
+  body_opr(1, addr(nm));
+  body_opr(5, addr(nm));
+  if sv <> nil then begin
+    nm2.id := il_$node_ptr_t(sv);
+    nm2.line := nm.line;
+    body_opr(11, addr(nm2));
+    body_opr(5, addr(nm2));
+  end
+  else if t^.kind = 132 then begin
+    s := [ctk_comma, ctk_semicolon, ctk_eof];
+    ctx := 2;
+    asn_expr(s, lab, ctx);
+    check(116, s);
+  end
+  else begin
+    n := 0;
+    while token_kind = ctk_lbrace do begin
+      n := n + 1;
+      get;
+    end;
+    s := [ctk_comma, ctk_semicolon, ctk_eof];
+    if n <> 0 then
+      s := s + [ctk_rbrace];
+    ctx := 2;
+    asn_expr(s, lab, ctx);
+    check(116, s);
+    if n <> 0 then begin
+      if token_kind = ctk_comma then
+        get;
+      while (n <> 0) and (token_kind = ctk_rbrace) do begin
+        n := n - 1;
+        get;
+      end;
+      if n <> 0 then
+        error1(100, lex_line, lex_token);
+    end;
+  end;
+  if cargs_$options.type_opt then
+    if t^.kind = 130 then
+      if t^.ptr_reference then
+        init_refvar(t);
+  op.id := lex_tokens[ctk_assign];
+  expr_op(65, addr(op), 2);
+  def_dynm_data;
+  cexs_23bc := cexs_23bc - 1;
+end;
+
+{ array_init - a static array's initializer (a string or braces:
+  diagnostic 99): its elements (array_dim_init; diagnostic 109 for an
+  element of no size), an array of no size given the size of what was
+  read (its section's size, a static's +80 the size as a constant node,
+  the attributes' size in bits; when it is the variable's own type its
+  index subrange 0 .. n - 1 made), then the allocation, and the address
+  constants of the outer block's data section (163) that refer to the
+  variable rebased to its offset (kind 10, the current block's data
+  section).
+
+  0x0640AE, 0x1D8 bytes, link #-76: the element count by m$dis$lll,
+  the size by m$mis$lll; the size kept in the type_exp record's bytes;
+  the section's chain followed through +4 for its address constants and
+  +116 for anything else (blocks).
+
+  Not known from the original:
+  - the names. }
+
+procedure array_init(
+    v: c_sym_ptr_t;
+    t: c_type_ptr_t); options(val_param); internal;
+var
+  te: type_exp_t;
+  hi: c_cexp_t;
+  lo: c_cexp_t;
+  n: integer32;
+  last: integer;
+  cnt: integer32;
+  sect: il_$node_ptr_t;
+  a: il_$node_ptr_t;
+begin
+  if not ((token_kind = ctk_string) or (token_kind = ctk_wstring) or
+          (token_kind = ctk_lbrace)) then
+    error1(99, lex_line, lex_token);
+  type_exp(t, addr(te));
+  if t^.arr_elsize <> 0 then
+    n := t^.arr_size div t^.arr_elsize
+  else begin
+    error1(109, lex_line, v^.name);
+    n := 1;
+  end;
+  array_dim_init(v, t^.arr_elem, 0, n, last);
+  cnt := n;
+  if t^.arr_size = 0 then begin
+    te.bytes := cnt * t^.arr_elsize;
+    if v^.var_vat = vat_sect then
+      v^.var_sect^.xl[5] := te.bytes
+    else if v^.var_vat = vat_stat then
+      v^.var_sect := smcontk(81, te.bytes);
+    v^.var_attr.size_bits := te.bytes * 8;
+    if v^.var_type = t then begin
+      lo.ctype := int_type;
+      lo.value := con_zero;
+      lo.line := lex_line;
+      lo.sym := con_zero;
+      hi.ctype := int_type;
+      hi.value := smcontk(81, cnt - 1);
+      hi.line := lex_line;
+      hi.sym := hi.value;
+      def_subr(lo, hi, c_decl_ptr_t(addr(t^.arr_index))^);
+      t^.arr_size := te.bytes;
+    end;
+  end;
+  def_alloc_var(v, te.bytes);
+  sect := c_blk_ptr_t(cdef_outer_block)^.data_sect;
+  a := sect^.xp[3];
+  while a <> nil do
+    if a^.kind = 163 then begin
+      if (c_sym_ptr_t(a^.xp[2])^.var_vat <> vat_sect) and
+         (a^.xc[20] <> chr(3)) and (c_sym_ptr_t(a^.xp[2]) = v) then begin
+        a^.xl[3] := a^.xl[3] + v^.var_offset;
+        a^.xc[20] := chr(10);
+        a^.xp[2] := c_blk_ptr_t(il_180)^.data_sect;
+        a := a^.xp[1];
+      end
+      else
+        a := a^.xp[1];
+    end
+    else
+      a := a^.xp[29];
+end;
+
+{ array_dim_init - the elements of an array of element type et from
+  offset off: count of them (0: as many as are given, count then
+  set), each in braces or not.  An array element's elements in turn
+  (diagnostic 109 for one of no size), a character array's string
+  (adjacent strings joined, then init_with_string), structures
+  (struct_init), scalars (get_constant, def_data).  A missing `,' is
+  diagnostic 173 before the next element; diagnostic 100 for a brace
+  left open.
+
+  0x064286, 0x2E8 bytes, link #-100: the last token kind (last) tells
+  whether an inner list has taken the `,' already; the element count
+  of an array element by m$dis$lll.
+
+  Not known from the original:
+  - the names. }
+
+procedure array_dim_init(
+    v: c_sym_ptr_t;
+    et: c_type_ptr_t;
+    off: integer32;
+    var count: integer32;
+    var last: integer); options(val_param); internal;
+var
+  s: c_tokset_t;
+  te: type_exp_t;
+  et0: c_type_ptr_t;
+  sub: integer32;
+  c: il_$node_ptr_t;
+  o: integer32;
+  i: integer32;
+  n: integer32;
+  braces: integer32;
+  pend: boolean;
+  str: il_$node_ptr_t;
+begin
+  o := off;
+  n := count;
+  i := 0;
+  pend := false;
+  et0 := et;
+  while et^.kind = 118 do
+    et := c_sym_ptr_t(et)^.td_type;
+  braces := 0;
+  if token_kind = ctk_lbrace then begin
+    braces := 1;
+    last := token_kind;
+    get;
+  end;
+  if et^.kind in [131, 127] then begin
+    if et^.arr_elsize <> 0 then
+      sub := et^.arr_size div et^.arr_elsize
+    else begin
+      error1(109, lex_line, v^.name);
+      sub := 0;
+    end;
+    repeat
+      if pend then begin
+        error0(173, lex_line);
+        pend := false;
+      end;
+      array_dim_init(v, et^.arr_elem, o, sub, last);
+      o := o + et^.arr_size;
+      i := i + 1;
+      if last <> ctk_comma then
+        if token_kind = ctk_comma then begin
+          last := token_kind;
+          get;
+        end
+        else
+          pend := true;
+      if count = 0 then begin
+        if (token_kind = ctk_eof) or (token_kind = ctk_semicolon) or
+           (token_kind = ctk_rbrace) then begin
+          count := i;
+          exit;
+        end;
+      end
+      else begin
+        n := n - 1;
+        if n = 0 then
+          exit;
+        if (token_kind = ctk_rbrace) or (token_kind = ctk_eof) or
+           (token_kind = ctk_semicolon) then
+          exit;
+      end;
+    until false;
+  end
+  else if ((token_kind = ctk_string) and (et^.kind = 122) and
+           (et^.len = 1)) or
+          ((token_kind = ctk_wstring) and (et = uint_type)) then begin
+    str := nil;
+    while (token_kind = ctk_string) or (token_kind = ctk_wstring) do begin
+      str := clex_$catstring(str, lex_token);
+      get;
+    end;
+    clex_$unget(str^.kind, str);
+    init_with_string(v, o, count, last);
+  end
+  else begin
+    type_exp(et0, addr(te));
+    s := [ctk_rbrace, ctk_sizeof, ctk_comma, ctk_semicolon, ctk_plus,
+          ctk_minus, ctk_eof, ctk_identifier, 77..89, ctk_string,
+          ctk_wstring, 101];
+    repeat
+      if pend then begin
+        error0(173, lex_line);
+        pend := false;
+      end;
+      if et^.kind = 132 then begin
+        struct_init(v, et, o, last);
+        if last <> ctk_comma then
+          if token_kind = ctk_comma then begin
+            last := token_kind;
+            get;
+          end
+          else
+            pend := true;
+      end
+      else begin
+        get_constant(s, v^.name, et, c);
+        def_data(v, o, c);
+        if token_kind = ctk_comma then begin
+          last := token_kind;
+          get;
+        end
+        else
+          pend := true;
+      end;
+      o := o + te.bytes;
+      i := i + 1;
+      if count = 0 then begin
+        if (token_kind = ctk_eof) or (token_kind = ctk_semicolon) or
+           (token_kind = ctk_rbrace) then begin
+          count := i;
+          exit;
+        end;
+      end
+      else begin
+        n := n - 1;
+        if n = 0 then
+          exit;
+        if (token_kind = ctk_rbrace) or (token_kind = ctk_eof) or
+           (token_kind = ctk_semicolon) then
+          exit;
+      end;
+    until false;
+  end;
+  while (braces <> 0) and (token_kind = ctk_rbrace) do begin
+    braces := braces - 1;
+    last := token_kind;
+    get;
+  end;
+  if braces <> 0 then
+    error1(100, lex_line, lex_token);
+end;
+
+{ struct_init - the members of the structure t of v from offset base,
+  in braces or not: arrays (array_dim_init; diagnostic 109 for an
+  element of no size), structures (struct_init), scalars (get_constant,
+  def_data); bit fields sharing a word are gathered and stored as one
+  constant: a byte (87; at the next byte when the first starts past
+  bit 7) for up to 8 bits, a word (80) for up to 16, else a longword
+  (82); a word's worth is stored early when the next bit field is two
+  bytes on and more follow.  A character member followed by an 8-bit
+  field at its offset is taken as a bit field (a copy of it, 120).
+  Unnamed bit fields (id_at) are skipped; a bit field's value must be
+  an integer constant (diagnostic 85).  A missing `,' is diagnostic 173
+  before the next member; the closing brace expected (diagnostic 100).
+
+  0x06456E, 0x474 bytes, link #-140: the field record's bit field byte
+  +48 (c_objtype's width, the position from the high-order end) and
+  +49 (at, the width); the bits gathered in a longword (its high byte
+  and word stored, `swap; clr.w' to keep the low word).
+
+  Not known from the original:
+  - the names; the meaning of c_field_t's bit field names (by offset
+    here, docs/questions.md). }
+
+procedure struct_init(
+    v: c_sym_ptr_t;
+    t: c_type_ptr_t;
+    base: integer32;
+    var last: integer); options(val_param); internal;
+var
+  fake: c_field_t;
+  s: c_tokset_t;
+  bf_off: integer32;
+  bits: record
+    case integer of
+      1: (l: integer32);
+      2: (w: integer);
+      3: (b: array [0..3] of char);
+  end;
+  count: integer32;
+  f: c_field_ptr_t;
+  c: il_$node_ptr_t;
+  braced: integer32;
+  off: integer32;
+  nbits: integer;
+  curpos: integer;
+  pend: boolean;
+  ft: c_type_ptr_t;
+  cur: c_field_ptr_t;
+  pos, w: integer;
+  val: integer32;
+  sh: integer32;
+begin
+  braced := 0;
+  if token_kind = ctk_lbrace then begin
+    braced := 1;
+    last := token_kind;
+    get;
+  end;
+  f := t^.su_fields;
+  bits.l := 0;
+  nbits := 0;
+  pend := false;
+  s := [ctk_rbrace, ctk_sizeof, ctk_comma, ctk_semicolon, ctk_plus,
+        ctk_minus, ctk_eof, ctk_identifier, 77..89, ctk_string,
+        ctk_wstring, 101];
+  while not ((token_kind = ctk_rbrace) or (token_kind = ctk_eof) or
+             (token_kind = ctk_semicolon)) and (f <> nil) do begin
+    if pend then begin
+      error0(173, lex_line);
+      pend := false;
+    end;
+    off := f^.offset + base;
+    ft := f^.ftype;
+    while ft^.kind = 118 do
+      ft := c_sym_ptr_t(ft)^.td_type;
+    cur := f;
+    if f^.kind = 119 then
+      if ft^.kind in [131, 127] then begin
+        if ft^.arr_elsize <> 0 then
+          count := ft^.arr_size div ft^.arr_elsize
+        else begin
+          error1(109, lex_line, cur^.name);
+          count := 1;
+        end;
+        array_dim_init(v, ft^.arr_elem, off, count, last);
+      end
+      else if ft^.kind = 132 then
+        struct_init(v, ft, off, last)
+      else if (f^.next <> nil) and (f^.next^.kind = 120) and
+              (f^.next^.offset = cur^.offset) and
+              (f^.next^.bits.width = 8) then begin
+        fake.kind := 120;
+        fake.next := cur^.next;
+        fake.name := cur^.name;
+        fake.line := cur^.line;
+        fake.unused_14 := cur^.unused_14;
+        fake.ftype := cur^.ftype;
+        fake.flags := cur^.flags;
+        fake.attr := cur^.attr;
+        fake.unused_38 := cur^.unused_38;
+        fake.unused_40 := cur^.unused_40;
+        fake.offset := cur^.offset;
+        fake.bits := cur^.bits;
+        fake.bits.width := 0;
+        fake.bits.at := 8;
+        f := addr(fake);
+      end
+      else begin
+        get_constant(s, cur^.name, ft, c);
+        def_data(v, off, c);
+      end;
+    if f^.kind <> 119 then begin
+      curpos := f^.bits.width;
+      bf_off := f^.offset;
+      while f^.kind = 120 do begin
+        if pend then begin
+          error0(173, lex_line);
+          pend := false;
+        end;
+        if f^.offset <> bf_off then
+          exit;
+        if f^.name = id_at then begin
+          nbits := nbits + f^.bits.at;
+          f := f^.next;
+          if f = nil then
+            exit;
+        end
+        else begin
+          ft := f^.ftype;
+          while ft^.kind = 118 do
+            ft := c_sym_ptr_t(ft)^.td_type;
+          pos := f^.bits.width;
+          w := f^.bits.at;
+          get_constant(s, f^.name, ft, c);
+          if c^.kind in [77..87, 101, 200] then
+            val := c^.int_value
+          else begin
+            val := 0;
+            error1(85, lex_line, c);
+          end;
+          nbits := nbits + w;
+          sh := 32 - w - pos;
+          bits.l := bits.l ! (lshft(val, sh) & lshft(lshft(1, w) - 1, sh));
+          f := f^.next;
+          if token_kind = ctk_comma then begin
+            last := token_kind;
+            get;
+          end
+          else
+            pend := true;
+          if f = nil then
+            exit;
+          if (token_kind = ctk_rbrace) or (token_kind = ctk_eof) or
+             (token_kind = ctk_semicolon) then
+            exit;
+        end;
+      end;
+      if nbits < 9 then begin
+        if curpos > 7 then begin
+          off := off + 1;
+          c := smcontk(87, ord(bits.b[1]));
+        end
+        else
+          c := smcontk(87, ord(bits.b[0]));
+        bits.l := 0;
+        nbits := 0;
+      end
+      else if (f <> nil) and (f^.kind = 120) and (f^.offset - bf_off = 2) and
+              (nbits <> 16) and
+              not ((token_kind = ctk_eof) or (token_kind = ctk_semicolon) or
+                   (token_kind = ctk_rbrace)) then begin
+        c := smcontk(80, bits.w);
+        bits.l := lshft(bits.l, 16);
+        nbits := nbits - 16;
+      end
+      else begin
+        if nbits < 17 then
+          c := smcontk(80, bits.w)
+        else
+          c := smcontk(82, bits.l);
+        bits.l := 0;
+        nbits := 0;
+      end;
+      def_data(v, off, c);
+    end
+    else begin
+      if not ((cur^.kind = 119) and ((ft^.kind in [131, 127]) or
+                                     (ft^.kind = 132)) and
+              (last = ctk_comma)) then
+        if token_kind = ctk_comma then begin
+          last := token_kind;
+          get;
+        end
+        else
+          pend := true;
+      f := cur^.next;
+    end;
+  end;
+  if braced = 1 then
+    if token_kind = ctk_rbrace then begin
+      last := token_kind;
+      get;
+    end
+    else
+      error1(100, lex_line, lex_token);
+end;
+
+{ init_with_string - a character array's string (92) or wide string
+  (93, 4 bytes a character) from offset off: count its length when 0,
+  else the string cut to count (diagnostic 112 when it is longer, not
+  for the terminating NUL alone under -XANSI); then the string token
+  made an ordinary string's and the next token read.
+
+  0x0649E2, 0x D2 bytes, link #-20: the cut length the low word of
+  count (times 4 for a wide string).
+
+  Not known from the original:
+  - the names. }
+
+procedure init_with_string(
+    v: c_sym_ptr_t;
+    off: integer32;
+    var count: integer32;
+    var last: integer); options(val_param); internal;
+var
+  c: il_$node_ptr_t;
+  s: il_$node_ptr_t;
+  wide: boolean;
+  len: integer32;
+begin
+  s := lex_token;
+  c := s;
+  if token_kind = ctk_string then begin
+    wide := false;
+    len := s^.str_len;
+  end
+  else begin
+    wide := true;
+    len := s^.str_len div 4;
+  end;
+  if count = 0 then
+    count := len
+  else if len > count then begin
+    if not ((count + 1 = len) and cargs_$options.xansi) then
+      error1(112, lex_line, v^.name);
+    if wide then
+      c := strtk(s^.str_chars, count * 4)
+    else
+      c := strtk(s^.str_chars, count);
+  end;
+  def_data(v, off, c);
+  lex_token^.kind := ctk_string;
+  token_kind := ctk_string;
+  last := token_kind;
+  get;
+end;
+
+{ get_constant - an initializer's constant expression for a value of
+  type t, the constant node to c (il_178 when there is none; name the
+  variable, in diagnostics): for a floating type an integer converted
+  (single or double: rlcontk, dpcontk); for an enumeration one of its
+  own type; an address (`&' of a variable or of a displaced
+  dereference of a null pointer, an integer then; a variable of the
+  stack is diagnostic 172, an address not of a variable 181), checked
+  (check_addr_init) and its variable marked; an integer type takes a
+  real truncated (a conversion fault is cgerr 19 and 0), else an
+  integer constant of the type's kind (87 char, 80 short, 82 long;
+  diagnostic 78 for a pointer given a non-zero integer of another
+  type); anything else diagnostic 79.
+
+  0x064BEA, 0x494 bytes, link #-136: the integer's conversion to a
+  double `jsr fpp_$' with 0x00C4 0x0080 (signed) or 0x01D8 0x0080
+  (unsigned; no other form of it is known); the truncation 0x0074
+  0x00D0 inside a cleanup handler (pfm_$cleanup), its fault printed
+  with error_$print_format(status, 2, `?', `compiler', 8, `%$'); the
+  null pointer's displacement passed to rlcontk and dpcontk as the
+  first longword of a double; the vats of the stack a one-longword set
+  (101: local, dynm, param, xdynm); check_addr_init given name too.
+
+  Not known from the original:
+  - the names; the conversion of an unsigned integer to a double. }
+
+procedure get_constant(
+    in follow: c_tokset_t;
+    name: il_$node_ptr_t;
+    t: c_type_ptr_t;
+    out c: il_$node_ptr_t); options(val_param); internal;
+label
+  mismatch, num;
+var
+  crec: pfm_$cleanup_rec;
+  r: double;
+  cx: c_cexp_t;
+  rv: record
+    case integer of
+      1: (d: double);
+      2: (l: integer32);
+  end;
+  status: status_$t;
+  kind: integer;
+  orig: il_$node_ptr_t;
+  tmp: double;
+  n, a, b: il_$node_ptr_t;
+  disp: integer32;
+  v: integer32;
+
+  { address_exposed - the variable v's address is taken (its flag 12);
+    anything else is diagnostic 294.
+
+    0x064AB4, 0x2C bytes, link #-8.
+
+    Not known from the original:
+    - the names. }
+
+  procedure address_exposed(
+      v: il_$node_ptr_t); options(val_param);
+  begin
+    if v^.kind <> 109 then
+      error0(294, lex_line)
+    else
+      c_sym_ptr_t(v)^.var_flags := c_sym_ptr_t(v)^.var_flags + [12];
+  end;
+
+  { varn_from_addr_con - the variable an address constant (163: +8;
+    195: +12) is of: a variable (109), a section's (111: +12), else
+    il_178 (diagnostic 295 for another kind of node).
+
+    0x064AE0, 0x5C bytes, link #-16: the result in A0.
+
+    Not known from the original:
+    - the names. }
+
+  function varn_from_addr_con(
+      n: il_$node_ptr_t): il_$node_ptr_t; options(val_param);
+  var
+    a: il_$node_ptr_t;
+  begin
+    if n^.kind = 163 then
+      a := n^.xp[2]
+    else if n^.kind = 195 then
+      a := n^.xp[3]
+    else begin
+      error0(295, lex_line);
+      varn_from_addr_con := il_178;
+      return;
+    end;
+    if a^.kind = 109 then
+      varn_from_addr_con := a
+    else if a^.kind = 111 then
+      varn_from_addr_con := a^.xp[3]
+    else
+      varn_from_addr_con := il_178;
+  end;
+
+  { check_addr_init - an address constant may initialize t: a 4-byte
+    integer of a compatible type (diagnostic 78), a pointer
+    (check_types, loose; diagnostic 80); anything else diagnostic 79
+    and false.
+
+    0x064B3C, 0x AE bytes, link #-12: name read from the parent's frame
+    through the dynamic link (docs/rev889-patterns.md 25), though the
+    caller passes it as a third argument.
+
+    Not known from the original:
+    - the names; the third parameter's use. }
+
+  function check_addr_init(
+      t: c_type_ptr_t;
+      in cx: c_cexp_t;
+      nm: il_$node_ptr_t): boolean; options(val_param);
+  var
+    ok: boolean;
+  begin
+    ok := true;
+    if (t^.kind = 122) and (t^.len = 4) then begin
+      if not check_types(t, cx.ctype, true) then
+        error3(78, cx.line, cx.sym, name, lex_tokens[ctk_assign]);
+    end
+    else if t^.kind = 130 then begin
+      if not check_types(t, cx.ctype, true) then
+        error1(80, cx.line, cx.sym);
+    end
+    else begin
+      error2(79, cx.line, cx.sym, name);
+      ok := false;
+    end;
+    check_addr_init := ok;
+  end;
+
+begin
+  c := il_178;
+  constant_expr(follow, cx);
+  if (t^.kind = 123) and (cx.value^.kind <> 137) then begin
+    if cx.value = il_178 then
+      return;
+    n := cx.value;
+    if (n^.kind = 89) or (n^.kind = 88) then
+      r := n^.real_value
+    else if n^.kind in [77..87, 101, 200] then begin
+      if cx.ctype^.signed then
+        tmp := n^.int_value
+      else
+        tmp := n^.int_value;
+      r := tmp;
+    end
+    else
+      goto mismatch;
+    if t^.len = 6 then
+      c := rlcontk(r)
+    else
+      c := dpcontk(r);
+    return;
+  end;
+  if t^.kind = 129 then begin
+    if cx.value = il_178 then
+      return;
+    if t <> cx.ctype then
+      goto mismatch;
+    c := smcontk(int_ob_kind_from_integer_type(cx.ctype^.enum_int),
+                 cx.value^.int_value);
+    return;
+  end;
+  orig := cx.value;
+  if (orig^.kind = 137) and (c_tree_ptr_t(orig)^.op = 26) then begin
+    a := c_tree_ptr_t(orig)^.opnd[1];
+    if (a^.kind = 109) and
+       (c_sym_ptr_t(a)^.var_vat in [vat_local, vat_dynm, vat_param,
+                                    vat_xdynm]) then
+      error1(172, cx.line, cx.sym)
+    else begin
+      disp := 0;
+      while a^.kind = 147 do begin
+        disp := disp + a^.xl[8];
+        a := a^.xp[6];
+      end;
+      if a^.kind = 146 then begin
+        b := a^.xp[6];
+        if (b^.kind in [80..86, 200]) and (b^.int_value = 0) and
+           ((t^.kind = 122) or (t^.kind = 130) or (t^.kind = 123)) then begin
+          kind := 82;
+          if t^.kind = 122 then
+            case t^.len of
+              2: kind := 80;
+              1: kind := 87;
+              otherwise
+                ;
+            end;
+          if t^.kind = 123 then begin
+            rv.l := disp;
+            if t^.len = 6 then
+              c := rlcontk(rv.d)
+            else
+              c := dpcontk(rv.d);
+          end
+          else
+            c := smcontk(kind, disp);
+          return;
+        end;
+        a := b;
+        if not ((a^.kind = 163) or (a^.kind = 195)) then
+          error1(181, cx.line, cx.sym);
+      end;
+    end;
+    if not check_addr_init(t, cx, name) then
+      return;
+    if (a^.kind = 163) or (a^.kind = 195) then
+      a := varn_from_addr_con(a);
+    if a^.kind = 109 then
+      address_exposed(a);
+    c := cx.value;
+    return;
+  end;
+  if (orig^.kind = 163) or (orig^.kind = 195) then begin
+    if not check_addr_init(t, cx, name) then
+      return;
+    a := varn_from_addr_con(cx.value);
+    if a^.kind = 109 then
+      address_exposed(a);
+    c := cx.value;
+    return;
+  end;
+  if not (orig^.kind in [77..87, 101, 200]) then begin
+    if (t^.kind <> 122) or not ((orig^.kind = 89) or (orig^.kind = 88)) then
+      goto mismatch;
+    status := pfm_$cleanup(crec);
+    if status.all <> pfm_$cleanup_set then begin
+      pfm_$enable;
+      if (status.subsys = 5) or (status.subsys = 0) then begin
+        pfm_$enable;
+        cgerr(19, cx.line, cx.sym);
+        error_$print_format(status, 2, '?', 'compiler', 8, '%$');
+        cx.value := smcontk(82, 0);
+        goto num;
+      end;
+      pfm_$signal(status);
+    end;
+    v := trunc(orig^.real_value);
+    pfm_$rls_cleanup(crec, status);
+    cx.value := smcontk(82, v);
+    orig^.int_value := v;
+  end;
+num:
+  if t^.kind = 130 then
+    if not check_types(t, cx.ctype, true) then
+      if orig^.int_value <> 0 then
+        error3(78, cx.line, name, cx.sym, lex_tokens[ctk_assign]);
+  kind := 82;
+  if t^.kind = 122 then
+    if t^.len = 1 then
+      kind := 87
+    else if t^.len < 4 then
+      kind := 80;
+  c := smcontk(kind, orig^.int_value);
+  return;
+mismatch:
+  error2(79, cx.line, cx.sym, name);
 end;
 
 { body - a function's body: an opening brace, its declarations, the dynamic
