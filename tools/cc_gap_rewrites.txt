@@ -234,3 +234,26 @@ lang/lang/source/kfold.pas	s/((?:\w+(?:\[[^\]]*\])?\^?\.)*\w+(?:\[[^\]]*\])?)\.w
 # gap 25 (kfold): kfold_$general exceeds the virtual registers: its integer operators left out of the check too
 lang/lang/source/kfold.pas	s/^(    \{ The integer and set constants' operators\. \})$/%var gap25k;\n%if gap25k %then { gap 25 }\n$1/
 lang/lang/source/kfold.pas	s/^(    \{ Not all constants: identities with a constant operand\. \})$/%endif { gap 25 }\n$1/
+# gap 8 (add_node): in on constant sets with word elements (every one, as comparisons)
+lang/lang/source/add_node.pas	s{((?:\w+(?:\[[^\]]*\])?\^?\.)*\w+)\s+in\s+\[([^\]]+)\]}{my ($e, $l) = ($1, $2); '((' . join(') or (', map { /^(\d+)\.\.(\d+)$/ ? "($e >= $1) and ($e <= $2)" : "$e = $_" } split(/\s*,\s*/, $l)) . ')) { gap 8 }'}ge
+# gap 4 (add_node): writeln (dropped, for the check)
+lang/lang/source/add_node.pas	s/^(\s*)writeln\('Compiler internal warning.*,$/$1; { gap 4 }/
+lang/lang/source/add_node.pas	s/^\s*an_kind_t\(.*\), '\) is not top-level\.'\);$//
+# gap 7 (add_node): real conversions and constants (dropped or zero, for the check)
+lang/lang/source/add_node.pas	s/^(\s*)v1 := trunc\(node\^\.real_value\)$/$1v1 := 0/
+lang/lang/source/add_node.pas	s/^(\s*)else if node\^\.real_value <= 2147483647\.0 then/$1else if v1 = 0 then { gap 7 }/
+lang/lang/source/add_node.pas	s/^(\s*)v1 := trunc\(node\^\.real_value - 2147483647\.0 - 1\.0\) - 16#80000000;/$1v1 := 0; { gap 7 }/
+lang/lang/source/add_node.pas	s/^(\s*)if d\.flags\.signed then rr := v1 else if v1 < 0 then rr := v1 \+ 4294967296\.0 else rr := v1;/${1}{ gap 7 }/
+lang/lang/source/add_node.pas	s/^(\s*)a := rr;$/${1}{ gap 7 }/
+# gap 7 (add_node): the real operators left out of the check (a conditional variable not set)
+lang/lang/source/add_node.pas	s/^(    \{ The real constants\. \})$/    v1 := 0; { gap 7 }\n%var gap7a;\n%if gap7a %then { gap 7 }\n$1/
+lang/lang/source/add_node.pas	s/^(    \{ The end of the real operators\. \})$/%endif { gap 7 }\n$1/
+# gap 25 (add_node): add_tn exceeds the virtual registers: its constant folding left out of the check (a conditional variable not set)
+lang/lang/source/add_node.pas	s/^(  \{ Constant folding\. \})$/%var gap25a;\n%if gap25a %then { gap 25 }\n$1/
+lang/lang/source/add_node.pas	s/^(  \{ Calls entered in the routine's references\. \})$/%endif { gap 25 }\n$1/
+lang/lang/source/add_node.pas	s/^(  \{ Constants moved out of trees of the same operator\. \})$/%var gap25b;\n%if gap25b %then { gap 25 }\n$1/
+lang/lang/source/add_node.pas	s/^(  \{ The registers, and the operands swapped for the costlier first\. \})$/%endif { gap 25 }\n$1/
+# gap 11 (add_node): a pointer function of the one statement `f := nil' (il_178, for the check)
+lang/lang/source/add_node.pas	s/^(\s*)make(_char)?_temp := nil;/$1make$2_temp := il_178; { gap 11 }/
+# gap 15 (add_node): a pointer result assigned from a parameter (nil, for the check)
+lang/lang/source/add_node.pas	s/^(\s*)add_disp_node := base;/$1add_disp_node := nil; { gap 15 }/

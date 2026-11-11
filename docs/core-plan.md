@@ -33,7 +33,7 @@ the translators; headings and cells should not need to change.
 | il_utils | `lang/lang/source/il_utils.pas` | 14 | 3412 | done (nodes by offset) |
 | gen_utils | `lang/lang/source/gen_utils.pas` | 21 | 4248 | done (nodes by offset) |
 | cargs | `lang/lang/source/cargs.pas` | 24 | 9064 | done (best effort; both variants, `%if cc_a88k`) |
-| add_node | `lang/lang/source/add_node.pas` | 23 | 18204 | headings (11 called from outside) |
+| add_node | `lang/lang/source/add_node.pas` | 23 | 18204 | done (best effort; translator S: headings settled, add_node_$desc_t, add_node_$opnds_t) |
 | debug_sym_dmp | `lang/lang/source/debug_sym_dmp.pas` | 56 | 15050 | done (best effort; headings narrowed) |
 | outbin | `lang/lang/source/outbin.pas` (m68k only) | 70 | 24354 | headings (3) |
 | globals_from_frontend, _backend, _general, real_externals, lib | (foreign headings and cells) | | | done (placement rule in globals_from_backend.ins.pas) |
@@ -197,3 +197,13 @@ table at +0x4009C, opt_4009c), lang2/source/ftn/source/f_hash.ins.pas,
 lang2/source/ftn/source/const_op.ins.pas (r8_expon, r8i4_expon), and
 us/us/ins/fpp_errs.ins.pas, fpp.ins.pas, peb.ins.pas (empty; c_expr_sem
 and kfold open them).
+
+Translator S (2026-11-11), add_node: add_node.ins.pas's headings are
+checked against the bodies and the parameters named; new types
+add_node_$desc_t (a tree node's 16-byte descriptor, as c_desc_t and
+kf_desc_t) and add_node_$opnds_t; add_tn takes `var d: univ
+add_node_$desc_t', buildtreenode `in' d and ops (callers pass the
+records, no longer addr()); copy_tree and add_node_$dispose_top_level
+take the node by address; the reference makers' base is
+il_$node_ptr_t.  The IL node kinds' names were found in add_node's
+enumeration name table (docs/questions.md 66).

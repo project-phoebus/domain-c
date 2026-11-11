@@ -449,3 +449,42 @@ revisited.
    +10 of an integer constant is the low half of its value, so either
    the constants kfold sees there are not smcontk's or the field means
    something else; kept as the image has it.
+66. Translator S (2026-11-11), add_node.pas: **the IL node kinds' original
+   names are in the image** (question 13's discussion).  add_node writes
+   a kind as an enumerated value (PAS_$WRITE code 3877), and the run
+   time's name table follows add_node_$dispose_top_level (cc.m68k
+   0x0A06A6, cc.a88k 0x0A2086; docs/rev889-patterns.md 57): 237 names,
+   0 END_OB .. 104 SIGNED_COB (the tokens), 105 PROGRAM_BLK, 106
+   MODULE_BLK, 107 PROCEDURE_BLK, 108 FUNCTION_BLK, 109 VAR_NAME, 110
+   FORTRAN_SYMBOL, ..., 137 TREE_NODE, 139 EVAL_NODE, 140 ASSIGN_NODE,
+   144 LABEL_NODE, 145 DINDEX_NODE, 146 PTR_NODE, 147 DISP_NODE, 163
+   ADDR_CON, 171 CC_CALL, 172 INNER_BLK, 205 SYM_DISP_NODE, ..., 236
+   UNION_OB (the whole list is add_node.pas's an_kind_t).  add_node
+   declares the enumeration for its writes and keeps numbers elsewhere.
+   Proposal: declare it once in il.ins.pas (il_$node_t's kind as that
+   type, or the names as constants), so that every unit can write
+   `tree_node' for 137.  Two names collide with cells c_globals.ins.pas
+   named by use, char_type (+0x2390) and void_type (+0x23B0); add_node
+   writes them kind_char_type and kind_void_type (so the name the run
+   time would print differs).  Renaming the two cells (char_ptype,
+   void_ptype, or by the front end's names when found) would let the
+   table be declared as the image has it.
+67. Translator S: add_tn takes its descriptor as `var d: univ
+   add_node_$desc_t' (distribute writes it) and buildtreenode `in d:
+   univ add_node_$desc_t; in ops: univ add_node_$opnds_t' (add_node.ins.pas
+   declares both types; same frames as the univ_ptr headings); every
+   caller's addr(x) became x (c_expr_sem, c_stmt_sem, kfold,
+   commit_top_node).  copy_tree and add_node_$dispose_top_level take the
+   node by address (var); add_dn's, add_disp_node's, add_pn's and
+   add_dindexn's base is il_$node_ptr_t.
+68. Translator S: add_node calls reg_save (cc.m68k reg_save.pas; cc.a88k's
+   target_at_dummies.pas has an empty one) and kfold (with a nil parent
+   passed as a constant by address, so `in parent' as c_syntax declares
+   it); both are declared in add_node.pas, as no insert add_node opens
+   declares them.  If reg_save's insert (or g_opt.ins.pas, which add_node
+   and kfold open) held them originally, move them there.
+69. Translator S: copy_tree reads a word of the section std_lib
+   (cc.m68k 0x2D2B68, the data-only unit lang/dervobjs std_lib.pas) at
+   +706 + 2 * the call's result class; declared in add_node.pas as an
+   extern array named after the section until std_lib's contents are
+   reconstructed (best effort: the name does not bind to the section).

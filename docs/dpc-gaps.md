@@ -184,6 +184,20 @@ when this tree is merged).
            f := q
          else
            f := nil;
+
+   Also met by translator S in add_node.pas: a pointer function whose
+   body is the one statement `f := nil' (make_temp 0x09F9BC,
+   make_char_temp 0x09F9D6: `movea.l #0,A0' between the A5 load and
+   the restore).  dpc: "a pointer function body of the one statement
+   `f := nil` (no site; ...) is not supported yet".  Reproducer:
+
+       module g11s;
+       type p_t = ^integer;
+       function f(n: integer): p_t; options(val_param);
+       begin
+         f := nil;
+       end;
+
 12. **A pointer function's result compared with a variable.**
    `get_bucket(main_index) = b` (pds.pas append_root_rec_to_bucket,
    cc.m68k 0x06CF9C: `bsr.w get_bucket; cmpa.l A3,A0; bne'; also
@@ -489,3 +503,8 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
        begin
          t[k].a := t[k + 1].b;   { ... repeated 300 times }
        end;
+
+   Also add_node.pas add_tn (0x0A1ABC, 0x30AE bytes): its reassociations
+   and its constant folding are left out of the check (two conditional
+   regions); the gap 8 rule for add_node rewrites every `in' on a
+   constant set into comparisons with one perl substitution (`/e').
