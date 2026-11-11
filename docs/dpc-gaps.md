@@ -20,3 +20,24 @@ when this tree is merged).
        begin
          a := b;
        end;
+
+2. **A `case` whose labels are too sparse for dpc's jump table and too
+   dense for its compare chain.**  errorlst's case on the character
+   after '@' (c_error.pas, cc.m68k 0x0498B0: `subi.w #48; cmpi.w #35;
+   bcc' and a 35-entry jump table at 0x0498C8) has 12 labels ('0'..'9',
+   'L', 'R') over the range '0'..'R'.  dpc: "a `case` of 12 labels over
+   a range of 35 (between the sparsest jump table and the densest
+   compare chain seen, codegen-patterns 7.3) is not supported yet".
+   Rev 8.89 builds the table.  Reproducer:
+
+       module g2;
+       var n: integer;
+       procedure p(c: char);
+       begin
+         case c of
+           '0', '1', '2', '3', '4', '5', '6', '7', '8', '9': n := 1;
+           'L': n := 2;
+           'R': n := 3;
+           otherwise n := 4;
+         end;
+       end;
