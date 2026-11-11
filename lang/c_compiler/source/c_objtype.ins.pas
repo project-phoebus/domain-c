@@ -241,13 +241,27 @@ type
                                           bytes (from a bit size, +7
                                           div 8), else size }
     flags: packed record
-      align: -16..15;                   { +24.7..3: an alignment
-                                          (attr_set_align_dsc may raise
-                                          it; type_exp lowers it back) }
-      b24_2: boolean;                   { .2 }
-      b24_1: boolean;                   { .1: set by type_exp, cleared
-                                          when align is lowered }
-      b24_0: boolean;                   { .0 }
+      align: -16..15;                   { +24.7..3: the alignment (log2
+                                          of bytes; attr_set_align_dsc
+                                          sets it from the attributes
+                                          and may lower it to the
+                                          type's; type_exp lowers it
+                                          back) }
+      align_attr: boolean;              { .2: an Aligned attribute set
+                                          it (attr_set_align_dsc);
+                                          attr_check_align warns of it
+                                          only at -INFO 4 and above }
+      align_ok: boolean;                { .1: aligned at least
+                                          naturally, or not worth a
+                                          warning (set by type_exp and
+                                          attr_set_align_dsc, and by
+                                          attr_check_align once it has
+                                          warned) }
+      b24_0: boolean;                   { .0: cleared by
+                                          attr_set_align_dsc for
+                                          variables, kind 121, 108 and
+                                          174; attr_check_align does not
+                                          warn while it is set }
       b25_7: boolean;                   { +25.7 }
       ranged: boolean;                  { .6: low and high are known
                                           (integral kinds) }
@@ -292,14 +306,26 @@ type
   end;
 
   { An entry of c_expr_sem's expression stack (cexs_stack, 64 bytes):
-    c_main's make_main_pgm sets the top entry's node from its +28.
+    c_main's make_main_pgm sets the top entry's node from its +28;
+    attributes's attr_check_align names +4 in its diagnostic and reads
+    and sets the flags of the type_exp_t at +28 (+52; the brief's
+    `table at +0x354' is +4 of these entries).  c_expr_sem's basic
+    types are such entries (their type_exp_t at +0x36C).
 
-    Not known from the original: everything but the offsets. }
+    Not known from the original: everything but the offsets; whether
+    +28 was one field (the symbol c_main reads is where a type_exp_t's
+    base lies). }
   c_exp_t = record
     node: il_$node_ptr_t;               { +0 }
-    unused_4: array [1..6] of integer32;   { +4..+27 }
-    sym: il_$node_ptr_t;                { +28 }
-    unused_32: array [8..15] of integer32;  { +32..+63 }
+    name: il_$node_ptr_t;               { +4: what the operand is called
+                                          (attr_check_align's error1
+                                          argument) }
+    unused_8: array [3..7] of integer32;   { +8..+27 }
+    case integer of
+      1: (sym: il_$node_ptr_t);         { +28 }
+      2: (texp: type_exp_t;             { +28..+53: the operand's type }
+          unused_54: integer;           { +54 }
+          unused_56: array [15..16] of integer32);  { +56..+63 }
   end;
 
   { An identifier entry as a block of its own: the kind and the rest

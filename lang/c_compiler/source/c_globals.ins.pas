@@ -167,7 +167,10 @@ var
                                           entries to +0x2390, cexs_23bc
                                           the top): c_main
                                           make_main_pgm, c_stmt_sem
-                                          walk_tree }
+                                          walk_tree, attributes
+                                          attr_check_align (`movea.l
+                                          #0x140440' and k * 64 less
+                                          60 or 12) }
   char_type: extern c_type_ptr_t;       { +0x2390: signed, 1 }
   short_type: extern c_type_ptr_t;      { +0x2394: signed, 2 (cc also
                                           stores it in runbackend_10) }

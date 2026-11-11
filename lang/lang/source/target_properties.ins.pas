@@ -29,15 +29,18 @@
 
 type
   { 42 bytes, copied whole by kernel_mode_code (+0x100 to +0xD0):
-    attributes.pas takes the addresses of +0, +8, +0x10 and reads
-    longwords at +0x18..+0x20. }
+    the routine options a routine takes when neither it nor an
+    enclosing routine gives them (attributes.pas's
+    attr_compute_routine_options: the three 8-byte sets at +0, +8,
+    +0x10 and the three longword sets at +0x18..+0x20, laid out as
+    attributes.ins.pas's attr_rtn_opts_t). }
   target_properties_$mode_t = record
-    m_0: array [0..7] of char;          { +0 }
-    m_8: array [0..7] of char;          { +8 }
-    m_10: array [0..7] of char;         { +0x10 }
-    m_18: integer32;                    { +0x18 }
-    m_1c: integer32;                    { +0x1C }
-    m_20: integer32;                    { +0x20 }
+    m_0: set of 0..63;                  { +0 }
+    m_8: set of 0..63;                  { +8 }
+    m_10: set of 0..63;                 { +0x10 }
+    m_18: set of 0..31;                 { +0x18 }
+    m_1c: set of 0..31;                 { +0x1C }
+    m_20: set of 0..31;                 { +0x20 }
     m_24: array [0..4] of char;         { +0x24 }
     m_29: char;                         { +0x29 }
   end;
@@ -75,7 +78,9 @@ type
     p_130: char;                        { +0x130 }
     p_131: char;                        { +0x131 }
     p_132: array [0..7] of char;        { +0x132 }
-    p_13a: char;                        { +0x13A }
+    p_13a: char;                        { +0x13A: the default of a
+                                          routine options' +0x28
+                                          (attributes) }
     p_13b: char;                        { +0x13B }
     p_13c: array [0..9] of char;        { +0x13C }
   end;
