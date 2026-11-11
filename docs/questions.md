@@ -81,6 +81,12 @@ revisited.
    sys/ins does not have, so pds.pas cannot be compiled until a
    stand-in exists.  Where should it go (us/us/sys/ins/dst.ins.pas in
    the tree, included by path, or a rewrite rule)?
+   Lead's provisional decision (2026-11-11): no dst.ins.pas exists in any
+   of the SR10.x installs or elsewhere in the archives (an internal
+   insert, the debug symbol table's, not shipped to customers).  A
+   customer-path insert the install lacks is reconstructed in the tree
+   at its //us path, us/us/sys/ins/<name>, and included by that path,
+   with a header note that the original is /sys/ins/<name>.
 16. objio.ins.pas and objmod.ins.pas: the source repository's
    com/bind/objio.ins.pas was split, its OBJ records going to
    us/us/ins/objmod.ins.pas (cc's units open objmod first) and its
