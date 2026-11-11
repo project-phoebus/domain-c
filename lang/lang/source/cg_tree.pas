@@ -82,10 +82,10 @@
   copy_set_aggregate, set_range_in_set_proc, set_bit_in_set_proc,
   proto_set, set_ops, compare_proc,
   round_fp_to_ieee, switch, f_compare_proc, ld_addr and
-  restore_alloc_temps; not yet bit_test_proc, bit_set_proc,
-  unpack_proc, agg_compare_proc, mdmcase, ldsqr, mul_proc,
+  restore_alloc_temps, bit_test_proc, bit_set_proc, unpack_proc; not
+  yet agg_compare_proc, mdmcase, ldsqr, mul_proc,
   extend_div_proc_result, div_proc, nor the `case' arms of operators
-  other than 19..21, 27, 28, 49, 50, 72, 73 (they fall
+  other than 11, 14, 19..21, 25, 27, 28, 49, 50, 72, 73 (they fall
   to cgerr 0 meanwhile).
 
   Not known from the original: the names of the module's variables
@@ -1087,6 +1087,436 @@ var
   temps: boolean;
   rlen: integer;
 
+  { bit_test_proc - element opnd[1] in the set opnd[2] (operator 11), its
+    condition left in desc.w8 (negated when it was negative; reversed
+    for 7) and, but for a 143 node, set into a byte register (emit 19,
+    an `scc'): a set of up to 4 bytes by a `btst' (emit 17) of the bit
+    (the sign bit's elements 7, 15, 31 by a test of the set, emit 18
+    with cg_zero_ads; element 0 by a shift right of 1, emit 13's shift,
+    when the set is not in a register); larger sets by the 68020's
+    `bftst' (emit 66, cpu 3) or a `btst' of the byte (the set's address
+    indexed by the bit's byte, for a variable element); with the range
+    check (flags bit 10) an element outside the set branches past
+    (emit 20 or 21, the label emit 32), the condition then 2 or 14.
+
+    0x100660, 0x75C bytes: the size's word at +22; movewlx's constants'
+    set (0x0FFE4C); the bounds compared unsigned (`bcc', `bhi', `bls');
+    getphase's element 3 (`btst #3,D0'); a constant element's longword
+    complemented (`not.l') for the bit field's offset, its quotient and
+    remainder by 32 by `divs.w' (`swap', `ext.l') and `asr' with the
+    rounding add; the size 31999 bits for a bit field offset as it is.
+
+    Not known from the original:
+    - why the bit field offset of a constant element is the set's last
+      bit less its complement (the image's). }
+
+  procedure bit_test_proc(
+      n: cg_tree_ptr_t); options(val_param);
+  var
+    s: codegen_$uads_t;
+    res: codegen_$uads_t;
+    range: boolean;
+    inst: integer;
+    cc: integer;
+    sz: integer;
+    bits: integer;
+    v: integer32;
+    r: integer32;
+    e: il_$node_ptr_t;
+  begin
+    range := false;
+    cc := 6;
+    inst := 17;
+    sz := il_$node_ptr_t(n)^.xw[11];
+    bits := il_$node_ptr_t(n)^.xw[11] * 8 - 1;
+    if bits < 32 then begin
+      e := n^.opnd[1];
+      if e^.kind = 81 then begin
+        v := e^.xl[2];
+        if (v = 31) or (v = 15) or (v = 7) then begin
+          sz := rshft(e^.xl[2] + 1, 3);
+          opr := cg_zero_ads;
+          inst := 18;
+          cc := 11;
+        end
+        else if v = 0 then begin
+          anyconst(0, 1, opr);
+          if opr.f1 <> 1 then begin
+            r := peek(n^.opnd[2], il_$node_ptr_t(n)^.xw[11]);
+            if r = 31 then begin
+              if bits > 8 then begin
+                inst := 13;
+                cc := 5;
+              end;
+            end
+            else if weight(r) = 16000 then begin
+              inst := 13;
+              cc := 5;
+            end;
+          end;
+        end
+        else
+          anyconst(e^.xl[2], 1, opr);
+      end
+      else begin
+        load_operand(e, n^.desc.w6, opr);
+        if (n^.desc.flags & 16#400) <> 0 then begin
+          anyconst(bits, n^.desc.w6, ops);
+          if ops.f1 = 3 then
+            load_operand(smcontk(81, bits), n^.desc.w6, ops);
+          emit(18, n^.desc.w6, ops, opr, 0);
+          release(ops);
+          address(templabel, 0, opt);
+          emit(20, 5, opt, cg_null_ads, 5);
+          cc := 2;
+          range := true;
+        end;
+      end;
+      if (bits <= 8) and (inst <> 13) then
+        address(n^.opnd[2], il_$node_ptr_t(n)^.xw[11], ops)
+      else if (inst = 18) and (peek(n^.opnd[2], il_$node_ptr_t(n)^.xw[11]) = 31) and
+          (not (3 in getphase(n^.opnd[2])) or (sz = n^.desc.size)) then begin
+        address(n^.opnd[2], sz, ops);
+        if ops.f1 <> 1 then
+          ops.y := ops.y + (n^.desc.size - sz);
+      end
+      else
+        load_operand(n^.opnd[2], il_$node_ptr_t(n)^.xw[11], ops);
+      release(opr);
+      release(ops);
+      if (ops.f1 = 1) and (ops.f2 > 7) then begin
+        load_operand(n^.opnd[2], sz, ops);
+        release(ops);
+      end;
+      if inst = 13 then begin
+        shift(ops, 1, 1, 2);
+        kill_register(ops.f2);
+      end
+      else
+        emit(inst, sz, ops, opr, 0);
+    end
+    else begin
+      if 3 in cargs_$options.cpu then begin
+        address(n^.opnd[2], sz, s);
+        e := n^.opnd[1];
+        if e^.kind in [77..87, 101, 200] then begin
+          if bits = 31999 then begin
+            v := e^.xl[2];
+            inst := v;
+          end
+          else begin
+            v := ~e^.xl[2];
+            inst := bits - v;
+          end;
+          r := inst;
+          address(smcontk(81, r mod 32), 0, ops);
+          s.y := s.y + (r div 32) * 4;
+          if (n^.desc.flags & 16#400) <> 0 then
+            if (v < 0) or (bits < v) then begin
+              address(templabel, 0, opt);
+              emit(21, 5, opt, cg_null_ads, 0);
+              range := true;
+            end;
+        end
+        else begin
+          load_operand(e, n^.desc.w6, ops);
+          if bits <> 31999 then begin
+            if (n^.desc.flags & 16#400) <> 0 then begin
+              anyconst(~bits, n^.desc.w6, opt);
+              emit(18, n^.desc.w6, ops, opt, 0);
+              unlock(opt);
+              address(templabel, 0, opt);
+              emit(20, 5, opt, cg_null_ads, 5);
+              cc := 2;
+              range := true;
+            end;
+            s.y := s.y + n^.desc.size;
+          end;
+        end;
+        emit(66, sz, s, ops, 0);
+        release(s);
+      end
+      else begin
+        e := n^.opnd[1];
+        if e^.kind in [77..87, 101, 200] then begin
+          inst := rshft(bits - e^.xw[5], 3);
+          anyconst(e^.xl[2], n^.desc.w6, ops);
+        end
+        else begin
+          load_operand(smcontk(81, bits), n^.desc.w6, opr);
+          load_operand(n^.opnd[1], n^.desc.w6, ops);
+          emit(2, n^.desc.w6, opr, ops, 0);
+          kill_register(opr.f2);
+          if (n^.desc.flags & 16#400) <> 0 then begin
+            address(templabel, 0, opt);
+            emit(20, 5, opt, cg_null_ads, 5);
+            cc := 14;
+            range := true;
+          end;
+          shift(opr, n^.desc.w6, 3, 2);
+        end;
+        load_address(n^.opnd[2], s);
+        if n^.desc.w8 < 0 then begin
+          emit(18, n^.desc.w6, ops, cg_zero_ads, 0);
+          cc := 2;
+        end;
+        if n^.opnd[1]^.kind in [77..87, 101, 200] then begin
+          s.y := s.y + inst;
+          s.f1 := 2;
+        end
+        else begin
+          s.f1 := 4;
+          s.f3 := opr.f2;
+          if n^.desc.w6 = 4 then
+            s.f5 := s.f5 ! 2
+          else
+            s.f5 := s.f5 & ~2;
+          release(opr);
+        end;
+        emit(17, 1, s, ops, 0);
+        s.f3 := 31;
+        unlock(s);
+        if range then
+          kill_register(s.f2);
+      end;
+      release(ops);
+    end;
+    if n^.kind <> 143 then
+      get_register(il_$node_ptr_t(n), 1, res);
+    if range then begin
+      emit(32, 5, opt, cg_null_ads, 0);
+      release(opt);
+    end;
+    if abs(n^.desc.w8) = 7 then
+      cc := reverse_cc(cc);
+    if n^.desc.w8 < 0 then
+      n^.desc.w8 := -cc
+    else
+      n^.desc.w8 := cc;
+    if n^.kind <> 143 then begin
+      emit(19, 1, res, cg_null_ads, cc);
+      unlock(res);
+    end;
+  end;
+
+  { bit_set_proc - bits set in a word (operator 25): with three operands
+    the bits opnd[2] .. opnd[3] of opnd[1] set (a mask built in a
+    register from 1 shifted by the bounds, constant bounds folded), the
+    mask itself when opnd[1] is the constant 0, else or'ed (emit 4)
+    into the result; with two, bit opnd[2] of opnd[1] set (emit 14, a
+    `bset').
+
+    0x100DBC, 0x41C bytes: movewlx's constants' set (0x0FFE4C); the 1 a
+    constant node (smcontk 81); the constant mask by `lsl.l' of a frame
+    copy of the count; shift's count and x pushed as one longword
+    (0x00010003). }
+
+  procedure bit_set_proc(
+      n: cg_tree_ptr_t); options(val_param);
+  var
+    m2: codegen_$uads_t;
+    m: codegen_$uads_t;
+    b: codegen_$uads_t;
+    res: codegen_$uads_t;
+    sh: integer32;
+    mask: integer32;
+  begin
+    if n^.count = 3 then begin
+      if n^.opnd[3]^.kind in [77..87, 101, 200] then begin
+        sh := n^.opnd[3]^.xl[2] + 1;
+        mask := lshft(1, sh);
+        load_operand(smcontk(81, 1), n^.desc.rlen, m);
+        load_operand(n^.opnd[2], n^.desc.w6, b);
+        emit(13, n^.desc.rlen, m, b, 3);
+        release(b);
+        kill_register(m.f2);
+        emit(11, n^.desc.rlen, m, cg_null_ads, 0);
+        if mask <> 0 then begin
+          anyconst(mask, n^.desc.rlen, b);
+          emit(1, n^.desc.rlen, m, b, 0);
+          unlock(b);
+        end;
+      end
+      else if n^.opnd[2]^.kind in [77..87, 101, 200] then begin
+        mask := lshft(1, n^.opnd[2]^.xl[2]);
+        load_operand(smcontk(81, 1), n^.desc.rlen, m);
+        load_operand(n^.opnd[3], n^.desc.w6, b);
+        emit(13, n^.desc.rlen, m, b, 3);
+        shift(m, n^.desc.rlen, 1, 3);
+        release(b);
+        kill_register(m.f2);
+        if mask <> 0 then begin
+          anyconst(mask, n^.desc.rlen, b);
+          emit(2, n^.desc.rlen, m, b, 0);
+          unlock(b);
+        end;
+      end
+      else begin
+        load_operand(smcontk(81, 1), n^.desc.rlen, m);
+        kill_register(m.f2);
+        load_operand(n^.opnd[3], n^.desc.w6, b);
+        emit(13, n^.desc.rlen, m, b, 3);
+        shift(m, n^.desc.rlen, 1, 3);
+        release(b);
+        load_operand(smcontk(81, 1), n^.desc.rlen, m2);
+        kill_register(m2.f2);
+        load_operand(n^.opnd[2], n^.desc.w6, b);
+        emit(13, n^.desc.rlen, m2, b, 3);
+        release(b);
+        emit(2, n^.desc.rlen, m, m2, 0);
+        release(m2);
+      end;
+      if (n^.opnd[1]^.kind in [77..87, 101, 200]) and
+          (n^.opnd[1]^.xl[2] = 0) then
+        setresult(m.f2, il_$node_ptr_t(n), n^.desc.rlen)
+      else begin
+        load_result(il_$node_ptr_t(n), -1, res);
+        emit(4, n^.desc.rlen, res, m, 0);
+        unlock(res);
+      end;
+      unlock(m);
+    end
+    else begin
+      load_result(il_$node_ptr_t(n), -1, res);
+      load_operand(n^.opnd[2], n^.desc.w6, b);
+      emit(14, n^.desc.rlen, res, b, 0);
+      release(b);
+      unlock(res);
+    end;
+  end;
+
+  { unpack_proc - a bit field of opnd[1] (width desc.w8 at bit offset
+    opnd[2]; flags bit 14 signed) as a value of class rlen: a constant
+    offset beyond the first byte moved to the next byte; a byte at bit
+    0 moved (cleared first unless signed, sign-extended when signed);
+    with the 68020's bit fields (cpu 3) and an operand they take (not a
+    register but D0..D7) a `bfexts' or `bfextu' (emit 64, 65; a variable
+    offset in a register, mode 14); else the unit holding the field
+    moved, masked (genmask: emit 3) and shifted right (shift, x 2), or,
+    signed or at a variable offset, shifted left to the top (x 3, emit
+    13) and right (x 0 arithmetic, x 2 logical; s_extend).
+
+    0x1011D8, 0x3E6 bytes: movewlx's constants' set (0x0FFE4C); the
+    offset the constant's word at +10; M020 bit 5 of 0x2C3671; the
+    modes [1, 3, 8, 9] as the longword mask 0x30A, the data registers
+    0xFF; the sums and classes compared unsigned (`bhi', `bls', `bcs').
+
+    Not known from the original:
+    - the bit field's size for a variable offset (the frame word at -64
+      is not set on that path). }
+
+  procedure unpack_proc(
+      n: cg_tree_ptr_t); options(val_param);
+  var
+    c: codegen_$uads_t;
+    t: codegen_$uads_t;
+    bsz: integer;
+    off: integer;
+    rs: integer;
+    bits: integer;
+    hi: integer;
+    sz: integer;
+    cnst: boolean;
+  begin
+    if n^.opnd[2]^.kind in [77..87, 101, 200] then begin
+      cnst := true;
+      off := n^.opnd[2]^.xw[5];
+    end
+    else
+      cnst := false;
+    address(n^.opnd[1], 0, opr);
+    get_register(il_$node_ptr_t(n), n^.desc.rlen, ops);
+    if cnst then
+      if (off >= 8) and (off + n^.desc.w8 <= 16) then begin
+        off := off - 8;
+        opr.y := opr.y + 1;
+      end;
+    if cnst and (off = 0) and (n^.desc.w8 = 8) then begin
+      if ((n^.desc.flags & 16#4000) = 0) and (n^.desc.rlen > 1) then begin
+        anyconst(0, n^.desc.rlen, c);
+        emit(0, n^.desc.rlen, ops, c, 0);
+        unlock(c);
+      end;
+      emit(0, 1, ops, opr, 0);
+      if (n^.desc.flags & 16#4000) <> 0 then
+        s_extend(ops, 1, n^.desc.rlen);
+    end
+    else if (3 in cargs_$options.cpu) and
+        (not (opr.f1 in [1, 3, 8, 9]) or
+         ((opr.f1 = 1) and (opr.f2 in [0..7]))) then begin
+      opr.x := integer32(n);
+      if cnst then begin
+        if off + n^.desc.w8 > 16 then
+          bsz := 4
+        else
+          bsz := 2;
+      end
+      else begin
+        load_operand(n^.opnd[2], 4, t);
+        ops.f3 := t.f2;
+        ops.f1 := 14;
+      end;
+      if (n^.desc.flags & 16#4000) <> 0 then
+        emit(64, bsz, ops, opr, 0)
+      else
+        emit(65, bsz, ops, opr, 0);
+      if ops.f1 = 14 then begin
+        release(t);
+        ops.f1 := 1;
+      end;
+    end
+    else begin
+      if cnst then begin
+        hi := off + n^.desc.w8;
+        sz := 2;
+        if hi > 16 then
+          sz := 4
+        else if hi <= 8 then
+          sz := 1;
+      end
+      else
+        sz := n^.desc.w6;
+      bits := sz * 8;
+      rs := sz;
+      if n^.desc.rlen > sz then
+        rs := n^.desc.rlen;
+      if cnst and ((n^.desc.flags & 16#4000) = 0) then begin
+        if (off <> 0) or (rs <> sz) then begin
+          anyconst(genmask(off, hi, bits), rs, opt);
+          emit(0, rs, ops, opt, 0);
+          unlock(opt);
+          emit(3, sz, ops, opr, 0);
+        end
+        else
+          emit(0, sz, ops, opr, 0);
+        shift(ops, rs, bits - hi, 2);
+      end
+      else begin
+        if (n^.desc.flags & 16#4000) = 0 then begin
+          anyconst(0, n^.desc.rlen, c);
+          emit(0, n^.desc.rlen, ops, c, 0);
+          unlock(c);
+        end;
+        emit(0, sz, ops, opr, 0);
+        if cnst then
+          shift(ops, sz, off, 3)
+        else begin
+          load_operand(n^.opnd[2], 1, t);
+          emit(13, sz, ops, t, 3);
+          release(t);
+        end;
+        if (n^.desc.flags & 16#4000) <> 0 then begin
+          shift(ops, sz, bits - n^.desc.w8, 0);
+          s_extend(ops, sz, n^.desc.rlen);
+        end
+        else
+          shift(ops, sz, bits - n^.desc.w8, 2);
+      end;
+    end;
+    release(opr);
+    unlock(ops);
+  end;
+
   { shift_proc - a shift tree (operators 27, 28, 49, 50: how, shift's
     and emit's x): by a constant count with shift, else by a count in a
     register (emit 13).
@@ -1929,8 +2359,14 @@ begin
       end;
   end;
   case n^.op of
+    11:
+      bit_test_proc(n);
+    14:
+      unpack_proc(n);
     19, 20, 21:
       set_ops(n);
+    25:
+      bit_set_proc(n);
     27:
       shift_proc(n, 3);
     28:
