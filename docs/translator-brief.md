@@ -98,6 +98,12 @@ Language reference:
     the unit's own heading is not consulted.  When you define a routine
     whose insert heading has placeholder names (p1, p4, ...), correct
     the heading (and its callers) rather than renaming in the body.
+  - **Regions a gap rewrite removes are not checked by the gate.**  Also
+    run `dpc --check-only --root ~/src/domainos-archeology/source/tmp/coff_compare/root -I $PWD FILE.pas`
+    on the unrewritten file: it stops before code generation, so it
+    type-checks everything; any error that is not one of the logged
+    gaps' messages is a real mistake.  (A merge found two calls and a
+    renamed field hidden in a gap-25 region.)
   - **objdump prints indexed displacements in hex without `0x`**:
     `%a5@(12,%d1:l)` is 0x12, while a plain `%fp@(12)` is decimal 12.
     `tools/cc_dis.py` now rewrites the indexed ones as `0x12`/`-0x11`;
