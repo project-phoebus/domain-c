@@ -487,3 +487,19 @@ cc.m68k unless marked.
     it, though the copy is not used again.  (A record value parameter
     without val_param is passed by address and copied, which dpc does
     too; the restore is the source's.)
+## Data (translator V, the optimizer)
+
+65. **Another unit's cells reached as fields of a record.**  opt_select
+    (resetserial 0x0E56E8, select_block_list 0x0E582E, select_loop
+    0x0E593A), opt_cse (cse_$cleanup_phase 0x0D4EAA) and kfold
+    (node_number 0x0AD156) load the address of il.pas's +0xC0
+    (`movea.l #0x169D30,A3') and reach il_11c, il_120 and il_124 as
+    (92,A3), (96,A3), (100,A3), as a `with' over a record variable
+    compiles; other units reach the same cells absolutely
+    (`movea.l 0x169D8C,A0').  il.ins.pas declares separate variables
+    (docs/questions.md 79); dpc addresses each absolutely.
+66. **A table indexed by two booleans.**  opt_cse's rel_tab (its data
+    +0, initialized -1, 1, 2, 0) is read as `seq; lsr.b #7' of each
+    test, the first index shifted by 2 and the second doubled
+    (cse_$is_cseable 0x0D52DC): `array [boolean, boolean] of integer'
+    with false the first element.
