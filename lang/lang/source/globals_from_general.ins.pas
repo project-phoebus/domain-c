@@ -24,14 +24,15 @@
   earlier insert of the prelude) declared each name; every name given
   by offset. }
 
-{ PUTOBJ - iosub.pas 0x0B5FD0 (cc.a88k likewise in iosub): 8 a
-  longword (added to the object's current size), 12 a pointer (its
-  address taken); 81 call sites (coff_syms, debug_sym_dmp, gen_debug,
-  gen_unwind, outbin, unix_objmod open iosub.ins.pas; gen_exception does
-  not), which read A0. }
+{ PUTOBJ - map len bytes of the object file at offset from its current
+  offset, to write.  iosub.pas 0x0B5FD0 (cc.a88k likewise in iosub): 8
+  a longword (added to the object file's current offset), 12 a longword
+  (its slot passed to obj_$put as the length); 81 call sites
+  (coff_syms, debug_sym_dmp, gen_debug, gen_unwind, outbin, unix_objmod
+  open iosub.ins.pas; gen_exception does not), which read A0. }
 function putobj(
-    len: integer32;
-    p: univ_ptr): univ_ptr; options(val_param); extern;
+    offset: integer32;
+    len: integer32): univ_ptr; options(val_param); extern;
 
 { OPT_STR_$SET_SUBSTITUTION_POINT, OPT_STR_$ADD_SUBSTITUTION_POINT -
   opt_strength.pas 0x0E6656, 0x0E66B6 (cc.m68k): two addresses;

@@ -1271,10 +1271,10 @@ begin
     indexl := false;
 %endif
     subchk := false;
-    b27b_1 := false;
+    i_star_2 := false;
     b27b_0 := false;
-    x27c_7 := 10;
-    b27c_3 := false;
+    l_star := 10;
+    save := false;
     std := false;
     b27c_1 := false;
     cond := false;
@@ -1305,13 +1305,13 @@ begin
     if my_compiler = 1 then
       flags_286 := flags_286 + [6];
     x289 := 123;
-    b28a_7 := false;
+    uc := false;
     if my_compiler in [1, 3, 5] then
-      b28a_6 := true
+      u := true
     else
-      b28a_6 := false;
-    b28a_5 := false;
-    b28a_4 := false;
+      u := false;
+    ff := false;
+    lcinc := false;
     b28a_3 := false;
     alnchk := false;
     b28a_1 := false;

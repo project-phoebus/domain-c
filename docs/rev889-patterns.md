@@ -224,3 +224,30 @@ cc.m68k unless marked.
     results in a frame byte (`move.b D0,(-54,A6); ... or.b (-54,A6),D0')
     and branches once; cc.a88k's -VENDOR/-PRASM (0x0B794A) branches
     after the first (`bmi').
+## Constants (translator I, iosub.pas)
+
+30. **By-address constants pooled across a unit's routines.**  A
+    constant passed by address is one word or longword after some
+    routine, and other routines of the unit point at the same copy
+    whatever its type: iosub.pas's word 0 after open_src_file
+    (0x0B515C) is the empty open options of ios_$open, the empty
+    put/get options of ios_$put and ios_$get and ios_$current of
+    ios_$inq_short_key in seven routines; the word 2 at 0x0B55C4 is
+    [ios_$write_opt] for ios_$create, `false' (its first byte) for
+    ios_$set_obj_flag and stream 2 for typeln's vfmt_$ws2; the word 4
+    at 0x0B61E8 is open_include_file's severity and
+    iosub_$get_full_path_name's ios_$root_name.  An enumerated or set
+    constant is a word.  dpc puts a copy after each routine.
+31. **The empty string passed by the next routine's address.**  ''
+    with length 0 (stream_error's error_exit(status, '', 0), 0x0B50C4;
+    open_binary_file's build_name) is `pea' of the address just after
+    the routine's code, the next routine's entry: the literal has no
+    bytes.
+32. **A function's result left in A0 from a call.**  When the result
+    variable holds a callee's A0 and A0 is not reused, the function
+    ends without moving it to A0 again: celpkg.pas getlabcell (0x0B648E:
+    getcodecell's cell kept in A0 through the stores, no `movea.l' at
+    the end; its callers read A0), gen_exception.pas allocate (0x079FC6:
+    putobj's address stored in a frame slot and A0 left as it is) and
+    gen_exception_$new_exception (mrh_$alloc's).  dpc reloads the
+    result.
