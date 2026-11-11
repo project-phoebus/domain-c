@@ -364,3 +364,10 @@ lang/lang/source/list_tree.pas	s/sanity_check_walk_spine\(mode, t\^\.opnd\[i\]\)
 lang/lang/source/list_tree.pas	s/^(\s*)procedure sanity_check_walk_spine;/${1}procedure sanity_check_walk_spine(mode: integer32; t: lt_ptr_t); options(val_param);/
 # gap 29 (list_tree): in on a 32-byte set with a longword element (the range test only, for the check)
 lang/lang/source/list_tree.pas	s/\(i in t\^\.st_used\^\)/(i <= 255) { gap 29 }/
+# gap 8 (instr_reorder): in on constant sets of 0..63 with word elements (compare chains)
+lang/lang/source/instr_reorder.pas	s/c\^\.kind in \[54\.\.58\]/(c^.kind >= 54) and (c^.kind <= 58) { gap 8 }/
+lang/lang/source/instr_reorder.pas	s/c\^\.kind in \[39\.\.44, 48, 50\.\.52\]/((c^.kind >= 39) and (c^.kind <= 44)) or (c^.kind = 48) or ((c^.kind >= 50) and (c^.kind <= 52)) { gap 8 }/
+lang/lang/source/instr_reorder.pas	s/\(c\^\.kind in \[0, 17, 18, 20\.\.27, 30\.\.34, 39, 51, 52\]\)/((c^.kind = 0) or (c^.kind = 17) or (c^.kind = 18) or ((c^.kind >= 20) and (c^.kind <= 27)) or ((c^.kind >= 30) and (c^.kind <= 34)) or (c^.kind = 39) or (c^.kind = 51) or (c^.kind = 52)) { gap 8 }/
+lang/lang/source/instr_reorder.pas	s/k in \[3, 16, 19, 28, 29, 43, 44, 47, 50\]/(k = 3) or (k = 16) or (k = 19) or (k = 28) or (k = 29) or (k = 43) or (k = 44) or (k = 47) or (k = 50) { gap 8 }/
+lang/lang/source/instr_reorder.pas	s/not \(c\^\.kind in \[22, 24, 27, 32, 33, 34\]\)/not ((c^.kind = 22) or (c^.kind = 24) or (c^.kind = 27) or ((c^.kind >= 32) and (c^.kind <= 34))) { gap 8 }/
+lang/lang/source/instr_reorder.pas	s/while p\^\.kind in \[0, 24, 32, 33\] do/while (p^.kind = 0) or (p^.kind = 24) or (p^.kind = 32) or (p^.kind = 33) do { gap 8 }/
