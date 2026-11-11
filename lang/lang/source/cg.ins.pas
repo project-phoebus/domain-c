@@ -27,6 +27,23 @@
   bodies. }
 
 type
+  { codegen.ins.pas's unpacked address descriptor, for a unit that opens
+    this insert first (opt_vector; globals.ins.pas's
+    codegen_uads_declared). }
+%if not codegen_uads_declared %then
+%enable codegen_uads_declared;
+  codegen_$uads_t = record
+    f1: integer;                        { +0 }
+    f2: integer;                        { +2 }
+    f3: integer;                        { +4 }
+    f4: integer;                        { +6 }
+    f5: integer;                        { +8 }
+    f6: integer;                        { +10 }
+    x: integer32;                       { +12 }
+    y: integer32;                       { +16 }
+  end;
+%endif
+
   { A value's descriptor in an IL tree node (+20; kfold.pas's kf_desc_t,
     c_objtype's c_desc_t): its size, its register class (rlen: 1 byte,
     2 word, 4 long, 5 address, 6 single, 7 double, 8 and 12 the

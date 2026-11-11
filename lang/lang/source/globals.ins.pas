@@ -10,6 +10,12 @@
   No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binaries.
 }
 
+{ Set by the first of codegen.ins.pas and cg.ins.pas a unit opens, which
+  declares codegen_$uads_t: opt_vector opens cg.ins.pas before
+  codegen.ins.pas, whose descriptor type cg.ins.pas's headings use.
+  Not in the original (its cg.ins.pas is not known). }
+%var codegen_uads_declared;
+
 %include 'ivory/volume_3/lang_pools/lang_68k_pool/dseemgrs/apollo/dervobjs/lang/glob_extern.ins.pas/h5eea9860.001/glob_extern.ins.plb.pas';
 %include 'lang/lang/source/glob_extern.ins.pas';
 %include 'lang/lang/source/real_globals.ins.pas';
