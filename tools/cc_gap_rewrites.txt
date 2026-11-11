@@ -154,3 +154,5 @@ lang/c_compiler/source/c_def_sem.pas	s/n\^\.kind in \[77\.\.90, 92, 93, 101, 156
 lang/c_compiler/source/c_def_sem.pas	s/w\^\.kind in \[80\.\.86, 200\]/((w^.kind >= 80) and (w^.kind <= 86)) or (w^.kind = 200) { gap 8 }/
 # gap 12 (c_stmt_sem): fnd_name's result (now il_$node_ptr_t) compared with il_178 (compared with nil, for the check)
 lang/c_compiler/source/c_stmt_sem.pas	s/if fnd_name\((m[cs]), true, false\) = il_178 then/if fnd_name($1, true, false) = nil then { gap 12 }/
+# gap 8 (c_syntax): in on a constant set with word elements (the comparisons)
+lang/c_compiler/source/c_syntax.pas	s/t1\^\.kind in \[77\.\.87, 101, 200\]/((t1^.kind >= 77) and (t1^.kind <= 87)) or (t1^.kind = 101) or (t1^.kind = 200) { gap 8 }/

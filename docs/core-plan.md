@@ -166,3 +166,10 @@ are named further (the options field at +374 a variant).  c_globals:
 cdef_44 is cdef_dynm_inits, cdef_4c cdef_fwd_ptrs.  attributes.ins.pas
 gets merge_attribs, merge_attribs_natural, attr_tattr_to_vattr,
 attr_validate, attr_compute_routine_options.
+
+Translator O, c_syntax (started): cc_walk_it takes the walker as a
+routine pointer (c_externs.ins.pas's c_walker_t, `^procedure(var n:
+il_$node_ptr_t)'), call_kfold confirmed; kfold and kfold_$general are
+declared in c_syntax.pas (no kfold insert is opened); us/us/ins
+fpp_errs.ins.pas and peb.ins.pas are new empty stubs.  The other 49
+routines are not written yet.

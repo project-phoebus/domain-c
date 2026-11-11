@@ -32,6 +32,10 @@ type
     warning_text (by address, with its length). }
   cerr_text_t = array [1..256] of char;
 
+  { What cc_walk_it applies to each tree (call_kfold): a routine
+    taking the tree by address. }
+  c_walker_t = ^procedure(var n: il_$node_ptr_t);
+
 { ERROR_TEXT - an error at line whose message is text (len
   characters), listed and typed with the usual header.  c_error.pas
   0x049AC0; c_lex_pp. }
@@ -505,18 +509,23 @@ function walk_tree(
 { SYNTAX - c_syntax.pas 0x0609D8 (cc.a88k 0x060C58). }
 procedure syntax; extern;
 
-{ CC_WALK_IT - apply walker to the tree t (by address).  c_syntax.pas
-  0x0661BC (cc.a88k 0x06643C): c_stmt_sem's add_cbranch and c_expr_sem
-  pass call_kfold's address (`move.l #0x066162'), written addr(...)
-  for a routine parameter (dpc has none yet: docs/dpc-gaps.md 21). }
+{ CC_WALK_IT - apply walker to the IL tree t (by address) and to each of
+  its operands' trees, before them when pre is set, else after; under
+  the logical operators (51 ?:, 52 ||, 53 &&) a constant first operand
+  decides the result (a one-character string taken as its character
+  first).  c_syntax.pas 0x0661BC (cc.a88k 0x06643C): c_stmt_sem's
+  add_cbranch and c_expr_sem pass call_kfold's address (`move.l
+  #0x066162'), a routine parameter in the original (ref 5.4); declared
+  as a routine pointer by value (the same frame) since dpc has no
+  routine parameters (docs/dpc-gaps.md 21). }
 procedure cc_walk_it(
     var t: il_$node_ptr_t;
-    walker: univ_ptr;
-    p16: boolean); options(val_param); extern;
+    walker: c_walker_t;
+    pre: boolean); options(val_param); extern;
 
-{ CALL_KFOLD - fold the constants of the tree n.  c_syntax.pas 0x066162
-  (cc.a88k 0x0663E2): no call site, its address passed to cc_walk_it;
-  one address parameter. }
+{ CALL_KFOLD - fold the constants of the tree n (kfold with no parent).
+  c_syntax.pas 0x066162 (cc.a88k 0x0663E2): no call site, its address
+  passed to cc_walk_it. }
 procedure call_kfold(
     var n: il_$node_ptr_t); extern;
 
