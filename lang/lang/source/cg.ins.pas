@@ -303,6 +303,23 @@ procedure setobjcache(
     n: il_$node_ptr_t;
     size: integer); options(val_param); extern;
 
+{ GET_REGISTER - a register of size size for node n (nil: a scratch
+  register), its operand in a.  cg_addr 0x0F0C5A: 8 a pointer, 12 a
+  word, 14 the descriptor's address. }
+procedure get_register(
+    n: il_$node_ptr_t;
+    size: integer;
+    out a: codegen_$uads_t); options(val_param); extern;
+
+{ LOAD_MODIFIABLE - node n's value of size size loaded into a register
+  that may be changed, its operand in a.  cg_addr 0x0F11A8: 8 the
+  node's address, 12 the size's (load_dindex passes a constant), 16 the
+  descriptor's address. }
+procedure load_modifiable(
+    in n: il_$node_ptr_t;
+    in size: integer;
+    in out a: codegen_$uads_t); extern;
+
 { ---- cg_assign ---- }
 
 { CG_ASN_$BLOCK_MOVE - a loop moving count units of size from src to
@@ -394,6 +411,44 @@ procedure show_state; extern;
 
 procedure show_label(
     lab: il_$node_ptr_t); options(val_param); extern;
+
+{ AGG_LEN_LOOP_START - the head of a loop over an aggregate of the
+  length operand a addresses (the word moved to register r, plus 1,
+  shifted left 2), its label in lab.  cg_misc 0x0F9DB8: a's address (copied:
+  a value parameter), r's and lab's addresses. }
+procedure agg_len_loop_start(
+    a: codegen_$uads_t;
+    in out r: codegen_$uads_t;
+    in out lab: codegen_$uads_t); extern;
+
+{ AGG_LOOP_START, AGG_LOOP_END - the head and the end of a loop of
+  count iterations (`dbf' up to 65535, else a long count) in register
+  r, its label in lab.  cg_misc 0x0F9EB2, 0x0F9F4A: 8 a longword, 12
+  and 16 the descriptors' addresses. }
+procedure agg_loop_start(
+    count: integer32;
+    in out r: codegen_$uads_t;
+    in out lab: codegen_$uads_t); options(val_param); extern;
+
+procedure agg_loop_end(
+    count: integer32;
+    in out r: codegen_$uads_t;
+    in out lab: codegen_$uads_t); options(val_param); extern;
+
+{ GENMASK - a mask of the bits lo + 1 .. n, set up to hi (from the
+  most significant).  cg_misc 0x0FA012: three words; D0 a longword. }
+function genmask(
+    lo: integer;
+    hi: integer;
+    n: integer): integer32; options(val_param); extern;
+
+{ SHIFT - operand a of size size shifted by count (how: 2 left, 3 ...).
+  cg_misc 0x0FA050: 8 the descriptor's address, 12, 14, 16 words. }
+procedure shift(
+    in out a: codegen_$uads_t;
+    size: integer;
+    count: integer;
+    how: integer); options(val_param); extern;
 
 { REVERSE_CC - the opposite condition of cc.  cg_misc 0x0F9BEE: a word;
   D0. }

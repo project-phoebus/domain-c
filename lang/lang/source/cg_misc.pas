@@ -13,16 +13,19 @@
     0x0F9C16  --------  unaligned
     0x0F9CD0  --------  zero_check
     0x0F9D24  --------  s_extend
+    0x0F9DB8  --------  agg_len_loop_start
+    0x0F9EB2  --------  agg_loop_start
+    0x0F9F4A  --------  agg_loop_end
+    0x0FA012  --------  genmask
     A5 0x356310 (cc.m68k): +0 the label templabel gives while
     at_backend_506 is false (cg_top's f_initialize sets it).
 
   Every routine loads A5 (global).
 
-  TODO(pascal) cg_misc is started: 7 of its 24 routines are written
+  TODO(pascal) cg_misc is started: 11 of its 24 routines are written
   (show_state, show_label, templabel, reverse_cc, unaligned,
-  zero_check, s_extend); agg_len_loop_start (0x0F9DB8), agg_loop_start
-  (0x0F9EB2), agg_loop_end (0x0F9F4A), genmask (0x0FA012), shift
-  (0x0FA050), agg_opr (0x0FA27E), fill (0x0FA410), cbuiltin_strcpy
+  zero_check, s_extend, agg_len_loop_start, agg_loop_start,
+  agg_loop_end, genmask); shift (0x0FA050), agg_opr (0x0FA27E), fill (0x0FA410), cbuiltin_strcpy
   (0x0FA580), cbuiltin_strncpy (0x0FA67C), cbuiltin_strcat (0x0FA95A),
   cbuiltin_strncat (0x0FAAFC), cbuiltin_strlen (0x0FAD8A),
   cg_misc_$strcmp_can_use_longs (0x0FAEF0), cg_misc_$strcmp_by_longs
@@ -61,7 +64,7 @@ type
 define
   cg_misc_label,
   show_state, show_label, templabel, reverse_cc, unaligned, zero_check,
-  s_extend;
+  s_extend, agg_len_loop_start, agg_loop_start, agg_loop_end, genmask;
 
 { show_state - the pass, the line (and its file when not the main one),
   then each data and address register holding an object: its name,
@@ -282,4 +285,99 @@ begin
         emit(30, 4, a, cg_null_ads, 0);
     end;
   end;
+end;
+
+{ agg_len_loop_start - the head of a loop over an aggregate whose length
+  operand a addresses: the length (a word at a, as d(An) of 0) moved to
+  a scratch register r, plus 1 (1), shifted left 2, and a new label's
+  address (32) in lab.
+
+  0x0F9DB8, 0xFA bytes: a copied to a local (a value parameter); its
+  mode and y kept and put back around the move; get_register(nil, 2,
+  r). }
+
+procedure agg_len_loop_start;
+var
+  f1: integer;
+  y: integer32;
+begin
+  get_register(nil, 2, r);
+  f1 := a.f1;
+  y := a.y;
+  a.f1 := 2;
+  a.y := 0;
+  emit(0, 2, r, a, 0);
+  a.f1 := f1;
+  a.y := y;
+  address(smcontk(81, 2), 0, lab);
+  emit(1, 2, r, lab, 0);
+  unlock(lab);
+  shift(r, 2, 2, 2);
+  address(templabel, 0, lab);
+  emit(32, 5, lab, cg_null_ads, 0);
+end;
+
+{ agg_loop_start - the head of a loop of count iterations: the count
+  (a word up to 65535, else a long) loaded into a modifiable register r
+  (its contents forgotten), a new label's address (32) in lab.
+
+  0x0F9EB2, 0x98 bytes: the size and the constant's node passed by
+  address from locals. }
+
+procedure agg_loop_start;
+var
+  size: integer;
+  k: il_$node_ptr_t;
+begin
+  if count > 65535 then
+    size := 4
+  else
+    size := 2;
+  k := smcontk(81, count);
+  load_modifiable(k, size, r);
+  kill_register(r.f2);
+  address(templabel, 0, lab);
+  emit(32, 5, lab, cg_null_ads, 0);
+end;
+
+{ agg_loop_end - the end of agg_loop_start's loop: `dbf' (28, x 1) up to
+  65535, else a subtraction of 1 (2) and the branch back (20, x 10);
+  the registers released.
+
+  0x0F9F4A, 0xC8 bytes. }
+
+procedure agg_loop_end;
+var
+  t: codegen_$uads_t;
+begin
+  if count <= 65535 then
+    emit(28, 2, lab, r, 1)
+  else begin
+    address(smcontk(81, 1), 4, t);
+    emit(2, 4, r, t, 0);
+    emit(20, 5, lab, cg_null_ads, 10);
+    release(t);
+  end;
+  release(lab);
+  release(r);
+end;
+
+{ genmask - the bits lo + 1 .. n, from the most significant, set for
+  those up to hi.
+
+  0x0FA012, 0x3E bytes: `dbf' over n - lo; an unsigned compare with
+  hi. }
+
+function genmask;
+var
+  m: integer32;
+  i: integer;
+begin
+  m := 0;
+  for i := lo + 1 to n do begin
+    m := lshft(m, 1);
+    if i <= hi then
+      m := m + 1;
+  end;
+  genmask := m;
 end;
