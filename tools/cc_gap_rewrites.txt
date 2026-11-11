@@ -283,3 +283,5 @@ lang/lang/source/cg_call.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d.
 lang/lang/source/cg_call.pas	if ((/^  \{ The registers and objects the call may change\. \}/ .. /^  \{ The result.s register\. \}/) && !/The result.s register/) { $_ = "  { gap 28 }\n" }
 # gap 8 (cg_misc): in on constant sets with word elements (the comparisons)
 lang/lang/source/cg_misc.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d., ]+)\]}{my $v=$1; "(".join(" or ", map { /^(\d+)\.\.(\d+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $_)" } split(/,\s*/, $2)).") { gap 8 }"}ge
+# gap 7 (cg_misc): a real constant in a comparison (the double tested by its longwords, for the check)
+lang/lang/source/cg_misc.pas	s/n\^\.real_value <> 0\.0/(n^.bits[1] <> 0) or (n^.bits[2] <> 0) { gap 7 }/

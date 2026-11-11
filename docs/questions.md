@@ -547,3 +547,23 @@ revisited.
    18, 20, 22, 23 push an address, 24 jsr, 28 dbf, 30 ext, 31 bsr, 32
    lea of a label, 36, 39, 61 extb) are numbers here; fnl_slct maps them
    with the size to opinfo's instructions.
+
+78. Translator U (2026-11-11), cg_misc: cg.ins.pas's cg_tree_188 is
+   renamed cg_zero_ads (cg_tree's +0x188, the immediate 0 operand):
+   agg_opr gives it (a 20-byte copy) for a constant of zero bytes,
+   strncpy and strncat store it to pad (`clr.b (An)+'), shift `and's a
+   word with it to clear it, and the tests compare with it (18);
+   cg_fp's two uses follow.  cg_tree.pas must `define' it under the new
+   name.  emit's generic instructions read in cg_misc add to question
+   77's list: 3 and, 12 not, 13 a shift (x its kind: 0 arithmetic
+   right, 2 logical right, 1 and 3 left), 18 compare or test, 20 a
+   conditional branch whose x is the 68000's condition code (6 NE, 7
+   EQ, 11 MI, 15 LE: reverse_cc pairs them), 21 branch, 29 swap.
+   Rename the generic instructions as constants when emit or fnl_slct
+   is translated?
+
+79. cg_misc: cg.ins.pas's new cg_count_t (0..65535) types shift's count
+   and how and fill's len: the image zero-extends them to longwords
+   and compares them unsigned.  A parameter's type must be a type name
+   in dpc (and the reference), so the subrange is named.  Keep, or
+   use a base type of the original's (linteger-like)?

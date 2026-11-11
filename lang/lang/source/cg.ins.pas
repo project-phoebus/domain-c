@@ -59,6 +59,10 @@ type
     opnd: array [1..64] of il_$node_ptr_t;  { +40: from 1 }
   end;
 
+  { A count, size or shift kind of up to 65535 (word parameters that
+    are zero-extended and compared unsigned: shift, fill). }
+  cg_count_t = 0..65535;
+
   { A node's words by offset (word k at +2k), for the blocks' fields
     beyond il_$node_t's xw (a routine block's +394, +396 parameter
     classes). }
@@ -135,9 +139,13 @@ var
                                           it) }
 
   { cg_tree's cells (A5 0x356460). }
-  cg_tree_188: extern codegen_$uads_t;  { +0x188 (0x3565E8): set at run
-                                          time; the PEB's status operand
-                                          (test_peb_busy) }
+  cg_zero_ads: extern codegen_$uads_t;  { +0x188 (0x3565E8): set at run
+                                          time; the immediate 0 (cg_misc's
+                                          agg_opr gives it for an all-zero
+                                          constant, strncpy stores it to
+                                          pad, shift ands with it to
+                                          clear a word; compared with
+                                          it, a test) }
   cg_null_ads: extern codegen_$uads_t;  { +0x1A0 (0x356600): .rwdi sets
                                           f2 and f3 to 31 (no register),
                                           the rest 0: no operand }
@@ -442,17 +450,60 @@ function genmask(
     hi: integer;
     n: integer): integer32; options(val_param); extern;
 
-{ SHIFT - operand a of size size shifted by count (how: 2 left, 3 ...).
-  cg_misc 0x0FA050: 8 the descriptor's address, 12, 14, 16 words. }
+{ SHIFT - operand a of size size shifted by count (how, emit's x: 0
+  arithmetic right, 2 logical right, 1 and 3 left, as its forms for
+  16 and for 1 show).  cg_misc 0x0FA050: 8 the descriptor's address,
+  12, 14, 16 words (count and how zero-extended, compared unsigned). }
 procedure shift(
     in out a: codegen_$uads_t;
     size: integer;
-    count: integer;
-    how: integer); options(val_param); extern;
+    count: cg_count_t;
+    how: cg_count_t); options(val_param); extern;
 
-{ CBUILTIN_STRCPY - the inline code of strcpy tree n (a byte loop).
-  cg_misc 0x0FA580: a pointer (cg_assign's assign_proc). }
+{ AGG_OPR - the operand of aggregate node n for a block operation: the
+  immediate 0 or a replicated byte for a constant of identical bytes,
+  else its address in an address register as (An)+.  cg_misc 0x0FA27E:
+  8 a pointer, 12 the descriptor's address (cg_assign's agg_assign_proc,
+  cg_tree's agg_compare_proc). }
+procedure agg_opr(
+    n: il_$node_ptr_t;
+    out a: codegen_$uads_t); options(val_param); extern;
+
+{ FILL - len bytes at node n's address set to value.  cg_misc 0x0FA410:
+  8 a pointer, 12 a longword, 16 a word (compared unsigned; cg_tree's
+  generate). }
+procedure fill(
+    n: il_$node_ptr_t;
+    value: integer32;
+    len: cg_count_t); options(val_param); extern;
+
+{ CBUILTIN_STRCPY, CBUILTIN_STRNCPY, CBUILTIN_STRCAT, CBUILTIN_STRNCAT -
+  the inline code of the string builtin of tree n (byte loops; the
+  operands at +60, +64 and the count at +68).  cg_misc 0x0FA580,
+  0x0FA67C, 0x0FA95A, 0x0FAAFC: a pointer (cg_assign's assign_proc). }
 procedure cbuiltin_strcpy(
+    n: il_$node_ptr_t); options(val_param); extern;
+
+procedure cbuiltin_strncpy(
+    n: il_$node_ptr_t); options(val_param); extern;
+
+procedure cbuiltin_strcat(
+    n: il_$node_ptr_t); options(val_param); extern;
+
+procedure cbuiltin_strncat(
+    n: il_$node_ptr_t); options(val_param); extern;
+
+{ CBUILTIN_STRLEN, CBUILTIN_STRCMP, CBUILTIN_STRNCMP - the inline code
+  of the string builtin of tree n (its operands opnd[1..3]), its value
+  left in a data register (setresult).  cg_misc 0x0FAD8A, 0x0FB42C,
+  0x0FB7D6: a pointer (cg_tree's generate). }
+procedure cbuiltin_strlen(
+    n: il_$node_ptr_t); options(val_param); extern;
+
+procedure cbuiltin_strcmp(
+    n: il_$node_ptr_t); options(val_param); extern;
+
+procedure cbuiltin_strncmp(
     n: il_$node_ptr_t); options(val_param); extern;
 
 { CG_MISC_$STRCMP_CAN_USE_LONGS - neither string operand of the strcmp
