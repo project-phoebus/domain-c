@@ -425,8 +425,15 @@ def pick_unit(coff, prog, want=None):
     (the file's own name); the only one when the binary has one."""
     units = coff.units()
     key = (want or prog).lower()
-    hits = [u for u in units if u['source'] and
-            os.path.splitext(u['source'].split('/')[-1])[0].lower() == key]
+    if '/' in key:
+        # a path less `.pas' (two units of one name: lang/lang/source/
+        # token.pas and lang/common/source/token.pas)
+        hits = [u for u in units if u['source'] and
+                os.path.splitext(u['source'])[0].lower().endswith('/' + key.lstrip('/'))]
+        key = key.split('/')[-1]
+    else:
+        hits = [u for u in units if u['source'] and
+                os.path.splitext(u['source'].split('/')[-1])[0].lower() == key]
     if len(hits) == 1:
         return hits[0]
     if len(units) == 1 and not want:

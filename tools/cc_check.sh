@@ -32,7 +32,9 @@ for f in "$@"; do
     printf '%s\n' "$rules" | while IFS= read -r r; do perl -pi -e "$r" "$src"; done
   fi
   for bin in $m68k $a88k; do
-    out=$(python3 tools/coff_compare.py --binary "$bin" "$src" -- -I "$here" 2>&1)
+    # the unit by its path (two units are named token.pas)
+    unit=${f#./}
+    out=$(python3 tools/coff_compare.py --binary "$bin" --unit "${unit%.pas}" "$src" -- -I "$here" 2>&1)
     rc=$?
     case "$out" in
       *"no single unit"*) continue ;;
