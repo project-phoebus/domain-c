@@ -785,7 +785,7 @@ begin
       discard(coerce(tt, cexs_23bc, true));
     end;
   init_aux(aux, cexs_stack[cexs_23bc].typ);
-  add_tn(17, addr(aux), cexs_23bc, cexs_23bc);
+  add_tn(17, aux, cexs_23bc, cexs_23bc);
   add_eval(cexs_23bc, cexs_23bc);
   c.first := il_d8;
   c.x4 := il_178;
@@ -1021,7 +1021,7 @@ begin
           d.size := 4
         else if k = 7 then
           d.size := 8;
-        t^.opnd[i] := buildtreenode(op, addr(d), addr(opl), 1);
+        t^.opnd[i] := buildtreenode(op, d, opl, 1);
         c_tree_ptr_t(t^.opnd[i])^.w16 := 0;
       end;
     end;
@@ -1453,7 +1453,7 @@ begin
       d.w6 := c_sym_ptr_t(rhs)^.var_sect^.int_value;
       cexs_23bc := cexs_23bc + 1;
       cexs_stack[cexs_23bc].node := a.opnd[2];
-      add_tn(18, addr(d), cexs_23bc, cexs_23bc);
+      add_tn(18, d, cexs_23bc, cexs_23bc);
       a.opnd[2] := cexs_stack[cexs_23bc].node;
       cexs_23bc := cexs_23bc - 1;
     end;
@@ -1468,7 +1468,7 @@ begin
       d.w6 := tt.size;
       cexs_23bc := cexs_23bc + 1;
       cexs_stack[cexs_23bc].node := a.opnd[2];
-      add_tn(18, addr(d), cexs_23bc, cexs_23bc);
+      add_tn(18, d, cexs_23bc, cexs_23bc);
       a.opnd[2] := cexs_stack[cexs_23bc].node;
       cexs_23bc := cexs_23bc - 1;
     end;
@@ -1526,14 +1526,14 @@ begin
     if (d.rlen = 6) or (d.rlen = 7) then begin
       if cargs_$options.cpu * [0, 1] <> [] then begin
         e.rlen := 2;
-        add_tn(18, addr(e), top, top);
+        add_tn(18, e, top, top);
         e.rlen := d.rlen;
         e.w6 := 2;
       end;
-      add_tn(39, addr(e), top, top);
+      add_tn(39, e, top, top);
     end
     else
-      add_tn(18, addr(e), top, top);
+      add_tn(18, e, top, top);
   end;
   extend_boolean := cexs_stack[top].node;
 end;
@@ -1596,10 +1596,10 @@ begin
          (c_tree_ptr_t(node)^.desc.w8 = 6) then
         c_tree_ptr_t(node)^.desc.w8 := 7
       else
-        add_tn(8, addr(aux), cexs_23bc, cexs_23bc);
+        add_tn(8, aux, cexs_23bc, cexs_23bc);
     end;
   end;
-  add_tn(7, addr(aux), cexs_23bc, cexs_23bc);
+  add_tn(7, aux, cexs_23bc, cexs_23bc);
   a.opnd[2] := extend_boolean(d, cexs_23bc);
   cexs_23bc := cexs_23bc - 1;
   build_assign(a);
@@ -1719,7 +1719,7 @@ begin
         init_aux(aux, typ);
         if not ((node^.kind = 82) or (node^.kind = 81) or
                 (node^.kind = 80)) then begin
-          add_tn(7, addr(aux), cexs_23bc, cexs_23bc);
+          add_tn(7, aux, cexs_23bc, cexs_23bc);
           a.opnd[2] := extend_boolean(d, cexs_23bc);
         end
         else if node^.int_value <> 0 then
@@ -2069,7 +2069,7 @@ begin
               cexs_stack[cexs_23bc].node := a^.opnd[1];
               cexs_23bc := cexs_23bc + 1;
               cexs_stack[cexs_23bc].node := smcontk(81, incr);
-              add_tn(13, addr(aux), cexs_23bc - 1, cexs_23bc);
+              add_tn(13, aux, cexs_23bc - 1, cexs_23bc);
               c_tree_ptr_t(cexs_stack[cexs_23bc].node)^.bits.post := true;
               n := cexs_stack[cexs_23bc].node;
               cexs_23bc := cexs_23bc - 1;
@@ -2090,7 +2090,7 @@ begin
               aux := r^.desc;
               if (node^.kind = 137) and (c_tree_ptr_t(node)^.op = 14) then
                 aux.rlen := c_tree_ptr_t(node)^.desc.rlen;
-              add_tn(17, addr(aux), cexs_23bc, cexs_23bc);
+              add_tn(17, aux, cexs_23bc, cexs_23bc);
               add_eval(cexs_23bc, cexs_23bc);
               res := node;
             end;
@@ -2163,7 +2163,7 @@ begin
               opl[1] := r^.opnd[2];
               aux.w6 := aux.rlen;
               aux.rlen := c_tree_ptr_t(parent)^.desc.rlen;
-              r^.opnd[2] := buildtreenode(39, addr(aux), addr(opl), 1);
+              r^.opnd[2] := buildtreenode(39, aux, opl, 1);
               c_tree_ptr_t(r^.opnd[2])^.w16 := 0;
             end;
           end;
