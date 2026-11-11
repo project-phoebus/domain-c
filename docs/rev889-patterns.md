@@ -185,3 +185,17 @@ cc.m68k unless marked.
 24. **A register known to hold a constant passed for it.**  obj_$put
     0x088D74 pushes `move.b D2' (searching, set true at entry and not
     changed on that path) for map_portion's constant `true'.
+## Nested routines
+
+25. **The parent's frame through the dynamic link.**  A nested routine
+    that only its parent calls takes the parent's frame from its own
+    saved A6 (`movea.l (A6),A2' after the `link') and its caller loads
+    no static link: c_sym_map's print_block (0x05FB4A; sym_map's call
+    0x0605C0 is `pea (A2); bsr.w') and print_addr_cons (0x0601BE),
+    c_macro_read's just_get_the_next_line_please (0x0574CC) and the
+    four routines nested in mr_$get_expanded_line (0x058034..0x0581E4).
+    A nested routine its siblings call too gets the static link in A1
+    (`movea.l A6,A1' or `movea.l A2,A1' before each `bsr'; c_sym_map's
+    print_10, print_type).  tools/cc_params.py marks the first kind
+    `nested'.  dpc passes the static link in A1 to every nested
+    routine.

@@ -1,6 +1,6 @@
 { us/us/ins/name.ins.pas - Apollo's internal NAME_ insert (//us/us/ins).
 
-  No copy survives.  objio.pas opens it and not the customer
+  No copy survives.  objio.pas and c_macro_read open it and not the customer
   /sys/ins/name.ins.pas, so it stands in by including that insert.  The declarations are the source repository's
   com/ins/name.ins.pas (what the SR10.2 /com/bind uses), which
   lang/bind/source's units call.

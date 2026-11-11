@@ -40,6 +40,11 @@ procedure typeln(
 procedure listln(
     in s: univ iosub_$line_t); extern;
 
+{ EJCTLN - a page eject on the listing (ios_$put of a form feed
+  while the listing is open).  0x0B5F6E: no parameters (c_sym_map's
+  sym_map and print_addr_cons). }
+procedure ejctln; extern;
+
 { OPEN_INCLUDE_FILE - open the include file named by the len characters
   of name; sid gets its stream.  0x0B60D6 (cc.a88k 0x0B9B9E): name by
   address, len a word by value (its slot is also passed by address to

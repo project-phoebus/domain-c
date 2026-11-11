@@ -177,9 +177,12 @@ var
   lex_2afe: extern boolean;             { +0x2AFE: c_main, c_syntax }
 
   { c_stmt_sem.pas's data, A5 0x14A694 (cc.m68k), 0x2CA694 (cc.a88k). }
-  cst_400: extern integer32;            { +0x400: c_main, c_sym_map }
+  { +0x400..+0x40C: two (identifier, word) pairs cc (c_main) sets up
+    with idntk(76, ...) and a cleared word; sym_map (c_sym_map) omits
+    variables of these names. }
+  id_end_of_for: extern il_$node_ptr_t; { +0x400: `end_of_for' }
   cst_404: extern integer;              { +0x404: c_main }
-  cst_408: extern integer32;            { +0x408: c_main, c_sym_map }
+  id_end_of_while: extern il_$node_ptr_t;  { +0x408: `end_of_while' }
   cst_40c: extern integer;              { +0x40C: c_main }
   cst_5f4: extern integer32;            { +0x5F4: c_main }
   cst_5fa: extern integer;              { +0x5FA: c_main }
@@ -190,10 +193,15 @@ var
     merge_attribs_natural read. }
   csyn_48: extern integer32;            { +0x48: c_def_sem, c_main }
   csyn_4c: extern integer;              { +0x4C: c_main }
-  csyn_50: extern integer32;            { +0x50: c_def_sem, c_main,
-                                          c_sym_map }
+  id_at: extern il_$node_ptr_t;         { +0x50: the identifier `@'
+                                          (idntk(76, ...) in cc), the
+                                          name of unnamed fields and
+                                          variables (c_sym_map omits
+                                          them); c_def_sem, c_main }
   csyn_54: extern integer;              { +0x54: c_main }
-  csyn_58: extern integer32;            { +0x58: c_expr_syn, c_main,
+  id_string_constant: extern il_$node_ptr_t;  { +0x58: the identifier
+                                          `<string-constant>' (cc);
+                                          c_expr_syn, c_main,
                                           c_stmt_sem, c_sym_map }
   csyn_5c: extern integer;              { +0x5C: c_main }
   csyn_60: extern integer;              { +0x60: c_main }

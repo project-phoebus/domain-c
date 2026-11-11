@@ -33,6 +33,16 @@ var
     mr_$get_expanded_line test it. }
   cr_if_continued: extern boolean;
 
+  { c_macro_read.pas's data (A5 0x14907C, 0x2C907C) +0x62A: the
+    implicit #include of /usr/include/apollo_$std.h.  2 before the
+    first line: get_par_cooked_line then puts the #include in place of
+    the first line (unless the line is #systype, #module or #1, or the
+    file is not there) and saves the line, 3; else 1.  c_lex_pp clears
+    it when the included file ends (ppio_$get_line, open_include): the
+    next line read is the saved one (just_get_the_next_line_please),
+    and 1 again.  c_main sets it up. }
+  mr_std_include_state: extern integer;
+
 { CR_$INITIALIZE - start a source file: no conditional is open; flag
   is passed on to mr_$initialize.  c_cond_read.pas 0x0403D8; c_main's
   cc. }
