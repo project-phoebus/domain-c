@@ -100,3 +100,15 @@ procedure attr_validate(
 procedure attr_compute_routine_options(
     opts: univ_ptr;
     outer: univ_ptr); options(val_param); extern;
+
+{ ADD_ATTRIBUTE - add attribute code (an element of the flags: 19
+  const, 0 volatile, 3 device read, 4 device write, ...) to the
+  declaration's attributes a, with a value n, for the token tok (its
+  diagnostics).  0x0A5466 (cc.a88k 0x0A6E46): a word, an address and
+  two longwords (c_syntax's type_qualifiers pass 0, parse_attributes
+  -10). }
+procedure add_attribute(
+    code: integer;
+    a: univ_ptr;
+    n: integer32;
+    tok: univ_ptr); options(val_param); extern;
