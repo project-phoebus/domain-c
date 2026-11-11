@@ -109,6 +109,52 @@ function iosub_$get_dtm(
 function iosub_$get_full_path_name(
     stream: integer): univ_ptr; options(val_param); extern;
 
+{ IOSUB_$INIT_ALL - open the outputs and parse the command line: the
+  source suffix (suffix_len characters), then the four lists the
+  options -DEF, -IDIR, -INLIB and -UNDEF add to (count, size, list of
+  pointers; cargs_$parse_command_line_options).  0x0B5896: c_main's cc
+  passes '.c' and 2, its -DEF list (128), inc_list's -IDIR (64) and
+  -INLIB (65) lists and its -UNDEF list (128); the counts and lists by
+  address. }
+procedure iosub_$init_all(
+    in suffix: univ iosub_$name_t;
+    suffix_len: integer;
+    var ndef: integer;
+    maxdef: integer;
+    var deflist: univ iosub_$name_t;
+    var nidir: integer;
+    maxidir: integer;
+    var idirlist: univ iosub_$name_t;
+    var ninlib: integer;
+    maxinlib: integer;
+    var inliblist: univ iosub_$name_t;
+    var nundef: integer;
+    maxundef: integer;
+    var undeflist: univ iosub_$name_t); options(val_param); extern;
+
+{ IOSUB_$REDIRECT_SOURCE_INPUT - read the source from the file name
+  (len characters) instead (c_main's preprocess: acpp's output).
+  0x0B5950: name by address, len a word by value. }
+procedure iosub_$redirect_source_input(
+    in name: univ iosub_$name_t;
+    len: integer); options(val_param); extern;
+
+{ IO_MARK - mark output n (0, 1) at its current position.  0x0B5DD6: a
+  word by value (c_main). }
+procedure io_mark(
+    n: integer); options(val_param); extern;
+
+{ TYPEMSG - s to the terminal, unless error_listing_0c.  0x0B5F02: s by
+  address (c_main's summary line). }
+procedure typemsg(
+    in s: univ iosub_$line_t); extern;
+
+var
+  { iosub.pas's data +0x935: flags; c_main tests bit 2 (`btst
+    #2,0x2CE119') before printing the compile time and running the back
+    end.  Not known from the original: the name and the type. }
+  iosub_$flags_935: extern set of 0..7;
+
 { CLOSE_INCLUDE_FILE - ios_$close of stream.  0x0B6306: a word by
   value; c_lex_pp's open_file_to_get_info and ppio_$get_line. }
 procedure close_include_file(

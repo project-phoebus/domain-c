@@ -21,4 +21,4 @@ procedure get_time_stamp; extern;
   weekday (`yyyy/mm/dd hh:mm:ss tz (day)') to the end of s.  0x098AAE:
   s by address (c_main passes a module line, a5@(3184)). }
 procedure cat_time_info(
-    in out s: time_$line_t); extern;
+    in out s: univ time_$line_t); extern;

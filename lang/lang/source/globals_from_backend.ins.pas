@@ -54,6 +54,18 @@ procedure opt_main_$initialize; extern;         { opt_main 0x0E1740 (cc.a88k 0x2
 procedure at_backend_$end_compilation; extern;  { cc.a88k 0x2221BA }
 procedure bin_$emit_compilation_pure_text; extern;  { cc.a88k bin 0x224314; unix_objmod calls it }
 
+{ RUN_BACKEND - the back end, after the front end (runbackend.pas
+  0x0B22CC, cc.a88k 0x0B3CAC): compiler (a word, by address: c_main
+  passes 1 from its literals), the routine that lists the source up to
+  a line (c_main passes do_lex_for_listings' address, `move.l #'; it
+  is called with `jsr (A0)'), the last line (by address) and a pointer
+  by address (c_main's literal nil). }
+procedure run_backend(
+    in compiler: integer;
+    listing: univ_ptr;
+    in last_line: integer;
+    in p4: univ_ptr); options(val_param); extern;
+
 { AT_BACKEND_$BEGIN_COMPILATION - cc.a88k 0x221D3C: a word by value. }
 procedure at_backend_$begin_compilation(
     p: integer); options(val_param); extern;
