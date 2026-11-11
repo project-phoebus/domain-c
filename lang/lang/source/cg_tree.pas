@@ -82,10 +82,10 @@
   copy_set_aggregate, set_range_in_set_proc, set_bit_in_set_proc,
   proto_set, set_ops, compare_proc,
   round_fp_to_ieee, switch, f_compare_proc, ld_addr and
-  restore_alloc_temps, bit_test_proc, bit_set_proc, unpack_proc; not
-  yet agg_compare_proc, mdmcase, ldsqr, mul_proc,
+  restore_alloc_temps, bit_test_proc, bit_set_proc, unpack_proc,
+  agg_compare_proc; not yet mdmcase, ldsqr, mul_proc,
   extend_div_proc_result, div_proc, nor the `case' arms of operators
-  other than 11, 14, 19..21, 25, 27, 28, 49, 50, 72, 73 (they fall
+  other than 11, 14, 19..21, 23..25, 27, 28, 49, 50, 72, 73 (they fall
   to cgerr 0 meanwhile).
 
   Not known from the original: the names of the module's variables
@@ -1890,6 +1890,166 @@ var
     cg_addr_next_areg := save;
   end;
 
+  { agg_compare_proc - an aggregate comparison (operator 24: a `cmp'
+    (emit 18) unit by unit, the condition from desc.w8; 23: a test of
+    the bits of opnd[1] not in opnd[2], the condition made 7) by bytes
+    (an odd size, or opnd's that may be unaligned with the alignment
+    check, flags bit 10), words or longwords; one unit by its operands,
+    more through address registers post-incremented (mode 8, agg_opr's)
+    in a loop (emit 28, a `dbne' on the count less 1: 2 units unrolled;
+    more than 65535 an outer count in a long); the condition then set
+    into a byte register (emit 19) but for a 143 node; desc.w8
+    restored but on the last pass.
+
+    0x101674, 0x5FA bytes: cg_addr_next_areg set to 8 meanwhile; the
+    constants' set after the code (0x101C6E: 77..87, 92, 101, 156, 200,
+    212); the counts compared unsigned (`bhi'); a count register a
+    register variable lives in (cg_addr_cache's live, 0x354FBF) copied
+    first through a partial copy of its operand (f1, f2, f5); the
+    operands swapped through t (-104); the loop's head label (lab)
+    reused for the branch of 2 units. }
+
+  procedure agg_compare_proc(
+      n: cg_tree_ptr_t); options(val_param);
+  var
+    tmp: codegen_$uads_t;
+    lab2: codegen_$uads_t;
+    res: codegen_$uads_t;
+    t: codegen_$uads_t;
+    lab: codegen_$uads_t;
+    csz: integer;
+    cnt: integer32;
+    unit: integer;
+    w8: integer;
+    save: integer;
+  begin
+    save := cg_addr_next_areg;
+    w8 := n^.desc.w8;
+    cg_addr_next_areg := 8;
+    cnt := n^.desc.size;
+    unit := 2;
+    if odd(cnt) then
+      unit := 1
+    else if (n^.op = 24) and ((n^.desc.flags & 16#400) <> 0) then
+      if unaligned(n^.opnd[1]) or unaligned(n^.opnd[2]) then
+        unit := 1;
+    if unit = 2 then begin
+      cnt := rshft(cnt, 1);
+      if not odd(cnt) then begin
+        cnt := rshft(cnt, 1);
+        unit := 4;
+      end;
+    end;
+    if cnt <= 65536 then begin
+      cnt := cnt - 1;
+      csz := 2;
+    end
+    else
+      csz := 4;
+    if cnt = 0 then begin
+      if (n^.opnd[2]^.kind in [77..87, 92, 101, 156, 200, 212]) and
+          not (n^.opnd[1]^.kind in [77..87, 92, 101, 156, 200, 212]) then
+        address(n^.opnd[1], unit, opr)
+      else
+        load_operand(n^.opnd[1], unit, opr);
+    end
+    else begin
+      load_address(n^.opnd[1], opr);
+      opr.f1 := 8;
+      kill_register(opr.f2);
+    end;
+    if n^.op <> 23 then begin
+      if cnt = 0 then
+        address(n^.opnd[2], unit, ops)
+      else
+        agg_opr(n^.opnd[2], ops);
+      if (ops.f1 = 1) and (opr.f1 <> 1) then begin
+        t := opr;
+        opr := ops;
+        ops := t;
+        n^.desc.w8 := swap_cc[n^.desc.w8];
+      end;
+    end
+    else begin
+      if cnt = 0 then
+        address(n^.opnd[2], unit, ops)
+      else begin
+        load_address(n^.opnd[2], ops);
+        kill_register(ops.f2);
+        ops.f1 := 8;
+      end;
+      if n^.desc.w8 = 12 then begin
+        t := opr;
+        opr := ops;
+        ops := t;
+      end;
+      n^.desc.w8 := 7;
+      get_register(nil, 4, t);
+    end;
+    if cnt <> 0 then begin
+      load_operand(smcontk(81, cnt), csz, opt);
+      if cg_addr_cache[opt.f2].live then begin
+        tmp.f1 := opt.f1;
+        tmp.f2 := opt.f2;
+        tmp.f5 := opt.f5;
+        get_register(smcontk(81, cnt), csz, opt);
+        emit(0, csz, opt, tmp, 0);
+        unlock(tmp);
+      end;
+      kill_register(opt.f2);
+      address(templabel, 0, lab);
+      emit(32, 5, lab, cg_null_ads, 0);
+    end;
+    if n^.op = 24 then
+      emit(18, unit, opr, ops, 0)
+    else begin
+      emit(0, unit, t, ops, 0);
+      emit(12, unit, t, cg_null_ads, 0);
+      emit(3, unit, t, opr, 0);
+      if cnt <> 1 then
+        unlock(t);
+    end;
+    if cnt <> 0 then begin
+      if cnt = 1 then begin
+        address(templabel, 0, lab);
+        emit(20, 5, lab, cg_null_ads, 6);
+        if n^.op = 24 then
+          emit(18, unit, opr, ops, 0)
+        else begin
+          emit(0, unit, t, ops, 0);
+          emit(12, unit, t, cg_null_ads, 0);
+          emit(3, unit, t, opr, 0);
+          unlock(t);
+        end;
+        emit(32, 5, lab, cg_null_ads, 0);
+      end
+      else if cnt <= 65535 then
+        emit(28, 2, lab, opt, 6)
+      else begin
+        address(templabel, 0, lab2);
+        emit(20, 5, lab2, cg_null_ads, 6);
+        address(smcontk(81, 1), 4, t);
+        emit(2, 4, opt, t, 0);
+        emit(20, 5, lab, cg_null_ads, 6);
+        release(t);
+        emit(32, 5, lab2, cg_null_ads, 0);
+        release(lab2);
+      end;
+      release(opt);
+      release(lab);
+    end;
+    unlock(ops);
+    unlock(opr);
+    if n^.kind <> 143 then begin
+      get_register(il_$node_ptr_t(n), 1, res);
+      emit(19, 1, res, cg_null_ads, n^.desc.w8);
+      unlock(res);
+    end;
+    if not at_backend_506 then
+      n^.desc.w8 := w8;
+    cg_addr_next_areg := save;
+  end;
+
   { compare_proc - an integer comparison (emit 18, a `cmp') of n's
     operands of class size: an operand a register variable's statement
     changes (register_tickle) loaded first; a constant kept on the right
@@ -2365,6 +2525,8 @@ begin
       unpack_proc(n);
     19, 20, 21:
       set_ops(n);
+    23, 24:
+      agg_compare_proc(n);
     25:
       bit_set_proc(n);
     27:
