@@ -19,3 +19,21 @@ revisited.
    consecutive constant stores (docs/rev889-patterns.md 10).  If the
    original used more sets (for example for the +0x27A..+0x27B and
    +0x28A..+0x28B flags), only the declarations change, not the layout.
+4. Translator A (2026-11-11): lang/common/source/token.pas does not
+   open il.ins.pas, yet lang/lang/source/token.ins.pas (which it opens)
+   names il_$node_ptr_t; token.low.pas (private to token.pas) declares
+   il_$node_ptr_t and the node fields token.pas uses, at il.ins.pas's
+   offsets.  Likewise st.ins.pas declares only the block fields ecb.pas
+   uses.  If the original il_$node_t is ever reconstructed in one
+   shared insert, token.low.pas should become its private view.
+5. Probable bugs of the original, reproduced as the image has them:
+   mem.pas rws_release leaves the chain's head on a disposed chunk when
+   older chunks remain; htm.pas addresses bucket i at +10 + 4 * i (bucket
+   0 overlaps the header); bvs.pas check2_same_size never compares
+   source 2's size; bvs_$and_and_test tests the source's longword.
+   Keep as is?
+6. tools/coff_compare.py's --unit now also takes a tree path less .pas
+   (two units are named token), and tools/cc_check.sh passes each
+   file's; lang/lang/source/list_tree.ins.pas is new (a stub with
+   list_tree_$print_tree only) and us/us/ins/{loader,fault,unix_sig,ms}
+   are new stand-ins.
