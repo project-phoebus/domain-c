@@ -16,8 +16,7 @@
 
 { TODO(pascal) g_opt.ins.pas holds what the translated units need
 
-  Add the optimizer's other cells (opt_main +0x14, +0x5A, +0x60,
-  +0x62, read by opt_reachdef, opt_strength, the
+  Add the optimizer's other cells (opt_main +0x14, +0x5A, +0x62, read by opt_reachdef, opt_strength, the
   reg_ units) and headings as their units are translated; the record
   fields are named by use. }
 
@@ -460,6 +459,11 @@ var
                                           down; find_loops; 6 units) }
   opt_region: extern g_opt_num_t;       { +0x5E: the entry of opt_4009c
                                           find_var looks in (10 units) }
+  opt_main_60: extern g_opt_num_t;      { +0x60 (0x2D2F50): the
+                                          routine's statements from
+                                          opt_region (reg_vars's
+                                          get_range: the last is
+                                          opt_region + opt_main_60 - 1) }
   opt_last_block: extern g_opt_num_t;   { +0x68: the routine's last
                                           basic block (11 units) }
   opt_first_block: extern g_opt_num_t;  { +0x6A: its first (11 units) }
