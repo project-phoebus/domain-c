@@ -77,6 +77,25 @@ Language reference:
   and resolves conflicts.
 - Update the README status table and `docs/core-plan.md`'s table rows for
   your units.
+- Lessons from the first wave's merge:
+  - Before creating an insert outside your area, check whether it exists
+    on `main` (your branch starts from it); if not, keep your stub
+    minimal (only what your units use), since another translator may be
+    creating the same file.  Take names from the owner's insert when it
+    exists, rather than inventing a second name for the same cell.
+  - An insert that some unit opens without the inserts it would otherwise
+    lean on must declare its own types (lang/lang token.ins.pas is opened
+    by lang/common token.pas without strings.ins.pas).
+  - When you change a shared heading's parameter modes or types, grep
+    every caller in the tree (`git grep -n 'name('`) and fix them in the
+    same commit.
+  - New numbered entries (dpc gaps, patterns, questions) will collide with
+    other branches' numbers; that is fine, the lead renumbers at merge.
+    Cite them in unit comments as `docs/dpc-gaps.md N` so they can be
+    found.
+  - The full gate takes several minutes: run `tools/cc_check.sh FILE.pas`
+    for the units you touch, and the full gate once before your report
+    (in the background if your tool times out).
 
 ## Report
 
