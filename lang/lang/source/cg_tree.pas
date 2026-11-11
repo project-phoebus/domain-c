@@ -79,13 +79,13 @@
 
   TODO(pascal) generate is begun: its frame, the operands' temporaries
   and its end are translated, and of its nested routines shift_proc,
-  copy_set_aggregate, proto_set, set_ops, compare_proc,
+  copy_set_aggregate, set_range_in_set_proc, set_bit_in_set_proc,
+  proto_set, set_ops, compare_proc,
   round_fp_to_ieee, switch, f_compare_proc, ld_addr and
   restore_alloc_temps; not yet bit_test_proc, bit_set_proc,
   unpack_proc, agg_compare_proc, mdmcase, ldsqr, mul_proc,
-  extend_div_proc_result, div_proc, set_range_in_set_proc,
-  set_bit_in_set_proc, nor the
-  `case' arms of operators other than 19..21, 27, 28, 49, 50 (they fall
+  extend_div_proc_result, div_proc, nor the `case' arms of operators
+  other than 19..21, 27, 28, 49, 50, 72, 73 (they fall
   to cgerr 0 meanwhile).
 
   Not known from the original: the names of the module's variables
@@ -1181,6 +1181,219 @@ var
     cg_addr_next_areg := save;
   end;
 
+  { set_range_in_set_proc - the range opnd[2] .. opnd[3] added to the set
+    opnd[1] (operator 73), in n's temporary (get_childs_agg_temp, else
+    the set copied there; an empty constant set as zeros): a loop
+    (emit 28, a `dbf' on the range's length) setting bit by bit (emit
+    14, a `bset' at the set's last byte less the bit's byte index,
+    indexed); constant bounds clipped to the set (an empty or outside
+    range: no code); with the range check (flags bit 10) a bound beyond
+    the set clipped (emit 18, 20 a branch, 32 its label) and a negative
+    length skipped.
+
+    0x102E94, 0x54A bytes: movewlx's constants' set (0x0FFE4C) for the
+    operands, 156 a set constant; load_modifiable's size 5 by address
+    (a constant after the code, 0x1033DE); the bit's register shifted
+    right by 3 (shift's x 2) and negated (emit 11); the index register's
+    long flag (f5 bit 1) set for class 4 by `bset #1' of its low byte
+    (docs/rev889-patterns.md 49). }
+
+  procedure set_range_in_set_proc(
+      n: cg_tree_ptr_t); options(val_param);
+  var
+    c: codegen_$uads_t;
+    s: codegen_$uads_t;
+    lab: codegen_$uads_t;
+    lp: codegen_$uads_t;
+    cnt: codegen_$uads_t;
+    bit: codegen_$uads_t;
+    idx: codegen_$uads_t;
+    v: codegen_$uads_t;
+    k: codegen_$uads_t;
+    bits: integer32;
+    hi: integer32;
+    len: integer32;
+    w: integer;
+    set1: il_$node_ptr_t;
+    range: boolean;
+  begin
+    range := false;
+    bits := n^.desc.size * 8 - 1;
+    w := n^.desc.w6;
+    set1 := n^.opnd[1];
+    if not get_childs_agg_temp(il_$node_ptr_t(n)) then begin
+      if (set1^.kind in [77..87, 101, 200]) or (set1^.kind = 156) then
+        if set_is_nil(set1) then
+          set1 := nil;
+      copy_set_aggregate(set1, n^.opnd[1], n^.desc.size);
+    end;
+    if (n^.opnd[3]^.kind in [77..87, 101, 200]) and
+        (n^.opnd[2]^.kind in [77..87, 101, 200]) then begin
+      hi := n^.opnd[3]^.xl[2];
+      if hi > bits then
+        hi := bits;
+      len := hi - n^.opnd[2]^.xl[2];
+      if (len < 0) or (n^.opnd[2]^.xl[2] > bits) or
+          (n^.opnd[2]^.xl[2] < 0) then
+        return;
+      anyconst(hi, w, k);
+      get_register(nil, w, bit);
+      emit(0, w, bit, k, 0);
+      kill_register(bit.f2);
+      release(k);
+      anyconst(len, w, c);
+      get_register(nil, w, cnt);
+      emit(0, w, cnt, c, 0);
+      kill_register(cnt.f2);
+      release(c);
+      load_modifiable(n^.opnd[1], 5, s);
+      kill_register(s.f2);
+    end
+    else begin
+      address(n^.opnd[3], w, c);
+      get_register(nil, w, cnt);
+      emit(0, w, cnt, c, 0);
+      kill_register(cnt.f2);
+      release(c);
+      get_register(nil, w, bit);
+      emit(0, w, bit, cnt, 0);
+      if (n^.desc.flags & 16#400) <> 0 then begin
+        anyconst(bits, w, k);
+        emit(18, w, bit, k, 0);
+        address(templabel, 0, lab);
+        emit(20, 5, lab, cg_null_ads, 3);
+        emit(0, w, bit, k, 0);
+        emit(0, w, cnt, k, 0);
+        emit(32, 5, lab, cg_null_ads, 0);
+        release(k);
+        release(lab);
+      end;
+      load_modifiable(n^.opnd[1], 5, s);
+      kill_register(s.f2);
+      address(n^.opnd[2], w, v);
+      emit(2, w, cnt, v, 0);
+      release(v);
+      if (n^.desc.flags & 16#400) <> 0 then begin
+        range := true;
+        address(templabel, 0, lab);
+        emit(20, 5, lab, cg_null_ads, 5);
+      end;
+    end;
+    address(templabel, 0, lp);
+    emit(32, 5, lp, cg_null_ads, 0);
+    get_register(nil, w, idx);
+    emit(0, w, idx, bit, 0);
+    kill_register(idx.f2);
+    shift(idx, w, 3, 2);
+    emit(11, w, idx, cg_null_ads, 0);
+    s.y := s.y + n^.desc.size - 1;
+    s.f1 := 4;
+    s.f3 := idx.f2;
+    if w = 4 then
+      s.f5 := s.f5 ! 2
+    else
+      s.f5 := s.f5 & ~2;
+    emit(14, 1, s, bit, 0);
+    s.f3 := 31;
+    unlock(idx);
+    unlock(s);
+    anyconst(1, w, c);
+    emit(2, w, bit, c, 0);
+    kill_register(bit.f2);
+    unlock(c);
+    unlock(bit);
+    emit(28, 2, lp, cnt, 1);
+    kill_register(cnt.f2);
+    release(lp);
+    unlock(cnt);
+    if range then begin
+      emit(32, 5, lab, cg_null_ads, 0);
+      release(lab);
+    end;
+  end;
+
+  { set_bit_in_set_proc - element opnd[2] added to the set opnd[1]
+    (operator 72), in n's temporary as set_range_in_set_proc: a constant
+    element by a `bset' (emit 14) of its bit in its byte (none outside
+    the set with the range check), else the bit's number (the set's
+    last bit less the element) in a register, its byte by a shift right
+    of 3 as an index (with the range check a negative number branches
+    past: emit 20, 32).
+
+    0x1033E0, 0x298 bytes: movewlx's constants' set (0x0FFE4C); the
+    byte's offset by `lsr' (rshft); the index register's long flag (f5
+    bit 1) by `bset #1' of its low byte. }
+
+  procedure set_bit_in_set_proc(
+      n: cg_tree_ptr_t); options(val_param);
+  var
+    s: codegen_$uads_t;
+    r: codegen_$uads_t;
+    v: codegen_$uads_t;
+    lab: codegen_$uads_t;
+    c: codegen_$uads_t;
+    bits: integer32;
+    w: integer;
+    set1: il_$node_ptr_t;
+    range: boolean;
+  begin
+    range := false;
+    bits := n^.desc.size * 8 - 1;
+    w := n^.desc.w6;
+    set1 := n^.opnd[1];
+    if not get_childs_agg_temp(il_$node_ptr_t(n)) then begin
+      if (set1^.kind in [77..87, 101, 200]) or (set1^.kind = 156) then
+        if set_is_nil(set1) then
+          set1 := nil;
+      copy_set_aggregate(set1, n^.opnd[1], n^.desc.size);
+    end;
+    if n^.opnd[2]^.kind in [77..87, 101, 200] then begin
+      bits := bits - n^.opnd[2]^.xl[2];
+      if ((n^.desc.flags & 16#400) = 0) or (bits >= 0) then begin
+        bits := rshft(bits, 3);
+        anyconst(n^.opnd[2]^.xl[2], w, v);
+        address(n^.opnd[1], 5, s);
+        s.y := s.y + bits;
+        s.f1 := 2;
+        emit(14, 1, s, v, 0);
+        release(v);
+        release(s);
+      end;
+    end
+    else begin
+      anyconst(bits, w, c);
+      get_register(nil, w, r);
+      emit(0, w, r, c, 0);
+      release(c);
+      load_operand(n^.opnd[2], w, v);
+      emit(2, w, r, v, 0);
+      kill_register(r.f2);
+      release(v);
+      if (n^.desc.flags & 16#400) <> 0 then begin
+        address(templabel, 0, lab);
+        emit(20, 5, lab, cg_null_ads, 5);
+        range := true;
+      end;
+      shift(r, w, 3, 2);
+      load_address(n^.opnd[1], s);
+      kill_register(s.f2);
+      s.f1 := 4;
+      s.f3 := r.f2;
+      if w = 4 then
+        s.f5 := s.f5 ! 2
+      else
+        s.f5 := s.f5 & ~2;
+      emit(14, 1, s, v, 0);
+      s.f3 := 31;
+      release(r);
+      unlock(s);
+    end;
+    if range then begin
+      emit(32, 5, lab, cg_null_ads, 0);
+      release(lab);
+    end;
+  end;
+
   { set_ops - a set operation (operators 19..21: and, or, and of the
     complement) of n's operands into n's temporary (get_agg_temp), a
     longword at a time (a loop of size div 4), then a word and a byte;
@@ -1726,6 +1939,10 @@ begin
       shift_proc(n, 1);
     50:
       shift_proc(n, 0);
+    72:
+      set_bit_in_set_proc(n);
+    73:
+      set_range_in_set_proc(n);
     otherwise
       cgerr(0, cg_line, n);
   end;
