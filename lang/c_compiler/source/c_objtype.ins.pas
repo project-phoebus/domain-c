@@ -44,15 +44,27 @@ type
     (c_sym_map's tattr_to_vattr: the longwords at +0 and +4 exchanged,
     and the words at +8 and +10).
 
+    A pointer's attributes (+12) hold a size in bits at +0: c_expr_syn's
+    unary_expr and primary_expr take a dereferenced pointer's storage
+    size as (+0 + 7) div 8 (`addq.l #7; bpl; addq.l #7; asr.l #3').
+
     Not known from the original: whether the two forms were distinct
     types; the meaning of +0, +10 and +12. }
   c_attr_t = record
-    other_bits: c_flags_t;              { +0 }
-    bits: c_flags_t;                    { +4 }
-    align: integer;                     { +8: Aligned(n)'s n }
-    unused_10: integer;                 { +10 }
-    unused_12: integer;                 { +12 }
+    case integer of
+      1: (other_bits: c_flags_t;        { +0 }
+          bits: c_flags_t;              { +4 }
+          align: integer;               { +8: Aligned(n)'s n }
+          unused_10: integer;           { +10 }
+          unused_12: integer);          { +12 }
+      2: (size_bits: integer32);        { +0: the vattr form's size }
   end;
+
+  { A set of token classes (the ctk_ constants of c_globals.ins.pas, 0..111):
+    the follow sets the parser passes down (14 bytes, by address;
+    c_expr_syn's routines `or' constants into a copy, `btst' with the
+    byte index (111 - k) div 8). }
+  c_tokset_t = set of 0..111;
 
   { How a variable is allocated (c_sym_t's var_vat, a word; c_sym_map's
     print_vat names them in this order: local, stat, dynm, ext, extdef,
@@ -63,6 +75,20 @@ type
 
   c_field_ptr_t = ^c_field_t;
   c_sym_ptr_t = ^c_sym_t;
+  c_type_ptr_t = ^c_type_t;
+
+  { A routine's parameter types (a function type's fn_params, a block's
+    params): a word, the count at +2, then the types from +4 (kind 31,
+    an ellipsis, ends a variable list; c_expr_syn's func_call_stat
+    checks arguments against them under -TYPE).  c_expr_syn's
+    c_expr_syn_$begin_compilation builds the builtins' lists with
+    gspace(4 + 4n). }
+  c_parlist_ptr_t = ^c_parlist_t;
+  c_parlist_t = record
+    unused_0: integer;                  { +0 }
+    count: integer;                     { +2 }
+    types: array [1..1024] of c_type_ptr_t;  { +4 }
+  end;
 
   { An enumeration's constants (c_type_t's enum_list), from 1: symbols
     of kind 116, or il_178. }
@@ -73,7 +99,6 @@ type
     translated units read; type_exp (c_def_sem.pas 0x04590A) shows more
     (kind 118 a name whose type is at +28; 109, 119, 120, 121 with a
     bit size and an attribute longword). }
-  c_type_ptr_t = ^c_type_t;
   c_type_t = record
     unused_0: integer;                  { +0 }
     kind: integer;                      { +2 }
@@ -100,10 +125,20 @@ type
           enum_unused_12: integer32;    { +12 }
           enum_list: ^c_enum_list_t;    { +16 }
           enum_int: c_type_ptr_t);      { +20 }
-      { A pointer (130). }
+      { A pointer (130; 36 bytes from def_ptr): the type pointed to, its
+        attributes (+20 the alignment add_pn is given when the pointer
+        is dereferenced, +16 bits 19 const and 0 volatile), and a
+        boolean c_expr_syn tests under -TYPE (cargs_$options.type_opt):
+        such a pointer is dereferenced where it is used (body_opr 3 after
+        a name or a call; a cast to it takes the address first), a
+        reference. }
       4: (ptr_to: c_type_ptr_t;         { +4 }
           ptr_unused_8: integer32;      { +8 }
-          ptr_attr: c_attr_t);          { +12 }
+          ptr_attr: c_attr_t;           { +12 }
+          ptr_unused_26: integer;       { +26 }
+          ptr_unused_28: integer32;     { +28 }
+          ptr_unused_32: integer;       { +32 }
+          ptr_reference: boolean);      { +34: `tst.b; bpl' }
       { An array (127, 131): the element and index types; the size at
         +40 (type_exp). }
       5: (arr_elem: c_type_ptr_t;       { +4 }
@@ -128,9 +163,17 @@ type
       { Kind 121: print_type looks through it to the type at +16. }
       8: (wrap_unused: array [1..3] of integer32;  { +4..+15 }
           wrap_type: c_type_ptr_t);     { +16 }
-      { A function returning (234). }
-      9: (fn_unused_4: integer32;       { +4 }
-          fn_result: c_type_ptr_t);     { +8 }
+      { A function returning (234; 58 bytes from c_expr_syn's
+        alloc_builtins): the result type, the parameters' types (nil
+        when there is no prototype) and a word alloc_builtins sets to 3
+        and func_call_stat pushes on c_syntax's context stack (csyn_60)
+        for the call (a block's calling context, c_blk_t's conv). }
+      9: (fn_unused_4: integer32;       { +4: cleared }
+          fn_result: c_type_ptr_t;      { +8 }
+          fn_params: c_parlist_ptr_t;   { +12 }
+          fn_unused_16: integer32;      { +16 }
+          fn_unused_20: integer32;      { +20 }
+          fn_conv: integer);            { +24 }
       { A typedef's symbol used as a type (118, a c_sym_t): its name;
         its type at +28. }
       10: (tn_name: il_$node_ptr_t);    { +4 }
@@ -145,7 +188,10 @@ type
     kind: integer;                      { +2 }
     next: c_field_ptr_t;                { +4 }
     name: il_$node_ptr_t;               { +8: the identifier }
-    unused_12: integer32;               { +12 }
+    line: integer;                      { +12: where it was declared
+                                          (c_expr_syn's `&' of a bit
+                                          field reports it) }
+    unused_14: integer;                 { +14 }
     ftype: c_type_ptr_t;                { +16 }
     flags: c_flags_t;                   { +20: print_attr's flags }
     attr: c_attr_t;                     { +24 }
@@ -183,7 +229,12 @@ type
       1: (var_type: c_type_ptr_t;       { +28 }
           var_flags: c_flags_t;         { +32: print_attr's flags;
                                           sym_map omits a variable
-                                          with 14 }
+                                          with 14 (c_expr_syn's
+                                          do_c_string sets it for a
+                                          string's array); c_expr_syn
+                                          sets 22 for a constant
+                                          subscript within bounds
+                                          and tests 10 }
           var_attr: c_attr_t;           { +36 }
           var_unused_50: integer;       { +50 }
           var_unused_52: integer32;     { +52 }
@@ -281,25 +332,134 @@ type
 
     Not known from the original: everything but the offsets. }
   c_decl_t = record
-    dtype: univ_ptr;                    { +0: int_type or il_178 }
+    dtype: univ_ptr;                    { +0: int_type or il_178; a
+                                          type (def_subr, def_arr and
+                                          c_type_name fill it) }
     name: univ_ptr;                     { +4 }
     unused_8: integer32;                { +8 }
-    unused_12: integer32;               { +12: cleared }
-    unused_16: array [4..7] of integer32;  { +16..+31 }
+    flags: c_flags_t;                   { +12: cleared; c_type_name's
+                                          qualifiers (19 const, 0
+                                          volatile: c_expr_syn's cast
+                                          copies them to type_exp_t's
+                                          b25_5 and b25_4) }
+    size_bits: integer32;               { +16: an element's size in
+                                          bits (do_c_string: 8, 32) }
+    align: integer;                     { +20: do_c_string: 0, 2 for
+                                          a wide string's element }
+    unused_22: integer;                 { +22 }
+    unused_24: integer32;               { +24 }
+    unused_28: integer32;               { +28: cleared by do_c_string
+                                          (add_varn copies +12..+31,
+                                          the attributes) }
     line: integer;                      { +32 }
     unused_34: integer;                 { +34 }
     unused_36: integer32;               { +36 }
   end;
 
-  { An entry of c_expr_sem's expression stack (cexs_stack, 64 bytes):
-    c_main's make_main_pgm sets the top entry's node from its +28.
+  { An entry of c_expr_sem's expression stack (cexs_stack, 64 bytes;
+    cexs_23bc the top).  c_expr_syn reads and sets these fields.
 
-    Not known from the original: everything but the offsets. }
+    Not known from the original: the names; +12..+23, +54..+57, +60,
+    +62. }
   c_exp_t = record
-    node: il_$node_ptr_t;               { +0 }
+    node: il_$node_ptr_t;               { +0: the operand's tree (a
+                                          constant node, a variable
+                                          symbol (109), a tree node
+                                          (137, 143, 146, ...)) }
+    sym: il_$node_ptr_t;                { +4: what diagnostics name: a
+                                          symbol (c_sym_t), a field
+                                          (c_field_t, 120) }
+    item: il_$node_ptr_t;               { +8: the variable (109) or
+                                          string (92) the operand
+                                          names, or the type a
+                                          dereference gives }
+    unused_12: integer32;               { +12 }
+    unused_16: integer32;               { +16 }
+    unused_20: integer32;               { +20 }
+    disp: integer32;                    { +24: compared with 0 and with
+                                          typ.size by unary_expr's
+                                          `*' }
+    typ: type_exp_t;                    { +28..+53: the operand's type
+                                          (type_exp) }
+    unused_54: integer;                 { +54 }
+    unused_56: integer;                 { +56 }
+    line: integer;                      { +58: where the operand was
+                                          met }
+    unused_60: char;                    { +60 }
+    flag_61: boolean;                   { +61: `tst.b; bpl' in
+                                          unary_expr's `*' }
+    unused_62: integer;                 { +62 }
+  end;
+
+  { A constant expression's value as c_syntax's constant_expr gives it
+    and def_subr takes its bounds (14 bytes, copied as three longwords
+    and a word; c_expr_syn's do_c_string builds two).
+
+    Not known from the original: the names. }
+  c_cexp_t = record
+    ctype: c_type_ptr_t;                { +0 }
+    value: il_$node_ptr_t;              { +4: the constant node }
+    sym: il_$node_ptr_t;                { +8: what diagnostics name }
+    line: integer;                      { +12 }
+  end;
+
+  { A block (kinds 105..108; 107 and 108 also the types of routines) as
+    the front end reads it: by offset (il.ins.pas's xp, xw views name
+    the same words, docs/questions.md 13).
+
+    Not known from the original: the names; the fields not named. }
+  c_reglist_ptr_t = ^c_reglist_t;
+  c_reglist_t = record                  { a block's register variables }
+    unused_0: integer;                  { +0 }
+    kind: integer;                      { +2 }
+    rvar: il_$node_ptr_t;               { +4: the variable (109) }
+    next: c_reglist_ptr_t;              { +8 }
+  end;
+  c_blk_ptr_t = ^c_blk_t;
+  c_blk_t = record
+    unused_0: integer;                  { +0 }
+    kind: integer;                      { +2 }
     unused_4: array [1..6] of integer32;   { +4..+27 }
-    sym: il_$node_ptr_t;                { +28 }
-    unused_32: array [8..15] of integer32;  { +32..+63 }
+    result: c_type_ptr_t;               { +28: a function's result
+                                          type (func_call_stat) }
+    unused_32: array [8..46] of integer32;  { +32..+187 }
+    code_sect: il_$node_ptr_t;          { +188 (c_main) }
+    data_sect: il_$node_ptr_t;          { +192 (c_main; primary_expr
+                                          compares it with il_180's) }
+    unused_196: array [49..92] of integer32;  { +196..+371 }
+    unused_372: integer;                { +372 }
+    bits: packed record                 { +374 }
+      b374_7: boolean;
+      b374_6: boolean;                  { .6: set by unary_expr's `&'
+                                          of a variable with flag 10 }
+      b374_5: boolean;
+      b374_4: boolean;
+      b374_3: boolean;
+      b374_2: boolean;
+      b374_1: boolean;
+      b374_0: boolean;
+      b375: 0..255;                     { +375 }
+      b376_7: boolean;                  { +376 }
+      b376_6: boolean;
+      b376_5: boolean;
+      db_adjusted: boolean;             { .4: adjust_blk_for_db was
+                                          called for it (primary_expr) }
+      b376_3: boolean;                  { .3 }
+      b376_2: boolean;
+      b376_1: boolean;
+      x376_0: 0..3;                     { .0 to +377.7 (c_main,
+                                          c_sym_map: `andi.w #0x180') }
+      conv: 0..7;                       { +377 .6..4: the calling
+                                          context func_call_stat pushes
+                                          on csyn_60 }
+      b377_3_0: 0..15;                  { .3..0 }
+    end;
+    unused_378: integer;                { +378 }
+    unused_380: integer32;              { +380 }
+    reg_vars: c_reglist_ptr_t;          { +384: unary_expr's `&' }
+    unused_388: integer32;              { +388 }
+    params: c_parlist_ptr_t;            { +392: the parameters' types
+                                          (func_call_stat) }
   end;
 
   { An identifier entry as a block of its own: the kind and the rest

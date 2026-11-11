@@ -112,7 +112,10 @@ var
                                           c_main }
   cdef_44: extern univ_ptr;             { +0x44: c_syntax }
   cdef_4c: extern integer32;            { +0x4C: c_syntax }
-  cdef_50: extern univ_ptr;             { +0x50: c_expr_sem, c_expr_syn,
+  cdef_50: extern c_blk_ptr_t;          { +0x50: the current block (cc
+                                          and make_main_pgm set it to
+                                          il_180; c_expr_syn's `&' sets
+                                          its b374_6); c_expr_sem,
                                           c_main, c_stmt_sem, c_syntax }
   cdef_outer_block: extern il_$node_ptr_t;  { +0x54: the outermost
                                           block (cc sets it to il_180;
@@ -183,7 +186,11 @@ var
   cexs_23b4: extern c_type_ptr_t;       { +0x23B4: uint_type's node
                                           again (c_expr_syn, c_main) }
   cexs_23b8: extern c_type_ptr_t;       { +0x23B8: kind 136 (c_main) }
-  cexs_23bc: extern integer;            { +0x23BC: add_node, c_def_sem,
+  cexs_23bc: extern integer;            { +0x23BC: the expression
+                                          stack's top (cexs_stack's
+                                          index; c_expr_syn's swap_top
+                                          exchanges the two top
+                                          entries); add_node, c_def_sem,
                                           c_expr_syn, c_main, c_stmt_sem,
                                           c_syntax }
 
@@ -306,7 +313,17 @@ var
                                           c_expr_syn, c_main,
                                           c_stmt_sem, c_sym_map }
   csyn_5c: extern integer;              { +0x5C: c_main }
-  csyn_60: extern integer;              { +0x60: c_main }
+  csyn_60: extern array [1..128] of integer;  { +0x60..+0x15F: a
+                                          stack of calling contexts,
+                                          csyn_202 its top (cc pushes
+                                          3; c_expr_syn's func_call_stat
+                                          pushes the called block's
+                                          conv, 3 for a function type,
+                                          and pops it; 4 makes
+                                          c_expr_syn skip the address
+                                          of a string, its redundant-&
+                                          warning and adjust_parm; the
+                                          bound from the next cell) }
   { +0x160..+0x1E4: the attribute keywords, identifiers cc (c_main)
     enters with idntk(76, ...) (the `idu_' ones spelled with two
     leading underscores); attributes's find_conflict and
@@ -360,9 +377,16 @@ var
                                           integer constant, 92 and 93
                                           strings); c_expr_sem,
                                           c_expr_syn, c_main }
-  csyn_202: extern integer;             { +0x202: c_expr_sem,
+  csyn_202: extern integer;             { +0x202: csyn_60's top (cc
+                                          sets 1); c_expr_sem,
                                           c_expr_syn, c_main }
-  csyn_204: extern boolean;             { +0x204: c_expr_syn }
+  csyn_204: extern boolean;             { +0x204: an assignment or an
+                                          increment was parsed
+                                          (c_expr_syn's asn_expr,
+                                          unary_expr set it; its
+                                          test_side_effects clears it
+                                          before the right operand of
+                                          `&&', `||' and `?:'s last) }
 
   { unix_objmod.pas's data, A5 0x1A0314 (cc.m68k), 0x320384 (cc.a88k):
     two cells the front end sets (c_lex_pp, c_main) and the object

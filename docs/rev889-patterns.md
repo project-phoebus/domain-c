@@ -306,3 +306,28 @@ cc.m68k unless marked.
     except do_lex_for_listings (0x05A380), whose address cc passes to
     run_backend (`move.l #0x05A380,-(SP)') and which runbackend calls
     with `jsr (A0)'.  The others are written `internal'.
+## Sets and records (translator L, c_expr_syn.pas)
+
+41. **Set difference with a constant as `and' with its complement.**
+    c_expr_syn's unary_expr `&' (0x05187E): `follow + [61, 76..89, 92,
+    93, 101] - [77..89, 101]' is formed with `or.l'/`or.w' of the first
+    constant, then `and.l'/`and.w' of a 14-byte constant holding the
+    complement of the second (0x052230); the default case's `follow +
+    [19, 20] + [...]' or-s the two constants in turn (0x052068).
+42. **Small constant `in' tests as compare chains in source order.**
+    The binary levels' loops (`token_kind in' their operators: multip
+    0x05231E `cmpi.w #21; beq; cmpi.w #66; beq; cmpi.w #65; beq') and
+    primary_expr's postfix loop compare in turn; sets whose elements
+    pass 111 (token or node kinds up to 207) are `btst' on a 26-byte
+    constant (docs/dpc-gaps.md 8).  Written here as `or' chains.
+43. **A function of a record returns through a hidden address.**
+    c_expr_syn's alloc_builtins (0x04FCF0) stores its 10-byte result
+    through (8,A6) and the caller passes a frame temporary (`pea
+    (-252,A6)' pushed last) and copies it to the table entry; dpc does
+    the same.
+44. **A record of 62 bytes in a 64-byte array element.**  swap_top
+    (0x05047C) copies c_expr_sem's expression stack entries with five
+    12-byte `move.l' triples and a `move.w' (62 bytes), while the stack
+    is indexed `lsl.w #6' (64 bytes apart): the entry record is 62
+    bytes and the array pads its elements to a multiple of 4.
+    c_objtype.ins.pas declares the entry as 64 bytes.

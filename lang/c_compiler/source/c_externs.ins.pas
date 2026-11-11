@@ -95,12 +95,14 @@ function fnd_param(
     p8: univ_ptr;
     p12: univ_ptr): univ_ptr; options(val_param); extern;
 
-{ BLK_FND_NAME - c_def_sem.pas 0x045302 (cc.a88k 0x045582). }
+{ BLK_FND_NAME - c_def_sem.pas 0x045302 (cc.a88k 0x045582): the
+  name's address, two booleans and a block (c_expr_syn's alloc_builtins
+  passes il_180). }
 function blk_fnd_name(
     p8: univ_ptr;
     p12: boolean;
     p14: boolean;
-    p16: integer32): univ_ptr; options(val_param); extern;
+    p16: univ_ptr): univ_ptr; options(val_param); extern;
 
 { FND_NAME - c_def_sem.pas 0x045390 (cc.a88k 0x045610). }
 function fnd_name(
@@ -137,11 +139,14 @@ function def_varn(
     p16: integer;
     p18: boolean): univ_ptr; options(val_param); extern;
 
-{ ADD_VARN - c_def_sem.pas 0x046D98 (cc.a88k 0x047018). }
+{ ADD_VARN - a variable (109) named name, of decl's type and
+  attributes, allocated as vat, entered in il_180's chain.
+  c_def_sem.pas 0x046D98 (cc.a88k 0x047018): name and vat by value,
+  decl by address (its +0 and +12..+31 read); A0. }
 function add_varn(
-    p8: integer32;
-    p12: integer32;
-    p16: integer): univ_ptr; options(val_param); extern;
+    name: univ_ptr;
+    in decl: c_decl_t;
+    vat: c_vat_t): c_sym_ptr_t; options(val_param); extern;
 
 { ADD_REG_VAR - c_def_sem.pas 0x046E60 (cc.a88k 0x0470E0). }
 procedure add_reg_var(
@@ -198,11 +203,13 @@ procedure def_enum_list(
     p8: univ_ptr;
     p12: univ_ptr); options(val_param); extern;
 
-{ DEF_SUBR - c_def_sem.pas 0x0475C2 (cc.a88k 0x047842). }
+{ DEF_SUBR - a subrange type (128) of low's type from low's value to
+  high's, to d.dtype.  c_def_sem.pas 0x0475C2 (cc.a88k 0x047842):
+  three addresses. }
 procedure def_subr(
-    p8: integer32;
-    p12: integer32;
-    p16: integer32); options(val_param); extern;
+    in low: c_cexp_t;
+    in high: c_cexp_t;
+    var d: c_decl_t); extern;
 
 { DEF_PTR - c_def_sem.pas 0x047614 (cc.a88k 0x047894). }
 function def_ptr(
@@ -242,21 +249,26 @@ function def_rec(
     p8: univ_ptr;
     p12: univ_ptr): univ_ptr; options(val_param); extern;
 
-{ DEF_ARR - c_def_sem.pas 0x0480A4 (cc.a88k 0x048324). }
-procedure def_arr(
-    p8: univ_ptr;
-    p12: univ_ptr;
+{ DEF_ARR - an array type indexed by index's type of elem's.
+  c_def_sem.pas 0x0480A4 (cc.a88k 0x048324): the declarations by
+  address, a longword and a byte by value; c_expr_syn's do_c_string
+  reads A0. }
+function def_arr(
+    in index: c_decl_t;
+    in elem: c_decl_t;
     p16: integer32;
-    p20: boolean); options(val_param); extern;
+    p20: boolean): univ_ptr; options(val_param); extern;
 
-{ DEF_BLK_SKELETON - c_def_sem.pas 0x0484F8 (cc.a88k 0x048778). }
+{ DEF_BLK_SKELETON - c_def_sem.pas 0x0484F8 (cc.a88k 0x048778):
+  p24 a parameter list (c_expr_syn's alloc_builtins; nil from c_main
+  and primary_expr). }
 procedure def_blk_skeleton(
     p8: integer;
     p10: univ_ptr;
     p14: integer;
     p16: univ_ptr;
     p20: univ_ptr;
-    p24: integer32;
+    p24: univ_ptr;
     p28: boolean;
     p30: integer;
     p32: integer32;
@@ -281,12 +293,13 @@ procedure init_aux(
     p8: univ_ptr;
     p12: univ_ptr); options(val_param); extern;
 
-{ COERCE - c_expr_sem.pas 0x04A678 (cc.a88k 0x04A8F8). }
-procedure coerce(
-    p8: univ_ptr;
-    p12: integer;
-    p14: integer32;
-    p18: integer32); options(val_param); extern;
+{ COERCE - c_expr_sem.pas 0x04A678 (cc.a88k 0x04A8F8): c_expr_syn
+  pushes a type_exp_t's address, the expression stack's top (a word)
+  and a byte, and tests D0 (`tst.b; bmi'). }
+function coerce(
+    in t: type_exp_t;
+    top: integer;
+    p14: boolean): boolean; options(val_param); extern;
 
 { BODY_OPR - c_expr_sem.pas 0x04B5E0 (cc.a88k 0x04B860). }
 procedure body_opr(
@@ -297,9 +310,10 @@ procedure body_opr(
 procedure push_con(
     p8: integer32); options(val_param); extern;
 
-{ PUSH_FCON - c_expr_sem.pas 0x04BCD0 (cc.a88k 0x04BF50). }
+{ PUSH_FCON - c_expr_sem.pas 0x04BCD0 (cc.a88k 0x04BF50): c_expr_syn
+  and test_ne_zero pass a double constant's address (`pea (lit,PC)'). }
 procedure push_fcon(
-    p8: univ_ptr); options(val_param); extern;
+    in value: double); extern;
 
 { EXPR_OP - c_expr_sem.pas 0x04CDBA (cc.a88k 0x04D03A). }
 procedure expr_op(
@@ -307,16 +321,18 @@ procedure expr_op(
     p10: univ_ptr;
     p14: integer); options(val_param); extern;
 
-{ ADJUST_PARM - c_expr_sem.pas 0x04F974 (cc.a88k 0x04FBF4). }
+{ ADJUST_PARM - c_expr_sem.pas 0x04F974 (cc.a88k 0x04FBF4): a
+  boolean by address (`tst.b (A0)'). }
 procedure adjust_parm(
-    p8: univ_ptr); options(val_param); extern;
+    in conv: boolean); extern;
 
 { TEST_NE_ZERO - c_expr_sem.pas 0x04FA40 (cc.a88k 0x04FCC0). }
 procedure test_ne_zero; extern;
 
-{ ADJUST_BLK_FOR_DB - c_expr_sem.pas 0x04FC62 (cc.a88k 0x04FEE2). }
+{ ADJUST_BLK_FOR_DB - c_expr_sem.pas 0x04FC62 (cc.a88k 0x04FEE2): a
+  block pointer by address (`movea.l (8,A6); move.l (A0)'). }
 procedure adjust_blk_for_db(
-    p8: integer32); options(val_param); extern;
+    var blk: c_type_ptr_t); extern;
 
 { c_expr_syn.pas: called from c_main. }
 

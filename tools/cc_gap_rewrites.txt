@@ -87,3 +87,16 @@ lang/c_compiler/source/c_main.pas	s/^(\s*)(ptoc|ctop)\((\w+)\);/${1}{ gap 16 }/
 lang/c_compiler/source/c_main.pas	s/^(\s*)arg := '[^']*';/${1}arg.length := 0; { gap 17 }/
 # gap 1 (c_main): whole varying assignment (the length only, for the check)
 lang/c_compiler/source/c_main.pas	s/^(\s*)arg := tmp;/${1}arg.length := tmp.length; { gap 1 }/
+# gap 7 (c_expr_syn): a real constant passed (the integer increment pushed instead, for the check)
+lang/c_compiler/source/c_expr_syn.pas	s/^(\s*)push_fcon\(1\.0\)$/${1}push_con(incr) { gap 7 }/
+# gap 18: a set expression passed by address (the set variable passed instead, for the check)
+lang/c_compiler/source/c_expr_syn.pas	s/^(\s*)check\(102, follow \+ \[ctk_lparen\]\);/${1}check(102, follow); { gap 18 }/
+lang/c_compiler/source/c_expr_syn.pas	s/^(\s*)eval_expr\(s \+ \[ctk_rparen\]\);/${1}eval_expr(s); { gap 18 }/
+# gap 8 (c_expr_syn): in on constant sets with word elements (the comparisons)
+lang/c_compiler/source/c_expr_syn.pas	s/n\^\.kind in \[77\.\.87, 101, 200\]/((n^.kind >= 77) and (n^.kind <= 87)) or (n^.kind = 101) or (n^.kind = 200) { gap 8 }/
+lang/c_compiler/source/c_expr_syn.pas	s/node\^\.kind in \[73, 109, 145, 146, 147, 205\]/(node^.kind = 73) or (node^.kind = 109) or ((node^.kind >= 145) and (node^.kind <= 147)) or (node^.kind = 205) { gap 8 }/
+lang/c_compiler/source/c_expr_syn.pas	s/node\^\.kind in \[109, 145, 146, 147, 205\]/(node^.kind = 109) or ((node^.kind >= 145) and (node^.kind <= 147)) or (node^.kind = 205) { gap 8 }/
+lang/c_compiler/source/c_expr_syn.pas	s/token_kind in \[61, 76\.\.89, 92, 93, 101, 200\]/(token_kind = 61) or ((token_kind >= 76) and (token_kind <= 89)) or (token_kind = 92) or (token_kind = 93) or (token_kind = 101) or (token_kind = 200) { gap 8 }/
+lang/c_compiler/source/c_expr_syn.pas	s/k in \[80\.\.86, 200\]/((k >= 80) and (k <= 86)) or (k = 200) { gap 8 }/
+lang/c_compiler/source/c_expr_syn.pas	s/token_kind in \[24, 34, 42, 61, 63, 65, 67, 68, 69, 76\.\.89, 92, 93, 101, 200\]/(token_kind = 24) or (token_kind = 34) or (token_kind = 42) or (token_kind = 61) or (token_kind = 63) or (token_kind = 65) or ((token_kind >= 67) and (token_kind <= 69)) or ((token_kind >= 76) and (token_kind <= 89)) or (token_kind = 92) or (token_kind = 93) or (token_kind = 101) or (token_kind = 200) { gap 8 }/
+lang/c_compiler/source/c_expr_syn.pas	s/token_kind in \[77\.\.(8[79]), 101, 200\]/((token_kind >= 77) and (token_kind <= $1)) or (token_kind = 101) or (token_kind = 200) { gap 8 }/

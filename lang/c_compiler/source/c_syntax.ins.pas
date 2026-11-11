@@ -16,8 +16,13 @@ procedure data_init(
     p14: univ_ptr;
     p18: integer); options(val_param); extern;
 
-{ C_TYPE_NAME - c_syntax.pas 0x067286 (cc.a88k 0x067506). }
-function c_type_name(
-    p8: univ_ptr;
-    p12: univ_ptr;
-    p16: univ_ptr): integer32; options(val_param); extern;
+{ C_TYPE_NAME - after a `(', a type name to d (d.dtype the type,
+  d.flags its qualifiers) and is_type true, or is_type false when what
+  follows is not a type name.  c_syntax.pas 0x067286 (cc.a88k
+  0x067506): c_expr_syn's unary_expr passes its follow set, a 40-byte
+  frame record and a byte, all by address, and reads neither D0 nor
+  A0. }
+procedure c_type_name(
+    in follow: c_tokset_t;
+    out d: c_decl_t;
+    out is_type: boolean); extern;

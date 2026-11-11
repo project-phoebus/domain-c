@@ -313,3 +313,18 @@ when this tree is merged).
        begin
          s := '-D__apollo';
        end;
+
+18. **A set expression passed to an `in` parameter.**  c_expr_syn.pas
+   func_call_stat `check(102, follow + [ctk_lparen])' (cc.m68k 0x050970:
+   the 14-byte set formed in a frame temporary with `or.l'/`or.w' and
+   `pea' of it) and primary_expr `eval_expr(s + [ctk_rparen])'
+   (0x050FAC).  dpc: "a 14-byte expression passed by address is not
+   supported yet".  Reproducer:
+
+       module g18;
+       type s_t = set of 0..111;
+       procedure q(in s: s_t); extern;
+       procedure p(in f: s_t);
+       begin
+         q(f + [61]);
+       end;

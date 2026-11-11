@@ -230,3 +230,40 @@ revisited.
    time_$line_t' (and time.pas's definition the same), so that c_main
    can pass its PRTSUB line (dpc refuses a type transfer of a
    variable passed by reference).
+
+38. Translator L (2026-11-11), c_expr_syn: probable slip of the
+   original kept: unary_expr's increment (`++', `--', cc.m68k
+   0x05215E) tests the operand's node (+0 of the stack entry) for kind
+   130 and then type_exp's the node's +4 into the entry's own type, as
+   if the node were the pointer type (the type is at +28).  Keep as is?
+39. c_objtype.ins.pas: the expression stack entry (c_exp_t) is now
+   named (node +0, sym +4, item +8, disp +24, typ +28 a type_exp_t,
+   line +58, flag_61), c_main's make_main_pgm reads typ.base (was sym);
+   c_decl_t's +12 is flags (a set; c_main's `:= 0' became `:= []') and
+   +16..+31 size_bits, align and unused words; c_type_t's pointer and
+   function variants got their further fields (ptr_reference at +34,
+   fn_params, fn_conv); new: c_tokset_t (the follow sets), c_parlist_t
+   (parameter type lists), c_cexp_t (a constant expression), c_blk_t
+   and c_reglist_t (a block by offset; il.ins.pas's xp/xw views name the
+   same words, question 13).  c_globals.ins.pas: csyn_60 is an array
+   [1..128] (c_main's `csyn_60 := 3' became csyn_60[1] := 3) and
+   cdef_50 a c_blk_ptr_t.  The cells keep their offset names.
+40. c_externs.ins.pas headings of routines c_expr_syn calls but other
+   units define were narrowed from the call sites (their owners should
+   check them): c_expr_sem's coerce (a function of a type_exp_t by
+   address, a word and a byte; the frame reading was wrong), push_fcon
+   (a double by address), adjust_parm (a boolean by address),
+   adjust_blk_for_db (a block pointer by address); c_syntax's
+   c_type_name (c_syntax.ins.pas: a procedure, the follow set, a
+   c_decl_t and a boolean, all by address); c_def_sem's def_subr,
+   def_arr (a function), add_varn, blk_fnd_name (p16 a block) and
+   def_blk_skeleton (p24 a parameter list; c_main passes nil);
+   attributes.ins.pas got attr_set_align_dsc, attr_check_align and
+   attr_curr_align_env.
+41. do_c_string stores int_type and char_type (uint_type) in the
+   declarations' +4, which c_main and alloc_builtins fill with an
+   identifier or il_178 (c_decl_t's `name'): the field's meaning is
+   unsettled.
+42. lang/lang/source/externals.ins.pas and fop.ins.pas are new empty
+   stubs (c_expr_syn opens them; so do c_def_sem, c_expr_sem,
+   c_stmt_sem, c_syntax and code generator units).
