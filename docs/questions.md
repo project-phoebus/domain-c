@@ -704,3 +704,11 @@ revisited.
    the program).  delparent (opt_strength) is declared `in p' and
    add_constant `in t; in b' after the callers' frame copies; the
    owners should confirm when opt_strength is translated.
+
+95. Translator X: opt_vec_$process_routine (cc.m68k 0x096854, a global
+   routine) has no caller in cc.m68k and its address is not taken by
+   an instruction; process_candidate reaches its transforms' dispatch
+   with a tree's kind when an accumulation's other operand is not a
+   scalar (nothing happens: the kind is out of the jump table's 11
+   entries; written as kind 0).  Is process_routine called from the
+   a88k back end or through a table not found?

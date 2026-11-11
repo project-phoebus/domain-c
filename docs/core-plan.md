@@ -284,3 +284,9 @@ g_opt_varset_t; opt_main's +0x18 (opt_main_18, the chains' pool),
 liveanalysis, add_constant, loopopt, motion_constants and of the
 callees in units not translated yet (delparent, opt_main_$ensure_var_set,
 make_motioned_ud_chain).
+Translator X, opt_vector: the unit opens cg.ins.pas before
+codegen.ins.pas, so codegen_$uads_t (which cg.ins.pas's headings use)
+is declared by both inserts under `%if not codegen_uads_declared', a
+conditional variable globals.ins.pas declares; opt_vector reads the
+statements and trees through its own views (it does not open
+g_opt.ins.pas) and declares inline_$mark_reference_params (opt_inline).

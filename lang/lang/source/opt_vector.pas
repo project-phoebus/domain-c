@@ -52,8 +52,11 @@
   44/45, mult_add 34/35 (strided 156/157), addconst 26/27,
   mult_constant 38/39, addvector 30/31, subvector 50/51.
 
-  dpc gaps (docs/dpc-gaps.md): 2 (sparse cases), 7 (a comparison with
-  0.0), 8 (`in' on the node kind sets), 24 (calls as operands of `or').
+  The unit opens cg.ins.pas before codegen.ins.pas (globals.ins.pas's
+  codegen_uads_declared lets either declare the descriptor type).
+
+  dpc gaps (docs/dpc-gaps.md): 7 (a comparison with 0.0), 8 (`in' on
+  the node kind sets).
 }
 module opt_vector;
 
