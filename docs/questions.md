@@ -108,4 +108,23 @@ revisited.
    position, last region, 3001 regions) because Rev 8.89 addresses all
    of it absolutely; the image puts the regions at +8 where dpc puts
    them at +6 (docs/rev889-patterns.md 21).
-
+19. Translator G (2026-11-11): putobj is declared in
+   globals_from_general.ins.pas (the prelude), but gen_debug.pas opens
+   no prelude insert, only iosub.ins.pas (putobj's own unit's insert),
+   and dpc refuses a second declaration of a routine (so iosub.ins.pas
+   cannot also declare it for gen_debug while inc_list and c_error open
+   both).  gen_debug.pas declares putobj itself for now.  Move putobj
+   from globals_from_general to iosub.ins.pas (and add iosub.ins.pas to
+   the prelude's users that call putobj without opening it:
+   gen_exception), or keep the local declaration?  Also, putobj's
+   second parameter is a size (the bytes mapped: gen_debug's
+   flush_one_block, debug_sym_dmp's obj_alloc pass a count), not a
+   pointer: the heading in globals_from_general.ins.pas (`p:
+   univ_ptr') could be `size: integer32'.
+20. Translator G: pds.ins.pas returns every record made as univ_ptr
+   (the image returns them in D0, the two attribute sets, typed, in A0:
+   docs/rev889-patterns.md 25).  The core's rule is a longword for a D0
+   result; univ_ptr was taken because the records are pointers in
+   every use (debug_sym_dmp passes them back and pds.pas dereferences
+   them) and it spares a type transfer at each call.  Keep, or make
+   them integer32?
