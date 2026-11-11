@@ -247,3 +247,27 @@ revisited.
    and no routine of either binary reaches; declared as an initialized
    array (table_18) so the values are kept.  The original may have been
    two tables or a constant record.
+40. Translator M (2026-11-11), attributes.pas: the alignment
+   environment, cargs_$options.b28b_0 (+0x28B bit 0), is handled by the
+   image as a one-bit enumeration or 0..1 field (attr_set_align_env
+   stores its word parameter's low byte without a test; merge_attribs
+   compares the field's value `tst.w', merge_attribs_natural `cmpi.w
+   #1'; attr_curr_align_env returns it as a word), while cargs.pas
+   assigns it false, true and the boolean `natural'.  It is kept a
+   boolean (attributes writes `env <> 0', `ord(...)' (docs/dpc-gaps.md
+   19) and boolean tests).  Typing it as an enumeration (word,
+   natural) would change cargs.ins.pas, cargs.pas (three assignments)
+   and attributes; proposed, not done.
+41. Translator M: c_objtype's c_attr_t names its +0 `other_bits' (a
+   set), but +0 of the variable form is the size in bits
+   (attr_tattr_to_vattr copies the type form's size there;
+   attr_packed_size reads a structure's +12 and kind 197's +16 as bit
+   counts; type_exp rounds a structure's +12 to bytes).  attributes
+   declares its own attr_vattr_t (size, bits, align, natural,
+   min_align) and passes c_attr_t to it as univ; c_sym_map's own
+   tattr_to_vattr keeps c_attr_t's names.  Proposed: rename c_attr_t's
+   fields to attr_vattr_t's (other_bits -> size: integer32, unused_10
+   -> natural, unused_12 -> min_align) and fix c_sym_map's two uses.
+   Also c_type_t's set variant gives set_size at +12 (integer32), but
+   type_exp takes a set's size from +8 and attributes reads a word at
+   +12 (the element count); not changed (no translated user).

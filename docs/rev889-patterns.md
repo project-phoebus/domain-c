@@ -316,3 +316,14 @@ cc.m68k unless marked.
     edge 0x0B0B5E), but normalize_il's set of 0..239 (0x0B17D4) has
     no `bcs': the kinds' type may be 0..239 (a set as large as the
     type needs no check).  Not decided; noted for the node types.
+## Packed fields (translator M, attributes.pas)
+
+42. **A bit of a byte set or cleared with the word's bit number.**
+    attr_check_align (cc.m68k 0x0A4F22) sets a type_exp_t's align_ok
+    flag, bit 1 of the byte at +24 (+52 of the expression stack entry,
+    tested `btst #1,(-0xc,A0,D3.l)' just before), with `bset
+    #9,(-0xc,A0,D3.l)': 9 is the flag's bit in the word at +24, and
+    the 68000 takes a memory operand's bit number modulo 8, so the
+    byte's bit 1 is set.  Elsewhere the unit uses the byte's own bit
+    numbers (`bset #1,(24,A0)' in attr_set_align_dsc 0x0A51E0).  dpc
+    emits `bset #1'.

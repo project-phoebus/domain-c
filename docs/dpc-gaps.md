@@ -334,3 +334,19 @@ when this tree is merged).
        begin
          f('Compiler may not');
        end;
+
+19. **`ord` of a boolean.**  attributes.pas attr_curr_align_env
+   (cc.m68k 0x0A63F6: `moveq #1,D0; and.b 0x2C3677,D0', the packed
+   boolean cargs_$options.b28b_0 as 0 or 1 in a word result).  The
+   reference defines `ord' for any ordinal type, boolean included
+   (false 0, true 1).  dpc: "this predeclared function is not
+   supported yet" (for an unpacked boolean too).  Reproducer:
+
+       module g19;
+       var r: packed record a: boolean; b: boolean; end;
+         b: boolean; n: integer;
+       procedure p;
+       begin
+         n := ord(b);
+         n := ord(r.b);
+       end;

@@ -106,6 +106,7 @@ later.
 | `lang/c_compiler/source/macro_utl.ins.pas` | done (c_macro_utl, c_macro_read): text list elements (pos, kind), macros, 64 actuals |
 | `lang/c_compiler/source/c_lex_pp.pvt.pas` | done (c_lex_pp, translator H): PPIO_ headings, the file stack (lex_file_t complete, lex_files, lex_depth), lex_listing_line (number field and text), lex_macro_expanded |
 | `lang/c_compiler/source/c_syntax.ins.pas`, `c_expr_syn.ins.pas`, `cppansi.ins.pas` | headings read off frames and call sites (TODO) |
+| `lang/lang/source/attributes.ins.pas` | done (attributes, translator M): the type and variable forms of the attributes (attr_tattr_t, attr_vattr_t), a routine's options (attr_rtn_opts_t, a block's +332); every global routine but attr_packed_size; declares its own types (c_main and c_lex_pp open it before c_objtype) |
 
 Translator H (2026-11-11), c_lex_pp: c_globals.ins.pas now has the
 token classes (ctk_ constants: k in 0..75 the class of the k-th name
