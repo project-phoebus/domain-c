@@ -425,6 +425,15 @@ def pick_unit(coff, prog, want=None):
     (the file's own name); the only one when the binary has one."""
     units = coff.units()
     key = (want or prog).lower()
+    if '/' in key:
+        # a tree path less .pas (lang/common/source/token): the unit
+        # whose source path ends with it (two units may share a name)
+        hits = [u for u in units if u['source'] and
+                os.path.splitext(u['source'])[0].lower().endswith('/' + key.lstrip('/'))]
+        if len(hits) == 1:
+            return hits[0]
+        if not hits:
+            raise SystemExit('%s: no single unit from %s.pas' % (coff.path, key))
     hits = [u for u in units if u['source'] and
             os.path.splitext(u['source'].split('/')[-1])[0].lower() == key]
     if len(hits) == 1:
