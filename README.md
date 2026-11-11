@@ -83,4 +83,6 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/c_compiler/source/c_cond_read.pas` | 7 | translated (best effort) |
 | `lang/c_compiler/source/c_error.pas` | 8 | translated (best effort; dpc gap 2) |
 | `lang/c_compiler/source/c_macro_utl.pas` | 19 | translated (best effort; dpc gaps 3, 4, 5) |
+| `lang/c_compiler/source/c_initdate.c` | 1 | reconstructed (C; not checked by the gate) |
+| `lang/c_compiler/source/c_run_acpp.c` | 3 | reconstructed (C; not checked by the gate) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
