@@ -76,3 +76,4 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/prtsub.pas` | 7 | translated (best effort) |
 | `lang/lang/source/il.pas` | 1 | translated (best effort; IL globals named by offset) |
 | `lang/lang/source/target_properties.pas` | 3 | translated (best effort; record fields named by offset, table initializer TODO) |
+| core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

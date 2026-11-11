@@ -27,16 +27,50 @@ the translators; headings and cells should not need to change.
 | prtsub | `lang/lang/source/prtsub.pas` | 7 | 632 | done |
 | target_properties | `lang/lang/source/target_properties.pas` | 3 | 294 | done (fields named by offset) |
 | il | `lang/lang/source/il.pas` | 1 | 580 | done (globals named by offset) |
-| token | `lang/lang/source/token.pas` (+ `lang/common/source/token.pas`) | 12 (+8) | 1946 | headings and tables |
-| inc_list | `lang/lang/source/inc_list.pas` | 5 | 916 | |
-| error_listing | `lang/lang/source/error_listing.pas` | 6 | 894 | |
-| il_utils | `lang/lang/source/il_utils.pas` | 14 | 3412 | |
+| token | `lang/lang/source/token.pas` (+ `lang/common/source/token.pas`) | 12 (+8) | 1946 | headings and tables (lang/common's adds nothing to the core) |
+| inc_list | `lang/lang/source/inc_list.pas` | 5 | 916 | headings |
+| error_listing | `lang/lang/source/error_listing.pas` | 6 | 894 | headings, +0xC |
+| il_utils | `lang/lang/source/il_utils.pas` | 14 | 3412 | headings |
 | gen_utils | `lang/lang/source/gen_utils.pas` | 21 | 4248 | headings |
-| cargs | `lang/lang/source/cargs.pas` | 24 | 9064 | |
-| add_node | `lang/lang/source/add_node.pas` | 23 | 18204 | headings first |
-| debug_sym_dmp | `lang/lang/source/debug_sym_dmp.pas` | 56 | 15050 | headings first |
-| outbin | `lang/lang/source/outbin.pas` (m68k only) | 70 | 24354 | headings first |
-| globals, glob_extern, real_globals, real_externals, globals_from_*, lib | (variables and foreign headings) | | | from the globals catalogue |
+| cargs | `lang/lang/source/cargs.pas` | 24 | 9064 | headings, the options record, shared cells |
+| add_node | `lang/lang/source/add_node.pas` | 23 | 18204 | headings (11 called from outside) |
+| debug_sym_dmp | `lang/lang/source/debug_sym_dmp.pas` | 56 | 15050 | headings (9) |
+| outbin | `lang/lang/source/outbin.pas` (m68k only) | 70 | 24354 | headings (3) |
+| globals_from_frontend, _backend, _general, real_externals, lib | (foreign headings and cells) | | | done (placement rule in globals_from_backend.ins.pas) |
+| glob_extern, glob_extern.ins.plb, real_globals | | | | nothing required |
+
+**The core is settled (2026-11-10).**  Every routine of a provider that
+another unit calls has a heading read off its frame and call sites;
+every shared cell of the providers is declared (il, target_properties,
+cargs, token, error_listing; the other providers have none); the
+foreign routines and cells that units opening the prelude need and no
+other insert they open could declare are in globals_from_* (front end:
+type_exp, cgerr, cgerr_no_source, advance_listing_to_line, ...; back
+ends: the entry points runbackend calls and runbackend's +0x8..+0x16),
+real_externals (pas_$new, pas_$dispose, ftn_$dlog10) and
+us/us/ins/lib.ins.pas (lib_$cv_fp_in, lib_$cv_dfp_out, lib_$cv_sfp_out,
+lib_$data_move).
+
+For the parallel translators:
+
+- A provider's global routines that only its own unit calls are not in
+  its insert (listed at the head of add_node, debug_sym_dmp and outbin's
+  inserts): declare them in the unit file (module-level, not internal:
+  they load A5).  add_node's add_top_node must stay out of the insert:
+  c_stmt_sem and c_syntax have internal routines of that name.
+- Headings read off frames use univ_ptr for every pointer and p1..pn
+  for names; narrow the types (and name the parameters) from the callee's
+  body, which is the expected kind of core change.
+- cargs_$options (cargs.ins.pas) is one packed record: read the field
+  comments for the option behind each bit; the sets' elements are
+  numbers.  Rev 8.89 merges consecutive constant stores to packed fields
+  (docs/rev889-patterns.md 10): write the separate assignments.  A name
+  is the 1026-byte cargs_$name_t (length, body), not a varying string.
+- Front-end cells used by add_node, attributes and error_listing come
+  from lang/c_compiler/source/c_globals.ins.pas, which those units open;
+  unix_objmod's +0x5DD0 and +0x5E16 (c_lex_pp, c_main) and emit's +0x108
+  (jmp_br_resolve, outbin, unix_objmod) belong to inserts outside the
+  prelude (c_globals or unix_objmod's; codegen or final's).
 
 ## Shared global cells (the largest groups)
 
