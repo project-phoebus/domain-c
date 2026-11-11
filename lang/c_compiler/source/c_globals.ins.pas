@@ -370,7 +370,9 @@ var
   id_resident_procedure: extern il_$node_ptr_t;  { +0x1DC }
   id_device: extern il_$node_ptr_t;     { +0x1E0 }
   idu_device: extern il_$node_ptr_t;    { +0x1E4 }
-  csyn_1e8: extern univ_ptr;            { +0x1E8: c_stmt_sem add_ldfn }
+  csyn_1e8: extern c_switch_ptr_t;      { +0x1E8: the innermost switch
+                                          statement (c_syntax); c_stmt_sem
+                                          add_cbranch }
   idu_options: extern il_$node_ptr_t;   { +0x1F0: `__options' (c_main) }
   idu_attribute: extern il_$node_ptr_t; { +0x1F4: `__attribute' }
   con_minus_one: extern il_$node_ptr_t; { +0x1F8: smcontk(81, -1)

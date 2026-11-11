@@ -514,7 +514,7 @@ begin
   v := add_varn(id_string_constant, arr, vat_stat);
   v^.var_flags := v^.var_flags + [14];
   str := lex_token;
-  data_init(0, v, arr.dtype, 1);
+  data_init(0, v, arr.dtype, vat_stat);
   name.id := il_$node_ptr_t(v);
   name.line := lex_line;
   body_opr(7, addr(name));

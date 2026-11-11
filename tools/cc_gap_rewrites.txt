@@ -261,3 +261,15 @@ lang/lang/source/outbin.pas	s/\bnot (executable_insts_follow_prev_lineno|assert_
 lang/lang/source/outbin.pas	s/\b(executable_insts_follow_prev_lineno|assert_inline_block_start_follows|assert_is_inline_block_start|assert_is_line_no_instyp|fardisp)\(([^()]*)\)/(($1($2)) = true)/g
 # gap 25 (outbin): a routine needing more registers than dpc has (wr_instr's listing case dropped, for the check)
 lang/lang/source/outbin.pas	$s=1 if /^      case c\^\.kind of$/; if ($s) { $e = /^      end;$/; $_ = $e ? "      { gap 25 }\n" : ""; $s = 0 if $e; }
+# gap 8 (c_syntax): in on a constant set with word elements, generically over the whole file (BEGIN undef $/: sets spanning lines): `x in s + [..]' split in two, then each `x in [..]' expanded into comparisons
+lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in (\w+) ([-+]) (\[[^\]]*\])}{$3 eq "+" ? "(($1 in $2) or ($1 in $4))" : "(($1 in $2) and not ($1 in $4))"}ge
+lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
+# gap 20 (c_syntax): set expressions passed to in parameters (the first operand passed, for the check)
+lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{([(]|,\s+)(\w+)((?:\s*\+\s*(?:\w+|\[[^\]]*\]))+)(?=\s*[,)])}{$1$2}g
+# gap 7 (c_syntax): a real compared with 0.0 (its high longword compared with 0, for the check)
+lang/c_compiler/source/c_syntax.pas	s/cx\.value\^\.real_value <> 0\.0/cx.value^.bits[1] <> 0 { gap 7 }/
+# gap 27 (c_syntax): set constants passed to in parameters (a module variable gap25_s passed, for the check)
+lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s#\n(  legal_specs: )#\n  gap25_s: c_tokset_t;\n$1#; s#(\(|, +)\[[^\]\[]*\](?=\s*[,)])#${1}gap25_s#g
+# gap 7 (c_syntax): an integer converted to a double, a real truncated (dropped; the high longword taken, for the check)
+lang/c_compiler/source/c_syntax.pas	s/^(\s*)(?:tmp := n\^\.int_value|r := n\^\.real_value|r := tmp)(;?)$/${1}kind := kind${2} { gap 7 }/
+lang/c_compiler/source/c_syntax.pas	s/^(\s*)v := trunc\(orig\^\.real_value\);/${1}v := orig^.bits[1]; { gap 7 }/

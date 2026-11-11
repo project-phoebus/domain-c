@@ -2037,8 +2037,8 @@ var
 begin
   p := gspace(36);
   p^.kind := 130;
-  if d.unused_8 <> 0 then
-    p^.ptr_to := c_type_ptr_t(d.unused_8)
+  if d.tag <> nil then
+    p^.ptr_to := c_type_ptr_t(d.tag)
   else
     p^.ptr_to := d.dtype;
   p^.ptr_fwd_next := cdef_fwd_ptrs;

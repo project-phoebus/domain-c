@@ -434,12 +434,15 @@ type
   end;
 
   { What def_blk_skeleton takes as its fourth argument (c_main's cc,
-    +0x400 of its data, and make_main_pgm, a frame record): 40 bytes,
-    of which these are set.
+    +0x400 of its data, and make_main_pgm, a frame record): 34 bytes
+    (c_syntax's member_list copies 34; c_main's next variable, a large
+    one, at +0x428), of which these are set.
 
     +12..+31 are the attributes (c_dattr_t, the variant attr: c_def_sem
-    copies them whole); def_fwd_ptr takes +8, when set, as the
-    structure tag a pointer is declared to.
+    copies them whole).  The declaration specifiers leave in name the
+    token that named the type (diagnostics), in tag a structure, union
+    or enumeration tag's identifier (def_fwd_ptr takes it, when set, as
+    the tag a pointer is declared to).
 
     Not known from the original: everything but the offsets. }
   c_decl_t = record
@@ -447,7 +450,7 @@ type
                                           type (def_subr, def_arr and
                                           c_type_name fill it) }
     name: univ_ptr;                     { +4 }
-    unused_8: integer32;                { +8 }
+    tag: il_$node_ptr_t;                { +8 }
     case integer of
     1: (
     flags: c_flags_t;                   { +12: cleared; c_type_name's
@@ -464,9 +467,7 @@ type
     unused_28: integer32;               { +28: cleared by do_c_string
                                           (add_varn copies +12..+31,
                                           the attributes) }
-    line: integer;                      { +32 }
-    unused_34: integer;                 { +34 }
-    unused_36: integer32);              { +36 }
+    line: integer);                     { +32 }
     2: (
     attr: c_dattr_t);                   { +12..+31 }
   end;
@@ -642,7 +643,11 @@ type
       b374_2: boolean;
       b374_1: boolean;
       b374_0: boolean;
-      b375: 0..255;                     { +375 }
+      b375_7: boolean;                  { +375 }
+      main_int: boolean;                { .6: main returns int (c_syntax's
+                                          body sets it before testing
+                                          the result type) }
+      b375_5_0: 0..63;
       b376_7: boolean;                  { +376 }
       b376_6: boolean;
       b376_5: boolean;
@@ -862,6 +867,23 @@ type
     line: integer;                      { +108 }
     started: boolean;                   { +110: set by case_s }
     has_default: boolean;               { +111 }
+  end;
+
+  { The switch statements being parsed (c_syntax's push_switch and
+    pop_switch, csyn_1e8 the innermost): 124 bytes from gspace, kept
+    for reuse once popped.  c_stmt_sem's add_cbranch tests active.
+
+    Not known from the original: the names. }
+  c_switch_ptr_t = ^c_switch_t;
+  c_switch_t = record
+    next: c_switch_ptr_t;               { +0: the one made for a switch
+                                          inside it }
+    prev: c_switch_ptr_t;               { +4: the enclosing one }
+    c: c_case_t;                        { +8: case_s .. case_e's }
+    active: boolean;                    { +120: inside the switch's
+                                          body: stat takes case and
+                                          default }
+    has_default: boolean;               { +121: its default seen }
   end;
 
   { A parameter declared by name (121, 56 bytes from c_def_sem's

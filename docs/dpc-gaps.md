@@ -518,3 +518,28 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
          b := substr(a, 1, n) = 'CommandCIR';
        end;
 
+
+27. **A set constant passed to an `in` parameter.**  c_syntax.pas stat
+   `error(101, [ctk_if, ...])' (cc.m68k 0x065630: `pea' of the 14-byte
+   constant after the routine), enum_list `identifier([ctk_rbrace,
+   ctk_assign, ctk_comma], 117, nm)', function_def `body([])',
+   array_decl's constant_expr, parse_attributes and declaration's
+   error and identifier calls.  dpc: "a 14-byte set constant passed by
+   address (no site known) is not supported yet".  The rewrite
+   (tools/cc_gap_rewrites.txt) declares a module variable gap25_s in
+   the scratch copy and passes it for every set constant argument.
+   Reproducer:
+
+       module g27;
+       type s_t = set of 0..111;
+       procedure q(in s: s_t); extern;
+       procedure p;
+       begin
+         q([1, 2, 100]);
+       end;
+
+   c_syntax also meets gap 8 (`in' on constant sets, and on `cases +
+   [... 200]', a set expression), gap 20 (set expressions passed by
+   address) and gap 7 (a real compared with 0.0, an integer converted
+   to a double, trunc, double assignments); its rules are generic over
+   the whole file (BEGIN { undef $/ }, the sets span lines).

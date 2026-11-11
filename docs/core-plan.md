@@ -106,7 +106,7 @@ later.
 | `lang/c_compiler/source/macro_utl.ins.pas` | done (c_macro_utl, c_macro_read): text list elements (pos, kind), macros, 64 actuals |
 | `lang/c_compiler/source/c_lex_pp.pvt.pas` | done (c_lex_pp, translator H): PPIO_ headings, the file stack (lex_file_t complete, lex_files, lex_depth), lex_listing_line (number field and text), lex_macro_expanded |
 | `lang/c_compiler/source/c_expr_syn.ins.pas` | done (c_expr_syn, translator L): the parsing levels' (follow, lab, ctx) |
-| `lang/c_compiler/source/c_syntax.ins.pas`, `cppansi.ins.pas` | headings read off frames and call sites (TODO; c_type_name narrowed from c_expr_syn's calls) |
+| `lang/c_compiler/source/c_syntax.ins.pas`, `cppansi.ins.pas` | c_syntax.ins.pas done (data_init, c_type_name checked against their bodies); cppansi.ins.pas headings read off frames (TODO) |
 | `lang/lang/source/attributes.ins.pas` | done (attributes, translator M): the type and variable forms of the attributes (attr_tattr_t, attr_vattr_t), a routine's options (attr_rtn_opts_t, a block's +332); every global routine but attr_packed_size; declares its own types (c_main and c_lex_pp open it before c_objtype) |
 
 Translator H (2026-11-11), c_lex_pp: c_globals.ins.pas now has the
@@ -197,3 +197,16 @@ table at +0x4009C, opt_4009c), lang2/source/ftn/source/f_hash.ins.pas,
 lang2/source/ftn/source/const_op.ins.pas (r8_expon, r8i4_expon), and
 us/us/ins/fpp_errs.ins.pas, fpp.ins.pas, peb.ins.pas (empty; c_expr_sem
 and kfold open them).
+fpp_errs.ins.pas and peb.ins.pas are new empty stubs.
+
+Translator R, c_syntax (finished, 59 routines): c_objtype gets
+c_switch_t (csyn_1e8's switch records, csyn_1e8 typed in c_globals),
+c_blk_t's +375.6 (main_int), c_decl_t shrunk to 34 bytes with +8 the
+tag (il_$node_ptr_t); data_init's heading narrowed (c_expr_syn passes
+vat_stat).  c_syntax's gap rewrites are generic over the file (gaps
+8, 20, 25: `in' on constant sets, set expressions and set constants
+passed by address).  body_opr and expr_op (c_expr_sem, translator P)
+are called with addresses of c_name_t records (addr(...)) as their
+univ_ptr headings stand; def_func's x4, x16 and x20 are the options, the
+parameters by name (c_parm_ptr_t) and the prototype's scope block
+(c_blk_ptr_t), passed as integer32 (docs/questions.md).
