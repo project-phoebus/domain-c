@@ -62,3 +62,36 @@ procedure moverefcell(
   pointer by value. }
 procedure reversecond(
     c: codegen_$cell_ptr_t); options(val_param); extern;
+
+{ The routines of final.pas that instr_reorder.pas calls. }
+
+{ FINAL_$IS_UNMOVEABLE_FP_INST - whether floating-point cell c must stay
+  where it is.  0x10905A: a pointer by value, a boolean in D0. }
+function final_$is_unmoveable_fp_inst(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); extern;
+
+{ SAMEADDR - whether descriptors a and b address the same place.
+  0x109304: both by address, a boolean in D0. }
+function sameaddr(
+    in a: codegen_$ads_t;
+    in b: codegen_$ads_t): boolean; extern;
+
+{ INVOLVES - whether descriptor a uses register reg.  0x109548: a by
+  address, reg a word by value, a boolean in D0. }
+function involves(
+    in a: codegen_$ads_t;
+    reg: integer): boolean; options(val_param); extern;
+
+{ TESTCC - whether the condition codes cell c sets (of mask) are
+  tested before they are set again.  0x10AFD2: a pointer and a word by
+  value, a boolean in D0. }
+function testcc(
+    c: codegen_$cell_ptr_t;
+    mask: integer): boolean; options(val_param); extern;
+
+{ INSTR_REORDER - the instructions of section sect from first reordered
+  to separate stores and loads of a register (instr_reorder.pas
+  0x0BA754): two pointers by value (final's caller). }
+procedure instr_reorder(
+    first: univ_ptr;
+    psect: univ_ptr); options(val_param); extern;
