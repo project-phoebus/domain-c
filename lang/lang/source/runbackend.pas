@@ -40,7 +40,8 @@
     and 149), +0x8..+0x16 the cells other units read
     (globals_from_backend.ins.pas), +0x18 fourteen words .rwdi
     initializes (0, 1, 2, 4, 6, 7, 8, 9, 1, 2, 4, 5, 0, 12) that
-    nothing reaches, +0x34 whether a routine has bit 7 of +376 set
+    other units read (runbackend_18: cg_call's alias_size_expand, the
+    optimizer's add_range and add_con_range), +0x34 whether a routine has bit 7 of +376 set
     (set_local_call_bits), +0x36 whether coding a routine failed, +0x38
     the last source line normalize_il met (a longword; cgerr is passed
     its low word).  .rwdi also clears +0xC..+0x13.  prtobj.pas's
@@ -119,12 +120,11 @@ define
   runbackend_10 := nil;                 { +0x10 }
   runbackend_14;                        { +0x14 }
   runbackend_16;                        { +0x16 }
+  runbackend_18 := [0, 1, 2, 4, 6, 7, 8, 9, 1, 2, 4, 5, 0, 12];  { +0x18 }
 
 var
   cur_stmt: il_$node_ptr_t;             { +0x0 }
   ref_stmt: il_$node_ptr_t;             { +0x4 }
-  table_18: array [0..13] of integer := [0, 1, 2, 4, 6, 7, 8, 9, 1, 2,
-                                         4, 5, 0, 12];  { +0x18: not read }
   fcw_seen: boolean;                    { +0x34 }
   backend_failed: boolean;              { +0x36 }
   last_line: integer32;                 { +0x38 }

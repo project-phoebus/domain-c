@@ -38,6 +38,13 @@ var
   runbackend_16: extern integer;        { +0x16: opt_main sets it; opt_*,
                                           reg_*, cc.a88k's at_backend
                                           and dmp read it }
+  runbackend_18: extern array [0..13] of integer;  { +0x18 (cc.m68k
+                                          0x2C33C8): .rwdi's 0, 1, 2, 4,
+                                          6, 7, 8, 9, 1, 2, 4, 5, 0, 12;
+                                          cg_call's alias_size_expand
+                                          (by a variable's +10 low
+                                          nibble), the optimizer's
+                                          add_range and add_con_range }
 
   { A back-end cell: cc.a88k's at_backend.pas, A5 0x485830, +0x506
     (rewrite clears it); cc.m68k's cg_top.pas, A5 0x356314, +0x148
