@@ -185,3 +185,23 @@ when this tree is merged).
          else
            f := nil;
        end;
+
+12. **A string constant passed to a varying parameter.**
+   commit_top_node.pas commit_top_$convert_aops_to__aop_to_mem (cc.m68k
+   0x0760B8) passes 'Compiler may not guarantee atomic behavior.' to
+   token_$make_string_token's `in s: univ token_$vstring_t': the image
+   passes a varying constant (the word 43, then the text, at 0x07613A).
+   The reference converts a string constant to a varying string in
+   assignments and value/`in' arguments (3.11.4).  dpc refuses it for a
+   varying parameter ("Assignment statement expression is not
+   compatible with the assignment variable (v_t := string of 16
+   characters)") and passes the characters alone (no length word) for a
+   univ one, which the translation uses (no rewrite).  Reproducer:
+
+       module g12;
+       type v_t = varying [32767] of char;
+       procedure f(in s: v_t); extern;
+       procedure p;
+       begin
+         f('Compiler may not');
+       end;
