@@ -73,6 +73,7 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/common/source/diag.pas` | 13 | translated (best effort; dpc gap 1) |
 | `lang/common/source/ass.pas` | 14 | translated (best effort) |
 | `lang/common/source/token.pas` | 8 | translated (best effort; dpc gap 2) |
+| `lang/common/source/ecb.pas` | 1 | translated (best effort; st.ins.pas fields named by use) |
 | `lang2/source/lt_utils/source/bug_check.pas` | 3 | translated (best effort) |
 | `lang/lang/source/gspace.pas` | 6 | translated (best effort) |
 | `lang/lang/source/strings.pas` | 7 | translated (best effort) |
