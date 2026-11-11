@@ -164,3 +164,24 @@ lang/lang/source/alias.pas	s/n\^\.xw\[18\] in \[1\.\.12, 14, 16, 18, 23\.\.31, 3
 lang/lang/source/alias.pas	s/^\s*57, 59\.\.62, 64\.\.66, 68\.\.71, 74\.\.84, 86, 87\] then$/ then/
 # gap 24 (alias): a function call as an operand of `or' (compared with true, for the check)
 lang/lang/source/alias.pas	s/^(\s*)is_display_ptr\(y\) then/$1(is_display_ptr(y) = true) then { gap 24 }/
+# gap 7 (c_expr_sem): real conversions (dropped, for the check)
+lang/c_compiler/source/c_expr_sem.pas	s/^(\s*)r := node\^\.(int|real)_value;/${1}{ gap 7 }/
+lang/c_compiler/source/c_expr_sem.pas	s/^(\s*)d := r;/${1}{ gap 6 }/
+# gap 8 (c_expr_sem): in on a constant set with a word element (the comparisons)
+lang/c_compiler/source/c_expr_sem.pas	s/((?:\w+(?:\[[^\]]*\])?\.)*\w+)\^\.kind in \[80\.\.86, 200\]/((($1^.kind >= 80) and ($1^.kind <= 86)) or ($1^.kind = 200)) { gap 8 }/g
+lang/c_compiler/source/c_expr_sem.pas	s/((?:\w+(?:\[[^\]]*\])?\.)*\w+)\^\.kind in \[137, 138, 143, 145\.\.147, 164, 171, 175, 189, 205\]/((($1^.kind >= 137) and ($1^.kind <= 147)) or ($1^.kind = 164) or ($1^.kind = 171) or ($1^.kind = 175) or ($1^.kind = 189) or ($1^.kind = 205)) { gap 8 }/g
+lang/c_compiler/source/c_expr_sem.pas	s/((?:\w+(?:\[[^\]]*\])?\.)*\w+)\^\.kind in \[77\.\.90, 92, 93, 101, 156, 176, 198, 200\]/((($1^.kind >= 77) and ($1^.kind <= 90)) or ($1^.kind = 92) or ($1^.kind = 93) or ($1^.kind = 101) or ($1^.kind = 156) or ($1^.kind = 176) or ($1^.kind = 198) or ($1^.kind = 200)) { gap 8 }/g
+# gap 7 (c_expr_sem): real constants in comparisons (the stack depth tested instead, for the check)
+lang/c_compiler/source/c_expr_sem.pas	s/if \(r > -100\.0\) and \(r < 100\.0\) then/if cexs_23bc > 2 then { gap 7 }/
+lang/c_compiler/source/c_expr_sem.pas	s/^(\s*)r := value;/${1}{ gap 7 }/
+lang/c_compiler/source/c_expr_sem.pas	s/push_fcon\(0\.0\)/push_con(0) { gap 7 }/
+# gap 14 (c_expr_sem): non-local gotos (an assignment instead, for the check)
+lang/c_compiler/source/c_expr_sem.pas	s/goto 99;  \{ non-local \}/cexs_23be := false; { gap 14 }/
+lang/c_compiler/source/c_expr_sem.pas	s/((?:\w+(?:\[[^\]]*\])?\.)*\w+)\^\.kind in \[77\.\.87, 101, 200\]/((($1^.kind >= 77) and ($1^.kind <= 87)) or ($1^.kind = 101) or ($1^.kind = 200)) { gap 8 }/g
+lang/c_compiler/source/c_expr_sem.pas	s/((?:\w+(?:\[[^\]]*\])?\.)*\w+)\^\.kind in \[122, 123, 129, 134, 136\]/(($1^.kind = 122) or ($1^.kind = 123) or ($1^.kind = 129) or ($1^.kind = 134) or ($1^.kind = 136)) { gap 8 }/g
+lang/c_compiler/source/c_expr_sem.pas	s/\bop in \[18, 27, 28, 32, 37\.\.42, 51\.\.61, 65\]/((op = 18) or (op = 27) or (op = 28) or (op = 32) or ((op >= 37) and (op <= 42)) or ((op >= 51) and (op <= 61)) or (op = 65)) { gap 8 }/g
+lang/c_compiler/source/c_expr_sem.pas	s/\bop in \[18, 27, 28, 44, 65\]/((op = 18) or (op = 27) or (op = 28) or (op = 44) or (op = 65)) { gap 8 }/g
+# gap 25 (c_expr_sem): a routine needing more virtual registers than dpc numbers (expr_op's cases from
+# subtraction on left out of the check by a conditional variable that is not set)
+lang/c_compiler/source/c_expr_sem.pas	s/^(    \{ Subtraction\. \})$/%var gap25;\n%if gap25 %then { gap 25 }\n$1/
+lang/c_compiler/source/c_expr_sem.pas	s/^(    \{ The other operators: the common end)/%endif { gap 25 }\n$1/

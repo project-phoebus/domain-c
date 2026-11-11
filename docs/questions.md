@@ -354,3 +354,30 @@ revisited.
    Also c_type_t's set variant gives set_size at +12 (integer32), but
    type_exp takes a set's size from +8 and attributes reads a word at
    +12 (the element count); not changed (no translated user).
+53. Translator P (2026-11-11), c_expr_sem.pas: probable slips of the
+   original kept as the image has them: expr_op's `?:' (op 24) takes
+   the result's bounds from entries ib and ib + 1 (`(952,A3)' and
+   `(948,A3)' with A3 = A5 + 64 ib), the entry above the stack's top
+   unless the operands were exchanged (ia + 1 = ib was probably meant);
+   check_for_out_of_bounds sets the array variable's flag 22 when the
+   constant subscript is at or past the end (c_expr_syn's comment calls
+   22 `within bounds'); reference_operand compiles vat_stat and
+   vat_extdef with the same code twice.
+54. Translator P: c_objtype's c_field_t names +48's low six bits
+   `width' and +49 `at', but expr_op's bit-field code uses +49 as the
+   width (the mask `(1 lsl +49) - 1') and +48 as the position (the
+   shift `32 - +48 - +49', the extraction pushing +48 then giving +49
+   as the descriptor's +8): the two names are probably exchanged.
+   c_sym_map prints them as named; not renamed (c_sym_map's output
+   order would have to be checked).
+55. Translator P: c_expr_sem's operator table (op_tab, +0x172, 8 bytes
+   an operator) has 59 initialized entries and ends at +0x34A; expr_op
+   indexes it by every operator code up to 65 (the builtins 60..61 and
+   the internal 62..65), reading into +0x350.., the expression stack's
+   unused entry 0 (zeros).  Declared [0..65] in the unit (best effort;
+   the stack then lies elsewhere in dpc's layout).
+56. Translator P: arith (lang2/source/lt_utils/source/arith.pas) is
+   called by c_expr_sem, whose inserts (routines-cc.*.md) do not include
+   arith.ins.pas: the unit declares it itself with a word operation.
+   If an insert of c_expr_sem's list declared it originally (fop.ins.pas
+   is a stub), move it there.

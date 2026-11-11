@@ -389,3 +389,20 @@ cc.m68k unless marked.
     multiple of 8, leaving 4 or 6 bytes of zeros between.  (Elsewhere
     module variables follow each other at word alignment: item 9,
     il.pas +0x142.)  dpc lays them out end to end.
+## Calls (translator P, c_expr_sem.pas)
+
+51. **Two word arguments pushed as one longword.**  Consecutive
+    constant word arguments are pushed by one `pea' or `move.l #':
+    mult_div_mod_prep (cc.m68k 0x04C624) calls adjust_length(base, 0, 2)
+    as `subq.l #2,SP; pea 0x2; move.w (-288,A0),-(SP)' (0 and 2 in one
+    longword), and expr_op's adjust_length(k, 1, 4) are `move.l
+    #0x10004,-(SP)' (0x04C678, 0x04D8C0, ...).  dpc pushes each word.
+52. **A procedure's non-local goto target keeps A5 in the frame.**  As
+    item 35: expr_op (0x04CDBA) stores A5 at -488 after loading it and
+    reloads it at the label (0x04F856) that its nested do_coerce,
+    coerce_as_usual and value_preserve reach through pas_$nlg2
+    (0x04BF36, 0x04C0EA, 0x04C3FE).
+53. **A bit set or cleared of a merged longword.**  expr_op's address
+    of a function (0x04F046) sets two flags of a block, +374 bit 3 and
+    +376 bit 4, with one `ori.l #0x08001000,(374,A2)' (item 10 for a
+    longword spanning two packed fields).
