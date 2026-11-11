@@ -8,7 +8,7 @@
 - maker: Pascal compiler 68K Rev 8.89(546)
 - maker: Fortran 77 compiler PRISM=>68K Rev 10.89(615)
 - maker: cc (program)
-- units: 132 (asm 1, c 3, ftn 1, pas 127); routines: 3378; routine bytes: 1172146
+- units: 132 (asm 1, c 3, ftn 1, pas 127); routines: 3368; routine bytes: 1171364
 
 | # | file | lang | routines | code start | A5 | routine bytes | span |
 |---|------|------|----------|------------|----|---------------|------|
@@ -66,7 +66,7 @@
 | 51 | `lang/lang/source/il.pas` | pas | 1 | 0x07F12C | 0x2E9CE0 | 580 | 600 |
 | 52 | `lang/lang/source/il_utils.pas` | pas | 14 | 0x07F384 | 0x2E9E68 | 3412 | 3612 |
 | 53 | `lang/lang/source/list_tree.pas` | pas | 42 | 0x0801A0 | 0x2E9E6C | 24786 | 32400 |
-| 54 | `us1/us1/lib/dblib/loc/src/loc_build.c` | c | 43 | 0x088030 | 0x513B44 | 5002 | 4220 |
+| 54 | `us1/us1/lib/dblib/loc/src/loc_build.c` | c | 33 | 0x088030 | 0x513B44 | 4220 | 4220 |
 | 55 | `lang2/source/lt_utils/source/mrh.pas` | pas | 15 | 0x0890AC | 0x2E9FB8 | 1912 | 2396 |
 | 56 | `lang/bind/source/objio.pas` | pas | 34 | 0x089A08 | 0x30E7F8 | 10512 | 10688 |
 | 57 | `lang/bind/source/objutil.pas` | pas | 18 | 0x08C3C8 | 0x316DDC | 4576 | 16976 |
@@ -2657,9 +2657,7 @@
 
     loc_build__unknown_loc                   0x089092 0x1A     level 2
     loc_build__prism_mode_loc                0x088FB6 0xDC     level 2
-    	                                     0x089028 0x48     level 3
     loc_build__m68k_indirect_loc             0x088E7C 0x13A    level 2
-    	                                     0x088EFE 0x58     level 3
     loc_build__relative_loc                  0x088D5C 0x120    level 2
     loc_build__register_loc                  0x088C64 0xF8     level 2
     loc_build__close_list                    0x088BD6 0x8E     level 2
@@ -2667,16 +2665,9 @@
     close_all_locs                           0x088B2A 0x72     level 2
     close_all_ranges                         0x088AE0 0x4A     level 2
     close_range                              0x0889DA 0x106    level 2
-    	                                     0x088AB8 0x1E     level 3
-    	ÿÿÿÎ                                 0x0889EE 0xCA     level 3
     fix_stmt_based_list                      0x088938 0xA2     level 2
     loc_put_clan_op                          0x088908 0x30     level 2
     loc_put_family_op                        0x08878A 0x17E    level 2
-    	                                     0x0887F8 0xFA     level 3
-    	                                     0x0888E4 0xC      level 4
-    	ÿÿÿÎ                                 0x0888D4 0xC      level 4
-    	ÿÿÿÎ                                 0x0888BE 0x8      level 4
-    	ÿÿÿ8                                 0x0887A0 0x20     level 3
     nybble_pack                              0x08871A 0x70     level 2
     loc_build__stmt_range                    0x088664 0xB6     level 2
     loc_build__pc_range                      0x0885D6 0x8E     level 2
@@ -2685,7 +2676,6 @@
     loc_build__close_pool                    0x0884B6 0x88     level 2
     loc_build__dump_pool                     0x08841E 0x98     level 2
     fill_buffer                              0x08838E 0x90     level 2
-    	                                     0x0883BA 0x4C     level 3
     next_dump_position                       0x088320 0x6E     level 2
     next_dump_string                         0x0882E2 0x3E     level 2
     loc_build__open_list                     0x088288 0x5A     level 2

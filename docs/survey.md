@@ -18,8 +18,8 @@ Generated tables (regenerate with `tools/cc_survey.py`):
 
 | file | install dir | format | .text | units | routines (.blocks) |
 |------|-------------|--------|-------|-------|--------------------|
-| `cc.m68k` | `ctape/install/ri.apollo.cc.v.6.9.m/` | Apollo m68k COFF (0x197) | 0x89E94 (+ opt$procedure, peephole$proc, codegen$proc) | 105 | 2180 |
-| `cc.a88k` | `ctape/install/ri.apollo.cc.v.6.9.mpx/` | Apollo m68k COFF (0x197) | 0x247FF4 (+ opt$procedure) | 132 | 3378 (+ ~1080 ISC routines with no record, below) |
+| `cc.m68k` | `ctape/install/ri.apollo.cc.v.6.9.m/` | Apollo m68k COFF (0x197) | 0x89E94 (+ opt$procedure, peephole$proc, codegen$proc) | 105 | 2170 |
+| `cc.a88k` | `ctape/install/ri.apollo.cc.v.6.9.mpx/` | Apollo m68k COFF (0x197) | 0x247FF4 (+ opt$procedure) | 132 | 3368 (+ ~1080 ISC routines with no record, below) |
 
 Both run on the 68K.  `cc.a88k` is the C compiler whose back end is the newer
 `lang2/source/be_com` (with the ISC instruction selector) generating code for

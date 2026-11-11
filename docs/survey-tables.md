@@ -9,7 +9,7 @@
 - maker: bind
 - maker: Fortran 77 compiler PRISM=>68K Rev 10.89(615)
 - maker: cc (program)
-- units: 105 (asm 1, c 3, ftn 1, pas 100); routines: 2180; routine bytes: 732028
+- units: 105 (asm 1, c 3, ftn 1, pas 100); routines: 2170; routine bytes: 731246
 
 | # | file | lang | routines | code start | A5 | routine bytes | span |
 |---|------|------|----------|------------|----|---------------|------|
@@ -66,7 +66,7 @@
 | 50 | `lang/lang/source/il.pas` | pas | 1 | 0x07D74C | 0x169C70 | 580 | 600 |
 | 51 | `lang/lang/source/il_utils.pas` | pas | 14 | 0x07D9A4 | 0x169DF8 | 3412 | 3612 |
 | 52 | `lang/lang/source/list_tree.pas` | pas | 42 | 0x07E7C0 | 0x169DFC | 24786 | 32400 |
-| 53 | `us1/us1/lib/dblib/loc/src/loc_build.c` | c | 43 | 0x086650 | 0x35319C | 5002 | 4220 |
+| 53 | `us1/us1/lib/dblib/loc/src/loc_build.c` | c | 33 | 0x086650 | 0x35319C | 4220 | 4220 |
 | 54 | `lang2/source/lt_utils/source/mrh.pas` | pas | 15 | 0x0876CC | 0x169F48 | 1912 | 2396 |
 | 55 | `lang/bind/source/objio.pas` | pas | 34 | 0x088028 | 0x18E788 | 10512 | 10688 |
 | 56 | `lang/bind/source/objutil.pas` | pas | 18 | 0x08A9E8 | 0x196D6C | 4576 | 16976 |
@@ -129,7 +129,7 @@
 - maker: Pascal compiler 68K Rev 8.89(546)
 - maker: Fortran 77 compiler PRISM=>68K Rev 10.89(615)
 - maker: cc (program)
-- units: 132 (asm 1, c 3, ftn 1, pas 127); routines: 3378; routine bytes: 1172146
+- units: 132 (asm 1, c 3, ftn 1, pas 127); routines: 3368; routine bytes: 1171364
 
 | # | file | lang | routines | code start | A5 | routine bytes | span |
 |---|------|------|----------|------------|----|---------------|------|
@@ -187,7 +187,7 @@
 | 51 | `lang/lang/source/il.pas` | pas | 1 | 0x07F12C | 0x2E9CE0 | 580 | 600 |
 | 52 | `lang/lang/source/il_utils.pas` | pas | 14 | 0x07F384 | 0x2E9E68 | 3412 | 3612 |
 | 53 | `lang/lang/source/list_tree.pas` | pas | 42 | 0x0801A0 | 0x2E9E6C | 24786 | 32400 |
-| 54 | `us1/us1/lib/dblib/loc/src/loc_build.c` | c | 43 | 0x088030 | 0x513B44 | 5002 | 4220 |
+| 54 | `us1/us1/lib/dblib/loc/src/loc_build.c` | c | 33 | 0x088030 | 0x513B44 | 4220 | 4220 |
 | 55 | `lang2/source/lt_utils/source/mrh.pas` | pas | 15 | 0x0890AC | 0x2E9FB8 | 1912 | 2396 |
 | 56 | `lang/bind/source/objio.pas` | pas | 34 | 0x089A08 | 0x30E7F8 | 10512 | 10688 |
 | 57 | `lang/bind/source/objutil.pas` | pas | 18 | 0x08C3C8 | 0x316DDC | 4576 | 16976 |
@@ -323,7 +323,7 @@
 | `lang/lang/source/il.pas` | 1 | 1 | yes | yes |
 | `lang/lang/source/il_utils.pas` | 14 | 14 | yes | yes |
 | `lang/lang/source/list_tree.pas` | 42 | 42 | yes | yes |
-| `us1/us1/lib/dblib/loc/src/loc_build.c` | 43 | 43 | yes | yes |
+| `us1/us1/lib/dblib/loc/src/loc_build.c` | 33 | 33 | yes | yes |
 | `lang2/source/lt_utils/source/mrh.pas` | 15 | 15 | yes | yes |
 | `lang/bind/source/objio.pas` | 34 | 34 | yes | yes |
 | `lang/bind/source/objutil.pas` | 18 | 18 | yes | yes |

@@ -271,6 +271,9 @@ class Coff:
             for r in sorted(level):
                 if b[r] == 0x04 and u16(r + 2) == 0:
                     continue                    # a module: no code
+                if b[r] == 0x04 and s32(r + 12) == 0:
+                    continue                    # an unnamed C scope block
+                    # (kind 0x0902, loc_build.c): part of its function
                 cell = u16(r + 28)
                 if b[r] != 0x04 or not 4 <= cell <= 3 + len(code):
                     raise SystemExit('%s: .blocks record not understood at +0x%X' % (self.path, r))
