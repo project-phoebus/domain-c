@@ -440,7 +440,7 @@ lang/lang/source/cg_tree.pas	s/^(\s+)if dv\.d < 0\.0 then$/$1if dv.hi < 0 then {
 lang/lang/source/cg_tree.pas	s/\(\(\(peek\(n\^\.opnd\[1\], n\^\.desc\.rlen\) >= 16\) and \(peek\(n\^\.opnd\[1\], n\^\.desc\.rlen\) <= 23\)\)\)/(peek(n^.opnd[1], n^.desc.rlen) >= 16) { gap 24 }/
 # gap 25 (cg_tree): generate exceeds the virtual registers: its floating operators' arms left out of the check (a conditional variable not set)
 lang/lang/source/cg_tree.pas	s/^(    \{ Floating addition \(34\))/%var gap25g;\n%if gap25g %then { gap 25 }\n$1/
-lang/lang/source/cg_tree.pas	s/^(    \{ The status register \(47)/%endif { gap 25 }\n$1/
+lang/lang/source/cg_tree.pas	s/^(    \{ The library's routines 14 and 15 \(43)/%endif { gap 25 }\n$1/
 # gap 2 (cg_tree): compare_proc's sign tests, a case of 4 labels over a range of 12 (six labels added, for the check)
 lang/lang/source/cg_tree.pas	s/^(\s+)2: n\^\.desc\.w6 := 6;$/$1 2, 4, 5, 6, 7, 8, 9: n^.desc.w6 := 6; { gap 2 }/
 # gap 7 (cg_tree): f_compare_proc's comparisons of a constant with 0.0 (its first longword compared with 0, for the check)

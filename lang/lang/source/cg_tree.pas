@@ -55,12 +55,18 @@
     0x108524  --------  loadcse (in tree_walk)
     0x1085B4  --------  tree_walk
     A5 0x356460 (cc.m68k), 0x298 bytes: +0 the fast math library's
-    routines by builtin function (22 entries of a flag byte and a
-    std_lib index, .rwdi), +0x58 a PEB operand (.rwdi: f1 11, f2 and f3
-    31, f5 5), +0x70 and +0x158 word tables (.rwdi), +0x188
-    cg_zero_ads, +0x1A0 cg_null_ads (.rwdi: f2 and f3 31), +0x1B4
-    cg_tree_1b4, +0x1B8 .. +0x230 operands (24 bytes apart), +0x248 a
-    statement for multi_assign_proc (cg_assign's cg_asn_t), +0x294.
+    routines by builtin function (tree_math: 22 entries of a flag byte
+    and a std_lib index, .rwdi), +0x58 the PEB's operand (peb_ads; .rwdi:
+    f1 11, f2 and f3 31, f5 5), +0x70 the 68881's instructions by
+    builtin function (tree_fn_inst, 24 words), +0xA0 emit's
+    instructions by operator (tree_op_inst, 92 words), +0x158 the FPA's
+    routines by builtin function (tree_fn_rtn, 24 words; the three
+    tables' .rwdi leaves their zero words out), +0x188 cg_zero_ads,
+    +0x1A0 cg_null_ads (.rwdi: f2 and f3 31), +0x1B4 cg_tree_1b4, +0x1B8
+    .. +0x230 the operands opw, opv (.rwdi: f1 10, f2 and f3 31, f5 4),
+    opu, opt, ops, opr (24 bytes apart), +0x248 the statement for
+    multi_assign_proc (tree_asn, cg_assign's cg_asn_t), +0x294
+    tree_rlen.
 
   Global (A5 loaded): cg_tree_$needs_lib_support, movewlx,
   cg_tree_$is_decomposable_const_mul, walker, tree_walk; the other
@@ -69,24 +75,24 @@
   docs/rev889-patterns.md 16).  The routines nested in do_const_mul,
   walker and tree_walk take their parent's frame from their dynamic
   link (docs/rev889-patterns.md 25), but const_mul and push, which
-  take it in A1 (const_mul calls itself).
+  take it in A1 (const_mul calls itself); of generate's, ldsqr,
+  proto_set, switch, f_compare_proc and restore_alloc_temps use their
+  parents' frames (switch generate's through f_compare_proc's), the
+  others are given the tree.
 
   The nodes are read through cg.ins.pas's tree view (cg_tree_t) and
   il.ins.pas's views by offset.  emit's generic instructions as numbers
-  (docs/questions.md 77, 83): 0 move, 1 add, 2 subtract, 7, 11 neg, 13
-  a shift (x 3 left), 21 branch, 32 a label, 42..44 and 47 the 68881's
-  (a conditional branch, add and subtract, compare).
+  (docs/questions.md 77, 83): 0 move, 1 add, 2 subtract, 3 and, 4 or, 5
+  exclusive or, 7, 11 neg, 12 not, 13 a shift (x 3 left, 2 logical
+  right, 0 arithmetic right), 14 bset, 17 btst, 18 cmp, 19 scc, 20 a
+  conditional branch (x the condition), 21 branch, 22 lea, 28 dbcc, 32
+  a label, 42..47, 49, 56, 60, 69 the 68881's (a conditional branch,
+  add, subtract, multiply, divide, compare, negate, fintrz, fscale),
+  64..66 the 68020's bit fields.
 
-  TODO(pascal) generate is begun: its frame, the operands' temporaries
-  and its end are translated, and of its nested routines shift_proc,
-  copy_set_aggregate, set_range_in_set_proc, set_bit_in_set_proc,
-  proto_set, set_ops, compare_proc,
-  round_fp_to_ieee, switch, f_compare_proc, ld_addr and
-  restore_alloc_temps, bit_test_proc, bit_set_proc, unpack_proc,
-  agg_compare_proc, mdmcase, ldsqr, mul_proc, extend_div_proc_result
-  and div_proc (all 21); not yet the `case' arms of operators other
-  than 3, 4, 6, 11, 14, 19..21, 23..25, 27, 28, 49, 50, 72, 73 (they
-  fall to cgerr 0 meanwhile).
+  generate's floating operators' arms (34 .. 42) are left out of the
+  gate (docs/dpc-gaps.md 25: the routine needs more virtual registers
+  than dpc numbers) and type-checked by tools/cc_typecheck.sh.
 
   Not known from the original: the names of the module's variables
   (cg.ins.pas's), the locals and the parameters; the IL nodes' fields
@@ -1087,12 +1093,23 @@ end;
 
   0x10484E, 0x3B38 bytes, no A5 load (walker's): the operators by a jump
   table of 74 (0x104910; 5, 30..33, 51..62, 64, 67, 71 and the others
-  cgerr 0); rlen in D7; the floating units' test `andi.w #0x714' of the
-  cpu word; the result's floating register tested with the longword mask
-  0x00FF0000, the class compared unsigned (`bhi').
+  cgerr 0); rlen in D7 (the arms read desc.rlen again); the arms end in
+  shared tails (unlock and release of opr and ops, setresult of FP0 and
+  FP1, fp_temp, fop_proc), written out in each arm; the floating units'
+  test `andi.w #0x714' of the cpu word (FPA1 `btst #2' of 0x2C3670,
+  MATHLIB #3; the 68881 `btst #6' of 0x2C3671, M020 #5, the 160 #4, PEB
+  #3); the result's floating register tested with the longword mask
+  0x00FF0000, the classes compared unsigned (`bhi', `bcs'); cg_assign's
+  flags in the longword at +4 (`btst #13', `#14'); tree_op_inst by
+  `lea (0,A5,D0.w)' of op * 2 and (160,A1).  The scales' constants by
+  `jsr fpp_$' (0x0078 1.0 0x00A4 0x0080 the reciprocal; 0x0074 0xFF34 a
+  sign test, then `bpl': docs/rev889-patterns.md 19); the `cmpi.w #88'
+  of the constant before them is not tested (the moves of the double
+  set the condition codes the `bne' takes: the low longword's).
 
   Not known from the original:
-  - the names of the locals. }
+  - the names of the locals (generate's own and those its nested
+    routines share: k, the operand put first, and the flags). }
 
 procedure generate(
     n: cg_tree_ptr_t); options(val_param); internal;
@@ -1109,6 +1126,10 @@ var
   e: integer32;
   sz: integer;
   r: integer;
+  ea: integer;
+  eb: integer;
+  ec: integer;
+  m: integer;
   inl: boolean;
   inreg: boolean;
   temps: boolean;
@@ -3321,10 +3342,6 @@ begin
       unlock(opr);
       release(opt);
     end;
-    49:
-      shift_proc(n, 1);
-    50:
-      shift_proc(n, 0);
 
     { Floating addition (34): inline (prefers_inline_float: the FPA1's
       emit_mul_add or the 68881's add, emit 43), else by the FPA
@@ -4179,6 +4196,121 @@ begin
       end;
     end;
 
+    { A power (42): with FPA1 by its routine (fpa1_expon_inquire's: the
+      exponent in its register), with -CPU MATHLIB the fast math
+      library's, else on the floating stack (94, 96, 98, 100 by the
+      classes). }
+    42:
+      if 8 in cargs_$options.cpu then begin
+        push_fpa_opr(n^.opnd[1], 1, n^.desc.rlen, 16);
+        cg_tree_$fpa1_expon_inquire(il_$node_ptr_t(n), ea, eb, ec);
+        push_fpa_opr(n^.opnd[2], 1, n^.desc.w8, ea);
+        emit_jsr(eb, n^.desc.w8, 0);
+        fpa_temp(il_$node_ptr_t(n), t1);
+        setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
+        if n^.desc.rlen >= 8 then
+          setresult(17, il_$node_ptr_t(n), n^.desc.rlen);
+      end
+      else if 9 in cargs_$options.cpu then
+        cg_tree_$call_fast_math_lib(il_$node_ptr_t(n))
+      else begin
+        if cargs_$options.cpu * [2, 4, 8, 9, 10] <> [] then
+          cg_tree_$spill_fp_reg_contents_before_fpp(n^.opnd[2],
+              n^.desc.rlen);
+        if not check_use(cg_fp_result, n^.opnd[1]) then
+          stack_fp(1, n^.desc.rlen, n^.opnd[1]);
+        if n^.desc.rlen = 6 then begin
+          if n^.desc.w8 <= 4 then
+            eb := 94
+          else
+            eb := 96;
+        end
+        else if n^.desc.w8 <= 4 then
+          eb := 98
+        else
+          eb := 100;
+        stack_fp(eb, n^.desc.w8, n^.opnd[2]);
+        fp_temp(il_$node_ptr_t(n), t1);
+      end;
+
+    { The library's routines 14 and 15 (43, a word's and a long's). }
+    43:
+      if n^.desc.rlen = 2 then
+        gen_call(il_$node_ptr_t(n), std_lib_rtns[14])
+      else
+        gen_call(il_$node_ptr_t(n), std_lib_rtns[15]);
+
+    { Exclusive or (44, emit 5): a constant or the operand a register
+      holds on the right (the operands swapped by n's opnd[1]). }
+    44: begin
+      if cg_fp_count <> 0 then
+        purge_fp;
+      if register_tickle(n^.opnd[1], false) then begin
+        load_operand(n^.opnd[1], n^.desc.rlen, opr);
+        unlock(opr);
+      end;
+      if register_tickle(n^.opnd[2], false) then begin
+        load_operand(n^.opnd[2], n^.desc.rlen, opr);
+        unlock(opr);
+      end;
+      if n^.opnd[2]^.kind in [77..87, 101, 200] then begin
+        address(n^.opnd[2], n^.desc.rlen, ops);
+        load_result(il_$node_ptr_t(n), -1, opr);
+      end
+      else if n^.opnd[1]^.kind in [77..87, 101, 200] then begin
+        address(n^.opnd[1], n^.desc.rlen, ops);
+        n^.opnd[1] := n^.opnd[2];
+        load_result(il_$node_ptr_t(n), -1, opr);
+      end
+      else begin
+        inquire(n^.opnd[2], n^.desc.rlen, ops);
+        if ops.f1 <> 0 then
+          load_result(il_$node_ptr_t(n), -1, opr)
+        else begin
+          inquire(n^.opnd[1], n^.desc.rlen, ops);
+          if ops.f1 <> 0 then begin
+            n^.opnd[1] := n^.opnd[2];
+            load_result(il_$node_ptr_t(n), -1, opr);
+          end
+          else begin
+            load_result(il_$node_ptr_t(n), 2, opr);
+            load_operand(n^.opnd[2], n^.desc.rlen, ops);
+          end;
+        end;
+      end;
+      emit(5, n^.desc.rlen, opr, ops, 0);
+      unlock(opr);
+      release(ops);
+    end;
+
+    { Minimum, maximum (45, 46): a compare (emit 18) and a conditional
+      move over a branch (12 or 15; 2 or 3 unsigned under the routine's
+      convention 1 or 6, the routine block's +377 bits 6..4). }
+    45, 46: begin
+      if cg_fp_count <> 0 then
+        purge_fp;
+      if n^.op = 45 then
+        inst := 12
+      else
+        inst := 15;
+      m := rshft(ord(il_180^.xc[377]) & 16#70, 4);
+      if ((m = 1) or (m = 6)) and ((n^.desc.flags & 16#4000) = 0) then
+        if inst = 12 then
+          inst := 2
+        else
+          inst := 3;
+      load_result(il_$node_ptr_t(n), 2, opr);
+      address(n^.opnd[2], n^.desc.rlen, ops);
+      emit(18, n^.desc.rlen, opr, ops, 0);
+      address(templabel, 0, opt);
+      emit(20, 5, opt, cg_null_ads, inst);
+      emit(0, n^.desc.rlen, opr, ops, 0);
+      emit(32, 5, opt, cg_null_ads, 0);
+      unlock(opt);
+      release(ops);
+      unlock(opr);
+    end;
+
     { The status register (47, through opv, mode 10): with one operand
       a constant and'ed (negative) or or'ed into it; with two its old
       value the result and the operand stored. }
@@ -4200,6 +4332,36 @@ begin
         unlock(opr);
         release(ops);
       end;
+
+    { 48: a word's `chk'-like operation (emit 38) of the operands; for a
+      long without the 68020 a compare and a branch around it with -1
+      as a word. }
+    48: begin
+      if cg_fp_count <> 0 then
+        purge_fp;
+      load_result(il_$node_ptr_t(n), -1, opr);
+      address(n^.opnd[2], n^.desc.rlen, ops);
+      if (n^.desc.rlen = 2) or
+          ((n^.desc.rlen = 4) and (3 in cargs_$options.cpu)) then
+        emit(38, n^.desc.rlen, opr, ops, 0)
+      else begin
+        emit(18, n^.desc.rlen, opr, ops, 0);
+        release(ops);
+        address(templabel, 0, opt);
+        emit(20, 5, opt, cg_null_ads, 3);
+        anyconst(-1, 2, ops);
+        emit(38, 2, opr, ops, 0);
+        emit(32, 5, opt, cg_null_ads, 0);
+        kill_register(ops.f2);
+      end;
+      unlock(opr);
+      release(ops);
+    end;
+
+    49:
+      shift_proc(n, 1);
+    50:
+      shift_proc(n, 0);
 
     { The stack pointer less opnd[1] (65, an alloca). }
     65: begin
