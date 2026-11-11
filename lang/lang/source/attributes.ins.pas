@@ -59,3 +59,44 @@ function attr_curr_align_env: integer; extern;
   a word (c_stmt_sem's temp_alloc). }
 function attr_natural_align_from_bytes(
     n: integer32): integer; options(val_param); extern;
+
+{ The attribute records' routines (c_def_sem): a is the address of a
+  declaration's attributes (c_objtype.ins.pas's c_dattr_t, 20 bytes;
+  univ_ptr since c_main and c_lex_pp open this insert before
+  c_objtype.ins.pas), t a type node, n a symbol or type node. }
+
+{ MERGE_ATTRIBS - merge t's attributes into a; the flags (a longword
+  set, c_flags_t) of the object declared.  0x0A628C (cc.a88k
+  0x0A7C6C): two longwords by value; D0 stored as a longword
+  (c_def_sem's update_attr, add_varn, def_ptr, def_blk_skeleton,
+  def_blk_params). }
+function merge_attribs(
+    a: univ_ptr;
+    t: univ_ptr): integer32; options(val_param); extern;
+
+{ MERGE_ATTRIBS_NATURAL - the same under natural alignment rules.
+  0x0A5A26 (cc.a88k 0x0A7406): c_def_sem's def_typn, def_fld, def_arr,
+  def_resolve_incomplete_types; c_syntax. }
+function merge_attribs_natural(
+    a: univ_ptr;
+    t: univ_ptr): integer32; options(val_param); extern;
+
+{ ATTR_TATTR_TO_VATTR - convert a declaration's attributes a to a
+  symbol's or a type's form at v (the size in bits first).  0x0A59F0
+  (cc.a88k 0x0A73D0). }
+procedure attr_tattr_to_vattr(
+    a: univ_ptr;
+    v: univ_ptr); options(val_param); extern;
+
+{ ATTR_VALIDATE - check the attributes a given for the object n.
+  0x0A564E (cc.a88k 0x0A702E). }
+procedure attr_validate(
+    a: univ_ptr;
+    n: univ_ptr); options(val_param); extern;
+
+{ ATTR_COMPUTE_ROUTINE_OPTIONS - fill a routine block's options area
+  (its +332) from the enclosing block's.  0x0A6412 (cc.a88k 0x0A7DF2):
+  c_def_sem's def_blk_skeleton; D0 not read. }
+procedure attr_compute_routine_options(
+    opts: univ_ptr;
+    outer: univ_ptr); options(val_param); extern;
