@@ -405,3 +405,47 @@ revisited.
    cell, c_def_sem a symbol's +4) and return il_$node_ptr_t (a symbol
    or il_178); c_stmt_sem's two comparisons of fnd_name's result with
    il_178 are now dpc gap 12 (a rewrite in tools/cc_gap_rewrites.txt).
+60. Translator P (2026-11-11), c_expr_sem.pas: probable slips of the
+   original kept as the image has them: expr_op's `?:' (op 24) takes
+   the result's bounds from entries ib and ib + 1 (`(952,A3)' and
+   `(948,A3)' with A3 = A5 + 64 ib), the entry above the stack's top
+   unless the operands were exchanged (ia + 1 = ib was probably meant);
+   check_for_out_of_bounds sets the array variable's flag 22 when the
+   constant subscript is at or past the end (c_expr_syn's comment calls
+   22 `within bounds'); reference_operand compiles vat_stat and
+   vat_extdef with the same code twice.
+61. Translator P: c_objtype's c_field_t names +48's low six bits
+   `width' and +49 `at', but expr_op's bit-field code uses +49 as the
+   width (the mask `(1 lsl +49) - 1') and +48 as the position (the
+   shift `32 - +48 - +49', the extraction pushing +48 then giving +49
+   as the descriptor's +8): the two names are probably exchanged.
+   c_sym_map prints them as named; not renamed (c_sym_map's output
+   order would have to be checked).
+62. Translator P: c_expr_sem's operator table (op_tab, +0x172, 8 bytes
+   an operator) has 59 initialized entries and ends at +0x34A; expr_op
+   indexes it by every operator code up to 65 (the builtins 60..61 and
+   the internal 62..65), reading into +0x350.., the expression stack's
+   unused entry 0 (zeros).  Declared [0..65] in the unit (best effort;
+   the stack then lies elsewhere in dpc's layout).
+63. Translator P: arith (lang2/source/lt_utils/source/arith.pas) is
+   called by c_expr_sem, whose inserts (routines-cc.*.md) do not include
+   arith.ins.pas: the unit declares it itself with a word operation.
+   If an insert of c_expr_sem's list declared it originally (fop.ins.pas
+   is a stub), move it there.
+64. Translator P (2026-11-11), kfold.pas: kfold (22 call sites: c_syntax's
+   call_kfold, the optimizer) and kfold_$general are declared in the unit
+   (kfold forward); which insert gave the callers kfold's heading is not
+   known (g_opt.ins.pas, which kfold opens, is a likely place; created as
+   a stub holding opt_main's +0x4009C table that node_number reads).
+   kfold takes the statement by address and passes its value on.
+65. Translator P: kfold_$general's FPP operations 0x0178 and 0x0180
+   (builtin functions 13 and 12, two operands) are not identified; they
+   are written as Fortran's MOD and SIGN (kfold is shared with the
+   FORTRAN compiler: const_op.ftn's r8_expon and r8i4_expon do its
+   powers).  Its x * 0.0 identity branches (`beq') into the smcontk
+   tail with A0 as fpp_$ leaves it; written as the constant operand.
+   The constant node's +10 word is replaced by a node number when the
+   node il_120[+10] names is an unused tree (the end of kfold_$general):
+   +10 of an integer constant is the low half of its value, so either
+   the constants kfold sees there are not smcontk's or the field means
+   something else; kept as the image has it.

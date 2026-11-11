@@ -425,6 +425,7 @@ type
     the name is found in an enclosing block, def_name clears it.
 
     Not known from the original: the names; +7. }
+  c_name_ptr_t = ^c_name_t;
   c_name_t = record
     id: il_$node_ptr_t;                 { +0 }
     line: integer;                      { +4 }
@@ -471,10 +472,11 @@ type
   end;
 
   { An entry of c_expr_sem's expression stack (cexs_stack, 64 bytes;
-    cexs_23bc the top).  c_expr_syn reads and sets these fields.
+    cexs_23bc the top).  c_expr_syn reads and sets these fields;
+    c_expr_sem's reference_operand turns the address parts (offset,
+    index, base, the flags at +57) into the node.
 
-    Not known from the original: the names; +12..+23, +54..+57, +60,
-    +62. }
+    Not known from the original: the names; +54, +56, +62. }
   c_exp_t = record
     node: il_$node_ptr_t;               { +0: the operand's tree (a
                                           constant node, a variable
@@ -486,20 +488,42 @@ type
     item: il_$node_ptr_t;               { +8: the variable (109) or
                                           string (92) the operand
                                           names, or the type a
-                                          dereference gives }
-    unused_12: integer32;               { +12 }
-    unused_16: integer32;               { +16 }
-    unused_20: integer32;               { +20 }
+                                          dereference gives: add_pn's
+                                          and add_dindexn's type) }
+    offset: integer32;                  { +12: a byte displacement not
+                                          yet in the node (add_dn,
+                                          add_dindexn) }
+    index: il_$node_ptr_t;              { +16: a subscript's tree not yet
+                                          in the node (add_dindexn, or
+                                          an addition) }
+    base: il_$node_ptr_t;               { +20: a dynamic variable whose
+                                          frame displacement is still to
+                                          be added (add_sdn) }
     disp: integer32;                    { +24: compared with 0 and with
                                           typ.size by unary_expr's
                                           `*' }
     typ: type_exp_t;                    { +28..+53: the operand's type
                                           (type_exp) }
     unused_54: integer;                 { +54 }
-    unused_56: integer;                 { +56 }
+    bits: packed record                 { +56 }
+      b56: 0..255;
+      b57_7, b57_6: boolean;            { +57 }
+      force_disp: boolean;              { .5: add_dn even for a zero
+                                          offset }
+      b57_4, b57_3: boolean;
+      long_index: boolean;              { .2: the index is a longword
+                                          (add_dindexn's length 4) }
+      is_addr: boolean;                 { .1: the node is the operand's
+                                          address (add_pn makes it the
+                                          operand) }
+      var_pending: boolean;             { .0: the node is a variable
+                                          (109) whose address its
+                                          allocation still has to make }
+    end;
     line: integer;                      { +58: where the operand was
                                           met }
-    unused_60: char;                    { +60 }
+    bf_done: boolean;                   { +60: a bit field's value has
+                                          been extracted (expr_op) }
     flag_61: boolean;                   { +61: `tst.b; bpl' in
                                           unary_expr's `*' }
     unused_62: integer;                 { +62 }
@@ -690,8 +714,15 @@ type
       b7: boolean;                      { .7: cleared by call_s }
       b6: boolean;                      { .6: call_s copies it from the
                                           argument's; extend_boolean
-                                          sets it }
-      rest: 0..63;
+                                          sets it; signed (c_expr_sem's
+                                          init_aux sets it for the
+                                          signed basic types, the
+                                          conversions from the source's
+                                          signedness) }
+      b5, b4, b3: boolean;
+      b2: boolean;                      { .2: an array (init_aux: kind
+                                          127) }
+      b1, b0: boolean;
       b11: 0..255;                      { +11 }
     end;
     unused_12: integer32;               { +12 }

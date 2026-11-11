@@ -469,3 +469,23 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
   parameter's own parameters (the routines passed are val_param; the
   only trace is the error "Incompatible routine OPTIONS"), so the
   headings give none (a TODO in spos.ins.pas).
+25. **A routine needing more virtual registers than dpc numbers.**
+   c_expr_sem.pas expr_op (cc.m68k 0x04CDBA, 0x2B7A bytes of code, some
+   900 lines of Pascal in one body) exhausts dpc's virtual register
+   numbers (regs.rs new_reg: VBASE plus a u8 counter per class, never
+   reused within a routine) about a third of the way through: "a
+   routine needing this many registers is not supported yet".  The
+   check compiles expr_op with its cases from subtraction on left out
+   (a conditional variable that is not set: tools/cc_gap_rewrites.txt).
+   kfold.pas kfold_$general (0x0AD1A0, 0x223C bytes) likewise: its
+   integer operators and everything from its real operators on are left
+   out.  Reproducer: any procedure of a few hundred statements that each
+   index a record array, e.g.
+
+       module g25;
+       type e = record a, b: integer32; end;
+       var t: array [1..100] of e; k: integer;
+       procedure p;
+       begin
+         t[k].a := t[k + 1].b;   { ... repeated 300 times }
+       end;

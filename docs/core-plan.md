@@ -179,3 +179,21 @@ il_$node_ptr_t)'), call_kfold confirmed; kfold and kfold_$general are
 declared in c_syntax.pas (no kfold insert is opened); us/us/ins
 fpp_errs.ins.pas and peb.ins.pas are new empty stubs.  The other 47
 routines are not written yet.
+Translator P (2026-11-11), c_expr_sem: c_externs.ins.pas's c_expr_sem
+headings are checked against the bodies (init_aux takes `out d:
+c_desc_t; in t: type_exp_t', c_stmt_sem's calls fixed; coerce's third
+parameter is check; body_opr and expr_op take a c_name_ptr_t, which
+the callers' addr(...) passes; push_con, push_fcon, adjust_parm,
+adjust_blk_for_db, test_ne_zero confirmed).  c_objtype.ins.pas:
+c_exp_t's +12 offset, +16 index, +20 base, the flags at +56/+57 (bits:
+force_disp, long_index, is_addr, var_pending), +60 bf_done; c_desc_t's
+flags b5..b0 (b2 an array); c_blk_t's +388 exposed; c_name_ptr_t.
+add_node.ins.pas: add_dn's and add_sdn's second parameter (a symbol)
+and add_sdn's third, add_disp_node's second, are univ_ptr (c_stmt_sem's
+add_dn call fixed).
+
+Translator P, kfold: new stubs lang/lang/source/g_opt.ins.pas (opt_main's
+table at +0x4009C, opt_4009c), lang2/source/ftn/source/f_hash.ins.pas,
+lang2/source/ftn/source/const_op.ins.pas (r8_expon, r8i4_expon), and
+us/us/ins/fpp_errs.ins.pas, fpp.ins.pas, peb.ins.pas (empty; c_expr_sem
+and kfold open them).

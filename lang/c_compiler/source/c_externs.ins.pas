@@ -342,52 +342,76 @@ procedure def_alloc_var(
 
 { c_expr_sem.pas: expressions. }
 
-{ INIT_EXP_TBL - c_expr_sem.pas 0x049BB8 (cc.a88k 0x049E38). }
+{ INIT_EXP_TBL - the operand classes under -ANSI.  c_expr_sem.pas
+  0x049BB8 (cc.a88k 0x049E38); c_main.  (Checked against the body.) }
 procedure init_exp_tbl; extern;
 
-{ INIT_AUX - c_expr_sem.pas 0x049C0A (cc.a88k 0x049E8A). }
+{ INIT_AUX - d describes a value of type t (size, register class,
+  flags).  c_expr_sem.pas 0x049C0A (cc.a88k 0x049E8A): two addresses,
+  d cleared and filled; c_stmt_sem. }
 procedure init_aux(
-    p8: univ_ptr;
-    p12: univ_ptr); options(val_param); extern;
+    out d: c_desc_t;
+    in t: type_exp_t); extern;
 
-{ COERCE - c_expr_sem.pas 0x04A678 (cc.a88k 0x04A8F8): c_expr_syn
-  pushes a type_exp_t's address, the expression stack's top (a word)
-  and a byte, and tests D0 (`tst.b; bmi'). }
+{ COERCE - convert the expression stack's entry top to the type t;
+  true when it could be.  c_expr_sem.pas 0x04A678 (cc.a88k 0x04A8F8):
+  c_expr_syn pushes a type_exp_t's address, the entry (a word) and a
+  byte (check: pointer conversions check alignment and qualifiers),
+  and tests D0 (`tst.b; bmi'). }
 function coerce(
     in t: type_exp_t;
     top: integer;
-    p14: boolean): boolean; options(val_param); extern;
+    check: boolean): boolean; options(val_param); extern;
 
-{ BODY_OPR - c_expr_sem.pas 0x04B5E0 (cc.a88k 0x04B860). }
+{ BODY_OPR - push an operand on the expression stack: mode 0 a name
+  in a function's own body, 1 a name, 2 a check that the top is an
+  integer or an array, 3 a dereference, 4 a member, 5 an rvalue, 6 a
+  real constant, 7 a string's array, 8 an integer constant, 10 a
+  variable already found, 11 a symbol given (name its id, the line).
+  c_expr_sem.pas 0x04B5E0 (cc.a88k 0x04B860): a word and an address
+  by value (the callers pass addr of a c_name_t).  (Checked against
+  the body.) }
 procedure body_opr(
-    p8: integer;
-    p10: univ_ptr); options(val_param); extern;
+    mode: integer;
+    name: c_name_ptr_t); options(val_param); extern;
 
-{ PUSH_CON - c_expr_sem.pas 0x04BC90 (cc.a88k 0x04BF10). }
+{ PUSH_CON - push the integer constant v.  c_expr_sem.pas 0x04BC90
+  (cc.a88k 0x04BF10).  (Checked against the body.) }
 procedure push_con(
-    p8: integer32); options(val_param); extern;
+    v: integer32); options(val_param); extern;
 
-{ PUSH_FCON - c_expr_sem.pas 0x04BCD0 (cc.a88k 0x04BF50): c_expr_syn
-  and test_ne_zero pass a double constant's address (`pea (lit,PC)'). }
+{ PUSH_FCON - push the double constant value.  c_expr_sem.pas 0x04BCD0
+  (cc.a88k 0x04BF50): c_expr_syn and test_ne_zero pass a double
+  constant's address (`pea (lit,PC)'); the body copies it to a local
+  first (a value parameter's copy, or the original's own).  (Checked
+  against the body.) }
 procedure push_fcon(
     in value: double); extern;
 
-{ EXPR_OP - c_expr_sem.pas 0x04CDBA (cc.a88k 0x04D03A). }
+{ EXPR_OP - reduce the top nargs entries of the expression stack by
+  the operator op (name: the operator's token and line, for
+  diagnostics and compound assignments).  c_expr_sem.pas 0x04CDBA
+  (cc.a88k 0x04D03A): a word, an address and a word by value (the
+  callers pass addr of a c_name_t).  (Checked against the body.) }
 procedure expr_op(
-    p8: integer;
-    p10: univ_ptr;
-    p14: integer); options(val_param); extern;
+    op: integer;
+    name: c_name_ptr_t;
+    nargs: integer); options(val_param); extern;
 
-{ ADJUST_PARM - c_expr_sem.pas 0x04F974 (cc.a88k 0x04FBF4): a
-  boolean by address (`tst.b (A0)'). }
+{ ADJUST_PARM - the default argument promotions of the top entry when
+  conv.  c_expr_sem.pas 0x04F974 (cc.a88k 0x04FBF4): a boolean by
+  address (`tst.b (A0)').  (Checked against the body.) }
 procedure adjust_parm(
     in conv: boolean); extern;
 
-{ TEST_NE_ZERO - c_expr_sem.pas 0x04FA40 (cc.a88k 0x04FCC0). }
+{ TEST_NE_ZERO - the top entry becomes `operand != 0'.  c_expr_sem.pas
+  0x04FA40 (cc.a88k 0x04FCC0).  (Checked against the body.) }
 procedure test_ne_zero; extern;
 
-{ ADJUST_BLK_FOR_DB - c_expr_sem.pas 0x04FC62 (cc.a88k 0x04FEE2): a
-  block pointer by address (`movea.l (8,A6); move.l (A0)'). }
+{ ADJUST_BLK_FOR_DB - enter the routine blk's parameters' names in it.
+  c_expr_sem.pas 0x04FC62 (cc.a88k 0x04FEE2): a block pointer by
+  address (`movea.l (8,A6); move.l (A0)').  (Checked against the
+  body.) }
 procedure adjust_blk_for_db(
     var blk: c_type_ptr_t); extern;
 
