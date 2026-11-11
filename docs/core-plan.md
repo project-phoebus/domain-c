@@ -171,5 +171,6 @@ Translator O, c_syntax (started): cc_walk_it takes the walker as a
 routine pointer (c_externs.ins.pas's c_walker_t, `^procedure(var n:
 il_$node_ptr_t)'), call_kfold confirmed; kfold and kfold_$general are
 declared in c_syntax.pas (no kfold insert is opened); us/us/ins
-fpp_errs.ins.pas and peb.ins.pas are new empty stubs.  The other 49
+fpp_errs.ins.pas and peb.ins.pas are new empty stubs; attributes.ins.pas
+gets add_attribute.  The other 47
 routines are not written yet.

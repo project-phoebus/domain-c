@@ -126,5 +126,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/c_compiler/source/c_expr_syn.pas` | 28 | translated (best effort; dpc gaps 7, 8, 18) |
 | `lang/c_compiler/source/c_stmt_sem.pas` | 52 | translated (best effort; IL nodes through c_objtype views; dpc gaps 3, 7, 8, 12, 19) |
 | `lang/c_compiler/source/c_def_sem.pas` | 59 | translated (best effort; IL nodes through c_objtype views and il.ins.pas's; dpc gap 8) |
-| `lang/c_compiler/source/c_syntax.pas` | 59 | started: 10 of 59 (error, check, cc_walk_it, call_kfold, ...; dpc gap 8) |
+| `lang/c_compiler/source/c_syntax.pas` | 59 | started: 12 of 59 (error, check, type_qualifiers, cc_walk_it, call_kfold, ...; dpc gap 8) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

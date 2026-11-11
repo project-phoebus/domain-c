@@ -76,8 +76,9 @@
   TODO(pascal) c_syntax is translated in part
 
   Translated so far: initialize_legal_specs, error, warning, check,
-  add_top_node, call_kfold, call_kfold_fold_addrs, cc_walk_it,
-  continue_break, goto_stat.  The other routines (syntax, program_,
+  type_qualifiers, int_ob_kind_from_integer_type, add_top_node,
+  call_kfold, call_kfold_fold_addrs, cc_walk_it, continue_break,
+  goto_stat.  The other routines (syntax, program_,
   the declarations', the initializers', the statements', constant_expr,
   pp_constant, abstract_decl, c_type_name, data_init) are not written
   yet: syntax (0x0609D8) clears cdef_fwd_ptrs, enters the nine
@@ -267,6 +268,79 @@ procedure check(
 begin
   if not (token_kind in follow) then
     error(code, follow);
+end;
+
+{ type_qualifiers - const and volatile (lex_tokens 102, 103) taken into
+  the flags q: const 19, volatile 0, 3 and 4 (add_attribute with the
+  token).
+
+  0x061FBE, 0xAA bytes, link #-24: a 20-byte attribute record of which
+  the first longword is q; volatile's three calls and const's share the
+  last call (docs/rev889-patterns.md 23); the loop's test compares 103
+  first.
+
+  Not known from the original:
+  - the names; add_attribute's third argument (0 here). }
+
+procedure type_qualifiers(
+    var q: c_flags_t); internal;
+var
+  a: c_dattr_t;
+begin
+  a.flags := q;
+  while (token_kind = 103) or (token_kind = 102) do begin
+    case token_kind of
+      102:
+        add_attribute(19, addr(a), 0, lex_token);
+      103: begin
+        add_attribute(0, addr(a), 0, lex_token);
+        add_attribute(3, addr(a), 0, lex_token);
+        add_attribute(4, addr(a), 0, lex_token);
+      end;
+      otherwise
+        ;
+    end;
+    get;
+  end;
+  q := a.flags;
+end;
+
+{ int_ob_kind_from_integer_type - the integer constant kind of the
+  integral (or enumeration) type t: 82 int, 85 unsigned, 80 short, 83
+  unsigned short, 200 char, 86 unsigned char; another kind is cgerr 28
+  (the result then not set).
+
+  0x063A00, 0x88 bytes, link #-8: the message a 41-character literal
+  after the routine (strtk).
+
+  Not known from the original:
+  - the names. }
+
+function int_ob_kind_from_integer_type(
+    t: c_type_ptr_t): integer; options(val_param); internal;
+begin
+  case t^.kind of
+    122:
+      if t^.len = 4 then
+        if t^.signed then
+          int_ob_kind_from_integer_type := 82
+        else
+          int_ob_kind_from_integer_type := 85
+      else if t^.len = 2 then
+        if t^.signed then
+          int_ob_kind_from_integer_type := 80
+        else
+          int_ob_kind_from_integer_type := 83
+      else if t^.signed then
+        int_ob_kind_from_integer_type := 200
+      else
+        int_ob_kind_from_integer_type := 86;
+    129:
+      int_ob_kind_from_integer_type :=
+        int_ob_kind_from_integer_type(t^.enum_int);
+    otherwise
+      cgerr(28, 0, strtk('int_ob_kind_from_integer_type -- bad kind', 41));
+  end;
 end;
 
 { add_top_node - a top-level node of kind and size bytes, linked
