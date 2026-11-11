@@ -93,6 +93,11 @@ Language reference:
     other branches' numbers; that is fine, the lead renumbers at merge.
     Cite them in unit comments as `docs/dpc-gaps.md N` so they can be
     found.
+  - **dpc takes a routine's parameter names and types from its first
+    declaration**, which for a global routine is the insert's heading;
+    the unit's own heading is not consulted.  When you define a routine
+    whose insert heading has placeholder names (p1, p4, ...), correct
+    the heading (and its callers) rather than renaming in the body.
   - **objdump prints indexed displacements in hex without `0x`**:
     `%a5@(12,%d1:l)` is 0x12, while a plain `%fp@(12)` is decimal 12.
     `tools/cc_dis.py` now rewrites the indexed ones as `0x12`/`-0x11`;
