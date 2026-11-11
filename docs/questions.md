@@ -700,3 +700,37 @@ revisited.
    kinds?  Also: list_tree_$print_tree's second parameter is the
    routine the lines go to (univ_ptr in list_tree.ins.pas, since
    iosub's line type is not declared where the insert is opened).
+
+93. Translator Y (2026-11-11), cg_addr: cg_reg_t's w8, w12 and w14 are
+   named by offset though their use is known: w12 the stamp
+   (cg_addr_2ba) at which obj was set, w8 obj2's, w14 the value's
+   state (0 loaded; 2 not loaded yet: inquire emits the load, makes
+   the home live; 1 edit_register's mark when a label's register has
+   no home variable).  Rename (obj_stamp, obj2_stamp, state) when
+   cg_tree is translated?  cg_state_t's b4, b6 and w266 hold
+   cg_addr_next_dreg's and _next_areg's low bytes and
+   cg_addr_next_freg.
+
+94. cg_addr: registers and classes are compared unsigned in places
+   (kill_register `cmpi.w #23; bhi', peek's `cmpi.w #4; bcc' of the
+   size and its zero-extension before `size + 10 * disp',
+   load_operand's `1 <= size <= 5' as `scc'/`sls', address's `cmpi.w
+   #7,(2,A2); bls' and `cmpi.w #8; bls' of the size), while
+   load_result is passed -1 and -2 as its operand count.  The
+   original's register and class types were perhaps subranges
+   (0..31, 0..15); cg.ins.pas keeps integer, and cg_addr.pas writes
+   kill_register's test as `(r >= 0) and (r <= 23)' and the others
+   as signed compares (the values are never negative there).
+
+95. cg_addr: assert_optimizer_is_enabled is an internal routine of both
+   cg_addr (0x0EEFF4: not -DBA and -OPT above 2) and opt_main
+   (0x0DAC88: the same with a test of 0x2CE5A7 first);
+   tools/cc_dis.py picks opt_main's unless given `--unit cg_addr'.
+
+96. cg_addr: load_result tests `best <> 0' a second time under the
+   constant's branch (0x0F243A), where it is always false; the dead
+   code is kept as the image has it.  cg_addr_$merge_state_of_
+   assigned_goto_targets goes on with a nil block after its cgerr 28
+   (the image's).  unlock's test of the index register compares the
+   base register with the data register (kept).
+

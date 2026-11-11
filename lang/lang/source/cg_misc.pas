@@ -533,7 +533,7 @@ general:
   a.f1 := 8;
 end;
 
-{ fill - len bytes at node n's address set to value (cg_addr_2b6 set to
+{ fill - len bytes at node n's address set to value (cg_addr_next_areg set to
   8 meanwhile): up to 8 bytes as longword moves (0, size 4) to
   displacements 0, 4 and a word move for the rest; more as (An)+ moves
   through n's address loaded into a register, in agg_loop_start's loop
@@ -554,8 +554,8 @@ var
   c: integer32;
   save: integer;
 begin
-  save := cg_addr_2b6;
-  cg_addr_2b6 := 8;
+  save := cg_addr_next_areg;
+  cg_addr_next_areg := 8;
   address(smcontk(81, value), 4, v);
   if len <= 8 then begin
     address(n, 0, d);
@@ -588,7 +588,7 @@ begin
   end;
   unlock(v);
   release(d);
-  cg_addr_2b6 := save;
+  cg_addr_next_areg := save;
 end;
 
 { cbuiltin_strcpy - strcpy(+60, +64) of tree n inline (nothing when the

@@ -49,6 +49,12 @@ when this tree is merged).
    dpc: "a `case` of 4 labels over a range of 13 ... is not supported
    yet"; the check adds empty labels for the other 9.
 
+   Also cg_addr.pas address (cc.m68k 0x0F1C38: `subi.w #77; cmpi.w
+   #136; bcc', a 136-entry jump table on the node's kind): 46 labels
+   over 77..212.  dpc: "a `case` of 46 labels over a range of 136
+   ... is not supported yet"; the check adds the otherwise's 90 kinds
+   as labels of the cgerr.
+
 3. **`new` and `dispose`.**  c_macro_utl's mu_$enter_name (cc.m68k
    0x058FDC: PAS_$NEW with 0x100E), mu_$alloc_tle (0x05993C, 134182)
    and mu_$initialize (0x059220, PAS_$DISPOSE).  dpc: "undefined

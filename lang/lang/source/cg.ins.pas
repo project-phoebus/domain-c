@@ -77,22 +77,35 @@ type
     level: -128..127;                   { +294 }
   end;
 
-  { cg_addr's record of what a register holds (+0x120, 16 bytes each). }
+  { cg_addr's record of what a register holds (+0x120, 16 bytes each):
+    obj the node whose value it holds (setresult; a 190 or 189 node's
+    object), obj2 a second node with the same value (a variable the
+    value was loaded from or stored to), the stamps (cg_addr_2ba) at
+    which each was set (w12 obj's, w8 obj2's), its register class, and
+    w14 the value's state (0 loaded; 2 not loaded yet: inquire loads
+    it from obj when asked; 1 edit_register's mark of a label's
+    register whose cached object is gone). }
   cg_reg_t = record
     obj: il_$node_ptr_t;                { +0: setresult's node }
     obj2: il_$node_ptr_t;               { +4 }
-    w8: integer;                        { +8 }
+    w8: integer;                        { +8: obj2's stamp }
     size: integer;                      { +10: its register class }
-    w12: integer;                       { +12 }
-    w14: integer;                       { +14 }
+    w12: integer;                       { +12: obj's stamp }
+    w14: integer;                       { +14: the state }
   end;
 
-  { cg_addr's object cache entries (+0, 8 bytes each). }
+  { cg_addr's object cache entries (+0, 8 bytes each): register k is
+    the home of variable obj (a register variable of class size). }
   cg_cache_t = record
     obj: il_$node_ptr_t;                { +0 }
     size: integer;                      { +4 }
-    b6: char;                           { +6 }
-    param_alias: boolean;               { +7: gen_call clears it when a
+    load: boolean;                      { +6: load_live_registers loads
+                                          obj into the register (and
+                                          clears it) }
+    live: boolean;                      { +7: the register holds obj's
+                                          current value (weight 32767:
+                                          not taken for a temporary);
+                                          gen_call clears it when a
                                           call's argument may alias the
                                           object (kill_any_param_alias) }
   end;
@@ -105,7 +118,7 @@ type
 
   { A routine block's register sets as the code generator keeps them
     (cg_top): +216 the callee-saved registers the routine leaves alone
-    (block_entry_proc removes those cg_addr_killed marks), +220 those
+    (block_entry_proc removes those cg_addr_used marks), +220 those
     its entry saves and its return restores (updatestacksize: the
     callee-saved less +216's), +224 and +228 the frame offsets of the
     saved general and floating registers. }
@@ -120,10 +133,12 @@ type
 
   { A label's register state (a label node's +64: a node of kind 161,
     264 bytes, or with the floating registers 180, 396 bytes, from
-    gspace; cg_top's label_proc and cg_misc's show_label): two bytes
-    cg_addr_2b8 and cg_addr_2b6 take, +7 set when the label is
-    reached, the registers' records as cg_addr's table (+8: D0..A7;
-    +268: the floating registers). }
+    gspace or runbackend_08's free list (+8 the link); cg_addr's
+    merge_state, cg_top's label_proc and cg_misc's show_label): the
+    low bytes of cg_addr_next_dreg (+4) and cg_addr_next_areg (+6),
+    +7 set when the label is reached, the registers' records as
+    cg_addr's table (+8: D0..A7; +268: the floating registers) and
+    cg_addr_next_freg (+266). }
   cg_state_ptr_t = ^cg_state_t;
   cg_state_t = record
     unused_0: integer;                  { +0 }
@@ -134,7 +149,7 @@ type
     b7: boolean;                        { +7 }
     regs: array [0..15] of cg_reg_t;    { +8 }
     w264: integer;                      { +264 }
-    w266: integer;                      { +266: cg_addr_2b4's }
+    w266: integer;                      { +266: cg_addr_next_freg }
     fp_regs: array [16..23] of cg_reg_t;  { +268 }
   end;
 
@@ -234,18 +249,33 @@ var
                                           over (stack_fp: an operand's
                                           second longword) }
 
-  { cg_addr's cells (A5 0x354FB8). }
+  { cg_addr's cells (A5 0x354FB8, 0x2BC bytes), defined in cg_addr.pas
+    in this order (+0x2A0 and +0x2A4 only cg_addr reads; declared here
+    to keep the layout). }
   cg_addr_cache: extern array [0..23] of cg_cache_t;  { +0x0 }
-  cg_addr_killed: extern array [0..31] of boolean;  { +0xC0: gen_call
-                                          sets a register's after a call
-                                          that does not save it }
+  cg_addr_used: extern array [0..31] of boolean;  { +0xC0: the register
+                                          is used in the routine (set by
+                                          address_reg, inquire, address;
+                                          gen_call after a call that does
+                                          not save it); the entry saves
+                                          those it must }
   cg_addr_locks: extern array [0..31] of integer;   { +0xE0
                                           (0x355098): a register's lock
                                           count (gen_call adds 1) }
-  cg_addr_regs: extern array [0..31] of cg_reg_t;   { +0x120
+  cg_addr_regs: extern array [0..23] of cg_reg_t;   { +0x120
                                           (0x3550D8); stack_fp tests FP0's
                                           w14 (0x3551E6) for 2 }
-  cg_addr_2a8: extern univ_ptr;         { +0x2A8 (0x355260): cleared at
+  cg_addr_half_blk: extern il_$node_ptr_t;  { +0x2A0 (0x355258): the
+                                          routine block whose frame has
+                                          the spare word cg_addr_half_disp }
+  cg_addr_half_disp: extern integer32;  { +0x2A4 (0x35525C): a word of the
+                                          frame left by aligning a
+                                          temporary (allocate_temp gives
+                                          it to the next one of 2 bytes);
+                                          0 none }
+  cg_addr_free_temps: extern il_$node_ptr_t;  { +0x2A8 (0x355260): the
+                                          temporaries (152 nodes) free for
+                                          reuse, through +12; cleared at
                                           a routine's entry
                                           (block_entry_proc) }
   cg_addr_2ac: extern il_$node_ptr_t;   { +0x2AC (0x355264): a node of
@@ -254,58 +284,61 @@ var
   cg_addr_2b0: extern cg_regset_t;      { +0x2B0 (0x355268): set to
                                           0..23 at a routine's first pass,
                                           less each basic block's
-                                          registers (initialize_tree) }
-  cg_addr_2b4: extern integer;          { +0x2B4 (0x35526C): from a
-                                          label's state +266 }
-  cg_addr_2b6: extern integer;          { +0x2B6 (0x35526E): gen_call
-                                          stores 8 before a call through
-                                          a routine variable; from a
+                                          registers (initialize_tree); an
+                                          empty register outside it
+                                          weighs 1, not 0 (weight) }
+  cg_addr_next_freg: extern integer;    { +0x2B4 (0x35526C): the floating
+                                          register get_register tries
+                                          first (16..23, round robin);
+                                          from a label's state +266 }
+  cg_addr_next_areg: extern integer;    { +0x2B6 (0x35526E): the address
+                                          register get_register tries
+                                          first (8..12); gen_call stores
+                                          8 before a call through a
+                                          routine variable; from a
                                           label's state +6 }
-  cg_addr_2b8: extern integer;          { +0x2B8 (0x355270): from a
-                                          label's state +4 }
+  cg_addr_next_dreg: extern integer;    { +0x2B8 (0x355270): the data
+                                          register get_register tries
+                                          first (0..7); from a label's
+                                          state +4 }
   cg_addr_2ba: extern integer;          { +0x2BA (0x355272): cleared by
-                                          cg_top's initialize; a register
-                                          record's w8 at a basic block }
+                                          cg_top's initialize; the stamp
+                                          setresult and inquire give a
+                                          register record (w12, w8) }
 
 { ---- cg_addr ---- }
 
-{ ADDRESS - the operand of node n (size: its class, 0 its address) in
-  a.  cg_addr 0x0F197E: 8 the node (a longword), 12 a word, 14 the
-  descriptor's address; 264 call sites. }
-procedure address(
+{ The headings are checked against cg_addr.pas's bodies (in its
+  address order).  Register numbers: 0..7 D0-D7, 8..15 A0-A7, 16..23
+  the floating registers, 31 none.  A size is a register class (the
+  descriptors' rlen: 1 byte, 2 word, 4 long, 5 address, 6 single, 7
+  double, 8 and 12 extended; 0 an address). }
+
+{ SETOBJCACHE - node n (a 190's object and every node of its chain
+  through +20, +28) marked as cached in register r unless it is
+  already: the flag and the register in the node (+6 bit 10 and +10
+  for the trees and references, +32 bit 24 and +74 for a 109
+  variable, +24 bit 24 and +16 for a 110).  cg_addr 0x0EF112: 8 a
+  pointer, 12 a word. }
+procedure setobjcache(
     n: il_$node_ptr_t;
-    size: integer;
-    out a: codegen_$uads_t); options(val_param); extern;
-
-{ ADDRESS_REG - register r's operand in a.  cg_addr 0x0EF5B0: 8 a word,
-  10 the descriptor's address; 94 call sites. }
-procedure address_reg(
-    r: integer;
-    out a: codegen_$uads_t); options(val_param); extern;
-
-{ KILL_REGISTER - register r's contents forgotten.  cg_addr 0x0F00B6:
-  8 a word; 93 call sites. }
-procedure kill_register(
     r: integer); options(val_param); extern;
 
-{ RELEASE, UNLOCK - operand a's registers released or unlocked.
-  cg_addr 0x0F0AEA, 0x0EF600: the descriptor's address. }
-procedure release(
-    in out a: codegen_$uads_t); extern;
+{ GETOBJCACHE - the register node n is marked as cached in (setobjcache),
+  when that register's cache entry holds n, else the first entry that
+  does; else the register in the node (31 none).  cg_addr 0x0EF1F2: a
+  pointer; D0. }
+function getobjcache(
+    n: il_$node_ptr_t): integer; options(val_param); extern;
 
-procedure unlock(
-    in out a: codegen_$uads_t); extern;
-
-{ CHK_ASSIGN, PEEK - the register holding node n's value of size size
-  (D0: 16..23 the floating registers).  cg_addr 0x0EF6F8, 0x0EF9C2: 8
-  the node, 12 a word; callers read D0. }
-function chk_assign(
+{ SETRESULT - register r holds node n's value (a 190's or 189's object)
+  of class size (a long in a data register for an address, an address
+  register's class 5): nothing when the register cannot hold that
+  class.  cg_addr 0x0EF2BC: 8 a word, 10 a pointer, 14 a word. }
+procedure setresult(
+    r: integer;
     n: il_$node_ptr_t;
-    size: integer): integer; options(val_param); extern;
-
-function peek(
-    n: il_$node_ptr_t;
-    size: integer): integer; options(val_param); extern;
+    size: integer); options(val_param); extern;
 
 { CHECK_USE - whether a and b are the same object (190 and 189 nodes
   taken through +4 and +20).  cg_addr 0x0EF3BA: two pointers; D0. }
@@ -313,88 +346,104 @@ function check_use(
     a: il_$node_ptr_t;
     b: il_$node_ptr_t): boolean; options(val_param); extern;
 
-{ INVALIDATE - the registers holding a's object of size size
-  forgotten.  cg_addr 0x0F011C: 8 the descriptor's address, 12 a
-  longword. }
-procedure invalidate(
-    in a: codegen_$uads_t;
-    size: integer32); options(val_param); extern;
+{ WEIGHT - the cost of taking register r for something else: 32767 for
+  a live register variable, 16001 or 15001 less the uses for a tree's
+  or a reference's value, 1 for a constant, else the stamp + 2; the
+  larger of the two objects'; 1 for an empty register outside
+  cg_addr_2b0.  cg_addr 0x0EF42A: a word; D0 (compared unsigned). }
+function weight(
+    r: integer): integer; options(val_param); extern;
 
-{ SETRESULT - register r holds node n's value of size size.  cg_addr
-  0x0EF2BC: 8 a word, 10 a pointer, 14 a word. }
-procedure setresult(
+{ ADDRESS_REG - register r's operand in a (mode 1, or 13 for a floating
+  register), marked used.  cg_addr 0x0EF5B0: 8 a word, 10 the
+  descriptor's address; 94 call sites. }
+procedure address_reg(
     r: integer;
-    n: il_$node_ptr_t;
-    size: integer); options(val_param); extern;
-
-{ LOAD_ADDRESS - node n's address loaded into an address register,
-  its operand in a.  cg_addr 0x0F1050: two pointers (the second a
-  descriptor). }
-procedure load_address(
-    n: il_$node_ptr_t;
     out a: codegen_$uads_t); options(val_param); extern;
 
-{ INQUIRE - node n's operand of size size in a if it is in a register
-  (a.f1 0 when not).  cg_addr 0x0EFE7E: 8 a pointer, 12 a word, 14 the
-  descriptor's address. }
+{ UNLOCK - operand a's registers (base and index) unlocked (cgerr 28
+  for one not locked, but the data register and A7).  cg_addr
+  0x0EF600: the descriptor's address. }
+procedure unlock(
+    in a: codegen_$uads_t); extern;
+
+{ CHK_ASSIGN - the register that is the home of variable n (a 190's
+  or 189's object) for class size (the same width; an address
+  register exactly for size 5), 31 none.  cg_addr 0x0EF6F8: 8 the node
+  (a longword), 12 a word; callers read D0. }
+function chk_assign(
+    n: il_$node_ptr_t;
+    size: integer): integer; options(val_param); extern;
+
+{ REGISTER_TICKLE - whether the current statement (past register
+  lists) uses n so that it is worth keeping in a register: a 142 whose
+  +56 is n or an add or subtract (12, 40) of n (not a constant 0 unless
+  zero_ok), a 140 whose +68 is n; never for a constant 0, a string or
+  a node of getphase element 1.  cg_addr 0x0EF7D2: 8 a pointer, 12 a
+  byte; D0 (cg_assign's assign_proc, cg_tree). }
+function register_tickle(
+    n: il_$node_ptr_t;
+    zero_ok: boolean): boolean; options(val_param); extern;
+
+{ PEEK - the register holding node n's value of class size (D0: 16..23
+  the floating registers, 31 none); for a byte or word of a reference
+  (147) the register holding the word or long it is part of.  cg_addr
+  0x0EF9C2: 8 the node, 12 a word; callers read D0. }
+function peek(
+    n: il_$node_ptr_t;
+    size: integer): integer; options(val_param); extern;
+
+{ CG_ADDR_$OPERAND_IN_REG_ANY_RLEN - the registers holding node n's
+  value live (of any class; with a reference's base variable's), a set
+  of register numbers as a longword.  cg_addr 0x0EFCD6: 8 a pointer;
+  D0. }
+function cg_addr_$operand_in_reg_any_rlen(
+    n: il_$node_ptr_t): integer32; options(val_param); extern;
+
+{ LOAD_LIVE_REGISTERS - the register variables marked to be loaded
+  (cg_addr_cache's load) loaded and made live.  cg_addr 0x0EFD68: no
+  parameters (cg_top's reg_list_proc). }
+procedure load_live_registers; extern;
+
+{ INQUIRE - node n's value of class size in a if a register holds it
+  (locked and marked used; a value not loaded yet loaded first), else
+  a.f1 0; the phase flags in a.f5 and n in a.x.  cg_addr 0x0EFE7E: 8 a
+  pointer, 12 a word, 14 the descriptor's address. }
 procedure inquire(
     n: il_$node_ptr_t;
     size: integer;
     out a: codegen_$uads_t); options(val_param); extern;
 
-{ LOAD_OPERAND - node n's value of size size loaded into a register,
-  its operand in a.  cg_addr 0x0F0EA4: 8 a longword, 12 a word, 14 the
-  descriptor's address. }
-procedure load_operand(
-    n: il_$node_ptr_t;
-    size: integer;
-    out a: codegen_$uads_t); options(val_param); extern;
+{ KILL_REGISTER - register r's contents forgotten (r up to 23).
+  cg_addr 0x0F00B6: 8 a word; 93 call sites. }
+procedure kill_register(
+    r: integer); options(val_param); extern;
 
-{ GET_TEMP - a temporary for node n (a 138 node).  cg_addr 0x0F0740: 8
-  a pointer, 12 a byte. }
-procedure get_temp(
-    n: il_$node_ptr_t;
-    b: boolean); options(val_param); extern;
+{ INIT_TEMP - no temporaries free and no spare frame word.  cg_addr
+  0x0F00F4: no parameters (cg_top's initialize). }
+procedure init_temp; extern;
 
-{ ANYCONST - the operand of constant value of size size in a.  cg_addr
-  0x0F26BA: 8 a longword, 12 a word, 14 the descriptor's address; 62
-  call sites. }
-procedure anyconst(
-    value: integer32;
-    size: integer;
-    out a: codegen_$uads_t); options(val_param); extern;
+{ INVALIDATE - the registers holding a value of an object that a's
+  object of size bytes may change forgotten (and the floating unit's
+  remembered variables).  cg_addr 0x0F011C: 8 the descriptor's address,
+  12 a longword. }
+procedure invalidate(
+    in a: codegen_$uads_t;
+    size: integer32); options(val_param); extern;
 
-{ GET_TEMP_REGISTER - a register for node n of size size, its operand in
-  a.  cg_addr 0x0F0E42: 8 a pointer, 12 a word, 14 the descriptor's
-  address. }
-procedure get_temp_register(
-    n: il_$node_ptr_t;
-    size: integer;
-    out a: codegen_$uads_t); options(val_param); extern;
-
-{ CHK_ADDR - the register holding node n's address (31 none), its operand
-  in a.  cg_addr 0x0F18F4: 8 a pointer, 12 the descriptor's address;
-  D0. }
-function chk_addr(
-    n: il_$node_ptr_t;
-    out a: codegen_$uads_t): integer; options(val_param); extern;
-
-{ ALLOCATE_TEMP - a temporary of size bytes (t, when not nil, reused).
-  cg_addr 0x0F0390: 8 a longword, 12 a byte, 14 a pointer; the node in
-  A0. }
+{ ALLOCATE_TEMP - a temporary (a 152 node: +4 its frame offset, +8 its
+  size, +16 owner) of size bytes rounded to even, from the free list
+  when reuse, else from the routine's frame.  cg_addr 0x0F0390: 8 a
+  longword, 12 a byte, 14 a pointer; the node in A0. }
 function allocate_temp(
     size: integer32;
-    b: boolean;
-    t: il_$node_ptr_t): il_$node_ptr_t; options(val_param); extern;
+    reuse: boolean;
+    owner: il_$node_ptr_t): il_$node_ptr_t; options(val_param); extern;
 
-{ CG_ADDR_$OPERAND_IN_REG_ANY_RLEN - the registers holding node n's
-  value, of any class (a set of register numbers as a longword).  cg_addr
-  0x0EFCD6: 8 a pointer; D0. }
-function cg_addr_$operand_in_reg_any_rlen(
-    n: il_$node_ptr_t): integer32; options(val_param); extern;
-
-{ CG_ADDR_$ADDR_OF_CSE, CG_ADDR_$LOAD_ADDR_OF_CSE - whether the address
-  of the common subexpression n is kept, and its operand in a.  cg_addr
+{ CG_ADDR_$ADDR_OF_CSE, CG_ADDR_$LOAD_ADDR_OF_CSE - whether the common
+  subexpression n (a 190 or 189, or a temporary of one) is an
+  address kept, and its address loaded into an address register (the
+  value stored in a temporary first), its operand in a.  cg_addr
   0x0F04C6 (the node's address; D0), 0x0F051A (the node's address, the
   descriptor's address). }
 function cg_addr_$addr_of_cse(
@@ -404,28 +453,111 @@ procedure cg_addr_$load_addr_of_cse(
     in n: il_$node_ptr_t;
     out a: codegen_$uads_t); extern;
 
-{ SETOBJCACHE - the cached objects of node n (a routine) of class size
-  dropped.  cg_addr 0x0EF112: 8 a pointer, 12 a word. }
-procedure setobjcache(
+{ GET_TEMP - tree n's temporary (its opnd[1]: a 152 node allocated
+  when it is not one), its value stored there when store.  cg_addr
+  0x0F0740: 8 a pointer, 12 a byte. }
+procedure get_temp(
     n: il_$node_ptr_t;
-    size: integer); options(val_param); extern;
+    store: boolean); options(val_param); extern;
 
-{ GET_REGISTER - a register of size size for node n (nil: a scratch
-  register), its operand in a.  cg_addr 0x0F0C5A: 8 a pointer, 12 a
-  word, 14 the descriptor's address. }
+{ GET_AGG_TEMP - n made a 138 with a temporary.  cg_addr 0x0F09B6: a
+  pointer (cg_tree's set_ops, generate). }
+procedure get_agg_temp(
+    n: il_$node_ptr_t); options(val_param); extern;
+
+{ GET_CHILDS_AGG_TEMP - n made a 138 taking its operand's temporary
+  when the operand is a set operation's tree (true), else a temporary
+  of its own (false).  cg_addr 0x0F09E4: a pointer; D0 (cg_tree's
+  set_range_in_set_proc, set_bit_in_set_proc). }
+function get_childs_agg_temp(
+    n: il_$node_ptr_t): boolean; options(val_param); extern;
+
+{ RELEASE - operand a's registers unlocked and its nodes' uses counted
+  down (a temporary freed at 0).  cg_addr 0x0F0AEA: the descriptor's
+  address. }
+procedure release(
+    in a: codegen_$uads_t); extern;
+
+{ GET_REGISTER - a register of class size for node n (nil: a scratch
+  register; a 190's or 189's object): its home when free, else the
+  lightest (weight) of the class, round robin; locked, its operand in
+  a, holding n (setresult, setobjcache).  cg_addr 0x0F0C5A: 8 a
+  pointer, 12 a word, 14 the descriptor's address. }
 procedure get_register(
     n: il_$node_ptr_t;
     size: integer;
     out a: codegen_$uads_t); options(val_param); extern;
 
-{ LOAD_MODIFIABLE - node n's value of size size loaded into a register
-  that may be changed, its operand in a.  cg_addr 0x0F11A8: 8 the
-  node's address, 12 the size's (load_dindex passes a constant), 16 the
+{ GET_TEMP_REGISTER - get_register for node n, or a scratch register
+  when a register is n's live home.  cg_addr 0x0F0E42: 8 a pointer, 12
+  a word, 14 the descriptor's address. }
+procedure get_temp_register(
+    n: il_$node_ptr_t;
+    size: integer;
+    out a: codegen_$uads_t); options(val_param); extern;
+
+{ LOAD_OPERAND - node n's value of class size in a register, its
+  operand in a.  cg_addr 0x0F0EA4: 8 a longword, 12 a word, 14 the
   descriptor's address. }
+procedure load_operand(
+    n: il_$node_ptr_t;
+    size: integer;
+    out a: codegen_$uads_t); options(val_param); extern;
+
+{ LOAD_ADDRESS - node n's address in an address register, its operand
+  in a.  cg_addr 0x0F1050: two pointers (the second a descriptor). }
+procedure load_address(
+    n: il_$node_ptr_t;
+    out a: codegen_$uads_t); options(val_param); extern;
+
+{ LOAD_MODIFIABLE - node n's value of class size (5 its address) in a
+  register that may be changed, its operand in a.  cg_addr 0x0F11A8: 8
+  the node's address, 12 the size's (load_dindex passes a constant),
+  16 the descriptor's address. }
 procedure load_modifiable(
     in n: il_$node_ptr_t;
     in size: integer;
-    in out a: codegen_$uads_t); extern;
+    out a: codegen_$uads_t); extern;
+
+{ CHK_ADDR - the register (A4 down to D0) whose live temporary holds
+  node n's address (a 138 of operator 26), 31 none, its operand in a.
+  cg_addr 0x0F18F4: 8 a pointer, 12 the descriptor's address; D0. }
+function chk_addr(
+    n: il_$node_ptr_t;
+    out a: codegen_$uads_t): integer; options(val_param); extern;
+
+{ ADDRESS - the operand of node n (size: its class, 0 its address) in
+  a.  cg_addr 0x0F197E: 8 the node (a longword), 12 a word, 14 the
+  descriptor's address; 264 call sites. }
+procedure address(
+    n: il_$node_ptr_t;
+    size: integer;
+    out a: codegen_$uads_t); options(val_param); extern;
+
+{ LOAD_RESULT, LOAD_FP_RESULT - one of tree n's operands (1..k, or
+  operand -k alone) loaded into a register for the result (a data or
+  address register; a floating register), preferring one already in
+  a register that may be changed, its operand in a, the tree's value
+  (setresult, setobjcache).  cg_addr 0x0F226C, 0x0F2780: 8 a pointer,
+  12 a word, 14 the descriptor's address (cg_tree's generate, ...). }
+procedure load_result(
+    n: il_$node_ptr_t;
+    k: integer;
+    out a: codegen_$uads_t); options(val_param); extern;
+
+procedure load_fp_result(
+    n: il_$node_ptr_t;
+    k: integer;
+    out a: codegen_$uads_t); options(val_param); extern;
+
+{ ANYCONST - the operand of constant value of size size in a (a
+  register holding it, or one holding a wider constant of the same
+  low bytes, else the immediate).  cg_addr 0x0F26BA: 8 a longword, 12
+  a word, 14 the descriptor's address; 62 call sites. }
+procedure anyconst(
+    value: integer32;
+    size: integer;
+    out a: codegen_$uads_t); options(val_param); extern;
 
 { MERGE_STATE - the register state at label lab merged with the
   current one (its state saved at the label's first branch).  cg_addr
@@ -440,9 +572,10 @@ procedure cg_addr_$merge_state_of_assigned_goto_targets(
     n: il_$node_ptr_t); options(val_param); extern;
 
 { CG_ADDR_$INIT_REGS - every register's contents forgotten (keep: the
-  ones holding variables kept, cg_top passes true for -FRND...).
-  cg_addr 0x0F2EAA: a boolean by address (cg_top passes the constants
-  at 0x0FBE62 and 0x0FEFB6). }
+  data and address registers kept, only the floating registers
+  forgotten; cg_top passes true for -FRND...).  cg_addr 0x0F2EAA: a
+  boolean by address (cg_top passes the constants at 0x0FBE62 and
+  0x0FEFB6). }
 procedure cg_addr_$init_regs(
     in keep: boolean); extern;
 
@@ -452,13 +585,6 @@ procedure cg_addr_$init_regs(
 procedure edit_register(
     r: integer;
     in out reg: cg_reg_t); options(val_param); extern;
-
-{ LOAD_LIVE_REGISTERS, INIT_TEMP - the registers a register list marks
-  live loaded; no temporaries in use.  cg_addr 0x0EFD68, 0x0F00F4: no
-  parameters. }
-procedure load_live_registers; extern;
-
-procedure init_temp; extern;
 
 { ---- cg_assign ---- }
 

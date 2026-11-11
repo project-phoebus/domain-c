@@ -268,11 +268,11 @@ begin
       cg_addr_cache[i].size := 5
     else
       cg_addr_cache[i].size := 0;
-    cg_addr_cache[i].param_alias := false;
+    cg_addr_cache[i].live := false;
     cg_top_save[i].obj := nil;
     cg_top_save[i].size := 0;
-    cg_top_save[i].param_alias := false;
-    cg_top_save[i].b6 := chr(0);
+    cg_top_save[i].live := false;
+    cg_top_save[i].load := false;
   end;
   cg_addr_2ac := gspace(4);
   cg_addr_2ac^.kind := 181;
@@ -506,7 +506,7 @@ var
               cg_data_reg := 13;
               cg_addr_2b0 := [0..23];
               for i := 0 to 31 do
-                cg_addr_killed[i] := false;
+                cg_addr_used[i] := false;
               if il_124 <> 0 then begin
                 s := [2..7, 10..12, 18..23];
                 l := g_opt_bb_ptr_t(select_block_list(cg_top_13e + 1, cg_top_13e));
@@ -564,12 +564,12 @@ var
     if bb^.regs_in = nil then
       for i := 0 to 23 do begin
         cg_addr_cache[i].obj := nil;
-        cg_addr_cache[i].param_alias := false;
+        cg_addr_cache[i].live := false;
       end;
     if bb^.cache_in = nil then
       for i := 0 to 23 do begin
         cg_addr_cache[i].obj := nil;
-        cg_addr_cache[i].param_alias := false;
+        cg_addr_cache[i].live := false;
       end
     else
       for i := 0 to 23 do begin
@@ -584,7 +584,7 @@ var
                 top_cache_in_ptr_t(bb^.cache_in)^.ent[i].size);
           cg_addr_regs[i].obj2 := top_cache_in_ptr_t(bb^.cache_in)^.ent[i].obj;
           cg_addr_regs[i].w8 := cg_addr_2ba;
-          cg_addr_cache[i].param_alias := true;
+          cg_addr_cache[i].live := true;
         end;
       end;
   end;
@@ -644,7 +644,7 @@ var
           end;
           if 5 in l^.ents[i].flags then begin
             cg_addr_cache[reg].obj := nil;
-            cg_addr_cache[reg].param_alias := false;
+            cg_addr_cache[reg].live := false;
           end;
         end;
       end;
@@ -672,28 +672,28 @@ var
           x := chk_assign(obj, size);
           if (x <> reg) and (x <> 31) then begin
             cg_addr_cache[x].obj := nil;
-            cg_addr_cache[x].param_alias := false;
+            cg_addr_cache[x].live := false;
           end;
           if keep then begin
             cg_top_save[reg].obj := obj;
             cg_top_save[reg].size := size;
-            cg_top_save[reg].param_alias := false;
-            cg_top_save[reg].b6 := chr(0);
+            cg_top_save[reg].live := false;
+            cg_top_save[reg].load := false;
           end
           else begin
             cg_addr_cache[reg].obj := obj;
             cg_addr_cache[reg].size := size;
-            cg_addr_cache[reg].param_alias := false;
-            cg_addr_cache[reg].b6 := chr(0);
+            cg_addr_cache[reg].live := false;
+            cg_addr_cache[reg].load := false;
           end;
-          cg_addr_killed[reg] := true;
+          cg_addr_used[reg] := true;
           setobjcache(l^.ents[i].obj, reg);
         end;
         if 1 in l^.ents[i].flags then begin
           cg_addr_cache[reg].obj := obj;
           cg_addr_cache[reg].size := size;
-          cg_addr_cache[reg].b6 := chr(255);
-          cg_addr_cache[reg].param_alias := false;
+          cg_addr_cache[reg].load := true;
+          cg_addr_cache[reg].live := false;
           live := true;
         end;
       end;
@@ -1035,7 +1035,7 @@ var
     cg_top_124 := nil;
     if e.blk^.kind <> 167 then begin
       il_180 := e.blk;
-      cg_addr_2a8 := nil;
+      cg_addr_free_temps := nil;
       cg_top_13a := 0;
       if at_backend_506 then begin
         address(e.blk, 0, a);
@@ -1062,12 +1062,12 @@ var
     cg_addr_$init_regs(false);
     if cg_level_ptr_t(il_180)^.level > 0 then
       if ord(il_180^.xc[292]) <> 0 then begin
-        cg_addr_killed[9] := true;
+        cg_addr_used[9] := true;
         setresult(9, il_node_155, 5);
       end;
     cg_blk_regs_ptr_t(il_180)^.unused := [2..7, 10..13, 18..23];
     for i := 2 to 23 do
-      if cg_addr_killed[i] then
+      if cg_addr_used[i] then
         cg_blk_regs_ptr_t(il_180)^.unused :=
             cg_blk_regs_ptr_t(il_180)^.unused - [i];
     il_180^.xc[375] := chr(ord(il_180^.xc[375]) ! 8);
@@ -1075,7 +1075,7 @@ var
       cg_blk_regs_ptr_t(il_180)^.unused :=
           cg_blk_regs_ptr_t(il_180)^.unused + [13]
     else if ((rshft(il_180^.xl2[93], 11) & 258) = 258) and
-        at_backend_506 and not cg_addr_killed[8] and
+        at_backend_506 and not cg_addr_used[8] and
         (cargs_$options.db <= 1) then
       cg_blk_regs_ptr_t(il_180)^.unused :=
           cg_blk_regs_ptr_t(il_180)^.unused + [13]
@@ -1186,7 +1186,7 @@ var
         end;
     end;
     if ((rshft(il_180^.xl2[93], 11) & 258) = 258) and at_backend_506 then begin
-      if not cg_addr_killed[8] and (cargs_$options.db <= 1) then
+      if not cg_addr_used[8] and (cargs_$options.db <= 1) then
         cg_data_reg := 8;
       if 7 in cargs_$options.flags_286 then begin
         g := il_180^.xp[48];
@@ -1604,13 +1604,13 @@ var
       show_label(cg_stmt);
     s := cg_state_ptr_t(lab^.xp[16]);
     s^.b7 := true;
-    cg_addr_2b8 := ord(s^.b4);
-    cg_addr_2b6 := ord(s^.b6);
+    cg_addr_next_dreg := ord(s^.b4);
+    cg_addr_next_areg := ord(s^.b6);
     for i := 0 to 15 do
       cg_addr_regs[i] := s^.regs[i];
     fp := cargs_$options.cpu * [2, 4, 8, 9, 10] <> [];
     if fp then begin
-      cg_addr_2b4 := s^.w266;
+      cg_addr_next_freg := s^.w266;
       for i := 16 to 23 do
         cg_addr_regs[i] := s^.fp_regs[i];
     end;
@@ -1688,11 +1688,11 @@ var
       a24.y := cg_top_128;
       emit(0, 5, a48, a24, 0);
       for i := 0 to 12 do
-        cg_addr_killed[i] := true;
+        cg_addr_used[i] := true;
     end;
     for i := 0 to 23 do
       if cg_addr_cache[i].obj <> nil then
-        if cg_addr_cache[i].param_alias then begin
+        if cg_addr_cache[i].live then begin
           if peek(cg_addr_cache[i].obj, cg_addr_cache[i].size) <> i then begin
             setresult(i, cg_addr_cache[i].obj, cg_addr_cache[i].size);
             cg_addr_regs[i].obj2 := cg_addr_cache[i].obj;
@@ -1827,7 +1827,7 @@ begin
                         setresult(r, cg_stmt^.xp[12 + k], size);
                         unlock(cg_top_e0);
                       end;
-                      cg_addr_cache[r].param_alias := true;
+                      cg_addr_cache[r].live := true;
                     end;
                   end;
                 end
@@ -1889,7 +1889,7 @@ begin
               end;
             end
             else begin
-              if cg_addr_killed[13] or (cg_code_bytes >= 5000) then
+              if cg_addr_used[13] or (cg_code_bytes >= 5000) then
                 il_180^.xc[375] := chr(ord(il_180^.xc[375]) ! 8);
               if at_backend_506 then begin
                 updatestacksize;
