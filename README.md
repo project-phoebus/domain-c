@@ -95,4 +95,11 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/c_compiler/source/c_macro_utl.pas` | 19 | translated (best effort; dpc gaps 3, 4, 5) |
 | `lang/c_compiler/source/c_initdate.c` | 1 | reconstructed (C; not checked by the gate) |
 | `lang/c_compiler/source/c_run_acpp.c` | 3 | reconstructed (C; not checked by the gate) |
+| `lang/lang/source/inc_list.pas` | 5 | translated (best effort) |
+| `lang/lang/source/error_listing.pas` | 6 | translated (best effort) |
+| `lang/lang/source/token.pas` | 12 | translated (best effort; dpc gaps 7, 8) |
+| `lang/lang/source/il_utils.pas` | 14 | translated (best effort; nodes by offset; dpc gaps 8, 9) |
+| `lang/lang/source/gen_utils.pas` | 21 | translated (best effort; nodes by offset; dpc gap 8) |
+| `lang/lang/source/time.pas` | 2 | translated (best effort) |
+| `lang/lang/source/sortidntk.pas` | 3 | translated (best effort; dpc gap 10) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

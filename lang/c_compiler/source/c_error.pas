@@ -253,7 +253,7 @@ var
     0x049508, 0x138 bytes (nested: the static link at (-16,A6), through
     which relisted, (-540) of errorlst's frame, is set).  The result
     is held in D0, true first; found (a frame byte at -10) false.  The
-    list (error_listing_08) is walked while an entry's line is not
+    list (error_listing_first) is walked while an entry's line is not
     past line (`bge'); an entry of the same line, code and nargs (in
     that order) is compared argument by argument according to nargs
     (a case, jump table at 0x04955C: 0 found; 1, 2, 3 the arguments'
@@ -271,11 +271,11 @@ var
       nargs: integer): boolean; options(val_param);
   var
     found: boolean;
-    p: error_listing_$saved_ptr_t;
+    p: error_listing_$ptr_t;
   begin
     error_not_printed := true;
     found := false;
-    p := error_listing_08;
+    p := error_listing_first;
     while (p <> nil) and then (line >= p^.line) do begin
       if (p^.line = line) and then (p^.code = code) and then
          (p^.nargs = nargs) then begin

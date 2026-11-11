@@ -61,3 +61,17 @@ revisited.
    file's; lang/lang/source/list_tree.ins.pas is new (a stub with
    list_tree_$print_tree only) and us/us/ins/{loader,fault,unix_sig,ms}
    are new stand-ins.
+13. IL nodes read by offset (translator C, 2026-11-10): il_utils and
+   gen_utils read many node kinds (tree nodes 137..233, variables 109
+   and 110, blocks 105 and 172, sections 182 and 183, address constants
+   163 and 195, ...) whose variants nobody has named yet.  Rather than
+   invent per-kind variants, il.ins.pas got generic views by offset
+   (xp[k], xl[k] at +4k; xp2[k], xl2[k] at +4k+2; xw[k] at +2k; xc[k] at
+   +k), the convention of IL's globals.  Replace them with named
+   variants as the kinds are identified, or prefer per-kind variants
+   now?
+14. tools/coff_compare.py and tools/cc_check.sh pick a binary's unit by
+   its path (--unit lang/lang/source/token): two units are named
+   token.pas, and the gate skipped lang/lang/source/token.pas silently
+   (`no single unit').  The change belongs in the source repository's
+   coff_compare.py too when it is merged back.

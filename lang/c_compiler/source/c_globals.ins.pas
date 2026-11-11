@@ -249,5 +249,5 @@ var
 procedure errorlst(
     in code: integer;
     in line: integer;
-    in args: cerr_args_t;
+    in args: univ cerr_args_t;
     in nargs: integer); extern;

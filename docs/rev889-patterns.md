@@ -130,3 +130,21 @@ cc.m68k unless marked.
     0..2147483647); a word zero-extended before use (`clr.l; move.w`)
     is 0..65535.  dpc compiles such types the same way, so the
     translation declares them so (not a code-generation difference).
+
+## Real arithmetic
+
+19. **The FPP emulator inline.**  Real arithmetic and conversions are a
+    `jsr fpp_$' (through the transfer vector) after the operands'
+    addresses are pushed, followed by inline 16-bit operation words
+    (and immediate constants) that fpp_$ interprets and skips; it pops
+    its operands itself.  token.pas get_reciprocal 0x098E48 (`r := 1.0
+    / t^.real_value'): `pea r; pea (12,A2); jsr fpp_$', then 0x0078,
+    the double 1.0 (0x3FF00000 00000000), 0x00A4, 0x0080;
+    token_$make_real_lit_pair 0x098F2E (a double to a single): `pea
+    temp; pea a; jsr fpp_$', then 0x0074, 0x00D4, 0xFF3E.  Comparisons
+    leave the condition codes for a following Bcc (0x0074 0x00B4 then
+    `bne', `beq', ...; 0x00B8 compares with an immediate double).  The
+    most frequent sequences in cc.m68k: 0x0074 0x00B8 <double> (5),
+    0x0078 <double> 0x00A4 (3).  The operation words are not decoded
+    further here.  Write the arithmetic (`/', assignment); dpc has no
+    real arithmetic yet (docs/dpc-gaps.md 2).

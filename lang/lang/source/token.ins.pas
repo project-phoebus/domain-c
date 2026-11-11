@@ -22,6 +22,10 @@
 type
   token_$vstring_t = varying [32767] of char;
   token_$set_bits_t = array [0..4095] of integer;
+  { strtk's characters.  Its own type, not strings_$bytes_t:
+    lang/common/source/token.pas opens this insert without
+    strings.ins.pas. }
+  token_$bytes_t = array [1..32767] of char;
 
 var
   { token.pas's data, A5 0x19DF90 (cc.m68k), 0x2384 bytes. }
@@ -65,13 +69,14 @@ function cmplxtk(
     in im: real): il_$node_ptr_t; extern;
 
 { TOKEN_$MAKE_REAL_LIT_PAIR - the kind 90 node of two doubles converted
-  to single precision; found_swapped is set when the pair is found only
-  the other way round and swapped_ok allows that.  0x098F2E. }
+  to single precision; unless exact, a node of the pair the other way
+  round is taken too and found_swapped set.  0x098F2E: found_swapped by
+  address (cc.a88k's fit_instr passes a local boolean and exact false). }
 function token_$make_real_lit_pair(
     in a: double;
     in b: double;
-    swapped_ok: boolean;
-    found_swapped: univ_ptr): il_$node_ptr_t; options(val_param); extern;
+    exact: boolean;
+    var found_swapped: boolean): il_$node_ptr_t; options(val_param); extern;
 
 { DPCMPLXTK - the node of a double-precision complex (kind 198).
   0x099020: im's address passed as a value. }
@@ -80,22 +85,23 @@ function dpcmplxtk(
     im: univ_ptr): il_$node_ptr_t; options(val_param); extern;
 
 { STRTK - the string constant node (kind 92) of the len characters s.
-  0x0990F0. }
+  0x0990F0: s by address (callers push a string's or a buffer's
+  address, `pea'). }
 function strtk(
-    s: univ_ptr;
+    in s: univ token_$bytes_t;
     len: integer): il_$node_ptr_t; options(val_param); extern;
 
 { TOKEN_$MAKE_STRING_TOKEN - strtk of a varying string.  0x0991A6. }
 function token_$make_string_token(
     in s: univ token_$vstring_t): il_$node_ptr_t; extern;
 
-{ SETCONTK - the node of the set constant whose bits are lo..hi of bits
-  (a word array): an integer constant node when it fits in 32 bits.
-  0x0991D0. }
+{ SETCONTK - the node of the set constant of len bytes from byte first
+  of bits (a word array; first even): an integer constant node (kind
+  81) when it takes one or two words, else a kind 156 node.  0x0991D0. }
 function setcontk(
     in bits: univ token_$set_bits_t;
-    lo: integer;
-    hi: integer): il_$node_ptr_t; options(val_param); extern;
+    first: integer;
+    len: integer): il_$node_ptr_t; options(val_param); extern;
 
 { SET_IS_NIL - whether the set constant node has no members.
   0x09930E. }

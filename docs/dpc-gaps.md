@@ -100,4 +100,69 @@ when this tree is merged).
        function f(r: real): univ_ptr; options(val_param);
        begin
          f := rlcontk(r);
+7. **Real arithmetic.**  A real constant (`1.0`), real division, and
+   the assignment of a double to a single (`real := double`, the
+   conversion Rev 8.89 does with `jsr fpp_$`): token.pas get_reciprocal
+   0x098E48 (`r := 1.0 / t^.real_value'), token_$make_real_lit_pair
+   0x098F2E (`sa.r := a').  dpc: "a real constant is not supported
+   yet", "real arithmetic is not supported yet", "Assignment statement
+   expression is not compatible with the assignment variable (real :=
+   double)".  Reproducer:
+
+       module g7;
+       var d, e: double; s: real;
+       procedure p;
+       begin
+         d := 1.0 / e;
+         s := d;
+       end;
+
+8. **`in` on a constant set with a word element.**  `t^.kind in [77..87,
+   101, 200]` (token.pas set_is_nil 0x09930E: `move.w #207,D0; sub.w
+   kind,D0; bcs; lsr.w #3,D0; btst kind,(set,D0.w); ble', the set a
+   26-byte constant after the routine).  dpc: "`in` on a constant set of
+   more than a longword with an element of more than a byte ... is not
+   supported yet" (it names the `ble').  Reproducer:
+
+       module g8;
+       var k: integer; b: boolean;
+       procedure p;
+       begin
+         b := k in [77..87, 101, 200];
+       end;
+
+9. **A nested routine declared `forward`.**  il_utils.pas: search_point
+   (0x07E206) and search_walk (0x07E252), nested in
+   il_utils_$search_tree_for_node, call each other; search_point comes
+   first in the image, so search_walk is declared forward.  dpc: "a
+   nested routine declared `forward` ... is not supported yet".
+   Reproducer:
+
+       module g9;
+       procedure p;
+         procedure b(n: integer); forward;
+         procedure a(n: integer);
+         begin
+           if n > 0 then b(n - 1);
+         end;
+         procedure b;
+         begin
+           if n > 0 then a(n - 1);
+         end;
+       begin
+         a(3);
+       end;
+
+10. **Ordering arrays of char.**  `a[i]^.idnt_name > pivot^.idnt_name`,
+   two `array [1..4096] of char` (sortidntk.pas qsort 0x098598: `move.w
+   #4095,D0; cmpm.b (A0)+,(A1)+; dbne D0' then `bhi', `bcs', `bls').
+   dpc: "ordering records is not supported yet" (with a best-effort
+   warning on comparing arrays).  Reproducer:
+
+       module g10;
+       type n_t = record len: integer; name: array [1..4096] of char; end;
+       var a, b: ^n_t; r: boolean;
+       procedure p;
+       begin
+         r := a^.name > b^.name;
        end;

@@ -170,7 +170,7 @@ begin
   if len > token_$max_text_length then
     ass_$precondition_fail(
       'TOKEN_$CHAR_STRING -- string text too long (%lsd)%$', len);
-  token_$char_string := strtk(addr(s), len);
+  token_$char_string := strtk(s, len);
 end;
 
 { token_$identifier - the identifier of the len characters s.

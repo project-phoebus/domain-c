@@ -34,7 +34,11 @@ type
           idnt_unused_8: integer32;     { +8: cleared by idntk }
           idnt_unused_12: integer32;    { +12: cleared by idntk }
           idnt_len: integer;            { +16 }
-          idnt_name: array [1..1024] of char);  { +18 }
+          idnt_name: array [1..4096] of char);  { +18: sortidntk's qsort
+                                          compares 4096 bytes (cmpm.b,
+                                          dbne 4095), sortidentifiers
+                                          puts a NUL after a name of
+                                          fewer than 4096 }
       { An integer constant (smcontk; 12 bytes). }
       2: (int_next: il_$node_ptr_t;     { +4: the sorted chain }
           int_value: integer32);        { +8 }
@@ -54,6 +58,41 @@ type
           dcx_unused_8: integer32;      { +8: cleared }
           dcx_re: double;               { +12 }
           dcx_im: double);              { +20 }
+      { A string constant (strtk, kind 92; len + 18 bytes): laid out as
+        an identifier.  inc_list reads an include file's name, ending in
+        its closing delimiter, from such a node. }
+      6: (str_next: il_$node_ptr_t;     { +4: the sorted chain }
+          str_unused_8: integer32;      { +8: cleared }
+          str_unused_12: integer32;     { +12: cleared }
+          str_len: integer;             { +16 }
+          str_chars: array [1..1024] of char);  { +18 }
+      { The longwords of a real (88, 89: high, low), a pair (90) or a
+        double complex (198: re high, re low, im high, im low) as
+        token.pas compares them (signed, high first). }
+      7: (bits_next: il_$node_ptr_t;    { +4 }
+          bits_unused_8: integer32;     { +8 }
+          bits: array [1..4] of integer32);  { +12 }
+      { A set constant of more than 4 bytes (setcontk, kind 156; len + 18
+        bytes): the bytes as words. }
+      8: (set_next: il_$node_ptr_t;     { +4: its chain, by size }
+          set_unused_8: integer32;      { +8: cleared }
+          set_unused_12: integer32;     { +12 }
+          set_len: integer;             { +16: bytes }
+          set_words: array [1..2048] of integer);  { +18 }
+      { A node seen by offset, for the kinds whose variants are not
+        declared yet (il_utils.pas: the tree nodes 137..233, the
+        variables 109 and 110, the blocks 105 and 172): xp[k] the pointer
+        and xl[k] the longword at +4k, xp2[k] and xl2[k] those at +4k+2,
+        xw[k] the word at +2k, xc[k] the byte at +k.  Replace uses with
+        named variants as the kinds are identified. }
+      9: (xp: array [1..94] of il_$node_ptr_t);     { +4 }
+      10: (xp2_pad: integer;                        { +4 }
+           xp2: array [1..93] of il_$node_ptr_t);   { +6 }
+      11: (xl: array [1..94] of integer32);         { +4 }
+      12: (xl2_pad: integer;                        { +4 }
+           xl2: array [1..93] of integer32);        { +6 }
+      13: (xw: array [2..189] of integer);          { +4 }
+      14: (xc: array [4..379] of char);             { +4 }
   end;
 
 var
