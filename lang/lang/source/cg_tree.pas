@@ -77,12 +77,15 @@
   a shift (x 3 left), 21 branch, 32 a label, 42..44 and 47 the 68881's
   (a conditional branch, add and subtract, compare).
 
-  TODO(pascal) generate and the 21 routines nested in it (bit_test_proc
-  .. restore_alloc_temps above, 0x100660..0x1047CA and 0x10484E,
-  0x3B38 bytes) are not translated yet: generate is declared extern
-  below so that walker compiles.  The module's tables at +0x58, +0x70
-  and +0x158 and its operands from +0x1B8, which only generate's
-  routines read, are not declared yet.
+  TODO(pascal) generate is begun: its frame, the operands' temporaries
+  and its end are translated, and of its nested routines shift_proc,
+  copy_set_aggregate, proto_set, set_ops, round_fp_to_ieee, ld_addr and
+  restore_alloc_temps; not yet bit_test_proc, bit_set_proc,
+  unpack_proc, agg_compare_proc, mdmcase, ldsqr, mul_proc,
+  extend_div_proc_result, div_proc, set_range_in_set_proc,
+  set_bit_in_set_proc, compare_proc, switch, f_compare_proc, nor the
+  `case' arms of operators other than 19..21, 27, 28, 49, 50 (they fall
+  to cgerr 0 meanwhile).
 
   Not known from the original: the names of the module's variables
   (cg.ins.pas's), the locals and the parameters; the IL nodes' fields
@@ -119,6 +122,38 @@ var
     [false, 115], [false, 115], [false, 115], [true, 135], [true, 137],
     [true, 139], [false, 115]];         { +0 }
 
+  { The PEB's operand (+0x58: mode 11, size 5). }
+  peb_ads: codegen_$uads_t := [11, 31, 31, 0, 5, 0, 0, 0];  { +0x58 }
+
+  { The 68881's instruction of a builtin math function (+0x70, by
+    desc.w6: 33 none). }
+  tree_fn_inst: array [0..23] of integer := [50, 51, 52, 53, 54, 55, 57,
+      58, 33, 59, 60, 33, 12 of 0];     { +0x70 }
+
+  { emit's generic instruction of an operator (+0xA0, by op: 1 add, 2
+    subtract, 3 and, 4 or, 11 and 12 the unary ones; 33 none). }
+  tree_op_inst: array [0..91] of integer := [33, 1, 2, 33, 3 of 0, 11,
+      12, 3, 4, 33, 7 of 0, 3, 4, 3, 33, 69 of 0];  { +0xA0 }
+
+  { The FPA's routine of a builtin math function (+0x158, by desc.w6). }
+  tree_fn_rtn: array [0..23] of integer := [104, 106, 108, 110, 112, 114,
+      116, 118, 121, 125, 127, 129, 132, 137, 141, 143, 148, 7 of 0];
+                                        { +0x158 }
+
+  { The operands generate's routines build (+0x1B8 .. +0x230, 24 bytes
+    apart): opr the tree's result (load_result's), ops its second
+    operand; opv (+0x1D0) a branch's condition operand (.rwdi: mode 10,
+    size 4). }
+  opw: codegen_$uads_t;                 { +0x1B8 }
+  opv: codegen_$uads_t := [10, 31, 31, 0, 4, 0, 0, 0];  { +0x1D0 }
+  opu: codegen_$uads_t;                 { +0x1E8 }
+  opt: codegen_$uads_t;                 { +0x200 }
+  ops: codegen_$uads_t;                 { +0x218 }
+  opr: codegen_$uads_t;                 { +0x230 }
+
+  { The statement generate builds for multi_assign_proc (+0x248). }
+  tree_asn: cg_asn_t;                   { +0x248 }
+
 define
   cg_zero_ads;                          { +0x188 }
   cg_null_ads := [0, 31, 31, 0, 0, 0, 0, 0];  { +0x1A0 }
@@ -132,12 +167,6 @@ function dfetch(
     v: integer32;
     len: integer;
     sgn: boolean): integer32; options(val_param); extern;
-
-{ TODO(pascal) generate is not translated yet (cg_tree 0x10484E, internal:
-  no A5 load; walker its only caller). }
-procedure generate(
-    n: il_$node_ptr_t); options(val_param); extern;
-
 
 { assert_is_a_tree - n is a tree node (143, 138, 137).
 
@@ -1026,6 +1055,369 @@ begin
     cg_tree_$is_decomposable_const_mul := false;
 end;
 
+{ generate - the code of tree n (a 137 operator node, made a 138 value
+  node): by its operator (jump table of 74), mostly through its nested
+  routines; the operands' temporaries (152 nodes, wrapping the operand at
+  +16) taken off first and put back after (restore_alloc_temps) on the
+  last pass, else n's descriptor words restored; a value used again
+  (w18 < 0) kept in a temporary (get_temp) on the last pass.
+
+  0x10484E, 0x3B38 bytes, no A5 load (walker's): the operators by a jump
+  table of 74 (0x104910; 5, 30..33, 51..62, 64, 67, 71 and the others
+  cgerr 0); rlen in D7; the floating units' test `andi.w #0x714' of the
+  cpu word; the result's floating register tested with the longword mask
+  0x00FF0000, the class compared unsigned (`bhi').
+
+  Not known from the original:
+  - the names of the locals. }
+
+procedure generate(
+    n: cg_tree_ptr_t); options(val_param); internal;
+var
+  t2: il_$node_ptr_t;
+  t1: il_$node_ptr_t;
+  w8: integer;
+  w6: integer;
+  temps: boolean;
+  rlen: integer;
+
+  { shift_proc - a shift tree (operators 27, 28, 49, 50: how, shift's
+    and emit's x): by a constant count with shift, else by a count in a
+    register (emit 13).
+
+    0x1015BE, 0xB6 bytes: the constants' set after movewlx's code
+    (0x0FFE4C: 77..87, 101, 200); the count's word at +10 of the
+    constant. }
+
+  procedure shift_proc(
+      n: cg_tree_ptr_t;
+      how: integer); options(val_param);
+  begin
+    load_result(il_$node_ptr_t(n), -1, opr);
+    if n^.opnd[2]^.kind in [77..87, 101, 200] then
+      shift(opr, n^.desc.rlen, n^.opnd[2]^.xw[5], how)
+    else begin
+      load_operand(n^.opnd[2], n^.desc.w8, ops);
+      emit(13, n^.desc.rlen, opr, ops, how);
+      release(ops);
+    end;
+    unlock(opr);
+  end;
+
+  { copy_set_aggregate - a set of size bytes copied from src (nil: all
+    zero, an immediate 0) to dst: through address registers
+    post-incremented (mode 8) for more than 4 bytes, else d(An) (mode 2;
+    a constant source as it is); longwords inline up to 3, else a loop,
+    then a word and a byte.
+
+    0x102CAA, 0x1EA bytes: cg_addr_next_areg (0x35526E) set to 8 (A0)
+    meanwhile; the constants' set after movewlx's code (0x0FFE4C); the
+    longwords' count a signed division (`asr' with the rounding add). }
+
+  procedure copy_set_aggregate(
+      src: il_$node_ptr_t;
+      dst: il_$node_ptr_t;
+      size: integer32); options(val_param);
+  var
+    d: codegen_$uads_t;
+    s: codegen_$uads_t;
+    lab: codegen_$uads_t;
+    r: codegen_$uads_t;
+    cnt: integer32;
+    i: integer32;
+    save: integer;
+  begin
+    save := cg_addr_next_areg;
+    cg_addr_next_areg := 8;
+    if src = nil then
+      anyconst(0, 4, s);
+    if size > 4 then begin
+      if src <> nil then begin
+        load_address(src, s);
+        kill_register(s.f2);
+        s.f1 := 8;
+      end;
+      load_address(dst, d);
+      kill_register(d.f2);
+      d.f1 := 8;
+    end
+    else begin
+      if src <> nil then begin
+        address(src, 5, s);
+        if not (src^.kind in [77..87, 101, 200]) then
+          s.f1 := 2;
+      end;
+      address(dst, 5, d);
+      d.f1 := 2;
+    end;
+    cnt := size div 4;
+    if cnt > 0 then
+      if cnt <= 3 then
+        for i := 1 to cnt do
+          emit(0, 4, d, s, 0)
+      else begin
+        agg_loop_start(cnt - 1, r, lab);
+        emit(0, 4, d, s, 0);
+        agg_loop_end(cnt, r, lab);
+      end;
+    if (size & 2) <> 0 then
+      emit(0, 2, d, s, 0);
+    if (size & 1) <> 0 then
+      emit(0, 1, d, s, 0);
+    if size > 4 then
+      unlock(d)
+    else
+      release(d);
+    if (size > 4) and (src <> nil) then
+      unlock(s)
+    else
+      release(s);
+    cg_addr_next_areg := save;
+  end;
+
+  { set_ops - a set operation (operators 19..21: and, or, and of the
+    complement) of n's operands into n's temporary (get_agg_temp), a
+    longword at a time (a loop of size div 4), then a word and a byte;
+    through address registers post-incremented (mode 8).
+
+    0x10370A, 0x164 bytes: cg_addr_next_areg set to 8 meanwhile; the
+    count by `lsr' (rshft). }
+
+  procedure set_ops(
+      n: cg_tree_ptr_t); options(val_param);
+  var
+    dst: codegen_$uads_t;
+    r: codegen_$uads_t;
+    lab: codegen_$uads_t;
+    cnt: integer32;
+    save: integer;
+
+    { proto_set - one unit of size: r := right; complemented for 21;
+      r := left op r; dst := r.
+
+      0x103678, 0x92 bytes: set_ops's frame from the dynamic link;
+      the operator's instruction from tree_op_inst (+0xA0). }
+
+    procedure proto_set(
+        size: integer); options(val_param);
+    begin
+      emit(0, size, r, ops, 0);
+      if n^.op = 21 then
+        emit(12, size, r, cg_null_ads, 0);
+      emit(tree_op_inst[n^.op], size, r, opr, 0);
+      emit(0, size, dst, r, 0);
+    end;
+
+  begin
+    save := cg_addr_next_areg;
+    cg_addr_next_areg := 8;
+    load_address(n^.opnd[1], opr);
+    kill_register(opr.f2);
+    load_address(n^.opnd[2], ops);
+    kill_register(ops.f2);
+    opr.f1 := 8;
+    ops.f1 := 8;
+    get_register(nil, 4, r);
+    get_agg_temp(il_$node_ptr_t(n));
+    load_address(n^.opnd[1], dst);
+    kill_register(dst.f2);
+    dst.f1 := 8;
+    cnt := rshft(n^.desc.size, 2) - 1;
+    if cnt >= 0 then begin
+      if cnt > 0 then
+        agg_loop_start(cnt, opt, lab);
+      proto_set(4);
+      if cnt > 0 then
+        agg_loop_end(cnt, opt, lab);
+    end;
+    if (n^.desc.size & 2) <> 0 then
+      proto_set(2);
+    if (n^.desc.size & 1) <> 0 then
+      proto_set(1);
+    unlock(r);
+    unlock(dst);
+    unlock(opr);
+    unlock(ops);
+    cg_addr_next_areg := save;
+  end;
+
+  { round_fp_to_ieee - a value in a floating register (mode 13) rounded
+    to its IEEE size by a store to memory and a load back: to n's own
+    storage for a variable (109, 110), else to the temporary t (made
+    when it is not one, allocate_temp); not for real constants (88,
+    89).
+
+    0x103E14, 0xD2 bytes: a, n and t by address; the class's width from
+    delay.pas's table (0x169968). }
+
+  procedure round_fp_to_ieee(
+      in out a: codegen_$uads_t;
+      in n: il_$node_ptr_t;
+      in out t: il_$node_ptr_t;
+      size: integer); options(val_param);
+  var
+    m: codegen_$uads_t;
+  begin
+    if (n^.kind <> 89) and (n^.kind <> 88) and (a.f1 = 13) then begin
+      if (n^.kind = 110) or (n^.kind = 109) then
+        address(n, 0, m)
+      else begin
+        if t^.kind <> 152 then
+          t := allocate_temp(delay_378[size], true, n);
+        address(t, size, m);
+      end;
+      emit(0, size, m, a, 0);
+      emit(0, size, a, m, 0);
+      unlock(m);
+    end;
+  end;
+
+  { ld_addr - the address of n's operand (operator 26) in an address
+    register: a common subexpression's (cg_addr_$load_addr_of_cse); a
+    reference's (146, under a 164's +20) base pointer loaded (copied to
+    another address register unless loaded into one) when no register
+    holds it or its register may be taken (weight up to 15000, or 16000,
+    and unlocked), x the reference; else a `lea' (emit 22) of the
+    operand, of the constant kinds' sizes (81, 82, 84, 85 long; 80, 83
+    word; others byte).
+
+    0x104640, 0x18A bytes: the operand passed to addr_of_cse by a frame
+    copy, n's slot to load_addr_of_cse; the weight compared unsigned
+    (`bls'); the kinds by a jump table of 6 from 80. }
+
+  procedure ld_addr(
+      n: cg_tree_ptr_t;
+      out a: codegen_$uads_t); options(val_param);
+  var
+    t: codegen_$uads_t;
+    p: il_$node_ptr_t;
+    cse: il_$node_ptr_t;
+    w: integer;
+    r: integer;
+    ok: boolean;
+  begin
+    ok := false;
+    p := n^.opnd[1];
+    cse := p;
+    if cg_addr_$addr_of_cse(cse) then
+      cg_addr_$load_addr_of_cse(il_$node_ptr_t(n), a)
+    else begin
+      if p^.kind = 164 then
+        p := p^.xp[5];
+      if p^.kind = 146 then begin
+        r := peek(p^.xp[6], 5);
+        if r = 31 then
+          ok := true
+        else begin
+          w := weight(r);
+          if ((w <= 15000) or (w = 16000)) and (cg_addr_locks[r] = 0) then
+            ok := true;
+        end;
+      end;
+      if ok then begin
+        load_operand(p^.xp[6], 5, a);
+        if a.f1 <> 1 then begin
+          t := a;
+          get_register(nil, 5, a);
+          emit(0, 5, a, t, 0);
+        end;
+        a.x := integer32(p);
+      end
+      else begin
+        address(p, 0, t);
+        release(t);
+        get_register(il_$node_ptr_t(n), 5, a);
+        case p^.kind of
+          81, 82, 84, 85:
+            emit(22, 4, a, t, 0);
+          80, 83:
+            emit(22, 2, a, t, 0);
+          otherwise
+            emit(22, 1, a, t, 0);
+        end;
+      end;
+    end;
+  end;
+
+  { restore_alloc_temps - the operands' temporaries (152 nodes) put back
+    in n, each wrapping its operand again (+16); temps cleared.
+
+    0x1047CA, 0x84 bytes: generate's frame from the dynamic link. }
+
+  procedure restore_alloc_temps;
+  begin
+    if t1 <> nil then
+      if t1^.kind = 152 then begin
+        t1^.xp[4] := n^.opnd[1];
+        n^.opnd[1] := t1;
+      end;
+    if t2 <> nil then
+      if t2^.kind = 152 then begin
+        t2^.xp[4] := n^.opnd[2];
+        n^.opnd[2] := t2;
+      end;
+    temps := false;
+  end;
+
+begin
+  temps := false;
+  rlen := n^.desc.rlen;
+  w6 := n^.desc.w6;
+  w8 := n^.desc.w8;
+  t1 := nil;
+  t2 := nil;
+  if n^.count > 0 then begin
+    t1 := n^.opnd[1];
+    if t1 <> nil then
+      if t1^.kind = 152 then begin
+        temps := true;
+        n^.opnd[1] := t1^.xp[4];
+      end;
+  end;
+  if n^.count > 1 then begin
+    t2 := n^.opnd[2];
+    if t2 <> nil then
+      if t2^.kind = 152 then begin
+        temps := true;
+        n^.opnd[2] := t2^.xp[4];
+      end;
+  end;
+  case n^.op of
+    19, 20, 21:
+      set_ops(n);
+    27:
+      shift_proc(n, 3);
+    28:
+      shift_proc(n, 2);
+    49:
+      shift_proc(n, 1);
+    50:
+      shift_proc(n, 0);
+    otherwise
+      cgerr(0, cg_line, n);
+  end;
+  if not at_backend_506 then begin
+    n^.desc.w6 := w6;
+    n^.desc.w8 := w8;
+    if n^.count > 0 then
+      n^.opnd[1] := t1;
+    if n^.count > 1 then
+      n^.opnd[2] := t2;
+  end
+  else if temps then
+    restore_alloc_temps;
+  if n^.kind = 137 then begin
+    n^.kind := 138;
+    if at_backend_506 then
+      if n^.w18 < 0 then
+        if ((cargs_$options.cpu * [2, 4, 8, 9, 10] <> []) and
+            ((rlen = 7) or (rlen = 6)) and
+            (peek(il_$node_ptr_t(n), rlen) in [16..23])) or
+            (rlen <= 6) then
+          get_temp(il_$node_ptr_t(n), true);
+  end;
+end;
+
 { walker - tree n's operands evaluated (in reverse for the operators of
   the set: the right one first), then its own code (generate), and the
   register stamp counted up.  Not for operators 15, 16.
@@ -1100,7 +1492,7 @@ begin
       for i := 1 to cg_tree_ptr_t(n)^.count do
         evaluate_subtree(n, i, first);
   end;
-  generate(n);
+  generate(cg_tree_ptr_t(n));
   cg_addr_2ba := cg_addr_2ba + 1;
 end;
 
