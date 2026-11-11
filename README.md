@@ -132,4 +132,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/c_compiler/source/c_syntax.pas` | 59 | started: 12 of 59 (error, check, type_qualifiers, cc_walk_it, call_kfold, ...; dpc gap 8) |
 | `lang/c_compiler/source/c_expr_sem.pas` | 43 | translated (best effort; tables initialized; dpc gaps 6, 7, 8, 14, 25) |
 | `lang/lang/source/kfold.pas` | 14 | translated (best effort; nodes through kf_tree_t and il views; dpc gaps 7, 8, 19, 25) |
+| `lang/lang/source/outbin.pas` | 70 | translated (cc.m68k only; best effort; nodes by offset, cells through codegen's variants; dpc gaps 3, 4, 8, 9, 19, 24, 26, 25) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

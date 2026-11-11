@@ -449,3 +449,30 @@ revisited.
    +10 of an integer constant is the low half of its value, so either
    the constants kfold sees there are not smcontk's or the field means
    something else; kept as the image has it.
+
+66. Translator Q: outbin.pas declares other units' cells it reaches
+   absolutely, as unix_objmod.pas did with emit's: emit_108 (emit.pas
+   +0x108..+0x11B; +0x110 here a count_t for its low word),
+   cg_top_130 (cg_top.pas +0x130, the block's line table), delay_378
+   and delay_398 (delay.pas +0x378, +0x398: two word tables ln_end
+   indexes), opinfo_opword and opinfo_names (opinfo.pas, the unit with
+   no code: 0x2CF9E2 and 0x2D05C4) and dbl_to_real (kfold).  The names
+   are by offset; the owners' units (or a back-end insert, codegen or
+   final) should declare them, and the names here be changed to match.
+
+67. Translator Q: the code cells' kinds are an enumerated type in the
+   original (dbcod writes them with the names DEF_LBL_INSTYP ..
+   FPA_CMP_INSTYP); codegen.ins.pas has them as integer constants since
+   celpkg and the cells treat the kind as a number.  Should the kind
+   field become the enumerated type when cg_* are translated?
+
+68. Translator Q: outbin's module data has four identical tables of the
+   integer registers' names (A5 + 0xCD0, 0xCF0, 0xD10, 0xD40), taken to
+   be static variables of prt_int_regs, prtads, dbcod and wr_instr in
+   that order (each routine reads only its own); and an initialized
+   table of eight bit masks (+0xC50) and a byte (+0xCC8) that no
+   routine reads.
+   Lead's note (2026-11-11): three of outbin.pas's FPA name entries are
+   written as six raw NUL bytes (the image's), so text tools (grep) treat
+   the source as binary.  Kept as written; blanks or a chr(0) form would
+   read better but change the data or need another initializer form.

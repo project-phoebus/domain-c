@@ -15,6 +15,73 @@
   Add the code generator's other declarations as its units are
   translated. }
 
+const
+  { The code cells' kinds (+8), the instructions' types.  outbin.pas's
+    dbcod writes the kind with the names of an enumerated type of 59
+    values (its write table at cc.m68k 0x0BE564: DEF_LBL_INSTYP,
+    MOVE_INSTYP, ...); the cells keep it as an integer here because
+    celpkg.pas, getcodecell's callers and the cells' clearing treat it
+    as a number.  Not known from the original: the type's name. }
+  def_lbl_instyp = 0;
+  move_instyp = 1;
+  moveq_instyp = 2;
+  dest1_sz_instyp = 3;
+  a_instyp = 4;
+  q_instyp = 5;
+  src2_sz_instyp = 6;
+  dest2_sz_instyp = 7;
+  i_instyp = 8;
+  src2_instyp = 9;
+  shft_d_instyp = 10;
+  shft_cnt_instyp = 11;
+  shft_mem_instyp = 12;
+  cmpm_instyp = 13;
+  i_w_instyp = 14;
+  dest2_instyp = 15;
+  dest1_instyp = 16;
+  br_instyp = 17;
+  cbr_instyp = 18;
+  logicize_instyp = 19;
+  link_instyp = 20;
+  unlk_instyp = 21;
+  rts_instyp = 22;
+  dbcc_instyp = 23;
+  line_no_instyp = 24;
+  movemr_instyp = 25;
+  moverm_instyp = 26;
+  fop_instyp = 27;
+  inline_instyp = 28;
+  case_instyp = 29;
+  casejmp_instyp = 30;
+  bsr_instyp = 31;
+  block_start_instyp = 32;
+  block_end_instyp = 33;
+  align_instyp = 34;
+  nop_instyp = 35;
+  tern_32u_instyp = 36;
+  tern_src_ext_instyp = 37;
+  tern_reg_reg_instyp = 38;
+  fbr_instyp = 39;
+  m68881_src_ext_instyp = 40;
+  m68881_reg_reg_instyp = 41;
+  m68881_dst_ext_instyp = 42;
+  m68881_set_byte_instyp = 43;
+  m68881_tst_reg_instyp = 44;
+  m020_src2_instyp = 45;
+  m020_dest2_instyp = 46;
+  m020_dest1_instyp = 47;
+  m68881_i_instyp = 48;
+  m020_cmp2_instyp = 49;
+  m68881_dest1_instyp = 50;
+  m881_moverm_instyp = 51;
+  m881_movemr_instyp = 52;
+  m881_nop_instyp = 53;
+  fpa_reg_reg_instyp = 54;
+  fpa_load_instyp = 55;
+  fpa_store_instyp = 56;
+  fpa_mem_2reg_instyp = 57;
+  fpa_cmp_instyp = 58;
+
 type
   { An address descriptor, packed (12 bytes; the cells hold two): five
     small fields in the first three bytes, then two longwords.
@@ -62,6 +129,31 @@ type
       { The owner of reference cells: their list at +32. }
       3: (c3_8: array [1..12] of integer;   { +8 }
           refs: codegen_$cell_ptr_t);   { +32 }
+      { A line number cell (line_no_instyp: the source line), a block's
+        start or end (block_start_instyp, block_end_instyp: the
+        block's first line and its node); outbin.pas.  Other cells
+        keep a word and a longword there (dbcod prints them as `len'
+        and in hexadecimal). }
+      4: (c4_8: integer;                { +8 }
+          line: integer;                { +10 }
+          blk: il_$node_ptr_t;          { +12: a line number cell's list
+                                          of equivalent lines }
+          ret: boolean);                { +16: a line number cell's
+                                          statement returns (outbin's
+                                          wr_instr) }
+      { A branch (br_instyp, cbr_instyp, bsr_instyp: its size, 2 short
+        and 6 long, and its target's number) or a label (def_lbl_instyp:
+        its address, which outbin's br_distance reads through the
+        reference cell's owner). }
+      5: (c5_8: integer;                { +8 }
+          size: integer;                { +10 }
+          addr: integer32;              { +12 }
+          c5_16: array [1..4] of integer;   { +16 }
+          c5_ads1: codegen_$ads_t;      { +24 }
+          c5_ads2: codegen_$ads_t;      { +36 }
+          op: integer;                  { +48: the instruction (outbin's
+                                          tables are indexed by it) }
+          c5_50: integer);              { +50 }
   end;
 
 { INIT_CELPKG - no cells allocated.  0x0B645C (final's f_initialize). }

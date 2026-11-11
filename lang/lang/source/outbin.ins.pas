@@ -41,17 +41,21 @@
   0x0BD88C, prtads 0x0BDAE0, prtsiz 0x0BDF34, dbcod 0x0BDFEC,
   init_proc_reloc 0x0BF21C, dump_proc_reloc 0x0BF23E. }
 
-{ GENFPINST - 0x0BEB32; frame 8:p/a; 7 call sites (banshee); result in
-  D0. }
+{ GENFPINST - the 68881 command word of code cell cell (a
+  codegen_$cell_ptr_t: codegen.ins.pas comes after the prelude).
+  0x0BEB32; frame 8:p/a; 7 call sites (banshee); result in D0. }
 function genfpinst(
-    p1: univ_ptr): integer; options(val_param); extern;
+    cell: univ_ptr): integer; options(val_param); extern;
 
-{ ADD_PROC_RELOC - 0x0BF472; frame 8:l 12:a 16:l 20:a; 1 call site. }
+{ ADD_PROC_RELOC - a relocation of the longword at vaddr of sect
+  against symbol symndx (target the node it refers to) added to
+  unix_objmod's list.  0x0BF472; frame 8:l 12:a 16:l 20:a; 1 call
+  site. }
 procedure add_proc_reloc(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: integer32;
-    p4: univ_ptr); options(val_param); extern;
+    vaddr: integer32;
+    sect: il_$node_ptr_t;
+    symndx: integer32;
+    target: il_$node_ptr_t); options(val_param); extern;
 
 { OUTCODE - 0x0C1FC6; 1 call site (unix_objmod). }
 procedure outcode; extern;

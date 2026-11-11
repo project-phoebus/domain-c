@@ -234,3 +234,30 @@ lang/lang/source/kfold.pas	s/((?:\w+(?:\[[^\]]*\])?\^?\.)*\w+(?:\[[^\]]*\])?)\.w
 # gap 25 (kfold): kfold_$general exceeds the virtual registers: its integer operators left out of the check too
 lang/lang/source/kfold.pas	s/^(    \{ The integer and set constants' operators\. \})$/%var gap25k;\n%if gap25k %then { gap 25 }\n$1/
 lang/lang/source/kfold.pas	s/^(    \{ Not all constants: identities with a constant operand\. \})$/%endif { gap 25 }\n$1/
+# gap 4 (outbin): write and writeln (dropped, for the check)
+lang/lang/source/outbin.pas	s/^(\s*)write(ln)?\b.*;\s*$/${1}dbcod_on := dbcod_on; { gap 4 }\n/
+# gap 3 (outbin): new and dispose (the PAS_$NEW and PAS_$DISPOSE calls they compile to; the size is in the line's comment)
+lang/lang/source/outbin.pas	s/^(\s*)new\((\w+)\);\s*\{ (\d+) bytes \}/$1pas_\$new($2, $3); { gap 3 }/
+lang/lang/source/outbin.pas	s/^(\s*)dispose\((\w+)\);\s*\{ (\d+) bytes \}/$1pas_\$dispose($2, $3); { gap 3 }/
+# gap 19 (outbin): a function returning real (the single taken as a longword, for the check)
+lang/lang/source/outbin.pas	s/^(\s*)line: integer\): real; options\(val_param\); extern;/$1line: integer): integer32; options(val_param); extern; { gap 19 }/
+lang/lang/source/outbin.pas	s/\bv\.r := dbl_to_real/v.l := dbl_to_real { gap 19 }/
+# gap 26 (outbin): substr (the length compared instead, for the check)
+lang/lang/source/outbin.pas	s/:= substr\(fpx_chars_ptr_t\(addr\(s\^\.str_chars\)\)\^, 1, s\^\.str_len\) = 'CommandCIR';/:= s^.str_len = 10; { gap 26 }/
+# gap 9 (outbin): a nested forward routine (the forward heading dropped, the earlier call replaced)
+lang/lang/source/outbin.pas	s/^\s*procedure coff_lines_instruction; forward;/{ gap 9 }/
+lang/lang/source/outbin.pas	s/^(\s*)coff_lines_instruction;  \{ forward \}/${1}lines_pending := true; { gap 9 }/
+# gap 8 (outbin): in on constant sets with word elements (the comparisons, for the check)
+lang/lang/source/outbin.pas	s/\(c\^\.op in \[358\.\.363\]\)/((c^.op >= 358) and (c^.op <= 363)) { gap 8 }/g
+lang/lang/source/outbin.pas	s/\(k\^\.kind in \[77\.\.87, 101, 200\]\)/(((k^.kind >= 77) and (k^.kind <= 87)) or (k^.kind = 101) or (k^.kind = 200)) { gap 8 }/
+lang/lang/source/outbin.pas	s/not \(p\^\.kind in \[107\.\.111, 167, 183, 192, 194\]\)/not (((p^.kind >= 107) and (p^.kind <= 111)) or (p^.kind = 167) or (p^.kind = 183) or (p^.kind = 192) or (p^.kind = 194)) { gap 8 }/
+lang/lang/source/outbin.pas	s/not \(p\^\.kind in \[0, 24, 32, 33\]\)/not ((p^.kind = 0) or (p^.kind = 24) or (p^.kind = 32) or (p^.kind = 33)) { gap 8 }/
+# gap 24 (outbin): a function call as a right operand of `and' (compared with false, for the check)
+lang/lang/source/outbin.pas	s/^(\s*)not pc_disp_ok\(il_\$node_ptr_t\(a\.x\)\^\.xp\[2\]\^\.xl\[3\]\) then/$1(pc_disp_ok(il_\$node_ptr_t(a.x)^.xp[2]^.xl[3]) = false) then { gap 24 }/
+lang/lang/source/outbin.pas	s/if c\^\.kind in \[54\.\.58\] then/if (c^.kind >= 54) and (c^.kind <= 58) then { gap 8 }/
+lang/lang/source/outbin.pas	s/\(n\^\.kind in \[77\.\.87, 101, 200\]\)/(((n^.kind >= 77) and (n^.kind <= 87)) or (n^.kind = 101) or (n^.kind = 200)) { gap 8 }/
+# gap 24 (outbin): calls as operands of `and'/`or' (compared with true, for the check)
+lang/lang/source/outbin.pas	s/\bnot (executable_insts_follow_prev_lineno|assert_inline_block_start_follows|assert_is_inline_block_start|assert_is_line_no_instyp|fardisp)\(([^()]*)\)/(($1($2)) = false)/g
+lang/lang/source/outbin.pas	s/\b(executable_insts_follow_prev_lineno|assert_inline_block_start_follows|assert_is_inline_block_start|assert_is_line_no_instyp|fardisp)\(([^()]*)\)/(($1($2)) = true)/g
+# gap 25 (outbin): a routine needing more registers than dpc has (wr_instr's listing case dropped, for the check)
+lang/lang/source/outbin.pas	$s=1 if /^      case c\^\.kind of$/; if ($s) { $e = /^      end;$/; $_ = $e ? "      { gap 25 }\n" : ""; $s = 0 if $e; }
