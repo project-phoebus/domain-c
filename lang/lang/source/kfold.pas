@@ -439,7 +439,7 @@ var
   k: integer;
   w: integer32;
   i, j: integer;
-  rg: g_opt_range_ptr_t;
+  rg: g_opt_block_ptr_t;
 begin
   k := 0;
   w := 0;
@@ -450,7 +450,7 @@ begin
   else
     w := rshft(s^.xl2[10] & 16#FFFF00, 8);
   if w <> 0 then begin
-    rg := opt_4009c[w]^.range;
+    rg := opt_4009c[w]^.block;
     if rg^.last >= rg^.first then begin
       j := rg^.first;
       for i := 0 to rg^.last - rg^.first do begin

@@ -767,3 +767,34 @@ revisited.
    export: jmp_br_resolve keeps a copy of its own rather than moving
    celpkg's variables (`define' would reorder celpkg's data).  Should
    codegen.ins.pas export celpkg's descriptors?
+
+100. Translator X: a statement's flags at +41..+42 (g_opt.ins.pas's hdr:
+   b7..deleted, then kills, last, first) are written by assign_elim as
+   one 16-bit field (`andi.l #0xFF0000FF; ori.l #0x10000' of the
+   longword at +40 for deleted alone; `(+40 & 0xFFFF00) >> 8 | 2' and
+   `| 8' stored back for first and last of another statement), while
+   other sites `bset'/`btst' single bits.  Perhaps a `set of 0..15' in
+   the original (deleted element 8, no_prune 9, first 1, last 3); the
+   translations keep V's booleans and store all sixteen for the former.
+   Rename to a set when opt_main or opt_reachdef settle it?
+
+101. Translator X: opt_4009c's entries are the region statements (the
+   entry of region r is the statement whose +43 is r: opt_livevar's
+   assign_elim reads its kind, operator and operands); g_opt_ent_t and
+   g_opt_range_t were removed (kfold's node_number now reads the
+   statement's block).  The table's element type is g_opt_stmt_ptr_t.
+
+102. Translator X: opt_loop's data has opt_loop_hoist at +4 and the
+   current region at +8; dpc lays defined cells out after the module's
+   own, so the translation has them the other way round (internal to
+   the program).  delparent (opt_strength) is declared `in p' and
+   add_constant `in t; in b' after the callers' frame copies; the
+   owners should confirm when opt_strength is translated.
+
+103. Translator X: opt_vec_$process_routine (cc.m68k 0x096854, a global
+   routine) has no caller in cc.m68k and its address is not taken by
+   an instruction; process_candidate reaches its transforms' dispatch
+   with a tree's kind when an accumulation's other operand is not a
+   scalar (nothing happens: the kind is out of the jump table's 11
+   entries; written as kind 0).  Is process_routine called from the
+   a88k back end or through a table not found?

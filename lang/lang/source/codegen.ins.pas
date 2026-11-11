@@ -98,7 +98,11 @@ type
     y: integer32;                       { +8 (a label's number) }
   end;
 
-  { An address descriptor, unpacked (20 bytes). }
+  { An address descriptor, unpacked (20 bytes).  cg.ins.pas declares it
+    too, for a unit that opens it first (globals.ins.pas's
+    codegen_uads_declared). }
+%if not codegen_uads_declared %then
+%enable codegen_uads_declared;
   codegen_$uads_t = record
     f1: integer;                        { +0 }
     f2: integer;                        { +2 }
@@ -109,6 +113,7 @@ type
     x: integer32;                       { +12 }
     y: integer32;                       { +16 }
   end;
+%endif
 
   { A code cell (getcodecell: 52 bytes, 20 for kinds 24, 32, 33) or a
     reference cell (getrefcell: 16 bytes), on a circular list. }

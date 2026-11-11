@@ -150,4 +150,7 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/gen_unwind.pas` | 21 | translated (best effort; the unwind records as a packed record by kind; the scope's PA and a88k fields; prelude types declared in the unit, docs/questions.md 93) |
 | `lang/lang/source/jmp_br_resolve.pas` | 21 | translated (cc.m68k only; best effort; code cells through jb_cell_t, sections through jb_sect_t; dpc gap 24 avoided; docs/questions.md 95) |
 | `lang/lang/source/instr_reorder.pas` | 14 | translated (cc.m68k only; best effort; cells through codegen_$cell_t; dpc gaps 8, 24) |
+| `lang/lang/source/opt_livevar.pas` | 19 | translated (best effort; statements through g_opt.ins.pas's views (opt_4009c's entries), other nodes by offset; dpc gaps 2, 8, 24) |
+| `lang/lang/source/opt_loop.pas` | 12 | translated (best effort; statements and trees through g_opt.ins.pas's views, other nodes by offset; dpc gaps 2, 3, 7, 8) |
+| `lang/lang/source/opt_vector.pas` | 20 | translated (best effort; statements and trees through the unit's views ov_stmt_t, ov_tree_t, other nodes by offset; dpc gaps 7, 8) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

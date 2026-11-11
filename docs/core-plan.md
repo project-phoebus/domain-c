@@ -295,3 +295,26 @@ instr_reorder's heading (jmp_br_setup's first parameter renamed psect);
 codegen.ins.pas gets emit's ilength and fnl_slct.  jmp_br_resolve and
 instr_reorder read cells through views of their own (jb_cell_t,
 jb_sect_t; codegen_$cell_t and ir_sect_t); banshee.pas is not started.
+Translator X (2026-11-11), the global optimizer (opt_livevar, opt_loop):
+opt_4009c's entries are the region statements themselves (opt_livevar
+reads their kind, operands and variable), so g_opt.ins.pas's entry
+view (g_opt_ent_t, g_opt_range_t) gave way to g_opt_stmt_t: opt_4009c
+and a cse use's u_ent are g_opt_stmt_ptr_t, kfold's node_number reads
+the statement's block.  g_opt_stmt_t gets vars (+22), regs (+30), vset
+(+34) and hdr from +38 (vnum, num, the flags of +41/+42 named: counted,
+kills, first, last, b6 the for index's assignment, region); the image
+writes +41..+42 as one 16-bit field in places (docs/questions.md).
+g_opt_block_t gets consts (+20) and regs (+100); g_opt_var_t its count
+(+6), ud/du chains (+8, +12) and flags (+16), vars indexed 1..255 (a
+byte index is a word); new g_opt_chain_t, g_opt_const_t,
+g_opt_varset_t; opt_main's +0x18 (opt_main_18, the chains' pool),
++0x40/+0x44/+0x48 (opt_live_out, opt_not_killed, opt_used); headings of
+liveanalysis, add_constant, loopopt, motion_constants and of the
+callees in units not translated yet (delparent, opt_main_$ensure_var_set,
+make_motioned_ud_chain).
+Translator X, opt_vector: the unit opens cg.ins.pas before
+codegen.ins.pas, so codegen_$uads_t (which cg.ins.pas's headings use)
+is declared by both inserts under `%if not codegen_uads_declared', a
+conditional variable globals.ins.pas declares; opt_vector reads the
+statements and trees through its own views (it does not open
+g_opt.ins.pas) and declares inline_$mark_reference_params (opt_inline).
