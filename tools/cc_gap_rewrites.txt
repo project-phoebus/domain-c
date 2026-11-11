@@ -121,3 +121,6 @@ lang/lang/source/unix_objmod.pas	s/^(\s*)single: real;/$1single: integer32; { ga
 lang/lang/source/unix_objmod.pas	s/c\^\.kind in \[77\.\.90, 92, 93, 101, 156, 176, 198, 200\]/(((c^.kind >= 77) and (c^.kind <= 93) and (c^.kind <> 91)) or (c^.kind = 101) or (c^.kind = 156) or (c^.kind = 176) or (c^.kind = 198) or (c^.kind = 200)) { gap 8 }/
 # gap 12 (unix_objmod): a pointer function's result compared with a variable (the operands swapped)
 lang/lang/source/unix_objmod.pas	s/if idntk\(76, '\.symbols', 8\) = s\^\.xp\[1\] then begin/if s^.xp[1] = idntk(76, '.symbols', 8) then begin { gap 12 }/
+# gap 8 (coff_syms): in on constant sets with word elements (the comparisons)
+lang/lang/source/coff_syms.pas	s/p\^\.kind in \[105, 107, 108, 159, 167, 208, 234\]/((p^.kind = 105) or (p^.kind = 107) or (p^.kind = 108) or (p^.kind = 159) or (p^.kind = 167) or (p^.kind = 208) or (p^.kind = 234)) { gap 8 }/
+lang/lang/source/coff_syms.pas	s/p\^\.kind in \[105, 107, 108, 109, 110, 111, 159, 167, 208\]/((p^.kind = 105) or ((p^.kind >= 107) and (p^.kind <= 111)) or (p^.kind = 159) or (p^.kind = 167) or (p^.kind = 208)) { gap 8 }/

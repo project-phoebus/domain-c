@@ -143,12 +143,13 @@ type
     next: unix_objmod_$lnno_ptr_t;      { +14 }
   end;
 
-  { An entry of the name tables (12 bytes): the node or name and its
-    COFF symbol. }
+  { An entry of the name tables (12 bytes, coff_syms's count_global_sym
+    fills them): the node, its COFF symbol and the identifier of its
+    name. }
   unix_objmod_$sym_entry_t = record
     name: il_$node_ptr_t;               { +0 }
     symndx: integer32;                  { +4 }
-    unused_8: integer32;                { +8 }
+    ident: il_$node_ptr_t;              { +8 }
   end;
 
   { The routine run_backend's caller passes for unix_obj_gen (c_main's
