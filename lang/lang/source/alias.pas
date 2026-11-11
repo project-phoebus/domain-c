@@ -484,7 +484,7 @@ begin
             exit;
         end;
       end;
-      w := varn_from_fortran_symbol(top, top^.xl[10], 0);
+      w := varn_from_fortran_symbol(top, top^.xp[10], false);
       w^.xl[8] := integer32(alias_bits_t(w^.xl[8]) + m * [0, 8, 12, 17]);
       ok := get_alias_desc(w, d);
       if 13 in m then

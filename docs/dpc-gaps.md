@@ -427,3 +427,44 @@ when this tree is merged).
        begin
          if (k = 1) or f(k) then b := true;
        end;
+
+Gap 21 (a routine parameter, reference 5.4; translator L's entry) also
+met in debug_sym_dmp.pas (translator N), where it differs in two ways:
+
+- The routines passed are nested (write_files' add_file_table_entry,
+  write_string_for_file_table_entry, add_unit_table_entry and
+  debug_sym_dmp_$init's add_file_entry, passed to
+  spos_$apply_over_marked_source_files and spos_$apply_over_source_files:
+  `pea' of a trampoline built in the parent's frame,
+  docs/rev889-patterns.md 12), so L's way out (a univ_ptr given
+  addr(routine)) is closed: the reference forbids the address of a
+  nested routine (3.13.3, p. 3-50; dpc: "the address of a nested
+  routine cannot be taken").  The headings must take a routine
+  parameter.
+- The heading is in a shared insert (lang/common/source/spos.ins.pas,
+  opened by every unit that opens spos), and dpc refuses the
+  declaration even where nothing calls it, so a rewrite of the unit
+  alone cannot keep the other units checked.  tools/cc_check.sh now
+  applies tools/cc_gap_rewrites.txt rules naming an insert to a scratch
+  copy of the insert, which every unit's compilation finds first (dpc
+  looks in its working directory before the -I directories); the spos
+  headings go back to the routine pointer types spos_$region_proc_t and
+  spos_$marked_region_proc_t there, spos.pas calls them with `^', and
+  debug_sym_dmp's calls pass nil.  Reproducer (the nested routine):
+
+      module g21n;
+      procedure apply(procedure proc(region: integer32)); extern;
+      procedure p;
+      var n: integer32;
+        procedure q(region: integer32); options(val_param);
+        begin
+          n := region;
+        end;
+      begin
+        apply(q);
+      end;
+
+  The reference gives no syntax for the options of a routine
+  parameter's own parameters (the routines passed are val_param; the
+  only trace is the error "Incompatible routine OPTIONS"), so the
+  headings give none (a TODO in spos.ins.pas).

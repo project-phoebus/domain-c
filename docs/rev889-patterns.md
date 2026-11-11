@@ -389,3 +389,26 @@ cc.m68k unless marked.
     multiple of 8, leaving 4 or 6 bytes of zeros between.  (Elsewhere
     module variables follow each other at word alignment: item 9,
     il.pas +0x142.)  dpc lays them out end to end.
+## Calls and nested routines (translator N, debug_sym_dmp.pas)
+
+51. **An argument area's pad left on the stack for the next call.**
+    After a call of 8 bytes of arguments that another call of 6 bytes
+    follows, the first pops only 6 (`addq.l #6,SP') and the 2 bytes
+    left stand for the second call's pad (item 8: no `subq.l #2'):
+    debug_sym_dmp get_memory_loc 0x0A8B4E (force_add_string, then
+    pds_$add_var_attr's word and longword), write_files 0x0ABE5A
+    (`addq.l #2' after a 4-byte call, then three arguments of 10
+    bytes), debug_sym_dmp_$block_dmp 0x0AC2EA (`lea (10,SP)' between
+    two dump_string_table calls of 10 bytes each), get_type_rep
+    0x0AA78C.  dpc pops each call's arguments and pads each call.
+52. **A nested routine passed as a routine parameter loads A5.**  The
+    routines nested in write_files (0x0ABB62, 0x0ABC00, 0x0ABC52) and
+    debug_sym_dmp_$init (0x0AC3BC), which spos calls through their
+    trampolines (item 12), save A5 and `lea abs.l,A5' after taking the
+    parent's frame from A1 (`movea.l A1,A3'); the trampoline also loads
+    A0 with the parent's A5, which they do not use.  Nested routines
+    called directly run on their parent's A5 (item 1).
+53. **A loop-invariant address loaded and not used.**
+    get_var_location_rep 0x0A902C loads target_properties' address
+    (`move.l #0x2CE528,D7') before its loop, whose tests of the target
+    (+0x12) are absolute (`move.w 0x2CE53A,D0').

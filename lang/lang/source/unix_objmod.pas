@@ -335,7 +335,7 @@ define
 var
   target_aligns: array [0..3] of integer32 := [0, 16#40000, 16#80000];  { +0x0 }
   target_bases: array [0..3] of integer32 := [0, 16#40000, 16#80000];   { +0x10 }
-  symbols_tail: univ_ptr;               { +0x5C2C }
+  symbols_tail: il_$node_ptr_t;         { +0x5C2C: the last of them }
   symbols_sections: il_$node_ptr_t;     { +0x5C30: debug_sym_dmp's
                                           symbols sections (+8 next) }
   exc_tuple: il_$node_ptr_t;            { +0x5C34 }
@@ -3835,7 +3835,7 @@ var
         while s <> nil do begin
           sect_from := uobj_obj_pos;
           s^.xl[11] := sect_from + uobj_addr_bias + data_5c54 + data_5c50;
-          debug_sym_dmp_$dump_symbols_section(s, uobj_obj_pos, addr(uobj_obj_pos));
+          debug_sym_dmp_$dump_symbols_section(s, uobj_obj_pos, uobj_obj_pos);
           symbols_scnhdr_pos := uobj_scnhdr_pos;
           symbols_symndx := uobj_nsyms;
           uobj_nsyms := uobj_nsyms + 1;
@@ -3876,7 +3876,7 @@ var
       else
         uobj_symbols_addr := 0;
       start := uobj_obj_pos;
-      debug_sym_dmp_$block_dmp(start, addr(uobj_obj_pos));
+      debug_sym_dmp_$block_dmp(start, uobj_obj_pos);
       uobj_pad_from := uobj_obj_pos;
       uobj_obj_pos := (target_properties.p_90 + uobj_obj_pos - 1) &
                  (-target_properties.p_90);
@@ -4182,8 +4182,8 @@ begin
       cgerr_no_source(9, 0);
   end;
   if cargs_$options.db >= 2 then
-    debug_sym_dmp_$create_symbols_sections(addr(symbols_sections),
-                                           addr(symbols_tail))
+    debug_sym_dmp_$create_symbols_sections(symbols_sections,
+                                           symbols_tail)
   else begin
     symbols_sections := nil;
     symbols_tail := nil;

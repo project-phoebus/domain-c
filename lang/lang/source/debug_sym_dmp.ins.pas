@@ -26,60 +26,66 @@
 
   Not known from the original: every parameter name and most types. }
 
-{ TODO(pascal) debug_sym_dmp headings are read off the frames only
+{ The headings were read off the frames and call sites, and narrowed
+  from debug_sym_dmp.pas (translated): a routine with no call site in
+  this tree (sz_fsym, varn_from_fortran_symbol: alias, list_tree and
+  opt_inline call them) keeps the image's slots. }
 
-  Narrow the univ_ptr parameters and results to the node types, and name
-  the parameters, when debug_sym_dmp.pas and its callers are translated.  A
-  routine with no call site (0 call sites) is reached through a
-  procedure pointer or not at all; its result is read off its epilogue. }
+{ The unit's other global routines are called only within it (or
+  through PDS_'s and LOC_BUILD_'s routine pointers) and are declared in
+  the unit file: allocfunc 0x0A83B0, dumpfunc 0x0A8428, obj_alloc
+  0x0A847A, add_symbols_section 0x0A84C0, add_name_to_symbols_section
+  0x0A8554, get_record_rep 0x0A9FBC, get_enum_rep 0x0AA2B6. }
 
-{ The unit's other global routines are called only within it (or not at
-  all) and are left to the unit file: allocfunc 0x0A83B0, dumpfunc
-  0x0A8428, obj_alloc 0x0A847A, add_symbols_section 0x0A84C0,
-  add_name_to_symbols_section 0x0A8554, get_record_rep 0x0A9FBC,
-  get_enum_rep 0x0AA2B6. }
-
-{ SZ_FSYM - 0x0A8350, cc.a88k 0x0A9D30; frame 8:p; 5 call sites (alias,
-  list_tree, opt_inline); result in D0. }
+{ SZ_FSYM - a Fortran symbol's size: a stub that reports a bug.
+  0x0A8350, cc.a88k 0x0A9D30; frame 8:p (not read); 5 call sites
+  (alias, list_tree, opt_inline); result in D0. }
 function sz_fsym(
-    p1: univ_ptr): integer32; options(val_param); extern;
+    sym: il_$node_ptr_t): integer32; options(val_param); extern;
 
-{ VARN_FROM_FORTRAN_SYMBOL - 0x0A8664, cc.a88k 0x0AA044; frame 8:p/a
-  12:l 16:w/b; 4 call sites (alias, list_tree); result in A0. }
+{ VARN_FROM_FORTRAN_SYMBOL - a variable node standing for Fortran
+  symbol sym of block blk (a fresh one when fresh, else the unit's
+  own).  0x0A8664, cc.a88k 0x0AA044; frame 8:p/a 12:l (not read)
+  16:w/b; 4 call sites (alias, list_tree); result in A0. }
 function varn_from_fortran_symbol(
-    p1: univ_ptr;
-    p2: integer32;
-    p3: integer): univ_ptr; options(val_param); extern;
+    sym: il_$node_ptr_t;
+    blk: il_$node_ptr_t;
+    fresh: boolean): il_$node_ptr_t; options(val_param); extern;
 
-{ GET_INCLUDE_FILE_INDEX - 0x0A87F4, cc.a88k 0x0AA1D4; frame 8:w/w
-  10:p/a 14:p/a; 7 call sites (outbin). }
+{ GET_INCLUDE_FILE_INDEX - the file (its source file mark) and line of
+  a source position.  0x0A87F4, cc.a88k 0x0AA1D4; frame 8:w 10:a 14:a;
+  7 call sites (outbin). }
 procedure get_include_file_index(
-    p1: integer;
-    p2: univ_ptr;
-    p3: univ_ptr); options(val_param); extern;
+    position: integer;
+    out file_index: integer;
+    out line: integer); options(val_param); extern;
 
-{ DEBUG_SYM_DMP_$ADD_LOC_INFO - 0x0A9458, cc.a88k 0x0AAE38; 1 call site
-  (unix_objmod). }
+{ DEBUG_SYM_DMP_$ADD_LOC_INFO - the objects' locations, once the code
+  is placed.  0x0A9458, cc.a88k 0x0AAE38; 1 call site (unix_objmod). }
 procedure debug_sym_dmp_$add_loc_info; extern;
 
-{ DEBUG_SYM_DMP_$CREATE_SYMBOLS_SECTIONS - 0x0AB3B8, cc.a88k 0x0ACD98;
-  frame 8:p/a 12:p/a; 1 call site (unix_objmod). }
+{ DEBUG_SYM_DMP_$CREATE_SYMBOLS_SECTIONS - the .symbols sections made;
+  the first and the last returned.  0x0AB3B8, cc.a88k 0x0ACD98; frame
+  8:a 12:a; 1 call site (unix_objmod: its +0x5C30, +0x5C2C). }
 procedure debug_sym_dmp_$create_symbols_sections(
-    p1: univ_ptr;
-    p2: univ_ptr); options(val_param); extern;
+    out first: il_$node_ptr_t;
+    out last: il_$node_ptr_t); extern;
 
-{ DEBUG_SYM_DMP_$DUMP_SYMBOLS_SECTION - 0x0AB400, cc.a88k 0x0ACDE0;
-  frame 8:p/l 12:l/l 16:p/a; 1 call site (unix_objmod). }
+{ DEBUG_SYM_DMP_$DUMP_SYMBOLS_SECTION - section written at
+  start_offset; its end returned.  0x0AB400, cc.a88k 0x0ACDE0; frame
+  8:p/l 12:l/l 16:a; 1 call site (unix_objmod). }
 procedure debug_sym_dmp_$dump_symbols_section(
-    p1: univ_ptr;
-    p2: integer32;
-    p3: univ_ptr); options(val_param); extern;
+    section: il_$node_ptr_t;
+    start_offset: integer32;
+    out end_offset: integer32); options(val_param); extern;
 
-{ DEBUG_SYM_DMP_$BLOCK_DMP - 0x0AC20A, cc.a88k 0x0ADBEA; frame 8:l
-  12:p/l; 1 call site (unix_objmod). }
+{ DEBUG_SYM_DMP_$BLOCK_DMP - the .blocks section written at offset
+  (moved past it).  0x0AC20A, cc.a88k 0x0ADBEA; frame 8:l (not read)
+  12:p/l; 1 call site (unix_objmod: the offset by value, then its
+  address). }
 procedure debug_sym_dmp_$block_dmp(
-    p1: integer32;
-    p2: univ_ptr); options(val_param); extern;
+    start: integer32;
+    in out offset: integer32); options(val_param); extern;
 
 { DEBUG_SYM_DMP_$INIT - 0x0AC44A, cc.a88k 0x0ADE2A; 1 call site
   (unix_objmod). }
@@ -92,6 +98,6 @@ procedure debug_sym_dmp_$finalize; extern;
 var
   { debug_sym_dmp.pas's data (A5 0x2C20CC cc.m68k) + 0x1090: a boolean
     gen_utils's make_new_addr_con clears and sets when OBJUTIL_ finds a
-    symbol or section in an -inlib library.  Its meaning here is not
-    known. }
+    symbol or section in an -inlib library.  debug_sym_dmp.pas does not
+    read it. }
   debug_sym_dmp_1090: extern boolean;

@@ -21,10 +21,23 @@ fi
 scratch=$(mktemp -d)
 trap 'rm -rf "$scratch"' EXIT
 fail=0
+# dpc gaps in inserts: a rule whose file is an insert (*.ins.pas,
+# *.pvt.pas) rewrites a scratch copy of it at its tree path under
+# $scratch/inc, which every unit's compilation searches first: dpc looks
+# an include up in its working directory, then in the -I directories in
+# order, so coff_compare runs in $scratch/inc with the tree as -I.
+inc=$scratch/inc
+mkdir -p "$inc"
+for ins in $(awk -F'\t' '$1 ~ /\.(ins|pvt)\.pas$/ { print $1 }' tools/cc_gap_rewrites.txt | sort -u); do
+  mkdir -p "$inc/$(dirname "$ins")"
+  cp "$ins" "$inc/$ins"
+  awk -F'\t' -v f="$ins" '$1 == f { print $2 }' tools/cc_gap_rewrites.txt |
+    while IFS= read -r r; do perl -pi -e "$r" "$inc/$ins"; done
+done
 for f in "$@"; do
   # dpc gaps (docs/dpc-gaps.md): compile a rewritten scratch copy, named
   # as the unit (coff_compare picks the binary's unit by the file name)
-  src=$f
+  src=$here/$f
   rules=$(awk -F'\t' -v f="$f" '$1 == f { print $2 }' tools/cc_gap_rewrites.txt)
   if [ -n "$rules" ]; then
     src=$scratch/$(basename "$f")
@@ -36,7 +49,7 @@ for f in "$@"; do
     # conditional variable cc_a88k (%var cc_a88k; %if cc_a88k %then ...)
     config=
     [ "$bin" = "$a88k" ] && config="-config cc_a88k"
-    out=$(python3 tools/coff_compare.py --binary "$bin" --unit "${f%.pas}" "$src" -- -I "$here" $config 2>&1)
+    out=$(cd "$inc" && python3 "$here/tools/coff_compare.py" --binary "$here/$bin" --unit "${f%.pas}" "$src" -- -I "$here" $config 2>&1)
     rc=$?
     case "$out" in
       *"no single unit"*) continue ;;

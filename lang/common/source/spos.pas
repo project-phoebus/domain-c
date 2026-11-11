@@ -673,20 +673,21 @@ end;
   0x072CC2, 0x52 bytes: D2 from 0; each pass `cmp.l (36,A0),D2'
   (the region its own root) then `jsr (A1)' with D2 pushed; then `cmp.l
   (2,A2),D2; beq' (the last region, read again each pass: not a `for')
-  and `addq.l #1'.
+  and `addq.l #1'.  proc is a routine parameter (spos.ins.pas;
+  docs/dpc-gaps.md 21: the gate checks a copy with a routine pointer).
 
   Not known from the original:
   - the local's name; the loop's form. }
 
 procedure spos_$apply_over_source_files(
-    proc: spos_$region_proc_t);
+    procedure proc(region: integer32));
 var
   r: spos_$region_t;
 begin
   r := 0;
   repeat
     if db.regions[r].root = r then
-      proc^(r);
+      proc(r);
     if r = db.last_region then
       exit;
     r := r + 1;
@@ -701,14 +702,14 @@ end;
   the region. }
 
 procedure spos_$apply_over_marked_source_files(
-    proc: spos_$marked_region_proc_t);
+    procedure proc(region: integer32; mark: integer32));
 var
   r: spos_$region_t;
 begin
   r := 0;
   repeat
     if (db.regions[r].root = r) and (db.regions[r].mark <> 0) then
-      proc^(r, db.regions[r].mark);
+      proc(r, db.regions[r].mark);
     if r = db.last_region then
       exit;
     r := r + 1;

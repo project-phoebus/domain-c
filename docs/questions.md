@@ -354,3 +354,26 @@ revisited.
    Also c_type_t's set variant gives set_size at +12 (integer32), but
    type_exp takes a set's size from +8 and attributes reads a word at
    +12 (the element count); not changed (no translated user).
+53. Translator N: debug_sym_dmp's nested routines are passed to
+   spos_$apply_over_* as routine parameters, so spos.ins.pas's headings
+   now take routine parameters (core change) and tools/cc_check.sh
+   rewrites an insert's scratch copy for a rule naming an insert
+   (tools/cc_gap_rewrites.txt; docs/dpc-gaps.md, after gap 19).  Is the
+   tool change acceptable, or should such a heading be kept behind a
+   conditional (`%if')?  And how did the original declare the passed
+   routines' val_param (the reference gives no options syntax for a
+   routine parameter)?
+   Lead's provisional decision (2026-11-11): accepted.  An insert rule in
+   tools/cc_gap_rewrites.txt rewrites a scratch copy that shadows the
+   tree's insert (dpc searches the working directory first); the tree
+   keeps the reference's construct, as for units.  The gate's results are
+   otherwise unchanged.
+54. Translator N: get_memory_loc (debug_sym_dmp) returns its location
+   unset when the variable has none (failed), and get_name_rep, the
+   records' makers after a bug_check of an unknown kind likewise; kept
+   as the image has them.  debug_sym_dmp's two string tables (+4176,
+   written as kind 27; +4192, kind 28 and "local") are named by their
+   record kinds (strings_27, strings_28); which holds what (the names
+   of nested or exported routines in 27, the static variables' and the
+   other routines' in 28) is read off block_dmp and get_memory_loc, the
+   meaning of the kinds is not known.
