@@ -415,3 +415,10 @@ lang/lang/source/reg_cost_68k.pas	s/^(      \{ The constants' classes\. \})$/%va
 lang/lang/source/reg_cost_68k.pas	s/^(      \{ No register for a variable of no cost\. \})$/%endif { gap 25 }\n$1/
 lang/lang/source/reg_cost_68k.pas	s/^(            \{ The class of register\. \})$/%var gap25d;\n%if gap25d %then { gap 25 }\n$1/
 lang/lang/source/reg_cost_68k.pas	s/^(            \{ A cse parent's uses and its assignment at s\. \})$/%endif { gap 25 }\n$1/
+# gap 8 (reg_action): in on constant sets with word elements (comparisons, for the check)
+lang/lang/source/reg_action.pas	s/r\^\.node\^\.kind in \[88\.\.89, 137\.\.138, 145\.\.147, 163, (190, )?195\]/((r^.node^.kind = 88) or (r^.node^.kind = 195)) { gap 8 }/
+lang/lang/source/reg_action.pas	s/r\^\.node\^\.kind in \[137\.\.138, 145\.\.147\]/(r^.node^.kind = 137) { gap 8 }/
+lang/lang/source/reg_action.pas	s/\(t\^\.kind in \[137\.\.138, 143, 145\.\.147, 164, 171, 175, 189,$/((t^.kind = 137) or (t^.kind = 143) { gap 8 }/
+lang/lang/source/reg_action.pas	s/^\s*205\]\) and \(t\^\.kind <> 189\) then begin$/) and (t^.kind <> 189) then begin/
+lang/lang/source/reg_action.pas	s/if x\^\.kind in \[137\.\.138, 143, 145\.\.147, 164, 171, 175,$/if (x^.kind = 137) or (x^.kind = 190) { gap 8 }/
+lang/lang/source/reg_action.pas	s/^\s*189\.\.190, 205\] then$/ then/

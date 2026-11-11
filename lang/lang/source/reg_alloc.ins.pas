@@ -21,8 +21,8 @@
 { TODO(pascal) reg_alloc.ins.pas holds what the translated reg_ units
   need
 
-  reg_range_t's words named w6, w16, w24, w26 and the longwords l12,
-  l56 are cleared by compress_graph and read by units not translated
+  reg_range_t's words named w6, w16, w24 (an action's reg2), w26 and
+  the longwords l12, l56 are cleared by compress_graph and read by units not translated
   yet; name them when reg_life, reg_color_68k and reg_action are
   translated.  Add the headings of the routines the other reg_ units
   call as those units are translated. }
@@ -89,7 +89,8 @@ type
     w24: integer;                       { +24 }
     w26: integer;                       { +26 }
     prefer: reg_regset_t;               { +28 }
-    unused_32: integer;                 { +32 }
+    rlen: integer;                      { +32: its value's register
+                                          class (insert_reg_stmts) }
     uses: integer;                      { +34 }
     defs: integer;                      { +36 }
     flags: reg_flags_t;                 { +38 }
@@ -140,5 +141,15 @@ function test_stmt(
   definitions in each block by the block's loop depth, the class of
   register each may have, and which get none.  0x0C5D4A (reg_alloc). }
 procedure compute_costs(
+    r: reg_ranges_ptr_t;
+    n: integer); options(val_param); extern;
+
+{ reg_action.pas (cc.m68k 0x0C241C). }
+
+{ INSERT_REG_STMTS - put the loads and stores of the n ranges r^[1..n]
+  that have registers into the routine (191 statements), and take the
+  constants that got none back into their evaluations.  0x0C369A
+  (reg_alloc). }
+procedure insert_reg_stmts(
     r: reg_ranges_ptr_t;
     n: integer); options(val_param); extern;
