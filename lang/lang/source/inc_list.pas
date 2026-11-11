@@ -243,7 +243,7 @@ begin
         buf[j] := lib^.body[k];
         j := j + 1;
       end;
-      inlib_add(addr(buf), lib^.length + 2);
+      inlib_add(buf, lib^.length + 2);
     end;
     2: begin
       buf[1] := lib^.body[1];
@@ -253,9 +253,9 @@ begin
         buf[j] := lib^.body[k];
         j := j + 1;
       end;
-      inlib_add(addr(buf), lib^.length + 1);
+      inlib_add(buf, lib^.length + 1);
     end;
-    0: inlib_add(addr(lib^.body), lib^.length);
+    0: inlib_add(lib^.body, lib^.length);
   end;
 end;
 

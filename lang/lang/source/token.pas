@@ -454,21 +454,19 @@ end;
   - the locals' names. }
 
 function strtk(
-    s: univ_ptr;
+    in s: univ strings_$bytes_t;
     len: integer): il_$node_ptr_t;
 var
-  ps: ^strings_$bytes_t;
   first: boolean;
   c: integer;
   i: integer;
   p, prev, t: il_$node_ptr_t;
 begin
-  ps := s;
   first := true;
   p := token_string_chain;
   while p <> nil do begin
     if len = p^.str_len then begin
-      c := compare_bytes(ps^, len, p^.str_chars, p^.str_len);
+      c := compare_bytes(s, len, p^.str_chars, p^.str_len);
       if c = 0 then begin
         strtk := p;
         return;
@@ -484,7 +482,7 @@ begin
   end;
   t := gspace(len + 18);
   for i := 1 to len do
-    t^.str_chars[i] := ps^[i];
+    t^.str_chars[i] := s[i];
   t^.str_len := len;
   t^.str_next := p;
   if first then
@@ -504,7 +502,7 @@ end;
 function token_$make_string_token(
     in s: univ token_$vstring_t): il_$node_ptr_t;
 begin
-  token_$make_string_token := strtk(addr(s.body), s.length);
+  token_$make_string_token := strtk(s.body, s.length);
 end;
 
 { setcontk - the node of the set constant of len bytes from byte first
