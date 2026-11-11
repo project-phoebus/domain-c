@@ -594,3 +594,17 @@ cc.m68k unless marked.
     (`moveq #4') but 11, 15 and 16 on arms of their own with the same
     constant (0x07BD62..0x07BD76).  (Item 23 for case arms.)  Written
     here as one arm for 0 and 2 (and 1 and 3) with an `if'.
+## Real arithmetic and registers (translator AA, cg_assign.pas)
+
+79. **Integer operands of a real comparison pushed by value.**
+    cg_asn_$inline_move_is_best (cc.m68k 0x0F30AE) compares count * 2
+    with (body * 2 + 8) * 1.5: the two integers are pushed (`move.l
+    D6,-(SP); move.l D7,-(SP)') before `jsr fpp_$', whose operation
+    words are 0x002C, the single 1.5 (0x3FC00000) and 0x0048, and the
+    condition codes it leaves are tested (`bmi').  Item 19's operands
+    are addresses.
+80. **A variable set only on a loop's early exit shares the count's
+    register.**  gen_clr_set (0x0F4166) looks for a mask's lowest bit
+    with a `for' of 32 counted by `dbf D3' and stores the bit's index
+    in D3 when it leaves: the result is not set on the other path, so
+    the allocator gives it the trip count's register.

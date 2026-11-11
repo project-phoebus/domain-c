@@ -142,6 +142,8 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/cg_misc.pas` | 24 | translated (cc.m68k only; best effort; nodes by offset and cg.ins.pas's tree view; dpc gaps 7, 8) |
 | `lang/lang/source/cg_top.pas` | 18 | translated (cc.m68k only; best effort; nodes by offset, statements from their +4 through univ records; dpc gaps 8, 12) |
 | `lang/lang/source/cg_addr.pas` | 50 | translated (cc.m68k only; best effort; nodes by offset and cg.ins.pas's tree view; cells defined in the image's layout; dpc gaps 2, 7, 8) |
+| `lang/lang/source/cg_assign.pas` | 15 | translated (cc.m68k only; best effort; the statement through cg.ins.pas's cg_asn_t, nodes by offset; dpc gaps 7, 8, 24, 25) |
+| `lang/lang/source/cg_tree.pas` | 44 | started: 22 of 44 (every routine but generate and the 21 nested in it: the assertions, needs_lib_support, prefers_inline_float, spill_fp_reg_contents_before_fpp, adjust_before_round, call_fast_math_lib, movewlx, do_const_mul with its 6 nested, is_decomposable_const_mul, walker, tree_walk; cc.m68k only; dpc gaps 7, 8, 24) |
 | `lang/lang/source/opt_general.pas` | 9 | translated (best effort; nodes through g_opt.ins.pas's views; dpc gaps 7, 8) |
 | `lang/lang/source/opt_select.pas` | 11 | translated (best effort; blocks through g_opt.ins.pas's views; dpc gaps 3, 15) |
 | `lang/lang/source/opt_assign.pas` | 9 | translated (best effort; nodes through g_opt.ins.pas's views and il.ins.pas's by offset; dpc gaps 8, 12, 19, 23) |
