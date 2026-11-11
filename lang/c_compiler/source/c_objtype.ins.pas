@@ -618,7 +618,11 @@ type
       b374_2: boolean;
       b374_1: boolean;
       b374_0: boolean;
-      b375: 0..255;                     { +375 }
+      b375_7: boolean;                  { +375 }
+      main_int: boolean;                { .6: main returns int (c_syntax's
+                                          body sets it before testing
+                                          the result type) }
+      b375_5_0: 0..63;
       b376_7: boolean;                  { +376 }
       b376_6: boolean;
       b376_5: boolean;
@@ -831,6 +835,23 @@ type
     line: integer;                      { +108 }
     started: boolean;                   { +110: set by case_s }
     has_default: boolean;               { +111 }
+  end;
+
+  { The switch statements being parsed (c_syntax's push_switch and
+    pop_switch, csyn_1e8 the innermost): 124 bytes from gspace, kept
+    for reuse once popped.  c_stmt_sem's add_cbranch tests active.
+
+    Not known from the original: the names. }
+  c_switch_ptr_t = ^c_switch_t;
+  c_switch_t = record
+    next: c_switch_ptr_t;               { +0: the one made for a switch
+                                          inside it }
+    prev: c_switch_ptr_t;               { +4: the enclosing one }
+    c: c_case_t;                        { +8: case_s .. case_e's }
+    active: boolean;                    { +120: inside the switch's
+                                          body: stat takes case and
+                                          default }
+    has_default: boolean;               { +121: its default seen }
   end;
 
   { A parameter declared by name (121, 56 bytes from c_def_sem's

@@ -254,12 +254,13 @@ end;
 
 { add_ldfn - place the label lab (by address) here.  A conditional
   branch over an unconditional one to it, just made, is folded
-  (unless forced, csyn_1e8's +120 set, or -DBA): the branch reversed.
-  Otherwise a label placed right after another joins it (il_c8 its
-  chain); with forced (or csyn_1e8's +120) a label node (144, 84
-  bytes) is made at once (lkind kind, its number from il_146[kind]),
-  else it stays pending (il_c0, def_def_label).  Then the branches
-  waiting on the chain (141, 142, 150) are pointed at the label, and
+  (unless forced, inside a switch body (csyn_1e8^.active), or -DBA):
+  the branch reversed.  Otherwise a label placed right after another
+  joins it (il_c8 its chain); with forced (or in a switch body) a
+  label node (144, 84 bytes) is made at once (lkind kind, its number
+  from il_146[kind]), else it stays pending (il_c0, def_def_label).
+  Then the branches waiting on the chain (141, 142, 150) are pointed at
+  the label, and
   lab becomes it.
 
   0x05C0B6, 0x24E bytes, link #-28.  The fold's test is evaluated whole
@@ -268,8 +269,7 @@ end;
   andi.b #0xC1; or.b' (the kind's low byte doubled).
 
   Not known from the original:
-  - the names; il_c1's role (il_c2 saved when a label is pending);
-    what csyn_1e8 points to (its byte +120 tested, `tst.b; bpl'). }
+  - the names; il_c1's role (il_c2 saved when a label is pending). }
 
 procedure add_ldfn(
     var lab: il_$node_ptr_t;
@@ -282,7 +282,7 @@ var
 begin
   make := forced;
   if csyn_1e8 <> nil then
-    if ord(il_$node_ptr_t(csyn_1e8)^.xc[120]) >= 128 then
+    if csyn_1e8^.active then
       make := true;
   if (not make and fold and (lab^.kind = 142)) and
      (cargs_$options.db <> 3) then begin
