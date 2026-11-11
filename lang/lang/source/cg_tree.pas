@@ -83,10 +83,10 @@
   proto_set, set_ops, compare_proc,
   round_fp_to_ieee, switch, f_compare_proc, ld_addr and
   restore_alloc_temps, bit_test_proc, bit_set_proc, unpack_proc,
-  agg_compare_proc; not yet mdmcase, ldsqr, mul_proc,
-  extend_div_proc_result, div_proc, nor the `case' arms of operators
-  other than 11, 14, 19..21, 23..25, 27, 28, 49, 50, 72, 73 (they fall
-  to cgerr 0 meanwhile).
+  agg_compare_proc, mdmcase, ldsqr, mul_proc, extend_div_proc_result
+  and div_proc (all 21); not yet the `case' arms of operators other
+  than 3, 4, 6, 11, 14, 19..21, 23..25, 27, 28, 49, 50, 72, 73 (they
+  fall to cgerr 0 meanwhile).
 
   Not known from the original: the names of the module's variables
   (cg.ins.pas's), the locals and the parameters; the IL nodes' fields
@@ -158,6 +158,9 @@ var
 
   { The statement generate builds for multi_assign_proc (+0x248). }
   tree_asn: cg_asn_t;                   { +0x248 }
+
+  { mul_proc's result class while it multiplies words (+0x294). }
+  tree_rlen: integer;                   { +0x294 }
 
 define
   cg_zero_ads;                          { +0x188 }
@@ -1540,6 +1543,639 @@ var
     unlock(opr);
   end;
 
+  { agg_compare_proc - an aggregate comparison (operator 24: a `cmp'
+    (emit 18) unit by unit, the condition from desc.w8; 23: a test of
+    the bits of opnd[1] not in opnd[2], the condition made 7) by bytes
+    (an odd size, or opnd's that may be unaligned with the alignment
+    check, flags bit 10), words or longwords; one unit by its operands,
+    more through address registers post-incremented (mode 8, agg_opr's)
+    in a loop (emit 28, a `dbne' on the count less 1: 2 units unrolled;
+    more than 65535 an outer count in a long); the condition then set
+    into a byte register (emit 19) but for a 143 node; desc.w8
+    restored but on the last pass.
+
+    0x101674, 0x5FA bytes: cg_addr_next_areg set to 8 meanwhile; the
+    constants' set after the code (0x101C6E: 77..87, 92, 101, 156, 200,
+    212); the counts compared unsigned (`bhi'); a count register a
+    register variable lives in (cg_addr_cache's live, 0x354FBF) copied
+    first through a partial copy of its operand (f1, f2, f5); the
+    operands swapped through t (-104); the loop's head label (lab)
+    reused for the branch of 2 units. }
+
+  procedure agg_compare_proc(
+      n: cg_tree_ptr_t); options(val_param);
+  var
+    tmp: codegen_$uads_t;
+    lab2: codegen_$uads_t;
+    res: codegen_$uads_t;
+    t: codegen_$uads_t;
+    lab: codegen_$uads_t;
+    csz: integer;
+    cnt: integer32;
+    unit: integer;
+    w8: integer;
+    save: integer;
+  begin
+    save := cg_addr_next_areg;
+    w8 := n^.desc.w8;
+    cg_addr_next_areg := 8;
+    cnt := n^.desc.size;
+    unit := 2;
+    if odd(cnt) then
+      unit := 1
+    else if (n^.op = 24) and ((n^.desc.flags & 16#400) <> 0) then
+      if unaligned(n^.opnd[1]) or unaligned(n^.opnd[2]) then
+        unit := 1;
+    if unit = 2 then begin
+      cnt := rshft(cnt, 1);
+      if not odd(cnt) then begin
+        cnt := rshft(cnt, 1);
+        unit := 4;
+      end;
+    end;
+    if cnt <= 65536 then begin
+      cnt := cnt - 1;
+      csz := 2;
+    end
+    else
+      csz := 4;
+    if cnt = 0 then begin
+      if (n^.opnd[2]^.kind in [77..87, 92, 101, 156, 200, 212]) and
+          not (n^.opnd[1]^.kind in [77..87, 92, 101, 156, 200, 212]) then
+        address(n^.opnd[1], unit, opr)
+      else
+        load_operand(n^.opnd[1], unit, opr);
+    end
+    else begin
+      load_address(n^.opnd[1], opr);
+      opr.f1 := 8;
+      kill_register(opr.f2);
+    end;
+    if n^.op <> 23 then begin
+      if cnt = 0 then
+        address(n^.opnd[2], unit, ops)
+      else
+        agg_opr(n^.opnd[2], ops);
+      if (ops.f1 = 1) and (opr.f1 <> 1) then begin
+        t := opr;
+        opr := ops;
+        ops := t;
+        n^.desc.w8 := swap_cc[n^.desc.w8];
+      end;
+    end
+    else begin
+      if cnt = 0 then
+        address(n^.opnd[2], unit, ops)
+      else begin
+        load_address(n^.opnd[2], ops);
+        kill_register(ops.f2);
+        ops.f1 := 8;
+      end;
+      if n^.desc.w8 = 12 then begin
+        t := opr;
+        opr := ops;
+        ops := t;
+      end;
+      n^.desc.w8 := 7;
+      get_register(nil, 4, t);
+    end;
+    if cnt <> 0 then begin
+      load_operand(smcontk(81, cnt), csz, opt);
+      if cg_addr_cache[opt.f2].live then begin
+        tmp.f1 := opt.f1;
+        tmp.f2 := opt.f2;
+        tmp.f5 := opt.f5;
+        get_register(smcontk(81, cnt), csz, opt);
+        emit(0, csz, opt, tmp, 0);
+        unlock(tmp);
+      end;
+      kill_register(opt.f2);
+      address(templabel, 0, lab);
+      emit(32, 5, lab, cg_null_ads, 0);
+    end;
+    if n^.op = 24 then
+      emit(18, unit, opr, ops, 0)
+    else begin
+      emit(0, unit, t, ops, 0);
+      emit(12, unit, t, cg_null_ads, 0);
+      emit(3, unit, t, opr, 0);
+      if cnt <> 1 then
+        unlock(t);
+    end;
+    if cnt <> 0 then begin
+      if cnt = 1 then begin
+        address(templabel, 0, lab);
+        emit(20, 5, lab, cg_null_ads, 6);
+        if n^.op = 24 then
+          emit(18, unit, opr, ops, 0)
+        else begin
+          emit(0, unit, t, ops, 0);
+          emit(12, unit, t, cg_null_ads, 0);
+          emit(3, unit, t, opr, 0);
+          unlock(t);
+        end;
+        emit(32, 5, lab, cg_null_ads, 0);
+      end
+      else if cnt <= 65535 then
+        emit(28, 2, lab, opt, 6)
+      else begin
+        address(templabel, 0, lab2);
+        emit(20, 5, lab2, cg_null_ads, 6);
+        address(smcontk(81, 1), 4, t);
+        emit(2, 4, opt, t, 0);
+        emit(20, 5, lab, cg_null_ads, 6);
+        release(t);
+        emit(32, 5, lab2, cg_null_ads, 0);
+        release(lab2);
+      end;
+      release(opt);
+      release(lab);
+    end;
+    unlock(ops);
+    unlock(opr);
+    if n^.kind <> 143 then begin
+      get_register(il_$node_ptr_t(n), 1, res);
+      emit(19, 1, res, cg_null_ads, n^.desc.w8);
+      unlock(res);
+    end;
+    if not at_backend_506 then
+      n^.desc.w8 := w8;
+    cg_addr_next_areg := save;
+  end;
+
+  { mul_proc - an integer multiplication (operator 3): by a constant as
+    shifts and adds (do_const_mul, opt_on 7); words to a word or a long
+    by the 68000's `muls'/`mulu' (emit 6 signed, 7 unsigned; mdmcase
+    of the classes w6, w8 and rlen, the operands swapped to put the
+    word first); else by the routine k (std_lib_rtns: 0 signed word by
+    long, 1 signed long, 2 unsigned word by long, 3 unsigned long), the
+    PEB (cpu 1: the operands stored to its registers, 149 and 150,
+    through fault_free_assign, an operand it holds kept), the 68020's
+    or the 160's `mul' (cpu 2, 3) or a call (gen_call).  n's descriptor
+    restored but on the last pass.
+
+    0x101D38, 0x732 bytes: the classes by mdmcase's jump table of 8;
+    tree_rlen (+0x294) the result's class meanwhile; cg_addr_regs's size
+    (0x3550E2) set; the PEB's operations' set after the code (0x10246A:
+    63, 83, 104, 149, 157, 159) tested with cg_fp_last_op; std_lib_rtns
+    at 0x2D2B68.
+
+    Not known from the original:
+    - k for a signed long by long (mdmcase 3 or 5 with flags bit 14): the
+      image leaves D2 as it was. }
+
+  procedure mul_proc(
+      n: cg_tree_ptr_t); options(val_param);
+  var
+    d: cg_desc_t;
+    p: codegen_$uads_t;
+    op: integer;
+    k: integer;
+    m: integer;
+    t: il_$node_ptr_t;
+
+    { mdmcase - the classes' case: 4 when a is a long, plus 2 when b is,
+      plus 1 when c is.
+
+      0x101C8A, 0x3E bytes. }
+
+    function mdmcase(
+        a: integer;
+        b: integer;
+        c: integer): integer; options(val_param);
+    var
+      r: integer;
+    begin
+      r := 0;
+      if a = 4 then
+        r := 4;
+      if b = 4 then
+        r := r + 2;
+      if c = 4 then
+        r := r + 1;
+      mdmcase := r;
+    end;
+
+    { ldsqr - the second operand in ops: opr again (locked once more)
+      when both operands are the same node, else addressed with size.
+
+      0x101CC8, 0x70 bytes: mul_proc's frame from the dynamic link;
+      cg_addr_locks (0x355098). }
+
+    procedure ldsqr(
+        size: integer); options(val_param);
+    begin
+      if n^.opnd[1] = n^.opnd[2] then begin
+        ops := opr;
+        cg_addr_locks[opr.f2] := cg_addr_locks[opr.f2] + 1;
+      end
+      else
+        address(n^.opnd[2], size, ops);
+    end;
+
+  begin
+    if cg_fp_count <> 0 then
+      purge_fp;
+    if (n^.opnd[2]^.kind in [77..87, 101, 200]) and
+        (7 in cargs_$options.opt_on) then
+      if do_const_mul(n, 0) then
+        return;
+    d := n^.desc;
+    m := mdmcase(n^.desc.w6, n^.desc.w8, n^.desc.rlen);
+    if (m = 3) or (m = 4) then begin
+      n^.desc.w6 := n^.desc.w8;
+      n^.desc.w8 := d.w6;
+      t := n^.opnd[1];
+      n^.opnd[1] := n^.opnd[2];
+      n^.opnd[2] := t;
+    end;
+    op := 6;
+    if (n^.desc.flags & 16#4000) = 0 then
+      op := 7;
+    case m of
+      3, 5:
+        if (n^.desc.flags & 16#4000) = 0 then
+          k := 2;
+      7: begin
+        k := 1;
+        if (n^.desc.flags & 16#4000) = 0 then
+          k := 3;
+      end;
+      0, 1: begin
+        tree_rlen := n^.desc.rlen;
+        n^.desc.rlen := 2;
+        load_result(il_$node_ptr_t(n), 2, opr);
+        ldsqr(2);
+        emit(op, 2, opr, ops, 0);
+        cg_addr_regs[opr.f2].size := tree_rlen;
+        n^.desc.rlen := tree_rlen;
+        unlock(opr);
+        release(ops);
+        if not at_backend_506 then
+          n^.desc := d;
+        return;
+      end;
+      2, 4: begin
+        n^.desc.rlen := 4;
+        load_result(il_$node_ptr_t(n), -2, opr);
+        address(n^.opnd[1], 2, ops);
+        emit(7, 2, opr, ops, 0);
+        n^.desc.rlen := 2;
+        cg_addr_regs[opr.f2].size := 2;
+        unlock(opr);
+        release(ops);
+        if not at_backend_506 then
+          n^.desc := d;
+        return;
+      end;
+      6: begin
+        n^.desc.rlen := 4;
+        load_result(il_$node_ptr_t(n), 2, opr);
+        if n^.opnd[1] = n^.opnd[2] then begin
+          ops := opr;
+          cg_addr_locks[opr.f2] := cg_addr_locks[opr.f2] + 1;
+        end
+        else
+          load_operand(n^.opnd[2], 4, ops);
+        emit(7, 2, opr, ops, 0);
+        n^.desc.rlen := 2;
+        cg_addr_regs[opr.f2].size := 2;
+        unlock(opr);
+        release(ops);
+        if not at_backend_506 then
+          n^.desc := d;
+        return;
+      end;
+      otherwise ;
+    end;
+    if 1 in cargs_$options.cpu then begin
+      if ((n^.desc.flags & 16#4000) = 0) or (k = 1) then
+        gen_call(il_$node_ptr_t(n), std_lib_rtns[k])
+      else begin
+        p := peb_ads;
+        opr.f1 := 0;
+        if not check_use(cg_fp_in_peb, n^.opnd[1]) then
+          if check_use(cg_fp_in_peb, n^.opnd[2]) and
+              not ((k = 2) or (k = 0)) then begin
+            t := n^.opnd[1];
+            n^.opnd[1] := n^.opnd[2];
+            n^.opnd[2] := t;
+          end
+          else begin
+            p.y := 149;
+            address(n^.opnd[1], 4, opr);
+            if not (cg_fp_last_op in [63, 83, 104, 149, 157, 159]) then
+              test_peb_busy;
+            cg_fp_last_op := 149;
+            fault_free_assign(4, p, opr);
+          end;
+        opr.x := integer32(n^.opnd[1]);
+        release(opr);
+        if (k = 3) or (k = 1) then
+          address(n^.opnd[2], 4, ops)
+        else
+          movewlx(n^.opnd[2], ops, (n^.desc.flags & 16#4000) <> 0, false);
+        p.y := 150;
+        if not (cg_fp_last_op in [63, 83, 104, 149, 157, 159]) then
+          test_peb_busy;
+        cg_fp_last_op := 150;
+        fault_free_assign(4, p, ops);
+        release(ops);
+        cg_fp_in_peb := il_$node_ptr_t(n);
+      end;
+    end
+    else if cargs_$options.cpu * [2, 3] <> [] then begin
+      if k = 1 then begin
+        load_result(il_$node_ptr_t(n), 2, opr);
+        ldsqr(4);
+        emit(op, 4, opr, ops, 0);
+      end
+      else if k = 3 then begin
+        if 3 in cargs_$options.cpu then begin
+          load_result(il_$node_ptr_t(n), 2, opr);
+          ldsqr(4);
+        end
+        else begin
+          inquire(n^.opnd[2], 4, ops);
+          if ops.f1 = 0 then begin
+            inquire(n^.opnd[1], 4, ops);
+            if ops.f1 = 0 then
+              load_operand(n^.opnd[2], 4, ops)
+            else
+              n^.opnd[1] := n^.opnd[2];
+          end;
+          load_result(il_$node_ptr_t(n), -1, opr);
+        end;
+        emit(op, 4, opr, ops, 0);
+      end
+      else if (k = 0) or (k = 2) then begin
+        movewlx(n^.opnd[2], opr, (n^.desc.flags & 16#4000) <> 0, true);
+        setresult(opr.f2, il_$node_ptr_t(n), 4);
+        if (2 in cargs_$options.cpu) and ((n^.desc.flags & 16#4000) = 0) then
+          load_operand(n^.opnd[1], 4, ops)
+        else
+          address(n^.opnd[1], 4, ops);
+        emit(op, 4, opr, ops, 0);
+      end
+      else begin
+        gen_call(il_$node_ptr_t(n), std_lib_rtns[k]);
+        if not at_backend_506 then
+          n^.desc := d;
+        return;
+      end;
+      unlock(opr);
+      release(ops);
+    end
+    else
+      gen_call(il_$node_ptr_t(n), std_lib_rtns[k]);
+    if not at_backend_506 then
+      n^.desc := d;
+  end;
+
+  { div_proc - an integer division or remainder (operators 4, 6) by
+    delay_$divide_attributes's strategy: by a power of 2 (how 1) a
+    shift (signed: the value rounded toward zero first, emit 18 a test,
+    20 a branch, 1 the add of 2^sh - 1; unsigned: masked to its class
+    first); by the PEB (cpu 1, routines 4 and 5: the operands stored
+    to its registers 149 and 151 or 152, an operand it holds kept) or
+    the library (std_lib_rtns[rtn], the result extended); else the
+    hardware's divide (emit's op and size from the strategy; the
+    operands as longs or words, movewlx; a 68020 remainder (cpu 3,
+    operator 6, how 4 or 8) by a `divsl' into a second register,
+    mode 14), the result extended (extend_div_proc_result) and, with
+    b27c_1 for a remainder, made positive (emit 1 of the divisor after
+    a sign test).
+
+    0x102556, 0x728 bytes: the attributes in the frame (-184 .. -226,
+    passed by address); the PEB's operations' set after mul_proc
+    (0x10246A); the classes compared unsigned (`bcc', `bcs'); the
+    68020 test evaluated whole (`sne', `seq', `and.b'), the classes 2
+    and 6 (0x44), 4 and 8 (0x110) as masks; cg_addr_cache's live and
+    obj (0x354FB8); the bug_check message after the code (0x102C7E);
+    b27c_1 bit 1 of cargs +0x27C. }
+
+  procedure div_proc(
+      n: cg_tree_ptr_t); options(val_param);
+  var
+    lab: codegen_$uads_t;
+    rem: codegen_$uads_t;
+    lab2: codegen_$uads_t;
+    a: codegen_$uads_t;
+    c: codegen_$uads_t;
+    strategy: integer32;
+    rsize: integer32;
+    sh: integer32;
+    lsize: integer32;
+    rtn: integer;
+    w70: integer;
+    w66: integer;
+    res: integer;
+    how: integer;
+    ext: integer;
+    w34: integer;
+    w26: integer;
+    op: integer;
+    size: integer;
+    b58: boolean;
+    b54: boolean;
+    sz: integer;
+    r: integer;
+    pop: integer;
+    t: il_$node_ptr_t;
+    m020: boolean;
+
+    { extend_div_proc_result - the quotient or remainder a of n extended
+      as how says: 1 a word's (emit 29, `ext'), 2 the high word cleared
+      (an and with 0xFFFF) for a long, 3 a word sign-extended to a long
+      (emit 30), 4 a word to a long through a cleared high word (emit 3
+      with cg_zero_ads) and 29, 5 both extensions; 0 none.
+
+      0x10247E, 0xD8 bytes: a jump table of 6; the class compared
+      unsigned (`bcs'). }
+
+    procedure extend_div_proc_result(
+        n: cg_tree_ptr_t;
+        how: integer;
+        in out a: codegen_$uads_t); options(val_param);
+    var
+      c: codegen_$uads_t;
+    begin
+      case how of
+        0: ;
+        1:
+          emit(29, 2, a, cg_null_ads, 0);
+        2:
+          if n^.desc.rlen = 4 then begin
+            anyconst(65535, 4, c);
+            emit(3, 4, a, c, 0);
+          end;
+        3:
+          if n^.desc.rlen = 4 then
+            emit(30, 4, a, cg_null_ads, 0);
+        4: begin
+          if n^.desc.rlen >= 4 then
+            emit(3, 2, a, cg_zero_ads, 0);
+          emit(29, 2, a, cg_null_ads, 0);
+        end;
+        5: begin
+          emit(29, 2, a, cg_null_ads, 0);
+          if n^.desc.rlen = 4 then
+            emit(30, 4, a, cg_null_ads, 0);
+        end;
+        otherwise ;
+      end;
+    end;
+
+  begin
+    if cg_fp_count <> 0 then
+      purge_fp;
+    delay_$divide_attributes(il_$node_ptr_t(n), false, strategy, op,
+        lsize, w26, rsize, w34, how, ext, rtn, sh, b54, b58, size, w66,
+        w70);
+    if how = 1 then begin
+      sz := n^.desc.rlen;
+      n^.desc.rlen := n^.desc.w6;
+      load_result(il_$node_ptr_t(n), -1, opr);
+      n^.desc.rlen := sz;
+      cg_addr_regs[opr.f2].size := n^.desc.rlen;
+      if (n^.desc.flags & 16#4000) <> 0 then begin
+        if n^.desc.w6 < n^.desc.rlen then
+          emit(30, n^.desc.rlen, opr, cg_null_ads, 0)
+        else
+          sz := n^.desc.w6;
+        address(smcontk(81, lshft(1, sh) - 1), 0, c);
+        address(templabel, 0, lab);
+        emit(18, sz, opr, cg_zero_ads, 0);
+        emit(20, 5, lab, cg_null_ads, 10);
+        emit(1, sz, opr, c, 0);
+        emit(32, 5, lab, cg_null_ads, 0);
+        shift(opr, sz, sh, 0);
+        unlock(opr);
+        release(c);
+      end
+      else begin
+        sz := n^.desc.w6;
+        if sz < n^.desc.rlen then begin
+          if sz = 1 then
+            anyconst(255, n^.desc.rlen, c)
+          else if sz = 2 then
+            anyconst(65535, n^.desc.rlen, c);
+          emit(3, n^.desc.rlen, opr, c, 0);
+        end;
+        shift(opr, n^.desc.rlen, sh, 2);
+        unlock(opr);
+      end;
+    end
+    else if how = 0 then begin
+      if (1 in cargs_$options.cpu) and ((rtn = 5) or (rtn = 4)) then begin
+        opt := peb_ads;
+        opr.f1 := 0;
+        if check_use(cg_fp_in_peb, n^.opnd[1]) then
+          pop := 151
+        else if check_use(cg_fp_in_peb, n^.opnd[2]) and (rtn <> 4) then begin
+          pop := 152;
+          t := n^.opnd[1];
+          n^.opnd[1] := n^.opnd[2];
+          n^.opnd[2] := t;
+        end
+        else begin
+          pop := 151;
+          opt.y := 149;
+          address(n^.opnd[1], 4, opr);
+          if not (cg_fp_last_op in [63, 83, 104, 149, 157, 159]) then
+            test_peb_busy;
+          cg_fp_last_op := 149;
+          fault_free_assign(4, opt, opr);
+        end;
+        opr.x := integer32(n^.opnd[1]);
+        release(opr);
+        cg_fp_in_peb := nil;
+        if rtn <> 4 then
+          address(n^.opnd[2], 4, c)
+        else
+          movewlx(n^.opnd[2], c, true, false);
+        opt.y := pop;
+        if not (cg_fp_last_op in [63, 83, 104, 149, 157, 159]) then
+          test_peb_busy;
+        cg_fp_last_op := pop;
+        fault_free_assign(4, opt, c);
+        release(c);
+        cg_fp_in_peb := il_$node_ptr_t(n);
+      end
+      else begin
+        gen_call(il_$node_ptr_t(n), std_lib_rtns[rtn]);
+        if ext <> 0 then begin
+          address(il_$node_ptr_t(n), n^.desc.rlen, opr);
+          extend_div_proc_result(n, ext, opr);
+          release(opr);
+        end;
+      end;
+    end
+    else begin
+      setobjcache(n^.opnd[1], getobjcache(il_$node_ptr_t(n)));
+      if (n^.desc.w6 > 2) or (lsize = 2) or (w26 = 0) then begin
+        sz := n^.desc.rlen;
+        n^.desc.rlen := n^.desc.w6;
+        load_result(il_$node_ptr_t(n), -1, opr);
+        n^.desc.rlen := sz;
+      end
+      else if w26 = 3 then
+        movewlx(n^.opnd[1], opr, true, true)
+      else
+        movewlx(n^.opnd[1], opr, false, true);
+      if (n^.desc.w8 > 2) or (rsize = 2) or (w34 = 0) then
+        address(n^.opnd[2], n^.desc.w8, c)
+      else if w34 = 3 then
+        movewlx(n^.opnd[2], c, true, true)
+      else if w34 = 2 then
+        movewlx(n^.opnd[2], c, false, true);
+      m020 := (3 in cargs_$options.cpu) and (n^.op = 6) and
+          not (how in [2, 6]);
+      if m020 then begin
+        if not (how in [4, 8]) then
+          bug_check('Inconsistent computation of long_m020_mod%.');
+        if m020 then begin
+          r := peek(n^.opnd[2], n^.desc.w8);
+          if (n^.desc.w6 = 4) and (n^.desc.w8 = 4) and (r in [0..7]) and
+              (not cg_addr_cache[r].live or (cg_addr_cache[r].obj = nil)) and
+              not b58 then begin
+            cg_addr_locks[r] := cg_addr_locks[r] + 1;
+            address_reg(r, rem);
+            rem.x := integer32(n^.opnd[2]);
+          end
+          else
+            get_temp_register(il_$node_ptr_t(n), n^.desc.rlen, rem);
+          opr.f1 := 14;
+          opr.f3 := rem.f2;
+        end;
+      end;
+      emit(op, size, opr, c, 0);
+      if m020 then begin
+        setresult(opr.f3, il_$node_ptr_t(n), n^.desc.rlen);
+        kill_register(opr.f2);
+        res := opr.f3;
+      end
+      else begin
+        setresult(opr.f2, il_$node_ptr_t(n), n^.desc.rlen);
+        kill_register(opr.f2);
+        res := opr.f2;
+      end;
+      extend_div_proc_result(n, ext, opr);
+      if cargs_$options.b27c_1 and (n^.op = 6) and b58 then begin
+        address_reg(res, a);
+        emit(18, n^.desc.rlen, a, cg_zero_ads, 0);
+        address(templabel, 0, lab2);
+        emit(20, 5, lab2, cg_null_ads, 12);
+        emit(1, n^.desc.rlen, a, c, 0);
+        emit(32, 5, lab2, cg_null_ads, 0);
+        release(lab2);
+      end;
+      setresult(res, il_$node_ptr_t(n), n^.desc.rlen);
+      release(c);
+      unlock(opr);
+    end;
+  end;
+
   { copy_set_aggregate - a set of size bytes copied from src (nil: all
     zero, an immediate 0) to dst: through address registers
     post-incremented (mode 8) for more than 4 bytes, else d(An) (mode 2;
@@ -1887,166 +2523,6 @@ var
     unlock(dst);
     unlock(opr);
     unlock(ops);
-    cg_addr_next_areg := save;
-  end;
-
-  { agg_compare_proc - an aggregate comparison (operator 24: a `cmp'
-    (emit 18) unit by unit, the condition from desc.w8; 23: a test of
-    the bits of opnd[1] not in opnd[2], the condition made 7) by bytes
-    (an odd size, or opnd's that may be unaligned with the alignment
-    check, flags bit 10), words or longwords; one unit by its operands,
-    more through address registers post-incremented (mode 8, agg_opr's)
-    in a loop (emit 28, a `dbne' on the count less 1: 2 units unrolled;
-    more than 65535 an outer count in a long); the condition then set
-    into a byte register (emit 19) but for a 143 node; desc.w8
-    restored but on the last pass.
-
-    0x101674, 0x5FA bytes: cg_addr_next_areg set to 8 meanwhile; the
-    constants' set after the code (0x101C6E: 77..87, 92, 101, 156, 200,
-    212); the counts compared unsigned (`bhi'); a count register a
-    register variable lives in (cg_addr_cache's live, 0x354FBF) copied
-    first through a partial copy of its operand (f1, f2, f5); the
-    operands swapped through t (-104); the loop's head label (lab)
-    reused for the branch of 2 units. }
-
-  procedure agg_compare_proc(
-      n: cg_tree_ptr_t); options(val_param);
-  var
-    tmp: codegen_$uads_t;
-    lab2: codegen_$uads_t;
-    res: codegen_$uads_t;
-    t: codegen_$uads_t;
-    lab: codegen_$uads_t;
-    csz: integer;
-    cnt: integer32;
-    unit: integer;
-    w8: integer;
-    save: integer;
-  begin
-    save := cg_addr_next_areg;
-    w8 := n^.desc.w8;
-    cg_addr_next_areg := 8;
-    cnt := n^.desc.size;
-    unit := 2;
-    if odd(cnt) then
-      unit := 1
-    else if (n^.op = 24) and ((n^.desc.flags & 16#400) <> 0) then
-      if unaligned(n^.opnd[1]) or unaligned(n^.opnd[2]) then
-        unit := 1;
-    if unit = 2 then begin
-      cnt := rshft(cnt, 1);
-      if not odd(cnt) then begin
-        cnt := rshft(cnt, 1);
-        unit := 4;
-      end;
-    end;
-    if cnt <= 65536 then begin
-      cnt := cnt - 1;
-      csz := 2;
-    end
-    else
-      csz := 4;
-    if cnt = 0 then begin
-      if (n^.opnd[2]^.kind in [77..87, 92, 101, 156, 200, 212]) and
-          not (n^.opnd[1]^.kind in [77..87, 92, 101, 156, 200, 212]) then
-        address(n^.opnd[1], unit, opr)
-      else
-        load_operand(n^.opnd[1], unit, opr);
-    end
-    else begin
-      load_address(n^.opnd[1], opr);
-      opr.f1 := 8;
-      kill_register(opr.f2);
-    end;
-    if n^.op <> 23 then begin
-      if cnt = 0 then
-        address(n^.opnd[2], unit, ops)
-      else
-        agg_opr(n^.opnd[2], ops);
-      if (ops.f1 = 1) and (opr.f1 <> 1) then begin
-        t := opr;
-        opr := ops;
-        ops := t;
-        n^.desc.w8 := swap_cc[n^.desc.w8];
-      end;
-    end
-    else begin
-      if cnt = 0 then
-        address(n^.opnd[2], unit, ops)
-      else begin
-        load_address(n^.opnd[2], ops);
-        kill_register(ops.f2);
-        ops.f1 := 8;
-      end;
-      if n^.desc.w8 = 12 then begin
-        t := opr;
-        opr := ops;
-        ops := t;
-      end;
-      n^.desc.w8 := 7;
-      get_register(nil, 4, t);
-    end;
-    if cnt <> 0 then begin
-      load_operand(smcontk(81, cnt), csz, opt);
-      if cg_addr_cache[opt.f2].live then begin
-        tmp.f1 := opt.f1;
-        tmp.f2 := opt.f2;
-        tmp.f5 := opt.f5;
-        get_register(smcontk(81, cnt), csz, opt);
-        emit(0, csz, opt, tmp, 0);
-        unlock(tmp);
-      end;
-      kill_register(opt.f2);
-      address(templabel, 0, lab);
-      emit(32, 5, lab, cg_null_ads, 0);
-    end;
-    if n^.op = 24 then
-      emit(18, unit, opr, ops, 0)
-    else begin
-      emit(0, unit, t, ops, 0);
-      emit(12, unit, t, cg_null_ads, 0);
-      emit(3, unit, t, opr, 0);
-      if cnt <> 1 then
-        unlock(t);
-    end;
-    if cnt <> 0 then begin
-      if cnt = 1 then begin
-        address(templabel, 0, lab);
-        emit(20, 5, lab, cg_null_ads, 6);
-        if n^.op = 24 then
-          emit(18, unit, opr, ops, 0)
-        else begin
-          emit(0, unit, t, ops, 0);
-          emit(12, unit, t, cg_null_ads, 0);
-          emit(3, unit, t, opr, 0);
-          unlock(t);
-        end;
-        emit(32, 5, lab, cg_null_ads, 0);
-      end
-      else if cnt <= 65535 then
-        emit(28, 2, lab, opt, 6)
-      else begin
-        address(templabel, 0, lab2);
-        emit(20, 5, lab2, cg_null_ads, 6);
-        address(smcontk(81, 1), 4, t);
-        emit(2, 4, opt, t, 0);
-        emit(20, 5, lab, cg_null_ads, 6);
-        release(t);
-        emit(32, 5, lab2, cg_null_ads, 0);
-        release(lab2);
-      end;
-      release(opt);
-      release(lab);
-    end;
-    unlock(ops);
-    unlock(opr);
-    if n^.kind <> 143 then begin
-      get_register(il_$node_ptr_t(n), 1, res);
-      emit(19, 1, res, cg_null_ads, n^.desc.w8);
-      unlock(res);
-    end;
-    if not at_backend_506 then
-      n^.desc.w8 := w8;
     cg_addr_next_areg := save;
   end;
 
@@ -2519,6 +2995,10 @@ begin
       end;
   end;
   case n^.op of
+    3:
+      mul_proc(n);
+    4, 6:
+      div_proc(n);
     11:
       bit_test_proc(n);
     14:
