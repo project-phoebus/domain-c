@@ -166,3 +166,22 @@ cc.m68k unless marked.
     longwords) follow a word (+0) and a longword (+2) at +8 (+6..+7 not
     used); dpc puts them at +6.  Taken as a record of three fields; the
     image's alignment rule for the array is not known.
+
+## Code (continued)
+
+22. **Unsigned division and remainder for non-negative types.**  `div`,
+    `mod` and the multiplication after them call the unsigned helpers
+    when the operands' types are non-negative subranges: objio.pas
+    obj_$put 0x088CF6 and obj_$get (`(offset div page_size) *
+    page_size' of linteger offsets: M$DIU$LLL, M$MIU$LLL), obj_$open_r
+    and obj_$open_r_tag 0x089C30 (`(n - 1) mod 100' of a pinteger:
+    M$OIU$WLW, then `andi.l #0xFFFF').  SR10.2 (and dpc) call the signed
+    ones (M$DIS$LLL, M$OIS$WLW).
+23. **Identical tails shared.**  Two branches that end in the same
+    statements jump to one copy: objio.pas obj_$open_t 0x089974 (`bmi'
+    and `bra' into the other branch's ios_$change_path_name and
+    obj_$open, 0x089A3C), obj_$put 0x088D98 (the refs and
+    obj_$remove_free of two cases).  dpc compiles each branch's own.
+24. **A register known to hold a constant passed for it.**  obj_$put
+    0x088D74 pushes `move.b D2' (searching, set true at entry and not
+    changed on that path) for map_portion's constant `true'.
