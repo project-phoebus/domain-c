@@ -495,6 +495,12 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
   parameter's own parameters (the routines passed are val_param; the
   only trace is the error "Incompatible routine OPTIONS"), so the
   headings give none (a TODO in spos.ins.pas).
+   Also reg_color_68k.pas (translator EE): color_graph passes its
+   nested targetfunctionresult, computecommonregs, setcommonregs and
+   paint's nested checkout to walkconflicts (cc.m68k 0x0C51C0, `pea'
+   of a trampoline at -52, -74, -92, -36); walkconflicts is the unit's
+   own, so the rewrite gives it a routine pointer (rc_walk_t, called
+   with `^') and the calls pass nil.
    Also cg_tree.pas (translator AA): `or assert_is_f_math_op(...)',
    `and consecutivebits(...)' (needs_lib_support 0x0FF0AA, const_mul
    0x0FFF22).

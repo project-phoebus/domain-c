@@ -365,3 +365,7 @@ the headings of newconflict, color_graph and the reg_life routines
 reg_alloc calls (add_range, add_cse_ranges, add_con_range,
 ranges_intersect, combine_ranges, run_interference).  Core change:
 g_opt.ins.pas declares reg_alloc (opt_main's g_opt calls it).
+Translator EE, reg_color_68k: reg_alloc.ins.pas gets add_conflict's
+heading (reg_life's run_interference calls it).  The four routines
+passed to walkconflicts are nested (docs/dpc-gaps.md 21); the gate
+checks a copy with a routine pointer (rc_walk_t) and nil.

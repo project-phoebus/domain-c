@@ -855,3 +855,10 @@ revisited.
    strength reduction temporary's class (+11 high nibble) to 6 and then
    tests it against the static classes 1, 4, 7, 8, 11: the static
    branch can never be taken.  Written as the image does.
+
+113. Translator EE: reg_color_68k's pickcolor (cc.m68k 0x0C5674) sets
+   its result to 31 and then searches lo..hi with the loop's index in
+   D0, the result's register: when no register is found the image
+   returns hi + 1, not 31 (docs/rev889-patterns.md 80's sharing, here
+   for a result set before the loop).  Not met (color_graph calls it
+   after availcolors found one); written as returning 31.

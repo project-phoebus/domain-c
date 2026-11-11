@@ -155,6 +155,12 @@ function test_stmt(
 
 { reg_color_68k.pas (cc.m68k 0x0C50AC). }
 
+{ ADD_CONFLICT - range number k among r's conflicts (once).  0x0C50AC
+  (reg_life's run_interference: r a pointer, k a word). }
+procedure add_conflict(
+    r: reg_range_ptr_t;
+    k: integer); options(val_param); extern;
+
 { COLOR_GRAPH - give the n ranges r^[1..n] registers (reg; flags
   element 0 for those that get none).  0x0C5772 (reg_alloc). }
 procedure color_graph(
