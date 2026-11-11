@@ -45,6 +45,20 @@ var
     sets it and clears it (run_backend, optimize_and_code). }
   at_backend_506: extern boolean;
 
+var (std_lib)
+  { The section std_lib (cc.m68k 0x2D2B68, 0x2DC bytes: 183 longwords),
+    shared by the units that declare it: the nodes of the run-time
+    library's routines the code generator calls (cg_fp's purge_fp
+    passes +0x48..+0x58 to gen_call; cg_top, cg_tree and opt_vector read
+    others).  The unit ivory/.../std_lib.mac/.../std_lib.pas (a DSEE
+    derived object, no routines) opens only the prelude, so the
+    section is declared here.
+
+    Not known from the original: the section's variables (one per
+    routine, named after it, most likely); they are taken as one
+    array, element k at +4k. }
+  std_lib_rtns: array [0..182] of il_$node_ptr_t;
+
 { The back end's entry points runbackend calls: cc.m68k's in lang/lang
   (cg_top, final, opt_inline, opt_main) and empty a88k ones in
   target_68k_dummies.pas; cc.a88k's in lang2/source/be_com and empty
