@@ -18,6 +18,8 @@ var
     spos_$init_source_position clears (0x071D2E) and 15 units read
     (c_error, c_lex_pp, c_macro_utl, c_stmt_sem, c_syntax, cg_top,
     error_listing, opt_general, ...), comparing source positions with
-    it; error_listing's print_error prints nothing for a line equal to
-    it.  Probably the null source position; not decided. }
+    it: the position of a node that has none (il_utils's src_line and
+    source_generated_top_level_node skip nodes whose +20 equals it;
+    error_listing's print_error prints nothing for a line equal to
+    it). }
   spos_2efc: extern integer;

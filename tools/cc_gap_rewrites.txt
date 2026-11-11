@@ -9,3 +9,13 @@ lang/lang/source/token.pas	s/floating_token\(r, t\^\.kind\)/floating_token(t^.re
 lang/lang/source/token.pas	s/^(\s*)s([ab])\.r := ([ab]);/$1s$2.i := 0; { gap 2 }/
 # gap 3: in on a constant set with a word element (the comparisons)
 lang/lang/source/token.pas	s/t\^\.kind in \[77\.\.87, 101, 200\]/((t^.kind >= 77) and (t^.kind <= 87)) or (t^.kind = 101) or (t^.kind = 200) { gap 3 }/
+# gap 4: a nested forward routine (search_point stops instead of walking on)
+lang/lang/source/il_utils.pas	s/^\s*procedure search_walk\(t: il_\$node_ptr_t\); forward;/{ gap 4 }/
+lang/lang/source/il_utils.pas	s/^(\s*)search_walk\(t\)(;?)$/${1}found := found$2 { gap 4 }/
+lang/lang/source/il_utils.pas	s/^(\s*)procedure search_walk;/${1}procedure search_walk(t: il_\$node_ptr_t);/
+# gap 3 (il_utils): in on constant sets with word elements
+lang/lang/source/il_utils.pas	s/old\^\.kind in \[[^\]]*\]/(old^.kind = 137) { gap 3 }/
+lang/lang/source/il_utils.pas	s/not \(([tp])\^\.kind in \[139, 140, 141, 142, 144, 148, 149, 150, 151, 188,$/not (($1^.kind = 139) { gap 3 }/
+lang/lang/source/il_utils.pas	s/^\s*191, 214, 215, 223, 224, 225, 227, 228, 231, 233\]\) then$/) then/
+lang/lang/source/il_utils.pas	s/if op in \[0\.\.10, 13, 14, 17, 18, 27\.\.29, 33\.\.39, 41\.\.46, 49\.\.53,$/if (op <= 10) { gap 3 }/
+lang/lang/source/il_utils.pas	s/^\s*57, 59\.\.62, 74\.\.77, 86\] then begin$/ then begin/

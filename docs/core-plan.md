@@ -30,7 +30,7 @@ the translators; headings and cells should not need to change.
 | token | `lang/lang/source/token.pas` (+ `lang/common/source/token.pas`) | 12 (+8) | 1946 | done (lang/common's adds nothing to the core) |
 | inc_list | `lang/lang/source/inc_list.pas` | 5 | 916 | done (lists declared) |
 | error_listing | `lang/lang/source/error_listing.pas` | 6 | 894 | done (+0x8, +0xC, the saved error) |
-| il_utils | `lang/lang/source/il_utils.pas` | 14 | 3412 | headings |
+| il_utils | `lang/lang/source/il_utils.pas` | 14 | 3412 | done (nodes by offset) |
 | gen_utils | `lang/lang/source/gen_utils.pas` | 21 | 4248 | headings |
 | cargs | `lang/lang/source/cargs.pas` | 24 | 9064 | headings, the options record, shared cells |
 | add_node | `lang/lang/source/add_node.pas` | 23 | 18204 | headings (11 called from outside) |

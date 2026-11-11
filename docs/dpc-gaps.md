@@ -51,3 +51,25 @@ when this tree is merged).
        begin
          b := k in [77..87, 101, 200];
        end;
+
+4. **A nested routine declared `forward`.**  il_utils.pas: search_point
+   (0x07E206) and search_walk (0x07E252), nested in
+   il_utils_$search_tree_for_node, call each other; search_point comes
+   first in the image, so search_walk is declared forward.  dpc: "a
+   nested routine declared `forward` ... is not supported yet".
+   Reproducer:
+
+       module g4;
+       procedure p;
+         procedure b(n: integer); forward;
+         procedure a(n: integer);
+         begin
+           if n > 0 then b(n - 1);
+         end;
+         procedure b;
+         begin
+           if n > 0 then a(n - 1);
+         end;
+       begin
+         a(3);
+       end;
