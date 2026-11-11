@@ -328,3 +328,20 @@ when this tree is merged).
        begin
          q(f + [61]);
        end;
+
+19. **A routine parameter** (reference 5.4).  c_syntax's cc_walk_it
+   takes a routine (c_stmt_sem's add_cbranch and c_expr_sem pass
+   call_kfold: `move.l #0x066162,-(SP)'), declared in c_externs.ins.pas
+   as a univ_ptr and given addr(call_kfold), which dpc compiles the
+   same way.  dpc: "a routine parameter (ref 5.4) is not supported
+   yet".  Reproducer:
+
+       module g19;
+       type p_t = ^integer;
+       procedure kf(var n: p_t); extern;
+       procedure walk(var t: p_t; procedure f(var n: p_t); b: boolean);
+           options(val_param); extern;
+       procedure q(t: p_t); options(val_param);
+       begin
+         walk(t, kf, false);
+       end;

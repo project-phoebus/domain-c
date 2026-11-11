@@ -267,3 +267,24 @@ revisited.
 42. lang/lang/source/externals.ins.pas and fop.ins.pas are new empty
    stubs (c_expr_syn opens them; so do c_def_sem, c_expr_sem,
    c_stmt_sem, c_syntax and code generator units).
+43. Translator L, c_stmt_sem: case_default pushes the selector back
+   (cexs_stack[top] := c.sel) and then stores c.sel's typ.size at
+   -0x54 from the new top entry's end (cc.m68k 0x05CD24), the entry
+   below's typ.size; kept as the image has it (a probable slip of the
+   original, perhaps meant for the new entry).  The 68..70 operators
+   in walk_tree evaluate the stack's first entry (`move.l 0x140440'),
+   also kept.
+44. c_stmt_sem: c_objtype.ins.pas gets views of IL nodes the front end
+   builds (c_top_t top-level nodes, c_tree_t tree nodes, c_desc_t, the
+   switch record c_case_t); c_stmt_sem reaches them by type transfer
+   from il_$node_ptr_t.  If the lead prefers the il.ins.pas views by
+   offset (question 13), the records can move there as variants.
+   csyn_1e8 (c_syntax's +0x1E8) is tested at its +120 (a byte, `tst.b;
+   bpl'); what it points to is not known, so add_ldfn reads it through
+   il.ins.pas's xc view.  cc_walk_it's routine parameter is written
+   addr(call_kfold) (docs/dpc-gaps.md 19); call_kfold is declared in
+   c_externs.ins.pas.
+45. The scratchpad directory is shared between the parallel
+   translators' sessions: helper files of one translator were
+   overwritten by another's (keep.sh, rt.py).  Translators should use
+   a subdirectory of their own.

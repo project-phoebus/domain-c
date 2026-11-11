@@ -142,3 +142,11 @@ c_reglist_t, the pointer type's ptr_reference and the function type's
 fn_params and fn_conv; c_decl_t's +12 is flags; c_globals' csyn_60 is
 the calling contexts' stack (csyn_202 its top) and cdef_50 the current
 block (docs/questions.md 38-42).
+
+Translator L, c_stmt_sem: c_externs.ins.pas's c_stmt_sem headings are
+checked against the bodies; c_objtype.ins.pas gets c_top_t,
+c_tree_t, c_desc_t, c_case_t and c_caselist_t, c_sym_t's blk_next and
+label fields, c_blk_t's labels, return label and frame fields.  dpc
+lays out `0..255' in a record as a word and aligns a packed record to
+a word: byte fields at odd offsets are written as char or inside a
+packed record that starts at an even offset.

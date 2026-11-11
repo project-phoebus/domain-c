@@ -53,3 +53,9 @@ procedure attr_check_align(
   b28b_0 as 0 or 1 (`moveq #1; and.b').  0x0A63F6 (cc.a88k 0x0A7DD6);
   callers `tst.w D0; seq'. }
 function attr_curr_align_env: integer; extern;
+
+{ ATTR_NATURAL_ALIGN_FROM_BYTES - the natural alignment of an object of
+  n bytes.  0x0A4F38 (cc.a88k 0x0A6918): a longword by value; D0 read as
+  a word (c_stmt_sem's temp_alloc). }
+function attr_natural_align_from_bytes(
+    n: integer32): integer; options(val_param); extern;

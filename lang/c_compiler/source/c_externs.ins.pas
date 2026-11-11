@@ -132,12 +132,14 @@ function check_types(
     p12: univ_ptr;
     p16: boolean): boolean; options(val_param); extern;
 
-{ DEF_VARN - c_def_sem.pas 0x046742 (cc.a88k 0x0469C2). }
+{ DEF_VARN - c_def_sem.pas 0x046742 (cc.a88k 0x0469C2): the name and
+  the declaration by address (c_stmt_sem's profiling calls), the
+  allocation and a byte by value; A0. }
 function def_varn(
-    p8: integer32;
-    p12: integer32;
-    p16: integer;
-    p18: boolean): univ_ptr; options(val_param); extern;
+    in name: c_name_t;
+    in decl: c_decl_t;
+    vat: c_vat_t;
+    p18: boolean): c_sym_ptr_t; options(val_param); extern;
 
 { ADD_VARN - a variable (109) named name, of decl's type and
   attributes, allocated as vat, entered in il_180's chain.
@@ -174,11 +176,12 @@ function def_su(
     p8: univ_ptr;
     p12: integer): univ_ptr; options(val_param); extern;
 
-{ DEF_DATA - c_def_sem.pas 0x04717A (cc.a88k 0x0473FA). }
+{ DEF_DATA - c_def_sem.pas 0x04717A (cc.a88k 0x0473FA): the variable,
+  a longword and a constant node (c_stmt_sem's setup_profiling). }
 procedure def_data(
     p8: univ_ptr;
     p12: integer32;
-    p16: integer32); options(val_param); extern;
+    p16: univ_ptr); options(val_param); extern;
 
 { DEF_DYNM_DATA - c_def_sem.pas 0x0471CE (cc.a88k 0x04744E). }
 procedure def_dynm_data; extern;
@@ -339,120 +342,133 @@ procedure adjust_blk_for_db(
 { C_EXPR_SYN_$BEGIN_COMPILATION - c_expr_syn.pas 0x04FDFC (cc.a88k 0x05007C). }
 procedure c_expr_syn_$begin_compilation; extern;
 
-{ c_stmt_sem.pas: statements (add_node calls link_top). }
+{ c_stmt_sem.pas: statements (add_node calls link_top; c_syntax the
+  others; checked against c_stmt_sem.pas's bodies).  The labels are
+  IL nodes passed by address: il_178 until a label (144) or a chain of
+  branches waiting for one is made. }
 
-{ LINK_TOP - c_stmt_sem.pas 0x05BEF8 (cc.a88k 0x05C178). }
-function link_top(
-    p8: univ_ptr): univ_ptr; options(val_param); extern;
+{ LINK_TOP - append the top-level node n to IL's chain (il_d4..il_d8),
+  defining a pending label first.  c_stmt_sem.pas 0x05BEF8 (cc.a88k
+  0x05C178). }
+procedure link_top(
+    n: il_$node_ptr_t); options(val_param); extern;
 
-{ DEF_DEF_LABEL - c_stmt_sem.pas 0x05C304 (cc.a88k 0x05C584). }
+{ DEF_DEF_LABEL - make the pending label (il_c8) a label node.
+  c_stmt_sem.pas 0x05C304 (cc.a88k 0x05C584). }
 procedure def_def_label; extern;
 
-{ DEF_LABL - c_stmt_sem.pas 0x05C7B4 (cc.a88k 0x05CA34). }
+{ DEF_LABL - define the label name here (diagnostics 23, 57, 56).
+  c_stmt_sem.pas 0x05C7B4 (cc.a88k 0x05CA34). }
 procedure def_labl(
-    p8: univ_ptr); options(val_param); extern;
+    in name: c_name_t); extern;
 
-{ IF_S - c_stmt_sem.pas 0x05C8CA (cc.a88k 0x05CB4A). }
+{ IF_S, ELSE_S, ENDIF_S - an if statement's branches around its
+  parts: else_lab and end_lab in the caller's frame.  c_stmt_sem.pas
+  0x05C8CA, 0x05C900, 0x05C94A (cc.a88k 0x05CB4A, 0x05CB80,
+  0x05CBCA). }
 procedure if_s(
-    p8: univ_ptr;
-    p12: univ_ptr); options(val_param); extern;
+    var else_lab: il_$node_ptr_t;
+    var end_lab: il_$node_ptr_t); extern;
 
-{ ELSE_S - c_stmt_sem.pas 0x05C900 (cc.a88k 0x05CB80). }
 procedure else_s(
-    p8: univ_ptr;
-    p12: univ_ptr); options(val_param); extern;
+    var else_lab: il_$node_ptr_t;
+    var end_lab: il_$node_ptr_t); extern;
 
-{ ENDIF_S - c_stmt_sem.pas 0x05C94A (cc.a88k 0x05CBCA). }
 procedure endif_s(
-    p8: univ_ptr;
-    p12: univ_ptr); options(val_param); extern;
+    var else_lab: il_$node_ptr_t;
+    var end_lab: il_$node_ptr_t); extern;
 
-{ CASE_CON - c_stmt_sem.pas 0x05C9F8 (cc.a88k 0x05CC78). }
+{ CASE_CON - a case constant of the switch c (diagnostics 45, 46); with
+  push its value is pushed on the expression stack.  c_stmt_sem.pas
+  0x05C9F8 (cc.a88k 0x05CC78). }
 procedure case_con(
-    p8: univ_ptr;
-    p12: integer32;
-    p16: boolean); options(val_param); extern;
+    var cx: c_cexp_t;
+    var c: c_case_t;
+    push: boolean); options(val_param); extern;
 
-{ CASE_S - c_stmt_sem.pas 0x05CB26 (cc.a88k 0x05CDA6). }
+{ CASE_S, CASE_DEFAULT, CASE_E - a switch statement's start (the
+  selector on the stack), a case or the default label, the end.
+  c_stmt_sem.pas 0x05CB26, 0x05CC7C, 0x05CDA4 (cc.a88k 0x05CDA6,
+  0x05CEFC, 0x05D024). }
 procedure case_s(
-    p8: univ_ptr); options(val_param); extern;
+    var c: c_case_t); extern;
 
-{ CASE_DEFAULT - c_stmt_sem.pas 0x05CC7C (cc.a88k 0x05CEFC). }
 procedure case_default(
-    p8: univ_ptr;
-    p12: boolean); options(val_param); extern;
+    var c: c_case_t;
+    is_default: boolean); options(val_param); extern;
 
-{ CASE_E - c_stmt_sem.pas 0x05CDA4 (cc.a88k 0x05D024). }
 procedure case_e(
-    p8: univ_ptr); options(val_param); extern;
+    var c: c_case_t); extern;
 
-{ WHILE_LABEL - c_stmt_sem.pas 0x05CDFA (cc.a88k 0x05D07A). }
+{ The loops' labels: WHILE_LABEL, WHILE_S, WHILE_E (c_stmt_sem.pas
+  0x05CDFA, 0x05CE3E, 0x05CE6E), FOR_START_LAB, FOR_S, FOR_NEXT_LAB,
+  FOR_E (0x05CEBC, 0x05CF00, 0x05CF30, 0x05CF66), REPEAT_S, REPEAT_E
+  (0x05CFB4, 0x05CFF8); cc.a88k 0x280 higher. }
 procedure while_label; extern;
-
-{ WHILE_S - c_stmt_sem.pas 0x05CE3E (cc.a88k 0x05D0BE). }
-function while_s: univ_ptr; extern;
-
-{ WHILE_E - c_stmt_sem.pas 0x05CE6E (cc.a88k 0x05D0EE). }
+procedure while_s; extern;
 procedure while_e; extern;
-
-{ FOR_START_LAB - c_stmt_sem.pas 0x05CEBC (cc.a88k 0x05D13C). }
 procedure for_start_lab; extern;
-
-{ FOR_S - c_stmt_sem.pas 0x05CF00 (cc.a88k 0x05D180). }
 procedure for_s; extern;
-
-{ FOR_NEXT_LAB - c_stmt_sem.pas 0x05CF30 (cc.a88k 0x05D1B0). }
 procedure for_next_lab; extern;
-
-{ FOR_E - c_stmt_sem.pas 0x05CF66 (cc.a88k 0x05D1E6). }
 procedure for_e; extern;
-
-{ REPEAT_S - c_stmt_sem.pas 0x05CFB4 (cc.a88k 0x05D234). }
-function repeat_s: univ_ptr; extern;
-
-{ REPEAT_E - c_stmt_sem.pas 0x05CFF8 (cc.a88k 0x05D278). }
+procedure repeat_s; extern;
 procedure repeat_e; extern;
 
-{ CALL_S - c_stmt_sem.pas 0x05D05C (cc.a88k 0x05D2DC). }
+{ CALL_S - the call on the top of the stack as a statement.
+  c_stmt_sem.pas 0x05D05C (cc.a88k 0x05D2DC). }
 procedure call_s; extern;
 
-{ BODY_S - c_stmt_sem.pas 0x05D62C (cc.a88k 0x05D8AC). }
+{ BODY_S, BODY_E - a routine's body begins (the profiling calls under
+  -PROF) and ends.  c_stmt_sem.pas 0x05D62C, 0x05D7CE (cc.a88k
+  0x05D8AC, 0x05DA4E). }
 procedure body_s; extern;
-
-{ BODY_E - c_stmt_sem.pas 0x05D7CE (cc.a88k 0x05DA4E). }
 procedure body_e; extern;
 
-{ NXTEXT_S - c_stmt_sem.pas 0x05D9F8 (cc.a88k 0x05DC78). }
+{ NXTEXT_S - break or continue (il_cc the token, il_d0 the line).
+  c_stmt_sem.pas 0x05D9F8 (cc.a88k 0x05DC78). }
 procedure nxtext_s; extern;
 
 { RETURN_S - c_stmt_sem.pas 0x05DA8A (cc.a88k 0x05DD0A). }
 procedure return_s; extern;
 
-{ GOTO_S - c_stmt_sem.pas 0x05DAAC (cc.a88k 0x05DD2C). }
+{ GOTO_S - goto name.  c_stmt_sem.pas 0x05DAAC (cc.a88k 0x05DD2C). }
 procedure goto_s(
-    p8: univ_ptr); options(val_param); extern;
+    in name: c_name_t); extern;
 
-{ TEMP_ALLOC - c_stmt_sem.pas 0x05DB3A (cc.a88k 0x05DDBA). }
+{ TEMP_ALLOC - a temporary variable <stack-temp-n> of size bytes and
+  register class kind (its node).  c_stmt_sem.pas 0x05DB3A (cc.a88k
+  0x05DDBA). }
 function temp_alloc(
-    p8: integer;
-    p10: integer): univ_ptr; options(val_param); extern;
+    size: integer;
+    kind: integer): il_$node_ptr_t; options(val_param); extern;
 
-{ WALK_TREE - c_stmt_sem.pas 0x05E938 (cc.a88k 0x05EBB8). }
+{ WALK_TREE - lower the tree t (assignments, conditional and logical
+  operators, calls, post-increments to statements) under parent; the
+  tree's value.  c_stmt_sem.pas 0x05E938 (cc.a88k 0x05EBB8). }
 function walk_tree(
-    p8: univ_ptr;
-    p12: univ_ptr;
-    p16: integer32): univ_ptr; options(val_param); extern;
+    t: il_$node_ptr_t;
+    parent: il_$node_ptr_t;
+    up: il_$node_ptr_t): il_$node_ptr_t; options(val_param); extern;
 
 { c_syntax.pas: called from c_main, c_expr_sem, c_stmt_sem and c_lex_pp. }
 
 { SYNTAX - c_syntax.pas 0x0609D8 (cc.a88k 0x060C58). }
 procedure syntax; extern;
 
-{ CC_WALK_IT - c_syntax.pas 0x0661BC (cc.a88k 0x06643C). }
+{ CC_WALK_IT - apply walker to the tree t (by address).  c_syntax.pas
+  0x0661BC (cc.a88k 0x06643C): c_stmt_sem's add_cbranch and c_expr_sem
+  pass call_kfold's address (`move.l #0x066162'), written addr(...)
+  for a routine parameter (dpc has none yet: docs/dpc-gaps.md 19). }
 procedure cc_walk_it(
-    p8: univ_ptr;
-    p12: univ_ptr;
+    var t: il_$node_ptr_t;
+    walker: univ_ptr;
     p16: boolean); options(val_param); extern;
+
+{ CALL_KFOLD - fold the constants of the tree n.  c_syntax.pas 0x066162
+  (cc.a88k 0x0663E2): no call site, its address passed to cc_walk_it;
+  one address parameter. }
+procedure call_kfold(
+    var n: il_$node_ptr_t); extern;
 
 { PP_CONSTANT - c_syntax.pas 0x066E54 (cc.a88k 0x0670D4). }
 function pp_constant: integer32; extern;
