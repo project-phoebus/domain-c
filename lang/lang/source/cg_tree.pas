@@ -1087,6 +1087,7 @@ var
   w8: integer;
   w6: integer;
   k: integer;
+  inst: integer;
   temps: boolean;
   rlen: integer;
 
@@ -2995,20 +2996,177 @@ begin
       end;
   end;
   case n^.op of
+
+    { A value as it is (0, 17, 63): a floating one on the floating
+      stack without a floating unit. }
+    0, 17, 63:
+      if (n^.desc.rlen = 7) or (n^.desc.rlen = 6) then begin
+        if cargs_$options.cpu * [2, 4, 8, 9, 10] = [] then begin
+          if not check_use(cg_fp_result, n^.opnd[1]) then
+            stack_fp(1, n^.desc.rlen, n^.opnd[1]);
+          fp_temp(il_$node_ptr_t(n), t1);
+        end
+        else begin
+          load_fp_result(il_$node_ptr_t(n), -1, opr);
+          unlock(opr);
+        end;
+      end
+      else begin
+        load_result(il_$node_ptr_t(n), -1, opr);
+        unlock(opr);
+      end;
+
+    { Addition: an address and a long added in either order. }
+    1: begin
+      if cg_fp_count <> 0 then
+        purge_fp;
+      if (n^.desc.rlen = 5) and (peek(n^.opnd[2], 4) <> 31) then begin
+        load_result(il_$node_ptr_t(n), -1, opr);
+        address(n^.opnd[2], 4, ops);
+      end
+      else if (n^.desc.rlen = 5) and (peek(n^.opnd[1], 4) <> 31) then begin
+        load_result(il_$node_ptr_t(n), -2, opr);
+        address(n^.opnd[1], 4, ops);
+      end
+      else begin
+        load_result(il_$node_ptr_t(n), 2, opr);
+        if (n^.desc.rlen = 4) and (peek(n^.opnd[2], 5) <> 31) then
+          address(n^.opnd[2], 5, ops)
+        else if (n^.desc.rlen = 5) and (peek(n^.opnd[2], 4) <> 31) then
+          address(n^.opnd[2], 4, ops)
+        else
+          address(n^.opnd[2], n^.desc.rlen, ops);
+      end;
+      emit(tree_op_inst[n^.op], n^.desc.rlen, opr, ops, 0);
+      unlock(opr);
+      release(ops);
+    end;
+
+    { Subtraction: when the right operand is the destination (cg_assign's
+      flag, +6 bit 13) it is loaded, negated and the left added (the
+      operands swapped back through t1 and t2). }
+    2: begin
+      if cg_fp_count <> 0 then
+        purge_fp;
+      inst := tree_op_inst[2];
+      if ((il_$node_ptr_t(n)^.xw[3] & 16#2000) <> 0) and
+          (n^.desc.rlen <> 5) then begin
+        load_result(il_$node_ptr_t(n), -2, opr);
+        n^.opnd[1] := t2;
+        n^.opnd[2] := t1;
+        inst := tree_op_inst[1];
+        emit(11, n^.desc.rlen, opr, cg_null_ads, 0);
+      end
+      else
+        load_result(il_$node_ptr_t(n), -1, opr);
+      if (n^.desc.rlen = 5) and (peek(n^.opnd[2], 4) <> 31) then
+        address(n^.opnd[2], 4, ops)
+      else if (n^.desc.rlen = 4) and (peek(n^.opnd[2], 5) <> 31) then
+        address(n^.opnd[2], 5, ops)
+      else
+        address(n^.opnd[2], n^.desc.rlen, ops);
+      emit(inst, n^.desc.rlen, opr, ops, 0);
+      unlock(opr);
+      release(ops);
+    end;
+
     3:
       mul_proc(n);
     4, 6:
       div_proc(n);
+
+    { Negation, complement (7, 8). }
+    7, 8: begin
+      if cg_fp_count <> 0 then
+        purge_fp;
+      load_result(il_$node_ptr_t(n), -1, opr);
+      emit(tree_op_inst[n^.op], n^.desc.rlen, opr, cg_null_ads, 0);
+      unlock(opr);
+    end;
+
+    { And, or (9, 10): a long with a constant that fits a byte or a word
+      (and: negative; or: positive) done as one. }
+    9, 10: begin
+      if cg_fp_count <> 0 then
+        purge_fp;
+      load_result(il_$node_ptr_t(n), 2, opr);
+      tree_rlen := n^.desc.rlen;
+      if n^.opnd[2]^.kind in [77..87, 101, 200] then
+        if (n^.op = 9) and (n^.opnd[2]^.xl[2] < 0) and
+            (tree_rlen = 4) then begin
+          if n^.opnd[2]^.xl[2] >= -128 then
+            tree_rlen := 1
+          else if n^.opnd[2]^.xl[2] >= -32767 then
+            tree_rlen := 2;
+        end
+        else if (n^.op = 10) and (n^.opnd[2]^.xl[2] > 0) and
+            (tree_rlen = 4) then begin
+          if n^.opnd[2]^.xl[2] <= 127 then
+            tree_rlen := 1
+          else if n^.opnd[2]^.xl[2] <= 32767 then
+            tree_rlen := 2;
+        end;
+      address(n^.opnd[2], tree_rlen, ops);
+      emit(tree_op_inst[n^.op], tree_rlen, opr, ops, 0);
+      unlock(opr);
+      release(ops);
+    end;
     11:
       bit_test_proc(n);
     14:
       unpack_proc(n);
+
+    { Calls (15, 16): the PEB's and the stored variable's records
+      forgotten. }
+    15, 16: begin
+      if cg_fp_count <> 0 then
+        purge_fp;
+      gen_call(il_$node_ptr_t(n), nil);
+      cg_fp_in_peb := nil;
+      cg_fp_last_store := nil;
+    end;
     19, 20, 21:
       set_ops(n);
     23, 24:
       agg_compare_proc(n);
     25:
       bit_set_proc(n);
+
+    { An address (26): of a variable or a reference as a long, by its
+      d(An) operand added to the register (a `lea'-less add), else
+      ld_addr's. }
+    26: begin
+      if cg_fp_count <> 0 then
+        purge_fp;
+      setobjcache(n^.opnd[1], getobjcache(il_$node_ptr_t(n)));
+      if ((n^.opnd[1]^.kind = 109) or (n^.opnd[1]^.kind = 110) or
+          (n^.opnd[1]^.kind = 147) or (n^.opnd[1]^.kind = 146)) and
+          (n^.desc.rlen = 4) then begin
+        address(n^.opnd[1], 5, ops);
+        if ops.f1 <> 2 then begin
+          unlock(ops);
+          ld_addr(n, opr);
+        end
+        else begin
+          get_temp_register(il_$node_ptr_t(n), 4, opr);
+          if ops.y <> 0 then begin
+            anyconst(ops.y, 4, opt);
+            emit(0, 4, opr, opt, 0);
+            unlock(opt);
+            inst := 1;
+          end
+          else
+            inst := 0;
+          address_reg(ops.f2, opt);
+          emit(inst, 4, opr, opt, 0);
+          release(ops);
+        end;
+      end
+      else
+        ld_addr(n, opr);
+      unlock(opr);
+      setresult(opr.f2, il_$node_ptr_t(n), n^.desc.rlen);
+    end;
     27:
       shift_proc(n, 3);
     28:
@@ -3017,6 +3175,42 @@ begin
       shift_proc(n, 1);
     50:
       shift_proc(n, 0);
+
+    { The status register (47, through opv, mode 10): with one operand
+      a constant and'ed (negative) or or'ed into it; with two its old
+      value the result and the operand stored. }
+    47:
+      if n^.count = 1 then begin
+        if n^.opnd[1]^.xl[2] < 0 then
+          inst := 3
+        else
+          inst := 4;
+        address(n^.opnd[1], 0, ops);
+        emit(inst, 2, opv, ops, 0);
+      end
+      else begin
+        get_register(il_$node_ptr_t(n), 2, opr);
+        address(n^.opnd[1], 2, ops);
+        emit(0, 2, opr, opv, 0);
+        emit(0, 2, opv, ops, 0);
+        setresult(opr.f2, il_$node_ptr_t(n), 2);
+        unlock(opr);
+        release(ops);
+      end;
+
+    { The stack pointer less opnd[1] (65, an alloca). }
+    65: begin
+      address_reg(15, opr);
+      address(n^.opnd[1], n^.desc.w6, ops);
+      emit(tree_op_inst[2], n^.desc.w6, opr, ops, 0);
+      setresult(opr.f2, il_$node_ptr_t(n), 5);
+      release(ops);
+      unlock(opr);
+    end;
+
+    { The library's routine 147 (66). }
+    66:
+      gen_call(nil, std_lib_rtns[147]);
     72:
       set_bit_in_set_proc(n);
     73:
