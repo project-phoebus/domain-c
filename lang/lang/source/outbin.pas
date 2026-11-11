@@ -2643,26 +2643,25 @@ var
     68881's (cpu 2); the instructions' cases by a jump table of 53 from
     kind 2 (kinds out of range write both operands' extensions); the
     statement's last address (the location less 1, in an inlined block
-    from its frame's start) kept at A5 + 0xD94.
+    from its frame's start) kept at A5 + 0xD94; the listing's operand
+    forms by a jump table of 56 from kind 3 (the register names of a
+    static table at A5 + 0xD40; the bit field of 214 and 215 through
+    prt_expr_bit_field, a data register destination shown as mode 1 and
+    restored, 213's through prt_bit_field; the FPX commands); at the end
+    the node taken from the descriptor put back.
 
     Not known from the original:
     - the locals' names (-56 and -54 the saved line and statement for
       coff_equiv_lines). }
-
-  { TODO(pascal) wr_instr's listing of the instruction's operands under
-    -EXP (0x0C1458..0x0C1B54: tab 40, the name, then a jump table of 56
-    on kind 3.. for the operand forms, prtads of each descriptor,
-    prt_int_regs and prt_fp_regs for the MOVEMs, the bit fields through
-    prt_bit_field and prt_expr_bit_field, the FPA and FPX forms with the
-    register names at A5 + 0xD40 and fp_names, then listln) is not
-    translated yet: only the name is put in the line and the line
-    listed. }
 
   procedure wr_instr(
       c: codegen_$cell_ptr_t); options(val_param);
   label
     9;
   var
+    regs: static outbin_reg_names_t := [
+        'D0', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7',
+        'A0', 'A1', 'A2', 'A3', 'A4', 'DB', 'SB', 'SP'];
     save_line: integer;                 { -56 }
     save_stmt: integer;                 { -54 }
     saved: il_$node_ptr_t;
@@ -3454,6 +3453,129 @@ var
         prtcats(line, fpa_ops[c^.op], 6)
       else
         prtcats(line, opinfo_names[c^.op], 9);
+      case c^.kind of
+        dest1_sz_instyp, dest1_instyp, br_instyp, cbr_instyp,
+            logicize_instyp, unlk_instyp, case_instyp, bsr_instyp,
+            fbr_instyp, m68881_set_byte_instyp, m68881_tst_reg_instyp,
+            m020_dest1_instyp, m68881_dest1_instyp: begin
+          prttab(line, 50);
+          unpack_ads(c^.ads2, u);
+          prtads(line, u);
+          if c^.kind = m020_dest1_instyp then begin
+            prtcatc(line, '{');
+            n := il_$node_ptr_t(c^.ads1.x);
+            if n <> nil then
+              if (n^.kind in [77..87, 101, 200]) then
+                prtint(line, n^.int_value, 5, false)
+              else
+                prtcats(line, regs[c^.ads1.f2], 2);
+            prtcats(line, ':1}', 3);
+          end;
+        end;
+        casejmp_instyp: begin
+          unpack_ads(c^.ads2, u);
+          prtads(line, u);
+          prtcatc(line, '-');
+          unpack_ads(c^.ads1, u);
+          prtads(line, u);
+        end;
+        moverm_instyp, m881_moverm_instyp: begin
+          prttab(line, 50);
+          if c^.kind = moverm_instyp then
+            prt_int_regs(line, c)
+          else
+            prt_fp_regs(line, c);
+          prtcatc(line, ',');
+          unpack_ads(c^.ads2, u);
+          prtads(line, u);
+        end;
+        movemr_instyp, m881_movemr_instyp: begin
+          prttab(line, 50);
+          unpack_ads(c^.ads1, u);
+          prtads(line, u);
+          prtcatc(line, ',');
+          if c^.kind = movemr_instyp then
+            prt_int_regs(line, c)
+          else
+            prt_fp_regs(line, c);
+        end;
+        fpa_cmp_instyp: begin
+          prttab(line, 50);
+          unpack_ads(c^.ads1, u);
+          prtcats(line, fp_names[c^.ads1.f3], 3);
+          prtcatc(line, ',');
+          prtcats(line, fp_names[c^.ads1.f2], 3);
+        end;
+        fpa_reg_reg_instyp: begin
+          prttab(line, 50);
+          unpack_ads(c^.ads2, u);
+          prtcats(line, fp_names[c^.ads2.f3], 3);
+          prtcatc(line, ',');
+          prtcats(line, fp_names[c^.ads2.f2], 3);
+        end;
+        fpa_load_instyp: begin
+          prttab(line, 50);
+          unpack_ads(c^.ads1, u);
+          prtads(line, u);
+          prtcatc(line, ',');
+          unpack_ads(c^.ads2, u);
+          prtcats(line, fp_names[c^.ads2.f2], 3);
+        end;
+        fpa_store_instyp: begin
+          prttab(line, 50);
+          unpack_ads(c^.ads1, u);
+          prtcats(line, fp_names[c^.ads1.f2], 3);
+          prtcatc(line, ',');
+          unpack_ads(c^.ads2, u);
+          prtads(line, u);
+        end;
+        fpa_mem_2reg_instyp: begin
+          prttab(line, 50);
+          unpack_ads(c^.ads1, u);
+          prtads(line, u);
+          prtcatc(line, ',');
+          unpack_ads(c^.ads2, u);
+          prtcats(line, fp_names[c^.ads2.f2], 3);
+          prtcatc(line, ',');
+          prtcats(line, fp_names[c^.ads2.f2], 3);
+        end;
+        rts_instyp, fop_instyp, align_instyp, nop_instyp, m881_nop_instyp:
+          ;
+        otherwise begin
+          prttab(line, 50);
+          unpack_ads(c^.ads1, u);
+          prtads(line, u);
+          have_w := false;
+          if (c^.op = 215) or (c^.op = 214) then begin
+            t := saved;
+            w := c^.ads2.f1;
+            off := c^.ads2.f3;
+            prt_expr_bit_field(line, t, off, w);
+            if c^.ads2.f1 = 14 then begin
+              have_w := true;
+              c^.ads2.f1 := 1;
+            end;
+          end
+          else if assert_is_an_fpx_command_instr(c) then
+            attempt_fpx_command_opcode_disassembly(c);
+          prtcatc(line, ',');
+          if ((c^.kind = m68881_reg_reg_instyp) or
+              (c^.kind = m68881_src_ext_instyp)) and
+              (c^.op in [358..363]) then
+            prt_fp_regs(line, c)
+          else begin
+            unpack_ads(c^.ads2, u);
+            prtads(line, u);
+            if have_w then
+              c^.ads2.f1 := 14;
+            if c^.op = 213 then begin
+              t := saved;
+              w := c^.ads2.f1;
+              prt_bit_field(line, t, w);
+            end;
+          end;
+        end;
+      end;
       listln(line);
     end;
   9:
