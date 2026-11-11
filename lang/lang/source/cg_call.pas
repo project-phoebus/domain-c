@@ -966,7 +966,7 @@ begin
   end;
 
   { The registers and objects the call may change. }
-  regs := reg_save(desig);
+  regs := integer32(reg_save(desig));
   if desig^.kind <> 159 then
     cg_fp_last_op := 147;
   if n <> nil then begin

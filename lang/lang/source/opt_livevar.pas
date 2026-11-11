@@ -48,8 +48,7 @@
   The statements of a region are opt_4009c's entries
   (g_opt.ins.pas's g_opt_stmt_t: vars, regs, vset and hdr), trees are
   read through g_opt_tree_t and the other nodes by offset (il.ins.pas).
-  reg_save (reg_save.pas, cg.ins.pas, which this unit does not open)
-  is declared here.
+  reg_save's heading is the prelude's (globals_from_backend.ins.pas).
 
   dpc gaps (docs/dpc-gaps.md): 2 (sparse cases on the node kinds), 8
   (`in' on the node kind sets).
@@ -64,11 +63,6 @@ module opt_livevar;
 %include 'lang/lang/source/g_opt.ins.pas';
 %include 'lang2/source/ftn/source/f_hash.ins.pas';
 %include 'lang/common/source/mem.ins.pas';
-
-{ REG_SAVE - reg_save.pas 0x0ED478 (cc.a88k 0x2BA668): the registers
-  a call of r preserves, as cg.ins.pas declares it. }
-function reg_save(
-    r: il_$node_ptr_t): integer32; options(val_param); extern;
 
 type
   lv_head_t = array [1..21] of integer;  { a statement's +4..+45 }

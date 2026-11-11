@@ -897,10 +897,8 @@ procedure walker(
 
 { ---- reg_save ---- }
 
-{ REG_SAVE - the registers a call of routine r preserves (a set of
-  register numbers as a longword).  reg_save 0x0ED478: a pointer; D0. }
-function reg_save(
-    r: il_$node_ptr_t): integer32; options(val_param); extern;
+{ REG_SAVE (reg_save 0x0ED478) is declared in the prelude
+  (globals_from_backend.ins.pas): add_node calls it too. }
 
 { ---- the front end ---- }
 
