@@ -450,6 +450,12 @@ procedure shift(
     count: integer;
     how: integer); options(val_param); extern;
 
+{ CG_MISC_$STRCMP_CAN_USE_LONGS - neither string operand of the strcmp
+  tree n may be unaligned.  cg_misc 0x0FAEF0: a pointer; D0
+  (reg_save's registers_consumed_by_tree_operator, cbuiltin_strcmp). }
+function cg_misc_$strcmp_can_use_longs(
+    n: il_$node_ptr_t): boolean; options(val_param); extern;
+
 { REVERSE_CC - the opposite condition of cc.  cg_misc 0x0F9BEE: a word;
   D0. }
 function reverse_cc(

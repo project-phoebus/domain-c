@@ -17,18 +17,20 @@
     0x0F9EB2  --------  agg_loop_start
     0x0F9F4A  --------  agg_loop_end
     0x0FA012  --------  genmask
+    0x0FAEF0  --------  cg_misc_$strcmp_can_use_longs
     A5 0x356310 (cc.m68k): +0 the label templabel gives while
     at_backend_506 is false (cg_top's f_initialize sets it).
 
   Every routine loads A5 (global).
 
-  TODO(pascal) cg_misc is started: 11 of its 24 routines are written
+  TODO(pascal) cg_misc is started: 12 of its 24 routines are written
   (show_state, show_label, templabel, reverse_cc, unaligned,
   zero_check, s_extend, agg_len_loop_start, agg_loop_start,
-  agg_loop_end, genmask); shift (0x0FA050), agg_opr (0x0FA27E), fill (0x0FA410), cbuiltin_strcpy
+  agg_loop_end, genmask, cg_misc_$strcmp_can_use_longs); shift
+  (0x0FA050), agg_opr (0x0FA27E), fill (0x0FA410), cbuiltin_strcpy
   (0x0FA580), cbuiltin_strncpy (0x0FA67C), cbuiltin_strcat (0x0FA95A),
   cbuiltin_strncat (0x0FAAFC), cbuiltin_strlen (0x0FAD8A),
-  cg_misc_$strcmp_can_use_longs (0x0FAEF0), cg_misc_$strcmp_by_longs
+  cg_misc_$strcmp_by_longs
   (0x0FAFCC, with compare_two_bytes 0x0FAF2A nested), cbuiltin_strcmp
   (0x0FB42C) and cbuiltin_strncmp (0x0FB7D6) are not.
 
@@ -64,7 +66,8 @@ type
 define
   cg_misc_label,
   show_state, show_label, templabel, reverse_cc, unaligned, zero_check,
-  s_extend, agg_len_loop_start, agg_loop_start, agg_loop_end, genmask;
+  s_extend, agg_len_loop_start, agg_loop_start, agg_loop_end, genmask,
+  cg_misc_$strcmp_can_use_longs;
 
 { show_state - the pass, the line (and its file when not the main one),
   then each data and address register holding an object: its name,
@@ -380,4 +383,18 @@ begin
       m := m + 1;
   end;
   genmask := m;
+end;
+
+{ cg_misc_$strcmp_can_use_longs - neither of strcmp tree n's operands
+  may be at an odd address.
+
+  0x0FAEF0, 0x3A bytes: the second test's result complemented
+  (`not.b'). }
+
+function cg_misc_$strcmp_can_use_longs;
+begin
+  if unaligned(cg_tree_ptr_t(n)^.opnd[1]) then
+    cg_misc_$strcmp_can_use_longs := false
+  else
+    cg_misc_$strcmp_can_use_longs := not unaligned(cg_tree_ptr_t(n)^.opnd[2]);
 end;
