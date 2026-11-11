@@ -139,4 +139,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/cg_misc.pas` | 24 | started: 13 of 24 (show_state .. genmask in address order, cbuiltin_strcpy, cg_misc_$strcmp_can_use_longs; shift, agg_opr, fill and the other string builtins not written; cc.m68k only; dpc gap 8) |
 | `lang/lang/source/opt_general.pas` | 9 | translated (best effort; nodes through g_opt.ins.pas's views; dpc gaps 7, 8) |
 | `lang/lang/source/opt_select.pas` | 11 | translated (best effort; blocks through g_opt.ins.pas's views; dpc gaps 3, 15) |
+| `lang/lang/source/opt_assign.pas` | 9 | translated (best effort; nodes through g_opt.ins.pas's views and il.ins.pas's by offset; dpc gaps 8, 12, 19, 23) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

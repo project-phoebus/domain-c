@@ -301,3 +301,12 @@ lang/lang/source/opt_general.pas	s/if c\^\.kind in \[77\.\.87, 101, 200\] then/i
 lang/lang/source/opt_select.pas	s/^(\s*)new\(c\);/$1pas_\$new(c, 16); { gap 3 }/
 # gap 15 (opt_select): a pointer result assigned from a parameter (a field of it, for the check)
 lang/lang/source/opt_select.pas	s/^(\s*)eval := v$/$1eval := v^.lbl { gap 15 }/
+# gap 23 (opt_assign): in on a one-word constant set with a byte element (the comparisons)
+lang/lang/source/opt_assign.pas	s/\(da\.class in \[alias_ref_thru_param_ptr, alias_random_pointer\]\)/((da.class = alias_ref_thru_param_ptr) or (da.class = alias_random_pointer)) { gap 23 }/
+# gap 19 (opt_assign): a function returning a single real (the line stored instead, for the check)
+lang/lang/source/opt_assign.pas	s/^(\s*)rv\.r := dbl_to_real\(x, p\^\.line\);/$1rv.l := p^.line; { gap 19 }/
+# gap 12 (opt_assign): a pointer function's result compared with another (the first operand a variable, for the check)
+lang/lang/source/opt_assign.pas	s/^(\s*)alias_\$ind_for_captured_lvalue\(a\^\.asg_lhs\) <>$/$1a^.asg_lhs <> { gap 12 }/
+# gap 8 (opt_assign): in on constant sets with word elements (the comparisons)
+lang/lang/source/opt_assign.pas	s/([\w\^\.]+)\^\.kind in \[77\.\.87, 101, 200\]/(($1^.kind >= 77) and ($1^.kind <= 87)) { gap 8 }/g
+lang/lang/source/opt_assign.pas	s/([\w\^\.]+)\^\.kind in \[77\.\.90, 92, 93, 101, 156, 176, 198, 200\]/(($1^.kind >= 77) and ($1^.kind <= 90)) { gap 8 }/g

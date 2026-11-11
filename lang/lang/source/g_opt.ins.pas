@@ -60,10 +60,22 @@ type
           eval_opnd: array [1..64] of il_$node_ptr_t);  { +52 }
       { 140: lhs := lhs op rhs, op 0 a plain store (1, 2, 15, 16
         additions, 3 and, 4 or, 5 exclusive or, as general_opts folds
-        them); rlen the stored width in bytes (1, 2, 4). }
+        them; 6 and 25 block moves of size bytes; merge_assignments
+        also folds 2 a subtraction, 10 a bit field, 13 not, 14
+        negation, 15 a left shift); rlen the stored width's class (1,
+        2, 4; 11 a block; delay's table gives the bytes). }
       2: (asg_size: integer32;          { +48 }
           asg_rlen: g_opt_num_t;        { +52 }
-          asg_unused_54: array [1..5] of integer;  { +54..+63 }
+          asg_w54: g_opt_num_t;         { +54: a bit field's (op 10) }
+          asg_w56: g_opt_num_t;         { +56: likewise }
+          asg_flags: packed record      { +58 }
+            b7, b6, b5, b4, b3: boolean;
+            chars: boolean;             { .2: a block move (op 6) of
+                                          characters (assign_opt) }
+            b1, b0: boolean;
+            b59: 0..255;                { +59 }
+          end;
+          asg_unused_60: integer32;     { +60 }
           asg_lhs: il_$node_ptr_t;      { +64 }
           asg_rhs: il_$node_ptr_t;      { +68 }
           asg_x: il_$node_ptr_t;        { +72 }
@@ -320,3 +332,11 @@ procedure dominators(
 
 { FIND_LOOPS - mark the loop headers and the loops' blocks (opt_main). }
 procedure find_loops; extern;
+
+{ opt_assign.pas (cc.m68k 0x0D393C, cc.a88k 0x2A0B2C). }
+
+{ ASSIGN_OPT - merge the run of assignments from start on to adjacent
+  storage into one (opt_livevar's coalesce_adjacent_and_eliminate_
+  dead_assignments). }
+procedure assign_opt(
+    start: g_opt_stmt_ptr_t); options(val_param); extern;
