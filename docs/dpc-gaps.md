@@ -245,3 +245,31 @@ when this tree is merged).
          n := 1;
          f := a;
        end;
+
+15. **`ptoc` and `ctop`** (reference 4-149, 4-61).  c_main.pas addarg
+   (cc.m68k 0x05A5D2: `pea (-1040,A6); jsr pas_$ptoc' on the copy of
+   its varying parameter), preprocess (0x05A99E pas_$ptoc, 0x05ACBE
+   pas_$ctop).  dpc: "undefined identifier `ptoc`".  Reproducer:
+
+       module g15;
+       var s: varying [1024] of char;
+       procedure p;
+       begin
+         ptoc(s);
+         ctop(s);
+       end;
+
+16. **A string constant assigned to a varying string.**  c_main.pas
+   preprocess: `arg := '-D__apollo'' and nine others (cc.m68k 0x05AB2A:
+   the length word and the characters copied from a literal laid out
+   as a varying string, `lea (lit,PC),A0; move.l (A0)+,(A1)+ ...').
+   dpc: "Assignment statement expression is not compatible with the
+   assignment variable (arg_t := string of 10 characters)".
+   Reproducer:
+
+       module g16;
+       var s: varying [1024] of char;
+       procedure p;
+       begin
+         s := '-D__apollo';
+       end;

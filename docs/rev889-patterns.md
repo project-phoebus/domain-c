@@ -250,3 +250,14 @@ cc.m68k unless marked.
     is displacement 0x11 (the extension word 0x0011), a string node's
     characters at +18 indexed from 1; `(fffffffffffffffc,A0,D2.l)' is
     -4.  Plain displacements `(9439,A0)' are decimal.
+34. **Varying string constants laid out as varying strings.**  c_main's
+    preprocess assigns string constants to a varying [1024] (`arg :=
+    '-Dunix''): the pool holds the length word and the characters
+    (0x05AD1E: `00 06 -Dunix'), copied whole with `move.l (A0)+,(A1)+'
+    (and a final `move.w' or `move.b'), not the 1026 bytes of the
+    variable (docs/dpc-gaps.md 16).
+35. **A program's routine passed as a parameter loads A5.**  c_main is
+    the program cc; its routines run on cc's A5 and do not load it,
+    except do_lex_for_listings (0x05A380), whose address cc passes to
+    run_backend (`move.l #0x05A380,-(SP)') and which runbackend calls
+    with `jsr (A0)'.  The others are written `internal'.

@@ -185,3 +185,18 @@ revisited.
    (c_lex_pp opens it before the prelude) instead of cargs_$chars_t.
    iosub.ins.pas's error_exit takes a univ iosub_$status_t for the
    same reason (c_error and c_sym_map open it without base's types).
+31. c_main: cc enters `_longjmp', `longjmp' and `sigsetjmp' with the
+   lengths 7, 6 and 6 (copied from `_setjmp' and `setjmp', it seems),
+   so c_def_sem's special names are the prefixes `_longjm', `longjm'
+   and `sigset'.  Kept as the image has it (a probable slip of the
+   original).
+32. c_main calls pas_$ctov through the transfer vector (preprocess:
+   the C string cpp_path into a varying string, three arguments); the
+   reference documents ptoc and ctop but no ctov, so it is written as
+   a call of an extern declared in c_main.  do_report's heading is in
+   c_main too (report.ins.pas would clash with do_report.pas's own
+   report_$word_t parameter).
+33. time.ins.pas's cat_time_info now takes `in out s: univ
+   time_$line_t' (and time.pas's definition the same), so that c_main
+   can pass its PRTSUB line (dpc refuses a type transfer of a
+   variable passed by reference).

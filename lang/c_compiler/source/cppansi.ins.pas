@@ -24,7 +24,7 @@ procedure c_run_acpp(
 { C_DELETE_TEMP - remove the file named by name^.  0x05BEAA; preprocess
   and cc pass the address of argv[2]. }
 procedure c_delete_temp(
-    var name: univ_ptr); extern;
+    var name: univ univ_ptr); extern;
 
 { C_CPP_PRESENT - found^ := 0 when the file path^ exists (access).
   0x05BECC; preprocess 0x05A9D4. }

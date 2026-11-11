@@ -261,3 +261,61 @@ type
       b25_0: boolean;
     end;
   end;
+
+  { An identifier with the line it was met on: 8 bytes (c_lex_pp's
+    module_sem copies two longwords into a module block; c_main's
+    make_main_pgm and cc pass them by address to def_blk_skeleton,
+    fnd_name and body_opr; c_def_sem's, c_syntax's and c_stmt_sem's
+    data hold such pairs).
+
+    Not known from the original: the names; +6. }
+  c_name_t = record
+    id: il_$node_ptr_t;                 { +0 }
+    line: integer;                      { +4 }
+    unused_6: integer;                  { +6 }
+  end;
+
+  { What def_blk_skeleton takes as its fourth argument (c_main's cc,
+    +0x400 of its data, and make_main_pgm, a frame record): 40 bytes,
+    of which these are set.
+
+    Not known from the original: everything but the offsets. }
+  c_decl_t = record
+    dtype: univ_ptr;                    { +0: int_type or il_178 }
+    name: univ_ptr;                     { +4 }
+    unused_8: integer32;                { +8 }
+    unused_12: integer32;               { +12: cleared }
+    unused_16: array [4..7] of integer32;  { +16..+31 }
+    line: integer;                      { +32 }
+    unused_34: integer;                 { +34 }
+    unused_36: integer32;               { +36 }
+  end;
+
+  { An entry of c_expr_sem's expression stack (cexs_stack, 64 bytes):
+    c_main's make_main_pgm sets the top entry's node from its +28.
+
+    Not known from the original: everything but the offsets. }
+  c_exp_t = record
+    node: il_$node_ptr_t;               { +0 }
+    unused_4: array [1..6] of integer32;   { +4..+27 }
+    sym: il_$node_ptr_t;                { +28 }
+    unused_32: array [8..15] of integer32;  { +32..+63 }
+  end;
+
+  { An identifier entry as a block of its own: the kind and the rest
+    (c_main copies an identifier's +4..+4113 into c_lex_pp's
+    kw_options and kw_attribute after setting their kinds), laid out as
+    il.ins.pas's identifier variant. }
+  c_kw_body_t = record
+    next: il_$node_ptr_t;               { +4 }
+    unused_8: integer32;                { +8 }
+    unused_12: integer32;               { +12 }
+    len: integer;                       { +16 }
+    name: array [1..4096] of char;      { +18 }
+  end;
+  c_kw_node_ptr_t = ^c_kw_node_t;
+  c_kw_node_t = record
+    unused_0: integer;                  { +0 }
+    kind: integer;                      { +2 }
+    body: c_kw_body_t;                  { +4 }
+  end;

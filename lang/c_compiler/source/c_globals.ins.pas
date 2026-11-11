@@ -84,19 +84,24 @@ type
 
 var
   { c_def_sem.pas's data, A5 0x140054 (cc.m68k), 0x2C0054 (cc.a88k).
-    cc (c_main) sets six (longword, word) pairs at +0x4..+0x2C. }
-  cdef_00: extern integer32;            { +0x0: c_def_sem, c_main }
-  cdef_04: extern integer;              { +0x4: c_main }
-  cdef_08: extern integer32;            { +0x8: c_main }
-  cdef_0c: extern integer;              { +0xC: c_main }
-  cdef_10: extern integer32;            { +0x10: c_main }
-  cdef_14: extern integer;              { +0x14: c_main }
-  cdef_18: extern integer32;            { +0x18: c_main }
-  cdef_1c: extern integer;              { +0x1C: c_main }
-  cdef_20: extern integer32;            { +0x20: c_main }
-  cdef_24: extern integer;              { +0x24: c_main }
-  cdef_28: extern integer32;            { +0x28: c_main }
-  cdef_2c: extern integer;              { +0x2C: c_main }
+    cc (c_main) enters six identifiers with idntk(76, ...) and clears
+    the word after each: the routines c_def_sem treats specially.  The
+    lengths cc passes for three of them are short (`_longjm', `longjm',
+    `sigset': 7, 6 and 6 characters of `_longjmp', `longjmp' and
+    `sigsetjmp'; probably copied from `_setjmp' and `setjmp'), so the
+    names entered are those prefixes. }
+  cdef_id_ulongjmp: extern il_$node_ptr_t;  { +0x0: `_longjm'; c_def_sem }
+  cdef_04: extern integer;              { +0x4 }
+  cdef_id_longjmp: extern il_$node_ptr_t;   { +0x8: `longjm' }
+  cdef_0c: extern integer;              { +0xC }
+  cdef_id_sigsetjmp: extern il_$node_ptr_t; { +0x10: `sigset' }
+  cdef_14: extern integer;              { +0x14 }
+  cdef_id_pfm_cleanup: extern il_$node_ptr_t;  { +0x18: `pfm_$cleanup' }
+  cdef_1c: extern integer;              { +0x1C }
+  cdef_id_usetjmp: extern il_$node_ptr_t;   { +0x20: `_setjmp' }
+  cdef_24: extern integer;              { +0x24 }
+  cdef_id_setjmp: extern il_$node_ptr_t;    { +0x28: `setjmp' }
+  cdef_2c: extern integer;              { +0x2C }
   cdef_data_sect: extern il_$node_ptr_t;  { +0x38: the data section
                                           variables go to (#section's
                                           second name: c_lex_pp
@@ -148,11 +153,21 @@ var
   end;
   cerr_texts: extern array [0..16141] of char;         { 0x0412A6 }
 
+  { The names c_main's rword_init enters as the token classes 0..75
+    (ctk_ constants), 10 characters each, blank-padded (c_data.asm,
+    cc.m68k 0x0409E4; the 76th entry is the bytes after the table). }
+  c_rword_table: extern array [0..75] of array [1..10] of char;  { 0x0409E4 }
+
   { c_expr_sem.pas's data, A5 0x1400B0 (cc.m68k), 0x2C00B0 (cc.a88k).
     The basic types, made by c_main's init_basic_types: 8-byte integral
     nodes (kind 122; +4 the length, +6 signed), 6-byte floating nodes
     (kind 123; +4 6 or 7) and 4-byte nodes of kinds 210 and 136. }
-  cexs_390: extern integer32;           { +0x390: c_stmt_sem walk_tree }
+  cexs_stack: extern array [1..128] of c_exp_t;  { +0x390: the
+                                          expression stack (64-byte
+                                          entries to +0x2390, cexs_23bc
+                                          the top): c_main
+                                          make_main_pgm, c_stmt_sem
+                                          walk_tree }
   char_type: extern c_type_ptr_t;       { +0x2390: signed, 1 }
   short_type: extern c_type_ptr_t;      { +0x2394: signed, 2 (cc also
                                           stores it in runbackend_10) }
@@ -175,12 +190,12 @@ var
   { c_lex_pp.pas's data, A5 0x142528 (cc.m68k), 0x2C2528 (cc.a88k):
     the cells other units reach (c_lex_pp's own are in c_lex_pp.pas and
     c_lex_pp.pvt.pas). }
-  kw_options: extern il_$node_t;        { +0x498: the token `#options'
+  kw_options: extern c_kw_node_t;       { +0x498: the token `#options'
                                           stands for: c_main copies the
                                           identifier `options' into it
                                           and makes its class
                                           ctk_options }
-  kw_attribute: extern il_$node_t;      { +0x14B0: the token of
+  kw_attribute: extern c_kw_node_t;     { +0x14B0: the token of
                                           `#attribute' (class
                                           ctk_attribute; c_main) }
   lex_line: extern integer;             { +0x24C8: the current source
@@ -234,8 +249,8 @@ var
                                           constants), [-10..-1] the
                                           compound assignments (class
                                           ctk_assign), [102..104]
-                                          `signed', `volatile' and
-                                          `const' under -XANSI (the
+                                          `const', `volatile' and
+                                          `signed' under -XANSI (the
                                           upper bound from the next
                                           cell, +0x2AC4).  get hands
                                           them out as lex_token;
@@ -269,14 +284,16 @@ var
   cst_404: extern integer;              { +0x404: c_main }
   id_end_of_while: extern il_$node_ptr_t;  { +0x408: `end_of_while' }
   cst_40c: extern integer;              { +0x40C: c_main }
-  cst_5f4: extern integer32;            { +0x5F4: c_main }
+  cst_stack_size: extern integer32;     { +0x5F4: as_info_$stack_size
+                                          (c_main) }
   cst_5fa: extern integer;              { +0x5FA: c_main }
 
   { c_syntax.pas's data, A5 0x14AC94 (cc.m68k), 0x2CAC94 (cc.a88k;
-    c_sym_map has none, its A5 is the same address).  +0x160..+0x1E4:
-    longwords cc (c_main) sets, attributes's find_conflict and
-    merge_attribs_natural read. }
-  csyn_48: extern integer32;            { +0x48: c_def_sem, c_main }
+    c_sym_map has none, its A5 is the same address). }
+  id_main: extern il_$node_ptr_t;       { +0x48: `main' (c_main, which
+                                          passes its address, a
+                                          c_name_t with csyn_4c);
+                                          c_def_sem }
   csyn_4c: extern integer;              { +0x4C: c_main }
   id_at: extern il_$node_ptr_t;         { +0x50: the identifier `@'
                                           (idntk(76, ...) in cc), the
@@ -290,45 +307,51 @@ var
                                           c_stmt_sem, c_sym_map }
   csyn_5c: extern integer;              { +0x5C: c_main }
   csyn_60: extern integer;              { +0x60: c_main }
-  csyn_160: extern univ_ptr;            { +0x160 }
-  csyn_164: extern integer32;           { +0x164 }
-  csyn_168: extern integer32;           { +0x168 }
-  csyn_16c: extern integer32;           { +0x16C }
-  csyn_170: extern integer32;           { +0x170 }
-  csyn_174: extern integer32;           { +0x174 }
-  csyn_178: extern univ_ptr;            { +0x178 }
-  csyn_17c: extern integer32;           { +0x17C }
-  csyn_180: extern integer32;           { +0x180 }
-  csyn_184: extern integer32;           { +0x184 }
-  csyn_188: extern integer32;           { +0x188 }
-  csyn_18c: extern integer32;           { +0x18C }
-  csyn_190: extern integer32;           { +0x190 }
-  csyn_194: extern univ_ptr;            { +0x194 }
-  csyn_198: extern univ_ptr;            { +0x198 }
-  csyn_19c: extern integer32;           { +0x19C }
-  csyn_1a0: extern univ_ptr;            { +0x1A0 }
-  csyn_1a4: extern integer32;           { +0x1A4 }
-  csyn_1a8: extern integer32;           { +0x1A8 }
-  csyn_1ac: extern univ_ptr;            { +0x1AC }
-  csyn_1b0: extern univ_ptr;            { +0x1B0 }
-  csyn_1b4: extern univ_ptr;            { +0x1B4 }
-  csyn_1b8: extern univ_ptr;            { +0x1B8 }
-  csyn_1bc: extern univ_ptr;            { +0x1BC }
-  csyn_1c0: extern univ_ptr;            { +0x1C0 }
-  csyn_1c4: extern univ_ptr;            { +0x1C4 }
-  csyn_1c8: extern integer32;           { +0x1C8 }
-  csyn_1cc: extern univ_ptr;            { +0x1CC }
-  csyn_1d0: extern univ_ptr;            { +0x1D0 }
-  csyn_1d4: extern univ_ptr;            { +0x1D4 }
-  csyn_1d8: extern integer32;           { +0x1D8 }
-  csyn_1dc: extern univ_ptr;            { +0x1DC }
-  csyn_1e0: extern integer32;           { +0x1E0 }
-  csyn_1e4: extern integer32;           { +0x1E4 }
+  { +0x160..+0x1E4: the attribute keywords, identifiers cc (c_main)
+    enters with idntk(76, ...) (the `idu_' ones spelled with two
+    leading underscores); attributes's find_conflict and
+    merge_attribs_natural compare them. }
+  id_volatile: extern il_$node_ptr_t;   { +0x160 }
+  idu_volatile: extern il_$node_ptr_t;  { +0x164 }
+  id_read: extern il_$node_ptr_t;       { +0x168 }
+  idu_read: extern il_$node_ptr_t;      { +0x16C }
+  id_write: extern il_$node_ptr_t;      { +0x170 }
+  idu_write: extern il_$node_ptr_t;     { +0x174 }
+  id_address: extern il_$node_ptr_t;    { +0x178 }
+  idu_address: extern il_$node_ptr_t;   { +0x17C }
+  id_bit: extern il_$node_ptr_t;        { +0x180 }
+  id_byte: extern il_$node_ptr_t;       { +0x184 }
+  id_word: extern il_$node_ptr_t;       { +0x188 }
+  id_long: extern il_$node_ptr_t;       { +0x18C }
+  id_quad: extern il_$node_ptr_t;       { +0x190 }
+  id_size: extern il_$node_ptr_t;       { +0x194 }
+  id_aligned: extern il_$node_ptr_t;    { +0x198 }
+  idu_aligned: extern il_$node_ptr_t;   { +0x19C }
+  id_natural: extern il_$node_ptr_t;    { +0x1A0 }
+  idu_natural: extern il_$node_ptr_t;   { +0x1A4 }
+  id_unaligned: extern il_$node_ptr_t;  { +0x1A8 }
+  id_physical: extern il_$node_ptr_t;   { +0x1AC }
+  id_processor_register: extern il_$node_ptr_t;  { +0x1B0 }
+  id_fp_internal_register: extern il_$node_ptr_t;  { +0x1B4 }
+  id_register: extern il_$node_ptr_t;   { +0x1B8 }
+  id_immediate: extern il_$node_ptr_t;  { +0x1BC }
+  id_reference: extern il_$node_ptr_t;  { +0x1C0 }
+  id_atomic: extern il_$node_ptr_t;     { +0x1C4 }
+  idu_atomic: extern il_$node_ptr_t;    { +0x1C8 }
+  id_no_fp: extern il_$node_ptr_t;      { +0x1CC }
+  id_save_db: extern il_$node_ptr_t;    { +0x1D0 }
+  id_section: extern il_$node_ptr_t;    { +0x1D4 }
+  idu_section: extern il_$node_ptr_t;   { +0x1D8 }
+  id_resident_procedure: extern il_$node_ptr_t;  { +0x1DC }
+  id_device: extern il_$node_ptr_t;     { +0x1E0 }
+  idu_device: extern il_$node_ptr_t;    { +0x1E4 }
   csyn_1e8: extern univ_ptr;            { +0x1E8: c_stmt_sem add_ldfn }
-  csyn_1f0: extern integer32;           { +0x1F0: c_main }
-  csyn_1f4: extern integer32;           { +0x1F4: c_main }
-  csyn_1f8: extern univ_ptr;            { +0x1F8: c_expr_syn, c_main }
-  csyn_1fc: extern integer32;           { +0x1FC: c_expr_syn, c_main }
+  idu_options: extern il_$node_ptr_t;   { +0x1F0: `__options' (c_main) }
+  idu_attribute: extern il_$node_ptr_t; { +0x1F4: `__attribute' }
+  con_minus_one: extern il_$node_ptr_t; { +0x1F8: smcontk(81, -1)
+                                          (c_main); c_expr_syn }
+  con_zero: extern il_$node_ptr_t;      { +0x1FC: smcontk(81, 0)
+                                          (c_main); c_expr_syn }
   token_kind: extern integer;           { +0x200: the current token's
                                           class, lex_token^.kind (set by
                                           c_lex_pp's get and

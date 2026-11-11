@@ -64,3 +64,11 @@ lang/c_compiler/source/c_lex_pp.pas	s/^(\s*)'a': get_backslash_char := chr\(7\);
 lang/c_compiler/source/c_lex_pp.pas	s/if spos_\$region_user_name\(spos_\$region\) = std_include_tok then/if std_include_tok = nil then { gap 13 }/
 # gap 14: a pointer result assigned from a parameter (nil, for the check)
 lang/c_compiler/source/c_lex_pp.pas	s/^(\s*)clex_\$catstring := s([12]);/$1clex_\$catstring := nil; { gap 14 }/
+# gap 3 (c_main): new (the PAS_$NEW call it compiles to, for the check)
+lang/c_compiler/source/c_main.pas	s/^(\s*)new\(argv\^\[argc\]\);/$1pas_\$new(argv^[argc], 1024); { gap 3 }/
+# gap 15: ptoc and ctop (dropped, for the check)
+lang/c_compiler/source/c_main.pas	s/^(\s*)(ptoc|ctop)\((\w+)\);/${1}{ gap 15 }/
+# gap 16: a string constant assigned to a varying string (the length cleared instead, for the check)
+lang/c_compiler/source/c_main.pas	s/^(\s*)arg := '[^']*';/${1}arg.length := 0; { gap 16 }/
+# gap 1 (c_main): whole varying assignment (the length only, for the check)
+lang/c_compiler/source/c_main.pas	s/^(\s*)arg := tmp;/${1}arg.length := tmp.length; { gap 1 }/
