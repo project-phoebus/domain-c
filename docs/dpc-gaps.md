@@ -495,6 +495,9 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
   parameter's own parameters (the routines passed are val_param; the
   only trace is the error "Incompatible routine OPTIONS"), so the
   headings give none (a TODO in spos.ins.pas).
+   Also cg_tree.pas (translator AA): `or assert_is_f_math_op(...)',
+   `and consecutivebits(...)' (needs_lib_support 0x0FF0AA, const_mul
+   0x0FFF22).
    Also cg_assign.pas (translator AA): `and not (k in getphase(n))',
    `and not check_use(...)', `or unaligned(...)', `and
    register_tickle(...)', `and zero_check(...)' and `(rlen = 5) and

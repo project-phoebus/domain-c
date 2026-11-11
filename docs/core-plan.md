@@ -291,3 +291,10 @@ unchanged), and headings for cg_asn_$inline_move_is_best (reg_save
 calls it; a second, unread word parameter) and multi_assign_proc
 (cg_tree's generate); fault_free_assign checked.  fpa.ins.pas:
 emit_mul_add, emit_div_sub, push_fpa_opr.
+
+Translator AA, cg_tree (started, 22 of 44): cg_tree.pas defines
+cg_zero_ads, cg_null_ads (initialized) and cg_tree_1b4; cg.ins.pas gets
+the headings of cg_tree_$needs_lib_support (t and rtn by address) and
+cg_tree_$is_decomposable_const_mul, which reg_save calls.  generate and
+its 21 nested routines are not written (declared extern in the unit
+for walker; a TODO in its header).

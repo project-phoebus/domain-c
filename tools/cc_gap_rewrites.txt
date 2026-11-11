@@ -389,3 +389,13 @@ lang/lang/source/cg_assign.pas	s/^  if \(rlen = 5\) and \(\(peek\(s\.right, 4\) 
 lang/lang/source/cg_assign.pas	s/^(  \{ Through a floating register when one holds either side\. \})$/%var gap25e;\n%if gap25e %then { gap 25 }\n$1/
 lang/lang/source/cg_assign.pas	s/^(  \{ Else moved, or through the floating stack or the FPA\. \})$/%endif { gap 25 }\n$1/
 lang/lang/source/cg_assign.pas	s/^(\s+)not \((\d) in getphase\(([^()]*)\)\) then$/$1(($2 in getphase($3)) = false) then { gap 24 }/
+# gap 8 (cg_tree): in on constant sets with word elements, over the whole file (the comparisons)
+lang/lang/source/cg_tree.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
+# gap 7 (cg_tree): real constants and arithmetic (adjust_before_round's rounding of a constant left out, the constants 0.0 and 0.5 passed as the node's value, for the check)
+lang/lang/source/cg_tree.pas	s/^(\s+)if d >= 0\.0 then$/$1if n^.kind = 89 then { gap 7 }/
+lang/lang/source/cg_tree.pas	s/^(\s+)d := d [+-] 0\.5(;?)$/$1n := n$2 { gap 7 }/
+lang/lang/source/cg_tree.pas	s/rlcontk\(0\.[05]\)/rlcontk(n^.real_value) { gap 7 }/g
+lang/lang/source/cg_tree.pas	s/^(\s+)d := n\^\.real_value;$/${1}{ gap 7 }/
+# gap 24 (cg_tree): boolean functions as right operands of and/or (compared with true or false, for the check)
+lang/lang/source/cg_tree.pas	s/\b(and|or) (not )?(assert_is_f_math_op|consecutivebits|assert_is_a_tree)\(([^()]*)\)/"$1 ($3($4) = " . ($2 ? "false" : "true") . ")"/ge
+lang/lang/source/cg_tree.pas	s/^(\s+)(assert_is_f_math_op|consecutivebits)\(([^()]*)\)( then(?: begin)?)$/$1($2($3) = true)$4/
