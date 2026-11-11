@@ -70,3 +70,4 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/common/source/std.pas` | 11 | translated (best effort) |
 | `lang/common/source/diag.pas` | 13 | translated (best effort; dpc gap 1) |
 | `lang/lang/source/gspace.pas` | 6 | translated (best effort) |
+| `lang/lang/source/strings.pas` | 7 | translated (best effort) |
