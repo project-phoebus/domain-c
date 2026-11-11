@@ -32,6 +32,10 @@ type
     warning_text (by address, with its length). }
   cerr_text_t = array [1..256] of char;
 
+  { What cc_walk_it applies to each tree (call_kfold): a routine
+    taking the tree by address. }
+  c_walker_t = ^procedure(var n: il_$node_ptr_t);
+
 { ERROR_TEXT - an error at line whose message is text (len
   characters), listed and typed with the usual header.  c_error.pas
   0x049AC0; c_lex_pp. }
@@ -88,123 +92,155 @@ function clex_$catstring(
     s2: il_$node_ptr_t): il_$node_ptr_t; options(val_param); extern;
 
 { c_def_sem.pas: declarations (called from c_expr_sem, c_expr_syn,
-  c_main, c_stmt_sem, c_syntax and runbackend). }
+  c_main, c_stmt_sem, c_syntax and runbackend; checked against
+  c_def_sem.pas's bodies).  A name is a c_name_t passed by address
+  (univ where a caller passes a symbol's +4 or an identifier cell);
+  a symbol looked up is il_178 when there is none. }
 
-{ FND_PARAM - c_def_sem.pas 0x0452A4 (cc.a88k 0x045524). }
+{ FND_PARAM - the parameter of the list (by name, from a block's
+  old_parms) named as name, else il_178.  c_def_sem.pas 0x0452A4
+  (cc.a88k 0x045524); c_syntax's declaration_stmts. }
 function fnd_param(
-    p8: univ_ptr;
-    p12: univ_ptr): univ_ptr; options(val_param); extern;
+    in name: c_name_t;
+    list: c_parm_ptr_t): c_parm_ptr_t; options(val_param); extern;
 
-{ BLK_FND_NAME - c_def_sem.pas 0x045302 (cc.a88k 0x045582): the
-  name's address, two booleans and a block (c_expr_syn's alloc_builtins
-  passes il_180). }
+{ BLK_FND_NAME - the symbol of the name declared in blk (or, unless
+  local, in the blocks enclosing it); diagnostic 23 when there is none
+  and report is set and local is not.  c_def_sem.pas 0x045302 (cc.a88k
+  0x045582): runbackend passes a node's +8 (a symbol's name), c_expr_syn's
+  alloc_builtins il_180. }
 function blk_fnd_name(
-    p8: univ_ptr;
-    p12: boolean;
-    p14: boolean;
-    p16: univ_ptr): univ_ptr; options(val_param); extern;
+    in name: univ c_name_t;
+    local: boolean;
+    report: boolean;
+    blk: c_blk_ptr_t): il_$node_ptr_t; options(val_param); extern;
 
-{ FND_NAME - c_def_sem.pas 0x045390 (cc.a88k 0x045610). }
+{ FND_NAME - blk_fnd_name in the current block (il_180).
+  c_def_sem.pas 0x045390 (cc.a88k 0x045610). }
 function fnd_name(
-    p8: univ_ptr;
-    p12: boolean;
-    p14: boolean): univ_ptr; options(val_param); extern;
+    in name: univ c_name_t;
+    local: boolean;
+    report: boolean): il_$node_ptr_t; options(val_param); extern;
 
-{ DEF_LNKTBL_CLEAR - c_def_sem.pas 0x045582 (cc.a88k 0x045802). }
+{ DEF_LNKTBL_CLEAR - move the externs declared in blocks to the
+  outermost block.  c_def_sem.pas 0x045582 (cc.a88k 0x045802);
+  c_main's fe_cc_$end_compilation. }
 procedure def_lnktbl_clear; extern;
 
-{ DEF_DROP_TNAMES - c_def_sem.pas 0x045622 (cc.a88k 0x0458A2). }
+{ DEF_DROP_TNAMES - t with its typedef names (118) looked through.
+  c_def_sem.pas 0x045622 (cc.a88k 0x0458A2). }
 function def_drop_tnames(
-    p8: univ_ptr): univ_ptr; options(val_param); extern;
+    t: c_type_ptr_t): c_type_ptr_t; options(val_param); extern;
 
-{ DEF_INCOMPLETE_SU - c_def_sem.pas 0x045650 (cc.a88k 0x0458D0). }
+{ DEF_INCOMPLETE_SU - t (through typedefs and arrays) is a structure
+  or union not yet complete: its tag to holder.  c_def_sem.pas
+  0x045650 (cc.a88k 0x0458D0). }
 function def_incomplete_su(
-    p8: univ_ptr;
-    p12: univ_ptr): boolean; options(val_param); extern;
+    t: c_type_ptr_t;
+    var holder: c_tag_ptr_t): boolean; options(val_param); extern;
 
-{ DEF_RESOLVE_INCOMPLETE_TYPES - c_def_sem.pas 0x04576E (cc.a88k 0x0459EE). }
+{ DEF_RESOLVE_INCOMPLETE_TYPES - complete what was declared with the
+  tag's type while it was incomplete.  c_def_sem.pas 0x04576E (cc.a88k
+  0x0459EE): c_syntax's struct_union_type passes the tag's +4. }
 procedure def_resolve_incomplete_types(
-    p8: univ_ptr); options(val_param); extern;
+    var tag: c_tag_body_t); extern;
 
-{ CHECK_TYPES - c_def_sem.pas 0x046162 (cc.a88k 0x0463E2). }
+{ CHECK_TYPES - a and b are compatible types (loose: a pointer to void
+  matches any pointer).  c_def_sem.pas 0x046162 (cc.a88k 0x0463E2). }
 function check_types(
-    p8: univ_ptr;
-    p12: univ_ptr;
-    p16: boolean): boolean; options(val_param); extern;
+    a: c_type_ptr_t;
+    b: c_type_ptr_t;
+    loose: boolean): boolean; options(val_param); extern;
 
-{ DEF_VARN - c_def_sem.pas 0x046742 (cc.a88k 0x0469C2): the name and
-  the declaration by address (c_stmt_sem's profiling calls), the
-  allocation and a byte by value; A0. }
+{ DEF_VARN - declare the variable name of decl's type allocated as
+  vat (init: it has an initializer), or merge the declaration into an
+  existing one; the symbol.  c_def_sem.pas 0x046742 (cc.a88k
+  0x0469C2): decl's type may be replaced by the existing one's. }
 function def_varn(
     in name: c_name_t;
-    in decl: c_decl_t;
+    var decl: c_decl_t;
     vat: c_vat_t;
-    p18: boolean): c_sym_ptr_t; options(val_param); extern;
+    init: boolean): c_sym_ptr_t; options(val_param); extern;
 
 { ADD_VARN - a variable (109) named name, of decl's type and
   attributes, allocated as vat, entered in il_180's chain.
-  c_def_sem.pas 0x046D98 (cc.a88k 0x047018): name and vat by value,
-  decl by address (its +0 and +12..+31 read); A0. }
+  c_def_sem.pas 0x046D98 (cc.a88k 0x047018). }
 function add_varn(
-    name: univ_ptr;
+    name: il_$node_ptr_t;
     in decl: c_decl_t;
     vat: c_vat_t): c_sym_ptr_t; options(val_param); extern;
 
-{ ADD_REG_VAR - c_def_sem.pas 0x046E60 (cc.a88k 0x0470E0). }
+{ ADD_REG_VAR - add v (unless il_178) to il_180's register variables.
+  c_def_sem.pas 0x046E60 (cc.a88k 0x0470E0). }
 procedure add_reg_var(
-    p8: univ_ptr); options(val_param); extern;
+    v: c_sym_ptr_t); options(val_param); extern;
 
-{ ADD_PARM - c_def_sem.pas 0x046EC4 (cc.a88k 0x047144). }
+{ ADD_PARM - append a parameter named name of decl's type to list
+  (diagnostic 36 for a second of the name).  c_def_sem.pas 0x046EC4
+  (cc.a88k 0x047144): c_syntax's declaration (w44 0, b46 its byte) and
+  function_prototype (w44 its word, b46 false). }
 procedure add_parm(
-    p8: integer32;
-    p12: integer32;
-    p16: integer32;
-    p20: integer;
-    p22: boolean); options(val_param); extern;
+    var list: c_parm_ptr_t;
+    in name: c_name_t;
+    in decl: c_decl_t;
+    w44: integer;
+    b46: boolean); options(val_param); extern;
 
-{ LOOKUP_SU - c_def_sem.pas 0x046F7C (cc.a88k 0x0471FC). }
+{ LOOKUP_SU - the tag named id in il_180 or the blocks enclosing it,
+  else nil.  c_def_sem.pas 0x046F7C (cc.a88k 0x0471FC). }
 function lookup_su(
-    p8: univ_ptr): univ_ptr; options(val_param); extern;
+    id: il_$node_ptr_t): c_tag_ptr_t; options(val_param); extern;
 
-{ ADD_SU - c_def_sem.pas 0x046FDC (cc.a88k 0x04725C). }
+{ ADD_SU - append the tag t to list (a block's tags).  c_def_sem.pas
+  0x046FDC (cc.a88k 0x04725C). }
 procedure add_su(
-    p8: univ_ptr;
-    p12: univ_ptr); options(val_param); extern;
+    t: c_tag_ptr_t;
+    var list: c_tag_ptr_t); options(val_param); extern;
 
-{ DEF_SU - c_def_sem.pas 0x047012 (cc.a88k 0x047292). }
+{ DEF_SU - a tag of kind named name in il_180.  c_def_sem.pas 0x047012
+  (cc.a88k 0x047292). }
 function def_su(
-    p8: univ_ptr;
-    p12: integer): univ_ptr; options(val_param); extern;
+    in name: c_name_t;
+    kind: integer): c_tag_ptr_t; options(val_param); extern;
 
-{ DEF_DATA - c_def_sem.pas 0x04717A (cc.a88k 0x0473FA): the variable,
-  a longword and a constant node (c_stmt_sem's setup_profiling). }
+{ DEF_DATA - initialize v's bytes at offset with the constant con.
+  c_def_sem.pas 0x04717A (cc.a88k 0x0473FA): c_stmt_sem's
+  setup_profiling, c_syntax's data_init. }
 procedure def_data(
-    p8: univ_ptr;
-    p12: integer32;
-    p16: univ_ptr); options(val_param); extern;
+    v: c_sym_ptr_t;
+    offset: integer32;
+    con: il_$node_ptr_t); options(val_param); extern;
 
-{ DEF_DYNM_DATA - c_def_sem.pas 0x0471CE (cc.a88k 0x04744E). }
+{ DEF_DYNM_DATA - keep the expression stack's top for a dynamic
+  initializer (cdef_dynm_inits).  c_def_sem.pas 0x0471CE (cc.a88k
+  0x04744E). }
 procedure def_dynm_data; extern;
 
-{ DEF_TYPN - c_def_sem.pas 0x047230 (cc.a88k 0x0474B0). }
+{ DEF_TYPN - a typedef name of decl's type.  c_def_sem.pas 0x047230
+  (cc.a88k 0x0474B0). }
 procedure def_typn(
-    p8: integer32;
-    p12: univ_ptr); options(val_param); extern;
+    in name: c_name_t;
+    in decl: c_decl_t); options(val_param); extern;
 
-{ DEF_CONN - c_def_sem.pas 0x0472C6 (cc.a88k 0x047546). }
-procedure def_conn(
-    p8: integer32;
-    p12: univ_ptr;
-    p16: integer32); options(val_param); extern;
+{ DEF_CONN - an enumeration constant name of ctype with the constant
+  node value; the symbol.  c_def_sem.pas 0x0472C6 (cc.a88k 0x047546):
+  c_syntax's enum_list does not read it. }
+function def_conn(
+    in name: c_name_t;
+    ctype: c_type_ptr_t;
+    value: il_$node_ptr_t): c_sym_ptr_t; options(val_param); extern;
 
-{ DEF_ENUM_SKELETON - c_def_sem.pas 0x04731A (cc.a88k 0x04759A). }
+{ DEF_ENUM_SKELETON - an enumeration type held in int_t.
+  c_def_sem.pas 0x04731A (cc.a88k 0x04759A). }
 function def_enum_skeleton(
-    p8: univ_ptr): univ_ptr; options(val_param); extern;
+    int_t: c_type_ptr_t): c_type_ptr_t; options(val_param); extern;
 
-{ DEF_ENUM_LIST - c_def_sem.pas 0x04734E (cc.a88k 0x0475CE). }
+{ DEF_ENUM_LIST - give the enumeration t its constants and the range
+  of their values (diagnostic 28 for a value its type cannot hold).
+  c_def_sem.pas 0x04734E (cc.a88k 0x0475CE). }
 procedure def_enum_list(
-    p8: univ_ptr;
-    p12: univ_ptr); options(val_param); extern;
+    in list: c_enumset_t;
+    t: c_type_ptr_t); options(val_param); extern;
 
 { DEF_SUBR - a subrange type (128) of low's type from low's value to
   high's, to d.dtype.  c_def_sem.pas 0x0475C2 (cc.a88k 0x047842):
@@ -214,77 +250,95 @@ procedure def_subr(
     in high: c_cexp_t;
     var d: c_decl_t); extern;
 
-{ DEF_PTR - c_def_sem.pas 0x047614 (cc.a88k 0x047894). }
+{ DEF_PTR - a pointer type to target (into, when not nil, is filled
+  instead of a new node).  c_def_sem.pas 0x047614 (cc.a88k 0x047894). }
 function def_ptr(
-    p8: univ_ptr;
-    p12: univ_ptr): univ_ptr; options(val_param); extern;
+    target: c_type_ptr_t;
+    into: c_type_ptr_t): c_type_ptr_t; options(val_param); extern;
 
-{ DEF_FWD_PTR - c_def_sem.pas 0x0476DC (cc.a88k 0x04795C). }
+{ DEF_FWD_PTR - a pointer to a structure tag not yet defined, chained
+  in cdef_fwd_ptrs.  c_def_sem.pas 0x0476DC (cc.a88k 0x04795C):
+  c_syntax's declaration passes a declaration's address. }
 function def_fwd_ptr(
-    p8: integer32): univ_ptr; options(val_param); extern;
+    in d: c_decl_t): c_type_ptr_t; options(val_param); extern;
 
-{ DEF_RESOLVE_FWD_PTRS - c_def_sem.pas 0x047738 (cc.a88k 0x0479B8). }
+{ DEF_RESOLVE_FWD_PTRS - point the forward pointers whose tags are now
+  defined at their structures.  c_def_sem.pas 0x047738 (cc.a88k
+  0x0479B8). }
 procedure def_resolve_fwd_ptrs; extern;
 
-{ DEF_FINAL_RES_FWD_PTRS - c_def_sem.pas 0x04780C (cc.a88k 0x047A8C). }
+{ DEF_FINAL_RES_FWD_PTRS - resolve the rest, to void when the tag was
+  never defined.  c_def_sem.pas 0x04780C (cc.a88k 0x047A8C). }
 procedure def_final_res_fwd_ptrs; extern;
 
-{ DEF_FUNC - c_def_sem.pas 0x0478B4 (cc.a88k 0x047B34). }
+{ DEF_FUNC - a function type (234) returning d's type.  c_def_sem.pas
+  0x0478B4 (cc.a88k 0x047B34): c_expr_sem's expr_op, c_syntax's
+  declaration. }
 function def_func(
-    p8: integer32;
-    p12: univ_ptr;
-    p16: integer;
-    p18: integer32;
-    p22: integer32;
-    p26: integer32;
-    p30: integer32): univ_ptr; options(val_param); extern;
+    in d: c_decl_t;
+    into: c_type_ptr_t;
+    conv: integer;
+    x4: integer32;
+    params: c_parlist_ptr_t;
+    x16: integer32;
+    x20: integer32): c_type_ptr_t; options(val_param); extern;
 
-{ DEF_FLD - c_def_sem.pas 0x047956 (cc.a88k 0x047BD6). }
+{ DEF_FLD - lay out a field named name of decl's type (width.value its
+  bit width, when given) in st; kind 16 for a union.  c_def_sem.pas
+  0x047956 (cc.a88k 0x047BD6); c_syntax's struct_union_type. }
 procedure def_fld(
-    p8: univ_ptr;
-    p12: univ_ptr;
-    p16: univ_ptr;
-    p20: integer;
-    p22: univ_ptr); options(val_param); extern;
+    var st: c_fldlist_t;
+    in name: c_name_t;
+    in decl: c_decl_t;
+    kind: integer;
+    in width: c_cexp_t); options(val_param); extern;
 
-{ DEF_REC - c_def_sem.pas 0x047FDC (cc.a88k 0x04825C). }
+{ DEF_REC - the structure or union type st has laid out.
+  c_def_sem.pas 0x047FDC (cc.a88k 0x04825C). }
 function def_rec(
-    p8: univ_ptr;
-    p12: univ_ptr): univ_ptr; options(val_param); extern;
+    in st: c_fldlist_t;
+    into: c_type_ptr_t): c_type_ptr_t; options(val_param); extern;
 
-{ DEF_ARR - an array type indexed by index's type of elem's.
-  c_def_sem.pas 0x0480A4 (cc.a88k 0x048324): the declarations by
-  address, a longword and a byte by value; c_expr_syn's do_c_string
-  reads A0. }
+{ DEF_ARR - an array type indexed by index's type of elem's (word_env:
+  the word alignment environment, c_expr_syn's `attr_curr_align_env =
+  0').  c_def_sem.pas 0x0480A4 (cc.a88k 0x048324); into, when not nil,
+  is filled instead of a new node (def_resolve_incomplete_types). }
 function def_arr(
     in index: c_decl_t;
     in elem: c_decl_t;
-    p16: integer32;
-    p20: boolean): univ_ptr; options(val_param); extern;
+    into: c_type_ptr_t;
+    word_env: boolean): c_type_ptr_t; options(val_param); extern;
 
-{ DEF_BLK_SKELETON - c_def_sem.pas 0x0484F8 (cc.a88k 0x048778):
-  p24 a parameter list (c_expr_syn's alloc_builtins; nil from c_main
-  and primary_expr). }
+{ DEF_BLK_SKELETON - a block of kind (105 program, 106 module, 108
+  function, 172 scope) named name: for a function, its symbol in the
+  outermost block, checked against an earlier declaration; class 2
+  declares it only.  parms the parameters by name, protos the
+  prototype's types.  c_def_sem.pas 0x0484F8 (cc.a88k 0x048778): c_main,
+  c_expr_syn, c_stmt_sem and c_syntax pass the name and the declaration
+  by address. }
 procedure def_blk_skeleton(
-    p8: integer;
-    p10: univ_ptr;
-    p14: integer;
-    p16: univ_ptr;
-    p20: univ_ptr;
-    p24: univ_ptr;
+    kind: integer;
+    in name: c_name_t;
+    cls: integer;
+    in decl: c_decl_t;
+    parms: c_parm_ptr_t;
+    protos: c_parlist_ptr_t;
     p28: boolean;
-    p30: integer;
-    p32: integer32;
-    p36: univ_ptr); options(val_param); extern;
+    conv: integer;
+    opts: integer32;
+    into: c_blk_ptr_t); options(val_param); extern;
 
-{ DEF_BLK_PARAMS - c_def_sem.pas 0x048A96 (cc.a88k 0x048D16). }
+{ DEF_BLK_PARAMS - il_180's parameters and result as variables.
+  c_def_sem.pas 0x048A96 (cc.a88k 0x048D16): promote set for an
+  old-style definition (c_main passes false). }
 procedure def_blk_params(
-    p8: boolean); options(val_param); extern;
+    promote: boolean); options(val_param); extern;
 
-{ DEF_ALLOC_VAR - c_def_sem.pas 0x048FE0 (cc.a88k 0x049260). }
+{ DEF_ALLOC_VAR - allocate v's size bytes (static data, the frame).
+  c_def_sem.pas 0x048FE0 (cc.a88k 0x049260). }
 procedure def_alloc_var(
-    p8: univ_ptr;
-    p12: integer32); options(val_param); extern;
+    v: c_sym_ptr_t;
+    size: integer32); options(val_param); extern;
 
 { c_expr_sem.pas: expressions. }
 
@@ -455,18 +509,23 @@ function walk_tree(
 { SYNTAX - c_syntax.pas 0x0609D8 (cc.a88k 0x060C58). }
 procedure syntax; extern;
 
-{ CC_WALK_IT - apply walker to the tree t (by address).  c_syntax.pas
-  0x0661BC (cc.a88k 0x06643C): c_stmt_sem's add_cbranch and c_expr_sem
-  pass call_kfold's address (`move.l #0x066162'), written addr(...)
-  for a routine parameter (dpc has none yet: docs/dpc-gaps.md 21). }
+{ CC_WALK_IT - apply walker to the IL tree t (by address) and to each of
+  its operands' trees, before them when pre is set, else after; under
+  the logical operators (51 ?:, 52 ||, 53 &&) a constant first operand
+  decides the result (a one-character string taken as its character
+  first).  c_syntax.pas 0x0661BC (cc.a88k 0x06643C): c_stmt_sem's
+  add_cbranch and c_expr_sem pass call_kfold's address (`move.l
+  #0x066162'), a routine parameter in the original (ref 5.4); declared
+  as a routine pointer by value (the same frame) since dpc has no
+  routine parameters (docs/dpc-gaps.md 21). }
 procedure cc_walk_it(
     var t: il_$node_ptr_t;
-    walker: univ_ptr;
-    p16: boolean); options(val_param); extern;
+    walker: c_walker_t;
+    pre: boolean); options(val_param); extern;
 
-{ CALL_KFOLD - fold the constants of the tree n.  c_syntax.pas 0x066162
-  (cc.a88k 0x0663E2): no call site, its address passed to cc_walk_it;
-  one address parameter. }
+{ CALL_KFOLD - fold the constants of the tree n (kfold with no parent).
+  c_syntax.pas 0x066162 (cc.a88k 0x0663E2): no call site, its address
+  passed to cc_walk_it. }
 procedure call_kfold(
     var n: il_$node_ptr_t); extern;
 

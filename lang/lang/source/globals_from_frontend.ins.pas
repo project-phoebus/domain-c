@@ -42,14 +42,15 @@ procedure cgerr_no_source(
 
   Not known from the original: the parameter names and most types. }
 
-{ TYPE_EXP - c_def_sem.pas 0x04590A (cc.a88k 0x045B8A): 8 a pointer
-  (moved to an address register), 12 an address (callers `pea'); 135
-  call sites, those outside the front end in coff_syms, debug_sym_dmp,
-  list_tree and opt_inline, which open neither c_externs nor c_globals;
-  the callers do not read D0 or A0. }
+{ TYPE_EXP - what the type (or typed symbol) node t is: its
+  c_objtype.ins.pas type_exp_t to d.  c_def_sem.pas 0x04590A (cc.a88k
+  0x045B8A): t a node, d an address (callers `pea'); 135 call sites,
+  those outside the front end in coff_syms, debug_sym_dmp, list_tree and
+  opt_inline, which open neither c_externs nor c_globals (so both are
+  univ_ptr); the callers do not read D0 or A0. }
 procedure type_exp(
-    p1: univ_ptr;
-    p2: univ_ptr); options(val_param); extern;
+    t: univ_ptr;
+    d: univ_ptr); options(val_param); extern;
 
 { CGERR - report error code at line with one argument (an address).
   c_error.pas 0x049A00 (cc.a88k 0x049C80): 8 and 10 words, 12 a

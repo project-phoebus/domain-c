@@ -517,7 +517,7 @@ end;
 
 procedure add_attribute(
     code: integer;
-    var attr: attr_tattr_t;
+    var attr: univ attr_tattr_t;
     value: integer32;
     name: il_$node_ptr_t);
 var
@@ -624,7 +624,7 @@ end;
   and the register classes are. }
 
 procedure attr_validate(
-    in attr: attr_tattr_t;
+    in attr: univ attr_tattr_t;
     node: il_$node_ptr_t);
 var
   mask: attr_bits_t;
@@ -723,7 +723,7 @@ end;
   Not known from the original: the names. }
 
 procedure attr_tattr_to_vattr(
-    in t: attr_tattr_t;
+    in t: univ attr_tattr_t;
     out v: univ attr_vattr_t);
 begin
   v.bits := t.bits;
@@ -793,7 +793,7 @@ end;
   Not known from the original: the names; why atomic is tested twice. }
 
 function merge_attribs_natural(
-    var attr: attr_tattr_t;
+    var attr: univ attr_tattr_t;
     typ: il_$node_ptr_t): attr_bits_t;
 var
   an: attr_node_ptr_t;
@@ -1070,7 +1070,7 @@ end;
   (`moveq #1; and.b; tst.w'). }
 
 function merge_attribs(
-    var attr: attr_tattr_t;
+    var attr: univ attr_tattr_t;
     typ: il_$node_ptr_t): attr_bits_t;
 var
   n: integer;
@@ -1165,7 +1165,7 @@ end;
   Not known from the original: the names; what the sets hold. }
 
 procedure attr_compute_routine_options(
-    var opts: attr_rtn_opts_t;
+    var opts: univ attr_rtn_opts_t;
     parent: il_$node_ptr_t);
 var
   pb: attr_block_ptr_t;
