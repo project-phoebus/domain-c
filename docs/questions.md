@@ -681,3 +681,26 @@ revisited.
    kfold's node_number); its entries (g_opt_ent_t) hold a region's
    block (+16) and variables (+22); +0x9C is 65536 row pointers and
    +0x4009C 65536 entries, which fills opt_main's 0x8009C bytes.
+
+92. Translator X: a statement's flags at +41..+42 (g_opt.ins.pas's hdr:
+   b7..deleted, then kills, last, first) are written by assign_elim as
+   one 16-bit field (`andi.l #0xFF0000FF; ori.l #0x10000' of the
+   longword at +40 for deleted alone; `(+40 & 0xFFFF00) >> 8 | 2' and
+   `| 8' stored back for first and last of another statement), while
+   other sites `bset'/`btst' single bits.  Perhaps a `set of 0..15' in
+   the original (deleted element 8, no_prune 9, first 1, last 3); the
+   translations keep V's booleans and store all sixteen for the former.
+   Rename to a set when opt_main or opt_reachdef settle it?
+
+93. Translator X: opt_4009c's entries are the region statements (the
+   entry of region r is the statement whose +43 is r: opt_livevar's
+   assign_elim reads its kind, operator and operands); g_opt_ent_t and
+   g_opt_range_t were removed (kfold's node_number now reads the
+   statement's block).  The table's element type is g_opt_stmt_ptr_t.
+
+94. Translator X: opt_loop's data has opt_loop_hoist at +4 and the
+   current region at +8; dpc lays defined cells out after the module's
+   own, so the translation has them the other way round (internal to
+   the program).  delparent (opt_strength) is declared `in p' and
+   add_constant `in t; in b' after the callers' frame copies; the
+   owners should confirm when opt_strength is translated.
