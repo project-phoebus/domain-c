@@ -75,6 +75,7 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/common/source/token.pas` | 8 | translated (best effort; dpc gap 2) |
 | `lang/common/source/ecb.pas` | 1 | translated (best effort; st.ins.pas fields named by use) |
 | `lang/common/source/mem.pas` | 19 | translated (best effort) |
+| `lang/common/source/htm.pas` | 12 | translated (best effort; tables initialized) |
 | `lang2/source/lt_utils/source/bug_check.pas` | 3 | translated (best effort) |
 | `lang2/source/lt_utils/source/seg_size.pas` | 1 | translated (best effort) |
 | `lang2/source/lt_utils/source/mrh.pas` | 15 | translated (best effort) |
