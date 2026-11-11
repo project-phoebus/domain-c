@@ -89,8 +89,11 @@ def main():
     a = ap.parse_args()
     coff = cc.Coff(a.binary)
     units, rows = disassemble(coff, a.binary)
-    data = coff.section('.data')
-    lo, hi = data[1], data[1] + data[2]
+    # .data and the other data sections (opt$data, codegen$data, ...):
+    # those with no file contents (their initial bytes come from .rwdi).
+    ranges = [(sec[1], sec[1] + sec[2]) for sec in coff.sections
+              if sec[3] == 0 and sec[1] != 0]
+    lo = min(r[0] for r in ranges)
     a5s = sorted({u['a5'] for u in units if u['a5']})
     owner = {}
     for ui, u in enumerate(units):
@@ -98,9 +101,11 @@ def main():
             owner.setdefault(u['a5'], []).append(ui)
     cells = collections.defaultdict(lambda: {'w': set(), 'units': set(), 'routines': set()})
     for st, ui, nm, addr, text in rows:
-        for m in re.finditer(r'0x([0-9a-f]{5,8})\b', text):
-            v = int(m.group(1), 16)
-            if lo <= v < hi and '%pc' not in text:
+        vals = [int(m.group(1), 16) for m in re.finditer(r'0x([0-9a-f]{5,8})\b', text)]
+        # objdump prints a `movea.l #abs' / `move.l #abs' in decimal
+        vals += [int(m.group(1)) for m in re.finditer(r'#(\d{6,8})\b', text)]
+        for v in vals:
+            if any(a <= v < b for a, b in ranges) and '%pc' not in text:
                 c = cells[v]
                 c['w'].add(width(text))
                 c['units'].add(ui)

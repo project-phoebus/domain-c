@@ -61,7 +61,8 @@ type
     p_7f: boolean;                      { +0x7F: a boolean (tst.b, bmi), 7
                                           units }
     p_80: array [0..3] of char;         { +0x80 }
-    p_84: char;                         { +0x84 }
+    p_84: boolean;                      { +0x84: a boolean (tst.b, bmi:
+                                          opt_assign's ok_node; delay) }
     p_85: char;                         { +0x85 }
     p_86: array [0..1] of char;         { +0x86 }
     p_88: integer32;                    { +0x88 }

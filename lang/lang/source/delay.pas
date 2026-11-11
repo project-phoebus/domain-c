@@ -1328,7 +1328,7 @@ begin
       res := x;
     end;
     63:
-      if (target_properties.p_84 >= chr(128)) or (n^.desc.w8 = 0) then begin
+      if target_properties.p_84 or (n^.desc.w8 = 0) then begin
         il_utils_$adjust_uc(il_$node_ptr_t(n), -1);
         t := n^.opnd[1];
         il_utils_$adjust_uc(t, 1);

@@ -645,3 +645,39 @@ revisited.
    both set: the block keeps A5 in a register of its own) and written
    as bytes (cg_call's +375 bit 3); cg_top writes the longword test with
    il_$node_t's xl2[93].  The two flags' names are not known.
+
+88. Translator V: kfold's first parameter.  kfold.pas declares kfold
+   `(var stmt; var n)'; c_syntax and the optimizer's units (opt_general)
+   declare it `(in stmt; var n)': general_opts copies a statement held
+   in a register to a frame temporary before each call (cc.m68k
+   0x0D6614, `move.l A3,(-300,A6); pea (-300,A6)'), the copy an `in'
+   (or value-by-address) parameter needs.  kfold.pas's heading should
+   probably become `in'.  kfold, kfold_$general and dbl_to_real are
+   declared in each unit that calls them (c_syntax, opt_general,
+   opt_assign); the original's insert for them is not known (perhaps
+   g_opt.ins.pas, but kfold.pas opens it, so a heading there would
+   clash with kfold.pas's own forward declaration).
+
+89. Translator V: il.pas's +0xC0.. as a record.  opt_select, opt_cse and
+   kfold reach il_11c (+0x11C), il_120 (+0x120) and il_124 (+0x124) as
+   fields of a record at il.pas's +0xC0 (`movea.l #0x169D30,A0', then
+   (92,A0), (96,A0), (100,A0)); il.ins.pas declares separate variables
+   (il_c0 .. il_184).  Perhaps il.pas's globals from +0xC0 were one
+   record variable; the translations use the separate cells.
+
+90. Translator V: opt_cse's operand descriptors lie 24 bytes apart
+   (+16, +40, +64, +88 of its data; assign_opt's frame records likewise
+   at -24 and -48) while alias.ins.pas's alias_$desc_t is 20 bytes;
+   opt_cse.pas declares an element of a descriptor and 4 unused bytes.
+   Is the descriptor 24 bytes (a field at +20 nobody reads)?
+
+91. Translator V: g_opt.ins.pas names opt_main's cells by use
+   (opt_dfs_number +0x50, opt_dfs_block +0x54, opt_region +0x5E,
+   opt_last_block +0x68, opt_first_block +0x6A, opt_track_lines +0x6C,
+   opt_dom +0x9C, opt_4009c), opt_loop's +4 (opt_loop_hoist) and
+   opt_cse's +0x88 (cse_limit, opt_cse.pas defines it).  opt_main.pas
+   and opt_loop.pas must `define' them under these names.  opt_4009c is
+   now indexed from 0 (the image's `lea (0,A1,D3.l)', find_var and
+   kfold's node_number); its entries (g_opt_ent_t) hold a region's
+   block (+16) and variables (+22); +0x9C is 65536 row pointers and
+   +0x4009C 65536 entries, which fills opt_main's 0x8009C bytes.

@@ -509,7 +509,7 @@ var
                 cg_addr_killed[i] := false;
               if il_124 <> 0 then begin
                 s := [2..7, 10..12, 18..23];
-                l := select_block_list(cg_top_13e + 1, cg_top_13e);
+                l := g_opt_bb_ptr_t(select_block_list(cg_top_13e + 1, cg_top_13e));
                 while l <> nil do begin
                   s := s * l^.regs;
                   l := l^.next;
@@ -520,7 +520,7 @@ var
                   bb := g_opt_bb_list_ptr_t(il_11c)^[j];
                   if not odd(rshft(ord(bb^.flags), 3)) and
                       odd(rshft(ord(bb^.flags), 2)) then begin
-                    l := select_loop(bb^.loop^^.head);
+                    l := g_opt_bb_ptr_t(select_loop(bb^.loop^^.head));
                     s := bb^.regs;
                     while l <> nil do begin
                       s := s * l^.regs;
