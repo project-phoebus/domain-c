@@ -334,3 +334,18 @@ when this tree is merged).
        begin
          f('Compiler may not');
        end;
+
+19. **A function returning a single real.**  kfold.pas's dbl_to_real
+   (cc.m68k 0x0ACDC2) returns the single in D0; unix_objmod.pas
+   emit_constant (0x09A450: `jsr dbl_to_real; move.l D0,(-32,A6)')
+   stores it in a real local and emits its four bytes.  dpc: "functions
+   returning real are not supported yet (codegen-patterns 3: result
+   convention unknown)".  Reproducer:
+
+       module g19;
+       var s: real;
+       function f(n: integer): real; options(val_param); extern;
+       procedure p;
+       begin
+         s := f(1);
+       end;

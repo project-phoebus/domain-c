@@ -247,3 +247,28 @@ revisited.
    and no routine of either binary reaches; declared as an initialized
    array (table_18) so the values are kept.  The original may have been
    two tables or a constant record.
+40. Translator K (2026-11-11): unix_objmod.pas calls five foreign
+   things none of its inserts declares, so the unit declares them
+   itself: dump_namelist (fe_cc_hooks_to_backend), dbl_to_real (kfold;
+   no kfold insert is opened), time (the C library's, through the
+   transfer vector), kg_$lookup (the loader's) and emit.pas's cells
+   +0x108..+0x118 (emit_108; jmp_br_resolve and outbin read them too).
+   Better homes: globals_from_frontend (dump_namelist), an emit or
+   codegen insert (emit_108), us/us/ins/loader.ins.pas (kg_$lookup)?
+41. Translator K: unix_objmod's units (coff_syms, debug_sym_dmp,
+   gen_utils, outbin) do not open us/us/ins/coff.ins.pas, so
+   unix_objmod.ins.pas declares its own COFF records
+   (unix_objmod_$scnhdr_t, ...: coff.ins.pas's layout) and coff_syms's
+   two routines (coff_syms has no insert).  Its cells are prefixed
+   uobj_ (after c_globals.ins.pas's uobj_hp_standard and
+   uobj_systype_2).  Those two cannot be in unix_objmod.ins.pas
+   (runbackend opens it with c_globals.ins.pas), so unix_objmod.pas,
+   which opens neither c_globals nor anything else that could declare
+   them, declares them itself before defining them.  The order of the cells in the insert matters
+   to dpc (the defined ones are laid out first, in declaration order;
+   a scalar beyond 32K is refused): uobj_global_names must stay last.
+42. Translator K: unix_objmod's get_reloc_symndx and get_section_id
+   leave their result unset for kinds they do not know (after
+   reporting, or silently), and emit_tree_node_const goes on with a nil
+   section after reporting an unknown address constant; kept as the
+   image has them.

@@ -316,3 +316,30 @@ cc.m68k unless marked.
     edge 0x0B0B5E), but normalize_il's set of 0..239 (0x0B17D4) has
     no `bcs': the kinds' type may be 0..239 (a set as large as the
     type needs no check).  Not decided; noted for the node types.
+
+## Data layout (translator K, unix_objmod.pas)
+
+42. **Arrays beyond 32K reached from one anchor address.**  unix_objmod's
+    data (1.18 MB) has a 1000000-byte buffer at +0x5E24 (cc.m68k
+    0x1A6138, `movea.l #0x1A6138,A0; move.b D2,(-1,A0,D0.l)' for
+    element [count], emit_8 0x099B92), then two tables reached from one
+    anchor, 0x29F198: the 12-byte names at 0x29A378 (`movea.l
+    #0x29F198,A3' then (-20012,A3+12i): get_reloc_symndx 0x0995F0) and
+    the string table at 0x29AF78 (`lea (0,A0,D0.l),A1; move.b
+    D2,(-16928,A1)': write_byte_to_temp_string_table 0x0993BE;
+    unix_obj_gen 0x09F6B8).  Other units reach the names absolutely
+    (coff_syms 0x0A68F8: `movea.l #0x29A378,A0').  The anchor is the
+    names' start + 20000; why that value is not known.  dpc addresses
+    such an array from A5 with an added 32-bit offset (`adda.l
+    #off,A0') and refuses a scalar placed after it.
+43. **A module variable as a `for' loop's index.**  get_reloc_symndx
+    (0x0995EC, 0x099692) and unix_obj_gen (0x09F6B0, from 0) count with
+    the A5 longword +0x5CE8 (`move.l D2,(23784,A5)' before the loop,
+    `addq.l #1,(23784,A5)' at its end, the trip count in D3/D2 by
+    `dbf').  dpc accepts a global index.
+44. **A parameter only a nested routine reads.**  unix_objmod's
+    dump_data_init_thread (0x09CC02) never reads its parameter; its
+    nested sort_data_init_thread takes the parent's frame from its
+    dynamic link and reads (8,A2) (0x09C964).  Likewise gen_proc_relocs
+    (0x09BED0) is passed a fourth longword (0 or +0x5D78, output_data_info
+    0x09EF32, 0x09EF64) it never reads.

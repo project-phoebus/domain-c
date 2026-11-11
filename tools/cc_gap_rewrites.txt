@@ -110,3 +110,14 @@ lang/lang/source/commit_top_node.pas	s/\(b\^\.kind in \[109, 145, 146, 147, 205\
 lang/lang/source/commit_top_node.pas	s/op in \[26, 31, 32, 33, 34\]/(op = 26) or (op >= 31) and (op <= 34) { gap 8 }/
 # gap 2 (commit_top_node): a case of 16 labels over a range of 44 (labels added, for the check)
 lang/lang/source/commit_top_node.pas	s/^(\s*)44: n\^\.xw\[38\] := 5;$/${1}3, 4, 5, 6, 11, 12, 13, 14, 15, 16, 17, 18, 22, 23, 24, 25, 26, 29, 30, 31, 32, 33, 38, 39, 40, 41, 42, 43, 44: n^.xw[38] := 5; { gap 2 }/
+# gap 9 (unix_objmod): nested forward routines (the forward headings dropped, the bodies given the parameters, the earlier calls replaced)
+lang/lang/source/unix_objmod.pas	s/^(\s*)procedure (emit_(?:abs_)?addr_con)\(p: il_\$node_ptr_t; offset: integer32\); options\(val_param\); forward;/${1}{ gap 9 }/
+lang/lang/source/unix_objmod.pas	s/^(\s*)procedure (emit_(?:abs_)?addr_con);/$1procedure $2(p: il_\$node_ptr_t; offset: integer32); options(val_param);/
+lang/lang/source/unix_objmod.pas	s/^(\s*)emit_(?:abs_)?addr_con\([^)]*\)(;?) \{ forward \}$/${1}emit_32(0)$2 { gap 9 }/
+# gap 19 (unix_objmod): a function returning real (the single taken as a longword, for the check)
+lang/lang/source/unix_objmod.pas	s/^(\s*)line: integer\): real; options\(val_param\); extern;/$1line: integer): integer32; options(val_param); extern; { gap 19 }/
+lang/lang/source/unix_objmod.pas	s/^(\s*)single: real;/$1single: integer32; { gap 19 }/
+# gap 8 (unix_objmod): in on a constant set with a word element (the comparisons)
+lang/lang/source/unix_objmod.pas	s/c\^\.kind in \[77\.\.90, 92, 93, 101, 156, 176, 198, 200\]/(((c^.kind >= 77) and (c^.kind <= 93) and (c^.kind <> 91)) or (c^.kind = 101) or (c^.kind = 156) or (c^.kind = 176) or (c^.kind = 198) or (c^.kind = 200)) { gap 8 }/
+# gap 12 (unix_objmod): a pointer function's result compared with a variable (the operands swapped)
+lang/lang/source/unix_objmod.pas	s/if idntk\(76, '\.symbols', 8\) = s\^\.xp\[1\] then begin/if s^.xp[1] = idntk(76, '.symbols', 8) then begin { gap 12 }/
