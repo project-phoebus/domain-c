@@ -599,3 +599,49 @@ revisited.
    of 0..95 and 0..79 without a range check (docs/rev889-patterns.md
    41): the operator codes may be an enumeration of 96 values, as the
    node kinds are of 237.
+
+83. Translator U (2026-11-11), cg_misc: cg.ins.pas's cg_tree_188 is
+   renamed cg_zero_ads (cg_tree's +0x188, the immediate 0 operand):
+   agg_opr gives it (a 20-byte copy) for a constant of zero bytes,
+   strncpy and strncat store it to pad (`clr.b (An)+'), shift `and's a
+   word with it to clear it, and the tests compare with it (18);
+   cg_fp's two uses follow.  cg_tree.pas must `define' it under the new
+   name.  emit's generic instructions read in cg_misc add to question
+   77's list: 3 and, 12 not, 13 a shift (x its kind: 0 arithmetic
+   right, 2 logical right, 1 and 3 left), 18 compare or test, 20 a
+   conditional branch whose x is the 68000's condition code (6 NE, 7
+   EQ, 11 MI, 15 LE: reverse_cc pairs them), 21 branch, 29 swap.
+   Rename the generic instructions as constants when emit or fnl_slct
+   is translated?
+
+84. cg_misc: cg.ins.pas's new cg_count_t (0..65535) types shift's count
+   and how and fill's len: the image zero-extends them to longwords
+   and compares them unsigned.  A parameter's type must be a type name
+   in dpc (and the reference), so the subrange is named.  Keep, or
+   use a base type of the original's (linteger-like)?
+
+85. Translator U, cg_top: cg.ins.pas names cg_top's cells other units
+   read: cg_stmt (+0x12C, the statement compiled), cg_code_bytes
+   (+0x134, emit's fnl_slct adds to it), cg_top_13a (+0x13A), cg_data_reg
+   (+0x140: 13, or 8 when the data is reached through A0), cg_pass
+   (+0x142, was cg_top_142: show_state prints it as PASS), cg_line,
+   cg_settled (+0x146: cg_addr's merge_register clears it; at_backend_506
+   at +0x148 is the last, emitting pass).  cg_addr.pas must define
+   cg_addr_2a8 .. cg_addr_2ba (new), cg_tree.pas cg_zero_ads and
+   cg_tree_1b4.  outbin.pas's cg_top_130 is defined by cg_top with a
+   type of its own (top_line_ptr_t, the same layout as outbin's
+   outbin_ln_bb_ptr_t): move the type to an insert both open?
+
+86. cg_top: codegen passes the statement routines the address of the
+   node's +4 (`pea (4,A0)': assign_proc, cbranch_proc, block_entry_proc,
+   return_proc), so the original's routines probably took the node's
+   variant part by reference.  cg_top's take univ records laid out from
+   +4 (top_cbranch_t, ...); cg.ins.pas's assign_proc takes `in out s:
+   univ cg_stmt_t' (a view by offset from +4).  Keep, or give the IL
+   node type named statement variants?
+
+87. cg_top: the routine block's flags at +374..+377 are tested as a
+   longword (`(+374 >> 11) & 258 = 258': +375 bit 3 and +376 bit 4,
+   both set: the block keeps A5 in a register of its own) and written
+   as bytes (cg_call's +375 bit 3); cg_top writes the longword test with
+   il_$node_t's xl2[93].  The two flags' names are not known.

@@ -153,7 +153,7 @@ end;
 
 { test_peb_busy - the wait for the PEB: a temporary label's address
   (32, size 5), the PEB's status (operation 147 of mode 11) tested
-  against cg_tree_188 (18, size 2), and the branch back (20, x 11).
+  against cg_zero_ads (18, size 2), and the branch back (20, x 11).
 
   0x0F8976, 0x98 bytes: the status descriptor built in the frame (-48:
   f1 11, f5 5, x 0, y 147); templabel's node to address (size 0, -24);
@@ -171,7 +171,7 @@ begin
   status.y := 147;
   address(templabel, 0, lab);
   emit(32, 5, lab, cg_null_ads, 0);
-  emit(18, 2, status, cg_tree_188, 0);
+  emit(18, 2, status, cg_zero_ads, 0);
   emit(20, 5, lab, cg_null_ads, 11);
 end;
 
@@ -504,7 +504,7 @@ begin
   else
     r.y := op;
   if m = nil then
-    emit(18, 2, r, cg_tree_188, 0)
+    emit(18, 2, r, cg_zero_ads, 0)
   else begin
     if op = 63 then
       emit(0, 4, t, r, 0)

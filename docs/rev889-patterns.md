@@ -505,3 +505,22 @@ cc.m68k unless marked.
     bytes) holds swap_cc (16 words at +0, read indexed) and four
     longwords 127, 32767, 255, 65535 at +0x28 that no instruction of
     the unit addresses; kept as a module array.
+
+## Loops and nested routines (translator U, cg_top.pas)
+
+67. **A jump to a loop's `until' threaded to the loop's head.**  codegen
+    (cc.m68k 0x0FEDF2) leaves its statement loop at a routine's end; when
+    the pass does not emit (at_backend_506 false) the `until
+    at_backend_506' after the loop is known to fail, and the code jumps
+    straight to the pass loop's head (`tst.b (328,A5); bpl.w 0x0FE6EA'),
+    leaving the `until''s own test (0x0FEED0) to the emitting path.  dpc
+    branches to the `until'.
+68. **A nested routine counting with its parent's local.**  initialize
+    (0x0FBDDA, nested in codegen) loops `for r := 18 to 23' with r
+    codegen's word at -12 (`movew #18,(-12,A2)', A2 the parent's frame
+    from the dynamic link; `addq.w #1,(-12,A2)' and `dbf' of the trip
+    count); dpc accepts the non-local index.
+69. **One argument value pushed twice with `move.l (SP),-(SP)'.**
+    emit_a_line_eop (0x0FE61A) and emit_terminating_line_no pass
+    cg_null_ads for both of emit_line_eop's descriptors as `move.l
+    #0x356600,-(SP); move.l (SP),-(SP)'.  dpc pushes each.

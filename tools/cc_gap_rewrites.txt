@@ -312,3 +312,9 @@ lang/lang/source/delay.pas	s{((?:\w+(?:\[[^\]]*\])?\^?\.)*\w+)\s+in\s+\[([^\]]+)
 lang/lang/source/delay.pas	s/^(\s*)delay_\$splice := n;/$1delay_\$splice := nil; { gap 15 }/
 # gap 2 (delay): a case of 4 labels over a range of 13 (the other labels added, empty, for the check)
 lang/lang/source/delay.pas	s/^(      )151:$/${1}141, 143, 144, 145, 146, 147, 148, 149, 150: ; { gap 2 }\n${1}151:/
+# gap 7 (cg_misc): a real constant in a comparison (the double tested by its longwords, for the check)
+lang/lang/source/cg_misc.pas	s/n\^\.real_value <> 0\.0/(n^.bits[1] <> 0) or (n^.bits[2] <> 0) { gap 7 }/
+# gap 8 (cg_top): in on constant sets with word elements, over the whole file (sets spanning lines; the comparisons)
+lang/lang/source/cg_top.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
+# gap 12 (cg_top): an A0 function's result compared with a variable (the operands swapped)
+lang/lang/source/cg_top.pas	s/if csetotree\(cg_tree_ptr_t\(c\)\^\.opnd\[(\d)\]\) (=|<>) s then/if s $2 csetotree(cg_tree_ptr_t(c)^.opnd[$1]) then { gap 12 }/
