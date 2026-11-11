@@ -8,7 +8,11 @@
   (docs/core-plan.md).
 }
 
-{ TODO(pascal) glob_extern.ins.pas not reconstructed yet
-
-  Declarations are added as the units that use them are translated
-  (docs/core-plan.md). }
+{ Nothing in the image requires a declaration here: every shared cell
+  and foreign routine the prelude's users need is declared in the
+  provider inserts or in globals_from_frontend, globals_from_backend,
+  globals_from_general, real_externals and us/us/ins/lib.ins.pas
+  (docs/core-plan.md, step 4).  What the original held here is not
+  known; a translator who finds a name no insert declares and no
+  customer insert provides adds it to one of those, or here with the
+  evidence. }

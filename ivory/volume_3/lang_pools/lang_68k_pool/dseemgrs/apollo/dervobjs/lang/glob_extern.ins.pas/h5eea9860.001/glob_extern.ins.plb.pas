@@ -9,7 +9,10 @@
   (docs/core-plan.md).
 }
 
-{ TODO(pascal) glob_extern.ins.plb.pas not reconstructed yet
+{ Nothing in the image requires a declaration here (see
+  lang/lang/source/glob_extern.ins.pas).  A DSEE derived object of an
+  insert is perhaps its precompiled form, which would make this file
+  glob_extern.ins.pas's contents over again; it is left empty so that
+  nothing is declared twice.
 
-  Declarations are added as the units that use them are translated
-  (docs/core-plan.md). }
+  Not known from the original: the derivation. }

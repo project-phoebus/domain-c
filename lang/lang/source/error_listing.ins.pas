@@ -57,3 +57,10 @@ procedure error3(
 { PRINT_ERROR - print a saved error.  0x0AC8E0. }
 procedure print_error(
     p: univ_ptr); options(val_param); extern;
+
+var
+  { error_listing.pas's data (A5 0x2C3168 cc.m68k, 0x4431D8 cc.a88k),
+    +0xC: a boolean outbin's wr_instr sets and clears (st, clr.b) and
+    c_error, c_lex_pp and iosub test (tst.b).  Its meaning is not
+    known. }
+  error_listing_0c: extern boolean;

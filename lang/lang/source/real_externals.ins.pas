@@ -21,3 +21,15 @@ procedure pas_$new(
 procedure pas_$dispose(
     in out p: univ univ_ptr;
     size: integer32); options(val_param); extern;
+
+{ FTN_$DLOG10 - the Fortran library's double-precision log10 (transfer
+  vector), called by add_node and kfold, which open no insert that
+  declares it: two addresses, the first the result (add_node 0x0A3CEE
+  `pea x; pea r; jsr', then reads r).  Placed here as the prelude's
+  real-arithmetic externals.
+
+  Not known from the original: the insert that declared it, and whether
+  it was declared as this procedure or as a function. }
+procedure ftn_$dlog10(
+    out r: double;
+    in x: double); extern;

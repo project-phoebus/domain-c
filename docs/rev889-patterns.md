@@ -80,3 +80,15 @@ cc.m68k unless marked.
     language reference (3.15.3 p. 3-57) documents the merging for whole
     objects (dpc `--merge-constant-stores`), not for packed fields.  dpc
     stores each field.
+11. **Calls that pop 2 bytes fewer than they push** (observed, not
+    explained): iosub_$init_all 0x0B58F8 pushes 44 bytes for
+    cargs_$parse_command_line_options and pops 42 (`lea (42,SP),SP`);
+    prtobj_$prtobj_full 0x0AFA04 pushes 20 for lib_$cv_dfp_out and pops
+    18; outbin's call of add_proc_reloc pops 14 for a 16-byte frame.
+    The frame's `unlk` restores SP, so the drift is harmless.
+12. **Trampolines for nested routines passed as parameters.**  Where a
+    nested routine is passed as a procedure parameter, the code builds
+    `lea abs.l,A0; lea abs.l,A1; jmp abs.l` in the frame (move.w #0x41F9,
+    #0x43F9, #0x4EF9 and the addresses) and calls cache_$clear through
+    the transfer vector (debug_sym_dmp, reg_color_68k); no source-level
+    call, so no unit declares cache_$clear.
