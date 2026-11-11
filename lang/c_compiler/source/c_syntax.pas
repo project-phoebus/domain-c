@@ -75,14 +75,12 @@
 
   TODO(pascal) c_syntax is translated in part
 
-  Not written yet: syntax, program_, parse_attributes, avoid_void,
-  get_options, declaration_stmts, storage_class, declaration_specifiers
-  (type_specifier, check_add_spec), declaration, function_prototype,
-  function_def, array_decl, struct_union_type, member_list,
-  enum__type, enum_list, data_init, dynm_init, array_init,
+  Not written yet: parse_attributes, get_options, declaration_stmts,
+  declaration, function_prototype, array_decl, data_init, dynm_init, array_init,
   array_dim_init, struct_init, init_with_string, get_constant
   (check_addr_init, varn_from_addr_con, address_exposed), abstract_decl,
-  c_type_name; declaration_stmts is declared extern meanwhile.  The
+  c_type_name; declaration_stmts, declaration and parse_attributes are
+  declared extern meanwhile.  The
   headings of the routines not written (c_syntax.ins.pas) are still
   those read off the frames.
 
@@ -216,10 +214,49 @@ var
 
 { The routines called before they are defined. }
 
+procedure initialize_legal_specs(
+    xansi: boolean); options(val_param); internal; forward;
+
+procedure program_; internal; forward;
+
 procedure declaration_stmts(
     ctx: integer;
     first: boolean;
     out more: boolean); options(val_param); extern;   { TODO(pascal) not written yet }
+
+procedure declaration(
+    ctx: integer;
+    in md: c_decl_t;
+    conv: integer;
+    out d: c_decl_t;
+    out name: c_name_t); options(val_param); extern;   { TODO(pascal) not written yet }
+
+procedure parse_attributes(
+    var d: c_decl_t); extern;   { TODO(pascal) not written yet }
+
+procedure struct_union_type(
+    ctx: integer;
+    first: boolean;
+    kind: integer;
+    var d: c_decl_t); options(val_param); internal; forward;
+
+procedure enum__type(
+    ctx: integer;
+    first: boolean;
+    var d: c_decl_t); options(val_param); internal; forward;
+
+procedure member_list(
+    ctx: integer;
+    kind: integer;
+    var fl: c_fldlist_t;
+    var d: c_decl_t); options(val_param); internal; forward;
+
+procedure enum_list(
+    var es: c_enumset_t;
+    in t: c_type_ptr_t); forward;
+
+procedure body(
+    in follow: c_tokset_t); internal; forward;
 
 procedure stat_list(
     in follow: c_tokset_t); internal; forward;
@@ -265,6 +302,34 @@ procedure clear_operands(
 
 procedure init_refvar(
     t: c_type_ptr_t); options(val_param); internal; forward;
+
+{ syntax - parse the translation unit: the routine attribute keywords
+  entered, the legal specifier combinations set, program_.
+
+  0x0609D8, 0x110 bytes, link #0; A5: the nine names literals after
+  the routine (`__abnormal', `a0_return', `__noreturn', `nosave',
+  `save_db', `__a0_return', `noreturn', `__nosave', `abnormal'), each
+  entered with idntk(76, ...).
+
+  Not known from the original:
+  - the names. }
+
+procedure syntax;
+begin
+  cdef_fwd_ptrs := nil;
+  kw_save_db := idntk(76, 'save_db', 7);
+  kw_abnormal := idntk(76, 'abnormal', 8);
+  kwu_abnormal := idntk(76, '__abnormal', 10);
+  kw_nosave := idntk(76, 'nosave', 6);
+  kwu_nosave := idntk(76, '__nosave', 8);
+  kw_noreturn := idntk(76, 'noreturn', 8);
+  kwu_noreturn := idntk(76, '__noreturn', 10);
+  kw_a0_return := idntk(76, 'a0_return', 9);
+  kwu_a0_return := idntk(76, '__a0_return', 11);
+  csyn_44 := il_178;
+  initialize_legal_specs(cargs_$options.xansi);
+  program_;
+end;
 
 { initialize_legal_specs - the type specifiers each type specifier may
   join (check_add_spec): char signed and unsigned; int short, long,
@@ -344,6 +409,168 @@ begin
     error(code, follow);
 end;
 
+{ program_ - the translation unit: the outermost block, a module named
+  `file_name_useless_for_module' (def_blk_skeleton 106, conv 3), then
+  external declarations to the end of the source.  Without #module the
+  block is named after the source file's leaf (from its first letter,
+  `$' or `_': letters, digits, `$', `_' and `.'; a final `.c' or `_c'
+  dropped); then the forward pointers left are resolved
+  (def_final_res_fwd_ptrs), unless the leaf could not be had.
+
+  0x060C68, 0x1D4 bytes, link #-576: the name's 256 characters stored
+  from a 28-character literal and blanks; name_$strip_leaf_lc's
+  maximum a word constant (255) after the routine; the leaf's
+  characters tested with three set constants (letters and `$', `_'
+  first; then `.', the lower case letters, the rest).
+
+  Not known from the original:
+  - the names. }
+
+procedure program_;
+var
+  d: c_decl_t;
+  leaf: array [1..256] of char;
+  s: array [1..256] of char;
+  nm: c_name_t;
+  status: status_$t;
+  leaf_len: integer;
+  len: integer;
+  more: boolean;
+  i, j: integer;
+begin
+  s := 'file_name_useless_for_module';
+  len := 28;
+  nm.line := spos_$null_position;
+  nm.id := idntk(76, s, len);
+  d.dtype := il_178;
+  d.name := nm.id;
+  d.line := spos_$null_position;
+  d.flags := [];
+  def_blk_skeleton(106, nm, 0, d, nil, nil, false, 3, 0, nil);
+  cdef_outer_block := il_180;
+  get;
+  while token_kind <> ctk_eof do begin
+    csyn_1ec := nil;
+    declaration_stmts(0, true, more);
+  end;
+  if not lex_module_seen then begin
+    name_$strip_leaf_lc(iosub_$source_pathname,
+                        iosub_$source_pathname_length, 255, len, leaf,
+                        leaf_len, status);
+    if status.fail then
+      return;
+    j := 0;
+    for i := 1 to leaf_len do
+      if (j <> 0) or
+         (leaf[i] in ['$', 'A'..'Z', '_', 'a'..'z']) then
+        if (leaf[i] = '.') or (leaf[i] in ['a'..'z']) or
+           (leaf[i] in ['$', '0'..'9', 'A'..'Z', '_']) then begin
+          j := j + 1;
+          s[j] := leaf[i];
+        end;
+    if (s[j - 1] = '_') or (s[j - 1] = '.') then
+      if s[j] = 'c' then
+        j := j - 2;
+    if j > 0 then
+      c_blk_ptr_t(cdef_outer_block)^.name.id := idntk(76, s, j);
+  end;
+  def_final_res_fwd_ptrs;
+end;
+
+{ avoid_void - d's type is void (the callers test it): unless the void
+  is reached through a pointer or a function (the last of the pointers,
+  functions and arrays d's type is made of), it becomes int (the type,
+  its specifier token, the line; flags cleared) with diagnostic 9 naming
+  name when report is set; false then.
+
+  0x0612DE, 0xB6 bytes, link #-12; A5 (no other unit calls it): the
+  derivations followed by kind (130 +4, 234 +8, the arrays +4), tested
+  127, 131, 130, 234.
+
+  Not known from the original:
+  - the names. }
+
+function avoid_void(
+    var d: c_decl_t;
+    in name: c_name_t;
+    in report: boolean): boolean;
+var
+  t, last: c_type_ptr_t;
+begin
+  avoid_void := true;
+  last := nil;
+  t := d.dtype;
+  while t^.kind in [127, 131, 130, 234] do begin
+    last := t;
+    if t^.kind = 130 then
+      t := t^.ptr_to
+    else if t^.kind = 234 then
+      t := t^.fn_result
+    else
+      t := t^.arr_elem;
+  end;
+  if last <> nil then
+    if last^.kind in [130, 234] then
+      return;
+  avoid_void := false;
+  if report then
+    error1(9, lex_line, name.id);
+  d.dtype := int_type;
+  d.name := lex_tokens[ctk_int];
+  d.line := lex_line;
+  d.flags := [];
+end;
+
+{ storage_class - the storage class specifiers to sc (std_call makes
+  conv 4 and is a storage class only when there is none yet); a second
+  class is diagnostic 12.  At file level (ctx 0) only extern, static
+  and typedef are taken (diagnostic 12, extern), for the parameters of
+  an old-style definition (ctx 2) only register (diagnostic 12, auto).
+
+  0x061EA8, 0x110 bytes, link #-4: the context's case a jump table
+  (0..4); the tests `(sc = 216) or (sc = 29)' and the class lists
+  evaluated whole.
+
+  Not known from the original:
+  - the names. }
+
+procedure storage_class(
+    ctx: integer;
+    var sc: integer;
+    var conv: integer); options(val_param); internal;
+begin
+  conv := 3;
+  while token_kind in [ctk_auto, ctk_register, ctk_typedef, ctk_std_call,
+                       ctk_static, ctk_extern] do begin
+    if token_kind = ctk_std_call then begin
+      conv := 4;
+      if sc = 216 then
+        sc := token_kind;
+    end
+    else begin
+      if not ((sc = 216) or (sc = ctk_std_call)) then
+        error1(12, lex_line, lex_token);
+      sc := token_kind;
+      case ctx of
+        0:
+          if not ((token_kind = ctk_extern) or (token_kind = ctk_static) or
+                  (token_kind = ctk_typedef)) then begin
+            error1(12, lex_line, lex_token);
+            sc := ctk_extern;
+          end;
+        2:
+          if token_kind <> ctk_register then begin
+            error1(12, lex_line, lex_token);
+            sc := ctk_auto;
+          end;
+        otherwise
+          ;
+      end;
+    end;
+    get;
+  end;
+end;
+
 { type_qualifiers - const and volatile (lex_tokens 102, 103) taken into
   the flags q: const 19, volatile 0, 3 and 4 (add_attribute with the
   token).
@@ -377,6 +604,637 @@ begin
     get;
   end;
   q := a.flags;
+end;
+
+{ declaration_specifiers - the storage class, qualifiers and type
+  specifiers of a declaration to d (its type, il_174 until one is
+  given, then the basic type the specifiers make: void, or by char,
+  short, float, double (else int) and unsigned; signed sets the
+  attribute bit 20), sc (216 when none was given: sc 216 on entry asks
+  for none; anything else is made auto and back 216 at the end) and
+  conv (3, 4 for std_call); res is set when anything was given.
+
+  0x06228E, 0x15E bytes, link #-12: the specifiers in D2, passed to
+  type_specifier through a frame word; the basic types through the
+  table at +0x208 of c_syntax's data; the specifier set cleared of 12
+  (`andi.w #0xEFFF') before the result `(sc <> 216) or (d.flags <> [])
+  or (specs <> [])' is evaluated whole.
+
+  Not known from the original:
+  - the names. }
+
+procedure declaration_specifiers(
+    ctx: integer;
+    first: boolean;
+    var res: boolean;
+    var d: c_decl_t;
+    var conv: integer;
+    var sc: integer); options(val_param); internal;
+var
+  t: c_specs_t;
+  specs: c_specs_t;
+  none: boolean;
+  u, k: integer;
+
+  { type_specifier - type specifiers to specs and d: the basic type
+    names (check_add_spec), a structure or union (struct_union_type), an
+    enumeration (enum__type, held in char or short when those were
+    given) and a typedef name; an identifier that is not one, or comes
+    after other specifiers, adds 12 and ends them.  d.name is the last
+    specifier's token.
+
+    0x0620AC, 0x1D4 bytes, link #-20: the token's case a compare chain
+    (12, 11, 13, 14, 38, 37, 104, 39, 8, 16, 17, 6, 76), the specifier
+    calls sharing their tail; the typedef name looked up with
+    fnd_name(nm, false, false).
+
+    Not known from the original:
+    - the names. }
+
+  procedure type_specifier(
+      ctx: integer;
+      first: boolean;
+      var d: c_decl_t;
+      var specs: c_specs_t); options(val_param);
+  var
+    nm: c_name_t;
+    s: il_$node_ptr_t;
+
+    { check_add_spec - add the specifier k to specs, diagnostic 25 when
+      it may not join those given (legal_specs[k]).
+
+      0x062068, 0x44 bytes, link #-12: the test `(specs = []) or (specs
+      - legal_specs[k] = [])' as `not.w; and.w'.
+
+      Not known from the original:
+      - the names. }
+
+    procedure check_add_spec(
+        k: integer;
+        var specs: c_specs_t); options(val_param);
+    begin
+      if (specs = []) or (specs - legal_specs[k] = []) then
+        specs := specs + [k]
+      else
+        error1(25, lex_line, lex_token);
+    end;
+
+  begin
+    while token_kind in [ctk_enum, ctk_void, ctk_int, ctk_char, ctk_float,
+                         ctk_double, ctk_union, ctk_struct, ctk_long,
+                         ctk_short, ctk_unsigned, ctk_identifier,
+                         104] do
+      case token_kind of
+        ctk_char: begin
+          check_add_spec(0, specs);
+          d.name := lex_token;
+          get;
+        end;
+        ctk_int: begin
+          check_add_spec(1, specs);
+          d.name := lex_token;
+          get;
+        end;
+        ctk_float: begin
+          check_add_spec(2, specs);
+          d.name := lex_token;
+          get;
+        end;
+        ctk_double: begin
+          check_add_spec(3, specs);
+          d.name := lex_token;
+          get;
+        end;
+        ctk_short: begin
+          check_add_spec(4, specs);
+          d.name := lex_token;
+          get;
+        end;
+        ctk_long: begin
+          check_add_spec(5, specs);
+          d.name := lex_token;
+          get;
+        end;
+        104: begin
+          check_add_spec(6, specs);
+          d.name := lex_token;
+          get;
+        end;
+        ctk_unsigned: begin
+          check_add_spec(7, specs);
+          d.name := lex_token;
+          get;
+        end;
+        ctk_void: begin
+          check_add_spec(8, specs);
+          d.name := lex_token;
+          get;
+        end;
+        ctk_union, ctk_struct: begin
+          check_add_spec(9, specs);
+          d.name := lex_token;
+          struct_union_type(ctx, first, token_kind, d);
+        end;
+        ctk_enum: begin
+          check_add_spec(10, specs);
+          d.name := lex_token;
+          if 0 in specs then
+            d.dtype := char_type
+          else if 4 in specs then
+            d.dtype := short_type
+          else
+            d.dtype := int_type;
+          enum__type(ctx, first, d);
+        end;
+        ctk_identifier: begin
+          if specs <> [] then begin
+            specs := specs + [12];
+            return;
+          end;
+          nm.id := lex_token;
+          nm.line := lex_line;
+          s := fnd_name(nm, false, false);
+          if (s = il_178) or (s^.kind <> 118) then begin
+            specs := specs + [12];
+            return;
+          end;
+          check_add_spec(11, specs);
+          d.dtype := s;
+          d.name := lex_token;
+          get;
+        end;
+        otherwise begin
+          d.name := lex_token;
+          get;
+        end;
+      end;
+  end;
+
+begin
+  specs := [];
+  d.line := lex_line;
+  d.tag := nil;
+  d.dtype := il_174;
+  d.flags := [];
+  conv := 3;
+  if sc <> 216 then begin
+    sc := ctk_auto;
+    none := true;
+  end
+  else
+    none := false;
+  while token_kind in [ctk_enum, ctk_void, ctk_int, ctk_char, ctk_float,
+                       ctk_double, ctk_union, ctk_struct, ctk_auto,
+                       ctk_register, ctk_typedef, ctk_std_call, ctk_static,
+                       ctk_extern, ctk_long, ctk_short, ctk_unsigned,
+                       ctk_identifier, 102, 103, 104] do
+    if token_kind in [ctk_auto, ctk_register, ctk_typedef, ctk_std_call,
+                      ctk_static, ctk_extern] then
+      storage_class(ctx, sc, conv)
+    else if (token_kind = 103) or (token_kind = 102) then
+      type_qualifiers(d.flags)
+    else begin
+      t := specs;
+      type_specifier(ctx, first, d, t);
+      specs := t;
+      if 12 in specs then
+        exit;
+    end;
+  if none then
+    sc := 216;
+  specs := specs - [12];
+  res := (sc <> 216) or (d.flags <> []) or (specs <> []);
+  if d.dtype = il_174 then
+    if specs = [8] then
+      d.dtype := void_type
+    else begin
+      if 7 in specs then
+        u := 1
+      else
+        u := 0;
+      if 0 in specs then
+        k := 0
+      else if 4 in specs then
+        k := 1
+      else if 2 in specs then
+        k := 3
+      else if 3 in specs then
+        k := 4
+      else
+        k := 2;
+      d.dtype := basic_types[k, u]^;
+    end;
+  if 6 in specs then
+    d.flags := d.flags + [20];
+end;
+
+{ function_def - a function's definition after its declarator: the
+  parameter declarations of an old-style definition (declaration_stmts
+  with ctx 2), the parameters made variables (def_blk_params; promote
+  for an old-style definition) and the body (follow empty).
+
+  0x062E88, 0x34 bytes, link #-8: body's follow set an empty 14-byte
+  constant after the routine.
+
+  Not known from the original:
+  - the names. }
+
+procedure function_def(
+    promote: boolean); options(val_param); internal;
+var
+  more: boolean;
+begin
+  repeat
+    declaration_stmts(2, true, more);
+  until not more;
+  def_blk_params(promote);
+  body([]);
+end;
+
+{ struct_union_type - struct or union (kind 17 or 16), a tag, members
+  in braces, to d.dtype (d.tag the tag's identifier).  A tag is looked up
+  (lookup_su): an enumeration's is diagnostic 24 (258 under -USRCH);
+  with a body, a tag of another block (or, for the first declaration of
+  a compound statement, ctx 4, any tag) is declared anew (def_su, in
+  the scope's tags through csyn_1ec or in il_180's), a complete one is
+  redefined (diagnostic 24 or 258).  The body's fields (member_list)
+  make the type (def_rec), the tag's attributes merged
+  (merge_attribs_natural), its incomplete users and the forward
+  pointers resolved; a body without a tag gets an unnamed one.
+
+  0x063098, 0x336 bytes, link #-92: the field list's alignment words
+  set together (`move.l #0x10001') and x12 -1; while the body is read
+  the structure's field pointer is il_178 (a member of its own type is
+  incomplete).
+
+  Not known from the original:
+  - the names. }
+
+procedure struct_union_type(
+    ctx: integer;
+    first: boolean;
+    kind: integer;
+    var d: c_decl_t); options(val_param); internal;
+label
+  body;
+var
+  fl: c_fldlist_t;
+  nm: c_name_t;
+  a: attr_tattr_t;
+  tag: c_tag_ptr_t;
+  st: c_type_ptr_t;
+  err: boolean;
+  save: c_field_ptr_t;
+begin
+  get;
+  lex_fatal := false;
+  tag := nil;
+  st := c_type_ptr_t(il_178);
+  err := false;
+  fl.first := nil;
+  fl.tag := nil;
+  fl.has_bf := err;
+  fl.size := 0;
+  fl.bitoff := 0;
+  fl.attr.flags := [];
+  fl.attr.align := 1;
+  fl.attr.w10 := 1;
+  fl.attr.x12 := -1;
+  if token_kind = ctk_identifier then begin
+    nm.line := lex_line;
+    nm.id := lex_token;
+    d.tag := lex_token;
+    get;
+    tag := lookup_su(nm.id);
+    if tag <> nil then begin
+      if tag^.kind = ctk_enum then begin
+        if cargs_$options.usrch then
+          error1(258, lex_line, nm.id)
+        else
+          error2(24, lex_line, nm.id, smcontk(81, tag^.body.name.line));
+        err := true;
+        st := c_type_ptr_t(il_178);
+        d.dtype := st;
+        if token_kind <> ctk_lbrace then
+          return;
+        goto body;
+      end;
+      st := tag^.body.stype;
+      d.dtype := st;
+      if token_kind <> ctk_lbrace then
+        return;
+      if (tag^.body.block = c_blk_ptr_t(il_180)) and
+         not (first and (ctx = 4)) then begin
+        if st^.su_fields = nil then
+          goto body;
+        if cargs_$options.usrch then
+          error1(258, lex_line, nm.id)
+        else
+          error2(24, lex_line, nm.id, smcontk(81, tag^.body.name.line));
+        err := true;
+        if st^.su_fields <> c_field_ptr_t(il_178) then
+          goto body;
+        st := c_type_ptr_t(il_178);
+        d.dtype := st;
+        d.tag := il_178;
+        tag := nil;
+        if token_kind <> ctk_lbrace then
+          return;
+        goto body;
+      end;
+    end;
+    st := c_type_ptr_t(il_178);
+    tag := def_su(nm, kind);
+    fl.tag := tag;
+    if first and (ctx = 4) then
+      add_su(tag, csyn_1ec)
+    else
+      add_su(tag, c_blk_ptr_t(il_180)^.tags);
+    if token_kind <> ctk_lbrace then begin
+      d.dtype := def_rec(fl, nil);
+      a.bits := fl.attr.flags;
+      discard(merge_attribs_natural(a, d.dtype));
+      tag^.body.stype := d.dtype;
+      return;
+    end;
+  end;
+body:
+  if token_kind = ctk_lbrace then
+    get
+  else begin
+    error1(99, lex_line, lex_token);
+    if token_kind = ctk_semicolon then
+      return;
+  end;
+  if st <> c_type_ptr_t(il_178) then begin
+    save := st^.su_fields;
+    st^.su_fields := c_field_ptr_t(il_178);
+  end;
+  member_list(ctx, kind, fl, d);
+  if st <> c_type_ptr_t(il_178) then
+    st^.su_fields := save;
+  if err then
+    return;
+  if st <> c_type_ptr_t(il_178) then begin
+    st := def_rec(fl, st);
+    if tag <> nil then begin
+      a.bits := fl.attr.flags;
+      discard(merge_attribs_natural(a, il_$node_ptr_t(st)));
+      def_resolve_incomplete_types(tag^.body);
+      def_resolve_fwd_ptrs;
+    end;
+    return;
+  end;
+  d.dtype := def_rec(fl, nil);
+  if tag = nil then begin
+    nm.line := lex_line;
+    nm.id := il_178;
+    tag := def_su(nm, kind);
+    if first and (ctx = 4) then
+      add_su(tag, csyn_1ec)
+    else
+      add_su(tag, c_blk_ptr_t(il_180)^.tags);
+  end
+  else begin
+    a.bits := fl.attr.flags;
+    discard(merge_attribs_natural(a, d.dtype));
+  end;
+  tag^.body.stype := d.dtype;
+end;
+
+{ member_list - the members of a structure or union up to the closing brace: each
+  declaration's specifiers (diagnostic 41 when there are none) and its
+  declarators or `: width' bit fields (named by id_at), laid out by
+  def_fld; a function member is diagnostic 42, a member of an unknown
+  type 161, a void member made int (avoid_void).  The members' storage
+  attribute bits (all but 0, 2, 5, 12 and 19) are or-ed into d's.  A
+  `)' or `]' is diagnostic 58; after a declaration anything but `;'
+  is diagnostic 55 (101 for a typedef name, or another declaration's
+  start).  No members, or a size of 0, is diagnostic 174.
+
+  0x0633CE, 0x370 bytes, link #-236: the specifiers called with the
+  register holding false (docs/rev889-patterns.md 24) and sc 36; the
+  bit field declaration copied whole (34 bytes); the tests on s +
+  [rbrace, semicolon] and s - [rbrace, semicolon] in a frame temporary.
+
+  Not known from the original:
+  - the names. }
+
+procedure member_list(
+    ctx: integer;
+    kind: integer;
+    var fl: c_fldlist_t;
+    var d: c_decl_t); options(val_param); internal;
+var
+  te: type_exp_t;
+  nm: c_name_t;
+  s: c_tokset_t;
+  cs: c_tokset_t;
+  width: c_cexp_t;
+  fname: c_name_t;
+  fd: c_decl_t;
+  md: c_decl_t;
+  conv: integer;
+  sc: integer;
+  res: boolean;
+  empty: boolean;
+  t: c_type_ptr_t;
+  sym: il_$node_ptr_t;
+begin
+  cs := [ctk_sizeof, ctk_comma, ctk_semicolon, ctk_plus, ctk_minus,
+         ctk_eof, ctk_identifier, 77..89, ctk_string, ctk_wstring, 101];
+  s := [ctk_lbrace, ctk_enum, ctk_void, ctk_int, ctk_char, ctk_float,
+        ctk_double, ctk_union, ctk_struct, ctk_auto, ctk_register,
+        ctk_typedef, ctk_static, ctk_extern, ctk_long, ctk_short,
+        ctk_unsigned, 102, 103, 104];
+  empty := true;
+  conv := 3;
+  sc := ctk_extern;
+  while not ((token_kind = ctk_eof) or (token_kind = ctk_rbrace)) do begin
+    empty := false;
+    if (token_kind = ctk_rparen) or (token_kind = ctk_rbracket) then begin
+      error1(58, lex_line, lex_token);
+      exit;
+    end;
+    if token_kind in [ctk_enum, ctk_void, ctk_int, ctk_char, ctk_float,
+                      ctk_double, ctk_union, ctk_struct, ctk_std_call,
+                      ctk_long, ctk_short, ctk_unsigned, ctk_identifier,
+                      102, 103, 104] then begin
+      md.name := nil;
+      md.flags := [];
+      declaration_specifiers(ctx, false, res, md, conv, sc);
+      if not res then begin
+        error1(41, lex_line, lex_token);
+        md.dtype := il_178;
+      end;
+    end
+    else begin
+      error1(41, lex_line, lex_token);
+      md.dtype := il_178;
+    end;
+    repeat
+      width.value := nil;
+      if token_kind = ctk_colon then begin
+        get;
+        constant_expr(cs, width);
+        fname.id := id_at;
+        fname.line := csyn_54;
+        fd := md;
+      end
+      else begin
+        declaration(3, md, conv, fd, fname);
+        if (token_kind = ctk_attribute) or (lex_token = idu_attribute) then
+          parse_attributes(fd);
+        type_exp(fd.dtype, addr(te));
+        while te.base^.kind = 131 do begin
+          t := te.base^.arr_elem;
+          type_exp(t, addr(te));
+        end;
+        if te.base^.kind = 234 then begin
+          error1(42, lex_line, fname.id);
+          fd.dtype := il_178;
+        end
+        else if (fd.dtype = il_178) and (fd.tag <> nil) then
+          error1(161, lex_line, fd.tag);
+        if c_type_ptr_t(md.dtype)^.kind = 210 then
+          discard(avoid_void(fd, fname, true));
+        d.flags := d.flags + (fd.flags - [0, 2, 5, 12, 19]);
+        if token_kind = ctk_colon then begin
+          get;
+          constant_expr(cs, width);
+        end;
+      end;
+      def_fld(fl, fname, fd, kind, width);
+      if token_kind <> ctk_comma then
+        exit;
+      get;
+    until false;
+    if not (token_kind in s + [ctk_rbrace, ctk_semicolon]) then
+      if token_kind = ctk_identifier then begin
+        nm.id := lex_token;
+        nm.line := lex_line;
+        sym := fnd_name(nm, false, false);
+        if sym <> il_178 then
+          if sym^.kind = 118 then
+            error1(101, lex_line, lex_token);
+      end
+      else
+        error1(55, lex_line, lex_token);
+    if token_kind = ctk_semicolon then
+      get
+    else if token_kind in s - [ctk_rbrace, ctk_semicolon] then
+      error1(101, lex_line, lex_token);
+  end;
+  get;
+  if empty or ((fl.size = 0) and (fl.bitoff = 0)) then
+    error0(174, lex_line);
+end;
+
+{ enum__type - enum [tag] [enumerators in braces] to d.dtype, held in the
+  type d.dtype gives (int, short or char; diagnostic 204 when an
+  existing tag's differs).  A tag of a structure or union is diagnostic
+  24 (258 under -USRCH); with a body, a tag of another block (or, for
+  the first declaration of a compound statement, ctx 4, any tag) is
+  declared anew, a complete one is redefined (diagnostic 24 or 258).
+  The enumerators (enum_list) give the type its constants
+  (def_enum_list).
+
+  0x063784, 0x27C bytes, link #-4128: the enumerators' record (4104
+  bytes) in the frame, the type passed to enum_list through a frame
+  copy.
+
+  Not known from the original:
+  - the names. }
+
+procedure enum__type(
+    ctx: integer;
+    first: boolean;
+    var d: c_decl_t); options(val_param); internal;
+label
+  body, define;
+var
+  es: c_enumset_t;
+  nm: c_name_t;
+  t: c_type_ptr_t;
+  tag: c_tag_ptr_t;
+  err: boolean;
+  et: c_type_ptr_t;
+  int_t: c_type_ptr_t;
+begin
+  get;
+  lex_fatal := false;
+  tag := nil;
+  err := false;
+  es.count := 0;
+  et := c_type_ptr_t(il_178);
+  int_t := d.dtype;
+  if token_kind = ctk_identifier then begin
+    nm.line := lex_line;
+    nm.id := lex_token;
+    d.tag := lex_token;
+    get;
+    tag := lookup_su(nm.id);
+    if tag <> nil then begin
+      if tag^.kind = ctk_enum then begin
+        d.dtype := tag^.body.stype;
+        et := d.dtype;
+      end
+      else begin
+        if cargs_$options.usrch then
+          error1(258, lex_line, nm.id)
+        else
+          error2(24, lex_line, nm.id, smcontk(81, tag^.body.name.line));
+        err := true;
+        d.dtype := il_178;
+      end;
+      if token_kind <> ctk_lbrace then begin
+        if tag^.body.stype^.enum_int <> int_t then
+          error2(204, lex_line, nm.id, tag^.body.stype^.enum_int);
+        return;
+      end;
+      if (tag^.body.block = c_blk_ptr_t(il_180)) and
+         not (first and (ctx = 4)) then begin
+        if tag^.body.stype <> c_type_ptr_t(il_178) then
+          if tag^.body.stype^.enum_list <> nil then begin
+            if cargs_$options.usrch then
+              error1(258, lex_line, nm.id)
+            else
+              error2(24, lex_line, nm.id, smcontk(81, tag^.body.name.line));
+            err := true;
+          end
+          else if tag^.body.stype^.enum_int <> int_t then
+            error2(204, lex_line, nm.id, tag^.body.stype^.enum_int);
+        goto body;
+      end;
+    end;
+    tag := def_su(nm, ctk_enum);
+    if first and (ctx = 4) then
+      add_su(tag, csyn_1ec)
+    else
+      add_su(tag, c_blk_ptr_t(il_180)^.tags);
+    et := def_enum_skeleton(int_t);
+    if token_kind <> ctk_lbrace then
+      goto define;
+  end
+  else
+    et := def_enum_skeleton(int_t);
+body:
+  if token_kind = ctk_lbrace then
+    get
+  else begin
+    error1(99, lex_line, lex_token);
+    if token_kind = ctk_semicolon then
+      return;
+  end;
+  t := et;
+  enum_list(es, t);
+  if err then
+    return;
+define:
+  def_enum_list(es, et);
+  d.dtype := et;
+  if tag <> nil then
+    tag^.body.stype := d.dtype;
 end;
 
 { int_ob_kind_from_integer_type - the integer constant kind of the
@@ -415,6 +1273,72 @@ begin
     otherwise
       cgerr(28, 0, strtk('int_ob_kind_from_integer_type -- bad kind', 41));
   end;
+end;
+
+{ enum_list - the enumerators up to the closing brace to es, each a constant of t
+  (def_conn) with the value given (`= constant'; diagnostic 26 for a
+  value not an integer constant, naming a tree's first operand) or the
+  one after the last; past 1024 the last entry is overwritten
+  (diagnostic 20, once).  A `)' or `]' is diagnostic 58, anything but
+  `,' or the closing brace after an enumerator 55.
+
+  0x063AB2, 0x19E bytes, link #-56; A5 (no other unit calls it): the
+  value's type t's enum_int set up front in the constant's record;
+  es's entry addressed from the count times 4 kept in the frame.
+
+  Not known from the original:
+  - the names. }
+
+procedure enum_list(
+    var es: c_enumset_t;
+    in t: c_type_ptr_t);
+var
+  s: c_tokset_t;
+  nm: c_name_t;
+  cx: c_cexp_t;
+  warn: boolean;
+  v: integer32;
+  n: integer;
+begin
+  s := [ctk_rbrace, ctk_sizeof, ctk_comma, ctk_semicolon, ctk_plus,
+        ctk_minus, ctk_eof, ctk_identifier, 77..89, ctk_string,
+        ctk_wstring, 101];
+  warn := true;
+  v := 0;
+  n := 0;
+  cx.ctype := t^.enum_int;
+  while not ((token_kind = ctk_eof) or (token_kind = ctk_rbrace)) do begin
+    if (token_kind = ctk_rparen) or (token_kind = ctk_rbracket) then begin
+      error1(58, lex_line, lex_token);
+      exit;
+    end;
+    if n < 1024 then
+      n := n + 1
+    else if warn then begin
+      error0(20, lex_line);
+      warn := false;
+    end;
+    identifier([ctk_rbrace, ctk_assign, ctk_comma], 117, nm);
+    if token_kind = ctk_assign then begin
+      get;
+      constant_expr(s, cx);
+      if cx.value^.kind in [77..87, 101, 200] then
+        v := cx.value^.int_value
+      else if cx.value^.kind = 137 then
+        error1(26, lex_line, c_tree_ptr_t(cx.value)^.opnd[1])
+      else
+        error1(26, lex_line, cx.value);
+    end;
+    es.syms[n] := def_conn(nm, t,
+                           smcontk(int_ob_kind_from_integer_type(t), v));
+    v := v + 1;
+    if not ((token_kind = ctk_comma) or (token_kind = ctk_rbrace)) then
+      error1(55, lex_line, lex_token);
+    if token_kind = ctk_comma then
+      get;
+  end;
+  get;
+  es.count := n;
 end;
 
 { add_top_node - a top-level node of kind and size bytes, linked
@@ -1094,13 +2018,13 @@ begin
 end;
 
 { call_kfold_fold_addrs - fold the tree n, address constants too
-  (kfold_$general with no parent and addrs set).
+  (kfold_$general with no parent and addrs set): constant_expr passes
+  it to cc_walk_it under -XANSI (`move.l #0x066190,-(SP)').
 
   0x066190, 0x2C bytes, link #-4.
 
   Not known from the original:
-  - the names; who uses it (no instruction of either binary takes its
-    address). }
+  - the names. }
 
 procedure call_kfold_fold_addrs(
     var n: il_$node_ptr_t);

@@ -188,7 +188,7 @@ lang/c_compiler/source/c_stmt_sem.pas	s/if fnd_name\((m[cs]), true, false\) = il
 # gap 8 (c_syntax): in on a constant set with word elements (the comparisons)
 lang/c_compiler/source/c_syntax.pas	s/t1\^\.kind in \[77\.\.87, 101, 200\]/((t1^.kind >= 77) and (t1^.kind <= 87)) or (t1^.kind = 101) or (t1^.kind = 200) { gap 8 }/
 # gap 8 (c_syntax): in on a constant set with word elements, generically over the whole file (BEGIN undef $/: sets spanning lines): `x in s + [..]' split in two, then each `x in [..]' expanded into comparisons
-lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in (\w+) \+ (\[[^\]]*\])}{(($1 in $2) or ($1 in $3))}g
+lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in (\w+) ([-+]) (\[[^\]]*\])}{$3 eq "+" ? "(($1 in $2) or ($1 in $4))" : "(($1 in $2) and not ($1 in $4))"}ge
 lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
 # gap 20 (c_syntax): set expressions passed to in parameters (the first operand passed, for the check)
 lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{([(]|,\s+)(\w+)((?:\s*\+\s*(?:\w+|\[[^\]]*\]))+)(?=\s*[,)])}{$1$2}g
@@ -196,3 +196,6 @@ lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{([(]|,\s+)(\w+)((?:\s*\
 lang/c_compiler/source/c_syntax.pas	s/cx\.value\^\.real_value <> 0\.0/cx.value^.bits[1] <> 0 { gap 7 }/
 # gap 25 (c_syntax): a set constant passed to an in parameter (follow passed, for the check)
 lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{((?:error|check)\(\d+,\s+)\[[^\]]*\](?=\))}{${1}follow}g
+# gap 25 (c_syntax): set constants passed to in parameters where no follow set is at hand (the routine's s; function_def given one, for the check)
+lang/c_compiler/source/c_syntax.pas	s/identifier\(\[ctk_rbrace, ctk_assign, ctk_comma\], 117, nm\)/identifier(s, 117, nm) { gap 25 }/
+lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s#(procedure function_def\(\n[^\n]*\n)var\n#${1}var\n  gap25_s: c_tokset_t;\n#; s#  body\(\[\]\);#  body(gap25_s); { gap 25 }#
