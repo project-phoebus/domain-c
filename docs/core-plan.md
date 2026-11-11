@@ -267,3 +267,15 @@ cse_serial, cse's use and parent nodes (g_opt_cse_t), opt_loop's +4
 (opt_loop_hoist), opt_cse's +0x88 (cse_limit) and the headings of
 assign_opt, csecleanup, moved_check and cse (docs/questions.md 78-81).
 Core change: target_properties' +0x84 is a boolean.
+Translator Z (2026-11-11), gen_unwind, jmp_br_resolve, instr_reorder:
+gen_unwind.ins.pas is complete (the scope's PA and a88k variants,
+every global heading; gen_unwind_$add_scope's second parameter a
+univ_ptr, outbin passes nil); gen_unwind.pas declares the two prelude
+types unix_objmod.ins.pas names, since it opens no prelude
+(docs/questions.md 93).  Core changes: final.ins.pas gets final.pas's
+detach, nxtcc, nxtlcc, makejump, moverefcell, reversecond,
+final_$is_unmoveable_fp_inst, sameaddr, involves, testcc and
+instr_reorder's heading (jmp_br_setup's first parameter renamed psect);
+codegen.ins.pas gets emit's ilength and fnl_slct.  jmp_br_resolve and
+instr_reorder read cells through views of their own (jb_cell_t,
+jb_sect_t; codegen_$cell_t and ir_sect_t); banshee.pas is not started.
