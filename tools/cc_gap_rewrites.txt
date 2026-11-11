@@ -263,3 +263,9 @@ lang/lang/source/outbin.pas	s/\b(executable_insts_follow_prev_lineno|assert_inli
 lang/lang/source/outbin.pas	$s=1 if /^      case c\^\.kind of$/; if ($s) { $e = /^      end;$/; $_ = $e ? "      { gap 25 }\n" : ""; $s = 0 if $e; }
 # gap 8 (cg_fp): in on constant sets with word elements (the comparisons)
 lang/lang/source/cg_fp.pas	s{\b([a-z_]\w*(?:\^\.\w+)?) in \[([\d., ]+)\]}{my $v=$1; "(".join(" or ", map { /^(\d+)\.\.(\d+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $_)" } split(/,\s*/, $2)).") { gap 8 }"}ge
+# gap 22 (cg_call): ord of a boolean (0, for the check)
+lang/lang/source/cg_call.pas	s/ord\(pass_len\)/0 { gap 22 }/
+# gap 8 (cg_call): in on constant sets with word elements (the comparisons)
+lang/lang/source/cg_call.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d., ]+)\]}{my $v=$1; "(".join(" or ", map { /^(\d+)\.\.(\d+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $_)" } split(/,\s*/, $2)).") { gap 8 }"}ge
+# gap 27 (cg_call): gen_call's values exceed dpc's registers (the registers' and aliases' loop after the call dropped)
+lang/lang/source/cg_call.pas	if ((/^  \{ The registers and objects the call may change\. \}/ .. /^  \{ The result.s register\. \}/) && !/The result.s register/) { $_ = "  { gap 27 }\n" }

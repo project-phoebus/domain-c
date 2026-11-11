@@ -59,6 +59,40 @@ type
     opnd: array [1..64] of il_$node_ptr_t;  { +40: from 1 }
   end;
 
+  { A node's words by offset (word k at +2k), for the blocks' fields
+    beyond il_$node_t's xw (a routine block's +394, +396 parameter
+    classes). }
+  cg_words_t = array [0..16383] of integer;
+  cg_words_ptr_t = ^cg_words_t;
+
+  { A block's static nesting level, the signed byte at +294 (as
+    runbackend.pas's rb_level_t). }
+  cg_level_ptr_t = ^cg_level_t;
+  cg_level_t = packed record
+    pad: packed array [0..293] of char;
+    level: -128..127;                   { +294 }
+  end;
+
+  { cg_addr's record of what a register holds (+0x120, 16 bytes each). }
+  cg_reg_t = record
+    obj: il_$node_ptr_t;                { +0: setresult's node }
+    obj2: il_$node_ptr_t;               { +4 }
+    w8: integer;                        { +8 }
+    size: integer;                      { +10: its register class }
+    w12: integer;                       { +12 }
+    w14: integer;                       { +14 }
+  end;
+
+  { cg_addr's object cache entries (+0, 8 bytes each). }
+  cg_cache_t = record
+    obj: il_$node_ptr_t;                { +0 }
+    size: integer;                      { +4 }
+    b6: char;                           { +6 }
+    param_alias: boolean;               { +7: gen_call clears it when a
+                                          call's argument may alias the
+                                          object (kill_any_param_alias) }
+  end;
+
 var
   { cg_fp's cells (A5 0x3552F8 + 0x1000..0x1014). }
   cg_fp_1000: extern il_$node_ptr_t;    { +0x1000: f_compare_proc sets it
@@ -89,6 +123,8 @@ var
                                           routine }
 
   { cg_top's cells. }
+  cg_top_142: extern integer;           { +0x142 (0x356456): gen_call
+                                          tests it for 1 }
   cg_line: extern integer;              { +0x144 (0x356458): the line
                                           being compiled (cgerr's) }
 
@@ -104,9 +140,19 @@ var
                                           second longword) }
 
   { cg_addr's cells (A5 0x354FB8). }
-  cg_addr_22e: extern integer;          { +0x22E (0x3551E6): stack_fp
-                                          tests it for 2 when peek finds
-                                          a value in FP0 (register 16) }
+  cg_addr_cache: extern array [0..23] of cg_cache_t;  { +0x0 }
+  cg_addr_killed: extern array [0..31] of boolean;  { +0xC0: gen_call
+                                          sets a register's after a call
+                                          that does not save it }
+  cg_addr_locks: extern array [0..31] of integer;   { +0xE0
+                                          (0x355098): a register's lock
+                                          count (gen_call adds 1) }
+  cg_addr_regs: extern array [0..31] of cg_reg_t;   { +0x120
+                                          (0x3550D8); stack_fp tests FP0's
+                                          w14 (0x3551E6) for 2 }
+  cg_addr_2b6: extern integer;          { +0x2B6 (0x35526E): gen_call
+                                          stores 8 before a call through
+                                          a routine variable }
 
 { ---- cg_addr ---- }
 
@@ -197,7 +243,89 @@ procedure get_temp(
     n: il_$node_ptr_t;
     b: boolean); options(val_param); extern;
 
+{ ANYCONST - the operand of constant value of size size in a.  cg_addr
+  0x0F26BA: 8 a longword, 12 a word, 14 the descriptor's address; 62
+  call sites. }
+procedure anyconst(
+    value: integer32;
+    size: integer;
+    out a: codegen_$uads_t); options(val_param); extern;
+
+{ GET_TEMP_REGISTER - a register for node n of size size, its operand in
+  a.  cg_addr 0x0F0E42: 8 a pointer, 12 a word, 14 the descriptor's
+  address. }
+procedure get_temp_register(
+    n: il_$node_ptr_t;
+    size: integer;
+    out a: codegen_$uads_t); options(val_param); extern;
+
+{ CHK_ADDR - the register holding node n's address (31 none), its operand
+  in a.  cg_addr 0x0F18F4: 8 a pointer, 12 the descriptor's address;
+  D0. }
+function chk_addr(
+    n: il_$node_ptr_t;
+    out a: codegen_$uads_t): integer; options(val_param); extern;
+
+{ ALLOCATE_TEMP - a temporary of size bytes (t, when not nil, reused).
+  cg_addr 0x0F0390: 8 a longword, 12 a byte, 14 a pointer; the node in
+  A0. }
+function allocate_temp(
+    size: integer32;
+    b: boolean;
+    t: il_$node_ptr_t): il_$node_ptr_t; options(val_param); extern;
+
+{ CG_ADDR_$OPERAND_IN_REG_ANY_RLEN - the registers holding node n's
+  value, of any class (a set of register numbers as a longword).  cg_addr
+  0x0EFCD6: 8 a pointer; D0. }
+function cg_addr_$operand_in_reg_any_rlen(
+    n: il_$node_ptr_t): integer32; options(val_param); extern;
+
+{ CG_ADDR_$ADDR_OF_CSE, CG_ADDR_$LOAD_ADDR_OF_CSE - whether the address
+  of the common subexpression n is kept, and its operand in a.  cg_addr
+  0x0F04C6 (the node's address; D0), 0x0F051A (the node's address, the
+  descriptor's address). }
+function cg_addr_$addr_of_cse(
+    in n: il_$node_ptr_t): boolean; extern;
+
+procedure cg_addr_$load_addr_of_cse(
+    in n: il_$node_ptr_t;
+    out a: codegen_$uads_t); extern;
+
+{ SETOBJCACHE - the cached objects of node n (a routine) of class size
+  dropped.  cg_addr 0x0EF112: 8 a pointer, 12 a word. }
+procedure setobjcache(
+    n: il_$node_ptr_t;
+    size: integer); options(val_param); extern;
+
+{ ---- cg_assign ---- }
+
+{ CG_ASN_$BLOCK_MOVE - a loop moving count units of size from src to
+  dst (two more descriptors for the loop's registers).  cg_assign
+  0x0F30FA: 8 a longword, 12 a word, then four descriptors' addresses. }
+procedure cg_asn_$block_move(
+    count: integer32;
+    size: integer;
+    in out src: codegen_$uads_t;
+    in out dst: codegen_$uads_t;
+    in out r1: codegen_$uads_t;
+    in out r2: codegen_$uads_t); options(val_param); extern;
+
+{ FAULT_FREE_ASSIGN - a move of size size from src to dst that cannot
+  fault.  cg_assign 0x0F36F4: 8 a word, 10 and 14 the descriptors'
+  addresses. }
+procedure fault_free_assign(
+    size: integer;
+    in out dst: codegen_$uads_t;
+    in out src: codegen_$uads_t); options(val_param); extern;
+
 { ---- cg_call ---- }
+
+{ CG_CALL_$IS_PROC_VAR_CALL - the routine designator n is called
+  through a variable (147, 146, a routine variable 107/108, a 171 of a
+  non-routine, 175).  cg_call 0x0F6912: the node's address (reg_save's
+  registers_consumed_by_tree_operator passes a tree's opnd[1]); D0. }
+function cg_call_$is_proc_var_call(
+    in n: il_$node_ptr_t): boolean; extern;
 
 { GEN_CALL - the call of node n (nil: of routine rtn, a library
   routine with its arguments already pushed).  cg_call 0x0F720A: two
@@ -264,7 +392,35 @@ procedure s_extend(
     from: integer;
     too: integer); options(val_param); extern;
 
+{ ---- cg_tree ---- }
+
+{ TREE_WALK - the code of IL tree n.  cg_tree 0x1085B4: a pointer. }
+procedure tree_walk(
+    n: il_$node_ptr_t); options(val_param); extern;
+
+{ ---- reg_save ---- }
+
+{ REG_SAVE - the registers a call of routine r preserves (a set of
+  register numbers as a longword).  reg_save 0x0ED478: a pointer; D0. }
+function reg_save(
+    r: il_$node_ptr_t): integer32; options(val_param); extern;
+
+{ ---- the front end ---- }
+
+{ PASS_CHAR_LEN_DIFF - whether character lengths are passed apart (C:
+  false).  frontend_cc_dummies 0x067408: the routine node's address
+  (gen_call passes the address of its local); D0. }
+function pass_char_len_diff(
+    in r: univ il_$node_ptr_t): boolean; extern;
+
 { ---- emit ---- }
+
+{ EMIT_ASSIGN - a move of size size from src to dst (FPA1).  emit
+  0x0B7F54: 8 a word, 10 and 14 the descriptors' addresses. }
+procedure emit_assign(
+    size: integer;
+    in out dst: codegen_$uads_t;
+    in out src: codegen_$uads_t); options(val_param); extern;
 
 { EMIT - a code cell of instruction op (the generic instruction:
   fnl_slct picks the machine instruction from op and size) on operands

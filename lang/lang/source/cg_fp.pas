@@ -406,7 +406,7 @@ end;
 
   Not known from the original:
   - the operations' meanings and the sets' members' names;
-  - cg_addr_22e's meaning. }
+  - the meaning of FP0's w14 in cg_addr's register table. }
 
 procedure stack_fp;
 var
@@ -436,7 +436,7 @@ begin
     end;
     if op = 1 then
       if peek(m, size) = 16 then
-        if cg_addr_22e <> 2 then
+        if cg_addr_regs[16].w14 <> 2 then
           return;
     address_reg(16, r);
     if op <> 1 then
