@@ -324,7 +324,7 @@ revisited.
    csyn_1e8 (c_syntax's +0x1E8) is tested at its +120 (a byte, `tst.b;
    bpl'); what it points to is not known, so add_ldfn reads it through
    il.ins.pas's xc view.  cc_walk_it's routine parameter is written
-   addr(call_kfold) (docs/dpc-gaps.md 19); call_kfold is declared in
+   addr(call_kfold) (docs/dpc-gaps.md 21); call_kfold is declared in
    c_externs.ins.pas.
 50. The scratchpad directory is shared between the parallel
    translators' sessions: helper files of one translator were
@@ -358,7 +358,7 @@ revisited.
    spos_$apply_over_* as routine parameters, so spos.ins.pas's headings
    now take routine parameters (core change) and tools/cc_check.sh
    rewrites an insert's scratch copy for a rule naming an insert
-   (tools/cc_gap_rewrites.txt; docs/dpc-gaps.md, after gap 19).  Is the
+   (tools/cc_gap_rewrites.txt; docs/dpc-gaps.md, the note at the end of the file, with gap 21).  Is the
    tool change acceptable, or should such a heading be kept behind a
    conditional (`%if')?  And how did the original declare the passed
    routines' val_param (the reference gives no options syntax for a
