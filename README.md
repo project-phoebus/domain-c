@@ -122,4 +122,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/runbackend.pas` | 24 | translated (best effort; nodes by offset; dpc gaps 2, 8) |
 | `lang/lang/source/commit_top_node.pas` | 7 | translated (best effort; nodes by offset; dpc gaps 2, 8, 12) |
 | `lang/lang/source/attributes.pas` | 19 | translated (best effort; nodes by offset; dpc gaps 8, 19) |
+| `lang/lang/source/alias.pas` | 19 | translated (best effort; nodes by offset; tables initialized; dpc gaps 8, 20, 21) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

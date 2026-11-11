@@ -1034,7 +1034,7 @@ begin
     else
       attr.size := pad_align;
     if (typ <> nil) and (pad_align <> pad_natural) and
-        not (12 in attr.bits) and (typ^.kind = 132) then
+        not (12 in attr.bits) and then (typ^.kind = 132) then
       error2(cerr_code_map[81], lex_line, smcontk(81, pad_align div 8),
           smcontk(81, pad_natural div 8));
   end;

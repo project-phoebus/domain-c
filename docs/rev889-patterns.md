@@ -327,3 +327,13 @@ cc.m68k unless marked.
     byte's bit 1 is set.  Elsewhere the unit uses the byte's own bit
     numbers (`bset #1,(24,A0)' in attr_set_align_dsc 0x0A51E0).  dpc
     emits `bset #1'.
+
+## Data layout (translator M, alias.pas)
+
+43. **Large module arrays start on a multiple of 8.**  alias.pas's
+    data (A5 0x168D8C, all initialized): a 340-byte array of names at
+    +0, then three 578-byte tables (17 x 17 words) at +0x158, +0x3A0
+    and +0x5E8 and a 34-byte one at +0x830: each starts on the next
+    multiple of 8, leaving 4 or 6 bytes of zeros between.  (Elsewhere
+    module variables follow each other at word alignment: item 9,
+    il.pas +0x142.)  dpc lays them out end to end.
