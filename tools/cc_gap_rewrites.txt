@@ -434,3 +434,11 @@ lang/lang/source/cg_tree.pas	s/^(\s+)d := n\^\.real_value;$/${1}{ gap 7 }/
 # gap 24 (cg_tree): boolean functions as right operands of and/or (compared with true or false, for the check)
 lang/lang/source/cg_tree.pas	s/\b(and|or) (not )?(assert_is_f_math_op|consecutivebits|assert_is_a_tree)\(([^()]*)\)/"$1 ($3($4) = " . ($2 ? "false" : "true") . ")"/ge
 lang/lang/source/cg_tree.pas	s/^(\s+)(assert_is_f_math_op|consecutivebits)\(([^()]*)\)( then(?: begin)?)$/$1($2($3) = true)$4/
+# gap 26 (final): substr (the length compared instead, for the check)
+lang/lang/source/final.pas	s/^(\s*)substr\(fn_chars_ptr_t\(addr\(n\^\.xc\[12\]\)\)\^, 1, 7\) = 'fp040_\$'/$1n^.xw[4] = 7 { gap 26 }/
+# gap 8 (final): in on constant sets with word elements (the comparisons)
+lang/lang/source/final.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d., ]+)\]}{my $v=$1; "(".join(" or ", map { /^(\d+)\.\.(\d+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $_)" } split(/,\s*/, $2)).") { gap 8 }"}ge
+# gap 24 (final): calls of boolean functions as operands of and/or (compared with true, for the check)
+lang/lang/source/final.pas	s{(?<!function )\b(final_\$(?:is_call|is_branch|sets_m881_codes_for_fp0|is_fp040_libcall|is_int|is_int_load|in_15bit_range|is_call_or_branch|is_unmoveable_fp_inst|is_unmoveable_ftest)|assert_is_\w+|has_\w+|sameaddr|involves|testcc)(\((?:[^()]++|(?2))*\))}{(($1$2) = true)}g
+# gap 12 (final): a pointer function's result compared with a variable (the operands swapped)
+lang/lang/source/final.pas	s/:= alias_\$ind_for_captured_lvalue\(n\) = t;/:= t = alias_\$ind_for_captured_lvalue(n); { gap 12 }/
