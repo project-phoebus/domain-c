@@ -16,10 +16,10 @@
 
 { TODO(pascal) g_opt.ins.pas holds what the translated units need
 
-  Add the optimizer's other cells (opt_main +0x8, +0x14, +0x18, +0x20,
-  +0x24, +0x40..+0x4C, +0x5A, +0x60, +0x62, read by opt_livevar,
-  opt_reachdef, opt_strength, the reg_ units and cg_top) and headings
-  as their units are translated; the record fields are named by use. }
+  Add the optimizer's other cells (opt_main +0x14, +0x20, +0x24,
+  +0x4C, +0x5A, +0x60, +0x62, read by opt_reachdef, opt_strength, the
+  reg_ units) and headings as their units are translated; the record
+  fields are named by use. }
 
 type
   { Block, node and variable numbers: words, zero-extended where read
@@ -39,9 +39,26 @@ type
     entry of opt_4009c, 0 for a statement of no region (cse looks
     for the nearest one); block (+16) the basic block of an empty
     evaluation (a loop's mark, cse); cses (+26) the cse parents (190)
-    made at it. }
+    made at it.
+
+    A statement with a region number is opt_4009c's entry of that
+    number (opt_livevar: the entry's kind, operands and variable are
+    the statement's): vars (+22) its table of the region's variables,
+    by number (find_var), each with its def-use chains; regs (+30) the
+    registers free over it (varcheck: reg_save of each node); vset
+    (+34) the variables it uses (buildsets, build_du_chains).  hdr
+    (+38..+45): vnum (+38) the variable it assigns (its number in
+    vars, 0 none: assign_elim clears it when the store is removed),
+    num (+39) its number in il_120, two bytes of flags (+41, +42: the
+    image reads and writes them as one 16-bit field, assign_elim
+    `andi.l #0xFF0000FF; ori.l #0x10000' of the longword at +40 for
+    deleted alone, `or.w #2' and `or.w #8' of the word for first and
+    last: perhaps a set in the original), region (+43) and a byte. }
   g_opt_block_ptr_t = ^g_opt_block_t;
   g_opt_stmt_ptr_t = ^g_opt_stmt_t;
+  g_opt_vars_ptr_t = ^g_opt_vars_t;
+  g_opt_varset_ptr_t = ^g_opt_varset_t;
+  g_opt_regs_t = set of 0..31;
   g_opt_stmt_t = record
     unused_0: integer;                  { +0 }
     kind: integer;                      { +2 }
@@ -50,17 +67,34 @@ type
     unused_12: integer32;               { +12 }
     block: g_opt_block_ptr_t;           { +16 }
     line: integer;                      { +20 }
-    unused_22: integer;                 { +22 }
-    unused_24: integer;                 { +24 }
+    vars: g_opt_vars_ptr_t;             { +22 }
     cses: il_$node_ptr_t;               { +26 }
-    unused_30: integer;                 { +30 }
-    unused_32: array [8..9] of integer32;  { +32..+39 }
-    hdr: packed record                  { +40 }
-      b40: 0..255;
-      b7, b6, b5, b4, b3, b2: boolean;  { +41 }
+    regs: g_opt_regs_t;                 { +30 }
+    vset: g_opt_varset_ptr_t;           { +34 }
+    hdr: packed record                  { +38 }
+      vnum: 0..255;                     { +38 }
+      num: 0..65535;                    { +39 }
+      b7: boolean;                      { +41 .7: report_removal
+                                          stays quiet }
+      b6: boolean;                      { .6: for_check's assignment
+                                          (a for loop's index) }
+      b5: boolean;                      { .5: report_removal stays
+                                          quiet }
+      b4, b3: boolean;
+      counted: boolean;                 { .2: liveanalysis took the
+                                          statement off its variable's
+                                          count }
       no_prune: boolean;                { .1 }
       deleted: boolean;                 { .0 }
-      b42: 0..255;                      { +42 }
+      b42_7, b42_6: boolean;            { +42 }
+      kills: boolean;                   { .5: buildsets: kills the
+                                          variables (109) whose address
+                                          may be taken }
+      b42_4: boolean;
+      last: boolean;                    { .3: its block's last_stmt }
+      b42_2: boolean;
+      first: boolean;                   { .1: its block's first_stmt }
+      b42_0: boolean;
       region: 0..65535;                 { +43 }
       b45: 0..255;                      { +45 }
     end;
@@ -96,6 +130,11 @@ type
       3: (br_target: il_$node_ptr_t;    { +48 }
           br_unused_52: integer32;      { +52 }
           br_cond: il_$node_ptr_t);     { +56 }
+      { 140: the stored value's descriptor (asg_size .. asg_flags) as
+        a whole (assign_elim passes it to buildtreenode). }
+      4: (asg_desc: add_node_$desc_t);  { +48 }
+      { 148 (a call): the routine called; 151, 188: the operand. }
+      5: (x48: il_$node_ptr_t);         { +48 }
   end;
 
   { An IL tree node (137 an operator, 143, ...; kfold's kf_tree_t, cg's
@@ -141,6 +180,15 @@ type
     next_pred).  dominators' buckets reuse it (dest, next_pred). }
   g_opt_edge_ptr_t = ^g_opt_edge_t;
 
+  { A constant a loop uses (opt_loop's add_constant, 10 bytes from new):
+    count its uses. }
+  g_opt_const_ptr_t = ^g_opt_const_t;
+  g_opt_const_t = record
+    node: il_$node_ptr_t;               { +0 }
+    next: g_opt_const_ptr_t;            { +4 }
+    count: integer;                     { +8 }
+  end;
+
   { A basic block (il_11c^[num]).  flags (+0, bit 7 first): visited
     (.5) by dfs, last (.4) the last block of a straight run, run (.3)
     the first block of one, latch (.2) the loop header's dominator
@@ -172,7 +220,9 @@ type
     loop: g_opt_block_ptr_t;            { +12: its innermost loop's
                                           header }
     preheader: g_opt_block_ptr_t;       { +16: a header's dominator }
-    unused_20: array [5..6] of integer32;  { +20..+27 }
+    consts: g_opt_const_ptr_t;          { +20: the constants a loop's
+                                          blocks use (add_constant) }
+    unused_24: integer32;               { +24 }
     succs: g_opt_edge_ptr_t;            { +28 }
     preds_list: g_opt_edge_ptr_t;       { +32 }
     idom: g_opt_block_ptr_t;            { +36 }
@@ -195,7 +245,10 @@ type
     link: g_opt_block_ptr_t;            { +92 }
     serial: integer;                    { +96 }
     cse_serial: integer;                { +98: cse's walk }
-    unused_100: array [1..3] of integer;  { +100..+105 }
+    regs: g_opt_regs_t;                 { +100: the registers free over
+                                          the block (varcheck,
+                                          liveanalysis: reg_save) }
+    unused_104: integer;                { +104 }
     nsucc: integer;                     { +106 }
     succ: g_opt_blocks_ptr_t;           { +108 }
     nfwd: integer;                      { +112: predecessors not
@@ -228,31 +281,39 @@ type
   g_opt_nums_t = array [1..32767] of g_opt_num_t;
   g_opt_nums_ptr_t = ^g_opt_nums_t;
 
-  { A variable's entry in a region's table (find_var). }
+  { A def-use or use-def chain's cell (8 bytes from mem_$alloc of
+    opt_main_18): the statement defining or using a variable. }
+  g_opt_chain_ptr_t = ^g_opt_chain_t;
+  g_opt_chain_t = record
+    next: g_opt_chain_ptr_t;            { +0 }
+    stmt: g_opt_stmt_ptr_t;             { +4 }
+  end;
+
+  { A variable's entry in a statement's table (vars; find_var looks in
+    opt_region's): node the variable (109, 110); count the statements
+    using it (addvaruse); ud the statements whose values of it reach
+    this one, du those this one's value reaches (build_du_chains,
+    elim_chains); flags (a word): the uses' kinds or-ed in by addvaruse
+    (bit 0 the value is read, 1 and 5 as an operand, 2 by address
+    (varcheck), 3, 4), 16#100 a chain was cut (elim_chains: no report
+    of the removal). }
   g_opt_var_ptr_t = ^g_opt_var_t;
   g_opt_var_t = record
     node: il_$node_ptr_t;               { +0: the variable (109, 110) }
+    unused_4: integer;                  { +4 }
+    count: integer;                     { +6 }
+    ud: g_opt_chain_ptr_t;              { +8 }
+    du: g_opt_chain_ptr_t;              { +12 }
+    flags: integer;                     { +16 }
   end;
-  g_opt_vars_t = array [1..16383] of g_opt_var_ptr_t;
-  g_opt_vars_ptr_t = ^g_opt_vars_t;
+  g_opt_vars_t = array [1..255] of g_opt_var_ptr_t;  { a byte index is a
+                                          word (`lsl.w #2') }
 
-  { An entry of opt_main's table at +0x4009C (kfold's node_number, by
-    a node's number at +43; find_var, by opt_region): range a block
-    whose first..last are the entry's nodes, vars its variables by
-    number. }
-  g_opt_range_ptr_t = ^g_opt_range_t;
-  g_opt_range_t = record
-    unused_0: array [1..4] of integer;  { +0 }
-    first: integer;                     { +8 }
-    last: integer;                      { +10 }
-  end;
-  g_opt_ent_ptr_t = ^g_opt_ent_t;
-  g_opt_ent_t = record
-    unused_0: array [1..4] of integer32;  { +0 }
-    range: g_opt_range_ptr_t;           { +16 }
-    unused_20: integer;                 { +20 }
-    vars: g_opt_vars_ptr_t;             { +22 }
-  end;
+  { A set of variables by number (32 bytes: opt_livevar's per block
+    and per statement sets). }
+  g_opt_varset_t = set of 0..255;
+  g_opt_varsets_t = array [1..16383] of g_opt_varset_t;
+  g_opt_varsets_ptr_t = ^g_opt_varsets_t;
 
   { cse's nodes: a use (189, 36 bytes; +4..+15 copied from the tree it
     stands for, flag 6 set, stmt its number) of a common
@@ -268,7 +329,7 @@ type
       1: (u_hdr: array [1..3] of integer32;  { +4..+15 }
           u_parent: g_opt_cse_ptr_t;    { +16 }
           u_tree: il_$node_ptr_t;       { +20 }
-          u_ent: g_opt_ent_ptr_t;       { +24: opt_4009c's entry }
+          u_ent: g_opt_stmt_ptr_t;      { +24: opt_4009c's entry }
           u_next: g_opt_cse_ptr_t;      { +28: the parent's next use }
           u_x: il_$node_ptr_t);         { +32 }
       { 190 }
@@ -323,6 +384,20 @@ var
     a memory pool cg_top's codegen empties at the end. }
   opt_main_8: extern univ_ptr;
 
+  { opt_main.pas's +0x18 (cc.m68k 0x2D2F08): the memory pool
+    (mem_$pool_t) the chains are allocated from (opt_livevar's
+    build_du_chains, opt_loop, opt_reachdef, opt_strength). }
+  opt_main_18: extern univ_ptr;
+
+  { opt_main.pas's +0x40, +0x44, +0x48 (cc.m68k 0x2D2F30, 0x2D2F34,
+    0x2D2F38): by block number (from 1), the variables live at the
+    block's exit, those it does not assign, and those it uses before
+    assigning them (opt_livevar's buildsets and lvanalyze; reg_life,
+    reg_cost_68k). }
+  opt_live_out: extern g_opt_varsets_ptr_t;
+  opt_not_killed: extern g_opt_varsets_ptr_t;
+  opt_used: extern g_opt_varsets_ptr_t;
+
   { opt_main.pas's cells (A5 0x2D2EF0 in cc.m68k, 0x49389C in cc.a88k)
     read by the other units, absolutely.  opt_main defines them. }
   opt_dfs_number: extern g_opt_nums_ptr_t;  { +0x50: by block number,
@@ -343,7 +418,7 @@ var
                                           (0x2D2F8C, 0x493938): by block
                                           number, its row of the dominance
                                           matrix (dom; opt_main) }
-  opt_4009c: extern array [0..65535] of g_opt_ent_ptr_t;  { +0x4009C
+  opt_4009c: extern array [0..65535] of g_opt_stmt_ptr_t;  { +0x4009C
                                           (0x312F8C, 0x4D3938, reached
                                           absolutely, from 0: `lea
                                           (0,A1,D3.l)'; 13 units) }
@@ -457,3 +532,27 @@ procedure moved_check(
 { CSE - find the common subexpressions of the routine's blocks
   (opt_main's g_opt). }
 procedure cse; extern;
+
+{ opt_livevar.pas (cc.m68k 0x0D6A8C, cc.a88k 0x2A3C7C). }
+
+{ LIVEANALYSIS - the def-use chains and the removal of dead stores
+  (under opt_on 12 or 13), each block's and statement's free registers
+  and the variables' uses, then the live variables (opt_main's g_opt). }
+procedure liveanalysis; extern;
+
+{ opt_loop.pas (cc.m68k 0x0D8960, cc.a88k 0x2A5B50). }
+
+{ ADD_CONSTANT - count constant t once more among block b's constants
+  (opt_livevar's varcheck, opt_loop).  0x0D935E: both by address
+  (varcheck passes a frame copy of t and a statement's +16). }
+procedure add_constant(
+    in t: il_$node_ptr_t;
+    in b: g_opt_block_ptr_t); extern;
+
+{ opt_strength.pas (cc.m68k 0x0E78B8 for delparent). }
+
+{ DELPARENT - take the cse parent p (190) off its statement's list of
+  parents (opt_livevar's check_cse_uses: p by address, a frame copy;
+  `in' until opt_strength is translated). }
+procedure delparent(
+    in p: g_opt_cse_ptr_t); extern;
