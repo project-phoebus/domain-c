@@ -68,7 +68,7 @@ function add_node_$new_top_level(
   20:b/b; 4 call sites (c_expr_sem, kfold); result in A0. }
 function add_disp_node(
     p1: univ_ptr;
-    p2: integer32;
+    p2: univ_ptr;
     p3: integer32;
     p4: boolean): univ_ptr; options(val_param); extern;
 
@@ -78,15 +78,15 @@ function add_disp_node(
   result in A0. }
 function add_dn(
     p1: univ_ptr;
-    p2: integer32;
+    p2: univ_ptr;
     p3: integer32): univ_ptr; options(val_param); extern;
 
 { ADD_SDN - 0x0A13FE, cc.a88k 0x0A2DDE; frame 8:l/a 12:l/l 16:l/l; 2
   call sites (c_expr_sem, opt_inline); result in A0. }
 function add_sdn(
     p1: univ_ptr;
-    p2: integer32;
-    p3: integer32): univ_ptr; options(val_param); extern;
+    p2: univ_ptr;
+    p3: univ_ptr): univ_ptr; options(val_param); extern;
 
 { ADD_DINDEXN - 0x0A14F8, cc.a88k 0x0A2ED8; frame 8:p/l 12:l/a 16:p/al
   20:l/l 24:w/w 26:w/w 28:w/w; 5 call sites (c_expr_sem, opt_main);

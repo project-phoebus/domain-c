@@ -783,7 +783,7 @@ begin
       tt.size := 2;
       discard(coerce(tt, cexs_23bc, true));
     end;
-  init_aux(addr(aux), addr(cexs_stack[cexs_23bc].typ));
+  init_aux(aux, cexs_stack[cexs_23bc].typ);
   add_tn(17, addr(aux), cexs_23bc, cexs_23bc);
   add_eval(cexs_23bc, cexs_23bc);
   c.first := il_d8;
@@ -1589,7 +1589,7 @@ begin
   with cexs_stack[cexs_23bc] do begin
     node := n^.opnd[1];
     type_exp(char_type, addr(typ));
-    init_aux(addr(aux), addr(typ));
+    init_aux(aux, typ);
     if pos then begin
       if (node^.kind = 137) and (c_tree_ptr_t(node)^.op = 12) and
          (c_tree_ptr_t(node)^.desc.w8 = 6) then
@@ -1715,7 +1715,7 @@ begin
       with cexs_stack[cexs_23bc] do begin
         node := tr^.opnd[2];
         type_exp(char_type, addr(typ));
-        init_aux(addr(aux), addr(typ));
+        init_aux(aux, typ);
         if not ((node^.kind = 82) or (node^.kind = 81) or
                 (node^.kind = 80)) then begin
           add_tn(7, addr(aux), cexs_23bc, cexs_23bc);
@@ -2060,7 +2060,7 @@ begin
             type_exp(r^.opnd[1], addr(tt));
             add_or_update(a^.opnd[1], incr);
             if (incr < -32700) or (incr > 32700) then begin
-              init_aux(addr(aux), addr(tt));
+              init_aux(aux, tt);
               aux.rlen := 5;
               aux.w6 := 4;
               aux.size := 0;
@@ -2078,7 +2078,7 @@ begin
               n := a^.opnd[1];
             n := add_pn(n, a^.opnd[1], tt.flags.align, 0);
             if incr <> 0 then
-              res := add_dn(n, integer32(n), incr)
+              res := add_dn(n, n, incr)
             else
               res := n;
           end
@@ -2113,7 +2113,7 @@ begin
                 aux := r^.desc
               else begin
                 type_exp(int_type, addr(tt));
-                init_aux(addr(aux), addr(tt));
+                init_aux(aux, tt);
               end;
               tmp := parent;
             end;
@@ -2123,7 +2123,7 @@ begin
               tmp := nil
             else begin
               type_exp(int_type, addr(tt));
-              init_aux(addr(aux), addr(tt));
+              init_aux(aux, tt);
               tmp := temp_alloc(4, aux.rlen);
             end;
             parent := tmp;
