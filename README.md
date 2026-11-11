@@ -1,0 +1,67 @@
+# DOMAIN C 6.9 compiler - reconstructed source
+
+A reconstruction, in Domain Pascal (and the few C, Fortran and assembly
+units), of Apollo's DOMAIN C compiler V.6.9 from the two executables on the
+cartridge in `ctape/`:
+
+- `ctape/install/ri.apollo.cc.v.6.9.m/cc.m68k`: the C compiler with the
+  m68k back end (`lang/lang/source/cg_*`, `reg_*`, ...).
+- `ctape/install/ri.apollo.cc.v.6.9.mpx/cc.a88k`: the C compiler with the
+  a88k (PRISM) back end (`lang2/source/be_com`, `isc`).  Both run on the 68K.
+
+Each unit is one file under its original path, `//foo/bar/baz.pas`
+becoming `./foo/bar/baz.pas` (the paths come from the binaries' .blocks
+debug section).  The method is the one `../../domainos-archeology/source`
+used for `com/bind`: the disassembly is the truth; names come from the
+binaries (.blocks routine names, the transfer vector's externals, Apollo's
+customer inserts); what the image does not decide is listed in each
+routine's "Not known from the original" or a `TODO(pascal)` block.
+
+**Fidelity: best effort** (decided 2026-11-10).  The binaries were built
+by Pascal compiler Rev 8.89; dpc models SR10.2's Rev 7.x.  dpc's default
+(best-effort) mode is used: each routine is written so that its code does
+what the image's does, checked by reading dpc's output against the image,
+but it is not byte-identical.  The Rev 8.89 forms met are collected in
+`docs/rev889-patterns.md` for a later dpc profile.
+
+## Layout
+
+- `docs/survey.md`: the binaries, the units, the .blocks v4 format, open
+  items, the pilot.  `docs/survey-tables.md`, `docs/routines-cc.*.md`:
+  generated unit and routine tables (with each unit's inserts in the order
+  opened).
+- `docs/rev889-patterns.md`: Rev 8.89 code generation vs dpc.
+- `docs/dpc-gaps.md`: constructs dpc refuses (bug reports for dpc).
+- `tools/`: `coff_compare.py` (a patched copy of
+  `source/domain_os/tools/coff_compare.py`, to merge back), `cc_survey.py`,
+  `cc_dis.py` (disassemble a routine by name), `cc_check.sh` (the gate),
+  `cc_gap_rewrites.txt` (scratch rewrites for dpc gaps).
+- `pilot/`: the first experiment (`get_rlen`).
+- `lang/`, `lang2/`, ...: the reconstructed source.
+
+## Conventions
+
+- A unit file: a header comment (purpose; image addresses in both binaries;
+  A5; module data), `module <name>;` (the unit's .blocks module record
+  name), the `%include`s **in the order the unit opened them**
+  (`docs/routines-cc.*.md`; customer inserts as `/sys/ins/...`, others
+  relative to this tree, `lang/common/source/...`), then each routine with
+  its header comment (address, length, the instructions that decide each
+  construct, "Not known from the original").
+- Inserts (`*.ins.pas`) hold the constants, types and `extern` headings,
+  each with evidence.  Rev 8.89 loads A5 in every global routine of a
+  module with data, so a module-level routine that does not load A5 is
+  `internal`.  Parameters read by value from the frame mean `val_param`
+  (a 16-bit value takes a 2-byte slot).
+- Calls to `M$...` arithmetic are ordinary `*`, `div`, `mod`; never call
+  them.
+- Comments are `{ }` and contain no braces.
+- Gate: `tools/cc_check.sh [FILE.pas ...]` must show no dpc errors (set
+  `DPC` to a current dpc; the default is the domain-pascal debug build).
+
+## Status
+
+| unit | routines | state |
+|------|----------|-------|
+| `lang/common/source/std.pas` | 11 | translated (best effort) |
+| `lang/common/source/diag.pas` | 13 | translated (best effort; dpc gap 1) |

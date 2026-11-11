@@ -1,0 +1,5 @@
+# dpc gap rewrites for tools/cc_check.sh: FILE<TAB>PERL-SUBSTITUTION
+# Applied to a scratch copy only; the tree keeps the original construct.
+# Each line names its gap in docs/dpc-gaps.md.
+# gap 1: whole varying assignment (copy the length only, for the check)
+lang/common/source/diag.pas	s/^(\s*)line_prefix := prefix;/$1line_prefix.length := prefix.length; { gap 1 }/
