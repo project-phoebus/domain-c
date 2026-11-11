@@ -46,3 +46,31 @@ function gen_unwind_$dump_exception_table(
 procedure gen_unwind_$end_compilation(
     a: integer32;
     b: integer32); options(val_param); extern;
+
+type
+  { A scope of a routine's code (outbin.pas's begin_unwind_scope and
+    end_unwind_scope fill one, at its A5 + 0xD60; gen_unwind_$add_scope
+    copies 46 bytes of it): the start and length of the code, the
+    registers saved (a set each of the address, data and floating
+    registers; outbin's from the block's +220). }
+  gen_unwind_$scope_t = record
+    start: integer32;                   { +0 }
+    len: integer32;                     { +4 }
+    x8: integer32;                      { +8: the block's +224 }
+    x12: integer32;                     { +12 }
+    aregs: set of 0..15;                { +16 }
+    dregs: set of 0..15;                { +18 }
+    fregs: set of 0..15;                { +20 }
+    b22: boolean;                       { +22 }
+    b23: boolean;                       { +23 }
+    b24: boolean;                       { +24 }
+    rest: array [1..21] of char;        { +25: to 46 bytes }
+  end;
+
+{ GEN_UNWIND_$ADD_SCOPE - a scope added to the unwind table.  0x07A920:
+  the scope by address, two longwords by value (outbin's end_unwind_scope
+  passes 0 and the block's section's +64). }
+procedure gen_unwind_$add_scope(
+    in scope: gen_unwind_$scope_t;
+    p2: integer32;
+    p3: integer32); options(val_param); extern;
