@@ -436,7 +436,9 @@ when this tree is merged).
    routine needing this many registers is not supported yet".  The
    check compiles expr_op with its cases from subtraction on left out
    (a conditional variable that is not set: tools/cc_gap_rewrites.txt).
-   Reproducer: any procedure of a few hundred statements that each
+   kfold.pas kfold_$general (0x0AD1A0, 0x223C bytes) likewise: its
+   integer operators and everything from its real operators on are left
+   out.  Reproducer: any procedure of a few hundred statements that each
    index a record array, e.g.
 
        module g25;

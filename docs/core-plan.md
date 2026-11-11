@@ -164,3 +164,9 @@ flags b5..b0 (b2 an array); c_blk_t's +388 exposed; c_name_ptr_t.
 add_node.ins.pas: add_dn's and add_sdn's second parameter (a symbol)
 and add_sdn's third, add_disp_node's second, are univ_ptr (c_stmt_sem's
 add_dn call fixed).
+
+Translator P, kfold: new stubs lang/lang/source/g_opt.ins.pas (opt_main's
+table at +0x4009C, opt_4009c), lang2/source/ftn/source/f_hash.ins.pas,
+lang2/source/ftn/source/const_op.ins.pas (r8_expon, r8i4_expon), and
+us/us/ins/fpp_errs.ins.pas, fpp.ins.pas, peb.ins.pas (empty; c_expr_sem
+and kfold open them).

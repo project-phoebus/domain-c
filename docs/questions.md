@@ -381,3 +381,20 @@ revisited.
    arith.ins.pas: the unit declares it itself with a word operation.
    If an insert of c_expr_sem's list declared it originally (fop.ins.pas
    is a stub), move it there.
+57. Translator P (2026-11-11), kfold.pas: kfold (22 call sites: c_syntax's
+   call_kfold, the optimizer) and kfold_$general are declared in the unit
+   (kfold forward); which insert gave the callers kfold's heading is not
+   known (g_opt.ins.pas, which kfold opens, is a likely place; created as
+   a stub holding opt_main's +0x4009C table that node_number reads).
+   kfold takes the statement by address and passes its value on.
+58. Translator P: kfold_$general's FPP operations 0x0178 and 0x0180
+   (builtin functions 13 and 12, two operands) are not identified; they
+   are written as Fortran's MOD and SIGN (kfold is shared with the
+   FORTRAN compiler: const_op.ftn's r8_expon and r8i4_expon do its
+   powers).  Its x * 0.0 identity branches (`beq') into the smcontk
+   tail with A0 as fpp_$ leaves it; written as the constant operand.
+   The constant node's +10 word is replaced by a node number when the
+   node il_120[+10] names is an unused tree (the end of kfold_$general):
+   +10 of an integer constant is the low half of its value, so either
+   the constants kfold sees there are not smcontk's or the field means
+   something else; kept as the image has it.
