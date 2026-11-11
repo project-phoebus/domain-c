@@ -224,7 +224,8 @@ routines' nodes, std_lib_rtns) and runbackend_18 (runbackend.pas's
 table at +0x18, now defined there); g_opt.ins.pas declares paramclass.
 fpa.ins.pas is a new empty stub.  cg_top is not started.
 
-Translator V (2026-11-11), the global optimizer (opt_general, ...):
+Translator V (2026-11-11), the global optimizer (opt_general, opt_select,
+opt_assign, opt_cse translated):
 lang/lang/source/g_opt.ins.pas is the optimizer's insert: the views
 of the nodes it reads (g_opt_stmt_t, c_top_t's layout; g_opt_tree_t,
 kf_tree_t's), the basic blocks (il_11c^[1..il_124], g_opt_block_t),
@@ -235,4 +236,10 @@ opt_last_block +0x68, opt_first_block +0x6A, opt_track_lines +0x6C,
 opt_dom +0x9C, opt_4009c, now indexed from 0 as the image does), and
 the headings of opt_general's and opt_select's global routines.
 tools/cc_globals.py now also catalogues opt$data and the other data
-sections without file contents, and decimal `#abs' operands.
+sections without file contents, and decimal `#abs' operands.  Later in the same branch g_opt.ins.pas
+gained the statements' block, cses and region fields, the trees'
+owner and descriptor words, the blocks' first and last statements and
+cse_serial, cse's use and parent nodes (g_opt_cse_t), opt_loop's +4
+(opt_loop_hoist), opt_cse's +0x88 (cse_limit) and the headings of
+assign_opt, csecleanup, moved_check and cse (docs/questions.md 78-81).
+Core change: target_properties' +0x84 is a boolean.
