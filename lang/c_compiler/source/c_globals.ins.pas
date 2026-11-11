@@ -110,8 +110,13 @@ var
   cdef_code_sect: extern il_$node_ptr_t;  { +0x3C: the code section
                                           (#section's first name);
                                           c_main }
-  cdef_44: extern univ_ptr;             { +0x44: c_syntax }
-  cdef_4c: extern integer32;            { +0x4C: c_syntax }
+  cdef_dynm_inits: extern c_dynm_ptr_t; { +0x44: the dynamic
+                                          initializers kept by
+                                          def_dynm_data (its +0x40 the
+                                          last); c_syntax }
+  cdef_fwd_ptrs: extern c_type_ptr_t;   { +0x4C: the forward pointers
+                                          (def_fwd_ptr, through
+                                          ptr_fwd_next); c_syntax }
   cdef_50: extern c_blk_ptr_t;          { +0x50: the current block (cc
                                           and make_main_pgm set it to
                                           il_180; c_expr_syn's `&' sets

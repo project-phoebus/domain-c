@@ -149,3 +149,8 @@ lang/c_compiler/source/c_stmt_sem.pas	s/\(c_tree_ptr_t\(t\)\^\.op in \[12, 18, 3
 # gap 12 (c_stmt_sem): an A0 function result compared with a variable (the operands swapped, for the check)
 lang/c_compiler/source/c_stmt_sem.pas	s/if fnd_name\(addr\((\w+)\), true, false\) = il_178 then/if il_178 = fnd_name(addr($1), true, false) then { gap 12 }/
 lang/c_compiler/source/c_stmt_sem.pas	s/if tr\^\.op in \[11, 12, 23, 24, 40, 78, 79, 84\] then/if (tr^.op = 11) or (tr^.op = 12) or (tr^.op = 23) or (tr^.op = 24) or (tr^.op = 40) or (tr^.op = 78) or (tr^.op = 79) or (tr^.op = 84) then { gap 8 }/
+# gap 8 (c_def_sem): in on constant sets with word elements (the comparisons)
+lang/c_compiler/source/c_def_sem.pas	s/n\^\.kind in \[77\.\.90, 92, 93, 101, 156, 176, 198, 200\]/((n^.kind >= 77) and (n^.kind <= 90)) or (n^.kind = 92) or (n^.kind = 93) or (n^.kind = 101) or (n^.kind = 156) or (n^.kind = 176) or (n^.kind = 198) or (n^.kind = 200) { gap 8 }/
+lang/c_compiler/source/c_def_sem.pas	s/w\^\.kind in \[80\.\.86, 200\]/((w^.kind >= 80) and (w^.kind <= 86)) or (w^.kind = 200) { gap 8 }/
+# gap 12 (c_stmt_sem): fnd_name's result (now il_$node_ptr_t) compared with il_178 (compared with nil, for the check)
+lang/c_compiler/source/c_stmt_sem.pas	s/if fnd_name\((m[cs]), true, false\) = il_178 then/if fnd_name($1, true, false) = nil then { gap 12 }/

@@ -161,9 +161,9 @@ var
     decl.name := il_178;
     decl.line := 0;
     decl.flags := [];
-    def_blk_skeleton(108, addr(fname), 2, addr(decl), nil, params, false,
+    def_blk_skeleton(108, fname, 2, decl, nil, params, false,
                      3, 0, nil);
-    b.sym := blk_fnd_name(addr(fname), false, false, il_180);
+    b.sym := blk_fnd_name(fname, false, false, c_blk_ptr_t(il_180));
     b.ftype := ft;
     b.code := code;
     alloc_builtins := b;
@@ -507,7 +507,7 @@ begin
   end;
   elem.line := lex_line;
   elem.flags := [];
-  arr.dtype := def_arr(idx, elem, 0, attr_curr_align_env = 0);
+  arr.dtype := def_arr(idx, elem, nil, attr_curr_align_env = 0);
   arr.flags := [];
   arr.unused_28 := 0;
   arr.line := lex_line;
@@ -791,13 +791,13 @@ begin
       return;
     end;
     if token_kind = ctk_lparen then begin
-      fsym := fnd_name(addr(nm), false, false);
+      fsym := fnd_name(nm, false, false);
       if fsym = il_178 then begin
         decl.flags := [];
         decl.dtype := int_type;
         decl.name := nm.id;
         decl.line := nm.line;
-        def_blk_skeleton(108, addr(nm), 2, addr(decl), nil, nil, false,
+        def_blk_skeleton(108, nm, 2, decl, nil, nil, false,
                          3, 0, nil);
       end
       else begin
@@ -1000,6 +1000,7 @@ var
   incr, size: integer32;
   t: c_type_ptr_t;
   regs, q: c_reglist_ptr_t;
+  tag: c_tag_ptr_t;
 begin
   name.id := lex_token;
   name.line := lex_line;
@@ -1023,8 +1024,8 @@ begin
         end;
         if t^.ptr_to^.kind = 76 then
           error1(293, lex_line, t^.ptr_to)
-        else if def_incomplete_su(t^.ptr_to, addr(x)) then
-          error1(293, lex_line, x^.xp[5]);
+        else if def_incomplete_su(t^.ptr_to, tag) then
+          error1(293, lex_line, tag^.body.name.id);
         item := il_$node_ptr_t(typ.base^.ptr_to);
         node := add_pn(node, item, typ.base^.ptr_attr.align, 0);
         typ.flags.b25_5 := 19 in typ.base^.ptr_attr.bits;

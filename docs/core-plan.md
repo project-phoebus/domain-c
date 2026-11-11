@@ -150,3 +150,19 @@ label fields, c_blk_t's labels, return label and frame fields.  dpc
 lays out `0..255' in a record as a word and aligns a packed record to
 a word: byte fields at odd offsets are written as char or inside a
 packed record that starts at an even offset.
+
+Translator O (2026-11-11), c_def_sem: c_externs.ins.pas's c_def_sem
+headings are checked against the bodies (names by univ c_name_t where
+a caller passes a symbol's +4; lookups return il_$node_ptr_t; def_varn's
+declaration is var; def_arr's third argument a node to fill;
+def_conn, def_enum_skeleton functions); globals_from_frontend's
+type_exp names its parameters t and d.  c_objtype.ins.pas gets
+c_dattr_t (a declaration's 20-byte attributes, c_decl_t's variant
+attr), c_parm_t (kind 121 parameters), c_tag_t (structure tags),
+c_fldlist_t (a structure being laid out), c_dynm_t, c_enumset_t;
+c_name_t's +6 and c_sym_t's +10 are the uplevel flag; the
+enumeration, pointer, array, set and structure variants and c_blk_t
+are named further (the options field at +374 a variant).  c_globals:
+cdef_44 is cdef_dynm_inits, cdef_4c cdef_fwd_ptrs.  attributes.ins.pas
+gets merge_attribs, merge_attribs_natural, attr_tattr_to_vattr,
+attr_validate, attr_compute_routine_options.

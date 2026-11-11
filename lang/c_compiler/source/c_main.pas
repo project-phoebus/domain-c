@@ -170,7 +170,7 @@ var
 begin
   if lex_errors <> 0 then
     return;
-  m := fnd_name(addr(id_main), true, false);
+  m := fnd_name(id_main, true, false);
   if m = il_178 then
     return;
   if m^.kind <> 109 then
@@ -190,14 +190,14 @@ begin
   decl.name := name1.id;
   decl.line := name1.line;
   decl.flags := [];
-  def_blk_skeleton(108, addr(name1), 2, addr(decl), nil, nil, false, 3, 0, nil);
+  def_blk_skeleton(108, name1, 2, decl, nil, nil, false, 3, 0, nil);
   name2.id := idntk(ctk_identifier, '<apollo_c_startup>', 18);
   name2.line := 31999;
   decl.dtype := il_178;
   decl.name := name2.id;
   decl.line := name2.line;
   decl.flags := [];
-  def_blk_skeleton(105, addr(name2), 0, addr(decl), nil, nil, false, 3, 0, nil);
+  def_blk_skeleton(105, name2, 0, decl, nil, nil, false, 3, 0, nil);
   cdef_50 := c_blk_ptr_t(il_180);
   def_blk_params(false);
   il_d0 := 31999;
@@ -826,7 +826,7 @@ begin
   outer_decl.name := il_178;
   outer_decl.line := 0;
   outer_decl.flags := [];
-  def_blk_skeleton(106, addr(outer_name), 0, addr(outer_decl), nil, nil,
+  def_blk_skeleton(106, outer_name, 0, outer_decl, nil, nil,
                    false, 3, 0, nil);
   il_184 := il_180;
   cdef_outer_block := il_180;

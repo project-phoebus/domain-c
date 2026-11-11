@@ -125,4 +125,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/commit_top_node.pas` | 7 | translated (best effort; nodes by offset; dpc gaps 2, 8, 12) |
 | `lang/c_compiler/source/c_expr_syn.pas` | 28 | translated (best effort; dpc gaps 7, 8, 18) |
 | `lang/c_compiler/source/c_stmt_sem.pas` | 52 | translated (best effort; IL nodes through c_objtype views; dpc gaps 3, 7, 8, 12, 19) |
+| `lang/c_compiler/source/c_def_sem.pas` | 59 | translated (best effort; IL nodes through c_objtype views and il.ins.pas's; dpc gap 8) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

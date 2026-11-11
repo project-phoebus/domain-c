@@ -76,6 +76,36 @@ type
   c_field_ptr_t = ^c_field_t;
   c_sym_ptr_t = ^c_sym_t;
   c_type_ptr_t = ^c_type_t;
+  c_tag_ptr_t = ^c_tag_t;
+  c_parm_ptr_t = ^c_parm_t;
+
+  { A declaration's attributes as the parser collects them (c_decl_t's
+    +12..+31, 20 bytes; a typedef's +40, a routine block's +312, the
+    structure being laid out's +8): c_def_sem copies them whole into a
+    frame record, merges the type's into them (merge_attribs,
+    merge_attribs_natural) and converts them to a symbol's form
+    (attr_tattr_to_vattr: the size in bits first).  def_fld stores w10
+    as a field's alignment, def_arr and def_rec raise it to x12.
+
+    Not known from the original: the names; w14. }
+  c_dattr_ptr_t = ^c_dattr_t;
+  c_dattr_t = record
+    flags: c_flags_t;                   { +0: 3 device read, 4 device
+                                          write (or-ed into a
+                                          structure's), 5 address(n)
+                                          given (x16 the address), 12
+                                          an alignment was given, 16
+                                          section(name) given (x16
+                                          the name), 20 a bit field
+                                          declared signed }
+    size_bits: integer32;               { +4: 0 for the type's }
+    align: integer;                     { +8: the alignment wanted (a
+                                          power of 2) }
+    w10: integer;                       { +10: the alignment met }
+    x12: integer;                       { +12: the least alignment }
+    w14: integer;                       { +14 }
+    x16: integer32;                     { +16 }
+  end;
 
   { A routine's parameter types (a function type's fn_params, a block's
     params): a word, the count at +2, then the types from +4 (kind 31,
@@ -117,14 +147,22 @@ type
       2: (sub_base: c_type_ptr_t;       { +4 }
           sub_low: il_$node_ptr_t;      { +8 }
           sub_high: il_$node_ptr_t);    { +12 }
-      { An enumeration (129): its constants and the integral type that
-        holds it (short_type for a `short enum'). }
+      { An enumeration (129; 60 bytes from c_def_sem's
+        def_enum_skeleton): its constants and the integral type that
+        holds it (short_type for a `short enum'; def_enum_list widens
+        it to the unsigned type when the values need it), and the
+        values' extremes, signed and unsigned (def_enum_list). }
       3: (enum_unused_4: integer;       { +4 }
           enum_count: integer;          { +6 }
           enum_unused_8: integer32;     { +8 }
           enum_unused_12: integer32;    { +12 }
           enum_list: ^c_enum_list_t;    { +16 }
-          enum_int: c_type_ptr_t);      { +20 }
+          enum_int: c_type_ptr_t;       { +20 }
+          enum_unused_24: integer32;    { +24 }
+          enum_high: integer32;         { +28 }
+          enum_low: integer32;          { +32 }
+          enum_uhigh: integer32;        { +36: compared unsigned }
+          enum_ulow: integer32);        { +40: compared unsigned }
       { A pointer (130; 36 bytes from def_ptr): the type pointed to, its
         attributes (+20 the alignment add_pn is given when the pointer
         is dereferenced, +16 bits 19 const and 0 volatile), and a
@@ -132,33 +170,49 @@ type
         such a pointer is dereferenced where it is used (body_opr 3 after
         a name or a call; a cast to it takes the address first), a
         reference. }
-      4: (ptr_to: c_type_ptr_t;         { +4 }
-          ptr_unused_8: integer32;      { +8 }
+      4: (ptr_to: c_type_ptr_t;         { +4: a forward pointer's
+                                          (c_def_sem's def_fwd_ptr) is
+                                          the structure tag's identifier
+                                          (76) until it is resolved }
+          ptr_fwd_next: c_type_ptr_t;   { +8: the forward pointers'
+                                          chain (cdef_4c) }
           ptr_attr: c_attr_t;           { +12 }
           ptr_unused_26: integer;       { +26 }
           ptr_unused_28: integer32;     { +28 }
-          ptr_unused_32: integer;       { +32 }
+          ptr_line: integer;            { +32: a forward pointer's }
           ptr_reference: boolean);      { +34: `tst.b; bpl' }
-      { An array (127, 131): the element and index types; the size at
-        +40 (type_exp). }
+      { An array (127, 131; 44 bytes from c_def_sem's def_arr): the
+        element and index types (il_178 for no bound), the element's
+        size and the array's (+40; type_exp). }
       5: (arr_elem: c_type_ptr_t;       { +4 }
           arr_index: c_type_ptr_t;      { +8 }
-          arr_unused_12: integer32;     { +12 }
+          arr_elsize: integer32;        { +12: bytes (0 until the
+                                          element is complete:
+                                          fix_array_decl) }
           arr_attr: c_attr_t;           { +16 }
           arr_unused_30: integer;       { +30 }
           arr_unused_32: integer32;     { +32 }
           arr_unused_36: integer32;     { +36 }
           arr_size: integer32);         { +40 }
-      { A set (134): its base type; the size at +12 (type_exp). }
+      { A set (134): its base type; the size at +8 (type_exp). }
       6: (set_base: c_type_ptr_t;       { +4 }
-          set_unused_8: integer32;      { +8 }
-          set_size: integer32);         { +12 }
-      { A structure or union (132): its fields, its size, and the number
-        c_sym_map's map gives it when it first prints it (`-MAP#n'; 0
-        until then). }
+          set_size: integer32;          { +8 }
+          set_unused_12: integer32);    { +12 }
+      { A structure or union (132; 56 bytes from c_def_sem's def_rec):
+        its fields (nil while it is incomplete), its size, its
+        attributes (+12 the size in bits), whether it holds an array,
+        its tag (c_tag_t) and the number c_sym_map's map gives it when
+        it first prints it (`-MAP#n'; 0 until then). }
       7: (su_fields: c_field_ptr_t;     { +4 }
           su_size: integer32;           { +8 }
-          su_unused: array [3..10] of integer32;  { +12..+43 }
+          su_attr: c_attr_t;            { +12 }
+          su_unused_26: integer;        { +26 }
+          su_unused_28: integer32;      { +28 }
+          su_unused_32: integer;        { +32 }
+          su_unused_34: boolean;        { +34 }
+          su_has_arr: boolean;          { +35 }
+          su_tag: c_tag_ptr_t;          { +36 }
+          su_unused_40: integer32;      { +40 }
           su_map: integer32);           { +44 }
       { Kind 121: print_type looks through it to the type at +16. }
       8: (wrap_unused: array [1..3] of integer32;  { +4..+15 }
@@ -216,7 +270,9 @@ type
     name: il_$node_ptr_t;               { +4: the identifier }
     line: integer;                      { +8: where it was declared
                                           (spos's encoding) }
-    unused_10: integer;                 { +10 }
+    uplevel: boolean;                   { +10: found from an inner block
+                                          (c_def_sem's blk_fnd_name) }
+    unused_11: char;                    { +11 }
     next: c_sym_ptr_t;                  { +12: the identifier's next
                                           meaning }
     blk_next: il_$node_ptr_t;           { +16: the block's chain of its
@@ -236,7 +292,13 @@ type
                                           string's array); c_expr_syn
                                           sets 22 for a constant
                                           subscript within bounds
-                                          and tests 10 }
+                                          and tests 10 (c_def_sem's
+                                          def_blk_params sets it for a
+                                          parameter); c_def_sem: 6 an
+                                          initializer was given, 16
+                                          allocated in .bss (offset
+                                          the bss size before it), 18
+                                          allocated (def_alloc_var) }
           var_attr: c_attr_t;           { +36 }
           var_unused_50: integer;       { +50 }
           var_unused_52: integer32;     { +52 }
@@ -248,9 +310,17 @@ type
           var_unused_68: integer32;     { +68 }
           var_vat: c_vat_t;             { +72 }
           var_unused_74: integer;       { +74 }
-          var_unused_76: integer32;     { +76 }
-          var_sect: il_$node_ptr_t);    { +80: vat_sect's section, +4
-                                          its name }
+          var_unused_76: integer;       { +76 }
+          var_78: integer;              { +78: -1 when made (def_varn,
+                                          add_varn) }
+          var_sect: il_$node_ptr_t;     { +80: vat_sect's section (111),
+                                          +4 its name; il_178 when made
+                                          (only the 88-byte variables
+                                          of kinds stat, ext and extdef
+                                          have it and the next field) }
+          var_sect_next: c_sym_ptr_t);  { +84: the section's next
+                                          variable (c_def_sem's
+                                          make_comblk_sect) }
       { A typedef (118). }
       2: (td_type: c_type_ptr_t;        { +28 }
           td_unused_32: integer32;      { +32 }
@@ -273,6 +343,10 @@ type
             used: boolean;              { +37.7 }
             rest: 0..127;
           end);
+      { A block-local name of an outer variable (230, 28 bytes from
+        c_def_sem's def_virt_varn: an extern declared in a block under
+        -XANSI): blk_fnd_name answers the variable instead. }
+      5: (virt_sym: c_sym_ptr_t);       { +28 }
   end;
 
   { What type_exp (c_def_sem.pas 0x04590A) makes of a type node: the
@@ -331,16 +405,26 @@ type
     fnd_name and body_opr; c_def_sem's, c_syntax's and c_stmt_sem's
     data hold such pairs).
 
-    Not known from the original: the names; +6. }
+    The byte at +6 is where a symbol (c_sym_t's +4..+11) or a structure
+    tag (c_tag_t's +20..+27), which copy their name whole, keep their
+    uplevel flag: c_def_sem's blk_fnd_name and lookup_su set it when
+    the name is found in an enclosing block, def_name clears it.
+
+    Not known from the original: the names; +7. }
   c_name_t = record
     id: il_$node_ptr_t;                 { +0 }
     line: integer;                      { +4 }
-    unused_6: integer;                  { +6 }
+    uplevel: boolean;                   { +6 }
+    unused_7: char;                     { +7 }
   end;
 
   { What def_blk_skeleton takes as its fourth argument (c_main's cc,
     +0x400 of its data, and make_main_pgm, a frame record): 40 bytes,
     of which these are set.
+
+    +12..+31 are the attributes (c_dattr_t, the variant attr: c_def_sem
+    copies them whole); def_fwd_ptr takes +8, when set, as the
+    structure tag a pointer is declared to.
 
     Not known from the original: everything but the offsets. }
   c_decl_t = record
@@ -349,6 +433,8 @@ type
                                           c_type_name fill it) }
     name: univ_ptr;                     { +4 }
     unused_8: integer32;                { +8 }
+    case integer of
+    1: (
     flags: c_flags_t;                   { +12: cleared; c_type_name's
                                           qualifiers (19 const, 0
                                           volatile: c_expr_syn's cast
@@ -365,7 +451,9 @@ type
                                           the attributes) }
     line: integer;                      { +32 }
     unused_34: integer;                 { +34 }
-    unused_36: integer32;               { +36 }
+    unused_36: integer32);              { +36 }
+    2: (
+    attr: c_dattr_t);                   { +12..+31 }
   end;
 
   { An entry of c_expr_sem's expression stack (cexs_stack, 64 bytes;
@@ -421,7 +509,8 @@ type
 
     Not known from the original: the names; the fields not named. }
   c_reglist_ptr_t = ^c_reglist_t;
-  c_reglist_t = record                  { a block's register variables }
+  c_reglist_t = record                  { a block's register variables;
+                                          a tag's incomplete users }
     unused_0: integer;                  { +0 }
     kind: integer;                      { +2 }
     rvar: il_$node_ptr_t;               { +4: the variable (109) }
@@ -431,16 +520,25 @@ type
   c_blk_t = record
     unused_0: integer;                  { +0 }
     kind: integer;                      { +2 }
-    unused_4: integer32;                { +4 }
-    unused_8: integer32;                { +8 }
-    unused_12: integer32;               { +12 }
+    next_blk: c_blk_ptr_t;              { +4: the next block made (from
+                                          il_17c, def_blk_skeleton) }
+    outer: c_blk_ptr_t;                 { +8: the enclosing block
+                                          (cdef_outer_block for a
+                                          function) }
+    old_parms: c_parm_ptr_t;            { +12: the parameters (kind 121,
+                                          by name, from add_parm) }
     syms: il_$node_ptr_t;               { +16: its variables (through
                                           c_sym_t's blk_next) }
     unused_20: integer32;               { +20 }
     labels: c_sym_ptr_t;                { +24: its labels (c_stmt_sem) }
     result: c_type_ptr_t;               { +28: a function's result
                                           type (func_call_stat) }
-    unused_32: array [8..22] of integer32;  { +32..+91 }
+    unused_32: array [8..19] of integer32;  { +32..+79 }
+    saved_frame: integer32;             { +80: frame_size between
+                                          allocations (c_def_sem's
+                                          alloc_on_stk) }
+    x84: integer32;                     { +84: 16#FF000000 when made }
+    x88: integer32;                     { +88: -1 when made }
     ret_lab: il_$node_ptr_t;            { +92: the return label (return_s
                                           branches to it, body_e places
                                           it) }
@@ -448,10 +546,15 @@ type
                                           for none; body_e) }
     entry_lab: il_$node_ptr_t;          { +100: placed by body_s }
     end_node: il_$node_ptr_t;           { +104: body_e's 149 node }
-    unused_108: integer32;              { +108 }
+    x108: integer32;                    { +108: its data section's +16
+                                          (def_blk_params, without
+                                          -ABS) }
     frame_size: integer32;              { +112: body_e takes its
                                           absolute value }
-    unused_116: array [29..43] of integer32;  { +116..+175 }
+    sect_next: il_$node_ptr_t;          { +116: the next block of its
+                                          data section's chain (the
+                                          section's +12) }
+    unused_120: array [30..43] of integer32;  { +120..+175 }
     x176: integer32;                    { +176: added to frame_size }
     unused_180: array [45..46] of integer32;  { +180..+187 }
     code_sect: il_$node_ptr_t;          { +188 (c_main) }
@@ -464,13 +567,34 @@ type
     unused_232: array [58..66] of integer32;  { +232..+267 }
     unused_268: integer;                { +268 }
     end_line: integer;                  { +270: body_e }
-    unused_272: array [68..73] of integer32;  { +272..+295 }
+    unused_272: array [68..71] of integer32;  { +272..+287 }
+    parm_size: integer;                 { +288: the parameters' bytes
+                                          (def_blk_params) }
+    unused_290: integer;                { +290 }
+    lev: packed record                  { +292 }
+      b292: 0..255;
+      nparms: 0..255;                   { +293: the parameters by name
+                                          (def_blk_params); a
+                                          prototyped flag (0 or 255)
+                                          until then }
+      level: -128..127;                 { +294: the nesting (-1 a
+                                          module, -2 a declaration
+                                          only, 0, 1, a scope's
+                                          enclosing block's + 1) }
+      b295: 0..255;
+    end;
     name: c_name_t;                     { +296: the routine's name
                                           (body_e's diagnostics; a
                                           module's #module name) }
-    unused_304: array [76..92] of integer32;  { +304..+371 }
+    unused_304: array [76..77] of integer32;  { +304..+311 }
+    attr: c_dattr_t;                    { +312: its declaration's }
+    ropts: array [83..92] of integer32; { +332..+371: filled by
+                                          attributes's
+                                          attr_compute_routine_options }
     unused_372: integer;                { +372 }
     bits: packed record                 { +374 }
+    case integer of
+    1: (
       b374_7: boolean;
       b374_6: boolean;                  { .6: set by unary_expr's `&'
                                           of a variable with flag 10 }
@@ -490,16 +614,30 @@ type
       b376_2: boolean;
       b376_1: boolean;
       x376_0: 0..3;                     { .0 to +377.7 (c_main,
-                                          c_sym_map: `andi.w #0x180') }
+                                          c_sym_map: `andi.w #0x180'):
+                                          def_blk_skeleton's class (2 a
+                                          declaration only) }
       conv: 0..7;                       { +377 .6..4: the calling
                                           context func_call_stat pushes
                                           on csyn_60 }
-      b377_3_0: 0..15;                  { .3..0 }
+      b377_3_0: 0..15);                 { .3..0 }
+    { The routine's options (def_blk_skeleton: 1, 2 by the block's
+      kind, 4 for setjmp and the like, the caller's; 1024 inside
+      #pragma begin_inline, 2048 begin_noinline). }
+    2: (
+      opts: 0..2097151;                 { +374.7 to +376.3 }
+      opts_rest: 0..2047);
     end;
-    unused_378: integer;                { +378 }
+    b378: packed record                 { +378 }
+      made: boolean;                    { .7: set by def_blk_skeleton }
+      rest: 0..32767;
+    end;
     unused_380: integer32;              { +380 }
-    reg_vars: c_reglist_ptr_t;          { +384: unary_expr's `&' }
-    unused_388: integer32;              { +388 }
+    reg_vars: c_reglist_ptr_t;          { +384: its register variables
+                                          (add_reg_var; unary_expr's
+                                          `&') }
+    tags: c_tag_ptr_t;                  { +388: its structure, union and
+                                          enumeration tags (add_su) }
     params: c_parlist_ptr_t;            { +392: the parameters' types
                                           (func_call_stat) }
   end;
@@ -679,4 +817,88 @@ type
     line: integer;                      { +108 }
     started: boolean;                   { +110: set by case_s }
     has_default: boolean;               { +111 }
+  end;
+
+  { A parameter declared by name (121, 56 bytes from c_def_sem's
+    add_parm), chained from a block's old_parms (fnd_param looks names
+    up in it, def_blk_params makes each a variable): as type_exp sees a
+    kind 121 node, its type at +16 and its attributes at +24.
+
+    Not known from the original: the names; what w44 and b46 hold (the
+    parser's: c_syntax's declaration and function_prototype). }
+  c_parm_t = record
+    unused_0: integer;                  { +0 }
+    kind: integer;                      { +2 }
+    next: c_parm_ptr_t;                 { +4 }
+    pname: c_name_t;                    { +8 }
+    ptype: c_type_ptr_t;                { +16: il_178 until declared
+                                          (def_blk_params makes it int) }
+    flags: c_flags_t;                   { +20: merge_attribs's }
+    attr: c_dattr_t;                    { +24 }
+    w44: integer;                       { +44 }
+    b46: boolean;                       { +46 }
+    reg: boolean;                       { +47: declared register
+                                          (def_blk_params: add_reg_var) }
+    unused_48: array [12..13] of integer32;  { +48..+55 }
+  end;
+
+  { A structure, union or enumeration tag (28 bytes from c_def_sem's
+    def_su; a block's tags): its kind, then the rest, which
+    def_resolve_incomplete_types takes by address (c_syntax's
+    struct_union_type passes the tag's +4).
+
+    Not known from the original: the names. }
+  c_tag_body_t = record
+    next: c_tag_ptr_t;                  { +4: the block's next tag }
+    stype: c_type_ptr_t;                { +8: the type (il_178 until
+                                          defined) }
+    block: c_blk_ptr_t;                 { +12 }
+    incomplete: c_reglist_ptr_t;        { +16: the variables, typedefs
+                                          and arrays declared with the
+                                          type while it was incomplete
+                                          (kind 160 entries,
+                                          add_incomplete_type) }
+    name: c_name_t;                     { +20: its uplevel byte (+26)
+                                          set by lookup_su }
+  end;
+  c_tag_t = record
+    unused_0: integer;                  { +0 }
+    kind: integer;                      { +2 }
+    body: c_tag_body_t;                 { +4 }
+  end;
+
+  { A structure or union being laid out (c_syntax's struct_union_type
+    frame; c_def_sem's def_fld adds each field, def_rec makes the
+    type).
+
+    Not known from the original: the names. }
+  c_fldlist_ptr_t = ^c_fldlist_t;
+  c_fldlist_t = record
+    first: c_field_ptr_t;               { +0 }
+    tag: c_tag_ptr_t;                   { +4 }
+    attr: c_dattr_t;                    { +8: device read and write
+                                          or-ed in from the fields;
+                                          align, w10 and x12 their
+                                          greatest }
+    size: integer32;                    { +28: bytes so far (a union's:
+                                          the largest) }
+    bitoff: integer;                    { +32: bits past size }
+    has_bf: boolean;                    { +34: a bit field was laid out }
+    has_arr: boolean;                   { +35: a field is an array }
+  end;
+
+  { A dynamic initializer waiting for the routine's code (68 bytes from
+    c_def_sem's def_dynm_data, chained from cdef_44): the expression
+    stack's top entry. }
+  c_dynm_ptr_t = ^c_dynm_t;
+  c_dynm_t = record
+    next: c_dynm_ptr_t;                 { +0 }
+    e: c_exp_t;                         { +4: 62 bytes copied }
+  end;
+
+  { An enumeration's constants as c_syntax's enum__type collects them
+    (a 4104-byte frame record; c_def_sem's def_enum_list). }
+  c_enumset_t = record
+    syms: array [1..1024] of c_sym_ptr_t;  { +0: constants (116) }
+    count: integer;                     { +4096 }
   end;
