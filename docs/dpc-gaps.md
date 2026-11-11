@@ -28,7 +28,8 @@ when this tree is merged).
    'L', 'R') over the range '0'..'R'.  dpc: "a `case` of 12 labels over
    a range of 35 (between the sparsest jump table and the densest
    compare chain seen, codegen-patterns 7.3) is not supported yet".
-   Rev 8.89 builds the table.  Reproducer:
+   Rev 8.89 builds the table (also runbackend.pas normalize_il, cc.m68k
+   0x0B1AC0: 10, 11, 15, 21 over 10..21, a table of 12).  Reproducer:
 
        module g2;
        var n: integer;

@@ -59,3 +59,15 @@ lang/lang/source/celpkg.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
 lang/lang/source/celpkg.pas	s/kind in \[0, 17, 18, 23, 31, 34, 39\]/(kind = 0) or (kind = 17) or (kind = 18) or (kind = 23) or (kind = 31) or (kind = 34) or (kind = 39) { gap 8 }/
 # gap 4 (gen_exception): writeln (dropped, for the check)
 lang/lang/source/gen_exception.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
+# gap 8 (runbackend): in on constant sets with word elements (the comparisons, for the check)
+lang/lang/source/runbackend.pas	s/([\w\^\.]+?)\^\.kind in \[105, 106, 107, 108, 172, 209\]/((($1^.kind >= 105) and ($1^.kind <= 108)) or ($1^.kind = 172) or ($1^.kind = 209)) { gap 8 }/
+lang/lang/source/runbackend.pas	s/n\^\.kind in \[137, 138, 143, 145, 146, 147, 164, 205\]/((n^.kind = 137) or (n^.kind = 138) or (n^.kind = 143) or (n^.kind = 145) or (n^.kind = 146) or (n^.kind = 147) or (n^.kind = 164) or (n^.kind = 205)) { gap 8 }/
+lang/lang/source/runbackend.pas	s/n\^\.kind in \[137, 138, 143, 145, 146, 147, 164, 171, 175, 189,$/(n^.kind = 171) or (n^.kind = 175) or (n^.kind = 189) { gap 8 }/
+lang/lang/source/runbackend.pas	s/^\s*205\] then$/ then/
+lang/lang/source/runbackend.pas	s/n\^\.xw\[18\] in \[2, 4, 5, 6, 11, 15, 16, 21, 35, 37\]/((n^.xw[18] = 2) or (n^.xw[18] = 4) or (n^.xw[18] = 35)) { gap 8 }/
+lang/lang/source/runbackend.pas	s/d\^\.xp\[6\]\^\.kind in \[77\.\.90, 92, 93, 101, 156,$/(d^.xp[6]^.kind <= 93) { gap 8 }/
+lang/lang/source/runbackend.pas	s/^\s*176, 198, 200\]$//
+lang/lang/source/runbackend.pas	s/t\^\.kind in \[139\.\.142, 144, 148\.\.151, 188, 191, 214, 215, 223\.\.225,$/((t^.kind >= 139) and (t^.kind <= 151)) { gap 8 }/
+lang/lang/source/runbackend.pas	s/^\s*227, 228, 231, 233\] then$/ then/
+# gap 2 (runbackend): a case of 4 labels over a range of 12 (labels added, for the check)
+lang/lang/source/runbackend.pas	s/^(\s*)10, 11, 21:$/${1}10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21: { gap 2 }/

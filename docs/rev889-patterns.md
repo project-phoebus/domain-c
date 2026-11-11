@@ -251,3 +251,13 @@ cc.m68k unless marked.
     putobj's address stored in a frame slot and A0 left as it is) and
     gen_exception_$new_exception (mrh_$alloc's).  dpc reloads the
     result.
+## Sets (translator J, runbackend.pas)
+
+33. **No range check for a set test that spans the node kinds.**  A
+    test of a node's kind (+2) against a constant set of 0..207 or
+    0..223 checks the range first (`move.w #207,D0; sub.w kind,D0; bcs
+    ...; lsr.w #3,D0; btst kind,(set,D0.w)': runbackend
+    build_call_graph_walk_il 0x0B0F5E, unconditionally_add_call_graph_
+    edge 0x0B0B5E), but normalize_il's set of 0..239 (0x0B17D4) has
+    no `bcs': the kinds' type may be 0..239 (a set as large as the
+    type needs no check).  Not decided; noted for the node types.
