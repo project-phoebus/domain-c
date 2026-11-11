@@ -92,3 +92,17 @@ bodies are translated in the parallel phase like any other unit.  Types the
 headings cannot decide are `univ_ptr` (any pointer) or the width's integer;
 translators narrow them, which is the one kind of core change expected
 later.
+
+## The front end's inserts (translator B, 2026-11-11)
+
+| insert | state |
+|--------|-------|
+| `lang/c_compiler/source/c_objtype.ins.pas` | type_exp_t (type_exp's result), c_type_t (integral and floating type nodes); the other node kinds TODO |
+| `lang/c_compiler/source/c_globals.ins.pas` | every front-end cell another unit reaches (both binaries, same offsets), by owner; diagnostics cells named, the rest by offset; c_data.asm's diagnostic tables; errorlst |
+| `lang/c_compiler/source/c_externs.ins.pas` | get_rlen, error_text, warning_text, initdate (narrowed); the other cross-unit routines read off frames (TODO) |
+| `lang/c_compiler/source/c_pre_proc.ins.pas` | pp_$line_t, CR_ |
+| `lang/c_compiler/source/general_utl.ins.pas` | done (c_general_utl) |
+| `lang/c_compiler/source/macro_read.ins.pas` | MR_ headings (frames), mr_632, mr_date, mr_time |
+| `lang/c_compiler/source/macro_utl.ins.pas` | done (c_macro_utl): text list elements, macros |
+| `lang/c_compiler/source/c_lex_pp.pvt.pas`, `c_syntax.ins.pas`, `c_expr_syn.ins.pas`, `cppansi.ins.pas` | headings read off frames and call sites (TODO) |
+
