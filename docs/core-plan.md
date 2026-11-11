@@ -267,3 +267,19 @@ cse_serial, cse's use and parent nodes (g_opt_cse_t), opt_loop's +4
 (opt_loop_hoist), opt_cse's +0x88 (cse_limit) and the headings of
 assign_opt, csecleanup, moved_check and cse (docs/questions.md 78-81).
 Core change: target_properties' +0x84 is a boolean.
+
+Translator Y (2026-11-11), the m68k code generator (cg_addr
+translated): cg.ins.pas's cg_addr cells are defined by cg_addr.pas in
+the image's layout (0x2BC bytes) and renamed by use: cg_addr_used
+(+0xC0, was cg_addr_killed: address_reg marks each register it
+addresses), cg_addr_half_blk and cg_addr_half_disp (+0x2A0, +0x2A4:
+allocate_temp's spare frame word, new), cg_addr_free_temps (+0x2A8,
+was cg_addr_2a8), cg_addr_next_freg, _next_areg, _next_dreg (+0x2B4,
++0x2B6, +0x2B8: get_register's round robin); cg_cache_t's b6 and
+param_alias are load and live; cg_addr_regs is [0..23].  The cg_addr
+headings are checked against the bodies (release and unlock `in',
+setobjcache's register, load_modifiable's `out'), and headings added
+for getobjcache, weight, register_tickle, get_agg_temp,
+get_childs_agg_temp, load_result and load_fp_result (cg_assign and
+cg_tree call them).  cg_call, cg_misc and cg_top follow the renames.
+

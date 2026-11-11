@@ -540,3 +540,15 @@ cc.m68k unless marked.
     test, the first index shifted by 2 and the second doubled
     (cse_$is_cseable 0x0D52DC): `array [boolean, boolean] of integer'
     with false the first element.
+## Tails and constants (translator Y, cg_addr.pas)
+
+72. **A shared tail entered with a different constant.**  load_operand
+    (cc.m68k 0x0F0F96) tests its register against [0..7] for class 4
+    by `move.l #0xFF,D0; bra' into class 5's `btst D1,D0' (whose own
+    path loads 0xFF00): item 23's identical tails, the differing set
+    constant loaded before the jump.  dpc compiles each branch's test.
+73. **A constant reused from a register holding another value.**
+    load_result tests -CPU element 8 (0x2C3670 bit 2) with `btst
+    D5,0x2C3670' where D5 holds 0x2002, the set [1, 13] it tested
+    just before (0x0F25DE): bit numbers of a memory `btst' are taken
+    modulo 8 (item 49), so 0x2002 tests bit 2.  dpc loads the bit.
