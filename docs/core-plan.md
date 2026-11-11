@@ -197,3 +197,16 @@ table at +0x4009C, opt_4009c), lang2/source/ftn/source/f_hash.ins.pas,
 lang2/source/ftn/source/const_op.ins.pas (r8_expon, r8i4_expon), and
 us/us/ins/fpp_errs.ins.pas, fpp.ins.pas, peb.ins.pas (empty; c_expr_sem
 and kfold open them).
+
+Translator T (2026-11-11), the m68k code generator (cg_fp, cg_call,
+cg_misc started): lang/lang/source/cg.ins.pas (new) holds the code
+generator's tree view (cg_tree_t, cg_desc_t: kfold's kf_tree_t layout),
+block views (cg_words_t, cg_level_t), cg_addr's tables (cg_reg_t,
+cg_cache_t), the cells of cg_fp, cg_top, cg_misc, cg_tree and cg_addr
+that other units read absolutely, and the headings of the cg_addr,
+cg_assign, cg_call, cg_fp, cg_misc, cg_tree, reg_save and emit routines
+the translated units call (docs/questions.md 69-72).  Core changes:
+globals_from_backend.ins.pas declares the section std_lib (the library
+routines' nodes, std_lib_rtns) and runbackend_18 (runbackend.pas's
+table at +0x18, now defined there); g_opt.ins.pas declares paramclass.
+fpa.ins.pas is a new empty stub.  cg_top is not started.
