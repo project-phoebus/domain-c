@@ -136,7 +136,11 @@ type
         and in hexadecimal). }
       4: (c4_8: integer;                { +8 }
           line: integer;                { +10 }
-          blk: il_$node_ptr_t);         { +12 }
+          blk: il_$node_ptr_t;          { +12: a line number cell's list
+                                          of equivalent lines }
+          ret: boolean);                { +16: a line number cell's
+                                          statement returns (outbin's
+                                          wr_instr) }
       { A branch (br_instyp, cbr_instyp, bsr_instyp: its size, 2 short
         and 6 long, and its target's number) or a label (def_lbl_instyp:
         its address, which outbin's br_distance reads through the
