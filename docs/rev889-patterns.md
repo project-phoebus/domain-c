@@ -92,6 +92,8 @@ cc.m68k unless marked.
     #0x43F9, #0x4EF9 and the addresses) and calls cache_$clear through
     the transfer vector (debug_sym_dmp, reg_color_68k); no source-level
     call, so no unit declares cache_$clear.
+## Prologue and epilogue (continued)
+
 13. **An empty global procedure is a lone `rts`**: no `link`, no saves
     and no A5 load, though the module has data and other routines are
     called from outside (fe_cc_hooks_to_backend's dump_namelist 0x067378,
