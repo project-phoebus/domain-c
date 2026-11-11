@@ -75,3 +75,28 @@ revisited.
    token.pas, and the gate skipped lang/lang/source/token.pas silently
    (`no single unit').  The change belongs in the source repository's
    coff_compare.py too when it is merged back.
+
+15. Translator D (2026-11-11): probable slips of the original in the
+   front end, reproduced as the image has them: c_macro_read's
+   get_par_cooked_line copies the tail of two messages to positions
+   that do not follow the text before them (`Formals list of macro
+   "' name: the closing text at line[n + 18] instead of n + 24; `Text
+   follows the valid #undef of ' name: at line[n + 22] with the length
+   n + 51, instead of n + 34 and n + 56); mr_$get_expanded_line leaves
+   its `#if' flag unset when it resumes a kind 5 piece (the register
+   holds remove_q's position, whose low byte the image tests);
+   c_sym_map's print_addr_cons passes 4 for its 3-blank literal.  Keep
+   as is?
+16. Translator D: c_objtype.ins.pas now has front-end records for
+   symbols (c_sym_t), structure fields (c_field_t) and attributes
+   (c_attr_t), and c_type_t variants by kind; blocks and sections
+   (IL kinds 105..108, 172, 182, 183) stay il.ins.pas views by offset
+   (question 13).  The symbol chain hangs from an identifier's +8,
+   which il.ins.pas calls idnt_unused_8 (an integer32): c_sym_map
+   reads it as xp[2] and transfers it to c_sym_ptr_t.  Narrow it in
+   il.ins.pas (a core change) when the lead prefers.
+17. Translator D: mr_632 (macro_read.ins.pas) is a char, not a
+   boolean: str_locate_c_id stores the open quote in it ('"', '''' or
+   '>'), and cr_$get_cooked_line tests it with `tst.b; sne'.  It is
+   now mr_open_quote: char, and c_cond_read reads mr_open_quote <>
+   chr(0).

@@ -25,8 +25,15 @@ type
   mu_$tle_t = record
     next: mu_$tle_ptr_t;                { +0 }
     len: integer;                       { +4 }
-    unused_6: integer;                  { +6 }
-    w_8: integer;                       { +8: cleared when allocated }
+    pos: integer;                       { +6: in c_macro_read's queue,
+                                          where a kind 5 piece's scan
+                                          resumes (remove_q returns it;
+                                          nothing in either preprocessor
+                                          unit stores it) }
+    kind: integer;                      { +8: cleared when allocated;
+                                          in c_macro_read's queues, the
+                                          line's kind (mr_$get_expanded_line)
+                                          or a diagnostic's }
     text: array [1..mu_$text_max] of char;  { +10 }
     unused_522: integer;                { +522 }
   end;
@@ -47,14 +54,10 @@ type
     name: array [1..pp_$line_max] of char;  { +13 }
   end;
 
-  { The actual parameters' text lists, by number (c_macro_read's +764,
-    by address). }
-  mu_$actuals_t = array [1..200] of mu_$tle_ptr_t;
-
-{ TODO(pascal) mu_$actuals_t's bound
-
-  Read it off c_macro_read's extract_params when c_macro_read.pas is
-  translated (+764 to +1568 would hold 201). }
+  { The actual parameters' text lists, by number (c_macro_read's data
+    +0x300, by address): at most 64 (append_actual drops the 65th on;
+    mr_$initialize and extract_params clear 64). }
+  mu_$actuals_t = array [1..64] of mu_$tle_ptr_t;
 
 { MU_$LOOKUP_NAME - the macro called name (len characters), in m.
   0x058F42. }

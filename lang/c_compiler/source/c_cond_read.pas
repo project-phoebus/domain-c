@@ -200,8 +200,8 @@ end;
 { cr_$get_cooked_line - the next line the conditionals let through.
 
   0x04041E, 0x346 bytes.  The result is held in D4 (0 first), a done
-  flag in D5 (false); raw := mr_632 (`tst.b 0x1496AE; sne').  A loop
-  (`bpl' on D5 back to 0x04043C):
+  flag in D5 (false); raw := mr_open_quote <> chr(0) (`tst.b
+  0x1496AE; sne').  A loop (`bpl' on D5 back to 0x04043C):
   - in state cr_on, mr_$get_expanded_line(len, line, kind) (0x04044C;
     kind a word at (-514,A6)): kind 3 makes the result 6, kinds 1 and
     2 are returned at once; in the other states mr_$get_raw_line
@@ -266,7 +266,7 @@ var
 begin
   result := 0;
   finished := false;
-  raw := mr_632;
+  raw := mr_open_quote <> chr(0);
   repeat
     if state = cr_on then begin
       mr_$get_expanded_line(len, line, kind);

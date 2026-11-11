@@ -501,7 +501,7 @@ begin
               t := addr(b^.tles[i]);
               t^.len := 0;
               t^.next := nil;
-              t^.w_8 := 0;
+              t^.kind := 0;
               alloc_block := b;
               mu_$alloc_tle := t;
               return;
@@ -528,7 +528,7 @@ begin
   b^.used := [0];
   b^.tles[0].next := nil;
   b^.tles[0].len := 0;
-  b^.tles[0].w_8 := 0;
+  b^.tles[0].kind := 0;
   alloc_block := b;
   mu_$alloc_tle := addr(b^.tles[0]);
 end;

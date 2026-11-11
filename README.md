@@ -103,4 +103,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/time.pas` | 2 | translated (best effort) |
 | `lang/lang/source/sortidntk.pas` | 3 | translated (best effort; dpc gap 10) |
 | `lang/c_compiler/source/c_sym_map.pas` | 11 | translated (best effort; blocks by offset) |
+| `lang/c_compiler/source/c_macro_read.pas` | 23 | translated (best effort) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
