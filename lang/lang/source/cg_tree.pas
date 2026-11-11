@@ -1088,6 +1088,7 @@ var
   w6: integer;
   k: integer;
   inst: integer;
+  save: integer;
   temps: boolean;
   rlen: integer;
 
@@ -3113,6 +3114,43 @@ begin
     end;
     11:
       bit_test_proc(n);
+    { A comparison (12) into a byte register (emit 19, an `scc') but for
+      a 143 node. }
+    12: begin
+      compare_proc(n, n^.desc.w6);
+      if n^.kind <> 143 then begin
+        get_register(il_$node_ptr_t(n), 1, opt);
+        emit(19, 1, opt, cg_null_ads, n^.desc.w8);
+        unlock(opt);
+      end;
+    end;
+
+    { An address indexed (13): by a constant an add, else a `lea' (emit
+      22) of the base indexed by the operand's register. }
+    13:
+      if n^.opnd[2]^.kind in [77..87, 101, 200] then begin
+        anyconst(n^.opnd[2]^.xl[2], 4, opr);
+        load_result(il_$node_ptr_t(n), -1, ops);
+        emit(1, 5, ops, opr, 0);
+        unlock(opr);
+        unlock(ops);
+      end
+      else begin
+        load_operand(n^.opnd[2], n^.desc.w6, opr);
+        load_operand(n^.opnd[1], 5, ops);
+        release(ops);
+        get_register(il_$node_ptr_t(n), 5, opt);
+        ops.f1 := 4;
+        ops.f3 := opr.f2;
+        if n^.desc.w6 = 4 then
+          ops.f5 := ops.f5 ! 2
+        else
+          ops.f5 := ops.f5 & ~2;
+        emit(22, 5, opt, ops, 0);
+        unlock(opt);
+        release(opr);
+      end;
+
     14:
       unpack_proc(n);
 
@@ -3125,8 +3163,84 @@ begin
       cg_fp_in_peb := nil;
       cg_fp_last_store := nil;
     end;
+
+    { A conversion (18) from class w6 to rlen (by their widths, delay.pas's
+      table): wider unsigned by a mask (the operand the destination,
+      cg_assign's +6 bit 14) or a cleared register; wider signed by
+      s_extend; narrower the operand as it is in the narrower class. }
+    18:
+      if delay_378[n^.desc.rlen] > delay_378[n^.desc.w6] then begin
+        if (n^.desc.flags & 16#4000) = 0 then begin
+          if (il_$node_ptr_t(n)^.xw[3] & 16#4000) <> 0 then begin
+            tree_rlen := n^.desc.rlen;
+            n^.desc.rlen := n^.desc.w6;
+            load_result(il_$node_ptr_t(n), 1, opr);
+            anyconst(rshft(-1, 32 - delay_378[n^.desc.rlen] * 8),
+                tree_rlen, ops);
+            emit(3, tree_rlen, opr, ops, 0);
+            n^.desc.rlen := tree_rlen;
+            cg_addr_regs[opr.f2].size := tree_rlen;
+          end
+          else begin
+            address(n^.opnd[1], n^.desc.w6, ops);
+            get_register(il_$node_ptr_t(n), n^.desc.rlen, opr);
+            anyconst(0, n^.desc.rlen, opw);
+            emit(0, n^.desc.rlen, opr, opw, 0);
+            emit(0, n^.desc.w6, opr, ops, 0);
+            unlock(opw);
+          end;
+          release(ops);
+        end
+        else begin
+          tree_rlen := n^.desc.rlen;
+          n^.desc.rlen := n^.desc.w6;
+          load_result(il_$node_ptr_t(n), -1, opr);
+          s_extend(opr, n^.desc.rlen, tree_rlen);
+          n^.desc.rlen := tree_rlen;
+          cg_addr_regs[opr.f2].size := tree_rlen;
+        end;
+        unlock(opr);
+      end
+      else begin
+        tree_rlen := n^.desc.rlen;
+        n^.desc.rlen := n^.desc.w6;
+        load_result(il_$node_ptr_t(n), -1, opr);
+        n^.desc.rlen := tree_rlen;
+        cg_addr_regs[opr.f2].size := tree_rlen;
+        unlock(opr);
+      end;
     19, 20, 21:
       set_ops(n);
+    { An aggregate converted to size w6 (22) in n's temporary by
+      multi_assign_proc (tree_asn): the source cut down, or copied with
+      the rest filled with zeros (fill), through cg_tree_1b4 (+16 1,
+      +24 and +28 the aggregate, +32 the difference). }
+    22: begin
+      save := cg_addr_next_areg;
+      cg_addr_next_areg := 8;
+      tree_asn.right := n^.opnd[1];
+      get_agg_temp(il_$node_ptr_t(n));
+      tree_asn.left := n^.opnd[1];
+      cg_tree_1b4^.xw[8] := 1;
+      if n^.desc.w6 >= n^.desc.size then begin
+        cg_tree_1b4^.xp[6] := tree_asn.right;
+        cg_tree_1b4^.xp[7] := tree_asn.right;
+        cg_tree_1b4^.xl[8] := n^.desc.w6 - n^.desc.size;
+        tree_asn.right := cg_tree_1b4;
+        tree_asn.desc.size := n^.desc.size;
+      end
+      else begin
+        cg_tree_1b4^.xp[6] := tree_asn.left;
+        cg_tree_1b4^.xp[7] := tree_asn.left;
+        cg_tree_1b4^.xl[8] := n^.desc.size - n^.desc.w6;
+        fill(tree_asn.left, 0, n^.desc.size - n^.desc.w6);
+        tree_asn.left := cg_tree_1b4;
+        tree_asn.desc.size := n^.desc.w6;
+      end;
+      multi_assign_proc(tree_asn);
+      cg_addr_next_areg := save;
+    end;
+
     23, 24:
       agg_compare_proc(n);
     25:
@@ -3171,6 +3285,20 @@ begin
       shift_proc(n, 3);
     28:
       shift_proc(n, 2);
+
+    { The absolute value (29): negated when negative. }
+    29: begin
+      if cg_fp_count <> 0 then
+        purge_fp;
+      load_result(il_$node_ptr_t(n), -1, opr);
+      emit(18, n^.desc.rlen, opr, cg_zero_ads, 0);
+      address(templabel, 0, opt);
+      emit(20, 5, opt, cg_null_ads, 10);
+      emit(11, n^.desc.rlen, opr, cg_null_ads, 0);
+      emit(32, 5, opt, cg_null_ads, 0);
+      unlock(opr);
+      release(opt);
+    end;
     49:
       shift_proc(n, 1);
     50:
