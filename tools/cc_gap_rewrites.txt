@@ -57,3 +57,5 @@ lang/lang/source/prtobj.pas	s/\(kind in \[91, 94, 102\.\.104\]\)/(kind = 91) or 
 lang/lang/source/celpkg.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
 # gap 8 (celpkg): in on a constant set with a word element
 lang/lang/source/celpkg.pas	s/kind in \[0, 17, 18, 23, 31, 34, 39\]/(kind = 0) or (kind = 17) or (kind = 18) or (kind = 23) or (kind = 31) or (kind = 34) or (kind = 39) { gap 8 }/
+# gap 4 (gen_exception): writeln (dropped, for the check)
+lang/lang/source/gen_exception.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
