@@ -80,6 +80,7 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang2/source/lt_utils/source/bug_check.pas` | 3 | translated (best effort) |
 | `lang2/source/lt_utils/source/seg_size.pas` | 1 | translated (best effort) |
 | `lang2/source/lt_utils/source/mrh.pas` | 15 | translated (best effort) |
+| `lang2/source/lt_utils/source/arith.pas` | 2 | translated (best effort) |
 | `lang/lang/source/gspace.pas` | 6 | translated (best effort) |
 | `lang/lang/source/strings.pas` | 7 | translated (best effort) |
 | `lang/lang/source/prtsub.pas` | 7 | translated (best effort) |
