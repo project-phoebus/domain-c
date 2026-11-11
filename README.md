@@ -81,4 +81,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/c_compiler/source/fe_cc_hooks_to_backend.pas` | 3 | translated (best effort) |
 | `lang/c_compiler/source/c_general_utl.pas` | 10 | translated (best effort) |
 | `lang/c_compiler/source/c_cond_read.pas` | 7 | translated (best effort) |
+| `lang/c_compiler/source/c_error.pas` | 8 | translated (best effort; dpc gap 2) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

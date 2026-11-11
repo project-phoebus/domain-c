@@ -21,6 +21,11 @@
   not yet known are named by their owner and offset).
 }
 
+type
+  { A diagnostic's arguments as error_listing's error0..error3 pass
+    them to errorlst (a 16-byte frame array, by address). }
+  cerr_args_t = array [1..3] of univ_ptr;
+
 { TODO(pascal) most cells are named by offset
 
   Rename them as their owners and users are translated (c_main sets
@@ -54,9 +59,35 @@ var
                                           cc sets it to il_180 }
 
   { c_error.pas's data, A5 0x1400AC (cc.m68k), 0x2C00AC (cc.a88k):
-    one byte, tested (tst.b) by c_error's routines through A5 and by
-    c_lex_pp, c_main and error_listing absolutely. }
-  cerr_00: extern boolean;              { +0x0 }
+    a byte (tested by c_error's routines through A5 and by c_lex_pp,
+    c_main and error_listing absolutely), and at +0x2 a byte errorlst
+    keeps to itself. }
+  cerr_quiet: extern boolean;           { +0x0: diagnostics are listed
+                                          but neither typed nor counted:
+                                          set except while cgerr reports
+                                          (cgerr clears it around its
+                                          call of error0/error1);
+                                          error_listing's error0..3 do
+                                          not save diagnostics while it
+                                          is set }
+
+  { The diagnostics' tables, in c_data.asm's part of .text (cc.m68k
+    0x0409E4..0x0451B3): the C compiler's diagnostic numbers for the
+    code generator's codes (cgerr; attributes and c_lex_pp's get read
+    single entries), each diagnostic's text offset and severity (0 a
+    warning, 1 fatal, 2 an error, 3..6 information of level 1..4;
+    errorlst, cgerr) and the texts (errorlst: '.' ends a text, '_' is
+    a blank, '@n' the n-th argument, '@L' '[' and '@R' ']', '&n' the
+    line of the n-th argument).  Defined by c_data.asm.
+
+    Not known from the original: the names and the bounds. }
+  cerr_code_map: extern array [0..85] of integer;      { 0x040CD2 }
+  cerr_messages: extern array [1..330] of record       { 0x040D7E }
+    text_at: integer;                   { +0: where the text begins in
+                                          cerr_texts }
+    severity: integer;                  { +2 }
+  end;
+  cerr_texts: extern array [0..16141] of char;         { 0x0412A6 }
 
   { c_expr_sem.pas's data, A5 0x1400B0 (cc.m68k), 0x2C00B0 (cc.a88k).
     The basic types, made by c_main's init_basic_types: 8-byte integral
@@ -94,12 +125,23 @@ var
                                           c_expr_sem, c_expr_syn,
                                           c_macro_read, c_main,
                                           c_stmt_sem, c_syntax }
-  lex_24cc: extern boolean;             { +0x24CC: c_error, c_main }
-  lex_24cd: extern boolean;             { +0x24CD: c_error (set by
-                                          error_hdr), c_main }
-  lex_24d0: extern boolean;             { +0x24D0: c_error, c_syntax }
-  lex_24d1: extern boolean;             { +0x24D1: c_error }
-  lex_24d2: extern boolean;             { +0x24D2: c_error }
+  lex_text_written: extern boolean;     { +0x24CC: the current line's
+                                          text has been written out
+                                          (errorlst writes it before the
+                                          line's first diagnostic; cgerr
+                                          sets it); c_main }
+  lex_hdr_written: extern boolean;      { +0x24CD: the line's header
+                                          has been typed (error_hdr;
+                                          cgerr sets it); c_main }
+  lex_fatal: extern boolean;            { +0x24D0: a fatal diagnostic
+                                          was reported: errorlst
+                                          reports no more (cgerr clears
+                                          it); c_syntax }
+  lex_fatal_suppressed: extern boolean; { +0x24D1: errorlst dropped a
+                                          diagnostic after a fatal one }
+  lex_type_errors: extern boolean;      { +0x24D2: diagnostics are
+                                          typed on the terminal as well
+                                          as listed }
   lex_errors: extern integer;           { +0x24D4: errors reported
                                           (error_hdr); c_main,
                                           runbackend }
@@ -199,3 +241,13 @@ var
   csyn_202: extern integer;             { +0x202: c_expr_sem,
                                           c_expr_syn, c_main }
   csyn_204: extern boolean;             { +0x204: c_expr_syn }
+
+{ ERRORLST - list (and type) diagnostic code at line with its nargs
+  arguments.  c_error.pas 0x0495EC; error_listing's error0..error3 pass
+  everything by address (nargs a literal word), so the heading is here,
+  in an insert error_listing opens. }
+procedure errorlst(
+    in code: integer;
+    in line: integer;
+    in args: cerr_args_t;
+    in nargs: integer); extern;

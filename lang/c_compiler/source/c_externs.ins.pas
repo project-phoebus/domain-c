@@ -32,3 +32,23 @@
   type_exp_t and read D0 as a word. }
 function get_rlen(
     in t: type_exp_t): integer; extern;
+
+type
+  { A diagnostic's text as c_lex_pp passes it to error_text and
+    warning_text (by address, with its length). }
+  cerr_text_t = array [1..256] of char;
+
+{ ERROR_TEXT - an error at line whose message is text (len
+  characters), listed and typed with the usual header.  c_error.pas
+  0x049AC0; c_lex_pp. }
+procedure error_text(
+    line: integer;
+    in text: univ cerr_text_t;
+    len: integer); options(val_param); extern;
+
+{ WARNING_TEXT - the same for a warning, only counted when warnings
+  are off (-NWARN).  c_error.pas 0x049B2C; c_lex_pp. }
+procedure warning_text(
+    line: integer;
+    in text: univ cerr_text_t;
+    len: integer); options(val_param); extern;
