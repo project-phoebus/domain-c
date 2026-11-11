@@ -17,18 +17,19 @@
     0x0F9EB2  --------  agg_loop_start
     0x0F9F4A  --------  agg_loop_end
     0x0FA012  --------  genmask
+    0x0FA580  --------  cbuiltin_strcpy
     0x0FAEF0  --------  cg_misc_$strcmp_can_use_longs
     A5 0x356310 (cc.m68k): +0 the label templabel gives while
     at_backend_506 is false (cg_top's f_initialize sets it).
 
   Every routine loads A5 (global).
 
-  TODO(pascal) cg_misc is started: 12 of its 24 routines are written
+  TODO(pascal) cg_misc is started: 13 of its 24 routines are written
   (show_state, show_label, templabel, reverse_cc, unaligned,
   zero_check, s_extend, agg_len_loop_start, agg_loop_start,
-  agg_loop_end, genmask, cg_misc_$strcmp_can_use_longs); shift
-  (0x0FA050), agg_opr (0x0FA27E), fill (0x0FA410), cbuiltin_strcpy
-  (0x0FA580), cbuiltin_strncpy (0x0FA67C), cbuiltin_strcat (0x0FA95A),
+  agg_loop_end, genmask, cbuiltin_strcpy,
+  cg_misc_$strcmp_can_use_longs); shift (0x0FA050), agg_opr
+  (0x0FA27E), fill (0x0FA410), cbuiltin_strncpy (0x0FA67C), cbuiltin_strcat (0x0FA95A),
   cbuiltin_strncat (0x0FAAFC), cbuiltin_strlen (0x0FAD8A),
   cg_misc_$strcmp_by_longs
   (0x0FAFCC, with compare_two_bytes 0x0FAF2A nested), cbuiltin_strcmp
@@ -67,7 +68,7 @@ define
   cg_misc_label,
   show_state, show_label, templabel, reverse_cc, unaligned, zero_check,
   s_extend, agg_len_loop_start, agg_loop_start, agg_loop_end, genmask,
-  cg_misc_$strcmp_can_use_longs;
+  cbuiltin_strcpy, cg_misc_$strcmp_can_use_longs;
 
 { show_state - the pass, the line (and its file when not the main one),
   then each data and address register holding an object: its name,
@@ -383,6 +384,37 @@ begin
       m := m + 1;
   end;
   genmask := m;
+end;
+
+{ cbuiltin_strcpy - strcpy(+60, +64) of tree n inline (nothing when the
+  two operands are the same node): both addresses in modifiable
+  registers, a label (32), `move.b (As)+,(Ad)+' (0, size 1) and the
+  branch back while not zero (20, x 6); the registers unlocked and
+  forgotten.
+
+  0x0FA580, 0xFA bytes: load_modifiable's size 5 a word after the
+  routine (0x0FA67A), passed by address. }
+
+procedure cbuiltin_strcpy;
+var
+  dst: codegen_$uads_t;                 { -72 }
+  src: codegen_$uads_t;                 { -48 }
+  lab: codegen_$uads_t;                 { -24 }
+begin
+  if n^.xp[16] <> n^.xp[15] then begin
+    load_modifiable(n^.xp[16], 5, src);
+    load_modifiable(n^.xp[15], 5, dst);
+    address(templabel, 5, lab);
+    emit(32, 5, lab, cg_null_ads, 0);
+    src.f1 := 8;
+    dst.f1 := 8;
+    emit(0, 1, dst, src, 0);
+    emit(20, 5, lab, cg_null_ads, 6);
+    unlock(src);
+    unlock(dst);
+    kill_register(src.f2);
+    kill_register(dst.f2);
+  end;
 end;
 
 { cg_misc_$strcmp_can_use_longs - neither of strcmp tree n's operands

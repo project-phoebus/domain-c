@@ -450,6 +450,11 @@ procedure shift(
     count: integer;
     how: integer); options(val_param); extern;
 
+{ CBUILTIN_STRCPY - the inline code of strcpy tree n (a byte loop).
+  cg_misc 0x0FA580: a pointer (cg_assign's assign_proc). }
+procedure cbuiltin_strcpy(
+    n: il_$node_ptr_t); options(val_param); extern;
+
 { CG_MISC_$STRCMP_CAN_USE_LONGS - neither string operand of the strcmp
   tree n may be unaligned.  cg_misc 0x0FAEF0: a pointer; D0
   (reg_save's registers_consumed_by_tree_operator, cbuiltin_strcmp). }
