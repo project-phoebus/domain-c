@@ -37,3 +37,10 @@ lang/lang/source/il_utils.pas	s/^\s*57, 59\.\.62, 74\.\.77, 86\] then begin$/ th
 lang/lang/source/gen_utils.pas	s/if sym\^\.kind in \[77\.\.87, 101, 200\] then/if sym^.kind = 81 then { gap 8 }/
 # gap 10: ordering arrays of char (compare the lengths instead)
 lang/lang/source/sortidntk.pas	s/\^\.idnt_name ([<>]) pivot\^\.idnt_name/^.idnt_len $1 pivot^.idnt_len { gap 10 }/g
+# gap 3 (cargs): new and dispose (the PAS_$NEW and PAS_$DISPOSE calls they compile to)
+lang/lang/source/cargs.pas	s/^(\s*)new\((p|arg)\);/$1pas_\$new($2, 130); { gap 3 }/
+lang/lang/source/cargs.pas	s/^(\s*)new\(argv\);/$1pas_\$new(argv, 512); { gap 3 }/
+lang/lang/source/cargs.pas	s/^(\s*)dispose\(argv\^\[j\]\);/$1pas_\$dispose(argv^[j], 130); { gap 3 }/
+lang/lang/source/cargs.pas	s/^(\s*)dispose\(argv\);/$1pas_\$dispose(argv, 512); { gap 3 }/
+# gap 11: nil as a pointer function's result (return another pointer, for the check)
+lang/lang/source/cargs.pas	s/^(\s*)arg_option_parameter := nil$/$1arg_option_parameter := argv^[0] { gap 11 }/

@@ -32,7 +32,7 @@ the translators; headings and cells should not need to change.
 | error_listing | `lang/lang/source/error_listing.pas` | 6 | 894 | done (+0x8, +0xC, the saved error) |
 | il_utils | `lang/lang/source/il_utils.pas` | 14 | 3412 | done (nodes by offset) |
 | gen_utils | `lang/lang/source/gen_utils.pas` | 21 | 4248 | done (nodes by offset) |
-| cargs | `lang/lang/source/cargs.pas` | 24 | 9064 | headings, the options record, shared cells |
+| cargs | `lang/lang/source/cargs.pas` | 24 | 9064 | done (best effort; both variants, `%if cc_a88k`) |
 | add_node | `lang/lang/source/add_node.pas` | 23 | 18204 | headings (11 called from outside) |
 | debug_sym_dmp | `lang/lang/source/debug_sym_dmp.pas` | 56 | 15050 | headings (9) |
 | outbin | `lang/lang/source/outbin.pas` (m68k only) | 70 | 24354 | headings (3) |
