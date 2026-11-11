@@ -62,7 +62,10 @@
 
   Field names: the command-line option that sets the field where there is
   one (an option beginning with N clears the field of the same name);
-  else the field's position. }
+  else the option prfpkg's perfsummary prints for the field (-I*2,
+  -L*1/-L*2, -SAVE, -UC, -U, -FF, -LCINC: options of the other
+  compilers sharing the record, which cc's parse_options does not
+  take); else the field's position. }
 
 { TODO(pascal) cargs_$options_t fields named by position
 
@@ -117,16 +120,19 @@ type
     b27b_4: boolean;            { .4: c_lex_pp sets it }
     indexl: boolean;            { .3: -INDEXL (default true in cc.a88k) }
     subchk: boolean;            { .2: -SUBCHK }
-    b27b_1: boolean;            { .1: cg_call, delay, opt_inline }
+    i_star_2: boolean;          { .1: -I*2 (perfsummary prints it; cg_call,
+                                  delay, opt_inline) }
     b27b_0: boolean;            { .0 }
     { +0x27C }
-    x27c_7: 0..15;              { .7..4: default 10 }
-    b27c_3: boolean;            { .3 }
+    l_star: 0..15;              { .7..4: -L*1 8, -L*2 9 (perfsummary
+                                  prints them); default 10 }
+    save: boolean;              { .3: -SAVE (perfsummary) }
     std: boolean;               { .2: -STD, -ANSI; -NANSI clears it }
     b27c_1: boolean;            { .1: add_node, cg_tree, delay, kfold }
     b27c_0: boolean;            { .0: not set by cargs }
     { +0x27D }
-    cond: boolean;              { .7: -COND }
+    cond: boolean;              { .7: -COND (perfsummary prints it as
+                                  -DEBUG) }
     warn: boolean;              { .6: -WARN (default true) }
     usrch: boolean;             { .5: -USRCH }
     comchk: boolean;            { .4: -COMCHK }
@@ -183,8 +189,10 @@ type
                                   -AC (default), -ABS 7, -PIC neither,
                                   6 -ULINE (default for compiler 1),
                                   5 -VARARGS, 4 -ALIGN (default; -PEB
-                                  removes it), 3 -NMSGS, 2 (compiler 1),
-                                  1 -EXTRA, 0 (compilers 1, 3, 5) }
+                                  removes it), 3 -NMSGS, 2 -ZERO (default
+                                  for compiler 1), 1 -EXTRA, 0 -MGBL
+                                  (default for compilers 1, 3, 5); 0 and
+                                  2 named from perfsummary's printout }
     { +0x288 }
     b288_2: boolean;            { .2 }
     b288_1: boolean;            { .1 }
@@ -192,12 +200,14 @@ type
     { +0x289 }
     x289: 0..255;               { default 123 }
     { +0x28A }
-    b28a_7: boolean;            { .7: coff_syms, unix_objmod }
-    b28a_6: boolean;            { .6: default true for compilers 1, 3, 5
+    uc: boolean;                { .7: -UC (perfsummary; coff_syms,
+                                  unix_objmod) }
+    u: boolean;                 { .6: -U (perfsummary): names keep their
+                                  case; default true for compilers 1, 3, 5
                                   (coff_syms, debug_sym_dmp, gen_utils,
                                   unix_objmod) }
-    b28a_5: boolean;            { .5 }
-    b28a_4: boolean;            { .4 }
+    ff: boolean;                { .5: -FF (perfsummary) }
+    lcinc: boolean;             { .4: -LCINC (perfsummary) }
     b28a_3: boolean;            { .3 }
     alnchk: boolean;            { .2: -ALNCHK: not cpu 6 (attributes,
                                   c_def_sem, c_expr_sem) }

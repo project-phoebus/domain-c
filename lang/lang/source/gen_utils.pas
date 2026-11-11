@@ -310,7 +310,7 @@ end;
 
 { change_name_lower_case - id's characters to buf.
 
-  0x07C966, 0x92 bytes: with cargs_$options.b28a_6 (`btst #6,0x2C3676')
+  0x07C966, 0x92 bytes: with cargs_$options.u (`btst #6,0x2C3676')
   copied as they are, else A..Z made lower case (32-bit `dbf' loops). }
 
 procedure change_name_lower_case(
@@ -320,7 +320,7 @@ var
   i: integer32;
   c: char;
 begin
-  if not cargs_$options.b28a_6 then begin
+  if not cargs_$options.u then begin
     for i := 1 to id^.idnt_len do begin
       c := id^.idnt_name[i];
       if c in ['A'..'Z'] then

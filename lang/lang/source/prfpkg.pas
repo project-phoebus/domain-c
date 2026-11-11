@@ -89,10 +89,10 @@ type
     b27b_4: boolean;
     indexl: boolean;
     subchk: boolean;
-    b27b_1: boolean;
+    i_star_2: boolean;
     b27b_0: boolean;
-    x27c_7: 0..15;
-    b27c_3: boolean;
+    l_star: 0..15;
+    save: boolean;
     std: boolean;
     b27c_1: boolean;
     b27c_0: boolean;
@@ -123,10 +123,10 @@ type
     b288_1: boolean;
     b288_0: boolean;
     x289: 0..255;
-    b28a_7: boolean;
-    b28a_6: boolean;
-    b28a_5: boolean;
-    b28a_4: boolean;
+    uc: boolean;
+    u: boolean;
+    ff: boolean;
+    lcinc: boolean;
     b28a_3: boolean;
     alnchk: boolean;
     b28a_1: boolean;
@@ -689,14 +689,14 @@ begin
         end;
         if xrs then
           prtcats(line, '-XRS ', 5);
-        if b27b_1 then
+        if i_star_2 then
           prtcats(line, '-I*2 ', 5);
-        l := x27c_7;
+        l := l_star;
         if l = 8 then
           prtcats(line, '-L*1 ', 5)
         else if l = 9 then
           prtcats(line, '-L*2 ', 5);
-        if b27c_3 then
+        if save then
           prtcats(line, '-SAVE ', 6);
         case db of
           0: prtcats(line, '-NDB ', 5);
@@ -756,13 +756,13 @@ begin
           prtcats(line, '-FRND ', 6);
         if 15 in flags_286 then
           prtcats(line, '-AEGIS10 ', 9);
-        if b28a_7 then
+        if uc then
           prtcats(line, '-UC ', 4);
-        if b28a_6 then
+        if u then
           prtcats(line, '-U ', 3);
-        if b28a_5 then
+        if ff then
           prtcats(line, '-FF ', 4);
-        if b28a_4 then
+        if lcinc then
           prtcats(line, '-LCINC ', 7);
         if 11 in flags_286 then
           prtcats(line, '-BSS ', 5);

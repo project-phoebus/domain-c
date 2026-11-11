@@ -94,7 +94,7 @@ function gen_utils_$alloc_new_addr_con(
     sect: il_$node_ptr_t): il_$node_ptr_t; options(val_param); extern;
 
 { CHANGE_NAME_LOWER_CASE - id's characters to buf, made lower case
-  unless cargs_$options.b28a_6.  0x07C966: id and buf by address. }
+  unless cargs_$options.u.  0x07C966: id and buf by address. }
 procedure change_name_lower_case(
     in id: il_$node_ptr_t;
     out buf: univ cargs_$chars_t); extern;
