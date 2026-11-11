@@ -243,3 +243,11 @@ cc.m68k unless marked.
     open_binary_file's build_name) is `pea' of the address just after
     the routine's code, the next routine's entry: the literal has no
     bytes.
+32. **A function's result left in A0 from a call.**  When the result
+    variable holds a callee's A0 and A0 is not reused, the function
+    ends without moving it to A0 again: celpkg.pas getlabcell (0x0B648E:
+    getcodecell's cell kept in A0 through the stores, no `movea.l' at
+    the end; its callers read A0), gen_exception.pas allocate (0x079FC6:
+    putobj's address stored in a frame slot and A0 left as it is) and
+    gen_exception_$new_exception (mrh_$alloc's).  dpc reloads the
+    result.
