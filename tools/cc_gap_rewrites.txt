@@ -283,3 +283,17 @@ lang/lang/source/cg_call.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d.
 lang/lang/source/cg_call.pas	if ((/^  \{ The registers and objects the call may change\. \}/ .. /^  \{ The result.s register\. \}/) && !/The result.s register/) { $_ = "  { gap 28 }\n" }
 # gap 8 (cg_misc): in on constant sets with word elements (the comparisons)
 lang/lang/source/cg_misc.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d., ]+)\]}{my $v=$1; "(".join(" or ", map { /^(\d+)\.\.(\d+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $_)" } split(/,\s*/, $2)).") { gap 8 }"}ge
+# gap 7 (opt_general): real arithmetic in is_scale_candidate (the bits tested instead, for the check)
+lang/lang/source/opt_general.pas	s/^(\s*)a := abs\(x\.d\);/${1}{ gap 7 }/
+lang/lang/source/opt_general.pas	s/if a >= 5\.0e-307 then/if x.hi >= 0 then { gap 7 }/
+lang/lang/source/opt_general.pas	s/if a <= 4\.0e307 then/if x.lo >= 0 then { gap 7 }/
+lang/lang/source/opt_general.pas	s/^(\s*)r := 1\.0 \/ x\.d;/${1}{ gap 7 }/
+lang/lang/source/opt_general.pas	s/^(\s*)x\.d := r;/${1}x.lo := 0; { gap 7 }/
+lang/lang/source/opt_general.pas	s/^(\s*)x\.d := c\^\.real_value;/${1}x.hi := c^.bits[1]; x.lo := c^.bits[2]; { gap 7 }/
+# gap 8 (opt_general): in on constant sets with word elements (the first elements compared)
+lang/lang/source/opt_general.pas	s/t\^\.kind in \[137, 138, 143, 145\.\.147, 164, 205\]/((t^.kind = 137) or (t^.kind = 143)) { gap 8 }/
+lang/lang/source/opt_general.pas	s/\(t\^\.kind in \[139\.\.142, 144, 148\.\.151, 188, 191, 214, 215,$/((t^.kind >= 139) and (t^.kind <= 142) { gap 8 }/
+lang/lang/source/opt_general.pas	s/^\s*223\.\.225, 227, 228, 231, 233\]\) and$/) and/
+lang/lang/source/opt_general.pas	s/\(t\^\.kind in \[137, 138, 143, 145\.\.147, 164, 171, 175, 189, 205\]\)/((t^.kind = 137) or (t^.kind = 143)) { gap 8 }/
+lang/lang/source/opt_general.pas	s/\((\w+(?:\^\.\w+)*)\^\.kind in \[77\.\.87, 101, 200\]\)/(($1^.kind >= 77) and ($1^.kind <= 87)) { gap 8 }/
+lang/lang/source/opt_general.pas	s/if c\^\.kind in \[77\.\.87, 101, 200\] then/if (c^.kind >= 77) and (c^.kind <= 87) then { gap 8 }/

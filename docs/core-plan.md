@@ -223,3 +223,16 @@ globals_from_backend.ins.pas declares the section std_lib (the library
 routines' nodes, std_lib_rtns) and runbackend_18 (runbackend.pas's
 table at +0x18, now defined there); g_opt.ins.pas declares paramclass.
 fpa.ins.pas is a new empty stub.  cg_top is not started.
+
+Translator V (2026-11-11), the global optimizer (opt_general, ...):
+lang/lang/source/g_opt.ins.pas is the optimizer's insert: the views
+of the nodes it reads (g_opt_stmt_t, c_top_t's layout; g_opt_tree_t,
+kf_tree_t's), the basic blocks (il_11c^[1..il_124], g_opt_block_t),
+flow edges, a routine block's depth-first lists (il_180^,
+g_opt_rtn_t), the cells of opt_main's block other units read
+(opt_dfs_number +0x50, opt_dfs_block +0x54, opt_region +0x5E,
+opt_last_block +0x68, opt_first_block +0x6A, opt_track_lines +0x6C,
+opt_dom +0x9C, opt_4009c, now indexed from 0 as the image does), and
+the headings of opt_general's and opt_select's global routines.
+tools/cc_globals.py now also catalogues opt$data and the other data
+sections without file contents, and decimal `#abs' operands.
