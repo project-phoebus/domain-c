@@ -638,3 +638,11 @@ procedure make_motioned_ud_chain(
   `in' until opt_strength is translated). }
 procedure delparent(
     in p: g_opt_cse_ptr_t); extern;
+
+{ reg_alloc.pas (cc.m68k 0x0C4A62; not in cc.a88k). }
+
+{ REG_ALLOC - the m68k register allocator over the routine's numbered
+  statements: live ranges, their costs and interference, colouring,
+  the loads and stores, the variables' frame offsets (opt_main's g_opt;
+  no parameters, A5 loaded). }
+procedure reg_alloc; extern;
