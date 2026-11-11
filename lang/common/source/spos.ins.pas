@@ -15,24 +15,17 @@
   (the routine names are the binaries').
 }
 
-{ TODO(pascal) spos.pas is not translated yet
-
-  The headings are complete; the region record and the rest of spos's
-  data are for spos.pvt.pas when spos.pas is translated: +0 the base
-  source position of each region (3000 longwords), +12004 and +12012
-  the marked files' counts, +12008 the include files opened, +12016 the
-  include depth, +12032 the marks locked; +12036 (0x14E778) the next
-  position (a word) and +12038 the last region (a longword), then from
-  +12044 the regions, 36 bytes each (user name, name used to open, full
-  path name, unit name, dtm, base line, mark, root region, the next
-  region of the file and the region's first position, a word). }
-
 type
   { An encoded source position. }
   spos_$position_t = integer;
 
   { A region's number: compared unsigned with the last region. }
   spos_$region_t = 0..2147483647;
+
+  { A line number: spos.pas compares lines unsigned (`bls', `bhi':
+    SPOS_$RESUME_FILE 0x0720C4, SPOS_$ENCODE_SOURCE_POSITION 0x072638),
+    as a non-negative longword (base's linteger) is compared. }
+  spos_$line_t = 0..2147483647;
 
   { The routines SPOS_$APPLY_OVER_SOURCE_FILES and
     SPOS_$APPLY_OVER_MARKED_SOURCE_FILES call for each root region
@@ -45,7 +38,7 @@ type
 
 var
   { spos.pas's data, A5 0x14B874 (cc.m68k), 0x2CB8E4 (cc.a88k). }
-  spos_$line: extern integer32;                 { +0x2EF4: the line in
+  spos_$line: extern spos_$line_t;              { +0x2EF4: the line in
                                                   the current region }
   spos_$region: extern integer32;               { +0x2EF8: the current
                                                   region (0 the main
@@ -107,7 +100,7 @@ procedure spos_$change_file(
     full_path_name: univ_ptr;
     dtm: integer32;
     unit_name: univ_ptr;
-    line: integer32); options(val_param); extern;
+    line: spos_$line_t); options(val_param); extern;
 
 { SPOS_$IS_MAIN_SOURCE_FILE - region = 0.  0x07250C. }
 function spos_$is_main_source_file(
@@ -128,7 +121,7 @@ procedure spos_$decode_source_position(
   region.  0x0725C4. }
 function spos_$encode_source_position(
     region: spos_$region_t;
-    line: integer32): spos_$position_t; options(val_param); extern;
+    line: spos_$line_t): spos_$position_t; options(val_param); extern;
 
 { SPOS_$LAST_SOURCE_REGION - 0x07278C. }
 function spos_$last_source_region: integer32; extern;

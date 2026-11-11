@@ -75,3 +75,31 @@ revisited.
    token.pas, and the gate skipped lang/lang/source/token.pas silently
    (`no single unit').  The change belongs in the source repository's
    coff_compare.py too when it is merged back.
+
+15. Translator E (2026-11-11): pds.pas opens //us/us/sys/ins/dst.ins.pas
+   (`/sys/ins/dst.ins.pas' by the include rule), which the install's
+   sys/ins does not have, so pds.pas cannot be compiled until a
+   stand-in exists.  Where should it go (us/us/sys/ins/dst.ins.pas in
+   the tree, included by path, or a rewrite rule)?
+16. objio.ins.pas and objmod.ins.pas: the source repository's
+   com/bind/objio.ins.pas was split, its OBJ records going to
+   us/us/ins/objmod.ins.pas (cc's units open objmod first) and its
+   status codes and routines staying in objio.ins.pas.  The com/ins
+   inserts objio uses were copied into the us/us/ins stand-ins (strl,
+   mst, file, cmpexe, pfm and name, the last two including the customer
+   insert first) and misc_server/clib/ins/unix_time.ins.pas;
+   us/us/ins/ios.ins.pas declares ios_$inq_obj_uid with an integer
+   stream id since /sys/ins/ios.ins.pas comes after it.  Keep, or
+   revisit when the source repository's com/ins inserts change?
+17. us/us/ins/objutil.ins.pas makes three parameters univ (the error
+   routine, the lookups' options, the kind) because gen_utils.pas passes
+   inlib_error's address, an integer built with `!', and a 280-byte
+   frame area; objutil's own bodies take the set and an integer kind.
+   gen_utils could instead pass a objutil_$lookup_opts_t and an integer
+   kind (its 280-byte `info' is only the callee's word); left to the
+   lead.
+18. spos.pas: the regions' database is taken to be one record (next
+   position, last region, 3001 regions) because Rev 8.89 addresses all
+   of it absolutely; the image puts the regions at +8 where dpc puts
+   them at +6 (docs/rev889-patterns.md 21).
+

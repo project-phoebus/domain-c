@@ -77,6 +77,10 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/common/source/mem.pas` | 19 | translated (best effort) |
 | `lang/common/source/htm.pas` | 12 | translated (best effort; tables initialized) |
 | `lang/common/source/bvs.pas` | 24 | translated (best effort) |
+| `lang/common/source/spos.pas` | 31 | translated (best effort; regions' database a record addressed absolutely) |
+| `lang/bind/source/objio.pas` | 34 | translated (best effort; the source repository's SR10.2 objio, changed where cc's differs; dpc gap 4) |
+| `lang/bind/source/objutil.pas` | 18 | translated (best effort; the source repository's SR10.2 objutil, the same in cc) |
+| `lang/common/source/pds.pas` | 124 | not translated; `pds.ins.pas` has the 51 headings other units call (read off frames) |
 | `lang2/source/lt_utils/source/bug_check.pas` | 3 | translated (best effort) |
 | `lang2/source/lt_utils/source/seg_size.pas` | 1 | translated (best effort) |
 | `lang2/source/lt_utils/source/mrh.pas` | 15 | translated (best effort) |

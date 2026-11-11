@@ -60,7 +60,8 @@ when this tree is merged).
    c_macro_utl's messages and mu_$dump (PAS_$WRITE, PAS_$WRITELN on the
    file at (-4,A5); `write(m^.name:m^.name_len)' passes the array, its
    size and the width).  dpc: "undefined identifier `writeln`"; with a
-   width, "expected `)`, found `:`".  Reproducer:
+   width, "expected `)`, found `:`".  Also lang/bind/source/objio.pas's
+   check_init (0x088028, PAS_$WRITE and PAS_$WRITELN).  Reproducer:
 
        module g4;
        var s: array [1..10] of char; n: integer;
