@@ -101,10 +101,11 @@
   Written: the routines cc.a88k shares (the products, the substitution
   points, deluse, delparent, walkuses; cc.a88k's empty strengthreduce),
   opt_str_$is_loop_constant_integer, opt_str_$opmod1_of_multiplier,
-  transformtemps .. ptrsub, match_rlens_srtemp_and_assign .. autoinc
-  and the module's data.
-  Not written yet: elimuses .. minimally_size_sr_temp, reduce and
-  cc.m68k's strengthreduce (0x0EBAF0, 0x35C bytes). }
+  transformtemps .. ptrsub, match_rlens_srtemp_and_assign .. autoinc,
+  opt_str_$make_name .. minimally_size_sr_temp and the module's data.
+  Not written yet: elimuses, add_assign, getval, findvalues (with
+  not_on_ud_chain and noincfound), reduce and cc.m68k's strengthreduce
+  (0x0EBAF0, 0x35C bytes). }
 
 module opt_strength;
 
@@ -2127,6 +2128,722 @@ begin
   end;
   walkuses := found;
 end;
+
+%if cc_a88k %then
+%else
+{ opt_str_$make_name - s the name of temporary n: `<OSR$n>' (n five
+  digits, zero filled).
+
+  0x0E9C50, 0x66 bytes: s by address. }
+
+procedure opt_str_$make_name(
+    out s: prtsub_$line_t;
+    n: integer); options(val_param); internal;
+begin
+  s.length := 0;
+  prtcatc(s, '<');
+  prtcats(s, 'OSR$', 4);
+  prtint(s, n, 5, true);
+  prtcatc(s, '>');
+end;
+
+{ create_sr_temp_var - a new strength reduction temporary of type typ
+  for the loop headed by block h: its sr_temp_t (18 bytes, its first
+  point 8 bytes, from gspace; cgerr_no_source(9, 0) for nil); in a C
+  routine (il_180's +377 bits 6..4 = 2) a 110 (83 bytes: +44 high
+  nibble 3, data class 2, +11 high nibble 2, +68 -1, the routine at
+  +40, the name in its own +70, +72), else a 109 (84 bytes: the
+  routine at +20, typ at +28, storage class 2, +78 -1, its name an
+  identifier, kind 76); both flagged 14 and 17 (16#24000).
+
+  0x0E9CBA, 0x17A bytes: ntemps counted first; the name built in the
+  frame (-264). }
+
+function create_sr_temp_var(
+    typ: il_$node_ptr_t;
+    h: integer): il_$node_ptr_t; options(val_param); internal;
+var
+  name: prtsub_$line_t;
+  p: sr_point_ptr_t;
+  t: sr_temp_ptr_t;
+  n: il_$node_ptr_t;
+begin
+  ntemps := ntemps + 1;
+  p := gspace(8);
+  t := gspace(18);
+  if (p = nil) or (t = nil) then
+    cgerr_no_source(9, 0);
+  t^.tree := nil;
+  t^.points := p;
+  t^.incs := nil;
+  t^.asg := nil;
+  t^.header := h;
+  if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then begin
+    n := gspace(84);
+    n^.kind := 109;
+    n^.xp[5] := il_180;
+    n^.xp[7] := typ;
+    n^.xw[36] := 2;
+    n^.xl[8] := 16#24000;
+    n^.xp[13] := il_$node_ptr_t(t);
+    n^.xw[39] := -1;
+    n^.xl[15] := 0;
+    opt_str_$make_name(name, ntemps);
+    n^.xp[1] := idntk(76, name.body, name.length);
+  end
+  else begin
+    n := gspace(83);
+    n^.kind := 110;
+    n^.xc[44] := chr(ord(n^.xc[44]) & 16#0F ! 16#30);
+    n^.xp[1] := nil;
+    n^.xc[10] := chr(ord(n^.xc[10]) & 16#F0 ! 2);
+    n^.xc[11] := chr(ord(n^.xc[11]) & 16#0F ! 16#20);
+    n^.xw[34] := -1;
+    n^.xp[10] := il_180;
+    n^.xp2[11] := il_$node_ptr_t(t);
+    n^.xl[6] := 16#24000;
+    opt_str_$make_name(name, ntemps);
+    strings_$memmove(n^.xc[72], name.body, name.length);
+    n^.xw[35] := name.length;
+  end;
+  create_sr_temp_var := n;
+end;
+
+{ setflag - mark variable n an induction variable (bit 20 of a 109's
+  +32, a 110's +24).
+
+  0x0E9E34, 0x40 bytes: the two kinds tested whole; `bset #4' of the
+  flags' second byte. }
+
+procedure setflag(
+    n: il_$node_ptr_t); options(val_param); internal;
+begin
+  if n <> nil then
+    if (n^.kind = 110) or (n^.kind = 109) then
+      if n^.kind = 109 then
+        n^.xc[33] := chr(ord(n^.xc[33]) ! 16#10)
+      else
+        n^.xc[25] := chr(ord(n^.xc[25]) ! 16#10);
+end;
+
+{ removeflag - the mark of setflag cleared.
+
+  0x0E9E74, 0x40 bytes: `bclr #4'. }
+
+procedure removeflag(
+    n: il_$node_ptr_t); options(val_param); internal;
+begin
+  if n <> nil then
+    if (n^.kind = 110) or (n^.kind = 109) then
+      if n^.kind = 109 then
+        n^.xc[33] := chr(ord(n^.xc[33]) & 16#EF)
+      else
+        n^.xc[25] := chr(ord(n^.xc[25]) & 16#EF);
+end;
+
+{ newexpr - tree t added at the end of the candidate expressions
+  (exprs) unless there; cgerr_no_source(9, 0) when new gives nil.
+
+  0x0E9EB4, 0xA4 bytes: new (PAS_$NEW, 8 bytes). }
+
+procedure newexpr(
+    t: il_$node_ptr_t); options(val_param); internal;
+var
+  p, q: sr_list_ptr_t;
+begin
+  if exprs = nil then begin
+    new(exprs);
+    if exprs = nil then
+      cgerr_no_source(9, 0);
+    exprs^.node := t;
+    exprs^.next := nil;
+  end
+  else begin
+    p := exprs;
+    while p^.node <> t do begin
+      if p^.next = nil then begin
+        new(q);
+        if q = nil then
+          cgerr_no_source(9, 0);
+        p^.next := q;
+        q^.node := t;
+        q^.next := nil;
+        return;
+      end;
+      p := p^.next;
+    end;
+  end;
+end;
+
+{ removeexpr - tree t taken off the candidate expressions (its cell
+  not disposed).
+
+  0x0E9F58, 0x52 bytes. }
+
+procedure removeexpr(
+    t: il_$node_ptr_t); options(val_param); internal;
+var
+  p, prev, nxt: sr_list_ptr_t;
+begin
+  if exprs <> nil then
+    if exprs^.node = t then
+      exprs := exprs^.next
+    else begin
+      prev := exprs;
+      p := exprs^.next;
+      while p <> nil do begin
+        nxt := p^.next;
+        if p^.node = t then begin
+          prev^.next := nxt;
+          exit;
+        end;
+        prev := p;
+        p := nxt;
+      end;
+    end;
+end;
+
+{ walkexpr - found set when tree t uses an induction variable (setflag)
+  other than through a load (15, 16), a shared product or shift used
+  outside the loop, or a 171 or 175.
+
+  0x0E9FAA, 0x12E bytes: found by address, cleared first; the kinds
+  compared in turn. }
+
+procedure walkexpr(
+    t: il_$node_ptr_t;
+    var found: boolean); options(val_param); internal;
+var
+  x: g_opt_tree_ptr_t;
+  k: integer;
+begin
+  found := false;
+  x := g_opt_tree_ptr_t(t);
+  case t^.kind of
+    143, 137: begin
+      if (x^.op = 16) or (x^.op = 15) then
+        return;
+      if (x^.op = 27) or (x^.op = 3) then
+        if x^.uses > 1 then
+          if used_outside_loop(t) then
+            return;
+      for k := 1 to x^.count do begin
+        walkexpr(x^.opnd[k], found);
+        if found then
+          return;
+      end;
+    end;
+    147, 146, 205:
+      walkexpr(t^.xp[6], found);
+    145: begin
+      walkexpr(t^.xp[6], found);
+      if found then
+        return;
+      walkexpr(t^.xp[9], found);
+    end;
+    164: begin
+      walkexpr(t^.xp[5], found);
+      if found then
+        return;
+      walkexpr(t^.xp[6], found);
+    end;
+    175:
+      found := false;
+    171:
+      found := false;
+    109:
+      if (t^.xl[8] & 16#100000) <> 0 then
+        found := true;
+    110:
+      if (t^.xl[6] & 16#100000) <> 0 then
+        found := true;
+    otherwise
+  end;
+end;
+
+{ disqualify - the candidate expressions kept are those using an
+  induction variable (walkexpr), not a tree flagged 20, and, for a
+  137, with a product, multiplication (36) or shift operand whose
+  operand is a constant or variable or a conversion (18) of a
+  variable; the others removed (removeexpr).
+
+  0x0EA0D8, 0x156 bytes: the tree kinds and the operands' by sets of
+  0..207; walkexpr's flag a frame copy of D2. }
+
+procedure disqualify; internal;
+var
+  e: sr_list_ptr_t;
+  t: g_opt_tree_ptr_t;
+  x, y: g_opt_tree_ptr_t;
+  ok: boolean;
+  k: integer;
+begin
+  e := exprs;
+  while e <> nil do begin
+    walkexpr(e^.node, ok);
+    t := g_opt_tree_ptr_t(e^.node);
+    if t^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205] then
+      if 20 in t^.flags then
+        ok := false;
+    if ok then
+      if t^.kind = 137 then begin
+        ok := false;
+        for k := 1 to t^.count do begin
+          x := g_opt_tree_ptr_t(t^.opnd[k]);
+          if x^.kind = 137 then
+            if (x^.op = 3) or (x^.op = 36) or (x^.op = 27) then begin
+              if x^.opnd[1]^.kind in [77..90, 92, 93, 101, 109, 110, 147, 156, 176, 198, 200] then begin
+                ok := true;
+                exit;
+              end;
+              if x^.opnd[2]^.kind in [77..90, 92, 93, 101, 109, 110, 147, 156, 176, 198, 200] then begin
+                ok := true;
+                exit;
+              end;
+              y := g_opt_tree_ptr_t(x^.opnd[1]);
+              if y^.kind = 137 then
+                if y^.op = 18 then
+                  if (y^.opnd[1]^.kind = 110) or (y^.opnd[1]^.kind = 109) then begin
+                    ok := true;
+                    exit;
+                  end;
+              y := g_opt_tree_ptr_t(x^.opnd[2]);
+              if y^.kind = 137 then
+                if y^.op = 18 then
+                  if (y^.opnd[1]^.kind = 110) or (y^.opnd[1]^.kind = 109) then begin
+                    ok := true;
+                    exit;
+                  end;
+            end;
+        end;
+      end;
+    if not ok then
+      removeexpr(e^.node);
+    e := e^.next;
+  end;
+end;
+
+{ testexits - a candidate indexed reference (145) used more than once
+  is removed unless all its uses are in the loop: the times it is an
+  operand of the loop's statements and trees (exitwalk) equal to its
+  use count (fetch_uc).
+
+  0x0EA3A0, 0x1C2 bytes: the candidate and the count in registers,
+  copied to frame words (-12, -22) for each exitwalk; a 139's operands
+  from the last. }
+
+procedure testexits(
+    loop: g_opt_block_ptr_t); options(val_param); internal;
+var
+  e: sr_list_ptr_t;
+  b: g_opt_block_ptr_t;
+  s: g_opt_stmt_ptr_t;
+  cnt, uc, k: integer;
+
+  { fetch_uc - the use count of t (145, 137, 143, 147, 205, 146), else 0.
+
+    0x0EA248, 0x4A bytes: no frame (docs/rev889-patterns.md 16), t at
+    (4,SP); four copies of the load. }
+
+  function fetch_uc(
+      t: il_$node_ptr_t): integer; options(val_param);
+  begin
+    case t^.kind of
+      145:
+        fetch_uc := g_opt_tree_ptr_t(t)^.uses;
+      137, 143:
+        fetch_uc := g_opt_tree_ptr_t(t)^.uses;
+      147, 205:
+        fetch_uc := g_opt_tree_ptr_t(t)^.uses;
+      146:
+        fetch_uc := g_opt_tree_ptr_t(t)^.uses;
+      otherwise
+        fetch_uc := 0;
+    end;
+  end;
+
+  { exitwalk - count the times e's tree is an operand of t or of the
+    trees below it (a 171's operand only counted, not walked).
+
+    0x0EA292, 0x10E bytes: e and count by address, passed on; 175 and
+    the base of 146, 147 and 205 share the last test. }
+
+  procedure exitwalk(
+      t: il_$node_ptr_t;
+      var e: sr_list_ptr_t;
+      var count: integer); options(val_param);
+  var
+    k: integer;
+  begin
+    case t^.kind of
+      137, 143:
+        for k := 1 to g_opt_tree_ptr_t(t)^.count do
+          if g_opt_tree_ptr_t(t)^.opnd[k] = e^.node then
+            count := count + 1
+          else
+            exitwalk(g_opt_tree_ptr_t(t)^.opnd[k], e, count);
+      147, 205, 146:
+        if t^.xp[6] = e^.node then
+          count := count + 1
+        else
+          exitwalk(t^.xp[6], e, count);
+      145: begin
+        if t^.xp[6] = e^.node then
+          count := count + 1
+        else
+          exitwalk(t^.xp[6], e, count);
+        if t^.xp[9] = e^.node then
+          count := count + 1
+        else
+          exitwalk(t^.xp[9], e, count);
+      end;
+      175:
+        if t^.xp[4] = e^.node then
+          count := count + 1
+        else
+          exitwalk(t^.xp[4], e, count);
+      171:
+        if t^.xp[4] = e^.node then
+          count := count + 1;
+      164: begin
+        if t^.xp[5] = e^.node then
+          count := count + 1
+        else
+          exitwalk(t^.xp[5], e, count);
+        if t^.xp[6] = e^.node then
+          count := count + 1
+        else
+          exitwalk(t^.xp[6], e, count);
+      end;
+      otherwise
+    end;
+  end;
+
+begin
+  e := exprs;
+  while e <> nil do begin
+    if e^.node^.kind = 145 then
+      if fetch_uc(e^.node) > 1 then begin
+        cnt := 0;
+        uc := fetch_uc(e^.node);
+        b := loop;
+        while b <> nil do begin
+          s := b^.first_stmt;
+          while s <> b^.last_stmt^.next do begin
+            case s^.kind of
+              139:
+                for k := s^.eval_count downto 1 do
+                  exitwalk(s^.eval_opnd[k], e, cnt);
+              140: begin
+                exitwalk(s^.asg_lhs, e, cnt);
+                exitwalk(s^.asg_rhs, e, cnt);
+                if s^.asg_x <> nil then
+                  exitwalk(s^.asg_x, e, cnt);
+              end;
+              142:
+                exitwalk(s^.br_cond, e, cnt);
+              151:
+                if s^.x48 <> nil then
+                  exitwalk(s^.x48, e, cnt);
+              188:
+                exitwalk(s^.x48, e, cnt);
+              otherwise
+            end;
+            s := s^.next;
+          end;
+          b := b^.link;
+        end;
+        if cnt <> uc then
+          removeexpr(e^.node);
+      end;
+    if e <> nil then
+      e := e^.next;
+  end;
+end;
+
+{ cand_exprs - the candidate expressions of loop's nodes: a 137 with a
+  product, multiplication (36) or shift operand, a 145 whose index is
+  one; a node standing for its statement (flag 6) followed to it (a
+  137 only once an operand qualifies, the operands then looked at
+  again).
+
+  0x0EA562, 0x112 bytes: loop the parameter itself, stepped; il_120
+  reached as il_c0's +0x60 (docs/rev889-patterns.md 70); the 137's
+  restart a branch back to the kind's test. }
+
+procedure cand_exprs(
+    loop: g_opt_block_ptr_t); options(val_param); internal;
+label
+  10;
+var
+  n: integer32;
+  t: g_opt_tree_ptr_t;
+  x: g_opt_tree_ptr_t;
+  k: integer;
+begin
+  while loop <> nil do begin
+    for n := loop^.first to loop^.last do begin
+      t := g_opt_tree_ptr_t(g_opt_nodes_ptr_t(il_120)^[n]);
+  10:
+      case t^.kind of
+        137:
+          for k := 1 to t^.count do begin
+            x := g_opt_tree_ptr_t(t^.opnd[k]);
+            if x^.kind = 137 then
+              if (x^.op = 3) or (x^.op = 36) or (x^.op = 27) then
+                if 6 in t^.flags then begin
+                  t := g_opt_tree_ptr_t(g_opt_nodes_ptr_t(il_120)^[t^.stmt]);
+                  goto 10;
+                end
+                else
+                  newexpr(il_$node_ptr_t(t));
+          end;
+        145: begin
+          while 6 in t^.flags do
+            t := g_opt_tree_ptr_t(g_opt_nodes_ptr_t(il_120)^[t^.stmt]);
+          x := g_opt_tree_ptr_t(il_$node_ptr_t(t)^.xp[9]);
+          if x^.kind = 137 then
+            if (x^.op = 3) or (x^.op = 36) or (x^.op = 27) then
+              newexpr(il_$node_ptr_t(t));
+        end;
+        otherwise
+      end;
+    end;
+    loop := loop^.link;
+  end;
+end;
+
+{ newindvar - variable v put in front of the induction variables (ivs)
+  unless there, and marked (setflag); cgerr_no_source(9, 0) when new
+  gives nil.
+
+  0x0EA674, 0xAA bytes: new (PAS_$NEW, 8 bytes) of ivs itself, the old
+  head kept in A3. }
+
+procedure newindvar(
+    v: il_$node_ptr_t); options(val_param); internal;
+var
+  p, old: sr_list_ptr_t;
+begin
+  if ivs = nil then begin
+    new(ivs);
+    if ivs = nil then
+      cgerr_no_source(9, 0);
+    ivs^.node := v;
+    ivs^.next := nil;
+  end
+  else begin
+    p := ivs;
+    while p <> nil do begin
+      if p^.node = v then
+        return;
+      p := p^.next;
+    end;
+    old := ivs;
+    new(ivs);
+    if ivs = nil then
+      cgerr_no_source(9, 0);
+    ivs^.node := v;
+    ivs^.next := old;
+  end;
+  setflag(v);
+end;
+
+{ recognize_induction_variables - the induction variables of loop:
+  variables (of opt_region's table) not excluded whose every
+  assignment in the loop is v := v + c, c + v, v - c (operator 0 with
+  a 137 of operator 1 or 2) or v op= c (operators 1, 2), c a loop
+  constant integer (opt_str_$is_loop_constant_integer); each becomes
+  a newindvar, marked; true when there is one.  invariant ends as the
+  variables no statement of the loop assigns.
+
+  0x0EA71E, 0x250 bytes: the sets in the module's data; a statement's
+  variable as a one-element frame set; each block's statements from
+  its first while they are of no block or of this one; ivset and
+  others or-ed in from separate copies of the code; the mark again
+  inline after newindvar. }
+
+function recognize_induction_variables(
+    loop: g_opt_block_ptr_t): boolean; options(val_param); internal;
+var
+  b: g_opt_block_ptr_t;
+  s: g_opt_stmt_ptr_t;
+  r: g_opt_tree_ptr_t;
+  v: integer;
+  one: g_opt_varset_t;
+  a1, a2, found: boolean;
+  n: il_$node_ptr_t;
+begin
+  ivset := [];
+  others := excluded;
+  invariant := [0..255];
+  b := loop;
+  while b <> nil do begin
+    s := b^.first_stmt;
+    repeat
+      v := s^.hdr.vnum;
+      one := [v];
+      invariant := invariant - one;
+      if s^.kind <> 140 then
+        others := others + one
+      else if v <> 0 then
+        if opt_main_$symidx_of_varn_or_fsym(s^.asg_lhs) = v then
+          case s^.asg_op of
+            0: begin
+              r := g_opt_tree_ptr_t(s^.asg_rhs);
+              if r^.kind <> 137 then
+                others := others + one
+              else
+                case r^.op of
+                  1: begin
+                    if r^.opnd[2] = s^.asg_lhs then
+                      a1 := opt_str_$is_loop_constant_integer(r^.opnd[1], loop)
+                    else
+                      a1 := false;
+                    if r^.opnd[1] = s^.asg_lhs then
+                      a2 := opt_str_$is_loop_constant_integer(r^.opnd[2], loop)
+                    else
+                      a2 := false;
+                    if a1 or a2 then
+                      ivset := ivset + one
+                    else
+                      others := others + one;
+                  end;
+                  2:
+                    if (r^.opnd[1] = s^.asg_lhs) and
+                       opt_str_$is_loop_constant_integer(r^.opnd[2], loop) then
+                      ivset := ivset + one
+                    else
+                      others := others + one;
+                  otherwise
+                    others := others + one;
+                end;
+            end;
+            2, 1:
+              if opt_str_$is_loop_constant_integer(s^.asg_rhs, loop) then
+                ivset := ivset + one
+              else
+                others := others + one;
+            otherwise
+              others := others + one;
+          end;
+      s := s^.next;
+    until (s = nil) or ((s^.block <> nil) and (s^.block <> b));
+    b := b^.link;
+  end;
+  ivset := ivset - others;
+  found := false;
+  for v := 1 to il_180^.xw[145] do
+    if v in ivset then begin
+      n := opt_4009c[opt_region]^.vars^[v]^.node;
+      newindvar(n);
+      if n^.kind = 109 then
+        n^.xc[33] := chr(ord(n^.xc[33]) ! 16#10)
+      else
+        n^.xc[25] := chr(ord(n^.xc[25]) ! 16#10);
+      found := true;
+    end;
+  recognize_induction_variables := found;
+end;
+
+{ dump_induction_variables - under -DUMP68 SRI: the routine's name, the
+  loop's blocks and the induction variables (address, number, name),
+  two to a line, on the listing.
+
+  0x0EA96E, 0x23E bytes: the line in the frame (-264); the blank
+  literals share one run of 30 blanks (docs/rev889-patterns.md 27);
+  the first listln pops 2 bytes of 4 (docs/rev889-patterns.md 51). }
+
+procedure dump_induction_variables(
+    loop: g_opt_block_ptr_t); options(val_param); internal;
+var
+  s: prtsub_$line_t;
+  b: g_opt_block_ptr_t;
+  p: sr_list_ptr_t;
+  v, nm: il_$node_ptr_t;
+  pad: integer;
+  odd: boolean;
+begin
+  s.length := 0;
+  listln(s);
+  prtcats(s, 'Strength reduction( ', 20);
+  nm := il_d4^.xp[2]^.xp[12]^.xp[74];
+  prtcats(s, nm^.idnt_name, nm^.idnt_len);
+  prtcats(s, ' ):  loop selected comprises blocks:', 36);
+  listln(s);
+  s.length := 0;
+  b := loop;
+  while b <> nil do begin
+    prtcatc(s, ' ');
+    prtint(s, b^.num, 3, true);
+    b := b^.link;
+  end;
+  listln(s);
+  s.length := 0;
+  prtcats(s, 'Induction variables:', 20);
+  listln(s);
+  s.length := 0;
+  odd := false;
+  p := ivs;
+  while p <> nil do begin
+    v := p^.node;
+    prtcats(s, '      ', 6);
+    prthex(s, integer32(v), 8);
+    prtcats(s, '  ', 2);
+    if v^.kind = 110 then begin
+      prtint(s, v^.xw[8], 3, true);
+      prtcats(s, '  ', 2);
+      prtcats(s, v^.xc[72], v^.xw[35]);
+      pad := 18 - v^.xw[35];
+    end
+    else begin
+      prtint(s, v^.xw[37], 3, true);
+      prtcats(s, '  ', 2);
+      prtcats(s, v^.xp[1]^.idnt_name, v^.xp[1]^.idnt_len);
+      pad := 18 - v^.xp[1]^.idnt_len;
+    end;
+    prtcats(s, '                        ', pad);
+    odd := not odd;
+    if not odd then begin
+      listln(s);
+      s.length := 0;
+    end;
+    p := p^.next;
+  end;
+  if odd then begin
+    listln(s);
+    s.length := 0;
+  end;
+end;
+
+{ minimally_size_sr_temp - temporary v retyped for its register class
+  rlen: 4 a longword (runbackend_0c), 2 a word (runbackend_10), when
+  its type or its type's +28 is the other; its +36 then 16 for a word,
+  else 32.
+
+  0x0EAC16, 0xB2 bytes. }
+
+procedure minimally_size_sr_temp(
+    rlen: integer;
+    v: il_$node_ptr_t); options(val_param); internal;
+begin
+  if (rlen = 4) and (v^.xp[7] = il_$node_ptr_t(runbackend_10)) then
+    v^.xp[7] := il_$node_ptr_t(runbackend_0c)
+  else if (rlen = 2) and (v^.xp[7] = il_$node_ptr_t(runbackend_0c)) then
+    v^.xp[7] := il_$node_ptr_t(runbackend_10)
+  else if (rlen = 4) and
+          (v^.xp[7]^.xp[7] = il_$node_ptr_t(runbackend_10)) then
+    v^.xp[7] := il_$node_ptr_t(runbackend_0c)
+  else if (rlen = 2) and
+          (v^.xp[7]^.xp[7] = il_$node_ptr_t(runbackend_0c)) then
+    v^.xp[7] := il_$node_ptr_t(runbackend_10);
+  if (v^.xp[7] = il_$node_ptr_t(runbackend_10)) or
+     (v^.xp[7]^.xp[7] = il_$node_ptr_t(runbackend_10)) then
+    v^.xl[9] := 16
+  else
+    v^.xl[9] := 32;
+end;
+%endif
 
 %if cc_a88k %then
 { strengthreduce - see g_opt.ins.pas; cc.a88k's does nothing.

@@ -480,3 +480,7 @@ lang/lang/source/opt_strength.pas	s/^(\s+)s\^\.br_cond, 1\);$/$1s^.br_cond, 1);\
 lang/lang/source/opt_strength.pas	BEGIN { undef $/ } s/((?:g_opt_tree_ptr_t\(\w+\)|\w+)(?:\^\.\w+(?:\[\w+\])?)*)\s+in\s+\[[^\]]*\]/($1 = 81) { gap 8 }/g
 # gap 24 (opt_strength): checkauto's call as a right operand of and (compared with true, for the check)
 lang/lang/source/opt_strength.pas	s/if \(t\^\.kind = 137\) and check_tree_node\(t\) then begin/if (t^.kind = 137) and (check_tree_node(t) = true) then begin { gap 24 }/
+# gap 3 (opt_strength): new and dispose of the 8-byte list cells (the PAS_$NEW and PAS_$DISPOSE calls they compile to, for the check)
+lang/lang/source/opt_strength.pas	s/^(\s*)(new|dispose)\((\w+)\);/$1pas_\$$2($3, 8); { gap 3 }/
+# gap 24 (opt_strength): recognize_induction_variables' call as a right operand of and (compared with true, for the check)
+lang/lang/source/opt_strength.pas	s/^(\s+)opt_str_\$is_loop_constant_integer\(r\^\.opnd\[2\], loop\) then$/$1(opt_str_\$is_loop_constant_integer(r^.opnd[2], loop) = true) then { gap 24 }/
