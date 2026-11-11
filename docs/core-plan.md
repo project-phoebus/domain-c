@@ -354,3 +354,14 @@ Translator BB, reg_vars: g_opt.ins.pas declares opt_main's +0x60
 reg_alloc.ins.pas gets store_debug_info's heading.  reg_vars's own
 records (the debugger's 28-byte ranges, the blocks' availability
 vectors, the variables by debugger index) are declared in the unit.
+
+Translator EE (2026-11-11), reg_alloc: reg_alloc.pas defines the
+insert's five cells; reg_range_t's +6 is degree, +12..+17 the range's
+own conflict cell (conflict: reg_conflict_t, the first of its
+conflicts, the others chained from it: newconflict's 8-byte cells),
++56 avail (the registers it may have, availcolors); flags element 6
+marks a range colourable whatever its conflicts get.  The insert gets
+the headings of newconflict, color_graph and the reg_life routines
+reg_alloc calls (add_range, add_cse_ranges, add_con_range,
+ranges_intersect, combine_ranges, run_interference).  Core change:
+g_opt.ins.pas declares reg_alloc (opt_main's g_opt calls it).

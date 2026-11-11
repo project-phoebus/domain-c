@@ -21,11 +21,8 @@
 { TODO(pascal) reg_alloc.ins.pas holds what the translated reg_ units
   need
 
-  reg_range_t's words named w6, w16, w24 (an action's reg2), w26 and
-  the longwords l12, l56 are cleared by compress_graph and read by units not translated
-  yet; name them when reg_life, reg_color_68k and reg_action are
-  translated.  Add the headings of the routines the other reg_ units
-  call as those units are translated. }
+  reg_range_t's w24 (an action's reg2) and w26 are named by position
+  until reg_life is translated. }
 
 type
   { Statement numbers (opt_4009c's), compared unsigned. }
@@ -60,37 +57,53 @@ type
     (flags, a word: element k its bit k): 0 none (compute_costs: too
     cheap, a parameter loaded for nothing, a variable whose address
     is taken ...), 2 an address register, 3 a data register, 4 a
-    floating register, 8 the range assigns its variable at a
-    statement that is not a call (188). }
+    floating register, 6 it can be coloured whatever its conflicts
+    get (color_graph: fewer conflicts than registers; removeconflict:
+    none left), 8 the range assigns its variable at a statement that
+    is not a call (188). }
   reg_flags_t = set of 0..15;
 
-  { A live range (64 bytes; reg_alloc allocates reg_nranges of them
+  { A conflict (8 bytes from newconflict): the number num of a range
+    that interferes with the range whose list it is on.  A range keeps
+    its first conflict in its own cell (conflict, +12..+17) and the
+    others in cells chained from conflict.next (add_conflict,
+    walkconflicts). }
+  reg_conflict_ptr_t = ^reg_conflict_t;
+  reg_conflict_t = record
+    next: reg_conflict_ptr_t;           { +0 }
+    num: integer;                       { +4 }
+  end;
+
+  { A live range (64 bytes; reg_alloc allocates reg_nest of them
     from opt_main_20, reg_ranges^[1..]): node the variable (109, 110),
     cse parent (190) or constant (88, 89, 145..147, 163, 195) whose
-    value it holds; num its number (compress_graph renumbers); blocks
-    the basic blocks it spans; first and last the statements it
-    spans; reg the register it is given (31 none); prefer the
-    registers it would rather have (a function's result: D0 or A0);
-    uses and defs the statements reading and assigning it; cost the
-    weighted uses, depth the deepest loop of a statement that uses
-    its value, priority the cost per statement spanned; live its bit
-    vector; onlist its blocks by number. }
+    value it holds; num its number (compress_graph renumbers); degree
+    the ranges it interferes with (conflict and the cells chained from
+    it: add_conflict, removeconflict); blocks the basic blocks it
+    spans; first and last the statements it spans; reg the register it
+    is given (31 none); prefer the registers it would rather have (a
+    function's result: D0 or A0; color_graph adds those its conflicts
+    and the function's result leave it); rlen its value's register
+    class (paint: 5 in an address register, 4 a data register); uses
+    and defs the statements reading and assigning it; cost the
+    weighted uses, depth the deepest loop of a statement that uses its
+    value, priority the cost per statement spanned; live its bit
+    vector; avail the registers it may have (availcolors); onlist its
+    blocks by number. }
   reg_range_ptr_t = ^reg_range_t;
   reg_range_t = record
     node: il_$node_ptr_t;               { +0 }
     num: integer;                       { +4 }
-    w6: integer;                        { +6 }
+    degree: integer;                    { +6 }
     blocks: reg_blk_ptr_t;              { +8 }
-    l12: integer32;                     { +12 }
-    w16: integer;                       { +16 }
+    conflict: reg_conflict_t;           { +12 }
     first: reg_num_t;                   { +18 }
     last: reg_num_t;                    { +20 }
     reg: integer;                       { +22 }
     w24: integer;                       { +24 }
     w26: integer;                       { +26 }
     prefer: reg_regset_t;               { +28 }
-    rlen: integer;                      { +32: its value's register
-                                          class (insert_reg_stmts) }
+    rlen: integer;                      { +32 }
     uses: integer;                      { +34 }
     defs: integer;                      { +36 }
     flags: reg_flags_t;                 { +38 }
@@ -98,7 +111,7 @@ type
     depth: integer32;                   { +44 }
     priority: integer32;                { +48 }
     live: reg_bits_ptr_t;               { +52 }
-    l56: integer32;                     { +56 }
+    avail: reg_regset_t;                { +56 }
     onlist: reg_onlist_ptr_t;           { +60 }
   end;
   reg_ranges_t = array [1..16383] of reg_range_t;
@@ -129,11 +142,63 @@ var
 { INITPOOL - a new chunk on reg_pool.  0x0C3D90. }
 procedure initpool; extern;
 
+{ NEWCONFLICT - 8 bytes of reg_pool for a conflict cell (a new chunk
+  when fewer than 6 are left).  0x0C3E0A (reg_color_68k's
+  add_conflict); A0. }
+function newconflict: reg_conflict_ptr_t; extern;
+
 { TEST_STMT - whether point k (2s or 2s + 1 of statement s) is in r's
   live range.  0x0C4476: r a pointer, k a word; D0. }
 function test_stmt(
     r: reg_range_ptr_t;
     k: integer): boolean; options(val_param); extern;
+
+{ reg_color_68k.pas (cc.m68k 0x0C50AC). }
+
+{ COLOR_GRAPH - give the n ranges r^[1..n] registers (reg; flags
+  element 0 for those that get none).  0x0C5772 (reg_alloc). }
+procedure color_graph(
+    r: reg_ranges_ptr_t;
+    n: integer); options(val_param); extern;
+
+{ reg_life.pas (cc.m68k 0x0C6CD4). }
+
+{ ADD_RANGE - the live ranges of variable v (its number in the
+  statements' vars) from its assignment at statement s.  0x0C7EC2
+  (reg_alloc: two words). }
+procedure add_range(
+    v: integer;
+    s: integer); options(val_param); extern;
+
+{ ADD_CSE_RANGES - the live ranges of the cse parents made at
+  statement s.  0x0C7688 (reg_alloc: a word). }
+procedure add_cse_ranges(
+    s: integer); options(val_param); extern;
+
+{ ADD_CON_RANGE - a live range for the constant (or strength
+  reduction temporary) t a loop uses, from statement s.  0x0C8628
+  (reg_alloc: s a word, t a pointer). }
+procedure add_con_range(
+    s: integer;
+    t: il_$node_ptr_t); options(val_param); extern;
+
+{ RANGES_INTERSECT - whether a's and b's bit vectors share a point.
+  0x0C7074 (reg_alloc, run_interference); D0. }
+function ranges_intersect(
+    a: reg_range_ptr_t;
+    b: reg_range_ptr_t): boolean; options(val_param); extern;
+
+{ COMBINE_RANGES - b's points, blocks and uses joined to a's and b
+  emptied.  0x0C7110 (reg_alloc). }
+procedure combine_ranges(
+    a: reg_range_ptr_t;
+    b: reg_range_ptr_t); options(val_param); extern;
+
+{ RUN_INTERFERENCE - the conflicts of the n ranges r^[1..n] (add_conflict
+  of each pair whose bit vectors intersect).  0x0C72FA (reg_alloc). }
+procedure run_interference(
+    r: reg_ranges_ptr_t;
+    n: integer); options(val_param); extern;
 
 { reg_cost_68k.pas (cc.m68k 0x0C5C5C). }
 

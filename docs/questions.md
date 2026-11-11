@@ -843,3 +843,15 @@ revisited.
    that set them (reg_life, reg_color_68k, reg_alloc) are not
    translated yet.  Name them when they are.
 
+
+111. Translator EE: reg_alloc's compress_graph (cc.m68k 0x0C44C4)
+   clears the moved range's depth (+44, `clr.l (-0x14,A1,D3.l)' with
+   D3 the slot it moved to) among the stores that clear the slot it
+   left (D0): the moved range loses its loop depth, the emptied slot
+   keeps it.  Written as the image does (`r^[i].depth := 0'); probably
+   a slip of the original for `r^[j].depth'.
+
+112. Translator EE: reg_alloc's alloc_ftn_vars (0x0C41C4) sets a
+   strength reduction temporary's class (+11 high nibble) to 6 and then
+   tests it against the static classes 1, 4, 7, 8, 11: the static
+   branch can never be taken.  Written as the image does.

@@ -451,3 +451,7 @@ lang/lang/source/reg_action.pas	s/\(t\^\.kind in \[137\.\.138, 143, 145\.\.147, 
 lang/lang/source/reg_action.pas	s/^\s*205\]\) and \(t\^\.kind <> 189\) then begin$/) and (t^.kind <> 189) then begin/
 lang/lang/source/reg_action.pas	s/if x\^\.kind in \[137\.\.138, 143, 145\.\.147, 164, 171, 175,$/if (x^.kind = 137) or (x^.kind = 190) { gap 8 }/
 lang/lang/source/reg_action.pas	s/^\s*189\.\.190, 205\] then$/ then/
+# gap 4 (reg_alloc): dump_lifetimes' writeln (dropped, for the check)
+lang/lang/source/reg_alloc.pas	s/^(\s*)writeln;\s*$/$1; { gap 4 }/
+# gap 8 (reg_alloc): in on constant sets with word elements (every one, as comparisons)
+lang/lang/source/reg_alloc.pas	s{((?:\w+(?:\[[^\]]*\])?\^?\.)*\w+)\s+in\s+\[([^\]]+)\]}{my ($e, $l) = ($1, $2); '((' . join(') or (', map { /^(\d+)\.\.(\d+)$/ ? "($e >= $1) and ($e <= $2)" : "$e = $_" } split(/\s*,\s*/, $l)) . ')) { gap 8 }'}ge

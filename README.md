@@ -158,4 +158,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/reg_cost_68k.pas` | 3 | translated (cc.m68k only; best effort; ranges through reg_alloc.ins.pas's reg_range_t, statements through g_opt.ins.pas's views; dpc gaps 8, 25) |
 | `lang/lang/source/reg_action.pas` | 11 | translated (cc.m68k only; best effort; the 191 statements through g_opt.ins.pas's acts; dpc gaps 2, 8) |
 | `lang/lang/source/reg_vars.pas` | 13 | translated (cc.m68k only; best effort; the debugger's ranges through the unit's rv_lr_t, the 191 statements' actions through g_opt.ins.pas) |
+| `lang/lang/source/reg_alloc.pas` | 15 | translated (cc.m68k only; best effort; statements and blocks through g_opt.ins.pas, variables and the routine block by offset; dpc gaps 4, 8) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
