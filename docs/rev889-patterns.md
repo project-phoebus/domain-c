@@ -113,3 +113,20 @@ cc.m68k unless marked.
     at +12 and the 4096-character name at +13 (mu_$lookup_name 0x058F76
     `pea (13,A3)'); dpc aligns the array to +14.
 
+16. **Leaf routines without a frame.**  mem.pas's internal
+    pool_name_len (0x0690D4, 0x20 bytes) has no `link`/`unlk`: it reads
+    its parameter as `movea.l (4,SP),A0`, keeps the count in D0 and
+    ends in `rts`; it calls nothing and has no locals in memory.  The
+    other routines met so far all `link` (a function with `link #-4`
+    for its result slot, item 3).  dpc always links.
+17. **A for loop of 32-bit count as `dbf` plus a borrow from the high
+    word** (`dbf Dn,top; clr.w Dn; subq.l #1,Dn; bcc top`):
+    htm_$create_table 0x06894C, mrh allocate_new_chunk 0x087874.
+    Not a difference: dpc emits the same form.
+18. **Unsigned compares of lengths and sizes.**  A longword parameter
+    compared `bls`/`bcs`/`bcc` (token_$char_string 0x07379A `cmpi.l
+    #4096; bls`, ass_$initialise 0x0674AA, htm_$increment_table_entries
+    0x0689EE) is a non-negative subrange (base's linteger,
+    0..2147483647); a word zero-extended before use (`clr.l; move.w`)
+    is 0..65535.  dpc compiles such types the same way, so the
+    translation declares them so (not a code-generation difference).

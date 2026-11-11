@@ -1,4 +1,5 @@
-ctape/
+ctape
+.claude/worktrees/
 __pycache__/
 *.pyc
 .DS_Store

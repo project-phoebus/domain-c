@@ -14,3 +14,6 @@ lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }
 # gap 5: displacements beyond 16 bits (the block shrunk to two elements, for the check)
 lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)tles: array \[0\.\.255\] of mu_\$tle_t;/$1tles: array [0..1] of mu_\$tle_t; { gap 5 }/
 lang/c_compiler/source/c_macro_utl.pas	s/tles\[255\]/tles[1] { gap 5 }/
+# gap 6: a real passed to an in double parameter (pass an unset double local, for the check)
+lang/common/source/token.pas	s/^    r: real\): token_\$t;$/    r: real): token_\$t;\nvar\n  r_gap6: double; { gap 6 }/
+lang/common/source/token.pas	s/rlcontk\(r\);/rlcontk(r_gap6); { gap 6 }/

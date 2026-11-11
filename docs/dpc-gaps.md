@@ -85,3 +85,19 @@ when this tree is merged).
          p^.f := true;
        end;
 
+6. **A single real where a double is expected.**  `rlcontk(r)` with
+   `r: real` and rlcontk's `in value: double` (token.pas
+   `token_$single_float_to_constant`, 0x073716: the image widens r with
+   FPP_$ESLV into a temporary and passes its address).  The reference
+   allows single and double to mix (its UNIV example assigns `(s + t) /
+   2.0` of singles to a double).  dpc: "Assignment statement expression
+   is not compatible with the assignment variable (double := real)"
+   (token.pas:143); `d := r` and real constants are refused too
+   ("a real constant is not supported yet").  Reproducer:
+
+       module g6;
+       function rlcontk(in value: double): univ_ptr; extern;
+       function f(r: real): univ_ptr; options(val_param);
+       begin
+         f := rlcontk(r);
+       end;

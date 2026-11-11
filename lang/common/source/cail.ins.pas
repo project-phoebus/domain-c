@@ -1,12 +1,13 @@
-{ lang/common/source/cail.ins.pas - CAIL (opened after token.ins.pas
-  by c_error, c_lex_pp, c_macro_read, c_macro_utl and c_sym_map, among
-  others).  No unit of this name is in either binary.
+{ lang/common/source/cail.ins.pas - CAIL (no unit of this name in
+  DOMAIN C 6.9).
 
-  No Apollo copy survives.
+  Opened by token.pas, spos.pas, ecb.pas, il_utils.pas, c_error.pas and
+  other units, always after token.ins.pas.  No Apollo copy survives and
+  no routine or cell found so far needs a declaration from it.
 
-  Not known from the original: its contents.
+  Not known from the original: everything about its contents.
 }
 
-{ TODO(pascal) cail.ins.pas is empty
+{ TODO(pascal) cail.ins.pas's contents
 
-  Nothing the translated units use has been traced to it. }
+  Add what a translated unit needs from it, with the evidence. }
