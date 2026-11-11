@@ -752,3 +752,10 @@ revisited.
    +0x80..+0x83 never addressed: perhaps unused variables, or the
    descriptors' type is 24 bytes (questions 90's opt_cse also spaces
    descriptors 24 apart).
+100. Translator AA, cg_tree: probable slips of the original kept:
+   assert_const_mul_candidate forms -c for a negative constant but
+   tests c again (`tst.l (A0); bpl'), so negative multipliers are
+   never done by shifts and adds; cg_tree_$adjust_before_round's
+   bug_check message ends `support!%.' (not `%$').  cg_tree's operands
+   at +0x1B8 .. +0x230 lie 24 bytes apart, as cg_assign's (question
+   99) and do_const_mul's frame operands (-432, -456).
