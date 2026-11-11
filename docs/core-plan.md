@@ -24,7 +24,7 @@ the translators; headings and cells should not need to change.
 |--------|------|----------|-------|-------|
 | gspace | `lang/lang/source/gspace.pas` | 6 | 644 | done |
 | strings | `lang/lang/source/strings.pas` | 7 | 702 | done |
-| prtsub | `lang/lang/source/prtsub.pas` | 7 | 632 | |
+| prtsub | `lang/lang/source/prtsub.pas` | 7 | 632 | done |
 | target_properties | `lang/lang/source/target_properties.pas` | 3 | 294 | |
 | il | `lang/lang/source/il.pas` | 1 | 580 | |
 | token | `lang/lang/source/token.pas` (+ `lang/common/source/token.pas`) | 12 (+8) | 1946 | |

@@ -48,4 +48,5 @@ for f in "$@"; do
     fi
   done
 done
+python3 tools/cc_addrcheck.py "$@" || fail=1
 exit $fail

@@ -35,7 +35,8 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 - `tools/`: `coff_compare.py` (a patched copy of
   `source/domain_os/tools/coff_compare.py`, to merge back), `cc_survey.py`,
   `cc_dis.py` (disassemble a routine by name), `cc_check.sh` (the gate),
-  `cc_gap_rewrites.txt` (scratch rewrites for dpc gaps).
+  `cc_gap_rewrites.txt` (scratch rewrites for dpc gaps), `cc_addrcheck.py`
+  (the unit headers' address tables, run by the gate), `cc_globals.py`.
 - `pilot/`: the first experiment (`get_rlen`).
 - `docs/core-plan.md`: the common prelude (`lang/lang/source/globals.ins.pas`
   and the inserts it includes) and the order it is being reconstructed in.
@@ -71,3 +72,4 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/common/source/diag.pas` | 13 | translated (best effort; dpc gap 1) |
 | `lang/lang/source/gspace.pas` | 6 | translated (best effort) |
 | `lang/lang/source/strings.pas` | 7 | translated (best effort) |
+| `lang/lang/source/prtsub.pas` | 7 | translated (best effort) |

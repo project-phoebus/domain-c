@@ -49,3 +49,9 @@ cc.m68k unless marked.
    `diag_$write` 0x06845A loads all eleven); dpc reads them where used.
 7. **Compare operands.**  `lower <= value` is `cmp.l value,lower; sle`
    with both in registers (std); dpc compares against the frame slot.
+8. **Argument areas padded to a multiple of 4.**  A call whose arguments
+   take 6, 10 or 14 bytes first does `subq.l #2,SP` and pops the rounded
+   size: `gspace` 0x07D4F2 calling gspace32... (`subq.l #2,SP; move.w
+   #4,-(SP)`, `addq.w #4,SP`), gspace32's `cgerr_no_source(28, 0)`
+   0x07D530 (`subq.l #2,SP; clr.l -(SP); move.w #28,-(SP)`, `addq.w
+   #8,SP`), compare_bytes 0x0988B4.  SR10.2/dpc push only the arguments.
