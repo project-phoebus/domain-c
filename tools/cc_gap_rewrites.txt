@@ -59,3 +59,10 @@ lang/lang/source/celpkg.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
 lang/lang/source/celpkg.pas	s/kind in \[0, 17, 18, 23, 31, 34, 39\]/(kind = 0) or (kind = 17) or (kind = 18) or (kind = 23) or (kind = 31) or (kind = 34) or (kind = 39) { gap 8 }/
 # gap 4 (gen_exception): writeln (dropped, for the check)
 lang/lang/source/gen_exception.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
+# gap 12 (pds): a pointer function's result compared with a variable (the operands swapped)
+lang/common/source/pds.pas	s/get_bucket\(main_index\) = b\b/b = get_bucket(main_index) { gap 12 }/
+lang/common/source/pds.pas	s/\(get_bucket\(main_index\) <> p\^\.bucket\)/(p^.bucket <> get_bucket(main_index)) { gap 12 }/
+# gap 13 (pds): testing an element of a packed array of 2048 booleans (test the bitmap pointer instead)
+lang/common/source/pds.pas	s/if \((\w+) <> (\w+)\) and (\w+)\^\.refs\^\[i\] then begin/if ($1 <> $2) and ($3^.refs <> nil) then begin { gap 13 }/
+lang/common/source/pds.pas	s/if \(i <> main_index\) and scope_refs\^\[i\] then begin/if (i <> main_index) and (scope_refs <> nil) then begin { gap 13 }/
+lang/common/source/pds.pas	s/^(\s*)m\^\.refs\^\[i\] := m\^\.refs\^\[i\] or node\^\.bucket\^\.refs\^\[i\];/$1m^.refs^[i] := true; { gap 13 }/

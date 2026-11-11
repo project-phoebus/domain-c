@@ -183,4 +183,43 @@ when this tree is merged).
            f := q
          else
            f := nil;
+12. **A pointer function's result compared with a variable.**
+   `get_bucket(main_index) = b` (pds.pas append_root_rec_to_bucket,
+   cc.m68k 0x06CF9C: `bsr.w get_bucket; cmpa.l A3,A0; bne'; also
+   append_to_merge_list 0x070BE6, 0x070C62).  dpc: "comparing the value
+   of a function whose result is in A0 other than `=` / `<>` with a
+   constant is not supported yet".  Reproducer:
+
+       module g12;
+       type r_t = record a: integer; end;
+         r_p = ^r_t;
+       var g: r_p; n: integer;
+       function f(i: integer): r_p; options(val_param);
+       begin
+         f := g;
+       end;
+       procedure p(b: r_p); options(val_param);
+       begin
+         if f(1) = b then n := 1;
+       end;
+
+13. **Testing an element of a packed array of more than 256 booleans.**
+   pds.pas's bitmaps of the files a bucket or a scope refers to
+   (`packed array [1..2048] of boolean', reached through a pointer):
+   `if (i <> main_index) and scope_refs^[i]' (pds_$end_scope 0x06D7C6:
+   `subq.w #1; lsr.l #3; andi.b #7; moveq #7; sub.b; btst Dn,(0,A1,D2.l)'),
+   dag_visit 0x070D9C, build_dependency_graph 0x070EC4, and do_merge's
+   `m^.refs^[i] := m^.refs^[i] or node^.bucket^.refs^[i]' (0x070B0E).
+   dpc: "testing an element of a packed array of more than 256 booleans
+   (the byte arithmetic of the 64-element sites would not reach it,
+   codegen-patterns 5.2) is not supported yet"; as an operand of
+   `and'/`or', "an element of a packed array of booleans as a value
+   other than a condition ...".  Reproducer:
+
+       module g13;
+       type bits_t = packed array [1..2048] of boolean;
+       var b: ^bits_t; n: integer;
+       procedure p(i: integer); options(val_param);
+       begin
+         if b^[i] then n := 1;
        end;

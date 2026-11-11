@@ -251,3 +251,21 @@ cc.m68k unless marked.
     putobj's address stored in a frame slot and A0 left as it is) and
     gen_exception_$new_exception (mrh_$alloc's).  dpc reloads the
     result.
+
+## Function results and constants
+
+33. **A univ_ptr result in D0, a typed pointer's in A0** (taken so;
+    not proven).  pds.pas's public record makers return what they
+    allocate in D0 (`move.l A0,D0' before the epilogue: pds_$make_name
+    0x069CB4, pds_$make_src_loc 0x069D3A, pds_$make_arg 0x06A630) and
+    their callers in debug_sym_dmp read D0 (`movea.l D0,A0'), while
+    pds_$make_var_attr and pds_$make_arg_attr (0x06A082, 0x06A524: a
+    pointer to a set) and the internal alloc_rec (0x069B40) leave it in
+    A0.  pds.ins.pas declares the former univ_ptr; dpc returns every
+    pointer in A0.
+34. **Identical string constants shared across routines.**
+    make_type_ref_from_aux (pds.pas 0x06F86A) passes make_type_ref's
+    copy of '\\PDS_\MAKE_TYPE_REF -- Unknown dst_rel_offset tag.%$'
+    (`pea 0x06F152', in make_type_ref's constants) instead of a copy of
+    its own; every other literal of the unit follows its routine.
+    dpc keeps one copy per routine.
