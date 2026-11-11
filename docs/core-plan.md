@@ -318,3 +318,12 @@ is declared by both inserts under `%if not codegen_uads_declared', a
 conditional variable globals.ins.pas declares; opt_vector reads the
 statements and trees through its own views (it does not open
 g_opt.ins.pas) and declares inline_$mark_reference_params (opt_inline).
+Translator CC (2026-11-11), the global optimizer (opt_reachdef
+translated): g_opt.ins.pas gets opt_main's opt_main_14 (+0x14),
+opt_var_types (+0x4C, g_opt_vtype_t: type_exp_t's layout),
+opt_nblocks (+0x5A), opt_max_stmts (+0x60) and opt_max_vars (+0x62),
+a 188 statement's variant (arg_call, arg_num), and the headings of
+adjust_ptr, releaserd, initrd, markuses and reachingdefinitions (opt_main
+calls them); paramclass and make_motioned_ud_chain are checked against
+their bodies (unchanged).  opt_reachdef declares kfold as opt_general
+does (docs/questions.md 104-107).

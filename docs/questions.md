@@ -798,3 +798,34 @@ revisited.
    scalar (nothing happens: the kind is out of the jump table's 11
    entries; written as kind 0).  Is process_routine called from the
    a88k back end or through a table not found?
+
+104. Translator CC (2026-11-11), opt_reachdef: g_opt.ins.pas names
+   opt_main's cells the unit reads by use: opt_main_14 (+0x14, the pool
+   of opt_reachdef's tables), opt_var_types (+0x4C, the variables' types
+   from compute_variable_type_descriptors: type_exp_t's layout as
+   g_opt_vtype_t, since g_opt.ins.pas cannot name c_objtype's type),
+   opt_nblocks (+0x5A), opt_max_stmts (+0x60), opt_max_vars (+0x62).
+   opt_main.pas must `define' them.  A 188 statement gets a variant of
+   its own (arg_call +56, arg_num +60: a variable passed to argument
+   arg_num of the call tree arg_call, paramclass's first parameter).
+105. Translator CC, opt_reachdef: ftn_data_init (nested in
+   reachingdefinitions) sets seen^[v] and value^[v] for
+   reachingdefinitions' own local v (frame -32).  reachingdefinitions
+   calls it with v the definition's variable, but init_block calls it
+   (with the static link) for a definition of its own variable (D3)
+   while v still holds whatever reachingdefinitions' previous loop
+   left (nvars + 1 after the clearing loop).  Kept as the image has it;
+   an original slip?
+106. Translator CC, opt_reachdef: when opt_track_lines (opt_main +0x6C)
+   is set, reachingdefinitions clears il_d0 and returns before the
+   uninitialized-use warnings (and without putting il_d0 back).  The
+   cell's name (translator V's, from opt_general) may not say what it
+   is.  The rd sets are allocated for opt_max_stmts + opt_max_vars + 1
+   bits (rd_words) and used for runbackend_16 - opt_region + nvars + 34
+   (rd_used), though only region numbers are ever set.
+107. Translator CC, opt_reachdef: the gap 8 rewrites for this unit
+   replace each kind set by a range holding it (`>= 137 and <= 205'):
+   the full comparison chains exhaust dpc's virtual registers in
+   evalforeffect (gap 25) even with a call's operands left out.  The
+   check of the unit is thus looser than the other units' (only the
+   scratch copy; the tree keeps the sets).
