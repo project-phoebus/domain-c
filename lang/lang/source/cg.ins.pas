@@ -852,6 +852,22 @@ procedure s_extend(
 
 { ---- cg_tree ---- }
 
+{ The headings are checked against cg_tree.pas's bodies. }
+
+{ CG_TREE_$NEEDS_LIB_SUPPORT - whether floating tree t needs a library
+  routine, rtn its index in std_lib_rtns (176 none).  cg_tree 0x0FF0AA:
+  t and rtn by address (reg_save's registers_consumed_by_tree_operator
+  passes its parameter's slot); D0. }
+function cg_tree_$needs_lib_support(
+    in t: il_$node_ptr_t;
+    out rtn: integer): boolean; extern;
+
+{ CG_TREE_$IS_DECOMPOSABLE_CONST_MUL - n is a multiplication by a
+  constant done by shifts and adds.  cg_tree 0x10061E: a pointer
+  (reg_save's registers_consumed_by_tree_operator); D0. }
+function cg_tree_$is_decomposable_const_mul(
+    n: il_$node_ptr_t): boolean; options(val_param); extern;
+
 { TREE_WALK - the code of IL tree n.  cg_tree 0x1085B4: a pointer. }
 procedure tree_walk(
     n: il_$node_ptr_t); options(val_param); extern;
