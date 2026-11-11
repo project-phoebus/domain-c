@@ -594,3 +594,16 @@ cc.m68k unless marked.
     (`moveq #4') but 11, 15 and 16 on arms of their own with the same
     constant (0x07BD62..0x07BD76).  (Item 23 for case arms.)  Written
     here as one arm for 0 and 2 (and 1 and 3) with an `if'.
+## Loops (translator BB, reg_cost_68k.pas, reg_action.pas)
+
+79. **A loop entered past its first statement when that statement's
+    test is known.**  compute_costs (cc.m68k 0x0C5D4A) walks a range's
+    blocks with `if b = nil then <whole range> ; repeat if b <> nil
+    then <the block's bounds> ... until b = nil': when the range has no
+    blocks the code jumps from the first `if' straight into the loop
+    after the block part (0x0C5F2E `bra 0x0C6018'), and the loop's end
+    jumps to the block part's head (0x0C67FE `bne 0x0C5F60'), skipping
+    the `if b <> nil' it knows to hold; do_register_actions (0x0C2D30,
+    0x0C3644) likewise.  (Item 67's threading, for a test at a loop's
+    head.)  dpc tests b each time round.
+

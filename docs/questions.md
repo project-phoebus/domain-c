@@ -798,3 +798,23 @@ revisited.
    scalar (nothing happens: the kind is out of the jump table's 11
    entries; written as kind 0).  Is process_routine called from the
    a88k back end or through a table not found?
+
+104. Translator BB: reg_action's alloc_stmt (cc.m68k 0x0C261E) asks
+   gspace for n * 336 + 50 bytes for a 191 statement of n actions,
+   while the actions it initializes (and add_actions fills) are 12
+   bytes from +52.  Was the original's action record declared larger
+   (336 = 28 * 12), or the size computed from another type?
+
+105. Translator BB: reg_action's insert_reg_stmts (0x0C36D2..0x0C3924)
+   replaces a Fortran constant's range node with buildtreenode(26, ...)
+   and then copies the new tree's +4..+15 onto themselves (`lea
+   (4,A0),A1; lea (4,A0),A4' and three `move.l').  Written as such
+   (a cse view's u_hdr assigned to itself); the source probably meant
+   to copy them from the constant replaced.
+
+106. Translator BB: reg_alloc.ins.pas's reg_range_t words +6, +16,
+   +24, +26 and longwords +12, +56 are named by position: compress_graph
+   clears them and reg_action copies +24 into an action, but the units
+   that set them (reg_life, reg_color_68k, reg_alloc) are not
+   translated yet.  Name them when they are.
+
