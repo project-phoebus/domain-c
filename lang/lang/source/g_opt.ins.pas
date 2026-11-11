@@ -16,8 +16,8 @@
 
 { TODO(pascal) g_opt.ins.pas holds what the translated units need
 
-  Add the optimizer's other cells (opt_main +0x14, +0x20, +0x24,
-  +0x4C, +0x5A, +0x60, +0x62, read by opt_reachdef, opt_strength, the
+  Add the optimizer's other cells (opt_main +0x14, +0x5A, +0x60,
+  +0x62, read by opt_reachdef, opt_strength, the
   reg_ units) and headings as their units are translated; the record
   fields are named by use. }
 
@@ -379,7 +379,42 @@ type
   end;
   g_opt_bb_list_ptr_t = ^array [1..16383] of g_opt_bb_ptr_t;
 
+  { opt_main's +0x4C: by variable number (from 0, 28 bytes each: `lsl
+    #2; neg; lsl #3; add', 28v), what the optimizer knows of the
+    routine's variable v: node the declaration or tree that gives its
+    value (kind 123, 130, 134 met in the reg_ units; nil none), size
+    (+16) its bytes (defined_var compares 4), flags (+24, +25: +25 bit
+    6 tested by defined_var).  The other words are not read by the
+    translated units. }
+  g_opt_vinfo_t = record
+    node: il_$node_ptr_t;               { +0 }
+    unused_4: array [1..3] of integer32;  { +4 }
+    size: integer32;                    { +16 }
+    unused_20: integer32;               { +20 }
+    flags: packed record                { +24 }
+      b24: 0..255;
+      b25_7: boolean;
+      b25_6: boolean;                   { .6 }
+      b25_5, b25_4, b25_3, b25_2, b25_1, b25_0: boolean;
+    end;
+    unused_26: integer;                 { +26 }
+  end;
+  g_opt_vinfo_ptr_t = ^array [0..9000] of g_opt_vinfo_t;
+
 var
+  { opt_main.pas's +0x20 and +0x24 (cc.m68k 0x2D2F10, 0x2D2F14): the
+    memory pools (mem_$pool_t) of the register allocator: +0x20 its
+    ranges and bit vectors (reg_alloc's mem_$alloc of the ranges,
+    release_space; reg_life, reg_vars), +0x24 the chunks of reg_alloc's
+    own pool (initpool, freepools). }
+  opt_main_20: extern univ_ptr;
+  opt_main_24: extern univ_ptr;
+
+  { opt_main.pas's +0x4C (cc.m68k 0x2D2F3C): by variable number, the
+    variables' g_opt_vinfo_t (opt_reachdef, opt_strength, reg_alloc,
+    reg_cost_68k, reg_life). }
+  opt_main_4c: extern g_opt_vinfo_ptr_t;
+
   { opt_main.pas's data +0x8 (cc.m68k 0x2D2EF8, reached absolutely):
     a memory pool cg_top's codegen empties at the end. }
   opt_main_8: extern univ_ptr;
