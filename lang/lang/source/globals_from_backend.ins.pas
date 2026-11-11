@@ -32,12 +32,17 @@ var
   runbackend_0c: extern univ_ptr;       { +0xC: c_main, gen_utils,
                                           opt_strength, reg_alloc }
   runbackend_10: extern univ_ptr;       { +0x10: c_main, opt_strength }
+  runbackend_14: extern integer;        { +0x14: the source language
+                                          run_backend is given; cc.a88k's
+                                          post reads it }
   runbackend_16: extern integer;        { +0x16: opt_main sets it; opt_*,
                                           reg_*, cc.a88k's at_backend
                                           and dmp read it }
 
-  { cc.a88k's at_backend.pas, A5 0x485830, +0x506: runbackend sets and
-    clears it (rewrite clears it).  Not in cc.m68k. }
+  { A back-end cell: cc.a88k's at_backend.pas, A5 0x485830, +0x506
+    (rewrite clears it); cc.m68k's cg_top.pas, A5 0x356314, +0x148
+    (0x35645C: emit, fpa, cg_addr, cg_call, cg_fp test it).  runbackend
+    sets it and clears it (run_backend, optimize_and_code). }
   at_backend_506: extern boolean;
 
 { The back end's entry points runbackend calls: cc.m68k's in lang/lang
