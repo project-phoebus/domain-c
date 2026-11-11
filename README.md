@@ -76,4 +76,13 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/prtsub.pas` | 7 | translated (best effort) |
 | `lang/lang/source/il.pas` | 1 | translated (best effort; IL globals named by offset) |
 | `lang/lang/source/target_properties.pas` | 3 | translated (best effort; record fields named by offset, table initializer TODO) |
+| `lang/c_compiler/source/c_get_rlen.pas` | 1 | translated (best effort) |
+| `lang/c_compiler/source/frontend_cc_dummies.pas` | 4 | translated (best effort) |
+| `lang/c_compiler/source/fe_cc_hooks_to_backend.pas` | 3 | translated (best effort) |
+| `lang/c_compiler/source/c_general_utl.pas` | 10 | translated (best effort) |
+| `lang/c_compiler/source/c_cond_read.pas` | 7 | translated (best effort) |
+| `lang/c_compiler/source/c_error.pas` | 8 | translated (best effort; dpc gap 2) |
+| `lang/c_compiler/source/c_macro_utl.pas` | 19 | translated (best effort; dpc gaps 3, 4, 5) |
+| `lang/c_compiler/source/c_initdate.c` | 1 | reconstructed (C; not checked by the gate) |
+| `lang/c_compiler/source/c_run_acpp.c` | 3 | reconstructed (C; not checked by the gate) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

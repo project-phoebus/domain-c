@@ -19,3 +19,27 @@ revisited.
    consecutive constant stores (docs/rev889-patterns.md 10).  If the
    original used more sets (for example for the +0x27A..+0x27B and
    +0x28A..+0x28B flags), only the declarations change, not the layout.
+4. get_rlen (c_get_rlen.pas) is called by reg_life, which opens
+   neither c_externs nor c_globals: its heading (c_externs.ins.pas,
+   taking a type_exp_t) is not visible there.  Add a univ heading to
+   globals_from_frontend.ins.pas (as for type_exp), or have reg_life
+   declare it?  Left to the lead (translator B, 2026-11-11).
+5. c_externs.ins.pas now declares about 85 front-end routines (headings
+   read off frames, TODO(pascal)), and add_node, attributes and
+   runbackend open it: their translators should check for clashes with
+   their own internal names (add_node's add_top_node is not among
+   them; `get', `identifier', `syntax' are).
+6. c_data.asm's diagnostic tables are declared in c_globals.ins.pas as
+   cerr_code_map (0x040CD2), cerr_messages (0x040D7E) and cerr_texts
+   (0x0412A6), names and bounds chosen by c_error's translator; the
+   c_data.asm translator should keep or rename them.
+7. errorlst's heading is in c_globals.ins.pas, not c_externs: its only
+   callers (error_listing's error0..error3) open c_objtype and
+   c_globals but not c_externs.
+8. frontend_cc_dummies opens no insert; its dummies return in D0 though
+   the prelude declares modify_m2_native_external_name as returning a
+   pointer (coff_syms reads A0).  The unit keeps the image's form.
+9. c_lex_pp's +0x24DE (lex_text, the current line's text) is declared
+   varying [256] of char; the space to the next known cell (+0x26E8) is
+   522 bytes.  Settle when c_lex_pp is translated.
+

@@ -92,3 +92,24 @@ cc.m68k unless marked.
     #0x43F9, #0x4EF9 and the addresses) and calls cache_$clear through
     the transfer vector (debug_sym_dmp, reg_color_68k); no source-level
     call, so no unit declares cache_$clear.
+## Prologue and epilogue (continued)
+
+13. **An empty global procedure is a lone `rts`**: no `link`, no saves
+    and no A5 load, though the module has data and other routines are
+    called from outside (fe_cc_hooks_to_backend's dump_namelist 0x067378,
+    which unix_objmod calls, and coproc_$suppress_warnings 0x06737A).
+    The exception to 1; dpc emits the same `rts`.
+14. **No frame for an internal routine without locals or calls.**
+    c_macro_utl's end_of_text_chain 0x059C84 reads its parameter at
+    (4,SP) and returns in A0 with no `link`; c_cond_read's
+    push_current_state 0x0409C0 and pop_current_state 0x0409D2 (no
+    parameters) are three instructions and `rts'.  An internal routine
+    that calls (c_macro_utl's hash_value) or has locals gets a frame.
+
+## Data layout (records)
+
+15. **A character array after a byte field is not word-aligned.**
+    c_macro_utl's macro record (4110 bytes from PAS_$NEW) has a byte
+    at +12 and the 4096-character name at +13 (mu_$lookup_name 0x058F76
+    `pea (13,A3)'); dpc aligns the array to +14.
+

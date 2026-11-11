@@ -58,7 +58,28 @@ procedure error3(
 procedure print_error(
     p: univ_ptr); options(val_param); extern;
 
+type
+  { A diagnostic saved for the listing (c_error's error_not_printed,
+    cc.m68k 0x049508, walks the list: the arguments compared by
+    address, the list ordered by line).
+
+    Not known from the original: the names; +22. }
+  error_listing_$saved_ptr_t = ^error_listing_$saved_t;
+  error_listing_$saved_t = record
+    args: array [1..3] of univ_ptr;     { +0 }
+    next: error_listing_$saved_ptr_t;   { +12 }
+    code: integer;                      { +16 }
+    nargs: integer;                     { +18 }
+    line: integer;                      { +20 }
+    unused_22: integer;                 { +22 }
+    printed: boolean;                   { +24: listed already }
+  end;
+
 var
+  { error_listing.pas's data +0x8: the saved diagnostics (c_error's
+    error_not_printed reads it absolutely). }
+  error_listing_08: extern error_listing_$saved_ptr_t;
+
   { error_listing.pas's data (A5 0x2C3168 cc.m68k, 0x4431D8 cc.a88k),
     +0xC: a boolean outbin's wr_instr sets and clears (st, clr.b) and
     c_error, c_lex_pp and iosub test (tst.b).  Its meaning is not
