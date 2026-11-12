@@ -146,7 +146,7 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/cg_top.pas` | 18 | translated (cc.m68k only; best effort; nodes by offset, statements from their +4 through univ records; dpc gaps 8, 12) |
 | `lang/lang/source/cg_addr.pas` | 50 | translated (cc.m68k only; best effort; nodes by offset and cg.ins.pas's tree view; cells defined in the image's layout; dpc gaps 2, 7, 8) |
 | `lang/lang/source/cg_assign.pas` | 15 | translated (cc.m68k only; best effort; the statement through cg.ins.pas's cg_asn_t, nodes by offset; dpc gaps 7, 8, 24, 25) |
-| `lang/lang/source/cg_tree.pas` | 44 | done: 44 of 44 (generate and its 21 nested routines by translator DD; cc.m68k only; dpc gaps 2, 7, 8, 24, 25: generate's floating arms 34..42 left out of the gate, type-checked) |
+| `lang/lang/source/cg_tree.pas` | 44 | translated (cc.m68k only; best effort; generate and its 21 nested routines by translator DD; dpc gaps 2, 7, 8, 24, 25: generate's floating arms 34..42 left out of the gate, type-checked) |
 | `lang/lang/source/opt_general.pas` | 9 | translated (best effort; nodes through g_opt.ins.pas's views; dpc gaps 7, 8) |
 | `lang/lang/source/opt_select.pas` | 11 | translated (best effort; blocks through g_opt.ins.pas's views; dpc gaps 3, 15) |
 | `lang/lang/source/opt_assign.pas` | 9 | translated (best effort; nodes through g_opt.ins.pas's views and il.ins.pas's by offset; dpc gaps 8, 12, 19, 23) |
@@ -162,7 +162,7 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/reg_action.pas` | 11 | translated (cc.m68k only; best effort; the 191 statements through g_opt.ins.pas's acts; dpc gaps 2, 8) |
 | `lang/lang/source/reg_vars.pas` | 13 | translated (cc.m68k only; best effort; the debugger's ranges through the unit's rv_lr_t, the 191 statements' actions through g_opt.ins.pas) |
 | `lang/lang/source/opt_reachdef.pas` | 37 | translated (best effort; statements and trees through g_opt.ins.pas's views, other nodes by offset; dpc gaps 8, 12, 24, 25) |
-| `lang/lang/source/opt_strength.pas` | 59 | done (59 of 59; cc.a88k's 12 under `%if cc_a88k`; the module data, four variable sets and the lists, cc.m68k only; dpc gaps 2, 3, 8, 24) |
+| `lang/lang/source/opt_strength.pas` | 59 | translated (best effort; cc.a88k's 12 under `%if cc_a88k`; the module data, four variable sets and the lists, cc.m68k only; dpc gaps 2, 3, 8, 24) |
 | `lang/lang/source/opt_main.pas` | 109 | translated (best effort; the module's data defined in the image's layout, statements, trees and blocks through g_opt.ins.pas's views, other nodes by offset; dpc gaps 2, 4, 7, 8, 29) |
 | `lang/lang/source/reg_alloc.pas` | 15 | translated (cc.m68k only; best effort; statements and blocks through g_opt.ins.pas, variables and the routine block by offset; dpc gaps 4, 8) |
 | `lang/lang/source/reg_color_68k.pas` | 16 | translated (cc.m68k only; best effort; ranges and conflicts through reg_alloc.ins.pas; dpc gap 21) |
@@ -192,7 +192,7 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang2/source/be_com/com.pas` | 63 | translated (cc.a88k only; best effort, translators PC3 and PC4; the CSE pass over the dominator tree (hash tables by opcode, canonical birthpoints), load and store elimination, do_not_delete stores, hoisting out of loops, invariant memory kept in registers across loops (MMT_SEQs at the entries and exits), instructions sunk into loop exits, sine/cosine calls merged into a88k_$cossin, zero valued live ranges; blocks +42/+142, the IL node +192 through views; dpc gap 30) |
 | `lang2/source/be_com/oli.pas` | 120 | translated (cc.a88k only; best effort; translators PC6, PC7: the dependence tests and the modulo scheduler (PC6); the induction variables' adjustments, the copies' operands, the pipelined loop's blocks, jumps, tests and birthpoints, the reductions' sums, the recurrences' precedence and the phase's entry (PC7); dpc gap 7) |
 | `lang2/source/be_com/iv.pas` | 127 | translated (cc.a88k only; best effort; translators PC4, PC5: the expressions and heaps; the induction records (iv.ins.pas: induction lts, address mode, expression, class, variable), the candidates (ivr_), the induction expressions (ixr_), the strength reduction (ixt_), the interval walk, recompute_for_oli and process_routine; opcodes/instr_size.init made) |
-| `lang2/source/be_com/lst.pas` | 33 | translated (cc.a88k only; best effort; the classic and -PRASM listings; the section initializers of instr_mnemonic*.init TODO; dpc gaps 7, 8, 28) |
+| `lang2/source/be_com/lst.pas` | 33 | translated (cc.a88k only; best effort; the classic and -PRASM listings; the sections initialized from instr_mnemonic*.init; dpc gaps 7, 8, 28) |
 | `lang2/source/be_com/bin.pas` | 32 | translated (cc.a88k only; best effort; defines unix_objmod's emit_108 at +0x30; records by offset; dpc gaps 7, 13, 22) |
 | `lang2/source/be_com/asm.pas` | 21 | translated (cc.a88k only; best effort; the PRISM encoder and literal pools, translator PB2; instr_assembly.init, operand_string*.init; docs/prism-isa.md; dpc gaps 22, 25, 32) |
 | `lang2/source/be_com/dmp.pas` | 27 | translated (cc.a88k only; best effort; the phases' dumps of blocks, instructions, live ranges, the interference graph and MRH, translator PB3; am/block/lsq/rrp_string*.init, operand_letter.init, rrp_letter.init; dpc gaps 4, 33, 34) |
