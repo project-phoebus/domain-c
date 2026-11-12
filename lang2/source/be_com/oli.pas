@@ -227,10 +227,34 @@ type
     l0: integer32;                      { +0 }
     next: oli_ivadj_ptr_t;              { +4 }
     lts: lts_ptr_t;                     { +8 }
-    l12: integer32;                     { +12 }
+    ilts: lts_ptr_t;                    { +12: a segment of its live
+                                          range (the columns' order) }
     it: integer32;                      { +16 }
     lr: lr_ptr_t;                       { +20 }
     mv: oli_mval_t;                     { +24 }
+    final: oli_mval_t;                  { +32: the adjustment after the
+                                          loop }
+  end;
+
+  { A live range's replacement in a column (12 bytes). }
+  oli_lrmap_ptr_t = ^oli_lrmap_t;
+  oli_lrmap_t = record
+    next: oli_lrmap_ptr_t;              { +0 }
+    lr: lr_ptr_t;                       { +4 }
+    new: lr_ptr_t;                      { +8 }
+  end;
+  oli_lrmaps_ptr_t = ^array [0..65535] of oli_lrmap_ptr_t;
+
+  { A final live range's copies by column (16 bytes): its operand kind
+    (+12), its segment's induction or reduction kind (+14), the copies
+    (+8, columns 0 .. niters). }
+  oli_col_ptr_t = ^oli_col_t;
+  oli_col_t = record
+    next: oli_col_ptr_t;                { +0 }
+    lr: lr_ptr_t;                       { +4 }
+    cols: ^array [0..65535] of lr_ptr_t;    { +8 }
+    kind: integer;                      { +12 }
+    ikind: integer;                     { +14 }
   end;
 
   { A reduction (16 bytes from the bookkeeping heap): a live range
@@ -367,7 +391,8 @@ var
                                           variables' adjustments }
   oli_fp_consts: oli_fpconst_ptr_t;     { +0x2DAC: the integer constants
                                           in floating registers }
-  oli_2db0: integer32;                  { +0x2DB0 }
+  oli_cols: oli_col_ptr_t;              { +0x2DB0: the final live
+                                          ranges' columns }
   oli_red_lts: lts_ptr_t;               { +0x2DB4: the segment
                                           is_exposed_reduction examines }
   oli_reductions: oli_red_ptr_t;        { +0x2DB8 }
@@ -384,7 +409,9 @@ var
   oli_copies: oli_instrs_ptr_t;         { +0x2DCC: the latest copy of
                                           each loop instruction, by its
                                           number less one (800 bytes) }
-  oli_2dd0: oli_longs_ptr_t;            { +0x2DD0: two by iteration }
+  oli_exposed: oli_lrmaps_ptr_t;        { +0x2DD0: by column (two by
+                                          iteration), the exposed live
+                                          ranges' replacements }
   oli_2dd4: oli_longs_ptr_t;            { +0x2DD4: by iteration }
   oli_tails: oli_bbs_ptr_t;             { +0x2DD8: the tail blocks, by
                                           iteration less one }
@@ -400,8 +427,6 @@ var
   oli_counter: lr_ptr_t;                { +0x2DF8: the loop counter }
   oli_rtn: rtn_ptr_t;                   { +0x2DFC }
   oli_2e00: integer32;                  { +0x2E00 }
-  oli_2de8: integer32;                  { +0x2DE8: the span of the
-                                          sequence numbers }
   oli_nmuld: integer32;                 { +0x2E04: muld's (no fp_ccs) }
   oli_nmuls: integer32;                 { +0x2E08: muls's }
   oli_n5d: integer32;                   { +0x2E0C: the double
@@ -412,7 +437,8 @@ var
   oli_2e1c: integer32;                  { +0x2E1C }
   oli_2e20: integer32;                  { +0x2E20 }
   oli_2e24: integer32;                  { +0x2E24 }
-  oli_2e28: integer32;                  { +0x2E28 }
+  oli_span: integer32;                  { +0x2E28: the span of the
+                                          sequence numbers }
   oli_2e2c: integer32;                  { +0x2E2C }
   oli_2e30: integer32;                  { +0x2E30 }
   oli_nfpctl: integer32;                { +0x2E34: the fp_control
@@ -608,7 +634,7 @@ begin
   oli_fp_consts := nil;
   oli_2e00 := -1;
   oli_prolog_last := nil;
-  oli_2db0 := 0;
+  oli_cols := nil;
 end;
 
 { add_instr_end_of_prolog_inits - a new instruction of opcode opc at
@@ -3345,7 +3371,7 @@ end;
   with, from the bookkeeping heap: two of a longword by iteration
   (oli_tails, oli_2dd4), one by instruction number (oli_copies, cleared),
   each reduction's partial sums (iterations by iterations), one of two
-  longwords by iteration (oli_2dd0, cleared); oli_2de8 the
+  longwords by iteration (oli_exposed, cleared); oli_span the
   instructions' sequence numbers' span.  0x25C108, 0x122 bytes: the
   sizes word products of the counts' low words (pattern 129). }
 
@@ -3360,15 +3386,15 @@ begin
   for k := 1 to 200 do
     oli_copies^[k - 1] := nil;
   r := oli_reductions;
-  oli_2de8 := ((oli_niters - 1) * (oli_niters - 2)) div 2 + oli_iters
+  oli_span := ((oli_niters - 1) * (oli_niters - 2)) div 2 + oli_iters
       + oli_niters - 1;
   while r <> nil do begin
     r^.sums := mrh_$alloc(oli_heap, oli_iters * oli_niters * 4);
     r := r^.next;
   end;
-  oli_2dd0 := mrh_$alloc(oli_heap, oli_niters * 2 * 4);
+  oli_exposed := mrh_$alloc(oli_heap, oli_niters * 2 * 4);
   for k := 0 to oli_niters * 2 - 1 do
-    oli_2dd0^[k] := 0;
+    oli_exposed^[k] := nil;
 end;
 
 { build_fan_in_seq_instr - with more than one memory live range exposed
@@ -3658,4 +3684,282 @@ begin
     191: utils_$set_instruction_opcode(i, 169);
     otherwise
   end;
+end;
+
+{ record_live_exposed_lr - in column k (oli_exposed's list), lr is
+  replaced by v; a different replacement recorded earlier is a
+  conflict.  0x25C994, 0x82 bytes. }
+
+procedure record_live_exposed_lr(
+    k: integer32;
+    v: lr_ptr_t;
+    lr: lr_ptr_t); options(val_param); internal;
+var
+  p: oli_lrmap_ptr_t;
+begin
+  p := oli_exposed^[k];
+  while p <> nil do begin
+    if p^.lr = lr then begin
+      if p^.new <> v then
+        bug_check('oli:record_live_exposed_lr -- live-exposed lr conflict%$');
+      return;
+    end;
+    p := p^.next;
+  end;
+  p := mrh_$alloc(oli_heap, 12);
+  p^.next := oli_exposed^[k];
+  oli_exposed^[k] := p;
+  p^.lr := lr;
+  p^.new := v;
+end;
+
+{ get_live_exposed_lr - lr's replacement in column k (a pair half's
+  through its mate's), else a new live range of its register file and
+  properties, made complex and recorded.  0x25CA4E, 0xDC bytes. }
+
+function get_live_exposed_lr(
+    k: integer32;
+    lr: lr_ptr_t): lr_ptr_t; options(val_param); internal;
+label
+  99;
+var
+  p: oli_lrmap_ptr_t;
+  x, nl: lr_ptr_t;
+begin
+  p := oli_exposed^[k];
+  while p <> nil do begin
+    if p^.lr = lr then begin
+      get_live_exposed_lr := p^.new;
+      goto 99;
+    end;
+    if (integer(p^.lr^.rrp) & 3) <> 0 then
+      if p^.lr^.mate = lr then begin
+        get_live_exposed_lr := p^.new^.mate;
+        goto 99;
+      end;
+    p := p^.next;
+  end;
+  p := mrh_$alloc(oli_heap, 12);
+  p^.next := oli_exposed^[k];
+  oli_exposed^[k] := p;
+  p^.lr := lr;
+  if (integer(lr^.rrp) & 3) <> 0 then begin
+    x := lir_$new_live_range_fp_reg_pair;
+    if rrp$fp_reg_even_only in lr^.rrp then
+      nl := x
+    else
+      nl := x^.mate;
+  end
+  else if rrp$fp_reg in lr^.rrp then
+    nl := lir_$new_live_range_fp_reg
+  else
+    nl := lir_$new_live_range_ip_reg;
+  p^.new := nl;
+  p^.new^.rrp := lr^.rrp;
+  bv_$make_live_range_complex(oli_rtn, nl);
+  get_live_exposed_lr := nl;
+99:
+end;
+
+{ find_final_lr_in_column - lr's live range in column k (column 0 when
+  the schedule's iterations together exceed oli_2e24).  0x25CB2A, 0x46
+  bytes. }
+
+function find_final_lr_in_column(
+    lr: lr_ptr_t;
+    k: integer32): lr_ptr_t; options(val_param); internal;
+var
+  p: oli_col_ptr_t;
+begin
+  p := oli_cols;
+  while p^.lr <> lr do
+    p := p^.next;
+  if oli_iters + oli_niters > oli_2e24 then
+    find_final_lr_in_column := p^.cols^[0]
+  else
+    find_final_lr_in_column := p^.cols^[k];
+end;
+
+{ record_final_lr_in_column - v is lr's live range in column k: column
+  0 recorded in column 0 (or all columns from 1 when oli_2e24 is not
+  below the iterations); another only when oli_2e24 is that column's
+  place (2 niters + k - 3) or not beyond 2 niters - 3.  0x25CB70, 0xA6
+  bytes. }
+
+procedure record_final_lr_in_column(
+    v: lr_ptr_t;
+    lr: lr_ptr_t;
+    k: integer32); options(val_param); internal;
+var
+  p: oli_col_ptr_t;
+  m: integer32;
+begin
+  p := oli_cols;
+  while p^.lr <> lr do
+    p := p^.next;
+  if k = 0 then begin
+    if oli_2e24 < oli_niters then
+      p^.cols^[0] := v
+    else
+      for m := 1 to oli_niters do
+        p^.cols^[m] := v;
+  end
+  else if (oli_2e24 = oli_niters * 2 + k - 3) or
+      (oli_niters * 2 - 3 >= oli_2e24) then
+    p^.cols^[k] := v;
+end;
+
+{ build_final_lr_in_col_list - a column record for each register live
+  range final in the loop but the counter (not exposed): its kind, its
+  segment's induction or reduction kind (+14), columns 0 .. niters.
+  0x25CC16, 0xB6 bytes. }
+
+procedure build_final_lr_in_col_list; internal;
+var
+  s: lts_ptr_t;
+  p: oli_col_ptr_t;
+  l: iv_lts_ptr_t;
+begin
+  s := oli_bb^.finals;
+  while s <> nil do begin
+    if s^.refs^.h.kind in [operand$ip_reg..operand$fp_reg_pair] then
+      if s^.lr <> oli_counter then
+        if not s^.f2.exposed then begin
+          l := iv_lts_ptr_t(s^.l24);
+          p := mrh_$alloc(oli_heap, 16);
+          if l = nil then
+            p^.ikind := 0
+          else
+            p^.ikind := l^.h.kind;
+          p^.next := oli_cols;
+          oli_cols := p;
+          p^.lr := s^.lr;
+          p^.cols := mrh_$alloc(oli_heap, (oli_niters + 1) * 4);
+          p^.kind := ord(s^.refs^.h.kind);
+        end;
+    s := s^.next_final;
+  end;
+end;
+
+{ link_lrs - in bb (after its last instruction before the control
+  transfers, or before its first), live range b made a's value less v:
+  a move (move, movei, copyd by register file kind) when v is the
+  constant 0 and a and b differ, else a sub (subi) of v's operand, a
+  modify when a is b.  0x25CCCC, 0x1FE bytes: for another kind the
+  move's instruction is not set (kept). }
+
+procedure link_lrs(
+    v: oli_mval_ptr_t;
+    a: lr_ptr_t;
+    b: lr_ptr_t;
+    bb: bb_ptr_t;
+    after: boolean;
+    kind: integer); options(val_param); internal;
+var
+  p, i: instr_ptr_t;
+  opc: integer;
+  tmp: opnd_t;
+begin
+  if after then begin
+    p := bb^.last;
+    while instruction_attributes[p^.opc].class in
+        [class$branch, class$fp_branch, class$jump] do
+      p := p^.prev;
+  end
+  else
+    p := bb^.first;
+  if (v^.kind = 3) and (v^.value = 0) then begin
+    if a = b then
+      return;
+    if kind = 1 then
+      i := lir_$optimizer_new_instruction(p, 75, after)     { move }
+    else if kind = 2 then
+      i := lir_$optimizer_new_instruction(p, 133, after)    { movei }
+    else if kind = 3 then
+      i := lir_$optimizer_new_instruction(p, 161, after);   { copyd }
+    opnd_bytes_ptr_t(addr(i^.opnds[1]))^.b3 :=
+        (opnd_bytes_ptr_t(addr(i^.opnds[1]))^.b3 & 16#E0) ! kind;
+    opnd_bytes_ptr_t(addr(i^.opnds[1]))^.rrp := 16;
+    i^.opnds[1].h.num := 1;
+    i^.opnds[1].ptr := a;
+    opnd_bytes_ptr_t(addr(i^.opnds[2]))^.b3 :=
+        (opnd_bytes_ptr_t(addr(i^.opnds[2]))^.b3 & 16#E0) ! kind;
+    opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 8;
+    i^.opnds[2].h.num := 2;
+    i^.opnds[2].ptr := b;
+    if kind = 3 then begin
+      opnd_bytes_ptr_t(addr(i^.opnds[1]))^.rrp := 17;
+      opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 9;
+      opnd_bytes_ptr_t(addr(i^.opnds[3]))^.b3 :=
+          (opnd_bytes_ptr_t(addr(i^.opnds[3]))^.b3 & 16#E0) ! kind;
+      opnd_bytes_ptr_t(addr(i^.opnds[3]))^.rrp := 18;
+      i^.opnds[3].h.num := 3;
+      i^.opnds[3].ptr := a^.mate;
+      opnd_bytes_ptr_t(addr(i^.opnds[4]))^.b3 :=
+          (opnd_bytes_ptr_t(addr(i^.opnds[4]))^.b3 & 16#E0) ! kind;
+      opnd_bytes_ptr_t(addr(i^.opnds[4]))^.rrp := 10;
+      i^.opnds[4].h.num := 4;
+      i^.opnds[4].ptr := b^.mate;
+    end;
+  end
+  else begin
+    if kind = 1 then
+      opc := 81                         { sub }
+    else
+      opc := 138;                       { subi }
+    operand_gets_materialized_value(addr(tmp), v, kind, opc, 1, bb);
+    i := lir_$optimizer_new_instruction(p, opc, after);
+    i^.opnds[1] := tmp;
+    i^.opnds[1].h.num := 1;
+    opnd_bytes_ptr_t(addr(i^.opnds[2]))^.b3 :=
+        (opnd_bytes_ptr_t(addr(i^.opnds[2]))^.b3 & 16#E0) ! kind;
+    i^.opnds[2].h.num := 2;
+    i^.opnds[2].ptr := a;
+    if a = b then begin
+      opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 48;
+      opnd_bytes_ptr_t(addr(i^.opnds[3]))^.rrp := 4;
+    end
+    else begin
+      opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 16;
+      opnd_bytes_ptr_t(addr(i^.opnds[3]))^.rrp := 8;
+    end;
+    opnd_bytes_ptr_t(addr(i^.opnds[3]))^.b3 :=
+        (opnd_bytes_ptr_t(addr(i^.opnds[3]))^.b3 & 16#E0) ! kind;
+    i^.opnds[3].h.num := 3;
+    i^.opnds[3].ptr := b;
+  end;
+end;
+
+{ link_final_induction_vars - in each tail block, each final live
+  range's column copy linked back to it, less its induction variable's
+  final adjustment (oli_ivadjs, in the columns' order) or 0; not for a
+  pair's odd half or a reduction.  0x25CECA, 0xD2 bytes. }
+
+procedure link_final_induction_vars; internal;
+var
+  zero_mv, mv: oli_mval_t;
+  p: oli_col_ptr_t;
+  a: oli_ivadj_ptr_t;
+  k: integer32;
+begin
+  zero_mv.kind := 3;
+  zero_mv.value := 0;
+  p := oli_cols;
+  a := oli_ivadjs;
+  while p <> nil do begin
+    if (a <> nil) and (p^.lr = a^.ilts^.lr) then begin
+      mv := a^.final;
+      a := a^.next;
+    end
+    else
+      mv := zero_mv;
+    if not (rrp$fp_reg_odd_only in p^.lr^.rrp) then
+      if p^.ikind <> 5 then
+        for k := 1 to oli_niters do
+          link_lrs(addr(mv), p^.cols^[k], p^.lr, oli_tails^[k - 1], true,
+              p^.kind);
+    p := p^.next;
+  end;
+  if a <> nil then
+    bug_check('OLI-link_final_induction_vars: induction increment unaccounted for.%$');
 end;
