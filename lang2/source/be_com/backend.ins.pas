@@ -200,7 +200,9 @@ type
 
   { An operand (12 bytes; an instruction's k-th at its +32 + 12k).  The
     first longword is one packed record (dpc lays a 0..255 field of an
-    unpacked record out as a word): num (+0) is k; +1 the low byte of
+    unpacked record out as a word): num (+0) is k (zzzzz compares a
+    register operand's with 31, the zero register, most likely); +1 the
+    low byte of
     rrp$set_t (xtp copies its bits 3..2 to a segment's rrp and sets
     0x30 for an operand that reads and means to modify; sem_utils tests
     read); +2 bits 5..4 a count sem_utils subtracts; +3 bits 4..0 the
@@ -234,8 +236,10 @@ type
 
   { An instruction (lir's opt_new_instruction: 44 bytes and 12 for each
     operand, from the routine's heap).  The first longword (h) is one
-    packed record: +0 b6 the opcode's b6_0, b4 (needs_ipccnop) marks
-    one that needs an IPCCNOP after it (xtp), b2 (grouped) one of a
+    packed record: +0 b6 the opcode's b6_0, b4 (sets_cc) marks one
+    that sets the condition codes (xtp puts an IPCCNOP after it; zzzzz
+    lists one whose result is register 31 as a TST or CMP), b2
+    (grouped) one of a
     group that runs on (xtp: insert_ipccnop skips them), b1 copied from
     the instruction it is put next to (instr_bug_check: then +32 points
     to the source position); nopnds (+1) its operands; +2 bit 5 the
@@ -250,7 +254,7 @@ type
     b0_7: boolean;                      { +0 }
     b0_6: boolean;
     b0_5: boolean;
-    needs_ipccnop: boolean;             { .4 }
+    sets_cc: boolean;                   { .4 }
     b0_3: boolean;
     grouped: boolean;                   { .2 }
     b0_1: boolean;
@@ -274,7 +278,7 @@ type
     class: char;                        { +40: class$... }
     b41: char;                          { +41 }
     num: integer;                       { +42 }
-    opnds: array [1..15] of opnd_t;     { +44 }
+    opnds: array [1..255] of opnd_t;    { +44 }
   end;
 
   { A basic block.  num (+10) its number (printed with an
@@ -350,18 +354,24 @@ type
   end;
 
   { A routine being compiled: what at_backend's phases are passed.
-    lrs (+52) its live ranges; bbs (+76) its basic blocks in code
-    order; cells (+92) the code cells zzzzz makes (their chain's
-    head); l192 (+192) passed on by dfa and xtp to
-    df_utils_$global_walk. }
+    node (+0) its IL node (whose +188 zzzzz reads); lrs (+52) its live
+    ranges; bbs (+76) its basic blocks in code order; cells (+88) the
+    code cells zzzzz makes, epilogues (+92) zzzzz's epilogue marks
+    (code cells chained at +12); l112 (+112) the segment a returning
+    jump's operand 1 has (zzzzz); l192 (+192) passed on by dfa and xtp
+    to df_utils_$global_walk. }
   rtn_t = record
-    space0: array [0..51] of char;      { +0 }
+    node: il_$node_ptr_t;               { +0 }
+    space4: array [4..51] of char;      { +4 }
     lrs: lr_ptr_t;                      { +52 }
     space56: array [56..75] of char;    { +56 }
     bbs: bb_ptr_t;                      { +76 }
-    space80: array [80..91] of char;    { +80 }
-    cells: cell_ptr_t;                  { +92 }
-    space96: array [96..191] of char;   { +96 }
+    space80: array [80..87] of char;    { +80 }
+    cells: cell_ptr_t;                  { +88 }
+    epilogues: cell_ptr_t;              { +92 }
+    space96: array [96..111] of char;   { +96 }
+    l112: lts_ptr_t;                    { +112 }
+    space116: array [116..191] of char; { +116 }
     l192: integer32;                    { +192 }
   end;
 
@@ -370,10 +380,15 @@ type
     first longword (h) is one packed record: +0 flags (bits 7..5
     zzzzz's, bits 4..0 cleared), opc (+1) the opcode as a byte, +3 bit
     5 set on a label's.  next (+4), +8 and +16 the instruction's source
-    position (+28, +32), +12 a label's symbol or number. }
+    position (+28, +32), +12 a label's symbol or number (or the next
+    epilogue mark), +12 of a case table its entries' count. }
   cell_hdr_t = packed record
     b0_7, b0_6, b0_5: boolean;          { +0 }
-    b0_4_0: 0..31;
+    b0_4, b0_3, b0_2: boolean;
+    b0_1: boolean;                      { .1: +16 points to the source
+                                          position (the instruction's
+                                          +0 bit 1) }
+    b0_0: boolean;
     opc: 0..255;                        { +1 }
     b2: 0..255;                         { +2 }
     b3_7, b3_6: boolean;                { +3 }
@@ -386,7 +401,8 @@ type
     l8: integer32;                      { +8 }
     l12: integer32;                     { +12 }
     l16: integer32;                     { +16 }
-    opnds: array [1..15] of opnd_t;     { +20 }
+    opnds: array [1..255] of opnd_t;    { +20: zzzzz's local cell is
+                                          3080 bytes }
   end;
 
   { The current phase's debug switches (at_backend +0x500: the phase
@@ -2064,19 +2080,23 @@ procedure zzzzz_$begin_compilation; extern;
 { ZZZZZ_$END_COMPILATION - 0x287FC8, 0x2 bytes (no A5). }
 procedure zzzzz_$end_compilation; extern;
 
-{ ZZZZZ_$PREALLOCATE_LABEL - 0x287FCA, 0x58 bytes; called from
-  isc_user_routines lir_main sym.  Result: A0 (callers: A03). }
-function zzzzz_$preallocate_label: univ_ptr; extern;
+{ ZZZZZ_$PREALLOCATE_LABEL - a label instruction (opc$label, one
+  operand of kind operand$symbol_definition) from zzzzz's heap, to be
+  put in a block later.  0x287FCA, 0x58 bytes; called from
+  isc_user_routines, lir_main, sym; A0. }
+function zzzzz_$preallocate_label: instr_ptr_t; extern;
 
-{ ZZZZZ_$PREALLOCATE_CASE_TABLE - 0x288022, 0x70 bytes; called from
-  rewrite.  Frame 8:a.  Result: A0 (callers: A01). }
+{ ZZZZZ_$PREALLOCATE_CASE_TABLE - a TABLEL code cell of n entries from
+  rws_$alloc_heap, chained on the current routine's tables.  0x288022,
+  0x70 bytes; called from rewrite: n by address; A0. }
 function zzzzz_$preallocate_case_table(
-    p1: univ_ptr): univ_ptr; options(val_param); extern;
+    in n: integer32): cell_ptr_t; extern;
 
-{ ZZZZZ_$NEW_CODE_CELL - 0x288092, 0x56 bytes; called from asm.  Frame
-  8:a.  Result: read (callers: A01). }
+{ ZZZZZ_$NEW_CODE_CELL - an empty code cell of opcode opc (its size
+  from code_cell_size) from zzzzz's heap.  0x288092, 0x56 bytes; called
+  from asm: opc (a word) by address; A0. }
 function zzzzz_$new_code_cell(
-    p1: univ_ptr): univ_ptr; options(val_param); extern;
+    in opc: integer): cell_ptr_t; extern;
 
 { ZZZZZ_$PROCESS_ROUTINE - 0x288214, 0x436 bytes.  Frame 8:a. }
 procedure zzzzz_$process_routine(

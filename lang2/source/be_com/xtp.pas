@@ -68,7 +68,8 @@ begin
 end;
 
 { insert_ipccnop - an IPCCNOP after instr (which marks itself as needing
-  one), unless its condition code segment needs none or the instruction
+  one: it sets the condition codes), unless its condition code
+  segment needs none or the instruction
   that defines it is an MFNEXTCC: the IPCCNOP reads instr's condition
   codes (operand 2, tied to their definition) and defines a new segment
   of them (operand 1, after instr's in the block), which instr's
@@ -269,7 +270,7 @@ begin
     instr := bb^.first;
     while instr <> nil do begin
       next := instr^.next;
-      if instr^.h.needs_ipccnop then
+      if instr^.h.sets_cc then
         insert_ipccnop(instr);
       instr := next;
     end;

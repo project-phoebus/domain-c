@@ -577,3 +577,5 @@ lang/lang/source/final.pas	s/^(\s*)if iv <> v\.d then$/$1if iv <> v.l[1] then { 
 lang/lang/source/final.pas	s/^(\s*)v\.d := n\^\.real_value;$/$1v.l[1] := n^.bits[1]; v.l[2] := n^.bits[2]; { gap 7 }/
 # gap 31 (final): an 8-byte set expression compared with [] (the low longword masked, for the check)
 lang/lang/source/final.pas	s/\(v\.s \* \[0\.\.28\] = \[\]\)/((v.l[2] \& 16#1FFFFFFF) = 0) { gap 31 }/
+# gap 2 (zzzzz): a case of 5 labels over a range of 15 (the empty labels added, for the check)
+lang2/source/be_com/zzzzz.pas	s/^(\s*)75:(\s*)\{ move \}$/${1}76, 77, 78, 80, 82, 83, 84, 85, 86, 87: ; { gap 2 }\n${1}75:${2}{ move }/
