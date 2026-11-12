@@ -156,6 +156,31 @@ const
   class$join_bp = 26;
   class$trap_cond = 27;                 { trap_gt .. trapd_flt }
 
+{ batch B (PB3): the phases, at_backend_phase's values: their order in
+  at_backend's table (A5 0x485830, each entry's name at +20); dmp tests
+  the running phase against them. }
+const
+  phase$isc = 0;
+  phase$fga = 1;
+  phase$mmt = 2;
+  phase$dfa = 3;
+  phase$konst = 4;
+  phase$hal = 5;
+  phase$trans = 6;
+  phase$life = 7;
+  phase$com = 8;
+  phase$iv = 9;
+  phase$oli = 10;
+  phase$xtp = 11;
+  phase$sched = 12;
+  phase$ra = 13;
+  phase$post = 14;
+  phase$jbr = 15;
+  phase$asm = 16;
+  phase$dbg_life = 17;
+  phase$zzzzz = 18;
+  phase$bin = 19;
+
 type
   instr_ptr_t = ^instr_t;
   opnd_ptr_t = ^opnd_t;
@@ -974,8 +999,11 @@ var
 
   { Other units' cells reached absolutely. }
   asm_658: extern integer32;            { asm +0x658 (lir, ra_utils) }
-  dmp_3c2: extern integer;              { dmp +0x3C2 (at_backend; ra
-                                          reads its low byte) }
+  dmp_3c2: extern at_switches_t;        { dmp +0x3C2: the debug switches
+                                          dmp_$starting_basic_block turns
+                                          on at one block (at_backend;
+                                          ra reads its level; batch B
+                                          (PB3): was integer) }
   lst_13c: extern univ_ptr;             { lst +0x13C (at_backend, bin,
                                           dmp) }
   lst_140: extern integer;              { lst +0x140 (sym) }
@@ -1311,14 +1339,20 @@ procedure dfa_$process_routine(
 
 { dmp.pas (cc.a88k). }
 
-{ DMP_$STARTING_BASIC_BLOCK - 0x22F188, 0x5E bytes; called from ra.  Frame
-  8:al. }
-procedure dmp_$starting_basic_block(
-    p1: univ_ptr); options(val_param); extern;
+{ batch B (PB3): the headings narrowed from dmp.pas's bodies (dmp
+  reads one parameter of dmp_$get_line_number and dmp_$instruction,
+  whose frames the callers' pushes suggested had more). }
 
-{ DMP_$NOTE_LABEL - 0x22F1FC, 0x22 bytes; called from lir.  Frame 8:pw. }
+{ DMP_$STARTING_BASIC_BLOCK - at the block numbered dmp_3c0, the debug
+  switches dmp_3c2 are turned on (off elsewhere); with dmp_3c0 0 and
+  dmp_3c2's level set, the block's number is written.  0x22F188, 0x5E
+  bytes; called from ra. }
+procedure dmp_$starting_basic_block(
+    bb: bb_ptr_t); options(val_param); extern;
+
+{ DMP_$NOTE_LABEL - "L$n:".  0x22F1FC, 0x22 bytes; called from lir. }
 procedure dmp_$note_label(
-    p1: integer); options(val_param); extern;
+    lab: integer); options(val_param); extern;
 
 { DMP_$COMPLEX_LR_BIT_VECTOR_HEADER - 0x22F374, 0x2A bytes; called from
   dbg_life mmt.  Frame 8:al.  (batch C: narrowed from mmt's calls.) }
@@ -1330,6 +1364,11 @@ procedure dmp_$complex_lr_bit_vector_header(
 type
   dmp_$text_t = array [1..256] of char;
 
+  { batch B (PB3): a live range's name as dmp writes it, in D0: "nnn "
+    (its number), "rnn " or "fnn " (its register), "pc_ ", "sf_ ",
+    "icc ", "fcc ". }
+  dmp_$lr_name_t = packed array [1..4] of char;
+
 { DMP_$COMPLEX_LR_BIT_VECTOR - 0x22F48C, 0x12A bytes; called from dbg_life
   mmt.  Frame 8:al; 12:a; 16:alp; 20:al.  (batch C: narrowed from mmt's
   calls: the text by address, its length by value, the vector.) }
@@ -1339,51 +1378,53 @@ procedure dmp_$complex_lr_bit_vector(
     len: integer32;
     v: bv_ptr_t); options(val_param); extern;
 
-{ DMP_$REG_SET - 0x22F5D8, 0xE4 bytes; called from ra.  Frame 8:l; 12:l. }
+{ DMP_$REG_SET - a register set as "[0, 3..5, 34 ]": hi registers
+  32..63, lo 0..31 (bit k register k).  0x22F5D8, 0xE4 bytes; called
+  from ra. }
 procedure dmp_$reg_set(
-    p1: integer32;
-    p2: integer32); options(val_param); extern;
+    hi: bv_word_t;
+    lo: bv_word_t); options(val_param); extern;
 
-{ DMP_$ALL_BASIC_BLOCK_HEADERS - 0x2304A8, 0x40 bytes; called from ra.
-  Frame 8:al. }
+{ DMP_$ALL_BASIC_BLOCK_HEADERS - 0x2304A8, 0x40 bytes; called from ra. }
 procedure dmp_$all_basic_block_headers(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
-{ DMP_$GET_LINE_NUMBER - 0x2309C4, 0x6A bytes; called from fg_utils.
-  Frame 8:a; 12:a.  Result: D0 (callers: D0l3). }
+{ DMP_$GET_LINE_NUMBER - an instruction's source line as the listing
+  numbers it (lst_13c), 0 beyond the last.  0x2309C4, 0x6A bytes;
+  called from fg_utils. }
 function dmp_$get_line_number(
-    p1: univ_ptr;
-    p2: univ_ptr): integer32; options(val_param); extern;
+    instr: instr_ptr_t): integer32; options(val_param); extern;
 
-{ DMP_$INSTRUCTION - 0x230A2E, 0x800 bytes; called from lir.  Frame 8:al;
-  110:w; 612:w. }
+{ DMP_$INSTRUCTION - an instruction, its flags and its operands, one
+  line each.  0x230A2E, 0x800 bytes; called from lir. }
 procedure dmp_$instruction(
-    p1: univ_ptr;
-    p2: integer;
-    p3: integer); options(val_param); extern;
+    instr: instr_ptr_t); options(val_param); extern;
 
-{ DMP_$THREE_CHAR_LR_NAME_FROM_LR - 0x232010, 0x114 bytes; called from ra.
-  Frame 8:al; 12:a; 16:a.  Result: D0 (callers: D0l23). }
+{ DMP_$THREE_CHAR_LR_NAME_FROM_LR - 0x232010, 0x114 bytes; called from
+  ra. }
 function dmp_$three_char_lr_name_from_lr(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr): integer32; options(val_param); extern;
+    lr: lr_ptr_t): dmp_$lr_name_t; options(val_param); extern;
 
-{ DMP_$WHOLE_ROUTINE - 0x23394A, 0x718 bytes; called from at_backend com
-  fg_utils ra ra_utils.  Frame 8:al; 12:b; 14:b. }
+{ DMP_$WHOLE_ROUTINE - the routine, its blocks and instructions (with
+  verbose dmp_$instruction's lines, else one line each), and its live
+  ranges; unless this_phase, as the phase before the running one.
+  0x23394A, 0x718 bytes; called from at_backend com fg_utils ra
+  ra_utils. }
 procedure dmp_$whole_routine(
-    p1: univ_ptr;
-    p2: boolean;
-    p3: boolean); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    verbose: boolean;
+    this_phase: boolean); options(val_param); extern;
 
-{ DMP_$INTERFERENCE_GRAPH_ANALYSIS - 0x2345FA, 0xC8 bytes; called from ra.
-  Frame 8:a; 12:a; 16:p; 20:a; 24:b. }
+{ DMP_$INTERFERENCE_GRAPH_ANALYSIS - two titles, the chromatic number
+  and the live ranges in allocation order (chained at their l52), with
+  their conflicts (full: display_ra_info's lines).  0x2345FA, 0xC8
+  bytes; called from ra. }
 procedure dmp_$interference_graph_analysis(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: integer32;
-    p4: univ_ptr;
-    p5: boolean); options(val_param); extern;
+    in title1: univ dmp_$text_t;
+    in title2: univ dmp_$text_t;
+    chromatic: integer32;
+    lrs: lr_ptr_t;
+    full: boolean); options(val_param); extern;
 
 { DMP_$MEMORY_USAGE - 0x23474A, 0x188 bytes; called from at_backend. }
 procedure dmp_$memory_usage; extern;
