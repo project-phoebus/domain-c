@@ -223,8 +223,8 @@ begin
             if op^.link <> nil then begin
               o := op^.link;
               if o^.h.num = 1 then begin
-                i := utils_ins_$operands_instruction(o);
-                if instruction_attributes[i^.opc].class in su_branchy then
+                if instruction_attributes[utils_ins_$operands_instruction(o)^.opc].class
+                   in su_branchy then
                   d := d + 1;
               end
               else if a^.class in su_loads then

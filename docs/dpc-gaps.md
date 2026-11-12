@@ -36,6 +36,9 @@ when this tree is merged).
 - **Gap 30 (`in' on a set held in a register, as a value or under
   `and'): fixed in 8cd3f59.**  Its rules (reg_save, com, dbg_life)
   removed.
+- **Gap 35 (the internal error): fixed in c83ade9** (a plain bug fix:
+  a call inside another unit's array index cleared the held array
+  bases).  sched_utils' temporary removed.
 - Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
   spiller finds values to spill but runs out of virtual register
   numbers (240 per class) adding the reloads, and the colouring's
