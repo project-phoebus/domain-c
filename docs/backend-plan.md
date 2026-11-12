@@ -322,7 +322,10 @@ Decided (docs/questions.md 151, the owner, 2026-11-11): reconstruct
 the generator's input (the pattern description) and a generator in
 tools/ that emits Pascal of the image's shape, checked by the gate
 against cc.a88k; do not hand-translate the ~1080 unnamed actions.
-Scheduled after batch A has filled the ISC inserts.
+Scheduled after batch A has filled the ISC inserts.  Phase 1 (analysis
+and design, translator GA): docs/iscg-design.md and
+tools/cc_isc_inventory.py; the 1126 actions are 25 + 25 separately
+compiled modules without .blocks units, 563 rules.
 
 ### ISC (hand-written)
 

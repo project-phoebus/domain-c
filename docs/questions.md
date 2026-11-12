@@ -2169,3 +2169,60 @@ revisited.
    2673): perhaps a hexadecimal or unsigned form.  Written as `:1'
    both times; which format?
 
+266. Translator GA, the ISC generator (docs/iscg-design.md): **names of
+   the generated action modules.**  The pass-1 and pass-2 actions are 25
+   + 25 separately compiled modules (one A5 each, rules in runs: section
+   1.2) with no .blocks unit, so neither the files' nor the routines'
+   names survive.  The ISC's named objects lie in alphabetical order, so
+   the pass-1 modules' names sort between isc_pass_1_main and
+   isc_pass_2_main and the pass-2 ones between isc_pass_2_main and
+   isc_pattern_matcher.  Proposed: `iscg_input/isc_pass_1_<nn>_<topic>.pas`
+   and `isc_pass_2_<nn>_<topic>.pas`, nn 01..25 in address order (so the
+   alphabetical order is the image's), topics from the operators
+   (address_modes, assignments, ..., compares); routines
+   `transform_<r>_pass_1` / `transform_<r>_pass_2`, r the rule
+   (which_transform).  Other names?
+267. Translator GA: **isc_solution_fields.ins.pas's field names.**  The
+   insert is a derived object of the generator's input, and the image
+   keeps the input's attribute names: dump_solution prints each field
+   after its name (`tools/cc_isc_inventory.py BINARY fields`:
+   which_transform +112, before_transform +88, memory_references,
+   evaluation_order, object_with_name, has_a_symbolic_displacement,
+   uses_the_displacement, uses_the_index_register,
+   embedded_strength_reduction_temporary, already_preserved +115.7,
+   builtin_could_deadlock_sched .6, builtin_is_local_cse .5,
+   builtin_local_cse_has_been_preserved .4, already_through_pass_2 .3,
+   and 50 more).  The current insert (translator PD) uses abbreviations
+   from the CSE accessors' names (memory_refs, eval_order, obj_w_name,
+   has_sym_disp, uses_disp, embedded_sr_temp) and calls +88 `chain' and
+   +112 `rule'.  Rename to the image's names when the generator emits
+   the insert (touches PD's and PD2's ISC units; batch A's solution_t
+   view is separate)?
+268. Translator GA: **the gate for units without a .blocks record.**
+   coff_compare picks a unit by its .blocks source path, so the 50
+   action modules cannot be compared as they are.  Proposed for phase 2:
+   the generator writes a manifest (file, A5, code range, routine name ->
+   address from the action tables) and coff_compare gains `--anon START
+   END A5 --names FILE`; cc_check.sh and cc_addrcheck.py use the manifest
+   for those files.  coff_compare.py is a shared tool (a local patched
+   copy of the source repository's): may phase 2 change it, or should
+   the comparison be a separate tool?
+269. Translator GA: **how far the rule file goes.**  The patterns,
+   result kinds, flags, opcode maps, attribute declarations and the
+   actions' skeleton come out of the image mechanically.  The actions'
+   bodies (pass 1 about 31% rule-specific code, pass 2 nearly all of
+   it) need a decompiler to a statement language, with a residue written
+   by hand.  Proposed: a Pascal-flavoured language with `<-` (the image
+   keeps `let result <- ...;' from the original), attribute paths
+   ($k.f, result.f) and macros for the repeated statements; one file
+   per section in rule order.  Acceptable, or should bodies be Pascal
+   text pasted by the generator (less to design, more like hand
+   translation)?
+270. Translator GA: **isc_main and isc_debug.**  Both are derived objects
+   of the input but mostly ordinary code.  The generated parts found:
+   preserve_solution's per-rule byte table and switch (isc_main) and
+   dump_solution's field list (isc_debug); isc_print_il_node (92 KB) may
+   be generated or the generator's fixed text.  Proposed: translate them
+   by hand as question 151 says, with the generator emitting only those
+   generated parts (as include files or by rewriting marked regions).
+   Agreed?
