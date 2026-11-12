@@ -9,24 +9,38 @@
 section 05 calls  image pass_1 a5 16#45A78C, pass_2 a5 16#480068;
 
 transform 340  ip_reg <- call_top ($1: ip_reg)
-  pass_1 image 16#115C64;
+  pass_1 image 16#115C64 begin
+    cycle_guard already_ip_reg;
+    copy code_bytes, memory_references, delay from $1;
+  end;
   pass_2 image 16#1A773C empty;
 end;
 
 transform 341  ip_reg <- func_call_top ($1: ip_reg)
-  pass_1 image 16#115DDA;
+  pass_1 image 16#115DDA begin
+    cycle_guard already_ip_reg;
+    copy code_bytes, memory_references, delay from $1;
+  end;
   pass_2 image 16#1A773E empty;
 end;
 
 transform 342  ip_reg <- isc_call_top
-  pass_1 image 16#115F12;
+  pass_1 image 16#115F12 begin
+    cycle_guard already_ip_reg;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+  end;
   pass_2 image 16#1A7740 begin
     pass_2_isc_call(subject.il, subject.il.b13 & 128 <> 0, subject.il.b12 & 128 <> 0, subject.il.b14 & 128 <> 0, subject.inherited_attributes, 0);
   end;
 end;
 
 transform 343  ip_reg <- isc_fio_init ($1: ip_reg)
-  pass_1 image 16#116036;
+  pass_1 image 16#116036 begin
+    cycle_guard already_ip_reg;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#1A778E begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -39,7 +53,21 @@ transform 343  ip_reg <- isc_fio_init ($1: ip_reg)
 end;
 
 transform 344  address_mode <- isc_func_call_hidden_temp_top
-  pass_1 image 16#116566;
+  pass_1 image 16#116566 begin
+    cycle_guard already_address_mode;
+    result.l352 <- pass_1_isc_call_addr_of_temp(subject.il);
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    copy bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value from result.l352;
+    result.has_a_symbolic_displacement <- false;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.literal_32_bits_value <- 0;
+    result.uses_the_base_register <- true;
+    result.uses_the_index_register <- false;
+    result.uses_the_displacement <- false;
+  end;
   pass_2 image 16#1A7806 begin
     pass_2_isc_call(subject.il, subject.il.b13 & 128 <> 0, subject.il.b12 & 128 <> 0, subject.il.b14 & 128 <> 0, subject.inherited_attributes, 0);
     result.base_register <- result.l352;
@@ -48,7 +76,20 @@ transform 344  address_mode <- isc_func_call_hidden_temp_top
 end;
 
 transform 345  ip_reg <- isc_func_call_top
-  pass_1 image 16#1166E2;
+  pass_1 image 16#1166E2 begin
+    condition subject.il.b10 = 0;
+    cycle_guard already_ip_reg;
+    result.l352 <- lir_4090[subject.il.b11];
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.ip_reg_result <- 1;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_from_function_call <- true;
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+  end;
   pass_2 image 16#1A785E begin
     pass_2_isc_call(subject.il, subject.il.b13 & 128 <> 0, subject.il.b12 & 128 <> 0, subject.il.b14 & 128 <> 0, subject.inherited_attributes, 0);
     result.live_range <- result.l352;
@@ -56,7 +97,20 @@ transform 345  ip_reg <- isc_func_call_top
 end;
 
 transform 346  fp_reg <- isc_func_call_top
-  pass_1 image 16#1168A4;
+  pass_1 image 16#1168A4 begin
+    condition not (subject.il.b10 <> 1 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    cycle_guard already_fp_reg;
+    result.l352 <- lir_3f90[subject.il.b11];
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.fp_reg_result <- 1;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_from_function_call <- true;
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+  end;
   pass_2 image 16#1A78AE begin
     pass_2_isc_call(subject.il, subject.il.b13 & 128 <> 0, subject.il.b12 & 128 <> 0, subject.il.b14 & 128 <> 0, subject.inherited_attributes, 0);
     result.live_range <- result.l352;
@@ -64,7 +118,25 @@ transform 346  fp_reg <- isc_func_call_top
 end;
 
 transform 347  fp_reg_pair <- isc_func_call_top
-  pass_1 image 16#116A7E;
+  pass_1 image 16#116A7E begin
+    condition not (subject.il.b10 <> 2 or subject.il.w24 = 8 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    cycle_guard already_fp_reg_pair;
+    result.l352 <- lir_3f90[subject.il.b11];
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.fp_reg_pair_result <- 1;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_from_function_call <- true;
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+  end;
   pass_2 image 16#1A78FE begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -75,7 +147,27 @@ transform 347  fp_reg_pair <- isc_func_call_top
 end;
 
 transform 348  ip_reg <- pf_call ($1: address_mode)
-  pass_1 image 16#116C78;
+  pass_1 image 16#116C78 begin
+    cycle_guard already_ip_reg;
+    if $1.uses_the_base_register then
+      result.c136 <- 1;
+      if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+        result.c137 <- 2;
+      else
+        result.c137 <- 1;
+      end;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(4, 4)[result.c138] + $1.code_bytes;
+    result.memory_references <- bytes(0, 1)[result.c138] + $1.memory_references;
+    result.delay <- bytes(0, 1)[result.c138] + $1.delay;
+  end;
   pass_2 image 16#1A7970 begin
     temp t1: solution;
     if result.c136 = 1 then

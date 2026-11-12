@@ -9,12 +9,23 @@
 section 18 shifts  image pass_1 a5 16#468804, pass_2 a5 16#48009C;
 
 transform 349  literal_32_bits <- alshf_top | arshf_top | lshf_top | rshf_top ($1: [ip_reg, literal_32_bits], $2: [ip_reg, literal_32_bits])
-  pass_1 image 16#157E94;
+  pass_1 image 16#157E94 begin
+    condition $1.kind = 14 and ($1.literal_32_bits_value = 0) or $1.physical_register_number = isc_user_routines_31c.physical_register_number and $1.physical_register and ($1.kind = 11);
+    sum code_bytes, memory_references, delay of $1, $2;
+    result.bits_known <- 0;
+    result.bits_trusted <- -1;
+    result.literal_32_bits_value <- 0;
+  end;
   pass_2 image 16#1CC6C4 empty;
 end;
 
 transform 350  ip_reg <- alshf_top | arshf_top | lshf_top | rshf_top ($1: ip_reg, $2: [ip_reg, literal_32_bits])
-  pass_1 image 16#157FF2;
+  pass_1 image 16#157FF2 begin
+    condition $2.kind = 14 and ($2.literal_32_bits_value = 0) or $2.physical_register_number = isc_user_routines_31c.physical_register_number and $2.physical_register and ($2.kind = 11);
+    cycle_guard already_ip_reg;
+    sum code_bytes, memory_references, delay of $1, $2;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#1CC6C6 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -27,21 +38,74 @@ transform 350  ip_reg <- alshf_top | arshf_top | lshf_top | rshf_top ($1: ip_reg
 end;
 
 transform 351  ip_reg <- alshf_top ($1: ip_reg, $2: literal_32_bits)
-  pass_1 image 16#1585B2;
+  pass_1 image 16#1585B2 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer;
+    temp t6: integer;
+    condition not ($2.literal_32_bits_value <= 0 or $2.literal_32_bits_value > 31);
+    cycle_guard already_ip_reg;
+    result.l352 <- $2.literal_32_bits_value;
+    t2 <- make_bit_mask_1(result.l352, 0);
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    t3 <- validate_shift_count(result.l352);
+    result.bits_known <- lshft($1.bits_known, t3);
+    t4 <- validate_shift_count(result.l352);
+    result.bits_trusted <- lshft($1.bits_trusted, t4) ! t2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t5 <- $1.ip_reg_max;
+    if t5 = $2.ip_reg_max then
+      result.ip_reg_max <- t5 + 1;
+    else
+      if t5 u<= $2.ip_reg_max then
+        t6 <- $2.ip_reg_max;
+      else
+        t6 <- t5;
+      end;
+      result.ip_reg_max <- t6;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CC73E begin
     emit simple(opc$lsl, 0, $1, find_well_known_literal_solution(result.l352), solution);
   end;
 end;
 
 transform 352  ip_reg <- alshf_top ($1: ip_reg, $2: ip_reg)
-  pass_1 image 16#1587CE;
+  pass_1 image 16#1587CE begin
+    temp t2: integer;
+    temp t3: integer;
+    cycle_guard already_ip_reg;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.ip_reg_max;
+    if t2 = $2.ip_reg_max then
+      result.ip_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.ip_reg_max then
+        t3 <- $2.ip_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.ip_reg_max <- t3;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CC78E begin
     emit simple(opc$lsl, 0, $1, $2, solution);
   end;
 end;
 
 transform 353  ip_reg <- arshf_top ($1: ip_reg, $2: literal_32_bits)
-  pass_1 image 16#15898C;
+  pass_1 image 16#15898C begin
+    condition $1.all_zeroes_or_all_ones;
+    cycle_guard already_ip_reg;
+    sum code_bytes, memory_references, delay of $1, $2;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#1CC7D4 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -54,7 +118,51 @@ transform 353  ip_reg <- arshf_top ($1: ip_reg, $2: literal_32_bits)
 end;
 
 transform 354  ip_reg <- arshf_top ($1: ip_reg, $2: literal_32_bits)
-  pass_1 image 16#158EE6;
+  pass_1 image 16#158EE6 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer;
+    temp t5: integer;
+    condition not ($2.literal_32_bits_value <= 0 or $2.literal_32_bits_value > 31 or $1.inherited_attributes.fetch_precision >= 32);
+    cycle_guard already_ip_reg;
+    result.l352 <- $2.literal_32_bits_value;
+    if $1.inherited_attributes.fetch_precision = 8 then
+      result.c136 <- 1;
+      if $1.bit_7_was_sign_extended then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    elsif $1.inherited_attributes.fetch_precision = 16 then
+      result.c136 <- 2;
+      if $1.bit_15_was_sign_extended then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    else
+      result.c136 <- 3;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(0, 4)[result.c138] + $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    t2 <- validate_shift_count(result.l352);
+    result.bits_known <- rshft($1.bits_known, t2);
+    t3 <- validate_shift_count(result.l352);
+    result.bits_trusted <- rshft($1.bits_trusted, t3);
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t4 <- $1.ip_reg_max;
+    if t4 = $2.ip_reg_max then
+      result.ip_reg_max <- t4 + 1;
+    else
+      if t4 u<= $2.ip_reg_max then
+        t5 <- $2.ip_reg_max;
+      else
+        t5 <- t4;
+      end;
+      result.ip_reg_max <- t5;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CC84C begin
     temp t1: solution;
     temp t2: solution;
@@ -77,7 +185,44 @@ transform 354  ip_reg <- arshf_top ($1: ip_reg, $2: literal_32_bits)
 end;
 
 transform 355  ip_reg <- arshf_top ($1: ip_reg, $2: ip_reg)
-  pass_1 image 16#159182;
+  pass_1 image 16#159182 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition $1.inherited_attributes.fetch_precision < 32;
+    cycle_guard already_ip_reg;
+    if $1.inherited_attributes.fetch_precision = 8 then
+      result.c136 <- 1;
+      if $1.bit_7_was_sign_extended then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    elsif $1.inherited_attributes.fetch_precision = 16 then
+      result.c136 <- 2;
+      if $1.bit_15_was_sign_extended then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    else
+      result.c136 <- 3;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(0, 4)[result.c138] + $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.ip_reg_max;
+    if t2 = $2.ip_reg_max then
+      result.ip_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.ip_reg_max then
+        t3 <- $2.ip_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.ip_reg_max <- t3;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CC910 begin
     temp t1: solution;
     temp t2: solution;
@@ -100,21 +245,91 @@ transform 355  ip_reg <- arshf_top ($1: ip_reg, $2: ip_reg)
 end;
 
 transform 356  ip_reg <- arshf_top ($1: ip_reg, $2: literal_32_bits)
-  pass_1 image 16#1593CA;
+  pass_1 image 16#1593CA begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer;
+    temp t5: integer;
+    condition not ($2.literal_32_bits_value <= 0 or $2.literal_32_bits_value > 31 or $1.inherited_attributes.fetch_precision <> 32);
+    cycle_guard already_ip_reg;
+    result.l352 <- $2.literal_32_bits_value;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    t2 <- validate_shift_count(result.l352);
+    result.bits_known <- rshft($1.bits_known, t2);
+    t3 <- validate_shift_count(result.l352);
+    result.bits_trusted <- rshft($1.bits_trusted, t3);
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t4 <- $1.ip_reg_max;
+    if t4 = $2.ip_reg_max then
+      result.ip_reg_max <- t4 + 1;
+    else
+      if t4 u<= $2.ip_reg_max then
+        t5 <- $2.ip_reg_max;
+      else
+        t5 <- t4;
+      end;
+      result.ip_reg_max <- t5;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CC9CA begin
     emit simple(opc$asr, 0, $1, find_well_known_literal_solution(result.l352), solution);
   end;
 end;
 
 transform 357  ip_reg <- arshf_top ($1: ip_reg, $2: ip_reg)
-  pass_1 image 16#1595E8;
+  pass_1 image 16#1595E8 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition $1.inherited_attributes.fetch_precision = 32;
+    cycle_guard already_ip_reg;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.ip_reg_max;
+    if t2 = $2.ip_reg_max then
+      result.ip_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.ip_reg_max then
+        t3 <- $2.ip_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.ip_reg_max <- t3;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CCA1A begin
     emit simple(opc$asr, 0, $1, $2, solution);
   end;
 end;
 
 transform 358  ip_reg <- arshf_top ($1: lshf_top($1: ip_reg, $2: literal_32_bits), $2: literal_32_bits)
-  pass_1 image 16#1597B2;
+  pass_1 image 16#1597B2 begin
+    condition not ($1.$2.literal_32_bits_value <> $2.literal_32_bits_value or $1.$2.literal_32_bits_value <> 16 and ($1.$2.literal_32_bits_value <> 24));
+    cycle_guard already_ip_reg;
+    if $1.$2.literal_32_bits_value = 24 then
+      result.c136 <- 1;
+      if $1.$1.bit_7_was_sign_extended then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    else
+      result.c136 <- 2;
+      if $1.$1.bit_15_was_sign_extended then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(0, 4)[result.c138] + $1.code_bytes + $2.code_bytes;
+    sum memory_references, delay of $1, $2;
+    copy bits_known, bits_trusted from $1.$1;
+    result.ip_reg_max <- $1.$1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CCA60 begin
     if result.c136 = 1 then
       if result.c137 = 1 then
@@ -131,12 +346,34 @@ transform 358  ip_reg <- arshf_top ($1: lshf_top($1: ip_reg, $2: literal_32_bits
 end;
 
 transform 359  literal_32_bits <- lshf_top ($1: literal_32_bits, $2: literal_32_bits)
-  pass_1 image 16#1599DE;
+  pass_1 image 16#1599DE begin
+    temp t2: integer32;
+    t2 <- validate_shift_count($2.literal_32_bits_value);
+    sum code_bytes, memory_references, delay of $1, $2;
+    result.bits_known <- lshft($1.literal_32_bits_value, t2);
+    result.bits_trusted <- -1;
+    result.literal_32_bits_value <- lshft($1.literal_32_bits_value, t2);
+  end;
   pass_2 image 16#1CCB64 empty;
 end;
 
 transform 360  ip_reg <- lshf_top ($1: rshf_top($1: ip_reg, $2: literal_32_bits), $2: literal_32_bits)
-  pass_1 image 16#159B28;
+  pass_1 image 16#159B28 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    condition not ($2.literal_32_bits_value <> $1.$2.literal_32_bits_value or $2.literal_32_bits_value <= 0 or ($2.literal_32_bits_value > 31 or not verify_bits($1.$1.bits_known, $1.$1.bits_trusted, 0, $2.literal_32_bits_value, 0)));
+    cycle_guard already_ip_reg;
+    if $2.literal_32_bits_value <= 0 or $2.literal_32_bits_value > 31 then
+      t2 <- 0;
+    else
+      t2 <- $2.literal_32_bits_value;
+    end;
+    t3 <- make_bit_mask_2(31, t2);
+    sum code_bytes, memory_references, delay of $1, $2;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1.$1;
+    result.bits_known <- t3 & $1.$1.bits_known;
+    result.bits_trusted <- $1.$1.bits_trusted ! (-1 - t3);
+  end;
   pass_2 image 16#1CCB66 begin
     result.base_register <- $1.$1.base_register;
     result.index_register <- $1.$1.index_register;
@@ -149,7 +386,28 @@ transform 360  ip_reg <- lshf_top ($1: rshf_top($1: ip_reg, $2: literal_32_bits)
 end;
 
 transform 361  ip_reg_scaled <- lshf_top ($1: ip_reg, $2: literal_32_bits)
-  pass_1 image 16#15A1D0;
+  pass_1 image 16#15A1D0 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    condition not ($1.physical_register and ($1.kind = 11) and ($1.physical_register_number = isc_user_routines_31c.physical_register_number) or $2.literal_32_bits_value <= 0 or $2.literal_32_bits_value > 3);
+    if $2.literal_32_bits_value <= 0 or $2.literal_32_bits_value > 3 then
+      t2 <- 0;
+    else
+      t2 <- $2.literal_32_bits_value;
+    end;
+    t3 <- make_bit_mask_1(t2, 0);
+    sum code_bytes, memory_references, delay of $1, $2;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    t4 <- validate_shift_count(t2);
+    result.bits_known <- lshft($1.bits_known, t4);
+    t5 <- validate_shift_count(t2);
+    result.bits_trusted <- lshft($1.bits_trusted, t5) ! t3;
+    result.evaluation_order <- 1;
+    result.ip_reg_result <- 1;
+    result.scale <- t2;
+  end;
   pass_2 image 16#1CCC00 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -162,21 +420,90 @@ transform 361  ip_reg_scaled <- lshf_top ($1: ip_reg, $2: literal_32_bits)
 end;
 
 transform 362  ip_reg <- lshf_top ($1: ip_reg, $2: literal_32_bits)
-  pass_1 image 16#15A788;
+  pass_1 image 16#15A788 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer;
+    temp t6: integer;
+    condition not ($2.literal_32_bits_value <= 0 or $2.literal_32_bits_value > 31);
+    cycle_guard already_ip_reg;
+    result.l352 <- $2.literal_32_bits_value;
+    t2 <- make_bit_mask_1(result.l352, 0);
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    t3 <- validate_shift_count(result.l352);
+    result.bits_known <- lshft($1.bits_known, t3);
+    t4 <- validate_shift_count(result.l352);
+    result.bits_trusted <- lshft($1.bits_trusted, t4) ! t2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t5 <- $1.ip_reg_max;
+    if t5 = $2.ip_reg_max then
+      result.ip_reg_max <- t5 + 1;
+    else
+      if t5 u<= $2.ip_reg_max then
+        t6 <- $2.ip_reg_max;
+      else
+        t6 <- t5;
+      end;
+      result.ip_reg_max <- t6;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CCC78 begin
     emit simple(opc$lsl, 0, $1, find_well_known_literal_solution(result.l352), solution);
   end;
 end;
 
 transform 363  ip_reg <- lshf_top ($1: ip_reg, $2: ip_reg)
-  pass_1 image 16#15A9A4;
+  pass_1 image 16#15A9A4 begin
+    temp t2: integer;
+    temp t3: integer;
+    cycle_guard already_ip_reg;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.ip_reg_max;
+    if t2 = $2.ip_reg_max then
+      result.ip_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.ip_reg_max then
+        t3 <- $2.ip_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.ip_reg_max <- t3;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CCCC8 begin
     emit simple(opc$lsl, 0, $1, $2, solution);
   end;
 end;
 
 transform 364  ip_reg <- lshf_top ($1: rshf_top($1: ip_reg, $2: literal_32_bits), $2: literal_32_bits)
-  pass_1 image 16#15AB62;
+  pass_1 image 16#15AB62 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    condition not ($2.literal_32_bits_value <> $1.$2.literal_32_bits_value or $2.literal_32_bits_value <= 0 or $2.literal_32_bits_value > 31);
+    cycle_guard already_ip_reg;
+    t2 <- validate_shift_count($2.literal_32_bits_value);
+    result.l352 <- t2;
+    result.l356 <- 32 - t2;
+    t3 <- make_bit_mask_2(31, t2);
+    result.l360 <- t3;
+    if lir_$can_encode_as_immediate_operand(t3, opc$and, 1) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- words(4, 4)[result.c136] + $1.code_bytes + $2.code_bytes;
+    sum memory_references, delay of $1, $2;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1.$1;
+    result.bits_known <- result.l360 & $1.$1.bits_known;
+    result.bits_trusted <- $1.$1.bits_trusted ! (-1 - result.l360);
+    result.physical_register <- false;
+  end;
   pass_2 image 16#1CCD0E begin
     temp t1: integer32;
     t1 <- make_bit_mask_1(result.l356, 0);
@@ -189,7 +516,30 @@ transform 364  ip_reg <- lshf_top ($1: rshf_top($1: ip_reg, $2: literal_32_bits)
 end;
 
 transform 365  ip_reg_field <- rshf_top ($1: bit_test_top($1: literal_32_bits, $2: address_mode), $2: literal_32_bits)
-  pass_1 image 16#15B232;
+  pass_1 image 16#15B232 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    condition not ($1.inherited_attributes.fetch_precision <> 8 or $2.literal_32_bits_value <> 7 or ($1.il.w28 <> 6 or $1.$2.inherited_attributes.fetch_precision <> 16) or ($1.$1.literal_32_bits_value < 8 or $1.$1.literal_32_bits_value > 15));
+    cycle_guard already_ip_reg_field;
+    t2 <- make_bit_mask_2(31, 8);
+    t3 <- make_bit_mask_2(7, 0);
+    result.l352 <- nil;
+    result.c136 <- 1;
+    if result.l352 = 256 then
+      result.c140 <- 1;
+    else
+      result.c140 <- 2;
+    end;
+    result.code_bytes <- $2.code_bytes + words(4, 4)[result.c136] + words(0, 4)[result.c138] + words(4, 4)[result.c139] + words(4)[result.c140] + $1.code_bytes;
+    result.memory_references <- bytes(1, 1)[result.c136] + bytes(0, 1)[result.c139] + bytes(1)[result.c140] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(1, 1)[result.c136] + bytes(0, 1)[result.c139] + bytes(1)[result.c140] + $1.delay + $2.delay;
+    result.bit_position_of_lsb <- $1.$1.literal_32_bits_value - 8;
+    result.bits_known <- $1.$2.bits_known_of_fetched_value & t3;
+    result.bits_trusted <- $1.$2.bits_trusted_of_fetched_value & t3 + t2;
+    result.field_precision <- 1;
+    result.field_requires_sign_extend <- false;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CCDAA begin
     temp t1: integer32;
     temp t2: integer32;
@@ -247,7 +597,16 @@ transform 365  ip_reg_field <- rshf_top ($1: bit_test_top($1: literal_32_bits, $
 end;
 
 transform 366  ip_reg_field <- rshf_top ($1: bit_test_top($1: literal_32_bits, $2: [ip_reg, ip_reg_field]), $2: literal_32_bits)
-  pass_1 image 16#15B51A;
+  pass_1 image 16#15B51A begin
+    condition not ($1.inherited_attributes.fetch_precision <> 8 or $2.literal_32_bits_value <> 7 or $1.il.w28 <> 6);
+    cycle_guard already_ip_reg_field;
+    sum code_bytes, memory_references, delay of $1, $2;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1.$2;
+    result.bit_position_of_lsb <- $1.$2.bit_position_of_lsb + $1.$1.literal_32_bits_value;
+    result.field_precision <- 1;
+    result.field_requires_sign_extend <- false;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CCFEE begin
     result.base_register <- $1.$2.base_register;
     result.index_register <- $1.$2.index_register;
@@ -260,7 +619,30 @@ transform 366  ip_reg_field <- rshf_top ($1: bit_test_top($1: literal_32_bits, $
 end;
 
 transform 367  ip_reg <- rshf_top ($1: bit_test_top($1: [ip_reg, literal_32_bits], $2: [ip_reg, ip_reg_field]), $2: literal_32_bits)
-  pass_1 image 16#15BB80;
+  pass_1 image 16#15BB80 begin
+    condition not ($1.inherited_attributes.fetch_precision <> 8 or $2.literal_32_bits_value <> 7 or $1.il.w28 <> 6);
+    cycle_guard already_ip_reg;
+    if $1.$2.kind = 12 then
+      result.c136 <- 1;
+      if $1.$1.kind = 11 then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    else
+      result.c136 <- 2;
+    end;
+    if subject.il.b30 & 64 <> 0 then
+      result.c138 <- 1;
+    else
+      result.c138 <- 2;
+    end;
+    result.code_bytes <- words(4)[result.c137] + words(12, 4)[result.c138] + $1.code_bytes + $2.code_bytes;
+    sum memory_references, delay of $1, $2;
+    result.bits_known <- 0;
+    result.bits_trusted <- make_bit_mask_2(31, 1);
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CD088 begin
     temp t1: integer32;
     temp t2: solution;
@@ -289,7 +671,48 @@ transform 367  ip_reg <- rshf_top ($1: bit_test_top($1: [ip_reg, literal_32_bits
 end;
 
 transform 368  ip_reg <- rshf_top ($1: compare_top($1: [ip_reg, ip_reg_field], $2: literal_32_bits), $2: literal_32_bits)
-  pass_1 image 16#15BD98;
+  pass_1 image 16#15BD98 begin
+    temp t1: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    temp t6: integer32;
+    temp t7: integer32;
+    temp t8: integer;
+    temp t9: integer;
+    condition not (subject.il.w24 <> 1 or $2.literal_32_bits_value <> 7 or $1.$2.literal_32_bits_value <> 0);
+    t1 <- abs($1.il.w28);
+    condition t1 = 13 or t1 = 12;
+    cycle_guard already_ip_reg;
+    t3 <- available_precision_function($1.$1);
+    result.l352 <- t3 + $1.$1.bit_position_of_lsb - 1;
+    t4 <- make_bit_mask_2(31, 1);
+    t5 <- abs($1.il.w28);
+    t6 <- make_bit_mask_1(1, 0);
+    t7 <- make_bit_mask_1(1, 0);
+    if t5 = 13 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- words(4, 8)[result.c136] + $1.code_bytes + $2.code_bytes;
+    sum memory_references, delay of $1, $2;
+    result.bits_known <- 0;
+    result.bits_trusted <- t4;
+    result.evaluation_order <- evaluation_order_function($1.il_kind, $1.$1.ip_reg_max, $1.$2.ip_reg_max, legal_evaluation_orders($1.$1, $1.$2));
+    t8 <- $1.$1.ip_reg_max;
+    if t8 = $1.$2.ip_reg_max then
+      result.ip_reg_max <- t8 + 1;
+    else
+      if t8 u<= $1.$2.ip_reg_max then
+        t9 <- $1.$2.ip_reg_max;
+      else
+        t9 <- t8;
+      end;
+      result.ip_reg_max <- t9;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CD1FA begin
     temp t1: solution;
     if result.c136 = 1 then
@@ -303,7 +726,16 @@ transform 368  ip_reg <- rshf_top ($1: compare_top($1: [ip_reg, ip_reg_field], $
 end;
 
 transform 369  ip_reg_field <- rshf_top ($1: ip_reg, $2: literal_32_bits)
-  pass_1 image 16#15C030;
+  pass_1 image 16#15C030 begin
+    condition not ($1.inherited_attributes.fetch_precision <> 8 or $2.literal_32_bits_value <> 7 or subject.inherited_attributes.required_precision <> 1);
+    cycle_guard already_ip_reg_field;
+    sum code_bytes, memory_references, delay of $1, $2;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.bit_position_of_lsb <- 7;
+    result.field_precision <- 1;
+    result.field_requires_sign_extend <- false;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CD2B6 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -316,19 +748,79 @@ transform 369  ip_reg_field <- rshf_top ($1: ip_reg, $2: literal_32_bits)
 end;
 
 transform 370  literal_32_bits <- rshf_top ($1: ip_reg, $2: literal_32_bits)
-  pass_1 image 16#15C5C2;
+  pass_1 image 16#15C5C2 begin
+    condition not ($2.literal_32_bits_value <= 0 or $2.literal_32_bits_value > 31 or ($1.inherited_attributes.fetch_precision >= 32 or $2.literal_32_bits_value < $1.inherited_attributes.fetch_precision));
+    sum code_bytes, memory_references, delay of $1, $2;
+    result.bits_known <- 0;
+    result.bits_trusted <- -1;
+    result.literal_32_bits_value <- 0;
+  end;
   pass_2 image 16#1CD32E empty;
 end;
 
 transform 371  ip_reg <- rshf_top ($1: ip_reg, $2: literal_32_bits)
-  pass_1 image 16#15C716;
+  pass_1 image 16#15C716 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer;
+    temp t5: integer;
+    condition not ($2.literal_32_bits_value <= 0 or $2.literal_32_bits_value > 31 or ($1.inherited_attributes.fetch_precision >= 32 or $2.literal_32_bits_value >= $1.inherited_attributes.fetch_precision));
+    cycle_guard already_ip_reg;
+    t2 <- make_bit_mask_2(31, $1.inherited_attributes.fetch_precision);
+    result.l352 <- $2.literal_32_bits_value;
+    t3 <- make_bit_mask_1($1.inherited_attributes.fetch_precision - result.l352, 0);
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.bits_known <- $1.bits_known & (-1 - t2);
+    result.bits_trusted <- $1.bits_trusted ! t2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t4 <- $1.ip_reg_max;
+    if t4 = $2.ip_reg_max then
+      result.ip_reg_max <- t4 + 1;
+    else
+      if t4 u<= $2.ip_reg_max then
+        t5 <- $2.ip_reg_max;
+      else
+        t5 <- t4;
+      end;
+      result.ip_reg_max <- t5;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CD330 begin
     emit field(opc$extractu, 0, $1.inherited_attributes.fetch_precision - result.l352, $1, find_well_known_literal_solution(result.l352), solution);
   end;
 end;
 
 transform 372  ip_reg <- rshf_top ($1: ip_reg, $2: ip_reg)
-  pass_1 image 16#15C95A;
+  pass_1 image 16#15C95A begin
+    temp t2: integer32;
+    temp t3: integer;
+    temp t4: integer;
+    condition $1.inherited_attributes.fetch_precision < 32;
+    cycle_guard already_ip_reg;
+    t2 <- make_bit_mask_1($1.inherited_attributes.fetch_precision, 0);
+    if verify_bits($1.bits_known, $1.bits_trusted, $1.inherited_attributes.fetch_precision, 32 - $1.inherited_attributes.fetch_precision, 0) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- words(0, 4)[result.c136] + $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t3 <- $2.ip_reg_max;
+    if t3 = $1.ip_reg_max then
+      result.ip_reg_max <- $1.ip_reg_max + 1;
+    else
+      if t3 u<= $1.ip_reg_max then
+        t4 <- $1.ip_reg_max;
+      else
+        t4 <- t3;
+      end;
+      result.ip_reg_max <- t4;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CD38A begin
     temp t1: solution;
     temp t2: solution;
@@ -343,14 +835,61 @@ transform 372  ip_reg <- rshf_top ($1: ip_reg, $2: ip_reg)
 end;
 
 transform 373  ip_reg <- rshf_top ($1: ip_reg, $2: literal_32_bits)
-  pass_1 image 16#15CB88;
+  pass_1 image 16#15CB88 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer;
+    temp t5: integer;
+    condition not ($2.literal_32_bits_value <= 0 or $2.literal_32_bits_value > 31 or $1.inherited_attributes.fetch_precision <> 32);
+    cycle_guard already_ip_reg;
+    result.l352 <- $2.literal_32_bits_value;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    t2 <- validate_shift_count(result.l352);
+    result.bits_known <- rshft($1.bits_known, t2);
+    t3 <- validate_shift_count(result.l352);
+    result.bits_trusted <- rshft($1.bits_trusted, t3);
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t4 <- $1.ip_reg_max;
+    if t4 = $2.ip_reg_max then
+      result.ip_reg_max <- t4 + 1;
+    else
+      if t4 u<= $2.ip_reg_max then
+        t5 <- $2.ip_reg_max;
+      else
+        t5 <- t4;
+      end;
+      result.ip_reg_max <- t5;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CD416 begin
     emit simple(opc$lsr, 0, $1, find_well_known_literal_solution(result.l352), solution);
   end;
 end;
 
 transform 374  ip_reg <- rshf_top ($1: ip_reg, $2: ip_reg)
-  pass_1 image 16#15CDA6;
+  pass_1 image 16#15CDA6 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition $1.inherited_attributes.fetch_precision = 32;
+    cycle_guard already_ip_reg;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.ip_reg_max;
+    if t2 = $2.ip_reg_max then
+      result.ip_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.ip_reg_max then
+        t3 <- $2.ip_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.ip_reg_max <- t3;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CD466 begin
     emit simple(opc$lsr, 0, $1, $2, solution);
   end;

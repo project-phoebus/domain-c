@@ -9,7 +9,11 @@
 section 06 double_float  image pass_1 a5 16#45A80C, pass_2 a5 16#48006C;
 
 transform 489  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
-  pass_1 image 16#116E58;
+  pass_1 image 16#116E58 begin
+    condition not (not $1.is_destroyable or subject.il.w24 <> 8);
+    cycle_guard already_fp_reg_pair;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#1A7A64 begin
     temp t1: live_range;
     result.base_register <- $1.base_register;
@@ -26,7 +30,26 @@ transform 489  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
 end;
 
 transform 490  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
-  pass_1 image 16#1173DA;
+  pass_1 image 16#1173DA begin
+    condition not ($1.is_destroyable or subject.il.w24 <> 8);
+    cycle_guard already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + 4;
+    result.memory_references <- $1.memory_references;
+    result.delay <- $1.delay + 2;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.is_destroyable <- true;
+    result.physical_register <- false;
+  end;
   pass_2 image 16#1A7B06 begin
     temp t1: solution;
     temp t2: solution;
@@ -56,7 +79,11 @@ transform 490  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
 end;
 
 transform 491  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
-  pass_1 image 16#117972;
+  pass_1 image 16#117972 begin
+    condition not (not $1.is_destroyable or subject.il.w24 <> 12);
+    cycle_guard already_fp_reg_quad;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#1A7C04 begin
     temp t1: live_range;
     result.base_register <- $1.base_register;
@@ -73,7 +100,26 @@ transform 491  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
 end;
 
 transform 492  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
-  pass_1 image 16#117EB6;
+  pass_1 image 16#117EB6 begin
+    condition not ($1.is_destroyable or subject.il.w24 <> 12);
+    cycle_guard already_fp_reg_quad;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + 8;
+    result.memory_references <- $1.memory_references;
+    result.delay <- $1.delay + 4;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.is_destroyable <- true;
+    result.physical_register <- false;
+  end;
   pass_2 image 16#1A7CA6 begin
     temp t1: solution;
     temp t2: solution;
@@ -108,7 +154,29 @@ transform 492  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
 end;
 
 transform 493  fp_reg_pair <- f_add_top ($1: fp_reg_pair, $2: fp_reg_pair)
-  pass_1 image 16#11844E;
+  pass_1 image 16#11844E begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w24 = 8;
+    cycle_guard already_fp_reg_pair;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 4;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_pair_max, $2.fp_reg_pair_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_pair_max;
+    if t2 = $2.fp_reg_pair_max then
+      result.fp_reg_pair_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_pair_max then
+        t3 <- $2.fp_reg_pair_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_pair_max <- t3;
+    end;
+    result.fp_reg_pair_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A7DE2 begin
     temp t1: solution;
     temp t2: solution;
@@ -130,7 +198,29 @@ transform 493  fp_reg_pair <- f_add_top ($1: fp_reg_pair, $2: fp_reg_pair)
 end;
 
 transform 494  fp_reg_quad <- f_add_top ($1: fp_reg_quad, $2: fp_reg_quad)
-  pass_1 image 16#118622;
+  pass_1 image 16#118622 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w24 = 12;
+    cycle_guard already_fp_reg_quad;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 4;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_quad_max, $2.fp_reg_quad_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_quad_max;
+    if t2 = $2.fp_reg_quad_max then
+      result.fp_reg_quad_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_quad_max then
+        t3 <- $2.fp_reg_quad_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_quad_max <- t3;
+    end;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A7EAA begin
     temp t1: solution;
     temp t2: solution;
@@ -153,7 +243,29 @@ end;
 
 transform 495  fp_reg_pair <- f_div_top ($1: fp_reg_pair, $2: fp_reg_pair)
   no_could_deadlock_child;
-  pass_1 image 16#1187F6;
+  pass_1 image 16#1187F6 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w24 = 8;
+    cycle_guard already_fp_reg_pair;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 44;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 30;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_pair_max, $2.fp_reg_pair_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_pair_max;
+    if t2 = $2.fp_reg_pair_max then
+      result.fp_reg_pair_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_pair_max then
+        t3 <- $2.fp_reg_pair_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_pair_max <- t3;
+    end;
+    result.fp_reg_pair_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A7F72 begin
     temp t1: solution;
     temp t2: solution;
@@ -193,7 +305,29 @@ end;
 
 transform 496  fp_reg_pair <- f_div_top ($1: fp_reg_pair, $2: fp_reg_pair)
   no_could_deadlock_child;
-  pass_1 image 16#1189CE;
+  pass_1 image 16#1189CE begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w24 = 8;
+    cycle_guard already_fp_reg_pair;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 48;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 32;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_pair_max, $2.fp_reg_pair_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_pair_max;
+    if t2 = $2.fp_reg_pair_max then
+      result.fp_reg_pair_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_pair_max then
+        t3 <- $2.fp_reg_pair_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_pair_max <- t3;
+    end;
+    result.fp_reg_pair_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A817A begin
     temp t1: solution;
     temp t2: solution;
@@ -240,7 +374,29 @@ end;
 
 transform 497  fp_reg_quad <- f_div_top ($1: fp_reg_quad, $2: fp_reg_quad)
   no_could_deadlock_child;
-  pass_1 image 16#118BA6;
+  pass_1 image 16#118BA6 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w24 = 12;
+    cycle_guard already_fp_reg_quad;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 44;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 36;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_quad_max, $2.fp_reg_quad_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_quad_max;
+    if t2 = $2.fp_reg_quad_max then
+      result.fp_reg_quad_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_quad_max then
+        t3 <- $2.fp_reg_quad_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_quad_max <- t3;
+    end;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A83CC begin
     temp t1: solution;
     temp t2: solution;
@@ -280,7 +436,29 @@ end;
 
 transform 498  fp_reg_quad <- f_div_top ($1: fp_reg_quad, $2: fp_reg_quad)
   no_could_deadlock_child;
-  pass_1 image 16#118D7E;
+  pass_1 image 16#118D7E begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w24 = 12;
+    cycle_guard already_fp_reg_quad;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 52;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 40;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_quad_max, $2.fp_reg_quad_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_quad_max;
+    if t2 = $2.fp_reg_quad_max then
+      result.fp_reg_quad_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_quad_max then
+        t3 <- $2.fp_reg_quad_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_quad_max <- t3;
+    end;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A85D4 begin
     temp t1: solution;
     temp t2: solution;
@@ -325,7 +503,51 @@ transform 498  fp_reg_quad <- f_div_top ($1: fp_reg_quad, $2: fp_reg_quad)
 end;
 
 transform 499  fp_reg_pair <- f_extend_top ($1: ip_reg, $2: void)
-  pass_1 image 16#118F56;
+  pass_1 image 16#118F56 begin
+    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = 8);
+    cycle_guard already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    if $1.inherited_attributes.fetch_precision = 8 then
+      result.c138 <- 1;
+      if $1.bit_7_was_sign_extended then
+        result.c139 <- 1;
+      else
+        result.c139 <- 2;
+      end;
+    elsif $1.inherited_attributes.fetch_precision = 16 then
+      result.c138 <- 2;
+      if $1.bit_15_was_sign_extended then
+        result.c140 <- 1;
+      else
+        result.c140 <- 2;
+      end;
+    else
+      result.c138 <- 3;
+    end;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c141 <- 1;
+    else
+      result.c141 <- 2;
+    end;
+    result.c142 <- 2;
+    result.code_bytes <- words(0, 4)[result.c139] + words(0, 4)[result.c140] + words(4, 4)[result.c142] + $1.code_bytes + $2.code_bytes + 12;
+    result.memory_references <- bytes(0, 1)[result.c142] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(2, 1)[result.c142] + $1.delay + $2.delay + 3;
+    result.fp_reg_max <- $1.fp_reg_max;
+    result.fp_reg_result <- 1;
+    result.ip_reg_max <- $1.ip_reg_max;
+    result.ip_reg_result <- 0;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A882C begin
     temp t1: solution;
     temp t2: solution;
@@ -371,7 +593,22 @@ transform 499  fp_reg_pair <- f_extend_top ($1: ip_reg, $2: void)
 end;
 
 transform 500  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: void)
-  pass_1 image 16#119232;
+  pass_1 image 16#119232 begin
+    condition not (subject.il.w26 <> 6 or subject.il.w24 <> 8);
+    cycle_guard already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.c137 <- 2;
+    result.code_bytes <- words(4, 4)[result.c137] + $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- bytes(0, 1)[result.c137] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(2, 1)[result.c137] + $1.delay + $2.delay + 2;
+    result.fp_reg_max <- $1.fp_reg_max;
+    result.fp_reg_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A89EE begin
     temp t1: solution;
     temp t2: solution;
@@ -394,7 +631,29 @@ transform 500  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: void)
 end;
 
 transform 501  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: fp_reg)
-  pass_1 image 16#11941A;
+  pass_1 image 16#11941A begin
+    temp t2: integer;
+    temp t3: integer;
+    condition not (subject.il.w26 <> 6 or subject.il.w24 <> 8);
+    cycle_guard already_fp_reg_pair;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 4;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_max, $2.fp_reg_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_max;
+    if t2 = $2.fp_reg_max then
+      result.fp_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_max then
+        t3 <- $2.fp_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_max <- t3;
+    end;
+    result.fp_reg_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A8AD2 begin
     temp t1: solution;
     temp t2: solution;
@@ -408,7 +667,32 @@ transform 501  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: fp_reg)
 end;
 
 transform 502  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
-  pass_1 image 16#1195F8;
+  pass_1 image 16#1195F8 begin
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 8);
+    cycle_guard already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c138 <- 1;
+    else
+      result.c138 <- 2;
+    end;
+    result.c139 <- 2;
+    result.code_bytes <- words(4, 4)[result.c139] + $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- bytes(0, 1)[result.c139] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(2, 1)[result.c139] + $1.delay + $2.delay + 2;
+    result.fp_reg_max <- $1.fp_reg_max;
+    result.fp_reg_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A8B56 begin
     temp t1: solution;
     temp t2: solution;
@@ -437,7 +721,39 @@ transform 502  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
 end;
 
 transform 503  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: fp_reg_pair)
-  pass_1 image 16#119840;
+  pass_1 image 16#119840 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 8);
+    cycle_guard already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 4;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_pair_max, $2.fp_reg_pair_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_max;
+    if t2 = $2.fp_reg_max then
+      result.fp_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_max then
+        t3 <- $2.fp_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_max <- t3;
+    end;
+    result.fp_reg_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A8C7E begin
     temp t1: solution;
     temp t2: solution;
@@ -457,7 +773,43 @@ transform 503  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: fp_reg_pair)
 end;
 
 transform 504  fp_reg_quad <- f_extend_top ($1: ip_reg, $2: void)
-  pass_1 image 16#119A7E;
+  pass_1 image 16#119A7E begin
+    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = 12);
+    cycle_guard already_fp_reg_quad;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    if $1.inherited_attributes.fetch_precision = 8 then
+      result.c138 <- 1;
+      if $1.bit_7_was_sign_extended then
+        result.c139 <- 1;
+      else
+        result.c139 <- 2;
+      end;
+    elsif $1.inherited_attributes.fetch_precision = 16 then
+      result.c138 <- 2;
+      if $1.bit_15_was_sign_extended then
+        result.c140 <- 1;
+      else
+        result.c140 <- 2;
+      end;
+    else
+      result.c138 <- 3;
+    end;
+    result.code_bytes <- words(0, 4)[result.c139] + words(0, 4)[result.c140] + $1.code_bytes + $2.code_bytes + 16;
+    result.memory_references <- $1.memory_references + $2.memory_references + 1;
+    result.delay <- $1.delay + $2.delay + 4;
+    result.fp_reg_quad_max <- $1.fp_reg_quad_max;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A8D42 begin
     temp t1: solution;
     temp t2: solution;
@@ -496,7 +848,26 @@ transform 504  fp_reg_quad <- f_extend_top ($1: ip_reg, $2: void)
 end;
 
 transform 505  fp_reg_quad <- f_extend_top ($1: fp_reg, $2: void)
-  pass_1 image 16#119D02;
+  pass_1 image 16#119D02 begin
+    condition not (subject.il.w26 <> 6 or subject.il.w24 <> 12);
+    cycle_guard already_fp_reg_quad;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references + 1;
+    result.delay <- $1.delay + $2.delay + 3;
+    result.fp_reg_quad_max <- $1.fp_reg_quad_max;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A8EC8 begin
     temp t1: solution;
     temp t2: solution;
@@ -518,7 +889,39 @@ transform 505  fp_reg_quad <- f_extend_top ($1: fp_reg, $2: void)
 end;
 
 transform 506  fp_reg_quad <- f_extend_top ($1: fp_reg, $2: fp_reg)
-  pass_1 image 16#119EF0;
+  pass_1 image 16#119EF0 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition not (subject.il.w26 <> 6 or subject.il.w24 <> 12);
+    cycle_guard already_fp_reg_quad;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 4;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_max, $2.fp_reg_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_quad_max;
+    if t2 = $2.fp_reg_quad_max then
+      result.fp_reg_quad_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_quad_max then
+        t3 <- $2.fp_reg_quad_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_quad_max <- t3;
+    end;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A8FAA begin
     temp t1: solution;
     temp t2: solution;
@@ -538,7 +941,16 @@ transform 506  fp_reg_quad <- f_extend_top ($1: fp_reg, $2: fp_reg)
 end;
 
 transform 507  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: void)
-  pass_1 image 16#11A12E;
+  pass_1 image 16#11A12E begin
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 12);
+    cycle_guard already_fp_reg_quad;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references + 1;
+    result.delay <- $1.delay + $2.delay + 3;
+    result.fp_reg_quad_max <- $1.fp_reg_quad_max;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A906E begin
     temp t1: solution;
     temp t2: solution;
@@ -554,7 +966,29 @@ transform 507  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: void)
 end;
 
 transform 508  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: fp_reg_pair)
-  pass_1 image 16#11A2B8;
+  pass_1 image 16#11A2B8 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 12);
+    cycle_guard already_fp_reg_quad;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 4;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_pair_max, $2.fp_reg_pair_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_quad_max;
+    if t2 = $2.fp_reg_quad_max then
+      result.fp_reg_quad_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_quad_max then
+        t3 <- $2.fp_reg_quad_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_quad_max <- t3;
+    end;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A910C begin
     temp t1: solution;
     temp t2: solution;
@@ -568,7 +1002,26 @@ transform 508  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: fp_reg_pair)
 end;
 
 transform 509  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: void)
-  pass_1 image 16#11A496;
+  pass_1 image 16#11A496 begin
+    condition not (subject.il.w26 <> 8 or subject.il.w24 <> 12);
+    cycle_guard already_fp_reg_quad;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 4;
+    result.fp_reg_quad_max <- $1.fp_reg_quad_max + 1;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A9190 begin
     temp t1: solution;
     temp t2: solution;
@@ -592,7 +1045,25 @@ transform 509  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: void)
 end;
 
 transform 510  ip_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
-  pass_1 image 16#11A686;
+  pass_1 image 16#11A686 begin
+    condition not (subject.il.w26 <> 8 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2));
+    cycle_guard already_ip_reg;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 12;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 3;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1A9274 begin
     temp t1: solution;
     temp t2: solution;
@@ -610,14 +1081,40 @@ transform 510  ip_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
 end;
 
 transform 511  fp_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
-  pass_1 image 16#11A880;
+  pass_1 image 16#11A880 begin
+    condition not (subject.il.w26 <> 8 or subject.il.w24 <> 6);
+    cycle_guard already_fp_reg;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.fp_reg_max <- $1.fp_reg_max;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1A9334 begin
     emit simple(opc$copys, 0, high_half_of_fp_reg_pair($1), solution, nil);
   end;
 end;
 
 transform 512  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
-  pass_1 image 16#11AA02;
+  pass_1 image 16#11AA02 begin
+    condition not (subject.il.w26 <> 8 or subject.il.w24 <> 7);
+    cycle_guard already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max;
+    result.fp_reg_pair_result <- 1;
+  end;
   pass_2 image 16#1A9386 begin
     temp t1: solution;
     t1 <- high_half_of_fp_reg_pair($1);
@@ -632,7 +1129,25 @@ transform 512  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
 end;
 
 transform 513  ip_reg <- f_extend_top ($1: fp_reg_quad, $2: void)
-  pass_1 image 16#11ABE8;
+  pass_1 image 16#11ABE8 begin
+    condition not (subject.il.w26 <> 12 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2));
+    cycle_guard already_ip_reg;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 12;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 3;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1A941E begin
     temp t1: solution;
     temp t2: solution;
@@ -650,7 +1165,25 @@ transform 513  ip_reg <- f_extend_top ($1: fp_reg_quad, $2: void)
 end;
 
 transform 514  fp_reg <- f_extend_top ($1: fp_reg_quad, $2: void)
-  pass_1 image 16#11ADE2;
+  pass_1 image 16#11ADE2 begin
+    condition not (subject.il.w26 <> 12 or subject.il.w24 <> 6);
+    cycle_guard already_fp_reg;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.fp_reg_max <- $1.fp_reg_max;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1A94DE begin
     temp t1: solution;
     t1 <- high_half_of_fp_reg_quad($1);
@@ -665,14 +1198,41 @@ transform 514  fp_reg <- f_extend_top ($1: fp_reg_quad, $2: void)
 end;
 
 transform 515  fp_reg_pair <- f_extend_top ($1: fp_reg_quad, $2: void)
-  pass_1 image 16#11AFC8;
+  pass_1 image 16#11AFC8 begin
+    condition not (subject.il.w26 <> 12 or subject.il.w24 <> 7);
+    cycle_guard already_fp_reg_pair;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max;
+    result.fp_reg_pair_result <- 1;
+  end;
   pass_2 image 16#1A9576 begin
     emit simple(opc$copyd, 0, high_half_of_fp_reg_quad($1), solution, nil);
   end;
 end;
 
 transform 516  fp_reg_pair <- f_extend_top ($1: fp_reg_quad, $2: void)
-  pass_1 image 16#11B14A;
+  pass_1 image 16#11B14A begin
+    condition not (subject.il.w26 <> 12 or subject.il.w24 <> 8);
+    cycle_guard already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 4;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max + 1;
+    result.fp_reg_pair_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A95C8 begin
     temp t1: solution;
     temp t2: solution;
@@ -696,14 +1256,31 @@ transform 516  fp_reg_pair <- f_extend_top ($1: fp_reg_quad, $2: void)
 end;
 
 transform 517  fp_reg <- f_math_top ($1: fp_reg_pair, $2: void)
-  pass_1 image 16#11B33A;
+  pass_1 image 16#11B33A begin
+    condition not (subject.il.w26 <> 15 or subject.il.w24 <> 6);
+    cycle_guard already_fp_reg;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.fp_reg_max <- $1.fp_reg_max;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1A96AC begin
     emit simple(opc$copys, 0, low_half_of_fp_reg_pair($1), solution, nil);
   end;
 end;
 
 transform 518  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
-  pass_1 image 16#11B4BC;
+  pass_1 image 16#11B4BC begin
+    condition not (subject.il.w26 <> 14 or subject.il.w24 <> 8);
+    cycle_guard already_fp_reg_pair;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 4;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max;
+    result.fp_reg_pair_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A96FE begin
     temp t1: solution;
     temp t2: solution;
@@ -721,14 +1298,31 @@ transform 518  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
 end;
 
 transform 519  fp_reg_pair <- f_math_top ($1: fp_reg_quad, $2: void)
-  pass_1 image 16#11B644;
+  pass_1 image 16#11B644 begin
+    condition not (subject.il.w26 <> 15 or subject.il.w24 <> 7);
+    cycle_guard already_fp_reg_pair;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max;
+    result.fp_reg_pair_result <- 1;
+  end;
   pass_2 image 16#1A97A2 begin
     emit simple(opc$copyd, 0, low_half_of_fp_reg_quad($1), solution, nil);
   end;
 end;
 
 transform 520  fp_reg_quad <- f_math_top ($1: fp_reg_quad, $2: void)
-  pass_1 image 16#11B7C6;
+  pass_1 image 16#11B7C6 begin
+    condition not (subject.il.w26 <> 14 or subject.il.w24 <> 12);
+    cycle_guard already_fp_reg_quad;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 4;
+    result.fp_reg_quad_max <- $1.fp_reg_quad_max;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A97F4 begin
     temp t1: solution;
     temp t2: solution;
@@ -747,7 +1341,29 @@ end;
 
 transform 521  fp_reg_pair <- f_mul_top ($1: fp_reg_pair, $2: fp_reg_pair)
   no_could_deadlock_child;
-  pass_1 image 16#11B94E;
+  pass_1 image 16#11B94E begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w24 = 8;
+    cycle_guard already_fp_reg_pair;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 24;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 12;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_pair_max, $2.fp_reg_pair_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_pair_max;
+    if t2 = $2.fp_reg_pair_max then
+      result.fp_reg_pair_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_pair_max then
+        t3 <- $2.fp_reg_pair_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_pair_max <- t3;
+    end;
+    result.fp_reg_pair_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A9898 begin
     temp t1: solution;
     temp t2: solution;
@@ -778,7 +1394,29 @@ end;
 
 transform 522  fp_reg_pair <- f_mul_top ($1: fp_reg_pair, $2: fp_reg_pair)
   no_could_deadlock_child;
-  pass_1 image 16#11BB26;
+  pass_1 image 16#11BB26 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w24 = 8;
+    cycle_guard already_fp_reg_pair;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 28;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 14;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_pair_max, $2.fp_reg_pair_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_pair_max;
+    if t2 = $2.fp_reg_pair_max then
+      result.fp_reg_pair_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_pair_max then
+        t3 <- $2.fp_reg_pair_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_pair_max <- t3;
+    end;
+    result.fp_reg_pair_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A99F0 begin
     temp t1: solution;
     temp t2: solution;
@@ -816,7 +1454,29 @@ end;
 
 transform 523  fp_reg_quad <- f_mul_top ($1: fp_reg_quad, $2: fp_reg_quad)
   no_could_deadlock_child;
-  pass_1 image 16#11BCFE;
+  pass_1 image 16#11BCFE begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w24 = 12;
+    cycle_guard already_fp_reg_quad;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 24;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 12;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_quad_max, $2.fp_reg_quad_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_quad_max;
+    if t2 = $2.fp_reg_quad_max then
+      result.fp_reg_quad_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_quad_max then
+        t3 <- $2.fp_reg_quad_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_quad_max <- t3;
+    end;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A9B92 begin
     temp t1: solution;
     temp t2: solution;
@@ -847,7 +1507,29 @@ end;
 
 transform 524  fp_reg_quad <- f_mul_top ($1: fp_reg_quad, $2: fp_reg_quad)
   no_could_deadlock_child;
-  pass_1 image 16#11BED6;
+  pass_1 image 16#11BED6 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w24 = 12;
+    cycle_guard already_fp_reg_quad;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 32;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 16;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_quad_max, $2.fp_reg_quad_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_quad_max;
+    if t2 = $2.fp_reg_quad_max then
+      result.fp_reg_quad_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_quad_max then
+        t3 <- $2.fp_reg_quad_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_quad_max <- t3;
+    end;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A9CEA begin
     temp t1: solution;
     temp t2: solution;
@@ -883,7 +1565,16 @@ transform 524  fp_reg_quad <- f_mul_top ($1: fp_reg_quad, $2: fp_reg_quad)
 end;
 
 transform 525  fp_reg_pair <- f_neg_top ($1: fp_reg_pair)
-  pass_1 image 16#11C0AE;
+  pass_1 image 16#11C0AE begin
+    condition subject.il.w24 = 8;
+    cycle_guard already_fp_reg_pair;
+    result.code_bytes <- $1.code_bytes + 8;
+    result.memory_references <- $1.memory_references;
+    result.delay <- $1.delay + 4;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max;
+    result.fp_reg_pair_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A9E92 begin
     temp t1: solution;
     temp t2: solution;
@@ -901,7 +1592,16 @@ transform 525  fp_reg_pair <- f_neg_top ($1: fp_reg_pair)
 end;
 
 transform 526  fp_reg_quad <- f_neg_top ($1: fp_reg_quad)
-  pass_1 image 16#11C212;
+  pass_1 image 16#11C212 begin
+    condition subject.il.w24 = 12;
+    cycle_guard already_fp_reg_quad;
+    result.code_bytes <- $1.code_bytes + 8;
+    result.memory_references <- $1.memory_references;
+    result.delay <- $1.delay + 4;
+    result.fp_reg_quad_max <- $1.fp_reg_quad_max;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A9F36 begin
     temp t1: solution;
     temp t2: solution;
@@ -919,7 +1619,29 @@ transform 526  fp_reg_quad <- f_neg_top ($1: fp_reg_quad)
 end;
 
 transform 527  fp_reg_pair <- f_sub_top ($1: fp_reg_pair, $2: fp_reg_pair)
-  pass_1 image 16#11C376;
+  pass_1 image 16#11C376 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w24 = 8;
+    cycle_guard already_fp_reg_pair;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 4;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_pair_max, $2.fp_reg_pair_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_pair_max;
+    if t2 = $2.fp_reg_pair_max then
+      result.fp_reg_pair_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_pair_max then
+        t3 <- $2.fp_reg_pair_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_pair_max <- t3;
+    end;
+    result.fp_reg_pair_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1A9FDA begin
     temp t1: solution;
     temp t2: solution;
@@ -941,7 +1663,29 @@ transform 527  fp_reg_pair <- f_sub_top ($1: fp_reg_pair, $2: fp_reg_pair)
 end;
 
 transform 528  fp_reg_quad <- f_sub_top ($1: fp_reg_quad, $2: fp_reg_quad)
-  pass_1 image 16#11C54A;
+  pass_1 image 16#11C54A begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w24 = 12;
+    cycle_guard already_fp_reg_quad;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 4;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_quad_max, $2.fp_reg_quad_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_quad_max;
+    if t2 = $2.fp_reg_quad_max then
+      result.fp_reg_quad_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_quad_max then
+        t3 <- $2.fp_reg_quad_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_quad_max <- t3;
+    end;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+  end;
   pass_2 image 16#1AA0A2 begin
     temp t1: solution;
     temp t2: solution;
@@ -963,7 +1707,26 @@ transform 528  fp_reg_quad <- f_sub_top ($1: fp_reg_quad, $2: fp_reg_quad)
 end;
 
 transform 529  fp_reg_pair <- fp_reg_pair
-  pass_1 image 16#11C71E;
+  pass_1 image 16#11C71E begin
+    condition not (subject.inherited_attributes.immediate_parent_wants_lvalue or not subject.physical_register or not subject.is_complex);
+    cycle_mark already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- subject.code_bytes + 4;
+    result.memory_references <- subject.memory_references;
+    result.delay <- subject.delay + 2;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register, memory_references from subject;
+    result.is_destroyable <- true;
+    result.physical_register <- false;
+  end;
   pass_2 image 16#1AA16A begin
     temp t1: solution;
     temp t2: solution;
@@ -982,7 +1745,26 @@ transform 529  fp_reg_pair <- fp_reg_pair
 end;
 
 transform 530  fp_reg_quad <- fp_reg_quad
-  pass_1 image 16#11CB9E;
+  pass_1 image 16#11CB9E begin
+    condition not (subject.inherited_attributes.immediate_parent_wants_lvalue or not subject.physical_register or not subject.is_complex);
+    cycle_mark already_fp_reg_quad;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- subject.code_bytes + 8;
+    result.memory_references <- subject.memory_references;
+    result.delay <- subject.delay + 4;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register, memory_references from subject;
+    result.is_destroyable <- true;
+    result.physical_register <- false;
+  end;
   pass_2 image 16#1AA212 begin
     temp t1: solution;
     temp t2: solution;
@@ -1006,7 +1788,31 @@ transform 530  fp_reg_quad <- fp_reg_quad
 end;
 
 transform 531  fp_reg_pair <- isc_func_call_top
-  pass_1 image 16#11D01E;
+  pass_1 image 16#11D01E begin
+    condition subject.il.w24 = 8;
+    cycle_guard already_fp_reg_pair;
+    result.l352 <- lir_3f90[subject.il.b11];
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.fp_reg_pair_result <- 1;
+    result.is_complex <- true;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_from_function_call <- true;
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+  end;
   pass_2 image 16#1AA2F2 begin
     if result.c136 = 1 then
       pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -1021,7 +1827,31 @@ transform 531  fp_reg_pair <- isc_func_call_top
 end;
 
 transform 532  fp_reg_quad <- isc_func_call_top
-  pass_1 image 16#11D224;
+  pass_1 image 16#11D224 begin
+    condition subject.il.w24 = 12;
+    cycle_guard already_fp_reg_quad;
+    result.l352 <- lir_3f90[subject.il.b11];
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.fp_reg_quad_result <- 1;
+    result.is_complex <- true;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_from_function_call <- true;
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+  end;
   pass_2 image 16#1AA39E begin
     if result.c136 = 1 then
       pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);

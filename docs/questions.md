@@ -2486,3 +2486,58 @@ revisited.
    had a macro (the trace with every rewrite) and a simpler condition.
    Acceptable as fixed text, or should the language grow `rewrite'
    blocks with nested conditions so these are generated too?
+295. Translator GE, the pass-1 actions (docs/iscg-design.md 10.7):
+   **the language's pass-1 names are ours**: the clause words `condition',
+   `cycle_guard', `cycle_mark', `rewrite', `dropped', the macros `copy
+   ... from' and `sum ... of', `trace', the inline cost tables `bytes(..)
+   [e]' / `words(..)[e]' and `@k' places, the modules' tables
+   `cost_<rule>_<k>' (k the place in the rule's layout), the local
+   `solution' for the language's `result', and the views p1_already_t,
+   p1_int_fields_t, p1_snode_t, p1_readonly_t.  Only "Pattern N matched
+   the semantics." and "Infinite cycle prevented by NOT adding this to
+   the work list." survive.  Other names?
+296. Translator GE: **are the cost tables the generator's or the
+   input's?**  Every table has 17 entries (0..16), entry 0 always 0, no
+   non-zero entry past 11; each is read once; a rule's tables lie in the
+   reverse of their order of use, 8 of 548 rules otherwise (the clause
+   writes their places).  The rule file writes each table's contents
+   inline where it is used.  The input probably described instructions
+   (sizes, memory references, delays) and the generator built the
+   tables from them (iscg-design 2.6), so the contents should derive
+   from instruction descriptions we have not recovered.  Worth decoding
+   (the values are few: code_bytes 0/4/8/12/16..., memory_references
+   and delay 0..3), or are inline tables enough?
+297. Translator GE: **the cost tables past 32 KB (module 02).**  Rev
+   8.89 laid rule 170's tables up to +0x7F78, put rule 171's first two
+   byte tables in the room below 32 KB (+0x7FA0, +0x7FB8), and the rest
+   of rule 170's from +0x7FCC (not 8-aligned), read through an absolute
+   base (`movea.l #0x45732C,A0', A5 + 0x7FCC).  The generator lays the
+   tables in rule order on 8 bytes, so module 02's data differ past
+   +0x7FA0 (a cc_datacheck_known.txt entry; every byte is present).
+   Module 24 (56 KB, not generated: one residue rule) will meet the same.
+   Should the generator learn Rev 8.89's near/far allocation (it needs
+   the rule of which variables go far), or the rule file carry module
+   offsets for those tables?
+298. Translator GE: **the action's frame.**  Every pass-1 action links
+   -32 or more (349 of 563 exactly -32) though most use no frame
+   temporary: the original declared locals (eight longwords?) in every
+   action, or the skeleton had a fixed frame.  dpc links what the body
+   needs (best effort).  Known?
+299. Translator GE: **rules 399 and 402.**  The image clears result and
+   work, tests the subject's inherited immediate_parent_wants_lvalue
+   (btst #5 of +39) and returns: no branch, no trace (the only two
+   actions without one), no solution.  Read as a condition whose arm
+   Rev 8.89 removed (a constant false conjunct?).  The rule file writes
+   them by hand as `hand dropped' clauses with the test's sense guessed
+   from rule 397 (`not ...'); the modules write the test with an empty
+   arm (dpc refuses an `if' with a constant condition).  Better reading?
+300. Translator GE: **the 5 pass-1 residue actions.**  Rules 9 and 10
+   compare the node's double at +12 with zero through the FPP emulation
+   (`pea (12,A1); jsr fpp_$...' with inline operand words: a real
+   comparison, dpc gap 7's ground); rule 20 reads a longword of
+   target_properties at +0x9C (inside target_properties.ins.pas's p_94:
+   name it?); rule 211 tests a value joined from two arms after a call
+   (the lifter loses the flags); rule 177 tests a bit given by a register
+   (btst Dn,(81,A0)).  They keep sections 07, 12, 23, 24 from being
+   generated.  A real-valued node field in the language (and a gap-7
+   rewrite) for 9 and 10, a name for target_properties +0x9C?

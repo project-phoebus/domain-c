@@ -9,7 +9,36 @@
 section 20 variables  image pass_1 a5 16#468E94, pass_2 a5 16#4800A4;
 
 transform 35  ip_reg <- fortran_symbol
-  pass_1 image 16#15DBEC;
+  pass_1 image 16#15DBEC begin
+    temp t1: boolean;
+    temp t2: integer32;
+    t1 <- side_effect_symbol_fill_in_size(subject.il, subject.inherited_attributes.fetch_precision);
+    t2 <- sz_fsym(subject.il);
+    condition not (rshft(subject.il.b44 & 240, 4) <> 3 or rshft(subject.il.b11 & 240, 4) <> 2 or (subject.inherited_attributes.fetch_precision > 32 or not (subject.il.l24 & 16#20000 <> 0)) or (not t1 or t2 * 8 <> subject.inherited_attributes.fetch_precision or (not (subject.il.l24 & 16#4000000 <> 0) or solution_kind_of_symbol(subject.il) <> 11)));
+    cycle_guard already_ip_reg;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.embedded_strength_reduction_temporary <- true;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b27 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b27 & 4 <> 0;
+    result.is_volatile <- subject.il.b27 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CE7D4 begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -17,7 +46,37 @@ transform 35  ip_reg <- fortran_symbol
 end;
 
 transform 36  ip_reg_field <- fortran_symbol
-  pass_1 image 16#15DEE8;
+  pass_1 image 16#15DEE8 begin
+    temp t1: integer32;
+    temp t3: integer32;
+    t1 <- sz_fsym(subject.il);
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and ((rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision <= 32 and (t1 * 8 > subject.inherited_attributes.fetch_precision))) and (subject.il.l24 & 16#4000000 <> 0 and (solution_kind_of_symbol(subject.il) = 11));
+    cycle_guard already_ip_reg_field;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    t3 <- sz_fsym(subject.il);
+    result.bit_position_of_lsb <- t3 * 8 - subject.inherited_attributes.fetch_precision;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.field_precision <- subject.inherited_attributes.fetch_precision;
+    result.field_requires_sign_extend <- false;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b27 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b27 & 4 <> 0;
+    result.is_volatile <- subject.il.b27 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CE7FA begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -25,7 +84,33 @@ transform 36  ip_reg_field <- fortran_symbol
 end;
 
 transform 37  ip_reg <- fortran_symbol
-  pass_1 image 16#15E1B8;
+  pass_1 image 16#15E1B8 begin
+    temp t1: integer32;
+    t1 <- sz_fsym(subject.il);
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and ((rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision <= 32 and (t1 * 8 = subject.inherited_attributes.fetch_precision))) and (subject.il.l24 & 16#4000000 <> 0 and (solution_kind_of_symbol(subject.il) = 11));
+    cycle_guard already_ip_reg;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b27 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b27 & 4 <> 0;
+    result.is_volatile <- subject.il.b27 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CE820 begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -33,7 +118,31 @@ transform 37  ip_reg <- fortran_symbol
 end;
 
 transform 38  fp_reg <- fortran_symbol
-  pass_1 image 16#15E462;
+  pass_1 image 16#15E462 begin
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and ((rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision = 32 and (subject.il.l24 & 16#4000000 <> 0))) and (solution_kind_of_symbol(subject.il) = 8 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)));
+    cycle_guard already_fp_reg;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.fp_reg_max <- 1;
+    result.fp_reg_result <- 1;
+    result.has_a_symbolic_displacement <- true;
+    result.is_atomic <- subject.il.b27 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b27 & 4 <> 0;
+    result.is_volatile <- subject.il.b27 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CE846 begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -41,7 +150,36 @@ transform 38  fp_reg <- fortran_symbol
 end;
 
 transform 39  fp_reg_pair <- fortran_symbol
-  pass_1 image 16#15E70E;
+  pass_1 image 16#15E70E begin
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and ((rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision = 64 and (subject.il.l24 & 16#4000000 <> 0))) and (solution_kind_of_symbol(subject.il) = 9 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)));
+    cycle_guard already_fp_reg_pair;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.fp_reg_pair_max <- 1;
+    result.fp_reg_pair_result <- 1;
+    result.has_a_symbolic_displacement <- true;
+    result.is_atomic <- subject.il.b27 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b27 & 4 <> 0;
+    result.is_volatile <- subject.il.b27 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CE86C begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -53,7 +191,36 @@ transform 39  fp_reg_pair <- fortran_symbol
 end;
 
 transform 40  fp_reg_quad <- fortran_symbol
-  pass_1 image 16#15E9D0;
+  pass_1 image 16#15E9D0 begin
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and ((rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision = 128 and (subject.il.l24 & 16#4000000 <> 0))) and (solution_kind_of_symbol(subject.il) = 10 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)));
+    cycle_guard already_fp_reg_quad;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.fp_reg_quad_max <- 1;
+    result.fp_reg_quad_result <- 1;
+    result.has_a_symbolic_displacement <- true;
+    result.is_atomic <- subject.il.b27 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b27 & 4 <> 0;
+    result.is_volatile <- subject.il.b27 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CE8CA begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -65,7 +232,33 @@ transform 40  fp_reg_quad <- fortran_symbol
 end;
 
 transform 41  address_mode <- fortran_symbol
-  pass_1 image 16#15EC92;
+  pass_1 image 16#15EC92 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and (rshft(subject.il.b11 & 240, 4) = 2 and (subject.il.l24 & 16#4000000 = 0) and (subject.il.l24 & 1024 = 0));
+    cycle_guard already_address_mode;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    t2 <- get_alignment(subject.il);
+    result.bits_trusted <- readonly_l2728[t2];
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_atomic <- subject.il.b27 & 2 <> 0;
+    result.is_dynm_vat <- true;
+    result.is_physical <- subject.il.b27 & 4 <> 0;
+    result.is_volatile <- subject.il.b27 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    t3 <- sz_fsym(subject.il);
+    result.pass_1_size <- t3 * 8;
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CE928 begin
     result.base_register <- isc_user_routines_340;
     result.index_register <- isc_user_routines_31c;
@@ -74,7 +267,62 @@ transform 41  address_mode <- fortran_symbol
 end;
 
 transform 42  address_mode <- fortran_symbol
-  pass_1 image 16#15EEBC;
+  pass_1 image 16#15EEBC begin
+    temp t2: boolean;
+    temp t3: integer32;
+    temp t4: integer32;
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and (rshft(subject.il.b11 & 240, 4) = 2 and (subject.il.l24 & 16#4000000 = 0) and (subject.il.l24 & 1024 <> 0));
+    cycle_guard already_address_mode;
+    t2 <- lir_$can_encode_as_immediate_operand(subject.il.l12, opc$loadl, 1);
+    result.c352 <- t2;
+    if t2 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand(subject.il.l12, opc$move, 1) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(4, 4)[result.c137];
+    result.memory_references <- bytes(0, 1)[result.c137];
+    result.delay <- bytes(0, 1)[result.c137];
+    result.bits_known <- 0;
+    if number_of_rightmost_zeroes(subject.il.l12) > 3 then
+      t3 <- 3;
+    else
+      t3 <- number_of_rightmost_zeroes(subject.il.l12);
+    end;
+    result.bits_trusted <- readonly_l2728[t3];
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.has_a_symbolic_displacement <- false;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_atomic <- subject.il.b27 & 2 <> 0;
+    result.is_dynm_vat <- true;
+    result.is_physical <- subject.il.b27 & 4 <> 0;
+    result.is_volatile <- subject.il.b27 & 1 <> 0;
+    if result.c352 & 128 <> 0 then
+      result.literal_32_bits_value <- subject.il.l12;
+    else
+      result.literal_32_bits_value <- 0;
+    end;
+    t4 <- sz_fsym(subject.il);
+    result.pass_1_size <- t4 * 8;
+    result.uses_the_base_register <- true;
+    if result.c352 & 128 <> 0 then
+      result.uses_the_displacement <- true;
+    else
+      result.uses_the_displacement <- false;
+    end;
+    if result.c352 & 128 <> 0 then
+      result.uses_the_index_register <- false;
+    else
+      result.uses_the_index_register <- true;
+    end;
+  end;
   pass_2 image 16#1CE958 begin
     temp t1: solution;
     temp t2: solution;
@@ -106,7 +354,37 @@ transform 42  address_mode <- fortran_symbol
 end;
 
 transform 43  ip_reg_field <- fortran_symbol
-  pass_1 image 16#15F1AA;
+  pass_1 image 16#15F1AA begin
+    temp t1: integer32;
+    temp t3: integer32;
+    t1 <- sz_fsym(subject.il);
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and (rshft(subject.il.b11 & 240, 4) = 5 and (subject.il.b44 & 2 <> 0) and (subject.inherited_attributes.fetch_precision <= 32 and (t1 * 8 > subject.inherited_attributes.fetch_precision))) and (subject.il.l24 & 16#4000000 <> 0 and (solution_kind_of_symbol(subject.il) = 11));
+    cycle_guard already_ip_reg_field;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    t3 <- sz_fsym(subject.il);
+    result.bit_position_of_lsb <- t3 * 8 - subject.inherited_attributes.fetch_precision;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.field_precision <- subject.inherited_attributes.fetch_precision;
+    result.field_requires_sign_extend <- false;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b27 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b27 & 4 <> 0;
+    result.is_volatile <- subject.il.b27 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CEA3C begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -114,7 +392,28 @@ transform 43  ip_reg_field <- fortran_symbol
 end;
 
 transform 44  ip_reg <- fortran_symbol
-  pass_1 image 16#15F47E;
+  pass_1 image 16#15F47E begin
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and (rshft(subject.il.b11 & 240, 4) = 5 and (subject.il.l24 & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11));
+    cycle_guard already_ip_reg;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b27 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b27 & 4 <> 0;
+    result.is_volatile <- subject.il.b27 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CEA62 begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -122,7 +421,29 @@ transform 44  ip_reg <- fortran_symbol
 end;
 
 transform 45  address_mode <- fortran_symbol
-  pass_1 image 16#15F6F2;
+  pass_1 image 16#15F6F2 begin
+    temp t2: integer32;
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and (rshft(subject.il.b11 & 240, 4) = 5 and (subject.il.l24 & 16#4000000 = 0));
+    cycle_guard already_address_mode;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    t2 <- get_alignment(subject.il);
+    result.bits_trusted <- readonly_l2728[t2];
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_atomic <- subject.il.b27 & 2 <> 0;
+    result.is_physical <- subject.il.b27 & 4 <> 0;
+    result.is_volatile <- subject.il.b27 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CEA88 begin
     result.base_register <- isc_user_routines_33c;
     result.index_register <- isc_user_routines_31c;
@@ -131,7 +452,58 @@ transform 45  address_mode <- fortran_symbol
 end;
 
 transform 46  address_mode <- fortran_symbol
-  pass_1 image 16#15F8FC;
+  pass_1 image 16#15F8FC begin
+    temp t2: boolean;
+    temp t3: integer32;
+    condition not (rshft(subject.il.b44 & 240, 4) <> 3 or rshft(subject.il.b11 & 240, 4) <> 1 and (rshft(subject.il.b11 & 240, 4) <> 4) or subject.il.l24 & 16#4000000 <> 0);
+    cycle_guard already_address_mode;
+    t2 <- lir_$can_encode_as_immediate_operand(subject.il.l12, opc$loadl, 1);
+    result.c352 <- t2;
+    if t2 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand(subject.il.l12, opc$move, 1) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(4, 4)[result.c137];
+    result.memory_references <- bytes(0, 1)[result.c137];
+    result.delay <- bytes(0, 1)[result.c137];
+    result.bits_known <- 0;
+    if number_of_rightmost_zeroes(subject.il.l12) > 3 then
+      t3 <- 3;
+    else
+      t3 <- number_of_rightmost_zeroes(subject.il.l12);
+    end;
+    result.bits_trusted <- readonly_l2728[t3];
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.has_a_symbolic_displacement <- false;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_atomic <- subject.il.b27 & 2 <> 0;
+    result.is_physical <- subject.il.b27 & 4 <> 0;
+    result.is_volatile <- subject.il.b27 & 1 <> 0;
+    if result.c352 & 128 <> 0 then
+      result.literal_32_bits_value <- subject.il.l12;
+    else
+      result.literal_32_bits_value <- 0;
+    end;
+    result.uses_the_base_register <- true;
+    if result.c352 & 128 <> 0 then
+      result.uses_the_displacement <- true;
+    else
+      result.uses_the_displacement <- false;
+    end;
+    if result.c352 & 128 <> 0 then
+      result.uses_the_index_register <- false;
+    else
+      result.uses_the_index_register <- true;
+    end;
+  end;
   pass_2 image 16#1CEAB8 begin
     temp t1: solution;
     temp t2: solution;
@@ -159,7 +531,21 @@ transform 46  address_mode <- fortran_symbol
 end;
 
 transform 47  ip_reg <- fortran_symbol
-  pass_1 image 16#15FBC6;
+  pass_1 image 16#15FBC6 begin
+    condition not (rshft(subject.il.b44 & 240, 4) <> 1 or subject.il.l40 <> nil or (rshft(subject.il.b11 & 240, 4) <> 5 or not (subject.il.l24 & 16#4000000 <> 0)) or solution_kind_of_symbol(subject.il) <> 11);
+    cycle_guard already_ip_reg;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 1;
+    result.is_destroyable <- false;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+  end;
   pass_2 image 16#1CEB84 begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -167,7 +553,24 @@ transform 47  ip_reg <- fortran_symbol
 end;
 
 transform 48  address_mode <- fortran_symbol
-  pass_1 image 16#15FDC2;
+  pass_1 image 16#15FDC2 begin
+    condition rshft(subject.il.b44 & 240, 4) = 6;
+    cycle_guard already_address_mode;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 3;
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.literal_32_bits_value <- 0;
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CEBAA begin
     result.base_register <- isc_user_routines_330;
     result.index_register <- isc_user_routines_31c;
@@ -176,7 +579,54 @@ transform 48  address_mode <- fortran_symbol
 end;
 
 transform 49  address_mode <- var_name
-  pass_1 image 16#15FF38;
+  pass_1 image 16#15FF38 begin
+    temp t2: boolean;
+    temp t3: integer32;
+    condition not (subject.il.w72 <> 11 or subject.il.b35 & 32 <> 0 or subject.il.w42 & 1024 <> 0);
+    cycle_guard already_address_mode;
+    t2 <- lir_$can_encode_as_immediate_operand(subject.il.l56, opc$loadl, 1);
+    result.c352 <- t2;
+    if t2 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand(subject.il.l56, opc$move, 1) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(4, 4)[result.c137];
+    result.memory_references <- bytes(0, 1)[result.c137];
+    result.delay <- bytes(0, 1)[result.c137];
+    result.bits_known <- 0;
+    t3 <- number_of_rightmost_zeroes(subject.il.l56);
+    result.bits_trusted <- readonly_l2728[t3];
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.has_a_symbolic_displacement <- false;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    if result.c352 & 128 <> 0 then
+      result.literal_32_bits_value <- subject.il.l56;
+    else
+      result.literal_32_bits_value <- 0;
+    end;
+    if result.c352 & 128 <> 0 then
+      result.uses_the_base_register <- false;
+    else
+      result.uses_the_base_register <- true;
+    end;
+    if result.c352 & 128 <> 0 then
+      result.uses_the_displacement <- true;
+    else
+      result.uses_the_displacement <- false;
+    end;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CEBE4 begin
     temp t1: solution;
     temp t2: solution;
@@ -204,7 +654,34 @@ transform 49  address_mode <- var_name
 end;
 
 transform 50  ip_reg <- var_name
-  pass_1 image 16#1601EA;
+  pass_1 image 16#1601EA begin
+    temp t1: boolean;
+    t1 <- side_effect_symbol_fill_in_size(subject.il, subject.inherited_attributes.fetch_precision);
+    condition not (subject.il.w72 <> 2 or subject.inherited_attributes.fetch_precision > 32 or (not (subject.il.l32 & 16#20000 <> 0) or not t1) or (subject.inherited_attributes.fetch_precision <> subject.il.l36 or not (subject.il.l32 & 16#4000000 <> 0) or solution_kind_of_symbol(subject.il) <> 11));
+    cycle_guard already_ip_reg;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.embedded_strength_reduction_temporary <- true;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CECB0 begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -212,7 +689,33 @@ transform 50  ip_reg <- var_name
 end;
 
 transform 51  ip_reg_field <- var_name
-  pass_1 image 16#160484;
+  pass_1 image 16#160484 begin
+    condition (subject.il.w72 = 2 or subject.il.w72 = 1) and (subject.inherited_attributes.fetch_precision > 0 and (subject.inherited_attributes.fetch_precision <= 32)) and (subject.inherited_attributes.fetch_precision < subject.il.l36 and (subject.il.w42 & 1024 = 0) and (subject.il.l32 & 16#4000000 <> 0 and (solution_kind_of_symbol(subject.il) = 11)));
+    cycle_guard already_ip_reg_field;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- subject.il.b39 - subject.inherited_attributes.fetch_precision;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.field_precision <- subject.inherited_attributes.fetch_precision;
+    result.field_requires_sign_extend <- false;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CECD6 begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -220,7 +723,31 @@ transform 51  ip_reg_field <- var_name
 end;
 
 transform 52  ip_reg <- var_name
-  pass_1 image 16#160726;
+  pass_1 image 16#160726 begin
+    condition (subject.il.w72 = 2 or subject.il.w72 = 1) and (subject.inherited_attributes.fetch_precision <= 32 and (subject.inherited_attributes.fetch_precision = subject.il.l36)) and (subject.il.w42 & 1024 = 0 and (subject.il.l32 & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11));
+    cycle_guard already_ip_reg;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CECFC begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -228,7 +755,31 @@ transform 52  ip_reg <- var_name
 end;
 
 transform 53  fp_reg <- var_name
-  pass_1 image 16#1609A4;
+  pass_1 image 16#1609A4 begin
+    condition (subject.il.w72 = 2 or subject.il.w72 = 1) and (subject.il.w42 & 1024 = 0 and (subject.il.l32 & 16#4000000 <> 0)) and (solution_kind_of_symbol(subject.il) = 8 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)));
+    cycle_guard already_fp_reg;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.fp_reg_max <- 1;
+    result.fp_reg_result <- 1;
+    result.has_a_symbolic_displacement <- true;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CED22 begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -236,7 +787,36 @@ transform 53  fp_reg <- var_name
 end;
 
 transform 54  fp_reg_pair <- var_name
-  pass_1 image 16#160C2E;
+  pass_1 image 16#160C2E begin
+    condition (subject.il.w72 = 2 or subject.il.w72 = 1) and (subject.il.w42 & 1024 = 0 and (subject.il.l32 & 16#4000000 <> 0)) and (solution_kind_of_symbol(subject.il) = 9 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)));
+    cycle_guard already_fp_reg_pair;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.fp_reg_pair_max <- 1;
+    result.fp_reg_pair_result <- 1;
+    result.has_a_symbolic_displacement <- true;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CED48 begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -247,7 +827,31 @@ transform 54  fp_reg_pair <- var_name
 end;
 
 transform 55  address_mode <- var_name
-  pass_1 image 16#160ECE;
+  pass_1 image 16#160ECE begin
+    temp t2: integer;
+    condition not (subject.il.w72 <> 2 or subject.il.l32 & 16#4000000 <> 0 or subject.il.l32 & 1024 <> 0);
+    cycle_guard already_address_mode;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    t2 <- alignment_from_il_node(subject.il);
+    result.bits_trusted <- readonly_l2728[t2];
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_dynm_vat <- true;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.pass_1_size <- subject.il.l36;
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CED96 begin
     result.base_register <- isc_user_routines_340;
     result.index_register <- isc_user_routines_31c;
@@ -256,7 +860,60 @@ transform 55  address_mode <- var_name
 end;
 
 transform 56  address_mode <- var_name
-  pass_1 image 16#1610C8;
+  pass_1 image 16#1610C8 begin
+    temp t2: boolean;
+    temp t3: integer32;
+    condition not (subject.il.w72 <> 2 or subject.il.l32 & 16#4000000 <> 0 or not (subject.il.l32 & 1024 <> 0));
+    cycle_guard already_address_mode;
+    t2 <- lir_$can_encode_as_immediate_operand(subject.il.l56, opc$loadl, 1);
+    result.c352 <- t2;
+    if t2 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand(subject.il.l56, opc$move, 1) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(4, 4)[result.c137];
+    result.memory_references <- bytes(0, 1)[result.c137];
+    result.delay <- bytes(0, 1)[result.c137];
+    result.bits_known <- 0;
+    if number_of_rightmost_zeroes(subject.il.l56) > 3 then
+      t3 <- 3;
+    else
+      t3 <- number_of_rightmost_zeroes(subject.il.l56);
+    end;
+    result.bits_trusted <- readonly_l2728[t3];
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.has_a_symbolic_displacement <- false;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_dynm_vat <- true;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    if result.c352 & 128 <> 0 then
+      result.literal_32_bits_value <- subject.il.l56;
+    else
+      result.literal_32_bits_value <- 0;
+    end;
+    result.pass_1_size <- subject.il.l36;
+    result.uses_the_base_register <- true;
+    if result.c352 & 128 <> 0 then
+      result.uses_the_displacement <- true;
+    else
+      result.uses_the_displacement <- false;
+    end;
+    if result.c352 & 128 <> 0 then
+      result.uses_the_index_register <- false;
+    else
+      result.uses_the_index_register <- true;
+    end;
+  end;
   pass_2 image 16#1CEDC6 begin
     temp t1: solution;
     temp t2: solution;
@@ -284,7 +941,31 @@ transform 56  address_mode <- var_name
 end;
 
 transform 57  ip_reg <- var_name
-  pass_1 image 16#161392;
+  pass_1 image 16#161392 begin
+    condition not (subject.il.w72 <> 5 or not (subject.il.l32 & 16#4000000 <> 0) or solution_kind_of_symbol(subject.il) <> 11);
+    cycle_guard already_ip_reg;
+    result.l352 <- isc_$get_il_live_range(subject.il);
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CEE92 begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -292,7 +973,29 @@ transform 57  ip_reg <- var_name
 end;
 
 transform 58  address_mode <- var_name
-  pass_1 image 16#1615EA;
+  pass_1 image 16#1615EA begin
+    temp t2: integer;
+    condition not (subject.il.w72 <> 5 or subject.il.l32 & 16#4000000 <> 0);
+    cycle_guard already_address_mode;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    t2 <- alignment_from_il_node(subject.il);
+    result.bits_trusted <- readonly_l2728[t2];
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CEEB8 begin
     result.base_register <- isc_user_routines_33c;
     result.index_register <- isc_user_routines_31c;
@@ -301,7 +1004,58 @@ transform 58  address_mode <- var_name
 end;
 
 transform 59  address_mode <- var_name
-  pass_1 image 16#1617CC;
+  pass_1 image 16#1617CC begin
+    temp t2: boolean;
+    temp t3: integer32;
+    condition (subject.il.w72 = 1 or subject.il.w72 = 4) and (subject.il.w42 & 1024 = 0 and (subject.il.l32 & 16#4000000 = 0));
+    cycle_guard already_address_mode;
+    t2 <- lir_$can_encode_as_immediate_operand(subject.il.l56, opc$loadl, 1);
+    result.c352 <- t2;
+    if t2 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand(subject.il.l56, opc$move, 1) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(4, 4)[result.c137];
+    result.memory_references <- bytes(0, 1)[result.c137];
+    result.delay <- bytes(0, 1)[result.c137];
+    result.bits_known <- 0;
+    if number_of_rightmost_zeroes(subject.il.l56) > 3 then
+      t3 <- 3;
+    else
+      t3 <- number_of_rightmost_zeroes(subject.il.l56);
+    end;
+    result.bits_trusted <- readonly_l2728[t3];
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.has_a_symbolic_displacement <- false;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    if result.c352 & 128 <> 0 then
+      result.literal_32_bits_value <- subject.il.l56;
+    else
+      result.literal_32_bits_value <- 0;
+    end;
+    result.uses_the_base_register <- true;
+    if result.c352 & 128 <> 0 then
+      result.uses_the_displacement <- true;
+    else
+      result.uses_the_displacement <- false;
+    end;
+    if result.c352 & 128 <> 0 then
+      result.uses_the_index_register <- false;
+    else
+      result.uses_the_index_register <- true;
+    end;
+  end;
   pass_2 image 16#1CEEE8 begin
     temp t1: solution;
     temp t2: solution;
@@ -329,7 +1083,31 @@ transform 59  address_mode <- var_name
 end;
 
 transform 60  ip_reg <- var_name
-  pass_1 image 16#161A92;
+  pass_1 image 16#161A92 begin
+    condition not (not (subject.il.w42 & 1024 <> 0) or lshft(rshft(subject.il.l56, 16), 16) ! rshft(rshft(subject.il.l56, 16), 16) <> 0);
+    cycle_guard already_ip_reg;
+    result.l352 <- lir_4090[subject.il.w58];
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CEFB4 begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -337,7 +1115,31 @@ transform 60  ip_reg <- var_name
 end;
 
 transform 61  fp_reg <- var_name
-  pass_1 image 16#161CE2;
+  pass_1 image 16#161CE2 begin
+    condition not (not (subject.il.w42 & 1024 <> 0) or lshft(rshft(subject.il.l56, 16), 16) ! rshft(rshft(subject.il.l56, 16), 16) <> 1 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    cycle_guard already_fp_reg;
+    result.l352 <- lir_3f90[subject.il.w58];
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CEFDA begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -345,7 +1147,36 @@ transform 61  fp_reg <- var_name
 end;
 
 transform 62  fp_reg_pair <- var_name
-  pass_1 image 16#161F4C;
+  pass_1 image 16#161F4C begin
+    condition not (not (subject.il.w42 & 1024 <> 0) or lshft(rshft(subject.il.l56, 16), 16) ! rshft(rshft(subject.il.l56, 16), 16) <> 2 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    cycle_guard already_fp_reg_pair;
+    result.l352 <- lir_3f90[subject.il.w58];
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CF000 begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);

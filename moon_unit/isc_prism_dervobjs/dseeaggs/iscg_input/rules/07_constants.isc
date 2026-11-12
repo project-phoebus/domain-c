@@ -9,28 +9,75 @@
 section 07 constants  image pass_1 a5 16#45A9B4, pass_2 a5 16#480070;
 
 transform 2  literal_32_bits <- binteger_ob | ubinteger_ob | blogical_ob | integer_ob | uinteger_ob | linteger_ob | ulinteger_ob | llogical_ob | slogical_ob | sinteger_ob | usinteger_ob
-  pass_1 image 16#11D42C;
+  pass_1 image 16#11D42C begin
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- subject.il.l8;
+    result.bits_trusted <- -1;
+    result.literal_32_bits_value <- subject.il.l8;
+  end;
   pass_2 image 16#1AA44C begin
     result.object_with_name <- self.il;
   end;
 end;
 
 transform 3  literal_32_bits <- char_ob
-  pass_1 image 16#11D530;
+  pass_1 image 16#11D530 begin
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- subject.il.l8;
+    result.bits_trusted <- -1;
+    result.literal_32_bits_value <- subject.il.l8;
+  end;
   pass_2 image 16#1AA46C begin
     result.object_with_name <- self.il;
   end;
 end;
 
 transform 4  literal_32_bits <- char_string_ob
-  pass_1 image 16#11D634;
+  pass_1 image 16#11D634 begin
+    temp t2: integer32;
+    condition (subject.il.w16 = 4 and (subject.inherited_attributes.fetch_precision = 32) or subject.il.w16 = 1 and (subject.inherited_attributes.fetch_precision = 8) or subject.il.w16 = 2 and (subject.inherited_attributes.fetch_precision = 16)) and not subject.inherited_attributes.immediate_parent_wants_lvalue;
+    t2 <- integer32_from_char_string_ob(subject.il);
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- t2;
+    result.bits_trusted <- -1;
+    result.literal_32_bits_value <- t2;
+  end;
   pass_2 image 16#1AA48C begin
     result.object_with_name <- self.il;
   end;
 end;
 
 transform 5  address_mode <- char_string_ob
-  pass_1 image 16#11D788;
+  pass_1 image 16#11D788 begin
+    temp t2: integer;
+    cycle_guard already_address_mode;
+    if subject.il.w16 u>= 4 then
+      t2 <- subject.il.w16;
+    else
+      t2 <- 4;
+    end;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- pc_relative_literal_size_to_bits_trusted(t2);
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.bytes <- t2;
+    result.has_a_symbolic_displacement <- true;
+    result.literal_32_bits_value <- 0;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1AA4AC begin
     result.base_register <- isc_user_routines_330;
     result.index_register <- isc_user_routines_31c;
@@ -39,7 +86,25 @@ transform 5  address_mode <- char_string_ob
 end;
 
 transform 6  address_mode <- complex_ob
-  pass_1 image 16#11D934;
+  pass_1 image 16#11D934 begin
+    cycle_guard already_address_mode;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- pc_relative_literal_size_to_bits_trusted(8);
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.bytes <- 8;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_complex <- true;
+    result.literal_32_bits_value <- 0;
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1AA4F0 begin
     result.base_register <- isc_user_routines_330;
     result.index_register <- isc_user_routines_31c;
@@ -48,7 +113,25 @@ transform 6  address_mode <- complex_ob
 end;
 
 transform 7  address_mode <- dpcomplex_ob
-  pass_1 image 16#11DA94;
+  pass_1 image 16#11DA94 begin
+    cycle_guard already_address_mode;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- pc_relative_literal_size_to_bits_trusted(16);
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.bytes <- 16;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_complex <- true;
+    result.literal_32_bits_value <- 0;
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1AA520 begin
     result.base_register <- isc_user_routines_330;
     result.index_register <- isc_user_routines_31c;
@@ -57,28 +140,56 @@ transform 7  address_mode <- dpcomplex_ob
 end;
 
 transform 8  literal_32_bits <- dpreal_ob
-  pass_1 image 16#11DBF4;
+  pass_1 image 16#11DBF4 begin
+    condition subject.inherited_attributes.fetch_precision = 32;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- subject.il.l12;
+    result.bits_trusted <- -1;
+    result.literal_32_bits_value <- subject.il.l12;
+    result.literal_derived_from_floating_constant <- true;
+  end;
   pass_2 image 16#1AA550 begin
     result.object_with_name <- self.il;
   end;
 end;
 
 transform 9  literal_64_bits <- dpreal_ob
-  pass_1 image 16#11DD08;
+  { not lifted: no heading for fpp_$ }
+  pass_1 image 16#11DD08 residue;
   pass_2 image 16#1AA570 begin
     result.object_with_name <- self.il;
   end;
 end;
 
 transform 10  literal_32_bits <- real_ob
-  pass_1 image 16#11DE24;
+  { not lifted: no heading for fpp_$ }
+  pass_1 image 16#11DE24 residue;
   pass_2 image 16#1AA590 begin
     result.object_with_name <- self.il;
   end;
 end;
 
 transform 11  address_mode <- namelist_constant_ob | set_con_ob
-  pass_1 image 16#11DF4E;
+  pass_1 image 16#11DF4E begin
+    cycle_guard already_address_mode;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- pc_relative_literal_size_to_bits_trusted(subject.il.w16);
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_set_temporary <- false;
+    result.literal_32_bits_value <- 0;
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1AA5B0 begin
     result.base_register <- isc_user_routines_330;
     result.index_register <- isc_user_routines_31c;
@@ -87,7 +198,59 @@ transform 11  address_mode <- namelist_constant_ob | set_con_ob
 end;
 
 transform 12  address_mode <- set_con_ob
-  pass_1 image 16#11E0C0;
+  pass_1 image 16#11E0C0 begin
+    temp t2: pointer;
+    temp t3: pointer;
+    temp t4: solution;
+    condition not (not subject.inherited_attributes.immediate_parent_wants_set_temporary or not is_all_zeroes(subject.il));
+    cycle_guard already_address_mode;
+    result.l360 <- rshft(subject.il.w16 + 3, 2) * 4;
+    t2 <- make_expression_temporary(122, rshft(subject.il.w16 + 3, 2) * 4 * 8);
+    side_effect_set_var_$address_exposed(t2);
+    t3 <- t2;
+    result.l356 <- t3;
+    t4 <- address_mode_for_expression_temporary(t3, result.l360 * 8, 0, 3);
+    result.l352 <- t4;
+    if not lir_$can_encode_as_immediate_operand(t4.literal_32_bits_value + result.l360 - 1, opc$loadl, 1) and not result.l352.has_a_symbolic_displacement or result.l352.uses_the_index_register then
+      result.c136 <- 2;
+      if result.l352.uses_the_base_register then
+        result.c137 <- 1;
+        if result.l352.literal_32_bits_value <> 0 or result.l352.uses_the_index_register or result.l352.has_a_symbolic_displacement then
+          result.c138 <- 2;
+        else
+          result.c138 <- 1;
+        end;
+      else
+        result.c137 <- 2;
+        if lir_$can_encode_as_immediate_operand(result.l352.literal_32_bits_value, opc$move, 1) then
+          result.c139 <- 1;
+        else
+          result.c139 <- 2;
+        end;
+      end;
+    else
+      result.c136 <- 1;
+    end;
+    if not result.l352.uses_the_displacement then
+      result.c140 <- 1;
+    else
+      result.c140 <- 2;
+    end;
+    result.code_bytes <- result.l360 div 4 * 4 + words(0, 4)[result.c138] + words(4, 4)[result.c139];
+    result.memory_references <- result.l360 div 4 + bytes(0, 1)[result.c139];
+    result.delay <- bytes(0, 1)[result.c139];
+    result.bits_known <- 0;
+    result.bits_trusted <- 3;
+    result.has_a_symbolic_displacement <- true;
+    result.literal_32_bits_value <- 0;
+    result.il <- result.l356;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_set_temporary <- true;
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1AA5E0 begin
     temp t1: solution;
     temp t2: solution;

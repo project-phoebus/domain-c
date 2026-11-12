@@ -9,14 +9,43 @@
 section 08 cses  image pass_1 a5 16#45AA34, pass_2 a5 16#480074;
 
 transform 87  literal_32_bits <- cse_parent_ob
-  pass_1 image 16#11E3A8;
+  pass_1 image 16#11E3A8 begin
+    condition solution_kind_of_cse(subject.il) = 14;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- pass_1_cse_parent_bits_known(subject.il);
+    result.bits_trusted <- pass_1_cse_parent_bits_trusted(subject.il);
+    result.literal_32_bits_value <- pass_1_cse_parent_lit_value(subject.il);
+  end;
   pass_2 image 16#1AA794 begin
     result.object_with_name <- pass_2_cse_parent_obj_w_name(self.il);
   end;
 end;
 
 transform 88  address_mode <- cse_parent_ob
-  pass_1 image 16#11E4DA;
+  pass_1 image 16#11E4DA begin
+    condition solution_kind_of_cse(subject.il) = 5;
+    cycle_guard already_address_mode;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- pass_1_cse_parent_bits_known(subject.il);
+    result.bits_trusted <- pass_1_cse_parent_bits_trusted(subject.il);
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.code_bytes <- pass_1_cse_parent_code_bytes(subject.il);
+    result.delay <- pass_1_cse_parent_delay(subject.il);
+    result.embedded_strength_reduction_temporary <- pass_1_cse_parent_embedded_sr_temp(subject.il);
+    result.has_a_symbolic_displacement <- pass_1_cse_parent_has_sym_disp(subject.il);
+    result.ip_reg_max <- pass_1_cse_parent_ip_reg_max(subject.il);
+    result.ip_reg_result <- pass_1_cse_parent_ip_reg_result(subject.il);
+    result.literal_32_bits_value <- pass_1_cse_parent_disp(subject.il);
+    result.memory_references <- pass_1_cse_parent_memory_refs(subject.il);
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- pass_1_cse_parent_uses_disp(subject.il);
+    result.uses_the_index_register <- pass_1_cse_parent_uses_index_reg(subject.il);
+  end;
   pass_2 image 16#1AA7C8 begin
     pass_2_cse_parent_ob(self.il, subject.inherited_attributes.stmt_number);
     result.base_register <- pass_2_cse_parent_base_reg(self.il);
@@ -26,7 +55,28 @@ transform 88  address_mode <- cse_parent_ob
 end;
 
 transform 89  ip_reg <- cse_parent_ob
-  pass_1 image 16#11E75C;
+  pass_1 image 16#11E75C begin
+    temp t1: integer32;
+    t1 <- precision_from_il_node(subject.il.l4);
+    condition not (subject.inherited_attributes.fetch_precision > 32 or t1 <> subject.inherited_attributes.fetch_precision or solution_kind_of_cse(subject.il) <> 11);
+    cycle_guard already_ip_reg;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- pass_1_cse_parent_bits_known(subject.il);
+    result.bits_trusted <- pass_1_cse_parent_bits_trusted(subject.il);
+    result.code_bytes <- pass_1_cse_parent_code_bytes(subject.il);
+    result.delay <- pass_1_cse_parent_delay(subject.il);
+    result.embedded_strength_reduction_temporary <- pass_1_cse_parent_embedded_sr_temp(subject.il);
+    result.ip_reg_max <- pass_1_cse_parent_ip_reg_max(subject.il);
+    result.ip_reg_result <- pass_1_cse_parent_ip_reg_result(subject.il);
+    result.fp_reg_max <- pass_1_cse_parent_fp_reg_max(subject.il);
+    result.fp_reg_result <- pass_1_cse_parent_fp_reg_result(subject.il);
+    result.fp_reg_pair_max <- pass_1_cse_parent_fp_reg_pair_max(subject.il);
+    result.fp_reg_pair_result <- pass_1_cse_parent_fp_reg_pair_result(subject.il);
+    result.is_destroyable <- false;
+    result.memory_references <- pass_1_cse_parent_memory_refs(subject.il);
+  end;
   pass_2 image 16#1AA82E begin
     pass_2_cse_parent_ob(self.il, subject.inherited_attributes.stmt_number);
     result.live_range <- isc_$get_il_live_range(self.il);
@@ -35,7 +85,33 @@ transform 89  ip_reg <- cse_parent_ob
 end;
 
 transform 90  ip_reg_field <- cse_parent_ob
-  pass_1 image 16#11E992;
+  pass_1 image 16#11E992 begin
+    temp t1: integer32;
+    temp t3: integer32;
+    t1 <- precision_from_il_node(subject.il.l4);
+    condition not (subject.inherited_attributes.fetch_precision <= 0 or subject.inherited_attributes.fetch_precision > 32 or (t1 <= subject.inherited_attributes.fetch_precision or solution_kind_of_cse(subject.il) <> 11));
+    cycle_guard already_ip_reg_field;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    t3 <- precision_from_il_node(subject.il.l4);
+    result.bit_position_of_lsb <- t3 - subject.inherited_attributes.fetch_precision;
+    result.bits_known <- pass_1_cse_parent_bits_known(subject.il);
+    result.bits_trusted <- pass_1_cse_parent_bits_trusted(subject.il);
+    result.code_bytes <- pass_1_cse_parent_code_bytes(subject.il);
+    result.delay <- pass_1_cse_parent_delay(subject.il);
+    result.embedded_strength_reduction_temporary <- pass_1_cse_parent_embedded_sr_temp(subject.il);
+    result.field_precision <- subject.inherited_attributes.fetch_precision;
+    result.field_requires_sign_extend <- false;
+    result.ip_reg_max <- pass_1_cse_parent_ip_reg_max(subject.il);
+    result.ip_reg_result <- pass_1_cse_parent_ip_reg_result(subject.il);
+    result.fp_reg_max <- pass_1_cse_parent_fp_reg_max(subject.il);
+    result.fp_reg_result <- pass_1_cse_parent_fp_reg_result(subject.il);
+    result.fp_reg_pair_max <- pass_1_cse_parent_fp_reg_pair_max(subject.il);
+    result.fp_reg_pair_result <- pass_1_cse_parent_fp_reg_pair_result(subject.il);
+    result.is_destroyable <- false;
+    result.memory_references <- pass_1_cse_parent_memory_refs(subject.il);
+  end;
   pass_2 image 16#1AA884 begin
     pass_2_cse_parent_ob(self.il, subject.inherited_attributes.stmt_number);
     result.live_range <- isc_$get_il_live_range(self.il);
@@ -44,7 +120,26 @@ transform 90  ip_reg_field <- cse_parent_ob
 end;
 
 transform 91  fp_reg <- cse_parent_ob
-  pass_1 image 16#11EBFA;
+  pass_1 image 16#11EBFA begin
+    condition solution_kind_of_cse(subject.il) = 8;
+    cycle_guard already_fp_reg;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- pass_1_cse_parent_bits_known(subject.il);
+    result.bits_trusted <- pass_1_cse_parent_bits_trusted(subject.il);
+    result.code_bytes <- pass_1_cse_parent_code_bytes(subject.il);
+    result.delay <- pass_1_cse_parent_delay(subject.il);
+    result.embedded_strength_reduction_temporary <- pass_1_cse_parent_embedded_sr_temp(subject.il);
+    result.ip_reg_max <- pass_1_cse_parent_ip_reg_max(subject.il);
+    result.ip_reg_result <- pass_1_cse_parent_ip_reg_result(subject.il);
+    result.fp_reg_max <- pass_1_cse_parent_fp_reg_max(subject.il);
+    result.fp_reg_result <- pass_1_cse_parent_fp_reg_result(subject.il);
+    result.fp_reg_pair_max <- pass_1_cse_parent_fp_reg_pair_max(subject.il);
+    result.fp_reg_pair_result <- pass_1_cse_parent_fp_reg_pair_result(subject.il);
+    result.is_destroyable <- false;
+    result.memory_references <- pass_1_cse_parent_memory_refs(subject.il);
+  end;
   pass_2 image 16#1AA8DA begin
     pass_2_cse_parent_ob(self.il, subject.inherited_attributes.stmt_number);
     result.live_range <- isc_$get_il_live_range(self.il);
@@ -53,7 +148,31 @@ transform 91  fp_reg <- cse_parent_ob
 end;
 
 transform 92  fp_reg_pair <- cse_parent_ob
-  pass_1 image 16#11EE0C;
+  pass_1 image 16#11EE0C begin
+    condition solution_kind_of_cse(subject.il) = 9;
+    cycle_guard already_fp_reg_pair;
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- pass_1_cse_parent_bits_known(subject.il);
+    result.bits_trusted <- pass_1_cse_parent_bits_trusted(subject.il);
+    result.code_bytes <- pass_1_cse_parent_code_bytes(subject.il);
+    result.delay <- pass_1_cse_parent_delay(subject.il);
+    result.embedded_strength_reduction_temporary <- pass_1_cse_parent_embedded_sr_temp(subject.il);
+    result.ip_reg_max <- pass_1_cse_parent_ip_reg_max(subject.il);
+    result.ip_reg_result <- pass_1_cse_parent_ip_reg_result(subject.il);
+    result.fp_reg_max <- pass_1_cse_parent_fp_reg_max(subject.il);
+    result.fp_reg_result <- pass_1_cse_parent_fp_reg_result(subject.il);
+    result.fp_reg_pair_max <- pass_1_cse_parent_fp_reg_pair_max(subject.il);
+    result.fp_reg_pair_result <- pass_1_cse_parent_fp_reg_pair_result(subject.il);
+    result.is_destroyable <- false;
+    result.memory_references <- pass_1_cse_parent_memory_refs(subject.il);
+  end;
   pass_2 image 16#1AA930 begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -66,7 +185,33 @@ transform 92  fp_reg_pair <- cse_parent_ob
 end;
 
 transform 93  fp_reg_quad <- cse_parent_ob
-  pass_1 image 16#11F034;
+  pass_1 image 16#11F034 begin
+    condition solution_kind_of_cse(subject.il) = 10;
+    cycle_guard already_fp_reg_quad;
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- pass_1_cse_parent_bits_known(subject.il);
+    result.bits_trusted <- pass_1_cse_parent_bits_trusted(subject.il);
+    result.code_bytes <- pass_1_cse_parent_code_bytes(subject.il);
+    result.delay <- pass_1_cse_parent_delay(subject.il);
+    result.embedded_strength_reduction_temporary <- pass_1_cse_parent_embedded_sr_temp(subject.il);
+    result.ip_reg_max <- pass_1_cse_parent_ip_reg_max(subject.il);
+    result.ip_reg_result <- pass_1_cse_parent_ip_reg_result(subject.il);
+    result.fp_reg_max <- pass_1_cse_parent_fp_reg_max(subject.il);
+    result.fp_reg_result <- pass_1_cse_parent_fp_reg_result(subject.il);
+    result.fp_reg_pair_max <- pass_1_cse_parent_fp_reg_pair_max(subject.il);
+    result.fp_reg_pair_result <- pass_1_cse_parent_fp_reg_pair_result(subject.il);
+    result.fp_reg_quad_max <- pass_1_cse_parent_fp_reg_quad_max(subject.il);
+    result.fp_reg_quad_result <- pass_1_cse_parent_fp_reg_quad_result(subject.il);
+    result.is_destroyable <- false;
+    result.memory_references <- pass_1_cse_parent_memory_refs(subject.il);
+  end;
   pass_2 image 16#1AA9B8 begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -79,14 +224,44 @@ transform 93  fp_reg_quad <- cse_parent_ob
 end;
 
 transform 94  literal_32_bits <- cse_use_ob
-  pass_1 image 16#11F27C;
+  pass_1 image 16#11F27C begin
+    condition solution_kind_of_cse(subject.il) = 14;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- pass_1_cse_use_bits_known(subject.il);
+    result.bits_trusted <- pass_1_cse_use_bits_trusted(subject.il);
+    result.literal_32_bits_value <- pass_1_cse_use_lit_value(subject.il);
+  end;
   pass_2 image 16#1AAA40 begin
     result.object_with_name <- pass_2_cse_use_obj_w_name(self.il);
   end;
 end;
 
 transform 95  address_mode <- cse_use_ob
-  pass_1 image 16#11F3AE;
+  pass_1 image 16#11F3AE begin
+    condition solution_kind_of_cse(subject.il) = 5;
+    cycle_guard already_address_mode;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- pass_1_cse_use_bits_known(subject.il);
+    result.bits_trusted <- pass_1_cse_use_bits_trusted(subject.il);
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.code_bytes <- pass_1_cse_use_code_bytes(subject.il);
+    result.delay <- pass_1_cse_use_delay(subject.il);
+    result.embedded_strength_reduction_temporary <- pass_1_cse_use_embedded_sr_temp(subject.il);
+    result.has_a_symbolic_displacement <- pass_1_cse_use_has_sym_disp(subject.il);
+    result.ip_reg_max <- pass_1_cse_use_ip_reg_max(subject.il);
+    result.ip_reg_result <- pass_1_cse_use_ip_reg_result(subject.il);
+    result.is_volatile <- subject.il.l4 & 16#10000 <> 0;
+    result.literal_32_bits_value <- pass_1_cse_use_disp(subject.il);
+    result.memory_references <- pass_1_cse_use_memory_refs(subject.il);
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- pass_1_cse_use_uses_disp(subject.il);
+    result.uses_the_index_register <- pass_1_cse_use_uses_index_reg(subject.il);
+  end;
   pass_2 image 16#1AAA74 begin
     pass_2_cse_use_ob(self.il, subject.inherited_attributes.stmt_number);
     result.base_register <- pass_2_cse_use_base_reg(self.il);
@@ -96,7 +271,28 @@ transform 95  address_mode <- cse_use_ob
 end;
 
 transform 96  ip_reg <- cse_use_ob
-  pass_1 image 16#11F612;
+  pass_1 image 16#11F612 begin
+    temp t1: integer32;
+    t1 <- precision_from_il_node(subject.il.l20);
+    condition not (subject.inherited_attributes.fetch_precision > 32 or t1 <> subject.inherited_attributes.fetch_precision or solution_kind_of_cse(subject.il) <> 11);
+    cycle_guard already_ip_reg;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- pass_1_cse_use_bits_known(subject.il);
+    result.bits_trusted <- pass_1_cse_use_bits_trusted(subject.il);
+    result.code_bytes <- pass_1_cse_use_code_bytes(subject.il);
+    result.delay <- pass_1_cse_use_delay(subject.il);
+    result.embedded_strength_reduction_temporary <- pass_1_cse_use_embedded_sr_temp(subject.il);
+    result.ip_reg_max <- pass_1_cse_use_ip_reg_max(subject.il);
+    result.ip_reg_result <- pass_1_cse_use_ip_reg_result(subject.il);
+    result.fp_reg_max <- pass_1_cse_use_fp_reg_max(subject.il);
+    result.fp_reg_result <- pass_1_cse_use_fp_reg_result(subject.il);
+    result.fp_reg_pair_max <- pass_1_cse_use_fp_reg_pair_max(subject.il);
+    result.fp_reg_pair_result <- pass_1_cse_use_fp_reg_pair_result(subject.il);
+    result.is_destroyable <- false;
+    result.memory_references <- pass_1_cse_use_memory_refs(subject.il);
+  end;
   pass_2 image 16#1AAADA begin
     pass_2_cse_use_ob(self.il, subject.inherited_attributes.stmt_number);
     result.live_range <- isc_$get_il_live_range(self.il);
@@ -105,7 +301,33 @@ transform 96  ip_reg <- cse_use_ob
 end;
 
 transform 97  ip_reg_field <- cse_use_ob
-  pass_1 image 16#11F848;
+  pass_1 image 16#11F848 begin
+    temp t1: integer32;
+    temp t3: integer32;
+    t1 <- precision_from_il_node(subject.il.l20);
+    condition not (subject.inherited_attributes.fetch_precision <= 0 or subject.inherited_attributes.fetch_precision > 32 or (t1 <= subject.inherited_attributes.fetch_precision or solution_kind_of_cse(subject.il) <> 11));
+    cycle_guard already_ip_reg_field;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    t3 <- precision_from_il_node(subject.il.l20);
+    result.bit_position_of_lsb <- t3 - subject.inherited_attributes.fetch_precision;
+    result.bits_known <- pass_1_cse_use_bits_known(subject.il);
+    result.bits_trusted <- pass_1_cse_use_bits_trusted(subject.il);
+    result.code_bytes <- pass_1_cse_use_code_bytes(subject.il);
+    result.delay <- pass_1_cse_use_delay(subject.il);
+    result.embedded_strength_reduction_temporary <- pass_1_cse_use_embedded_sr_temp(subject.il);
+    result.field_precision <- subject.inherited_attributes.fetch_precision;
+    result.field_requires_sign_extend <- false;
+    result.ip_reg_max <- pass_1_cse_use_ip_reg_max(subject.il);
+    result.ip_reg_result <- pass_1_cse_use_ip_reg_result(subject.il);
+    result.fp_reg_max <- pass_1_cse_use_fp_reg_max(subject.il);
+    result.fp_reg_result <- pass_1_cse_use_fp_reg_result(subject.il);
+    result.fp_reg_pair_max <- pass_1_cse_use_fp_reg_pair_max(subject.il);
+    result.fp_reg_pair_result <- pass_1_cse_use_fp_reg_pair_result(subject.il);
+    result.is_destroyable <- false;
+    result.memory_references <- pass_1_cse_use_memory_refs(subject.il);
+  end;
   pass_2 image 16#1AAB30 begin
     pass_2_cse_use_ob(self.il, subject.inherited_attributes.stmt_number);
     result.live_range <- isc_$get_il_live_range(self.il);
@@ -114,7 +336,26 @@ transform 97  ip_reg_field <- cse_use_ob
 end;
 
 transform 98  fp_reg <- cse_use_ob
-  pass_1 image 16#11FAB0;
+  pass_1 image 16#11FAB0 begin
+    condition solution_kind_of_cse(subject.il) = 8;
+    cycle_guard already_fp_reg;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- pass_1_cse_use_bits_known(subject.il);
+    result.bits_trusted <- pass_1_cse_use_bits_trusted(subject.il);
+    result.code_bytes <- pass_1_cse_use_code_bytes(subject.il);
+    result.delay <- pass_1_cse_use_delay(subject.il);
+    result.embedded_strength_reduction_temporary <- pass_1_cse_use_embedded_sr_temp(subject.il);
+    result.ip_reg_max <- pass_1_cse_use_ip_reg_max(subject.il);
+    result.ip_reg_result <- pass_1_cse_use_ip_reg_result(subject.il);
+    result.fp_reg_max <- pass_1_cse_use_fp_reg_max(subject.il);
+    result.fp_reg_result <- pass_1_cse_use_fp_reg_result(subject.il);
+    result.fp_reg_pair_max <- pass_1_cse_use_fp_reg_pair_max(subject.il);
+    result.fp_reg_pair_result <- pass_1_cse_use_fp_reg_pair_result(subject.il);
+    result.is_destroyable <- false;
+    result.memory_references <- pass_1_cse_use_memory_refs(subject.il);
+  end;
   pass_2 image 16#1AAB86 begin
     pass_2_cse_use_ob(self.il, subject.inherited_attributes.stmt_number);
     result.live_range <- isc_$get_il_live_range(self.il);
@@ -123,7 +364,31 @@ transform 98  fp_reg <- cse_use_ob
 end;
 
 transform 99  fp_reg_pair <- cse_use_ob
-  pass_1 image 16#11FCC2;
+  pass_1 image 16#11FCC2 begin
+    condition solution_kind_of_cse(subject.il) = 9;
+    cycle_guard already_fp_reg_pair;
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- pass_1_cse_use_bits_known(subject.il);
+    result.bits_trusted <- pass_1_cse_use_bits_trusted(subject.il);
+    result.code_bytes <- pass_1_cse_use_code_bytes(subject.il);
+    result.delay <- pass_1_cse_use_delay(subject.il);
+    result.embedded_strength_reduction_temporary <- pass_1_cse_use_embedded_sr_temp(subject.il);
+    result.ip_reg_max <- pass_1_cse_use_ip_reg_max(subject.il);
+    result.ip_reg_result <- pass_1_cse_use_ip_reg_result(subject.il);
+    result.fp_reg_max <- pass_1_cse_use_fp_reg_max(subject.il);
+    result.fp_reg_result <- pass_1_cse_use_fp_reg_result(subject.il);
+    result.fp_reg_pair_max <- pass_1_cse_use_fp_reg_pair_max(subject.il);
+    result.fp_reg_pair_result <- pass_1_cse_use_fp_reg_pair_result(subject.il);
+    result.is_destroyable <- false;
+    result.memory_references <- pass_1_cse_use_memory_refs(subject.il);
+  end;
   pass_2 image 16#1AABDC begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -136,7 +401,33 @@ transform 99  fp_reg_pair <- cse_use_ob
 end;
 
 transform 100  fp_reg_quad <- cse_use_ob
-  pass_1 image 16#11FEEA;
+  pass_1 image 16#11FEEA begin
+    condition solution_kind_of_cse(subject.il) = 10;
+    cycle_guard already_fp_reg_quad;
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- pass_1_cse_use_bits_known(subject.il);
+    result.bits_trusted <- pass_1_cse_use_bits_trusted(subject.il);
+    result.code_bytes <- pass_1_cse_use_code_bytes(subject.il);
+    result.delay <- pass_1_cse_use_delay(subject.il);
+    result.embedded_strength_reduction_temporary <- pass_1_cse_use_embedded_sr_temp(subject.il);
+    result.ip_reg_max <- pass_1_cse_use_ip_reg_max(subject.il);
+    result.ip_reg_result <- pass_1_cse_use_ip_reg_result(subject.il);
+    result.fp_reg_max <- pass_1_cse_use_fp_reg_max(subject.il);
+    result.fp_reg_result <- pass_1_cse_use_fp_reg_result(subject.il);
+    result.fp_reg_pair_max <- pass_1_cse_use_fp_reg_pair_max(subject.il);
+    result.fp_reg_pair_result <- pass_1_cse_use_fp_reg_pair_result(subject.il);
+    result.fp_reg_quad_max <- pass_1_cse_use_fp_reg_quad_max(subject.il);
+    result.fp_reg_quad_result <- pass_1_cse_use_fp_reg_quad_result(subject.il);
+    result.is_destroyable <- false;
+    result.memory_references <- pass_1_cse_use_memory_refs(subject.il);
+  end;
   pass_2 image 16#1AAC64 begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);

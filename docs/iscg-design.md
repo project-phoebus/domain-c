@@ -777,7 +777,7 @@ modules, isc_pass_1_main's operator routines.
 ### 10.4 What remains
 
 1. **The action bodies**: pass 2 done (10.6, translator GC); pass 1
-   remains.  The decompiler from the
+   done but 5 actions (10.7, translator GE).  The decompiler from the
    pass-1 and pass-2 actions to the statement language (section 4),
    macros for the templates of 2.5, the cost tables of 2.6, and the
    generator's emission of the 50 modules.  The action headings are
@@ -790,8 +790,8 @@ modules, isc_pass_1_main's operator routines.
    placeholders become the statement lists; the image addresses move to
    the manifest only.
 2. **The action modules' gate** (question 268): done (10.6) for the
-   pass-2 modules and the named units before anonymous code; the pass-1
-   modules need their `module' lines in the manifest.  `tools/cc_isc_check.py`
+   pass-2 modules and the named units before anonymous code, and (10.7)
+   for the pass-1 modules (every section's `module' line).  `tools/cc_isc_check.py`
    driven by iscg_names.txt (extended with each module's file, A5 and
    code range: the section clauses have the A5s), reusing coff_compare's
    compile_program/compare_object with `starts` augmented by the
@@ -1038,3 +1038,116 @@ not used: the bodies are written out.  The pass-1 modules' data still go
 to cc_datacheck_known.txt's isc_pass_1_main entry; their `module' lines
 in the manifest would let cc_isc_check own them.  Questions 410 .. 415,
 patterns 177 .. 338.
+
+### 10.7 The pass-1 actions (translator GE, 2026-11-12)
+
+558 of the 563 pass-1 actions are in the rule file as clauses in the
+statement language: 556 lifted from the image, 2 written by hand (rules
+399 and 402); 5 are residue.  21 of the 25 modules
+`isc_pass_1_<nn>_<topic>.pas` are generated and compile with errors=0
+under cc_isc_check, their data (the cost tables) equal to the image's.
+
+**The tools** (new files; hooks of a few lines in iscg_gen.py's Rules.parse,
+names() and all(), and iscg_extract.py's extract() and write_rules()):
+
+- `tools/iscg_p1lift.py [RULE ...] | --stats [--section N] | --raw RULE`:
+  the decompiler.  It subclasses iscg_p2lift's Lifter (the same symbolic
+  execution, ifs at post-dominators, temps), adding the pass-1 heading
+  (subject, il, inh; the var pointers work and result), the trace as
+  one statement (write + writeln to pas_$output at A5-4), the cost tables
+  (module data at A5 + offset, or an absolute base above 32 KB, indexed
+  by a choice byte), Rev 8.89's boolean forms (s<cc> into bytes, not.b,
+  and.b, or.b and a test of bit 7; a boolean function's value moved into
+  a packed field by lsr.b #7 / lsl.b / or.b into a cleared bit, bit 7 by
+  andi.b #-128; booleans of two bytes set or cleared by one word or/and),
+  adjacent fields cleared or copied by one longword move (split into
+  their fields), block copies through two postincrement registers,
+  constants copied from the code (lea pc), the low byte or word of a
+  longer field, a node byte sign-extended, the high/low word by swap and
+  clr.w, abs, the run time's 32-bit arithmetic (m$mis$lll, m$ois$lll,
+  m$ois$wlw, m$dis$lll ... written as *, mod, div; they leave D1 alone),
+  lir_4090, isc_readonly_tables' byte and longword tables, il_180 and
+  two cargs_$options flags.  **Short-circuit conditions**: from a
+  conditional branch the lifter collects the blocks that only compute a
+  condition (loads, compares, tests, set bytes, frame temporaries and
+  function calls whose arguments they push) and reduces their graph to
+  one condition with and/or (four rules: x or y, x or not y, x and y, x
+  and not y, while a block has one way in); each exit gets the registers
+  every way into it agrees on.  Without this the p2 lifter duplicates the
+  then-part into every or-arm.  The join of an if/else also merges
+  frame temporaries (a value set on both arms: p2's branch kept the
+  then-arm's) and gives a phi of a boolean and a register's dead value
+  the boolean.  **The skeleton** is then matched on the statements:
+  `result := nil; work := nil', nested ifs (the conditions) with temps'
+  assignments between them, the trace, the cycle guard and its trace,
+  new_solution(isc_heap, the rule's kind, 0, inh, il, 0) (temps Rev 8.89
+  computes before its first stores move to the body), which_transform,
+  before_transform, the seven already_ copies, the flag, `work := s;
+  result := s'; for a proper_subtree rule `result := subject'.  What
+  does not match is residue.
+- `tools/iscg_p1lang.py`: the clause (its docstring is the grammar):
+  `pass_1 image A [rewrite] [hand [dropped]] begin ... end;' with
+  `condition e;' (one per nesting level), `cycle_guard already_X;',
+  `cycle_mark already_X;' (11 chain rules set the flag without the
+  test), the macros `copy f, g from P [to S];' and `sum f, g of P, Q [to
+  S];', `trace 'text';', and inline cost tables `bytes(v1, ..)[e]',
+  `words(..)[e]' (entry k = vk, 0 and the rest zero; `bytes@k(...)'
+  places a table where the image's layout is not the reverse of the
+  clause: 8 rules); the Emitter (result is the local `solution', subject
+  the var record, `subject' alone its address, the rule's own longwords
+  that hold numbers through a view p1_int_fields_t, a boolean kept in a
+  rule's byte as 255 * ord(b), and/or operands parenthesized for Pascal's
+  precedence).
+- `tools/iscg_p1gen.py`: the clauses in the rule file (extract_bodies,
+  hand_clauses kept by the extractor), the modules and the manifest's
+  `module' lines (all 25: their A5s bound the data blocks before them).
+
+**The cost tables** (2.6, decoded): every table is `array [0..16]' of
+bytes (memory_references, delay) or words (code_bytes), indexed by an
+alternative's choice byte; entry 0 is always 0, no entry past 11 is
+non-zero; each is read exactly once in the image, so the clause writes
+it inline where it is used.  A rule's tables lie in the reverse of their
+order in the code (the generator built them by pushing), rules in rule
+order, each table on 8 bytes (17 bytes take 24, 17 words 40; pattern
+188).  The modules declare them as p1_byte_costs_t (packed array
+[0..23]) and p1_word_costs_t (array [0..19]) with 17 initial values,
+the module's last table unpadded (its block ends 4 bytes before the next
+module's A5: the next pas_$output), which dpc lays out as the image
+does (dpc gap 47).  4,049 tables in the 21 generated modules (6,020 in
+the clauses): no data difference but module 02's past 32 KB, where Rev
+8.89 allocated otherwise (pattern 189, questions 297: a
+cc_datacheck_known.txt entry).
+
+**Coverage**: 556 lifted, 2 hand (399, 402: `dropped': Rev 8.89 kept only
+the condition's first test; the generator writes the test with an empty
+arm), 5 residue: rules 9, 10 (a double compared with zero through the
+FPP emulation, fpp_$ with inline operands: dpc gap 7's ground), 20 (a
+longword of target_properties +0x9C, inside its unnamed p_94), 211 (the
+signed-division idiom on a value joined from two arms after a call), 177
+(btst by a register).  Sections 07, 12, 23 and 24 are therefore not
+generated.  In the lifted clauses: 472 conditions, 304 statements
+between them, 372 cycle guards, 13 rewrites, 13,599 assignments, 161
+copy (5,247 fields) and 218 sum (575 fields) macros, 3,995 ifs, 1,291
+temps.
+
+**The modules**: the generator writes the skeleton around each clause
+(the trace as `write(...); writeln;', gap 4's rewrite line per module in
+cc_gap_rewrites.txt), the views the bodies need (p2's node, flags and
+locals views; p1_already_t for the guard's flags at +342..+348,
+p1_int_fields_t, p1_snode_t, p1_readonly_t), the tables, one routine
+per rule.  Similarity (cc.a88k, non-identical routines): 0.34 (21) ..
+0.51 (08), 0.53 .. 0.75 modulo registers.  Gap 25 (dpc runs out of
+registers; the check compiles them empty): 02's 153, 157, 158, 169, 170;
+09's 445, 450, 474; 10's 423; 14's 384; 25's 120, 121.  tools/cc_typecheck.sh
+reports only gap 4's message.
+
+**Tested**: the extraction gives the same rule file under any
+PYTHONHASHSEED (no set iterated for output); iscg_gen.py --check passes.
+
+**What remains**: the 5 residue actions (sections 07, 12, 23, 24); names
+(the tables', the temps', questions 266, 286); the cc_datacheck_known.txt
+entry for isc_pass_1_main's span is gone (the manifest's A5s end its
+block at module 01's); the 4 ungenerated pass-1 modules' data are checked
+by nobody until their modules exist.  Questions 450 .. 455, patterns
+188 .. 371, dpc gap 47.
+

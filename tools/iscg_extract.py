@@ -54,6 +54,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import cc_isc_inventory as inv  # noqa: E402
 import iscg_p2gen  # noqa: E402
+import iscg_p1gen  # noqa: E402
 import iscg_p2lift  # noqa: E402
 import iscg_pass1  # noqa: E402
 
@@ -523,6 +524,8 @@ def extract(binary):
     # the pass-2 actions' bodies, lifted (tools/iscg_p2lift.py)
     p2img = iscg_p2lift.Image(binary, im)
     p2_bodies = {r: iscg_p2lift.lift_rule(p2img, r) for r in range(1, nrules + 1)}
+    # the pass-1 actions' clauses, lifted (tools/iscg_p1lift.py)
+    p1_bodies = iscg_p1gen.lift_all(binary, im, result_kind)
     return {
         'nrules': nrules, 'result_kind': result_kind, 'per_il': per_il, 'tail': tail,
         'check_permissible': [bool(x) for x in f1], 'no_could_deadlock_child': [bool(x) for x in f2],
@@ -531,6 +534,7 @@ def extract(binary):
                  for k, v in arms.items()],
         'layout': mt.layout, 'patterns': pats, 'sections': sections, 'section_of': sec_of,
         'fields': fields, 'operators': ops, 'ils': ils, 'p2_bodies': p2_bodies,
+        'p1_bodies': p1_bodies,
         'readonly': list(im.read(ISC_READONLY, ISC_READONLY_LEN)),
     }
 
@@ -551,6 +555,7 @@ HEADER = '''{ %s - the ISC generator's input (docs/iscg-design.md), %s.
 def write_rules(x, out):
     os.makedirs(out, exist_ok=True)
     hand = iscg_p2gen.hand_bodies(out)      # kept: written by hand
+    hand1 = iscg_p1gen.hand_clauses(out)
     ils = x['ils']
     n = x['nrules']
     written = []
@@ -616,7 +621,8 @@ def write_rules(x, out):
                                                     fmt_pattern(x['patterns'][r])))
             if flags:
                 lines.append('  ' + ' '.join(flags) + ';')
-            lines.append('  pass_1 image 16#%06X;' % x['p1'][r - 1])
+            lines.extend(iscg_p1gen.clause_lines(x['p1'][r - 1], x['p1_bodies'][r],
+                                                 hand1.get(r)))
             if r in hand:
                 lines.extend(hand[r])
             else:
@@ -674,6 +680,7 @@ def main():
     if a.json:
         y = dict(x)
         y.pop('arms_raw')
+        y.pop('p1_bodies')
         y['patterns'] = {str(k): v for k, v in x['patterns'].items()}
         y['section_of'] = {str(k): v for k, v in x['section_of'].items()}
         with open(a.json, 'w') as f:

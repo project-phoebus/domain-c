@@ -725,9 +725,13 @@ function alignment_from_sr_info(
     in info: isc_sr_info_ptr_t): integer; extern;
 
 { LIR_$CAN_ENCODE_AS_IMMEDIATE_POSTINCREMENT - 0x2105D4: whether v fits
-  a postincrement's immediate under the literal model. }
+  a postincrement's immediate under the literal model.  The pass-1
+  actions pass the instruction's opcode too (`movew #105,-(SP)' after a
+  pad, before v: 0x0F82A2), which the routine does not read
+  (translator GE). }
 function lir_$can_encode_as_immediate_postincrement(
-    v: integer32): boolean; options(val_param); extern;
+    v: integer32;
+    opc: integer): boolean; options(val_param); extern;
 
 { AVAILABLE_PRECISION_FUNCTION - 0x210B06: the bits available in sol. }
 function available_precision_function(

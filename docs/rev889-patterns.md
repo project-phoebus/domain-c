@@ -1377,3 +1377,57 @@ cc.m68k unless marked.
     isc_readonly_tables +424 by opmod1 evaluated together before the
     branch, the earlier tests (15, 14, 11) each a `beq then' and the
     last (13) a `bne else'.
+188. **Module arrays begin on 8 bytes.**  The pass-1 modules' cost
+    tables (`array [0..16]' of bytes or words) lie 24 and 40 bytes apart
+    with the padding unset (module 07: tables at A5+0, +24, +48, +88);
+    the module's last table is not padded (its block ends at the next
+    pas_$output).  Also isc_pattern_matcher's pm_check_permissible at
+    +0x8D0 after 563 longwords ending at +0x8CC (question 275's four
+    bytes).  dpc packs (docs/dpc-gaps.md 47).
+189. **Module data past 32 KB through an absolute base.**  Module 02
+    (38,172 bytes): `movea.l #0x45732C,A0; lea (0,A0,D0.w),A1; add.w
+    (3440,A1),D1' (0x1057BE), the far tables from A5 + 0x7FCC (not
+    8-aligned), a later rule's small tables placed in the room left
+    below 32 KB (docs/questions.md 297).
+190. **Conditions: top-level `and'/`or' short-circuited, their operands
+    evaluated into bytes.**  `cmpi.w #4,(16,A2); seq d0; cmpi.l
+    #32,(24,A4); seq d1; and.b d1,d0; bmi' (rule 4, 0x11D656): each
+    operand of the top-level `or' a byte expression, the `or' itself a
+    branch to the next conjunct; function values combined the same way
+    (`not.b d0; ... and.b d1,d0').
+191. **A boolean function's value into a packed field.**  `jsr f; lsr.b
+    #7,d0; clr.l d1; lsl.b #3,d0; or.b d0,d1; andi.b #-9,(83,A2); or.b
+    d1,(83,A2)' (rule 397, 0x14B5C8; `add.b d0,d0' for bit 1, no shift
+    for bit 0); a boolean copied into bit 7: `smi d0; clr.l d1; andi.b
+    #-128,d0; or.b d0,d1; andi.b #127,(81,A0); or.b d1,(81,A0)' (rule
+    69, 0x0F2068).
+192. **Adjacent fields cleared, copied or set together.**  `clr.l
+    (70,A2)' for ip_reg_max and ip_reg_result (rule 397), `move.l
+    (70,A3),(70,A2)' copies, `moveq #48,d0; or.w d0,(80,A2)' sets two
+    booleans of +81, `andi.w #-49,(80,A3)' clears them (rule 380).
+193. **Block copies of fields through postincrement.**  `lea
+    (32,A2),A1; lea (32,A0),A3; move.l (A1)+,(A3)+; ...' (rule 529,
+    0x11C882); constants copied from the code: `lea (pc),A0; lea
+    (32,A2),A1; move.l (A0)+,(A1)+ ...' (rule 13, 0x13D232).
+194. **String constants shared by a module's routines.**  Rule 397's
+    "Infinite cycle prevented ..." is `pea (0x144C0E,pc)', inside an
+    earlier action of module 14.
+195. **abs, min and max by branches.**  `tst; bpl +; neg; +:' for abs
+    (rule 102), `cmp.l d0,d1; ble +; move.l d0,d1' for a minimum
+    (rule 17, 0x13E14E).
+196. **A bit of a word or longword field tested on its last byte.**
+    `btst #0,(39,A4)' for bits_trusted & 1, `btst #0,(35,A4)' for
+    bits_known & 1 (rule 150, 0x0F873E).
+197. **The run time's 32-bit multiply, divide and remainder.**  `jsr
+    m$mis$lll' (0x49300C), m$ois$lll (0x493000), m$ois$wlw (word result,
+    a word divisor), m$dis$lll; arguments pushed right to left like a
+    call's; they change only D0 (rule 158 reads D1 after m$ois$lll,
+    0x0FFF94).
+198. **Rules 399 and 402: the arm removed.**  Only `btst #5,(39,A3)'
+    survives between the result/work clears and the epilogue
+    (0x14B8C8), the restores already begun (docs/questions.md 299).
+199. **Temporaries computed before a new solution's first stores.**
+    Rule 258: an abs of two attributes between new_solution and the
+    which_transform store; rule 200: a frame temporary set
+    on both arms of an if (`move.l #512,(-8,A6)' / `clr.l (-8,A6)',
+    0x154BE2) and tested later.

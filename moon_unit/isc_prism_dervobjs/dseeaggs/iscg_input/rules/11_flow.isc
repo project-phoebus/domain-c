@@ -9,26 +9,46 @@
 section 11 flow  image pass_1 a5 16#461680, pass_2 a5 16#480080;
 
 transform 227  void <- blk_end_node
-  pass_1 image 16#13BAE0;
+  pass_1 image 16#13BAE0 begin
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+  end;
   pass_2 image 16#1BB678 empty;
 end;
 
 transform 228  void <- block_entry_node
-  pass_1 image 16#13BBCA;
+  pass_1 image 16#13BBCA begin
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+  end;
   pass_2 image 16#1BB67A begin
     debug_lir_main_$entry(self.il);
   end;
 end;
 
 transform 229  void <- branch_node ($1: irrelevant)
-  pass_1 image 16#13BCB4;
+  pass_1 image 16#13BCB4 begin
+    result.code_bytes <- $1.code_bytes + 4;
+    result.memory_references <- $1.memory_references;
+    result.delay <- $1.delay + 1;
+  end;
   pass_2 image 16#1BB6A2 begin
     emit branch(isc_$get_label($1.il), opc$jump, 0);
   end;
 end;
 
 transform 230  void <- case_node_range_check ($1: irrelevant, $2: ip_reg, $3: flow, $4: ip_reg)
-  pass_1 image 16#13BDB8;
+  pass_1 image 16#13BDB8 begin
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + $3.code_bytes + $4.code_bytes + 8;
+    result.memory_references <- $1.memory_references + $2.memory_references + $3.memory_references + $4.memory_references;
+    result.delay <- $1.delay + $2.delay + $3.delay + $4.delay + 1;
+    result.evaluation_order <- 1;
+    result.ip_reg_max <- 0;
+    result.fp_reg_max <- 0;
+    result.fp_reg_pair_max <- 0;
+  end;
   pass_2 image 16#1BB6F2 begin
     temp t1: solution;
     temp t2: solution;
@@ -40,7 +60,15 @@ transform 230  void <- case_node_range_check ($1: irrelevant, $2: ip_reg, $3: fl
 end;
 
 transform 231  void <- case_node_no_range_check ($1: ip_reg)
-  pass_1 image 16#13BF10;
+  pass_1 image 16#13BF10 begin
+    result.code_bytes <- $1.code_bytes + 8;
+    result.memory_references <- $1.memory_references;
+    result.delay <- $1.delay + 1;
+    result.evaluation_order <- 1;
+    result.ip_reg_max <- 0;
+    result.fp_reg_max <- 0;
+    result.fp_reg_pair_max <- 0;
+  end;
   pass_2 image 16#1BB768 begin
     temp t1: solution;
     temp t2: solution;
@@ -52,12 +80,36 @@ transform 231  void <- case_node_no_range_check ($1: ip_reg)
 end;
 
 transform 232  void <- cbranch_node ($1: irrelevant, $2: flow)
-  pass_1 image 16#13C026;
+  pass_1 image 16#13C026 begin
+    sum code_bytes, memory_references, delay of $1, $2;
+    copy ip_reg_max, fp_reg_max, fp_reg_pair_max from $2;
+  end;
   pass_2 image 16#1BB7DE empty;
 end;
 
 transform 233  void <- cbranch_node ($1: irrelevant, $2: [ip_reg, literal_32_bits])
-  pass_1 image 16#13C15E;
+  pass_1 image 16#13C15E begin
+    condition $2.kind = 14 or $2.physical_register_number = isc_user_routines_31c.physical_register_number and $2.physical_register and ($2.kind = 11);
+    if verify_bits($2.bits_known, $2.bits_trusted, 0, 32, 0) then
+      result.c136 <- 1;
+      if subject.il.b60 = -1 then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    else
+      result.c136 <- 2;
+      if subject.il.b60 = -1 then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(4)[result.c138] + $1.code_bytes + $2.code_bytes;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- bytes(0, 1)[result.c137] + bytes(1)[result.c138] + $1.delay + $2.delay;
+    copy ip_reg_max, fp_reg_max, fp_reg_pair_max from $2;
+  end;
   pass_2 image 16#1BB7E0 begin
     if result.c136 = 1 then
       if result.c137 <> 1 then
@@ -70,7 +122,46 @@ transform 233  void <- cbranch_node ($1: irrelevant, $2: [ip_reg, literal_32_bit
 end;
 
 transform 234  void <- cbranch_node ($1: irrelevant, $2: ip_reg_field)
-  pass_1 image 16#13C35C;
+  pass_1 image 16#13C35C begin
+    temp t2: integer32;
+    if subject.il.b60 & 128 <> 0 then
+      result.w352 <- 6;
+    else
+      result.w352 <- 7;
+    end;
+    t2 <- make_bit_mask_1($2.field_precision, 0);
+    if result.w352 = 7 then
+      result.c136 <- 1;
+    elsif result.w352 = 6 then
+      result.c136 <- 2;
+    elsif result.w352 = 5 then
+      result.c136 <- 3;
+    elsif result.w352 = 3 then
+      result.c136 <- 4;
+    elsif result.w352 = 2 then
+      result.c136 <- 5;
+    elsif result.w352 = 4 then
+      result.c136 <- 6;
+    elsif result.w352 = 13 then
+      result.c136 <- 7;
+    elsif result.w352 = 15 then
+      result.c136 <- 8;
+    elsif result.w352 = 14 then
+      result.c136 <- 9;
+    elsif result.w352 = 12 then
+      result.c136 <- 10;
+    elsif result.w352 = 0 then
+      result.c136 <- 11;
+    elsif result.w352 = 1 then
+      result.c136 <- 12;
+    else
+      result.c136 <- 13;
+    end;
+    result.code_bytes <- words(8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 4)[result.c136] + $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- bytes(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)[result.c136] + $1.delay + $2.delay;
+    copy ip_reg_max, fp_reg_max, fp_reg_pair_max from $2;
+  end;
   pass_2 image 16#1BB83C begin
     temp t1: solution;
     t1 <- create_solution_for_ip_reg();
@@ -114,7 +205,47 @@ transform 234  void <- cbranch_node ($1: irrelevant, $2: ip_reg_field)
 end;
 
 transform 235  void <- cbranch_node ($1: irrelevant, $2: ip_reg)
-  pass_1 image 16#13C5B6;
+  pass_1 image 16#13C5B6 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    condition not $2.physical_register or $2.kind <> 11 or $2.physical_register_number <> isc_user_routines_31c.physical_register_number;
+    t2 <- make_bit_mask_1(8, 0);
+    t3 <- make_bit_mask_1(8, 0);
+    if rshft(il_180.b377 & 112, 4) = 2 then
+      result.c136 <- 1;
+      if $2.bit_7_was_sign_extended then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+      if subject.il.b60 = -1 then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    else
+      result.c136 <- 2;
+      if subject.il.b60 = -1 then
+        result.c139 <- 1;
+        if verify_bits($2.bits_known, $2.bits_trusted, 8, 24, 0) then
+          result.c140 <- 1;
+        else
+          result.c140 <- 2;
+        end;
+      else
+        result.c139 <- 2;
+        if verify_bits($2.bits_known, $2.bits_trusted, 8, 24, 0) then
+          result.c141 <- 1;
+        else
+          result.c141 <- 2;
+        end;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(8, 8)[result.c138] + words(8, 8)[result.c139] + words(0, 4)[result.c140] + words(0, 4)[result.c141] + $1.code_bytes + $2.code_bytes;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- bytes(1, 1)[result.c138] + bytes(1, 1)[result.c139] + $1.delay + $2.delay;
+    copy ip_reg_max, fp_reg_max, fp_reg_pair_max from $2;
+  end;
   pass_2 image 16#1BBB1E begin
     temp t1: solution;
     temp t2: solution;
@@ -159,34 +290,55 @@ transform 235  void <- cbranch_node ($1: irrelevant, $2: ip_reg)
 end;
 
 transform 236  void <- exception_handler_entry
-  pass_1 image 16#13C87E;
+  pass_1 image 16#13C87E begin
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+  end;
   pass_2 image 16#1BBCF0 begin
     debug_lir_main_$handler_reentry(self.il);
   end;
 end;
 
 transform 237  void <- label_node
-  pass_1 image 16#13C968;
+  pass_1 image 16#13C968 begin
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+  end;
   pass_2 image 16#1BBD18 begin
     emit label(isc_$get_label(self.il));
   end;
 end;
 
 transform 238  void <- nlbranch_node ($1: ip_reg)
-  pass_1 image 16#13CA52;
+  pass_1 image 16#13CA52 begin
+    result.code_bytes <- $1.code_bytes + 4;
+    result.memory_references <- $1.memory_references;
+    result.delay <- $1.delay + 1;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#1BBD5C begin
     emit dispatch($1, opc$dispatch, 16#40000);
   end;
 end;
 
 transform 239  void <- raise_exception
-  pass_1 image 16#13CF4E;
+  pass_1 image 16#13CF4E begin
+    result.code_bytes <- 4;
+    result.memory_references <- 0;
+    result.delay <- 0;
+  end;
   pass_2 image 16#1BBD9E begin
     emit simple(opc$trap, 0, nil, nil, nil);
   end;
 end;
 
 transform 240  void <- return_node
-  pass_1 image 16#13D03A;
+  pass_1 image 16#13D03A begin
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+  end;
   pass_2 image 16#1BBDD4 empty;
 end;

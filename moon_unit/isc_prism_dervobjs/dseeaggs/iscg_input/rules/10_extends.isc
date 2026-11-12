@@ -9,7 +9,10 @@
 section 10 extends  image pass_1 a5 16#45FD38, pass_2 a5 16#48007C;
 
 transform 404  literal_32_bits <- extend_top ($1: literal_32_bits)
-  pass_1 image 16#13190C;
+  pass_1 image 16#13190C begin
+    condition $1.literal_32_bits_value = 0;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#1B7670 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -22,7 +25,10 @@ transform 404  literal_32_bits <- extend_top ($1: literal_32_bits)
 end;
 
 transform 405  literal_32_bits <- extend_top ($1: literal_32_bits)
-  pass_1 image 16#131E0C;
+  pass_1 image 16#131E0C begin
+    condition not (subject.il.b30 & 64 <> 0) or subject.il.w26 = 4;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#1B76E8 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -35,7 +41,12 @@ transform 405  literal_32_bits <- extend_top ($1: literal_32_bits)
 end;
 
 transform 406  ip_reg_field <- extend_top ($1: ip_reg_field)
-  pass_1 image 16#132316;
+  pass_1 image 16#132316 begin
+    condition not (subject.il.b30 & 64 <> 0 or subject.il.b30 & 128 <> 0);
+    cycle_guard already_ip_reg_field;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.field_requires_sign_extend <- false;
+  end;
   pass_2 image 16#1B7760 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -48,7 +59,17 @@ transform 406  ip_reg_field <- extend_top ($1: ip_reg_field)
 end;
 
 transform 407  ip_reg <- extend_top ($1: ip_reg)
-  pass_1 image 16#1328A0;
+  pass_1 image 16#1328A0 begin
+    temp t1: boolean;
+    temp t2: boolean;
+    temp t3: boolean;
+    t1 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0);
+    t2 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
+    t3 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 25, 0);
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.w26 <> 5 and (subject.il.w26 <> 4) and ((not t2 or subject.il.w26 <> 2) and (not t1 or subject.il.w26 <> 1) or subject.il.b30 & 64 <> 0) and (subject.il.b30 & 64 = 0 or not $1.all_zeroes_or_all_ones and (not t3 or subject.il.w26 <> 1) and (not verify_bits($1.bits_known, $1.bits_trusted, 15, 17, 0) or subject.il.w26 <> 2)));
+    cycle_guard already_ip_reg;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#1B77D8 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -61,7 +82,81 @@ transform 407  ip_reg <- extend_top ($1: ip_reg)
 end;
 
 transform 408  ip_reg <- extend_top ($1: ip_reg)
-  pass_1 image 16#132ECA;
+  pass_1 image 16#132ECA begin
+    temp t1: boolean;
+    temp t2: boolean;
+    temp t3: boolean;
+    temp t4: boolean;
+    temp t5: boolean;
+    temp t6: boolean;
+    temp t7: boolean;
+    temp t8: boolean;
+    temp t9: boolean;
+    temp t10: boolean;
+    temp t11: boolean;
+    temp t12: boolean;
+    temp t13: boolean;
+    temp t14: boolean;
+    temp t15: boolean;
+    temp t16: boolean;
+    temp t17: boolean;
+    temp t18: boolean;
+    temp t19: boolean;
+    temp t20: boolean;
+    temp t21: boolean;
+    temp t22: boolean;
+    temp t23: boolean;
+    temp t24: boolean;
+    temp t25: boolean;
+    temp t26: boolean;
+    temp t27: boolean;
+    temp t28: boolean;
+    temp t29: boolean;
+    temp t30: boolean;
+    temp t31: boolean;
+    temp t32: boolean;
+    temp t33: boolean;
+    temp t34: boolean;
+    temp t35: boolean;
+    t1 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 9, 0);
+    t2 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 9, 1);
+    t3 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 25, 0);
+    t4 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 25, 1);
+    t5 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 9, 0);
+    t6 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 9, 1);
+    t7 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 17, 0);
+    t8 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 17, 1);
+    t9 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 25, 0);
+    t10 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 25, 1);
+    t11 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 17, 0);
+    t12 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 17, 1);
+    t13 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 1, 0);
+    t14 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 9, 0);
+    t15 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 25, 0);
+    t16 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 8, 0);
+    t17 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 1, 0);
+    t18 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 17, 0);
+    t19 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0);
+    t20 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
+    t21 <- verify_bits($1.bits_known, $1.bits_trusted, 31, 1, 0);
+    t22 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 8, 0);
+    t23 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0);
+    t24 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 8, 0);
+    t25 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
+    t26 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0);
+    t27 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
+    t28 <- verify_bits($1.bits_known, $1.bits_trusted, 31, 1, 0);
+    t29 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 17, 0);
+    t30 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 25, 0);
+    t31 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
+    t32 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 1, 0);
+    t33 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 9, 0);
+    t34 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0);
+    t35 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 1, 0);
+    condition not (subject.il.b30 & 128 = 0 or ((not t12 and not t11 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t10 and not t9 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t8 and not t7 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t6 and not t5 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t4 and not t3 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and ((not t2 and not t1 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (subject.il.w26 <> 1 or subject.il.w24 <> 1))) and (subject.il.w26 <> 2 or subject.il.w24 <> 2)))) and (subject.il.w26 <> 4 or subject.il.w24 <> 4) or (subject.il.w28 <> 1 or subject.il.b30 & 64 = 0)) and ((not t21 or (subject.il.w26 <> 4 or subject.il.w24 <> 4)) and ((not t20 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t19 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t18 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t17 or (subject.il.w26 <> 2 or subject.il.w24 <> 2)) and ((not t16 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t15 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and ((not t14 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (not t13 or (subject.il.w26 <> 1 or subject.il.w24 <> 1))))))))) or (subject.il.w28 <> 1 or subject.il.b30 & 64 <> 0)) and ((not t27 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t26 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t25 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t24 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t23 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and ((not t22 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (subject.il.w26 <> 1 or subject.il.w24 <> 1))) and (subject.il.w26 <> 2 or subject.il.w24 <> 2)))) and (subject.il.w26 <> 4 or subject.il.w24 <> 4) or (subject.il.w28 <> 0 or subject.il.b30 & 64 <> 0)) and (subject.il.w28 <> 0 or subject.il.b30 & 64 = 0 or (not t28 or (subject.il.w26 <> 4 or subject.il.w24 <> 4)) and (not t29 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t30 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and (not t31 or (subject.il.w26 <> 2 or subject.il.w24 <> 4))) and ((not t32 or (subject.il.w26 <> 2 or subject.il.w24 <> 2)) and (not t33 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t34 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and (not t35 or (subject.il.w26 <> 1 or subject.il.w24 <> 1)))) and (not verify_bits($1.bits_known, $1.bits_trusted, 8, 8, 0) or subject.il.w26 <> 1 or subject.il.w24 <> 2)));
+    cycle_guard already_ip_reg;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#1B7850 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -74,14 +169,82 @@ transform 408  ip_reg <- extend_top ($1: ip_reg)
 end;
 
 transform 409  ip_reg <- extend_top ($1: ip_reg)
-  pass_1 image 16#133CFE;
+  pass_1 image 16#133CFE begin
+    temp t1: boolean;
+    temp t2: boolean;
+    temp t3: boolean;
+    temp t4: boolean;
+    temp t5: boolean;
+    temp t6: boolean;
+    temp t7: boolean;
+    temp t8: boolean;
+    temp t9: boolean;
+    temp t10: boolean;
+    temp t11: boolean;
+    temp t12: boolean;
+    temp t13: boolean;
+    temp t14: boolean;
+    temp t15: boolean;
+    temp t16: boolean;
+    temp t17: boolean;
+    temp t18: boolean;
+    temp t19: boolean;
+    temp t20: boolean;
+    temp t21: boolean;
+    temp t22: boolean;
+    temp t23: boolean;
+    temp t24: boolean;
+    temp t25: boolean;
+    temp t26: boolean;
+    temp t27: boolean;
+    temp t28: boolean;
+    temp t29: boolean;
+    t1 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 9, 1);
+    t2 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 9, 0);
+    t3 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 25, 1);
+    t4 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 25, 0);
+    t5 <- verify_any_bits($1.bits_known, $1.bits_trusted, 15, 17, 1);
+    t6 <- verify_any_bits($1.bits_known, $1.bits_trusted, 15, 17, 0);
+    t7 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 1, 1);
+    t8 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 9, 1);
+    t9 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 25, 1);
+    t10 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 8, 1);
+    t11 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 1, 1);
+    t12 <- verify_any_bits($1.bits_known, $1.bits_trusted, 15, 17, 1);
+    t13 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 24, 1);
+    t14 <- verify_any_bits($1.bits_known, $1.bits_trusted, 16, 16, 1);
+    t15 <- verify_bits($1.bits_known, $1.bits_trusted, 31, 1, 1);
+    t16 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 8, 1);
+    t17 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 24, 1);
+    t18 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 8, 1);
+    t19 <- verify_any_bits($1.bits_known, $1.bits_trusted, 16, 16, 1);
+    t20 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 24, 1);
+    t21 <- verify_any_bits($1.bits_known, $1.bits_trusted, 16, 16, 1);
+    t22 <- verify_bits($1.bits_known, $1.bits_trusted, 31, 1, 1);
+    t23 <- verify_any_bits($1.bits_known, $1.bits_trusted, 15, 17, 1);
+    t24 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 25, 1);
+    t25 <- verify_any_bits($1.bits_known, $1.bits_trusted, 16, 16, 1);
+    t26 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 1, 1);
+    t27 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 9, 1);
+    t28 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 8, 1);
+    t29 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 24, 1);
+    condition not (subject.il.b30 & 128 = 0 or ((not t6 or (not t5 or (subject.il.w26 <> 4 or subject.il.w24 <> 2))) and ((not t4 or (not t3 or (subject.il.w26 <> 4 or subject.il.w24 <> 1))) and (not t2 or (not t1 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)))) or (subject.il.w28 <> 1 or subject.il.b30 & 64 = 0)) and ((not t15 or (subject.il.w26 <> 4 or subject.il.w24 <> 4)) and ((not t14 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t13 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t12 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t11 or (subject.il.w26 <> 2 or subject.il.w24 <> 2)) and ((not t10 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t9 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and ((not t8 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (not t7 or (subject.il.w26 <> 1 or subject.il.w24 <> 1))))))))) or (subject.il.w28 <> 1 or subject.il.b30 & 64 <> 0)) and ((not t21 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t20 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t19 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t18 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t17 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and (not t16 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)))))) or (subject.il.w28 <> 0 or subject.il.b30 & 64 <> 0)) and (subject.il.b30 & 64 = 0 or subject.il.w28 <> 0 or (not t22 or (subject.il.w26 <> 4 or subject.il.w24 <> 4)) and (not t23 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t24 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and (not t25 or (subject.il.w26 <> 2 or subject.il.w24 <> 4))) and ((not t26 or (subject.il.w26 <> 2 or subject.il.w24 <> 2)) and (not t27 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t28 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (not t29 or subject.il.w26 <> 1 or subject.il.w24 <> 4))) and (not verify_bits($1.bits_known, $1.bits_trusted, 7, 1, 1) or subject.il.w26 <> 1 or subject.il.w24 <> 1)));
+    cycle_guard already_ip_reg;
+    result.code_bytes <- $1.code_bytes + 4;
+    copy memory_references, delay from $1;
+  end;
   pass_2 image 16#1B78C8 begin
     emit simple(opc$trap, 0, $1, nil, nil);
   end;
 end;
 
 transform 410  ip_reg_scaled <- extend_top ($1: ip_reg_scaled)
-  pass_1 image 16#1345AC;
+  pass_1 image 16#1345AC begin
+    temp t1: boolean;
+    t1 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0);
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.w26 <> 5 and (subject.il.w26 <> 4) and (subject.il.b30 & 64 <> 0 or (not t1 or subject.il.w26 <> 1) and (not verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0) or subject.il.w26 <> 2)));
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#1B790A begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -94,28 +257,144 @@ transform 410  ip_reg_scaled <- extend_top ($1: ip_reg_scaled)
 end;
 
 transform 411  literal_32_bits <- extend_top ($1: literal_32_bits)
-  pass_1 image 16#134B20;
+  pass_1 image 16#134B20 begin
+    temp t2: integer32;
+    condition subject.il.b30 & 64 <> 0;
+    t2 <- sign_extend($1.literal_32_bits_value, $1.inherited_attributes.fetch_precision);
+    copy code_bytes, memory_references, delay from $1;
+    result.bits_known <- t2;
+    result.bits_trusted <- -1;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.literal_32_bits_value <- t2;
+  end;
   pass_2 image 16#1B7982 begin
     result.object_with_name <- $1.object_with_name;
   end;
 end;
 
 transform 412  ip_reg <- extend_top ($1: lshf_top($1: ip_reg, $2: literal_32_bits))
-  pass_1 image 16#134C58;
+  pass_1 image 16#134C58 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    temp t6: integer32;
+    temp t7: integer32;
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.b30 & 64 <> 0 or (subject.il.w26 <> 2 or subject.il.w24 <> 4));
+    cycle_guard already_ip_reg;
+    if $1.$2.literal_32_bits_value <= 0 or $1.$2.literal_32_bits_value > 15 then
+      result.l356 <- 15;
+    else
+      result.l356 <- $1.$2.literal_32_bits_value;
+    end;
+    t2 <- make_bit_mask_2(31, 16);
+    t3 <- make_bit_mask_2(15 - result.l356, 0);
+    t4 <- make_bit_mask_2(result.l356 - 1, 0);
+    result.l352 <- 16 - result.l356;
+    t5 <- make_bit_mask_1(16 - result.l356, 0);
+    result.code_bytes <- $1.code_bytes + 4;
+    copy memory_references, delay from $1;
+    t6 <- validate_shift_count(result.l356);
+    result.bits_known <- t3 & lshft($1.$1.bits_known, t6);
+    t7 <- validate_shift_count(result.l356);
+    result.bits_trusted <- t2 ! t3 & lshft($1.$1.bits_trusted, t7) ! t4;
+    result.ip_reg_max <- $1.$1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1B79AA begin
     emit field(opc$clrins, 0, result.l352, $1.$1, find_well_known_literal_solution(result.l356), solution);
   end;
 end;
 
 transform 413  ip_reg <- extend_top ($1: ip_reg_field)
-  pass_1 image 16#134E88;
+  pass_1 image 16#134E88 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.w26 <> 2 or (not (subject.il.b30 & 64 <> 0) or $1.field_precision <> 16) or $1.bit_position_of_lsb <> 16);
+    cycle_guard already_ip_reg;
+    t2 <- make_bit_mask_2(31, 16);
+    t3 <- make_bit_mask_2(15, 0);
+    result.code_bytes <- $1.code_bytes + 4;
+    copy memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.bits_known <- t3 & rshft($1.bits_known, 16);
+    if subject.il.b30 & 64 <> 0 then
+      result.bits_trusted <- rshft($1.bits_trusted, 16) & t3;
+    else
+      result.bits_trusted <- t3 & rshft($1.bits_trusted, 16) + t2;
+    end;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+    result.physical_register <- false;
+  end;
   pass_2 image 16#1B7A02 begin
     emit simple(opc$asr, 0, $1, find_well_known_literal_solution(16), solution);
   end;
 end;
 
 transform 414  ip_reg <- extend_top ($1: ip_reg_field)
-  pass_1 image 16#135480;
+  pass_1 image 16#135480 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.w26 <> 2 or (not (subject.il.b30 & 64 <> 0) or $1.field_precision <> 16) or $1.bit_position_of_lsb <> 0);
+    cycle_guard already_ip_reg;
+    t2 <- make_bit_mask_2(31, 16);
+    t3 <- make_bit_mask_2(15, 0);
+    t4 <- make_bit_mask_1(8, 0);
+    t5 <- make_bit_mask_1(16, 0);
+    if subject.il.b30 & 64 <> 0 then
+      result.c136 <- 1;
+      if $1.inherited_attributes.fetch_precision = 8 then
+        result.c137 <- 1;
+        if $1.bit_7_was_sign_extended then
+          result.c138 <- 1;
+        else
+          result.c138 <- 2;
+        end;
+      elsif $1.inherited_attributes.fetch_precision = 16 then
+        result.c137 <- 2;
+        if $1.bit_15_was_sign_extended then
+          result.c139 <- 1;
+        else
+          result.c139 <- 2;
+        end;
+      else
+        result.c137 <- 3;
+      end;
+    else
+      result.c136 <- 2;
+      if $1.inherited_attributes.fetch_precision = 8 then
+        result.c140 <- 1;
+        if verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0) then
+          result.c141 <- 1;
+        else
+          result.c141 <- 2;
+        end;
+      elsif $1.inherited_attributes.fetch_precision = 16 then
+        result.c140 <- 2;
+        if verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0) then
+          result.c142 <- 1;
+        else
+          result.c142 <- 2;
+        end;
+      else
+        result.c140 <- 3;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c138] + words(0, 4)[result.c139] + words(0, 4)[result.c141] + words(0, 4)[result.c142] + $1.code_bytes;
+    copy memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.bits_known <- t3 & $1.bits_known;
+    if subject.il.b30 & 64 <> 0 then
+      result.bits_trusted <- $1.bits_trusted & t3;
+    else
+      result.bits_trusted <- t3 & $1.bits_trusted + t2;
+    end;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+    result.physical_register <- false;
+  end;
   pass_2 image 16#1B7A52 begin
     if result.c136 = 1 then
       if result.c137 = 1 then
@@ -153,7 +432,34 @@ end;
 
 transform 415  ip_reg <- extend_top ($1: ip_reg)
   no_could_deadlock_child;
-  pass_1 image 16#135BD4;
+  pass_1 image 16#135BD4 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.w26 <> 1 or (not $1.is_entire_object or $1.is_destroyable));
+    cycle_guard already_ip_reg;
+    t2 <- make_bit_mask_2(31, 8);
+    t3 <- make_bit_mask_2(7, 0);
+    t4 <- make_bit_mask_1(8, 0);
+    if subject.il.b30 & 64 <> 0 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(4)[result.c136] + words(0, 4)[result.c137] + $1.code_bytes;
+    copy memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.bits_known <- t3 & $1.bits_known;
+    if subject.il.b30 & 64 <> 0 then
+      result.bits_trusted <- $1.bits_trusted & t3;
+    else
+      result.bits_trusted <- t3 & $1.bits_trusted + t2;
+    end;
+  end;
   pass_2 image 16#1B7C1C begin
     if result.c136 = 1 then
       emit simple(opc$extend7, 16#4000, $1, $1, nil);
@@ -171,7 +477,67 @@ transform 415  ip_reg <- extend_top ($1: ip_reg)
 end;
 
 transform 416  ip_reg <- extend_top ($1: ip_reg_field)
-  pass_1 image 16#136216;
+  pass_1 image 16#136216 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.w26 <> 1 or ($1.field_precision <> 8 or $1.bit_position_of_lsb <> 0));
+    cycle_guard already_ip_reg;
+    t2 <- make_bit_mask_2(31, 8);
+    t3 <- make_bit_mask_2(7, 0);
+    t4 <- make_bit_mask_1(8, 0);
+    t5 <- make_bit_mask_1(16, 0);
+    if subject.il.b30 & 64 <> 0 then
+      result.c136 <- 1;
+      if $1.inherited_attributes.fetch_precision = 8 then
+        result.c137 <- 1;
+        if $1.bit_7_was_sign_extended then
+          result.c138 <- 1;
+        else
+          result.c138 <- 2;
+        end;
+      elsif $1.inherited_attributes.fetch_precision = 16 then
+        result.c137 <- 2;
+        if $1.bit_15_was_sign_extended then
+          result.c139 <- 1;
+        else
+          result.c139 <- 2;
+        end;
+      else
+        result.c137 <- 3;
+      end;
+    else
+      result.c136 <- 2;
+      if $1.inherited_attributes.fetch_precision = 8 then
+        result.c140 <- 1;
+        if verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0) then
+          result.c141 <- 1;
+        else
+          result.c141 <- 2;
+        end;
+      elsif $1.inherited_attributes.fetch_precision = 16 then
+        result.c140 <- 2;
+        if verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0) then
+          result.c142 <- 1;
+        else
+          result.c142 <- 2;
+        end;
+      else
+        result.c140 <- 3;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c138] + words(0, 4)[result.c139] + words(0, 4)[result.c141] + words(0, 4)[result.c142] + $1.code_bytes;
+    copy memory_references, delay from $1;
+    result.bits_known <- t3 & $1.bits_known;
+    if subject.il.b30 & 64 <> 0 then
+      result.bits_trusted <- $1.bits_trusted & t3;
+    else
+      result.bits_trusted <- t3 & $1.bits_trusted + t2;
+    end;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1B7CF4 begin
     if result.c136 = 1 then
       if result.c137 = 1 then
@@ -208,7 +574,67 @@ transform 416  ip_reg <- extend_top ($1: ip_reg_field)
 end;
 
 transform 417  ip_reg <- extend_top ($1: ip_reg)
-  pass_1 image 16#136572;
+  pass_1 image 16#136572 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.w26 <> 1);
+    cycle_guard already_ip_reg;
+    t2 <- make_bit_mask_2(31, 8);
+    t3 <- make_bit_mask_2(7, 0);
+    t4 <- make_bit_mask_1(8, 0);
+    t5 <- make_bit_mask_1(16, 0);
+    if subject.il.b30 & 64 <> 0 then
+      result.c136 <- 1;
+      if $1.inherited_attributes.fetch_precision = 8 then
+        result.c137 <- 1;
+        if $1.bit_7_was_sign_extended then
+          result.c138 <- 1;
+        else
+          result.c138 <- 2;
+        end;
+      elsif $1.inherited_attributes.fetch_precision = 16 then
+        result.c137 <- 2;
+        if $1.bit_15_was_sign_extended then
+          result.c139 <- 1;
+        else
+          result.c139 <- 2;
+        end;
+      else
+        result.c137 <- 3;
+      end;
+    else
+      result.c136 <- 2;
+      if $1.inherited_attributes.fetch_precision = 8 then
+        result.c140 <- 1;
+        if verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0) then
+          result.c141 <- 1;
+        else
+          result.c141 <- 2;
+        end;
+      elsif $1.inherited_attributes.fetch_precision = 16 then
+        result.c140 <- 2;
+        if verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0) then
+          result.c142 <- 1;
+        else
+          result.c142 <- 2;
+        end;
+      else
+        result.c140 <- 3;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c138] + words(0, 4)[result.c139] + words(0, 4)[result.c141] + words(0, 4)[result.c142] + $1.code_bytes;
+    copy memory_references, delay from $1;
+    result.bits_known <- t3 & $1.bits_known;
+    if subject.il.b30 & 64 <> 0 then
+      result.bits_trusted <- $1.bits_trusted & t3;
+    else
+      result.bits_trusted <- t3 & $1.bits_trusted + t2;
+    end;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1B7EBE begin
     if result.c136 = 1 then
       if result.c137 = 1 then
@@ -246,7 +672,87 @@ end;
 
 transform 418  ip_reg <- extend_top ($1: ip_reg)
   no_could_deadlock_child;
-  pass_1 image 16#1368B8;
+  pass_1 image 16#1368B8 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    condition not (subject.il.b30 & 128 = 0 or subject.il.w26 <> 1);
+    cycle_guard already_ip_reg;
+    t2 <- make_bit_mask_2(31, 8);
+    t3 <- make_bit_mask_2(7, 0);
+    result.l352 <- find_well_known_literal_solution(127);
+    t4 <- make_bit_mask_1(8, 0);
+    t5 <- make_bit_mask_1(8, 0);
+    if not (subject.il.b30 & 64 <> 0) or subject.il.w28 <> 1 then
+      if subject.il.b30 & 64 <> 0 or subject.il.w28 <> 0 then
+        if not (subject.il.b30 & 64 <> 0) or subject.il.w28 <> 0 then
+          result.c136 <- 4;
+          if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+            result.c143 <- 2;
+          else
+            result.c143 <- 1;
+            if $1.kind = 11 then
+              result.c144 <- 1;
+            elsif $1.kind = 8 then
+              result.c144 <- 2;
+            else
+              result.c144 <- 3;
+            end;
+          end;
+        else
+          result.c136 <- 3;
+          if subject.il.w24 = 1 then
+            result.c138 <- 1;
+            if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+              result.c139 <- 2;
+            else
+              result.c139 <- 1;
+              if $1.kind = 11 then
+                result.c140 <- 1;
+              elsif $1.kind = 8 then
+                result.c140 <- 2;
+              else
+                result.c140 <- 3;
+              end;
+            end;
+            if lir_$can_encode_as_immediate_operand(-result.l352.literal_32_bits_value, opc$add, 1) then
+              result.c141 <- 1;
+            else
+              result.c141 <- 2;
+              if lir_$can_encode_as_immediate_operand(result.l352.literal_32_bits_value, opc$move, 1) then
+                result.c142 <- 1;
+              else
+                result.c142 <- 2;
+              end;
+            end;
+          else
+            result.c138 <- 2;
+          end;
+        end;
+      else
+        result.c136 <- 2;
+      end;
+    else
+      result.c136 <- 1;
+      if $1.bit_7_was_sign_extended then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(0, 4, 0, 12)[result.c136] + words(0, 4)[result.c137] + words(8, 4)[result.c138] + words(4, 4, 4)[result.c140] + words(4, 4)[result.c141] + words(4, 4)[result.c142] + words(4, 4, 4)[result.c144] + $1.code_bytes;
+    result.memory_references <- bytes(0, 1)[result.c142] + $1.memory_references;
+    result.delay <- bytes(0, 2, 2)[result.c140] + bytes(0, 1)[result.c142] + bytes(0, 2, 2)[result.c144] + $1.delay;
+    result.bits_known <- t3 & $1.bits_known;
+    if subject.il.b30 & 64 <> 0 then
+      result.bits_trusted <- $1.bits_trusted & t3;
+    else
+      result.bits_trusted <- t3 & $1.bits_trusted + t2;
+    end;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1B8088 begin
     temp t1: solution;
     temp t2: solution;
@@ -313,7 +819,34 @@ end;
 
 transform 419  ip_reg <- extend_top ($1: ip_reg)
   no_could_deadlock_child;
-  pass_1 image 16#136D10;
+  pass_1 image 16#136D10 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.w26 <> 2 or (not $1.is_entire_object or $1.is_destroyable));
+    cycle_guard already_ip_reg;
+    t2 <- make_bit_mask_2(31, 16);
+    t3 <- make_bit_mask_2(15, 0);
+    t4 <- make_bit_mask_1(16, 0);
+    if subject.il.b30 & 64 <> 0 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(4)[result.c136] + words(0, 4)[result.c137] + $1.code_bytes;
+    copy memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.bits_known <- t3 & $1.bits_known;
+    if subject.il.b30 & 64 <> 0 then
+      result.bits_trusted <- $1.bits_trusted & t3;
+    else
+      result.bits_trusted <- t3 & $1.bits_trusted + t2;
+    end;
+  end;
   pass_2 image 16#1B83DC begin
     if result.c136 = 1 then
       emit simple(opc$extend15, 16#4000, $1, $1, nil);
@@ -331,7 +864,67 @@ transform 419  ip_reg <- extend_top ($1: ip_reg)
 end;
 
 transform 420  ip_reg <- extend_top ($1: ip_reg_field)
-  pass_1 image 16#137350;
+  pass_1 image 16#137350 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.w26 <> 2 or ($1.bit_position_of_lsb <> 0 or $1.field_precision <> 16));
+    cycle_guard already_ip_reg;
+    t2 <- make_bit_mask_2(31, 16);
+    t3 <- make_bit_mask_2(15, 0);
+    t4 <- make_bit_mask_1(8, 0);
+    t5 <- make_bit_mask_1(16, 0);
+    if subject.il.b30 & 64 <> 0 then
+      result.c136 <- 1;
+      if $1.inherited_attributes.fetch_precision = 8 then
+        result.c137 <- 1;
+        if $1.bit_7_was_sign_extended then
+          result.c138 <- 1;
+        else
+          result.c138 <- 2;
+        end;
+      elsif $1.inherited_attributes.fetch_precision = 16 then
+        result.c137 <- 2;
+        if $1.bit_15_was_sign_extended then
+          result.c139 <- 1;
+        else
+          result.c139 <- 2;
+        end;
+      else
+        result.c137 <- 3;
+      end;
+    else
+      result.c136 <- 2;
+      if $1.inherited_attributes.fetch_precision = 8 then
+        result.c140 <- 1;
+        if verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0) then
+          result.c141 <- 1;
+        else
+          result.c141 <- 2;
+        end;
+      elsif $1.inherited_attributes.fetch_precision = 16 then
+        result.c140 <- 2;
+        if verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0) then
+          result.c142 <- 1;
+        else
+          result.c142 <- 2;
+        end;
+      else
+        result.c140 <- 3;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c138] + words(0, 4)[result.c139] + words(0, 4)[result.c141] + words(0, 4)[result.c142] + $1.code_bytes;
+    copy memory_references, delay from $1;
+    result.bits_known <- t3 & $1.bits_known;
+    if subject.il.b30 & 64 <> 0 then
+      result.bits_trusted <- $1.bits_trusted & t3;
+    else
+      result.bits_trusted <- t3 & $1.bits_trusted + t2;
+    end;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1B84B4 begin
     if result.c136 = 1 then
       if result.c137 = 1 then
@@ -368,7 +961,67 @@ transform 420  ip_reg <- extend_top ($1: ip_reg_field)
 end;
 
 transform 421  ip_reg <- extend_top ($1: ip_reg)
-  pass_1 image 16#1376AC;
+  pass_1 image 16#1376AC begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.w26 <> 2);
+    cycle_guard already_ip_reg;
+    t2 <- make_bit_mask_2(31, 16);
+    t3 <- make_bit_mask_2(15, 0);
+    t4 <- make_bit_mask_1(8, 0);
+    t5 <- make_bit_mask_1(16, 0);
+    if subject.il.b30 & 64 <> 0 then
+      result.c136 <- 1;
+      if $1.inherited_attributes.fetch_precision = 8 then
+        result.c137 <- 1;
+        if $1.bit_7_was_sign_extended then
+          result.c138 <- 1;
+        else
+          result.c138 <- 2;
+        end;
+      elsif $1.inherited_attributes.fetch_precision = 16 then
+        result.c137 <- 2;
+        if $1.bit_15_was_sign_extended then
+          result.c139 <- 1;
+        else
+          result.c139 <- 2;
+        end;
+      else
+        result.c137 <- 3;
+      end;
+    else
+      result.c136 <- 2;
+      if $1.inherited_attributes.fetch_precision = 8 then
+        result.c140 <- 1;
+        if verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0) then
+          result.c141 <- 1;
+        else
+          result.c141 <- 2;
+        end;
+      elsif $1.inherited_attributes.fetch_precision = 16 then
+        result.c140 <- 2;
+        if verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0) then
+          result.c142 <- 1;
+        else
+          result.c142 <- 2;
+        end;
+      else
+        result.c140 <- 3;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c138] + words(0, 4)[result.c139] + words(0, 4)[result.c141] + words(0, 4)[result.c142] + $1.code_bytes;
+    copy memory_references, delay from $1;
+    result.bits_known <- t3 & $1.bits_known;
+    if subject.il.b30 & 64 <> 0 then
+      result.bits_trusted <- $1.bits_trusted & t3;
+    else
+      result.bits_trusted <- t3 & $1.bits_trusted + t2;
+    end;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1B867E begin
     if result.c136 = 1 then
       if result.c137 = 1 then
@@ -406,7 +1059,244 @@ end;
 
 transform 422  ip_reg <- extend_top ($1: ip_reg)
   no_could_deadlock_child;
-  pass_1 image 16#1379F2;
+  pass_1 image 16#1379F2 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    condition not (subject.il.b30 & 128 = 0 or subject.il.w26 <> 2);
+    cycle_guard already_ip_reg;
+    t2 <- make_bit_mask_2(31, 16);
+    t3 <- make_bit_mask_2(15, 0);
+    result.l352 <- find_well_known_literal_solution(127);
+    result.l356 <- find_well_known_literal_solution(255);
+    result.l360 <- find_well_known_literal_solution(16#7FFF);
+    result.l364 <- find_well_known_literal_solution(-128);
+    t4 <- make_bit_mask_1(16, 0);
+    t5 <- make_bit_mask_1(16, 0);
+    if not (subject.il.b30 & 64 <> 0) or subject.il.w28 <> 1 then
+      if subject.il.b30 & 64 <> 0 or subject.il.w28 <> 0 then
+        if not (subject.il.b30 & 64 <> 0) or subject.il.w28 <> 0 then
+          result.c136 <- 4;
+          if subject.il.w24 = 1 then
+            result.c163 <- 1;
+            if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+              result.c164 <- 2;
+            else
+              result.c164 <- 1;
+              if $1.kind = 11 then
+                result.c165 <- 1;
+              elsif $1.kind = 8 then
+                result.c165 <- 2;
+              else
+                result.c165 <- 3;
+              end;
+            end;
+            if lir_$can_encode_as_immediate_operand(-result.l356.literal_32_bits_value, opc$add, 1) then
+              result.c166 <- 1;
+            else
+              result.c166 <- 2;
+              if lir_$can_encode_as_immediate_operand(result.l356.literal_32_bits_value, opc$move, 1) then
+                result.c167 <- 1;
+              else
+                result.c167 <- 2;
+              end;
+            end;
+          else
+            result.c163 <- 2;
+            if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+              result.c168 <- 2;
+            else
+              result.c168 <- 1;
+              if $1.kind = 11 then
+                result.c169 <- 1;
+              elsif $1.kind = 8 then
+                result.c169 <- 2;
+              else
+                result.c169 <- 3;
+              end;
+            end;
+            if lir_$can_encode_as_immediate_operand(-result.l360.literal_32_bits_value, opc$add, 1) then
+              result.c170 <- 1;
+            else
+              result.c170 <- 2;
+              if lir_$can_encode_as_immediate_operand(result.l360.literal_32_bits_value, opc$move, 1) then
+                result.c171 <- 1;
+              else
+                result.c171 <- 2;
+              end;
+            end;
+          end;
+          if subject.il.w24 = 4 then
+            result.c172 <- 1;
+          else
+            result.c172 <- 2;
+          end;
+        else
+          result.c136 <- 3;
+          if subject.il.w24 = 1 then
+            result.c152 <- 1;
+            if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+              result.c153 <- 2;
+            else
+              result.c153 <- 1;
+              if $1.kind = 11 then
+                result.c154 <- 1;
+              elsif $1.kind = 8 then
+                result.c154 <- 2;
+              else
+                result.c154 <- 3;
+              end;
+            end;
+            if lir_$can_encode_as_immediate_operand(-result.l352.literal_32_bits_value, opc$add, 1) then
+              result.c155 <- 1;
+            else
+              result.c155 <- 2;
+              if lir_$can_encode_as_immediate_operand(result.l352.literal_32_bits_value, opc$move, 1) then
+                result.c156 <- 1;
+              else
+                result.c156 <- 2;
+              end;
+            end;
+          else
+            result.c152 <- 2;
+            if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+              result.c157 <- 2;
+            else
+              result.c157 <- 1;
+              if $1.kind = 11 then
+                result.c158 <- 1;
+              elsif $1.kind = 8 then
+                result.c158 <- 2;
+              else
+                result.c158 <- 3;
+              end;
+            end;
+            if lir_$can_encode_as_immediate_operand(-result.l360.literal_32_bits_value, opc$add, 1) then
+              result.c159 <- 1;
+            else
+              result.c159 <- 2;
+              if lir_$can_encode_as_immediate_operand(result.l360.literal_32_bits_value, opc$move, 1) then
+                result.c160 <- 1;
+              else
+                result.c160 <- 2;
+              end;
+            end;
+          end;
+          if subject.il.w24 = 4 then
+            result.c161 <- 1;
+            if $1.bit_15_was_sign_extended then
+              result.c162 <- 1;
+            else
+              result.c162 <- 2;
+            end;
+          else
+            result.c161 <- 2;
+          end;
+        end;
+      else
+        result.c136 <- 2;
+        if subject.il.w24 = 1 then
+          result.c147 <- 1;
+          if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+            result.c148 <- 2;
+          else
+            result.c148 <- 1;
+            if $1.kind = 11 then
+              result.c149 <- 1;
+            elsif $1.kind = 8 then
+              result.c149 <- 2;
+            else
+              result.c149 <- 3;
+            end;
+          end;
+          if lir_$can_encode_as_immediate_operand(-result.l356.literal_32_bits_value, opc$add, 1) then
+            result.c150 <- 1;
+          else
+            result.c150 <- 2;
+            if lir_$can_encode_as_immediate_operand(result.l356.literal_32_bits_value, opc$move, 1) then
+              result.c151 <- 1;
+            else
+              result.c151 <- 2;
+            end;
+          end;
+        elsif subject.il.w24 = 4 then
+          result.c147 <- 2;
+        else
+          result.c147 <- 3;
+        end;
+      end;
+    else
+      result.c136 <- 1;
+      if subject.il.w24 = 1 then
+        result.c137 <- 1;
+        if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+          result.c138 <- 2;
+        else
+          result.c138 <- 1;
+          if $1.kind = 11 then
+            result.c139 <- 1;
+          elsif $1.kind = 8 then
+            result.c139 <- 2;
+          else
+            result.c139 <- 3;
+          end;
+        end;
+        if lir_$can_encode_as_immediate_operand(-result.l364.literal_32_bits_value, opc$add, 1) then
+          result.c140 <- 1;
+        else
+          result.c140 <- 2;
+          if lir_$can_encode_as_immediate_operand(result.l364.literal_32_bits_value, opc$move, 1) then
+            result.c141 <- 1;
+          else
+            result.c141 <- 2;
+          end;
+        end;
+        if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+          result.c142 <- 2;
+        else
+          result.c142 <- 1;
+          if $1.kind = 11 then
+            result.c143 <- 1;
+          elsif $1.kind = 8 then
+            result.c143 <- 2;
+          else
+            result.c143 <- 3;
+          end;
+        end;
+        if lir_$can_encode_as_immediate_operand(-result.l352.literal_32_bits_value, opc$add, 1) then
+          result.c144 <- 1;
+        else
+          result.c144 <- 2;
+          if lir_$can_encode_as_immediate_operand(result.l352.literal_32_bits_value, opc$move, 1) then
+            result.c145 <- 1;
+          else
+            result.c145 <- 2;
+          end;
+        end;
+      elsif subject.il.w24 = 4 then
+        result.c137 <- 2;
+        if $1.bit_15_was_sign_extended then
+          result.c146 <- 1;
+        else
+          result.c146 <- 2;
+        end;
+      else
+        result.c137 <- 3;
+      end;
+    end;
+    result.code_bytes <- words(12, 0, 4)[result.c137] + words(4, 4, 4)[result.c139] + words(4, 4)[result.c140] + words(4, 4)[result.c141] + words(4, 4, 4)[result.c143] + words(4, 4)[result.c144] + words(4, 4)[result.c145] + words(0, 4)[result.c146] + words(8, 4, 4)[result.c147] + words(4, 4, 4)[result.c149] + words(4, 4)[result.c150] + words(4, 4)[result.c151] + words(4, 4)[result.c152] + words(4, 4, 4)[result.c154] + words(4, 4)[result.c155] + words(4, 4)[result.c156] + words(4, 4, 4)[result.c158] + words(4, 4)[result.c159] + words(4, 4)[result.c160] + words(0, 4)[result.c161] + words(0, 4)[result.c162] + words(4, 4)[result.c163] + words(4, 4, 4)[result.c165] + words(4, 4)[result.c166] + words(4, 4)[result.c167] + words(4, 4, 4)[result.c169] + words(4, 4)[result.c170] + words(4, 4)[result.c171] + words(4, 4)[result.c172] + $1.code_bytes;
+    result.memory_references <- bytes(0, 1)[result.c141] + bytes(0, 1)[result.c145] + bytes(0, 1)[result.c151] + bytes(0, 1)[result.c156] + bytes(0, 1)[result.c160] + bytes(0, 1)[result.c167] + bytes(0, 1)[result.c171] + $1.memory_references;
+    result.delay <- bytes(0, 2, 2)[result.c139] + bytes(0, 1)[result.c141] + bytes(0, 2, 2)[result.c143] + bytes(0, 1)[result.c145] + bytes(0, 2, 2)[result.c149] + bytes(0, 1)[result.c151] + bytes(0, 2, 2)[result.c154] + bytes(0, 1)[result.c156] + bytes(0, 2, 2)[result.c158] + bytes(0, 1)[result.c160] + bytes(0, 2, 2)[result.c165] + bytes(0, 1)[result.c167] + bytes(0, 2, 2)[result.c169] + bytes(0, 1)[result.c171] + $1.delay;
+    result.bits_known <- t3 & $1.bits_known;
+    if subject.il.b30 & 64 <> 0 then
+      result.bits_trusted <- $1.bits_trusted & t3;
+    else
+      result.bits_trusted <- t3 & $1.bits_trusted + t2;
+    end;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1B8848 begin
     temp t1: solution;
     temp t2: solution;
@@ -652,7 +1542,340 @@ end;
 
 transform 423  ip_reg <- extend_top ($1: ip_reg)
   no_could_deadlock_child;
-  pass_1 image 16#138600;
+  pass_1 image 16#138600 begin
+    condition not (subject.il.b30 & 128 = 0 or subject.il.w26 <> 4);
+    cycle_guard already_ip_reg;
+    result.l352 <- find_well_known_literal_solution(127);
+    result.l356 <- find_well_known_literal_solution(16#7FFF);
+    result.l360 <- find_well_known_literal_solution(255);
+    result.l364 <- find_well_known_literal_solution(16#FFFF);
+    result.l368 <- find_well_known_literal_solution(16#7FFFFFFF);
+    result.l372 <- find_well_known_literal_solution(-128);
+    result.l376 <- find_well_known_literal_solution(-16#8000);
+    if not (subject.il.b30 & 64 <> 0) or subject.il.w28 <> 1 then
+      if subject.il.b30 & 64 <> 0 or subject.il.w28 <> 0 then
+        if not (subject.il.b30 & 64 <> 0) or subject.il.w28 <> 0 then
+          result.c136 <- 4;
+          if subject.il.w24 = 1 then
+            result.c179 <- 1;
+            if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+              result.c180 <- 2;
+            else
+              result.c180 <- 1;
+              if $1.kind = 11 then
+                result.c181 <- 1;
+              elsif $1.kind = 8 then
+                result.c181 <- 2;
+              else
+                result.c181 <- 3;
+              end;
+            end;
+            if lir_$can_encode_as_immediate_operand(-result.l360.literal_32_bits_value, opc$add, 1) then
+              result.c182 <- 1;
+            else
+              result.c182 <- 2;
+              if lir_$can_encode_as_immediate_operand(result.l360.literal_32_bits_value, opc$move, 1) then
+                result.c183 <- 1;
+              else
+                result.c183 <- 2;
+              end;
+            end;
+          else
+            result.c179 <- 2;
+            if subject.il.w24 = 2 then
+              result.c184 <- 1;
+              if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+                result.c185 <- 2;
+              else
+                result.c185 <- 1;
+                if $1.kind = 11 then
+                  result.c186 <- 1;
+                elsif $1.kind = 8 then
+                  result.c186 <- 2;
+                else
+                  result.c186 <- 3;
+                end;
+              end;
+              if lir_$can_encode_as_immediate_operand(-result.l364.literal_32_bits_value, opc$add, 1) then
+                result.c187 <- 1;
+              else
+                result.c187 <- 2;
+                if lir_$can_encode_as_immediate_operand(result.l364.literal_32_bits_value, opc$move, 1) then
+                  result.c188 <- 1;
+                else
+                  result.c188 <- 2;
+                end;
+              end;
+            else
+              result.c184 <- 2;
+              if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+                result.c189 <- 2;
+              else
+                result.c189 <- 1;
+                if $1.kind = 11 then
+                  result.c190 <- 1;
+                elsif $1.kind = 8 then
+                  result.c190 <- 2;
+                else
+                  result.c190 <- 3;
+                end;
+              end;
+              if lir_$can_encode_as_immediate_operand(-result.l368.literal_32_bits_value, opc$add, 1) then
+                result.c191 <- 1;
+              else
+                result.c191 <- 2;
+                if lir_$can_encode_as_immediate_operand(result.l368.literal_32_bits_value, opc$move, 1) then
+                  result.c192 <- 1;
+                else
+                  result.c192 <- 2;
+                end;
+              end;
+            end;
+          end;
+        else
+          result.c136 <- 3;
+          if subject.il.w24 = 1 then
+            result.c165 <- 1;
+            if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+              result.c166 <- 2;
+            else
+              result.c166 <- 1;
+              if $1.kind = 11 then
+                result.c167 <- 1;
+              elsif $1.kind = 8 then
+                result.c167 <- 2;
+              else
+                result.c167 <- 3;
+              end;
+            end;
+            if lir_$can_encode_as_immediate_operand(-result.l352.literal_32_bits_value, opc$add, 1) then
+              result.c168 <- 1;
+            else
+              result.c168 <- 2;
+              if lir_$can_encode_as_immediate_operand(result.l352.literal_32_bits_value, opc$move, 1) then
+                result.c169 <- 1;
+              else
+                result.c169 <- 2;
+              end;
+            end;
+          else
+            result.c165 <- 2;
+            if subject.il.w24 = 2 then
+              result.c170 <- 1;
+              if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+                result.c171 <- 2;
+              else
+                result.c171 <- 1;
+                if $1.kind = 11 then
+                  result.c172 <- 1;
+                elsif $1.kind = 8 then
+                  result.c172 <- 2;
+                else
+                  result.c172 <- 3;
+                end;
+              end;
+              if lir_$can_encode_as_immediate_operand(-result.l356.literal_32_bits_value, opc$add, 1) then
+                result.c173 <- 1;
+              else
+                result.c173 <- 2;
+                if lir_$can_encode_as_immediate_operand(result.l356.literal_32_bits_value, opc$move, 1) then
+                  result.c174 <- 1;
+                else
+                  result.c174 <- 2;
+                end;
+              end;
+            else
+              result.c170 <- 2;
+              if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+                result.c175 <- 2;
+              else
+                result.c175 <- 1;
+                if $1.kind = 11 then
+                  result.c176 <- 1;
+                elsif $1.kind = 8 then
+                  result.c176 <- 2;
+                else
+                  result.c176 <- 3;
+                end;
+              end;
+              if lir_$can_encode_as_immediate_operand(-result.l368.literal_32_bits_value, opc$add, 1) then
+                result.c177 <- 1;
+              else
+                result.c177 <- 2;
+                if lir_$can_encode_as_immediate_operand(result.l368.literal_32_bits_value, opc$move, 1) then
+                  result.c178 <- 1;
+                else
+                  result.c178 <- 2;
+                end;
+              end;
+            end;
+          end;
+        end;
+      else
+        result.c136 <- 2;
+        if subject.il.w24 = 1 then
+          result.c155 <- 1;
+          if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+            result.c156 <- 2;
+          else
+            result.c156 <- 1;
+            if $1.kind = 11 then
+              result.c157 <- 1;
+            elsif $1.kind = 8 then
+              result.c157 <- 2;
+            else
+              result.c157 <- 3;
+            end;
+          end;
+          if lir_$can_encode_as_immediate_operand(-result.l360.literal_32_bits_value, opc$add, 1) then
+            result.c158 <- 1;
+          else
+            result.c158 <- 2;
+            if lir_$can_encode_as_immediate_operand(result.l360.literal_32_bits_value, opc$move, 1) then
+              result.c159 <- 1;
+            else
+              result.c159 <- 2;
+            end;
+          end;
+        else
+          result.c155 <- 2;
+          if subject.il.w24 = 2 then
+            result.c160 <- 1;
+            if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+              result.c161 <- 2;
+            else
+              result.c161 <- 1;
+              if $1.kind = 11 then
+                result.c162 <- 1;
+              elsif $1.kind = 8 then
+                result.c162 <- 2;
+              else
+                result.c162 <- 3;
+              end;
+            end;
+            if lir_$can_encode_as_immediate_operand(-result.l364.literal_32_bits_value, opc$add, 1) then
+              result.c163 <- 1;
+            else
+              result.c163 <- 2;
+              if lir_$can_encode_as_immediate_operand(result.l364.literal_32_bits_value, opc$move, 1) then
+                result.c164 <- 1;
+              else
+                result.c164 <- 2;
+              end;
+            end;
+          else
+            result.c160 <- 2;
+          end;
+        end;
+      end;
+    else
+      result.c136 <- 1;
+      if subject.il.w24 = 1 then
+        result.c137 <- 1;
+        if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+          result.c138 <- 2;
+        else
+          result.c138 <- 1;
+          if $1.kind = 11 then
+            result.c139 <- 1;
+          elsif $1.kind = 8 then
+            result.c139 <- 2;
+          else
+            result.c139 <- 3;
+          end;
+        end;
+        if lir_$can_encode_as_immediate_operand(-result.l352.literal_32_bits_value, opc$add, 1) then
+          result.c140 <- 1;
+        else
+          result.c140 <- 2;
+          if lir_$can_encode_as_immediate_operand(result.l352.literal_32_bits_value, opc$move, 1) then
+            result.c141 <- 1;
+          else
+            result.c141 <- 2;
+          end;
+        end;
+        if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+          result.c142 <- 2;
+        else
+          result.c142 <- 1;
+          if $1.kind = 11 then
+            result.c143 <- 1;
+          elsif $1.kind = 8 then
+            result.c143 <- 2;
+          else
+            result.c143 <- 3;
+          end;
+        end;
+        if lir_$can_encode_as_immediate_operand(-result.l372.literal_32_bits_value, opc$add, 1) then
+          result.c144 <- 1;
+        else
+          result.c144 <- 2;
+          if lir_$can_encode_as_immediate_operand(result.l372.literal_32_bits_value, opc$move, 1) then
+            result.c145 <- 1;
+          else
+            result.c145 <- 2;
+          end;
+        end;
+      else
+        result.c137 <- 2;
+        if subject.il.w24 = 2 then
+          result.c146 <- 1;
+          if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+            result.c147 <- 2;
+          else
+            result.c147 <- 1;
+            if $1.kind = 11 then
+              result.c148 <- 1;
+            elsif $1.kind = 8 then
+              result.c148 <- 2;
+            else
+              result.c148 <- 3;
+            end;
+          end;
+          if lir_$can_encode_as_immediate_operand(-result.l356.literal_32_bits_value, opc$add, 1) then
+            result.c149 <- 1;
+          else
+            result.c149 <- 2;
+            if lir_$can_encode_as_immediate_operand(result.l356.literal_32_bits_value, opc$move, 1) then
+              result.c150 <- 1;
+            else
+              result.c150 <- 2;
+            end;
+          end;
+          if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
+            result.c151 <- 2;
+          else
+            result.c151 <- 1;
+            if $1.kind = 11 then
+              result.c152 <- 1;
+            elsif $1.kind = 8 then
+              result.c152 <- 2;
+            else
+              result.c152 <- 3;
+            end;
+          end;
+          if lir_$can_encode_as_immediate_operand(-result.l376.literal_32_bits_value, opc$add, 1) then
+            result.c153 <- 1;
+          else
+            result.c153 <- 2;
+            if lir_$can_encode_as_immediate_operand(result.l376.literal_32_bits_value, opc$move, 1) then
+              result.c154 <- 1;
+            else
+              result.c154 <- 2;
+            end;
+          end;
+        else
+          result.c146 <- 2;
+        end;
+      end;
+    end;
+    result.code_bytes <- words(8)[result.c137] + words(4, 4, 4)[result.c139] + words(4, 4)[result.c140] + words(4, 4)[result.c141] + words(4, 4, 4)[result.c143] + words(4, 4)[result.c144] + words(4, 4)[result.c145] + words(8)[result.c146] + words(4, 4, 4)[result.c148] + words(4, 4)[result.c149] + words(4, 4)[result.c150] + words(4, 4, 4)[result.c152] + words(4, 4)[result.c153] + words(4, 4)[result.c154] + words(4)[result.c155] + words(4, 4, 4)[result.c157] + words(4, 4)[result.c158] + words(4, 4)[result.c159] + words(4)[result.c160] + words(4, 4, 4)[result.c162] + words(4, 4)[result.c163] + words(4, 4)[result.c164] + words(4)[result.c165] + words(4, 4, 4)[result.c167] + words(4, 4)[result.c168] + words(4, 4)[result.c169] + words(4, 4)[result.c170] + words(4, 4, 4)[result.c172] + words(4, 4)[result.c173] + words(4, 4)[result.c174] + words(4, 4, 4)[result.c176] + words(4, 4)[result.c177] + words(4, 4)[result.c178] + words(4)[result.c179] + words(4, 4, 4)[result.c181] + words(4, 4)[result.c182] + words(4, 4)[result.c183] + words(4, 4)[result.c184] + words(4, 4, 4)[result.c186] + words(4, 4)[result.c187] + words(4, 4)[result.c188] + words(4, 4, 4)[result.c190] + words(4, 4)[result.c191] + words(4, 4)[result.c192] + $1.code_bytes + 4;
+    result.memory_references <- bytes(0, 1)[result.c141] + bytes(0, 1)[result.c145] + bytes(0, 1)[result.c150] + bytes(0, 1)[result.c154] + bytes(0, 1)[result.c159] + bytes(0, 1)[result.c164] + bytes(0, 1)[result.c169] + bytes(0, 1)[result.c174] + bytes(0, 1)[result.c178] + bytes(0, 1)[result.c183] + bytes(0, 1)[result.c188] + bytes(0, 1)[result.c192] + $1.memory_references;
+    result.delay <- bytes(0, 2, 2)[result.c139] + bytes(0, 1)[result.c141] + bytes(0, 2, 2)[result.c143] + bytes(0, 1)[result.c145] + bytes(0, 2, 2)[result.c148] + bytes(0, 1)[result.c150] + bytes(0, 2, 2)[result.c152] + bytes(0, 1)[result.c154] + bytes(0, 2, 2)[result.c157] + bytes(0, 1)[result.c159] + bytes(0, 2, 2)[result.c162] + bytes(0, 1)[result.c164] + bytes(0, 2, 2)[result.c167] + bytes(0, 1)[result.c169] + bytes(0, 2, 2)[result.c172] + bytes(0, 1)[result.c174] + bytes(0, 2, 2)[result.c176] + bytes(0, 1)[result.c178] + bytes(0, 2, 2)[result.c181] + bytes(0, 1)[result.c183] + bytes(0, 2, 2)[result.c186] + bytes(0, 1)[result.c188] + bytes(0, 2, 2)[result.c190] + bytes(0, 1)[result.c192] + $1.delay;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1B945E begin
     temp t1: solution;
     temp t2: solution;
@@ -1013,7 +2236,79 @@ end;
 
 transform 424  fp_reg <- f_extend_top ($1: ip_reg, $2: void)
   no_could_deadlock_child;
-  pass_1 image 16#139B5A;
+  pass_1 image 16#139B5A begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: boolean;
+    temp t5: boolean;
+    temp t6: boolean;
+    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = 6 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or not (14 in cargs_$options.flags_286))));
+    cycle_guard already_fp_reg;
+    t2 <- make_bit_mask_1(8, 0);
+    t3 <- make_bit_mask_1(16, 0);
+    if subject.il.b30 & 64 <> 0 then
+      result.c136 <- 1;
+      if $1.inherited_attributes.fetch_precision = 8 then
+        result.c137 <- 1;
+        if $1.bit_7_was_sign_extended then
+          result.c138 <- 1;
+        else
+          result.c138 <- 2;
+        end;
+      elsif $1.inherited_attributes.fetch_precision = 16 then
+        result.c137 <- 2;
+        if $1.bit_15_was_sign_extended then
+          result.c139 <- 1;
+        else
+          result.c139 <- 2;
+        end;
+      else
+        result.c137 <- 3;
+      end;
+    else
+      result.c136 <- 2;
+      if $1.inherited_attributes.fetch_precision = 8 then
+        result.c140 <- 1;
+        if verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0) then
+          result.c141 <- 1;
+        else
+          result.c141 <- 2;
+        end;
+        t5 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0);
+      else
+        if $1.inherited_attributes.fetch_precision = 16 then
+          result.c140 <- 2;
+          if verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0) then
+            result.c142 <- 1;
+          else
+            result.c142 <- 2;
+          end;
+          t4 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
+        else
+          result.c140 <- 3;
+        end;
+        t5 <- t4;
+      end;
+      t6 <- t5;
+    end;
+    if subject.il.b30 & 64 <> 0 or subject.il.w26 <> 4 then
+      result.c143 <- 2;
+    else
+      result.c143 <- 1;
+      if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+        result.c144 <- 1;
+      else
+        result.c144 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c138] + words(0, 4)[result.c139] + words(0, 4)[result.c141] + words(0, 4)[result.c142] + words(28, 4)[result.c143] + $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- bytes(1)[result.c143] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(7, 2)[result.c143] + $1.delay + $2.delay + 1;
+    result.fp_reg_max <- $1.fp_reg_max + 1;
+    result.fp_reg_result <- 1;
+    result.ip_reg_max <- $1.ip_reg_max;
+    result.ip_reg_result <- 0;
+  end;
   pass_2 image 16#1BA63C begin
     temp t1: solution;
     temp t2: solution;
@@ -1069,7 +2364,25 @@ end;
 
 transform 425  fp_reg <- f_extend_top ($1: fp_reg, $2: void)
   no_could_deadlock_child;
-  pass_1 image 16#139F90;
+  pass_1 image 16#139F90 begin
+    condition not (subject.il.w26 <> 6 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
+    cycle_guard already_fp_reg;
+    if subject.il.b30 & 64 <> 0 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(4, 32)[result.c136] + $1.code_bytes + $2.code_bytes;
+    result.memory_references <- bytes(0, 2)[result.c136] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(2, 12)[result.c136] + $1.delay + $2.delay;
+    result.fp_reg_max <- $1.fp_reg_max + 1;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1BA8D6 begin
     temp t1: pointer;
     temp t2: pointer;
@@ -1109,7 +2422,27 @@ end;
 
 transform 426  ip_reg <- f_extend_top ($1: fp_reg, $2: void)
   no_could_deadlock_child;
-  pass_1 image 16#13A1F2;
+  pass_1 image 16#13A1F2 begin
+    condition not (subject.il.w26 <> 6 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
+    cycle_guard already_ip_reg;
+    if subject.il.b30 & 64 <> 0 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(12, 48)[result.c136] + $1.code_bytes + $2.code_bytes;
+    result.memory_references <- bytes(0, 2)[result.c136] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(3, 12)[result.c136] + $1.delay + $2.delay;
+    result.fp_reg_max <- $1.fp_reg_max;
+    result.fp_reg_result <- 0;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1BAAC4 begin
     temp t1: pointer;
     temp t2: pointer;
@@ -1157,7 +2490,22 @@ transform 426  ip_reg <- f_extend_top ($1: fp_reg, $2: void)
 end;
 
 transform 427  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: void)
-  pass_1 image 16#13A456;
+  pass_1 image 16#13A456 begin
+    condition not (subject.il.w26 <> 6 or subject.il.w24 <> 7 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
+    cycle_guard already_fp_reg_pair;
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.fp_reg_max <- $1.fp_reg_max;
+    result.fp_reg_result <- 0;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max + 1;
+    result.fp_reg_pair_result <- 1;
+  end;
   pass_2 image 16#1BAD28 begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -1167,7 +2515,15 @@ transform 427  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: void)
 end;
 
 transform 428  fp_reg <- f_extend_top ($1: f_extend_top($1: fp_reg, $2: void), $2: void)
-  pass_1 image 16#13A63E;
+  pass_1 image 16#13A63E begin
+    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = 6 and (subject.il.b30 & 64 <> 0) and ($1.il.w26 = 6)) and (($1.il.w24 = 4 or $1.il.w24 = 1 or $1.il.w24 = 2) and ($1.il.b30 & 64 <> 0 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or not (14 in cargs_$options.flags_286)))));
+    cycle_guard already_fp_reg;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.fp_reg_max <- $1.$1.fp_reg_max + 1;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1BAD8E begin
     emit simple(opc$truncs, 0, $1.$1, solution, nil);
   end;
@@ -1175,7 +2531,84 @@ end;
 
 transform 429  fp_reg_pair <- f_extend_top ($1: ip_reg, $2: void)
   no_could_deadlock_child;
-  pass_1 image 16#13A84E;
+  pass_1 image 16#13A84E begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: boolean;
+    temp t5: boolean;
+    temp t6: boolean;
+    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = 7 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or not (14 in cargs_$options.flags_286))));
+    cycle_guard already_fp_reg_pair;
+    t2 <- make_bit_mask_1(8, 0);
+    t3 <- make_bit_mask_1(16, 0);
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if subject.il.b30 & 64 <> 0 then
+      result.c137 <- 1;
+      if $1.inherited_attributes.fetch_precision = 8 then
+        result.c138 <- 1;
+        if $1.bit_7_was_sign_extended then
+          result.c139 <- 1;
+        else
+          result.c139 <- 2;
+        end;
+      elsif $1.inherited_attributes.fetch_precision = 16 then
+        result.c138 <- 2;
+        if $1.bit_15_was_sign_extended then
+          result.c140 <- 1;
+        else
+          result.c140 <- 2;
+        end;
+      else
+        result.c138 <- 3;
+      end;
+    else
+      result.c137 <- 2;
+      if $1.inherited_attributes.fetch_precision = 8 then
+        result.c141 <- 1;
+        if verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0) then
+          result.c142 <- 1;
+        else
+          result.c142 <- 2;
+        end;
+        t5 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0);
+      else
+        if $1.inherited_attributes.fetch_precision = 16 then
+          result.c141 <- 2;
+          if verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0) then
+            result.c143 <- 1;
+          else
+            result.c143 <- 2;
+          end;
+          t4 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
+        else
+          result.c141 <- 3;
+        end;
+        t5 <- t4;
+      end;
+      t6 <- t5;
+    end;
+    if subject.il.b30 & 64 <> 0 or subject.il.w26 <> 4 then
+      result.c144 <- 2;
+    else
+      result.c144 <- 1;
+      if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+        result.c145 <- 1;
+      else
+        result.c145 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c139] + words(0, 4)[result.c140] + words(0, 4)[result.c142] + words(0, 4)[result.c143] + words(28, 4)[result.c144] + $1.code_bytes + $2.code_bytes + 8;
+    result.memory_references <- bytes(1)[result.c144] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(7, 2)[result.c144] + $1.delay + $2.delay + 1;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max + 1;
+    result.fp_reg_pair_result <- 1;
+    result.ip_reg_max <- $1.ip_reg_max;
+    result.ip_reg_result <- 0;
+  end;
   pass_2 image 16#1BADD6 begin
     temp t1: solution;
     temp t2: solution;
@@ -1234,7 +2667,32 @@ end;
 
 transform 430  fp_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
   no_could_deadlock_child;
-  pass_1 image 16#13AC5C;
+  pass_1 image 16#13AC5C begin
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
+    cycle_guard already_fp_reg;
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if subject.il.b30 & 64 <> 0 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+      if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(4, 32)[result.c137] + $1.code_bytes + $2.code_bytes;
+    result.memory_references <- bytes(0, 2)[result.c137] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(2, 12)[result.c137] + $1.delay + $2.delay;
+    result.fp_reg_max <- $1.fp_reg_max + 1;
+    result.fp_reg_result <- 1;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max;
+    result.fp_reg_pair_result <- 0;
+  end;
   pass_2 image 16#1BB098 begin
     temp t1: solution;
     temp t2: solution;
@@ -1277,7 +2735,34 @@ end;
 
 transform 431  ip_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
   no_could_deadlock_child;
-  pass_1 image 16#13AEE2;
+  pass_1 image 16#13AEE2 begin
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
+    cycle_guard already_ip_reg;
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if subject.il.b30 & 64 <> 0 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+      if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(12, 48)[result.c137] + $1.code_bytes + $2.code_bytes;
+    result.memory_references <- bytes(0, 2)[result.c137] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(3, 12)[result.c137] + $1.delay + $2.delay;
+    result.fp_reg_max <- $1.fp_reg_max;
+    result.fp_reg_result <- 0;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max;
+    result.fp_reg_pair_result <- 0;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1BB2AE begin
     temp t1: solution;
     temp t2: solution;
@@ -1328,7 +2813,22 @@ transform 431  ip_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
 end;
 
 transform 432  fp_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
-  pass_1 image 16#13B16A;
+  pass_1 image 16#13B16A begin
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 6 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
+    cycle_guard already_fp_reg;
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.fp_reg_max <- $1.fp_reg_max + 1;
+    result.fp_reg_result <- 1;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max;
+    result.fp_reg_pair_result <- 0;
+  end;
   pass_2 image 16#1BB52E begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -1338,7 +2838,12 @@ transform 432  fp_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
 end;
 
 transform 433  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
-  pass_1 image 16#13B352;
+  pass_1 image 16#13B352 begin
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 7);
+    cycle_guard already_fp_reg_pair;
+    sum code_bytes, memory_references, delay of $1, $2;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#1BB594 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -1351,7 +2856,20 @@ transform 433  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
 end;
 
 transform 434  fp_reg_pair <- f_extend_top ($1: f_extend_top($1: fp_reg_pair, $2: void), $2: void)
-  pass_1 image 16#13B8B6;
+  pass_1 image 16#13B8B6 begin
+    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = 7 and (subject.il.b30 & 64 <> 0) and ($1.il.w26 = 7)) and (($1.il.w24 = 4 or $1.il.w24 = 1 or $1.il.w24 = 2) and ($1.il.b30 & 64 <> 0 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or not (14 in cargs_$options.flags_286)))));
+    cycle_guard already_fp_reg_pair;
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.fp_reg_pair_max <- $1.$1.fp_reg_pair_max + 1;
+    result.fp_reg_pair_result <- 1;
+  end;
   pass_2 image 16#1BB60C begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);

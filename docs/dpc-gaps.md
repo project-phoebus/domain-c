@@ -1223,3 +1223,21 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
            5: q(13, 14, 15);
          end;
        end;
+
+47. **Module arrays begin on 8 bytes in Rev 8.89.**  The pass-1 action
+    modules' cost tables are `array [0..16]' of bytes or words, 24 and
+    40 bytes apart in the image (pattern 188); dpc lays module variables
+    one after the other (an even boundary).  Worked around in the
+    generated modules, no rewrite: the tables are declared `packed
+    array [0..23] of 0..255' and `array [0..19] of integer' with 17
+    initial values (the module's last table unpadded), which dpc lays
+    out as the image does.  Reproducer:
+
+       module m;
+       var
+         a: packed array [0..16] of 0..255 := [1, 16 of 0];
+         b: array [0..16] of integer := [2, 16 of 0];
+       procedure p; begin a[0] := b[0]; end;
+
+    Rev 8.89: b at +24; dpc: b at +18 (and an unpacked `array of 0..255'
+    gets 2 bytes an element: gap 37).
