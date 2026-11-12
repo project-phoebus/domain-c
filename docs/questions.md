@@ -833,7 +833,7 @@ revisited.
 109. final: the module data's +0..+15, +36, +42 and the initialized
    tables from +0x60 to +0x87 and beyond +0x2A4 (to about +0x6AC: more
    descriptor-like 20-byte entries, and from about +0x2EC doubles each
-   after a word tag: pi, 0x0B..0x0F, 0x30..0x3B, used by floatop)
+   after a word tag: pi, 0x0B..0x0F, 0x30..0x3B; their user not identified)
    belong to the routines not yet translated; fn_0, fn_32/fn_36 names
    and fn_60's initializer are placeholders.  brimply's table at +0xA8
    (14 by 14 words) has 133 entries .rwdi leaves unset, written as 0:
