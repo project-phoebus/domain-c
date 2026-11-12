@@ -468,8 +468,11 @@ var
   lir_main_c68: extern integer32;       { +0xC68 }
   lir_main_c6c: extern integer32;       { +0xC6C }
   lir_main_c70: extern univ_ptr;        { +0xC70 }
-  lir_main_heap: extern ^mrh_$heap_t;   { +0xC74: the routine's heap
-                                          (lir's instructions) }
+  lir_main_heap: extern univ_ptr;       { +0xC74: the routine's heap
+                                          (lir's instructions), a
+                                          ^mrh_$heap_t: dfa, sem_utils
+                                          and others open mrh.ins.pas
+                                          after this insert }
   lir_main_c78: extern integer32;       { +0xC78 }
   lir_main_c7c: extern integer32;       { +0xC7C }
   lir_main_c80: extern integer32;       { +0xC80 }

@@ -473,3 +473,12 @@ fn_60, fn_fop_a/fn_fop_b +0x2A8/+0x2B8, fn_fmovecr +0x2E8, fn_fabs_op
 unread second argument.  docs/dpc-gaps.md 31 (new), 2, 7, 24 (also);
 rev889-patterns 92-95; questions 136-139.
 
+
+## The PRISM back end (translator MM, 2026-11-11)
+
+cc.a88k's back end has a core of its own, opened after this prelude
+by the be_com units: `lang2/source/be_com/backend.ins.pas`,
+`utils.ins.pas`, `call_conv.ins.pas`, the generated opcode enumeration
+and stubs for `be_prism/target.ins.pas` and `at_base.ins.pas`.  Its
+state, conventions and the order and batches for the remaining be_com
+units are in `docs/backend-plan.md`.  No prelude insert changed.

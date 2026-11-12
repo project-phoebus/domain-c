@@ -1088,3 +1088,70 @@ revisited.
    test with A2 unchanged): the cell, now the pattern's operation, is
    visited again under its new kind.
 
+140. Translator MM, the PRISM back end's core: **the generated ISC
+   (moon_unit/.../iscg_input/*: isc_pass_1_main, isc_pass_2_main,
+   isc_vars, isc_pattern_matcher, isc_debug, isc_main; about 1.05 MB of
+   cc.a88k's 1.17 MB of a88k-only code).  Hand translation or tables /
+   generator input?**  What the image shows: the units are DSEE
+   derived objects of an ISC generator's input (iscg_input); 0xF0B02..
+   0x18C588 and 0x18C7A0..0x20042C hold about 1080 routines that no
+   .blocks record names (isc_pass_2_main has one named routine of 536
+   bytes in a span of 474,788; isc_vars none in 277,188, its "code
+   start" falling inside that code); they are tiny pattern actions,
+   many byte-identical (e.g. 0x18C7C4, 0x18C7F0: `link; lea
+   0x480058,A5; (8..16,A6); move.l (116,A1),(4,A0); move.l
+   0x48111C,(8,A0); clr.l (A0)'), with string constants like "ERROR:
+   unknown evaluation order"; isc_pattern_matcher (32 KB) and isc_debug
+   (92 KB) are each one generated routine; the generator's
+   tables are the sections isc_tool_generated_readonly_tables
+   (0x2BC13C) and isc_readonly_tables (0x2BCDFC); the opcode, solution
+   (SOLUTION$...) and IL kind enumerations appear as Pascal identifier
+   tables (tools/cc_enumnames.py).  My assessment: not sensibly
+   hand-translatable routine by routine (no names, ~1000 near-duplicate
+   bodies whose identity is the pattern they implement); the faithful
+   reconstruction is the generator's input (the pattern description,
+   recovered from the action bodies and the matcher's tables) plus, if
+   wanted, a small generator that emits Pascal of the image's shape, or
+   at least the actions as data tables.  The hand-written ISC units
+   (lang2/source/isc: isc_to_lir, isc_user_routines, isc_cse_handling,
+   isc_call_handling, rewrite) are ordinary translations.  Which do you
+   want: (a) hand translation, routine by routine, named by address;
+   (b) a reconstructed pattern description and generator; (c) the
+   generated units left as data (not translated)?  Not decided here.
+141. Translator MM: the opcode enumeration's type name is not in the
+   image (OPC$ is its elements' prefix): opcode_enumeration.ins.pas
+   calls it opc$t (after the ISC's ARITH$T_MAX, a `<prefix>$t' usage);
+   the back end's other enumerations follow the same pattern with the
+   prefixes of their string tables (operand$t, of$t, am$t, lsq$t,
+   block$t, rrp$t) though the generator stripped the prefixes there (of
+   "0_mod_2_s_immed16" proves one existed).  arg_loc_t is the ISC
+   routine arg_loc_t_to_string's.  Rename if you know Apollo's
+   conventions.
+142. Translator MM: backend.ins.pas's records (instr_t, opnd_t, bb_t,
+   lr_t, lts_t, rtn_t, cell_t) are read from the leaf units and the
+   allocators (lir_$opt_new_instruction, zzzzz); most fields are named
+   by offset.  Two readings to confirm when lir and utils are
+   translated: an operand's +1 is taken as rrp$set_t's low byte (xtp
+   copies its bits 3..2 into a segment's rrp and sets 0x30 = read and
+   intend_to_modify, matching dpc's set layout for the masks the image
+   uses), and the instruction's +0 bit 4 as "sets the condition codes"
+   (xtp puts an IPCCNOP after such an instruction; zzzzz lists one whose
+   result is register 31 as a TST/CMP).  zzzzz compares an operand's
+   +0 (otherwise its number k) with 31: register operands may hold the
+   register there after allocation.
+143. Translator MM: utils.ins.pas holds utils_ins_$operands_instruction's
+   body (19 units have a copy at their start; those that open the insert
+   without calling it have none, sem_utils computes the same address
+   inline).  dpc keeps the unused internal copy (dfa, sem_utils), which
+   the gate shows as an extra routine.  Was it a Rev 8.89 dead-routine
+   elimination, or an `%if' in the insert?
+144. Translator MM: contiguous_high_order_zero_bits (sem_utils 0x27A420)
+   counts the leading one bits and contiguous_high_order_one_bits
+   (0x27A44E) the leading zero bits (each stops at the first bit of the
+   other value); the names are kept, the behaviour is the image's.
+   number_of_relevant_low_order_bits uses ..._zero_bits for AND masks
+   and ..._one_bits for OR/BIC: consistent with "how many high bits the
+   mask clears/sets".
+145. Translator MM: basic_block_label (zzzzz 0x2880E8) reads the old
+   first instruction's +28 even when the block is empty (nil^ in the
+   image); kept.
