@@ -51,7 +51,9 @@ a guess says so.
 ## The records
 
 - **Inherited attributes** (isc_attribute_records.ins.pas,
-  `inherited_attributes_t`, 40 bytes; `new_inherited_attributes(heap,
+  `inherited_attributes_t`, 40 bytes; since translator RN3 its fields
+  carry isc_print_il_node's names, docs/questions.md 271, and the names
+  below are the earlier readings; `new_inherited_attributes(heap,
   node)`: node and stmt := node, precision and available 32, arith 1
   arith_integer): +4 the statement's top, +12 the statement, +20 the call
   being built, +24/+28 precision and available bits, +32 the source line
@@ -60,7 +62,10 @@ a guess says so.
   lir's lir_3b80 is the same record (lir_$complete_top_level_node_
   inherited_attrs fills +4, +32, +34).
 - **Solutions** (isc_solution_fields.ins.pas, `isc_solution_t`, 432
-  bytes; backend.ins.pas's `solution_t` is batch A's view of the same):
+  bytes; backend.ins.pas's `solution_t` is batch A's view of the same;
+  since translator RN3 both name their fields after dump_solution's
+  attributes, docs/questions.md 267, and the names below are the
+  earlier readings):
   `new_solution(heap, kind, nchildren, inh, sym, w98)` (isc_main
   0x0D9318) sets kind (+108), nchildren (+114), inh (+104), sym (+100),
   w98 (+98), eval_order 1 (+96 as the longword 16#10000), +77 := 32, +82
