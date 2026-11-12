@@ -184,9 +184,16 @@ type
     to an instruction's +2 bit 5; bits 6..3 the operands an
     instruction of the opcode has when made with its default size;
     bits 2..0 nresults, the operands it writes: sem_utils, zzzzz),
-    b14_0, b15, b19 (bits read by post, utils, ra_utils). }
+    b14_0, b15, b19 (bits read by post, utils, ra_utils).  batch A
+    (PA3, sanity): amse (+1 bits 6..4) the opcode's access size, the
+    index of the amse_ tables (a load's or store's immediate
+    displacement range); +0..+1 were w0. }
+  instr_attr_ptr_t = ^instr_attr_t;
   instr_attr_t = packed record
-    w0: 0..65535;                       { +0 }
+    b0: 0..255;                         { +0 }
+    b1_7: boolean;                      { +1 }
+    amse: 0..7;                         { .6..4 }
+    b1_3_0: 0..15;
     w2: 0..65535;                       { +2 }
     b4: 0..255;                         { +4 (asm: compared with 10) }
     num1: 0..255;                       { +5: 1 in every entry }
@@ -237,7 +244,11 @@ type
     b2_7, b2_6: boolean;                { +2 }
     count: 0..3;                        { .5..4 }
     b2_3_0: 0..15;
-    b3_7, b3_6, b3_5: boolean;          { +3 }
+    bytes: 0..7;                        { +3 .7..5: the size of what it
+                                          addresses in bytes (sanity's
+                                          ".bytes", asm's literal size;
+                                          batch A (PA3): were b3_7,
+                                          b3_6, b3_5) }
     kind: operand$t;                    { .4..0 }
   end;
   opnd_t = record
@@ -280,7 +291,20 @@ type
                                           instruction the global walk
                                           reached, fga and hal one that
                                           must stay) }
-    width: 0..255;                      { +3 }
+    case integer of                     { +3 }
+      1: (width: 0..255);               { the whole byte }
+      2: (modify: 0..3;                 { .7..6: a load's or store's
+                                          am$t (sanity: 1 postmodify,
+                                          2 premodify; batch A, PA3) }
+          lsq: 0..3;                    { .5..4: its lsq$t (sanity: not
+                                          lsq$normal is a qualified
+                                          access) }
+          b3_3: boolean;                { .3: sanity sets it on a CALL
+                                          whose physical result is live
+                                          out of the block and clears it
+                                          on every control transfer
+                                          once phase 3 is past }
+          b3_2, b3_1, b3_0: boolean);
   end;
   instr_t = record
     h: instr_hdr_t;                     { +0 }
@@ -518,7 +542,10 @@ type
   lr_t = record
     rrp: rrp$set_t;                     { +0 }
     f2: packed record                   { +2 }
-      b2: 0..255;
+      reg: 0..255;                      { +2: its register, of a live
+                                          range of a physical register
+                                          (asm; sanity excepts 30 and
+                                          31; batch A (PA3): was b2) }
       b3_7: boolean;                    { .7 (tr_utils: its uses depend
                                           on every instruction; utils
                                           tests it with `tst.b (3)':
@@ -877,6 +904,14 @@ type
   32): the gate renames those sections. }
 var (instruction_attributes)
   instruction_attributes: instr_attrs_t;
+var (amse_premod_immed_low)
+  amse_premod_immed_low: array [0..7] of integer32;
+var (amse_premod_immed_high)
+  amse_premod_immed_high: array [0..7] of integer32;
+var (amse_postmod_immed_low)
+  amse_postmod_immed_low: array [0..7] of integer32;
+var (amse_postmod_immed_high)
+  amse_postmod_immed_high: array [0..7] of integer32;
 var (instruction_mnemonic)
   instruction_mnemonic: array [0..383] of packed array [1..12] of char;
 var (instruction_mnemonic_length)

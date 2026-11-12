@@ -212,7 +212,7 @@ begin
     lts := op^.lts;
     if lts^.lr^.f2.b3_7 then begin
       is_const := result;
-      result := (lts^.lr^.f2.b2 = 0)
+      result := (lts^.lr^.f2.reg = 0)
                 and ((lts^.rrp * [rrp$modify, rrp$write]) = []);
     end
     else if lts^.refs^.h.write then begin
@@ -383,7 +383,7 @@ begin
   res := nil;
   for k := 1 to call^.h.nopnds do begin
     op := addr(call^.opnds[k]);
-    if (op^.lts^.lr^.f2.b2 = 0) and op^.lts^.lr^.f2.b3_7
+    if (op^.lts^.lr^.f2.reg = 0) and op^.lts^.lr^.f2.b3_7
        and op^.h.write and (op^.h.kind = operand$ip_reg) then begin
       res := op;
       exit;

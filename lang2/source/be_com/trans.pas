@@ -348,7 +348,7 @@ begin
       return;
     l3 := d^.opnds[3].lts;
     lr3 := l3^.lr;
-    if not ((k = operand$ip_reg_like) and (lr3^.f2.b2 = 31)) then begin
+    if not ((k = operand$ip_reg_like) and (lr3^.f2.reg = 31)) then begin
       if rrp$read in l3^.rrp then
         return;
       if l3^.next <> nil then
