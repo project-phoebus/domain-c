@@ -535,3 +535,5 @@ lang/lang/source/final.pas	s/^(\s*)if br_target\(x\) = nxtlcc\(xa\) then begin$/
 lang/lang/source/final.pas	s{\((\w+(\((?:[^()]++|(?2))*\))) (=|<>) ([a-z]\w*)\)}{($4 $3 $1 { gap 12 })}g
 # gap 2 (final): unlink_opts's case of 13 labels over 40 (the kinds of its otherwise listed with 24, 28, for the check)
 lang/lang/source/final.pas	s/^(\s*)24, 28:$/${1}1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 25, 26, 34, 35, 36, 37, 38, 24, 28: { gap 2 }/
+# gap 2 (final): deltest's case of 8 labels over 22 (the otherwise's ops added, for the check)
+lang/lang/source/final.pas	s/^(\s*)107, 108, 109, 119, 123:$/${1}105, 106, 110, 111, 112, 113, 114, 115, 116, 117, 118, 120, 121, 122: ; { gap 2 }\n${1}107, 108, 109, 119, 123:/

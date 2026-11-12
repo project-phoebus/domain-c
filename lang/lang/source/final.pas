@@ -12,10 +12,8 @@
   testcc; the same address: sameaddr) and edit them (detach, makejump,
   makecbr, moverefcell, movejump, reversecond, label_merge).
 
-  TODO(pascal) final.pas is not finished: 108 of its 120 routines are
+  TODO(pascal) final.pas is not finished: 110 of its 120 routines are
   translated.  Not yet translated (cc.m68k address, bytes):
-    0x10C51C 0xB2   backov (in deltest)
-    0x10C5CE 0x60C  deltest
     0x10CD7E 0x316  final_$redundant_lea
     0x10D28A 0x372  final_$cmp_branch_becomes_eor
     0x10D600 0x75A  opttest
@@ -157,9 +155,10 @@
     +44 the change flag, then initialized tables (+0x30 the registers'
     bits, +0x88 the conditions' codes, +0xA8 and +0x250 brimply's and
     f_brimply's answers, +0x230 and +0x298 the complements, +0x3A0 and
-    +0x3B0..+0x6AC try_reducing_fabs_op's op and patterns); +0..+15,
-    +36, +42, +0x60..+0x87 and +0x2A4..+0x39F are used only by routines
-    not yet translated (+0x2E8: the 68881's constant ROM, 16 doubles
+    +0x3B0..+0x6AC try_reducing_fabs_op's op and patterns, +0x60..+0x87
+    final_$try_reducing_literal's; +0, +36 and +42 deltest's test);
+    +12 and +0x84 have no user found; +0x2A4..+0x39F are used only by
+    routines not yet translated (+0x2E8: the 68881's constant ROM, 16 doubles
     each after its offset word).  Absolute: cargs's options
     (+0x280..+0x288), opinfo's tables (0x2CF4D8, 0x2CF5EC, 0x2CFDD8,
     0x2D01CE), cg_null_ads (0x356600), il_180.
@@ -227,6 +226,9 @@ type
     (`cmpm.l', `dbne' 2). }
   fn_ads_words_t = array [1..3] of integer32;
 
+  { The condition codes (0..5: opinfo_cc's columns) as a word. }
+  fn_ccs_t = set of 0..15;
+
   { An immediate's value as final_$try_reducing_literal reads its
     parts: the longword, its words, its bytes. }
   fn_lit_t = record
@@ -269,15 +271,21 @@ var
   opinfo_access: extern array [0..367] of packed array [1..2] of char;
 
   { The module's data (A5 0x3566F8). }
-  fn_0: array [0..3] of integer32;      { +0 }
-  fn_ads: codegen_$ads_t;               { +16 }
+  fn_ads0: codegen_$ads_t;              { +0: the operand a test's
+                                          compare is made against
+                                          (deltest) }
+  fn_12: integer32;                     { +12: no user found }
+  fn_ads: codegen_$ads_t;               { +16: the operand a test
+                                          tests (deltest) }
   fn_sect: fn_sect_ptr_t;               { +28: the section peepholer
                                           works on }
   fn_32: codegen_$cell_ptr_t;           { +32 }
-  fn_36: codegen_$cell_ptr_t;           { +36 }
-  fn_ccset: set of 0..15;               { +40: the condition codes
+  fn_test: codegen_$cell_ptr_t;         { +36: the test deltest
+                                          would remove }
+  fn_ccset: fn_ccs_t;                   { +40: the condition codes
                                           cc_change asks about (0..5) }
-  fn_42: char;                          { +42 }
+  fn_test_size: char;                   { +42: the test's size (as
+                                          opinfo_size gives it) }
   fn_changed: boolean;                  { +44: a cell was detached }
   fn_regmask: array [0..23] of 0..65535 := [
     1, 2, 4, 8, 16, 32, 64, 128,
@@ -1747,10 +1755,12 @@ end;
   asked about first.
 
   0x10ACDA, 0x14C bytes, no A5 load: the set's elements by `btst' of
-  +41. }
+  +41.  Its caller (deltest) passes fn_ccset too, a word it does
+  not read (a second parameter: `move.w (40,A5),-(SP)'). }
 
 function cc_change(
-    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+    c: codegen_$cell_ptr_t;
+    codes: fn_ccs_t): boolean; options(val_param); internal;
 label
   1;
 var
@@ -3065,6 +3075,257 @@ begin
   if r and (c^.op = 215) then
     r := not assert_bfextu_requires_test(nx);
   bit_field_inst_which_obviates_test := r;
+end;
+
+{ deltest - test fn_test (of fn_ads, setting fn_ccset's codes, of size
+  fn_test_size; a compare's other operand fn_ads0) is redundant on
+  every path that reaches it, looking back from c: each cell marked
+  visited (scancc's chain, fn_32); the answer false when a path meets
+  an instruction whose class differs from the test's in a code of
+  fn_ccset (3, or other than 1 and the test's), a call, branch or other
+  kinds 13, 17, 23, 27, 29..31, a compare of another kind (ops 107..109,
+  119, 123; 102..104 unless the test is one too), an lea or pea (kind
+  4, ops 105, 106) or an address instruction whose register the
+  operand uses (or fn_ads0 for a test of kind 6), a change of the
+  operand or its registers (cc_change, opinfo_access's 'W', reg_mod),
+  an operand of mode 10, a cell setting the codes from another
+  operand (cc_mod 0: either operand fn_ads; 2) or of another size (the
+  operand's sizes from opinfo_size, unless
+  bit_field_inst_which_obviates_test; bfextu when
+  assert_bfextu_requires_test); true when it meets an instruction that
+  sets the codes from fn_ads itself (a compare against fn_ads0 for
+  compares; moves of up to a long before an lea, pea or tst (105, 106,
+  113..115), FP moves 224..235 before an FP test 298..303), and on
+  each path into a label (backov) unless one is false.  w is a
+  register the caller asks about: cc_mod 1 with w 48 or 3 with w 15
+  passes on (not clearing b).  b (cleared by any cell that is not a
+  label or passed on) and passed (an instruction other than an
+  alignment, label or line met) decide whether backov moves a branch
+  into the label to after the test.
+
+  0x10C5CE, 0x60C bytes, no A5 load: c, b (a byte at 12) and w (a word
+  at 14); b kept at -18 and passed at -14 for backov; the answer in D2,
+  the paths' in D3; opinfo_cc_class and opinfo_cc's addresses in D4 and
+  A3; the six codes tested in turn (`btst #0' .. `btst #5' of +41, the
+  loop over them unrolled); `case's of the kind (a table of 32), the
+  op less 102 (22) and cc_mod's answer (5); the operand's two sizes
+  tried from the second (`dbf' D5, the index D4 2 then 1).
+
+  Not known from the original: the names of the locals; whether the six
+  codes' tests were a loop. }
+
+function deltest(
+    c: codegen_$cell_ptr_t;
+    b: boolean;
+    w: integer): boolean; options(val_param); internal;
+label
+  9;
+var
+  r: boolean;
+  ok: boolean;
+  passed: boolean;
+  p: codegen_$cell_ptr_t;
+  cls: integer;
+  tcls: integer;
+  e: integer;
+  i: integer;
+  ch: char;
+  k: integer;
+  keep: boolean;
+
+  { backov - the paths into label lab (each branch referring to it,
+    from the first reference after its refs): deltest of the cell
+    before each branch (false, w); when it holds and b is still set and
+    no instruction has been passed, the branch's reference is moved to
+    the label after the test (moverefcell).  False for untouchable
+    memory, a branch just after the test, or any path that fails.
+
+    0x10C51C, 0xB2 bytes, no A5 load: deltest's frame by its dynamic
+    link (A4: w at 14, b at -18, passed at -14); the answer in D2; the
+    reference in A2, the next in A3, the branch at -24. }
+
+  function backov(
+      lab: codegen_$cell_ptr_t): boolean; options(val_param);
+  label
+    8;
+  var
+    r: boolean;
+    ref: codegen_$cell_ptr_t;
+    nx: codegen_$cell_ptr_t;
+    t: codegen_$cell_ptr_t;
+  begin
+    if has_untouchable_mem_attrs(lab^.ads2) then
+      r := false
+    else begin
+      r := true;
+      ref := lab^.refs;
+      if ref <> nil then begin
+        ref := ref^.next;
+        repeat
+          t := codegen_$cell_ptr_t(ref^.target);
+          nx := ref^.next;
+          if prvcc(t) = fn_test then begin
+            r := false;
+            goto 8;
+          end;
+          if deltest(prvlcc(t), false, w) then begin
+            if b and not passed then
+              moverefcell(ref, nxtlcc(fn_test));
+          end
+          else
+            r := false;
+          if lab^.refs = nil then
+            goto 8;
+          if ref = lab^.refs then
+            goto 8;
+          if ref = nx then
+            goto 8;
+          ref := nx;
+        until false;
+      end;
+    end;
+  8:
+    backov := r;
+  end;
+
+begin
+  r := false;
+  passed := false;
+  p := c;
+  if p = fn_test then
+    goto 9;
+  if p^.visit <> nil then
+    goto 9;
+  p^.visit := fn_32;
+  fn_32 := p;
+  ok := true;
+  repeat
+    if p = fn_test then
+      goto 9;
+    keep := false;
+    if p^.kind <> def_lbl_instyp then begin
+      cls := opinfo_cc_class[p^.op];
+      tcls := opinfo_cc_class[fn_test^.op];
+      if (cls <> tcls) and (cls <> 0) then
+        for i := 0 to 5 do
+          if i in fn_ccset then begin
+            e := opinfo_cc[cls][i];
+            if e = 3 then
+              goto 9;
+            if e <> opinfo_cc[tcls][i] then
+              if e <> 1 then
+                goto 9;
+          end;
+    end;
+    case p^.kind of
+      def_lbl_instyp:
+        ok := ok and backov(p);
+      a_instyp: begin
+        if (p^.op = 105) or (p^.op = 106) then
+          goto 9;
+        if involves(fn_ads, p^.ads2.f2) then
+          goto 9;
+        if involves(fn_ads0, p^.ads2.f2) then
+          if fn_test^.kind = src2_sz_instyp then
+            goto 9;
+      end;
+      cmpm_instyp, br_instyp, dbcc_instyp, fop_instyp, case_instyp,
+      casejmp_instyp, bsr_instyp:
+        goto 9;
+      otherwise begin
+        if p^.kind in [6, 8, 16] then
+          case p^.op of
+            102, 103, 104:
+              if not (fn_test^.op in [102..104]) then
+                goto 9;
+            107, 108, 109, 119, 123:
+              goto 9;
+            otherwise
+              ;
+          end;
+        if not cc_change(p, fn_ccset) then begin
+          if opinfo_access[p^.op][2] = 'W' then
+            if sameaddr(p^.ads2, fn_ads) then
+              goto 9;
+          if fn_ads.f1 = 1 then
+            if reg_mod(p, fn_ads.f2) then
+              goto 9;
+        end;
+        if fn_ads.f1 in [2, 5, 8, 9] then
+          if reg_mod(p, fn_ads.f2) then
+            goto 9;
+        if fn_ads.f1 in [4, 6] then
+          if reg_mod(p, fn_ads.f2) or reg_mod(p, fn_ads.f3) then
+            goto 9;
+        if p^.ads2.f1 = 10 then
+          goto 9;
+        if not ((p^.kind = align_instyp) or (p^.kind = def_lbl_instyp) or
+                (p^.kind = line_no_instyp)) then
+          passed := true;
+        k := cc_mod(p);
+        case k of
+          0: begin
+            if sameaddr(p^.ads1, fn_ads) then
+              goto 9;
+            if sameaddr(p^.ads2, fn_ads) then
+              goto 9;
+          end;
+          2:
+            goto 9;
+          1, 3, 4: begin
+            if ((k = 1) and (w = 48)) or ((k = 3) and (w = 15)) then
+              keep := true
+            else begin
+              if fn_test^.op in [102..104] then begin
+                if p^.op <> fn_test^.op then
+                  goto 9;
+                if not sameaddr(p^.ads2, fn_test^.ads2) then
+                  goto 9;
+                if not sameaddr(p^.ads1, fn_ads0) then
+                  goto 9;
+              end;
+              for i := 2 downto 1 do begin
+                ch := opinfo_size[p^.op][i];
+                if ch <> '-' then begin
+                  if ch <> fn_test_size then
+                    if not bit_field_inst_which_obviates_test(p, fn_test) then
+                      goto 9;
+                  if p^.op = 215 then
+                    if assert_bfextu_requires_test(fn_test) then
+                      goto 9;
+                  if i = 2 then begin
+                    if sameaddr(p^.ads2, fn_ads) then begin
+                      r := ok;
+                      goto 9;
+                    end;
+                    if not ((p^.op <= 2) and
+                            ((fn_test^.op in [105..106]) or
+                             (fn_test^.op in [113..115]))) then
+                      if not ((p^.op in [224..235]) and
+                              (fn_test^.op in [298..303])) then
+                        goto 9;
+                  end
+                  else begin
+                    if sameaddr(p^.ads1, fn_ads) then
+                      r := ok;
+                    goto 9;
+                  end;
+                end;
+              end;
+              goto 9;
+            end;
+          end;
+          otherwise
+            ;
+        end;
+      end;
+    end;
+    if not keep then
+      b := false;
+    p := prvlcc(p);
+  until p = fn_sect^.head;
+9:
+  deltest := r;
 end;
 
 { opt_btst - a btst c, a beq or bne (ops 145, 144) after it and the
