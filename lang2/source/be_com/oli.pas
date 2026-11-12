@@ -8,16 +8,17 @@
   loop rebuilt as a prologue, a pipelined body and an epilogue
   (build_pipelined_loop).
 
-  TODO(oli): translator PC6 translated 77 of the 120 routines (0x257D60
+  TODO(oli): translator PC6 translated 80 of the 120 routines (0x257D60
   .. 0x25CECA, link_final_induction_vars, in address order: callees
-  come first, no routine calls a later one).  The 43 marked TODO in
+  come first, no routine calls a later one; and the leaves
+  copys_in_prolog, precedes_in_schedule, get_new_lr_pair).  The 40
+  marked TODO in
   the table are not in this file yet: get_induction_variable_adjustment
   0x25CFE2 (global: returns an 8-byte oli_mval_t through its caller's
   space, pattern 133; reads a segment's l24 at +32 .. +44, which iv's
   36-byte induction lts does not have: adjust_induction_vars 0x25F64A
-  rewrites l24, read it first), copys_in_prolog 0x25D496,
-  get_exposed_operand 0x25D50C, precedes_in_schedule 0x25D90E,
-  get_new_lr_pair 0x25D954, find_new_intend_to_modify_operand 0x25D978,
+  rewrites l24, read it first), get_exposed_operand 0x25D50C,
+  find_new_intend_to_modify_operand 0x25D978,
   get_write_lr 0x25DAB8, fill_in_live_ranges 0x25E046, generate_jump
   0x25E4EA, generate_jumps 0x25E57A, generate_control_flow_instructions
   0x25E654, generate_ltss 0x25ECC6, generate_birthpoints 0x25EDB6,
@@ -136,10 +137,10 @@
     --------  0x25CCCC  link_lrs (internal)
     --------  0x25CECA  link_final_induction_vars (internal)
     --------  0x25CFE2  get_induction_variable_adjustment TODO
-    --------  0x25D496  copys_in_prolog (internal) TODO
+    --------  0x25D496  copys_in_prolog (internal)
     --------  0x25D50C  get_exposed_operand (internal) TODO
-    --------  0x25D90E  precedes_in_schedule (internal) TODO
-    --------  0x25D954  get_new_lr_pair (internal) TODO
+    --------  0x25D90E  precedes_in_schedule (internal)
+    --------  0x25D954  get_new_lr_pair (internal)
     --------  0x25D978  find_new_intend_to_modify_operand (internal) TODO
     --------  0x25DAB8  get_write_lr (internal) TODO
     --------  0x25E046  fill_in_live_ranges (internal) TODO
@@ -4006,4 +4007,51 @@ begin
   end;
   if a <> nil then
     bug_check('OLI-link_final_induction_vars: induction increment unaccounted for.%$');
+end;
+
+{ copys_in_prolog - a copys of floating register a into b at the
+  prologue's end, b's operand given the properties rrp (and write).
+  0x25D496, 0x76 bytes (after get_induction_variable_adjustment in the
+  image, which is not translated yet; it calls none of them). }
+
+procedure copys_in_prolog(
+    a: lr_ptr_t;
+    b: lr_ptr_t;
+    rrp: integer); options(val_param); internal;
+var
+  i: instr_ptr_t;
+begin
+  i := add_instr_end_of_prolog_inits(144);      { copys }
+  opnd_bytes_ptr_t(addr(i^.opnds[1]))^.rrp := 16;
+  i^.opnds[1].h.kind := operand$fp_reg;
+  i^.opnds[1].h.num := 1;
+  i^.opnds[1].ptr := a;
+  opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := (rrp ! 8) & 255;
+  i^.opnds[2].h.kind := operand$fp_reg;
+  i^.opnds[2].h.num := 2;
+  i^.opnds[2].ptr := b;
+end;
+
+{ precedes_in_schedule - a comes before b in oli_sched_list.  0x25D90E,
+  0x46 bytes. }
+
+function precedes_in_schedule(
+    a: instr_ptr_t;
+    b: instr_ptr_t): boolean; options(val_param); internal;
+begin
+  precedes_in_schedule := oli_order[a^.num] < oli_order[b^.num];
+end;
+
+{ get_new_lr_pair - a new floating pair, its odd half for an odd half
+  lr.  0x25D954, 0x24 bytes. }
+
+function get_new_lr_pair(
+    lr: lr_ptr_t): lr_ptr_t; options(val_param); internal;
+var
+  x: lr_ptr_t;
+begin
+  x := lir_$new_live_range_fp_reg_pair;
+  if rrp$fp_reg_odd_only in lr^.rrp then
+    x := x^.mate;
+  get_new_lr_pair := x;
 end;
