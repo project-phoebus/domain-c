@@ -50,8 +50,8 @@
     --------  0x23B07E  iv_utils_$elaborate_expression
     A5 0x486500: the module's data: instr_size (+0, instr_size.init),
     iv_opc_kind (+0x330: the expression kind of an opcode), iv_commuted
-    (+0x630), iv_opnd_pos (+0x650), iv_ip_opc and iv_fp_opc (+0x688,
-    +0x6A2), iv_nchildren (+0x6C0), the six heaps (+0x6E0 .. +0x758),
+    (+0x630), iv_opnd_pos (+0x650), iv_opc (+0x688, two rows),
+    iv_opc_set (+0x300), iv_nchildren (+0x6C0), the six heaps (+0x6E0 .. +0x758),
     the free lists (+0x778 .. +0x788, +0x7B0), iv_elab_class (+0x7C0).
 
   The expression utilities' callers in other units reach them through
@@ -91,7 +91,53 @@ module iv;
 type
   iv_cost_t = array [1..2] of integer;
 
+  { iv's view of a block (fields batch A has not named; backend.ins.pas
+    bb_t): an interval head's first member (+138) and the next member
+    of the interval a block is in (+142; com's next142). }
+  iv_bb_v_ptr_t = ^iv_bb_v_t;
+  iv_bb_v_t = record
+    space0: array [0..137] of char;
+    first138: bb_ptr_t;                 { +138 }
+    next142: bb_ptr_t;                  { +142 }
+  end;
+
+  { A join birthpoint's input, as utils.pas's ut_jbi_t: chained from
+    the join instruction's operand 3 (+8) at next_op. }
+  iv_jbi_ptr_t = ^iv_jbi_t;
+  iv_jbi_t = record
+    next: iv_jbi_ptr_t;                 { +0 }
+    next_op: iv_jbi_ptr_t;              { +4 }
+    lts: lts_ptr_t;                     { +8 }
+  end;
+
+  { A literal pool operand's constant (its link, an IL node made by
+    smcontk): w4 its type (constants of types 0, 3, 4, 7 and 10 are
+    taken), value (+8). }
+  iv_node_v_ptr_t = ^iv_node_v_t;
+  iv_node_v_t = record
+    w0: integer;                        { +0 }
+    w2: integer;                        { +2 }
+    w4: integer;                        { +4 }
+    w6: integer;                        { +6 }
+    value: integer32;                   { +8 }
+  end;
+
+  { What apply_to_creating_induction_segments and
+    iv_$walk_basic_blocks_in_order call (`jsr (A1)', addresses passed
+    by `move.l #addr': pattern 104): given a segment's or a block's
+    slot by address. }
+  iv_lts_proc_t = ^procedure(
+      var s: lts_ptr_t);
+  iv_bb_proc_t = ^procedure(
+      var bb: bb_ptr_t);
+
 var
+  { +0x300: the opcodes an expression is made from (those with a kind
+    in iv_opc_kind): a set of 0..383, 48 bytes, tested `move.w #383;
+    sub.w opc; lsr.w #3; btst opc,(A5+0x300,D0.w)'. }
+  iv_opc_set: set of 0..383 := [75, 77, 79, 81, 83, 92, 105, 106, 116,
+    126, 135, 137, 138, 144, 178];
+
   { +0x330: the expression kind an instruction of each opcode computes
     (0 none). }
   iv_opc_kind: array [0..211] of integer := [
@@ -121,14 +167,15 @@ var
     [0, 0], [0, 0], [0, 0], [0, 0], [1, 0], [2, 1], [2, 1], [2, 1],
     [2, 1], [1, 0], [1, 0], [0, 0], [1, 2], [0, 0]];
 
-  { +0x688, +0x6A2: the opcode that computes an expression of each kind
-    in an integer register (neg, add, sub, -, rsub, mffp, move, loadl,
-    lsl) and in a floating one (negi, addi, subi, muli, -, mtfp, copys,
-    loads). }
-  iv_ip_opc: array [0..12] of integer := [
-    0, 0, 0, 0, 77, 79, 81, 0, 83, 116, 75, 105, 92];
-  iv_fp_opc: array [0..12] of integer := [
-    0, 0, 0, 0, 135, 137, 138, 178, 0, 126, 144, 106, 0];
+  { +0x688: the opcode that computes an expression of each kind in an
+    integer register (row 1: neg, add, sub, -, rsub, mffp, move, loadl,
+    lsl) and in a floating one (row 2, +0x6A2: negi, addi, subi, muli,
+    -, mtfp, copys, loads): one table by register file and kind, indexed
+    A5 + 0x66E + 26 rclass + 2 kind (create_operand_from_elaborated_
+    expression). }
+  iv_opc: array [1..2, 0..12] of integer := [
+    [0, 0, 0, 0, 77, 79, 81, 0, 83, 116, 75, 105, 92],
+    [0, 0, 0, 0, 135, 137, 138, 178, 0, 126, 144, 106, 0]];
 
   { +0x6C0: the children of an expression of each kind. }
   iv_nchildren: array [0..12] of integer := [
@@ -146,12 +193,20 @@ var
   iv_expr_heap: mrh_$heap_t;            { +0x758: expressions (24) }
 
   { +0x778 .. +0x788, +0x7B0: the records given back, for reuse. }
-  iv_free_class: univ_ptr;              { +0x778 (chained at +8) }
-  iv_free_iexpr: univ_ptr;              { +0x77C (+8) }
-  iv_free_addr: univ_ptr;               { +0x780 (+16) }
-  iv_free_lts: univ_ptr;                { +0x784 (+16) }
-  iv_free_var: univ_ptr;                { +0x788 (+50) }
+  iv_free_class: iv_class_ptr_t;        { +0x778 (chained at +8) }
+  iv_free_iexpr: iv_iexpr_ptr_t;        { +0x77C (+8) }
+  iv_free_addr: iv_addr_ptr_t;          { +0x780 (+16) }
+  iv_free_lts: iv_lts_ptr_t;            { +0x784 (+16) }
+  iv_free_var: iv_var_ptr_t;            { +0x788 (+50) }
   iv_free_expr: iv_expr_ptr_t;          { +0x7B0 (+12) }
+
+  { +0x798 .. +0x7AC: the routine's state. }
+  iv_vars_last: iv_var_ptr_t;           { +0x798: the last on iv_vars }
+  iv_vars: iv_var_ptr_t;                { +0x79C: the primary induction
+                                          variables, chained at +50 }
+  iv_head: bb_ptr_t;                    { +0x7A0: the loop (interval head)
+                                          being worked on }
+  iv_rtn: rtn_ptr_t;                    { +0x7AC: the routine }
 
   { +0x7C0: how elaborate_expression picks the register file of an
     expression's children by its kind: 1 its own (none), 2 the segment's
@@ -210,6 +265,74 @@ begin
     b^[k] := chr(0);
 end;
 
+{ alloc_induction_lts - an induction lts, reused from the free list
+  (cleared) or new.  0x238F62, 0x36 bytes, no A5: A0.  The other
+  allocators are alike (pattern 98's per-unit helpers' shape). }
+
+function alloc_induction_lts: iv_lts_ptr_t; internal;
+var
+  l: iv_lts_ptr_t;
+begin
+  if iv_free_lts = nil then
+    l := mrh_$alloc_fixed(iv_lts_heap)
+  else begin
+    l := iv_free_lts;
+    iv_free_lts := l^.next;
+    zero(l, 36);
+  end;
+  alloc_induction_lts := l;
+end;
+
+{ alloc_induction_addr - an induction address mode.  0x238F98, 0x38
+  bytes. }
+
+function alloc_induction_addr: iv_addr_ptr_t; internal;
+var
+  a: iv_addr_ptr_t;
+begin
+  if iv_free_addr = nil then
+    a := mrh_$alloc_fixed(iv_addr_heap)
+  else begin
+    a := iv_free_addr;
+    iv_free_addr := a^.next;
+    zero(a, 28);
+  end;
+  alloc_induction_addr := a;
+end;
+
+{ alloc_induction_expr - an induction expression.  0x238FD0, 0x38
+  bytes. }
+
+function alloc_induction_expr: iv_iexpr_ptr_t; internal;
+var
+  x: iv_iexpr_ptr_t;
+begin
+  if iv_free_iexpr = nil then
+    x := mrh_$alloc_fixed(iv_iexpr_heap)
+  else begin
+    x := iv_free_iexpr;
+    iv_free_iexpr := x^.next;
+    zero(x, 22);
+  end;
+  alloc_induction_expr := x;
+end;
+
+{ alloc_induction_class - an induction class.  0x239008, 0x38 bytes. }
+
+function alloc_induction_class: iv_class_ptr_t; internal;
+var
+  c: iv_class_ptr_t;
+begin
+  if iv_free_class = nil then
+    c := mrh_$alloc_fixed(iv_class_heap)
+  else begin
+    c := iv_free_class;
+    iv_free_class := c^.next;
+    zero(c, 20);
+  end;
+  alloc_induction_class := c;
+end;
+
 { alloc_expression - an expression, reused from the free list (cleared)
   or new.  0x239040, 0x38 bytes, no A5: A0. }
 
@@ -225,6 +348,46 @@ begin
     zero(e, 24);
   end;
   alloc_expression := e;
+end;
+
+{ alloc_induction_variable - an induction variable.  0x239078, 0x38
+  bytes. }
+
+function alloc_induction_variable: iv_var_ptr_t; internal;
+var
+  v: iv_var_ptr_t;
+begin
+  if iv_free_var = nil then
+    v := mrh_$alloc_fixed(iv_var_heap)
+  else begin
+    v := iv_free_var;
+    iv_free_var := v^.next;
+    zero(v, 62);
+  end;
+  alloc_induction_variable := v;
+end;
+
+{ create_induction_addr - an address mode of operand o (of its
+  instruction) by induction expression x, put first on x's list; l4
+  and l24 as given.  0x2390B0, 0x4C bytes, no A5. }
+
+function create_induction_addr(
+    x: iv_iexpr_ptr_t;
+    l4: integer32;
+    o: opnd_ptr_t;
+    l24: integer32): iv_addr_ptr_t; options(val_param); internal;
+var
+  a: iv_addr_ptr_t;
+begin
+  a := alloc_induction_addr;
+  a^.iexpr := x;
+  a^.l4 := l4;
+  a^.opnd := o;
+  a^.l24 := l24;
+  a^.instr := utils_ins_$operands_instruction(o);
+  a^.next := x^.addrs;
+  x^.addrs := a;
+  create_induction_addr := a;
 end;
 
 { free_expression - e put on the free list (not its children), e nil.
@@ -1440,11 +1603,11 @@ begin
           c := e^.child[n];
           if c^.kind = iv_value then begin
             if not lir_$can_encode_as_immediate_operand(c^.value,
-                       iv_ip_opc[e^.kind], univ_ptr(pos)) then
+                       iv_opc[1, e^.kind], univ_ptr(pos)) then
               if (pos <> 1) and (iv_commuted[e^.kind] <> 0)
                   and first_operand_can_change(e)
                   and lir_$can_encode_as_immediate_operand(c^.value,
-                          iv_ip_opc[iv_commuted[e^.kind]], univ_ptr(1)) then begin
+                          iv_opc[1, iv_commuted[e^.kind]], univ_ptr(1)) then begin
                 x := e^.right;
                 e^.right := e^.left;
                 e^.left := x;
@@ -1593,4 +1756,1091 @@ begin
       r^.rclass := 1;
     end;
   iv_utils_$elaborate_expression := r;
+end;
+
+{ find_last_instruction - the block's last instruction, or the first of
+  the branches and jumps (classes 1, 5, 6) just before it.  0x23B124,
+  0x46 bytes, no A5: `moveq #98; btst' of the opcode's class. }
+
+function find_last_instruction(
+    bb: bb_ptr_t): instr_ptr_t; options(val_param); internal;
+var
+  i, p: instr_ptr_t;
+begin
+  i := bb^.last;
+  p := i^.prev;
+  while p <> nil do begin
+    if not (instruction_attributes[p^.opc].class
+            in [class$branch, class$fp_branch, class$jump]) then
+      exit;
+    i := p;
+    p := p^.prev;
+  end;
+  find_last_instruction := i;
+end;
+
+{ add_operand_to_segment - operand o made a reference of kind to
+  segment s with properties rrp (also its live range's), chained on
+  s's references: last when it means to modify, after the definition
+  when it reads and the first reference writes, else first.  0x23B16A,
+  0x8C bytes, no A5. }
+
+procedure add_operand_to_segment(
+    o: opnd_ptr_t;
+    s: lts_ptr_t;
+    rrp: integer;
+    kind: integer); options(val_param); internal;
+var
+  p: ^opnd_ptr_t;
+begin
+  s^.rrp := rrp$set_t(integer(s^.rrp) ! rrp);
+  opnd_bytes_ptr_t(o)^.rrp := rrp;
+  o^.h.count := 0;
+  opnd_bytes_ptr_t(o)^.b3 := (opnd_bytes_ptr_t(o)^.b3 & 16#E0) ! kind;
+  o^.lts := s;
+  o^.link := nil;
+  s^.lr^.rrp := rrp$set_t(integer(s^.lr^.rrp) ! rrp);
+  p := addr(s^.refs);
+  if (rrp & 16#20) <> 0 then begin
+    while p^ <> nil do
+      p := addr(p^^.link);
+  end
+  else if (rrp & 16#10) <> 0 then
+    if p^ <> nil then
+      if (opnd_bytes_ptr_t(p^)^.rrp & 12) <> 0 then
+        p := addr(p^^.link);
+  o^.link := p^;
+  p^ := o;
+end;
+
+{ create_operand_from_elaborated_expression - operand o made what the
+  elaborated expression e computes, for an instruction in block use_bb:
+  a segment's value read (from the live range's last segment in the
+  block, or an exposed one with a birthpoint made for it), an operand
+  copied (keeping o's number), a constant an immediate; an operation an
+  instruction (after at, else before code_bb's closing branches)
+  computing a new live range, its operands made recursively (a child
+  that cannot be the register an operand other than 1 needs, or an
+  operand as operand 1 of other than an add or move, moved first; a
+  shift by a constant the operand's scale where the opcode takes it;
+  a commutative operation's children exchanged for that); a constant
+  loaded from the literal pool.  0x23B1F6, 0x680 bytes, no A5:
+  recursive; the opcode from iv_opc by e's register file and kind. }
+
+procedure create_operand_from_elaborated_expression(
+    o: opnd_ptr_t;
+    var e: iv_expr_ptr_t;
+    at: instr_ptr_t;
+    use_bb: bb_ptr_t;
+    code_bb: bb_ptr_t); options(val_param); internal;
+var
+  s, d, f: lts_ptr_t;
+  lr: lr_ptr_t;
+  prev: lts_ptr_t;
+  created: boolean;
+  n, k, pos, a, b: integer32;
+  opc: integer;
+  shift: integer32;
+  c, x: iv_expr_ptr_t;
+  i: instr_ptr_t;
+  r: opnd_ptr_t;
+begin
+  case e^.kind of
+    iv_lts: begin
+      d := e^.lts;
+      created := false;
+      lr := d^.lr;
+      if use_bb = code_bb then begin
+        s := utils_$find_last_lts_in_bb(lr, use_bb, prev);
+        if s = nil then begin
+          s := utils_$get_final_lts(lr, use_bb, created);
+          utils_$put_lts_on_exposed_list(s);
+        end;
+      end
+      else
+        s := utils_$get_exposed_lts(lr, use_bb, created);
+      if created then begin
+        if d^.f2.exposed then
+          if d^.l44 <> nil then
+            d := d^.l44;
+        if not d^.f2.final then
+          if use_bb <> d^.bb then
+            utils_$put_lts_on_final_list(d);
+        utils_$add_birthpoint(d, use_bb, true);
+      end;
+      add_operand_to_segment(o, s, 16, e^.rclass);
+    end;
+    iv_operand: begin
+      k := o^.h.num;
+      o^ := e^.opnd;
+      o^.h.num := k;
+    end;
+    iv_value: begin
+      o^.h.kind := operand$immediate;
+      o^.value := e^.value;
+      o^.link := nil;
+      opnd_bytes_ptr_t(o)^.rrp := 16;
+      o^.h.bytes := 4;
+      o^.h.count := 0;
+    end;
+    otherwise begin
+      n := iv_nchildren[e^.kind];
+      opc := iv_opc[e^.rclass, e^.kind];
+      if at = nil then
+        at := find_last_instruction(code_bb);
+      for k := 1 to n do begin
+        c := e^.child[k];
+        if (iv_opnd_pos[e^.kind, k] <> 1) and not can_encode_as_register(c)
+            and (e^.kind <> iv_shift) then begin
+          c := create_move_expression(c);
+          c^.rclass := c^.left^.rclass;
+          e^.child[k] := c;
+        end
+        else if (iv_opnd_pos[e^.kind, k] = 1) and (e^.kind <> iv_add)
+            and (c^.kind = iv_operand) and (e^.kind <> iv_move) then begin
+          c := create_move_expression(c);
+          c^.rclass := c^.left^.rclass;
+          e^.child[k] := c;
+        end;
+      end;
+      if n = 2 then
+        if iv_commuted[e^.kind] <> 0 then begin
+          a := iv_opnd_pos[e^.kind, 1];
+          b := iv_opnd_pos[e^.kind, 2];
+          if can_encode_as_register(e^.child[a]) then begin
+            c := e^.child[a];
+            if not ((c^.kind = iv_shift) and (c^.right^.kind = iv_value)
+                    and tm_utils_$can_convert_to_ip_reg_operand(opc, 1,
+                            c^.right^.value)
+                    and can_encode_as_register(c^.left)) then begin
+              c := e^.child[b];
+              if c^.kind = iv_shift then
+                if c^.right^.kind = iv_value then
+                  if tm_utils_$can_convert_to_ip_reg_operand(
+                         iv_opc[e^.rclass, iv_commuted[e^.kind]], 1,
+                         c^.right^.value) then
+                    if can_encode_as_register(c^.left) then begin
+                      x := e^.left;
+                      e^.left := e^.right;
+                      e^.right := x;
+                      e^.kind := iv_commuted[e^.kind];
+                      opc := iv_opc[e^.rclass, e^.kind];
+                    end;
+            end;
+          end;
+        end;
+      i := lir_$optimizer_new_instruction(at, opc, false);
+      i^.h.b0_6 := false;
+      for k := 1 to i^.h.nopnds do
+        i^.opnds[k].h.num := k;
+      for k := 1 to n do begin
+        pos := iv_opnd_pos[e^.kind, k];
+        shift := 0;
+        c := e^.child[k];
+        if c^.kind = iv_shift then
+          if c^.right^.kind = iv_value then
+            if tm_utils_$can_convert_to_ip_reg_operand(opc, pos,
+                                                       c^.right^.value) then
+              if can_encode_as_register(c^.left) then begin
+                shift := c^.right^.value;
+                c := c^.left;
+              end;
+        create_operand_from_elaborated_expression(addr(i^.opnds[pos]), c, i,
+                                                  code_bb, code_bb);
+        if shift <> 0 then
+          i^.opnds[pos].h.count := shift;
+      end;
+      if e^.kind = iv_load then begin
+        discard(sym_$reformat_literal_operand(smcontk(82, e^.value), 4, 0,
+                                              addr(i^.opnds[1])));
+        opnd_bytes_ptr_t(addr(i^.opnds[1]))^.rrp := 16;
+        i^.opnds[1].h.kind := operand$displacement_literal_pool;
+        i^.opnds[1].h.bytes := 4;
+        opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 16;
+        i^.opnds[2].h.kind := operand$ip_reg_like;
+        i^.opnds[2].value := lir_main_c48;   { a segment (lir_main +0xC48) }
+        i^.h.b2_5 := false;
+        n := 2;
+      end;
+      r := addr(i^.opnds[n + 1]);
+      opnd_bytes_ptr_t(r)^.rrp := 8;
+      opnd_bytes_ptr_t(r)^.b3 := (opnd_bytes_ptr_t(r)^.b3 & 16#E0) ! e^.rclass;
+      opnd_bytes_ptr_t(o)^.rrp := 16;
+      opnd_bytes_ptr_t(o)^.b3 := (opnd_bytes_ptr_t(o)^.b3 & 16#E0) ! e^.rclass;
+      lr := lir_$new_live_range_for_kind(e^.rclass);
+      lr^.rrp := rrp$set_t(integer(lr^.rrp) ! 24);
+      if use_bb = code_bb then begin
+        lir_utils_$add_lts_to_lr(24, lr, code_bb, s);
+        r^.lts := s;
+        r^.link := o;
+        o^.lts := s;
+        o^.link := nil;
+        s^.refs := r;
+      end
+      else begin
+        bv_$make_live_range_complex(iv_rtn, lr);
+        f := utils_$get_final_lts(lr, code_bb, created);
+        s := utils_$get_exposed_lts(lr, use_bb, created);
+        o^.lts := s;
+        o^.link := nil;
+        s^.refs := o;
+        s^.rrp := s^.rrp + [rrp$read];
+        r^.lts := f;
+        r^.link := nil;
+        f^.refs := r;
+        f^.rrp := f^.rrp + [rrp$write];
+        utils_$add_birthpoint(f, use_bb, true);
+      end;
+    end;
+  end;
+end;
+
+{ iv_utils_$create_operand_from_expression - operand o (of an
+  instruction in its block) made the value of a copy of e elaborated in
+  register file rclass for its place, the instructions put after at
+  in code_bb.  0x23B876, 0x78 bytes. }
+
+procedure iv_utils_$create_operand_from_expression;
+var
+  i: instr_ptr_t;
+  r: iv_expr_ptr_t;
+begin
+  i := utils_ins_$operands_instruction(o);
+  r := iv_utils_$elaborate_expression(iv_utils_$duplicate_expression(e),
+                                      rclass, i^.opc, o^.h.num);
+  create_operand_from_elaborated_expression(o, r, at, i^.bb, code_bb);
+  iv_utils_$delete_expression(r);
+end;
+
+{ iv_utils_$live_range_from_elaborated_expression - e as an operand: a
+  segment its live range (kind 1), an operand itself (2), a constant
+  its value (3); an operation an instruction made at the head of bb
+  writing a new live range (kind 1), its operands filled from its
+  children (a live range in their +8; an operand copied takes the
+  child's number k, though it goes to slot pos), a constant loaded from
+  the literal pool.  0x23B8EE, 0x2C0 bytes: recursive. }
+
+procedure iv_utils_$live_range_from_elaborated_expression;
+var
+  n, k, pos: integer32;
+  opc: integer;
+  i: instr_ptr_t;
+  p: opnd_ptr_t;
+  clr: lr_ptr_t;
+  cvalue: integer32;
+  cop: opnd_ptr_t;
+  ckind: integer;
+begin
+  case e^.kind of
+    iv_lts:
+      lr := e^.lts^.lr;
+    iv_operand: begin
+      op := addr(e^.opnd);
+      kind := 2;
+      return;
+    end;
+    iv_value: begin
+      value := e^.value;
+      kind := 3;
+      return;
+    end;
+    otherwise begin
+      n := iv_nchildren[e^.kind];
+      opc := iv_opc[e^.rclass, e^.kind];
+      i := lir_$optimizer_new_instruction(bb^.first, opc, false);
+      i^.h.b0_6 := false;
+      for k := 1 to i^.h.nopnds do
+        i^.opnds[k].h.num := k;
+      for k := 1 to n do begin
+        pos := iv_opnd_pos[e^.kind, k];
+        p := addr(i^.opnds[pos]);
+        opnd_bytes_ptr_t(p)^.rrp := 16;
+        iv_utils_$live_range_from_elaborated_expression(e^.child[k], bb, clr,
+                                                        cvalue, cop, ckind);
+        case ckind of
+          1: begin
+            opnd_bytes_ptr_t(p)^.b3 := (opnd_bytes_ptr_t(p)^.b3 & 16#E0)
+                                       ! e^.child[k]^.rclass;
+            p^.ptr := clr;
+          end;
+          3: begin
+            p^.h.kind := operand$immediate;
+            p^.value := cvalue;
+            p^.link := nil;
+            p^.h.bytes := 4;
+            p^.h.count := 0;
+          end;
+          2: begin
+            p^ := cop^;
+            p^.h.num := k;
+          end;
+          otherwise
+            ;
+        end;
+      end;
+      if e^.kind = iv_load then begin
+        discard(sym_$reformat_literal_operand(smcontk(82, e^.value), 4, 0,
+                                              addr(i^.opnds[1])));
+        opnd_bytes_ptr_t(addr(i^.opnds[1]))^.rrp := 16;
+        i^.opnds[1].h.kind := operand$displacement_literal_pool;
+        i^.opnds[1].h.bytes := 4;
+        opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 16;
+        i^.opnds[2].h.kind := operand$ip_reg_like;
+        i^.opnds[2].value := lir_main_c48;   { a segment (lir_main +0xC48) }
+        i^.h.b2_5 := false;
+        n := 2;
+      end;
+      opnd_bytes_ptr_t(addr(i^.opnds[n + 1]))^.rrp := 8;
+      opnd_bytes_ptr_t(addr(i^.opnds[n + 1]))^.b3 :=
+          (opnd_bytes_ptr_t(addr(i^.opnds[n + 1]))^.b3 & 16#E0) ! e^.rclass;
+      clr := lir_$new_live_range_for_kind(e^.rclass);
+      i^.opnds[n + 1].ptr := clr;
+      lr := clr;
+    end;
+  end;
+  kind := 1;
+end;
+
+{ increments_are_equal - both induction lts' increments are known and
+  the same.  0x23BBAE, 0x3A bytes, no A5. }
+
+function increments_are_equal(
+    a: iv_lts_ptr_t;
+    b: iv_lts_ptr_t): boolean; options(val_param); internal;
+begin
+  increments_are_equal := false;
+  if a^.h.known then
+    if b^.h.known then
+      increments_are_equal := iv_utils_$compare_expressions(a^.incr, b^.incr);
+end;
+
+{ create_induction_lts - segment s's induction lts of kind for variable
+  v (kinds 1..3 put first on v's list; a kind 2 of a secondary variable
+  made 3), its increment known as v's.  0x23BBE8, 0x6C bytes, no A5:
+  `moveq #14; btst kind' for kinds 1..3; frame 8:w 10:l 14:l
+  (pattern 125). }
+
+function create_induction_lts(
+    kind: integer;
+    s: lts_ptr_t;
+    v: iv_var_ptr_t): iv_lts_ptr_t; options(val_param); internal;
+var
+  l: iv_lts_ptr_t;
+begin
+  l := alloc_induction_lts;
+  l^.h.kind := kind;
+  l^.ivar := v;
+  l^.lts := s;
+  if kind in [1..3] then begin
+    l^.next := v^.ltss;
+    v^.ltss := l;
+  end;
+  if kind = 2 then
+    if v^.parent <> nil then
+      l^.h.kind := 3;
+  l^.h.known := v^.f48.known;
+  s^.l24 := integer32(l);
+  create_induction_lts := l;
+end;
+
+{ free_induction_lts - l put on the free list.  0x23BC54, 0x10 bytes,
+  no frame. }
+
+procedure free_induction_lts(
+    l: iv_lts_ptr_t); options(val_param); internal;
+begin
+  l^.next := iv_free_lts;
+  iv_free_lts := l;
+end;
+
+{ iv_utils_$delete_induction_lts - l given back: a kind 1..3's
+  expressions deleted and l taken off its variable's list, a kind 4's
+  off its induction expression's; its segment's +24 cleared when it
+  points to l.  The caller's pointer is not cleared.  0x23BC64, 0xC0
+  bytes (loads A5): a jump table by kind - 1. }
+
+procedure iv_utils_$delete_induction_lts(
+    var lp: iv_lts_ptr_t);
+var
+  l, x: iv_lts_ptr_t;
+  p: ^iv_lts_ptr_t;
+begin
+  l := lp;
+  if l = nil then
+    return;
+  case l^.h.kind of
+    1, 2, 3: begin
+      iv_utils_$delete_expression(l^.incr);
+      iv_utils_$delete_expression(l^.step);
+      p := addr(l^.ivar^.ltss);
+      x := p^;
+      while x <> nil do begin
+        if x = l then begin
+          p^ := x^.next;
+          exit;
+        end;
+        p := addr(x^.next);
+        x := x^.next;
+      end;
+    end;
+    4: begin
+      p := addr(l^.iexpr^.ltss);
+      x := p^;
+      while x <> nil do begin
+        if x = l then begin
+          p^ := x^.next;
+          exit;
+        end;
+        p := addr(x^.next);
+        x := x^.next;
+      end;
+    end;
+    otherwise
+      ;
+  end;
+  if l^.lts <> nil then begin
+    if iv_lts_ptr_t(l^.lts^.l24) = l then
+      l^.lts^.l24 := 0;
+  end;
+  l^.lts := nil;
+  free_induction_lts(l);
+end;
+
+{ free_induction_addr - a put on the free list.  0x23BD24, 0x10 bytes,
+  no frame. }
+
+procedure free_induction_addr(
+    a: iv_addr_ptr_t); options(val_param); internal;
+begin
+  a^.next := iv_free_addr;
+  iv_free_addr := a;
+end;
+
+{ iv_utils_$delete_induction_addr - a taken off its induction
+  expression's list (which must hold it: no nil test) and given back.
+  0x23BD34, 0x3C bytes, no A5. }
+
+procedure iv_utils_$delete_induction_addr(
+    a: iv_addr_ptr_t); options(val_param); internal;
+var
+  p: ^iv_addr_ptr_t;
+  x: iv_addr_ptr_t;
+begin
+  p := addr(a^.iexpr^.addrs);
+  x := p^;
+  while x <> a do begin
+    p := addr(x^.next);
+    x := x^.next;
+  end;
+  p^ := x^.next;
+  free_induction_addr(a);
+end;
+
+{ free_induction_expr - x put on the free list.  0x23BD70, 0x10 bytes,
+  no frame. }
+
+procedure free_induction_expr(
+    x: iv_iexpr_ptr_t); options(val_param); internal;
+begin
+  x^.next := iv_free_iexpr;
+  iv_free_iexpr := x;
+end;
+
+{ create_induction_expr - an induction expression of e put first on
+  class c's list, numbered one more than the one before it (1 for the
+  first).  0x23BD80, 0x4C bytes, no A5. }
+
+function create_induction_expr(
+    c: iv_class_ptr_t;
+    e: iv_expr_ptr_t): iv_iexpr_ptr_t; options(val_param); internal;
+var
+  x: iv_iexpr_ptr_t;
+begin
+  x := alloc_induction_expr;
+  if c^.iexprs = nil then
+    x^.num := 1
+  else
+    x^.num := c^.iexprs^.num + 1;
+  x^.class := c;
+  x^.expr := e;
+  x^.next := c^.iexprs;
+  c^.iexprs := x;
+  create_induction_expr := x;
+end;
+
+{ create_induction_class - a class of variable v put last on v's list,
+  numbered one more than the last (1 for the first).  0x23BDCC, 0x58
+  bytes, no A5: frame 8:w 10:l. }
+
+function create_induction_class(
+    w16: integer;
+    v: iv_var_ptr_t): iv_class_ptr_t; options(val_param); internal;
+var
+  c: iv_class_ptr_t;
+begin
+  c := alloc_induction_class;
+  c^.ivar := v;
+  c^.w16 := w16;
+  c^.prev := v^.classes_last;
+  if v^.classes = nil then begin
+    v^.classes := c;
+    c^.num := 1;
+  end
+  else begin
+    v^.classes_last^.next := c;
+    c^.num := v^.classes_last^.num + 1;
+  end;
+  v^.classes_last := c;
+  create_induction_class := c;
+end;
+
+{ free_induction_class - c put on the free list.  0x23BE24, 0x10 bytes,
+  no frame. }
+
+procedure free_induction_class(
+    c: iv_class_ptr_t); options(val_param); internal;
+begin
+  c^.next := iv_free_class;
+  iv_free_class := c;
+end;
+
+{ create_induction_variable - a variable of kind for segment s in the
+  loop iv_head: a primary (no parent) put last on iv_vars, a secondary
+  last on its parent's children (its known flag the parent's); s given
+  a kind 1 induction lts with a zero increment, known.  0x23BE34, 0xD0
+  bytes, no A5. }
+
+function create_induction_variable(
+    s: lts_ptr_t;
+    parent: iv_var_ptr_t;
+    kind: integer): iv_var_ptr_t; options(val_param); internal;
+var
+  v: iv_var_ptr_t;
+  l: iv_lts_ptr_t;
+begin
+  v := alloc_induction_variable;
+  v^.lts := s;
+  v^.head := iv_head;
+  v^.parent := parent;
+  v^.f48.kind := kind;
+  if parent = nil then begin
+    if iv_vars = nil then
+      iv_vars := v
+    else
+      iv_vars_last^.next := v;
+    iv_vars_last := v;
+  end;
+  if s <> nil then begin
+    l := create_induction_lts(1, s, v);
+    l^.incr := iv_utils_$create_value_expression(0);
+    l^.step := nil;
+    l^.h.known := true;
+  end;
+  if parent <> nil then begin
+    v^.f48.known := parent^.f48.known;
+    if parent^.l54 = nil then
+      parent^.l54 := v
+    else begin
+      v^.l54 := parent^.children_last;
+      parent^.children_last^.next := v;
+    end;
+    parent^.children_last := v;
+  end;
+  create_induction_variable := v;
+end;
+
+{ free_induction_variable - v put on the free list.  0x23BF04, 0x10
+  bytes, no frame. }
+
+procedure free_induction_variable(
+    v: iv_var_ptr_t); options(val_param); internal;
+begin
+  v^.next := iv_free_var;
+  iv_free_var := v;
+end;
+
+{ iv_utils_$delete_induction_expr - x's instantiations and address modes
+  deleted, its expression, and x taken off its class's list and given
+  back.  0x23BF14, 0x9C bytes, no A5. }
+
+procedure iv_utils_$delete_induction_expr(
+    x: iv_iexpr_ptr_t); options(val_param); internal;
+var
+  l, ln, t: iv_lts_ptr_t;
+  a, an: iv_addr_ptr_t;
+  p: ^iv_iexpr_ptr_t;
+  y: iv_iexpr_ptr_t;
+begin
+  l := x^.ltss;
+  while l <> nil do begin
+    ln := l^.next;
+    t := l;
+    iv_utils_$delete_induction_lts(t);
+    l := ln;
+  end;
+  a := x^.addrs;
+  while a <> nil do begin
+    an := a^.next;
+    iv_utils_$delete_induction_addr(a);
+    a := an;
+  end;
+  if x^.expr <> nil then
+    iv_utils_$delete_expression(x^.expr);
+  p := addr(x^.class^.iexprs);
+  y := p^;
+  while y <> nil do begin
+    if y = x then begin
+      p^ := y^.next;
+      exit;
+    end;
+    p := addr(y^.next);
+    y := y^.next;
+  end;
+  free_induction_expr(x);
+end;
+
+{ iv_utils_$delete_induction_class - c's induction expressions deleted,
+  c taken off its variable's list and given back.  0x23BFB0, 0x78
+  bytes, no A5. }
+
+procedure iv_utils_$delete_induction_class(
+    c: iv_class_ptr_t); options(val_param); internal;
+var
+  x, xn: iv_iexpr_ptr_t;
+  v: iv_var_ptr_t;
+begin
+  x := c^.iexprs;
+  while x <> nil do begin
+    xn := x^.next;
+    iv_utils_$delete_induction_expr(x);
+    x := xn;
+  end;
+  v := c^.ivar;
+  if c^.next <> nil then
+    c^.next^.prev := c^.prev;
+  if c^.prev <> nil then
+    c^.prev^.next := c^.next;
+  if v^.classes = c then
+    v^.classes := c^.next;
+  if v^.classes_last = c then
+    v^.classes_last := c^.prev;
+  free_induction_class(c);
+end;
+
+{ iv_utils_$delete_induction_variable - v's classes and induction lts
+  deleted; a secondary taken off its parent's children, a primary's
+  children deleted and it taken off iv_vars; v given back.  0x23C028,
+  0xEA bytes, no A5: recursive. }
+
+procedure iv_utils_$delete_induction_variable(
+    v: iv_var_ptr_t); options(val_param); internal;
+var
+  c, cn: iv_class_ptr_t;
+  l, ln, t: iv_lts_ptr_t;
+  pa, w, wn, prev: iv_var_ptr_t;
+  p: ^iv_var_ptr_t;
+begin
+  c := v^.classes;
+  while c <> nil do begin
+    cn := c^.next;
+    iv_utils_$delete_induction_class(c);
+    c := cn;
+  end;
+  l := v^.ltss;
+  while l <> nil do begin
+    ln := l^.next;
+    t := l;
+    iv_utils_$delete_induction_lts(t);
+    l := ln;
+  end;
+  pa := v^.parent;
+  if pa <> nil then begin
+    if pa^.l54 = v then
+      pa^.l54 := v^.next
+    else
+      v^.l54^.next := v^.next;
+    if pa^.children_last = v then
+      pa^.children_last := v^.l54
+    else
+      v^.next^.l54 := v^.l54;
+  end
+  else begin
+    w := v^.l54;
+    while w <> nil do begin
+      wn := w^.next;
+      iv_utils_$delete_induction_variable(w);
+      w := wn;
+    end;
+    prev := nil;
+    p := addr(iv_vars);
+    w := p^;
+    while w <> nil do begin
+      if w = v then begin
+        p^ := w^.next;
+        if iv_vars_last = w then
+          iv_vars_last := prev;
+        exit;
+      end;
+      prev := w;
+      p := addr(w^.next);
+      w := w^.next;
+    end;
+  end;
+  free_induction_variable(v);
+end;
+
+{ interval_contains_bb - bb is in the interval headed by head (any
+  block when head is nil): head is bb or reached up bb's interval heads
+  (+70).  0x23C112, 0x2E bytes, no frame. }
+
+function interval_contains_bb(
+    bb: bb_ptr_t;
+    head: bb_ptr_t): boolean; options(val_param); internal;
+begin
+  if head = nil then
+    interval_contains_bb := true
+  else begin
+    while (bb <> nil) and (bb <> head) do
+      bb := bb^.l70;
+    interval_contains_bb := bb <> nil;
+  end;
+end;
+
+function operand_is_loop_invariant(
+    o: opnd_ptr_t;
+    head: bb_ptr_t): boolean; options(val_param); internal; forward;
+
+{ lts_is_loop_invariant - segment s (the final segment that reaches an
+  exposed one) does not change in the loop headed by head: defined
+  outside it, or by an instruction of a kind whose operands are
+  invariant (a load of a literal pool constant of types 0, 3, 4, 7,
+  10; an add, sub, rsub or muli; a neg, move, copys, mffp or mtfp; an
+  lsl by an immediate).  0x23C140, 0x16C bytes, no A5: the opcodes
+  compared one by one; recursive through operand_is_loop_invariant. }
+
+function lts_is_loop_invariant(
+    s: lts_ptr_t;
+    head: bb_ptr_t): boolean; options(val_param); internal;
+var
+  i: instr_ptr_t;
+  r: boolean;
+begin
+  if s^.f2.exposed then
+    if s^.l44 <> nil then
+      s := s^.l44;
+  if not interval_contains_bb(s^.bb, head) then
+    r := true
+  else begin
+    i := utils_ins_$operands_instruction(s^.refs);
+    r := false;
+    case i^.opc of
+      106, 105:                         { loads, loadl }
+        if s^.refs^.h.num = 3 then
+          if i^.opnds[1].h.kind = operand$displacement_literal_pool then
+            if iv_node_v_ptr_t(i^.opnds[1].link)^.w4 in [0, 3, 4, 7, 10] then
+              r := true;
+      178, 83, 138, 81, 137, 79:        { muli, rsub, subi, sub, addi, add }
+        if s^.refs^.h.num = 3 then
+          if operand_is_loop_invariant(addr(i^.opnds[1]), head) then
+            if operand_is_loop_invariant(addr(i^.opnds[2]), head) then
+              r := true;
+      135, 77, 75, 144, 116, 126:       { negi, neg, move, copys, mffp, mtfp }
+        if s^.refs^.h.num <> 1 then
+          if operand_is_loop_invariant(addr(i^.opnds[1]), head) then
+            r := true;
+      92:                               { lsl }
+        if s^.refs^.h.num <> 1 then
+          if operand_is_loop_invariant(addr(i^.opnds[1]), head) then
+            if i^.opnds[2].h.kind = operand$immediate then
+              r := true;
+      otherwise
+        ;
+    end;
+  end;
+  lts_is_loop_invariant := r;
+end;
+
+{ operand_is_loop_invariant - o (none, a constant, a like register, a
+  displacement, ...) does not change in the loop headed by head; a
+  register's segment by lts_is_loop_invariant, never a physical
+  register's.  0x23C2AC, 0x6A bytes, no A5: masks 16#10FF7001, 126 and
+  16#27000 (the last's kinds already taken by the first). }
+
+function operand_is_loop_invariant;
+var
+  k: operand$t;
+begin
+  if o = nil then
+    operand_is_loop_invariant := true
+  else begin
+    k := o^.h.kind;
+    if k in [operand$none, operand$ip_reg_like..operand$fp_reg_pair_like,
+             operand$flow_graph_edge..operand$immediate,
+             operand$exception_information] then
+      operand_is_loop_invariant := true
+    else if k in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
+      if o^.lts^.lr^.f2.physical then
+        operand_is_loop_invariant := false
+      else
+        operand_is_loop_invariant := lts_is_loop_invariant(o^.lts, head);
+    end
+    else if k in [operand$ip_reg_like..operand$fp_reg_pair_like,
+                  operand$case_jump_base] then
+      operand_is_loop_invariant := true
+    else
+      operand_is_loop_invariant := false;
+  end;
+end;
+
+{ find_definition - whether one definition of the live range reaches bb
+  (from its marked blocks, l134 the segment, mark146 yes): a block
+  without predecessors (or a predecessor reached by none) has none;
+  blocks on the path marked no while searched, then yes with the
+  definition (l134) when every predecessor reached gives the same one.
+  0x23C316, 0xA4 bytes, no A5: recursive over the predecessors. }
+
+function find_definition(
+    lr: lr_ptr_t;
+    bb: bb_ptr_t;
+    yes: integer32;
+    no: integer32): boolean; options(val_param); internal;
+label
+  9;
+var
+  e: fg_edge_ptr_t;
+  def, x: univ_ptr;
+  none: boolean;
+begin
+  if bb^.mark146 = yes then begin
+    find_definition := true;
+    return;
+  end;
+  if bb^.mark146 = no then begin
+    find_definition := false;
+    return;
+  end;
+  if bb^.preds = nil then
+    goto 9;
+  bb^.mark146 := no;
+  def := nil;
+  none := true;
+  e := bb^.preds;
+  while e <> nil do begin
+    if find_definition(lr, e^.source, yes, no) then begin
+      none := false;
+      x := e^.source^.l134;
+      if x = nil then
+        goto 9;
+      if def = nil then
+        def := x
+      else if def <> x then
+        goto 9;
+    end;
+    e := e^.next_pred;
+  end;
+  if none then begin
+    bb^.mark146 := no;
+    find_definition := false;
+  end
+  else begin
+    bb^.mark146 := yes;
+    bb^.l134 := def;
+    find_definition := true;
+  end;
+  return;
+9:
+  bb^.l134 := nil;
+  bb^.mark146 := yes;
+  find_definition := true;
+end;
+
+{ iv_utils_$locate_definition - the one definition of live range lr
+  that reaches bb, or nil: each block's first writing segment (by the
+  live range's list) marked as its definition, then find_definition
+  with two new marks.  0x23C3BA, 0x90 bytes, no A5. }
+
+function iv_utils_$locate_definition(
+    lr: lr_ptr_t;
+    bb: bb_ptr_t): lts_ptr_t; options(val_param); internal;
+var
+  yes, no: integer32;
+  s: lts_ptr_t;
+  b: bb_ptr_t;
+begin
+  iv_rtn^.marks := iv_rtn^.marks + 1;
+  yes := iv_rtn^.marks;
+  iv_rtn^.marks := iv_rtn^.marks + 1;
+  no := iv_rtn^.marks;
+  s := lr^.ltss;
+  b := nil;
+  while s <> nil do begin
+    if s^.bb <> b then
+      if (integer(s^.rrp) & 12) <> 0 then begin
+        b := s^.bb;
+        b^.l134 := s;
+        b^.mark146 := yes;
+      end;
+    s := s^.next;
+  end;
+  if find_definition(lr, bb, yes, no) then
+    iv_utils_$locate_definition := bb^.l134
+  else
+    iv_utils_$locate_definition := nil;
+end;
+
+{ iv_utils_$create_expression_from_lts - the expression segment s (or the
+  final segment that reaches it) holds, seen from the loop headed by
+  head: what its defining instruction computes when that has a kind
+  (iv_opc_set), its operands' expressions (a shift by a constant made a
+  multiply by its power of 2; a move or transfer its operand's; nil
+  when an operand has none), canonicalized; a literal pool constant's
+  value; else the segment itself when it is defined outside the loop
+  and is the one definition reaching head (always when head is nil);
+  nil otherwise (a segment of the loop with no expression is a
+  bug).  0x23C44A, 0x278 bytes. }
+
+function iv_utils_$create_expression_from_lts;
+var
+  r, x: iv_expr_ptr_t;
+  i: instr_ptr_t;
+  k, n, j: integer32;
+  ch: array [1..2] of iv_expr_ptr_t;
+begin
+  if s^.f2.exposed then
+    if s^.l44 <> nil then
+      s := s^.l44;
+  r := nil;
+  i := utils_ins_$operands_instruction(s^.refs);
+  if (opnd_bytes_ptr_t(s^.refs)^.rrp & 12) <> 0 then
+    if i^.opc in iv_opc_set then begin
+      k := iv_opc_kind[i^.opc];
+      n := iv_nchildren[k];
+      if n > 0 then begin
+        for j := 1 to n do
+          ch[j] := nil;
+        for j := 1 to n do begin
+          x := iv_utils_$create_expression_from_operand(
+                   addr(i^.opnds[iv_opnd_pos[k, j]]), head);
+          if x = nil then
+            exit;
+          ch[j] := x;
+        end;
+        if x <> nil then
+          case k of
+            iv_shift:
+              if ch[2]^.kind <> iv_value then
+                x := nil
+              else begin
+                r := alloc_expression;
+                for j := 1 to n do
+                  r^.child[j] := ch[j];
+                r^.kind := iv_mul;
+                r^.right^.value := lshft(1, r^.right^.value);
+              end;
+            iv_transfer, iv_move:
+              r := x;
+            otherwise begin
+              r := alloc_expression;
+              r^.kind := k;
+              for j := 1 to n do
+                r^.child[j] := ch[j];
+              r := iv_utils_$canonicalize_expression(r);
+            end;
+          end;
+        if x = nil then
+          for j := 1 to n do
+            if ch[j] <> nil then
+              iv_utils_$delete_expression(ch[j]);
+      end
+      else if s^.refs^.h.num = 3 then
+        if i^.opnds[1].h.kind = operand$displacement_literal_pool then
+          if iv_node_v_ptr_t(i^.opnds[1].link)^.w4 in [0, 3, 4, 7, 10] then
+            r := iv_utils_$create_value_expression(
+                     iv_node_v_ptr_t(i^.opnds[1].link)^.value);
+    end;
+  if r = nil then
+    if head = nil then
+      r := iv_utils_$create_lts_expression(s)
+    else if interval_contains_bb(s^.bb, head) then
+      bug_check('IV_$create_expression_from_lts: Unknown instruction type found%.')
+    else if s^.f2.final then
+      if iv_utils_$locate_definition(s^.lr, head) = s then
+        r := iv_utils_$create_lts_expression(s);
+  iv_utils_$create_expression_from_lts := r;
+end;
+
+{ iv_utils_$create_expression_from_operand - o's expression seen from the
+  loop headed by head: an immediate a constant, an operand that does not
+  change (operand_is_loop_invariant's first mask) itself, a register's
+  segment's expression (times 2**scale), nil for a physical register
+  or anything else.  0x23C702, 0xA8 bytes. }
+
+function iv_utils_$create_expression_from_operand;
+var
+  k: operand$t;
+  r: iv_expr_ptr_t;
+  s: lts_ptr_t;
+  c: integer32;
+begin
+  k := o^.h.kind;
+  if k = operand$immediate then
+    r := iv_utils_$create_value_expression(o^.value)
+  else if k in [operand$none, operand$ip_reg_like..operand$fp_reg_pair_like,
+                operand$flow_graph_edge..operand$immediate,
+                operand$exception_information] then
+    r := iv_utils_$create_operand_expression(o^)
+  else if k in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
+    if o^.lts^.lr^.f2.physical then
+      r := nil
+    else begin
+      s := o^.lts;
+      if s^.f2.exposed then
+        if s^.l44 <> nil then
+          s := s^.l44;
+      r := iv_utils_$create_expression_from_lts(s, head);
+      if r <> nil then begin
+        c := o^.h.count;
+        if c <> 0 then
+          r := iv_utils_$create_mul_expression(r,
+                   iv_utils_$create_value_expression(lshft(1, c)));
+      end;
+    end;
+  end
+  else
+    r := nil;
+  iv_utils_$create_expression_from_operand := r;
+end;
+
+{ propagate_induction_increment - l (a segment o's instruction defines
+  from the one with induction lts from) given from's known flag, step
+  the expression of o (the operand added; negated for a subtraction),
+  incr from's increment plus step.  0x23C7AA, 0xA6 bytes, no A5: frame
+  8:a 12:a 16:l 20:b. }
+
+procedure propagate_induction_increment(
+    l: iv_lts_ptr_t;
+    from: iv_lts_ptr_t;
+    o: opnd_ptr_t;
+    neg: boolean); options(val_param); internal;
+var
+  x, y: iv_expr_ptr_t;
+begin
+  l^.h.known := from^.h.known;
+  l^.incr := nil;
+  l^.step := nil;
+  if o <> nil then begin
+    x := iv_utils_$create_expression_from_operand(o, iv_head);
+    if neg then
+      x := iv_utils_$canonicalize_expression(
+               iv_utils_$create_neg_expression(x));
+    l^.step := x;
+  end;
+  if from^.h.known then begin
+    y := iv_utils_$duplicate_expression(from^.incr);
+    if o <> nil then
+      y := iv_utils_$canonicalize_expression(
+               iv_utils_$create_add_expression(y,
+                   iv_utils_$duplicate_expression(x)));
+    l^.incr := y;
+  end;
 end;
