@@ -344,6 +344,13 @@ type
                                           on every control transfer
                                           once phase 3 is past }
           b3_2, b3_1, b3_0: boolean);
+      3: (b3_hi: 0..15;                 { .7..4 }
+          low_bits: 0..7;               { .3..1: a load's or store's
+                                          address's known low bits
+                                          (lir_$load_instruction,
+                                          lir_$store_instruction; batch A,
+                                          PA7) }
+          b3_lo: boolean);              { .0 }
   end;
   instr_t = record
     h: instr_hdr_t;                     { +0 }
@@ -746,7 +753,10 @@ type
                                           operand 3 (fga); df_utils makes
                                           it complex for every walk
                                           (batch A) }
-    space104: array [104..107] of char; { +104 }
+    argblock_lr: lr_ptr_t;              { +104: the argument block
+                                          memory's live range (lir's
+                                          lir_e38: lir_$reinitialize; batch
+                                          A, PA7: was space104) }
     db_lr: lr_ptr_t;                    { +108: the DB register's live
                                           range (PC4's reading; df_utils
                                           always makes it complex and
@@ -758,7 +768,23 @@ type
                                           makes it complex and compares
                                           live ranges with it: a live
                                           range (cast there) }
-    space116: array [116..139] of char; { +116 }
+    frame_lr: lr_ptr_t;                 { +116: the stack frame
+                                          register's live range (SF's, from
+                                          the conventions' w20: lir_$
+                                          reinitialize; dbg_life, ra's
+                                          reading; batch A, PA7: +116..+139
+                                          were space116) }
+    l120: lr_ptr_t;                     { +120: the conventions' w12
+                                          register's (isc_user_routines_32c's
+                                          live range; ra's other frame
+                                          register) }
+    l124: lr_ptr_t;                     { +124: the return address
+                                          register's (isc_user_routines_328) }
+    l128: lr_ptr_t;                     { +128: LB's (isc_user_routines_334) }
+    fp_cc_lr: lr_ptr_t;                 { +132: the floating condition
+                                          codes' live range (lir_de0; oli) }
+    ip_cc_lr: lr_ptr_t;                 { +136: the integer condition
+                                          codes' (lir_d88) }
     lr140: lr_ptr_t;                    { +140: a live range df_utils
                                           always makes complex (batch A) }
     memory_lr: lr_ptr_t;                { +144: the memory live range
@@ -2085,153 +2111,153 @@ procedure lir_$complete_instruction(
 { LIR_$DISPATCH_INSTRUCTION - 0x2467B6, 0x108 bytes; called from
   isc_to_lir.  Frame 8:l; 12:l; 16:w; 18:l. }
 procedure lir_$dispatch_instruction(
-    p1: integer32;
-    p2: integer32;
-    p3: integer;
-    p4: integer32); options(val_param); extern;
+    attrs: univ_ptr;
+    sol: solution_ptr_t;
+    opc: integer;
+    flags: integer32); options(val_param); extern;
 
 { LIR_$BRANCH_INSTRUCTION - 0x24691E, 0xA6 bytes; called from isc_to_lir
   lir_main.  Frame 8:al; 12:al; 16:w; 18:l. }
 procedure lir_$branch_instruction(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: integer;
-    p4: integer32); options(val_param); extern;
+    attrs: univ_ptr;
+    label_p: univ_ptr;
+    opc: integer;
+    flags: integer32); options(val_param); extern;
 
 { LIR_$OPERATE_AND_BRANCH_INSTRUCTION - 0x2469F4, 0xCE bytes; called from
   isc_to_lir.  Frame 8:l; 12:w; 14:l; 18:l; 22:l; 26:l. }
 procedure lir_$operate_and_branch_instruction(
-    p1: integer32;
-    p2: integer;
-    p3: integer32;
-    p4: integer32;
-    p5: integer32;
-    p6: integer32); options(val_param); extern;
+    attrs: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    sol1: solution_ptr_t;
+    sol2: solution_ptr_t;
+    label_p: univ_ptr); options(val_param); extern;
 
 { LIR_$USE_TRAP_FOR_EXCEPTION_RAISE - 0x246BC6, 0x62 bytes; called from
   isc_pass_1_main.  Frame 8:l; 12:al.  Result: D0 (callers: D0b1). }
 function lir_$use_trap_for_exception_raise(
-    p1: integer32;
-    p2: univ_ptr): boolean; options(val_param); extern;
+    frame: univ_ptr;
+    site: univ_ptr): boolean; options(val_param); extern;
 
 { LIR_$SIMPLE_INSTRUCTION - 0x246D90, 0x1EE bytes; called from isc_to_lir
   lir_main.  Frame 8:al; 12:w; 14:l; 18:al; 22:al; 26:al; 30:l. }
 procedure lir_$simple_instruction(
-    p1: univ_ptr;
-    p2: integer;
-    p3: integer32;
-    p4: univ_ptr;
-    p5: univ_ptr;
-    p6: univ_ptr;
-    p7: integer32); options(val_param); extern;
+    attrs: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    sol1: solution_ptr_t;
+    sol2: solution_ptr_t;
+    sol3: solution_ptr_t;
+    sol4: solution_ptr_t); options(val_param); extern;
 
 { LIR_$FIELD_INSTRUCTION - 0x246FAE, 0xDC bytes; called from isc_to_lir.
   Frame 8:l; 12:w; 14:l; 18:lp; 22:l; 26:l; 30:l. }
 procedure lir_$field_instruction(
-    p1: integer32;
-    p2: integer;
-    p3: integer32;
-    p4: integer32;
-    p5: integer32;
-    p6: integer32;
-    p7: integer32); options(val_param); extern;
+    attrs: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    width: integer32;
+    sol1: solution_ptr_t;
+    sol2: solution_ptr_t;
+    sol3: solution_ptr_t); options(val_param); extern;
 
 { LIR_$LOAD_INSTRUCTION - 0x2470EC, 0x274 bytes; called from isc_to_lir
   lir_main.  Frame 8:al; 12:w; 14:al; 18:al; 22:al; 26:al; 30:l; 34:l;
   38:l; 42:al. }
 procedure lir_$load_instruction(
-    p1: univ_ptr;
-    p2: integer;
-    p3: integer32;
-    p4: univ_ptr;
-    p5: univ_ptr;
-    p6: univ_ptr;
-    p7: integer32;
-    p8: integer32;
-    p9: integer32;
+    attrs: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    sol_a: solution_ptr_t;
+    sol_b: solution_ptr_t;
+    sol_c: solution_ptr_t;
+    home: univ_ptr;
+    disp: integer32;
+    bits: integer32;
     p10: integer32); options(val_param); extern;
 
 { LIR_$MFPR_INSTRUCTION - 0x2473D8, 0xC8 bytes; called from isc_to_lir.
   Frame 8:l; 12:w; 14:l; 18:l; 22:l; 26:l; 30:l. }
 procedure lir_$mfpr_instruction(
-    p1: integer32;
-    p2: integer;
-    p3: integer32;
-    p4: integer32;
-    p5: integer32;
-    p6: integer32;
-    p7: integer32); options(val_param); extern;
+    attrs: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    sol1: solution_ptr_t;
+    sol2: solution_ptr_t;
+    sol3: solution_ptr_t;
+    home: univ_ptr); options(val_param); extern;
 
 { LIR_$COMMON_LHS_RHS_TOKEN - 0x2474CE, 0xA0 bytes; called from
   isc_to_lir.  Frame 8:l. }
 procedure lir_$common_lhs_rhs_token(
-    p1: integer32); options(val_param); extern;
+    attrs: univ_ptr); options(val_param); extern;
 
 { LIR_$DISJOINT_LHS_AND_RHS_TOKENS - 0x2475B2, 0x124 bytes; called from
   isc_to_lir.  Frame 8:l; 12:l; 16:l. }
 procedure lir_$disjoint_lhs_and_rhs_tokens(
-    p1: integer32;
-    p2: integer32;
-    p3: integer32); options(val_param); extern;
+    attrs: univ_ptr;
+    lhs: univ_ptr;
+    rhs: univ_ptr); options(val_param); extern;
 
 { LIR_$STORE_INSTRUCTION - 0x24771E, 0x1D0 bytes; called from isc_to_lir
   lir_main.  Frame 8:l; 12:w; 14:l; 18:al; 22:al; 26:al; 30:l; 34:l; 38:l;
   42:al. }
 procedure lir_$store_instruction(
-    p1: integer32;
-    p2: integer;
-    p3: integer32;
-    p4: univ_ptr;
-    p5: univ_ptr;
-    p6: univ_ptr;
-    p7: integer32;
-    p8: integer32;
-    p9: integer32;
+    attrs: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    sol_a: solution_ptr_t;
+    sol_b: solution_ptr_t;
+    sol_c: solution_ptr_t;
+    home: univ_ptr;
+    disp: integer32;
+    bits: integer32;
     p10: integer32); options(val_param); extern;
 
 { LIR_$MTPR_INSTRUCTION - 0x247968, 0xC8 bytes; called from isc_to_lir.
   Frame 8:l; 12:w; 14:l; 18:l; 22:l; 26:l; 30:l. }
 procedure lir_$mtpr_instruction(
-    p1: integer32;
-    p2: integer;
-    p3: integer32;
-    p4: integer32;
-    p5: integer32;
-    p6: integer32;
-    p7: integer32); options(val_param); extern;
+    attrs: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    sol1: solution_ptr_t;
+    sol2: solution_ptr_t;
+    sol3: solution_ptr_t;
+    home: univ_ptr); options(val_param); extern;
 
 { LIR_$BEGIN_FORTRAN_IO_SEQUENCE - 0x247A5E, 0xBA bytes; called from
   isc_to_lir.  Frame 8:al. }
 procedure lir_$begin_fortran_io_sequence(
-    p1: univ_ptr); options(val_param); extern;
+    node_p: univ_ptr); options(val_param); extern;
 
 { LIR_$BEGIN_CALL_OR_SVC - 0x247B80, 0x5C bytes; called from isc_to_lir.
   Frame 8:w; 10:l; 14:l.  Result: D0 (callers: A01). }
 function lir_$begin_call_or_svc(
-    p1: integer;
+    opc: integer;
     p2: integer32;
-    p3: integer32): univ_ptr; options(val_param); extern;
+    nargs: integer32): univ_ptr; options(val_param); extern;
 
 { LIR_$EMIT_CALL_OR_SVC - 0x247DFC, 0x42C bytes; called from isc_to_lir.
   Frame 8:al; 12:al; 16:al; 20:l; 24:al; 28:l. }
 procedure lir_$emit_call_or_svc(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr;
-    p4: integer32;
-    p5: univ_ptr;
-    p6: integer32); options(val_param); extern;
+    attrs: univ_ptr;
+    call_p: univ_ptr;
+    instr_p: univ_ptr;
+    flags: integer32;
+    target: solution_ptr_t;
+    sol2: solution_ptr_t); options(val_param); extern;
 
 { LIR_$END_CALL_OR_SVC - 0x2482A4, 0x2A bytes; called from isc_to_lir.
   Frame 8:l; 12:al. }
 procedure lir_$end_call_or_svc(
     p1: integer32;
-    p2: univ_ptr); options(val_param); extern;
+    instr_p: univ_ptr); options(val_param); extern;
 
 { LIR_$REINITIALIZE - 0x2482CE, 0x6DC bytes; called from lir_main.  Frame
   8:al. }
 procedure lir_$reinitialize(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { LIR_$END_ROUTINE - 0x2489AA, 0xB6 bytes; called from at_backend. }
 procedure lir_$end_routine(

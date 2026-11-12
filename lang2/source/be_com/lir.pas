@@ -4,11 +4,10 @@
   use for them (lir_$new_*, lir_$optimizer_new_*), the calls'
   argument registers, the routine's reinitialization and its end.
 
-  TODO(pascal) lir.pas: begun by translator PA6 (7 routines, 0x242820 ..
-  0x242ED4) and continued by PA7 in address order through
-  lir_$complete_instruction (0x2457F4): 41 of 63.  The other 22
-  (lir_$dispatch_instruction 0x2467B6 .. lir_$strip_may_gen_exception
-  0x248A60) remain, with the module's data: lir's own cells are
+  TODO(pascal) lir.pas: the module's data.  Every routine is translated
+  (translator PA6: 0x242820 .. 0x242ED4; PA7: begin_instruction
+  0x242EF4 .. lir_$strip_may_gen_exception 0x248A60, in address order).
+  What remains: lir's own cells are
   declared extern below (lir_<offset>, the build_ tables by their .init
   files' names), and must be defined in address order with the data
   (as lir_main.pas does) when the unit is complete; the lir.dir/
@@ -237,6 +236,17 @@ type
 
   lir_msg_ptr_t = ^bug_check_$string_t;
 
+  { The register sets a call's instruction keeps after its operand
+    slots (+44 + 12 nopnds; the conventions' pointer follows): s0 the
+    floating registers 32..63 it clobbers, s4 0..31, s8 the integer
+    registers. }
+  lir_regs_ptr_t = ^lir_regs_t;
+  lir_regs_t = record
+    s0: bv_word_t;                      { +0 }
+    s4: bv_word_t;                      { +4 }
+    s8: bv_word_t;                      { +8 }
+  end;
+
   { The exception information operand (operand kind 28) as
     lir_$complete_instruction fills it from exs_$start_exception_
     handler_enquiry: +4 the handler, +8 a word, +10 a flag, +11 the
@@ -308,7 +318,9 @@ var
   lir_41a4: extern lir_count_t;         { +0x41A4: the build area's size }
   lir_41a8: extern integer32;           { +0x41A8 }
   lir_41ac: extern univ_ptr;            { +0x41AC: SF's node }
-  lir_41b0: extern integer32;           { +0x41B0 }
+  lir_41b0: extern solution_ptr_t;      { +0x41B0: the frame register's
+                                          own solution while SF's stands
+                                          in lir_3e60 (lir_$reinitialize) }
   lir_41b4: extern mrh_$mark_t;         { +0x41B4: lir_3c00's mark }
   lir_41b8: extern integer32;           { +0x41B8: the last line put in a
                                           block }
@@ -355,6 +367,9 @@ var
   { cargs.pas's data (A5 0x443570) +0x251, as a byte (cargs_$options'
     flags: bit 3 read here). }
   cargs_251: extern char;
+  { cargs.pas's data +0x258 (cargs_$options' flags; bit 7 read by
+    lir_$disjoint_lhs_and_rhs_tokens). }
+  cargs_258: extern char;
 
 { LIR_$ISC_BUGCHECK - 'ISC pass 2 failure'.
 
@@ -525,7 +540,7 @@ begin
   isc_user_routines_334 := isc_$init_well_known_ip_reg('LB  ', -1);
   isc_user_routines_340 := isc_$init_well_known_ip_reg('SF  ', -1);
   lir_41ac := isc_user_routines_340^.node;
-  lir_41b0 := 0;
+  lir_41b0 := nil;
   lir_41b4 := mrh_$mark(lir_3c00);
   lir_41c8 := mrh_$mark(lir_ea8);
   lir_41c4 := mrh_$mark(lir_e90);
@@ -2519,4 +2534,1220 @@ begin
     end;
   if lir_421a then
     dmp_$instruction(i);
+end;
+
+{ LIR_$DISPATCH_INSTRUCTION - a JUMP (opcode 70, DISPATCH, asked for)
+  through the solution sol, its edges to every label it may reach: the
+  routine's l4 labels (flags bit 18; none: an edge to the exit block),
+  or the case table lir_41e8 (bit 23: its entries made their labels'
+  instructions); 'unknown context' otherwise.
+
+  0x2467B6, 0x108 bytes: lir_$get_new_instruction called with three
+  arguments (pattern 132); the operand's form JUMP's first. }
+
+procedure lir_$dispatch_instruction(
+    attrs: univ_ptr;
+    sol: solution_ptr_t;
+    opc: integer;
+    flags: integer32);
+type
+  table_v_ptr_t = ^table_v_t;
+  table_v_t = record
+    space0: array [0..11] of char;      { +0 }
+    n: integer32;                       { +12: the entries }
+    space16: array [16..19] of char;    { +16 }
+    ent: array [0..65535] of univ_ptr;  { +20: labels, made
+                                          instructions }
+  end;
+var
+  i: instr_ptr_t;
+  lab: lir_label_ptr_t;
+  bb: bb_ptr_t;
+  t: table_v_ptr_t;
+  k: integer32;
+begin
+  if opc <> ord(opc$dispatch) then
+    bug_check('LIR_$DISPATCH_INSTRUCTION -- illegal opcode: %a%$',
+              instruction_mnemonic[opc], 12);
+  i := lir_$get_new_instruction(attrs, ord(opc$jump), flags, nil, 0);
+  lir_$build_operand(addr(i^.opnds[1]), sol,
+      instr_attr_view_ptr_t(addr(instruction_attributes[ord(opc$jump)]))^.opnds[1]);
+  if (flags & 16#40000) <> 0 then begin
+    lab := lir_41e0^.l4;
+    if lab = nil then begin
+      bb := get_basic_block;
+      bb^.f.hidden_successor_edges := true;
+      discard(lir_$add_flow_graph_edge(bb, lir_41f8));
+    end
+    else
+      while lab <> nil do begin
+        add_fge_to_labeled_basic_block(nil, lab);
+        lab := lab^.next;
+      end;
+  end
+  else if (flags & 16#800000) <> 0 then begin
+    t := univ_ptr(lir_41e8);
+    for k := t^.n - 1 downto 0 do begin
+      lab := t^.ent[k];
+      t^.ent[k] := lab^.instr;
+      add_fge_to_labeled_basic_block(nil, lab);
+    end;
+  end
+  else
+    bug_check('LIR_$DISPATCH_INSTRUCTION -- unknown context%$');
+  lir_41e8 := 0;
+  lir_$complete_instruction(i);
+end;
+
+{ LIR_$BRANCH_INSTRUCTION - a branch (a class 1, 5 or 6 opcode of one
+  operand) to the label.
+
+  0x24691E, 0xA6 bytes. }
+
+procedure lir_$branch_instruction(
+    attrs: univ_ptr;
+    label_p: univ_ptr;
+    opc: integer;
+    flags: integer32);
+var
+  a: instr_attr_ptr_t;
+  i: instr_ptr_t;
+begin
+  a := addr(instruction_attributes[opc]);
+  if not ((a^.class in [1, 5, 6]) and (a^.nresults = 1)) then
+    bug_check('LIR_$BRANCH_INSTRUCTION -- illegal opcode: %a%$',
+              instruction_mnemonic[opc], 12);
+  begin_instruction(attrs, opc, flags, nil, 0);
+  i := copy_build_instruction;
+  i^.opnds[1].h.num := 1;
+  add_fge_to_labeled_basic_block(addr(i^.opnds[1]), label_p);
+  lir_$complete_instruction(i);
+end;
+
+{ LIR_$OPERATE_AND_BRANCH_INSTRUCTION - a compare-and-branch (class 1,
+  5 or 6, three operands) of sol1 and sol2 to the label.
+
+  0x2469F4, 0xCE bytes. }
+
+procedure lir_$operate_and_branch_instruction(
+    attrs: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    sol1: solution_ptr_t;
+    sol2: solution_ptr_t;
+    label_p: univ_ptr);
+var
+  a: instr_attr_view_ptr_t;
+  i: instr_ptr_t;
+begin
+  a := addr(instruction_attributes[opc]);
+  if not ((instruction_attributes[opc].class in [1, 5, 6])
+          and (instruction_attributes[opc].nresults = 3)) then
+    bug_check('LIR_$OPERATE_AND_BRANCH_INSTRUCTION -- illegal opcode: %a%$',
+              instruction_mnemonic[opc], 12);
+  begin_instruction(attrs, opc, flags, nil, 0);
+  lir_$build_operand(addr(lir_2f58.opnds[1]), sol1, a^.opnds[1]);
+  lir_$build_operand(addr(lir_2f58.opnds[2]), sol2, a^.opnds[2]);
+  i := copy_build_instruction;
+  i^.opnds[3].h.num := 3;
+  add_fge_to_labeled_basic_block(addr(i^.opnds[3]), label_p);
+  lir_$complete_instruction(i);
+end;
+
+{ prolog_label_for_specific_exception - the label of handler's (a
+  handler node, kind 223) prologue for the exception exc: from its list
+  (+56: 12-byte records from lir_3c30, next, label, exception), made
+  the first time.
+
+  0x246AFE, 0x78 bytes, internal; its message names 'LIR_
+  \PROLOG_LABEL_FOR_SPECIFIC_EXCEPTION' (the bytes). }
+
+function prolog_label_for_specific_exception(
+    handler: il_$node_ptr_t;
+    exc: univ_ptr): univ_ptr; options(val_param, internal);
+type
+  plab_ptr_t = ^plab_t;
+  plab_t = record
+    next: plab_ptr_t;                   { +0 }
+    lab: univ_ptr;                      { +4 }
+    exc: univ_ptr;                      { +8 }
+  end;
+var
+  p: plab_ptr_t;
+begin
+  if handler^.kind <> 223 then
+    bug_check('LIR_ \PROLOG_LABEL_FOR_SPECIFIC_EXCEPTION -- handler argument has wrong .kind%$');
+  p := univ_ptr(handler^.xp[14]);
+  while p <> nil do begin
+    if p^.exc = exc then begin
+      prolog_label_for_specific_exception := p^.lab;
+      return;
+    end;
+    p := p^.next;
+  end;
+  p := mrh_$alloc(lir_3c30, 12);
+  p^.exc := exc;
+  p^.next := univ_ptr(handler^.xp[14]);
+  handler^.xp[14] := univ_ptr(p);
+  p^.lab := lir_$new_label;
+  prolog_label_for_specific_exception := p^.lab;
+end;
+
+{ LIR_$USE_TRAP_FOR_EXCEPTION_RAISE - whether an exception raised at
+  site in frame is handled (or is a predefined exception) so that a
+  trap is used.
+
+  0x246BC6, 0x62 bytes. }
+
+function lir_$use_trap_for_exception_raise(
+    frame: univ_ptr;
+    site: univ_ptr): boolean;
+var
+  handled: boolean;
+  exc: univ_ptr;
+  handler: univ_ptr;
+begin
+  exs_$exception_raise_strategy(frame, site, handled, exc, handler);
+  if handled then
+    lir_$use_trap_for_exception_raise := true
+  else if exc <> nil then
+    lir_$use_trap_for_exception_raise :=
+        exs_$map_to_predefined_exception(exc) <> 7
+  else
+    lir_$use_trap_for_exception_raise := false;
+end;
+
+{ LIR_$TRAP_INSTRUCTION - a trap (class 14 or 27) of sol: a branch to
+  the handler's prologue for the exception (TRAP a JUMP, a conditional
+  trap its branch: opcode - 40 for a double's, - 20 otherwise) when the
+  exception is handled here, else the trap (a pair's operand one more
+  operand's room).
+
+  0x246C28, 0x13A bytes: begin_instruction called with three arguments
+  and copy_build_instruction with one (patterns 132, 136). }
+
+procedure lir_$trap_instruction(
+    attrs: lir_inherited_ptr_t;
+    opc: integer;
+    flags: integer32;
+    sol: solution_ptr_t);
+var
+  a: instr_attr_view_ptr_t;
+  handled: boolean;
+  exc: univ_ptr;
+  handler: univ_ptr;
+  lab: univ_ptr;
+  nopc: integer;
+begin
+  a := addr(instruction_attributes[opc]);
+  if not (instruction_attributes[opc].class in [class$trap, class$trap_cond]) then
+    bug_check('LIR_$TRAP_INSTRUCTION -- illegal opcode: %a%$',
+              instruction_mnemonic[opc], 12);
+  lir_$complete_top_level_node_inherited_attrs(attrs);
+  exs_$exception_raise_strategy(univ_ptr(attrs^.l4), true_il(attrs), handled,
+                                exc, handler);
+  if handled then begin
+    lab := prolog_label_for_specific_exception(handler, exc);
+    if opc = ord(opc$trap) then
+      nopc := ord(opc$jump)
+    else if instruction_attributes[opc].b4 = 4 then
+      nopc := opc - 40
+    else
+      nopc := opc - 20;
+    lir_$branch_instruction(attrs, lab, nopc, flags);
+  end
+  else begin
+    begin_instruction(attrs, opc, flags, nil, 0);
+    if instruction_attributes[opc].nresults <> 0 then begin
+      lir_$build_operand(addr(lir_2f58.opnds[1]), sol, a^.opnds[1]);
+      if lir_2f58.opnds[1].h.kind = operand$fp_reg_pair then
+        lir_41a4.l := lir_41a4.l + 24;
+    end;
+    lir_$complete_instruction(copy_build_instruction);
+  end;
+end;
+
+{ LIR_$SIMPLE_INSTRUCTION - an instruction of up to four operands from
+  the solutions sol1..sol4 (a CMP with zero made a TST of sol2; a trap
+  passed to lir_$trap_instruction; a move of a register to itself
+  dropped; a move between operands of one kind with no count marked a
+  preference).
+
+  0x246D90, 0x1EE bytes: the opcode's class set constants; `btst d1,
+  (6,A2)' with the class set in D1 (bit 0: pattern 148);
+  begin_instruction with three arguments, copy_build_instruction with
+  one (patterns 132, 136). }
+
+procedure lir_$simple_instruction(
+    attrs: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    sol1: solution_ptr_t;
+    sol2: solution_ptr_t;
+    sol3: solution_ptr_t;
+    sol4: solution_ptr_t);
+label
+  99;
+var
+  a: instr_attr_view_ptr_t;
+  n: integer;
+begin
+  if opc = ord(opc$cmp) then
+    if ((sol1^.kind = 14) and (sol1^.disp = 0))
+       or ((sol1^.f78.reg = 31) and (sol1^.kind = 11)
+           and sol1^.f78.physical) then begin
+      opc := ord(opc$tst);
+      sol1 := sol2;
+    end;
+  a := addr(instruction_attributes[opc]);
+  if not (instruction_attributes[opc].class in [0, 3, 7, 8, 12, 13, 14, 17, 27])
+     or odd(instruction_attributes[opc].b14_7_1) then
+    bug_check('LIR_$SIMPLE_INSTRUCTION -- illegal opcode: %a%$',
+              instruction_mnemonic[opc], 12);
+  if instruction_attributes[opc].class in [class$trap, class$trap_cond] then begin
+    lir_$trap_instruction(attrs, opc, flags, sol1);
+    goto 99;
+  end;
+  if instruction_attributes[opc].b6_0 then
+    if (sol1^.kind = sol2^.kind) and (sol1^.f78.shift = sol2^.f78.shift)
+       and (sol1^.f78.physical = sol2^.f78.physical) then
+      if sol1^.f78.physical then begin
+        if sol1^.f78.reg = sol2^.f78.reg then
+          goto 99;
+      end
+      else if sol2^.lr <> nil then
+        if sol2^.lr = sol1^.lr then
+          goto 99;
+  begin_instruction(attrs, opc, flags, nil, 0);
+  n := instruction_attributes[opc].nresults;
+  if n <> 0 then begin
+    lir_$build_operand(addr(lir_2f58.opnds[1]), sol1, a^.opnds[1]);
+    if n > 1 then begin
+      lir_$build_operand(addr(lir_2f58.opnds[2]), sol2, a^.opnds[2]);
+      if n > 2 then begin
+        lir_$build_operand(addr(lir_2f58.opnds[3]), sol3, a^.opnds[3]);
+        if n > 3 then
+          lir_$build_operand(addr(lir_2f58.opnds[4]), sol4, a^.opnds[4]);
+      end
+      else if instruction_attributes[opc].b6_0 then
+        if lir_2f58.opnds[1].h.kind = lir_2f58.opnds[2].h.kind then
+          if lir_2f58.opnds[1].h.count = 0 then
+            lir_2f58.h.preference := true;
+    end;
+  end;
+  lir_$complete_instruction(copy_build_instruction);
+99:
+end;
+
+{ LIR_$FIELD_INSTRUCTION - an insert or extract (the opcode's b14 bit
+  1) of width 1..32 bits, three operands.
+
+  0x246FAE, 0xDC bytes. }
+
+procedure lir_$field_instruction(
+    attrs: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    width: integer32;
+    sol1: solution_ptr_t;
+    sol2: solution_ptr_t;
+    sol3: solution_ptr_t);
+var
+  a: instr_attr_view_ptr_t;
+begin
+  a := addr(instruction_attributes[opc]);
+  if not odd(instruction_attributes[opc].b14_7_1) then
+    bug_check('LIR_$FIELD_INSTRUCTION -- illegal opcode: %a%$',
+              instruction_mnemonic[opc], 12);
+  begin_instruction(attrs, opc, flags, nil, 0);
+  if (width <= 0) or (width > 32) then
+    bug_check('LIR_$FIELD_INSTRUCTION -- illegal field width: %D%$', width);
+  lir_2f58.h.width := width;
+  lir_$build_operand(addr(lir_2f58.opnds[1]), sol1, a^.opnds[1]);
+  lir_$build_operand(addr(lir_2f58.opnds[2]), sol2, a^.opnds[2]);
+  lir_$build_operand(addr(lir_2f58.opnds[3]), sol3, a^.opnds[3]);
+  lir_$complete_instruction(copy_build_instruction);
+end;
+
+{ LIR_$LOAD_INSTRUCTION - a load (class 16) of the address sol_a
+  (+ sol_b) into sol_c: flags bit 8 begins a locked sequence (an AND
+  of the frame's -4 into register 1 first, unless the routine's +374
+  bit 5); home (a memory home: its alias descriptor, offset by the
+  advance and disp); a negative literal through the DB register
+  raises no exception; bit 6 an advancing address mode (sol_a its own
+  base, by the access size; bit 5 through the frame solution
+  lir_main_760); bits 7..9 a qualified access (lir_4194's form); bits
+  4, 5 a modified base.  bits: the address's known low bits (+3 bits
+  3..1).
+
+  0x2470EC, 0x274 bytes: the AND made with three arguments (pattern
+  132). }
+
+procedure lir_$load_instruction(
+    attrs: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    sol_a: solution_ptr_t;
+    sol_b: solution_ptr_t;
+    sol_c: solution_ptr_t;
+    home: univ_ptr;
+    disp: integer32;
+    bits: integer32;
+    p10: integer32);
+var
+  a: instr_attr_view_ptr_t;
+  sz: integer32;
+  adv: integer32;
+  save: integer32;
+  d: integer32;
+  f: instr_attr_opnd_t;
+begin
+  a := addr(instruction_attributes[opc]);
+  if instruction_attributes[opc].class <> class$load then
+    bug_check('LIR_$LOAD_INSTRUCTION -- illegal opcode: %a%$',
+              instruction_mnemonic[opc], 12);
+  if (flags & 16#100) <> 0 then begin
+    lir_4228 := true;
+    lir_4222 := true;
+    lir_421c := true;
+    if (ord(il_180^.xc[374]) & 16#20) = 0 then begin
+      begin_instruction(attrs, ord(opc$and), 0, nil, 0);
+      lir_main_760.disp := -4;
+      lir_$build_operand(addr(lir_2f58.opnds[1]), addr(lir_main_760),
+          instr_attr_view_ptr_t(addr(instruction_attributes[ord(opc$and)]))^.opnds[1]);
+      lir_$build_operand(addr(lir_2f58.opnds[2]), isc_user_routines_330,
+          instr_attr_view_ptr_t(addr(instruction_attributes[ord(opc$and)]))^.opnds[2]);
+      lir_$build_operand(addr(lir_2f58.opnds[3]), lir_3e60[1],
+          instr_attr_view_ptr_t(addr(instruction_attributes[ord(opc$and)]))^.opnds[3]);
+      lir_$complete_instruction(copy_build_instruction);
+      lir_4226 := true;
+    end;
+  end;
+  if home <> nil then
+    flags := flags ! 16#2000;
+  if sol_a^.kind = 14 then
+    if sol_a^.disp < 0 then
+      if sol_b^.lr = isc_user_routines_338^.lr then begin
+        flags := flags ! 16#1000;
+        flags := flags & (~16#2000);
+      end;
+  if (flags & 16#40) <> 0 then begin
+    if sol_b <> nil then
+      bug_check('LIR_$LOAD_INSTRUCTION -- advancing_address_mode but B operand is not NIL%$');
+    sol_b := sol_a;
+    sz := lshft(1, instruction_attributes[opc].w18 & 7);
+    adv := sol_a^.l28;
+    save := adv;
+    bits := bits + adv;
+    adv := adv + sz;
+    if (flags & 16#20) <> 0 then begin
+      sol_a^.l28 := adv;
+      lir_main_760.disp := sz;
+      sol_a := addr(lir_main_760);
+    end;
+    if sol_b^.kind = 5 then
+      sol_b := solution_ptr_t(sol_b^.l4);
+  end
+  else
+    save := 0;
+  begin_instruction(attrs, opc, flags, home, 0);
+  if lir_2f58.h.b2_7 then begin
+    d := save + disp;
+    if d <> 0 then
+      lir_2f58.h.b2_7 := alias_$add_disp(lir_2f40, d);
+  end;
+  lir_2f58.h.low_bits := bits & 7;
+  if (flags & 896) = 0 then
+    f := a^.opnds[1]
+  else begin
+    lir_4194.num := 1;
+    f := lir_4194;
+  end;
+  lir_$build_operand(addr(lir_2f58.opnds[1]), sol_a, f);
+  lir_$build_operand(addr(lir_2f58.opnds[2]), sol_b, a^.opnds[2]);
+  lir_$build_operand(addr(lir_2f58.opnds[3]), sol_c, a^.opnds[3]);
+  if (flags & 48) <> 0 then
+    convert_to_intend_to_modify(univ_ptr(addr(lir_2f58.opnds[2])))
+  else if (flags & 16#40) <> 0 then
+    sol_a^.l28 := adv;
+  lir_$complete_instruction(copy_build_instruction);
+end;
+
+{ LIR_$MFPR_INSTRUCTION - an MFPR (opcode 115) of three operands, home
+  its memory home.
+
+  0x2473D8, 0xC8 bytes. }
+
+procedure lir_$mfpr_instruction(
+    attrs: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    sol1: solution_ptr_t;
+    sol2: solution_ptr_t;
+    sol3: solution_ptr_t;
+    home: univ_ptr);
+var
+  a: instr_attr_view_ptr_t;
+begin
+  a := addr(instruction_attributes[opc]);
+  if opc <> ord(opc$mfpr) then
+    bug_check('LIR_$MFPR_INSTRUCTION -- illegal opcode: %a%$',
+              instruction_mnemonic[opc], 12);
+  if home <> nil then
+    flags := flags ! 16#2000;
+  begin_instruction(attrs, opc, flags, home, 0);
+  lir_$build_operand(addr(lir_2f58.opnds[1]), sol1, a^.opnds[1]);
+  lir_$build_operand(addr(lir_2f58.opnds[2]), sol2, a^.opnds[2]);
+  lir_$build_operand(addr(lir_2f58.opnds[3]), sol3, a^.opnds[3]);
+  lir_$complete_instruction(copy_build_instruction);
+end;
+
+{ LIR_$COMMON_LHS_RHS_TOKEN - the loads and stores since a
+  lir_$disjoint_lhs_and_rhs_tokens back to one memory: an MMT_SEQ
+  reading the stores' memory live range (lir_41d8) and the memory
+  (lir_3ba8) again for both.  Both must have been read and written
+  ('MMT_SEQ was pointless').
+
+  0x2474CE, 0xA0 bytes: lir_$get_new_instruction with its five
+  arguments (3 operands). }
+
+procedure lir_$common_lhs_rhs_token(
+    attrs: univ_ptr);
+var
+  m: lr_ptr_t;
+  i: instr_ptr_t;
+begin
+  m := addr(lir_3ba8);
+  if (lir_41d4 = m) and (lir_41d8 = m) then
+    return;
+  if not (rrp$read in lir_41d8^.rrp) or not (rrp$read in lir_41d4^.rrp) then
+    bug_check('LIR_$COMMON_LHS_RHS_TOKEN -- MMT_SEQ was pointless -- no consumers%$');
+  i := lir_$get_new_instruction(attrs, ord(opc$mmt_seq), 0, nil, 3);
+  build_non_register_reference(addr(i^.opnds[1]), 10, 1, [rrp$read], lir_41d8);
+  lir_41d8 := m;
+  lir_41d4 := m;
+  lir_$complete_instruction(i);
+end;
+
+{ LIR_$DISJOINT_LHS_AND_RHS_TOKENS - unless lhs and rhs (IL nodes) may
+  overlap (a class 16 descriptor of lhs, class 0 or 11 of rhs, or
+  related unless cargs +0x258's flag): an MMT_SEQ from the memory to
+  two new memory live ranges, the loads' (lir_41d4) and the stores'
+  (lir_41d8).  Not nested.
+
+  0x2475B2, 0x124 bytes. }
+
+procedure lir_$disjoint_lhs_and_rhs_tokens(
+    attrs: univ_ptr;
+    lhs: univ_ptr;
+    rhs: univ_ptr);
+var
+  dl: alias_$desc_t;
+  dr: alias_$desc_t;
+  okl: boolean;
+  m: lr_ptr_t;
+  i: instr_ptr_t;
+  rd: lr_ptr_t;
+  wr: lr_ptr_t;
+begin
+  okl := alias_$get_alias_desc(lhs, 1, dl);
+  if okl and (dl.class = 16) then
+    return;
+  if alias_$get_alias_desc(rhs, 1, dr) then begin
+    dl.inexact := true;
+    dr.inexact := true;
+    if dr.class in [0, 11] then
+      return;
+    if okl then
+      if not (ord(cargs_258) >= 128) then
+        if not alias_$related(dl, dr) then
+          return;
+  end;
+  m := addr(lir_3ba8);
+  if (lir_41d8 <> m) or (lir_41d4 <> m) then
+    bug_check('LIR_$DISJOINT_LHS_AND_RHS_TOKENS -- nested disjoint tokens unsupported%$');
+  i := lir_$get_new_instruction(attrs, ord(opc$mmt_seq), 0, nil, 4);
+  rd := lir_$new_live_range;
+  build_non_register_reference(addr(i^.opnds[1]), 10, 1, [rrp$write], rd);
+  wr := lir_$new_live_range;
+  build_non_register_reference(addr(i^.opnds[2]), 10, 2, [rrp$write], wr);
+  lir_$complete_instruction(i);
+  lir_41d8 := wr;
+  lir_41d4 := rd;
+end;
+
+{ LIR_$STORE_INSTRUCTION - a store (class 21) of sol_a to the address
+  sol_b (+ sol_c), as lir_$load_instruction's: a home whose solution's
+  symbol is a kind 204 node defers the store (flags bit 15); bit 9 a
+  qualified access (lir_4194's form for operand 2); bit 15 marks the
+  instruction's b2_2.
+
+  0x24771E, 0x1D0 bytes. }
+
+procedure lir_$store_instruction(
+    attrs: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    sol_a: solution_ptr_t;
+    sol_b: solution_ptr_t;
+    sol_c: solution_ptr_t;
+    home: univ_ptr;
+    disp: integer32;
+    bits: integer32;
+    p10: integer32);
+type
+  sym_v_ptr_t = ^sym_v_t;
+  sym_v_t = record
+    w0: integer;
+    kind: integer;
+  end;
+var
+  a: instr_attr_view_ptr_t;
+  sz: integer32;
+  adv: integer32;
+  save: integer32;
+  d: integer32;
+  f: instr_attr_opnd_t;
+begin
+  a := addr(instruction_attributes[opc]);
+  if instruction_attributes[opc].class <> class$store then
+    bug_check('LIR_$STORE_INSTRUCTION -- illegal opcode: %a%$',
+              instruction_mnemonic[opc], 12);
+  if home <> nil then
+    flags := flags ! 16#2000;
+  if sol_b^.sym <> nil then
+    if sym_v_ptr_t(sol_b^.sym)^.kind = 204 then
+      flags := flags ! 16#8000;
+  if (flags & 16#40) <> 0 then begin
+    if sol_c <> nil then
+      bug_check('LIR_$STORE_INSTRUCTION -- advancing_address_mode but B operand is not NIL%$');
+    sol_c := sol_b;
+    sz := lshft(1, instruction_attributes[opc].w18 & 7);
+    adv := sol_b^.l28;
+    save := adv;
+    bits := bits + adv;
+    adv := adv + sz;
+    if (flags & 16#20) <> 0 then begin
+      sol_b^.l28 := adv;
+      lir_main_760.disp := sz;
+      sol_b := addr(lir_main_760);
+    end;
+    if sol_c^.kind = 5 then
+      sol_c := solution_ptr_t(sol_c^.l4);
+  end
+  else
+    save := 0;
+  begin_instruction(attrs, opc, flags, home, 0);
+  if lir_2f58.h.b2_7 then begin
+    d := save + disp;
+    if d <> 0 then
+      lir_2f58.h.b2_7 := alias_$add_disp(lir_2f40, d);
+  end;
+  lir_2f58.h.low_bits := bits & 7;
+  if (flags & 16#8000) <> 0 then
+    lir_2f58.h.b2_2 := true;
+  lir_$build_operand(addr(lir_2f58.opnds[1]), sol_a, a^.opnds[1]);
+  if (flags & 16#200) = 0 then
+    f := a^.opnds[2]
+  else begin
+    lir_4194.num := 2;
+    f := lir_4194;
+  end;
+  lir_$build_operand(addr(lir_2f58.opnds[2]), sol_b, f);
+  lir_$build_operand(addr(lir_2f58.opnds[3]), sol_c, a^.opnds[3]);
+  if (flags & 48) <> 0 then
+    convert_to_intend_to_modify(univ_ptr(addr(lir_2f58.opnds[3])))
+  else if (flags & 16#40) <> 0 then
+    sol_b^.l28 := adv;
+  lir_$complete_instruction(copy_build_instruction);
+end;
+
+{ LIR_$MTPR_INSTRUCTION - an MTPR (opcode 125), as the MFPR.
+
+  0x247968, 0xC8 bytes. }
+
+procedure lir_$mtpr_instruction(
+    attrs: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    sol1: solution_ptr_t;
+    sol2: solution_ptr_t;
+    sol3: solution_ptr_t;
+    home: univ_ptr);
+var
+  a: instr_attr_view_ptr_t;
+begin
+  a := addr(instruction_attributes[opc]);
+  if opc <> 125 then
+    bug_check('LIR_$MTPR_INSTRUCTION -- illegal opcode: %a%$',
+              instruction_mnemonic[opc], 12);
+  if home <> nil then
+    flags := flags ! 16#2000;
+  begin_instruction(attrs, opc, flags, home, 0);
+  lir_$build_operand(addr(lir_2f58.opnds[1]), sol1, a^.opnds[1]);
+  lir_$build_operand(addr(lir_2f58.opnds[2]), sol2, a^.opnds[2]);
+  lir_$build_operand(addr(lir_2f58.opnds[3]), sol3, a^.opnds[3]);
+  lir_$complete_instruction(copy_build_instruction);
+end;
+
+{ LIR_$BEGIN_FORTRAN_IO_SEQUENCE - the labels a FORTRAN I/O statement
+  (kind 137 of call 67, at most 3 entries) may reach (its entries'
+  label symbols: kind 110 of class 6 without +45 bit 4), their LABEL
+  instructions' +3 bit 7 set, kept in lir_3b78 (lir_41c0 of them) for
+  the call's hidden edges.
+
+  0x247A5E, 0xBA bytes: a dbf loop over the entries. }
+
+procedure lir_$begin_fortran_io_sequence(
+    node_p: univ_ptr);
+var
+  node: il_$node_ptr_t;
+  cnt: integer32;
+  k: integer32;
+  e: il_$node_ptr_t;
+  lab: lir_label_ptr_t;
+begin
+  node := node_p;
+  if not ((node^.kind = 137) and (node^.xw[18] = 67)
+          and (node^.xw[19] <= 3)) then
+    bug_check('LIR_$BEGIN_FORTRAN_IO_SEQUENCE -- bad argument.%$');
+  cnt := 0;
+  for k := 0 to node^.xw[19] - 2 do begin
+    e := node^.xp[11 + k];
+    if e <> nil then begin
+      if (e^.kind <> 110) or (rshft(ord(e^.xc[44]) & 16#F0, 4) <> 6)
+         or ((ord(e^.xc[45]) & 16#10) <> 0) then
+        bug_check('LIR_$BEGIN_FORTRAN_IO_SEQUENCE -- unexpected symbol.%$');
+      cnt := cnt + 1;
+      lab := isc_$get_label(e^.xp[12]);
+      lab^.instr^.h.modify := lab^.instr^.h.modify ! 2;
+      lir_3b78[cnt] := lab;
+    end;
+  end;
+  lir_41c0 := cnt;
+end;
+
+{ LIR_$BEGIN_CALL_OR_SVC - a CALL or SVC of opcode opc with nargs
+  operands more than its own and two for each serialized register
+  (lir_41f4), one for the exception information when the target asks
+  (target_properties +0xC1), made with lir_3b80's attributes; its +36
+  the previous call (lir_main_c60).
+
+  0x247B80, 0x5C bytes: p2 not read. }
+
+function lir_$begin_call_or_svc(
+    opc: integer;
+    p2: integer32;
+    nargs: integer32): univ_ptr;
+var
+  i: instr_ptr_t;
+begin
+  begin_instruction(addr(lir_3b80), opc, 0, nil, 2 * lir_41f4 + nargs);
+  if ord(target_properties.p_bf[2]) >= 128 then begin
+    lir_2f58.h.nopnds := lir_2f58.h.nopnds + 1;
+    lir_41a4.l := lir_41a4.l + 12;
+  end;
+  i := copy_build_instruction;
+  i^.l36 := integer32(lir_main_c60);
+  lir_$begin_call_or_svc := i;
+end;
+
+{ call_or_svc_argument_register - the solution of register reg of kind
+  kind (0 integer: of$ip_reg, 1 floating: of$fp_reg, else a pair:
+  of$fp_reg_pair) as the call's next operand (cnt counted up): a read's
+  form lir_419c, a write's lir_4190, the register then taken out of the
+  call's clobbered sets (regs: +8 the integer registers, +4 and +0 the
+  floating ones 0..31 and 32..63).
+
+  0x247BDC, 0x172 bytes, internal: the floating registers' sets are
+  updated as the image does it, `regs.s4 := regs.s8 - [r2]' for 0..31
+  and `regs.s0 := regs.s4 - [r2]' for 32..63 (r2 the pair's odd
+  register): an eight-byte set difference stored from its second
+  longword, the register's own bit computed and never used
+  (docs/questions.md 350). }
+
+function call_or_svc_argument_register(
+    reg: integer32;
+    kind: integer;
+    is_read: boolean;
+    var cnt: lir_count_t;
+    var regs: lir_regs_t): solution_ptr_t; options(val_param, internal);
+var
+  sol: solution_ptr_t;
+  f: integer;
+  r2: integer32;
+begin
+  if kind = 0 then begin
+    sol := lir_3e60[reg];
+    f := 18;
+  end
+  else if kind = 1 then begin
+    sol := lir_3d60[reg];
+    f := 19;
+  end
+  else begin
+    sol := lir_3c60[reg];
+    f := 4;
+  end;
+  cnt.l := cnt.l + 1;
+  if is_read then begin
+    lir_419c.form := f;
+    lir_419c.num := cnt.l & 255;
+  end
+  else begin
+    lir_4190.form := f;
+    lir_4190.num := cnt.l & 255;
+    if kind = 0 then
+      regs.s8 := regs.s8 - [reg & 31]
+    else begin
+      r2 := reg ! ord(kind = 2);
+      if reg < 32 then
+        regs.s4 := regs.s8 - [r2 & 31]
+      else
+        regs.s0 := regs.s4 - [r2 & 31];
+    end;
+  end;
+  call_or_svc_argument_register := sol;
+end;
+
+{ add_serialized_lr_operands - for each register base + k (k in mask)
+  of kind kind, a read and a write operand of instr (the serialized
+  registers a call keeps live).
+
+  0x247D4E, 0xAE bytes, internal. }
+
+procedure add_serialized_lr_operands(
+    instr: instr_ptr_t;
+    mask: bv_word_t;
+    kind: integer;
+    base: integer32;
+    var cnt: lir_count_t;
+    var regs: lir_regs_t); options(val_param, internal);
+var
+  k: integer32;
+  sol: solution_ptr_t;
+begin
+  for k := 0 to 31 do
+    if (k & 31) in mask then begin
+      sol := call_or_svc_argument_register(base + k, kind, true, cnt, regs);
+      lir_$build_operand(addr(instr^.opnds[cnt.lo]), sol, lir_419c);
+      sol := call_or_svc_argument_register(base + k, kind, false, cnt, regs);
+      lir_$build_operand(addr(instr^.opnds[cnt.lo]), sol, lir_4190);
+    end;
+end;
+
+{ LIR_$EMIT_CALL_OR_SVC - the call instr (lir_$begin_call_or_svc's) of
+  the IL call node completed: its target and second operand, for a CALL
+  its conventions (the pointer after the operands and the register sets
+  before it: the clobbered registers, from the conventions when the
+  call is serialized (+36 30, 31 or 32), else all but the preserved
+  ones; the stack register kept; the floating registers counted at
+  +41), the argument registers it reads (the input spine's kind 203
+  locations), the result register (+36 31: +10 its kind, +11 its
+  register, a pair's other half), the output spine's registers, the
+  serialized registers (lir_41f4: lir_420c, lir_4204, lir_4208).
+
+  0x247DFC, 0x42C bytes. }
+
+procedure lir_$emit_call_or_svc(
+    attrs: univ_ptr;
+    call_p: univ_ptr;
+    instr_p: univ_ptr;
+    flags: integer32;
+    target: solution_ptr_t;
+    sol2: solution_ptr_t);
+type
+  props_ptr_t = ^call_conv_$ptr_t;
+var
+  call: il_$node_ptr_t;
+  instr: instr_ptr_t;
+  ser: boolean;
+  regs: lir_regs_ptr_t;
+  a: instr_attr_view_ptr_t;
+  n: lir_count_t;
+  conv: call_conv_$ptr_t;
+  sp: bv_word_t;
+  r: integer32;
+  cntf: integer32;
+  arg: il_$node_ptr_t;
+  loc: il_$node_ptr_t;
+  sol: solution_ptr_t;
+  lr: lr_ptr_t;
+  v: integer32;
+begin
+  call := call_p;
+  instr := instr_p;
+  lir_2f58.opc := instr^.opc;
+  instr^.l32 := integer32(attrs);
+  instr^.l28 := instr^.l28 ! flags;
+  ser := (call^.xw[18] = 30) or (call^.xw[18] = 31) or (call^.xw[18] = 32);
+  regs := addr(instr^.opnds[instr^.h.nopnds + 1]);
+  a := addr(instruction_attributes[instr^.opc]);
+  n.l := instruction_attributes[instr^.opc].nresults;
+  if target^.kind = 5 then
+    target := solution_ptr_t(target^.l4);
+  lir_$build_operand(addr(instr^.opnds[1]), target, a^.opnds[1]);
+  lir_$build_operand(addr(instr^.opnds[2]), sol2, a^.opnds[2]);
+  if instr^.opc = ord(opc$call) then begin
+    conv := univ_ptr(call^.xp[13]);
+    props_ptr_t(addr(instr^.opnds[instr^.h.nopnds + 2]))^ := conv;
+    instr^.h.lsq := (instr^.h.lsq & 2) ! ord(conv^.b29);
+    if conv^.w24 = 1 then begin
+      instr^.h.b3_1 := true;
+      instr^.h.b3_0 := false;
+    end
+    else if conv^.w24 = 2 then begin
+      instr^.h.b3_1 := false;
+      instr^.h.b3_0 := true;
+    end;
+    sp := [conv^.w20 & 31];
+    if ser then begin
+      regs^.s0 := bv_word_t(conv^.fp_clobbered[0]);
+      regs^.s4 := bv_word_t(conv^.fp_clobbered[1]);
+      regs^.s8 := bv_word_t(conv^.ip_clobbered) - sp;
+      if conv^.no_ip_cc_write then
+        regs^.s8 := regs^.s8 - [30]
+      else
+        regs^.s8 := regs^.s8 + [30];
+      if conv^.no_fp_cc_write then
+        regs^.s8 := regs^.s8 - [31]
+      else
+        regs^.s8 := regs^.s8 + [31];
+    end
+    else begin
+      v := 16#FFFFF;
+      regs^.s0 := bv_word_t(v);
+      v := 16#FFFFFF0F;
+      regs^.s4 := bv_word_t(v);
+      v := 16#C003FF;
+      regs^.s8 := (bv_word_t(v) - sp) + [30, 31];
+    end;
+    lr := lir_pre_opnd_ptr_t(addr(instr^.opnds[2]))^.lr;
+    regs^.s8 := regs^.s8 - [lr^.f2.reg & 31];
+    cntf := 0;
+    for r := 31 downto 0 do begin
+      if r in regs^.s0 then
+        cntf := cntf + 1;
+      if r in regs^.s4 then
+        cntf := cntf + 1;
+    end;
+    instr^.b41 := chr(cntf);
+  end;
+  if ser then begin
+    arg := call^.xp[11];
+    while arg <> nil do begin
+      if arg^.kind <> 140 then
+        bug_check('LIR_$EMIT_CALL_OR_SVC -- input spine has a non-assign_node.%$');
+      loc := arg^.xp[16];
+      if loc^.kind = 203 then begin
+        sol := call_or_svc_argument_register(loc^.xw[3], loc^.xw[2], true, n,
+                                             regs^);
+        lir_$build_operand(addr(instr^.opnds[n.l]), sol, lir_419c);
+      end;
+      arg := arg^.xp[2];
+    end;
+  end;
+  if call^.xw[18] = 31 then begin
+    sol := call_or_svc_argument_register(ord(call^.xc[11]), ord(call^.xc[10]),
+                                         false, n, regs^);
+    lir_$build_operand(addr(instr^.opnds[n.l]), sol, lir_4190);
+    if ord(call^.xc[10]) = 3 then begin
+      sol := call_or_svc_argument_register(ord(call^.xc[11]) + 2,
+                                           ord(call^.xc[10]), false, n, regs^);
+      lir_$build_operand(addr(instr^.opnds[n.l]), sol, lir_4190);
+    end;
+  end;
+  if ser then begin
+    arg := call^.xp[12];
+    while arg <> nil do begin
+      loc := arg^.xp[17];
+      if arg^.kind <> 140 then
+        bug_check('LIR_$EMIT_CALL_OR_SVC -- output spine has a non-assign_node.%$');
+      if loc^.kind = 203 then begin
+        sol := call_or_svc_argument_register(loc^.xw[3], loc^.xw[2], false, n,
+                                             regs^);
+        lir_$build_operand(addr(instr^.opnds[n.l]), sol, lir_4190);
+      end;
+      arg := arg^.xp[2];
+    end;
+  end;
+  if lir_41f4 > 0 then begin
+    add_serialized_lr_operands(instr, regs^.s8 * bv_word_t(lir_420c), 0, 0, n,
+                               regs^);
+    add_serialized_lr_operands(instr, regs^.s4 * bv_word_t(lir_4204), 1, 0, n,
+                               regs^);
+    add_serialized_lr_operands(instr, regs^.s0 * bv_word_t(lir_4208), 1, 32, n,
+                               regs^);
+  end;
+  lir_$complete_instruction(instr);
+end;
+
+{ LIR_$END_CALL_OR_SVC - the call's previous call (+36) made current
+  again (lir_main_c60), lir_main_c58 cleared.
+
+  0x2482A4, 0x2A bytes: p1 not read. }
+
+procedure lir_$end_call_or_svc(
+    p1: integer32;
+    instr_p: univ_ptr);
+var
+  instr: instr_ptr_t;
+begin
+  instr := instr_p;
+  lir_main_c60 := univ_ptr(instr^.l36);
+  lir_main_c58 := nil;
+  instr^.l36 := 0;
+end;
+
+{ LIR_$REINITIALIZE - the LIR's state for the routine rtn: lir_main's
+  cells +0xC40..+0xD67 cleared, the instruction heap made the routine
+  heap, the flags, the condition codes' (registers 30, 31), memory's
+  and argument block's live ranges, the physical registers' tables;
+  the entry block (made current) and the exit block; rtn's special
+  live ranges (bb80 the exit block, the condition codes', the memory's,
+  the argument block's); the frame register (the conventions' w20)
+  kept, internal_db; lir_3b80 from the routine's statement; the
+  physical registers (lir_main_$reinit_physical_regs); the literal
+  pool's (target_properties +0x18/+0x1A) and the zero register's
+  (+0x14/+0x16) segments; the live ranges of AP, the return address,
+  LB, RPC, the frame (SF, its solution replacing the register's in
+  lir_3e60, the old one kept in lir_41b0), DB and the w12 register; the
+  registers the program declares (il_134's list) serialized; lir_4090's
+  30 and 31 the condition codes'.
+
+  0x2482CE, 0x6DC bytes: the declared registers' sets built in a frame
+  longword (`bset' with the computed byte). }
+
+procedure lir_$reinitialize(
+    rtn: rtn_ptr_t);
+type
+  decl_list_ptr_t = ^decl_list_t;
+  decl_list_t = record
+    next: decl_list_ptr_t;              { +0 }
+    decl: il_$node_ptr_t;               { +4 }
+  end;
+var
+  m: lr_ptr_t;
+  conv: call_conv_$ptr_t;
+  node: il_$node_ptr_t;
+  stmt: il_$node_ptr_t;
+  lr: lr_ptr_t;
+  r: integer32;
+  p: decl_list_ptr_t;
+  q: il_$node_ptr_t;
+  e: il_$node_ptr_t;
+  hi: integer;
+  mask: ^bv_word_t;
+  sol: solution_ptr_t;
+  reg: integer32;
+begin
+  lir_41e0 := rtn;
+  zero(addr(lir_main_c40), 16#128);
+  lir_main_heap := addr(lir_ef0);
+  lir_4228 := false;
+  lir_4226 := false;
+  lir_41fc := nil;
+  lir_41e4 := 0;
+  lir_41dc := nil;
+  lir_4224 := false;
+  m := addr(lir_3ba8);
+  lir_41d8 := m;
+  lir_41d4 := m;
+  asm_658 := 0;
+  lir_4220 := true;
+  lir_421e := false;
+  lir_421c := false;
+  lir_41bc.l := 0;
+  lir_41f4 := 0;
+  lir_41b8 := 0;
+  lir_4214 := 0;
+  lir_4212 := 0;
+  lir_4210 := 0;
+  lir_422a := false;
+  zero(addr(lir_de0), 88);
+  zero(addr(lir_d88), 88);
+  zero(addr(lir_3ba8), 88);
+  zero(addr(lir_e38), 88);
+  zero(addr(lir_3b80), 40);
+  zero(addr(lir_4090), 256);
+  zero(addr(lir_3f90), 256);
+  zero(addr(lir_d08), 128);
+  zero(addr(lir_c08), 256);
+  lir_41a0 := 0;
+  zero(addr(lir_f38), 16#2004);
+  lir_d88.f2.physical := true;
+  lir_d88.f2.reg := 30;
+  lir_de0.f2.physical := true;
+  lir_de0.f2.reg := 31;
+  lir_4222 := true;
+  lir_41f0 := get_basic_block;
+  lir_41f0^.f14.kind := 1;
+  lir_4222 := true;
+  lir_41f8 := mrh_$alloc_fixed(lir_f20);
+  lir_41f8^.f14.kind := 2;
+  lir_41f8^.f14.path_to := 2;
+  rtn^.bb80 := lir_41f8;
+  rtn^.ip_cc_lr := addr(lir_d88);
+  rtn^.fp_cc_lr := addr(lir_de0);
+  rtn^.lr140 := m;
+  rtn^.memory_lr := m;
+  rtn^.argblock_lr := addr(lir_e38);
+  lir_4218 := false;
+  conv := rtn^.conv;
+  rtn^.w208 := conv^.w20;
+  conv^.ip76 := integer32(bv_word_t(conv^.ip76) + [conv^.w20 & 31]);
+  node := rtn^.node;
+  rtn^.f226.internal_db := ((ord(node^.xc[379]) & 16#40) = 0) and conv^.nested;
+  zero(addr(lir_3b80), 40);
+  stmt := node^.xp[25];
+  lir_3b80.l4 := integer32(stmt^.xp[3]);
+  lir_3b80.w34 := (ord(stmt^.xc[43]) * 256) ! ord(stmt^.xc[44]);
+  lir_main_$reinit_physical_regs(rtn, conv, 0);
+  lir_main_$reinit_physical_regs(rtn, conv, 1);
+  lir_main_$reinit_physical_regs(rtn, conv, -1);
+  lir_41a8 := 0;
+  if target_properties.p_14[1] >= 0 then begin
+    lir_41a8 := integer32(mrh_$alloc_fixed(lir_3c00));
+    lr := lir_4090[target_properties.p_14[1] & 16#FFFF];
+    lts_ptr_t(lir_41a8)^.rrp := [rrp$safe_base_address, rrp$ip_reg];
+    lr^.rrp := lr^.rrp + [rrp$safe_base_address, rrp$ip_reg];
+    lts_ptr_t(lir_41a8)^.lr := lr;
+  end;
+  lir_main_c48 := lts_ptr_t(lir_41a8);
+  isc_user_routines_320 := nil;
+  lir_4200 := 0;
+  if target_properties.p_14[0] >= 0 then begin
+    isc_user_routines_320 := lir_3e60[target_properties.p_14[0] & 16#FFFF];
+    isc_user_routines_31c := isc_user_routines_320;
+    lir_4200 := integer32(mrh_$alloc_fixed(lir_3c00));
+    lts_ptr_t(lir_4200)^.lr := lir_4090[31];
+    lts_ptr_t(lir_4200)^.rrp := [rrp$unique_value, rrp$ip_reg];
+    lir_4090[30]^.rrp := lir_4090[30]^.rrp + [rrp$unique_value];
+  end;
+  lir_main_c4c := lir_4200;
+  rtn^.ap_lr := lir_main_$add_live_range(isc_user_routines_33c, -1);
+  rtn^.ap_lr^.memory_home := rtn^.ap_lr^.node20;
+  node^.xp[12] := rtn^.ap_lr^.node20;
+  rtn^.l124 := lir_main_$add_live_range(isc_user_routines_328, -1);
+  rtn^.l124^.memory_home := rtn^.l124^.node20;
+  node^.xp[16] := rtn^.l124^.node20;
+  rtn^.l128 := lir_main_$add_live_range(isc_user_routines_334, -1);
+  rtn^.l128^.memory_home := rtn^.l128^.node20;
+  node^.xp[17] := rtn^.l128^.node20;
+  rtn^.l112 := lts_ptr_t(lir_main_$add_live_range(lir_main_da0, -1));
+  lr_ptr_t(rtn^.l112)^.memory_home := lr_ptr_t(rtn^.l112)^.node20;
+  if lir_41b0 <> nil then begin
+    r := lir_41b0^.f78.reg;
+    lir_41b0^.lr := lir_4090[r];
+    lir_41b0^.lr^.node20 := lir_main_ac0[r];
+    lir_41b0^.node := lir_main_ac0[r];
+    lir_3e60[r] := lir_41b0;
+    lir_41b0 := nil;
+  end;
+  lir_420c := 0;
+  lir_4208 := 0;
+  lir_4204 := 0;
+  p := univ_ptr(il_134);
+  while p <> nil do begin
+    q := p^.decl;
+    e := node;
+    while e <> nil do begin
+      if q^.xp[5] = e then begin
+        hi := q^.xw[28];
+        reg := q^.xw[29];
+        if hi = 0 then begin
+          lr := lir_4090[reg];
+          sol := lir_3e60[reg];
+          mask := addr(lir_420c);
+        end
+        else begin
+          lr := lir_3f90[reg];
+          sol := lir_3d60[reg];
+          if reg >= 32 then
+            mask := addr(lir_4208)
+          else
+            mask := addr(lir_4204);
+        end;
+        if not lr^.f2.no_modify then begin
+          lr^.f2.serialize := true;
+          sol^.f78.serialize := true;
+          mask^ := mask^ + [reg & 31];
+          lir_41f4 := lir_41f4 + 1;
+          lr^.node20 := q;
+        end;
+        if hi = 2 then
+          if not lir_3f90[reg + 1]^.f2.no_modify then begin
+            lir_3f90[reg + 1]^.f2.serialize := true;
+            lir_3d60[reg + 1]^.f78.serialize := true;
+            lir_3c60[reg]^.f78.serialize := true;
+            mask^ := mask^ + [(reg + 1) & 31];
+            lir_41f4 := lir_41f4 + 1;
+          end;
+        exit;
+      end;
+      e := e^.xp[2];
+    end;
+    p := p^.next;
+  end;
+  isc_user_routines_340^.node := lir_41ac;
+  rtn^.frame_lr := lir_main_$add_ip_reg_physical_lr(isc_user_routines_340,
+                                                    conv^.w20);
+  lr := rtn^.frame_lr;
+  node^.xp[14] := lr^.node20;
+  isc_user_routines_340^.f78.no_modify := lr^.f2.no_modify;
+  isc_user_routines_340^.f78.serialize := lr^.f2.serialize;
+  isc_user_routines_340^.f78.reg := lr^.f2.reg;
+  lir_41b0 := lir_3e60[conv^.w20];
+  lir_3e60[conv^.w20] := isc_user_routines_340;
+  if lir_4090[conv^.w16]^.f2.no_modify then
+    lr := lir_main_$add_ip_reg_physical_lr(isc_user_routines_338, conv^.w16)
+  else
+    lr := lir_main_$add_live_range(isc_user_routines_338, -1);
+  rtn^.db_lr := lr;
+  node^.xp[13] := lr^.node20;
+  isc_user_routines_338^.f78.physical := lr^.f2.physical;
+  isc_user_routines_338^.f78.no_modify := lr^.f2.no_modify;
+  if conv^.b30 then
+    isc_user_routines_32c^.lr := isc_user_routines_33c^.lr
+  else
+    isc_user_routines_32c^.lr := lir_main_$add_live_range(isc_user_routines_32c, -1);
+  rtn^.l120 := isc_user_routines_32c^.lr;
+  node^.xp[15] := isc_user_routines_32c^.lr^.node20;
+  lir_4090[30] := addr(lir_d88);
+  lir_4090[31] := addr(lir_de0);
+end;
+
+{ LIR_$END_ROUTINE - the routine's map and heaps released (the segment
+  and live range heaps to their marks).
+
+  0x2489AA, 0xB6 bytes: the routine passed is the one kept (lir_41e0),
+  not a parameter (at_backend passes none: pattern 132; the heading
+  keeps rtn). }
+
+procedure lir_$end_routine(
+    rtn: rtn_ptr_t);
+begin
+  bv_$release_lr_map(lir_41e0);
+  mrh_$release_to_mark(lir_3c00, lir_41b4);
+  mrh_$release_to_mark(lir_ea8, lir_41c8);
+  mrh_$release_to_mark(lir_e90, lir_41c4);
+  mrh_$release_to_mark(lir_ed8, lir_41d0);
+  mrh_$release_to_mark(lir_ec0, lir_41cc);
+  mrh_$release_all(lir_f20);
+  mrh_$release_all(lir_f08);
+  mrh_$release_all(lir_ef0);
+  mrh_$release_all(lir_3c48);
+  mrh_$release_all(lir_3c30);
+  mrh_$release_all(lir_3c18);
+end;
+
+{ LIR_$STRIP_MAY_GEN_EXCEPTION - utils_$strip_may_gen_exception of
+  instr (for the units that open no utils.ins.pas).
+
+  0x248A60, 0x1E bytes. }
+
+procedure lir_$strip_may_gen_exception(
+    instr: instr_ptr_t);
+begin
+  utils_$strip_may_gen_exception(instr);
 end;
