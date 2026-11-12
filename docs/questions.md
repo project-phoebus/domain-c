@@ -897,3 +897,26 @@ revisited.
    Lead (2026-11-11): fixed; the -config pass now ends the variable list
    with `--' before the file (dpc read the file as another variable).
    iosub and opt_strength type-check clean under -config cc_a88k.
+
+118. Translator FF, opt_strength: substitute (0x0E6AA4), for a 109
+   temporary, joins the moved substitution points onto old's own list
+   (+52 of old, then stores into new's: `movea.l (52,A2),A1' with A2 old)
+   where the 110 case uses new's; the joined list then loops back on
+   itself.  The last point is also stored to unset when old has none.
+   Kept as the image has it: original slips?
+119. Translator FF, opt_strength: doinsert (0x0E7BDC) and add_assign
+   (0x0E8C8A) pass fixupchildren's `in f' flag as `pea' of 0x0E7BFC, the
+   first byte of the next routine (0x4E, `link'): false to fixupchildren's
+   `tst.b; bpl'.  Written as false.  Which constant the original passed
+   (and why it was pooled there) is not known.
+120. Translator FF, opt_strength: other kept oddities of the image:
+   strengthreduce or-s each routine's excluded variables into a module
+   set it never clears (the exclusions accumulate over the compilation);
+   findvalues' search of the header's predecessors for one in the loop
+   leaves k one past them when none is (then reads pred[npreds + 1]);
+   reduce's 145 case takes the index product's first operand as the
+   variable when only the second qualifies; ivs' cells are never
+   disposed (exprs' are).  The headings of opt_loop's fixupchildren and
+   opt_main's fixup_blocks and opt_main_$symidx_of_varn_or_fsym are
+   declared extern in opt_strength.pas (no insert has them): move them
+   to g_opt.ins.pas when opt_main is translated?

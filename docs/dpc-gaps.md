@@ -55,6 +55,9 @@ when this tree is merged).
    ... is not supported yet"; the check adds the otherwise's 90 kinds
    as labels of the cgerr.
 
+   Also opt_strength.pas (translator FF): ptrsub's case of 139, 140,
+   142, 151 (a compare chain at 0x0E7786).
+
 3. **`new` and `dispose`.**  c_macro_utl's mu_$enter_name (cc.m68k
    0x058FDC: PAS_$NEW with 0x100E), mu_$alloc_tle (0x05993C, 134182)
    and mu_$initialize (0x059220, PAS_$DISPOSE).  dpc: "undefined
@@ -68,6 +71,9 @@ when this tree is merged).
          new(p);
          dispose(p);
        end;
+
+   Also opt_strength.pas (translator FF): newexpr, newindvar (new of
+   8-byte list cells, PAS_$NEW 8) and strengthreduce (dispose).
 
 4. **`write` and `writeln` to standard output, and field widths.**
    c_macro_utl's messages and mu_$dump (PAS_$WRITE, PAS_$WRITELN on the
@@ -454,6 +460,11 @@ when this tree is merged).
        begin
          if (k = 1) or f(k) then b := true;
        end;
+
+   Also opt_strength.pas (translator FF): `and check_tree_node(t)'
+   (checkauto 0x0E7F92), `and opt_str_$is_loop_constant_integer(...)'
+   (recognize_induction_variables 0x0EA862), `and
+   il_utils_$is_strength_reduction_temp(...)' (reduce 0x0EB03E).
 
 Gap 21 (a routine parameter, reference 5.4; translator L's entry) also
 met in debug_sym_dmp.pas (translator N), where it differs in two ways:

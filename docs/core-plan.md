@@ -368,3 +368,8 @@ small cc.m68k ones): g_opt.ins.pas gets the headings of
 opt_str_$opmod_of_operand, opt_str_$product_of, walkuses and
 strengthreduce (opt_main calls them); delparent's `in' confirmed
 (docs/questions.md 108-110).
+Translator FF, opt_strength finished (59 of 59): no core change; the
+routines of other units it calls without an insert heading (opt_loop's
+fixupchildren, opt_main's fixup_blocks and
+opt_main_$symidx_of_varn_or_fsym, kfold) are declared extern in the
+unit file, as opt_reachdef does kfold (docs/questions.md 118-120).

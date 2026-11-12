@@ -633,3 +633,9 @@ cc.m68k unless marked.
     stores through a pointer variable are `clr' (p^.stmt := 0 0x0E4BE6
     `clr.w (A0)', e^.ud^.next := nil 0x0E27F4 `clr.l (A0)').  dpc emits
     `clr' for both.
+83. **A by-address boolean constant at the next routine's first byte.**
+    opt_strength's doinsert (0x0E7BDC) and add_assign (0x0E8C8A) pass
+    fixupchildren's `in' flag as `pea' of 0x0E7BFC, the entry of
+    check_tree_node right after doinsert (byte 0x4E, false to the
+    callee's `tst.b; bpl'), as pattern 31 passes the empty string.
+    dpc puts the constant after the routine.
