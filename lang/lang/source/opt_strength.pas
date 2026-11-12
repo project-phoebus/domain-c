@@ -92,8 +92,9 @@
   by offset.  delay.pas's class_size (its +888: the bytes of each
   register class) is read absolutely and declared here, as are the
   routines of other units without an insert heading (opt_loop's
-  fixupchildren, opt_main's fixup_blocks and
-  opt_main_$symidx_of_varn_or_fsym, kfold).
+  fixupchildren, kfold; opt_main's fixup_blocks and
+  opt_main_$symidx_of_varn_or_fsym are in g_opt.ins.pas since opt_main
+  was translated, docs/questions.md 126).
 
   dpc gaps (docs/dpc-gaps.md): 2 (ptrsub's case), 3 (new and dispose of
   the lists' cells), 8 (`in' on the kind and operator sets), 24 (calls
@@ -214,16 +215,6 @@ procedure fixupchildren(
     var t: il_$node_ptr_t;
     in r: integer;
     in f: boolean); extern;
-
-{ FIXUP_BLOCKS - opt_main.pas 0x0DF2B6: the basic blocks' first and
-  last statements after statements were added (no parameters). }
-procedure fixup_blocks; extern;
-
-{ OPT_MAIN_$SYMIDX_OF_VARN_OR_FSYM - opt_main.pas 0x0DE630: the number
-  in opt_region's table of the variable a reference t stands for (D0, a
-  word compared with a statement's vnum). }
-function opt_main_$symidx_of_varn_or_fsym(
-    t: il_$node_ptr_t): integer; options(val_param); extern;
 
 { KFOLD - kfold.pas 0x0AF444: fold the constants of tree t, a tree of
   statement stmt (opt_general's heading). }

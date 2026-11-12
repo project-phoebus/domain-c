@@ -164,7 +164,10 @@ type
         call tree arg_call (opt_reachdef: paramclass(arg_call, arg_num -
         1); a nil arg_call is tested too). }
       7: (arg_unused_48: il_$node_ptr_t;  { +48: x48 }
-          arg_unused_52: integer32;     { +52 }
+          arg_stmt: il_$node_ptr_t;     { +52: the statement the use or
+                                          definition was made for (opt_main's
+                                          create_use_def_ob; use_def_proc
+                                          ignores a 188 without one) }
           arg_call: il_$node_ptr_t;     { +56 }
           arg_num: integer);            { +60 }
   end;
@@ -684,13 +687,25 @@ procedure loopopt; extern;
   17; opt_main's g_opt). }
 procedure motion_constants; extern;
 
-{ opt_main.pas (cc.m68k 0x0DB2C6 for opt_main_$ensure_var_set). }
+{ opt_main.pas (cc.m68k 0x0DAC88, cc.a88k 0x2A7E78). }
 
 { OPT_MAIN_$ENSURE_VAR_SET - give s a set (32 bytes from mem_$alloc of
   opt_main's +0x1C pool) when it has none (opt_loop's fixupchildren
   passes a statement's vset). }
 procedure opt_main_$ensure_var_set(
     var s: g_opt_varset_ptr_t); extern;
+
+{ FIXUP_BLOCKS - the basic blocks' first and last statements after
+  statements were added or removed (opt_main's g_opt, opt_strength's
+  strengthreduce; cc.m68k 0x0DF2B6: no parameters, A5 loaded). }
+procedure fixup_blocks; extern;
+
+{ OPT_MAIN_$SYMIDX_OF_VARN_OR_FSYM - the number in opt_region's table of
+  the variable t (a 109's +74, a 110's +16; 0 for other nodes)
+  (opt_main's create_use_def_ob, opt_strength; cc.m68k 0x0DE630: D0 a
+  word, compared with a statement's vnum). }
+function opt_main_$symidx_of_varn_or_fsym(
+    t: il_$node_ptr_t): integer; options(val_param); extern;
 
 { opt_reachdef.pas (cc.m68k 0x0E18E0, cc.a88k 0x2AEAD0). }
 
@@ -756,9 +771,9 @@ function opt_str_$product_of(
 
 { WALKUSES - variable r occurs in the statement or tree t (opt_main's
   reviseuses, opt_strength).  0x0E852A: both by address, r only read;
-  D0. }
+  D0.  t is univ: reviseuses passes an entry of opt_4009c. }
 function walkuses(
-    var t: il_$node_ptr_t;
+    var t: univ il_$node_ptr_t;
     in r: il_$node_ptr_t): boolean; extern;
 
 { STRENGTHREDUCE - strength reduction of the routine's loops (opt_main's
