@@ -116,8 +116,9 @@ type
       end;
     chain: isc_solution_ptr_t;          { +88: the solution this one
                                           passes pass 2 on to (pass_2) }
-    code_bytes: integer;                { +92 (cse) }
-    delay: integer;                     { +94 (cse) }
+    code_bytes: 0..65535;               { +92 (cse; unsigned:
+                                          choose_one_cse_solution) }
+    delay: 0..65535;                    { +94 (cse) }
     eval_order: integer;                { +96 (cse): 1 the children
                                           left to right, 2 right to left
                                           (pass_2); 1 when made }
@@ -126,7 +127,7 @@ type
     sym: univ_ptr;                      { +100 }
     inherited: inherited_attributes_ptr_t;  { +104 }
     kind: integer;                      { +108: solution$t's ordinal }
-    memory_refs: integer;               { +110 (cse) }
+    memory_refs: 0..65535;              { +110 (cse; compared `bcc') }
     rule: integer;                      { +112: the pattern's number
                                           (pass_2 calls the pass-2
                                           action of this number) }

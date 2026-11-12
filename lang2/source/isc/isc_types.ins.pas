@@ -19,6 +19,19 @@ type
     arith_none, arith_integer, arith_real, arith_address,
     arith_meaningless, arith$t_max);
 
+  { A live range as the ISC marks it (lr_t is batch A's,
+    backend.ins.pas): +10 bit 7 isc_is_cse, set by isc_user_routines'
+    set_isc_is_cse_on_live_range_if_local_cse and by the CSEs' pass 2
+    (lr_t's l8 covers the byte). }
+  isc_lr_ptr_t = ^isc_lr_t;
+  isc_lr_t = record
+    space0: array [0..9] of char;       { +0 }
+    f10: packed record                  { +10 }
+      isc_is_cse: boolean;              { .7 }
+      b6_0: 0..127;
+      end;
+  end;
+
   { The IL nodes as the ISC reads them (kind at +2; the kinds are
     add_node.pas's an_kind_t ordinals, written as numbers). }
   isc_node_ptr_t = ^isc_node_t;
