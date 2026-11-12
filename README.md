@@ -160,6 +160,7 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/reg_vars.pas` | 13 | translated (cc.m68k only; best effort; the debugger's ranges through the unit's rv_lr_t, the 191 statements' actions through g_opt.ins.pas) |
 | `lang/lang/source/opt_reachdef.pas` | 37 | translated (best effort; statements and trees through g_opt.ins.pas's views, other nodes by offset; dpc gaps 8, 12, 24, 25) |
 | `lang/lang/source/opt_strength.pas` | 59 | done (59 of 59; cc.a88k's 12 under `%if cc_a88k`; the module data, four variable sets and the lists, cc.m68k only; dpc gaps 2, 3, 8, 24) |
+| `lang/lang/source/opt_main.pas` | 109 | translated (best effort; the module's data defined in the image's layout, statements, trees and blocks through g_opt.ins.pas's views, other nodes by offset; dpc gaps 2, 4, 7, 8, 29) |
 | `lang/lang/source/reg_alloc.pas` | 15 | translated (cc.m68k only; best effort; statements and blocks through g_opt.ins.pas, variables and the routine block by offset; dpc gaps 4, 8) |
 | `lang/lang/source/reg_color_68k.pas` | 16 | translated (cc.m68k only; best effort; ranges and conflicts through reg_alloc.ins.pas; dpc gap 21) |
 | `lang/lang/source/reg_life.pas` | 17 | translated (cc.m68k only; best effort; statements, blocks and cses through g_opt.ins.pas, variables by offset) |

@@ -439,3 +439,24 @@ Translator HH, banshee (finished, 1 of 1): dobansheefpx's heading in
 final.ins.pas (final's peepholer calls it); celpkg.pas defines
 null_ads, which banshee copies absolutely; opinfo's operand sizes
 (0x2D01CE) declared in the unit.
+
+Translator II (2026-11-11), opt_main (109 routines): opt_main.pas defines
+the whole module's data (A5 0x2D2EF0, 0x8009C bytes) in the image's
+layout: every cell is declared extern (g_opt.ins.pas's shared ones in
+address order, the unit's own om_ cells in the unit) and defined in
+address order (dpc lays defined cells out in define-list order after
+any own variables, so the unit has none).  Core changes in
+g_opt.ins.pas: opt_main_4c (g_opt_vinfo_t) and opt_var_types named the
+same cell +0x4C, opt_main_60 and opt_max_stmts +0x60: merged into
+opt_var_types and opt_max_stmts (reg_alloc, reg_cost_68k, reg_life and
+reg_vars follow: vinfo's node is vtype's base, b25_6 ranged);
+opt_abnormal_routine (opt_livevar's +0, docs/questions.md 122) declared
+there and defined by opt_livevar with its two cells (lv_cur, lv_depth);
+reg_save's local extern removed; the headings of fixup_blocks and
+opt_main_$symidx_of_varn_or_fsym moved there from opt_strength.pas
+(questions 126; kfold stays in the units); a statement's +42 bit 0 is
+entry (was b42_0; opt_livevar, reg_action, opt_strength follow), a
+142's +60 br_sense, a 188's +52 arg_stmt; g_opt_vtype_t's +24 split
+into its bits; walkuses' t is univ (reviseuses passes an entry of
+opt_4009c).
+

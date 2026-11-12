@@ -35,9 +35,11 @@
     0x0D8240  0x2A5430  for_check
     0x0D83AE  0x2A559E  liveanalysis
     A5 0x2D2ED8 (cc.m68k), 0x493884 (cc.a88k): the module's data, 8
-    bytes (opt_general, before it, has none): +0..+3 not addressed,
-    +4 the region whose statement varcheck charges (a word), +6 a
-    word liveanalysis sets and nothing reads.
+    bytes (opt_general, before it, has none): +0 opt_abnormal_routine
+    (g_opt.ins.pas; not addressed here, docs/questions.md 122), +4
+    lv_cur, the region whose statement varcheck charges (a word), +6
+    lv_depth, a word liveanalysis sets and nothing reads; defined in
+    that order.
 
   check_cse_uses, build_du_chains, elim_chains, assign_elim, varcheck
   and liveanalysis load A5 (liveanalysis is global, g_opt.ins.pas; the
@@ -69,12 +71,15 @@ type
   lv_head_ptr_t = ^lv_head_t;
 
 var
-  unused_0: integer32;                  { +0 }
-  cur: g_opt_num_t;                     { +4: the region of the
+  { The module's data, defined below in the image's order: +0
+    g_opt.ins.pas's opt_abnormal_routine (no routine of the unit
+    addresses it; opt_main and reg_save compare with it). }
+  lv_cur: extern g_opt_num_t;           { +4: the region of the
                                           statement varcheck charges }
-  depth: integer;                       { +6 }
+  lv_depth: extern integer;             { +6 }
 
 define
+  opt_abnormal_routine, lv_cur, lv_depth;
   liveanalysis;
 
 { opt_livevar_$find_nearest_spos_node - s, or when s has no source
@@ -682,7 +687,7 @@ begin
                       deleted := true;
                       b42_7 := false; b42_6 := false; kills := false;
                       b42_4 := false; last := false; b42_2 := false;
-                      first := false; b42_0 := false;
+                      first := false; entry := false;
                     end;
                     if s^.vset <> nil then
                       if s^.vset^ <> [] then begin
@@ -734,7 +739,7 @@ begin
             deleted := true;
             b42_7 := false; b42_6 := false; kills := false;
             b42_4 := false; last := false; b42_2 := false;
-            first := false; b42_0 := false;
+            first := false; entry := false;
           end;
         end;
       end;
@@ -743,7 +748,7 @@ begin
 end;
 
 { addvaruse - variable v is used (flags f, or-ed into its entries): in
-  opt_region's table, and counted in the table of statement cur.
+  opt_region's table, and counted in the table of statement lv_cur.
 
   0x0D7A2C, 0xA2 bytes: v and f words; nothing for v <= 0. }
 
@@ -754,16 +759,16 @@ begin
   if v > 0 then begin
     opt_4009c[opt_region]^.vars^[v]^.flags :=
       opt_4009c[opt_region]^.vars^[v]^.flags ! f;
-    if opt_4009c[cur]^.vars <> nil then
-      if opt_4009c[cur]^.vars^[v] <> nil then
-        with opt_4009c[cur]^.vars^[v]^ do begin
+    if opt_4009c[lv_cur]^.vars <> nil then
+      if opt_4009c[lv_cur]^.vars^[v] <> nil then
+        with opt_4009c[lv_cur]^.vars^[v]^ do begin
           flags := flags ! f;
           count := count + 1;
         end;
   end;
 end;
 
-{ varcheck - walk tree t of statement cur in block b: the registers a
+{ varcheck - walk tree t of statement lv_cur in block b: the registers a
   node does not preserve (reg_save) are taken from the block's and
   the statement's free registers (except below a shared node of
   another statement, a cse's own subtree marked 6 and trees no longer
@@ -804,7 +809,7 @@ begin
     if 6 in g_opt_tree_ptr_t(n)^.flags then
       return;
     if g_opt_tree_ptr_t(n)^.owner <> nil then
-      if g_opt_tree_ptr_t(n)^.owner <> opt_4009c[cur] then
+      if g_opt_tree_ptr_t(n)^.owner <> opt_4009c[lv_cur] then
         if n^.kind = 137 then
           return;
     if n^.kind in [137, 138, 143, 145..147, 164, 189, 205] then
@@ -813,7 +818,7 @@ begin
   end;
   rs := g_opt_regs_t(reg_save(n));
   bb^.regs := bb^.regs * rs;
-  opt_4009c[cur]^.regs := opt_4009c[cur]^.regs * rs;
+  opt_4009c[lv_cur]^.regs := opt_4009c[lv_cur]^.regs * rs;
   case n^.kind of
     137, 143:
       case g_opt_tree_ptr_t(n)^.op of
@@ -849,7 +854,7 @@ begin
       if rshft(ord(n^.xc[44]) & 16#F0, 4) = 3 then
         if 17 in g_opt_regs_t(n^.xl[6]) then begin
           c := n;
-          add_constant(c, opt_4009c[cur]^.block);
+          add_constant(c, opt_4009c[lv_cur]^.block);
         end;
       if v <> 0 then
         if rshft(ord(n^.xc[44]) & 16#F0, 4) <> 6 then
@@ -859,7 +864,7 @@ begin
       v := find_var(n);
       if 17 in g_opt_regs_t(n^.xl[8]) then begin
         c := n;
-        add_constant(c, opt_4009c[cur]^.block);
+        add_constant(c, opt_4009c[lv_cur]^.block);
       end;
       if v <> 0 then begin
         if (n^.xl[8] & 16#201001) <> 0 then
@@ -1080,29 +1085,29 @@ begin
     until assign_elim;
   end;
   g_opt_blocks_ptr_t(il_11c)^[opt_first_block]^.flags.skip := false;
-  cur := opt_region;
+  lv_cur := opt_region;
   for k := opt_first_block to opt_last_block do begin
     b := g_opt_blocks_ptr_t(il_11c)^[k];
-    depth := b^.depth + 1;
+    lv_depth := b^.depth + 1;
     s := b^.first_stmt;
     repeat
-      cur := s^.hdr.region;
-      if (cur = 0) and (s^.kind <> 144) then begin
+      lv_cur := s^.hdr.region;
+      if (lv_cur = 0) and (s^.kind <> 144) then begin
         p := s;
         if b^.flags.latch then
-          while cur = 0 do begin
-            cur := p^.hdr.region;
+          while lv_cur = 0 do begin
+            lv_cur := p^.hdr.region;
             p := p^.prev;
           end
         else
-          while cur = 0 do begin
-            cur := p^.hdr.region;
+          while lv_cur = 0 do begin
+            lv_cur := p^.hdr.region;
             p := p^.next;
           end;
       end;
       rs := g_opt_regs_t(reg_save(il_$node_ptr_t(s)));
       b^.regs := b^.regs * rs;
-      opt_4009c[cur]^.regs := opt_4009c[cur]^.regs * rs;
+      opt_4009c[lv_cur]^.regs := opt_4009c[lv_cur]^.regs * rs;
       bb := g_opt_blocks_ptr_t(il_11c)^[k];
       case s^.kind of
         140: begin
@@ -1156,7 +1161,7 @@ begin
         end;
         otherwise
       end;
-      e := opt_4009c[cur];
+      e := opt_4009c[lv_cur];
       if e^.hdr.vnum <> 0 then
         if not e^.hdr.counted then begin
           e^.hdr.counted := true;

@@ -185,7 +185,7 @@ begin
   n^.hdr.kills := false;
   n^.hdr.b42_4 := false;
   n^.hdr.b42_2 := false;
-  n^.hdr.b42_0 := false;
+  n^.hdr.entry := false;
   n^.line := spos_$null_position;
   if (s^.kind = 144) and s^.hdr.first then begin
     n^.prev^.hdr.last := false;

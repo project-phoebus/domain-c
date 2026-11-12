@@ -551,3 +551,18 @@ lang/lang/source/fpa.pas	s/address\((rl|dp)contk\((-1|0)\.0\), 0, k\)/address(sm
 lang/lang/source/fpa.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
 # gap 8 (banshee, translator HH): in on the cell kinds' constant sets (word elements; the comparisons, as cg_top's rule)
 lang/lang/source/banshee.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
+# gap 4 (opt_main): realloc_postorder_node_list's writeln (dropped, for the check)
+lang/lang/source/opt_main.pas	s/^(\s*)writeln\(.*\);\s*$/$1; { gap 4 }\n/
+# gap 7 (opt_main): realloc_postorder_node_list's trunc(old * 1.05) (old + old div 20, for the check)
+lang/lang/source/opt_main.pas	s/trunc\(old \* 1\.05\)/old + old div 20 { gap 7 }/
+# gap 8 (opt_main): in on constant sets with word elements (every one in the file, as comparisons; the sets span lines)
+lang/lang/source/opt_main.pas	BEGIN { undef $/ } s{((?:\w+(?:\[[^\]]*\])?\^?\.)*\w+)\s+in\s+\[([^\]]+)\]}{my ($e, $l) = ($1, $2); $l =~ s/\s+/ /g; '((' . join(') or (', map { /^(\d+)\.\.(\d+)$/ ? "($e >= $1) and ($e <= $2)" : "$e = $_" } split(/\s*,\s*/, $l)) . ')) { gap 8 }'}ge
+# gap 29 (opt_main): recompute_usedef_for_uplevel_addressing's and reviseuses' guarded tests of a word in a 32-byte set (the range test only, for the check)
+lang/lang/source/opt_main.pas	s/if (n|v) in s\^\.vset\^ then( begin)?$/if $1 <= 255 then$2 { gap 29 }/
+# gap 2 (opt_main): recover_scaled's case of 4 labels over a range of 13 (empty labels added, for the check)
+lang/lang/source/opt_main.pas	s/^(          )151:$/${1}141, 143, 144, 145, 146, 147, 148, 149, 150: ; { gap 2 }\n${1}151:/
+# gap 7 (opt_main): convert_exponentiation's real exponent (trunc, compared back; the longword at +12 and no test, for the check)
+lang/lang/source/opt_main.pas	s/n := trunc\(e\^\.real_value\);/n := e^.xl[3]; { gap 7 }/
+lang/lang/source/opt_main.pas	s/if n <> e\^\.real_value then/if n <> n then { gap 7 }/
+# gap 29 (opt_main): make_new_postorder_node_list's guarded test of a word in a 32-byte set (the range test only, for the check)
+lang/lang/source/opt_main.pas	s/\(k in e\^\.vset\^\)/(k <= 255) { gap 29 }/

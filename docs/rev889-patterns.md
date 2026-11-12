@@ -680,3 +680,19 @@ cc.m68k unless marked.
     `andi.w #-9; andi.w #-2' (two statements, `- [3]' and `- [0]'),
     not merged into one mask as consecutive constant stores to packed
     fields are (item 10).  dpc does the same.
+## Bit fields and nested frames (translator II, opt_main.pas)
+
+90. **Bit numbers beyond 7 on a byte operand.**  opt_main's
+    compute_variable_type_descriptors (cc.m68k 0x0DBD58) clears bits of
+    the word at +24 of a type with `bclr #10,(24,A1,D4.l)' and `bclr
+    #9': memory bit operations take the bit number modulo 8, so these
+    are bits 2 and 1 of the byte at +24 (the word's bits 10 and 9); the
+    neighbouring fields are written with `andi.b #7' and `ori.w #64'.
+    Rev 8.89 numbers a packed word's bits from the word, not the byte.
+91. **A nested routine's static link in A1 kept in a data register.**
+    g_opt's nested routines take A1 (the parent's frame) and keep it in
+    D5 or A2 (add_interior_node_to_postorder_node_list: `move.l A1,D5',
+    then `movea.l D5,A1' before each recursive call); recompute_node_lists
+    takes it from the dynamic link (`movea.l (A6),A2'), since only g_opt
+    calls it.
+

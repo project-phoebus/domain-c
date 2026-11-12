@@ -16,9 +16,11 @@
 
 { TODO(pascal) g_opt.ins.pas holds what the translated units need
 
-  Add the optimizer's other cells (opt_main +0x14, +0x5A, +0x62, read by opt_reachdef, opt_strength, the
-  reg_ units) and headings as their units are translated; the record
-  fields are named by use. }
+  opt_main's cells other units read are all declared (opt_main.pas
+  defines them with its own in the image's layout); add the headings
+  of the optimizer's units not translated yet (opt_inline, ...) as
+  they are; the record fields are named by use (some statement header
+  bits still by position, docs/questions.md 133). }
 
 type
   { Block, node and variable numbers: words, zero-extended where read
@@ -105,7 +107,11 @@ type
       last: boolean;                    { .3: its block's last_stmt }
       b42_2: boolean;
       first: boolean;                   { .1: its block's first_stmt }
-      b42_0: boolean;
+      entry: boolean;                   { .0: a routine's entry (148)
+                                          heading the routine's region
+                                          (opt_main's
+                                          compute_basic_block_
+                                          relationships) }
       region: 0..65535;                 { +43 }
       b45: 0..255;                      { +45 }
     end;
@@ -140,7 +146,12 @@ type
       { 141, 142, 150: the branch's target; 142's condition. }
       3: (br_target: il_$node_ptr_t;    { +48 }
           br_unused_52: integer32;      { +52 }
-          br_cond: il_$node_ptr_t);     { +56 }
+          br_cond: il_$node_ptr_t;      { +56 }
+          br_sense: boolean);           { +60: 142's sense, the branch
+                                          taken when br_cond is true
+                                          (cg_top; opt_main's
+                                          compute_abnormality_due_to_
+                                          proc_calls) }
       { 140: the stored value's descriptor (asg_size .. asg_flags) as
         a whole (assign_elim passes it to buildtreenode). }
       4: (asg_desc: add_node_$desc_t);  { +48 }
@@ -155,7 +166,10 @@ type
         call tree arg_call (opt_reachdef: paramclass(arg_call, arg_num -
         1); a nil arg_call is tested too). }
       7: (arg_unused_48: il_$node_ptr_t;  { +48: x48 }
-          arg_unused_52: integer32;     { +52 }
+          arg_stmt: il_$node_ptr_t;     { +52: the statement the use or
+                                          definition was made for (opt_main's
+                                          create_use_def_ob; use_def_proc
+                                          ignores a 188 without one) }
           arg_call: il_$node_ptr_t;     { +56 }
           arg_num: integer);            { +60 }
   end;
@@ -318,7 +332,11 @@ type
     size: integer32;                    { +16: bytes }
     bytes: integer32;                   { +20 }
     flags: packed record                { +24 }
-      b24: 0..255;                      { +24 }
+      b24: 0..31;                       { +24.7..3 }
+      b24_2, b24_1, b24_0: boolean;     { +24.2..0 (opt_main's
+                                          compute_variable_type_
+                                          descriptors clears .7..1 for
+                                          a Fortran variable) }
       b25_7: boolean;                   { +25.7 }
       ranged: boolean;                  { .6 }
       b25_5, b25_4, b25_3, b25_2, b25_1, b25_0: boolean;
@@ -426,99 +444,82 @@ type
   end;
   g_opt_bb_list_ptr_t = ^array [1..16383] of g_opt_bb_ptr_t;
 
-  { opt_main's +0x4C: by variable number (from 0, 28 bytes each: `lsl
-    #2; neg; lsl #3; add', 28v), what the optimizer knows of the
-    routine's variable v: node the declaration or tree that gives its
-    value (kind 123, 130, 134 met in the reg_ units; nil none), size
-    (+16) its bytes (defined_var compares 4), flags (+24, +25: +25 bit
-    6 tested by defined_var).  The other words are not read by the
-    translated units. }
-  g_opt_vinfo_t = record
-    node: il_$node_ptr_t;               { +0 }
-    unused_4: array [1..3] of integer32;  { +4 }
-    size: integer32;                    { +16 }
-    unused_20: integer32;               { +20 }
-    flags: packed record                { +24 }
-      b24: 0..255;
-      b25_7: boolean;
-      b25_6: boolean;                   { .6 }
-      b25_5, b25_4, b25_3, b25_2, b25_1, b25_0: boolean;
-    end;
-    unused_26: integer;                 { +26 }
-  end;
-  g_opt_vinfo_ptr_t = ^array [0..9000] of g_opt_vinfo_t;
-
 var
-  { opt_main.pas's +0x20 and +0x24 (cc.m68k 0x2D2F10, 0x2D2F14): the
-    memory pools (mem_$pool_t) of the register allocator: +0x20 its
-    ranges and bit vectors (reg_alloc's mem_$alloc of the ranges,
-    release_space; reg_life, reg_vars), +0x24 the chunks of reg_alloc's
-    own pool (initpool, freepools). }
-  opt_main_20: extern univ_ptr;
-  opt_main_24: extern univ_ptr;
+  { opt_main.pas's data (A5 0x2D2EF0 in cc.m68k, 0x49389C in cc.a88k;
+    the same offsets in both), the cells other units read, in address
+    order; opt_main.pas defines them with its own cells between, in the
+    image's layout (+0x0 .. +0x8009B). }
 
-  { opt_main.pas's +0x4C (cc.m68k 0x2D2F3C): by variable number, the
-    variables' g_opt_vinfo_t (opt_reachdef, opt_strength, reg_alloc,
-    reg_cost_68k, reg_life). }
-  opt_main_4c: extern g_opt_vinfo_ptr_t;
-
-  { opt_main.pas's data +0x8 (cc.m68k 0x2D2EF8, reached absolutely):
-    a memory pool cg_top's codegen empties at the end. }
+  { +0x8 (cc.m68k 0x2D2EF8, reached absolutely): the dom_matrix memory
+    pool (mem_$pool_t: opt_dom's rows), which cg_top's codegen empties at
+    the end. }
   opt_main_8: extern univ_ptr;
 
-  { opt_main.pas's +0x18 (cc.m68k 0x2D2F08): the memory pool
-    (mem_$pool_t) the chains are allocated from (opt_livevar's
-    build_du_chains, opt_loop, opt_reachdef, opt_strength). }
-  opt_main_18: extern univ_ptr;
-
-  { opt_main.pas's +0x14 (cc.m68k 0x2D2F04): the memory pool
-    opt_reachdef's tables and sets come from (initrd; releaserd empties
+  { +0x14 (cc.m68k 0x2D2F04): the memory pool opt_reachdef's tables and
+    sets come from (`opt_reachdef various'; initrd; releaserd empties
     it). }
   opt_main_14: extern univ_ptr;
 
-  { opt_main.pas's +0x4C (cc.m68k 0x2D2F3C): the variables' types, by
-    number from 0 (compute_variable_type_descriptors; opt_reachdef,
-    opt_strength, reg_alloc, reg_cost_68k, reg_life). }
-  opt_var_types: extern g_opt_vtypes_ptr_t;
+  { +0x18 (cc.m68k 0x2D2F08): the memory pool (`var_chain') the chains
+    and the region tables' entries are allocated from (opt_main,
+    opt_livevar's build_du_chains, opt_loop, opt_reachdef,
+    opt_strength). }
+  opt_main_18: extern univ_ptr;
 
-  { opt_main.pas's +0x5A, +0x60, +0x62 (cc.m68k 0x2D2F4A, 0x2D2F50,
-    0x2D2F52): the routine's basic blocks, and the most region
-    statements and variables of a routine (opt_main; opt_reachdef's
-    tables are allocated for them; reg_vars). }
-  opt_nblocks: extern g_opt_num_t;
-  opt_max_stmts: extern g_opt_num_t;
-  opt_max_vars: extern integer;
+  { +0x20 and +0x24 (cc.m68k 0x2D2F10, 0x2D2F14): the memory pools of
+    the register allocator (`reg_alloc graphs', `reg_alloc pools'):
+    +0x20 its ranges and bit vectors (reg_alloc's mem_$alloc of the
+    ranges, release_space; reg_life, reg_vars), +0x24 the chunks of
+    reg_alloc's own pool (initpool, freepools). }
+  opt_main_20: extern univ_ptr;
+  opt_main_24: extern univ_ptr;
 
-  { opt_main.pas's +0x40, +0x44, +0x48 (cc.m68k 0x2D2F30, 0x2D2F34,
-    0x2D2F38): by block number (from 1), the variables live at the
-    block's exit, those it does not assign, and those it uses before
-    assigning them (opt_livevar's buildsets and lvanalyze; reg_life,
-    reg_cost_68k). }
+  { +0x40, +0x44, +0x48 (cc.m68k 0x2D2F30, 0x2D2F34, 0x2D2F38): by block
+    number (from opt_first_block: opt_main's tables moved by adjust_ptr),
+    the variables live at the block's exit, those it does not assign,
+    and those it uses before assigning them (opt_livevar's buildsets and
+    lvanalyze; reg_life, reg_cost_68k). }
   opt_live_out: extern g_opt_varsets_ptr_t;
   opt_not_killed: extern g_opt_varsets_ptr_t;
   opt_used: extern g_opt_varsets_ptr_t;
 
-  { opt_main.pas's cells (A5 0x2D2EF0 in cc.m68k, 0x49389C in cc.a88k)
-    read by the other units, absolutely.  opt_main defines them. }
+  { +0x4C (cc.m68k 0x2D2F3C): the variables' types, by number from 0
+    (compute_variable_type_descriptors; opt_reachdef, opt_strength,
+    reg_alloc, reg_cost_68k, reg_life: base the type, size its bytes,
+    flags.ranged). }
+  opt_var_types: extern g_opt_vtypes_ptr_t;
+
   opt_dfs_number: extern g_opt_nums_ptr_t;  { +0x50: by block number,
                                           its depth-first number (dfs;
                                           find_loops) }
   opt_dfs_block: extern g_opt_nums_ptr_t;   { +0x54: by depth-first
                                           number, the block (dfs counts
                                           down; find_loops; 6 units) }
+  opt_nblocks: extern g_opt_num_t;      { +0x5A (0x2D2F4A): the most
+                                          basic blocks of a routine
+                                          (opt_reachdef's tables) }
   opt_region: extern g_opt_num_t;       { +0x5E: the entry of opt_4009c
                                           find_var looks in (10 units) }
-  opt_main_60: extern g_opt_num_t;      { +0x60 (0x2D2F50): the
-                                          routine's statements from
-                                          opt_region (reg_vars's
+  opt_max_stmts: extern g_opt_num_t;    { +0x60 (0x2D2F50): the most
+                                          region statements of a routine
+                                          (opt_reachdef's tables; reg_vars's
                                           get_range: the last is
-                                          opt_region + opt_main_60 - 1) }
+                                          opt_region + opt_max_stmts - 1) }
+  opt_max_vars: extern integer;         { +0x62 (0x2D2F52): the most
+                                          variables of a routine }
   opt_last_block: extern g_opt_num_t;   { +0x68: the routine's last
                                           basic block (11 units) }
   opt_first_block: extern g_opt_num_t;  { +0x6A: its first (11 units) }
-  opt_track_lines: extern boolean;      { +0x6C: general_opts keeps
+  opt_track_lines: extern boolean;      { +0x6C: set once reaching
+                                          definitions have run (g_opt,
+                                          recompute_node_lists): the
+                                          block starts and the use and
+                                          definition statements are not
+                                          made again; general_opts keeps
                                           il_d0 at each statement's line
-                                          (opt_reachdef) }
+                                          (opt_reachdef; the name is
+                                          translator V's, docs/questions.md
+                                          113) }
   opt_dom: extern array [0..65535] of g_opt_dom_row_ptr_t;  { +0x9C
                                           (0x2D2F8C, 0x493938): by block
                                           number, its row of the dominance
@@ -532,6 +533,15 @@ var
     number, the block the node could be hoisted to (opt_cse's
     cse_$set_hoistability and cse, opt_main). }
   opt_loop_hoist: extern g_opt_nums_ptr_t;
+
+  { opt_livevar.pas's +0 (cc.m68k 0x2D2ED8, cc.a88k 0x493884): the
+    Fortran symbol (110) of the routine whose calls may return
+    abnormally and disturb every register but FP2..FP7 (opt_main's
+    assert_is_call_to_abnormal_routine and
+    count_interior_nodes_for_postorder_node_list, reg_save's
+    registers_consumed_by_fortran_symbol compare with it).  Nothing in
+    either binary stores to it: it stays nil (docs/questions.md 122). }
+  opt_abnormal_routine: extern il_$node_ptr_t;
 
   { opt_cse.pas's +0x88 (cc.m68k 0x2D2ED0, cc.a88k 0x49387C): how many
     nodes cse looks back from each candidate (opt_main's g_opt sets
@@ -662,13 +672,25 @@ procedure loopopt; extern;
   17; opt_main's g_opt). }
 procedure motion_constants; extern;
 
-{ opt_main.pas (cc.m68k 0x0DB2C6 for opt_main_$ensure_var_set). }
+{ opt_main.pas (cc.m68k 0x0DAC88, cc.a88k 0x2A7E78). }
 
 { OPT_MAIN_$ENSURE_VAR_SET - give s a set (32 bytes from mem_$alloc of
   opt_main's +0x1C pool) when it has none (opt_loop's fixupchildren
   passes a statement's vset). }
 procedure opt_main_$ensure_var_set(
     var s: g_opt_varset_ptr_t); extern;
+
+{ FIXUP_BLOCKS - the basic blocks' first and last statements after
+  statements were added or removed (opt_main's g_opt, opt_strength's
+  strengthreduce; cc.m68k 0x0DF2B6: no parameters, A5 loaded). }
+procedure fixup_blocks; extern;
+
+{ OPT_MAIN_$SYMIDX_OF_VARN_OR_FSYM - the number in opt_region's table of
+  the variable t (a 109's +74, a 110's +16; 0 for other nodes)
+  (opt_main's create_use_def_ob, opt_strength; cc.m68k 0x0DE630: D0 a
+  word, compared with a statement's vnum). }
+function opt_main_$symidx_of_varn_or_fsym(
+    t: il_$node_ptr_t): integer; options(val_param); extern;
 
 { opt_reachdef.pas (cc.m68k 0x0E18E0, cc.a88k 0x2AEAD0). }
 
@@ -734,9 +756,9 @@ function opt_str_$product_of(
 
 { WALKUSES - variable r occurs in the statement or tree t (opt_main's
   reviseuses, opt_strength).  0x0E852A: both by address, r only read;
-  D0. }
+  D0.  t is univ: reviseuses passes an entry of opt_4009c. }
 function walkuses(
-    var t: il_$node_ptr_t;
+    var t: univ il_$node_ptr_t;
     in r: il_$node_ptr_t): boolean; extern;
 
 { STRENGTHREDUCE - strength reduction of the routine's loops (opt_main's

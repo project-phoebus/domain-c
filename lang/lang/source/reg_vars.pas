@@ -602,7 +602,7 @@ var
     0x0C9668, 0x332 bytes, link #-60: the parent's frame from the
     dynamic link (words its (12)); the mask of two bits as in
     bit_range_set; the statements spanned limited to opt_region +
-    opt_main_60 - 1; the first comparison of the extension evaluated
+    opt_max_stmts - 1; the first comparison of the extension evaluated
     whole (`seq; seq; and.b'); the range record's 24-bit lines merged
     with `andi.l #0xFF000000; or.l'. }
 
@@ -629,7 +629,7 @@ var
     i := 0;
     mask := 3;
     p := 0;
-    last := opt_region + opt_main_60 - 1;
+    last := opt_region + opt_max_stmts - 1;
     repeat
       while (bits^[i] & mask) = 0 do begin
         p := p + 2;
