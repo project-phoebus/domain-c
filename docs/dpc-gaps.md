@@ -7,6 +7,26 @@ that the unit's other routines are still compared.  Report these to the
 domain-pascal project (and to `../source/docs/pascal-translation-notes.md`
 when this tree is merged).
 
+## Status (dpc fixes)
+
+- **Gaps 2, 8, 12, 24: fixed in domain-pascal eaddf6c (2026-11-11)**,
+  compiled best effort (a warning; `--strict' still refuses).  Their
+  rewrites were removed from tools/cc_gap_rewrites.txt (188 rules),
+  except where the units still need them, marked "[still needed with
+  dpc eaddf6c]":
+  - gap 8 variant: `in' on a 14-byte set that is not a variable
+    (c_syntax.pas, 3 sites).
+  - gap 24 variant: a call deeper inside a right operand of plain
+    `and'/`or' than a comparison of the result or the result itself
+    (cg_assign.pas, final.pas).
+  - gap 12 variant: a function result in A0 compared other than
+    `='/`<>' with a constant (final.pas, opt_assign.pas).
+  - tr_utils.pas: without its gap 12/24 rules it meets gap 15 (a
+    pointer result in a body of several statements assigned other than
+    a function result, variable or nil).
+- Gaps 4 (write/writeln) and 7 (real arithmetic) are not being worked
+  on in dpc for now (the domain-pascal owner's choice).
+
 1. **Assignment of a whole varying string longer than dpc copies.**
    `line_prefix := prefix` of two `varying [200] of char` module variables
    (diag.pas `about_to_write_to_line`, 0x068438: the image copies
