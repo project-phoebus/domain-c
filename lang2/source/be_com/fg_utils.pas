@@ -18,11 +18,10 @@
     birthpoint instructions', +24 their inputs', +48 the dominator
     buckets'), then the cells the routines below use.
 
-  TODO(pascal) fg_utils: 22 of 53 routines (the first ones in address
-  order, through an_exit_has_multiple_successors, 0x2358B0); not
-  translated yet: build_exit, copy_bb_contents, build_loop_header, n_instrs,
-  every_interval_block_exits, make_loops_unconditional,
-  fg_utils_$make_loops_unconditional, fg_utils_$forward_empty_blocks,
+  TODO(pascal) fg_utils: 27 of 53 routines (with the insert's
+  utils_ins_$operands_instruction; the first ones in address order,
+  through fg_utils_$make_loops_unconditional, 0x235F04); not translated
+  yet: fg_utils_$forward_empty_blocks,
   fg_utils_$end_senseless_loops, reverse_depth_first_search, compress,
   eval, evaldef, compute_rel, replace_exposed_lts,
   fg_utils_$generate_join_birthpoint, fg_utils_$insert_join_birthpoint,
@@ -1013,4 +1012,303 @@ begin
     list := list^.next_pred;
   end;
   an_exit_has_multiple_successors := false;
+end;
+
+{ build_exit - a new block for the loop exits on list (edges into the
+  loop's header, chained at next_pred): put after the header in code
+  order (the postorder numbers made again), a member of the header's
+  interval at its depth, the list's edges retargeted to it, ending in a
+  jump (kept, +2 bit 6) to the header; list becomes the new edge alone
+  (taken off the header's edges in); the block.
+
+  0x23592E, 0xFA bytes, no A5: rtn (8) in D2, list (12) by address in
+  D3; the block A2, the header A3, the jump D2. }
+
+function build_exit(
+    rtn: rtn_ptr_t;
+    var list: fg_edge_ptr_t): bb_ptr_t; options(val_param, internal);
+var
+  nb: bb_ptr_t;
+  t: bb_ptr_t;
+  e: fg_edge_ptr_t;
+  j: instr_ptr_t;
+  ne: fg_edge_ptr_t;
+begin
+  nb := lir_$new_basic_block;
+  t := list^.target;
+  nb^.next114 := t;
+  t^.next^.next114 := nb;
+  nb^.next := t^.next;
+  t^.next := nb;
+  fg_utils_$recompute_postnum(rtn);
+  nb^.l70 := t;
+  nb^.l78 := t^.l74;
+  t^.l74 := nb;
+  nb^.f.depth := t^.f.depth;
+  nb^.preds := list;
+  e := list;
+  while e <> nil do begin
+    e^.target := nb;
+    e := e^.next_pred;
+  end;
+  j := lir_$new_instruction(ord(opc$jump));
+  j^.bb := nb;
+  j^.h.b2_6 := true;
+  j^.opnds[1].h.kind := operand$flow_graph_edge;
+  j^.opnds[1].h.num := 1;
+  ne := lir_$add_flow_graph_edge(nb, t);
+  j^.opnds[1].ptr := ne;
+  list := ne;
+  if ne = t^.preds then
+    t^.preds := ne^.next_pred
+  else begin
+    e := t^.preds;
+    while e^.next_pred <> list do
+      e := e^.next_pred;
+    e^.next_pred := list^.next_pred;
+  end;
+  list^.next_pred := nil;
+  nb^.first := j;
+  nb^.last := j;
+  build_exit := nb;
+end;
+
+{ copy_bb_contents - the header hdr's instructions after its labels and
+  join birthpoints, up to its jump, copied to the end of e's source
+  (those kept, +2 bit 6: completed, +0 bit 1 and the source position
+  copied); the source's jump (bug_check unless a jump to an edge) made
+  to jump where the header's jump goes, the source a loop exit
+  (bug_check unless it has two edges out).
+
+  0x235A28, 0xF2 bytes: hdr (8) by address, e (12) in D2; the header's
+  instruction A3. }
+
+procedure copy_bb_contents(
+    var hdr: bb_ptr_t;
+    e: fg_edge_ptr_t); options(val_param, internal);
+var
+  i: instr_ptr_t;
+  c: instr_ptr_t;
+  j: instr_ptr_t;
+begin
+  i := hdr^.first;
+  while (i^.opc = ord(opc$join_bp)) or (i^.opc = ord(opc$label)) do
+    i := i^.next;
+  while i^.opc <> ord(opc$jump) do begin
+    if i^.h.b2_6 then begin
+      c := utils_$copy_instr_template_to_bb_end(i, e^.source);
+      utils_$complete_copied_instr(c);
+      c^.h.b0_1 := i^.h.b0_1;
+      c^.l32 := i^.l32;
+    end;
+    i := i^.next;
+  end;
+  j := e^.source^.last;
+  if (j^.opc <> ord(opc$jump)) or (j^.opnds[1].h.kind <> operand$flow_graph_edge) then
+    bug_check('FG_UTILS_$copy_bb_contents:  exposed JUMP%$');
+  j^.opnds[1].ptr := lir_$add_flow_graph_edge(e^.source,
+                                              fg_edge_ptr_t(i^.opnds[1].ptr)^.target);
+  e^.source^.f.loop_exit := true;
+  if n_edges(e^.source^.succs, true) <> 2 then
+    bug_check('FG_UTILS_$copy_bb_contents:  wrong number of outgoing edges%$');
+end;
+
+{ build_loop_header - the conditional loop headed by hdr made to enter
+  unconditionally: its edges in from inside the loop taken off
+  (bug_check when there are none) and, when there are more than three
+  or an exit has more than one successor, sent through a new exit block
+  (build_exit; its mark146 mark); the header's successor inside the
+  loop becomes the loop's header (bug_check unless it is in hdr's
+  interval): those edges moved to it, the header's code copied to their
+  sources (copy_bb_contents), the interval's members moved to it (it
+  heads them, hdr leaves the interval: its depth its own head's);
+  conditional_entry computed again.
+
+  0x235B84, 0x174 bytes, no A5: rtn (8) in A4, hdr (12) in D3, mark
+  (16) in D2; the edges A3, the new header A2. }
+
+procedure build_loop_header(
+    rtn: rtn_ptr_t;
+    hdr: bb_ptr_t;
+    mark: integer32); options(val_param, internal);
+var
+  list: fg_edge_ptr_t;
+  e: fg_edge_ptr_t;
+  b: bb_ptr_t;
+  nb: bb_ptr_t;
+  m: bb_ptr_t;
+  prev: bb_ptr_t;
+begin
+  list := fg_utils_$separate_loop_header_edges(hdr, hdr, true);
+  if list = nil then
+    bug_check('FG_UTILS_$build_loop_header: loop entry with no incoming loop edges%$');
+  e := hdr^.succs;
+  if hdr <> e^.target^.l70 then
+    e := e^.next_succ;
+  if (n_edges(list, false) > 3) or an_exit_has_multiple_successors(list) then begin
+    nb := build_exit(rtn, list);
+    nb^.mark146 := mark;
+  end;
+  b := e^.target;
+  if hdr <> b^.l70 then
+    bug_check('FG_UTILS_$build_loop_header: can''t locate new header%$');
+  if b^.preds = nil then
+    b^.preds := list
+  else begin
+    e := b^.preds;
+    while e^.next_pred <> nil do
+      e := e^.next_pred;
+    e^.next_pred := list;
+  end;
+  e := list;
+  repeat
+    e^.target := b;
+    copy_bb_contents(hdr, e);
+    e := e^.next_pred;
+  until e = nil;
+  prev := nil;
+  m := hdr^.l74;
+  while m <> nil do begin
+    if m = b then begin
+      if prev = nil then
+        hdr^.l74 := m^.l78
+      else
+        prev^.l78 := m^.l78;
+    end
+    else begin
+      m^.l70 := b;
+      prev := m;
+    end;
+    m := m^.l78;
+  end;
+  b^.l74 := hdr^.l74;
+  hdr^.l74 := nil;
+  b^.l78 := hdr^.l78;
+  hdr^.l78 := b;
+  b^.l70 := hdr^.l70;
+  hdr^.f.distinguished_entry := false;
+  hdr^.f.conditional_entry := false;
+  hdr^.f.loop_exit := false;
+  if hdr^.l70 = nil then
+    hdr^.f.depth := 0
+  else
+    hdr^.f.depth := hdr^.l70^.f.depth;
+  b^.f.distinguished_entry := true;
+  b^.f.irreducible := false;
+  b^.f.additional_entry := false;
+  b^.f.conditional_entry := loop_entry_is_conditional(b);
+end;
+
+{ n_instrs - bb's instructions other than join birthpoints, MMT_SEQs,
+  labels and jumps.
+
+  0x235D74, 0x4E bytes, no A5. }
+
+function n_instrs(
+    bb: bb_ptr_t): integer32; options(val_param, internal);
+var
+  n: integer32;
+  i: instr_ptr_t;
+begin
+  n := 0;
+  i := bb^.first;
+  while i <> nil do begin
+    if not ((i^.opc = ord(opc$join_bp)) or (i^.opc = ord(opc$mmt_seq))
+            or (i^.opc = ord(opc$label)) or (i^.opc = ord(opc$jump))) then
+      n := n + 1;
+    i := i^.next;
+  end;
+  n_instrs := n;
+end;
+
+{ every_interval_block_exits - whether every member of h's interval is
+  a loop exit and either there are more than two blocks (h and its
+  members), h was made for this mark (mark146), or no instruction of h
+  and its members may raise an exception without being volatile.
+
+  0x235DC2, 0x9A bytes, no frame: h (4) in A0, mark (8) in D1. }
+
+function every_interval_block_exits(
+    h: bb_ptr_t;
+    mark: integer32): boolean; options(val_param, internal);
+var
+  n: integer32;
+  m: bb_ptr_t;
+  i: instr_ptr_t;
+begin
+  every_interval_block_exits := false;
+  n := 1;
+  m := h^.l74;
+  while m <> nil do begin
+    if not m^.f.loop_exit then
+      return;
+    n := n + 1;
+    m := m^.l78;
+  end;
+  every_interval_block_exits := true;
+  if n > 2 then
+    return;
+  if mark = h^.mark146 then
+    return;
+  i := h^.first;
+  while i <> nil do begin
+    if i^.h.may_generate_an_exception and not i^.h.volatile_location then begin
+      every_interval_block_exits := false;
+      return;
+    end;
+    i := i^.next;
+  end;
+  m := h^.l74;
+  while m <> nil do begin
+    i := m^.first;
+    while i <> nil do begin
+      if i^.h.may_generate_an_exception and not i^.h.volatile_location then begin
+        every_interval_block_exits := false;
+        return;
+      end;
+      i := i^.next;
+    end;
+    m := m^.l78;
+  end;
+end;
+
+{ make_loops_unconditional - each block on list (chained at l78), its
+  inner intervals first: a reducible loop head with a conditional
+  entry, two edges out, not all of whose blocks exit (or whose code may
+  raise exceptions), of at most 10 instructions and no hidden edges,
+  given an unconditional entry (build_loop_header).
+
+  0x235E5C, 0xA8 bytes, no A5: rtn (8) in A2, list (12) in A3, mark
+  (16). }
+
+procedure make_loops_unconditional(
+    rtn: rtn_ptr_t;
+    list: bb_ptr_t;
+    mark: integer32); options(val_param, internal);
+begin
+  while list <> nil do begin
+    if list^.f.distinguished_entry then
+      make_loops_unconditional(rtn, list^.l74, mark);
+    if list^.f.distinguished_entry then
+      if not list^.f.irreducible then
+        if list^.f.conditional_entry then
+          if n_edges(list^.succs, true) = 2 then
+            if not every_interval_block_exits(list, mark) then
+              if n_instrs(list) <= 10 then
+                if not list^.f.hidden_successor_edges then
+                  build_loop_header(rtn, list, mark);
+    list := list^.l78;
+  end;
+end;
+
+{ fg_utils_$make_loops_unconditional - make_loops_unconditional over
+  the routine's outermost blocks (l84) with a new mark.
+
+  0x235F04, 0x30 bytes. }
+
+procedure fg_utils_$make_loops_unconditional(
+    rtn: rtn_ptr_t);
+begin
+  rtn^.marks := rtn^.marks + 1;
+  make_loops_unconditional(rtn, rtn^.l84, rtn^.marks);
 end;
