@@ -429,7 +429,8 @@ def pass1_operators(im, rs, ops):
     pass1 = by['pass_1'].start
     for d in ops:
         r = by[d['name']]
-        d['lifted'], d['why'] = iscg_pass1.lift_routine(r.insns, im.names, pass1)
+        d['lifted'], d['why'] = iscg_pass1.lift_routine(
+            r.insns, im.names, pass1, lambda a, n: im.read(a, n).decode('latin1'))
         d['positions'] = iscg_pass1.call_positions(r.insns, pass1)
         if d['lifted'] and (d['lifted']['w98'] != d['w98'] or
                             d['lifted']['nchildren'] != d['nchildren']):

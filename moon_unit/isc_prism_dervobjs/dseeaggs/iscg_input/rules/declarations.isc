@@ -302,8 +302,13 @@ operator isc_assign_node_isc_mul_to_aop il isc_mul_to_aop children 2 image 16#0D
   pass_1 1: derived, 2: derived, inherited;
 end;
 operator isc_assign_node_isc_slice_aop il isc_slice_aop children 3 image 16#0DF648;
-  fixed;
-  pass_1 inherited;
+  trace rewrite;
+  let n1 <- rewrite_$routine_call(il, 0, inh);
+  child solutions n1 copy_all
+    il <- n1;
+    original_il <- il;
+    permissible inherited;
+  solutions_made;
 end;
 operator isc_assign_node_lshft_to_aop il lshft_to_aop children 2 image 16#0DF76C;
   child 1 il.p64
@@ -321,8 +326,13 @@ operator isc_assign_node_lshft_to_aop il lshft_to_aop children 2 image 16#0DF76C
     permissible derived;
 end;
 operator isc_assign_node_mul_to_aop il mul_to_aop children 2 image 16#0DF984;
-  fixed;
-  pass_1 inherited;
+  trace rewrite;
+  let n1 <- rewrite_$mul_to_aop(il);
+  child solutions n1 copy_all
+    il <- n1;
+    original_il <- il;
+    permissible inherited;
+  solutions_made;
 end;
 operator isc_assign_node_neg_to_aop il neg_to_aop children 1 image 16#0DFAA2;
   child 1 il.p64
@@ -662,8 +672,13 @@ operator isc_cs_node il cs_node children 2 image 16#0E38F6;
     permissible derived;
 end;
 operator isc_cs_temp il cs_temp children 0 image 16#0E3AB0;
-  fixed;
-  pass_1 inherited;
+  trace rewrite;
+  let n1 <- cs_temp_to_var_name(il);
+  child solutions n1 copy_all
+    il <- n1;
+    original_il <- il;
+    permissible inherited;
+  solutions_made;
 end;
 operator isc_cse_parent_ob il cse_parent_ob children 0 image 16#0E3BCC;
   call pass_1_cse_parent_ob(il, il.p4, inh);
@@ -764,8 +779,13 @@ end;
 operator isc_real_ob il real_ob children 0 image 16#0E56F0;
 end;
 operator isc_release_dynamic_space il release_dynamic_space children 1 image 16#0E572C;
-  fixed;
-  pass_1 inherited;
+  trace rewrite;
+  let n1 <- rewrite_$routine_call(il, 0, inh);
+  child solutions n1 copy_all
+    il <- n1;
+    original_il <- il;
+    permissible inherited;
+  solutions_made;
 end;
 operator isc_return_node il return_node children 0 image 16#0E5850;
   fixed;
@@ -796,8 +816,13 @@ operator isc_tree_node_abs_top il abs_top children 1 image 16#0E5D64;
     permissible derived;
 end;
 operator isc_tree_node_ada_expon_top il ada_expon_top children 2 image 16#0E5E74;
-  fixed;
-  pass_1 inherited;
+  trace rewrite;
+  let n1 <- rewrite_$routine_call(il, 0, inh);
+  child solutions n1 copy_all
+    il <- n1;
+    original_il <- il;
+    permissible inherited;
+  solutions_made;
 end;
 operator isc_tree_node_add_top il add_top children 2 image 16#0E5F98;
   fixed;
@@ -825,8 +850,13 @@ operator isc_tree_node_align_top il align_top children 1 image 16#0E65AA;
     permissible derived;
 end;
 operator isc_tree_node_allocate_dynamic_space_top il allocate_dynamic_space_top children 1 image 16#0E668E;
-  fixed;
-  pass_1 inherited;
+  trace rewrite;
+  let n1 <- rewrite_$routine_call(il, 0, inh);
+  child solutions n1 copy_all
+    il <- n1;
+    original_il <- il;
+    permissible inherited;
+  solutions_made;
 end;
 operator isc_tree_node_alshf_top il alshf_top children 2 image 16#0E67B2;
   child 1 il.p40
@@ -879,8 +909,13 @@ end;
 operator isc_tree_node_cache_top il cache_top children 0 image 16#0E784A;
 end;
 operator isc_tree_node_call_top il call_top children 1 image 16#0E7886;
-  fixed;
-  pass_1 inherited;
+  trace rewrite;
+  let n1 <- rewrite_$routine_call(il, 0, inh);
+  child solutions n1 copy_all
+    il <- n1;
+    original_il <- il;
+    permissible inherited;
+  solutions_made;
 end;
 operator isc_tree_node_chk_top il chk_top children 2 image 16#0E79AA;
   child 1 il.p40
@@ -905,8 +940,13 @@ operator isc_tree_node_eor_top il eor_top children 2 image 16#0E855C;
   pass_1 inherited, 1: derived -np, 2: derived -np;
 end;
 operator isc_tree_node_expon_top il expon_top children 2 image 16#0E8886;
-  fixed;
-  pass_1 inherited;
+  trace rewrite;
+  let n1 <- rewrite_$routine_call(il, 0, inh);
+  child solutions n1 copy_all
+    il <- n1;
+    original_il <- il;
+    permissible inherited;
+  solutions_made;
 end;
 operator isc_tree_node_extend_top il extend_top children 1 image 16#0E89A8;
   child 1 il.p40
@@ -932,8 +972,13 @@ operator isc_tree_node_extract_bit_field_top il extract_bit_field_top children 2
     permissible derived;
 end;
 operator isc_tree_node_f_ada_expon_top il f_ada_expon_top children 2 image 16#0E8C94;
-  fixed;
-  pass_1 inherited;
+  trace rewrite;
+  let n1 <- rewrite_$routine_call(il, 0, inh);
+  child solutions n1 copy_all
+    il <- n1;
+    original_il <- il;
+    permissible inherited;
+  solutions_made;
 end;
 operator isc_tree_node_f_add_top il f_add_top children 2 image 16#0E8DB6;
   child 1 il.p40
@@ -966,8 +1011,13 @@ operator isc_tree_node_f_div_top il f_div_top children 2 image 16#0E91FA;
   pass_1 inherited, 2: derived, 1: derived;
 end;
 operator isc_tree_node_f_expon_top il f_expon_top children 2 image 16#0E9546;
-  fixed;
-  pass_1 inherited;
+  trace rewrite;
+  let n1 <- rewrite_$routine_call(il, 0, inh);
+  child solutions n1 copy_all
+    il <- n1;
+    original_il <- il;
+    permissible inherited;
+  solutions_made;
 end;
 operator isc_tree_node_f_extend_top il f_extend_top children 2 image 16#0E9668;
   fixed;
@@ -1126,8 +1176,13 @@ operator isc_tree_node_lshf_top il lshf_top children 2 image 16#0EBA72;
     permissible derived;
 end;
 operator isc_tree_node_mark_dynamic_space_top il mark_dynamic_space_top children 0 image 16#0EBC74;
-  fixed;
-  pass_1 inherited;
+  trace rewrite;
+  let n1 <- rewrite_$routine_call(il, 0, inh);
+  child solutions n1 copy_all
+    il <- n1;
+    original_il <- il;
+    permissible inherited;
+  solutions_made;
 end;
 operator isc_tree_node_max_top il max_top children 2 image 16#0EBD94;
   fixed;

@@ -79,6 +79,7 @@ HEAP = 0x48103C           # isc_user_routines +0x23C: the ISC heap
 READONLY = 0x2BCDFC       # isc_readonly_tables
 TRACE_354 = 0x481154
 TRACE_356 = 0x481156
+REWRITE_TRACE = ['*********************', 'R E W R I T E ! ! ! !', '*********************']
 
 
 class NotLifted(Exception):
@@ -97,7 +98,8 @@ class Lifter:
     prologue, then child blocks and simple calls.  Anything else raises
     NotLifted (the routine is fixed text)."""
 
-    def __init__(self, ins, names, pass1, w98_param=22):
+    def __init__(self, ins, names, pass1, read=None):
+        self.read = read              # (address, length) -> the image's text
         self.ins = [(a, _strip(t), t) for a, n, t, h in ins]
         self.names = names            # address -> routine name
         self.pass1 = pass1
@@ -236,6 +238,9 @@ class Lifter:
             return v[1]
         if v[0] == 'newinh':
             return 'inh_%d' % v[1]
+        if v[0] == 'callres':
+            self.low_ref[v[1]][2] = True
+            return 'n%d' % v[1]
         raise NotLifted('value %s' % (v,))
 
     # ---- the body
@@ -245,8 +250,9 @@ class Lifter:
         ins = self.ins
         regs = self.regs
         stack = []
-        low = []          # ('store', target, value) | ('call', text) | ('list', k, call)
-        #                   | ('empty', k) | ('local', off, value)
+        low = []          # ('store', target, value) | ['call', text, used]
+        #                   | ('list', k) | ('empty', ...) | ('trace',) | ('made',) ...
+        self.low_ref = low
         ninh = 0
         k = self.k
         end = None
@@ -257,6 +263,28 @@ class Lifter:
                     and any(x[1].startswith('unlk') for x in ins[k:k + 4]):
                 end = k
                 break
+            m = re.match(r'moveb 0x%x,%%(d\d)$' % TRACE_356, t)
+            if m and ins[k + 1][1] == 'orb 0x%x,%%%s' % (TRACE_354, m.group(1)):
+                mb = re.match(r'bpl[sw]? 0x([0-9a-f]+)$', ins[k + 2][1])
+                if not mb:
+                    self.fail(k, 'trace')
+                tgt = int(mb.group(1), 16)
+                strs = []
+                j = k + 3
+                while ins[j][0] != tgt:
+                    u = ins[j][1]
+                    mm = re.match(r'pea %pc@\(0x([0-9a-f]+)\)$', u)
+                    if mm:
+                        strs.append(int(mm.group(1), 16))
+                    elif not re.match(r'(movew #\d+,%sp@-|movel %a5@\(-4\),%sp@-|jsr 0x4930(d2|cc)'
+                                      r'|lea %sp@\(12\),%sp|addqw #4,%sp)$', u):
+                        self.fail(j, 'in the trace')
+                    j += 1
+                if self.read is None or [self.read(a, 21) for a in strs] != REWRITE_TRACE:
+                    self.fail(k, 'not the REWRITE trace')
+                low.append(('trace',))
+                k = j
+                continue
             m = re.match(r'movea?l %([ad]\d),%([ad]\d)$', t)
             if m:
                 if m.group(1) not in regs:
@@ -395,9 +423,8 @@ class Lifter:
                 elif name in ('isc_$precision_from_rlen_and_size', 'not_permissible_function'):
                     regs['d0'] = ('expr', '%s(%s)' % (name, ', '.join(args)))
                 else:
-                    low.append(('call', '%s(%s)' % (name, ', '.join(args))))
-                    regs.pop('d0', None)
-                    regs.pop('a0', None)
+                    low.append(['call', '%s(%s)' % (name, ', '.join(args)), False])
+                    regs['d0'] = regs['a0'] = ('callres', len(low) - 1)
                 k += 1
                 continue
             m = re.match(r'notl %d0$', t)
@@ -443,15 +470,14 @@ class Lifter:
                 k += 1
                 continue
             # the whole record copied: moveq #4,R; movel a@+,b@+ (2); dbf
-            m = re.match(r'moveq #4,%(d\d)$', t)
-            if m and re.match(r'movel %(a\d)@\+,%(a\d)@\+$', ins[k + 1][1]) and \
-                    ins[k + 3][1].startswith('dbf'):
-                mm = re.match(r'movel %(a\d)@\+,%(a\d)@\+$', ins[k + 1][1])
-                src, dst = regs.get(mm.group(1)), regs.get(mm.group(2))
+            m = re.match(r'movel %(a\d)@\+,%(a\d)@\+$', t)
+            if m and ins[k - 1][1].startswith('moveq #4,') and ins[k + 1][1] == t and \
+                    ins[k + 2][1].startswith('dbf'):
+                src, dst = regs.get(m.group(1)), regs.get(m.group(2))
                 if src != ('param', 12) or not dst or dst[0] != 'newinh':
                     self.fail(k, 'record copy')
                 low.append(('copy_all', dst[1]))
-                k += 4
+                k += 3
                 continue
             # required_precision and source_line_number in one: lea X@(28),A;
             # movel A@+,Y@(28); movel A@,Y@(32)
@@ -499,6 +525,10 @@ class Lifter:
                     low.append(('store', ('inh', base[1], n), self.val(src, size)))
                     k += 1
                     continue
+                if base == ('param', 30) and size == 4 and src == '%a0' and off == 0:
+                    low.append(('list', 0))
+                    k += 1
+                    continue
                 if base and base[0] == 'param' and base[1] == 34 and size == 4 and src == '%a0' \
                         and off % 4 == 0 and off < 20:
                     low.append(('list', off // 4 + 1))
@@ -506,6 +536,10 @@ class Lifter:
                     continue
                 self.fail(k, 'store')
             m = re.match(r'st %(a\d)@$', t)
+            if m and regs.get(m.group(1)) == ('param', 38):
+                low.append(('made',))
+                k += 1
+                continue
             if m and regs.get(m.group(1)) == ('param', 42):
                 low.append(('no_solutions', ins[k][0], ins[k + 1][0]))
                 k += 1
@@ -556,7 +590,15 @@ class Lifter:
                 i += 1
                 continue
             if s[0] == 'call':
-                body.append(('call', re.sub(r'\bil\.l(\d+)\b', r'il.p\1', s[1])))
+                text = re.sub(r'\bil\.l(\d+)\b', r'il.p\1', s[1])
+                if s[2]:
+                    body.append(('let', 'n%d' % i, text))
+                else:
+                    body.append(('call', text))
+                i += 1
+                continue
+            if s[0] in ('trace', 'made'):
+                body.append((s[0],))
                 i += 1
                 continue
             if s[0] != 'newinh':
@@ -595,15 +637,16 @@ class Lifter:
                 i += 1
             else:
                 raise NotLifted('pass_1\'s list not stored')
-            if i >= len(low) or low[i][0] != 'empty':
-                raise NotLifted('no empty test')
-            i += 1
+            if kpos:
+                if i >= len(low) or low[i][0] != 'empty':
+                    raise NotLifted('no empty test')
+                i += 1
             mask = args[3]
             if np is not None:
                 exp = 'not_permissible_function(il, %d, permissible)' % kpos
                 if np != exp or not mask.endswith(' -np'):
                     raise NotLifted('not_permissible_function: %s' % np)
-            if args[2] != 'depth + 1':
+            if args[2] != ('depth' if kpos == 0 else 'depth + 1'):
                 raise NotLifted('depth %s' % args[2])
             # the default copy
             if not copy_all:
@@ -632,10 +675,10 @@ class Lifter:
         self.body = body
 
 
-def lift_routine(insns, names, pass1):
+def lift_routine(insns, names, pass1, read=None):
     """(lifted dict, None) or (None, why)."""
     try:
-        return Lifter(insns, names, pass1).lift(), None
+        return Lifter(insns, names, pass1, read).lift(), None
     except (NotLifted, IndexError, KeyError) as e:
         return None, str(e)
 
@@ -707,8 +750,18 @@ def format_operator(d, lifted, positions, unions, ils, kinds, op_name):
             if b[0] == 'call':
                 L.append('  call %s;' % b[1])
                 continue
+            if b[0] == 'let':
+                L.append('  let %s <- %s;' % (b[1], b[2]))
+                continue
+            if b[0] == 'trace':
+                L.append('  trace rewrite;')
+                continue
+            if b[0] == 'made':
+                L.append('  solutions_made;')
+                continue
             _, kpos, node, copy_all, stmts, mask = b
-            L.append('  child %d %s%s' % (kpos, node, ' copy_all' if copy_all else ''))
+            L.append('  child %s %s%s' % (kpos or 'solutions', node,
+                                          ' copy_all' if copy_all else ''))
             for a, v in stmts:
                 if a == 'parent_il_kind':
                     v = op_name(int(v) & 255)
@@ -755,11 +808,22 @@ def parse_operator(ts, i, fn, num):
             d['pass_1'] = ' '.join(ts[i + 1:j])
         elif ts[i] == 'call':
             d['body'].append(('call', join_expr(ts[i + 1:j])))
+        elif ts[i] == 'let':
+            d['body'].append(('let', ts[i + 1], join_expr(ts[i + 3:j])))
+        elif ts[i] == 'trace':
+            d['body'].append(('trace',))
+        elif ts[i] == 'solutions_made':
+            d['body'].append(('made',))
         elif ts[i] == 'child':
-            child = {'k': num(ts[i + 1]), 'node': ''.join(ts[i + 2:i + 5]),
-                     'copy_all': False, 'stmts': [], 'mask': None}
+            k = i + 2
+            node = [ts[k]]
+            while ts[k + 1] == '.':
+                node += ts[k + 1:k + 3]
+                k += 2
+            k += 1
+            child = {'k': 0 if ts[i + 1] == 'solutions' else num(ts[i + 1]),
+                     'node': ''.join(node), 'copy_all': False, 'stmts': [], 'mask': None}
             d['body'].append(('child', child))
-            k = i + 5
             if ts[k] == 'copy_all':
                 child['copy_all'] = True
                 k += 1
@@ -894,6 +958,8 @@ DISPATCHERS = {
 # argument casts the headings need (process_eval_node's second
 # parameter is a node in isc_routine_externs.ins.pas; the image passes inh)
 CALL_CASTS = {('process_eval_node', 1): 'isc_node_ptr_t'}
+# pointer arguments the image passes as a cleared longword
+CALL_NIL = {('rewrite_$routine_call', 1)}
 
 
 def node_ref(path):
@@ -974,6 +1040,8 @@ def call_text(c):
     out = []
     for k, a in enumerate(args):
         a = expr(a)
+        if (name, k) in CALL_NIL and a == '0':
+            a = 'nil'
         if (name, k) in CALL_CASTS:
             a = '%s(%s)' % (CALL_CASTS[(name, k)], a)
         out.append(a)
@@ -1032,6 +1100,7 @@ def emit_operator(op, unions, kinds):
     blocks)."""
     name = op['name']
     kids = [b[1] for b in op['body'] if b[0] == 'child']
+    lets = [b[1] for b in op['body'] if b[0] == 'let']
     L = []
     what = []
     if op['il']:
@@ -1042,10 +1111,13 @@ def emit_operator(op, unions, kinds):
                                  ' (0x%06X)' % op['image'] if op['image'] else ''))
     L.append('')
     L.append('procedure %s%s;' % (name, HEADING))
-    if kids:
+    if kids or lets:
         L.append('var')
-        L.append('  ' + ', '.join('inh_%d' % c['k'] for c in kids) +
+    if kids:
+        L.append('  ' + ', '.join('inh_%d' % (c['k'] or 1) for c in kids) +
                  ': inherited_attributes_ptr_t;')
+    if lets:
+        L.append('  ' + ', '.join(lets) + ': univ_ptr;')
     L.append('begin')
     L.append('  solutions_made := false;')
     L.append('  no_solutions := false;')
@@ -1057,9 +1129,18 @@ def emit_operator(op, unions, kinds):
         if b[0] == 'call':
             L.extend(wrap_stmt(call_text(b[1]) + ';', ind))
             continue
+        if b[0] == 'let':
+            L.extend(wrap_stmt('%s := %s;' % (b[1], call_text(b[2])), ind))
+            continue
+        if b[0] == 'trace':
+            L.extend(ind + x for x in REWRITE_TRACE_PASCAL)
+            continue
+        if b[0] == 'made':
+            L.append('%ssolutions_made := true;' % ind)
+            continue
         c = b[1]
         k = c['k']
-        v = 'inh_%d' % k
+        v = 'inh_%d' % (k or 1)
         L.extend(wrap_stmt('%s := new_inherited_attributes(isc_heap, %s);' % (v, expr(c['node'])),
                            ind))
         if c['copy_all']:
@@ -1078,11 +1159,15 @@ def emit_operator(op, unions, kinds):
             else:
                 val = expr(val)
             L.extend(wrap_stmt('%s := %s;' % (inh_ref(v, a), val), ind))
+        if k == 0:
+            L.extend(wrap_stmt('solutions := pass_1(%s, %s, depth, %s);' % (
+                expr(c['node']), v, mask_pascal(c['mask'], k, unions, kinds)), ind))
+            continue
         L.extend(wrap_stmt('children[%d] := pass_1(%s, %s, depth + 1, %s);' % (
             k, expr(c['node']), v, mask_pascal(c['mask'], k, unions, kinds)), ind))
         L.append('%sif solution_list$empty(children[%d]) then' % (ind, k))
         L.append('%s  no_solutions := true' % ind)
-        if c is kids[-1]:
+        if c is [x for x in kids if x['k']][-1]:
             L[-1] += ';'
         else:
             L.append('%selse begin' % ind)
@@ -1209,3 +1294,16 @@ INCLUDES_P1 = '''%include '/sys/ins/base.ins.pas';
 %include 'lang2/source/isc/isc_routine_externs.ins.pas';
 %include 'lang2/source/isc/isc_var_externs.ins.pas';
 '''
+
+
+REWRITE_TRACE_PASCAL = [
+    'if isc_user_routines_356 or isc_user_routines_354 then begin',
+    "  write('*********************');",
+    '  writeln;',
+    "  write('R E W R I T E ! ! ! !');",
+    '  writeln;',
+    "  write('*********************');",
+    '  writeln;',
+    '  writeln;',
+    'end;',
+]

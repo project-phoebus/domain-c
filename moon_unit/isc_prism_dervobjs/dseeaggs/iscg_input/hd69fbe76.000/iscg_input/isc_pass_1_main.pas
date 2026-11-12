@@ -227,33 +227,28 @@
 
   Not generated yet (declared extern below; the operator
   declarations mark them `fixed'; their text is to be read off the
-  image into tools/iscg_text.py P1_ROUTINES): 72 routines,
+  image into tools/iscg_text.py P1_ROUTINES): 61 routines,
     isc_unrecognized_il_node, isc_addr_con, isc_assign_node_agg_aop,
     isc_assign_node_div_by_aop, isc_assign_node_fp_aop,
     isc_assign_node_isc_agg_aop, isc_assign_node_isc_agg_zero_aop,
-    isc_assign_node_isc_mul_to_aop, isc_assign_node_isc_slice_aop,
-    isc_assign_node_mul_to_aop, isc_assign_node_pack_aop,
+    isc_assign_node_isc_mul_to_aop, isc_assign_node_pack_aop,
     isc_assign_node_scalar_aop, isc_at_lib_dsc, isc_bit_field_assign,
     isc_blk_end_node, isc_branch_node, isc_case_node_range_check,
     isc_cbranch_node, isc_char_string_ob,
     isc_cmp_tree_node_bit_field_cmp_top, isc_cmp_tree_node_compare_top,
-    isc_cs_temp, isc_dindex_node, isc_entry_blk, isc_fortran_symbol,
-    isc_function_blk, isc_insert_bit_field, isc_lib_dsc,
-    isc_namelist_constant_ob, isc_nlbranch_node, isc_procedure_blk,
-    isc_raise_exception, isc_release_dynamic_space, isc_return_node,
-    isc_set_con_ob, isc_tree_node_ada_expon_top, isc_tree_node_add_top,
-    isc_tree_node_addr_top, isc_tree_node_allocate_dynamic_space_top,
-    isc_tree_node_and_top, isc_tree_node_bit_field_cmp_top,
-    isc_tree_node_bit_set_top, isc_tree_node_call_top,
+    isc_dindex_node, isc_entry_blk, isc_fortran_symbol, isc_function_blk,
+    isc_insert_bit_field, isc_lib_dsc, isc_namelist_constant_ob,
+    isc_nlbranch_node, isc_procedure_blk, isc_raise_exception,
+    isc_return_node, isc_set_con_ob, isc_tree_node_add_top,
+    isc_tree_node_addr_top, isc_tree_node_and_top,
+    isc_tree_node_bit_field_cmp_top, isc_tree_node_bit_set_top,
     isc_tree_node_compare_top, isc_tree_node_div_top, isc_tree_node_eor_top,
-    isc_tree_node_expon_top, isc_tree_node_f_ada_expon_top,
-    isc_tree_node_f_div_top, isc_tree_node_f_expon_top,
-    isc_tree_node_f_extend_top, isc_tree_node_f_math_top,
-    isc_tree_node_func_call_top, isc_tree_node_isc_addr_top,
-    isc_tree_node_isc_func_call_top, isc_tree_node_isc_mul_top,
-    isc_tree_node_isc_signed_mod_top, isc_tree_node_isc_signed_rem_top,
-    isc_tree_node_isc_unsigned_mod_top, isc_tree_node_isc_unsigned_rem_top,
-    isc_tree_node_mark_dynamic_space_top, isc_tree_node_max_top,
+    isc_tree_node_f_div_top, isc_tree_node_f_extend_top,
+    isc_tree_node_f_math_top, isc_tree_node_func_call_top,
+    isc_tree_node_isc_addr_top, isc_tree_node_isc_func_call_top,
+    isc_tree_node_isc_mul_top, isc_tree_node_isc_signed_mod_top,
+    isc_tree_node_isc_signed_rem_top, isc_tree_node_isc_unsigned_mod_top,
+    isc_tree_node_isc_unsigned_rem_top, isc_tree_node_max_top,
     isc_tree_node_min_top, isc_tree_node_mod_top, isc_tree_node_mul_top,
     isc_tree_node_or_top, isc_tree_node_set_extend_top,
     isc_tree_node_signed_div_top, isc_tree_node_signed_mod_top,
@@ -423,6 +418,14 @@ procedure pattern_matcher(
 
 procedure rewrite_$check_for_case_statement(
     stmt: univ_ptr); options(val_param); extern;
+
+function rewrite_$routine_call(
+    node: univ_ptr;
+    temp: univ_ptr;
+    inh: inherited_attributes_ptr_t): univ_ptr; options(val_param); extern;
+
+function rewrite_$mul_to_aop(
+    node: univ_ptr): univ_ptr; options(val_param); extern;
 
 var
   { The dispatch tables (isc_pass_1_begin_compilation fills them; any
@@ -1282,7 +1285,7 @@ procedure isc_assign_node_isc_mul_to_aop(
     var solutions_made: boolean;
     var no_solutions: boolean); options(val_param); extern;
 
-{ isc_assign_node_isc_slice_aop (0x0DF648): not generated yet (the unit's header). }
+{ isc_assign_node_isc_slice_aop - the proper_subtree il_isc_slice_aop, 3 children (0x0DF648). }
 
 procedure isc_assign_node_isc_slice_aop(
     il: univ_ptr;
@@ -1294,7 +1297,32 @@ procedure isc_assign_node_isc_slice_aop(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1: inherited_attributes_ptr_t;
+  n1: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_isc_slice_aop);
+  number_of_children := 3;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('*********************');
+    writeln;
+    write('R E W R I T E ! ! ! !');
+    writeln;
+    write('*********************');
+    writeln;
+    writeln;
+  end;
+  n1 := rewrite_$routine_call(il, nil, inh);
+  inh_1 := new_inherited_attributes(isc_heap, n1);
+  inh_1^ := inh^;
+  inh_1^.node := n1;
+  inh_1^.stmt := il;
+  solutions := pass_1(n1, inh_1, depth, permissible);
+  solutions_made := true;
+end;
 
 { isc_assign_node_lshft_to_aop - the proper_subtree il_lshft_to_aop, 2 children (0x0DF76C). }
 
@@ -1355,7 +1383,7 @@ begin
   end;
 end;
 
-{ isc_assign_node_mul_to_aop (0x0DF984): not generated yet (the unit's header). }
+{ isc_assign_node_mul_to_aop - the proper_subtree il_mul_to_aop, 2 children (0x0DF984). }
 
 procedure isc_assign_node_mul_to_aop(
     il: univ_ptr;
@@ -1367,7 +1395,32 @@ procedure isc_assign_node_mul_to_aop(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1: inherited_attributes_ptr_t;
+  n1: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_mul_to_aop);
+  number_of_children := 2;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('*********************');
+    writeln;
+    write('R E W R I T E ! ! ! !');
+    writeln;
+    write('*********************');
+    writeln;
+    writeln;
+  end;
+  n1 := rewrite_$mul_to_aop(il);
+  inh_1 := new_inherited_attributes(isc_heap, n1);
+  inh_1^ := inh^;
+  inh_1^.node := n1;
+  inh_1^.stmt := il;
+  solutions := pass_1(n1, inh_1, depth, permissible);
+  solutions_made := true;
+end;
 
 { isc_assign_node_neg_to_aop - the proper_subtree il_neg_to_aop, 1 child (0x0DFAA2). }
 
@@ -2824,7 +2877,7 @@ begin
   end;
 end;
 
-{ isc_cs_temp (0x0E3AB0): not generated yet (the unit's header). }
+{ isc_cs_temp - the proper_subtree il_cs_temp, 0 children (0x0E3AB0). }
 
 procedure isc_cs_temp(
     il: univ_ptr;
@@ -2836,7 +2889,32 @@ procedure isc_cs_temp(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1: inherited_attributes_ptr_t;
+  n1: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_cs_temp);
+  number_of_children := 0;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('*********************');
+    writeln;
+    write('R E W R I T E ! ! ! !');
+    writeln;
+    write('*********************');
+    writeln;
+    writeln;
+  end;
+  n1 := cs_temp_to_var_name(il);
+  inh_1 := new_inherited_attributes(isc_heap, n1);
+  inh_1^ := inh^;
+  inh_1^.node := n1;
+  inh_1^.stmt := il;
+  solutions := pass_1(n1, inh_1, depth, permissible);
+  solutions_made := true;
+end;
 
 { isc_cse_parent_ob - the proper_subtree il_cse_parent_ob, 0 children (0x0E3BCC). }
 
@@ -3455,7 +3533,7 @@ begin
   number_of_children := 0;
 end;
 
-{ isc_release_dynamic_space (0x0E572C): not generated yet (the unit's header). }
+{ isc_release_dynamic_space - the proper_subtree il_release_dynamic_space, 1 child (0x0E572C). }
 
 procedure isc_release_dynamic_space(
     il: univ_ptr;
@@ -3467,7 +3545,32 @@ procedure isc_release_dynamic_space(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1: inherited_attributes_ptr_t;
+  n1: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_release_dynamic_space);
+  number_of_children := 1;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('*********************');
+    writeln;
+    write('R E W R I T E ! ! ! !');
+    writeln;
+    write('*********************');
+    writeln;
+    writeln;
+  end;
+  n1 := rewrite_$routine_call(il, nil, inh);
+  inh_1 := new_inherited_attributes(isc_heap, n1);
+  inh_1^ := inh^;
+  inh_1^.node := n1;
+  inh_1^.stmt := il;
+  solutions := pass_1(n1, inh_1, depth, permissible);
+  solutions_made := true;
+end;
 
 { isc_return_node (0x0E5850): not generated yet (the unit's header). }
 
@@ -3651,7 +3754,7 @@ begin
     no_solutions := true;
 end;
 
-{ isc_tree_node_ada_expon_top (0x0E5E74): not generated yet (the unit's header). }
+{ isc_tree_node_ada_expon_top - the proper_subtree il_ada_expon_top, 2 children (0x0E5E74). }
 
 procedure isc_tree_node_ada_expon_top(
     il: univ_ptr;
@@ -3663,7 +3766,32 @@ procedure isc_tree_node_ada_expon_top(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1: inherited_attributes_ptr_t;
+  n1: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_ada_expon_top);
+  number_of_children := 2;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('*********************');
+    writeln;
+    write('R E W R I T E ! ! ! !');
+    writeln;
+    write('*********************');
+    writeln;
+    writeln;
+  end;
+  n1 := rewrite_$routine_call(il, nil, inh);
+  inh_1 := new_inherited_attributes(isc_heap, n1);
+  inh_1^ := inh^;
+  inh_1^.node := n1;
+  inh_1^.stmt := il;
+  solutions := pass_1(n1, inh_1, depth, permissible);
+  solutions_made := true;
+end;
 
 { isc_tree_node_add_top (0x0E5F98): not generated yet (the unit's header). }
 
@@ -3785,7 +3913,7 @@ begin
     no_solutions := true;
 end;
 
-{ isc_tree_node_allocate_dynamic_space_top (0x0E668E): not generated yet (the unit's header). }
+{ isc_tree_node_allocate_dynamic_space_top - the proper_subtree il_allocate_dynamic_space_top, 1 child (0x0E668E). }
 
 procedure isc_tree_node_allocate_dynamic_space_top(
     il: univ_ptr;
@@ -3797,7 +3925,32 @@ procedure isc_tree_node_allocate_dynamic_space_top(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1: inherited_attributes_ptr_t;
+  n1: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_allocate_dynamic_space_top);
+  number_of_children := 1;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('*********************');
+    writeln;
+    write('R E W R I T E ! ! ! !');
+    writeln;
+    write('*********************');
+    writeln;
+    writeln;
+  end;
+  n1 := rewrite_$routine_call(il, nil, inh);
+  inh_1 := new_inherited_attributes(isc_heap, n1);
+  inh_1^ := inh^;
+  inh_1^.node := n1;
+  inh_1^.stmt := il;
+  solutions := pass_1(n1, inh_1, depth, permissible);
+  solutions_made := true;
+end;
 
 { isc_tree_node_alshf_top - the proper_subtree il_alshf_top, 2 children (0x0E67B2). }
 
@@ -4029,7 +4182,7 @@ begin
   number_of_children := 0;
 end;
 
-{ isc_tree_node_call_top (0x0E7886): not generated yet (the unit's header). }
+{ isc_tree_node_call_top - the proper_subtree il_call_top, 1 child (0x0E7886). }
 
 procedure isc_tree_node_call_top(
     il: univ_ptr;
@@ -4041,7 +4194,32 @@ procedure isc_tree_node_call_top(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1: inherited_attributes_ptr_t;
+  n1: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_call_top);
+  number_of_children := 1;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('*********************');
+    writeln;
+    write('R E W R I T E ! ! ! !');
+    writeln;
+    write('*********************');
+    writeln;
+    writeln;
+  end;
+  n1 := rewrite_$routine_call(il, nil, inh);
+  inh_1 := new_inherited_attributes(isc_heap, n1);
+  inh_1^ := inh^;
+  inh_1^.node := n1;
+  inh_1^.stmt := il;
+  solutions := pass_1(n1, inh_1, depth, permissible);
+  solutions_made := true;
+end;
 
 { isc_tree_node_chk_top - the proper_subtree il_chk_top, 2 children (0x0E79AA). }
 
@@ -4139,7 +4317,7 @@ procedure isc_tree_node_eor_top(
     var solutions_made: boolean;
     var no_solutions: boolean); options(val_param); extern;
 
-{ isc_tree_node_expon_top (0x0E8886): not generated yet (the unit's header). }
+{ isc_tree_node_expon_top - the proper_subtree il_expon_top, 2 children (0x0E8886). }
 
 procedure isc_tree_node_expon_top(
     il: univ_ptr;
@@ -4151,7 +4329,32 @@ procedure isc_tree_node_expon_top(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1: inherited_attributes_ptr_t;
+  n1: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_expon_top);
+  number_of_children := 2;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('*********************');
+    writeln;
+    write('R E W R I T E ! ! ! !');
+    writeln;
+    write('*********************');
+    writeln;
+    writeln;
+  end;
+  n1 := rewrite_$routine_call(il, nil, inh);
+  inh_1 := new_inherited_attributes(isc_heap, n1);
+  inh_1^ := inh^;
+  inh_1^.node := n1;
+  inh_1^.stmt := il;
+  solutions := pass_1(n1, inh_1, depth, permissible);
+  solutions_made := true;
+end;
 
 { isc_tree_node_extend_top - the proper_subtree il_extend_top, 1 child (0x0E89A8). }
 
@@ -4252,7 +4455,7 @@ begin
   end;
 end;
 
-{ isc_tree_node_f_ada_expon_top (0x0E8C94): not generated yet (the unit's header). }
+{ isc_tree_node_f_ada_expon_top - the proper_subtree il_f_ada_expon_top, 2 children (0x0E8C94). }
 
 procedure isc_tree_node_f_ada_expon_top(
     il: univ_ptr;
@@ -4264,7 +4467,32 @@ procedure isc_tree_node_f_ada_expon_top(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1: inherited_attributes_ptr_t;
+  n1: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_f_ada_expon_top);
+  number_of_children := 2;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('*********************');
+    writeln;
+    write('R E W R I T E ! ! ! !');
+    writeln;
+    write('*********************');
+    writeln;
+    writeln;
+  end;
+  n1 := rewrite_$routine_call(il, nil, inh);
+  inh_1 := new_inherited_attributes(isc_heap, n1);
+  inh_1^ := inh^;
+  inh_1^.node := n1;
+  inh_1^.stmt := il;
+  solutions := pass_1(n1, inh_1, depth, permissible);
+  solutions_made := true;
+end;
 
 { isc_tree_node_f_add_top - the proper_subtree il_f_add_top, 2 children (0x0E8DB6). }
 
@@ -4399,7 +4627,7 @@ procedure isc_tree_node_f_div_top(
     var solutions_made: boolean;
     var no_solutions: boolean); options(val_param); extern;
 
-{ isc_tree_node_f_expon_top (0x0E9546): not generated yet (the unit's header). }
+{ isc_tree_node_f_expon_top - the proper_subtree il_f_expon_top, 2 children (0x0E9546). }
 
 procedure isc_tree_node_f_expon_top(
     il: univ_ptr;
@@ -4411,7 +4639,32 @@ procedure isc_tree_node_f_expon_top(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1: inherited_attributes_ptr_t;
+  n1: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_f_expon_top);
+  number_of_children := 2;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('*********************');
+    writeln;
+    write('R E W R I T E ! ! ! !');
+    writeln;
+    write('*********************');
+    writeln;
+    writeln;
+  end;
+  n1 := rewrite_$routine_call(il, nil, inh);
+  inh_1 := new_inherited_attributes(isc_heap, n1);
+  inh_1^ := inh^;
+  inh_1^.node := n1;
+  inh_1^.stmt := il;
+  solutions := pass_1(n1, inh_1, depth, permissible);
+  solutions_made := true;
+end;
 
 { isc_tree_node_f_extend_top (0x0E9668): not generated yet (the unit's header). }
 
@@ -5139,7 +5392,7 @@ begin
   end;
 end;
 
-{ isc_tree_node_mark_dynamic_space_top (0x0EBC74): not generated yet (the unit's header). }
+{ isc_tree_node_mark_dynamic_space_top - the proper_subtree il_mark_dynamic_space_top, 0 children (0x0EBC74). }
 
 procedure isc_tree_node_mark_dynamic_space_top(
     il: univ_ptr;
@@ -5151,7 +5404,32 @@ procedure isc_tree_node_mark_dynamic_space_top(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1: inherited_attributes_ptr_t;
+  n1: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_mark_dynamic_space_top);
+  number_of_children := 0;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('*********************');
+    writeln;
+    write('R E W R I T E ! ! ! !');
+    writeln;
+    write('*********************');
+    writeln;
+    writeln;
+  end;
+  n1 := rewrite_$routine_call(il, nil, inh);
+  inh_1 := new_inherited_attributes(isc_heap, n1);
+  inh_1^ := inh^;
+  inh_1^.node := n1;
+  inh_1^.stmt := il;
+  solutions := pass_1(n1, inh_1, depth, permissible);
+  solutions_made := true;
+end;
 
 { isc_tree_node_max_top (0x0EBD94): not generated yet (the unit's header). }
 

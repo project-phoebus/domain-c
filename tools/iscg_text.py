@@ -685,7 +685,15 @@ procedure pattern_matcher(
     permissible: solution$set_t); options(val_param); extern;
 
 procedure rewrite_$check_for_case_statement(
-    stmt: univ_ptr); options(val_param); extern;'''
+    stmt: univ_ptr); options(val_param); extern;
+
+function rewrite_$routine_call(
+    node: univ_ptr;
+    temp: univ_ptr;
+    inh: inherited_attributes_ptr_t): univ_ptr; options(val_param); extern;
+
+function rewrite_$mul_to_aop(
+    node: univ_ptr): univ_ptr; options(val_param); extern;'''
 
 P1_DATA = '''var
   { The dispatch tables (isc_pass_1_begin_compilation fills them; any
