@@ -217,6 +217,25 @@ var
                                           HI, LS, CC, CS, NE, EQ, VC, VS,
                                           PL, MI, GE, LT, GT, LE) tests:
                                           1 N, 2 Z, 4 V, 8 C }
+  fn_brimply: array [2..15] of array [2..15] of integer := [
+    [2, 0, 1, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+    [0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 2, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+    [0, 2, 1, 1, 0, 2, 1, 0, 0, 0, 0, 0, 0, 2],
+    [1, 0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2],
+    [1, 0, 0, 0, 2, 0, 1, 0, 0, 0, 2, 0, 2, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]];
+                                        { +0xA8: brimply's answers by the
+                                          two conditions (ops less 138);
+                                          the entries .rwdi leaves unset
+                                          given as 0 }
 
 
 { assert_is_lea - c is a lea (kind 4, op 12).
@@ -1626,6 +1645,321 @@ begin
   end;
 1:
   makejump := p;
+end;
+
+{ makecbr - a conditional branch to target put after c (fnl_slct op
+  20, size 5, x 2, its destination a label operand to the label setlabel
+  gives target); the branch.
+
+  0x10B3DA, 0x8C bytes, no A5 load (the flag at +44 set). }
+
+function makecbr(
+    c: codegen_$cell_ptr_t;
+    target: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+var
+  lab: codegen_$cell_ptr_t;
+  u: codegen_$uads_t;
+  j: codegen_$cell_ptr_t;
+begin
+  fn_changed := true;
+  lab := setlabel(target);
+  u := cg_null_ads;
+  u.f1 := 7;
+  j := fnl_slct(20, 5, 2, u, cg_null_ads);
+  j^.ads2.y := integer32(getrefcell(integer32(j), lab));
+  j^.ads2.x := lab^.ads2.x;
+  after(c, j);
+  makecbr := j;
+end;
+
+{ moverefcell - reference cell ref moved from its label's list to that
+  of the label setlabel gives lab (its first, or after the first).
+
+  0x10B466, 0x76 bytes, A5 loaded (the flag at +44 set). }
+
+procedure moverefcell;
+var
+  o: codegen_$cell_ptr_t;
+  l: codegen_$cell_ptr_t;
+begin
+  fn_changed := true;
+  o := ref^.owner;
+  if o^.refs = ref then
+    o^.refs := ref^.next;
+  delink(ref);
+  if o^.refs = ref then
+    o^.refs := nil;
+  l := setlabel(lab);
+  ref^.owner := l;
+  if l^.refs = nil then
+    l^.refs := ref
+  else
+    after(l^.refs, ref);
+end;
+
+{ movejump - label operand a made to refer to b's label: a's reference
+  cell moved (moverefcell) to the label of b's, b's node taken.
+
+  0x10B4DC, 0x38 bytes, no A5 load: both by address; b's label kept at
+  -8. }
+
+procedure movejump(
+    in out a: codegen_$ads_t;
+    in b: codegen_$ads_t); internal;
+var
+  l: codegen_$cell_ptr_t;
+begin
+  l := codegen_$cell_ptr_t(b.y)^.owner;
+  moverefcell(codegen_$cell_ptr_t(a.y), l);
+  a.x := b.x;
+end;
+
+{ isbranch - c is a conditional branch, a bra or a floating branch (18,
+  17, 39).
+
+  0x10B514, 0x22 bytes, no frame. }
+
+function isbranch(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+begin
+  isbranch := (c^.kind = cbr_instyp) or (c^.kind = br_instyp) or
+              (c^.kind = fbr_instyp);
+end;
+
+{ eqlbitfield - bit field nodes a and b are the same: of one kind; a
+  140 the same +64, +54 and +56; a 138 the same node, or the same +36,
+  the four longwords at +20 and the +38 pointers from +40; another kind
+  the same node.
+
+  0x10B536, 0x9C bytes, no A5 load: the longwords compared by `cmpm.l',
+  `dbne' 3. }
+
+function eqlbitfield(
+    a: il_$node_ptr_t;
+    b: il_$node_ptr_t): boolean; options(val_param); internal;
+label
+  1;
+var
+  r: boolean;
+  i: integer;
+begin
+  r := false;
+  if a^.kind = b^.kind then
+    if a^.kind = 140 then begin
+      if (a^.xp[16] = b^.xp[16]) and (a^.xw[27] = b^.xw[27]) and
+         (a^.xw[28] = b^.xw[28]) then
+        r := true;
+    end
+    else if a^.kind = 138 then begin
+      if a = b then
+        r := true
+      else if (a^.xw[18] = b^.xw[18]) and (a^.xl[5] = b^.xl[5]) and
+              (a^.xl[6] = b^.xl[6]) and (a^.xl[7] = b^.xl[7]) and
+              (a^.xl[8] = b^.xl[8]) then begin
+        r := true;
+        for i := 1 to a^.xw[19] do
+          if a^.xp[9 + i] <> b^.xp[9 + i] then begin
+            r := false;
+            goto 1;
+          end;
+      end;
+    end
+    else
+      r := a = b;
+1:
+  eqlbitfield := r;
+end;
+
+function uncondjmpp(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal; forward;
+
+{ crossjump - the code before a (to the label before it) and before b
+  (instructions) is the same over at least two instructions: walking
+  back from both while the kinds, ops, bit fields (eqlbitfield, kinds
+  45..47 of ops 213..216) and operands (sameaddr) agree, stopping at a
+  label or an unconditional jump before a; a pair of branches to
+  different labels matching when they cross-jump themselves to the same
+  places.  pa and pb where the common code starts (lines, kinds 27, 28
+  passed); not when pb is b or the label just before it.  Only under
+  -OPT's optimization 5 (`btst #6' of +0x283) and without -VARARGS
+  (flags_286 5, bit 0 of +0x287).
+
+  0x10B5D2, 0x226 bytes, no A5 load: recursive, the inner results at
+  -12 and -8; the count in D3, b's side's start in D5. }
+
+function crossjump(
+    a: codegen_$cell_ptr_t;
+    b: codegen_$cell_ptr_t;
+    out pa: codegen_$cell_ptr_t;
+    out pb: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+label
+  1, 9;
+var
+  r: boolean;
+  x: codegen_$cell_ptr_t;
+  y: codegen_$cell_ptr_t;
+  sb: codegen_$cell_ptr_t;
+  n: integer;
+  xa: codegen_$cell_ptr_t;
+  xb: codegen_$cell_ptr_t;
+begin
+  r := false;
+  if not (5 in cargs_$options.opt_on) or (5 in cargs_$options.flags_286) then
+    goto 9;
+  x := prvlcc(a);
+  if x^.kind = def_lbl_instyp then
+    goto 9;
+  sb := b;
+  y := prvcc(b);
+  n := 0;
+  repeat
+    if (x^.kind <> y^.kind) or (x^.op <> y^.op) then
+      goto 1;
+    case x^.kind of
+      m020_dest2_instyp:
+        if y^.op = 213 then
+          if not eqlbitfield(il_$node_ptr_t(x^.ads2.x),
+                             il_$node_ptr_t(y^.ads2.x)) then
+            goto 1;
+      m020_src2_instyp:
+        if (y^.op = 214) or (y^.op = 215) then
+          if not eqlbitfield(il_$node_ptr_t(x^.ads1.x),
+                             il_$node_ptr_t(y^.ads1.x)) then
+            goto 1;
+      m020_dest1_instyp:
+        if y^.op = 216 then
+          if not eqlbitfield(il_$node_ptr_t(x^.ads2.x),
+                             il_$node_ptr_t(y^.ads2.x)) then
+            goto 1;
+      otherwise
+        ;
+    end;
+    if not sameaddr(x^.ads1, y^.ads1) then
+      goto 1;
+    if not sameaddr(x^.ads2, y^.ads2) then begin
+      if (x^.ads2.f1 <> y^.ads2.f1) or (x^.ads2.f1 <> 7) then
+        goto 1;
+      if not ((y^.kind = br_instyp) or (y^.kind = dbcc_instyp) or
+              (y^.kind = cbr_instyp)) then
+        goto 1;
+      if crossjump(x, y, xa, xb) then
+        if br_target(y) = xb then
+          if br_target(x) = nxtlcc(xa) then begin
+            pa := xa;
+            pb := xb;
+            r := true;
+            goto 9;
+          end;
+      goto 1;
+    end;
+    sb := y;
+    x := prvlcc(x);
+    n := n + 1;
+    if x^.kind = def_lbl_instyp then
+      goto 1;
+    if uncondjmpp(x) then
+      goto 1;
+    y := prvcc(y);
+  until false;
+1:
+  while (sb^.kind = fop_instyp) or (sb^.kind = inline_instyp) do
+    sb := nxtlcc(sb);
+  while x^.next^.kind = line_no_instyp do
+    x := x^.next;
+  y := nxtlcc(x);
+  while (y^.kind = inline_instyp) or (y^.kind = fop_instyp) do begin
+    x := y;
+    y := nxtlcc(y);
+  end;
+  if sb = b then
+    goto 9;
+  if n < 2 then
+    goto 9;
+  if sb^.kind = def_lbl_instyp then
+    if nxtcc(sb) = b then
+      goto 9;
+  pa := x;
+  pb := sb;
+  r := true;
+9:
+  crossjump := r;
+end;
+
+{ uncondjmpp - c is a case jump or a bra (30, 17).
+
+  0x10B7F8, 0x18 bytes, no frame. }
+
+function uncondjmpp;
+begin
+  uncondjmpp := (c^.kind = casejmp_instyp) or (c^.kind = br_instyp);
+end;
+
+{ brimply - what branch a's going implies about branch b's (fn_brimply,
+  +0xA8, by the two conditions: the ops from 138, those beyond 153 less
+  14 more): 2 when b is unconditional, 1 when a is or the kinds differ.
+
+  0x10B810, 0x80 bytes, no A5 load: the table's row of 28 bytes. }
+
+function brimply(
+    a: codegen_$cell_ptr_t;
+    b: codegen_$cell_ptr_t): integer; options(val_param); internal;
+var
+  r: integer;
+  i: integer;
+  j: integer;
+begin
+  if uncondjmpp(b) then
+    r := 2
+  else begin
+    r := 1;
+    if not uncondjmpp(a) then
+      if a^.kind = b^.kind then begin
+        i := a^.op - 138;
+        if i > 15 then
+          i := i - 14;
+        j := b^.op - 138;
+        if j > 15 then
+          j := j - 14;
+        r := fn_brimply[i][j];
+      end;
+  end;
+  brimply := r;
+end;
+
+{ reversecond - conditional branch, scc or dbcc c's condition reversed
+  (op bit 0 flipped: ops 140..153, 154..167, 436..441, 124..139,
+  448..453, 182..197); any other op an internal error (5).
+
+  0x10B890, 0x94 bytes, A5 loaded: the ranges compared unsigned. }
+
+procedure reversecond;
+begin
+  if (c^.op in [140..153]) or (c^.op in [154..167]) or
+     (c^.op in [436..441]) or (c^.op in [124..139]) or
+     (c^.op in [448..453]) or (c^.op in [182..197]) then
+    c^.op := xor(c^.op, 1)
+  else
+    cgerr_no_source(5, 0);
+end;
+
+{ change_br_value - conditional branch op's signed condition for its
+  unsigned one (140 144, 141 145, 150 148, 151 149); other ops as they
+  are.
+
+  0x10B924, 0x4E bytes, no frame: a `case' of op less 140 through a
+  table of 12. }
+
+function change_br_value(
+    op: integer): integer; options(val_param); internal;
+begin
+  case op of
+    140: change_br_value := 144;
+    141: change_br_value := 145;
+    150: change_br_value := 148;
+    151: change_br_value := 149;
+    otherwise
+      change_br_value := op;
+  end;
 end;
 
 { cc_mod - what c does to the condition codes: 0 nothing, 1 sets the

@@ -446,3 +446,8 @@ lang/lang/source/final.pas	s/:= alias_\$ind_for_captured_lvalue\(n\) = t;/:= t =
 lang/lang/source/final.pas	s/^(\s*)5: begin$/$1 3, 4, 6, 7, 10, 11, 12, 13, 14: ; { gap 2 }\n$1 5: begin/
 # gap 15 (final): a pointer result assigned from a parameter (prvlcc of it, for the check)
 lang/lang/source/final.pas	s/^(\s*)setlabel := c$/$1setlabel := prvlcc(c) { gap 15 }/
+# gap 12 (final): a pointer function's result compared with a variable (the operands swapped)
+lang/lang/source/final.pas	s{\b(if|while|until) (\w+(\((?:[^()]++|(?3))*\))) = ([a-z]\w*)\b(?!\()}{$1 $4 = $2 { gap 12 }}g
+# gap 2 (final): a case of 4 labels over a range of 12 (the ops between added, for the check)
+lang/lang/source/final.pas	s/^(\s*)140: change_br_value := 144;$/${1}142, 143, 144, 145, 146, 147, 148, 149: change_br_value := op; { gap 2 }\n${1}140: change_br_value := 144;/
+lang/lang/source/final.pas	s/^(\s*)if br_target\(x\) = nxtlcc\(xa\) then begin$/$1if xa = br_target(x) then begin { gap 12 }/
