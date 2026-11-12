@@ -1574,3 +1574,45 @@ revisited.
    registers w14 (22) and reg40 (26, 23) look like the static link and
    the return address; ip76 the registers a call reads.  Names if the
    PRISM calling standard is known.
+
+240. Translator PB4, dbg_life.pas: dbg_life_$find_symbols' test of
+   whether the call before an instruction clobbered a floating register
+   reads register r above 31 in the call's set of 0..31 (+48 after the
+   operands: never true) and r up to 31 in the set of 32..63 (+44),
+   while dbg_life_$initialize and find_symbols' own closing loops use
+   +48 for 0..31 and +44 for 32..63; and find_symbols tests for a call
+   inside its loop over the operands (an instruction without operands
+   is never taken for a call), where initialize tests after it.  Both
+   kept as the image has them.  Slips of the original?
+241. Translator PB4, dbg_life.pas: fields batch A owns that the phase
+   uses, read through views (for the owner to name): lr_t +8 a byte,
+   the operand kind of the live range's register (set on the live
+   ranges map_physical_to_virtual_lr makes; mmt's "kind 28 made 27"
+   is the same byte), +44 and +48 the first and the current of its pc
+   ranges, +72 their count (lr_t's l44, l48, exposed); rtn_t +16 the
+   routine's calling conventions (nargs at +22, 26-byte argument
+   records from +60 + 26: sym +6, arg_loc_t byte +12, register +17,
+   a flag +18; the routine's IL node's +128 has the same record), +116
+   the stack frame's live range (compared with a load's or store's
+   base operand), +208 the stack frame's register.  The IL nodes:
+   VAR_NAME +28 (the variable a spill slot was made for), +32 flags
+   (bit 29 a spill slot, bit 14 not for the debugger), +56 offset, +60
+   the block last written in (dbg_life's), +64 spill records, +68
+   debug records, +72 storage class, +74 spill slot number; FORTRAN
+   symbol (110) +11 bits 7..4 storage class, +12 offset, +16 slot,
+   +24 flags, +36, +50, +54 as +60, +64, +68.  Where should the debug
+   records' type (dbg_life's dbg_rec_t, read by whoever writes the
+   .dst: bin or debug_sym_dmp) live?
+242. Translator PB4, dbg_life.pas: map_physical_to_virtual_lr loads A5
+   (a global routine, its parameters by address: no val_param) while
+   every other routine of the unit but the two entry points is
+   internal; nothing outside the unit calls it.  Was it declared in an
+   insert (dbg_life's own, lost), or simply left global?
+243. Translator PB4, sched_utils.pas: the snuggle checks' messages
+   name COM_$PRESCAN_INST, and the operand delays' word parameter has
+   two flags (element 0: a condition code read costs a cycle more;
+   element 1: delays taken from the definition to its reader rather
+   than from the reader back) whose names are not known:
+   sched_utils_$flags_t = set of 0..15 in backend.ins.pas.  sched's
+   pass 1 passes [1] and the switches' sw9, oli [0] and false (one
+   longword, 0x10000).  Rename if the original's names are known.
