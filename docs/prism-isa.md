@@ -7,6 +7,22 @@ unit and address it was read from; nothing here comes from outside the
 image.  Translator PB, 2026-11-11; extended unit by unit (asm:
 translator PB2).
 
+## Processor revisions (-CPU; cargs.pas)
+
+cc.a88k's -CPU option takes two groups of synonyms (cargs.pas, the a88k
+branch of the -CPU parser):
+
+- `10000`, `PRISM`, `A88K`, `AT` (and `ANY`, `ALL`): the DN10000,
+  cpu set [6];
+- `10000TX`, `TX`, `KODIAK`: cpu set [6, 7].  **KODIAK is the code name
+  of the DN10000TX**, a PRISM revision that was never released (delayed,
+  then cancelled after HP's acquisition of Apollo).  Bit 7 changes only
+  the scheduler's floating-unit latencies (sched_utils_$kodiak_delay:
+  DIVI 9, SQRTS 8, DIVS 4, SQRTD 15, DIVD 8 cycles, other floating
+  operations 0), so the TX kept the instruction set and reworked the
+  floating unit's divide and square root.  `AT`'s meaning is not in the
+  image.
+
 ## The opcode tables
 
 - 384 opcodes (`opcode_enumeration.ins.pas`); 0..211 are PRISM opcodes
