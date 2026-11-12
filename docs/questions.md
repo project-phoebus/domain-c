@@ -1892,3 +1892,13 @@ revisited.
    block queue (+92/+80) is emptied but nothing fills it, and +96/+84
    are set and never read.  Is the level test the original's (KONST
    off by default)?
+304. Translator PB6, at_backend: the phase table's +3 byte is 255 exactly
+   where +2 (turned off at low optimization) is 0, and nothing reads
+   it (kept as b3); get_calling_conventions looks an entry's record up
+   at its block's +124 but stores a new one at the entry node's own
+   +124 (kept); build_source_statement_map sizes its tables by
+   runbackend_16 (the statements opt_main counted) and lir_$end_routine
+   is called with no argument (pattern 132; the translation passes the
+   routine).  at_backend_$begin_compilation passes its word p to
+   exs_$initialise as `p in [5]' twice (both arguments the same: a
+   slip, or two flags that coincide for C?).
