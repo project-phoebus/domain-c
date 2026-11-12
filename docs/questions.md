@@ -2182,6 +2182,9 @@ revisited.
    (address_modes, assignments, ..., compares); routines
    `transform_<r>_pass_1` / `transform_<r>_pass_2`, r the rule
    (which_transform).  Other names?
+   **Lead, provisional (2026-11-12, until the owner answers):** GA's
+   proposal is adopted: isc_pass_1_<nn>_<topic>.pas / isc_pass_2_<nn>_<topic>.pas
+   and transform_<r>_pass_1 / _pass_2.
 267. Translator GA: **isc_solution_fields.ins.pas's field names.**  The
    insert is a derived object of the generator's input, and the image
    keeps the input's attribute names: dump_solution prints each field
@@ -2198,6 +2201,10 @@ revisited.
    +112 `rule'.  Rename to the image's names when the generator emits
    the insert (touches PD's and PD2's ISC units; batch A's solution_t
    view is separate)?
+   **Lead, provisional:** no rename yet.  The rule file uses the image's
+   attribute names; the generator maps them to the insert's current
+   field names, so PD's and PD2's units are untouched.  A rename can
+   follow the owner's answer as one mechanical change.
 268. Translator GA: **the gate for units without a .blocks record.**
    coff_compare picks a unit by its .blocks source path, so the 50
    action modules cannot be compared as they are.  Proposed for phase 2:
@@ -2207,6 +2214,10 @@ revisited.
    for those files.  coff_compare.py is a shared tool (a local patched
    copy of the source repository's): may phase 2 change it, or should
    the comparison be a separate tool?
+   **Lead, provisional:** a separate tool (tools/cc_isc_check.py, driven
+   by the manifest) that reuses coff_compare as a library; the shared
+   coff_compare.py, cc_check.sh and cc_addrcheck.py are not changed
+   except to call it for the manifest's files.
 269. Translator GA: **how far the rule file goes.**  The patterns,
    result kinds, flags, opcode maps, attribute declarations and the
    actions' skeleton come out of the image mechanically.  The actions'
@@ -2218,6 +2229,10 @@ revisited.
    per section in rule order.  Acceptable, or should bodies be Pascal
    text pasted by the generator (less to design, more like hand
    translation)?
+   **Lead, provisional:** the statement language, as proposed: it is
+   what "classic codegen" (question 151) implies, and the image keeps
+   the original's `let result <- ...;'.  Residue the decompiler cannot
+   lift is written by hand in the same language.
 270. Translator GA: **isc_main and isc_debug.**  Both are derived objects
    of the input but mostly ordinary code.  The generated parts found:
    preserve_solution's per-rule byte table and switch (isc_main) and
@@ -2226,3 +2241,6 @@ revisited.
    by hand as question 151 says, with the generator emitting only those
    generated parts (as include files or by rewriting marked regions).
    Agreed?
+   **Lead, provisional:** agreed: isc_main is done (PD2); isc_debug is
+   translated by hand, with the generator emitting only its generated
+   parts (dump_solution's field list) into a marked include.
