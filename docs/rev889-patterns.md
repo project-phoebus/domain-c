@@ -1244,3 +1244,16 @@ cc.m68k unless marked.
     (+81 bits 5 and 4) with `moveq #48,D0; or.w D0,(80,A2)': the word at
     +80 covers the byte at +81.  Whether two assignments were merged by
     the compiler or the generator wrote one statement is not known.
+310. **A constant compared twice in a try loaded once.**  pattern_matcher
+    tests both children's kinds against the same kind with one `moveq
+    #8,D0' and two `cmp.w (108,An),D0' (0x2058B4, rule 306's try under
+    f_div_top); a single test is `cmpi.w #k,(108,A0)'.
+311. **Case arms cross-jumped into one another.**  pattern_matcher's 683
+    tries (in 184 arms) are 650 calls of hard_work in the code: an arm
+    whose tail is the same as another's jumps into it, and each arm's
+    last try is `pea rule; bra 0x2083AC' into the one call at the end
+    of the last arm (followed by `bra' to the case's end).  A failing
+    test of a try branches to the next try or to its copy in another
+    arm.  docs/iscg-design.md 9.1; tools/iscg_extract.py follows the
+    jumps.
+

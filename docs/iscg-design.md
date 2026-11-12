@@ -619,3 +619,142 @@ produce the same):
   it (an input flag?) or a different skeleton.
 - Whether the ISC objects really were bound in alphabetical order (the
   basis for guessing module names).
+
+## 9. Phase 2 progress (translator GB, 2026-11-12)
+
+Done: the tables and the matcher, isc_pass_2_main and isc_vars (GA's
+order, 7.5).  Not started: the action bodies' decompiler, the action
+modules, isc_pass_1_main's operator routines.
+
+### 9.1 The tools
+
+- `tools/iscg_extract.py [--binary B] [--out DIR] [--json FILE]` (about
+  40 s) writes the rule file from cc.a88k.  Its matcher decoder follows
+  each arm of pattern_matcher's two jump tables through the shared tails
+  (a try reached by a jump into another arm counts under both), and
+  checks that every failing test leads to the same remaining tries as
+  the call's return (by decoding from both).  It then reads the files it
+  wrote with the generator's parser and fails unless they give the
+  decoded matcher back, try for try and test for test (683 tries in 184
+  arms: 11 kind arms, 173 il$t arms; GA's inventory counted 185, one a
+  misread arm at 0x2058B4).
+- `tools/iscg_gen.py [--rules DIR] [--out DIR]` writes the generated
+  units into the iscg_input derived-object directory;
+  `tools/iscg_gen.py --check` regenerates in memory and fails, with a
+  diff, if a committed unit differs.  tools/cc_check.sh runs `--check`
+  whenever its arguments include a file under iscg_input (the full gate
+  does).  The generator's fixed text (unit headers, hard_work,
+  pattern_matcher's traces, pass_2) is `tools/iscg_text.py`.
+- `iscg_names.txt` (generated, beside the units) is the manifest: each
+  anonymous action's name (transform_<r>_pass_1/_2) and its cc.a88k
+  address, from the rule file's `image' clauses.  tools/cc_datacheck.py
+  reads it to resolve the action tables' relocations (otherwise 1126
+  unverified pointers).
+
+### 9.2 The rule file
+
+`moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/rules/`: 27 files,
+3813 lines, 118 KB.
+
+- `declarations.isc`: `kinds` (solution$t), 79 `attribute` lines
+  (dump_solution's names with offset, bit and size class), 179
+  `operator` lines (isc_pass_1_main's routine, il$t, children, each
+  pass_1 call's permissible set: `derived' where it equals the union of
+  the kinds the patterns test at that call's position, else the set,
+  `inherited', `-np'; 90 derived so far: a routine whose first pass_1
+  call is not for child 1 (add_top's `inherited' one) is compared at the
+  wrong position, to fix when isc_pass_1_main is generated), and the six
+  `map`s (opcode_rr_reversed, opcode_rr, opcode_immediate,
+  opcode_double, opcode_immediate_negated, opcode_single: names ours).
+- `NN_topic.isc`, NN 01..25 in address order (topics as 1.2; the
+  module names of question 266 follow them): `section NN topic image
+  pass_1 a5 X, pass_2 a5 Y;` then, in rule order,
+
+      transform 182  ip_reg <- and_to_aop ($1: [address_mode, ip_reg, ip_reg_field], $2: not_top($1: bit_set_top($1: literal_32_bits, $2: ip_reg, $3: void)))
+        pass_1 image 16#170AEA;
+        pass_2 image 16#1DF8DC;
+      end;
+
+  An alternative list `op1 | op2 (children)` shares the children; a
+  rule tried under operators with different children lists one group
+  per children (none so far).  A set of kinds is `[a, b]` (braces are
+  comments).  Flags: `check_permissible` (3 rules) and
+  `no_could_deadlock_child` (80).  `pass_2 image ... empty` marks the
+  45 empty pass-2 actions.  The image clauses are placeholders for the
+  bodies: the generator uses them only for the manifest.
+- `readonly.isc`: isc_readonly_tables' 3120 bytes as words (the ISC's
+  own tables, not the generator's; isc_vars defines them through
+  isc_types.ins.pas's views).
+
+### 9.3 The generated units and the gate
+
+| unit | routines | gate (cc.a88k) | data check |
+|------|---------:|----------------|------------|
+| isc_pattern_matcher | 2 | errors=0; hard_work sim 0.24, pattern_matcher 0.07 (most arms left out: gap 25) | 3376 bytes of module data, all 563 relocations resolved: no difference (one layout shift, dpc gap 37) |
+| isc_pass_2_main | 1 | errors=0; sim 0.00 (see below) | 2252 bytes, 563 relocations: no difference |
+| isc_vars | 0 | errors=0 (nothing to compare) | both sections, 6384 bytes: no difference |
+
+- pattern_matcher is `case solution$t(solution^.kind) of` with every
+  kind 1..23 a label (the kinds without chain rules share one empty
+  arm: the image's in-range kinds without tries go to the case's end,
+  only 0 and 24 to the error) and `case il$t(solution^.w98) of` with a
+  label per operator some pattern names (unlabelled ones go to the
+  otherwise, as in the image).  A try is one `if` per test, nested, in
+  pattern order: the image leaves at the first failing test, a child is
+  read only when the tests before it hold, and dpc evaluates `and`
+  whole (it would read a nested child of a node that is not a
+  proper_subtree).  The image's shared `pea rule; bra' tails and arms
+  jumping into one another are Rev 8.89 cross-jumping, not the source.
+- dpc refuses pattern_matcher whole ("more values live at once than
+  there are registers" once the il$t arms reach and_to_aop, "a routine
+  needing this many registers" with flat `and`s): the gate compiles it
+  with the il$t arms from and_to_aop to the otherwise left out (gap 25,
+  tools/cc_gap_rewrites.txt).  dpc --check-only accepts the whole
+  routine (writes aside).
+- isc_pass_2_main's similarity is meaningless: coff_compare ends pass_2
+  at the next named routine, hard_work (0x73EA4 bytes later: the pass-2
+  modules lie between).  The comparison tool of question 268 should end
+  a named routine at the manifest's next address too.
+- Question 261, settled: isc_vars defines isc_readonly_tables (its
+  .blocks record names the section); isc_types.ins.pas declares the
+  section's variable (`var (isc_readonly_tables)', the scheme of
+  question 161) and isc_vars gives it its value with `define', laid out
+  by isc_types' views (extended by 4 bytes to the section's end).
+  isc_tool_generated_readonly_tables likewise, declared in isc.pvt.pas.
+  isc_vars opens lang2/source/isc/isc_var_defines.ins.pas first (a
+  stub: its contents are not in the image).
+- Field names: the generator writes isc_solution_fields' current names
+  (kind, w98 for il_kind, children, f114.b6 for
+  builtin_could_deadlock_sched, f76.physical/no_modify/serialize/reg);
+  dead_end (+81.3), which the insert does not name, is read through a
+  unit-local view.  The mapping lives in iscg_text.py's fixed text and
+  iscg_gen.py's FIELD_MAP (question 267).
+
+### 9.4 What remains
+
+1. **The action bodies** (the next step): the decompiler from the
+   pass-1 and pass-2 actions to the statement language (section 4),
+   macros for the templates of 2.5, the cost tables of 2.6, and the
+   generator's emission of the 50 modules.  The action headings are
+   fixed by the tables' types: pass 1 `(var subject: isc_solution_t; il:
+   univ_ptr; inh: inherited_attributes_ptr_t; var work, result:
+   isc_solution_ptr_t)`, pass 2 `(var self: isc_solution_t; subject:
+   isc_solution_ptr_t; var result: isc_solution_t; solution:
+   isc_solution_ptr_t)`, both val_param (hard_work and pass_2 push
+   `pea (A2)' for the var records).  The rule file's `pass_1 image ...;`
+   placeholders become the statement lists; the image addresses move to
+   the manifest only.
+2. **The action modules' gate** (question 268): `tools/cc_isc_check.py`
+   driven by iscg_names.txt (extended with each module's file, A5 and
+   code range: the section clauses have the A5s), reusing coff_compare's
+   compile_program/compare_object with `starts` augmented by the
+   manifest's addresses and the module's A5 as its data base; also for
+   the named units, so that pass_2 and pattern_matcher end where the
+   image's code does.  cc_check.sh calls it for files the manifest names
+   and .blocks does not.
+3. isc_pass_1_main: the operator routines (isc_<kind>_<op>) from the
+   operator declarations (inherited attributes still to read, 8), the
+   derived-mask comparison by child position (9.2).
+4. isc_main's preserve_solution table and isc_debug's dump_solution
+   field list (question 270: hand-translated units, generated parts by
+   marked includes).
