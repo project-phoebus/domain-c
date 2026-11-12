@@ -114,6 +114,22 @@ function arithmetic_from_il_node(
 function precision_from_il_node(
     node: univ_ptr): integer32; options(val_param); extern;
 
+{ ISC_$GET_MEMORY_HOME - sym's memory home for an access of bits bits
+  as a kind node (122 an integral type, 123 a real one), or nil.
+  0x213DE8, 0xCE bytes (frame): sym 8, kind a word at 12, bits 14; A0.
+  Called from rewrite. }
+function isc_$get_memory_home(
+    sym: univ_ptr;
+    kind: integer;
+    bits: integer32): univ_ptr; options(val_param); extern;
+
+{ ISC_$PRECISION_FROM_RLEN_AND_SIZE - the bits of a value of register
+  class rlen and size bytes.  0x214BF6, 0x48 bytes (frame): rlen a word
+  at 8, size 10; D0.  225 call sites (the patterns, rewrite). }
+function isc_$precision_from_rlen_and_size(
+    rlen: integer;
+    size: integer32): integer32; options(val_param); extern;
+
 { isc_to_lir.pas: the debug_lir_ wrappers (each traces its arguments
   when the ISC's trace is on and calls the lir_ routine of its name). }
 

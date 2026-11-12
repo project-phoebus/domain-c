@@ -36,7 +36,8 @@ type
     add_node.pas's an_kind_t ordinals, written as numbers). }
   isc_node_ptr_t = ^isc_node_t;
   isc_node_t = record
-    flags: char;                        { +0 }
+    rewritten: boolean;                 { +0: list_tree's flag (rewrite)
+                                          sets it) }
     b1: char;                           { +1 }
     kind: integer;                      { +2 }
     case integer of

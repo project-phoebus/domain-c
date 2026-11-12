@@ -261,3 +261,8 @@ lang2/source/be_com/oli.pas	s/(dp|rl)contk\(0\.0\)/smcontk(81, 0) { gap 7 }/
 lang2/source/isc/isc_call_handling.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
 # gap 4 (isc_cse_handling): write and writeln (dropped, for the check)
 lang2/source/isc/isc_cse_handling.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
+# gap 25, 28 (rewrite): rewrite_$routine_call exceeds the virtual registers and then the spill slots: its arguments' value selection (the widening through the variables' marks and copies) and its FORTRAN I/O marking left out of the check (conditional variables not set)
+lang2/source/isc/rewrite.pas	s/^(    \{ a byte or halfword passed to op 86's routine: widened \})$/%var gap25r;\n%if gap25r %then { gap 25 }\n$1/
+lang2/source/isc/rewrite.pas	s/^(    \{ the copy into the home or temporary, and back \})$/%endif { gap 25 }\n$1/
+lang2/source/isc/rewrite.pas	s/^(  \{ FORTRAN I\/O \})$/%var gap25s;\n%if gap25s %then { gap 25 }\n$1/
+lang2/source/isc/rewrite.pas	s/^(  \{ a statement: an EVAL_NODE \})$/%endif { gap 25 }\n$1/
