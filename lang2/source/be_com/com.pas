@@ -9,6 +9,10 @@
     --------  0x225DF4  utils_ins_$operands_instruction (utils.ins.pas)
     --------  0x225E16  clean_up_this_mess_right_now_young_man (internal)
     --------  0x225E48  operand_reg_like_kind
+    --------  0x225E82  local_replace_output (internal)
+    --------  0x226514  find_exit_writer (internal)
+    --------  0x22670C  make_entering_lts (internal)
+    --------  0x22676E  find_calls_snuggle_move (internal)
     --------  0x22C02A  com_$begin_compilation
     --------  0x22C064  com_$end_compilation
     --------  0x22C080  com_$end_routine
@@ -19,10 +23,8 @@
 
   Not known from the original: every local, parameter and cell name. }
 
-{ TODO(pascal) com: 6 of the image's 63 routines.  Remaining, in
-  address order: local_replace_output (0x225E82, 0x612 bytes),
-  find_exit_writer (0x226514), make_entering_lts (0x22670C),
-  find_calls_snuggle_move (0x22676E), com_$replace_oprs_value
+{ TODO(pascal) com: 10 of the image's 63 routines.  Remaining, in
+  address order: com_$replace_oprs_value
   (0x226898), no_reg_like_kinds (0x226E38), build_loads (0x226E62),
   build_stores (0x22723E), replace_mem_instrs (0x2274D0),
   ip_mem_reference (0x227A0A), analyze_candidates (0x227A8C),
@@ -136,6 +138,458 @@ begin
       r := operand$fp_reg_pair_like;
   end;
   operand_reg_like_kind := r;
+end;
+
+{ local_replace_output - o's value (o and, for a register pair, its
+  mate operand writing into l2) given to the segment l (and l2) instead
+  of its own: when the even/odd requirements of o's readers allow,
+  neither segment means to modify, and the live ranges are simple (or
+  replace, or may_merge and marked +3 bit 1), o's readers simply join
+  l's (and the mate's l2's); when they cannot join (a paired floating
+  live range, a physical register's, replace, a segment or live range
+  that means to modify or is final), a preference MOVE at `at' copies
+  l (l2) into o's segment(s), its sources reg-like kinds with replace;
+  when the requirements fail, l (l2) and their live ranges are made
+  read, a preference MOVE after the later of their definitions (or at
+  the head of at's block) copies them into new segments of a new live
+  range of o's kind, which are tried again (may_merge then true,
+  replace false).  The segment that holds the value is returned.
+
+  0x225E82, 0x612 bytes, no A5: the kinds `btst' in 16#4048, 16#2024
+  and 16#21012; may_merge's register reused for o's kind once past
+  the tests; operand_reg_like_kind's argument a frame word, its second
+  call's argument left on the stack. }
+
+function local_replace_output(
+    l: lts_ptr_t;
+    l2: lts_ptr_t;
+    o: opnd_ptr_t;
+    at: instr_ptr_t;
+    may_merge: boolean;
+    replace: boolean): lts_ptr_t; options(val_param); internal;
+var
+  res, res2, nl, nl2: lts_ptr_t;
+  m, p, def, def2: opnd_ptr_t;
+  eo, rrp: integer;
+  mv, a, i: instr_ptr_t;
+  lr, nlr: lr_ptr_t;
+  after, done, ok: boolean;
+  k: operand$t;
+begin
+  res := l;
+  if l2 <> nil then
+    res2 := l2
+  else
+    res2 := res;
+  if o^.h.kind in [operand$fp_reg_pair, operand$fp_reg_pair_physical,
+                   operand$fp_reg_pair_like] then begin
+    m := lir_utils_$find_mate_operand(o);
+    if (l2 = nil) or (m = nil) or (rrp$fp_reg_odd_only in res^.rrp)
+        or (rrp$fp_reg_even_only in res2^.rrp) or o^.h.fp_reg_odd_only
+        or m^.h.fp_reg_even_only then
+      bug_check('COM_$local_replace_output: unreasonable reg_pair requirements.%$');
+    eo := 0;
+  end
+  else if o^.h.kind in [operand$fp_reg, operand$fp_reg_physical,
+                        operand$fp_reg_like] then begin
+    if o^.lts^.f2.final then
+      eo := opnd_bytes_ptr_t(o)^.rrp & 3
+    else begin
+      eo := 0;
+      p := o^.link;
+      while p <> nil do begin
+        eo := eo ! (opnd_bytes_ptr_t(p)^.rrp & 3);
+        p := p^.link;
+      end;
+      if eo = 3 then
+        bug_check('COM_$local_replace_output: unreasonable fp_reg requirements.%$');
+    end;
+    m := o;
+  end
+  else begin
+    m := o;
+    eo := 0;
+  end;
+  repeat
+    done := true;
+    ok := ((~eo & integer(res^.rrp) & 3) = 0) or (eo = 0);
+    if ok then
+      if (rrp$intend_to_modify in res2^.rrp)
+          or (rrp$intend_to_modify in res^.rrp) then
+        ok := false;
+    if ok then begin
+      lr := res^.lr;
+      if not ((lr^.id = 0) or replace or (may_merge and lr^.f2.b3_1)) then
+        ok := false
+      else begin
+        lr := res2^.lr;
+        if not ((lr^.id = 0) or replace) then
+          if not may_merge then
+            ok := false
+          else if not lr^.f2.b3_1 then
+            ok := false;
+      end;
+    end;
+    if ok then begin
+      if o^.h.kind in [operand$fp_reg, operand$fp_reg_physical,
+                       operand$fp_reg_like] then
+        ok := o^.lts^.lr^.mate <> nil
+      else
+        ok := false;
+      lr := o^.lts^.lr;
+      if not ok and not lr^.f2.b3_7 and not replace
+          and not (rrp$intend_to_modify in m^.lts^.rrp)
+          and not (rrp$intend_to_modify in lr^.rrp)
+          and not lr^.f2.b3_4 and not m^.lts^.f2.final then begin
+        { o's readers join l's }
+        p := res^.refs;
+        if p = nil then begin
+          res^.refs := o^.link;
+          p := o^.link;
+        end
+        else begin
+          while p^.link <> nil do
+            p := p^.link;
+          p^.link := o^.link;
+        end;
+        rrp := integer(res^.rrp) & 3;
+        o^.link := nil;
+        while p <> nil do begin
+          p^.lts := res;
+          opnd_bytes_ptr_t(p)^.rrp := (opnd_bytes_ptr_t(p)^.rrp & 16#FC) ! rrp;
+          p := p^.link;
+        end;
+        if o <> m then begin
+          p := res2^.refs;
+          if p = nil then begin
+            res2^.refs := m^.link;
+            p := m^.link;
+          end
+          else begin
+            while p^.link <> nil do
+              p := p^.link;
+            p^.link := m^.link;
+          end;
+          m^.link := nil;
+          while p <> nil do begin
+            p^.lts := res2;
+            p := p^.link;
+          end;
+        end;
+      end
+      else begin
+        { a preference move copies l into o's segment }
+        mv := lir_utils_$create_preference_move(ord(o^.h.kind), at, 0);
+        mv^.opnds[1].lts := res;
+        if not replace then begin
+          p := res^.refs;
+          if p = nil then
+            res^.refs := addr(mv^.opnds[1])
+          else begin
+            mv^.opnds[1].link := p^.link;
+            p^.link := addr(mv^.opnds[1]);
+          end;
+        end
+        else begin
+          k := operand_reg_like_kind(o^.h.kind);
+          mv^.opnds[1].h.kind := k;
+          mv^.h.b0_6 := false;
+        end;
+        opnd_bytes_ptr_t(addr(mv^.opnds[2]))^.rrp :=
+            opnd_bytes_ptr_t(addr(mv^.opnds[2]))^.rrp ! eo;
+        mv^.opnds[2].link := o^.link;
+        mv^.opnds[2].lts := o^.lts;
+        o^.lts^.refs := addr(mv^.opnds[2]);
+        if o <> m then begin
+          mv^.opnds[3].lts := res2;
+          if not replace then begin
+            p := res2^.refs;
+            if p = nil then
+              res2^.refs := addr(mv^.opnds[3])
+            else begin
+              mv^.opnds[3].link := p^.link;
+              p^.link := addr(mv^.opnds[3]);
+            end;
+          end
+          else begin
+            k := operand_reg_like_kind(o^.h.kind);
+            mv^.opnds[3].h.kind := k;
+          end;
+          mv^.opnds[4].link := m^.link;
+          mv^.opnds[4].lts := m^.lts;
+          m^.lts^.refs := addr(mv^.opnds[4]);
+        end;
+      end;
+    end
+    else begin
+      { copied into a new live range, tried again }
+      res^.rrp := res^.rrp + [rrp$read];
+      res^.lr^.rrp := res^.lr^.rrp + [rrp$read];
+      if res <> res2 then begin
+        res2^.rrp := res2^.rrp + [rrp$read];
+        res2^.lr^.rrp := res2^.lr^.rrp + [rrp$read];
+      end;
+      def := res^.refs;
+      a := nil;
+      def2 := res2^.refs;
+      if def <> nil then
+        if (opnd_bytes_ptr_t(def)^.rrp & 12) <> 0 then
+          a := utils_ins_$operands_instruction(def);
+      if def2 <> def then
+        if def2 <> nil then
+          if (opnd_bytes_ptr_t(def2)^.rrp & 12) <> 0 then begin
+            i := utils_ins_$operands_instruction(def2);
+            if a = nil then
+              a := i
+            else if a^.num < i^.num then
+              a := i;
+          end;
+      if a = nil then begin
+        a := at^.bb^.first;
+        while (a^.opc = ord(opc$join_bp)) or (a^.opc = ord(opc$label)) do
+          a := a^.next;
+        after := false;
+      end
+      else
+        after := true;
+      if after then
+        mv := lir_utils_$create_preference_move(ord(o^.h.kind), a, -1)
+      else
+        mv := lir_utils_$create_preference_move(ord(o^.h.kind), a, 0);
+      if (def = nil) or ((opnd_bytes_ptr_t(def)^.rrp & 12) = 0) then begin
+        mv^.opnds[1].link := def;
+        res^.refs := addr(mv^.opnds[1]);
+      end
+      else begin
+        mv^.opnds[1].link := def^.link;
+        def^.link := addr(mv^.opnds[1]);
+      end;
+      mv^.opnds[1].lts := res;
+      if res <> res2 then begin
+        if (def2 = nil) or ((opnd_bytes_ptr_t(def2)^.rrp & 12) = 0) then begin
+          mv^.opnds[3].link := def2;
+          res2^.refs := addr(mv^.opnds[3]);
+        end
+        else begin
+          mv^.opnds[3].link := def2^.link;
+          def2^.link := addr(mv^.opnds[3]);
+        end;
+        mv^.opnds[3].lts := res2;
+      end;
+      if res <> res2 then
+        nlr := lir_$new_live_range_fp_reg_pair
+      else if o^.h.kind in [operand$ip_reg, operand$ip_reg_physical,
+                            operand$ip_reg_like, operand$case_jump_base] then
+        nlr := lir_$new_live_range_ip_reg
+      else if o^.h.kind in [operand$fp_reg, operand$fp_reg_physical,
+                            operand$fp_reg_like] then
+        nlr := lir_$new_live_range_fp_reg
+      else
+        nlr := lir_$new_live_range;
+      lir_utils_$add_lts_to_lr(24, nlr, o^.lts^.bb, nl);
+      if nlr^.mate <> nil then
+        lir_utils_$add_lts_to_lr(24, nlr^.mate, o^.lts^.bb, nl2);
+      mv^.opnds[2].link := nil;
+      opnd_bytes_ptr_t(addr(mv^.opnds[2]))^.rrp :=
+          opnd_bytes_ptr_t(addr(mv^.opnds[2]))^.rrp ! eo;
+      mv^.opnds[2].lts := nl;
+      nl^.refs := addr(mv^.opnds[2]);
+      if nlr^.mate <> nil then begin
+        mv^.opnds[4].link := nil;
+        mv^.opnds[4].lts := nl2;
+        nl2^.refs := addr(mv^.opnds[4]);
+      end;
+      nlr^.f2.b3_1 := true;
+      res := nl;
+      if nlr^.mate = nil then
+        res2 := nl
+      else begin
+        nlr^.mate^.f2.b3_1 := true;
+        res2 := nl2;
+      end;
+      may_merge := true;
+      replace := false;
+      done := false;
+    end;
+  until done;
+  local_replace_output := res;
+end;
+
+{ find_exit_writer - the segment o (and its mate o2 of a register
+  pair) writes, when it can carry the value out of its block: already
+  final and marked (+3 bit 1) for both, or made so (a simple live range
+  that is not modified made complex, the segment put on its block's
+  final list and its live range marked); else the segment found the
+  same way through a MOVE, COPYS or COPYD (marked +0 bit 6) whose first
+  operand is a plain reader of o's (and o2's, the same instruction)
+  segment; nil when there is none.  0x226514, 0x1F8 bytes, no A5:
+  recursive; com_rtn read through the caller's A5; the kinds `btst' in
+  4094 and 16#4048. }
+
+function find_exit_writer(
+    o: opnd_ptr_t;
+    o2: opnd_ptr_t): lts_ptr_t; options(val_param); internal;
+var
+  pair, ok: boolean;
+  l: lts_ptr_t;
+  lr2, lr: lr_ptr_t;
+  i, ip, iq: instr_ptr_t;
+  b: bb_ptr_t;
+  p, q: opnd_ptr_t;
+  r: lts_ptr_t;
+begin
+  if o2 <> nil then
+    pair := true
+  else begin
+    pair := false;
+    o2 := o;
+  end;
+  l := o2^.lts;
+  lr2 := l^.lr;
+  if lr2^.f2.b3_1 and l^.f2.final and o^.lts^.f2.final
+      and o^.lts^.lr^.f2.b3_1 then begin
+    find_exit_writer := o^.lts;
+    return;
+  end;
+  if not (rrp$modify in lr2^.rrp) and (lr2^.id = 0) then begin
+    lr := o^.lts^.lr;
+    if (lr^.id = 0) and not (rrp$modify in lr^.rrp) then begin
+      bv_$make_live_range_complex(com_rtn, lr);
+      i := utils_ins_$operands_instruction(o);
+      b := i^.bb;
+      l := o^.lts;
+      l^.f2.final := true;
+      l^.lr^.f2.b3_1 := true;
+      l^.next_final := b^.finals;
+      b^.finals := l;
+      if pair then begin
+        l := o2^.lts;
+        l^.f2.final := true;
+        l^.lr^.f2.b3_1 := true;
+        l^.next_final := b^.finals;
+        b^.finals := l;
+      end;
+      find_exit_writer := o^.lts;
+      return;
+    end;
+  end;
+  q := l^.refs;
+  p := o^.lts^.refs;
+  while p <> nil do begin
+    if ((opnd_bytes_ptr_t(q)^.rrp & 16#30) = 16#10)
+        and (q^.h.kind in [operand$ip_reg..operand$well_behaved_memory])
+        and (p^.h.kind in [operand$ip_reg..operand$well_behaved_memory])
+        and ((opnd_bytes_ptr_t(p)^.rrp & 16#30) = 16#10) then begin
+      ip := utils_ins_$operands_instruction(p);
+      iq := utils_ins_$operands_instruction(q);
+      if ((ip = iq) or not pair) and ip^.h.b0_6 and (p^.h.num = 1) then begin
+        r := nil;
+        ok := false;
+        case ip^.opc of
+          75:                           { move }
+            ok := true;
+          144:                          { copys }
+            ok := not pair;
+          161:                          { copyd }
+            if pair then
+              if q^.h.num = 3 then begin
+                r := find_exit_writer(addr(ip^.opnds[2]), addr(ip^.opnds[4]));
+                if r <> nil then begin
+                  find_exit_writer := r;
+                  return;
+                end;
+              end;
+          otherwise
+            ;
+        end;
+        if ok then begin
+          r := find_exit_writer(addr(ip^.opnds[2]), nil);
+          if r <> nil then begin
+            find_exit_writer := r;
+            return;
+          end;
+        end;
+      end;
+    end;
+    if not pair then begin
+      p := p^.link;
+      q := p;
+    end
+    else begin
+      p := p^.link;
+      while p <> nil do begin
+        if p^.h.kind in [operand$fp_reg_pair, operand$fp_reg_pair_physical,
+                         operand$fp_reg_pair_like] then begin
+          q := lir_utils_$find_mate_operand(p);
+          if q <> nil then
+            exit;
+        end;
+        p := p^.link;
+      end;
+    end;
+  end;
+  find_exit_writer := nil;
+end;
+
+{ make_entering_lts - lr's exposed segment in bb (made when it has
+  none: chained to f, the final segment that reaches it, when f is of
+  another block), marked read and its live range +3 bit 4.  0x22670C,
+  0x62 bytes, no A5. }
+
+procedure make_entering_lts(
+    lr: lr_ptr_t;
+    bb: bb_ptr_t;
+    f: lts_ptr_t); options(val_param); internal;
+var
+  l: lts_ptr_t;
+  created: boolean;
+begin
+  l := utils_$get_exposed_lts(lr, bb, created);
+  l^.rrp := l^.rrp + [rrp$read];
+  l^.lr^.f2.b3_4 := true;
+  if created then
+    if f <> nil then
+      if f^.bb <> bb then begin
+        l^.l44 := f;
+        l^.l28 := f^.l28;
+        f^.l28 := l;
+      end;
+end;
+
+{ find_calls_snuggle_move - o's instruction when o has no reader; else
+  (o a physical register's, read once) the instruction of its reader,
+  when that is a snuggle move (+0 bit 6; for a register pair one whose
+  opcode's +19 bits 2..0 are 3), or one inserted for it
+  (lir_utils_$trans_insert_move).  0x22676E, 0xAE bytes, no A5. }
+
+function find_calls_snuggle_move(
+    o: opnd_ptr_t): instr_ptr_t; options(val_param); internal;
+var
+  i: instr_ptr_t;
+begin
+  if o^.link = nil then begin
+    find_calls_snuggle_move := utils_ins_$operands_instruction(o);
+    return;
+  end;
+  if not o^.lts^.lr^.f2.b3_7 or (o^.link^.link <> nil) then
+    bug_check('COM_$find_calls_snuggle_move:  physical operand looks funny.%$');
+  i := utils_ins_$operands_instruction(o^.link);
+  if i^.h.b0_6 then begin
+    if not (o^.h.kind in [operand$fp_reg_pair, operand$fp_reg_pair_physical,
+                          operand$fp_reg_pair_like]) then begin
+      find_calls_snuggle_move := i;
+      return;
+    end;
+    if (instruction_attributes[i^.opc].w18 & 7) = 3 then begin
+      find_calls_snuggle_move := i;
+      return;
+    end;
+  end;
+  lir_utils_$trans_insert_move(o^.link);
+  i := utils_ins_$operands_instruction(o^.link);
+  if not i^.h.b0_6 then
+    bug_check('COM_$find_calls_snuggle_move:  failed to find snuggle move.%$');
+  find_calls_snuggle_move := i;
 end;
 
 { com_$begin_compilation - com_heap made (flags 1, items of 8 bytes).
