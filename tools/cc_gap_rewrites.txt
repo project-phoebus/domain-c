@@ -242,3 +242,18 @@ lang2/source/be_com/lir_utils.pas	s/^(\s*)db_lts := new_db_lts;/$1db_lts := nil;
 # gap 25 (lir_utils, translator PA4): fix_store_through_lrs exceeds dpc's virtual registers (the stores after a written store-through register left out of the check)
 lang2/source/be_com/lir_utils.pas	s/^(        \{ The stores after the instruction\. \})$/%var gap25a;\n%if gap25a %then { gap 25 }\n$1/
 lang2/source/be_com/lir_utils.pas	s/^(        \{ The stores done\. \})$/%endif { gap 25 }\n$1/
+# gap 7 (ra_utils, translator PB5): real constants stored as spill costs (their bits), the FPP's round(x * 0.9 / 0.75 / 0.6) as integer arithmetic (for the check)
+lang2/source/be_com/ra_utils.pas	s/cost\.r := 0\.0;/cost.i := 0; { gap 7 }/
+lang2/source/be_com/ra_utils.pas	s/cost\.r := 1\.0;/cost.i := 16#3F800000; { gap 7 }/
+lang2/source/be_com/ra_utils.pas	s/round\((\w+) \* 0\.9\)/($1 * 9) div 10 { gap 7 }/
+lang2/source/be_com/ra_utils.pas	s/round\((\w+) \* 0\.75\)/($1 * 3) div 4 { gap 7 }/
+lang2/source/be_com/ra_utils.pas	s/round\((\w+) \* 0\.6\)/($1 * 3) div 5 { gap 7 }/
+# gap 21 (ra_utils, translator PB5): add_spill_code's nested new_db_lts passed to flesh_out_new_load_or_store (a module-level stand-in, for the check) [still needed with dpc ca0dd28]
+lang2/source/be_com/ra_utils.pas	s/^procedure ra_utils_\$add_spill_code;$/function ra_utils_gap21: lts_ptr_t; begin ra_utils_gap21 := nil; end; { gap 21 }\nprocedure ra_utils_\$add_spill_code;/
+lang2/source/be_com/ra_utils.pas	s/dbref, tmp88, new_db_lts\);/dbref, tmp88, ra_utils_gap21); { gap 21 }/
+# gap 25 (ra_utils, translator PB5): add_spill_code exceeds the virtual registers: the reads that keep their live range or are narrowed to a smaller load left out of the check (a conditional variable not set)
+lang2/source/be_com/ra_utils.pas	s/^(            \{ Reads that need no new live range or a narrower load\. \})$/%var gap25r;\n%if gap25r %then { gap 25 }\n$1/
+lang2/source/be_com/ra_utils.pas	s/^(            \{ A new live range for the reload\. \})$/%endif { gap 25 }\n$1/
+# gap 28 (ra_utils, translator PB5): add_spill_code's values outlive dpc's registers: the store's later readers' linking left out of the check (a conditional variable not set)
+lang2/source/be_com/ra_utils.pas	s/^(          \{ The later readers linked to the stored register\. \})$/%var gap28w;\n%if gap28w %then { gap 28 }\n$1/
+lang2/source/be_com/ra_utils.pas	s/^(          \{ A TST made of the writing move reads no register\. \})$/%endif { gap 28 }\n$1/

@@ -1675,3 +1675,42 @@ revisited.
    (sym calls it and opens no ISC insert; the original must have
    declared it in an insert sym opens, or in sym itself).  Whoever fills
    isc_lir.ins.pas must not declare it a second time.
+
+270. Translator PB5, ra_utils_$add_spill_code: its two bug checks on a
+   spill victim read the live range's +3 bit 5 as "spill victim is user
+   declared register" and bit 6 as "no_modify register"; batch A named
+   bit 5 serialize (dmp's SERIALIZE) and bit 6 no_modify.  Is SERIALIZE
+   the mark of a register the user declared (a `register' variable the
+   allocator must not spill)?
+271. Translator PB5, ra_utils (slips kept as the image has them?):
+   spill_the_victims passes the reloads' at_head as D2, the "any spilled"
+   flag it has just set (always true there; written true);
+   add_spill_code passes break_loops_from_spill_victim a trace flag from
+   a local it never sets (-110: the splitting trace can never print);
+   break_loops_from_spill_victim tests its second list twice;
+   find_best_dom_bb's last test (the routine's start block) is reached
+   only with no block; rematerialize_result leaves its copy unset after
+   the "unexpected DP instruction" bug check, pick_instruction its result
+   after the FP_REG_PAIR one, and the even/odd one tests whatever D0
+   bug_check left (written false).
+272. Translator PB5: backend.ins.pas's post_6b8 (PA4) is ra_utils' +0x10
+   (0x48FB04 is in ra_utils' data, A5 0x48FAF4; post's A5 is 0x48F438,
+   ra's 0x48F488; tools/cc_globals.py lists the cell under ra_utils):
+   renamed ra_utils_10 and defined in ra_utils.pas.  lir_$begin_
+   compilation clears 0x1B0 bytes there and at lir_main +0x250 and
+   +0x400 (0x400 - 0x250 = 0x1B0; +0x760 is three such records on), so
+   solution_t is 432 bytes, not 112: batch A should pad it.
+273. Translator PB5, ra_utils' data: +0x204 holds three initialized
+   characters, 'ISD', that no instruction reads (kept as ru_204), and
+   +12 is not referenced.  A leftover initialized variable, as
+   add_node's +0x28 (pattern 66)?
+274. Translator PB5: during RA a live range's +72 is its first
+   definition segment, the others chained at the segments' +36
+   (ra_utils_$rematerialize, choose_spill_cost, break_loops_from_spill_
+   victim), while batch A's lr_t calls +72 exposed (the exposed list,
+   chained at +16, which ra_utils' rebuild_db_exposed_lts_list restores
+   for the DB register before add_spill_code).  Likewise lr +28 is the
+   spill cost (a single real), lr +60 the rematerializing instruction,
+   an instruction's +29 and +31 the floating and integer registers live
+   at it, a block's +2 and +6 the most of each live in it.  For batch A
+   to name (ra_utils reads them through views).
