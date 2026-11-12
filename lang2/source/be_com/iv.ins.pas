@@ -55,6 +55,139 @@ type
           right: iv_expr_ptr_t);
       5: (child: array [1..2] of iv_expr_ptr_t);
   end;
+
+  { The induction records (translator PC5), from iv's five other heaps;
+    each kind's records given back go on a free list chained through
+    the field noted. }
+  iv_lts_ptr_t = ^iv_lts_t;
+  iv_addr_ptr_t = ^iv_addr_t;
+  iv_iexpr_ptr_t = ^iv_iexpr_t;
+  iv_class_ptr_t = ^iv_class_t;
+  iv_var_ptr_t = ^iv_var_t;
+
+  { An induction lts (36 bytes): what iv knows of a lifetime segment,
+    whose +24 (lts_t.l24) points back to it.  kind (+0): 1 a candidate
+    (create_induction_lts' default), 2 confirmed as its variable's
+    (ivr_$mark_lifetime_segments_as_induction_variables), 3 (made by
+    create_induction_lts of a kind 2 for a variable with a parent), 4 an
+    induction expression's instantiation; known (+1 bit 6) incr is
+    known; used_known and used_unknown (bits 5, 4) a primary's segment
+    is cur of an instantiation or address mode whose segment's increment
+    is known, not known (ixt_); first_in_bb (+1 bit 2) the first of its
+    variable's list in its block; a kind 4's cur (+8) its variable's
+    segment current where it was found, stale (bit 7) when that does
+    not reach it; ivar (+12) its variable, on whose list (+16) a kind
+    1..3 is chained at next (+16, also the free list's link); incr (+20)
+    the increment from the variable's start, step (+24) the increment
+    the instruction defining it adds, sec (+28) the secondary's
+    segment, repl (+32) the instantiation that replaces it (kinds 1..3,
+    ixt_); a kind 4's induction expression at +20. }
+  iv_lts_t = record
+    h: packed record                    { +0 }
+      kind: 0..255;
+      stale: boolean;                   { +1 .7 }
+      known: boolean;                   { .6 }
+      used_known: boolean;              { .5 }
+      used_unknown: boolean;            { .4 }
+      b1_3: boolean;
+      first_in_bb: boolean;             { .2 }
+      b1_1, b1_0: boolean;
+      w2: 0..65535;                     { +2 }
+      end;
+    lts: lts_ptr_t;                     { +4 }
+    cur: iv_lts_ptr_t;                  { +8 }
+    ivar: iv_var_ptr_t;                 { +12 }
+    next: iv_lts_ptr_t;                 { +16 }
+    case integer of                     { +20 }
+      1: (incr: iv_expr_ptr_t;
+          step: iv_expr_ptr_t;          { +24 }
+          sec: iv_lts_ptr_t;             { +28: its secondary's }
+          repl: iv_lts_ptr_t);           { +32: what replaces it }
+      2: (iexpr: iv_iexpr_ptr_t);
+  end;
+
+  { An induction address mode (28 bytes): an operand (+20; its base
+    register operand +24) of an instruction (+12) addressed by an
+    induction expression (+0), on whose list (+16) it is chained (and
+    on the free list); ilts (+4) the variable's segment current where
+    the instantiation was found, stale (+8) when the operand is not
+    reached by it (ixr_$find_current_lts_for_iv). }
+  iv_addr_t = record
+    iexpr: iv_iexpr_ptr_t;              { +0 }
+    ilts: iv_lts_ptr_t;                 { +4 }
+    stale: boolean;                     { +8 }
+    b9: char;                           { +9 }
+    w10: integer;                       { +10 }
+    instr: instr_ptr_t;                 { +12 }
+    next: iv_addr_ptr_t;                { +16 }
+    opnd: opnd_ptr_t;                   { +20 }
+    base: opnd_ptr_t;                   { +24 }
+  end;
+
+  { An induction expression (22 bytes): an expression (+4) of its class's
+    variable, on its class's list (+8, newest first; also the free
+    list's link) and numbered (+20) one more than the one it was put in
+    front of; its instantiations (induction lts of kind 4, +12) and
+    address modes (+16). }
+  iv_iexpr_t = record
+    class: iv_class_ptr_t;              { +0 }
+    expr: iv_expr_ptr_t;                { +4 }
+    next: iv_iexpr_ptr_t;               { +8 }
+    ltss: iv_lts_ptr_t;                 { +12 }
+    addrs: iv_addr_ptr_t;               { +16 }
+    num: integer;                       { +20 }
+  end;
+
+  { An induction class (20 bytes): on its variable's list (+20/+24)
+    doubly chained (+8 next, also the free list's link; +12 prev) and
+    numbered (+18); w16 what create_induction_class is given. }
+  iv_class_t = record
+    ivar: iv_var_ptr_t;                 { +0 }
+    iexprs: iv_iexpr_ptr_t;             { +4 }
+    next: iv_class_ptr_t;               { +8 }
+    prev: iv_class_ptr_t;               { +12 }
+    w16: integer;                       { +16 }
+    num: integer;                       { +18 }
+  end;
+
+  { An induction variable (62 bytes): the segment it is (+0, a loop
+    head's exposed segment), the loop (+4, the interval head), its
+    increment (+8, once every confirmed segment's is known and equal)
+    and initial value (+12, the one input from outside the loop); its
+    induction lts (+16) and classes (+20, +24 the last); a secondary
+    variable's parent (+28), on whose children list (+54 head, +58
+    last) it is doubly chained (+50 next, +54 its previous); a primary
+    is on iv's list of variables (iv_vars, chained at +50, also the
+    free list's link).  w44 counts its add and sub definitions; kind
+    (+48 bits 7..3) the operand kind of its definition; verified (bit
+    2), known (bit 1: incr is known), final (bit 0: kept by
+    ivr_$finalize_induction_variables, mult (+32) then 1). }
+  iv_var_t = record
+    lts: lts_ptr_t;                     { +0 }
+    head: bb_ptr_t;                     { +4 }
+    incr: iv_expr_ptr_t;                { +8 }
+    init: iv_expr_ptr_t;                { +12 }
+    ltss: iv_lts_ptr_t;                 { +16 }
+    classes: iv_class_ptr_t;            { +20 }
+    classes_last: iv_class_ptr_t;       { +24 }
+    parent: iv_var_ptr_t;               { +28 }
+    mult: iv_expr_ptr_t;                { +32 }
+    l36: integer32;                     { +36 }
+    l40: integer32;                     { +40 }
+    w44: integer;                       { +44 }
+    w46: integer;                       { +46 }
+    f48: packed record                  { +48 }
+      kind: 0..31;                      { .7..3 }
+      verified: boolean;                { .2 }
+      known: boolean;                   { .1 }
+      final: boolean;                   { .0 }
+      b49: 0..255;                      { +49 }
+      end;
+    next: iv_var_ptr_t;                 { +50 }
+    l54: iv_var_ptr_t;                  { +54: a primary's first child,
+                                          a secondary's previous sibling }
+    children_last: iv_var_ptr_t;        { +58 }
+  end;
 { end batch C }
 
 { iv.pas (cc.a88k). }
@@ -113,18 +246,50 @@ function iv_utils_$elaborate_expression(
     opc: integer;
     pos: integer): iv_expr_ptr_t; options(val_param); extern;
 
-{ IV_UTILS_$LIVE_RANGE_FROM_ELABORATED_EXPRESSION - 0x23B8EE, 0x2C0 bytes;
-  called from oli.  Frame 8:a; 12:al; 16:a; 20:a; 24:a; 28:a. }
-procedure iv_utils_$live_range_from_elaborated_expression(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr;
-    p4: univ_ptr;
-    p5: univ_ptr;
-    p6: univ_ptr); options(val_param); extern;
+{ IV_UTILS_$CREATE_OPERAND_FROM_EXPRESSION - operand o made the value of
+  e in register file rclass, the instructions after at in code_bb.
+  0x23B876, 0x78 bytes; called in iv (declared before its body: the
+  image's .blocks list puts it with the routines declared first).
+  Frame 8:a; 12:l; 16:l; 20:l; 24:w. }
+procedure iv_utils_$create_operand_from_expression(
+    o: opnd_ptr_t;
+    at: instr_ptr_t;
+    code_bb: bb_ptr_t;
+    e: iv_expr_ptr_t;
+    rclass: integer); options(val_param); extern;
 
-{ IV_UTILS_$COMPARE_ADDRESS_EXPRESSIONS - 0x23D5A0, 0x6C bytes; called
-  from oli.  Frame 8:al; 12:al.  Result: D0 (callers: D0b2). }
+{ IV_UTILS_$CREATE_EXPRESSION_FROM_LTS - the expression segment s holds,
+  seen from the loop headed by head.  0x23C44A, 0x278 bytes; called in
+  iv (declared first, as above).  Frame 8:a; 12:l.  A0. }
+function iv_utils_$create_expression_from_lts(
+    s: lts_ptr_t;
+    head: bb_ptr_t): iv_expr_ptr_t; options(val_param); extern;
+
+{ IV_UTILS_$CREATE_EXPRESSION_FROM_OPERAND - operand o's expression, seen
+  from the loop headed by head.  0x23C702, 0xA8 bytes; called in iv.
+  Frame 8:a; 12:l.  A0. }
+function iv_utils_$create_expression_from_operand(
+    o: opnd_ptr_t;
+    head: bb_ptr_t): iv_expr_ptr_t; options(val_param); extern;
+
+{ IV_UTILS_$LIVE_RANGE_FROM_ELABORATED_EXPRESSION - what an elaborated
+  expression e is as an operand: kind 1 a live range lr (an operation's
+  instructions made at the head of bb, their operands' +8 the live
+  ranges), 2 an operand op (in e), 3 a constant value.  0x23B8EE, 0x2C0
+  bytes; called from oli.  Frame 8:a; 12:a; 16:a; 20:a; 24:a; 28:a (all
+  by address: oli passes its locals and a module cell for bb). }
+procedure iv_utils_$live_range_from_elaborated_expression(
+    var e: iv_expr_ptr_t;
+    var bb: bb_ptr_t;
+    out lr: lr_ptr_t;
+    out value: integer32;
+    out op: opnd_ptr_t;
+    out kind: integer); extern;
+
+{ IV_UTILS_$COMPARE_ADDRESS_EXPRESSIONS - a and b are the same address
+  (both constants, or the same less a constant added or subtracted).
+  0x23D5A0, 0x6C bytes; called from oli.  Frame 8:al; 12:al.  Result:
+  D0 (callers: D0b2). }
 function iv_utils_$compare_address_expressions(
-    p1: univ_ptr;
-    p2: univ_ptr): boolean; options(val_param); extern;
+    a: iv_expr_ptr_t;
+    b: iv_expr_ptr_t): boolean; options(val_param); extern;
