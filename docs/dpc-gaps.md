@@ -814,3 +814,50 @@ utils_ins_$operands_instruction), 15 (bb_interval and
 find_suitable_driving_lts_for_tst returning a parameter) and 24 (calls
 as right operands of `and'); the rewrites are in
 tools/cc_gap_rewrites.txt under tr_utils.
+
+33. **A function returning a 4-character array.**
+   dmp_$three_char_lr_name_from_lr (cc.a88k 0x232010) returns a live
+   range's name, `packed array [1..4] of char', in D0 (`move.l
+   (-8,A6),D0'; the callers store D0 and pass its address to vfmt).
+   dpc: "functions returning dmp_$lr_name_t are not supported yet
+   (codegen-patterns 3: result convention unknown)".  The gate
+   rewrites the type to integer32 in backend.ins.pas (dmp.pas reads
+   and writes the result through a variant).  Reproducer:
+
+       module g33;
+       type n_t = packed array [1..4] of char;
+       var m: n_t;
+       function f(i: integer): n_t; options(val_param);
+       var r: n_t;
+       begin
+         r[1] := 'a'; r[2] := 'b'; r[3] := 'c'; r[4] := chr(i);
+         f := r;
+       end;
+       procedure p;
+       begin
+         m := f(32);
+       end;
+
+34. **A string constant assigned to a short character array.**
+   dmp's print_memory_home (0x2304E8) names a vat with 9-character
+   constants, dmp_$instr_print_single_line a literal's kind with
+   7-character ones (copied `move.l (A1)+; move.w (A1)+; move.b
+   (A1)+'), print_lts_list tags with 4-character ones stored as
+   longword immediates (`move.l #0x4A425020,(-36,A6)', 'JBP ').  dpc:
+   "assigning a record or array that is not a variable is not
+   supported yet" (7, 9 characters) and "a 4-character string constant
+   as a 4-byte scalar value is not supported yet".  The gate stores one
+   character instead.  Reproducer:
+
+       module g34;
+       var a: packed array [1..9] of char;
+           b: packed array [1..4] of char;
+       procedure p;
+       begin
+         a := 'externdef';
+         b := 'JBP ';
+       end;
+
+Translator PB3 (dmp.pas) also met gap 4 (dmp_$instruction writes an
+IL node kind as an enumerated value: `write('<object.kind= ',
+an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).

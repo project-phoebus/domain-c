@@ -292,6 +292,73 @@ read before the translation and the translation agrees with;
   in one pool before its second block, and LOADL immediates of
   literals get a pool of their own.
 
+## Registers and allocation as the dumps show them (dmp.pas; new)
+
+Translator PB3 (dmp.pas, the phases' dumps, 0x22F188..0x2348D0).
+
+- A live range's register is its +2 byte once one is assigned (+3
+  bit 7); rrp's ip_reg (bit 15) and fp_reg (bit 14) say which file.
+  Without either, register 30 is the integer condition codes and 31
+  the floating ones: the condition codes are allocated as registers
+  ("icc", "fcc"; print_register_if_assigned 0x2306D0, ", IP CONDITION
+  CODES").  So in a live range's numbering R30/R31 double as the two
+  condition code registers; in the encoding R31 reads as zero (above).
+- dmp names three registers specially (0x232010): the one
+  target_properties +0x18 holds ("pc_", the PC-like register lst
+  prints as "PC"), the stack frame's live range (the conventions'
+  record, at_backend_4fc, +116: "sf_"), and otherwise "rN"/"fN".
+- Register sets: integer registers a longword (bit k is Rk); floating
+  registers 64 bits, as two longwords with 32..63 first (the 64
+  singles; a double an even/odd pair).  Each routine has, from its
+  calling conventions (the routine's IL node +332..+364), the floating
+  and integer registers to preserve, not to preserve and not to modify;
+  the registers written (rtn +148, +152) and, from RA, saved (+160,
+  +164: lst's pe_info_t, the entry mask).  Each block has its written
+  registers (+122, +126) and the allocator's counts (+0..+7): live on
+  entry and exit, the most live at once, and those that pass through,
+  for each file.  A call or SVC carries after its operands the sets it
+  clobbers (floating +44 + 12n, integer +52 + 12n).
+- The frame: rtn +208 the stack frame's register ("SF = Rn"); +222 and
+  +224 two registers saved at [04,SF] and [12,SF] (31 or -1 for none;
+  the flags "save rpc" and "save sl", +226 bits 6 and 7, the return
+  address and the static link most likely); +218/+220 the registers'
+  save area ("regs saved from [n,SF] to [m,SF]"); from ASM the
+  prologue's offsets: from the ECB (+214), with a different DB (+212),
+  after the stack is pushed (+216), after all registers are saved
+  (+210); +176 the supplied argument block's end.  Flags at +226..+228:
+  contains call, needs frame, needs_db, internal db, db never
+  referenced, quad aligned, no return block, asynchronous return,
+  shares frame with lexical parent, no_memory_read/_write,
+  no_arg_block_read/_write, no_pointer_dereference, no_fp_cc_write,
+  no_ip_cc_write, common/static/uplevel-dynamic storage untouched.
+- The allocator (RA, during its dumps): a live range's conflicts are
+  records on both live ranges' lists (+44; the next pointers tagged in
+  their two low bits); +56 its remaining conflicts; rrp's life_mark
+  element means "never spill", +3 bit 0 "spill victim"; +80 the
+  conflicting register set, +64 the preferenced one; the allocation
+  order is chained at +52 ("CHROMATIC NUMBER", "ALLOCATION ORDER AND
+  CONFLICTS").  An instruction's +28..+31 are four counts during RA.
+- The scheduler: an instruction's +2 bits 3..0 (signed) are its stalls
+  from the SCHED phase (lst's cycle column).  From ASM, +2 bit 7 marks
+  an instruction with a floating companion and bit 6 one paired with
+  a companion NOP.
+- Branches and calls (opcodes with instruction_assembly +8 bit 5): +3
+  bit 7 squashes the delay slot on sequential flow (s_seq) and bit 6
+  on transfer (s_xfer): dmp's ".sn", ".st", ".ss", ".sa" are lst's
+  .SN, .ST, .SF, .SA; +3 bit 5 possible_nonlocal_return, bit 4
+  no_return, bit 3 final_call, bits 1..0 a function key (1 cos, 2 sin,
+  3 cos and sin together: "cssn").  Opcodes with instruction_attributes
+  +14 bit 0 that set the condition codes take a suffix by +3 bits 5..4:
+  .cc, .ucc, .scc, .zcc.  Loads and stores: +3 bits 7..6 the
+  modification (" []++" post, " ++[]" pre), bits 5..4 the qualifier
+  (lock, unlock, physical).  An instruction's +41 counts the floating
+  registers it writes.
+- Each phase's place (at_backend_phase, backend.ins.pas's phase$
+  constants): ISC 0, FGA, MMT, DFA, KONST, HAL, TRANS, LIFE, COM, IV,
+  OLI, XTP, SCHED 12, RA 13, POST, JBR, ASM 16, DBG_LIFE, ZZZZZ, BIN 19;
+  so the scheduler runs before register allocation, and again (as
+  pass 1 of ASM's pipeline rules) after it.
+
 ## The opcodes' encodings (instruction_assembly; new)
 
 From the section's data (asm.pas includes it as instr_assembly.init;

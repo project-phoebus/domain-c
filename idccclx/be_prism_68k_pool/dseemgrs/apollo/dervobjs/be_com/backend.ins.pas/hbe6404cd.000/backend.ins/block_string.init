@@ -1,0 +1,17 @@
+{ block_string.init - a DSEE derived object of be_com/backend.ins.pas
+  (cc.a88k only): the names of the basic block kinds (block$t), 4 of 6 characters;
+  dmp_$basic_block_header prints a block's kind and path_to with them.
+  Included by dmp.pas after its other inserts.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k: dmp's data +0x2E8 (24 bytes, set by .rwdi).
+
+  Not known from the original: the declaration's form (its name is the
+  file's). }
+
+var
+  block_string: array [block$t] of packed array [1..6] of char := [
+    'normal',
+    'start ',
+    'final ',
+    'return'];

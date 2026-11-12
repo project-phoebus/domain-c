@@ -1493,3 +1493,27 @@ revisited.
    reads the end block's number when it is nil (process_routine's
    calls).  Slips of the original?
 
+
+181. Translator PB3, dmp.pas: dmp reaches mrh.pas's heap_names, heaps
+   and heap_count (mrh's data +0x4000, +0x4400, +0x481C: 0x2EDFB8,
+   0x2EE3B8, 0x2EE7D4) absolutely, as mmt and dmp reach alias.pas's
+   class_names (question 170).  dmp.pas declares them `extern' with
+   mrh.pas's names; mrh.pas declares them as plain module variables.
+   For a link mrh.pas would `define' them (and mrh.ins.pas declare
+   them extern): which?
+182. Translator PB3, dmp.pas: dmp_$get_line_number and dmp_$instruction
+   read one parameter (fp+8), while the frames the headings were read
+   from suggested two and three (fg_utils', lir's pushes).  The headings
+   are narrowed to the one parameter; whoever translates fg_utils and
+   lir should check their calls (an argument pushed for nothing, or a
+   different routine).
+183. Translator PB3, dmp.pas: two slips kept as the image has them:
+   dmp_$instr_print_single_line's "Bad operand numbers" passes the
+   operand's number zero-extended to a longword for `%WD' (vfmt reads
+   the high word: 0); display_ra_info never reaches its displacement
+   loop and "PREFERENCED SET" (pattern 120).  Slips of the original?
+184. Translator PB3, dmp.pas: the IL node kinds' enumeration (an_kind_t,
+   237 names) is written by dmp_$instruction as add_node.pas writes it;
+   both units declare it locally (dmp.pas copies add_node.pas's
+   declaration).  Should it move to il.ins.pas (or an insert of its
+   own)?

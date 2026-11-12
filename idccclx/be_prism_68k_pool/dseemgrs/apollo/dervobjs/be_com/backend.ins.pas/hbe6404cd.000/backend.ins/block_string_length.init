@@ -1,0 +1,13 @@
+{ block_string_length.init - a DSEE derived object of be_com/backend.ins.pas
+  (cc.a88k only): block_string's lengths.
+  Included by dmp.pas after its other inserts.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k: dmp's data +0x2E0 (8 bytes, set by .rwdi).
+
+  Not known from the original: the declaration's form (its name is the
+  file's). }
+
+var
+  block_string_length: array [block$t] of integer := [
+    6, 5, 5, 6];

@@ -231,3 +231,11 @@ lang2/source/be_com/asm.pas	s/^(  \{ Its literals\. \})$/%var gap25b;\n%if gap25
 lang2/source/be_com/asm.pas	s/^(2:)$/%endif { gap 25 }\n$1/
 lang2/source/be_com/asm.pas	s/^(                case form of)$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
 lang2/source/be_com/asm.pas	s/^(                \{ The forms done\. \})$/%endif { gap 25 }\n$1/
+# gap 4 (dmp): write of an IL node kind (dropped, for the check)
+lang2/source/be_com/dmp.pas	s/^(\s*)write\(.*\);\s*$/${1}dmp_3c0 := dmp_3c0; { gap 4 }\n/
+# gap 33 (dmp): a function returning a 4-character array in D0 (a longword, for the check)
+lang2/source/be_com/backend.ins.pas	s/^(\s*)dmp_\$lr_name_t = packed array \[1\.\.4\] of char;/${1}dmp_\$lr_name_t = integer32; { gap 33 }/
+# gap 34 (dmp): a string constant assigned to a 9-character array (one character, for the check)
+lang2/source/be_com/dmp.pas	s/^(\s*)(\d+): name := '[^']*';/${1}${2}: name[1] := 'x'; { gap 34 }/
+lang2/source/be_com/dmp.pas	s/^(\s*)(\d+): lname := '[^']*';/${1}${2}: lname[2] := 'x'; { gap 34 }/
+lang2/source/be_com/dmp.pas	s/^(\s*)tag := '....'(;?)$/${1}tag[1] := 'x'${2} { gap 34 }/
