@@ -237,8 +237,6 @@ lang2/source/be_com/lir_utils.pas	s/^procedure lir_utils_\$fix_store_through_lrs
 lang2/source/be_com/lir_utils.pas	s/^(\s*)new_db_lts\);/$1lir_utils_gap21); { gap 21 }/
 # gap 32 (lir.pvt.pas, translator PA4): the initialized section spill_instr_forms named as its variable (renamed, for the check)
 lang2/source/be_com/lir.pvt.pas	s/^var \(spill_instr_forms\)/var (spill_instr_forms_s) { gap 32 }/
-# gap 36 (lir_utils, translator PA4): a pointer result of a call through a routine parameter (nil, for the check)
-lang2/source/be_com/lir_utils.pas	s/^(\s*)db_lts := new_db_lts;/$1db_lts := nil; { gap 36 }/
 # gap 25 (lir_utils, translator PA4): fix_store_through_lrs exceeds dpc's virtual registers (the stores after a written store-through register left out of the check)
 lang2/source/be_com/lir_utils.pas	s/^(        \{ The stores after the instruction\. \})$/%var gap25a;\n%if gap25a %then { gap 25 }\n$1/
 lang2/source/be_com/lir_utils.pas	s/^(        \{ The stores done\. \})$/%endif { gap 25 }\n$1/

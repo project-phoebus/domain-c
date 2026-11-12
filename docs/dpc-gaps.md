@@ -39,6 +39,9 @@ when this tree is merged).
 - **Gap 35 (the internal error): fixed in c83ade9** (a plain bug fix:
   a call inside another unit's array index cleared the held array
   bases).  sched_utils' temporary removed.
+- **Gap 36 (a pointer result of a call through a routine pointer or
+  parameter): fixed in 3bad22b.**  Its rule removed (lir_utils still
+  needs gap 21's stand-in for the nested new_db_lts).
 - Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
   spiller finds values to spill but runs out of virtual register
   numbers (240 per class) adding the reloads, and the colouring's
@@ -48,7 +51,7 @@ when this tree is merged).
   purpose (the image cannot tell it from `repeat ... until false'):
   write such loops with a label.
 - All compile best effort (a warning; `--strict' still refuses).  Their
-  rewrites are gone from tools/cc_gap_rewrites.txt (282 rules removed in all);
+  rewrites are gone from tools/cc_gap_rewrites.txt (283 rules removed in all);
   the full gate is clean without them.
 - Gaps 4 (write/writeln) and 7 (real arithmetic) are not being worked
   on in dpc for now (the domain-pascal owner's choice).
