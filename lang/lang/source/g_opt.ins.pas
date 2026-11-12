@@ -442,99 +442,82 @@ type
   end;
   g_opt_bb_list_ptr_t = ^array [1..16383] of g_opt_bb_ptr_t;
 
-  { opt_main's +0x4C: by variable number (from 0, 28 bytes each: `lsl
-    #2; neg; lsl #3; add', 28v), what the optimizer knows of the
-    routine's variable v: node the declaration or tree that gives its
-    value (kind 123, 130, 134 met in the reg_ units; nil none), size
-    (+16) its bytes (defined_var compares 4), flags (+24, +25: +25 bit
-    6 tested by defined_var).  The other words are not read by the
-    translated units. }
-  g_opt_vinfo_t = record
-    node: il_$node_ptr_t;               { +0 }
-    unused_4: array [1..3] of integer32;  { +4 }
-    size: integer32;                    { +16 }
-    unused_20: integer32;               { +20 }
-    flags: packed record                { +24 }
-      b24: 0..255;
-      b25_7: boolean;
-      b25_6: boolean;                   { .6 }
-      b25_5, b25_4, b25_3, b25_2, b25_1, b25_0: boolean;
-    end;
-    unused_26: integer;                 { +26 }
-  end;
-  g_opt_vinfo_ptr_t = ^array [0..9000] of g_opt_vinfo_t;
-
 var
-  { opt_main.pas's +0x20 and +0x24 (cc.m68k 0x2D2F10, 0x2D2F14): the
-    memory pools (mem_$pool_t) of the register allocator: +0x20 its
-    ranges and bit vectors (reg_alloc's mem_$alloc of the ranges,
-    release_space; reg_life, reg_vars), +0x24 the chunks of reg_alloc's
-    own pool (initpool, freepools). }
-  opt_main_20: extern univ_ptr;
-  opt_main_24: extern univ_ptr;
+  { opt_main.pas's data (A5 0x2D2EF0 in cc.m68k, 0x49389C in cc.a88k;
+    the same offsets in both), the cells other units read, in address
+    order; opt_main.pas defines them with its own cells between, in the
+    image's layout (+0x0 .. +0x8009B). }
 
-  { opt_main.pas's +0x4C (cc.m68k 0x2D2F3C): by variable number, the
-    variables' g_opt_vinfo_t (opt_reachdef, opt_strength, reg_alloc,
-    reg_cost_68k, reg_life). }
-  opt_main_4c: extern g_opt_vinfo_ptr_t;
-
-  { opt_main.pas's data +0x8 (cc.m68k 0x2D2EF8, reached absolutely):
-    a memory pool cg_top's codegen empties at the end. }
+  { +0x8 (cc.m68k 0x2D2EF8, reached absolutely): the dom_matrix memory
+    pool (mem_$pool_t: opt_dom's rows), which cg_top's codegen empties at
+    the end. }
   opt_main_8: extern univ_ptr;
 
-  { opt_main.pas's +0x18 (cc.m68k 0x2D2F08): the memory pool
-    (mem_$pool_t) the chains are allocated from (opt_livevar's
-    build_du_chains, opt_loop, opt_reachdef, opt_strength). }
-  opt_main_18: extern univ_ptr;
-
-  { opt_main.pas's +0x14 (cc.m68k 0x2D2F04): the memory pool
-    opt_reachdef's tables and sets come from (initrd; releaserd empties
+  { +0x14 (cc.m68k 0x2D2F04): the memory pool opt_reachdef's tables and
+    sets come from (`opt_reachdef various'; initrd; releaserd empties
     it). }
   opt_main_14: extern univ_ptr;
 
-  { opt_main.pas's +0x4C (cc.m68k 0x2D2F3C): the variables' types, by
-    number from 0 (compute_variable_type_descriptors; opt_reachdef,
-    opt_strength, reg_alloc, reg_cost_68k, reg_life). }
-  opt_var_types: extern g_opt_vtypes_ptr_t;
+  { +0x18 (cc.m68k 0x2D2F08): the memory pool (`var_chain') the chains
+    and the region tables' entries are allocated from (opt_main,
+    opt_livevar's build_du_chains, opt_loop, opt_reachdef,
+    opt_strength). }
+  opt_main_18: extern univ_ptr;
 
-  { opt_main.pas's +0x5A, +0x60, +0x62 (cc.m68k 0x2D2F4A, 0x2D2F50,
-    0x2D2F52): the routine's basic blocks, and the most region
-    statements and variables of a routine (opt_main; opt_reachdef's
-    tables are allocated for them; reg_vars). }
-  opt_nblocks: extern g_opt_num_t;
-  opt_max_stmts: extern g_opt_num_t;
-  opt_max_vars: extern integer;
+  { +0x20 and +0x24 (cc.m68k 0x2D2F10, 0x2D2F14): the memory pools of
+    the register allocator (`reg_alloc graphs', `reg_alloc pools'):
+    +0x20 its ranges and bit vectors (reg_alloc's mem_$alloc of the
+    ranges, release_space; reg_life, reg_vars), +0x24 the chunks of
+    reg_alloc's own pool (initpool, freepools). }
+  opt_main_20: extern univ_ptr;
+  opt_main_24: extern univ_ptr;
 
-  { opt_main.pas's +0x40, +0x44, +0x48 (cc.m68k 0x2D2F30, 0x2D2F34,
-    0x2D2F38): by block number (from 1), the variables live at the
-    block's exit, those it does not assign, and those it uses before
-    assigning them (opt_livevar's buildsets and lvanalyze; reg_life,
-    reg_cost_68k). }
+  { +0x40, +0x44, +0x48 (cc.m68k 0x2D2F30, 0x2D2F34, 0x2D2F38): by block
+    number (from opt_first_block: opt_main's tables moved by adjust_ptr),
+    the variables live at the block's exit, those it does not assign,
+    and those it uses before assigning them (opt_livevar's buildsets and
+    lvanalyze; reg_life, reg_cost_68k). }
   opt_live_out: extern g_opt_varsets_ptr_t;
   opt_not_killed: extern g_opt_varsets_ptr_t;
   opt_used: extern g_opt_varsets_ptr_t;
 
-  { opt_main.pas's cells (A5 0x2D2EF0 in cc.m68k, 0x49389C in cc.a88k)
-    read by the other units, absolutely.  opt_main defines them. }
+  { +0x4C (cc.m68k 0x2D2F3C): the variables' types, by number from 0
+    (compute_variable_type_descriptors; opt_reachdef, opt_strength,
+    reg_alloc, reg_cost_68k, reg_life: base the type, size its bytes,
+    flags.ranged). }
+  opt_var_types: extern g_opt_vtypes_ptr_t;
+
   opt_dfs_number: extern g_opt_nums_ptr_t;  { +0x50: by block number,
                                           its depth-first number (dfs;
                                           find_loops) }
   opt_dfs_block: extern g_opt_nums_ptr_t;   { +0x54: by depth-first
                                           number, the block (dfs counts
                                           down; find_loops; 6 units) }
+  opt_nblocks: extern g_opt_num_t;      { +0x5A (0x2D2F4A): the most
+                                          basic blocks of a routine
+                                          (opt_reachdef's tables) }
   opt_region: extern g_opt_num_t;       { +0x5E: the entry of opt_4009c
                                           find_var looks in (10 units) }
-  opt_main_60: extern g_opt_num_t;      { +0x60 (0x2D2F50): the
-                                          routine's statements from
-                                          opt_region (reg_vars's
+  opt_max_stmts: extern g_opt_num_t;    { +0x60 (0x2D2F50): the most
+                                          region statements of a routine
+                                          (opt_reachdef's tables; reg_vars's
                                           get_range: the last is
-                                          opt_region + opt_main_60 - 1) }
+                                          opt_region + opt_max_stmts - 1) }
+  opt_max_vars: extern integer;         { +0x62 (0x2D2F52): the most
+                                          variables of a routine }
   opt_last_block: extern g_opt_num_t;   { +0x68: the routine's last
                                           basic block (11 units) }
   opt_first_block: extern g_opt_num_t;  { +0x6A: its first (11 units) }
-  opt_track_lines: extern boolean;      { +0x6C: general_opts keeps
+  opt_track_lines: extern boolean;      { +0x6C: set once reaching
+                                          definitions have run (g_opt,
+                                          recompute_node_lists): the
+                                          block starts and the use and
+                                          definition statements are not
+                                          made again; general_opts keeps
                                           il_d0 at each statement's line
-                                          (opt_reachdef) }
+                                          (opt_reachdef; the name is
+                                          translator V's, docs/questions.md
+                                          113) }
   opt_dom: extern array [0..65535] of g_opt_dom_row_ptr_t;  { +0x9C
                                           (0x2D2F8C, 0x493938): by block
                                           number, its row of the dominance

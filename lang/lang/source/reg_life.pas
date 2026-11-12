@@ -66,7 +66,7 @@ type
   rl_longs_ptr_t = ^rl_longs_t;
 
   { What type_exp tells of a type, as get_rlen reads it (28 bytes; the
-    optimizer's g_opt_vinfo_t is passed the same way). }
+    optimizer's g_opt_vtype_t is passed the same way). }
   rl_texp_t = array [0..6] of integer32;
 
   { A list cell of a strength reduction temporary's record
@@ -827,7 +827,7 @@ begin
     if t^.xw[36] = 5 then
       rr^.rlen := 5
     else
-      rr^.rlen := get_rlen(opt_main_4c^[vn]);
+      rr^.rlen := get_rlen(opt_var_types^[vn]);
   end
   else begin
     vn := t^.xw[8];

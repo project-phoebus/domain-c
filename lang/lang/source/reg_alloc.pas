@@ -695,7 +695,7 @@ var
 
     A variable (109): not when its entry's +16 bit 10 is set, its +32
     has bits 0, 8, 12 or 21, the optimizer knows no node for it
-    (opt_main_4c), or opt_region's entry has flag 3; yes when of class
+    (opt_var_types), or opt_region's entry has flag 3; yes when of class
     5; a kind 123 needs a -CPU of 160, 5700, FPA1 or MATHLIB and
     il_180's +376 bit 7; the node must be of kind 134, 123 or 130 unless
     the optimizer's +25 bit 6 is set; a 134 only when at most 4 bytes.
@@ -711,7 +711,7 @@ var
     yes.
 
     0x0C45F8, 0x286 bytes, link #-24: the result in D0 cleared first,
-    `st' on the yes paths; opt_main_4c indexed by 28v; the kinds
+    `st' on the yes paths; opt_var_types indexed by 28v; the kinds
     compared 134, 123, 130; the -CPU set's word (0x2C3670) `andi.w
     #0x3FFC; lsr.w #2; andi.w #0x714'; the size class's sets 0x2040
     (6, 13), 0x30 (4, 5), 0x70 (4..6); the kinds 188 and 140 evaluated
@@ -739,13 +739,13 @@ var
     if t^.kind = 109 then begin
       if (t^.xl[8] & 16#201101) <> 0 then
         return;
-      if opt_main_4c^[v].node = nil then
+      if opt_var_types^[v].base = nil then
         return;
       if t^.xw[36] = 5 then begin
         defined_var := true;
         return;
       end;
-      if opt_main_4c^[v].node^.kind = 123 then begin
+      if opt_var_types^[v].base^.kind = 123 then begin
         if cargs_$options.cpu * [2, 4, 8..10] = [] then
           return;
         if (ord(il_180^.xc[376]) & 16#80) = 0 then
@@ -753,13 +753,13 @@ var
       end;
       if (opt_4009c[opt_region]^.vars^[v]^.flags & 8) <> 0 then
         return;
-      if not opt_main_4c^[v].flags.b25_6 then
-        if (opt_main_4c^[v].node^.kind <> 134) and
-           (opt_main_4c^[v].node^.kind <> 123) and
-           (opt_main_4c^[v].node^.kind <> 130) then
+      if not opt_var_types^[v].flags.ranged then
+        if (opt_var_types^[v].base^.kind <> 134) and
+           (opt_var_types^[v].base^.kind <> 123) and
+           (opt_var_types^[v].base^.kind <> 130) then
           return;
-      if opt_main_4c^[v].node^.kind = 134 then
-        defined_var := opt_main_4c^[v].size <= 4
+      if opt_var_types^[v].base^.kind = 134 then
+        defined_var := opt_var_types^[v].size <= 4
       else
         defined_var := true;
     end

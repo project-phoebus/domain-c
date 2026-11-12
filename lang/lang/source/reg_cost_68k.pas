@@ -331,10 +331,10 @@ begin
                  ((opt_4009c[opt_region]^.vars^[v]^.flags & 1) <> 0) then
                 rr^.flags := rr^.flags + [2]
               else if rr^.node^.kind = 109 then begin
-                if (v <> 0) and (opt_main_4c^[v].node <> nil) then begin
-                  if opt_main_4c^[v].node^.kind = 123 then
+                if (v <> 0) and (opt_var_types^[v].base <> nil) then begin
+                  if opt_var_types^[v].base^.kind = 123 then
                     rr^.flags := rr^.flags + [4]
-                  else if opt_main_4c^[v].node^.kind = 130 then
+                  else if opt_var_types^[v].base^.kind = 130 then
                     rr^.flags := rr^.flags + [2]
                   else
                     rr^.flags := rr^.flags + [3];
@@ -359,8 +359,8 @@ begin
               else if 2 in rr^.flags then
                 if rr^.flags * [3, 4] <> [] then
                   if v <> 0 then
-                    if opt_main_4c^[v].node <> nil then
-                      if opt_main_4c^[v].node^.kind = 130 then
+                    if opt_var_types^[v].base <> nil then
+                      if opt_var_types^[v].base^.kind = 130 then
                         rr^.flags := rr^.flags - [3, 4];
             end;
 
