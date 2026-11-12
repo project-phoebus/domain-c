@@ -829,9 +829,11 @@ cc.m68k unless marked.
     sign-extends D1's low word, 0.  Item 75's reuse of a register's
     constant, for a pointer compared with nil.  dpc tests A3 itself.
 111. **A pointer test after a store of another pointer's link.**
-    mmt_utils' fill_in_ltss (0x25732A..0x257358) and
-    free_mmt_seqs_and_ltss (0x256CE4) unlink an instruction or segment
-    with `move.l A3,(4,A0)' and branch on the flags of that move (`bne')
-    for the following `if next = nil': the store of the value tested
-    sets the condition codes, so no `tst' is emitted.  dpc tests again.
+    mmt_utils' free_mmt_seqs_and_ltss (0x256CE4) and
+    mmt_utils_$analyze_one_bb (0x257942) unlink an instruction or live
+    range with `move.l A3,(4,A0)' (or `(12,A1)') and branch on the
+    flags of that move (`bne') for the following `if next = nil': the
+    store of the value tested sets the condition codes, so no `tst' is
+    emitted (fill_in_ltss's like unlinking, 0x257342, does `tst.l').
+    dpc tests again.
 
