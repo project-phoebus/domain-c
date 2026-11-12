@@ -12,10 +12,8 @@
   testcc; the same address: sameaddr) and edit them (detach, makejump,
   makecbr, moverefcell, movejump, reversecond, label_merge).
 
-  TODO(pascal) final.pas is not finished: 110 of its 120 routines are
+  TODO(pascal) final.pas is not finished: 112 of its 120 routines are
   translated.  Not yet translated (cc.m68k address, bytes):
-    0x10CD7E 0x316  final_$redundant_lea
-    0x10D28A 0x372  final_$cmp_branch_becomes_eor
     0x10D600 0x75A  opttest
     0x10DD5A 0x1DC  transform_ptr_in_d_use
     0x10DF52 0x7E2  optmove
@@ -3403,6 +3401,96 @@ begin
   final_$redundant_compare := r;
 end;
 
+{ final_$redundant_lea - lea c (op 12) of (An) or an indexed operand
+  (modes 2, 4) repeats an earlier lea into the same register of the
+  same address (the same base, and for mode 4 the same index and
+  scale), looking back past instructions that kill neither register up
+  to a label, a call or branch or the section's head; and from there to
+  c the destination register, wherever it is changed, only stepped by
+  an addq or subq of an integer constant (ops 24..20 add, 33..29
+  subtract) or by postincrement or predecrement (the operand's size),
+  so that the displacement it then holds is c's.
+
+  0x10CD7E, 0x316 bytes, no A5 load: the earlier lea in D5, then the
+  displacement in D5; the ops compared in turn; the flags in D2 (found,
+  then reached c), D4 and the answer in D3. }
+
+function final_$redundant_lea(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+var
+  found: boolean;
+  done: boolean;
+  r: boolean;
+  p: codegen_$cell_ptr_t;
+  q: codegen_$cell_ptr_t;
+  disp: integer32;
+begin
+  found := false;
+  done := found;
+  r := found;
+  p := c;
+  if (c^.op = 12) and (c^.ads1.f1 in [2, 4]) then begin
+    repeat
+      p := prvlcc(p);
+      if (p^.op = 12) and (p^.ads1.f2 = c^.ads1.f2) and
+         ((p^.ads1.f1 = 2) or
+          ((p^.ads1.f4 = c^.ads1.f4) and (p^.ads1.f3 = c^.ads1.f3) and
+           (p^.ads1.f1 = 4))) and
+         sameaddr(p^.ads2, c^.ads2) then begin
+        found := true;
+        q := p;
+      end
+      else begin
+        done := (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+                final_$reg_is_killed(p, c^.ads1.f2);
+        if c^.ads1.f1 = 4 then
+          done := done or final_$reg_is_killed(p, c^.ads1.f3);
+      end;
+      done := done or (p = fn_sect^.head);
+    until found or done;
+    if found then begin
+      done := false;
+      disp := q^.ads1.y;
+      repeat
+        p := nxtlcc(p);
+        found := p = c;
+        if not found then
+          if final_$reg_is_killed(p, c^.ads2.f2) then
+            if p^.ads2.f1 = 1 then
+              done := true
+            else begin
+              if (p^.ads1.f1 = 3) and
+                 (il_$node_ptr_t(p^.ads1.x)^.kind = 81) and
+                 ((p^.op = 24) or (p^.op = 23) or (p^.op = 22) or
+                  (p^.op = 21) or (p^.op = 20)) then
+                disp := disp + il_$node_ptr_t(p^.ads1.x)^.int_value
+              else if (p^.ads1.f1 = 3) and
+                      (il_$node_ptr_t(p^.ads1.x)^.kind = 81) and
+                      ((p^.op = 33) or (p^.op = 32) or (p^.op = 31) or
+                       (p^.op = 30) or (p^.op = 29)) then
+                disp := disp - il_$node_ptr_t(p^.ads1.x)^.int_value
+              else if has_xcrement_addressing(p^.ads1) or
+                      has_xcrement_addressing(p^.ads2) then begin
+                if (p^.ads1.f1 = 8) and (p^.ads1.f2 = c^.ads2.f2) then
+                  disp := disp + final_$sizeof(p, 1);
+                if (p^.ads2.f1 = 8) and (p^.ads2.f2 = c^.ads2.f2) then
+                  disp := disp + final_$sizeof(p, 2);
+                if (p^.ads1.f1 = 9) and (p^.ads1.f2 = c^.ads2.f2) then
+                  disp := disp - final_$sizeof(p, 1);
+                if (p^.ads2.f1 = 9) and (p^.ads2.f2 = c^.ads2.f2) then
+                  disp := disp - final_$sizeof(p, 2);
+              end
+              else
+                done := true;
+            end;
+      until found or done;
+      if found then
+        r := disp = c^.ads1.y;
+    end;
+  end;
+  final_$redundant_lea := r;
+end;
+
 { final_$redundant_movea - movea c (kind 4, op 5) of a label or node
   address (modes 12, 15: `btst' in #0x9000) is already done by an
   earlier identical movea, looking back past instructions that do not
@@ -3471,6 +3559,114 @@ begin
       detach(b);
   end;
   final_$unity_compare_and_branch := r;
+end;
+
+{ final_$cmp_branch_becomes_eor - compare c (of a data register or an
+  immediate with c's destination register) followed by bne (145) or beq
+  (144) to a label of its own (final_$is_sole_label_consumer), a load
+  of 0 (1 after beq) into that register, a bra (kind 17, ops 120..122),
+  the label, a load of 1 (0) of the same size into it and a label:
+  made an eor of c's operands (kind c's, op 45 for kind 8 else 42, plus
+  half c's destination size), an sne (kind 19, op 131) of the register
+  and an and of the immediate 1 (kind 8, op 39 plus half the loads'
+  size), the six cells but the labels removed.  Whether it was done.
+
+  0x10D28A, 0x372 bytes, no A5 load: the cells after c in D6, -28,
+  -24, A2, -16, A3; getcodecell's kinds 19 and 8 words after the
+  routine, c's kind passed by its address; the sizes halved with `lsr.l
+  #1'. }
+
+function final_$cmp_branch_becomes_eor(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+label
+  9;
+var
+  r: boolean;
+  b: codegen_$cell_ptr_t;
+  m1: codegen_$cell_ptr_t;
+  j: codegen_$cell_ptr_t;
+  l1: codegen_$cell_ptr_t;
+  m2: codegen_$cell_ptr_t;
+  l2: codegen_$cell_ptr_t;
+  e: codegen_$cell_ptr_t;
+  x: codegen_$cell_ptr_t;
+  y: codegen_$cell_ptr_t;
+  v: integer32;
+  s1: integer;
+  s2: integer;
+begin
+  r := false;
+  b := nxtlcc(c);
+  m1 := nxtlcc(b);
+  j := nxtlcc(m1);
+  l1 := nxtlcc(j);
+  m2 := nxtlcc(l1);
+  l2 := nxtlcc(m2);
+  if (b^.kind = cbr_instyp) and (b^.op = 145) then begin
+    if not final_$is_int_load(m1, 0) then
+      goto 9;
+    if (m1^.ads2.f2 <> c^.ads2.f2) or (j^.kind <> br_instyp) or
+       not (j^.op in [120..122]) or (l1^.kind <> def_lbl_instyp) then
+      goto 9;
+    if not final_$is_sole_label_consumer(b, l1) then
+      goto 9;
+    v := 1;
+  end
+  else if (b^.kind = cbr_instyp) and (b^.op = 144) then begin
+    if not final_$is_int_load(m1, 1) then
+      goto 9;
+    if (m1^.ads2.f2 <> c^.ads2.f2) or (j^.kind <> br_instyp) or
+       not (j^.op in [120..122]) or (l1^.kind <> def_lbl_instyp) then
+      goto 9;
+    if not final_$is_sole_label_consumer(b, l1) then
+      goto 9;
+    v := 0;
+  end
+  else
+    goto 9;
+  if not final_$is_int_load(m2, v) then
+    goto 9;
+  if (m2^.ads2.f2 <> c^.ads2.f2) or (l2^.kind <> def_lbl_instyp) then
+    goto 9;
+  if final_$sizeof(m2, 2) <> final_$sizeof(m1, 2) then
+    goto 9;
+  if not (c^.ads1.f1 in [1, 3]) then
+    goto 9;
+  if c^.ads1.f1 = 1 then
+    if not (c^.ads1.f2 in [0..7]) then
+      goto 9;
+  r := true;
+  s1 := final_$sizeof(c, 2) div 2;
+  s2 := final_$sizeof(m1, 2) div 2;
+  e := getcodecell(c^.kind);
+  if c^.kind = i_instyp then
+    e^.op := s1 + 45
+  else
+    e^.op := s1 + 42;
+  e^.ads1 := c^.ads1;
+  e^.ads2 := c^.ads2;
+  e^.size := ilength(e);
+  x := getcodecell(logicize_instyp);
+  x^.op := 131;
+  x^.ads2 := e^.ads2;
+  x^.size := ilength(x);
+  y := getcodecell(i_instyp);
+  y^.op := s2 + 39;
+  y^.ads1.f1 := 3;
+  y^.ads1.x := integer32(smcontk(81, 1));
+  y^.ads1.f6 := s2;
+  y^.ads2 := e^.ads2;
+  y^.size := ilength(y);
+  after(c^.prev, e);
+  after(e, x);
+  after(x, y);
+  detach(c);
+  detach(b);
+  detach(m1);
+  detach(j);
+  detach(m2);
+9:
+  final_$cmp_branch_becomes_eor := r;
 end;
 
 { test_add_sub - c adds (ops 17..24: '+') or subtracts (28..35: '-') an
