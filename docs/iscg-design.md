@@ -796,9 +796,66 @@ modules, isc_pass_1_main's operator routines.
    the named units, so that pass_2 and pattern_matcher end where the
    image's code does.  cc_check.sh calls it for files the manifest names
    and .blocks does not.
-3. isc_pass_1_main: the operator routines (isc_<kind>_<op>) from the
-   operator declarations (inherited attributes still to read, 8), the
-   derived-mask comparison by child position (9.2).
+3. isc_pass_1_main: generated (10.5); 54 operator routines remain
+   `fixed' (extern, listed in the unit's header).
 4. isc_main's preserve_solution table and isc_debug's dump_solution
    field list (question 270: hand-translated units, generated parts by
    marked includes).
+
+### 10.5 isc_pass_1_main (translator GD, 2026-11-12)
+
+Generated: `tools/iscg_gen.py` writes isc_pass_1_main.pas from the
+rule file's operator declarations (declarations.isc) and the fixed text
+of `tools/iscg_text.py` (P1_HEAD, P1_TYPES, P1_DATA, CROSS_PRODUCT,
+UNRECOGNIZED_IL_NODE, DISPATCH, BEGIN_COMPILATION_HEAD, PASS_1).  The
+lifting and the emission are `tools/iscg_pass1.py` (separate from the
+transforms' code; iscg_extract.py's `operators()`/`pass1_operators()`
+and iscg_gen.py's `Rules.parse` (`operator') and `isc_pass_1_main()`
+call it).
+
+- **132 of 186 routines generated**: pass_1, cross_product_to_solutions_
+  of_parent, isc_unrecognized_il_node, isc_pass_1_begin_compilation,
+  the three dispatchers (isc_tree_node, isc_cmp_tree_node,
+  isc_assign_node: one template) and 125 operator routines lifted
+  from the image.  **54 remain** (`fixed;' in the rule file with their
+  pass_1 calls' sets; declared extern in the unit and listed in its
+  header): the lifter stops at their first construct it does not know
+  (a field compare such as `cmpi.w #59,(36,A1)' in the div/mod family,
+  `tst.b 0x44E76A' (a global flag) in char_string_ob and its two
+  siblings, the blocks' frame-size code in entry_blk/function_blk/
+  procedure_blk, the swap of compare_top through the relation table,
+  the larger rewrites of div, mod, mul, isc_mul and the bit fields).
+  Their text goes either into the lifter (a new statement form) or into
+  iscg_text.py's P1_ROUTINES (read off by hand), the operator
+  declaration keeping `fixed;'.
+- **Dispatch**: begin_compilation is generated from the routines'
+  names (isc_tree_node_<top>, isc_cmp_tree_node_<top>,
+  isc_assign_node_<aop>, isc_<an_kind>, the enumerations isc_user_
+  routines declares), in declaration order, each table's default loop
+  just before its first routine; the extractor checks the result
+  against the image's stores, cell for cell.
+- **The operator declaration** (the OPERATORS_COMMENT in declarations.isc
+  explains it): `operator NAME il X children N image ADDR;' then
+  `child K NODE [copy_all]', its inherited-attribute statements
+  (`fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);'),
+  `permissible derived|inherited|[kinds] [-np];', and `call',
+  `let nK <- f(...);', node stores of a rewritten node (`n2.p40 <-
+  il.p44;'), `trace rewrite;', `child solutions NODE copy_all' (the
+  routine's own list: pass_1 at the same depth), `solutions_made;',
+  `if COND; ... else; ... endif;'.  The default inherited attributes
+  are copied in alphabetical order before a child's statements (the
+  generator writes the copy); the statements' names are
+  isc_print_il_node's (question 271), mapped to the insert's fields
+  by iscg_pass1.INH_ATTRS.
+- **Derived masks by position** (GB's open point): a pass_1 call's
+  position is the children[k] it is stored in (call_positions), so a
+  routine whose first call is a rewrite (add_top's swap: `inherited')
+  compares its children's sets at positions 1 and 2.  The fixed
+  routines list `position: set' (`pass_1 inherited, 1: derived -np, 2:
+  derived -np').
+- **Gate**: errors=0 (best effort, similarity 0.42); the module data
+  (the four tables, 1820 bytes, uninitialized) match; the 25 pass-1
+  modules' data between this block and isc_pass_2_main's is a
+  cc_datacheck_known.txt entry (no .blocks unit owns it).  The writes
+  are gap 4 (a rewrite line for the unit).
+- Questions 420 .. 423; patterns 340 .. 343.

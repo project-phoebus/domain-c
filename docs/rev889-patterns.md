@@ -1296,3 +1296,27 @@ cc.m68k unless marked.
     arm.  docs/iscg-design.md 9.1; tools/iscg_extract.py follows the
     jumps.
 
+
+340. **Two word arguments pushed as one longword.**  pass_1
+    (isc_pass_1_main) calls new_solution(isc_heap, kind, nchildren, inh,
+    node, il_kind) with kind and nchildren constants pushed together:
+    `move.l #16#160002,-(sp)' (kind 22 proper_subtree, 2 children) at
+    0x0F06F2, and #16#160000 .. #16#160005 in the other cases.
+
+341. **A common subexpression kept across statements.**  The operator
+    routines of isc_pass_1_main compute `depth + 1' once (`move.w D2,D3;
+    addq.w #1,D3') for the first child's pass_1 and push D3 again for
+    the later children's (isc_assign_node_add_to_aop 0x0DCC40,
+    0x0DCD18), although the statements between call routines.
+
+342. **Adjacent field copies merged through a post-increment.**  The
+    copy of required_precision (+28) and of the position (+32: line and
+    statement number) from the node's inherited attributes is `lea
+    (28,A3),A0; move.l (A0)+,(28,A2); move.l (A0),(32,A2)' in every
+    child block of isc_pass_1_main (0x0E6170).
+
+343. **A constant index folded into an absolute address.**  rlen_arith(5)
+    (the word table at isc_readonly_tables +0x140, its low byte) with a
+    constant rlen is `move.b 0x2BCF47,(38,A2)' (isc_dindex_node), with
+    a variable one `movea.l #0x2BCDFC,A1; move.w (24,A0),D1; add.w
+    D1,D1; lea (0,A1,D1.w),A1; move.b (321,A1),(38,A2)' (0x0E6196).
