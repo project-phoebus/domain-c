@@ -1082,3 +1082,12 @@ revisited.
    loc_holder_alloc allocates one byte short for the NUL of a 13- or
    37-byte holder, and loc_holder_dispose files a 14-byte holder on
    the small list.  Were these in the original source?
+138. Translator LL, const_op.ftn: r8_math's operations 9, 11 and 12 are
+   the FPP emulator's words 0x0158 (one operand), 0x0180 and 0x0178
+   (two), written LOG10, SIGN and MOD (kfold.pas's builtins 12 and 13
+   use the last two and fold them as sign transfer and a truncating
+   remainder); operation 10 (0x0154 0x0068, a round to a longword, then
+   the longword loaded) is written IDNINT.  r8i4_expon pushes the low
+   word of its INTEGER*4 exponent for 0x0138 (a power by an
+   integer*2): written A ** INT2(E).  Confirm from an FPP operation
+   list if one turns up.

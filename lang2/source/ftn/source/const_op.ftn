@@ -1,0 +1,197 @@
+C const_op.ftn - constant operations of the FORTRAN front end's
+C constant folder (integer, double and complex arithmetic and the
+C double intrinsics), linked into the C compiler for kfold.pas, which
+C calls r8_expon and r8i4_expon for its powers
+C (lang2/source/ftn/source/const_op.ins.pas).
+C
+C Image addresses (DOMAIN C 6.9; the unit is the same in both binaries):
+C    cc.m68k   cc.a88k
+C    0x0761A4  0x077B84  long_expon
+C    0x0761DA  0x077BBA  r8_math
+C    0x07635A  0x077D3A  c8_add
+C    0x076398  0x077D78  c8_sub
+C    0x0763D6  0x077DB6  c8_mul
+C    0x076414  0x077DF4  c8_div
+C    0x076452  0x077E32  c8_neg
+C    0x07648C  0x077E6C  r8_expon
+C    0x0764CE  0x077EAE  r8i4_expon
+C    0x076512  0x077EF2  c16_add
+C    0x076554  0x077F34  c16_sub
+C    0x076596  0x077F76  c16_mul
+C    0x0765D8  0x077FB8  c16_div
+C    0x07661A  0x077FFA  c16_neg
+C (.blocks lists the 14 at level 1, in reverse order; the unit opens
+C no insert.)  A5 0x1695F0 (cc.m68k), 0x2E9660 (cc.a88k): every
+C routine loads it, but the unit has no data (delay.pas's A5 is the
+C same address).
+C
+C Compiled by Apollo's FORTRAN 77 compiler (PRISM=>68K Rev 10.89).
+C Arguments by address.  The double and complex arithmetic is the FPP
+C emulator's (`jsr fpp_$' after the operands' addresses, then the
+C operation words; docs/rev889-patterns.md 19): the result goes to a
+C temporary in the frame and is then copied to the dummy.  The words
+C (kfold.pas's header has the double ones): 0x0074 load a double,
+C 0x0080 store one, 0x0070 absolute value, 0x006C negate, 0x00E0 square
+C root, 0x00E8 exponential, 0x00F0 natural logarithm, 0x00F8 sine,
+C 0x0100 cosine, 0x0108 tangent, 0x0110 arc tangent, 0x0120 arc tangent
+C of two, 0x0148 power, 0x0138 power by an integer*2 pushed by value,
+C 0x0154 0x0068 round to a longword (D0), 0x00C4 load a longword,
+C 0x0158, 0x0178, 0x0180 (below); complex: 0x0188 load, 0x0190 add,
+C 0x0198 subtract, 0x01A8 multiply, 0x01B0 divide, 0x01C4 store, then
+C double complex: 0x01DC load, 0x01E4 add, 0x01EC subtract, 0x01FC
+C multiply, 0x0204 divide, 0x0218 store; the negations of both
+C 0x006C 0x01D0.
+C
+C Verified by reading: not compiled (tools/cc_check.sh compiles
+C Pascal only); each routine was written from its disassembly
+C (tools/cc_dis.py) and read back against it; the address table
+C checked against .blocks of both binaries (tools/cc_addrcheck.py on
+C a copy without the comment column).
+C
+C Not known from the original: the dummy arguments' and the
+C temporary's names; whether the temporaries were written (T) or are
+C the compiler's (the image is the same either way); the
+C intrinsics of r8_math's operations 9, 11 and 12 (FPP 0x0158, 0x0180,
+C 0x0178: written LOG10, SIGN and MOD, the last two as kfold.pas reads
+C the same words for its builtins 12 and 13); whether operation 10 was
+C IDNINT (as written: a round to a longword, then the longword
+C loaded) or DNINT compiled that way.
+
+C LONG_EXPON - I ** J.
+C
+C 0x0761A4, 0x36 bytes: *J and *I pushed (I last), `jsr m$eis$lll';
+C the result stored at -4 (the function's value) and left in D0.
+
+      INTEGER*4 FUNCTION LONG_EXPON(I, J)
+      INTEGER*4 I, J
+      LONG_EXPON = I ** J
+      END
+
+C R8_MATH - R := the double intrinsic OP (0..12) of A (and B).
+C
+C 0x0761DA, 0x180 bytes: OP a word (`movew (A0),D0'); a jump table on
+C it (`cmpiw #13', `bccs' to the first case: a computed GO TO falling
+C through to label 10); each case fpp_$ into -12 (0x0074 A, the
+C operation, 0x0080), `braw' to the copy into R; operations 7, 11 and
+C 12 push B too.  Case 10: 0x0074 0x0154 0x0068 (D0), then D0 pushed by
+C value, 0x00C4 0x0080.
+
+      SUBROUTINE R8_MATH(R, OP, A, B)
+      DOUBLE PRECISION R, A, B, T
+      INTEGER*2 OP
+      GO TO (10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130),
+     &      OP + 1
+   10 T = ABS(A)
+      GO TO 200
+   20 T = SIN(A)
+      GO TO 200
+   30 T = COS(A)
+      GO TO 200
+   40 T = TAN(A)
+      GO TO 200
+   50 T = LOG(A)
+      GO TO 200
+   60 T = EXP(A)
+      GO TO 200
+   70 T = ATAN(A)
+      GO TO 200
+   80 T = ATAN2(A, B)
+      GO TO 200
+   90 T = SQRT(A)
+      GO TO 200
+  100 T = LOG10(A)
+      GO TO 200
+  110 T = IDNINT(A)
+      GO TO 200
+  120 T = SIGN(A, B)
+      GO TO 200
+  130 T = MOD(A, B)
+  200 R = T
+      END
+
+C C8_ADD .. C8_NEG - A := A op B for COMPLEX (8 bytes).
+C
+C 0x07635A, 0x076398, 0x0763D6, 0x076414, 0x3E bytes each: A (8) in
+C A4, B (12) in A3; 0x0188 A, 0x0190 / 0x0198 / 0x01A8 / 0x01B0 B,
+C 0x01C4 into -8; the two longwords copied into A.  C8_NEG 0x076452,
+C 0x3A bytes: 0x0188 0x006C 0x01D0 0x01C4.
+
+      SUBROUTINE C8_ADD(A, B)
+      COMPLEX A, B
+      A = A + B
+      END
+
+      SUBROUTINE C8_SUB(A, B)
+      COMPLEX A, B
+      A = A - B
+      END
+
+      SUBROUTINE C8_MUL(A, B)
+      COMPLEX A, B
+      A = A * B
+      END
+
+      SUBROUTINE C8_DIV(A, B)
+      COMPLEX A, B
+      A = A / B
+      END
+
+      SUBROUTINE C8_NEG(A)
+      COMPLEX A
+      A = -A
+      END
+
+C R8_EXPON - R := A ** B (doubles).
+C
+C 0x07648C, 0x42 bytes: B (16) in A2, A (12) in A3; 0x0074 A, 0x0148
+C B, 0x0080 into -12; copied into R (8).
+
+      SUBROUTINE R8_EXPON(R, A, B)
+      DOUBLE PRECISION R, A, B
+      R = A ** B
+      END
+
+C R8I4_EXPON - R := A ** E.
+C
+C 0x0764CE, 0x44 bytes: E's low word pushed by value (`movew
+C (2,A2),-(SP)') for 0x0138, the power by an integer*2: E is an
+C INTEGER*4 (kfold.pas passes a longword) taken as INTEGER*2, written
+C INT2(E).
+
+      SUBROUTINE R8I4_EXPON(R, A, E)
+      DOUBLE PRECISION R, A
+      INTEGER*4 E
+      R = A ** INT2(E)
+      END
+
+C C16_ADD .. C16_NEG - A := A op B for DOUBLE COMPLEX (16 bytes).
+C
+C 0x076512, 0x076554, 0x076596, 0x0765D8, 0x42 bytes each: 0x01DC A,
+C 0x01E4 / 0x01EC / 0x01FC / 0x0204 B, 0x0218 into -16; four longwords
+C copied into A.  C16_NEG 0x07661A, 0x3E bytes: 0x01DC 0x006C 0x01D0
+C 0x0218.
+
+      SUBROUTINE C16_ADD(A, B)
+      DOUBLE COMPLEX A, B
+      A = A + B
+      END
+
+      SUBROUTINE C16_SUB(A, B)
+      DOUBLE COMPLEX A, B
+      A = A - B
+      END
+
+      SUBROUTINE C16_MUL(A, B)
+      DOUBLE COMPLEX A, B
+      A = A * B
+      END
+
+      SUBROUTINE C16_DIV(A, B)
+      DOUBLE COMPLEX A, B
+      A = A / B
+      END
+
+      SUBROUTINE C16_NEG(A)
+      DOUBLE COMPLEX A
+      A = -A
+      END
