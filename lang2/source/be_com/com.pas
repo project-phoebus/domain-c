@@ -238,7 +238,7 @@ begin
       else
         ok := false;
       lr := o^.lts^.lr;
-      if not ok and not lr^.f2.b3_7 and not replace
+      if not ok and not lr^.f2.physical and not replace
           and not (rrp$intend_to_modify in m^.lts^.rrp)
           and not (rrp$intend_to_modify in lr^.rrp)
           and not lr^.f2.b3_4 and not m^.lts^.f2.final then begin
@@ -280,7 +280,7 @@ begin
       end
       else begin
         { a preference move copies l into o's segment }
-        mv := lir_utils_$create_preference_move(ord(o^.h.kind), at, 0);
+        mv := lir_utils_$create_preference_move(o^.h.kind, at, false);
         mv^.opnds[1].lts := res;
         if not replace then begin
           p := res^.refs;
@@ -354,9 +354,9 @@ begin
       else
         after := true;
       if after then
-        mv := lir_utils_$create_preference_move(ord(o^.h.kind), a, -1)
+        mv := lir_utils_$create_preference_move(o^.h.kind, a, true)
       else
-        mv := lir_utils_$create_preference_move(ord(o^.h.kind), a, 0);
+        mv := lir_utils_$create_preference_move(o^.h.kind, a, false);
       if (def = nil) or ((opnd_bytes_ptr_t(def)^.rrp & 12) = 0) then begin
         mv^.opnds[1].link := def;
         res^.refs := addr(mv^.opnds[1]);
@@ -574,7 +574,7 @@ begin
     find_calls_snuggle_move := utils_ins_$operands_instruction(o);
     return;
   end;
-  if not o^.lts^.lr^.f2.b3_7 or (o^.link^.link <> nil) then
+  if not o^.lts^.lr^.f2.physical or (o^.link^.link <> nil) then
     bug_check('COM_$find_calls_snuggle_move:  physical operand looks funny.%$');
   i := utils_ins_$operands_instruction(o^.link);
   if i^.h.b0_6 then begin
@@ -648,7 +648,7 @@ begin
     if nm = nil then
       bug_check('COM_$replace_oprs_value: dst is reg_pair bug src is not.%$');
   snug := nil;
-  if old^.lts^.lr^.f2.b3_7 then begin
+  if old^.lts^.lr^.f2.physical then begin
     i := utils_ins_$operands_instruction(old);
     if i^.opc = ord(opc$call) then begin
       snug := find_calls_snuggle_move(old);
@@ -666,7 +666,7 @@ begin
       end;
     end;
   end;
-  if new^.lts^.lr^.f2.b3_7 then
+  if new^.lts^.lr^.f2.physical then
     if utils_ins_$operands_instruction(new)^.opc = ord(opc$call) then begin
       new := addr(find_calls_snuggle_move(new)^.opnds[2]);
       if nm <> nil then begin
@@ -740,8 +740,8 @@ begin
         nl2^.next_final := new^.lts^.bb^.finals;
         new^.lts^.bb^.finals := nl2;
       end;
-      mv := lir_utils_$create_preference_move(ord(new^.h.kind),
-          utils_ins_$operands_instruction(new), -1);
+      mv := lir_utils_$create_preference_move(new^.h.kind,
+          utils_ins_$operands_instruction(new), true);
       opnd_bytes_ptr_t(addr(mv^.opnds[1]))^.rrp :=
           opnd_bytes_ptr_t(addr(mv^.opnds[1]))^.rrp
           ! (opnd_bytes_ptr_t(new)^.rrp & 3);

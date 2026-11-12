@@ -1835,7 +1835,7 @@ begin
               lr := op^.lts^.lr;
             op^.link := univ_ptr(lr^.node20);
             op^.ptr := lr;
-            reg := lr^.f2.b2;
+            reg := lr^.f2.reg;
             op^.h.num := reg;
           end;
           v := op^.value;

@@ -1355,6 +1355,10 @@ revisited.
    filled from the sections' bytes.  dpc does not yet lay out such an
    initialized section whose variable has the section's name
    (docs/dpc-gaps.md 32): the gate renames the sections.
+   **Translator PA3:** the amse_ sections (amse_premod_immed_low/_high,
+   amse_postmod_immed_low/_high, 8 longwords each), which sanity reads,
+   are now declared in backend.ins.pas with the others, for tm_utils'
+   amse_*.init to `define' (PB2's scheme; tm_utils not reached).
 162. Translator PB, lst.pas: the -PRASM listing writes the integer
    registers as ".n" (`move.w #0x2E00' before the number), the singles
    ".FSn", the doubles ".FDn", and register 30 of kind ip_reg_like as
@@ -1413,6 +1417,14 @@ revisited.
    instruction's +16 (its descriptor, instr_t.l16).  mmt.pvt.pas reads
    them through unit-local views (mmt_lr_v_t, mmt_rtn_v_t) rather than
    naming them in backend.ins.pas: for batch A to name.
+   **Translator PA3:** named rtn +148 (ip_clobbered), +152 (fp_clobbered,
+   two longwords) and the memory properties at +227 bits 4..0 and +228
+   bits 7..5 (no_reads, no_writes, no_reads_16, no_writes_16,
+   no_class_1, no_static, own_only, no_dynamic: call_conv copies them
+   from a callee's rtn_t, its block's +124, into a later call's
+   conventions; mmt.pas follows).  rtn +80, +140, +144 were PA2's (bb80,
+   lr140, memory_lr).  lr +8, +44, +52 and rtn +227 bit 6 are still
+   unnamed: none of PA3's units reads them.
 170. Translator PC2, mmt: dump_related_vectors prints an alias class's
    name from alias.pas's table (its data +0, A5 0x2E8DFC: `class_names',
    a module variable alias.pas declares without `define'); dmp reads it
@@ -1429,6 +1441,10 @@ revisited.
    classes); mmt.pas reads them through a view (mmt_call_info_t) until
    call_conv.ins.pas declares the record.
 
+   **Translator PA3:** call_conv.ins.pas now declares the record
+   (call_conv_$t, with the memory model's names for +31, +33..+40) and
+   its argument descriptors (call_conv_$arg_t, 26 bytes from +80);
+   mmt.pas still reads it through mmt_call_info_t (batch C may switch).
 172. Translator PA2, backend.ins.pas rtn_t +112: zzzzz compares a
    returning jump's operand 1 segment with it (`cmpa.l (112,A0),A2'
    with the operand's +8), but df_utils and life pass it to
@@ -1454,6 +1470,15 @@ revisited.
    they open (be_prism/target.ins.pas or at_base.ins.pas, both stubs
    here) or through declarations in the unit; should a small insert of
    the prelude's cells for the back end be made instead?
+   **Answered by translator PA3: the premise is wrong.**  The .blocks
+   include lists of fga, hal, life, sanity, sym and tm_utils (and every
+   other unit that opens backend.ins.pas) have lang/lang/source/
+   globals.ins.pas and its members after bug_check.ins.pas
+   (docs/routines-cc.a88k.md); the translated files had left it out.
+   fga, hal, life and sanity now open the prelude in the image's order,
+   and fga's views (il_180, cargs_$options as bytes, idntk's heading)
+   are gone.  No new insert is needed; rtn_t.node could be narrowed to
+   il_$node_ptr_t (kept univ_ptr).
 175. Translator PA2, fga_$process_routine: the instructions chained
    from lir_main_c44 at their +32 are unchained (+32 cleared) but
    lir_main_c44 itself is left pointing to the first; df_utils's async
@@ -1517,3 +1542,35 @@ revisited.
    both units declare it locally (dmp.pas copies add_node.pas's
    declaration).  Should it move to il.ins.pas (or an insert of its
    own)?
+185. Translator PA3, call_conv: pfm_cleanup_check answers true for a name
+   that is not 'PFM_$CLEANUP' when cargs flags_286's element 0 is set
+   (`st D0' before the flag's test, 0x0B42F2); the lower-case name is
+   compared only without it.  A slip (the result meant false there)?
+   Kept as the image has it.
+186. Translator PA3, call_conv: at_call_conv reads a local it never sets
+   (-396) as the result's symbol and node when a routine's parameters
+   are a prototype's entries (kind 168) and its result is a string
+   (rlen 9), and reads the prototype pointer (-392) uninitialized when
+   only the preset's flag 6 asks for placement by prototype; strtk is
+   given 31 and 42 for 'call_conv cannot handle call' (28 characters)
+   and 'unrecognized argument kind in call_conv' (39).  Kept (unset396,
+   pt); slips of the original?
+187. Translator PA3, sanity: sanity_$check_entire_routine's messages read
+   "[%M12A]_$CHECK_ENTIRE_ROUTINE: ..." (no "\SANITY"), but the four
+   fp_reg_pair messages "[%M12A]\SANITY_$CHECK_ENTIRE_ROUTINE"; one has
+   "wrtie".  Taken from the bytes.  The literal pool check prints an
+   operand's .bytes as a signed 3-bit field (`asr.b #5') after testing
+   it unsigned.
+188. Translator PA3: at_backend_4fc (at_backend +0x4FC) is described as
+   get_calling_conventions' record, but lir_utils_$flesh_out_new_load_
+   or_store sets its +226 bit 1 (rtn_t.f226.b226_1) and utils reads
+   its +108 and +116 as live ranges (rtn_t's lr108 and +116): it looks
+   like the routine being compiled (rtn_ptr_t).  To settle when
+   at_backend is translated; backend.ins.pas keeps univ_ptr.
+189. Translator PA3, call_conv: names by offset only for most of
+   call_conv_$t (w12..w24, b27..b30, b41, b42) and the presets
+   (preset_0 .. preset_3: the C conventions under flags_286 element 15,
+   the ordinary ones, ftn_$stop's, the run-time library's).  The
+   registers w14 (22) and reg40 (26, 23) look like the static link and
+   the return address; ip76 the registers a call reads.  Names if the
+   PRISM calling standard is known.

@@ -45,6 +45,7 @@ module life;
 %include '/sys/ins/base.ins.pas';
 %include '/sys/ins/vfmt.ins.pas';
 %include 'lang2/source/lt_utils/source/bug_check.ins.pas';
+%include 'lang/lang/source/globals.ins.pas';
 %include 'lang2/source/be_com/backend.ins.pas';
 %include 'lang2/source/lt_utils/source/mrh.ins.pas';
 %include 'lang/lang/source/prtsub.ins.pas';
@@ -94,7 +95,7 @@ var
 begin
   lr := rtn^.lrs;
   while lr <> nil do begin
-    if not lr^.f2.b3_7 and ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) = []) then begin
+    if not lr^.f2.physical and ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) = []) then begin
       lts := lr^.ltss;
       while lts <> nil do begin
         op := lts^.refs;
@@ -504,16 +505,16 @@ begin
         end;
       if not (rrp$unique_value in lr^.rrp)
          or not (rrp$unique_value in mate^.rrp) then begin
-        lr^.sym := nil;
-        mate^.sym := nil;
+        lr^.memory_home := nil;
+        mate^.memory_home := nil;
       end;
       nlr := lir_$new_live_range_fp_reg_pair;
       if rrp$fp_reg_odd_only in lr^.rrp then
         nlr := nlr^.mate;
       nlr^.node20 := lr^.node20;
       nlr^.mate^.node20 := mate^.node20;
-      nlr^.sym := lr^.sym;
-      nlr^.mate^.sym := mate^.sym;
+      nlr^.memory_home := lr^.memory_home;
+      nlr^.mate^.memory_home := mate^.memory_home;
     end;
     other^.rrp := other^.rrp - [rrp$ra_marked];
     other^.lr := nlr^.mate;
@@ -522,7 +523,7 @@ begin
     nlr := lr
   else begin
     if not (rrp$unique_value in lr^.rrp) then
-      lr^.sym := nil;
+      lr^.memory_home := nil;
     if rrp$ip_reg in lr^.rrp then
       nlr := lir_$new_live_range_ip_reg
     else if rrp$fp_reg in lr^.rrp then
@@ -530,7 +531,7 @@ begin
     else
       nlr := lir_$new_live_range;
     nlr^.node20 := lr^.node20;
-    nlr^.sym := lr^.sym;
+    nlr^.memory_home := lr^.memory_home;
     nlr^.rrp := nlr^.rrp
                 + (lr^.rrp * [rrp$unique_value, rrp$safe_base_address]);
   end;
@@ -632,7 +633,7 @@ begin
       exit;
     if rrp$life_mark in lr^.rrp then
       lr^.rrp := lr^.rrp - [rrp$life_mark]
-    else if not lr^.f2.b3_7 and (lr <> rtn^.lr108)
+    else if not lr^.f2.physical and (lr <> rtn^.lr108)
             and (lr <> lr_ptr_t(rtn^.l112)) and (lr <> rtn^.memory_lr) then begin
       m := lr^.mate;
       if m <> nil then begin
@@ -682,7 +683,7 @@ begin
                    + (lts^.rrp * [rrp$fp_reg_even_only, rrp$fp_reg_odd_only]);
         lts := lts^.next;
       end;
-    if lr^.f2.b3_7 or lr^.f2.b3_4 then
+    if lr^.f2.physical or lr^.f2.b3_4 then
       bv_$make_live_range_complex(rtn, lr);
     lr := lr^.next;
   end;

@@ -293,7 +293,7 @@ begin
       end;
     end;
   end;
-  discard(lir_utils_$excise_inst(instr));
+  lir_utils_$excise_inst(instr);
   excising := was;
 end;
 
@@ -1175,7 +1175,7 @@ begin
   bp.has_base := false;
   bp.base := 0;
   lr := lts^.lr;
-  memory_only := (not lr^.f2.b3_7)
+  memory_only := (not lr^.f2.physical)
                  and ([rrp$fp_reg, rrp$ip_reg] * lr^.rrp = []);
   mem := nil;
   cur := lts;
@@ -1269,7 +1269,7 @@ begin
 20:
     if not memory_only and (mem <> nil)
        and ([rrp$fp_reg_even_only, rrp$fp_reg_odd_only] * mem^.rrp <> []) then
-      if (not bp.lts^.lr^.f2.b3_7)
+      if (not bp.lts^.lr^.f2.physical)
          and ([rrp$fp_reg, rrp$ip_reg] * bp.lts^.lr^.rrp = []) then begin
         if mem = nil then begin
           n := lts^.f2.num;
@@ -1737,7 +1737,7 @@ begin
         if (op^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical])
            and op^.h.intend_to_modify
            and (rshft(attr^[6 + 4 * (k - 1)], 6) = 0)
-           and (not op^.lts^.lr^.f2.b3_7) then begin
+           and (not op^.lts^.lr^.f2.physical) then begin
           if op^.h.kind = operand$fp_reg_pair then begin
             m := lir_utils_$find_mate_operand(op);
             m^.lts^.rrp := m^.lts^.rrp - [rrp$intend_to_modify];
@@ -2460,7 +2460,7 @@ begin
   end
   else
     return;
-  if (s = nil) or (s <> lr^.sym) then
+  if (s = nil) or (s <> lr^.memory_home) then
     return;
   size := sym_$allocation_size_in_bytes(s);
   case instruction_attributes[instr^.opc].w18 & 7 of

@@ -519,7 +519,7 @@ begin
     o := addr(instr^.opnds[k]);
     if (o^.h.kind in [operand$ip_reg_physical..operand$fp_reg_pair_physical])
        or ((o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical])
-           and o^.lts^.lr^.f2.b3_7) then begin
+           and o^.lts^.lr^.f2.physical) then begin
       while p <> stop do begin
         p^.l16 := mark;
         p := p^.next;
@@ -976,7 +976,7 @@ begin
     if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
       lts := o^.lts;
       lr := lts^.lr;
-      if lr^.f2.b3_7 then
+      if lr^.f2.physical then
         return;
       if not lts^.f2.first_in_bb and (lr^.ltss <> lts) then begin
         if lr^.id = 0 then begin
@@ -1001,7 +1001,7 @@ begin
                 or (instr^.opnds[k - 1].lts^.lr^.id <> 0)) then begin
           o3 := addr(i^.opnds[o^.link^.h.num]);
           if o3^.h.kind in [operand$ip_reg..operand$well_behaved_memory] then
-            if o3^.lts^.lr^.f2.b3_7 then
+            if o3^.lts^.lr^.f2.physical then
               return;
         end;
       end;
@@ -1083,10 +1083,10 @@ begin
     if (o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical])
        and o^.h.read then begin
       lts := o^.lts;
-      if lts^.lr^.f2.b3_7 then
+      if lts^.lr^.f2.physical then
         return;
       nxt := instr^.opnds[k + 1].lts;
-      if nxt^.lr^.f2.b3_7 then
+      if nxt^.lr^.f2.physical then
         return;
       if (lts^.rrp * [rrp$modify, rrp$intend_to_modify]) <> [] then
         return;
@@ -1179,7 +1179,7 @@ begin
     if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
       lts := o^.lts;
       lr := lts^.lr;
-      if lr^.f2.b3_7 then
+      if lr^.f2.physical then
         return;
       if not lr^.f2.b3_1 then
         return;
@@ -1602,7 +1602,7 @@ begin
     add^.h.sets_cc := true;
   end;
   add^.num := instr^.num;
-  discard(lir_utils_$excise_inst(instr));
+  lir_utils_$excise_inst(instr);
   convert_move_to_add := add;
 end;
 
@@ -2234,7 +2234,7 @@ begin
     o^.lts^.rrp := o^.lts^.rrp + [rrp$intend_to_modify];
     mem^.h.width := (mem^.h.width & 16#3F) ! lshft(mode, 6);
   end;
-  discard(lir_utils_$excise_inst(add));
+  lir_utils_$excise_inst(add);
 end;
 
 { mem_ref_positioned_for_postincrement - whether mem (not yet pre- or

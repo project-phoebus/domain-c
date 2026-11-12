@@ -371,7 +371,7 @@ begin
       return;
     l3 := d^.opnds[3].lts;
     lr3 := l3^.lr;
-    if not ((k = operand$ip_reg_like) and (lr3^.f2.b2 = 31)) then begin
+    if not ((k = operand$ip_reg_like) and (lr3^.f2.reg = 31)) then begin
       if rrp$read in l3^.rrp then
         return;
       if l3^.next <> nil then
@@ -867,16 +867,16 @@ begin
             if not other_consumers_same_lr(i1, i2, lr2, o1^.link) then
               return;
         end;
-        if lr2^.f2.b3_7 then
+        if lr2^.f2.physical then
           if not (rrp$unique_value in lr2^.rrp) then begin
             if o1^.h.kind in [operand$fp_reg, operand$fp_reg_pair] then begin
-              if lr2^.f2.b2 > 31 then
-                fp_hi := fp_hi - [lr2^.f2.b2 + 31]
+              if lr2^.f2.reg > 31 then
+                fp_hi := fp_hi - [lr2^.f2.reg + 31]
               else
-                fp_lo := fp_lo - [lr2^.f2.b2];
+                fp_lo := fp_lo - [lr2^.f2.reg];
             end
             else
-              ip := ip - [lr2^.f2.b2];
+              ip := ip - [lr2^.f2.reg];
             if not at_backend_switches.sw10 then
               return;
             if lr2^.id = 0 then
@@ -1352,7 +1352,7 @@ begin
           if bb^.preds^.next_pred <> nil then begin
             lr := bv_$find_next(rtn, bb^.live_in, nil);
             while lr <> nil do begin
-              if (rrp$unique_value in lr^.rrp) or not lr^.f2.b3_7
+              if (rrp$unique_value in lr^.rrp) or not lr^.f2.physical
                   or at_backend_switches.sw10 then begin
                 e := bb^.preds;
                 base := get_omega_candidate(e^.source, bb, lr);
@@ -1882,7 +1882,7 @@ begin
     moved := false;
     lr := bv_$find_next(rtn, first^.target^.live_gen, nil);
     while (lr <> nil) and not moved do begin
-      if (rrp$unique_value in lr^.rrp) or not lr^.f2.b3_7
+      if (rrp$unique_value in lr^.rrp) or not lr^.f2.physical
           or at_backend_switches.sw10 then begin
         cur := nil;
         repeat
@@ -2245,7 +2245,7 @@ begin
   lr := rtn^.lrs;
   while lr <> nil do begin
     if lr^.rrp * [rrp$fp_reg, rrp$ip_reg] = [] then
-      if (lr^.f2.b2 = 30) or (lr^.f2.b2 = 31) then begin
+      if (lr^.f2.reg = 30) or (lr^.f2.reg = 31) then begin
         l := lr^.ltss;
         while l <> nil do begin
           o := l^.refs;
