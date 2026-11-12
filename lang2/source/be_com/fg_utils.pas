@@ -18,11 +18,10 @@
     birthpoint instructions', +24 their inputs', +48 the dominator
     buckets'), then the cells the routines below use.
 
-  TODO(pascal) fg_utils: 27 of 53 routines (with the insert's
+  TODO(pascal) fg_utils: 29 of 53 routines (with the insert's
   utils_ins_$operands_instruction; the first ones in address order,
-  through fg_utils_$make_loops_unconditional, 0x235F04); not translated
-  yet: fg_utils_$forward_empty_blocks,
-  fg_utils_$end_senseless_loops, reverse_depth_first_search, compress,
+  through fg_utils_$end_senseless_loops, 0x23619E); not translated
+  yet: reverse_depth_first_search, compress,
   eval, evaldef, compute_rel, replace_exposed_lts,
   fg_utils_$generate_join_birthpoint, fg_utils_$insert_join_birthpoint,
   traverse, fg_utils_$add_jbi, add_join_birthpoint_inputs,
@@ -1311,4 +1310,195 @@ procedure fg_utils_$make_loops_unconditional(
 begin
   rtn^.marks := rtn^.marks + 1;
   make_loops_unconditional(rtn, rtn^.l84, rtn^.marks);
+end;
+
+{ fg_utils_$forward_empty_blocks - each block (bbs72, next114) whose
+  first instruction after its labels is a jump forwarded; then each
+  conditional branch (class branch or fp_branch) just before a block's
+  closing jump that goes where the jump goes excised, and the
+  condition codes it read (a definition whose segment is written) taken
+  off their definer when nothing else reads them, the definer kept
+  (+2 bit 6), not a branch, call, jump, SEQ, trap or SVC and not of
+  the attribute's +18 bits 1..0 (its sets_cc or fp_ccs cleared, its
+  preference bit the opcode's b6_0); repeated while a branch went.
+  The intervals found again when anything changed; whether anything
+  did.
+
+  0x235F34, 0x238 bytes: rtn (8); changed D2, again D3; the definer
+  (-20) (utils_ins_$operands_instruction of the segment's first
+  reference); the set 16#1104266 of classes. }
+
+function fg_utils_$forward_empty_blocks(
+    rtn: rtn_ptr_t): boolean;
+label
+  1;
+var
+  changed: boolean;
+  again: boolean;
+  b: bb_ptr_t;
+  nxt: bb_ptr_t;
+  i: instr_ptr_t;
+  j: instr_ptr_t;
+  c: instr_ptr_t;
+  d: instr_ptr_t;
+  k: integer;
+  op: opnd_ptr_t;
+begin
+  changed := false;
+1:
+  b := rtn^.bbs72;
+  while b <> nil do begin
+    nxt := b^.next114;
+    i := b^.first;
+    if i <> nil then begin
+      while i^.opc = ord(opc$label) do
+        i := i^.next;
+      if i^.opc = ord(opc$jump) then begin
+        fg_utils_$forward_this_block(rtn, b, i);
+        changed := true;
+      end;
+    end;
+    b := nxt;
+  end;
+  again := false;
+  b := rtn^.bbs72;
+  while b <> nil do begin
+    j := b^.last;
+    if j <> nil then
+      if j^.opc = ord(opc$jump) then
+        if j^.opnds[1].h.kind = operand$flow_graph_edge then begin
+          c := j^.prev;
+          if c <> nil then
+            if instruction_attributes[c^.opc].class in [class$branch, class$fp_branch] then
+              if c^.opnds[1].h.kind = operand$flow_graph_edge then
+                if fg_edge_ptr_t(j^.opnds[1].ptr)^.target
+                   = fg_edge_ptr_t(c^.opnds[1].ptr)^.target then begin
+                  d := nil;
+                  if c^.opnds[2].h.kind in [operand$ip_condition_codes,
+                                            operand$fp_condition_codes] then
+                    if (integer(c^.opnds[2].lts^.rrp) & 12) <> 0 then
+                      d := utils_ins_$operands_instruction(c^.opnds[2].lts^.refs);
+                  utils_$excise_instruction_cleanly(c, true);
+                  again := true;
+                  changed := again;
+                  if d <> nil then
+                    if d^.h.b2_6 then
+                      if not (instruction_attributes[d^.opc].class
+                              in [class$branch, class$call, class$fp_branch,
+                                  class$jump, class$seq, class$trap, class$svc,
+                                  class$trap_cond]) then
+                        if (instruction_attributes[d^.opc].w18 & 16#300) = 0 then begin
+                          op := addr(d^.opnds[d^.h.nopnds]);
+                          if not op^.lts^.f2.final then
+                            if op^.h.kind in [operand$ip_condition_codes,
+                                              operand$fp_condition_codes] then
+                              if op^.link = nil then begin
+                                k := ord(op^.h.kind);
+                                if k = ord(operand$ip_condition_codes) then
+                                  d^.h.sets_cc := false
+                                else if k = ord(operand$fp_condition_codes) then
+                                  d^.h.fp_ccs := false
+                                else
+                                  bug_check('FG_UTILS_$forward_empty_blocks:  unknown CC type%$');
+                                utils_$excise_lts_cleanly(op^.lts, changed);
+                                op^.h.kind := operand$none;
+                                op^.h.num := 0;
+                                op^.lts := nil;
+                                opnd_bytes_ptr_t(op)^.rrp := 0;
+                                d^.h.preference := instruction_attributes[d^.opc].b6_0;
+                              end;
+                        end;
+                end;
+        end;
+    b := b^.next114;
+  end;
+  if again then
+    goto 1;
+  if changed then
+    fg_utils_$intervals(rtn);
+  fg_utils_$forward_empty_blocks := changed;
+end;
+
+{ fg_utils_$end_senseless_loops - each one-block loop (a reducible loop
+  head without members, two edges out, no hidden edges, ending in a
+  jump to an edge) that writes nothing live into its exit (the block's
+  transparent vector and the exit's live_in have no live range in
+  common) is ended: a warning (53) for its source line, the
+  conditional branch (bug_check unless one) excised, the jump made to
+  the exit edge alone, the loop's edge back to itself dropped, and the
+  block forwarded when its first instruction after its labels is a
+  jump.  Whether any was.
+
+  0x23619E, 0x1BC bytes: rtn (8) in D4; the vector in the frame (-4096,
+  4096 bytes); the loop's own edge D6, the exit edge (-4124). }
+
+function fg_utils_$end_senseless_loops(
+    rtn: rtn_ptr_t): boolean;
+type
+  vec_t = array [0..1023] of bv_word_t;
+var
+  changed: boolean;
+  b: bb_ptr_t;
+  nxt: bb_ptr_t;
+  e: fg_edge_ptr_t;
+  self_e: fg_edge_ptr_t;
+  out_e: fg_edge_ptr_t;
+  v: vec_t;
+  br: instr_ptr_t;
+  line: integer32;
+  i: instr_ptr_t;
+begin
+  changed := false;
+  b := rtn^.bbs72;
+  while b <> nil do begin
+    nxt := b^.next114;
+    if b^.f.distinguished_entry then
+      if not b^.f.irreducible then
+        if b^.l74 = nil then
+          if n_edges(b^.succs, true) = 2 then
+            if not b^.f.hidden_successor_edges then
+              if b^.last^.opc = ord(opc$jump) then
+                if b^.last^.opnds[1].h.kind = operand$flow_graph_edge then begin
+                  e := b^.succs;
+                  if b = e^.target then begin
+                    self_e := e;
+                    out_e := e^.next_succ;
+                  end
+                  else begin
+                    out_e := e;
+                    self_e := e^.next_succ;
+                  end;
+                  bv_$and_to(rtn^.l192 + 1, b^.transparent, out_e^.target^.live_in,
+                             univ_ptr(addr(v)));
+                  if bv_$find_next(rtn, univ_ptr(addr(v)), nil) = nil then begin
+                    br := b^.last^.prev;
+                    if not (instruction_attributes[br^.opc].class
+                            in [class$branch, class$fp_branch]) then
+                      bug_check('FG_UTILS_$end_senseless_loops:  expected cond branch%$');
+                    line := dmp_$get_line_number(br);
+                    if line <> 0 then
+                      cgerr(53, line, nil);
+                    utils_$excise_instruction_cleanly(br, true);
+                    b^.last^.opnds[1].ptr := out_e;
+                    b^.succs := out_e;
+                    out_e^.next_succ := nil;
+                    if self_e = b^.preds then
+                      b^.preds := self_e^.next_pred
+                    else begin
+                      e := b^.preds;
+                      while e^.next_pred <> self_e do
+                        e := e^.next_pred;
+                      e^.next_pred := self_e^.next_pred;
+                    end;
+                    i := b^.first;
+                    while i^.opc = ord(opc$label) do
+                      i := i^.next;
+                    if i^.opc = ord(opc$jump) then
+                      fg_utils_$forward_this_block(rtn, b, i);
+                    changed := true;
+                  end;
+                end;
+    b := nxt;
+  end;
+  fg_utils_$end_senseless_loops := changed;
 end;
