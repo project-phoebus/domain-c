@@ -140,6 +140,13 @@ when this tree is merged).
          s := d;
        end;
 
+   Also opt_main.pas (translator II): realloc_postorder_node_list's
+   `trunc(old * 1.05)' (0x0DB07C) and convert_exponentiation's
+   `trunc(e^.real_value)' compared back with the real (0x0DE046):
+   "undefined identifier `trunc`", and under --check-only "operands of
+   the comparison are not compatible" for the integer compared with a
+   double.
+
 8. **`in` on a constant set with a word element.**  `t^.kind in [77..87,
    101, 200]` (token.pas set_is_nil 0x09930E: `move.w #207,D0; sub.w
    kind,D0; bcs; lsr.w #3,D0; btst kind,(set,D0.w); ble', the set a

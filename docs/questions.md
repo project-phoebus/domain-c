@@ -969,3 +969,53 @@ revisited.
    opt_main's fixup_blocks and opt_main_$symidx_of_varn_or_fsym are
    declared extern in opt_strength.pas (no insert has them): move them
    to g_opt.ins.pas when opt_main is translated?
+   Translator II (2026-11-11): decided.  fixup_blocks and
+   opt_main_$symidx_of_varn_or_fsym moved to g_opt.ins.pas (opt_main
+   defines them; opt_strength.pas's declarations removed).  kfold stays
+   declared in the units that call it: kfold.pas opens g_opt.ins.pas and
+   declares kfold `forward' with `var stmt', which a heading in the
+   insert (the first declaration, which dpc follows) would contradict;
+   a kfold insert would be the place.  opt_loop's fixupchildren stays in
+   opt_strength.pas until opt_loop's own insert heading is decided.
+
+127. Translator II, opt_main: question 122 settled as proposed:
+   opt_livevar's +0 is g_opt.ins.pas's opt_abnormal_routine, defined by
+   opt_livevar (its two other cells became lv_cur and lv_depth, defined
+   after it in the image's order).  Nothing in either binary stores to
+   it, so assert_is_call_to_abnormal_routine's and reg_save's tests
+   never match: the original's setter (a Fortran pragma or a name
+   lookup) may have been left out of these compilers.
+
+128. Translator II, opt_main: opt_track_lines (+0x6C, translator V's name
+   from opt_general) is cleared at g_opt's start and set after reaching
+   definitions (g_opt, recompute_node_lists): when set, the passes over
+   the statements take the blocks as they are (no new block starts, no
+   use and definition statements, no new tables).  A name like
+   opt_recomputing would say more; rename?  The statement header bits
+   opt_main sets are still named by position: +42 bit 2 (b42_2) the
+   routine's end (149) in its region, +42 bit 4 (b42_4) a statement
+   with a call, +41 bit 4 (b4) a statement with real trees, +42 bit 6
+   (b42_6) a conditional branch whose condition gets its own
+   evaluation.  Name them in g_opt.ins.pas?
+
+129. Translator II, opt_main: kept oddities of the image (original
+   slips?): distrib_mul's second form (shifts of sums) returns t
+   unchanged when no_enforce_parens_and_ucs_eq_1 is true, the first form
+   when it is false; init_opt_info_for_vars' two walks over a routine's
+   variables do not advance past a 109 in Fortran (the language tested
+   before the step; endless if one is met); recompute_usedef_for_
+   uplevel_addressing uses the previous call's variable number (D3)
+   when the chain does not end at a variable's name;
+   add_use_defs_for_call_site indexes om_param_conflicts with the
+   argument class left unset when num is 0; create_use_def_ob places the
+   statement after an unset pointer for a mode outside 0..3;
+   eliminate_dead_code_and_count_basic_blocks leaves the dead statements
+   linked when it stops at a routine's start or end; g_opt's -TREE 8, 9
+   and 12 exits skip the clean-up (pools, tables).
+
+130. Translator II, opt_main: om_class_bytes (+0x70, a data class's
+   bytes) has .rwdi words for 0..9 only, but the index is a nibble and
+   the table runs to +0x8F (om_param_conflicts follows): written as
+   [0..15] with zeros for 10..15.  Was the original a 10-element array
+   with 12 bytes of something unreferenced after it?
+
