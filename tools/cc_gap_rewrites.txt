@@ -594,3 +594,5 @@ lang2/source/be_com/tr_utils.pas	s/^(\s*)(index|base)_operand := nil;/$1$2_opera
 lang2/source/be_com/tr_utils.pas	s/^(\s*)bb_interval := bb$/$1bb_interval := bb^.l70 { gap 15 }/
 # gap 12 (tr_utils): a pointer function's result compared with a variable (two variables, for the check)
 lang2/source/be_com/tr_utils.pas	s/if bb_interval\(bb\) <> tr_24 then/if tr_28 <> tr_24 then { gap 12 }/
+lang2/source/be_com/tr_utils.pas	s/\(base_operand\(i\) <> r\)/(i <> instr) { gap 12 }/
+lang2/source/be_com/tr_utils.pas	s/if utils_ins_\$operands_instruction\(last\) = add then/if last = base then { gap 12 }/

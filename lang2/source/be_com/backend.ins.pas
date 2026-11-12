@@ -2014,27 +2014,30 @@ procedure tm_utils_$end_routine(
 procedure tm_utils_$end_compilation; extern;
 
 { TM_UTILS_$CAN_CONVERT_TO_IMMEDIATE_OPERAND - 0x27B71C, 0x11C bytes;
-  called from tr_utils.  Frame 8:l; 12:a; 16:l. }
-procedure tm_utils_$can_convert_to_immediate_operand(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: integer32); options(val_param); extern;
+  called from tr_utils.  Frame 8:l; 12:a; 16:l.  Result: D0 (tr_utils
+  reads it as a boolean). }
+function tm_utils_$can_convert_to_immediate_operand(
+    value: integer32;
+    instr: instr_ptr_t;
+    k: integer32): boolean; options(val_param); extern;
 
 { TM_UTILS_$CAN_CONVERT_TO_IP_REG_OPERAND - 0x27B838, 0xA2 bytes; called
   from iv tr_utils.  Frame 8:w; 10:al; 14:l.  Result: D0 (callers: D0b4).
   }
 function tm_utils_$can_convert_to_ip_reg_operand(
-    p1: integer;
-    p2: univ_ptr;
-    p3: integer32): boolean; options(val_param); extern;
+    opc: integer;
+    k: integer32;
+    count: integer32): boolean; options(val_param); extern;
 
 { TM_UTILS_$CAN_ENCODE_AS_IMMEDIATE_OPERAND - 0x27B8F2, 0x19C bytes;
   called from konst oli sanity tr_utils.  Frame 8:l; 12:w; 14:al.  Result:
-  D0 (callers: D0b11). }
+  D0 (callers: D0b11).  Whether value can be operand k (its number, a
+  longword: tr_utils pushes `pea 0x1' after a pad) of an instruction of
+  opcode opc (its operand forms from instruction_attributes). }
 function tm_utils_$can_encode_as_immediate_operand(
-    p1: integer32;
-    p2: integer;
-    p3: univ_ptr): boolean; options(val_param); extern;
+    value: integer32;
+    opc: integer;
+    k: integer32): boolean; options(val_param); extern;
 
 { TM_UTILS_$CAN_POSTMODIFY_BASE_REGISTER_BY - 0x27BBA2, 0xC2 bytes; called
   from oli tr_utils.  Frame 8:l; 12:w.  Result: D0 (callers: D0b4). }
@@ -2115,10 +2118,10 @@ procedure tr_utils_$attempt_copy_elimination(
 { TR_UTILS_$TRY_TWIDDLING_DISP - 0x27E4F0, 0x42C bytes; called from trans.
   Frame 8:al; 12:l; 16:bl; 18:b.  Result: D0 (callers: D0b2). }
 function tr_utils_$try_twiddling_disp(
-    p1: univ_ptr;
-    p2: integer32;
-    p3: integer32;
-    p4: boolean): boolean; options(val_param); extern;
+    instr: instr_ptr_t;
+    disp: integer32;
+    no_add: boolean;
+    no_copy_elim: boolean): boolean; options(val_param); extern;
 
 { TR_UTILS_$ATTEMPT_AUTOINCREMENT - 0x280610, 0x130 bytes; called from iv
   trans.  Frame 8:l; 12:a.  Result: D0 (callers: D0b1). }

@@ -1454,3 +1454,1024 @@ procedure print_solutions_for_debugging(
     sols: tr_sol_ptr_t); options(val_param); internal;
 begin
 end;
+
+{ convert_add_to_move - an ADD or SUB of an immediate made a MOVE: its
+  operand 1 (the immediate, dropped from its segment when a register)
+  replaced by operand 2, operand 2 by operand 3; with three operands the
+  third emptied (num 0, no kind) and nopnds 2, with four the fourth
+  (the condition codes) moved to the third (emptied when it has no
+  kind) and nopnds 3; the instruction's +0 bit 6 set when operand 1 is
+  a register (kinds 1..6: `sne; lsr.b #7; lsl.b #6').  The opcode MOVE
+  (75).
+
+  0x27DBCC, 0xD0 bytes, no A5. }
+
+procedure convert_add_to_move(
+    instr: instr_ptr_t); options(val_param); internal;
+begin
+  if instr^.opnds[1].h.kind
+     in [operand$ip_reg..operand$well_behaved_memory] then
+    drop_operand_from_lts(addr(instr^.opnds[1]));
+  move_operand(addr(instr^.opnds[2]), addr(instr^.opnds[1]));
+  move_operand(addr(instr^.opnds[3]), addr(instr^.opnds[2]));
+  if instr^.h.nopnds = 3 then begin
+    instr^.opnds[3].h.kind := operand$none;
+    instr^.opnds[3].h.num := 0;
+    instr^.h.b0_6 := instr^.opnds[1].h.kind
+                     in [operand$ip_reg..operand$fp_reg_pair_physical];
+    instr^.h.nopnds := 2;
+  end
+  else begin
+    move_operand(addr(instr^.opnds[4]), addr(instr^.opnds[3]));
+    if instr^.opnds[3].h.kind = operand$none then begin
+      instr^.opnds[3].h.num := 0;
+      instr^.h.b0_6 := instr^.opnds[1].h.kind
+                       in [operand$ip_reg..operand$fp_reg_pair_physical];
+    end;
+    instr^.h.nopnds := 3;
+  end;
+  utils_$set_instruction_opcode(instr, ord(opc$move));
+end;
+
+{ convert_move_to_add - a MOVE made an ADD (79) after it: the move's
+  operands 1 and 2 become the add's 2 and 3, its operand 1 an
+  immediate (kind 23, rrp byte 16, value left to the caller); a move
+  that sets the condition codes gives its last operand to the add's
+  last (the add then sets them, +0 bit 4); the add takes the move's
+  number (+42) and the move is excised (the result dropped).  The add.
+
+  0x27DC9C, 0xCC bytes, no A5: A0 the new instruction kept in A3 for
+  the return. }
+
+function convert_move_to_add(
+    instr: instr_ptr_t): instr_ptr_t; options(val_param); internal;
+var
+  add: instr_ptr_t;
+  o: opnd_ptr_t;
+begin
+  add := lir_$optimizer_new_instruction(instr, ord(opc$add), true);
+  add^.opnds[1].h.num := 1;
+  add^.opnds[2].h.num := 2;
+  add^.opnds[3].h.num := 3;
+  move_operand(addr(instr^.opnds[1]), addr(add^.opnds[2]));
+  move_operand(addr(instr^.opnds[2]), addr(add^.opnds[3]));
+  add^.opnds[1].h.kind := operand$immediate;
+  opnd_bytes_ptr_t(addr(add^.opnds[1]))^.rrp := 16;
+  if instr^.h.sets_cc then begin
+    o := addr(add^.opnds[add^.h.nopnds]);
+    o^.h.num := add^.h.nopnds;
+    move_operand(addr(instr^.opnds[instr^.h.nopnds]), o);
+    add^.h.sets_cc := true;
+  end;
+  add^.num := instr^.num;
+  discard(lir_utils_$excise_inst(instr));
+  convert_move_to_add := add;
+end;
+
+{ adjustable_creation_point - whether the instruction that creates o's
+  value can absorb disp (o's value then disp less), and, when apply,
+  it made to: a postmodifying load or store (+3 bits 7..6 = 1) whose
+  base is o's live range and o writes, when simple or its immediate
+  index less disp still postmodifies (tm_utils_$can_postmodify_base_
+  register_by); a JOIN_BP; an ADD or SUB whose operand 2 is o's live
+  range (when simple) or whose result is o: with an immediate operand
+  1 the new constant (an ADD's less disp, a SUB's plus disp or, as an
+  ADD, its negation) encodable (the opcode set, or a MOVE when 0);
+  otherwise, when the creator is in a block of a lower +16 than the
+  instruction's and -disp is encodable, an ADD of -disp after it into a
+  new segment of a new register live range that the result moves to; a
+  MOVE of an immediate (its value less disp) or of o's live range
+  (simple), or, unless no_add, made an ADD of -disp
+  (convert_move_to_add).  An instruction that sets condition codes
+  that are final (+3 bit 4) or read cannot.
+
+  0x27DD68, 0x3C8 bytes, no A5: the result a frame byte (-42); the
+  opcodes by a compare chain (203, 81, 79, 75); the classes 16 and 21
+  by `btst' in 0x210000; tm_utils_$can_encode_as_immediate_operand's
+  operand number 1 by `pea 0x1' after a pad. }
+
+function adjustable_creation_point(
+    o: opnd_ptr_t;
+    disp: integer32;
+    creator: instr_ptr_t;
+    simple: boolean;
+    no_add: boolean;
+    apply: boolean): boolean; options(val_param); internal;
+var
+  result: boolean;
+  i, add: instr_ptr_t;
+  x, last, res: opnd_ptr_t;
+  value: integer32;
+  newop: integer;
+  ok: boolean;
+  lr: lr_ptr_t;
+  lts: lts_ptr_t;
+  kind: integer;
+  neg: integer32;
+begin
+  result := false;
+  i := utils_ins_$operands_instruction(o);
+  if instruction_attributes[i^.opc].class in [class$load, class$store] then
+    if rshft(i^.h.width & 16#C0, 6) = 1 then
+      if base_operand(i)^.lts^.lr = o^.lts^.lr then
+        if (opnd_bytes_ptr_t(o)^.rrp & 12) <> 0 then begin
+          if simple then
+            result := true
+          else begin
+            x := index_operand(i);
+            if x^.h.kind = operand$immediate then
+              if tm_utils_$can_postmodify_base_register_by(x^.value - disp,
+                                                           i^.opc) then begin
+                result := true;
+                if apply then
+                  x^.value := x^.value - disp;
+              end;
+          end;
+        end;
+  if i^.h.sets_cc then begin
+    last := addr(i^.opnds[i^.h.nopnds]);
+    if last^.lts^.f2.b3_4 or (last^.link <> nil) then begin
+      adjustable_creation_point := result;
+      return;
+    end;
+  end;
+  if i^.opc = ord(opc$join_bp) then
+    result := true
+  else if (i^.opc = ord(opc$sub)) or (i^.opc = ord(opc$add)) then begin
+    if simple
+       and (i^.opnds[2].h.kind
+            in [operand$ip_reg..operand$well_behaved_memory])
+       and (i^.opnds[2].lts^.lr = o^.lts^.lr) then
+      result := true
+    else if addr(i^.opnds[3]) = o then begin
+      res := addr(i^.opnds[3]);
+      ok := false;
+      if i^.opnds[1].h.kind = operand$immediate then begin
+        if i^.opc = ord(opc$add) then begin
+          value := i^.opnds[1].value - disp;
+          if tm_utils_$can_encode_as_immediate_operand(value, ord(opc$add),
+                                                       1) then
+            ok := true;
+          newop := ord(opc$add);
+        end
+        else begin
+          value := disp + i^.opnds[1].value;
+          if tm_utils_$can_encode_as_immediate_operand(value, ord(opc$sub),
+                                                       1) then begin
+            newop := ord(opc$sub);
+            ok := true;
+          end
+          else begin
+            neg := -value;
+            if tm_utils_$can_encode_as_immediate_operand(neg, ord(opc$add),
+                                                         1) then begin
+              newop := ord(opc$add);
+              value := neg;
+              ok := true;
+            end;
+          end;
+        end;
+      end;
+      if ok then begin
+        result := true;
+        if apply then
+          if value <> 0 then begin
+            utils_$set_instruction_opcode(i, newop);
+            i^.opnds[1].value := value;
+          end
+          else
+            convert_add_to_move(i);
+      end
+      else if creator <> nil then
+        if i^.bb^.f.b16 < creator^.bb^.f.b16 then begin
+          neg := -disp;
+          if tm_utils_$can_encode_as_immediate_operand(neg, ord(opc$add),
+                                                       1) then begin
+            result := true;
+            if apply then begin
+              add := lir_$optimizer_new_instruction(i, ord(opc$add), true);
+              add^.opnds[1].h.num := 1;
+              add^.opnds[2].h.num := 2;
+              add^.opnds[3].h.num := 3;
+              move_operand(res, addr(add^.opnds[3]));
+              add^.opnds[1].h.kind := operand$immediate;
+              add^.opnds[1].value := neg;
+              opnd_bytes_ptr_t(addr(add^.opnds[1]))^.rrp := 16;
+              lr := lir_$new_live_range_ip_reg;
+              lir_utils_$add_lts_to_lr(24, lr, i^.bb, lts);
+              lts^.def := res;
+              i^.opnds[3].h.kind := operand$ip_reg;
+              i^.opnds[3].lts := lts;
+              i^.opnds[3].link := addr(add^.opnds[2]);
+              opnd_bytes_ptr_t(addr(i^.opnds[3]))^.rrp := 8;
+              i^.opnds[2].h.intend_to_modify := false;
+              i^.opnds[1].h.intend_to_modify := false;
+              add^.opnds[2].h.kind := operand$ip_reg;
+              add^.opnds[2].lts := lts;
+              opnd_bytes_ptr_t(addr(add^.opnds[2]))^.rrp := 16;
+            end;
+          end;
+        end;
+    end;
+  end
+  else if i^.opc = ord(opc$move) then begin
+    kind := ord(i^.opnds[1].h.kind);
+    if kind = ord(operand$immediate) then begin
+      value := i^.opnds[1].value - disp;
+      if tm_utils_$can_encode_as_immediate_operand(value, ord(opc$move),
+                                                   1) then begin
+        result := true;
+        if apply then
+          i^.opnds[1].value := value;
+      end;
+    end
+    else if simple
+            and (kind in [1..11])
+            and (i^.opnds[1].lts^.lr = o^.lts^.lr) then
+      result := true
+    else if not no_add then begin
+      result := true;
+      if apply then
+        convert_move_to_add(i)^.opnds[1].value := -disp;
+    end;
+  end;
+  adjustable_creation_point := result;
+end;
+
+{ can_preserve_operation - whether o's instruction can keep its effect
+  when o's value changes from old to new: o must be read; condition
+  codes it sets must be neither final nor read; a load's or store's
+  base (not postmodifying or premodifying, +3 bits 7..6 = 0) with its
+  index, an ADD's operand 2 with its operand 1, a SUB's operand 2 with
+  an immediate operand 1 (yes at once when the SUB's constant
+  adjusted, value - new + old, encodes; else as an ADD), a MOVE
+  (yes at once when new - old encodes as an ADD's, unless operand 1 is
+  a register) with its operand 1: that operand must be an immediate
+  whose adjusted value (+ new - old) can be converted
+  (tm_utils_$can_convert_to_immediate_operand) or, for the changed
+  opcode, encoded.
+
+  0x27E130, 0x1A2 bytes, no A5. }
+
+function can_preserve_operation(
+    o: opnd_ptr_t;
+    old: integer32;
+    new: integer32): boolean; options(val_param); internal;
+var
+  result: boolean;
+  i: instr_ptr_t;
+  last: opnd_ptr_t;
+  opc: integer;
+  x: opnd_ptr_t;
+begin
+  result := false;
+  if not o^.h.read then begin
+    can_preserve_operation := false;
+    return;
+  end;
+  i := utils_ins_$operands_instruction(o);
+  if i^.h.sets_cc then begin
+    last := addr(i^.opnds[i^.h.nopnds]);
+    if last^.lts^.f2.b3_4 or (last^.link <> nil) then begin
+      can_preserve_operation := false;
+      return;
+    end;
+  end;
+  opc := i^.opc;
+  if instruction_attributes[opc].class in [class$load, class$store] then begin
+    if not is_base_operand(i, o) then begin
+      can_preserve_operation := false;
+      return;
+    end;
+    if rshft(i^.h.width & 16#C0, 6) <> 0 then begin
+      can_preserve_operation := false;
+      return;
+    end;
+    x := index_operand(i);
+  end
+  else if opc = ord(opc$add) then begin
+    if o^.h.num <> 2 then begin
+      can_preserve_operation := false;
+      return;
+    end;
+    x := addr(i^.opnds[1]);
+  end
+  else if opc = ord(opc$sub) then begin
+    if (o^.h.num <> 2) or (i^.opnds[1].h.kind <> operand$immediate) then begin
+      can_preserve_operation := false;
+      return;
+    end;
+    if tm_utils_$can_encode_as_immediate_operand(
+           i^.opnds[1].value - new + old, ord(opc$sub), 1) then begin
+      can_preserve_operation := true;
+      return;
+    end;
+    opc := ord(opc$add);
+    x := addr(i^.opnds[1]);
+  end
+  else if opc = ord(opc$move) then begin
+    if not (i^.opnds[1].h.kind
+            in [operand$ip_reg..operand$well_behaved_memory]) then
+      if tm_utils_$can_encode_as_immediate_operand(new - old, ord(opc$add),
+                                                   1) then begin
+        can_preserve_operation := true;
+        return;
+      end;
+    x := addr(i^.opnds[1]);
+  end
+  else begin
+    can_preserve_operation := false;
+    return;
+  end;
+  if x^.h.kind = operand$immediate then
+    if opc = i^.opc then
+      result := tm_utils_$can_convert_to_immediate_operand(
+                    new + x^.value - old, i, x^.h.num)
+    else
+      result := tm_utils_$can_encode_as_immediate_operand(
+                    new + x^.value - old, opc, x^.h.num);
+  can_preserve_operation := result;
+end;
+
+{ preserve_operation - o's instruction made to keep its effect when o's
+  value changes by delta: the immediate (a load's or store's index, an
+  ADD's or SUB's operand 1; a MOVE first made an ADD, o then its
+  operand 2) less delta; a SUB whose constant plus delta does not
+  encode becomes an ADD of the negation, else delta is negated; an ADD
+  or SUB left adding 0 becomes a MOVE (o then its operand 1).  The
+  operand must be an immediate (bug_check).
+
+  0x27E2D2, 0x11C bytes, no A5: o by address; the subtraction's flags
+  (`sub.l D2,(8,A3); bne') test the new value. }
+
+procedure preserve_operation(
+    var o: opnd_ptr_t;
+    delta: integer32); options(val_param); internal;
+var
+  i: instr_ptr_t;
+  x: opnd_ptr_t;
+begin
+  i := utils_ins_$operands_instruction(o);
+  if instruction_attributes[i^.opc].class in [class$load, class$store] then
+    x := index_operand(i)
+  else if i^.opc = ord(opc$add) then
+    x := addr(i^.opnds[1])
+  else if i^.opc = ord(opc$sub) then begin
+    if i^.opnds[1].h.kind <> operand$immediate then
+      bug_check('TR_UTILS_$preserve_operation: operand not immediate%$');
+    if tm_utils_$can_encode_as_immediate_operand(delta + i^.opnds[1].value,
+                                                 ord(opc$sub), 1) then
+      delta := -delta
+    else begin
+      utils_$set_instruction_opcode(i, ord(opc$add));
+      i^.opnds[1].value := -i^.opnds[1].value;
+    end;
+    x := addr(i^.opnds[1]);
+  end
+  else if i^.opc = ord(opc$move) then begin
+    i := convert_move_to_add(i);
+    o := addr(i^.opnds[2]);
+    x := addr(i^.opnds[1]);
+  end;
+  if x^.h.kind <> operand$immediate then
+    bug_check('TR_UTILS_$preserve_operation: operand not immediate%$');
+  x^.value := x^.value - delta;
+  if x^.value = 0 then
+    if (i^.opc = ord(opc$sub)) or (i^.opc = ord(opc$add)) then begin
+      convert_add_to_move(i);
+      o := addr(i^.opnds[1]);
+    end;
+end;
+
+{ is_well_understood_intend_input_to_modify - whether o, a register or
+  memory operand read by a MOVE, ADD, JOIN_BP or SUB, means to modify
+  (+1 bit 5) or a later operand of its instruction writes or modifies
+  o's live range.  0x27E424, 0xCC bytes, no A5. }
+
+function is_well_understood_intend_input_to_modify(
+    o: opnd_ptr_t): boolean; options(val_param); internal;
+var
+  i: instr_ptr_t;
+  k: integer32;
+  opc: integer;
+begin
+  i := utils_ins_$operands_instruction(o);
+  if not o^.h.read
+     or not (o^.h.kind in [operand$ip_reg..operand$well_behaved_memory]) then begin
+    is_well_understood_intend_input_to_modify := false;
+    return;
+  end;
+  opc := i^.opc;
+  if (opc = ord(opc$move)) or (opc = ord(opc$add))
+     or (opc = ord(opc$join_bp)) or (opc = ord(opc$sub)) then begin
+    if o^.h.intend_to_modify then begin
+      is_well_understood_intend_input_to_modify := true;
+      return;
+    end;
+    for k := o^.h.num + 1 to i^.h.nopnds do
+      if (i^.opnds[k].h.kind
+          in [operand$ip_reg..operand$well_behaved_memory])
+         and ((opnd_bytes_ptr_t(addr(i^.opnds[k]))^.rrp & 12) <> 0)
+         and (i^.opnds[k].lts^.lr = o^.lts^.lr) then begin
+        is_well_understood_intend_input_to_modify := true;
+        return;
+      end;
+    is_well_understood_intend_input_to_modify := false;
+  end
+  else
+    is_well_understood_intend_input_to_modify := false;
+end;
+
+{ tr_utils_$try_twiddling_disp - instr's displacement folded into the
+  definitions and uses of the live range it adds to: for an ADD or SUB
+  (not setting the condition codes, disp 0) of a register result (its
+  operand 3), an immediate operand 1 (delta, negated for a SUB; not
+  when operand 2 is the result's live range) or a register operand 1
+  of an ADD (then the uses are rewritten instead: the copy mode); for a
+  load or store with an immediate index, disp less the index (delta)
+  and the base's live range.  Each segment of the live range: its
+  writing def must absorb delta (adjustable_creation_point; in the
+  copy mode be instr's result), its readers keep their effect
+  (is_well_understood_intend_input_to_modify, can_preserve_operation;
+  in the copy mode each must be the base of a load or store in instr's
+  block with an immediate index cancelling delta, convertible to a
+  register index, not modifying, after instr's operand 1's last
+  segment's def unless that live range is simple with one segment).
+  When some def or reader was found, everything rewritten so (in the
+  copy mode the defs, ADDs, become MOVEs and the index operands become
+  operand 1's segment, its rrp less 0x2C plus read, its count); then,
+  unless no_copy_elim, the last such MOVE's copy eliminated.  True when
+  done (also when nothing was found).
+
+  0x27E4F0, 0x42C bytes: delta at -52, the mode at -64 (true: adjust),
+  operand 1's live range simple at -60; tr_utils_$attempt_copy_elimination
+  with the cell +20 as it is. }
+
+function tr_utils_$try_twiddling_disp(
+    instr: instr_ptr_t;
+    disp: integer32;
+    no_add: boolean;
+    no_copy_elim: boolean): boolean;
+var
+  result: boolean;
+  adjust: boolean;
+  simple1: boolean;
+  delta: integer32;
+  base: opnd_ptr_t;
+  src: lts_ptr_t;
+  count: integer32;
+  kind: integer;
+  lr: lr_ptr_t;
+  l: lts_ptr_t;
+  found: boolean;
+  r, nr, x, t: opnd_ptr_t;
+  i: instr_ptr_t;
+  v: integer32;
+  last, prev: lts_ptr_t;
+  mv: instr_ptr_t;
+begin
+  result := false;
+  adjust := true;
+  simple1 := false;
+  if (instr^.opc = ord(opc$sub)) or (instr^.opc = ord(opc$add)) then begin
+    if instr^.h.sets_cc or (disp <> 0) then begin
+      tr_utils_$try_twiddling_disp := false;
+      return;
+    end;
+    base := addr(instr^.opnds[3]);
+    if not (base^.h.kind in [operand$ip_reg..operand$well_behaved_memory])
+    then begin
+      tr_utils_$try_twiddling_disp := false;
+      return;
+    end;
+    if instr^.opnds[1].h.kind = operand$immediate then begin
+      if instr^.opnds[2].h.kind
+         in [operand$ip_reg..operand$well_behaved_memory] then
+        if instr^.opnds[2].lts^.lr = base^.lts^.lr then begin
+          tr_utils_$try_twiddling_disp := false;
+          return;
+        end;
+      delta := instr^.opnds[1].value;
+      if instr^.opc = ord(opc$sub) then
+        delta := -delta;
+    end
+    else begin
+      if (instr^.opc = ord(opc$sub))
+         or not (instr^.opnds[1].h.kind
+                 in [operand$ip_reg..operand$well_behaved_memory]) then begin
+        tr_utils_$try_twiddling_disp := false;
+        return;
+      end;
+      src := instr^.opnds[1].lts;
+      simple1 := (src^.lr^.w4 = 0) and (src^.lr^.ltss^.next = nil);
+      count := instr^.opnds[1].h.count;
+      kind := ord(instr^.opnds[1].h.kind);
+      adjust := false;
+      delta := 0;
+    end;
+  end
+  else begin
+    x := index_operand(instr);
+    if x = nil then begin
+      tr_utils_$try_twiddling_disp := false;
+      return;
+    end;
+    if x^.h.kind <> operand$immediate then begin
+      tr_utils_$try_twiddling_disp := false;
+      return;
+    end;
+    delta := disp - x^.value;
+    base := base_operand(instr);
+    if not (base^.h.kind in [operand$ip_reg..operand$well_behaved_memory])
+    then begin
+      tr_utils_$try_twiddling_disp := false;
+      return;
+    end;
+  end;
+  lr := base^.lts^.lr;
+  l := lr^.ltss;
+  found := false;
+  while l <> nil do begin
+    r := l^.def;
+    if (r <> nil) and ((opnd_bytes_ptr_t(r)^.rrp & 12) <> 0) then begin
+      if adjust then begin
+        if not adjustable_creation_point(r, delta, instr, true, no_add,
+                                         false) then begin
+          tr_utils_$try_twiddling_disp := false;
+          return;
+        end;
+      end
+      else if r <> addr(instr^.opnds[3]) then begin
+        tr_utils_$try_twiddling_disp := false;
+        return;
+      end;
+      r := r^.link;
+    end
+    else if not adjust then begin
+      tr_utils_$try_twiddling_disp := false;
+      return;
+    end;
+    while r <> nil do begin
+      if adjust then begin
+        if not is_well_understood_intend_input_to_modify(r) then
+          if not can_preserve_operation(r, 0, delta) then begin
+            tr_utils_$try_twiddling_disp := false;
+            return;
+          end;
+      end
+      else begin
+        i := utils_ins_$operands_instruction(r);
+        x := index_operand(i);
+        if x = nil then begin
+          tr_utils_$try_twiddling_disp := false;
+          return;
+        end;
+        if x^.h.kind <> operand$immediate then begin
+          tr_utils_$try_twiddling_disp := false;
+          return;
+        end;
+        if not tm_utils_$can_convert_to_ip_reg_operand(i^.opc, x^.h.num,
+                                                       count) then begin
+          tr_utils_$try_twiddling_disp := false;
+          return;
+        end;
+        v := x^.value + delta;
+        if (rshft(i^.h.width & 16#C0, 6) <> 0) or (base_operand(i) <> r)
+           or (v <> 0) or (i^.bb <> instr^.bb) then begin
+          tr_utils_$try_twiddling_disp := false;
+          return;
+        end;
+        if not simple1 then begin
+          last := utils_$find_last_lts_in_bb(src^.lr, i^.bb, prev);
+          if last <> src then begin
+            while last^.next <> src do
+              last := last^.next;
+            if tr_utils_$relative_instr_position(i,
+                 utils_ins_$operands_instruction(last^.def)) < 0 then begin
+              tr_utils_$try_twiddling_disp := false;
+              return;
+            end;
+          end;
+        end;
+      end;
+      found := true;
+      r := r^.link;
+    end;
+    l := l^.next;
+  end;
+  if found then begin
+    mv := nil;
+    l := lr^.ltss;
+    while l <> nil do begin
+      r := l^.def;
+      if (r <> nil) and ((opnd_bytes_ptr_t(r)^.rrp & 12) <> 0) then begin
+        nr := r^.link;
+        if adjust then
+          discard(adjustable_creation_point(r, delta, instr, true, no_add,
+                                            true))
+        else begin
+          i := utils_ins_$operands_instruction(r);
+          convert_add_to_move(i);
+          mv := i;
+        end;
+        r := nr;
+      end;
+      while r <> nil do begin
+        nr := r^.link;
+        x := index_operand(utils_ins_$operands_instruction(r));
+        if adjust then begin
+          if not is_well_understood_intend_input_to_modify(r) then begin
+            t := r;
+            preserve_operation(t, -delta);
+          end;
+        end
+        else if x <> nil then begin
+          x^.h.kind := operand$t(kind);
+          opnd_bytes_ptr_t(x)^.rrp :=
+            (integer(src^.rrp) & 16#D3) ! 16;
+          x^.lts := src;
+          x^.h.count := count;
+          if (src^.def <> nil)
+             and ((opnd_bytes_ptr_t(src^.def)^.rrp & 12) <> 0) then begin
+            x^.link := src^.def^.link;
+            src^.def^.link := x;
+          end
+          else begin
+            x^.link := src^.def;
+            src^.def := x;
+          end;
+        end;
+        r := nr;
+      end;
+      l := l^.next;
+    end;
+    if not no_copy_elim and (mv <> nil) then
+      tr_utils_$attempt_copy_elimination(tr_rtn, mv);
+  end;
+  tr_utils_$try_twiddling_disp := true;
+end;
+
+{ transform_to_autoindex - add (an ADD or SUB of the base register and
+  an immediate) folded into mem as its pre- or postmodification: o (the
+  operand of mem that reads the base) takes the add's operand 2, x (the
+  index) a copy of the add's operand 1 (negated for a SUB); unless mem
+  is a load whose result is the base's live range (only allowed when
+  allow_same: then a mode 1 index is 0), the add's result moves to a
+  free operand slot of mem (modify instead of write), o means to
+  modify, and mem's +3 bits 7..6 get mode.  The add excised.
+
+  0x27E91C, 0x11A bytes, no A5. }
+
+procedure transform_to_autoindex(
+    mem: instr_ptr_t;
+    o: opnd_ptr_t;
+    x: opnd_ptr_t;
+    add: instr_ptr_t;
+    mode: integer;
+    allow_same: boolean); options(val_param); internal;
+var
+  n: opnd_ptr_t;
+begin
+  drop_operand_from_lts(o);
+  move_operand(addr(add^.opnds[2]), o);
+  drop_operand_from_lts(x);
+  make_copy(addr(add^.opnds[1]), x);
+  utils_$maybe_merge_source_statements(mem, add);
+  if add^.opc = ord(opc$sub) then
+    x^.value := -x^.value;
+  if (instruction_attributes[mem^.opc].class = class$load)
+     and (mem^.opnds[2].lts^.lr = mem^.opnds[3].lts^.lr) then begin
+    if not allow_same then
+      bug_check('TR_UTILS_$transform_to_autoindex: load LR same as base addr!%$');
+    if mode = 1 then
+      x^.value := 0;
+  end
+  else begin
+    n := find_operand_of_kind(mem, 0, 0);
+    move_operand(addr(add^.opnds[3]), n);
+    n^.h.write := false;
+    n^.h.modify := true;
+    n^.lts^.rrp := n^.lts^.rrp - [rrp$write] + [rrp$modify];
+    o^.h.intend_to_modify := true;
+    o^.lts^.rrp := o^.lts^.rrp + [rrp$intend_to_modify];
+    mem^.h.width := (mem^.h.width & 16#3F) ! lshft(mode, 6);
+  end;
+  discard(lir_utils_$excise_inst(add));
+end;
+
+{ mem_ref_positioned_for_postincrement - whether mem (not yet pre- or
+  postmodifying, with a register base and an immediate index) can
+  postmodify its base by disp (add the instruction that adds it, or
+  nil): with try_pre, a postmodification when the index plus offset is
+  0, or a premodification when it equals disp; otherwise the index
+  plus offset must be 0 and, when add's result is written before mem,
+  mem and its dependents are separated from what lies between them.
+  Then the base's readers are ordered; the last one (before add's, when
+  that is add's) must not mean to modify, and the readers mem's
+  dependents include must keep their effect (can_preserve_operation,
+  with try_pre only; else no); mem's dependents are separated from the
+  rest up to that reader.  Without try_pre, add's result's readers must
+  not depend on mem.
+
+  0x27EA74, 0x280 bytes, no A5 (its callers'): the result in D5, the
+  disp parameter's register reused for the answer (D2). }
+
+function mem_ref_positioned_for_postincrement(
+    mem: instr_ptr_t;
+    add: instr_ptr_t;
+    try_pre: boolean;
+    disp: integer32;
+    offset: integer32): boolean; options(val_param); internal;
+var
+  result: boolean;
+  ok: boolean;
+  base, x, prev, last, r: opnd_ptr_t;
+  sum: integer32;
+  def: instr_ptr_t;
+  mark: integer32;
+  target: instr_ptr_t;
+begin
+  result := false;
+  base := base_operand(mem);
+  if rshft(mem^.h.width & 16#C0, 6) <> 0 then begin
+    mem_ref_positioned_for_postincrement := false;
+    return;
+  end;
+  if base = nil then begin
+    mem_ref_positioned_for_postincrement := false;
+    return;
+  end;
+  if not (base^.h.kind in [operand$ip_reg..operand$well_behaved_memory])
+  then begin
+    mem_ref_positioned_for_postincrement := false;
+    return;
+  end;
+  x := index_operand(mem);
+  if x = nil then begin
+    mem_ref_positioned_for_postincrement := false;
+    return;
+  end;
+  if x^.h.kind <> operand$immediate then begin
+    mem_ref_positioned_for_postincrement := false;
+    return;
+  end;
+  sum := offset + x^.value;
+  if try_pre then begin
+    if not (tm_utils_$can_postmodify_base_register_by(disp, mem^.opc)
+            and (sum = 0)) then
+      if not tm_utils_$can_premodify_base_register_by(disp, mem^.opc)
+         or (disp <> sum) then begin
+        mem_ref_positioned_for_postincrement := false;
+        return;
+      end;
+  end
+  else begin
+    if (sum <> 0) or (add = nil) then begin
+      mem_ref_positioned_for_postincrement := false;
+      return;
+    end;
+    if (add^.opnds[1].lts^.rrp * [rrp$modify, rrp$write]) <> [] then begin
+      def := utils_ins_$operands_instruction(add^.opnds[1].lts^.def);
+      if tr_utils_$relative_instr_position(mem, def) > 0 then begin
+        tr_rtn^.l180 := tr_rtn^.l180 + 1;
+        mark := tr_rtn^.l180;
+        tr_utils_$mark_dependents(mem, def, mark);
+        if mem^.l16 = def^.l16 then begin
+          mem_ref_positioned_for_postincrement := false;
+          return;
+        end;
+        tr_utils_$separate_partitions(mem, def);
+        tr_utils_$guarantee_operand_order(add^.opnds[1].lts);
+      end;
+    end;
+  end;
+  tr_utils_$guarantee_operand_order(base^.lts);
+  if base^.link = nil then
+    ok := true
+  else begin
+    prev := nil;
+    last := base^.link;
+    while last^.link <> nil do begin
+      prev := last;
+      last := last^.link;
+    end;
+    if utils_ins_$operands_instruction(last) = add then
+      last := prev;
+    if last = nil then
+      ok := true
+    else begin
+      if last^.h.intend_to_modify then begin
+        mem_ref_positioned_for_postincrement := false;
+        return;
+      end;
+      tr_rtn^.l180 := tr_rtn^.l180 + 1;
+      mark := tr_rtn^.l180;
+      target := utils_ins_$operands_instruction(last);
+      tr_utils_$mark_dependents(mem, target, mark);
+      r := base^.link;
+      repeat
+        if utils_ins_$operands_instruction(r)^.l16 = mark then begin
+          if not try_pre then begin
+            mem_ref_positioned_for_postincrement := false;
+            return;
+          end;
+          if not can_preserve_operation(r, disp, offset) then begin
+            mem_ref_positioned_for_postincrement := false;
+            return;
+          end;
+        end;
+        if r = last then
+          exit;
+        r := r^.link;
+      until false;
+      tr_utils_$separate_partitions(mem, target);
+      tr_utils_$guarantee_operand_order(base^.lts);
+      ok := true;
+    end;
+  end;
+  if ok and not try_pre then
+    if (add^.opnds[1].h.kind
+        in [operand$ip_reg..operand$well_behaved_memory])
+       and ((add^.opnds[1].lts^.rrp * [rrp$modify, rrp$write]) <> []) then begin
+      tr_rtn^.l180 := tr_rtn^.l180 + 1;
+      mark := tr_rtn^.l180;
+      tr_utils_$mark_dependents(mem, add, mark);
+      if utils_ins_$operands_instruction(add^.opnds[1].lts^.def)^.l16
+         = mark then begin
+        mem_ref_positioned_for_postincrement := false;
+        return;
+      end;
+    end;
+  mem_ref_positioned_for_postincrement := ok;
+end;
+
+{ mem_ref_positioned_for_preincrement - whether mem (not yet pre- or
+  postmodifying, with a register base, written by add's result when
+  written at all, and an immediate index) can premodify its base by
+  disp: with try_post, a premodification when the index plus offset is
+  0 or a postmodification when it is -disp; otherwise it must be 0.
+  Then, the base's readers ordered, the reader before mem's base and
+  what depends on it must not include mem: else mem is separated from
+  it and the test repeated; when they do (only with try_post), each
+  reader before mem's base must keep its effect (can_preserve_operation
+  with -disp).
+
+  0x27ECF4, 0x1AC bytes, no A5 (its callers'): add's register reused
+  for the sum. }
+
+function mem_ref_positioned_for_preincrement(
+    mem: instr_ptr_t;
+    add: instr_ptr_t;
+    try_post: boolean;
+    disp: integer32;
+    offset: integer32): boolean; options(val_param); internal;
+var
+  base, x, r: opnd_ptr_t;
+  written: boolean;
+  sum: integer32;
+  mark: integer32;
+  i: instr_ptr_t;
+begin
+  base := base_operand(mem);
+  if (rshft(mem^.h.width & 16#C0, 6) <> 0) or (base = nil) then begin
+    mem_ref_positioned_for_preincrement := false;
+    return;
+  end;
+  if not (base^.h.kind in [operand$ip_reg..operand$well_behaved_memory])
+  then begin
+    mem_ref_positioned_for_preincrement := false;
+    return;
+  end;
+  written := (base^.lts^.rrp * [rrp$modify, rrp$write]) <> [];
+  if written then
+    if base^.lts^.def <> addr(add^.opnds[3]) then begin
+      mem_ref_positioned_for_preincrement := false;
+      return;
+    end;
+  x := index_operand(mem);
+  if x = nil then begin
+    mem_ref_positioned_for_preincrement := false;
+    return;
+  end;
+  if x^.h.kind <> operand$immediate then begin
+    mem_ref_positioned_for_preincrement := false;
+    return;
+  end;
+  sum := offset + x^.value;
+  if try_post then begin
+    if not (tm_utils_$can_premodify_base_register_by(disp, mem^.opc)
+            and (sum = 0)) then
+      if not tm_utils_$can_postmodify_base_register_by(disp, mem^.opc)
+         or (-disp <> sum) then begin
+        mem_ref_positioned_for_preincrement := false;
+        return;
+      end;
+  end
+  else if sum <> 0 then begin
+    mem_ref_positioned_for_preincrement := false;
+    return;
+  end;
+  repeat
+    tr_utils_$guarantee_operand_order(base^.lts);
+    if written then
+      r := base^.lts^.def^.link
+    else
+      r := base^.lts^.def;
+    if r = base then begin
+      mem_ref_positioned_for_preincrement := true;
+      return;
+    end;
+    while r^.link <> base do
+      r := r^.link;
+    tr_rtn^.l180 := tr_rtn^.l180 + 1;
+    mark := tr_rtn^.l180;
+    i := utils_ins_$operands_instruction(r);
+    tr_utils_$mark_dependents(i, mem, mark);
+    if i^.l16 = mem^.l16 then begin
+      if not try_post then begin
+        mem_ref_positioned_for_preincrement := false;
+        return;
+      end;
+      if written then
+        r := base^.lts^.def^.link
+      else
+        r := base^.lts^.def;
+      while r <> base do begin
+        if not can_preserve_operation(r, -disp, offset) then begin
+          mem_ref_positioned_for_preincrement := false;
+          return;
+        end;
+        r := r^.link;
+      end;
+      mem_ref_positioned_for_preincrement := true;
+      return;
+    end;
+    tr_utils_$separate_partitions(i, mem);
+  until false;
+end;
+
+{ can_adjust_creation_point - whether the creation of lts (written or
+  modified), by a MOVE (its operand 2), ADD or SUB (operand 3) or a
+  postmodifying load or store of lts's live range (lts's def), can
+  absorb new - old (adjustable_creation_point, without applying), and
+  the def's readers keep their effect (can_preserve_operation).
+
+  0x27EEA0, 0x122 bytes, no A5. }
+
+function can_adjust_creation_point(
+    instr: instr_ptr_t;
+    lts: lts_ptr_t;
+    creator: instr_ptr_t;
+    old: integer32;
+    new: integer32): boolean; options(val_param); internal;
+var
+  result: boolean;
+  o: opnd_ptr_t;
+begin
+  if (lts^.rrp * [rrp$modify, rrp$write]) = [] then begin
+    can_adjust_creation_point := false;
+    return;
+  end;
+  if (instr^.opc = ord(opc$move)) or (instr^.opc = ord(opc$sub))
+     or (instr^.opc = ord(opc$add)) then begin
+    if instr^.opc = ord(opc$move) then
+      o := addr(instr^.opnds[2])
+    else
+      o := addr(instr^.opnds[3]);
+    if o^.lts <> lts then begin
+      can_adjust_creation_point := false;
+      return;
+    end;
+    if adjustable_creation_point(o, new - old, creator, false, false,
+                                 false) then
+      result := true
+    else begin
+      can_adjust_creation_point := false;
+      return;
+    end;
+  end
+  else if instruction_attributes[instr^.opc].class
+          in [class$load, class$store] then begin
+    if (rshft(instr^.h.width & 16#C0, 6) <> 1)
+       or (base_operand(instr)^.lts^.lr <> lts^.lr) then begin
+      can_adjust_creation_point := false;
+      return;
+    end;
+    o := lts^.def;
+    result := adjustable_creation_point(o, new - old, creator, false, false,
+                                        false);
+  end
+  else
+    result := false;
+  if result then begin
+    o := o^.link;
+    while o <> nil do begin
+      if not can_preserve_operation(o, old, new) then begin
+        can_adjust_creation_point := false;
+        return;
+      end;
+      o := o^.link;
+    end;
+  end;
+  can_adjust_creation_point := result;
+end;
