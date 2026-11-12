@@ -2592,6 +2592,227 @@ begin
   bit_field_inst_which_obviates_test := r;
 end;
 
+{ opt_btst - a btst c, a beq or bne (ops 145, 144) after it and the
+  same btst again after that: the second removed when its op is the
+  first's reflected (72 or 74 plus 77, less c's op), which c takes.  Not
+  under -DBA or with untouchable memory.  The cell after c.
+
+  0x10CBDA, 0xBE bytes, no A5 load. }
+
+function opt_btst(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+label
+  9;
+var
+  b: codegen_$cell_ptr_t;
+  c2: codegen_$cell_ptr_t;
+  d: integer;
+begin
+  b := nxtlcc(c);
+  if cargs_$options.db = 3 then
+    goto 9;
+  if has_untouchable_mem_attrs(c^.ads2) then
+    goto 9;
+  if b^.kind <> cbr_instyp then
+    goto 9;
+  c2 := nxtlcc(b);
+  if (c2^.kind = c^.kind) and sameaddr(c^.ads1, c2^.ads1) and
+     sameaddr(c^.ads2, c2^.ads2) then begin
+    if b^.op = 145 then
+      d := 72
+    else if b^.op = 144 then
+      d := 74
+    else
+      goto 9;
+    d := d + 77 - c^.op;
+    if c2^.op = d then begin
+      c^.op := d;
+      detach(c2);
+    end;
+  end;
+9:
+  opt_btst := b;
+end;
+
+{ final_$redundant_compare - compare c repeats the compare two cells
+  before it (the same kind, op and operands, no untouchable memory, no
+  postincrement or predecrement), with branches of one kind (18 or 39)
+  after each.
+
+  0x10CC98, 0xE6 bytes, no A5 load. }
+
+function final_$redundant_compare(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+  nx: codegen_$cell_ptr_t;
+  pv: codegen_$cell_ptr_t;
+  pv2: codegen_$cell_ptr_t;
+begin
+  r := false;
+  if not has_untouchable_mem_attrs(c^.ads1) and
+     not has_untouchable_mem_attrs(c^.ads2) and
+     not has_xcrement_addressing(c^.ads1) and
+     not has_xcrement_addressing(c^.ads2) then begin
+    nx := nxtlcc(c);
+    pv := prvlcc(c);
+    pv2 := prvlcc(pv);
+    if ((nx^.kind = fbr_instyp) or (nx^.kind = cbr_instyp)) and
+       ((pv^.kind = fbr_instyp) or (pv^.kind = cbr_instyp)) and
+       (pv^.kind = nx^.kind) and (pv2^.kind = c^.kind) and
+       (pv2^.op = c^.op) and sameaddr(pv2^.ads1, c^.ads1) and
+       sameaddr(pv2^.ads2, c^.ads2) then
+      r := true;
+  end;
+  final_$redundant_compare := r;
+end;
+
+{ final_$redundant_movea - movea c (kind 4, op 5) of a label or node
+  address (modes 12, 15: `btst' in #0x9000) is already done by an
+  earlier identical movea, looking back past instructions that do not
+  change its register or write its source, up to a label, a call or
+  branch, or the section's head.
+
+  0x10D094, 0xE0 bytes, no A5 load: the stop flag in D2, the answer in
+  D3. }
+
+function final_$redundant_movea(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+  stop: boolean;
+  p: codegen_$cell_ptr_t;
+begin
+  r := false;
+  stop := false;
+  p := c;
+  if (c^.kind = a_instyp) and (c^.op = 5) and (c^.ads1.f1 in [12, 15]) then
+    repeat
+      p := prvlcc(p);
+      if (p^.kind = a_instyp) and (p^.op = 5) and
+         sameaddr(p^.ads1, c^.ads1) and sameaddr(p^.ads2, c^.ads2) then
+        r := true
+      else begin
+        if (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+           final_$reg_is_killed(p, c^.ads2.f2) then
+          stop := true
+        else
+          stop := sameaddr(p^.ads2, c^.ads1);
+      end;
+      stop := stop or (p = fn_sect^.head);
+    until stop or r;
+  final_$redundant_movea := r;
+end;
+
+{ final_$unity_compare_and_branch - c compares a data register with
+  itself (ops 102..104, mode 1, sameaddr), and the conditional branch
+  after it (a condition in a set of 0..175) depends on nothing the
+  compare leaves (testcc of the codes after the branch and at its
+  target): the branch becomes a bra (17, op 121) when the condition
+  holds for equal operands (a second set), else is removed.
+
+  0x10D174, 0xEA bytes, no A5 load: the sets at 0x10D25E and
+  0x10D274. }
+
+function final_$unity_compare_and_branch(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+  b: codegen_$cell_ptr_t;
+begin
+  r := false;
+  b := nxtlcc(c);
+  if (c^.op in [102..104]) and (c^.ads1.f1 = 1) and
+     sameaddr(c^.ads1, c^.ads2) and (b^.kind = cbr_instyp) and
+     (b^.op in [142..153, 156..167]) and not testcc(nxtlcc(b), 15) and
+     not testcc(br_target(b), 15) then begin
+    r := true;
+    if b^.op in [142, 145..146, 148, 150, 153, 156, 159..160, 162, 164, 167] then begin
+      b^.kind := br_instyp;
+      b^.op := 121;
+    end
+    else
+      detach(b);
+  end;
+  final_$unity_compare_and_branch := r;
+end;
+
+{ test_add_sub - c adds (ops 17..24: '+') or subtracts (28..35: '-') an
+  immediate integer constant (kinds 8, 5, 4); ch the sign.
+
+  0x10E734, 0xB8 bytes, no A5 load: a `case' of op less 17 through a
+  table of 19 (25..27 neither); ch by address. }
+
+function test_add_sub(
+    c: codegen_$cell_ptr_t;
+    out ch: char): boolean; options(val_param); internal;
+var
+  r: boolean;
+  n: il_$node_ptr_t;
+begin
+  r := false;
+  if ((c^.kind = i_instyp) or (c^.kind = q_instyp) or (c^.kind = a_instyp)) and
+     (c^.ads1.f1 = 3) then begin
+    n := il_$node_ptr_t(c^.ads1.x);
+    if n^.kind in [77..87, 101, 200] then
+      case c^.op of
+      17, 18, 19, 20, 21, 22, 23, 24: begin
+        ch := '+';
+        r := true;
+      end;
+        28, 29, 30, 31, 32, 33, 34, 35: begin
+          ch := '-';
+          r := true;
+        end;
+        otherwise
+          ;
+      end;
+  end;
+  test_add_sub := r;
+end;
+
+{ is_stack_adjuster - c adjusts SP (its destination register 15): ops
+  22..24, 31..33 (a set of 0..47), ops 17, 18, 35, 34 of an immediate,
+  or a lea (op 12) from (SP).
+
+  0x10E7EC, 0xA2 bytes, no A5 load. }
+
+function is_stack_adjuster(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+begin
+  r := false;
+  if (c^.ads2.f1 = 1) and (c^.ads2.f2 = 15) then
+    if c^.op in [22..24, 31..33] then
+      r := true
+    else if ((c^.op = 17) or (c^.op = 18) or (c^.op = 35) or (c^.op = 34)) and
+            (c^.ads1.f1 = 3) then
+      r := true
+    else if (c^.op = 12) and (c^.ads1.f1 = 2) and (c^.ads1.f2 = 15) then
+      r := true;
+  is_stack_adjuster := r;
+end;
+
+{ final_$addr_adjust_value - what stack adjuster c adds to SP: the
+  constant for ops 17, 18, 22..24 (`btst' in #0x1C60000), its negation
+  for 31..35 (a set of 0..47), a lea's displacement; else 0.
+
+  0x10E894, 0x50 bytes, no frame. }
+
+function final_$addr_adjust_value(
+    c: codegen_$cell_ptr_t): integer32; options(val_param); internal;
+begin
+  if c^.op in [17, 18, 22, 23, 24] then
+    final_$addr_adjust_value := il_$node_ptr_t(c^.ads1.x)^.int_value
+  else if c^.op in [31..35] then
+    final_$addr_adjust_value := -il_$node_ptr_t(c^.ads1.x)^.int_value
+  else if c^.op = 12 then
+    final_$addr_adjust_value := c^.ads1.y
+  else
+    final_$addr_adjust_value := 0;
+end;
+
 { final_$stack_is_altered - between link c and its unlk (21) the code
   calls, uses op 13, or changes SP (15) or A6 (14).
 
