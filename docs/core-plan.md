@@ -494,3 +494,14 @@ libdsc byte-identical; std_lib's pointers TODO, question 147) and
 opinfo.pas (the seven tables .blocks names, byte-identical).  No shared
 insert changed; the users' extern names for opinfo's tables and the
 prelude's std_lib_rtns are left for the merge (questions 147, 148).
+
+Translator OO (2026-11-11), opinfo's names (question 148): final.ins.pas
+declares opinfo's seven public tables under the names .blocks gives
+them and their true bounds (insind [0..77] of opinfo_list_ptr_t;
+cc_table [0..22] of [0..5]; class_table, optohex (0..16#FFFF),
+oprw_table, opcontext, opname [0..506]) and the list entry
+opinfo_entry_t (emit's em_entry_t); opinfo.pas defines them (define
+statement with initializers, address order); emit, final, banshee,
+instr_reorder and outbin lost their externs (opinfo_insts, opinfo_cc,
+opinfo_cc_class, opinfo_access, opinfo_size, opinfo_sizes,
+opinfo_opword, opinfo_names) and use the original names.

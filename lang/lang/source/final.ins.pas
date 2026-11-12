@@ -106,3 +106,60 @@ procedure instr_reorder(
 procedure dobansheefpx(
     first: codegen_$cell_ptr_t;
     last: codegen_$cell_ptr_t); options(val_param); extern;
+
+{ opinfo.pas's tables (cc.m68k only; data, reached absolutely), under
+  the names the unit's .blocks record gives them, in address order.
+  Each per-instruction table has an entry for each machine instruction
+  0..506 (a code cell's +48, codegen_$cell_t's op); opinfo.pas defines
+  them (docs/questions.md 148).  Readers: insind emit (fnl_slct);
+  cc_table and class_table final (cc_change, pcondjmp, puncondjmp,
+  assert_n_bit_is_modified, deltest); optohex outbin (genfpinst,
+  assemble, wr_instr); oprw_table final (reg_mod, deltest) and
+  instr_reorder (store_to_memory); opcontext final (final_$sizeof,
+  fpx_instruction, deltest, opttest) and banshee (dobansheefpx); opname
+  outbin (dbcod, wr_instr).
+
+  Not known from the original: which insert declared them (this one is
+  opened by opinfo, last, and by every reader); the types (written
+  with the widths of the accesses), the entry's fields and the list
+  type's bound (a list ends at the entry whose flags have element 5). }
+
+type
+  { An instruction of a generic operation, 12 bytes: the restriction
+    codes of the destination and the source (emit's chk_op_restr) and
+    of the size (chk_sz_restr), the code cell's kind and the machine
+    instruction (the cell's +48), and flags: elements 0..4 the cpu
+    features the instruction needs (fnl_slct's missing set), 5 the
+    list's last entry. }
+  opinfo_entry_t = record
+    dst: integer;                       { +0 }
+    src: integer;                       { +2 }
+    sz: integer;                        { +4 }
+    kind: integer;                      { +6 }
+    op: integer;                        { +8: the instruction }
+    flags: set of 0..15;                { +10 }
+  end;
+  opinfo_list_t = array [0..63] of opinfo_entry_t;
+  opinfo_list_ptr_t = ^opinfo_list_t;
+
+var
+  { 0x2CE8D8: generic operation k's (0..77) list of instructions (nil
+    for 32 and 33). }
+  insind: extern array [0..77] of opinfo_list_ptr_t;
+  { 0x2CF4D8: each condition-code class's effect on the codes 0..5
+    (0..4; 2 changed). }
+  cc_table: extern array [0..22] of array [0..5] of integer;
+  { 0x2CF5EC: each instruction's condition-code class. }
+  class_table: extern array [0..506] of integer;
+  { 0x2CF9E2: each instruction's operation word (unsigned: outbin's
+    wr_instr zero-extends it, `clr.l' then `move.w', before adding). }
+  optohex: extern packed array [0..506] of 0..16#FFFF;
+  { 0x2CFDD8: each instruction's operands' access: R read, W written,
+    - none. }
+  oprw_table: extern array [0..506] of packed array [1..2] of char;
+  { 0x2D01CE: each instruction's operands' sizes: B W L byte, word,
+    long, F D X single, double, extended, Q a quick constant, S, A an
+    address, - none. }
+  opcontext: extern array [0..506] of packed array [1..2] of char;
+  { 0x2D05C4: each instruction's mnemonic, blank-padded. }
+  opname: extern array [0..506] of packed array [1..9] of char;

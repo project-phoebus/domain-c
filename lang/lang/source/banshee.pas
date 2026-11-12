@@ -21,9 +21,9 @@
 
   dobansheefpx loads A5 (global; final.pas's peepholer calls it, the
   heading in final.ins.pas).  The 68881 operand sizes are opinfo.pas's
-  data (cc.m68k 0x2D01CE: two characters per instruction, the source's
-  and the destination's: B, W, L, F, D, X), declared here as
-  instr_reorder.pas declares opinfo's access codes.
+  data (opcontext, cc.m68k 0x2D01CE: two characters per instruction,
+  the source's and the destination's: B, W, L, F, D, X), declared in
+  final.ins.pas (docs/questions.md 148).
 
   Not known from the original: the names of the module's variables
   and of the locals; why the alignment cell is wanted.
@@ -57,10 +57,6 @@ var
   { celpkg.pas's empty descriptor (its +24, cc.m68k 0x2CE68C,
     absolute). }
   null_ads: extern codegen_$ads_t;
-
-  { opinfo.pas's data (cc.m68k 0x2D01CE, absolute): each instruction's
-    operand sizes. }
-  opinfo_sizes: extern array [0..367] of packed array [1..2] of char;
 
 { dobansheefpx - see final.ins.pas: under -CPU FPX, every 68881 cell
   (kinds 40..42, 44, 50) from first up to last rewritten: its command
@@ -121,7 +117,7 @@ begin
         access := '-';
         case p^.kind of
           40: begin
-            access := opinfo_sizes[p^.op][1];
+            access := opcontext[p^.op][1];
             if (access = 'D') and (c^.ads2.f1 = 9) then
               form := 2
             else
@@ -129,7 +125,7 @@ begin
             bans_opnd := p^.ads1;
           end;
           42: begin
-            access := opinfo_sizes[p^.op][2];
+            access := opcontext[p^.op][2];
             if (access = 'D') and (c^.ads2.f1 = 9) then
               form := 4
             else
@@ -137,7 +133,7 @@ begin
             bans_opnd := p^.ads2;
           end;
           50: begin
-            access := opinfo_sizes[p^.op][2];
+            access := opcontext[p^.op][2];
             if (access = 'D') and (c^.ads2.f1 = 9) then
               form := 4
             else

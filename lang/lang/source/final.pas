@@ -154,7 +154,8 @@
     68881's ROM constants) floatop's; +0, +36 and +42 deltest's
     test); +12, +0x84, +0x2C8 and +0x2D8 have no user found.
     Absolute: cargs's options (+0x280..+0x288), opinfo's tables
-    (0x2CF4D8, 0x2CF5EC, 0x2CFDD8, 0x2D01CE), cg_null_ads (0x356600),
+    (cc_table 0x2CF4D8, class_table 0x2CF5EC, oprw_table 0x2CFDD8,
+    opcontext 0x2D01CE: final.ins.pas), cg_null_ads (0x356600),
     il_180.
 
   The code cells are read through codegen.ins.pas's codegen_$cell_t:
@@ -220,7 +221,7 @@ type
     (`cmpm.l', `dbne' 2). }
   fn_ads_words_t = array [1..3] of integer32;
 
-  { The condition codes (0..5: opinfo_cc's columns) as a word. }
+  { The condition codes (0..5: cc_table's columns) as a word. }
   fn_ccs_t = set of 0..15;
 
   { A real constant as floatop reads it: the double, its bits as a set
@@ -262,25 +263,9 @@ type
   end;
 
 var
-  { opinfo.pas's data (the unit without code; cc.m68k 0x2D01CE,
-    absolute): each instruction's two operands' sizes ('B', 'W', 'L',
-    'F', 'D', 'X'), indexed by the cell's +48. }
-  opinfo_size: extern array [0..367] of packed array [1..2] of char;
-
-  { opinfo.pas's data (cc.m68k 0x2CF5EC, 0x2CF4D8, absolute): each
-    instruction's class for the condition codes, and each class's effect
-    on the codes (0..5; 2 the code changed), cc_change's. }
-  opinfo_cc_class: extern array [0..367] of integer;
-  opinfo_cc: extern array [0..22] of array [0..5] of integer;
-
   { cg_tree.pas's empty operand (cc.m68k 0x356600, absolute; cg.ins.pas
     declares it, which final does not open). }
   cg_null_ads: extern codegen_$uads_t;
-
-  { opinfo.pas's data (cc.m68k 0x2CFDD8, absolute): each instruction's
-    two operands' access ('W' written), as instr_reorder.pas declares
-    it. }
-  opinfo_access: extern array [0..367] of packed array [1..2] of char;
 
   { The module's data (A5 0x3566F8). }
   fn_ads0: codegen_$ads_t;              { +0: the operand a test's
@@ -297,7 +282,7 @@ var
   fn_ccset: fn_ccs_t;                   { +40: the condition codes
                                           cc_change asks about (0..5) }
   fn_test_size: char;                   { +42: the test's size (as
-                                          opinfo_size gives it) }
+                                          opcontext gives it) }
   fn_changed: boolean;                  { +44: a cell was detached }
   fn_regmask: array [0..23] of 0..65535 := [
     1, 2, 4, 8, 16, 32, 64, 128,
@@ -704,7 +689,7 @@ var
 begin
   r := 0;
   if (which = 2) or (which = 1) then
-    case opinfo_size[c^.op][which] of
+    case opcontext[c^.op][which] of
       'B': r := 1;
       'W': r := 2;
       'L': r := 4;
@@ -1774,9 +1759,9 @@ begin
     41, 44:
       r := true;
     40:
-      r := opinfo_size[c^.op][1] <> 'X';
+      r := opcontext[c^.op][1] <> 'X';
     42, 50:
-      r := opinfo_size[c^.op][2] <> 'X';
+      r := opcontext[c^.op][2] <> 'X';
     otherwise
       ;
   end;
@@ -1795,7 +1780,7 @@ begin
 end;
 
 { cc_change - c changes one of the condition codes in fn_ccset (+40):
-  its op's class (opinfo_cc_class) marks the code 2 in opinfo_cc; under
+  its op's class (class_table) marks the code 2 in cc_table; under
   -CPU FPX an FPX instruction's class is op 1's.  Codes 4 and 5 are
   asked about first.
 
@@ -1814,20 +1799,20 @@ var
 begin
   r := true;
   op := c^.op;
-  if (4 in fn_ccset) and (opinfo_cc[opinfo_cc_class[op]][4] = 2) then
+  if (4 in fn_ccset) and (cc_table[class_table[op]][4] = 2) then
     goto 1;
-  if (5 in fn_ccset) and (opinfo_cc[opinfo_cc_class[op]][5] = 2) then
+  if (5 in fn_ccset) and (cc_table[class_table[op]][5] = 2) then
     goto 1;
   if 5 in cargs_$options.cpu then
     if fpx_instruction(c) then
       op := 1;
-  if (0 in fn_ccset) and (opinfo_cc[opinfo_cc_class[op]][0] = 2) then
+  if (0 in fn_ccset) and (cc_table[class_table[op]][0] = 2) then
     goto 1;
-  if (1 in fn_ccset) and (opinfo_cc[opinfo_cc_class[op]][1] = 2) then
+  if (1 in fn_ccset) and (cc_table[class_table[op]][1] = 2) then
     goto 1;
-  if (2 in fn_ccset) and (opinfo_cc[opinfo_cc_class[op]][2] = 2) then
+  if (2 in fn_ccset) and (cc_table[class_table[op]][2] = 2) then
     goto 1;
-  if (3 in fn_ccset) and (opinfo_cc[opinfo_cc_class[op]][3] = 2) then
+  if (3 in fn_ccset) and (cc_table[class_table[op]][3] = 2) then
     goto 1;
   r := false;
 1:
@@ -2545,8 +2530,8 @@ end;
   after what it removed).  Not under -DBA (cargs's db 3: bits 16..15 of
   the longword at +0x282).  When it tests C or V (cc_use & 12) and the
   instruction that set the codes (before it, passing the classes 18
-  and 0 of opinfo_cc_class, not a label) leaves C (V) clear (its
-  opinfo_cc 3 (2) is 0), the condition becomes the signed one
+  and 0 of class_table, not a label) leaves C (V) clear (its
+  cc_table 3 (2) is 0), the condition becomes the signed one
   (change_br_value).  A branch to itself is left; one to the next
   instruction removed; one to a branch: by brimply 0 retargeted past
   it, 2 given its target (movejump); a conditional branch after it: by
@@ -2578,7 +2563,7 @@ begin
   u := cc_use(c);
   if (p^.kind <> def_lbl_instyp) and ((u & 12) <> 0) then begin
     ok := true;
-    while (opinfo_cc_class[p^.op] = 18) or (opinfo_cc_class[p^.op] = 0) do begin
+    while (class_table[p^.op] = 18) or (class_table[p^.op] = 0) do begin
       p := prvlcc(p);
       if p^.kind = def_lbl_instyp then begin
         ok := false;
@@ -2586,9 +2571,9 @@ begin
       end;
     end;
     if ok then begin
-      if ((u & 8) <> 0) and (opinfo_cc[opinfo_cc_class[p^.op]][3] = 0) then
+      if ((u & 8) <> 0) and (cc_table[class_table[p^.op]][3] = 0) then
         c^.op := change_br_value(c^.op);
-      if ((u & 4) <> 0) and (opinfo_cc[opinfo_cc_class[p^.op]][2] = 0) then
+      if ((u & 4) <> 0) and (cc_table[class_table[p^.op]][2] = 0) then
         c^.op := change_br_value(c^.op);
     end;
   end;
@@ -2710,10 +2695,10 @@ begin
     r := true
   else if has_xcrement_addressing(c^.ads2) and (c^.ads2.f2 = reg) then
     r := true
-  else if (c^.ads1.f1 = 1) and (opinfo_access[c^.op][1] = 'W') and
+  else if (c^.ads1.f1 = 1) and (oprw_table[c^.op][1] = 'W') and
           (c^.ads1.f2 = reg) then
     r := true
-  else if (c^.ads2.f1 = 1) and (opinfo_access[c^.op][2] = 'W') and
+  else if (c^.ads2.f1 = 1) and (oprw_table[c^.op][2] = 'W') and
           (c^.ads2.f2 = reg) then
     r := true;
   reg_mod := r;
@@ -2971,9 +2956,9 @@ begin
        ((p^.ads1.f1 = 3) and ((p^.kind = move_instyp) or
         (p^.kind = i_instyp) or (p^.kind = moveq_instyp))) then begin
       u := cc_use(t);
-      if ((u & 4) <> 0) and (opinfo_cc[opinfo_cc_class[p^.op]][2] <> 0) then
+      if ((u & 4) <> 0) and (cc_table[class_table[p^.op]][2] <> 0) then
         goto 2;
-      if ((u & 8) <> 0) and (opinfo_cc[opinfo_cc_class[p^.op]][3] <> 0) then
+      if ((u & 8) <> 0) and (cc_table[class_table[p^.op]][3] <> 0) then
         goto 2;
       n := il_$node_ptr_t(p^.ads1.x);
       case p^.op of
@@ -3028,7 +3013,7 @@ begin
 end;
 
 { assert_n_bit_is_modified - c's op's class does not leave N alone
-  (opinfo_cc 0 not 1).
+  (cc_table 0 not 1).
 
   0x10C384, 0x36 bytes, no frame. }
 
@@ -3038,7 +3023,7 @@ begin
   if c = nil then
     assert_n_bit_is_modified := false
   else
-    assert_n_bit_is_modified := opinfo_cc[opinfo_cc_class[c^.op]][0] <> 1;
+    assert_n_bit_is_modified := cc_table[class_table[c^.op]][0] <> 1;
 end;
 
 { assert_bfextu_requires_test - the instructions after c up to the
@@ -3132,10 +3117,10 @@ end;
   119, 123; 102..104 unless the test is one too), an lea or pea (kind
   4, ops 105, 106) or an address instruction whose register the
   operand uses (or fn_ads0 for a test of kind 6), a change of the
-  operand or its registers (cc_change, opinfo_access's 'W', reg_mod),
+  operand or its registers (cc_change, oprw_table's 'W', reg_mod),
   an operand of mode 10, a cell setting the codes from another
   operand (cc_mod 0: either operand fn_ads; 2) or of another size (the
-  operand's sizes from opinfo_size, unless
+  operand's sizes from opcontext, unless
   bit_field_inst_which_obviates_test; bfextu when
   assert_bfextu_requires_test); true when it meets an instruction that
   sets the codes from fn_ads itself (a compare against fn_ads0 for
@@ -3150,7 +3135,7 @@ end;
 
   0x10C5CE, 0x60C bytes, no A5 load: c, b (a byte at 12) and w (a word
   at 14); b kept at -18 and passed at -14 for backov; the answer in D2,
-  the paths' in D3; opinfo_cc_class and opinfo_cc's addresses in D4 and
+  the paths' in D3; class_table and cc_table's addresses in D4 and
   A3; the six codes tested in turn (`btst #0' .. `btst #5' of +41, the
   loop over them unrolled); `case's of the kind (a table of 32), the
   op less 102 (22) and cc_mod's answer (5); the operand's two sizes
@@ -3249,15 +3234,15 @@ begin
       goto 9;
     keep := false;
     if p^.kind <> def_lbl_instyp then begin
-      cls := opinfo_cc_class[p^.op];
-      tcls := opinfo_cc_class[fn_test^.op];
+      cls := class_table[p^.op];
+      tcls := class_table[fn_test^.op];
       if (cls <> tcls) and (cls <> 0) then
         for i := 0 to 5 do
           if i in fn_ccset then begin
-            e := opinfo_cc[cls][i];
+            e := cc_table[cls][i];
             if e = 3 then
               goto 9;
-            if e <> opinfo_cc[tcls][i] then
+            if e <> cc_table[tcls][i] then
               if e <> 1 then
                 goto 9;
           end;
@@ -3289,7 +3274,7 @@ begin
               ;
           end;
         if not cc_change(p, fn_ccset) then begin
-          if opinfo_access[p^.op][2] = 'W' then
+          if oprw_table[p^.op][2] = 'W' then
             if sameaddr(p^.ads2, fn_ads) then
               goto 9;
           if fn_ads.f1 = 1 then
@@ -3330,7 +3315,7 @@ begin
                   goto 9;
               end;
               for i := 2 downto 1 do begin
-                ch := opinfo_size[p^.op][i];
+                ch := opcontext[p^.op][i];
                 if ch <> '-' then begin
                   if ch <> fn_test_size then
                     if not bit_field_inst_which_obviates_test(p, fn_test) then
@@ -3932,7 +3917,7 @@ begin
       ;
   end;
   fn_test := c;
-  fn_test_size := opinfo_size[c^.op][2];
+  fn_test_size := opcontext[c^.op][2];
   fn_ads := c^.ads2;
   fn_ads0 := c^.ads1;
   fn_ccset := fn_ccs_t(cc_use(nxtcc(c)));

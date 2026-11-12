@@ -24,8 +24,9 @@
     0x0BA754  --------  instr_reorder
     A5 0x2CE8BC: the unit has no data (jmp_br_resolve.pas's A5, the
     next module's); instr_reorder loads it and reads none of it.
-    Absolute: opinfo's operand access codes (0x2CFDD8, two characters
-    an instruction, 'W' a written operand), cargs's options.
+    Absolute: opinfo's operand access codes (oprw_table, 0x2CFDD8, two
+    characters an instruction, 'W' a written operand; final.ins.pas),
+    cargs's options.
 
   The nested routines take instr_reorder's frame from their dynamic
   link (the reorder_ routines) or in A1 (cannot_move, adjust_links:
@@ -53,13 +54,6 @@ type
     unused: array [0..4] of integer32;  { +0 }
     head: codegen_$cell_ptr_t;          { +20 }
   end;
-
-var
-  { opinfo.pas's data (the unit without code; cc.m68k 0x2CFDD8,
-    absolute): each instruction's two operands' access ('W' written),
-    indexed by the cell's +48 (as outbin.pas declares opinfo's other
-    tables). }
-  opinfo_access: extern array [0..367] of packed array [1..2] of char;
 
 { instr_reorder - the cells of sect from first reordered until nothing
   moves.
@@ -145,10 +139,10 @@ var
     r := false;
     if not ((c^.kind = block_end_instyp) or (c^.kind = block_start_instyp) or
             (c^.kind = line_no_instyp) or (c^.kind = def_lbl_instyp)) then
-      if (opinfo_access[c^.op][1] = 'W') and
+      if (oprw_table[c^.op][1] = 'W') and
          (c^.ads1.f1 in [2, 4, 5, 6, 8, 9, 11, 15]) then
         r := true
-      else if (opinfo_access[c^.op][2] = 'W') and
+      else if (oprw_table[c^.op][2] = 'W') and
               (c^.ads2.f1 in [2, 4, 5, 6, 8, 9, 11, 15]) then
         r := true;
     store_to_memory := r;

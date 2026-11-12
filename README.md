@@ -165,7 +165,7 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/reg_color_68k.pas` | 16 | translated (cc.m68k only; best effort; ranges and conflicts through reg_alloc.ins.pas; dpc gap 21) |
 | `lang/lang/source/reg_life.pas` | 17 | translated (cc.m68k only; best effort; statements, blocks and cses through g_opt.ins.pas, variables by offset) |
 | `lang/lang/source/reg_save.pas` | 23 | translated (cc.m68k only; best effort; trees through cg.ins.pas's cg_tree_t, statements through g_opt.ins.pas's g_opt_stmt_t, other nodes by offset; dpc gaps 8, 24, 30) |
-| `lang/lang/source/emit.pas` | 11 | translated (cc.m68k only; best effort; opinfo's instruction lists through em_entry_t, cells through codegen.ins.pas, nodes by offset; dpc gaps 7, 8, 24) |
+| `lang/lang/source/emit.pas` | 11 | translated (cc.m68k only; best effort; opinfo's instruction lists (insind) through final.ins.pas's opinfo_entry_t, cells through codegen.ins.pas, nodes by offset; dpc gaps 7, 8, 24) |
 | `lang/lang/source/fpa.pas` | 20 | translated (cc.m68k only; best effort; descriptors through codegen_$uads_t, trees through cg_tree_t, the module's data initialized; dpc gaps 7, 8) |
 | `lang/lang/source/banshee.pas` | 1 | translated (cc.m68k only; best effort; cells through codegen.ins.pas, the module's descriptors initialized; dpc gap 8) |
 | `lang/lang/source/final.pas` | 120 | translated (best effort; translators GG, JJ; cc.m68k only; cells through codegen_$cell_t; peepholer_ops nested in peepholer; dpc gaps 2, 7, 8, 12, 15, 24, 26, 31) |
@@ -175,5 +175,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/c_compiler/source/c_data.asm` | 0 | reconstructed (assembly, GNU as syntax; not checked by the gate: assembled with m68k-elf-as, byte-identical to both binaries' 18384 bytes; c_globals.ins.pas's names kept) |
 | `lang/lang/source/empty.pas` | 0 | translated (an empty module: no routines, no data in either binary; docs/questions.md 146) |
 | `ivory/volume_3/.../std_lib.mac/hf398b043.001/std_lib.pas` | 0 | translated (data only: section libdsc's 176 descriptors as words, dpc's section byte-identical to the image; their table in the header; std_lib's pointers TODO, docs/questions.md 147) |
-| `lang/lang/source/opinfo.pas` | 0 | translated (cc.m68k only; data only: the seven tables named by .blocks and the instruction lists, initialized from .rwdi, dpc's data byte-identical to the image; docs/questions.md 148) |
+| `lang/lang/source/opinfo.pas` | 0 | translated (cc.m68k only; data only: the seven tables named by .blocks and the instruction lists, initialized from .rwdi, dpc's data byte-identical to the image; the tables declared in final.ins.pas under their original names, defined here; docs/questions.md 148) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

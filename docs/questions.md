@@ -459,6 +459,8 @@ revisited.
    no code: 0x2CF9E2 and 0x2D05C4) and dbl_to_real (kfold).  The names
    are by offset; the owners' units (or a back-end insert, codegen or
    final) should declare them, and the names here be changed to match.
+   (opinfo's two: done, optohex and opname in final.ins.pas, question
+   148.)
 
 67. Translator Q: the code cells' kinds are an enumerated type in the
    original (dbcod writes them with the names DEF_LBL_INSTYP ..
@@ -1177,3 +1179,34 @@ revisited.
    (ins_lists, our name) before insind because insind's initializer
    names them; the image has insind first and the lists in reverse
    order of their operations.
+
+   Resolved (translator OO): every absolute reference into
+   0x2CE8D8..0x2D1797 (tools/cc_globals.py --refs) is to a table's
+   first byte, and the readers map one to one: insind is emit's
+   opinfo_insts (fnl_slct); cc_table final's opinfo_cc and class_table
+   its opinfo_cc_class (cc_change, pcondjmp, puncondjmp,
+   assert_n_bit_is_modified, deltest); optohex outbin's opinfo_opword
+   (genfpinst, assemble, wr_instr); oprw_table final's and
+   instr_reorder's opinfo_access (reg_mod, deltest, store_to_memory);
+   opcontext final's opinfo_size and banshee's opinfo_sizes
+   (final_$sizeof, fpx_instruction, deltest, opttest, dobansheefpx);
+   opname outbin's opinfo_names (dbcod, wr_instr).  No other unit
+   reaches them.  The single declaration is in
+   lang/lang/source/final.ins.pas (the original names, bounds 0..506
+   and 0..77, the entry type opinfo_entry_t and opinfo_list_ptr_t moved
+   there from emit's em_entry_t), as other shared cells are declared
+   in an insert and defined by their owner (g_opt.ins.pas and
+   opt_main, cg.ins.pas and cg_tree): final.ins.pas is the last insert
+   opinfo opens and every reader opens it (codegen.ins.pas would do as
+   well; which one the original used is not known).  opinfo.pas now
+   defines them by the define statement with their initializers (the
+   reference's method 2) in address order, after ins_lists (still an
+   own variable, so still first in dpc's layout); the users' externs
+   are gone and the users renamed.  dpc's module data is unchanged,
+   byte for byte (transLL's cmp_opinfo.py), and the seven tables are
+   now global symbols of dpc's object: LL's form (`define' naming
+   variables then declared without `extern') made them local to the
+   module in dpc's output.  The readers' code is unchanged but for
+   the symbols and two places in wr_instr, where optohex's 0..16#FFFF
+   is now zero-extended before the add (`clr.l; move.w'), as the image
+   does (outbin's integer had sign-extended).
