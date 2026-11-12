@@ -18,10 +18,10 @@
     birthpoint instructions', +24 their inputs', +48 the dominator
     buckets'), then the cells the routines below use.
 
-  TODO(pascal) fg_utils: 40 of 53 routines (with the insert's
+  TODO(pascal) fg_utils: 41 of 53 routines (with the insert's
   utils_ins_$operands_instruction; the first ones in address order,
-  through add_join_birthpoint_inputs, 0x236BEA); not translated yet:
-  fg_utils_$dominators, drop_jbis_on_exposed_list,
+  through fg_utils_$dominators, 0x236C4A); not translated yet:
+  drop_jbis_on_exposed_list,
   drop_unconsumed_exposed_segments, drop_unconsumed_final_segments,
   fg_utils_$drop_old_join_birthpoints, fg_utils_$recompute_postnum,
   fg_utils_$recompute_dominators_and_dfs_lists, mark_live_on_entry_blocks,
@@ -1914,17 +1914,18 @@ begin
 end;
 
 { add_join_birthpoint_inputs - from bb back through its predecessors
-  not yet marked mark (mark146 set), each block whose current segment
-  (next142, a segment during the walk) is not lts searched further,
-  and one whose is gives its final segment (l134) as an input of join.
+  not yet marked mark (mark146 set), each block where lr has no
+  written final segment (next142, the live range during
+  fg_utils_$dominators) searched further, and one where it has gives
+  that segment (l134) as an input of join.
 
-  0x236BEA, 0x60 bytes, no A5: join (8), mark (12) in D2, lts (16) in
+  0x236BEA, 0x60 bytes, no A5: join (8), mark (12) in D2, lr (16) in
   A2, bb (20). }
 
 procedure add_join_birthpoint_inputs(
     join: instr_ptr_t;
     mark: integer32;
-    lts: lts_ptr_t;
+    lr: lr_ptr_t;
     bb: bb_ptr_t); options(val_param, internal);
 var
   e: fg_edge_ptr_t;
@@ -1935,11 +1936,235 @@ begin
     s := e^.source;
     if mark <> s^.mark146 then begin
       s^.mark146 := mark;
-      if lts <> lts_ptr_t(s^.next142) then
-        add_join_birthpoint_inputs(join, mark, lts, s)
+      if lr <> lr_ptr_t(s^.next142) then
+        add_join_birthpoint_inputs(join, mark, lr, s)
       else
         fg_utils_$add_jbi(join, s^.l134);
     end;
     e := e^.next_pred;
+  end;
+end;
+
+{ fg_utils_$dominators - the dominator tree (Lengauer and Tarjan, over
+  the depth-first preorder from dfs_last back to dfs_first: the
+  semidominator in members, the buckets 16-byte entries chained from
+  the semidominator's next142, the ancestor in mark146, the label in
+  l150, the immediate dominator in l54), with the availability
+  vectors carried along (avail_in from transparent for marked blocks,
+  avail_gen and avail_out by the evaluation); the tree's children (l46,
+  siblings l50), compute_rel, and, when ssa, the SSA form (traverse);
+  then the postdominators the same way over the reverse graph from
+  bb80 (l58); the blocks numbered in code order (w8).  When ssa: the
+  definitions may be located (lir_main_c8e; bug_check unless the lists
+  are by live range), each live range's final written segments noted
+  in their blocks (l134 the segment, next142 the live range), and each
+  exposed segment given its reaching final segment (the nearest
+  dominator's: l44, chained on its l28, its l40 when clear) or, for a
+  JOIN_BP's, its inputs (add_join_birthpoint_inputs with a new mark).
+
+  0x236C4A, 0x4D6 bytes: rtn (8), ssa (12) in D2, level (14); the first
+  block D3, the block walked D4. }
+
+procedure fg_utils_$dominators(
+    rtn: rtn_ptr_t;
+    ssa: boolean;
+    level: integer32);
+type
+  ent_ptr_t = ^ent_t;
+  ent_t = record
+    b0: bb_ptr_t;                       { +0 }
+    b4: bb_ptr_t;                       { +4 }
+    n8: ent_ptr_t;                      { +8 }
+    n12: ent_ptr_t;                     { +12 }
+  end;
+var
+  first: bb_ptr_t;
+  b: bb_ptr_t;
+  w: bb_ptr_t;
+  u: bb_ptr_t;
+  v: bb_ptr_t;
+  p: bb_ptr_t;
+  d: bb_ptr_t;
+  e: fg_edge_ptr_t;
+  dv: bv_ptr_t;
+  ent: ent_ptr_t;
+  n: integer32;
+  lr: lr_ptr_t;
+  s: lts_ptr_t;
+  x: lts_ptr_t;
+  nx: lts_ptr_t;
+  f: lts_ptr_t;
+  i: instr_ptr_t;
+begin
+  dom_rtn := rtn;
+  dfs_level := level;
+  first := rtn^.dfs_first;
+  mrh_$initialize(bucket_heap, 0, 16, 'dominator bucket heap%');
+  b := rtn^.dfs_last;
+  while b <> first do begin
+    if b^.f.b19_2 then
+      bv_$copy(rtn^.l192 + 1, b^.transparent, b^.avail_in);
+    b := b^.l102;
+  end;
+  w := rtn^.dfs_last;
+  while w <> first do begin
+    e := w^.preds;
+    while e <> nil do begin
+      u := eval(e^.source);
+      if u^.members^.w8 < w^.members^.w8 then
+        w^.members := u^.members;
+      dv := evaldef(e^.source);
+      if dv <> nil then
+        bv_$or(rtn^.l192 + 1, dv, w^.avail_in);
+      e := e^.next_pred;
+    end;
+    ent := mrh_$alloc_fixed(bucket_heap);
+    ent^.b0 := w;
+    ent^.n12 := ent_ptr_t(w^.members^.next142);
+    w^.members^.next142 := bb_ptr_t(ent);
+    bv_$copy(rtn^.l192 + 1, w^.avail_in, w^.avail_gen);
+    bv_$or(rtn^.l192 + 1, w^.transparent, w^.avail_gen);
+    w^.mark146 := integer32(w^.l106);
+    while w^.l106^.next142 <> nil do begin
+      p := w^.l106;
+      ent := ent_ptr_t(p^.next142);
+      v := ent^.b0;
+      p^.next142 := bb_ptr_t(ent^.n12);
+      u := eval(v);
+      if u^.members^.w8 < v^.members^.w8 then
+        v^.l54 := u
+      else
+        v^.l54 := w^.l106;
+      bv_$copy(rtn^.l192 + 1, v^.avail_in, v^.avail_out);
+      dv := evaldef(v^.l106);
+      if dv <> nil then
+        bv_$or(rtn^.l192 + 1, dv, v^.avail_out);
+    end;
+    w := w^.l102;
+  end;
+  mrh_$release_all(bucket_heap);
+  first^.l106 := nil;
+  first^.next142 := nil;
+  first^.mark146 := 0;
+  first^.members := nil;
+  w := bb_ptr_t(first^.l98);
+  while w <> nil do begin
+    if w^.l54 <> w^.members then begin
+      bv_$or(rtn^.l192 + 1, w^.l54^.avail_out, w^.avail_out);
+      w^.l54 := w^.l54^.l54;
+    end;
+    w^.l106 := nil;
+    w^.members := nil;
+    w^.next142 := nil;
+    w^.mark146 := 0;
+    w := bb_ptr_t(w^.l98);
+  end;
+  w := first;
+  while w <> nil do begin
+    w^.f.b19_2 := true;
+    if w^.l54 <> nil then begin
+      w^.l50 := w^.l54^.l46;
+      w^.l54^.l46 := w;
+    end;
+    w := bb_ptr_t(w^.l98);
+  end;
+  compute_rel(first);
+  if ssa then
+    traverse(first);
+  mrh_$release_all(bucket_heap);
+  rdfs_first := nil;
+  rdfs_last := nil;
+  b := rtn^.bbs;
+  while b <> nil do begin
+    b^.l98 := nil;
+    b^.l102 := nil;
+    b := b^.next;
+  end;
+  first^.l98 := nil;
+  first^.l102 := nil;
+  first := rtn^.bb80;
+  reverse_depth_first_search(first);
+  w := rdfs_last;
+  while w <> first do begin
+    e := w^.succs;
+    while e <> nil do begin
+      u := eval(e^.target);
+      if u^.members^.w8 < w^.members^.w8 then
+        w^.members := u^.members;
+      e := e^.next_succ;
+    end;
+    ent := mrh_$alloc_fixed(bucket_heap);
+    ent^.b4 := w;
+    ent^.n8 := ent_ptr_t(w^.members^.next142);
+    w^.members^.next142 := bb_ptr_t(ent);
+    w^.mark146 := integer32(w^.l106);
+    while w^.l106^.next142 <> nil do begin
+      p := w^.l106;
+      ent := ent_ptr_t(p^.next142);
+      v := ent^.b4;
+      p^.next142 := bb_ptr_t(ent^.n8);
+      u := eval(v);
+      if u^.members^.w8 < v^.members^.w8 then
+        v^.l58 := u
+      else
+        v^.l58 := w^.l106;
+    end;
+    w := w^.l102;
+  end;
+  mrh_$release_all(bucket_heap);
+  w := bb_ptr_t(first^.l98);
+  while w <> nil do begin
+    if w^.l58 <> w^.members then
+      w^.l58 := w^.l58^.l58;
+    w := bb_ptr_t(w^.l98);
+  end;
+  n := 0;
+  b := rtn^.bbs;
+  while b <> nil do begin
+    n := n + 1;
+    b^.w8 := n;
+    b := b^.next;
+  end;
+  if ssa then begin
+    lir_main_c8e := true;
+    if lir_main_c86 <> 1 then
+      bug_check('FG_UTILS: dominators -- exposed LTSs not attached to LRs%$');
+    lr := rtn^.lrs;
+    while lr <> nil do begin
+      s := lr^.finals;
+      while s <> nil do begin
+        if (integer(s^.rrp) & 12) <> 0 then begin
+          s^.bb^.l134 := s;
+          s^.bb^.next142 := bb_ptr_t(lr);
+        end;
+        s := s^.next_final;
+      end;
+      x := lr^.exposed;
+      while x <> nil do begin
+        nx := x^.next_exposed;
+        i := utils_ins_$operands_instruction(x^.refs);
+        if i^.opc = ord(opc$join_bp) then begin
+          rtn^.marks := rtn^.marks + 1;
+          add_join_birthpoint_inputs(i, rtn^.marks, lr, x^.bb);
+        end
+        else begin
+          d := x^.bb^.l54;
+          while d <> nil do
+            if lr_ptr_t(d^.next142) = lr then begin
+              f := d^.l134;
+              x^.l44 := f;
+              x^.l28 := f^.l28;
+              f^.l28 := x;
+              if f^.l40 = 0 then
+                f^.l40 := x^.l40;
+              d := nil;
+            end
+            else
+              d := d^.l54;
+        end;
+        x := nx;
+      end;
+      lr := lr^.next;
+    end;
   end;
 end;

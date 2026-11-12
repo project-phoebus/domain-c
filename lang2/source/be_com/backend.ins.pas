@@ -1793,7 +1793,7 @@ procedure fg_utils_$add_jbi(
   8:al; 12:b; 14:l. }
 procedure fg_utils_$dominators(
     rtn: rtn_ptr_t;
-    p2: boolean;
+    ssa: boolean;
     level: integer32); options(val_param); extern;
 
 { FG_UTILS_$DROP_OLD_JOIN_BIRTHPOINTS - 0x2372C4, 0x124 bytes; called from
