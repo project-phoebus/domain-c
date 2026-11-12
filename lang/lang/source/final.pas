@@ -272,6 +272,12 @@ var
   fn_fbr_complement: array [436..441] of integer := [
     437, 436, 439, 438, 441, 440];      { +0x298 }
 
+  { celpkg.pas's empty descriptor (its +24, which the image copies from
+    0x2CE68C): celpkg does not export it, so a copy here (as
+    jmp_br_resolve.pas has). }
+  fn_null_ads: codegen_$ads_t := [f1 := 0, f2 := 0, f3 := 0, f4 := 0,
+      f5 := 0, f6 := 0, pad := 0, x := 0, y := 0];
+
 
 { DFETCH - v's low len bytes, sign-extended when sgn (kfold.pas; as
   cg_tree.pas declares it). }
@@ -2857,4 +2863,386 @@ begin
   until p = fn_sect^.head;
 9:
   final_$unlink_opts := nx;
+end;
+
+{ TODO(pascal) peepholer_ops (0x111950, 0x638 bytes) and the six
+  routines nested in it (try_loading_from_fp_reg 0x110CB4,
+  try_loading_monadic_src_here 0x110F14, try_long_extend_opts
+  0x111130, try_reducing_fabs_op 0x111452, try_removing_previous_clr
+  0x111666, try_widening_clr 0x111856) are not translated yet: in the
+  image peepholer_ops is nested in peepholer (it runs on peepholer's
+  frame: its first cell, +12), declared here at module level until it
+  is written. }
+
+procedure peepholer_ops; extern;
+
+{ DOBANSHEEFPX - the FPX instructions of a routine's code cells, from
+  first to the section's head, scheduled (banshee.pas 0x0EE84C, not
+  translated: a pointer by address and one by value, read off its
+  frame). }
+
+procedure dobansheefpx(
+    first: univ_ptr;
+    head: codegen_$cell_ptr_t); options(val_param); extern;
+
+{ peepholer - the peephole pass over a routine's code cells in section
+  sect from first: peepholer_init; under -OPT's optimization 27 (`btst
+  #4' of +0x280) peepholer_ops; peepholer_cleanup; under optimization
+  14 (bit 7 of +0x282) instr_reorder and those two again; then
+  damn_the_040s_hide_anyway and dobansheefpx.
+
+  0x1120A0, 0x76 bytes, A5 loaded: the section kept at +28 (fn_sect).
+  Its frame holds what the nested routines share: -4 the link's frame
+  size (peepholer_init), -8 and -12 a branch's reference cell and label
+  (peepholer_cleanup), -20 and -24 the inline constants of sizes a
+  multiple of 4 and the others (constcheck). }
+
+procedure peepholer;
+var
+  size: integer32;
+  ref: codegen_$cell_ptr_t;
+  lab: codegen_$cell_ptr_t;
+  consts4: codegen_$cell_ptr_t;
+  consts2: codegen_$cell_ptr_t;
+
+  { constcheck - an immediate operand a of a constant (f6 3) not yet in
+    the section's pool made an inline constant: a code cell (kind 28,
+    op 506) holding the operand, on consts4 or consts2 by its length,
+    and a node 184 (12 bytes from gspace: the section, the cell) that
+    the constant's +8 and a's x then point to; a constant already
+    pooled in this section reused.
+
+    0x110584, 0xFE bytes, no A5 load: peepholer's frame in A1. }
+
+  procedure constcheck(
+      in out a: codegen_$ads_t);
+  var
+    n: il_$node_ptr_t;
+    m: il_$node_ptr_t;
+    k: codegen_$cell_ptr_t;
+  begin
+    if (a.f1 = 3) and (a.f6 = 3) then begin
+      n := il_$node_ptr_t(a.x);
+      if n^.kind <> 184 then
+        if (n^.xp[2] <> nil) and (n^.xp[2]^.xp[1] = il_$node_ptr_t(fn_sect)) then
+          a.x := integer32(n^.xp[2])
+        else begin
+          k := getcodecell(inline_instyp);
+          k^.op := 506;
+          k^.ads2 := a;
+          k^.size := ilength(k);
+          m := gspace(12);
+          m^.kind := 184;
+          m^.xp[1] := il_$node_ptr_t(fn_sect);
+          m^.xp[2] := il_$node_ptr_t(k);
+          n^.xp[2] := m;
+          a.x := integer32(m);
+          if (k^.size & 3) = 0 then
+            if consts4 = nil then
+              consts4 := k
+            else
+              after(consts4, k)
+          else if consts2 = nil then
+            consts2 := k
+          else
+            after(consts2, k);
+        end;
+    end;
+  end;
+
+  { fix_labeluse - a label operand a (mode 7) of cell c given its label
+    cell (the temporary label's +80, made by fnl_slct op 32 the first
+    time, +72 bit 7 then cleared) and a reference cell from c.
+
+    0x110684, 0x80 bytes, no A5 load: c by address. }
+
+  procedure fix_labeluse(
+      in out a: codegen_$ads_t;
+      in c: codegen_$cell_ptr_t);
+  var
+    n: il_$node_ptr_t;
+    u: codegen_$uads_t;
+  begin
+    if a.f1 = 7 then begin
+      n := il_$node_ptr_t(a.x);
+      if n^.xp[20] = nil then begin
+        unpack_ads(a, u);
+        n^.xp[20] := il_$node_ptr_t(fnl_slct(32, 5, 0, u, cg_null_ads));
+        n^.xc[72] := chr(ord(n^.xc[72]) & 16#7F);
+      end;
+      a.y := integer32(getrefcell(integer32(c), codegen_$cell_ptr_t(n^.xp[20])));
+    end;
+  end;
+
+  { peepholer_init - the cells made ready: a link's frame size an
+    integer constant (the routine's +112, less its +176 with -CPU M020),
+    a link.l (op 204, 6 bytes) when it is below -32768 under -CPU M020,
+    else a word; a compare (kind 8, ops 107..109) of 1 or -1 before a
+    conditional branch made a subtract (kind 3, op + 6) with the branch's
+    condition shifted (142 144, 143 145, 150 152, 151 153; for -1, 152
+    148, 153 149); other instructions' label operands set up
+    (fix_labeluse), and a move.b of a constant to -(SP) (op 0, mode 9,
+    SP) made a move.w (op 1, f6 1) of it shifted left 8.
+
+    0x110704, 0x27E bytes, no A5 load: peepholer's frame by its dynamic
+    link; the cell kept at -8 for fix_labeluse; a `case' of the branch's
+    op less 142 through a table of 10. }
+
+  procedure peepholer_init;
+  label
+    1;
+  var
+    p: codegen_$cell_ptr_t;
+    q: codegen_$cell_ptr_t;
+    c: codegen_$cell_ptr_t;
+    n: il_$node_ptr_t;
+    v: integer32;
+  begin
+    p := first;
+    while p <> fn_sect^.head do begin
+      case p^.kind of
+        link_instyp: begin
+          n := il_$node_ptr_t(p^.ads2.x);
+          if 3 in cargs_$options.cpu then
+            size := n^.xl[28] - n^.xl[44]
+          else
+            size := n^.xl[28];
+          p^.ads2.x := integer32(smcontk(81, size));
+          p^.ads2.f1 := 3;
+          if (3 in cargs_$options.cpu) and (size < -32768) then begin
+            p^.ads2.f6 := 2;
+            p^.op := 204;
+            p^.size := 6;
+          end
+          else
+            p^.ads2.f6 := 1;
+        end;
+        block_end_instyp, block_start_instyp, line_no_instyp, def_lbl_instyp:
+          ;
+        i_instyp: begin
+          q := nxtlcc(p);
+          if (p^.op in [107..109]) and (q^.kind = cbr_instyp) then begin
+            v := il_$node_ptr_t(p^.ads1.x)^.int_value;
+            if v = 1 then
+              case q^.op of
+                142: q^.op := 144;
+                143: q^.op := 145;
+                150: q^.op := 152;
+                151: q^.op := 153;
+                otherwise
+                  goto 1;
+              end
+            else if v = -1 then
+              if q^.op = 152 then
+                q^.op := 148
+              else if q^.op = 153 then
+                q^.op := 149
+              else
+                goto 1
+            else
+              goto 1;
+            p^.op := p^.op + 6;
+            p^.kind := dest1_sz_instyp;
+          end;
+        end;
+        otherwise begin
+          c := p;
+          fix_labeluse(p^.ads1, c);
+          p := c;
+          fix_labeluse(p^.ads2, c);
+          p := c;
+          if (p^.op = 0) and (p^.ads1.f1 = 3) then begin
+            n := il_$node_ptr_t(p^.ads1.x);
+            if (n^.kind in [77..87, 101, 200]) and
+               ((n^.int_value & 255) <> 255) and (p^.ads2.f1 = 9) and
+               (p^.ads2.f2 = 15) then begin
+              p^.op := 1;
+              p^.ads1.f6 := 1;
+              p^.ads1.x := integer32(smcontk(81, lshft(n^.int_value, 8)));
+            end;
+          end;
+        end;
+      end;
+    1:
+      p := p^.next;
+    end;
+  end;
+
+  { peepholer_cleanup - the cells' lengths and locations set (the
+    labels' +12 the location; plab on each label): a move of a byte
+    constant to a data register made a moveq (kind 2, op 3), immediate
+    operands pooled (constcheck, not for FPX instructions under -CPU
+    FPX); under -DBA nothing more but for block marks and lines;
+    otherwise the inline constants put after the end of each inner
+    block (the others first, then, under -ALIGN after an alignment
+    cell, the multiples of 4), and the branches simplified (pcondjmp,
+    puncondjmp, f_pcondjmp) after, under -ALIGN, an alignment cell put
+    before a label up to 256 bytes back that has none.
+
+    0x110982, 0x32A bytes, no A5 load: peepholer's frame by its dynamic
+    link; the location in D2; a set of 0..47 at 0x110CAC (the cells
+    that are not instructions). }
+
+  procedure peepholer_cleanup;
+  var
+    p: codegen_$cell_ptr_t;
+    k: codegen_$cell_ptr_t;
+    last: codegen_$cell_ptr_t;
+    n: il_$node_ptr_t;
+    pc: integer32;
+    kind: integer;
+  begin
+    consts2 := nil;
+    consts4 := nil;
+    pc := 0;
+    p := first;
+    while p <> fn_sect^.head do begin
+      kind := p^.kind;
+      if not (kind in [0, 24, 28, 32..33]) then begin
+        if (kind = move_instyp) and (p^.ads2.f1 = 1) and (p^.ads1.f1 = 3) then begin
+          n := il_$node_ptr_t(p^.ads1.x);
+          if (n^.kind in [77..87, 101, 200]) and (n^.int_value >= -128) and
+             (n^.int_value <= 127) then begin
+            p^.kind := moveq_instyp;
+            p^.op := 3;
+            p^.size := ilength(p);
+          end;
+        end;
+        if not ((5 in cargs_$options.cpu) and fpx_instruction(p)) then begin
+          constcheck(p^.ads1);
+          constcheck(p^.ads2);
+        end;
+        p^.size := ilength(p);
+        pc := pc + p^.size;
+      end
+      else if kind = inline_instyp then begin
+        p^.size := ilength(p);
+        pc := pc + p^.size;
+      end;
+      if (cargs_$options.db = 3) and
+         not ((p^.kind = block_end_instyp) or (p^.kind = block_start_instyp) or
+              (p^.kind = line_no_instyp)) then
+        p := p^.next
+      else
+        case p^.kind of
+          block_end_instyp: begin
+            if p^.blk^.kind <> 172 then begin
+              if consts2 <> nil then begin
+                last := consts2^.prev;
+                join(p, consts2);
+                p := last;
+              end;
+              if consts4 <> nil then begin
+                if 4 in cargs_$options.flags_286 then begin
+                  k := getcodecell(align_instyp);
+                  k^.op := 208;
+                  k^.ads1 := fn_null_ads;
+                  k^.ads2 := fn_null_ads;
+                  k^.size := ilength(k);
+                  after(p, k);
+                  p := k;
+                end;
+                last := consts4^.prev;
+                join(p, consts4);
+                p := last;
+              end;
+            end;
+            p := p^.next;
+          end;
+          def_lbl_instyp: begin
+            p^.addr := pc;
+            p := plab(p);
+          end;
+          fbr_instyp, cbr_instyp, br_instyp, dbcc_instyp: begin
+            ref := codegen_$cell_ptr_t(p^.ads2.y);
+            lab := ref^.owner;
+            if (4 in cargs_$options.flags_286) and
+               (lab^.prev^.kind <> align_instyp) and (lab^.addr - pc > -256) and
+               (lab^.addr <> 0) and (lab^.addr - pc < 0) then begin
+              k := getcodecell(align_instyp);
+              k^.op := 208;
+              k^.ads1 := fn_null_ads;
+              k^.ads2 := fn_null_ads;
+              k^.size := ilength(k);
+              after(lab^.prev, k);
+            end;
+            if p^.kind = cbr_instyp then
+              p := pcondjmp(p)
+            else if p^.kind = br_instyp then
+              p := puncondjmp(p)
+            else if p^.kind = fbr_instyp then
+              p := f_pcondjmp(p)
+            else
+              p := p^.next;
+          end;
+          otherwise
+            p := p^.next;
+        end;
+    end;
+  end;
+
+  { damn_the_040s_hide_anyway - a nop (insert_integer_nop) put before
+    each 68881 instruction of ops 448..453 (not a label, line or block
+    mark).
+
+    0x112042, 0x5E bytes, no A5 load: peepholer's first by its dynamic
+    link. }
+
+  procedure damn_the_040s_hide_anyway;
+  var
+    p: codegen_$cell_ptr_t;
+
+    { insert_integer_nop - a nop (kind 35, op 208, empty operands) put
+      after c.
+
+      0x111FE4, 0x5C bytes, no A5 load. }
+
+    procedure insert_integer_nop(
+        c: codegen_$cell_ptr_t); options(val_param);
+    var
+      n: codegen_$cell_ptr_t;
+    begin
+      n := getcodecell(nop_instyp);
+      n^.op := 208;
+      n^.ads1 := fn_null_ads;
+      n^.ads2 := fn_null_ads;
+      n^.size := ilength(n);
+      after(c, n);
+    end;
+
+  begin
+    p := first;
+    while p <> fn_sect^.head do begin
+      if not (p^.kind in [0, 24, 32..33]) and (p^.op in [448..453]) then
+        insert_integer_nop(prvlcc(p));
+      p := p^.next;
+    end;
+  end;
+
+begin
+  fn_sect := sect;
+  peepholer_init;
+  if 27 in cargs_$options.opt_on then
+    peepholer_ops;
+  peepholer_cleanup;
+  if 14 in cargs_$options.opt_on then begin
+    instr_reorder(first, sect);
+    if 27 in cargs_$options.opt_on then
+      peepholer_ops;
+    peepholer_cleanup;
+  end;
+  damn_the_040s_hide_anyway;
+  dobansheefpx(first, fn_sect^.head);
+end;
+
+{ finaldriver - the final phase's branch resolution, timed as phase 21
+  (perfstart, jmp_br_resolve, perfstop).
+
+  0x112116, 0x34 bytes, A5 loaded. }
+
+procedure finaldriver;
+begin
+  perfstart(21);
+  jmp_br_resolve;
+  perfstop(21);
 end;
