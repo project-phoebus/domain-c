@@ -654,6 +654,20 @@ P1_TYPES = '''type
   p1_node_bytes_ptr_t = ^p1_node_bytes_t;
   p1_node_bytes_t = array [0..379] of p1_bits_t;
 
+  { A node's bytes as values (the byte fields of a rewritten node). }
+  p1_node_chars_ptr_t = ^p1_node_chars_t;
+  p1_node_chars_t = array [0..379] of char;
+
+  { target_properties at +0xB4: a longword target_properties.ins.pas
+    leaves inside p_b0 (the size above which char_string_ob,
+    namelist_constant_ob and set_con_ob go to the literal pool when
+    p_be is set). }
+  p1_target_view_ptr_t = ^p1_target_view_t;
+  p1_target_view_t = record
+    x0: array [0..179] of char;         { +0 }
+    l180: integer32;                    { +0xB4 }
+  end;
+
   { The inherited attributes' byte at +36 (parent_il_kind, an il$t). }
   p1_inh_view_ptr_t = ^p1_inh_view_t;
   p1_inh_view_t = record
@@ -693,6 +707,9 @@ function rewrite_$routine_call(
     inh: inherited_attributes_ptr_t): univ_ptr; options(val_param); extern;
 
 function rewrite_$mul_to_aop(
+    node: univ_ptr): univ_ptr; options(val_param); extern;
+
+function rewrite_$agg_aop(
     node: univ_ptr): univ_ptr; options(val_param); extern;'''
 
 P1_DATA = '''var
