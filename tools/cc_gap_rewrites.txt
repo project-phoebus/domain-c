@@ -298,3 +298,12 @@ lang2/source/isc/isc_user_routines.pas	s/\bwrite(ln)?(\(.*\))?;\s*$/isc_user_rou
 lang2/source/be_com/lir.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
 # gap 43 (ass, translator QA): an initialized varying string (the initializer dropped, for the check)
 lang/common/source/ass.pas	s/^(  program_name: varying \[80\] of char) := 'ass_\$';/$1; { gap 43 }/
+# gap 4 (the generated isc_pattern_matcher and isc_pass_2_main, translator GB): write and writeln (each a dummy assignment, for the check: an empty then part is refused)
+moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pattern_matcher.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
+moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_main.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
+# gap 32 (isc.pvt.pas and isc_types.ins.pas, translator GB): the sections isc_vars defines, named as their variables (renamed, for the check)
+moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc.pvt.pas	s/^var \((isc_tool_generated_readonly_tables)\)/var (${1}_s) { gap 32 }/
+lang2/source/isc/isc_types.ins.pas	s/^var \((isc_readonly_tables)\)/var (${1}_s) { gap 32 }/
+# gap 25 (isc_pattern_matcher, translator GB): pattern_matcher (0x7944 bytes, 683 tries) exhausts dpc's virtual registers; the check leaves out the IL operators' arms from and_to_aop on (more values live at once than dpc has registers, docs/dpc-gaps.md 25) (a conditional variable that is not set)
+moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pattern_matcher.pas	s/^(        il_and_to_aop: begin)$/%var gap25pm;\n%if gap25pm %then { gap 25 }\n$1/
+moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pattern_matcher.pas	s/^(        otherwise)$/%endif { gap 25 }\n$1/

@@ -229,7 +229,7 @@ type
     rlen_w (+0x140) are indexed by register class codes
     (isc_$precision_from_rlen_and_size, rlen_code_from_type_node).  Not
     known from the original: the names, and how the original declared
-    the section (here an extern view; the bytes stay the image's). }
+    the section (isc_vars defines it, below; translator GB). }
   isc_readonly_tables_t = record
     x0: array [0..159] of char;         { +0x000 }
     rlen_w: array [0..25] of integer;   { +0x0A0 = 160 }
@@ -237,12 +237,16 @@ type
     rlen_bits: array [0..19] of integer32;  { +0x174 }
     x1c4: array [0..2275] of char;      { +0x1C4 }
     masks: array [0..32] of integer32;  { +0xAA8 }
-    xb2c: array [0..255] of char;       { +0xB2C }
+    xb2c: array [0..259] of char;       { +0xB2C .. the end, +0xC30 }
   end;
 
   { A longword of attribute bits (isc_user_routines' printers of a
     type's and a variable's attributes; translator PD2). }
   isc_attr_set_t = set of 0..31;
 
-var
-  isc_readonly_tables: extern isc_readonly_tables_t;
+{ The section itself (docs/questions.md 261, settled by translator GB):
+  isc_vars defines it, giving the variable its initial value (the
+  image's bytes, by these views) with a `define' statement, the scheme
+  of docs/questions.md 161; the other units see the overlay. }
+var (isc_readonly_tables)
+  isc_readonly_tables: isc_readonly_tables_t;
