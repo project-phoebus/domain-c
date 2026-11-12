@@ -1115,3 +1115,17 @@ revisited.
    named after it, initialized with addr() of its descriptor), the
    other units declaring what they use?  The .blocks record also names
    `stdlib_dummy', not a routine: what was it?
+141. Translator LL, opinfo.pas: the unit's .blocks record names its
+   public tables: insind (0x2CE8D8, the generic operations' lists),
+   cc_table (0x2CF4D8), class_table (0x2CF5EC), optohex (0x2CF9E2),
+   oprw_table (0x2CFDD8), opcontext (0x2D01CE) and opname (0x2D05C4);
+   the users declare them extern under other names (emit.pas
+   opinfo_insts; final.pas opinfo_cc, opinfo_cc_class, opinfo_access,
+   opinfo_size; banshee.pas opinfo_sizes; instr_reorder.pas's access
+   table; outbin.pas opinfo_opword, opinfo_names) and with bounds
+   [0..367] where the tables run to 506.  Rename the users' externs to
+   the original names and bounds at the merge (left alone here: final
+   is still being finished)?  opinfo.pas declares the lists
+   (ins_lists, our name) before insind because insind's initializer
+   names them; the image has insind first and the lists in reverse
+   order of their operations.

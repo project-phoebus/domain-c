@@ -174,4 +174,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/c_compiler/source/c_data.asm` | 0 | reconstructed (assembly, GNU as syntax; not checked by the gate: assembled with m68k-elf-as, byte-identical to both binaries' 18384 bytes; c_globals.ins.pas's names kept) |
 | `lang/lang/source/empty.pas` | 0 | translated (an empty module: no routines, no data in either binary; docs/questions.md 139) |
 | `ivory/volume_3/.../std_lib.mac/hf398b043.001/std_lib.pas` | 0 | translated (data only: section libdsc's 176 descriptors as words, dpc's section byte-identical to the image; their table in the header; std_lib's pointers TODO, docs/questions.md 140) |
+| `lang/lang/source/opinfo.pas` | 0 | translated (cc.m68k only; data only: the seven tables named by .blocks and the instruction lists, initialized from .rwdi, dpc's data byte-identical to the image; docs/questions.md 141) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

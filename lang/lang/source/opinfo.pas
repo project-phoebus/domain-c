@@ -1,0 +1,555 @@
+{ opinfo - the m68k code generator's tables of its machine instructions
+  (the code cells' +48, 0..506) and generic operations (0..77): data
+  only, no routines.
+
+  Image addresses (DOMAIN C 6.9; cc.m68k only): no code, no A5.  The
+  unit's .blocks record (version 4) names the module opinfo and seven
+  public variables, class_table, cc_table, insind, oprw_table,
+  opcontext, optohex and opname (the names written here; they are not
+  in address order there).  The tables are in .data, between
+  jmp_br_resolve's data and outbin's, reached absolutely by their users
+  (which declare them extern under names of their own, kept until the
+  merge: docs/questions.md 141):
+    0x2CE8D8  insind       78 longwords: generic operation k's list of
+                           instructions (nil for 32, 33); emit.pas
+                           opinfo_insts
+    0x2CEA10  ins_lists    230 entries of 12 bytes, the lists (private:
+                           not named in .blocks; the lists lie in
+                           reverse order of their operations, 77's
+                           first)
+    0x2CF4D8  cc_table     23 x 6 words: each condition-code class's
+                           effect on the codes (0..4; 2 changed);
+                           final.pas opinfo_cc
+    0x2CF5EC  class_table  507 words: each instruction's class;
+                           final.pas opinfo_cc_class
+    0x2CF9E2  optohex      507 words: each instruction's operation word;
+                           outbin.pas opinfo_opword
+    0x2CFDD8  oprw_table   507 x 2 characters: each operand's access, R
+                           read, W written, - none; final.pas,
+                           instr_reorder.pas opinfo_access
+    0x2D01CE  opcontext    507 x 2 characters: each operand's size, B W
+                           L byte, word, long, F D X single, double,
+                           extended, Q S A (by their users: a quick
+                           constant, ?, an address), - none; final.pas
+                           opinfo_size, banshee.pas opinfo_sizes
+    0x2D05C4  opname       507 x 9 characters: each instruction's
+                           mnemonic, blank-padded (MOVE.B .. ; 239 has
+                           none, all NUL); outbin.pas opinfo_names
+  ending at 0x2D1797 (outbin's cell for pas_$output follows at
+  0x2D1798).  The users declare the per-instruction tables [0..367];
+  they run to 506 (each table is 1014 bytes, or 4563 for the names, up
+  to the next one's address; the last instruction with data is 506).
+
+  The initial values are .rwdi's (tools/cc_data.py; bytes no record
+  sets are 0), generated into the initializers below; insind's
+  pointers are written addr(ins_lists[k]) by the entry they point at.
+  Checked: dpc's module data for this file is 11968 bytes, as the
+  image's 0x2CE8D8..0x2D1797, and byte for byte the image's (the lists
+  and insind exchanged; insind's 76 pointers name the image's
+  entries).
+  A list entry is emit.pas's em_entry_t (the operand forms, size and
+  kind it serves, the instruction, the flags: elements 0..4 the CPU
+  features it needs, 5 the list's last entry).
+
+  Not known from the original: the lists' names and how they were
+  declared (one variable per list, most likely, in reverse order);
+  the entry's and the tables' types (written with the widths of the
+  accesses; optohex as words 0..16#FFFF so that the operation words are
+  in hex); the letters Q, S and A.
+}
+
+module opinfo;
+
+%include 'lang/lang/source/globals.ins.pas';
+%include 'lang/lang/source/codegen.ins.pas';
+%include 'lang/lang/source/prtsub.ins.pas';
+%include 'lang/lang/source/final.ins.pas';
+
+type
+  { A list entry, 12 bytes (emit.pas's em_entry_t). }
+  opinfo_entry_t = record
+    dst: integer;                       { +0 }
+    src: integer;                       { +2 }
+    sz: integer;                        { +4 }
+    kind: integer;                      { +6 }
+    op: integer;                        { +8: the instruction }
+    flags: set of 0..15;                { +10 }
+  end;
+  opinfo_entry_ptr_t = ^opinfo_entry_t;
+
+define
+  class_table, cc_table, insind, oprw_table, opcontext, optohex, opname;
+
+var
+  { 0x2CEA10: the lists (dst, src, sz, kind, op, flags), after
+    insind in the image (declared first here: insind's initializer
+    names them). }
+  ins_lists: array [0..229] of opinfo_entry_t := [
+      [24, 10, 7, 55, 495, [4, 5]], [24, 5, 6, 54, 466, [4]],
+      [24, 5, 7, 54, 465, [4, 5]], [0, 24, 6, 58, 486, [4]],
+      [0, 24, 7, 58, 483, [4, 5]], [0, 24, 6, 58, 485, [4]],
+      [0, 24, 7, 58, 482, [4, 5]], [0, 24, 6, 58, 484, [4]],
+      [0, 24, 7, 58, 481, [4, 5]], [24, 5, 6, 54, 468, [4]],
+      [24, 5, 7, 54, 467, [4, 5]], [24, 5, 7, 54, 469, [4]],
+      [24, 5, 0, 54, 471, [4, 5]], [24, 5, 0, 54, 471, [4]],
+      [24, 5, 6, 54, 470, [4, 5]], [20, 20, 7, 41, 454, [3]],
+      [20, 10, 7, 40, 455, [3]], [20, 11, 1, 40, 230, [3]],
+      [20, 10, 1, 40, 230, [3]], [10, 20, 1, 42, 236, [3]],
+      [17, 20, 1, 42, 236, [3]], [9, 11, 7, 52, 238, [3]],
+      [9, 22, 7, 52, 238, [3]], [22, 9, 7, 51, 238, [3]],
+      [17, 9, 7, 51, 239, [3, 5]], [21, 22, 1, 49, 217, [2]],
+      [21, 22, 4, 49, 218, [2]], [21, 22, 3, 49, 219, [2, 5]],
+      [10, 5, 5, 47, 216, [2, 5]], [0, 10, 5, 45, 215, [2, 5]],
+      [0, 10, 5, 45, 214, [2, 5]], [10, 0, 5, 46, 213, [2, 5]],
+      [0, 5, 3, 16, 8, [2, 5]], [20, 20, 7, 41, 322, [1]],
+      [20, 10, 7, 40, 323, [1]], [20, 20, 7, 41, 328, [3]],
+      [20, 10, 7, 40, 329, [3, 5]], [24, 5, 6, 54, 461, [4]],
+      [24, 5, 7, 54, 462, [4]], [20, 20, 6, 38, 424, [1]],
+      [20, 10, 6, 37, 425, [1]], [20, 20, 7, 41, 430, [0]],
+      [20, 10, 7, 40, 431, [0, 5]], [20, 20, 6, 38, 412, [1]],
+      [20, 10, 6, 37, 413, [1]], [20, 20, 7, 41, 418, [0]],
+      [20, 10, 7, 40, 419, [0, 5]], [20, 20, 6, 38, 400, [1]],
+      [20, 10, 6, 37, 401, [1]], [20, 20, 7, 41, 406, [0]],
+      [20, 10, 7, 40, 407, [0, 5]], [20, 20, 7, 41, 394, [3]],
+      [20, 10, 7, 40, 395, [3, 5]], [20, 20, 7, 41, 388, [3]],
+      [20, 10, 7, 40, 389, [3, 5]], [20, 20, 6, 38, 376, [1]],
+      [20, 10, 6, 37, 377, [1]], [20, 20, 7, 41, 382, [0]],
+      [20, 10, 7, 40, 383, [0, 5]], [20, 20, 6, 38, 364, [1]],
+      [20, 10, 6, 37, 365, [1]], [20, 20, 7, 41, 370, [0]],
+      [20, 10, 7, 40, 371, [0, 5]], [20, 20, 6, 38, 346, [1]],
+      [20, 10, 6, 37, 347, [1]], [20, 20, 7, 41, 352, [0]],
+      [20, 10, 7, 40, 353, [0, 5]], [20, 20, 6, 38, 334, [1]],
+      [20, 10, 6, 37, 335, [1]], [20, 20, 7, 41, 340, [0]],
+      [20, 10, 7, 40, 341, [0, 5]], [24, 5, 6, 54, 463, [4]],
+      [24, 5, 7, 54, 464, [4]], [20, 20, 7, 41, 316, [0]],
+      [20, 10, 7, 40, 317, [0, 5]], [20, 20, 7, 41, 310, [0]],
+      [20, 10, 7, 40, 311, [0, 5]], [3, 5, 1, 43, 448, [0, 5]],
+      [20, 4, 7, 44, 298, [0]], [10, 4, 8, 50, 299, [0]],
+      [20, 20, 7, 41, 304, [0]], [20, 10, 7, 40, 305, [0, 5]],
+      [24, 5, 6, 54, 476, [4]], [24, 5, 7, 54, 480, [4]],
+      [20, 20, 6, 38, 281, [1]], [20, 10, 6, 37, 282, [1]],
+      [20, 20, 6, 41, 293, [3]], [20, 5, 6, 40, 294, [3]],
+      [20, 20, 7, 41, 287, [0]], [20, 10, 7, 40, 288, [0, 5]],
+      [24, 10, 6, 57, 487, [4]], [24, 10, 7, 57, 490, [4]],
+      [24, 5, 6, 54, 473, [4]], [24, 5, 7, 54, 477, [4]],
+      [20, 20, 6, 38, 264, [1]], [20, 10, 6, 37, 265, [1]],
+      [20, 20, 6, 41, 276, [3]], [20, 5, 6, 40, 277, [3]],
+      [20, 20, 7, 41, 270, [0]], [20, 10, 7, 40, 271, [0, 5]],
+      [24, 10, 6, 57, 489, [4]], [24, 10, 7, 57, 492, [4]],
+      [24, 5, 6, 54, 475, [4]], [24, 5, 7, 54, 479, [4]],
+      [20, 20, 6, 38, 252, [1]], [20, 10, 6, 37, 253, [1]],
+      [20, 20, 7, 41, 258, [0]], [20, 10, 7, 40, 259, [0, 5]],
+      [24, 10, 6, 57, 488, [4]], [24, 10, 7, 57, 491, [4]],
+      [24, 5, 6, 54, 474, [4]], [24, 5, 7, 54, 478, [4]],
+      [20, 20, 6, 38, 240, [1]], [20, 10, 6, 37, 241, [1]],
+      [20, 20, 7, 41, 246, [0]], [20, 10, 7, 40, 247, [0, 5]],
+      [13, 5, 5, 39, 436, [0, 5]], [13, 5, 5, 30, 503, [5]],
+      [14, 5, 5, 29, 123, [5]], [5, 5, 5, 28, 503, [5]],
+      [0, 10, 4, 9, 198, []], [0, 10, 3, 9, 199, [2, 5]],
+      [14, 5, 5, 16, 123, [5]], [5, 5, 5, 27, 212, [5]],
+      [22, 9, 3, 26, 207, []], [17, 9, 3, 26, 207, [5]],
+      [9, 22, 3, 25, 207, []], [9, 11, 3, 25, 207, [5]],
+      [13, 5, 5, 31, 116, [5]], [0, 5, 4, 16, 6, []],
+      [0, 5, 3, 16, 7, [5]], [0, 0, 3, 9, 201, []],
+      [1, 1, 3, 9, 201, []], [0, 5, 4, 16, 202, [5]],
+      [13, 0, 4, 23, 182, [5]], [5, 5, 5, 22, 212, [5]],
+      [1, 5, 5, 21, 205, [5]], [23, 1, 5, 20, 203, [5]],
+      [14, 5, 5, 16, 119, [5]], [14, 5, 5, 16, 13, [5]],
+      [1, 14, 5, 4, 12, [5]], [13, 5, 5, 17, 120, [5]],
+      [13, 5, 5, 18, 140, [5]], [3, 5, 1, 19, 124, [5]],
+      [3, 4, 0, 3, 113, []], [3, 9, 0, 8, 107, []],
+      [0, 5, 2, 6, 102, []], [0, 10, 1, 6, 102, []],
+      [1, 5, 4, 4, 105, []], [1, 5, 3, 4, 106, []],
+      [11, 11, 0, 13, 110, [5]], [0, 0, 3, 15, 77, []],
+      [0, 16, 3, 14, 77, []], [12, 0, 1, 15, 76, []],
+      [12, 16, 1, 14, 76, [5]], [0, 0, 3, 15, 71, []],
+      [0, 16, 3, 14, 71, []], [8, 0, 1, 15, 70, []],
+      [8, 16, 1, 14, 70, [5]], [0, 0, 3, 15, 73, []],
+      [0, 16, 3, 14, 73, []], [8, 0, 1, 15, 72, []],
+      [8, 16, 1, 14, 72, [5]], [0, 0, 3, 15, 75, []],
+      [0, 16, 3, 14, 75, []], [8, 0, 1, 15, 74, []],
+      [8, 16, 1, 14, 74, [5]], [0, 0, 0, 10, 78, []],
+      [0, 6, 0, 11, 78, []], [8, 15, 4, 12, 78, [5]],
+      [3, 5, 0, 3, 61, [5]], [3, 5, 0, 3, 58, [5]],
+      [5, 10, 3, 45, 53, [2, 5]], [5, 10, 3, 45, 50, [2, 5]],
+      [0, 10, 4, 9, 51, []], [0, 10, 3, 45, 52, [2]],
+      [0, 0, 3, 36, 223, [1, 5]], [0, 10, 4, 9, 48, []],
+      [0, 10, 3, 45, 49, [2]], [0, 10, 3, 9, 222, [1, 5]],
+      [0, 10, 4, 9, 56, []], [0, 10, 3, 45, 57, [2]],
+      [0, 0, 3, 36, 221, [1, 5]], [0, 10, 4, 9, 54, []],
+      [0, 10, 3, 45, 55, [2]], [0, 10, 3, 9, 220, [1, 5]],
+      [3, 9, 0, 8, 45, []], [3, 0, 0, 7, 42, [5]],
+      [18, 9, 0, 8, 67, []], [3, 9, 0, 8, 67, []],
+      [0, 10, 0, 6, 64, []], [8, 0, 0, 7, 64, [5]],
+      [18, 9, 0, 8, 39, []], [19, 4, 0, 3, 9, []],
+      [3, 9, 0, 8, 39, []], [0, 10, 0, 6, 36, []],
+      [8, 0, 0, 7, 36, [5]], [7, 6, 2, 5, 31, []],
+      [3, 6, 1, 5, 31, []], [3, 9, 0, 8, 28, []],
+      [8, 0, 0, 7, 25, []], [0, 5, 2, 6, 25, []],
+      [0, 10, 1, 6, 25, []], [1, 5, 3, 4, 35, []],
+      [1, 5, 4, 4, 34, [5]], [3, 6, 1, 5, 22, []],
+      [7, 6, 2, 5, 22, []], [3, 9, 0, 8, 19, []],
+      [8, 0, 0, 7, 14, []], [0, 5, 2, 6, 14, []],
+      [0, 10, 1, 6, 14, []], [1, 5, 3, 4, 18, []],
+      [1, 5, 4, 4, 17, [5]], [24, 10, 0, 55, 496, [4]],
+      [10, 24, 0, 56, 499, [4]], [3, 5, 2, 1, 0, []],
+      [3, 10, 1, 1, 0, []], [1, 5, 3, 4, 5, []],
+      [1, 5, 4, 4, 4, []], [18, 10, 4, 1, 0, []],
+      [3, 18, 4, 1, 0, []], [24, 10, 6, 55, 494, [4]],
+      [24, 10, 7, 55, 493, [4]], [10, 24, 6, 56, 498, [4]],
+      [10, 24, 7, 56, 497, [4]], [24, 5, 6, 54, 500, [4]],
+      [24, 5, 7, 54, 501, [4]], [20, 10, 7, 40, 225, [0]],
+      [10, 20, 8, 42, 231, [0]], [20, 20, 7, 41, 224, [0, 5]]];
+
+  { 0x2CE8D8: generic operation k's instructions. }
+  insind: array [0..77] of opinfo_entry_ptr_t := [
+      addr(ins_lists[213]), addr(ins_lists[205]), addr(ins_lists[197]),
+      addr(ins_lists[192]), addr(ins_lists[188]), addr(ins_lists[186]),
+      addr(ins_lists[183]), addr(ins_lists[180]), addr(ins_lists[177]),
+      addr(ins_lists[174]), addr(ins_lists[173]), addr(ins_lists[171]),
+      addr(ins_lists[170]), addr(ins_lists[167]), addr(ins_lists[163]),
+      addr(ins_lists[159]), addr(ins_lists[155]), addr(ins_lists[151]),
+      addr(ins_lists[144]), addr(ins_lists[143]), addr(ins_lists[142]),
+      addr(ins_lists[141]), addr(ins_lists[140]), addr(ins_lists[139]),
+      addr(ins_lists[138]), addr(ins_lists[137]), addr(ins_lists[136]),
+      addr(ins_lists[135]), addr(ins_lists[134]), addr(ins_lists[131]),
+      addr(ins_lists[129]), addr(ins_lists[128]), nil,
+      nil, addr(ins_lists[126]), addr(ins_lists[124]),
+      addr(ins_lists[123]), addr(ins_lists[122]), addr(ins_lists[120]),
+      addr(ins_lists[119]), addr(ins_lists[118]), addr(ins_lists[117]),
+      addr(ins_lists[116]), addr(ins_lists[108]), addr(ins_lists[100]),
+      addr(ins_lists[90]), addr(ins_lists[82]), addr(ins_lists[78]),
+      addr(ins_lists[77]), addr(ins_lists[75]), addr(ins_lists[71]),
+      addr(ins_lists[67]), addr(ins_lists[63]), addr(ins_lists[59]),
+      addr(ins_lists[55]), addr(ins_lists[53]), addr(ins_lists[51]),
+      addr(ins_lists[47]), addr(ins_lists[43]), addr(ins_lists[37]),
+      addr(ins_lists[33]), addr(ins_lists[32]), addr(ins_lists[172]),
+      addr(ins_lists[31]), addr(ins_lists[30]), addr(ins_lists[29]),
+      addr(ins_lists[28]), addr(ins_lists[25]), addr(ins_lists[17]),
+      addr(ins_lists[15]), addr(ins_lists[13]), addr(ins_lists[11]),
+      addr(ins_lists[9]), addr(ins_lists[7]), addr(ins_lists[5]),
+      addr(ins_lists[3]), addr(ins_lists[1]), addr(ins_lists[0])];
+
+  { 0x2CF4D8: each class's effect on the codes. }
+  cc_table: array [0..22] of array [0..5] of integer := [
+      [1, 0, 0, 0, 0, 0], [2, 2, 3, 3, 1, 1], [2, 2, 0, 0, 1, 1], [2, 2, 3, 3, 1, 1],
+      [2, 2, 3, 3, 1, 1], [2, 2, 3, 0, 1, 1], [2, 2, 3, 0, 1, 1], [2, 2, 3, 3, 1, 1],
+      [1, 3, 1, 0, 0, 0], [3, 3, 0, 0, 1, 1], [2, 2, 3, 3, 1, 1], [2, 2, 0, 3, 1, 1],
+      [2, 0, 0, 0, 1, 1], [2, 4, 4, 4, 1, 1], [2, 2, 0, 3, 1, 1], [2, 2, 0, 3, 1, 1],
+      [2, 2, 0, 3, 1, 1], [3, 3, 0, 0, 1, 0], [0, 0, 0, 0, 2, 2], [4, 3, 4, 3, 1, 1],
+      [3, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]];
+
+  { 0x2CF5EC: each instruction's class. }
+  class_table: array [0..506] of integer := [
+      2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1,
+      1, 0, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      5, 0, 0, 0, 0, 0, 6, 0, 0, 0, 7, 7, 7, 2, 0, 0,
+      0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 14, 14,
+      14, 10, 10, 10, 14, 14, 14, 11, 11, 11, 15, 15, 15, 16, 16, 16,
+      14, 14, 14, 11, 11, 11, 4, 4, 4, 12, 12, 4, 0, 0, 0, 0,
+      0, 2, 2, 2, 20, 20, 20, 21, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 13, 13, 0, 0, 17, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 2, 2, 2, 9, 19, 19, 19, 6, 6, 5, 5,
+      18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 0, 0,
+      18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      22, 0, 0, 0, 0, 0, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 18, 0, 0, 0, 0, 0, 0, 2, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+  { 0x2CF9E2: each instruction's operation word. }
+  optohex: packed array [0..506] of 0..16#FFFF := [
+      16#1000, 16#3000, 16#2000, 16#7000, 16#3040, 16#2040, 16#4880, 16#48C0,
+      16#49C0, 16#4200, 16#4240, 16#4280, 16#41C0, 16#4840, 16#D000, 16#D040,
+      16#D080, 16#D0C0, 16#D1C0, 16#0600, 16#0640, 16#0680, 16#5000, 16#5040,
+      16#5080, 16#9000, 16#9040, 16#9080, 16#0400, 16#0440, 16#0480, 16#5100,
+      16#5140, 16#5180, 16#90C0, 16#91C0, 16#C000, 16#C040, 16#C080, 16#0200,
+      16#0240, 16#0280, 16#B100, 16#B140, 16#B180, 16#0A00, 16#0A40, 16#0A80,
+      16#81C0, 16#4C40, 16#4C40, 16#80C0, 16#4C40, 16#4C40, 16#C1C0, 16#4C00,
+      16#C0C0, 16#4C00, 16#4400, 16#4440, 16#4480, 16#4600, 16#4640, 16#4680,
+      16#8000, 16#8040, 16#8080, 16#0000, 16#0040, 16#0080, 16#0040, 16#0040,
+      16#0080, 16#0080, 16#00C0, 16#00C0, 16#0000, 16#0000, 16#E000, 16#E040,
+      16#E080, 16#E100, 16#E140, 16#E180, 16#E008, 16#E048, 16#E088, 16#E108,
+      16#E148, 16#E188, 16#E010, 16#E050, 16#E090, 16#E110, 16#E150, 16#E190,
+      16#E018, 16#E058, 16#E098, 16#E118, 16#E158, 16#E198, 16#B000, 16#B040,
+      16#B080, 16#B0C0, 16#B1C0, 16#0C00, 16#0C40, 16#0C80, 16#B108, 16#B148,
+      16#B188, 16#4A00, 16#4A40, 16#4A80, 16#6100, 16#6100, 16#6100, 16#4E80,
+      16#6000, 16#6000, 16#6000, 16#4EC0, 16#50C0, 16#51C0, 16#52C0, 16#53C0,
+      16#54C0, 16#55C0, 16#56C0, 16#57C0, 16#58C0, 16#59C0, 16#5AC0, 16#5BC0,
+      16#5CC0, 16#5DC0, 16#5EC0, 16#5FC0, 16#6200, 16#6300, 16#6400, 16#6500,
+      16#6600, 16#6700, 16#6800, 16#6900, 16#6A00, 16#6B00, 16#6C00, 16#6D00,
+      16#6E00, 16#6F00, 16#6200, 16#6300, 16#6400, 16#6500, 16#6600, 16#6700,
+      16#6800, 16#6900, 16#6A00, 16#6B00, 16#6C00, 16#6D00, 16#6E00, 16#6F00,
+      16#6200, 16#6300, 16#6400, 16#6500, 16#6600, 16#6700, 16#6800, 16#6900,
+      16#6A00, 16#6B00, 16#6C00, 16#6D00, 16#6E00, 16#6F00, 16#50C8, 16#51C8,
+      16#52C8, 16#53C8, 16#54C8, 16#55C8, 16#56C8, 16#57C8, 16#58C8, 16#59C8,
+      16#5AC8, 16#5BC8, 16#5CC8, 16#5DC8, 16#5EC8, 16#5FC8, 16#4180, 16#4100,
+      16#4E76, 16#C140, 16#4840, 16#4E50, 16#4808, 16#4E58, 16#4880, 16#48C0,
+      16#4E71, 16#F280, 16#4E73, 16#4E77, 16#4E75, 16#EFC0, 16#EBC0, 16#E9C0,
+      16#E8C0, 16#00C0, 16#02C0, 16#04C0, 16#7100, 16#C0C8, 16#7140, 16#80C8,
+      16#0001, 16#5801, 16#5001, 16#4001, 16#4401, 16#5401, 16#4800, 16#7800,
+      16#7000, 16#6000, 16#6400, 16#7400, 16#6800, 16#5C00, 16#D000, 16#E000,
+      16#0022, 16#5822, 16#5022, 16#4022, 16#4422, 16#5422, 16#0022, 16#5822,
+      16#5022, 16#4022, 16#4422, 16#5422, 16#0028, 16#5828, 16#5028, 16#4028,
+      16#4428, 16#5428, 16#0028, 16#5828, 16#5028, 16#4028, 16#4428, 16#5428,
+      16#0023, 16#5823, 16#5023, 16#4023, 16#4423, 16#5423, 16#0023, 16#5823,
+      16#5023, 16#4023, 16#4423, 16#5423, 16#0027, 16#5827, 16#5027, 16#4027,
+      16#4427, 16#0020, 16#5820, 16#5020, 16#4020, 16#4420, 16#5420, 16#0020,
+      16#5820, 16#5020, 16#4020, 16#4420, 16#5420, 16#0024, 16#5824, 16#5024,
+      16#4024, 16#4424, 16#0032, 16#5832, 16#5032, 16#4032, 16#4432, 16#5432,
+      16#0030, 16#5830, 16#5030, 16#4030, 16#4430, 16#5430, 16#001A, 16#581A,
+      16#501A, 16#401A, 16#441A, 16#541A, 16#0018, 16#5818, 16#5018, 16#4018,
+      16#4418, 16#5418, 16#0000, 16#5800, 16#5000, 16#4000, 16#4400, 16#5400,
+      16#0003, 16#5803, 16#5003, 16#4003, 16#4403, 16#5403, 16#000E, 16#580E,
+      16#500E, 16#400E, 16#440E, 16#540E, 16#000E, 16#580E, 16#500E, 16#400E,
+      16#440E, 16#540E, 16#001D, 16#581D, 16#501D, 16#401D, 16#441D, 16#541D,
+      16#001D, 16#581D, 16#501D, 16#401D, 16#441D, 16#541D, 16#0030, 16#5830,
+      16#5030, 16#4030, 16#4430, 16#5430, 16#000F, 16#580F, 16#500F, 16#400F,
+      16#440F, 16#540F, 16#000F, 16#580F, 16#500F, 16#400F, 16#440F, 16#540F,
+      16#0014, 16#5814, 16#5014, 16#4014, 16#4414, 16#5414, 16#0014, 16#5814,
+      16#5014, 16#4014, 16#4414, 16#5414, 16#0015, 16#5815, 16#5015, 16#4015,
+      16#4415, 16#5415, 16#0006, 16#5806, 16#5006, 16#4006, 16#4406, 16#5406,
+      16#0010, 16#5810, 16#5010, 16#4010, 16#4410, 16#5410, 16#0010, 16#5810,
+      16#5010, 16#4010, 16#4410, 16#5410, 16#000A, 16#580A, 16#500A, 16#400A,
+      16#440A, 16#540A, 16#000A, 16#580A, 16#500A, 16#400A, 16#440A, 16#540A,
+      16#0004, 16#5804, 16#5004, 16#4004, 16#4404, 16#5404, 16#0004, 16#5804,
+      16#5004, 16#4004, 16#4404, 16#5404, 16#F28E, 16#F281, 16#F293, 16#F294,
+      16#F292, 16#F295, 16#F2CE, 16#F2C1, 16#F2D3, 16#F2D4, 16#F2D2, 16#F2D5,
+      16#000E, 16#0001, 16#0013, 16#0014, 16#0012, 16#0015, 16#0026, 16#5826,
+      16#5026, 16#4026, 16#4426, 16#5426, 16#4E71, 16#4200, 16#0000, 16#0000,
+      16#0000, 16#0000, 16#0000, 16#0000, 16#0000, 16#0000, 16#0000, 16#4A00,
+      16#4A00, 16#4240, 16#0000, 16#0000, 16#0000, 16#0000, 16#0000, 16#0000,
+      16#0000, 16#3000, 16#0000, 16#0000, 16#0000, 16#0000, 16#0000, 16#2000,
+      16#0000, 16#0000, 16#0000, 16#0000, 16#0000, 16#0000, 16#0000, 16#0000,
+      16#0000, 16#0000, 16#0000, 16#0000, 16#4200, 16#4200, 16#0000, 16#0000,
+      16#0000, 16#0000, 16#0000];
+
+  { 0x2CFDD8: each instruction's operands' access. }
+  oprw_table: array [0..506] of packed array [1..2] of char := [
+      'RW', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], '-W',
+      '-W', '-W', 'RW', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], '-W', [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], 'RW', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], 'RR', 'RR', 'RW', [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], 'RR', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], '-R', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], '-W', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      '--', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], 'W-', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], 'RR', 'RR',
+      'RR', 'WW', '-W', 'W-', 'W-', 'W-', '--', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], 'RW', 'RW', 'RW', 'RR', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      'RW', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], '-R', [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], 'RR', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      'RW', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], '--', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], 'RW', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      '--', 'RW', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], 'RR', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], 'RW', [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], '--', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)]];
+
+  { 0x2D01CE: each instruction's operands' sizes. }
+  opcontext: array [0..506] of packed array [1..2] of char := [
+      'BB', 'WW', 'LL', 'BL', 'WL', 'LL', 'BW', 'WL', 'BL', '-B',
+      '-W', '-L', '-L', '-L', 'BB', 'WW', 'LL', 'WL', 'LL', 'BB',
+      'WW', 'LL', 'QB', 'QW', 'QL', 'BB', 'WW', 'LL', 'BB', 'WW',
+      'LL', 'QB', 'QW', 'QL', 'WL', 'LL', 'BB', 'WW', 'LL', 'BB',
+      'WW', 'LL', 'BB', 'WW', 'LL', 'BB', 'WW', 'LL', 'WL', 'LL',
+      'LL', 'WL', 'LL', 'LL', 'WW', 'LL', 'WW', 'LL', '-B', '-W',
+      '-L', '-B', '-W', '-L', 'BB', 'WW', 'LL', 'BB', 'WW', 'LL',
+      'BB', 'LL', 'BB', 'LL', 'BB', 'LL', 'BB', 'LL', 'BB', 'BW',
+      'BL', 'BB', 'BW', 'BL', 'BB', 'BW', 'BL', 'BB', 'BW', 'BL',
+      'BB', 'BW', 'BL', 'BB', 'BW', 'BL', 'BB', 'BW', 'BL', 'BB',
+      'BW', 'BL', 'BB', 'WW', 'LL', 'WL', 'LL', 'BB', 'WW', 'LL',
+      'BB', 'WW', 'LL', '-B', '-W', '-L', '-A', '-A', '-A', '-L',
+      '-A', '-A', '-A', '-L', '-B', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      '-A', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], 'WA', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], 'WW', 'LL',
+      '--', 'LL', '-L', 'LW', 'LL', '-L', 'WW', 'LL', '--', [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], '-L', '-L', '--', 'BB', 'WW', 'LL',
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], 'XX', 'BX', 'WX', 'LX', 'FX', 'DX',
+      'XX', 'XB', 'XW', 'XL', 'XF', 'XD', 'XX', '-X', '-X', '-X',
+      'XX', 'BX', 'WX', 'LX', 'FX', 'DX', 'XX', 'BX', 'WX', 'LX',
+      'FX', 'DX', 'XX', 'BX', 'WX', 'LX', 'FX', 'DX', 'XX', 'BX',
+      'WX', 'LX', 'FX', 'DX', 'XX', 'BX', 'WX', 'LX', 'FX', 'DX',
+      'XX', 'BX', 'WX', 'LX', 'FX', 'DX', 'XX', 'BX', 'WX', 'LX',
+      'FX', 'XX', 'BX', 'WX', 'LX', 'FX', 'DX', 'XX', 'BX', 'WX',
+      'LX', 'FX', 'DX', 'XX', 'BX', 'WX', 'LX', 'FX', 'XX', 'BX',
+      'WX', 'LX', 'FX', 'DX', 'XX', 'BX', 'WX', 'LX', 'FX', 'DX',
+      'XX', 'BX', 'WX', 'LX', 'FX', 'DX', 'XX', 'BX', 'WX', 'LX',
+      'FX', 'DX', 'XX', 'BX', 'WX', 'LX', 'FX', 'DX', 'XX', 'BX',
+      'WX', 'LX', 'FX', 'DX', 'XX', 'BX', 'WX', 'LX', 'FX', 'DX',
+      'XX', 'BX', 'WX', 'LX', 'FX', 'DX', 'XX', 'BX', 'WX', 'LX',
+      'FX', 'DX', 'XX', 'BX', 'WX', 'LX', 'FX', 'DX', 'XX', 'BX',
+      'WX', 'LX', 'FX', 'DX', 'XX', 'BX', 'WX', 'LX', 'FX', 'DX',
+      'XX', 'BX', 'WX', 'LX', 'FX', 'DX', 'XX', 'BX', 'WX', 'LX',
+      'FX', 'DX', 'XX', 'BX', 'WX', 'LX', 'FX', 'DX', 'XX', 'BX',
+      'WX', 'LX', 'FX', 'DX', 'XX', 'BX', 'WX', 'LX', 'FX', 'DX',
+      'XX', 'BX', 'WX', 'LX', 'FX', 'DX', 'XX', 'BX', 'WX', 'LX',
+      'FX', 'DX', 'XX', 'BX', 'WX', 'LX', 'FX', 'DX', 'XX', 'BX',
+      'WX', 'LX', 'FX', 'DX', 'XX', 'BX', 'WX', 'LX', 'FX', 'DX',
+      'XX', 'BX', 'WX', 'LX', 'FX', 'DX', '-X', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], 'XX', 'BX', 'WX', 'LX', 'FX', 'DX',
+      '--', 'FF', 'DD', 'FF', 'DD', 'DL', 'FL', 'DL', 'FL', 'DF',
+      'FD', 'LD', 'LS', 'FF', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], 'DD', [chr(0), chr(0)], [chr(0), chr(0)],
+      [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], 'FF', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
+      'DD', 'DD', 'DD', 'FF', 'FF', 'FF', 'LF', 'FF', 'FF', 'FL',
+      'FF', 'DD', '--', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)]];
+
+  { 0x2D05C4: each instruction's mnemonic. }
+  opname: array [0..506] of packed array [1..9] of char := [
+      'MOVE.B   ', 'MOVE.W   ', 'MOVE.L   ', 'MOVEQ.L  ', 'MOVEA.W  ',
+      'MOVEA.L  ', 'EXT.W    ', 'EXT.L    ', 'EXTB.L   ', 'CLR.B    ',
+      'CLR.W    ', 'CLR.L    ', 'LEA      ', 'PEA      ', 'ADD.B    ',
+      'ADD.W    ', 'ADD.L    ', 'ADDA.W   ', 'ADDA.L   ', 'ADDI.B   ',
+      'ADDI.W   ', 'ADDI.L   ', 'ADDQ.B   ', 'ADDQ.W   ', 'ADDQ.L   ',
+      'SUB.B    ', 'SUB.W    ', 'SUB.L    ', 'SUBI.B   ', 'SUBI.W   ',
+      'SUBI.L   ', 'SUBQ.B   ', 'SUBQ.W   ', 'SUBQ.L   ', 'SUBA.W   ',
+      'SUBA.L   ', 'AND.B    ', 'AND.W    ', 'AND.L    ', 'ANDI.B   ',
+      'ANDI.W   ', 'ANDI.L   ', 'EOR.B    ', 'EOR.W    ', 'EOR.L    ',
+      'EORI.B   ', 'EORI.W   ', 'EORI.L   ', 'DIVS.W   ', 'DIVS.L   ',
+      'DIVSL.L  ', 'DIVU.W   ', 'DIVU.L   ', 'DIVUL.L  ', 'MULS.W   ',
+      'MULS.L   ', 'MULU.W   ', 'MULU.L   ', 'NEG.B    ', 'NEG.W    ',
+      'NEG.L    ', 'NOT.B    ', 'NOT.W    ', 'NOT.L    ', 'OR.B     ',
+      'OR.W     ', 'OR.L     ', 'ORI.B    ', 'ORI.W    ', 'ORI.L    ',
+      'BCHG.B   ', 'BCHG.L   ', 'BCLR.B   ', 'BCLR.L   ', 'BSET.B   ',
+      'BSET.L   ', 'BTST.B   ', 'BTST.L   ', 'ASR.B    ', 'ASR.W    ',
+      'ASR.L    ', 'ASL.B    ', 'ASL.W    ', 'ASL.L    ', 'LSR.B    ',
+      'LSR.W    ', 'LSR.L    ', 'LSL.B    ', 'LSL.W    ', 'LSL.L    ',
+      'ROXR.B   ', 'ROXR.W   ', 'ROXR.L   ', 'ROXL.B   ', 'ROXL.W   ',
+      'ROXL.L   ', 'ROR.B    ', 'ROR.W    ', 'ROR.L    ', 'ROL.B    ',
+      'ROL.W    ', 'ROL.L    ', 'CMP.B    ', 'CMP.W    ', 'CMP.L    ',
+      'CMPA.W   ', 'CMPA.L   ', 'CMPI.B   ', 'CMPI.W   ', 'CMPI.L   ',
+      'CMPM.B   ', 'CMPM.W   ', 'CMPM.L   ', 'TST.B    ', 'TST.W    ',
+      'TST.L    ', 'BSR.S    ', 'BSR      ', 'BSR.L    ', 'JSR      ',
+      'BRA.S    ', 'BRA      ', 'BRA.L    ', 'JMP      ', 'ST       ',
+      'SF       ', 'SHI      ', 'SLS      ', 'SCC      ', 'SCS      ',
+      'SNE      ', 'SEQ      ', 'SVC      ', 'SVS      ', 'SPL      ',
+      'SMI      ', 'SGE      ', 'SLT      ', 'SGT      ', 'SLE      ',
+      'BHI.S    ', 'BLS.S    ', 'BCC.S    ', 'BCS.S    ', 'BNE.S    ',
+      'BEQ.S    ', 'BVC.S    ', 'BVS.S    ', 'BPL.S    ', 'BMI.S    ',
+      'BGE.S    ', 'BLT.S    ', 'BGT.S    ', 'BLE.S    ', 'BHI      ',
+      'BLS      ', 'BCC      ', 'BCS      ', 'BNE      ', 'BEQ      ',
+      'BVC      ', 'BVS      ', 'BPL      ', 'BMI      ', 'BGE      ',
+      'BLT      ', 'BGT      ', 'BLE      ', 'BHI.L    ', 'BLS.L    ',
+      'BCC.L    ', 'BCS.L    ', 'BNE.L    ', 'BEQ.L    ', 'BVC.L    ',
+      'BVS.L    ', 'BPL.L    ', 'BMI.L    ', 'BGE.L    ', 'BLT.L    ',
+      'BGT.L    ', 'BLE.L    ', 'DBT      ', 'DBF      ', 'DBHI     ',
+      'DBLS     ', 'DBCC     ', 'DBCS     ', 'DBNE     ', 'DBEQ     ',
+      'DBVC     ', 'DBVS     ', 'DPBL     ', 'DBMI     ', 'DBGE     ',
+      'DBLT     ', 'DBGT     ', 'DBLE     ', 'CHK      ', 'CHK.L    ',
+      'TRAPV    ', 'EXG      ', 'SWAP     ', 'LINK     ', 'LINK.L   ',
+      'UNLK     ', 'MOVEM.W  ', 'MOVEM.L  ', 'NOP      ', 'FNOP     ',
+      'RTE      ', 'RTR      ', 'RTS      ', 'BFINS    ', 'BFEXTS   ',
+      'BFEXTU   ', 'BFTST    ', 'CMP2.B   ', 'CMP2.W   ', 'CMP2.L   ',
+      'MUL32S   ', 'MUL32U   ', 'DIV32S   ', 'DIV32U   ', 'FMOVE    ',
+      'FMOVE.B  ', 'FMOVE.W  ', 'FMOVE.L  ', 'FMOVE.S  ', 'FMOVE.D  ',
+      'FMOVE.X  ', 'FMOVE.B  ', 'FMOVE.W  ', 'FMOVE.L  ', 'FMOVE.S  ',
+      'FMOVE.D  ', 'FMOVE.X  ', 'FMOVECR  ', 'FMOVEM   ', [chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0)],
+      'SADD     ', 'SADD.B   ', 'SADD.W   ', 'SADD.L   ', 'SADD.S   ',
+      'SADD.D   ', 'FADD     ', 'FADD.B   ', 'FADD.W   ', 'FADD.L   ',
+      'FADD.S   ', 'FADD.D   ', 'SSUB     ', 'SSUB.B   ', 'SSUB.W   ',
+      'SSUB.L   ', 'SSUB.S   ', 'SSUB.D   ', 'FSUB     ', 'FSUB.B   ',
+      'FSUB.W   ', 'FSUB.L   ', 'FSUB.S   ', 'FSUB.D   ', 'SMUL     ',
+      'SMUL.B   ', 'SMUL.W   ', 'SMUL.L   ', 'SMUL.S   ', 'SMUL.D   ',
+      'FMUL     ', 'FMUL.B   ', 'FMUL.W   ', 'FMUL.L   ', 'FMUL.S   ',
+      'FMUL.D   ', 'FSGLMUL  ', 'FSGLMUL.B', 'FSGLMUL.W', 'FSGLMUL.L',
+      'FSGLMUL.S', 'SDIV     ', 'SDIV.B   ', 'SDIV.W   ', 'SDIV.L   ',
+      'SDIV.S   ', 'SDIV.D   ', 'FDIV     ', 'FDIV.B   ', 'FDIV.W   ',
+      'FDIV.L   ', 'FDIV.S   ', 'FDIV.D   ', 'FSGLDIV  ', 'FSGLDIV.B',
+      'FSGLDIV.W', 'FSGLDIV.L', 'FSGLDIV.S', 'FTEST    ', 'FTEST.B  ',
+      'FTEST.W  ', 'FTEST.L  ', 'FTEST.S  ', 'FTEST.D  ', 'FCMP     ',
+      'FCMP.B   ', 'FCMP.W   ', 'FCMP.L   ', 'FCMP.S   ', 'FCMP.D   ',
+      'FNEG     ', 'FNEG.B   ', 'FNEG.W   ', 'FNEG.L   ', 'FNEG.S   ',
+      'FNEG.D   ', 'FABS     ', 'FABS.B   ', 'FABS.W   ', 'FABS.L   ',
+      'FABS.S   ', 'FABS.D   ', 'FINT     ', 'FINT.B   ', 'FINT.W   ',
+      'FINT.L   ', 'FINT.S   ', 'FINT.D   ', 'FINTRZ   ', 'FINTRZ.B ',
+      'FINTRZ.W ', 'FINTRZ.L ', 'FINTRZ.S ', 'FINTRZ.D ', 'SSIN     ',
+      'SSIN.B   ', 'SSIN.W   ', 'SSIN.L   ', 'SSIN.S   ', 'SSIN.D   ',
+      'FSIN     ', 'FSIN.B   ', 'FSIN.W   ', 'FSIN.L   ', 'FSIN.S   ',
+      'FSIN.D   ', 'SCOS     ', 'SCOS.B   ', 'SCOS.W   ', 'SCOS.L   ',
+      'SCOS.S   ', 'SCOS.D   ', 'FCOS     ', 'FCOS.B   ', 'FCOS.W   ',
+      'FCOS.L   ', 'FCOS.S   ', 'FCOS.D   ', 'FSINCOS  ', 'FSINCOS.B',
+      'FSINCOS.W', 'FSINCOS.L', 'FSINCOS.S', 'FSINCOS.D', 'STAN     ',
+      'STAN.B   ', 'STAN.W   ', 'STAN.L   ', 'STAN.S   ', 'STAN.D   ',
+      'FTAN     ', 'FTAN.B   ', 'FTAN.W   ', 'FTAN.L   ', 'FTAN.S   ',
+      'FTAN.D   ', 'SLOGN    ', 'SLOGN.B  ', 'SLOGN.W  ', 'SLOGN.L  ',
+      'SLOGN.S  ', 'SLOGN.D  ', 'FLOGN    ', 'FLOGN.B  ', 'FLOGN.W  ',
+      'FLOGN.L  ', 'FLOGN.S  ', 'FLOGN.D  ', 'FLOG10   ', 'FLOG10.B ',
+      'FLOG10.W ', 'FLOG10.L ', 'FLOG10.S ', 'FLOG10.D ', 'FLOGNP1  ',
+      'FLOGNP1.B', 'FLOGNP1.W', 'FLOGNP1.L', 'FLOGNP1.S', 'FLOGNP1.L',
+      'SETOX    ', 'SETOX.B  ', 'SETOX.W  ', 'SETOX.L  ', 'SETOX.S  ',
+      'SETOX.D  ', 'FETOX    ', 'FETOX.B  ', 'FETOX.W  ', 'FETOX.L  ',
+      'FETOX.S  ', 'FETOX.D  ', 'SATAN    ', 'SATAN.B  ', 'SATAN.W  ',
+      'SATAN.L  ', 'SATAN.S  ', 'SATAN.D  ', 'FATAN    ', 'FATAN.B  ',
+      'FATAN.W  ', 'FATAN.L  ', 'FATAN.S  ', 'FATAN.D  ', 'SSQRT    ',
+      'SSQRT.B  ', 'SSQRT.W  ', 'SSQRT.L  ', 'SSQRT.S  ', 'SSQRT.D  ',
+      'FSQRT    ', 'FSQRT.B  ', 'FSQRT.W  ', 'FSQRT.L  ', 'FSQRT.S  ',
+      'FSQRT.D  ', 'FBNEQ    ', 'FBEQ     ', 'FBGE     ', 'FBLT     ',
+      'FBGT     ', 'FBLE     ', 'FBNEQ.L  ', 'FBEQ.L   ', 'FBGE.L   ',
+      'FBLT.L   ', 'FBGT.L   ', 'FBLE.L   ', 'FSNEQ    ', 'FSEQ     ',
+      'FSGE     ', 'FSLT     ', 'FSGT     ', 'FSLE     ', 'FSCALE   ',
+      'FSCALE.B ', 'FSCALE.W ', 'FSCALE.L ', 'FSCALE.S ', 'FSCALE.D ',
+      'NOP      ', 'FSQRTS   ', 'FSQRTD   ', 'FABSS    ', 'FABSD    ',
+      'FROUNDDI ', 'FROUNDSI ', 'FTRUNCDI ', 'FTRUNCSI ', 'FROUNDDS ',
+      'FCVTSD   ', 'FCVTID   ', 'FCVTIS   ', 'FMULS    ', 'FADDS    ',
+      'FSUBS    ', 'FDIVS    ', 'FMULD    ', 'FADDD    ', 'FSUBD    ',
+      'FDIVD    ', 'FCMPEQD  ', 'FCMPLSD  ', 'FCMPGTD  ', 'FCMPEQS  ',
+      'FCMPLSS  ', 'FCMPGTS  ', 'FMULS3   ', 'FADDS3   ', 'FSUBS3   ',
+      'FMULD3   ', 'FADDD3   ', 'FSUBD3   ', 'FLOADMS  ', 'FLOADLS  ',
+      'FLOADMSRG', 'FLOADI   ', 'FSTOREMS ', 'FSTORELS ', 'FSTOREI  ',
+      'FCOPYS   ', 'FCOPYD   ', 'DC.B     ', 'DC.W     ', 'DC.L     ',
+      'DC.D     ', 'DC       '];
