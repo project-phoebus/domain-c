@@ -617,3 +617,6 @@ lang2/source/be_com/bin.pas	s/if stmt_bits\^\[stmt\] then/if stmt_bits <> nil th
 lang2/source/be_com/bin.pas	s/if stmt_bits\^\[0\] and \(map\^\[0\] <> 0\) then begin/if (stmt_bits <> nil) and (map^[0] <> 0) then begin { gap 13 }/
 # gap 22 (bin): ord of a boolean (an if statement, for the check)
 lang2/source/be_com/bin.pas	s/^(\s*)(\w+) := ord\(([^()]*(?:\([^()]*\))?[^()]*)\) & 1;/${1}if $3 then $2 := 1 else $2 := 0; { gap 22 }/
+# gap 12 (utils, translator PA): an A0 function result compared with a variable (the operands swapped)
+lang2/source/be_com/utils.pas	s/if utils_\$find_exposed_lts\(lr, bb\) <> lts then/if lts <> utils_\$find_exposed_lts(lr, bb) then { gap 12 }/
+lang2/source/be_com/utils.pas	s/if utils_\$find_final_lts\(lr, bb\) <> lts then/if lts <> utils_\$find_final_lts(lr, bb) then { gap 12 }/

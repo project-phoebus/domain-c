@@ -236,10 +236,10 @@ begin
   dst^ := src^;
   dst^.h.num := num;
   if src^.h.kind in [operand$ip_reg..operand$well_behaved_memory] then begin
-    if src^.lts^.def = src then
-      src^.lts^.def := dst
+    if src^.lts^.refs = src then
+      src^.lts^.refs := dst
     else begin
-      o := src^.lts^.def;
+      o := src^.lts^.refs;
       while o^.link <> src do
         o := o^.link;
       o^.link := dst;
@@ -284,7 +284,7 @@ begin
     src^.h.count := 0;
     move_operand(src, addr(mv^.opnds[1]));
     lir_utils_$add_lts_to_lr(24, lir_$new_live_range_ip_reg, mv^.bb, lts);
-    lts^.def := addr(mv^.opnds[2]);
+    lts^.refs := addr(mv^.opnds[2]);
     mv^.opnds[2].h.num := 2;
     opnd_bytes_ptr_t(addr(mv^.opnds[2]))^.rrp := 8;
     mv^.opnds[2].h.kind := operand$ip_reg;
@@ -311,10 +311,10 @@ var
   p: opnd_ptr_t;
 begin
   if o^.h.kind in [operand$ip_reg..operand$well_behaved_memory] then begin
-    if o^.lts^.def = o then
-      o^.lts^.def := o^.link
+    if o^.lts^.refs = o then
+      o^.lts^.refs := o^.link
     else begin
-      p := o^.lts^.def;
+      p := o^.lts^.refs;
       while p^.link <> o do
         p := p^.link;
       p^.link := o^.link;
@@ -433,9 +433,9 @@ var
   o, first, before, m, p, prev: opnd_ptr_t;
   i1, i2: instr_ptr_t;
 begin
-  if lts^.def = nil then
+  if lts^.refs = nil then
     return;
-  o := lts^.def;
+  o := lts^.refs;
   if (opnd_bytes_ptr_t(o)^.rrp & 12) = 0 then begin
     first := o;
     before := nil;
@@ -466,7 +466,7 @@ begin
       if p = first then
         first := m;
       if prev = nil then
-        lts^.def := m
+        lts^.refs := m
       else
         prev^.link := m;
       p := o;
@@ -508,8 +508,8 @@ var
   r: opnd_ptr_t;
 begin
   instr^.l16 := mark;
-  tr_rtn^.l180 := tr_rtn^.l180 + 1;
-  serial := tr_rtn^.l180;
+  tr_rtn^.marks := tr_rtn^.marks + 1;
+  serial := tr_rtn^.marks;
   marked := nil;
   p := instr;
   if last = nil then
@@ -646,11 +646,11 @@ begin
         if (o^.h.kind in [operand$ip_reg..operand$well_behaved_memory])
            and ((opnd_bytes_ptr_t(o)^.rrp & 12) <> 0)
            and o^.lts^.lr^.f2.b3_2 then begin
-          if o^.lts^.f2.b3_4 then
+          if o^.lts^.f2.final then
             bug_check('TR_UTILS_$separate_partis: LTS was aon exit%$');
           l := utils_$find_last_lts_in_bb(o^.lts^.lr, p^.bb, prev);
-          o^.lts^.f2.b3_6 := false;
-          l^.f2.b3_6 := true;
+          o^.lts^.f2.first_in_bb := false;
+          l^.f2.first_in_bb := true;
           while l <> o^.lts do begin
             prev := l;
             l := l^.next;
@@ -716,14 +716,14 @@ procedure maintain_complex_props(
     set_bits: boolean); options(val_param); internal;
 begin
   if ((lts^.rrp * [rrp$modify, rrp$write]) <> []) and set_bits then
-    if lr^.w4 <> 0 then
-      bv_$set(lts^.bb^.l110, lr);
-  if lts^.f2.b3_7 then begin
-    lts^.f2.b3_7 := false;
+    if lr^.id <> 0 then
+      bv_$set(lts^.bb^.transparent, lr);
+  if lts^.f2.exposed then begin
+    lts^.f2.exposed := false;
     utils_$put_lts_on_exposed_list(lts);
     if set_bits then begin
-      bv_$set(lts^.bb^.l94, lr);
-      bv_$set(lts^.bb^.l90, lr);
+      bv_$set(lts^.bb^.live_in, lr);
+      bv_$set(lts^.bb^.live_gen, lr);
     end;
   end;
   if final <> nil then begin
@@ -731,11 +731,11 @@ begin
     lts^.l28 := final^.l28;
     final^.l28 := lts;
   end;
-  if lts^.f2.b3_4 then begin
-    lts^.f2.b3_4 := false;
+  if lts^.f2.final then begin
+    lts^.f2.final := false;
     utils_$put_lts_on_final_list(lts);
     if set_bits then
-      bv_$set(lts^.bb^.l86, lr);
+      bv_$set(lts^.bb^.live_out, lr);
   end;
 end;
 
@@ -791,12 +791,12 @@ begin
   l := src^.ltss;
   while (tail^ <> nil) and (l <> nil) do begin
     l^.lr := lr;
-    n0 := tail^^.bb^.w12;
-    if not passed and (l^.bb^.w12 = n0) then begin
-      o := l^.def;
+    n0 := tail^^.bb^.order;
+    if not passed and (l^.bb^.order = n0) then begin
+      o := l^.refs;
       if o <> nil then begin
-        if set_bits and (lr^.w4 <> 0) and l^.f2.b3_4 then
-          bv_$set(l^.bb^.l86, lr);
+        if set_bits and (lr^.id <> 0) and l^.f2.final then
+          bv_$set(l^.bb^.live_out, lr);
         repeat
           o^.lts := tail^;
           if o^.link = nil then
@@ -804,24 +804,24 @@ begin
           o := o^.link;
         until o = nil;
         if (l^.rrp * [rrp$modify, rrp$write]) <> [] then
-          readers := l^.def^.link
+          readers := l^.refs^.link
         else
-          readers := l^.def;
+          readers := l^.refs;
         if readers <> nil then begin
           if (tail^^.rrp * [rrp$modify, rrp$write]) <> [] then begin
-            o^.link := tail^^.def^.link;
-            tail^^.def^.link := readers;
+            o^.link := tail^^.refs^.link;
+            tail^^.refs^.link := readers;
           end
           else begin
-            o^.link := tail^^.def;
-            tail^^.def := readers;
+            o^.link := tail^^.refs;
+            tail^^.refs := readers;
           end;
         end;
       end;
       nxt := l^.next;
     end
     else begin
-      n1 := l^.bb^.w12;
+      n1 := l^.bb^.order;
       if n1 >= n0 then begin
         tail := addr(tail^^.next);
         nxt := l;
@@ -845,27 +845,27 @@ begin
       l := l^.next;
     end;
   end;
-  numbered := lr^.w4 <> 0;
+  numbered := lr^.id <> 0;
   prev_bb := nil;
   l := lr^.ltss;
   count := 0;
   while l <> nil do begin
     count := count + 1;
-    l^.f2.b2 := count;
+    l^.f2.num := count;
     if numbered and (prev_bb <> l^.bb) then
-      l^.f2.b3_6 := true;
+      l^.f2.first_in_bb := true;
     prev_bb := l^.bb;
     l := l^.next;
   end;
   lr^.w56 := count;
   src^.ltss := nil;
-  src^.l72 := 0;
-  src^.l76 := 0;
-  if with_mates and (src^.l16 <> nil) then begin
-    if lr^.l16 = nil then
+  src^.exposed := nil;
+  src^.finals := nil;
+  if with_mates and (src^.mate <> nil) then begin
+    if lr^.mate = nil then
       bug_check('TR_UTILS_$merge_lrs:  incompatible mates%$');
-    if src^.l16^.ltss <> nil then
-      tr_utils_$merge_lrs(lr^.l16, src^.l16, bb, false, false);
+    if src^.mate^.ltss <> nil then
+      tr_utils_$merge_lrs(lr^.mate, src^.mate, bb, false, false);
   end;
 end;
 
@@ -888,17 +888,17 @@ begin
     lr := lir_$new_live_range_for_kind(ord(instr^.opnds[2].h.kind));
     lir_utils_$add_lts_to_lr(8, lr, instr^.bb, lts);
     instr^.opnds[2].lts := lts;
-    lts^.def := addr(instr^.opnds[2]);
+    lts^.refs := addr(instr^.opnds[2]);
     instr^.opnds[2].link := nil;
-    if lr^.l16 <> nil then begin
-      lir_utils_$add_lts_to_lr(8, lr^.l16, instr^.bb, lts);
+    if lr^.mate <> nil then begin
+      lir_utils_$add_lts_to_lr(8, lr^.mate, instr^.bb, lts);
       instr^.opnds[4].lts := lts;
-      lts^.def := addr(instr^.opnds[4]);
+      lts^.refs := addr(instr^.opnds[4]);
       instr^.opnds[4].link := nil;
     end;
   end
   else
-    discard(utils_$excise_instruction_cleanly(instr, true));
+    utils_$excise_instruction_cleanly(instr, true);
 end;
 
 { simple_ends_before_next_complex - whether the last reader of simple
@@ -920,18 +920,18 @@ var
 begin
   l := utils_$find_last_lts_in_bb(complex^.lr, complex^.bb, prev);
   if l = complex then begin
-    complex^.f2.b3_6 := true;
+    complex^.f2.first_in_bb := true;
     simple_ends_before_next_complex := true;
     return;
   end;
   while l^.next <> complex do
     l := l^.next;
   tr_utils_$guarantee_operand_order(simple);
-  o := simple^.def;
+  o := simple^.refs;
   while o^.link <> nil do
     o := o^.link;
   if tr_utils_$relative_instr_position(utils_ins_$operands_instruction(o),
-       utils_ins_$operands_instruction(l^.def)) < 0 then
+       utils_ins_$operands_instruction(l^.refs)) < 0 then
     simple_ends_before_next_complex := false
   else
     simple_ends_before_next_complex := true;
@@ -979,8 +979,8 @@ begin
       lr := lts^.lr;
       if lr^.f2.b3_7 then
         return;
-      if not lts^.f2.b3_6 and (lr^.ltss <> lts) then begin
-        if lr^.w4 = 0 then begin
+      if not lts^.f2.first_in_bb and (lr^.ltss <> lts) then begin
+        if lr^.id = 0 then begin
           l := lr^.ltss;
           while l^.bb <> instr^.bb do
             l := l^.next;
@@ -999,7 +999,7 @@ begin
            and (instr^.opnds[k - 1].h.kind
                 in [operand$ip_reg..operand$well_behaved_memory])
            and ((rrp$intend_to_modify in instr^.opnds[k - 1].lts^.rrp)
-                or (instr^.opnds[k - 1].lts^.lr^.w4 <> 0)) then begin
+                or (instr^.opnds[k - 1].lts^.lr^.id <> 0)) then begin
           o3 := addr(i^.opnds[o^.link^.h.num]);
           if o3^.h.kind in [operand$ip_reg..operand$well_behaved_memory] then
             if o3^.lts^.lr^.f2.b3_7 then
@@ -1023,12 +1023,12 @@ begin
       instr^.opnds[k - 1].link := o^.link;
       lr := src^.lr;
       lr^.rrp := lr^.rrp + src^.rrp;
-      if lr^.l20 = 0 then
-        if (lr^.l16 = nil) = (o^.lts^.lr^.l16 = nil) then
-          lr^.l20 := o^.lts^.lr^.l20;
+      if lr^.node20 = nil then
+        if (lr^.mate = nil) = (o^.lts^.lr^.mate = nil) then
+          lr^.node20 := o^.lts^.lr^.node20;
       utils_$excise_lts_cleanly(o^.lts, true);
       tr_utils_$guarantee_operand_order(src);
-      r := src^.def;
+      r := src^.refs;
       while r^.link <> nil do
         r := r^.link;
       i := utils_ins_$operands_instruction(r);
@@ -1096,7 +1096,7 @@ begin
       if nxt^.next <> nil then
         if nxt^.next^.bb = instr^.bb then begin
           tr_utils_$guarantee_operand_order(nxt^.next);
-          r := instr^.opnds[k + 1].lts^.next^.def;
+          r := instr^.opnds[k + 1].lts^.next^.refs;
           if r <> nil then begin
             while r^.link <> nil do
               r := r^.link;
@@ -1105,7 +1105,7 @@ begin
               return;
             if tr_utils_$relative_instr_position(
                    utils_ins_$operands_instruction(r),
-                   utils_ins_$operands_instruction(o^.lts^.def)) < 0 then
+                   utils_ins_$operands_instruction(o^.lts^.refs)) < 0 then
               return;
           end;
         end;
@@ -1119,8 +1119,8 @@ begin
     if (o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical])
        and o^.h.write then begin
       src := instr^.opnds[k - 1].lts;
-      r := src^.def;
-      o^.lts^.def := r;
+      r := src^.refs;
+      o^.lts^.refs := r;
       i := utils_ins_$operands_instruction(r);
       lr := o^.lts^.lr;
       for j := r^.h.num - 1 downto 1 do begin
@@ -1146,7 +1146,7 @@ begin
       until false;
       r^.link := o^.link;
       lr^.rrp := lr^.rrp + o^.lts^.rrp;
-      src^.def := nil;
+      src^.refs := nil;
       utils_$excise_lts_cleanly(src, true);
     end;
   end;
@@ -1184,13 +1184,13 @@ begin
         return;
       if not lr^.f2.b3_1 then
         return;
-      if not lts^.f2.b3_6 then
+      if not lts^.f2.first_in_bb then
         return;
     end;
   end;
   lts := instr^.opnds[1].lts;
   if ((lts^.rrp * [rrp$modify, rrp$write]) = []) and (lts^.l44 <> nil) then
-    bb := lts^.l44^.bb
+    bb := lts_ptr_t(lts^.l44)^.bb
   else
     bb := nil;
   tr_utils_$merge_lrs(lts^.lr, instr^.opnds[2].lts^.lr, bb, true, false);
@@ -1220,18 +1220,18 @@ begin
      and (instr^.opnds[2].h.kind
           in [operand$ip_reg..operand$fp_reg_pair_physical]) then begin
     if (instruction_attributes[instr^.opc].w18 & 7) <> 3 then begin
-      if instr^.opnds[1].lts^.lr^.l16 <> nil then
+      if instr^.opnds[1].lts^.lr^.mate <> nil then
         return;
-      if instr^.opnds[2].lts^.lr^.l16 <> nil then
+      if instr^.opnds[2].lts^.lr^.mate <> nil then
         return;
     end;
-    if instr^.opnds[1].lts^.lr^.w4 = 0 then begin
-      if instr^.opnds[2].lts^.lr^.w4 = 0 then
+    if instr^.opnds[1].lts^.lr^.id = 0 then begin
+      if instr^.opnds[2].lts^.lr^.id = 0 then
         copy$simple_dest(instr)
       else
         copy$simple_complex(instr);
     end
-    else if instr^.opnds[2].lts^.lr^.w4 = 0 then
+    else if instr^.opnds[2].lts^.lr^.id = 0 then
       copy$simple_dest(instr)
     else
       copy$complex_complex(instr);
@@ -1272,10 +1272,10 @@ end;
 function just_join_bp(
     lts: lts_ptr_t): boolean; options(val_param); internal;
 begin
-  if lts^.def <> nil then
-    if (lts^.def^.link = nil) and lts^.def^.h.modify then begin
+  if lts^.refs <> nil then
+    if (lts^.refs^.link = nil) and lts^.refs^.h.modify then begin
       just_join_bp :=
-        utils_ins_$operands_instruction(lts^.def)^.opc = ord(opc$join_bp);
+        utils_ins_$operands_instruction(lts^.refs)^.opc = ord(opc$join_bp);
       return;
     end;
   just_join_bp := false;
@@ -1327,50 +1327,50 @@ var
   l: lts_ptr_t;
   r: integer;
   pair: tr_pair_t;
-  e: bb_edge_ptr_t;
+  e: fg_edge_ptr_t;
   prev: lts_ptr_t;
   yes: boolean;
 begin
-  if (lr1^.w4 = 0) or (lr2^.w4 = 0) then begin
+  if (lr1^.id = 0) or (lr2^.id = 0) then begin
     find_complex_driving_ltss := false;
     return;
   end;
   if start <> nil then begin
-    if start^.def = nil then
+    if start^.refs = nil then
       return;
-    if not start^.f2.b3_7 then
-      if utils_ins_$operands_instruction(start^.def)^.opc
+    if not start^.f2.exposed then
+      if utils_ins_$operands_instruction(start^.refs)^.opc
          <> ord(opc$join_bp) then begin
         find_complex_driving_ltss := false;
         return;
       end;
     tr_28 := bb;
     tr_24 := bb_interval(bb);
-    tr_rtn^.l180 := tr_rtn^.l180 + 2;
-    serial := tr_rtn^.l180;
+    tr_rtn^.marks := tr_rtn^.marks + 2;
+    serial := tr_rtn^.marks;
     fg_utils_$compute_lr_lifetime(lr1);
   end
   else begin
-    if bb^.l146 = serial then begin
+    if bb^.mark146 = serial then begin
       find_complex_driving_ltss := true;
       return;
     end;
     m := serial - 1;
-    if m = bb^.l146 then begin
+    if m = bb^.mark146 then begin
       if bb_interval(bb) = nil then
         find_complex_driving_ltss := not tr_rtn^.f228.b228_2
       else
         find_complex_driving_ltss := not bb_interval(bb)^.f.b18_5;
       return;
     end;
-    bb^.l146 := m;
+    bb^.mark146 := m;
     if (bb = tr_28) or not bb^.f20.b20_3 then begin
       find_complex_driving_ltss := false;
       return;
     end;
     l := utils_$find_final_lts(lr1, bb);
     if l <> nil then
-      if l^.def <> nil then
+      if l^.refs <> nil then
         if not just_join_bp(l) then begin
           if lr1 = lr2 then
             if bb_interval(bb) <> tr_24 then begin
@@ -1385,7 +1385,7 @@ begin
           if r = 1 then begin
             add_solution(sols, pair.a, pair.b, bb);
             tr_32 := true;
-            bb^.l146 := serial;
+            bb^.mark146 := serial;
             find_complex_driving_ltss := true;
             return;
           end;
@@ -1393,14 +1393,14 @@ begin
         end;
     start := utils_$find_last_lts_in_bb(lr2, bb, prev);
     if start <> nil then
-      if (start^.def = nil) or (start^.def^.link <> nil)
-         or (utils_ins_$operands_instruction(start^.def)^.opc
+      if (start^.refs = nil) or (start^.refs^.link <> nil)
+         or (utils_ins_$operands_instruction(start^.refs)^.opc
              <> ord(opc$join_bp)) then begin
         find_complex_driving_ltss := false;
         return;
       end;
   end;
-  e := bb^.l26;
+  e := bb^.preds;
   if e = nil then begin
     find_complex_driving_ltss := false;
     return;
@@ -1424,11 +1424,11 @@ begin
         return;
       end;
       add_solution(sols, nil, nil, e^.source);
-      e^.source^.l146 := serial;
+      e^.source^.mark146 := serial;
     end;
-    e := e^.next_in;
+    e := e^.next_pred;
   until e = nil;
-  bb^.l146 := serial;
+  bb^.mark146 := serial;
   find_complex_driving_ltss := true;
 end;
 
@@ -1469,43 +1469,43 @@ var
       mark: integer32;
       all: boolean): boolean; options(val_param);
   var
-    e: bb_edge_ptr_t;
+    e: fg_edge_ptr_t;
   begin
-    if bb^.l146 = mark then begin
+    if bb^.mark146 = mark then begin
       validate := true;
       return;
     end;
-    if bb^.l146 <> old then begin
+    if bb^.mark146 <> old then begin
       validate := not bb^.f20.b20_6;
       return;
     end;
     if all then
-      bb^.l146 := mark
+      bb^.mark146 := mark
     else
-      bb^.l146 := old - 1;
-    e := bb^.l22;
+      bb^.mark146 := old - 1;
+    e := bb^.succs;
     while e <> nil do begin
       if not validate(e^.target, lr, old, mark, true) then begin
         validate := false;
         return;
       end;
-      e := e^.next_out;
+      e := e^.next_succ;
     end;
     validate := true;
   end;
 
 begin
-  if (bb = nil) or (sols = nil) or (lr^.w4 = 0) then
+  if (bb = nil) or (sols = nil) or (lr^.id = 0) then
     bug_check('TR_UTILS_$solutions_dont_interfere:  invalid input.%$');
   fg_utils_$compute_lr_lifetime(lr);
-  tr_rtn^.l180 := tr_rtn^.l180 + 1;
-  m := tr_rtn^.l180;
-  bb^.l146 := m;
+  tr_rtn^.marks := tr_rtn^.marks + 1;
+  m := tr_rtn^.marks;
+  bb^.mark146 := m;
   s := sols;
   while s <> nil do begin
     for k := 1 to s^.count do begin
       b := s^.entries[k].bb;
-      if not all and (b^.l146 = m) then begin
+      if not all and (b^.mark146 = m) then begin
         solutions_dont_interfere := false;
         return;
       end;
@@ -1519,7 +1519,7 @@ begin
   s := sols;
   while s <> nil do begin
     for k := 1 to s^.count do
-      s^.entries[k].bb^.l146 := m;
+      s^.entries[k].bb^.mark146 := m;
     s := s^.next;
   end;
   serial := m;
@@ -1669,7 +1669,7 @@ begin
         end;
   if i^.h.sets_cc then begin
     last := addr(i^.opnds[i^.h.nopnds]);
-    if last^.lts^.f2.b3_4 or (last^.link <> nil) then begin
+    if last^.lts^.f2.final or (last^.link <> nil) then begin
       adjustable_creation_point := result;
       return;
     end;
@@ -1738,7 +1738,7 @@ begin
               opnd_bytes_ptr_t(addr(add^.opnds[1]))^.rrp := 16;
               lr := lir_$new_live_range_ip_reg;
               lir_utils_$add_lts_to_lr(24, lr, i^.bb, lts);
-              lts^.def := res;
+              lts^.refs := res;
               i^.opnds[3].h.kind := operand$ip_reg;
               i^.opnds[3].lts := lts;
               i^.opnds[3].link := addr(add^.opnds[2]);
@@ -1811,7 +1811,7 @@ begin
   i := utils_ins_$operands_instruction(o);
   if i^.h.sets_cc then begin
     last := addr(i^.opnds[i^.h.nopnds]);
-    if last^.lts^.f2.b3_4 or (last^.link <> nil) then begin
+    if last^.lts^.f2.final or (last^.link <> nil) then begin
       can_preserve_operation := false;
       return;
     end;
@@ -2042,7 +2042,7 @@ begin
         return;
       end;
       src := instr^.opnds[1].lts;
-      simple1 := (src^.lr^.w4 = 0) and (src^.lr^.ltss^.next = nil);
+      simple1 := (src^.lr^.id = 0) and (src^.lr^.ltss^.next = nil);
       count := instr^.opnds[1].h.count;
       kind := ord(instr^.opnds[1].h.kind);
       adjust := false;
@@ -2071,7 +2071,7 @@ begin
   l := lr^.ltss;
   found := false;
   while l <> nil do begin
-    r := l^.def;
+    r := l^.refs;
     if (r <> nil) and ((opnd_bytes_ptr_t(r)^.rrp & 12) <> 0) then begin
       if adjust then begin
         if not adjustable_creation_point(r, delta, instr, true, no_add,
@@ -2126,7 +2126,7 @@ begin
             while last^.next <> src do
               last := last^.next;
             if tr_utils_$relative_instr_position(i,
-                 utils_ins_$operands_instruction(last^.def)) < 0 then begin
+                 utils_ins_$operands_instruction(last^.refs)) < 0 then begin
               tr_utils_$try_twiddling_disp := false;
               return;
             end;
@@ -2142,7 +2142,7 @@ begin
     mv := nil;
     l := lr^.ltss;
     while l <> nil do begin
-      r := l^.def;
+      r := l^.refs;
       if (r <> nil) and ((opnd_bytes_ptr_t(r)^.rrp & 12) <> 0) then begin
         nr := r^.link;
         if adjust then
@@ -2170,14 +2170,14 @@ begin
             (integer(src^.rrp) & 16#D3) ! 16;
           x^.lts := src;
           x^.h.count := count;
-          if (src^.def <> nil)
-             and ((opnd_bytes_ptr_t(src^.def)^.rrp & 12) <> 0) then begin
-            x^.link := src^.def^.link;
-            src^.def^.link := x;
+          if (src^.refs <> nil)
+             and ((opnd_bytes_ptr_t(src^.refs)^.rrp & 12) <> 0) then begin
+            x^.link := src^.refs^.link;
+            src^.refs^.link := x;
           end
           else begin
-            x^.link := src^.def;
-            src^.def := x;
+            x^.link := src^.refs;
+            src^.refs := x;
           end;
         end;
         r := nr;
@@ -2310,10 +2310,10 @@ begin
       return;
     end;
     if (add^.opnds[1].lts^.rrp * [rrp$modify, rrp$write]) <> [] then begin
-      def := utils_ins_$operands_instruction(add^.opnds[1].lts^.def);
+      def := utils_ins_$operands_instruction(add^.opnds[1].lts^.refs);
       if tr_utils_$relative_instr_position(mem, def) > 0 then begin
-        tr_rtn^.l180 := tr_rtn^.l180 + 1;
-        mark := tr_rtn^.l180;
+        tr_rtn^.marks := tr_rtn^.marks + 1;
+        mark := tr_rtn^.marks;
         tr_utils_$mark_dependents(mem, def, mark);
         if mem^.l16 = def^.l16 then begin
           mem_ref_positioned_for_postincrement := false;
@@ -2343,8 +2343,8 @@ begin
         mem_ref_positioned_for_postincrement := false;
         return;
       end;
-      tr_rtn^.l180 := tr_rtn^.l180 + 1;
-      mark := tr_rtn^.l180;
+      tr_rtn^.marks := tr_rtn^.marks + 1;
+      mark := tr_rtn^.marks;
       target := utils_ins_$operands_instruction(last);
       tr_utils_$mark_dependents(mem, target, mark);
       r := base^.link;
@@ -2372,10 +2372,10 @@ begin
     if (add^.opnds[1].h.kind
         in [operand$ip_reg..operand$well_behaved_memory])
        and ((add^.opnds[1].lts^.rrp * [rrp$modify, rrp$write]) <> []) then begin
-      tr_rtn^.l180 := tr_rtn^.l180 + 1;
-      mark := tr_rtn^.l180;
+      tr_rtn^.marks := tr_rtn^.marks + 1;
+      mark := tr_rtn^.marks;
       tr_utils_$mark_dependents(mem, add, mark);
-      if utils_ins_$operands_instruction(add^.opnds[1].lts^.def)^.l16
+      if utils_ins_$operands_instruction(add^.opnds[1].lts^.refs)^.l16
          = mark then begin
         mem_ref_positioned_for_postincrement := false;
         return;
@@ -2423,7 +2423,7 @@ begin
   end;
   written := (base^.lts^.rrp * [rrp$modify, rrp$write]) <> [];
   if written then
-    if base^.lts^.def <> addr(add^.opnds[3]) then begin
+    if base^.lts^.refs <> addr(add^.opnds[3]) then begin
       mem_ref_positioned_for_preincrement := false;
       return;
     end;
@@ -2453,17 +2453,17 @@ begin
   repeat
     tr_utils_$guarantee_operand_order(base^.lts);
     if written then
-      r := base^.lts^.def^.link
+      r := base^.lts^.refs^.link
     else
-      r := base^.lts^.def;
+      r := base^.lts^.refs;
     if r = base then begin
       mem_ref_positioned_for_preincrement := true;
       return;
     end;
     while r^.link <> base do
       r := r^.link;
-    tr_rtn^.l180 := tr_rtn^.l180 + 1;
-    mark := tr_rtn^.l180;
+    tr_rtn^.marks := tr_rtn^.marks + 1;
+    mark := tr_rtn^.marks;
     i := utils_ins_$operands_instruction(r);
     tr_utils_$mark_dependents(i, mem, mark);
     if i^.l16 = mem^.l16 then begin
@@ -2472,9 +2472,9 @@ begin
         return;
       end;
       if written then
-        r := base^.lts^.def^.link
+        r := base^.lts^.refs^.link
       else
-        r := base^.lts^.def;
+        r := base^.lts^.refs;
       while r <> base do begin
         if not can_preserve_operation(r, -disp, offset) then begin
           mem_ref_positioned_for_preincrement := false;
@@ -2536,7 +2536,7 @@ begin
       can_adjust_creation_point := false;
       return;
     end;
-    o := lts^.def;
+    o := lts^.refs;
     result := adjustable_creation_point(o, new - old, creator, false, false,
                                         false);
   end
@@ -2676,10 +2676,10 @@ begin
               until a2 = b;
               op2 := addr(add^.opnds[2]);
               last^.link := op2;
-              if lts^.def = op2 then
-                lts^.def := add^.opnds[3].link
+              if lts^.refs = op2 then
+                lts^.refs := add^.opnds[3].link
               else begin
-                o := lts^.def;
+                o := lts^.refs;
                 while o^.link <> op2 do
                   o := o^.link;
                 o^.link := add^.opnds[3].link;
@@ -2696,7 +2696,7 @@ begin
     pass := pass + 1;
   end;
   tr_utils_$guarantee_operand_order(add^.opnds[2].lts);
-  a2 := add^.opnds[2].lts^.def;
+  a2 := add^.opnds[2].lts^.refs;
   if add^.opnds[2].link <> nil then
     bug_check('TR_UTILS_$autoindex_within_bb: intend to modify opr should be last%$');
   op2 := addr(add^.opnds[2]);
@@ -2707,7 +2707,7 @@ begin
   while a2^.link <> op2 do
     a2 := a2^.link;
   a2^.link := nil;
-  a2 := add^.opnds[2].lts^.def;
+  a2 := add^.opnds[2].lts^.refs;
   if a2 = nil then
     head := nil
   else begin
@@ -2732,7 +2732,7 @@ begin
          and can_adjust_creation_point(p, add^.opnds[2].lts, add, disp, 0)
       then begin
         ok := true;
-        b := add^.opnds[2].lts^.def;
+        b := add^.opnds[2].lts^.refs;
       end
       else begin
         b := base_operand(p);
@@ -2789,7 +2789,7 @@ begin
           b^.link := op2;
         lts := add^.opnds[2].lts;
         if (opnd_bytes_ptr_t(b)^.rrp & 12) <> 0 then begin
-          if not adjustable_creation_point(lts^.def, -disp, add, false, false,
+          if not adjustable_creation_point(lts^.refs, -disp, add, false, false,
                                            true) then
             bug_check('TR_UTILS_$autoindex_within_bb: adjustable_creation_point failed%$');
           add^.opnds[2].link := add^.opnds[3].link;
@@ -2800,14 +2800,14 @@ begin
             r := r^.link;
           end;
           l3 := add^.opnds[3].lts;
-          if l3^.f2.b3_4 then begin
+          if l3^.f2.final then begin
             utils_$move_definition(l3, lts, false);
             utils_$excise_lts_cleanly(add^.opnds[3].lts, false);
             utils_$put_lts_on_final_list(lts);
           end
           else
             utils_$excise_lts_cleanly(l3, false);
-          discard(utils_$excise_instruction_cleanly(add, true));
+          utils_$excise_instruction_cleanly(add, true);
           autoindex_within_bb := true;
           return;
         end;
@@ -2823,7 +2823,7 @@ begin
     end;
     pass := pass + 1;
   end;
-  o := add^.opnds[2].lts^.def;
+  o := add^.opnds[2].lts^.refs;
   while o^.link <> nil do
     o := o^.link;
   o^.link := op2;
@@ -2869,7 +2869,7 @@ begin
   result := false;
   lts := sols^.entries[sols^.count].b;
   sols^.count := sols^.count - 1;
-  r := lts^.def;
+  r := lts^.refs;
   if r = nil then begin
     autoincrement_solutions_acceptable := false;
     return;
@@ -2924,13 +2924,13 @@ begin
       while s <> nil do begin
         for k := 1 to s^.count do begin
           l2 := s^.entries[k].b;
-          if l2^.def = nil then begin
+          if l2^.refs = nil then begin
             autoincrement_solutions_acceptable := false;
             return;
           end;
-          p := utils_ins_$operands_instruction(l2^.def);
+          p := utils_ins_$operands_instruction(l2^.refs);
           p^.l24 := 0;
-          r := l2^.def^.link;
+          r := l2^.refs^.link;
           while r <> nil do begin
             i := utils_ins_$operands_instruction(r);
             if i <> p then begin
@@ -3010,14 +3010,14 @@ begin
       mem := s^.entries[k].a;
       lts := s^.entries[k].b;
       if mem = nil then begin
-        readers := lts^.def^.link;
-        lts^.def^.link := nil;
-        if not adjustable_creation_point(lts^.def, -disp, add, false, false,
+        readers := lts^.refs^.link;
+        lts^.refs^.link := nil;
+        if not adjustable_creation_point(lts^.refs, -disp, add, false, false,
                                          true) then
           bug_check('TR_UTILS_$apply_autoincrement_solutions: adjustable_creation_point failed%$');
-        mem := utils_ins_$operands_instruction(lts^.def);
+        mem := utils_ins_$operands_instruction(lts^.refs);
         nl := lts;
-        n := lts^.def;
+        n := lts^.refs;
       end
       else begin
         if not (instruction_attributes[mem^.opc].class
@@ -3027,7 +3027,7 @@ begin
         lts := b^.lts;
         readers := b^.link;
         b^.link := nil;
-        if not lts^.f2.b3_4 then
+        if not lts^.f2.final then
           bug_check('TR_UTILS_$apply_autoincrement:  can''t find final LTS%$');
         utils_$remove_lts_from_final_list(lts);
         nl := utils_$get_final_lts(lr, s^.entries[k].bb, created);
@@ -3037,7 +3037,7 @@ begin
         opnd_bytes_ptr_t(n)^.rrp := 4;
         n^.lts := nl;
         nl^.rrp := nl^.rrp + [rrp$modify];
-        nl^.def := n;
+        nl^.refs := n;
         lts^.rrp := lts^.rrp + [rrp$intend_to_modify];
         b^.h.intend_to_modify := true;
         if (lts^.rrp * [rrp$modify, rrp$write]) <> [] then
@@ -3088,7 +3088,7 @@ function validate_lts_for_auto(
     out pair: tr_pair_t): integer; options(val_param);
 begin
   pair.a := nil;
-  if (lts^.def = nil) or bb^.f.b17_6 then
+  if (lts^.refs = nil) or bb^.f.b17_6 then
     validate_lts_for_auto := 0
   else begin
     pair.b := lts;
@@ -3139,12 +3139,12 @@ begin
     return;
   end;
   lts := add^.opnds[2].lts;
-  if lts^.lr^.w4 = 0 then begin
+  if lts^.lr^.id = 0 then begin
     try_autoincrement := false;
     return;
   end;
-  if not lts^.f2.b3_7 then begin
-    r := lts^.def;
+  if not lts^.f2.exposed then begin
+    r := lts^.refs;
     if not r^.h.modify then begin
       try_autoincrement := false;
       return;
@@ -3156,7 +3156,7 @@ begin
     end;
   end;
   tr_utils_$guarantee_operand_order(lts);
-  r := lts^.def;
+  r := lts^.refs;
   if r^.h.read then
     first := r
   else
@@ -3181,13 +3181,13 @@ begin
       last := r;
       r := r^.link;
     until r = op2;
-    r := lts^.def;
+    r := lts^.refs;
     if not r^.h.read then
       r := r^.link;
-    if r = lts^.def then
-      lts^.def := op2
+    if r = lts^.refs then
+      lts^.refs := op2
     else
-      lts^.def^.link := op2;
+      lts^.refs^.link := op2;
     last^.link := add^.opnds[3].link;
     add^.opnds[3].link := r;
     add^.prev^.next := add^.next;
@@ -3228,12 +3228,12 @@ begin
   l3 := add^.opnds[3].lts;
   if l3^.next <> lts then
     bug_check('TR_UTILS_$try_autoincrement:  LTS list out of order%$');
-  if l3^.f2.b3_4 then begin
+  if l3^.f2.final then begin
     utils_$remove_lts_from_final_list(l3);
     utils_$put_lts_on_final_list(lts);
   end;
   last := nil;
-  r := l3^.def^.link;
+  r := l3^.refs^.link;
   while r <> nil do begin
     r^.lts := lts;
     last := r;
@@ -3241,12 +3241,12 @@ begin
   end;
   if last <> nil then begin
     last^.link := add^.opnds[2].link;
-    add^.opnds[2].link := l3^.def^.link;
+    add^.opnds[2].link := l3^.refs^.link;
   end;
-  l3^.def^.link := nil;
+  l3^.refs^.link := nil;
   utils_$excise_lts_cleanly(l3, false);
   lts^.l44 := nil;
-  discard(utils_$excise_instruction_cleanly(add, false));
+  utils_$excise_instruction_cleanly(add, false);
   fg_utils_$recompute_ssa_form_for_lr(lr);
   try_autoincrement := true;
 end;
@@ -3274,12 +3274,12 @@ begin
   while b <> nil do begin
     l := utils_$find_final_lts(lr, b);
     if l <> nil then begin
-      if not l^.f2.b3_7 then begin
+      if not l^.f2.exposed then begin
         could_adjust_hammock_contents := false;
         return;
       end;
       any := true;
-      r := l^.def;
+      r := l^.refs;
       while r <> nil do begin
         if not can_preserve_operation(r, disp, 0) then begin
           could_adjust_hammock_contents := false;
@@ -3332,7 +3332,7 @@ begin
         l^.l28 := final^.l28;
         final^.l28 := l;
       end;
-      r := l^.def;
+      r := l^.refs;
       while r <> nil do begin
         t := r;
         preserve_operation(t, disp);
@@ -3434,23 +3434,23 @@ begin
       utils_$put_lts_on_exposed_list(l2);
       l2^.l44 := add^.opnds[2].lts^.l44;
       if l2^.l44 <> nil then begin
-        l2^.l28 := l2^.l44^.l28;
-        l2^.l44^.l28 := l2;
+        l2^.l28 := lts_ptr_t(l2^.l44)^.l28;
+        lts_ptr_t(l2^.l44)^.l28 := l2;
       end;
     end;
     op2 := addr(add^.opnds[2]);
-    discard(utils_$remove_reader_from_lts(op2, false));
+    utils_$remove_reader_from_lts(op2, false);
     add^.opnds[2].lts := l2;
-    if l2^.def = nil then
-      l2^.def := op2
+    if l2^.refs = nil then
+      l2^.refs := op2
     else begin
-      r := l2^.def;
+      r := l2^.refs;
       while r^.link <> nil do
         r := r^.link;
       r^.link := op2;
     end;
     add^.opnds[2].link := nil;
-    if l2^.f2.b3_4 then begin
+    if l2^.f2.final then begin
       was_final := true;
       utils_$remove_lts_from_final_list(l2);
     end
@@ -3461,12 +3461,12 @@ begin
       utils_$move_definition(l2, f, false);
     l3 := add^.opnds[3].lts;
     utils_$move_definition(l3, f, true);
-    l3^.def := l3^.def^.link;
+    l3^.refs := l3^.refs^.link;
     l3^.rrp := l3^.rrp - [rrp$modify, rrp$write];
     utils_$put_lts_on_exposed_list(l3);
-    if l3^.def = nil then
+    if l3^.refs = nil then
       utils_$excise_lts_cleanly(l3, false);
-    f^.def := addr(add^.opnds[3]);
+    f^.refs := addr(add^.opnds[3]);
     add^.opnds[3].lts := f;
     add^.opnds[3].link := nil;
     f^.rrp := rrp$set_t(integer(f^.rrp)
@@ -3490,14 +3490,14 @@ begin
     l3^.l44 := nil;
     f := add^.opnds[3].lts;
     utils_$move_definition(f, l3, false);
-    if not l3^.f2.b3_4 then
+    if not l3^.f2.final then
       if (l3^.l28 <> nil) or (l3^.l44 <> nil) then
         utils_$put_lts_on_final_list(l3);
-    f^.def := nil;
+    f^.refs := nil;
     utils_$excise_lts_cleanly(f, false);
     add^.opnds[3].lts := l3;
-    add^.opnds[3].link := l3^.def;
-    l3^.def := addr(add^.opnds[3]);
+    add^.opnds[3].link := l3^.refs;
+    l3^.refs := addr(add^.opnds[3]);
     l3^.rrp := rrp$set_t(integer(l3^.rrp)
                          ! (opnd_bytes_ptr_t(addr(add^.opnds[3]))^.rrp & 12));
     l2 := utils_$get_exposed_lts(add^.opnds[2].lts^.lr, bb, created);
@@ -3511,8 +3511,8 @@ begin
     end;
     utils_$put_lts_on_final_list(add^.opnds[2].lts);
     op2 := addr(add^.opnds[2]);
-    discard(utils_$remove_reader_from_lts(op2, false));
-    l2^.def := op2;
+    utils_$remove_reader_from_lts(op2, false);
+    l2^.refs := op2;
     add^.opnds[2].lts := l2;
     add^.opnds[2].link := nil;
     if add^.opnds[2].h.intend_to_modify then
@@ -3552,11 +3552,11 @@ begin
     return;
   end;
   l := add^.opnds[2].lts;
-  if not l^.f2.b3_7 or (l^.def^.link <> nil) then begin
+  if not l^.f2.exposed or (l^.refs^.link <> nil) then begin
     move_add_to_hammock_head := false;
     return;
   end;
-  head := bb^.l26^.source;
+  head := bb^.preds^.source;
   if not head^.f.b19_7 then
     head := head^.l82;
   if head^.f14.b14 = 1 then begin
@@ -3608,7 +3608,7 @@ begin
     return;
   end;
   l := add^.opnds[3].lts;
-  if not l^.f2.b3_4 then begin
+  if not l^.f2.final then begin
     move_add_to_hammock_tail := false;
     return;
   end;
@@ -3650,10 +3650,10 @@ begin
     until r = nil;
     op2 := addr(add^.opnds[2]);
     last^.link := op2;
-    if l2^.def = op2 then
-      l2^.def := add^.opnds[3].link
+    if l2^.refs = op2 then
+      l2^.refs := add^.opnds[3].link
     else begin
-      o := l2^.def;
+      o := l2^.refs;
       while o^.link <> op2 do
         o := o^.link;
       o^.link := add^.opnds[3].link;
@@ -3756,11 +3756,11 @@ var
   last: lts_ptr_t;
   i: instr_ptr_t;
 begin
-  if lts^.def^.h.kind in [operand$fp_reg_pair, operand$fp_reg_pair_physical,
+  if lts^.refs^.h.kind in [operand$fp_reg_pair, operand$fp_reg_pair_physical,
                           operand$fp_reg_pair_like] then begin
     pair := true;
     if rrp$fp_reg_odd_only in lts^.rrp then begin
-      m := lir_utils_$find_mate_operand(lts^.def);
+      m := lir_utils_$find_mate_operand(lts^.refs);
       if m = nil then begin
         find_suitable_driving_lts_for_tst := nil;
         return;
@@ -3772,14 +3772,14 @@ begin
     pair := false;
   last := nil;
   repeat
-    i := utils_ins_$operands_instruction(lts^.def);
-    if ((opnd_bytes_ptr_t(lts^.def)^.rrp & 12) = 0)
+    i := utils_ins_$operands_instruction(lts^.refs);
+    if ((opnd_bytes_ptr_t(lts^.refs)^.rrp & 12) = 0)
        or not instruction_attributes[i^.opc].b14_0 then begin
       find_suitable_driving_lts_for_tst := last;
       return;
     end;
     if pair then begin
-      m := lir_utils_$find_mate_operand(lts^.def);
+      m := lir_utils_$find_mate_operand(lts^.refs);
       if (opnd_bytes_ptr_t(m)^.rrp & 12) = 0 then begin
         find_suitable_driving_lts_for_tst := last;
         return;
@@ -3792,8 +3792,8 @@ begin
     end;
     lts := i^.opnds[1].lts;
     if pair then begin
-      m := lir_utils_$find_mate_operand(lts^.def);
-      if m <> i^.opnds[3].lts^.def then begin
+      m := lir_utils_$find_mate_operand(lts^.refs);
+      if m <> i^.opnds[3].lts^.refs then begin
         find_suitable_driving_lts_for_tst := last;
         return;
       end;
@@ -3829,13 +3829,13 @@ begin
     safe_to_move_cc := true;
     return;
   end;
-  def := utils_ins_$operands_instruction(lts^.def);
+  def := utils_ins_$operands_instruction(lts^.refs);
   if def = instr then begin
     safe_to_move_cc := true;
     return;
   end;
   tr_utils_$guarantee_operand_order(lts);
-  r := lts^.def;
+  r := lts^.refs;
   while r^.link <> nil do
     r := r^.link;
   last := utils_ins_$operands_instruction(r);
@@ -3843,8 +3843,8 @@ begin
     safe_to_move_cc := true;
     return;
   end;
-  tr_rtn^.l180 := tr_rtn^.l180 + 1;
-  mark := tr_rtn^.l180;
+  tr_rtn^.marks := tr_rtn^.marks + 1;
+  mark := tr_rtn^.marks;
   tr_utils_$mark_dependents(instr, last, mark);
   if last <> nil then
     stop := last^.next
@@ -3899,16 +3899,16 @@ end;
   utils_$apply_func_to_all_uses (its first argument not read). }
 
 function test_lts_for_n_bit_unconsumed(
-    unused: univ_ptr;
+    unused: lts_ptr_t;
     lts: lts_ptr_t): boolean; options(val_param);
 var
   r: opnd_ptr_t;
   i: instr_ptr_t;
 begin
   if (lts^.rrp * [rrp$modify, rrp$write]) = [] then
-    r := lts^.def
+    r := lts^.refs
   else
-    r := lts^.def^.link;
+    r := lts^.refs^.link;
   while r <> nil do begin
     i := utils_ins_$operands_instruction(r);
     if (instruction_attributes[i^.opc].class <> class$branch)
@@ -3944,7 +3944,7 @@ begin
     n_bit_unconsumed := false;
     return;
   end;
-  if not lts^.f2.b3_4 then begin
+  if not lts^.f2.final then begin
     n_bit_unconsumed := true;
     return;
   end;
@@ -3995,7 +3995,7 @@ begin
     find_driver_for_tst := driver;
     return;
   end;
-  i := utils_ins_$operands_instruction(l^.def);
+  i := utils_ins_$operands_instruction(l^.refs);
   if i^.h.sets_cc or i^.h.b0_3 then begin
     if not allow_set then begin
       find_driver_for_tst := driver;
@@ -4037,7 +4037,7 @@ begin
       ok := false;
       if (instruction_attributes[i^.opc].b14_0 and ((form & 16#80) = 0))
          or (i^.opc = ord(opc$copys)) or (i^.opc = ord(opc$copyd)) then begin
-        if l^.def^.h.kind = operand$fp_reg_pair then begin
+        if l^.refs^.h.kind = operand$fp_reg_pair then begin
           if op = ord(opc$tstd) then
             if safe_to_move_cc(lr, after, i) then begin
               if i^.opc = ord(opc$copyd) then
@@ -4087,7 +4087,7 @@ begin
     instr^.h.b0_3 := false;
   end
   else
-    discard(utils_$excise_instruction_cleanly(instr, true));
+    utils_$excise_instruction_cleanly(instr, true);
 end;
 
 { br_consuming_tst_ccs_involves_v_bit - whether a reader of instr's
@@ -4102,9 +4102,9 @@ var
   r: opnd_ptr_t;
   i: instr_ptr_t;
 begin
-  r := instr^.opnds[instr^.h.nopnds].lts^.def;
+  r := instr^.opnds[instr^.h.nopnds].lts^.refs;
   while r <> nil do begin
-    if r^.lts^.f2.b3_4 then begin
+    if r^.lts^.f2.final then begin
       br_consuming_tst_ccs_involves_v_bit := true;
       return;
     end;
@@ -4205,9 +4205,9 @@ begin
   end;
   if l = nil then
     ok_to_add_tst := 1
-  else if l^.f2.b3_4 then
+  else if l^.f2.final then
     ok_to_add_tst := 0
-  else if (l^.def = nil) or not (rrp$read in l^.rrp) then
+  else if (l^.refs = nil) or not (rrp$read in l^.rrp) then
     ok_to_add_tst := 1
   else
     ok_to_add_tst := 0;
@@ -4240,7 +4240,7 @@ begin
     l := utils_$find_last_lts_in_bb(a^.lr, bb, prev);
   fin := nil;
   if l <> nil then begin
-    i := utils_ins_$operands_instruction(l^.def);
+    i := utils_ins_$operands_instruction(l^.refs);
     if a^.v_bit and (i^.opc in [77, 79..83]) then begin
       validate_lts_for_tst := 0;
       return;
@@ -4250,7 +4250,7 @@ begin
       validate_lts_for_tst := 1;
       return;
     end;
-    if l^.f2.b3_4 then
+    if l^.f2.final then
       fin := i;
   end;
   d := find_driver_for_tst(a^.tst, l, lts, true);
@@ -4303,7 +4303,7 @@ begin
   lr := lts^.lr;
   f := utils_$get_final_lts(lr, bb, created);
   if created then begin
-    if lr^.w4 = 0 then
+    if lr^.id = 0 then
       bug_check('TR_UTILS_$build_tst_instr:  unable to find LTS to test.%$');
     utils_$put_lts_on_exposed_list(f);
     dl := utils_$locate_definition(lr, bb);
@@ -4317,23 +4317,23 @@ begin
   n^.opnds[1].h.num := 1;
   opnd_bytes_ptr_t(addr(n^.opnds[1]))^.rrp := (integer(f^.rrp) & 3) ! 16;
   n^.opnds[1].lts := f;
-  n^.opnds[1].h.kind := lts^.def^.h.kind;
-  if f^.def = nil then
-    f^.def := addr(n^.opnds[1])
+  n^.opnds[1].h.kind := lts^.refs^.h.kind;
+  if f^.refs = nil then
+    f^.refs := addr(n^.opnds[1])
   else begin
-    r := f^.def;
+    r := f^.refs;
     while r^.link <> nil do
       r := r^.link;
     r^.link := addr(n^.opnds[1]);
   end;
   if n^.opnds[1].h.kind in [operand$fp_reg_pair, operand$fp_reg_pair_physical,
                             operand$fp_reg_pair_like] then begin
-    if lr^.l16 = nil then
+    if lr^.mate = nil then
       bug_check('TR_UTILS_$build_tst_instr:  want fp_reg_pair but mate is NIL.%$');
-    f := utils_$get_final_lts(lr^.l16, bb, created);
+    f := utils_$get_final_lts(lr^.mate, bb, created);
     if created then begin
       utils_$put_lts_on_exposed_list(f);
-      dl := utils_$locate_definition(lr^.l16, bb);
+      dl := utils_$locate_definition(lr^.mate, bb);
       if dl <> nil then begin
         f^.l44 := dl;
         f^.l28 := dl^.l28;
@@ -4349,10 +4349,10 @@ begin
     opnd_bytes_ptr_t(addr(n^.opnds[k]))^.rrp := (integer(f^.rrp) & 3) ! 16;
     n^.opnds[k].lts := f;
     n^.opnds[k].h.kind := n^.opnds[1].h.kind;
-    if f^.def = nil then
-      f^.def := addr(n^.opnds[k])
+    if f^.refs = nil then
+      f^.refs := addr(n^.opnds[k])
     else begin
-      r := f^.def;
+      r := f^.refs;
       while r^.link <> nil do
         r := r^.link;
       r^.link := addr(n^.opnds[k]);
@@ -4373,14 +4373,14 @@ begin
     opnd_bytes_ptr_t(addr(n^.opnds[2]))^.rrp := (integer(nl^.rrp) & 3) ! 8;
     n^.opnds[2].lts := nl;
     n^.opnds[2].h.kind := n^.opnds[1].h.kind;
-    nl^.def := addr(n^.opnds[2]);
-    if nlr^.l16 <> nil then begin
-      lir_utils_$add_lts_to_lr(8, nlr^.l16, bb, nl);
+    nl^.refs := addr(n^.opnds[2]);
+    if nlr^.mate <> nil then begin
+      lir_utils_$add_lts_to_lr(8, nlr^.mate, bb, nl);
       n^.opnds[4].h.num := 4;
       opnd_bytes_ptr_t(addr(n^.opnds[4]))^.rrp := (integer(nl^.rrp) & 3) ! 8;
       n^.opnds[4].lts := nl;
       n^.opnds[4].h.kind := n^.opnds[3].h.kind;
-      nl^.def := addr(n^.opnds[4]);
+      nl^.refs := addr(n^.opnds[4]);
     end;
   end;
   build_tst_instr := n;
@@ -4419,22 +4419,22 @@ begin
       if i^.h.sets_cc or i^.h.b0_3 then
         l := o^.lts
       else begin
-        l := utils_$get_new_lts(lr, i^.bb, 0);
+        l := utils_$get_new_lts(lr, i^.bb, false);
         o^.h.kind := operand$t(kind);
         o^.h.num := i^.h.nopnds;
         opnd_bytes_ptr_t(o)^.rrp := 8;
         o^.lts := l;
-        l^.def := o;
+        l^.refs := o;
         l^.rrp := l^.rrp + [rrp$write];
         nx := l^.next;
         if nx <> nil then
-          if (l^.bb = nx^.bb) and nx^.f2.b3_6 then begin
-            nx^.f2.b3_6 := false;
-            if nx^.f2.b3_4 then
+          if (l^.bb = nx^.bb) and nx^.f2.first_in_bb then begin
+            nx^.f2.first_in_bb := false;
+            if nx^.f2.final then
               bug_check('TR_UTILS_$move_cc_creations:  more than one active on exit LTS.%$');
           end;
       end;
-      if not l^.f2.b3_4 then begin
+      if not l^.f2.final then begin
         utils_$put_lts_on_final_list(l);
         if kind = 7 then begin
           i^.h.sets_cc := true;
@@ -4501,13 +4501,13 @@ begin
   if drv = nil then begin
     drv := o1^.lts;
     if (drv^.rrp * [rrp$modify, rrp$write]) <> [] then begin
-      i := utils_ins_$operands_instruction(drv^.def);
+      i := utils_ins_$operands_instruction(drv^.refs);
       if i^.opc = ord(opc$join_bp) then
         drv := i^.opnds[1].lts;
     end;
   end
   else begin
-    i := utils_ins_$operands_instruction(drv^.def);
+    i := utils_ins_$operands_instruction(drv^.refs);
     if i^.h.b0_6 then begin
       drv := i^.opnds[1].lts;
       if (i^.opnds[1].h.kind in [operand$fp_reg_pair,
@@ -4542,20 +4542,20 @@ begin
     if solutions_dont_interfere(sols, tst^.bb, cc^.lr, serial, true) then begin
       move_cc_creations(sols, tst, drv, cc^.lr,
                         ord(tst^.opnds[tst^.h.nopnds].h.kind));
-      if not cc^.f2.b3_4 then begin
+      if not cc^.f2.final then begin
         old := nil;
         nl := cc;
       end
       else begin
         old := cc;
-        if cc^.def^.link = nil then
+        if cc^.refs^.link = nil then
           nl := nil
         else begin
           nl := lir_utils_$add_lts_after_lts(cc, 16, cc^.bb);
-          nl^.def := old^.def;
+          nl^.refs := old^.refs;
           nl^.rrp := old^.rrp;
-          old^.def := nil;
-          r := nl^.def;
+          old^.refs := nil;
+          r := nl^.refs;
           while r <> nil do begin
             r^.lts := nl;
             r := r^.link;
@@ -4564,7 +4564,7 @@ begin
       end;
       if nl <> nil then begin
         nl^.rrp := nl^.rrp - [rrp$write];
-        nl^.def := nl^.def^.link;
+        nl^.refs := nl^.refs^.link;
         utils_$put_lts_on_exposed_list(nl);
       end;
       if old <> nil then begin

@@ -189,5 +189,8 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang2/source/be_com/mmt_utils.pas` | 37 | begun: 15 of 37 (translator PC; the leaf routines: memory live ranges and MMT_SEQ instructions kept for reuse; the rest listed in the file's TODO) |
 | `lang2/source/be_com/lst.pas` | 33 | translated (cc.a88k only; best effort; the classic and -PRASM listings; the section initializers of instr_mnemonic*.init TODO; dpc gaps 7, 8, 28) |
 | `lang2/source/be_com/bin.pas` | 32 | translated (cc.a88k only; best effort; defines unix_objmod's emit_108 at +0x30; records by offset; dpc gaps 7, 13, 22) |
+| `lang2/source/be_com/bv.pas` | 32 | translated (cc.a88k only; translator PA; best effort; vectors as sets of 0..31 (backend.ins.pas bv_t), the masks initialized) |
+| `lang/common/source/exs.pas` | 27 | translated (cc.a88k only; translator PA; best effort; IL nodes through the unit's views (exs_frame_t, exs_handler_t, ...); headings narrowed in exs.ins.pas) |
+| `lang2/source/be_com/utils.pas` | 54 | translated (cc.a88k only; translator PA; best effort; instructions, operands, segments and live ranges through backend.ins.pas (fields named by role), join inputs and statement lists through the unit's views; utils.ins.pas narrowed; dpc gap 12) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
 | PRISM back-end core (`lang2/source/be_com/backend.ins.pas`, `utils.ins.pas`, the opcode enumeration, ...) | | settled: headings of every cross-unit routine, shared cells, the records the leaf units use (docs/backend-plan.md) |

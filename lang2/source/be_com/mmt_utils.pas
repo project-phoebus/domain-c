@@ -196,9 +196,9 @@ begin
   if mu_free_lrs <> nil then begin
     lr := mu_free_lrs;
     mu_free_lrs := lr^.next;
-    w := lr^.w6;
+    w := lr^.num;
     zero(lr, 88);
-    lr^.w6 := w;
+    lr^.num := w;
     lr^.f2.b3_3 := true;
     mmt_rtn^.lrs_last^.next := lr;
     mmt_rtn^.lrs_last := lr;
@@ -221,9 +221,9 @@ begin
     mmt_utils_$lr_is_for_memory := false
   else if lr^.ltss = nil then
     mmt_utils_$lr_is_for_memory := true
-  else if lr^.ltss^.def = nil then
+  else if lr^.ltss^.refs = nil then
     mmt_utils_$lr_is_for_memory := true
-  else if lr^.ltss^.def^.h.kind = operand$argument_block_memory then
+  else if lr^.ltss^.refs^.h.kind = operand$argument_block_memory then
     mmt_utils_$lr_is_for_memory := false
   else
     mmt_utils_$lr_is_for_memory := true;

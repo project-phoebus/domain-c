@@ -79,7 +79,17 @@ Conventions the translators should know:
 | `lang2/source/be_com/bin.pas` | 32 | the code's bytes, displacements, exception stubs, .lines and unwind scopes (translator PB; dpc gaps 7, 13, 22) |
 
 exs.pas (27 routines, 4168 bytes, nested routines with uplevel
-references) was not reached: it heads batch A.
+references) was not reached with the core; batch A translated it
+(below).
+
+Batch A (translator PA, 2026-11-11):
+
+| unit | routines | notes |
+|------|----------|-------|
+| `lang2/source/be_com/bv.pas` | 32 | done: vectors as sets of 0..31 (bv_t), the blocks' data flow vectors (bb_t +86 .. +130), lir_main_c78 .. c84 named; bv headings narrowed |
+| `lang/common/source/exs.pas` | 27 | done: exs.ins.pas checked against the bodies (IL nodes univ_ptr in the headings) |
+| `lang2/source/be_com/utils.pas` | 54 | done: utils.ins.pas narrowed (utils_$birthpoint_t, utils_$pair_func_t); lts_t, lr_t, bb_t, rtn_t fields for the segment lists |
+| call_conv, lir_utils, lir, lir_main, sym, df_utils, fg_utils, tm_utils, sanity, fga, hal, life, post | | not reached (docs/questions.md 167) |
 
 ## Order: leaves first by the call graph
 
@@ -149,6 +159,63 @@ mmt.pvt.pas (mmt +0xC0..+0x1A8, which mmt_utils reaches), iv.ins.pas
 (oli and iv; iv includes opcodes/instr_size.init after it).  oli
 (37,772) is last in the graph and the largest: whoever finishes first
 takes it.
+
+## Reconciliation of batches A–C
+
+Batches A (PA: bv, exs, utils), B (PB: lst, bin) and C (PC: tr_utils,
+mmt_utils begun) each extended backend.ins.pas and utils.ins.pas from
+the same base.  At the merge each offset of bb_t, lts_t, lr_t and
+rtn_t got one field: a meaningful name over a positional one, batch
+A's where both were meaningful (it owns the LIR and flow-graph units
+that define these records), the other name kept in the field's
+comment.  Batch B's records did not overlap.  utils.ins.pas is batch
+A's (it wrote utils.pas, so its headings match the bodies).  Batch
+C's code was moved to the names below; **continuing batch C (mmt_utils,
+mmt, trans, com, iv, oli), use the right-hand column.**
+
+| PC's name | Reconciled |
+|---|---|
+| `bb_edge_t`, `bb_edge_ptr_t` | `fg_edge_t`, `fg_edge_ptr_t` (source, target unchanged) |
+| edge `next_out`, `next_in` | `next_succ`, `next_pred` |
+| bb `w12: integer` | `order: 0..65535` (`clr.l; move.w`: unsigned) |
+| bb `l22`, `l26` | `succs`, `preds` (fg_edge_ptr_t) |
+| bb `l86`, `l90`, `l94` (univ_ptr) | `live_out`, `live_gen`, `live_in` (bv_ptr_t) |
+| bb `l110` (univ_ptr) | `transparent` (bv_ptr_t) |
+| bb `l98: bb_edge_ptr_t` | `l98: fg_edge_ptr_t` |
+| bb `l146` | `mark146` |
+| bb `f14`, `f20`, `l70`, `l82`, `l102`, `l106`, `f.b18_*` | unchanged |
+| lts `f2.b2` | `f2.num` |
+| lts `f2.b3_7`, `f2.b3_6`, `f2.b3_4` | `f2.exposed`, `f2.first_in_bb`, `f2.final` |
+| lts `f2.b3_3`, `b3_2` (marked), `b3_1`, `b3_0` | unchanged |
+| lts `def` | `refs` (the operands that refer to the segment, the definition first) |
+| lts `l44: lts_ptr_t` | `l44: univ_ptr` (it also heads a join's inputs): `lts_ptr_t(l^.l44)^.bb` to dereference |
+| lr `f2` (all bits) | unchanged (batch A's `w2 & 16#80` is `f2.b3_7`) |
+| lr `w4: integer` | `id: 0..65535` (the complex id) |
+| lr `w6` | `num` |
+| lr `l16` | `mate` (batch A had `lr16`) |
+| lr `l20: integer32` | `node20: univ_ptr` (compare with nil) |
+| lr `l72`, `l76` (integer32) | `exposed`, `finals` (lts_ptr_t; clear with nil) |
+| lr `l40` .. `l60` | unchanged |
+| rtn `l180` | `marks` |
+| rtn `lrs_last`, `f228` | unchanged |
+| `utils_$excise_instruction_cleanly(p1; p2: boolean): integer32` | procedure `(instr: instr_ptr_t; cascade: boolean)` |
+| `utils_$remove_reader_from_lts` (function) | procedure `(op: opnd_ptr_t; cascade: boolean)` |
+| `utils_$excise_lts_cleanly(p1; p2: boolean)` | `(lts: lts_ptr_t; cascade: boolean)` |
+| `utils_$move_definition(p1; p2; p3: boolean)` | `(lts, def: lts_ptr_t; relink: boolean)` |
+| `utils_$find_last_lts_in_bb(lr, bb, out prev)` | `var prev` |
+| `utils_$get_exposed_lts`, `_get_final_lts(lr, bb, out created)` | `var created` |
+| `utils_$get_new_lts(..., 0)` | third parameter `at_end: boolean` |
+| `utils_$apply_func_to_all_uses`'s function | `utils_$pair_func_t`: `function(a, b: lts_ptr_t): boolean` |
+| `utils_$get_canonical_birthpoint`, `_complete_copied_instr`, `_add_birthpoint` | procedures (`utils_$birthpoint_t` in utils.ins.pas) |
+| `bv_$subtract`, `bv_$make_live_range_complex` | procedures |
+| bv_ headings (`p1`.. univ_ptr) | `bv_ptr_t` vectors, `lr: lr_ptr_t`, `rtn: rtn_ptr_t`, `n: linteger`; orders: `bv_$set_if_not_killed(not_killed, lr, v)`, `bv_$find_next_val(rtn, v, k): integer32`, `bv_$find_next(rtn, v, lr): lr_ptr_t`, `bv_$initialize_bit_vectors(rtn, n, nvectors, any_path)`, `bv_$propagate_lifetimes(n, rtn)`, `bv_$copy`/`_or`/`_and`/`_subtract(n, src, dst)`, `bv_$and_to(n, a, b, dst)` |
+
+New fields from batch A that batch C may use: bb `l54`, `exposed`
+(+62), `finals` (+66), `next114`, `avail_in`/`_out`/`_gen` (+122..);
+lts `next_exposed` (+16), `next_final` (+20), `l24`, `l32`, `mark`
+(+36); lr `exposed_hint`, `exposed_prev` (+64, +68), `final_hint`,
+`final_prev` (+80, +84); rtn `lr_map` (+60), `bbs72`, `nbbs` (+184),
+`l188`.
 
 ## The ISC
 
