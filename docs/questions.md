@@ -2322,6 +2322,53 @@ revisited.
    +284, so it takes 260 bytes, less than a varying [256]'s 262; is it a
    record like list_tree's line?  Worth the same check: lst_line_t,
    std_$string_t, time_$line_t, prtobj_$line_t.
+   **Answered by translator QC: yes; four more cells are records, the
+   rest fit.**  Every cell of a varying type (or of a type built on one)
+   laid out in module data, measured from the next cell the image's
+   code addresses (A5 displacements) or .rwdi sets:
+   - Not a varying [256] (the next cell 260 bytes on, under the 262 a
+     varying [256] takes): com_name (com, +24, com_284 at +284),
+     lst's line (+0x10, the scale letters at +0x114 in .rwdi, read at
+     (276,A0)), prfpkg's line (+0x7D0, start_faults at +0x8D4, both
+     binaries), opt_reachdef's line (+0, the tables from +260, both
+     binaries), as list_tree's (+0x18, countdown at +0x11C).  Each is
+     filled to 256 characters (add_char's `cmpi.w #256',
+     sym_$fully_qualified_routine_name's `n < 256', PRTSUB's bound), so
+     a smaller varying ([254] or [255], 260 bytes) would not hold what
+     the code writes: each is now a unit-local record of a length word
+     and 256 characters (com_name_t, lst_text_line_t, prf_line_t,
+     rd_line_t, as list_tree's lt_line_t).  dpc lays them so that
+     opt_reachdef's and com's later cells sit where the image has them;
+     lst's +0x112..+0x113 and opt_reachdef's +258 are bytes no
+     instruction reads.
+   - Not a varying [520]: c_lex_pp's lex_text (c_globals.ins.pas,
+     +0x24DE, lex_tokens at +0x26E8: 522 bytes, under 526); the text is
+     read in at character 9 up to 512 characters (520 in all), so a
+     record of a length and 520 characters (lex_text_t).
+   - PRTSUB's routines (prtcatc, prtcats, prtcatb, prtint, prthex,
+     prttab) now take the line `in out s: univ prtsub_$line_t', so
+     that prfpkg's and opt_reachdef's 258-byte lines can be passed
+     (same code; core change).
+   - Consistent with a varying (left as they are): outbin's line
+     (+0xE8, shown at +0x1F0: 264), dmp_line (+0, dmp_scale at +0x108:
+     264), at_backend's at_name and at_query_name (+720, +984, at_heap
+     +1248: 264 each), sym_line (sym's whole block, 264 bytes), diag's
+     line, line_prefix and prefix (varying [200], 208 apart, the last
+     ending at +622: 206), ass's prefix_before (+2, column_before at
+     +208: 206 exactly) and program_name (varying [80], +216, the
+     call-back at +304: 88 for 86).  A 264-byte gap does not tell a
+     varying [256] (262, then 2 bytes) from a varying [257] or [258];
+     [256] kept.
+   - Never laid out in data, so the image does not size them (used
+     only as univ or by-address parameter types, or for frame locals):
+     lst_line_t, std_$string_t (its append routines have no callers in
+     either image), time_$line_t, prtobj_$line_t, iosub_$line_t,
+     token_$vstring_t, ass_$description_t, c_main's arg_t and bin's
+     name_t (frame locals).  Left as they are.
+   The original's line type is open: two sizes coexist (258 and 262)
+   among units that all pass their line to PRTSUB, so PRTSUB's
+   parameter was presumably univ or the units declared their own types
+   (question 278).
 280. Translator QB, list_tree's size_letters (question 259): array
    [0..12] with 12 values, array [0..13], or padding before mrh's
    8-aligned data?  No instruction reads +0x148..+0x14B; the gate passes
@@ -2402,3 +2449,40 @@ revisited.
    +0x720..+0x30BA0) would move to cc_isc_check once the pass-1 action
    modules are generated and the generator writes their lines.  Agreed
    as the plan?
+291. Translator GD2, isc_pass_1_main (docs/iscg-design.md 10.5): **the
+   rule file's new operator statements are named by us**: `child K NODE
+   solution KIND' (a child's list of one solution made in the routine:
+   irrelevant for a label, void for a missing operand), `nK.index' (a
+   statement's index, the 16 bits at bit 8 of +42), `rlen_bits(X)'
+   beside `rlen_arith(X)', the roots `il_180' and
+   `target_properties.p_be' / `target_properties.l180' (+0xB4, which
+   target_properties.ins.pas leaves inside p_b0).  Other names?
+292. Translator GD2: **isc_readonly_tables and target_properties read
+   through isc_pass_1_main's views.**  The fixed text reads a word table
+   by rlen at isc_readonly_tables +346 (return_node: the assignment
+   operator of a return value), a word table at +0x30 by a relation's
+   absolute value (compare_top: its converse) and a boolean byte table
+   at +424 by opmod1 (f_math_top: the functions done in line), through
+   p1_readonly_words_t / p1_readonly_bytes_t; target_properties +0xB4
+   (a longword, the literal-pool size limit of char_string_ob and its
+   siblings) through p1_target_view_t.  With question 288's tables:
+   name them in isc_types.ins.pas and target_properties.ins.pas (p_b0
+   split), or keep the unit-local views?
+293. Translator GD2: **zero-extended words.**  The image pushes some
+   node words zero-extended (`clr.l d0; move.w (26,a0),d0; move.l
+   d0,-(sp)': set_extend_top's and isc_addr_top's size, mod_top's
+   value_top_over size) and compares char_string_ob's +16 zero-extended
+   with target_properties +0xB4; the rule file and the fixed text write
+   il.wN (an `integer', sign-extended by dpc).  The same for values
+   below 32768.  Mark unsigned words in the language (il.uwN, emitted
+   as `& 16#FFFF') or leave it?
+294. Translator GD2: **the large rewrites' conditions as written.**
+   mul_top, isc_mul_top, isc_mul_to_aop, div_by_aop, div_top and
+   mod_top test whether the multiplication or division can be done in
+   line as `c or not (X or (not X and Y))' (isc_mul_to_aop: `(not X and
+   Y) or c or not X'), X il_180's bit 4 of +374 or -NO_FP, Y -SOME_FP;
+   entry_blk and its two siblings give each branch its own trace.  The
+   fixed text keeps the image's evaluation order; the original may have
+   had a macro (the trace with every rewrite) and a simpler condition.
+   Acceptable as fixed text, or should the language grow `rewrite'
+   blocks with nested conditions so these are generated too?

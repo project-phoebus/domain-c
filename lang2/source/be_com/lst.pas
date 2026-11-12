@@ -44,8 +44,9 @@
     --------  0x251796  lst_$display_literal
     --------  0x251C92  lst_$display_table
     A5 0x48C1A4: the module's data (452 bytes): the squash suffixes
-    (+0, initialized), the line (+0x10, a prtsub_$line_t), the scale
-    letters (+0x114, initialized "1248"), the pending numbered label
+    (+0, initialized), the line (+0x10, a length and 256 characters;
+    +0x112..+0x113 no instruction reads), the scale letters (+0x114,
+    initialized "1248"), the pending numbered label
     (+0x118), the eight columns (+0x11C..+0x138), lst_13c (+0x13C, the
     source lines' listing line numbers: at_backend, bin, dmp), lst_140
     (+0x140, the listing stream: sym), three flags (+0x142, +0x144,
@@ -246,6 +247,16 @@ type
     l18: integer32;                     { +18 }
   end;
 
+  { The line being built: a length word and 256 characters, 258 bytes
+    (add_char's `cmpi.w #256'; the scale letters follow it 260 bytes on,
+    at +0x114; a varying [256] of char takes 262, language reference
+    3.11.4.1).  Passed to prtobj, lst_$prtlit and sym as univ.
+    docs/questions.md 279. }
+  lst_text_line_t = record
+    length: integer;
+    body: prtsub_$chars_t;
+  end;
+
 define
   lst_13c,                              { +0x13C }
   lst_140;                              { +0x140 }
@@ -253,7 +264,7 @@ define
 var
   squash_suffix: array [0..3] of packed array [1..4] of char := [
     '.SN ', '.ST ', '.SF ', '.SA '];    { +0x0 }
-  line: prtsub_$line_t;                 { +0x10 }
+  line: lst_text_line_t;               { +0x10 }
   scale_char: array [0..3] of char := [
     '1', '2', '4', '8'];                { +0x114 }
   pending_label: integer32;             { +0x118: a label$ cell's number,

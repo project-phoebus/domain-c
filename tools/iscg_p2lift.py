@@ -567,7 +567,7 @@ class Lifter:
             raise Unliftable('0x%X: the arms end at 0x%X and 0x%X' % (x.addr, e1, e2))
         # registers whose values differ after the arms
         newst = s_then.copy()
-        for r in set(s_then.regs) | set(s_else.regs):
+        for r in sorted(set(s_then.regs) | set(s_else.regs)):
             v1, v2 = s_then.regs.get(r), s_else.regs.get(r)
             if v1 is v2:
                 continue

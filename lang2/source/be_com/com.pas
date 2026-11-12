@@ -70,7 +70,8 @@
     --------  0x22C080  com_$end_routine
     --------  0x22C082  com_$process_routine
     A5 0x485E60: the module's data: com_heap (+0), com_name (+24, a
-    varying string: the routine's fully qualified name), +284 (set to
+    length and 256 characters: the routine's fully qualified name;
+    +282..+283 no instruction reads), +284 (set to
     100), com_rtn (+288), com_level (+296), com_hoisted (+304),
     com_306 (+306), com_saw_do_not_delete (+308), com_mem_lr (+312),
     com_mem_lrs (+316).
@@ -168,10 +169,19 @@ type
     buckets: array [0..63] of com_entry_ptr_t;   { +8 }
   end;
 
+  { The routine's name: a length word and 256 characters, 258 bytes
+    (sym_$fully_qualified_routine_name stops at 256; com_284 follows it
+    260 bytes on; a varying [256] of char takes 262, language reference
+    3.11.4.1).  docs/questions.md 279. }
+  com_name_t = record
+    length: integer;
+    body: array [1..256] of char;
+  end;
+
 var
   com_heap: mrh_$heap_t;                { +0: the hash table's heap }
   com_20: integer32;                    { +20 }
-  com_name: varying [256] of char;      { +24: the routine's name }
+  com_name: com_name_t;                { +24: the routine's name }
   com_284: integer32;                   { +284 (set to 100) }
   com_rtn: rtn_ptr_t;                   { +288 }
   com_292: integer32;                   { +292 }

@@ -37,7 +37,7 @@ var
   and the store at s.body[s.length]. }
 
 procedure prtcatc(
-    in out s: prtsub_$line_t;
+    in out s: univ prtsub_$line_t;
     c: char);
 begin
   if s.length < prtsub_$max_line then begin
@@ -57,7 +57,7 @@ end;
   - the locals' names. }
 
 procedure prtcats(
-    in out s: prtsub_$line_t;
+    in out s: univ prtsub_$line_t;
     in t: univ prtsub_$chars_t;
     n: integer);
 var
@@ -82,7 +82,7 @@ end;
   (0x09836C) or prtcats(s, 'true', 4) (0x098374), the call shared. }
 
 procedure prtcatb(
-    in out s: prtsub_$line_t;
+    in out s: univ prtsub_$line_t;
     b: boolean);
 begin
   if b then
@@ -108,7 +108,7 @@ end;
     not to be negative). }
 
 procedure prtint(
-    in out s: prtsub_$line_t;
+    in out s: univ prtsub_$line_t;
     n: integer32;
     width: integer;
     zero_fill: boolean);
@@ -163,7 +163,7 @@ end;
   - the locals' names. }
 
 procedure prthex(
-    in out s: prtsub_$line_t;
+    in out s: univ prtsub_$line_t;
     n: integer32;
     width: integer);
 var
@@ -185,7 +185,7 @@ end;
   s.length (`bgt'), a blank is appended. }
 
 procedure prttab(
-    in out s: prtsub_$line_t;
+    in out s: univ prtsub_$line_t;
     column: integer);
 var
   target: integer;
