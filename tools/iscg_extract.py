@@ -433,6 +433,11 @@ def pass1_operators(im, rs, ops):
         d['lifted'], d['why'] = iscg_pass1.lift_routine(
             r.insns, im.names, pass1, lambda a, n: im.read(a, n).decode('latin1'))
         d['positions'] = iscg_pass1.call_positions(r.insns, pass1)
+        # the inventory's reading misses a count stored through a data
+        # register's copy (branch_node); the lifter's then stands
+        for f in ('w98', 'nchildren'):
+            if d['lifted'] and d[f] is None:
+                d[f] = d['lifted'][f]
         if d['lifted'] and (d['lifted']['w98'] != d['w98'] or
                             d['lifted']['nchildren'] != d['nchildren']):
             raise Fail('%s: lifted il$t/children differ' % d['name'])

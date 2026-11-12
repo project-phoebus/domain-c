@@ -97,6 +97,12 @@ BOOL_FUNCS = {'lir_$use_trap_for_exception_raise', 'return_value_needs_assign_no
               'il_node_has_integer_value', 'is_power_of_2', 'invertible_in_sp',
               'invertible_in_dp', 'il_node_is_literal'}
 
+# functions whose result is an inherited attribute's value
+EXPR_FUNCS = {'isc_$get_label', 'precision_from_il_node', 'arithmetic_from_il_node',
+              'il_kind_function'}
+# those returning an enumeration (stored as its ordinal)
+ORD_FUNCS = {'arithmetic_from_il_node'}
+
 # condition codes: the relation a branch (or scc) takes, its negation
 CC_REL = {'eq': '=', 'ne': '<>', 'gt': '>', 'ge': '>=', 'lt': '<', 'le': '<='}
 REL_NOT = {'=': '<>', '<>': '=', '>': '<=', '>=': '<', '<': '>=', '<=': '>'}
@@ -246,6 +252,8 @@ class Lifter:
             if n is None:
                 raise NotLifted('inh +%d size %d' % (off, size))
             return 'inh.' + n
+        if base == ('param', 34) and size == 4 and off % 4 == 0:
+            return 'children[%d]' % (off // 4 + 1)
         if base and base[0] == 'gnode':     # a global node pointer's field
             return '%s.%s%d' % (base[1], {4: 'l', 2: 'w', 1: 'b'}[size], off)
         if base and base[0] == 'field':     # a node's field's field
@@ -454,6 +462,14 @@ class Lifter:
                 elif name == 'pass_1':
                     regs['a0'] = ('expr', 'pass_1(%s)' % ', '.join(args))
                     low.append(('pass_1', args))
+                elif name == 'solution_list$new' and not args:
+                    regs['a0'] = ('expr', 'newlist')
+                    low.append(('newlist',))
+                elif name == 'new_solution':
+                    regs['a0'] = ('expr', 'newsol')
+                    low.append(('newsol', args))
+                elif name == 'solution_list$append':
+                    low.append(('append', args))
                 elif name == 'solution_list$empty':
                     # the empty test of the list just stored
                     if ins[k + 2][1] != 'tstb %d0' or not re.match(r'b(mi|pl)[sw]? ', ins[k + 3][1]):
@@ -464,6 +480,10 @@ class Lifter:
                 elif name in ('isc_$precision_from_rlen_and_size', 'not_permissible_function',
                               'il_node_has_integer_value') or name in BOOL_FUNCS:
                     regs['d0'] = ('expr', '%s(%s)' % (name, ', '.join(args)))
+                elif name in EXPR_FUNCS:
+                    # their parameters are pointers
+                    args = [re.sub(r'\.l(\d+)$', r'.p\1', x) for x in args]
+                    regs['d0'] = regs['a0'] = ('expr', '%s(%s)' % (name, ', '.join(args)))
                 else:
                     low.append(['call', '%s(%s)' % (name, ', '.join(args)), False, len(low)])
                     regs['d0'] = regs['a0'] = ('callres', len(low) - 1)
@@ -527,6 +547,17 @@ class Lifter:
                     low.append(('store', dst, src) if dst[0] == 'inh' else ('nstore', dst[1], src))
                     k += 8
                     continue
+            # bit 7 of a byte loaded: moveb X,D; andib #-128,D; orb D,D2;
+            # andib #127,Y; orb D2,Y
+            m = re.match(r'andib #-128,%(d\d)$', t)
+            if m and regs.get(m.group(1), ('',))[0] == 'field' and k + 3 < len(ins) and \
+                    re.match(r'orb %%%s,%%d\d$' % m.group(1), ins[k + 1][1]) and \
+                    re.match(r'andib #127,', ins[k + 2][1]) and ins[k + 3][1].startswith('orb %d'):
+                src = '%s.7' % regs[m.group(1)][1]
+                dst = self.bit_target(ins[k + 2][1].split(',', 1)[1], 7)
+                low.append(('store', dst, src) if dst[0] == 'inh' else ('nstore', dst[1], src))
+                k += 4
+                continue
             m = re.match(r'or([wb]) %(d\d),%(a\d)@\((\d+)\)$', t)
             if m and regs.get(m.group(2), ('',))[0] == 'const' and \
                     regs.get(m.group(3), ('',))[0] == 'newinh' and \
@@ -797,31 +828,37 @@ class Lifter:
         if/else: a rewrite under a condition, the operator's children
         otherwise)."""
         ifs = [k for k, x in enumerate(low) if x[0] == 'if']
-        if len(ifs) > 1 or (ifs and ifs[0] != 0):
+        if len(ifs) > 1:
             raise NotLifted('conditions')
-        if ifs and low[0][2] == self.exit_addr:
-            cond = re.sub(r'\bil\.l(\d+)\b', r'il.p\1', low[0][1])
-            for x in low[1:]:
+        if ifs:
+            i = ifs[0]
+            head = self.group_items([x for x in low[:i] if x[0] != 'bra'])
+            for x in low[:i]:
+                if x[0] == 'bra':
+                    raise NotLifted('a branch before the condition')
+        if ifs and low[i][2] == self.exit_addr:
+            cond = re.sub(r'\bil\.l(\d+)\b', r'il.p\1', low[i][1])
+            for x in low[i + 1:]:
                 if x[0] == 'bra' and x[1] != self.exit_addr:
                     raise NotLifted('a branch in the then part')
-            body_then = self.group_items([x for x in low[1:] if x[0] != 'bra'])
-            self.body = [('if', cond, body_then, [])]
+            body_then = self.group_items([x for x in low[i + 1:] if x[0] != 'bra'])
+            self.body = head + [('if', cond, body_then, [])]
         elif ifs:
-            cond, else_at = re.sub(r'\bil\.l(\d+)\b', r'il.p\1', low[0][1]), low[0][2]
-            j = next(k for k, x in enumerate(low) if x[0] == 'bra')
-            then, rest = low[1:j], low[j + 1:]
+            cond, else_at = re.sub(r'\bil\.l(\d+)\b', r'il.p\1', low[i][1]), low[i][2]
+            j = next(k for k, x in enumerate(low) if x[0] == 'bra' and k > i)
+            then, rest = low[i + 1:j], low[j + 1:]
             made_at = low[j][1]
             made = [x for x in rest if x[0] == 'made' and x[1] == made_at]
-            if len(made) != 1:
+            if made_at != self.exit_addr and len(made) != 1:
                 raise NotLifted('the condition\'s branch')
-            rest = [x for x in rest if x is not made[0]]
+            rest = [x for x in rest if not made or x is not made[0]]
             for x in rest:
                 if x[0] == 'bra' and x[1] not in (self.exit_addr,):
                     raise NotLifted('a branch in the else part')
             rest = [x for x in rest if x[0] != 'bra']
             body_then = self.group_items(then + made)
             body_else = self.group_items(rest)
-            self.body = [('if', cond, body_then, body_else)]
+            self.body = head + [('if', cond, body_then, body_else)]
         else:
             self.body = self.group_items(low)
         self.check_tests(low)
@@ -849,6 +886,11 @@ class Lifter:
             if s[0] == 'nstore':
                 body.append(('nstore', s[1], s[2]))
                 i += 1
+                continue
+            sol = self.solution_child(low, i)
+            if sol:
+                body.append(sol[0])
+                i = sol[1]
                 continue
             if s[0] != 'newinh':
                 raise NotLifted('statement %s' % (s,))
@@ -906,6 +948,31 @@ class Lifter:
                 stmts = stmts[len(DEFAULT_COPY):]
             body.append(('child', kpos, node, copy_all, stmts, mask))
         return body
+
+    def solution_child(self, low, i):
+        """A child whose list is one solution of a kind, made here (no
+        pass_1): [new_inherited_attributes(heap, node)] list := new; append
+        new_solution(heap, kind, 0, inh or nil, node or nil, 0).  (('solution',
+        k, node, kind), the index after it) or None."""
+        j = i
+        node = None
+        if low[j][0] == 'newinh':
+            node, n = re.sub(r'^il\.l(\d+)$', r'il.p\1', low[j][2]), low[j][1]
+            j += 1
+        if j + 3 >= len(low) + 0 or low[j][0] != 'newlist' or low[j + 1][0] != 'list' or \
+                low[j + 2][0] != 'newsol' or low[j + 3][0] != 'append':
+            return None
+        k = low[j + 1][1]
+        heap, kw, inh, nd, ilk = low[j + 2][1]
+        lst, what = low[j + 3][1]
+        nd = re.sub(r'^il\.l(\d+)$', r'il.p\1', nd)
+        if heap != 'heap' or int(kw) & 0xFFFF or ilk != '0' or lst != 'children[%d]' % k or \
+                what != 'newsol':
+            raise NotLifted('a solution child')
+        if node is None and (inh, nd) != ('0', '0') or \
+                node is not None and (inh, nd) != ('inh_%d' % n, node):
+            raise NotLifted('a solution child\'s node')
+        return ('solution', k, node or 'nil', int(kw) >> 16), j + 4
 
     def check_tests(self, low):
         # the empty tests' control flow: every test but the last leaves when
@@ -1055,6 +1122,8 @@ def format_body(L, body, ind, unions, kinds, op_name):
             L.append('%ssolutions_made;' % ind)
         elif b[0] == 'nstore':
             L.append('%s%s <- %s;' % (ind, b[1], b[2]))
+        elif b[0] == 'solution':
+            L.append('%schild %d %s solution %s;' % (ind, b[1], b[2], kinds[b[3]]))
         elif b[0] == 'if':
             L.append('%sif %s;' % (ind, b[1]))
             format_body(L, b[2], ind + '  ', unions, kinds, op_name)
@@ -1133,7 +1202,10 @@ def parse_operator(ts, i, fn, num):
             if ts[k] == 'copy_all':
                 child['copy_all'] = True
                 k += 1
-            if ts[k] == 'permissible':
+            if ts[k] == 'solution':
+                d['body'][-1] = ('solution', child['k'], child['node'], ts[k + 1])
+                child = None
+            elif ts[k] == 'permissible':
                 child['mask'] = ts[k + 1:j]
                 child = None
             elif ts[k + 1] == '<-':
@@ -1438,11 +1510,12 @@ def emit_operator(op, unions, kinds):
                                  ' (0x%06X)' % op['image'] if op['image'] else ''))
     L.append('')
     L.append('procedure %s%s;' % (name, HEADING))
-    if kids or lets:
+    if kids or lets or any(b[0] == 'solution' and b[2] != 'nil' for b in flat):
         L.append('var')
-    if kids:
-        L.append('  ' + ', '.join(sorted({'inh_%d' % (c['k'] or 1) for c in kids})) +
-                 ': inherited_attributes_ptr_t;')
+    inhs = {'inh_%d' % (c['k'] or 1) for c in kids} | \
+        {'inh_%d' % b[1] for b in flat if b[0] == 'solution' and b[2] != 'nil'}
+    if inhs:
+        L.append('  ' + ', '.join(sorted(inhs)) + ': inherited_attributes_ptr_t;')
     if lets:
         L.append('  ' + ', '.join(lets) + ': univ_ptr;')
     L.append('begin')
@@ -1467,7 +1540,18 @@ def flatten(body):
 def emit_body(L, body, ind, unions, kinds):
     kids = [b[1] for b in body if b[0] == 'child']
     opened = 0
-    for b in body:
+    for bi, b in enumerate(body):
+        if b[0] == 'solution':
+            _, k, node, kind = b
+            if node != 'nil':
+                L.extend(wrap_stmt('inh_%d := new_inherited_attributes(isc_heap, %s);' % (
+                    k, expr(node)), ind))
+            L.append('%schildren[%d] := solution_list$new;' % (ind, k))
+            L.extend(wrap_stmt('solution_list$append(children[%d], new_solution(isc_heap, '
+                               'ord(solution$%s), 0, %s, %s, 0));' % (
+                                   k, kind, 'nil' if node == 'nil' else 'inh_%d' % k,
+                                   expr(node)), ind))
+            continue
         if b[0] == 'if':
             L.extend(wrap_stmt('if %s then begin' % expr(call_text_expr(b[1])), ind))
             emit_body(L, b[2], ind + '  ', unions, kinds)
@@ -1513,6 +1597,10 @@ def emit_body(L, body, ind, unions, kinds):
         for a, val in c['stmts']:
             if a == 'parent_il_kind':
                 val = 'ord(il_%s)' % val
+            elif val.split('(')[0] in ORD_FUNCS:
+                val = 'ord(%s)' % expr(val)
+            elif a == 'conditional_target' and '(' in val:
+                val = 'integer32(%s)' % expr(val)  # the insert's l16: a longword
             else:
                 val = expr(val)
             L.extend(wrap_stmt('%s := %s;' % (inh_ref(v, a), val), ind))
@@ -1524,7 +1612,8 @@ def emit_body(L, body, ind, unions, kinds):
             k, expr(c['node']), v, mask_pascal(c['mask'], k, unions, kinds)), ind))
         L.append('%sif solution_list$empty(children[%d]) then' % (ind, k))
         L.append('%s  no_solutions := true' % ind)
-        if c is [x for x in kids if x['k']][-1]:
+        if c is [x for x in kids if x['k']][-1] and \
+                not any(x[0] in ('if', 'solution') for x in body[bi + 1:]):
             L[-1] += ';'
         else:
             L.append('%selse begin' % ind)
