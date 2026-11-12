@@ -187,6 +187,7 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang2/source/be_com/zzzzz.pas` | 9 | translated (cc.a88k only; best effort; code cells through backend.ins.pas's cell_t, code_cell_size initialized; dpc gap 2) |
 | `lang2/source/be_com/tr_utils.pas` | 68 | translated (cc.a88k only; best effort, translator PC; instructions, operands, segments, live ranges and blocks through backend.ins.pas; validators as routine pointers; dpc gaps 8, 11, 12, 15, 24) |
 | `lang2/source/be_com/mmt_utils.pas` | 37 | translated (cc.a88k only; best effort, translators PC and PC2; descriptors, tokens and MMT_SEQs; mmt's tokens and the views of blocks, segments, live ranges and the routine in mmt.pvt.pas; dpc gap 12) |
+| `lang2/source/be_com/mmt.pas` | 39 | translated (cc.a88k only; best effort, translator PC2; tokens, relations, intra- and inter-block MMT_SEQs, segments for memory references; dpc gap 23) |
 | `lang2/source/be_com/lst.pas` | 33 | translated (cc.a88k only; best effort; the classic and -PRASM listings; the section initializers of instr_mnemonic*.init TODO; dpc gaps 7, 8, 28) |
 | `lang2/source/be_com/bin.pas` | 32 | translated (cc.a88k only; best effort; defines unix_objmod's emit_108 at +0x30; records by offset; dpc gaps 7, 13, 22) |
 | `lang2/source/be_com/bv.pas` | 32 | translated (cc.a88k only; translator PA; best effort; vectors as sets of 0..31 (backend.ins.pas bv_t), the masks initialized) |

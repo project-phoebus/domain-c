@@ -622,3 +622,6 @@ lang2/source/be_com/utils.pas	s/if utils_\$find_exposed_lts\(lr, bb\) <> lts the
 lang2/source/be_com/utils.pas	s/if utils_\$find_final_lts\(lr, bb\) <> lts then/if lts <> utils_\$find_final_lts(lr, bb) then { gap 12 }/
 # gap 12 (mmt_utils, translator PC2): a pointer function's result compared with a variable (two variables, for the check)
 lang2/source/be_com/mmt_utils.pas	s/if utils_ins_\$operands_instruction\(p\) <> i then begin/if p <> o then begin { gap 12 }/
+# gap 23 (mmt, translator PC2): in on a one-word constant set with a byte element (the comparisons)
+lang2/source/be_com/mmt.pas	s/\(nt\^\.desc\.class in \[1, 13\.\.15\]\)/((nt^.desc.class = 1) or ((nt^.desc.class >= 13) and (nt^.desc.class <= 15))) { gap 23 }/
+lang2/source/be_com/mmt.pas	s/\(d\^\.class in \[1\.\.15\]\)/((d^.class >= 1) and (d^.class <= 15)) { gap 23 }/

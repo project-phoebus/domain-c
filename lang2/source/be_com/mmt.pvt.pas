@@ -63,6 +63,13 @@ type
       2: (reads: mmt_classes_t;         { +8 }
           writes: mmt_classes_t);       { +12 }
   end;
+  { A token's 64 bytes, as mmt's static tokens are cleared (zero with
+    64) and its heap's items allocated. }
+  mmt_token_slot_t = record
+    case integer of
+      1: (t: mmt_token_t);
+      2: (l: array [1..16] of integer32);
+  end;
   mmt_token_map_t = array [1..1000000] of mmt_token_ptr_t;
   mmt_token_map_ptr_t = ^mmt_token_map_t;
 
@@ -87,13 +94,16 @@ type
   end;
 
   { The memory model's view of the routine (fields batch A has not
-    named; backend.ins.pas rtn_t): mem_lr (+140) the live range of the
+    named; backend.ins.pas rtn_t): exit_bb (+80), mem_lr (+140) the live range of the
     routine's memory, all_lr (+144) the one mmt makes for all memory but
     the local (a return's); +227 bit 6 the routine has asynchronous
     paths, bit 0 set by mmt when its memory needs no class 1 token. }
   mmt_rtn_v_ptr_t = ^mmt_rtn_v_t;
   mmt_rtn_v_t = record
-    space0: array [0..139] of char;
+    space0: array [0..79] of char;
+    exit_bb: bb_ptr_t;                  { +80: the exit block (its
+                                          live_gen gets all_lr) }
+    space84: array [84..139] of char;
     mem_lr: lr_ptr_t;                   { +140 }
     all_lr: lr_ptr_t;                   { +144 }
     space148: array [148..226] of char;
@@ -121,7 +131,7 @@ var
   mmt_scratch: extern bv_ptr_t;         { +0xE4: the scratch bit vectors'
                                           storage, the first of them }
   mmt_token_heap: extern mrh_$heap_t;   { +0xE8: the tokens' heap }
-  mmt_connector: extern mmt_token_t;    { +0x100: the MMT_SEQ connector
+  mmt_connector: extern mmt_token_slot_t;   { +0x100: the MMT_SEQ connector
                                           token (mmt_utils copies the
                                           last token it makes into it) }
   mmt_140: extern bv_ptr_t;             { +0x140: a bit vector of live

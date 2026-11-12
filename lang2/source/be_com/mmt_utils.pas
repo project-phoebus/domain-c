@@ -519,7 +519,7 @@ begin
       t := nxt;
     until k >= 254;
     if last = nil then begin
-      last := mmt_connector.lr;
+      last := mmt_connector.t.lr;
       add_operand(i, k, last, 8);
     end;
     m := n + 1;
@@ -1430,7 +1430,7 @@ begin
     mmt_lr_v_ptr_t(p^.lr)^.token := t;
     mmt_lr_v_ptr_t(p^.lr)^.uses := nil;
   end;
-  mmt_connector := mmt_token_map^[mmt_count]^;
+  mmt_connector.t := mmt_token_map^[mmt_count]^;
   for d := 1 to mmt_count do
     if mu_descs^[d].lr^.id <> d then begin
       l := mrh_$alloc(mmt_token_heap, 88);

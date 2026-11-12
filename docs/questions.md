@@ -1405,3 +1405,19 @@ revisited.
    instruction's +16 (its descriptor, instr_t.l16).  mmt.pvt.pas reads
    them through unit-local views (mmt_lr_v_t, mmt_rtn_v_t) rather than
    naming them in backend.ins.pas: for batch A to name.
+170. Translator PC2, mmt: dump_related_vectors prints an alias class's
+   name from alias.pas's table (its data +0, A5 0x2E8DFC: `class_names',
+   a module variable alias.pas declares without `define'); dmp reads it
+   too.  mmt.pas declares `class_names: extern' locally.  For a link
+   alias.pas would need `define class_names' (or the table moved to
+   alias.ins.pas as an extern with a name of its own): which?  mmt's
+   data also holds 'touched  '/'untouched' (+456, 2 x 9 characters)
+   that no instruction reads (as add_node's +0x28, pattern 66), kept as
+   an initialized module array.
+171. Translator PC2, mmt: a call instruction carries a pointer after its
+   operand slots (+56 + 12 nopnds) to the call's properties, whose bytes
+   +31, +33..+40 the memory model tests (asynchronous, no reads, no
+   writes, class 16, only what is passed, class 1, static, dynamic
+   classes); mmt.pas reads them through a view (mmt_call_info_t) until
+   call_conv.ins.pas declares the record.
+

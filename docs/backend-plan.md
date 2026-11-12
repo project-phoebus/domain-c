@@ -26,7 +26,7 @@ customer insert (in dpc's root): no stand-in is needed.
 | `lang2/source/be_com/utils.ins.pas` | utils.pas's 40 cross-unit headings; utils_ins_$operands_instruction's body | settled |
 | `lang2/source/be_com/call_conv.ins.pas` | get_rlen_and_size, at_call_conv | headings settled; records TODO |
 | `lang/common/source/exs.ins.pas` | exs.pas's 14 cross-unit headings | drafts read off frames (exs.pas not translated) |
-| `lang2/source/be_com/mmt.pvt.pas` | mmt's tokens, the memory model's views of bb_t, lts_t, lr_t and rtn_t (unit-local, by offset), mmt's cells mmt_utils reaches, the headings mmt/mmt_utils call across | mmt_utils's side settled (translator PC2) |
+| `lang2/source/be_com/mmt.pvt.pas` | mmt's tokens, the memory model's views of bb_t, lts_t, lr_t and rtn_t (unit-local, by offset), mmt's cells mmt_utils reaches, the headings mmt/mmt_utils call across | settled with mmt and mmt_utils (translator PC2) |
 | `lang2/source/be_com/iv.ins.pas`, `ra.pvt.pas` | the headings iv/oli, ra/ra_utils call across | headings only |
 | `lang2/source/be_com/lir.pvt.pas` | lir, lir_main, lir_utils, ra_utils's private cells | stub |
 | `lang2/source/be_prism/target.ins.pas`, `lang2/source/be_com/at_base.ins.pas` | | stubs: nothing the translated units need could only come from them |
