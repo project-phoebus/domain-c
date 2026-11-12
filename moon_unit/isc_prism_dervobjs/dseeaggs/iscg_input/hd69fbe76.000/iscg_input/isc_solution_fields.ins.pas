@@ -164,3 +164,52 @@ type
     first: solution_cell_ptr_t;         { +0 }
     last: solution_cell_ptr_t;          { +4 }
   end;
+
+  { A deferred LIR call (isc_to_lir: each debug_lir_ wrapper but
+    begin_call_or_svc and begin_fortran_io_sequence appends one, 108
+    bytes from the ISC heap, to the current statement's list;
+    end_statement replays the list).  kind (+0) says which lir_ routine:
+    1 branch, 2 break_basic_block, 3 common_lhs_rhs_token, 4
+    disjoint_lhs_and_rhs_tokens, 5 dispatch, 6 emit_call_or_svc, 7
+    end_call_or_svc, 8 field, 9 label, 10 load, 11 mfpr, 12 mtpr, 13
+    operate_and_branch, 14 a four-operand simple instruction
+    (pa_risc_shift_double), 15 simple, 16 store, 17 lir_main_$entry, 18
+    lir_main_$handler_reentry.  The fields are named after the
+    wrappers' parameters; a statement's head record (begin_statement)
+    uses only next.  Here rather than in isc_types.ins.pas because
+    isc_var_externs.ins.pas (opened by lir_main and lir_utils too, which
+    do not open isc_types.ins.pas) declares the tables of them. }
+  lir_request_ptr_t = ^lir_request_t;
+  lir_request_t = record
+    kind: integer;                      { +0 }
+    opc: integer;                       { +2 }
+    prev: lir_request_ptr_t;            { +4 }
+    next: lir_request_ptr_t;            { +8 }
+    target: univ_ptr;                   { +12: a label }
+    bits_known: integer32;              { +16 }
+    bits_trusted: integer32;            { +20 }
+    disp_off_tree: integer32;           { +24 }
+    siz: integer32;                     { +28 }
+    node: univ_ptr;                     { +32: the entry statement }
+    inh: inherited_attributes_ptr_t;    { +36 }
+    call: univ_ptr;                     { +40 }
+    lhs: univ_ptr;                      { +44 }
+    linkage_reg: solution_ptr_t;        { +48 }
+    l52: integer32;                     { +52 }
+    op1: isc_solution_ptr_t;            { +56 }
+    op2: isc_solution_ptr_t;            { +60 }
+    op3: isc_solution_ptr_t;            { +64 }
+    op4: isc_solution_ptr_t;            { +68 }
+    index: isc_solution_ptr_t;          { +72: index/disp }
+    base: isc_solution_ptr_t;           { +76 }
+    requests: integer32;                { +80 }
+    result: isc_solution_ptr_t;         { +84 }
+    rhs: univ_ptr;                      { +88 }
+    l92: integer32;                     { +92 }
+    source: isc_solution_ptr_t;         { +96 }
+    tree: univ_ptr;                     { +100: the IL tree (emit: the
+                                          call node) }
+    var_name: univ_ptr;                 { +104 }
+  end;
+  lir_request_tab_t = array [1..16] of lir_request_ptr_t;
+

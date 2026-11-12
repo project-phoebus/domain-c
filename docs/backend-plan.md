@@ -311,7 +311,7 @@ use; the generated units' notes in docs/isc-notes.md.
 | `lang2/source/isc/isc_call_handling.pas` | 6 | done: the call trees' pass 1 and pass 2 (dpc gap 4) |
 | `lang2/source/isc/isc_cse_handling.pas` | 57 | done: CSE solutions chosen, preserved, generated, moved; the accessors (dpc gap 4) |
 | `lang2/source/isc/rewrite.pas` | 16 | done: calls into ISC call trees, multiplies by constants, case statements, the entry's rws_$alloc_temp, ISC_AGG; module data byte for byte with m32_prism_and_pa.pas and m16_prism.pas (be_com) included in the tables' declarations; dpc gaps 25/28 (two regions of rewrite_$routine_call out of the check) |
-| `lang2/source/isc/isc_to_lir.pas` | 30 | not reached: a deferred queue of LIR calls (begin_statement allocates a 108-byte record per statement; each debug_lir_ wrapper traces and appends a record of its kind 1..18; end_statement merges preference moves and replays them through the lir_ routines; tables at isc_user_routines +0x28C and +0x2CC by statement depth +0x30C) |
+| `lang2/source/isc/isc_to_lir.pas` | 30 | done: a deferred queue of LIR calls (lir_request_t in isc_solution_fields.ins.pas: begin_statement starts a statement's list, each debug_lir_ wrapper traces under sw14 and appends a call of its kind 1..18, end_statement drops preference moves into the previous result and replays the list through the lir_ routines unless sw11); isc_user_routines +0x20C, +0x28C, +0x2CC, +0x30C, +0x310, +0x324 in isc_var_externs; the lir_ headings' readings reported in the unit's header for batch A; dpc gap 4 (every trace) |
 | `lang2/source/isc/isc_user_routines.pas` | 138 | not reached |
 | `moon_unit/.../isc_main.pas` | 18 | not reached (ordinary code; headings in isc_routine_externs) |
 

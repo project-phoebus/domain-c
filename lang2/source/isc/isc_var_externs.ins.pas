@@ -51,6 +51,23 @@ var
                                           base_reg and index_reg hold when
                                           it has none (new_solution,
                                           pass_2) }
+  isc_user_routines_20c: extern mrh_$heap_t; { +0x20C (0x48100C): a
+                                          heap for the compilation (the
+                                          solution of +0x324) }
+  isc_user_routines_28c: extern lir_request_tab_t; { +0x28C: by statement
+                                          depth, the last deferred LIR
+                                          call (isc_to_lir) }
+  isc_user_routines_2cc: extern lir_request_tab_t; { +0x2CC: by statement
+                                          depth, the statement's head }
+  isc_user_routines_30c: extern integer32; { +0x30C: the statements'
+                                          depth (isc_to_lir indexes by
+                                          its low word, +0x30E) }
+  isc_user_routines_310: extern integer32; { +0x310: cleared with it for
+                                          each routine }
+  isc_user_routines_324: extern isc_solution_ptr_t; { +0x324: a solution
+                                          of kind 17 made for the
+                                          compilation (isc_to_lir's
+                                          begin_compilation) }
   isc_user_routines_354: extern boolean;   { +0x354, +0x356: the ISC's
                                           traces (either prints the
                                           solutions after pass 2) }

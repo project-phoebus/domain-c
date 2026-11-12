@@ -114,6 +114,30 @@ function arithmetic_from_il_node(
 function precision_from_il_node(
     node: univ_ptr): integer32; options(val_param); extern;
 
+{ The printers the traces use: each writes its object on the standard
+  output and returns a blank, which the callers write (`write(x_to_
+  string(...))'). }
+
+{ SOLUTION_TO_STRING - isc_user_routines 0x219FA6, 0xA86 bytes (frame):
+  sol 8; D0. }
+function solution_to_string(
+    sol: isc_solution_ptr_t): char; options(val_param); extern;
+
+{ LABEL_TO_STRING - isc_user_routines 0x21998C, 0x68 bytes (frame):
+  8; D0. }
+function label_to_string(
+    lab: univ_ptr): char; options(val_param); extern;
+
+{ INSTRUCTION_TO_STRING - isc_user_routines 0x219924, 0x40 bytes
+  (frame): 8; D0. }
+function instruction_to_string(
+    instr: univ_ptr): char; options(val_param); extern;
+
+{ IL_NODE_TO_STRING - isc_user_routines 0x21805C, 0x13EA bytes (frame):
+  8; D0. }
+function il_node_to_string(
+    node: univ_ptr): char; options(val_param); extern;
+
 { ISC_$GET_MEMORY_HOME - sym's memory home for an access of bits bits
   as a kind node (122 an integral type, 123 a real one), or nil.
   0x213DE8, 0xCE bytes (frame): sym 8, kind a word at 12, bits 14; A0.
@@ -130,22 +154,83 @@ function isc_$precision_from_rlen_and_size(
     rlen: integer;
     size: integer32): integer32; options(val_param); extern;
 
-{ isc_to_lir.pas: the debug_lir_ wrappers (each traces its arguments
-  when the ISC's trace is on and calls the lir_ routine of its name). }
+{ isc_to_lir.pas: the phase's traces (isc_main calls them) and the
+  debug_lir_ wrappers of the LIR's instruction builders (the pass-2
+  actions call them; most defer the call to end_statement). }
 
-{ DEBUG_LIR_$BEGIN_CALL_OR_SVC - the call's record, for an instruction
-  of opcode opc with requests and count operands.  0x20B1A4, 0x1FA
-  bytes (frame): inh 8, opc a word at 12, requests 14, count 18; A0. }
+{ GUARANTEE_HAS_LIVE_RANGE - isc_to_lir 0x2088B0. }
+procedure guarantee_has_live_range(
+    s: isc_solution_ptr_t); options(val_param); extern;
+
+{ REQUESTS_TO_STRING - isc_to_lir 0x208BB4. }
+function requests_to_string(
+    r: integer32): char; options(val_param); extern;
+
+{ BEGIN_COMPILATION - isc_to_lir 0x209168. }
+procedure begin_compilation; extern;
+
+{ END_COMPILATION - isc_to_lir 0x20928C. }
+procedure end_compilation; extern;
+
+{ BEGIN_ROUTINE - isc_to_lir 0x20933A. }
+procedure begin_routine; extern;
+
+{ END_ROUTINE - isc_to_lir 0x2093F2. }
+procedure end_routine; extern;
+
+{ BEGIN_BASIC_BLOCK - isc_to_lir 0x20949C. }
+procedure begin_basic_block(
+    n: integer); options(val_param); extern;
+
+{ END_BASIC_BLOCK - isc_to_lir 0x2095D2. }
+procedure end_basic_block(
+    n: integer); options(val_param); extern;
+
+{ BEGIN_STATEMENT - isc_to_lir 0x2096B2. }
+procedure begin_statement; extern;
+
+{ END_STATEMENT - isc_to_lir 0x209796. }
+procedure end_statement; extern;
+
+{ DEBUG_LIR_$BEGIN_CALL_OR_SVC - isc_to_lir 0x20B1A4. }
 function debug_lir_$begin_call_or_svc(
     inh: inherited_attributes_ptr_t;
     opc: integer;
     requests: integer32;
-    count: integer32): univ_ptr; options(val_param); extern;
+    n: integer32): univ_ptr; options(val_param); extern;
 
-{ DEBUG_LIR_$EMIT_CALL_OR_SVC - the call node's call (its record call)
-  emitted: the routine's solution sol, the return address register's
-  solution ret.  0x20BCB2, 0x242 bytes (frame): inh 8, node 12, call
-  16, requests 20, sol 24, ret 28. }
+{ DEBUG_LIR_$BEGIN_FORTRAN_IO_SEQUENCE - isc_to_lir 0x20B3FA. }
+procedure debug_lir_$begin_fortran_io_sequence(
+    p: univ_ptr); options(val_param); extern;
+
+{ DEBUG_LIR_$BRANCH_INSTRUCTION - isc_to_lir 0x20B500. }
+procedure debug_lir_$branch_instruction(
+    inh: inherited_attributes_ptr_t;
+    target: univ_ptr;
+    opc: integer;
+    requests: integer32); options(val_param); extern;
+
+{ DEBUG_LIR_$BREAK_BASIC_BLOCK - isc_to_lir 0x20B6E8. }
+procedure debug_lir_$break_basic_block; extern;
+
+{ DEBUG_LIR_$COMMON_LHS_RHS_TOKEN - isc_to_lir 0x20B824. }
+procedure debug_lir_$common_lhs_rhs_token(
+    inh: inherited_attributes_ptr_t); options(val_param); extern;
+
+{ DEBUG_LIR_$DISJOINT_LHS_AND_RHS_TOKENS - isc_to_lir 0x20B972. }
+procedure debug_lir_$disjoint_lhs_and_rhs_tokens(
+    inh: inherited_attributes_ptr_t;
+    lhs: univ_ptr;
+    rhs: univ_ptr); options(val_param); extern;
+
+{ DEBUG_LIR_$DISPATCH_INSTRUCTION - isc_to_lir 0x20BACE. }
+procedure debug_lir_$dispatch_instruction(
+    inh: inherited_attributes_ptr_t;
+    op1: isc_solution_ptr_t;
+    opc: integer;
+    requests: integer32); options(val_param); extern;
+
+{ DEBUG_LIR_$EMIT_CALL_OR_SVC - isc_to_lir 0x20BCB2. }
 procedure debug_lir_$emit_call_or_svc(
     inh: inherited_attributes_ptr_t;
     node: univ_ptr;
@@ -154,15 +239,40 @@ procedure debug_lir_$emit_call_or_svc(
     sol: isc_solution_ptr_t;
     ret: solution_ptr_t); options(val_param); extern;
 
-{ DEBUG_LIR_$END_CALL_OR_SVC - the call finished.  0x20BF38, 0x16A bytes
-  (frame): inh 8, call 12. }
+{ DEBUG_LIR_$END_CALL_OR_SVC - isc_to_lir 0x20BF38. }
 procedure debug_lir_$end_call_or_svc(
     inh: inherited_attributes_ptr_t;
     call: univ_ptr); options(val_param); extern;
 
-{ DEBUG_LIR_$SIMPLE_INSTRUCTION - an instruction of opcode opc on the
-  operands' solutions.  0x20C924, 0x268 bytes (frame): inh 8, opc a
-  word at 12, requests 14, op1 18, op2 22, op3 26. }
+{ DEBUG_LIR_$FIELD_INSTRUCTION - isc_to_lir 0x20C0BE. }
+procedure debug_lir_$field_instruction(
+    inh: inherited_attributes_ptr_t;
+    opc: integer;
+    requests: integer32;
+    siz: integer32;
+    src: isc_solution_ptr_t;
+    pos: isc_solution_ptr_t;
+    dst: isc_solution_ptr_t); options(val_param); extern;
+
+{ DEBUG_LIR_$LABEL - isc_to_lir 0x20C388. }
+procedure debug_lir_$label(
+    inh: inherited_attributes_ptr_t;
+    target: univ_ptr); options(val_param); extern;
+
+{ DEBUG_LIR_$LOAD_INSTRUCTION - isc_to_lir 0x20C4D4. }
+procedure debug_lir_$load_instruction(
+    inh: inherited_attributes_ptr_t;
+    opc: integer;
+    requests: integer32;
+    index: isc_solution_ptr_t;
+    base: isc_solution_ptr_t;
+    result: isc_solution_ptr_t;
+    tree: univ_ptr;
+    disp_off_tree: integer32;
+    bits_known: integer32;
+    bits_trusted: integer32); options(val_param); extern;
+
+{ DEBUG_LIR_$SIMPLE_INSTRUCTION - isc_to_lir 0x20C924. }
 procedure debug_lir_$simple_instruction(
     inh: inherited_attributes_ptr_t;
     opc: integer;
@@ -170,6 +280,66 @@ procedure debug_lir_$simple_instruction(
     op1: isc_solution_ptr_t;
     op2: isc_solution_ptr_t;
     op3: isc_solution_ptr_t); options(val_param); extern;
+
+{ DEBUG_LIR_$STORE_INSTRUCTION - isc_to_lir 0x20CB8C. }
+procedure debug_lir_$store_instruction(
+    inh: inherited_attributes_ptr_t;
+    opc: integer;
+    requests: integer32;
+    source: isc_solution_ptr_t;
+    index: isc_solution_ptr_t;
+    base: isc_solution_ptr_t;
+    tree: univ_ptr;
+    disp_off_tree: integer32;
+    bits_known: integer32;
+    bits_trusted: integer32); options(val_param); extern;
+
+{ DEBUG_LIR_$MFPR_INSTRUCTION - isc_to_lir 0x20CF8E. }
+procedure debug_lir_$mfpr_instruction(
+    inh: inherited_attributes_ptr_t;
+    opc: integer;
+    requests: integer32;
+    index: isc_solution_ptr_t;
+    base: isc_solution_ptr_t;
+    result: isc_solution_ptr_t;
+    var_name: univ_ptr); options(val_param); extern;
+
+{ DEBUG_LIR_$MTPR_INSTRUCTION - isc_to_lir 0x20D2C2. }
+procedure debug_lir_$mtpr_instruction(
+    inh: inherited_attributes_ptr_t;
+    opc: integer;
+    requests: integer32;
+    source: isc_solution_ptr_t;
+    index: isc_solution_ptr_t;
+    base: isc_solution_ptr_t;
+    var_name: univ_ptr); options(val_param); extern;
+
+{ DEBUG_LIR_$OPERATE_AND_BRANCH_INSTRUCTION - isc_to_lir 0x20D5FC. }
+procedure debug_lir_$operate_and_branch_instruction(
+    inh: inherited_attributes_ptr_t;
+    opc: integer;
+    requests: integer32;
+    op1: isc_solution_ptr_t;
+    op2: isc_solution_ptr_t;
+    target: univ_ptr); options(val_param); extern;
+
+{ DEBUG_LIR_MAIN_$ENTRY - isc_to_lir 0x20D850. }
+procedure debug_lir_main_$entry(
+    node: univ_ptr); options(val_param); extern;
+
+{ DEBUG_LIR_MAIN_$HANDLER_REENTRY - isc_to_lir 0x20D994. }
+procedure debug_lir_main_$handler_reentry(
+    node: univ_ptr); options(val_param); extern;
+
+{ DEBUG_LIR_$PA_RISC_SHIFT_DOUBLE_INSTRUCTION - isc_to_lir 0x20DAE2. }
+procedure debug_lir_$pa_risc_shift_double_instruction(
+    inh: inherited_attributes_ptr_t;
+    opc: integer;
+    requests: integer32;
+    op3: isc_solution_ptr_t;
+    op1: isc_solution_ptr_t;
+    op2: isc_solution_ptr_t;
+    op4: isc_solution_ptr_t); options(val_param); extern;
 
 { isc_call_handling.pas: the generated actions of the call operators
   call these. }

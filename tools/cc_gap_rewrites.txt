@@ -266,3 +266,5 @@ lang2/source/isc/rewrite.pas	s/^(    \{ a byte or halfword passed to op 86's rou
 lang2/source/isc/rewrite.pas	s/^(    \{ the copy into the home or temporary, and back \})$/%endif { gap 25 }\n$1/
 lang2/source/isc/rewrite.pas	s/^(  \{ FORTRAN I\/O \})$/%var gap25s;\n%if gap25s %then { gap 25 }\n$1/
 lang2/source/isc/rewrite.pas	s/^(  \{ a statement: an EVAL_NODE \})$/%endif { gap 25 }\n$1/
+# gap 4 (isc_to_lir): write and writeln (dropped, for the check; also after `then')
+lang2/source/isc/isc_to_lir.pas	s/\bwrite(ln)?(\(.*\))?;\s*$/; { gap 4 }\n/
