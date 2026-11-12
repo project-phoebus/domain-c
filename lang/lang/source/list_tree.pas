@@ -57,7 +57,9 @@
     countdown (3), +0x120 the routine the lines go to, +0x124 the
     inline depth, +0x126 the statement index last printed, +0x128 the
     node last numbered, +0x12A the line's indent (all 0), +0x130 the
-    size letters (9 pairs).  The IL's globals are il.pas's (il_d4,
+    size letters (12 pairs, the last four `**' from a .rwdi repeat
+    record, once read as zeros: docs/questions.md 238; the block's last
+    4 bytes no record sets).  The IL's globals are il.pas's (il_d4,
     il_110, il_118, il_11c, il_120, il_124, il_126, il_180, il_184).
 
   The routines without A5 (every module-level one but the four
@@ -387,8 +389,9 @@ var
   w126: integer := 0;                   { +0x126 }
   last_node: integer := 0;              { +0x128: the node last numbered }
   indent: integer := 0;                 { +0x12A: the line's indent }
-  size_letters: array [0..8] of lt_size_t := [
-    '**', 'B:', 'W:', '**', 'L:', 'A:', 'R:', 'D:', '**'];  { +0x130 }
+  size_letters: array [0..11] of lt_size_t := [
+    '**', 'B:', 'W:', '**', 'L:', 'A:', 'R:', 'D:', '**', '**', '**',
+    '**'];                              { +0x130 }
 
 { initialise_list_tree - a fresh dump whose lines go to p.
 
