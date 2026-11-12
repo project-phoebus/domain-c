@@ -2844,3 +2844,613 @@ begin
     l^.incr := y;
   end;
 end;
+
+{ ivr_$propagate_induction_for_lifetime_segment - every segment an
+  instruction reading s (unscaled) defines by adding a loop invariant to
+  it given a candidate induction lts of s's variable, with its
+  increment, and followed in turn: a join's result (no increment), a
+  move's (an increment of 0), an add's or sub's result (the other
+  operand; negated when s is subtracted), a load's or store's base
+  register modified by it (the access's displacement).  0x23C850,
+  0x31C bytes, no A5: recursive; the opcodes compared one by one. }
+
+procedure ivr_$propagate_induction_for_lifetime_segment(
+    s: lts_ptr_t); options(val_param); internal;
+label
+  1;
+var
+  o: opnd_ptr_t;
+  i: instr_ptr_t;
+  num, k: integer;
+  res, inc: opnd_ptr_t;
+  neg: boolean;
+  zop: opnd_t;
+  lr: lr_ptr_t;
+  t: lts_ptr_t;
+  l: iv_lts_ptr_t;
+begin
+  o := s^.refs;
+  while o <> nil do begin
+    if o^.h.read and (o^.h.count = 0) then begin
+      i := utils_ins_$operands_instruction(o);
+      num := o^.h.num;
+      res := nil;
+      neg := false;
+      case i^.opc of
+        203:                            { join_bp }
+          if num = 1 then begin
+            inc := nil;
+            res := addr(i^.opnds[2]);
+          end;
+        144, 75: begin                  { copys, move }
+          inc := addr(zop);
+          res := addr(i^.opnds[2]);
+          zop.h.num := 0;
+          zop.h.kind := operand$immediate;
+          zop.value := 0;
+        end;
+        137, 79:                        { addi, add }
+          if num = 1 then begin
+            inc := addr(i^.opnds[2]);
+            res := addr(i^.opnds[3]);
+          end
+          else if num = 2 then begin
+            inc := addr(i^.opnds[1]);
+            res := addr(i^.opnds[3]);
+          end;
+        138, 81:                        { subi, sub }
+          if num = 2 then begin
+            neg := true;
+            inc := addr(i^.opnds[1]);
+            res := addr(i^.opnds[3]);
+          end;
+        83:                             { rsub }
+          if num = 1 then begin
+            neg := true;
+            inc := addr(i^.opnds[2]);
+            res := addr(i^.opnds[3]);
+          end;
+        221, 109, 106, 105, 104, 218, 103, 217:   { loadq, loadd, loads,
+                                          loadl, loadwu, loadws, loadbu,
+                                          loadbs }
+          if i^.h.modify in [1, 2] then
+            if o^.h.intend_to_modify then begin
+              inc := addr(i^.opnds[1]);
+              lr := s^.lr;
+              for k := num + 1 to i^.h.nopnds do
+                if i^.opnds[k].h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then
+                  if i^.opnds[k].lts^.lr = lr then
+                    if i^.opnds[k].h.modify then begin
+                      res := addr(i^.opnds[k]);
+                      goto 1;
+                    end;
+            end;
+        228, 124, 121, 120, 119, 118:   { storeq, stored, stores, storel,
+                                          storew, storeb }
+          if i^.h.modify in [1, 2] then
+            if o^.h.intend_to_modify then begin
+              inc := addr(i^.opnds[2]);
+              lr := s^.lr;
+              for k := num + 1 to i^.h.nopnds do
+                if i^.opnds[k].h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then
+                  if i^.opnds[k].lts^.lr = lr then
+                    if i^.opnds[k].h.modify then begin
+                      res := addr(i^.opnds[k]);
+                      goto 1;
+                    end;
+            end;
+        otherwise
+          ;
+      end;
+    1:
+      if res <> nil then
+        if (inc = nil) or operand_is_loop_invariant(inc, iv_head) then
+          if res^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
+            t := res^.lts;
+            if not t^.lr^.f2.physical then begin
+              l := create_induction_lts(1, t,
+                                        iv_lts_ptr_t(s^.l24)^.ivar);
+              propagate_induction_increment(l, iv_lts_ptr_t(s^.l24), inc,
+                                            neg);
+              ivr_$propagate_induction_for_lifetime_segment(t);
+            end;
+          end;
+    end;
+    o := o^.link;
+  end;
+end;
+
+{ duplicate_increment_information - to's increment made a copy of
+  from's (or unknown).  0x23CB6C, 0x42 bytes, no A5. }
+
+procedure duplicate_increment_information(
+    from: iv_lts_ptr_t;
+    dst: iv_lts_ptr_t); options(val_param); internal;
+begin
+  if from^.h.known then begin
+    dst^.h.known := true;
+    dst^.incr := iv_utils_$duplicate_expression(from^.incr);
+  end
+  else begin
+    dst^.h.known := false;
+    dst^.incr := nil;
+  end;
+end;
+
+{ ivr_$locate_induction_candidates - the candidates of the loop headed
+  by head: each exposed integer register segment not yet a candidate
+  that a join defines with inputs from inside the loop and from outside
+  becomes a variable (its initial value the one outside input's
+  segment), or a candidate of the variable all its outside inputs are
+  candidates of when none comes from inside; one whose final segment
+  (l44) is a candidate gets that one's variable and increment; each is
+  then followed (ivr_$propagate_induction_for_lifetime_segment).
+  0x23CBAE, 0x162 bytes, no A5. }
+
+procedure ivr_$locate_induction_candidates(
+    head: bb_ptr_t); options(val_param); internal;
+label
+  8, 9;
+var
+  s, t, last: lts_ptr_t;
+  d: opnd_ptr_t;
+  l, f, nl: iv_lts_ptr_t;
+  i: instr_ptr_t;
+  inp: iv_jbi_ptr_t;
+  n_in, n_out: integer32;
+  v: iv_var_ptr_t;
+begin
+  s := head^.exposed;
+  while s <> nil do begin
+    d := s^.refs;
+    l := iv_lts_ptr_t(s^.l24);
+    if l <> nil then
+      if l^.h.kind = 1 then
+        goto 9;
+    if d = nil then
+      goto 9;
+    if d^.h.kind <> operand$ip_reg then
+      goto 9;
+    i := utils_ins_$operands_instruction(d);
+    if i^.opc = 203 then begin          { join_bp }
+      n_in := 0;
+      n_out := 0;
+      inp := i^.opnds[3].ptr;
+      while inp <> nil do begin
+        t := inp^.lts;
+        if interval_contains_bb(t^.bb, head) then
+          n_in := n_in + 1
+        else begin
+          if (n_out = 0) and (t^.l24 <> 0) then
+            v := iv_lts_ptr_t(t^.l24)^.ivar
+          else if t^.l24 = 0 then
+            v := nil
+          else if v <> iv_lts_ptr_t(t^.l24)^.ivar then
+            v := nil;
+          last := t;
+          n_out := n_out + 1;
+        end;
+        inp := inp^.next_op;
+      end;
+      if n_in > 0 then begin
+        if n_out <= 0 then
+          goto 9;
+        v := create_induction_variable(s, nil, ord(d^.h.kind));
+        if n_out = 1 then
+          v^.init := iv_utils_$create_lts_expression(last);
+      end
+      else begin
+        if n_out <= 0 then
+          goto 9;
+        if v = nil then
+          goto 9;
+        discard(create_induction_lts(1, s, v));
+      end;
+    end
+    else begin
+      if s^.l44 = nil then
+        goto 9;
+      f := iv_lts_ptr_t(lts_ptr_t(s^.l44)^.l24);
+      if f = nil then
+        goto 9;
+      nl := create_induction_lts(1, s, f^.ivar);
+      duplicate_increment_information(f, nl);
+    end;
+  8:
+    ivr_$propagate_induction_for_lifetime_segment(s);
+  9:
+    s := s^.next_exposed;
+  end;
+end;
+
+{ ivr_$propagate_induction_into_basic_block - bb's exposed register
+  segments without an induction lts made candidates: a join's result
+  when every input is a candidate (not an instantiation) of one
+  variable (its increment the inputs' when all are equal, else
+  unknown), else the candidate its final segment (l44) is; each then
+  followed.  0x23CD10, 0x156 bytes, no A5.  v is set from the first
+  input only when it has a variable (else it keeps an earlier value,
+  which the inputs' test then rejects). }
+
+procedure ivr_$propagate_induction_into_basic_block(
+    bb: bb_ptr_t); options(val_param); internal;
+label
+  9;
+var
+  s: lts_ptr_t;
+  d: opnd_ptr_t;
+  i: instr_ptr_t;
+  inp, first_inp: iv_jbi_ptr_t;
+  l, nl, first: iv_lts_ptr_t;
+  v: iv_var_ptr_t;
+begin
+  s := bb^.exposed;
+  while s <> nil do begin
+    if s^.l24 <> 0 then
+      goto 9;
+    d := s^.refs;
+    if d = nil then
+      goto 9;
+    if not (d^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical]) then
+      goto 9;
+    i := utils_ins_$operands_instruction(d);
+    if i^.opc = 203 then begin          { join_bp }
+      inp := i^.opnds[3].ptr;
+      l := iv_lts_ptr_t(inp^.lts^.l24);
+      if l <> nil then
+        if l^.ivar <> nil then
+          v := l^.ivar;
+      while inp <> nil do begin
+        l := iv_lts_ptr_t(inp^.lts^.l24);
+        if (l = nil) or (v <> l^.ivar) or (l^.h.kind = 4) then begin
+          v := nil;
+          goto 9;
+        end;
+        inp := inp^.next_op;
+      end;
+      if v = nil then
+        goto 9;
+      nl := create_induction_lts(1, s, v);
+      inp := i^.opnds[3].ptr;
+      first := iv_lts_ptr_t(inp^.lts^.l24);
+      while inp <> nil do begin
+        if not increments_are_equal(first, iv_lts_ptr_t(inp^.lts^.l24)) then
+          exit;
+        inp := inp^.next_op;
+      end;
+      if inp <> nil then
+        nl^.h.known := false
+      else
+        duplicate_increment_information(l, nl);
+    end
+    else begin
+      if s^.l44 = nil then
+        goto 9;
+      l := iv_lts_ptr_t(lts_ptr_t(s^.l44)^.l24);
+      if l = nil then
+        goto 9;
+      if l^.h.kind = 4 then
+        goto 9;
+      v := l^.ivar;
+      nl := create_induction_lts(1, s, v);
+      duplicate_increment_information(l, nl);
+    end;
+    ivr_$propagate_induction_for_lifetime_segment(s);
+  9:
+    s := s^.next_exposed;
+  end;
+end;
+
+{ operand_has_same_induction_variable - o is a register whose segment
+  has an induction lts of s's variable.  0x23CE66, 0x48 bytes, no A5. }
+
+function operand_has_same_induction_variable(
+    s: lts_ptr_t;
+    o: opnd_ptr_t): boolean; options(val_param); internal;
+var
+  l: iv_lts_ptr_t;
+begin
+  operand_has_same_induction_variable := false;
+  if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
+    l := iv_lts_ptr_t(o^.lts^.l24);
+    if l <> nil then
+      if l^.ivar = iv_lts_ptr_t(s^.l24)^.ivar then
+        operand_has_same_induction_variable := true;
+  end;
+end;
+
+{ apply_to_creating_induction_segments - f applied to (the slots of) the
+  segments of s's variable that make s: an exposed s's final segment, a
+  join's inputs, the registers its defining instruction reads.
+  0x23CEAE, 0x104 bytes, no A5: f called `jsr (A1)'. }
+
+procedure apply_to_creating_induction_segments(
+    s: lts_ptr_t;
+    f: iv_lts_proc_t); options(val_param); internal;
+var
+  l, fl: iv_lts_ptr_t;
+  t: lts_ptr_t;
+  i: instr_ptr_t;
+  inp: iv_jbi_ptr_t;
+  k: integer32;
+  o: opnd_ptr_t;
+begin
+  l := iv_lts_ptr_t(s^.l24);
+  if s^.f2.exposed then begin
+    t := s^.l44;
+    if t <> nil then begin
+      fl := iv_lts_ptr_t(t^.l24);
+      if fl <> nil then
+        if fl^.ivar = l^.ivar then
+          f^(t);
+    end;
+  end
+  else begin
+    i := utils_ins_$operands_instruction(s^.refs);
+    if i^.opc = 203 then begin          { join_bp }
+      inp := i^.opnds[3].ptr;
+      while inp <> nil do begin
+        fl := iv_lts_ptr_t(inp^.lts^.l24);
+        if fl <> nil then
+          if fl^.ivar = l^.ivar then
+            f^(inp^.lts);
+        inp := inp^.next_op;
+      end;
+    end;
+    for k := 1 to i^.h.nopnds do begin
+      o := addr(i^.opnds[k]);
+      if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then
+        if o^.h.read then
+          if operand_has_same_induction_variable(s, o) then
+            f^(o^.lts);
+    end;
+  end;
+end;
+
+{ ivr_$mark_lifetime_segments_as_induction_variables - s's candidate (and
+  the candidates that make it, recursively) confirmed (kind 2), known as
+  its variable is; an add or sub defining it counted (w44).  0x23CFB2,
+  0x9E bytes (loads A5: passes itself, `move.l #0x23CFB2'); the opcodes
+  `in' a constant set of 0..143 laid out from its significant bytes
+  (pattern 102). }
+
+procedure ivr_$mark_lifetime_segments_as_induction_variables(
+    var s: lts_ptr_t);
+var
+  t: lts_ptr_t;
+  l: iv_lts_ptr_t;
+  d: opnd_ptr_t;
+  i: instr_ptr_t;
+begin
+  t := s;
+  l := iv_lts_ptr_t(t^.l24);
+  if l <> nil then
+    if l^.h.kind = 1 then begin
+      l^.h.kind := 2;
+      l^.h.known := l^.ivar^.f48.known;
+      d := t^.refs;
+      if d <> nil then
+        if (opnd_bytes_ptr_t(d)^.rrp & 12) <> 0 then begin
+          i := utils_ins_$operands_instruction(d);
+          if i^.opc in [79, 81, 83, 137, 138] then
+            l^.ivar^.w44 := l^.ivar^.w44 + 1;
+        end;
+      apply_to_creating_induction_segments(t,
+          addr(ivr_$mark_lifetime_segments_as_induction_variables));
+    end;
+end;
+
+{ ivr_$verify_candidate_is_induction_variable - v is an induction
+  variable: every input of its join from inside the loop a candidate of
+  v (their increments equal makes v's increment known); its segments
+  then confirmed, the unconfirmed candidates deleted, the others'
+  first_in_bb set; no block holds two of its first segments, and no
+  exposed one is reached by a segment of v that is not first in its
+  block (from inside the loop, for a join).  Verified (+48 bit 2) and
+  the increment (+8) set.  0x23D062, 0x1D6 bytes, no A5. }
+
+function ivr_$verify_candidate_is_induction_variable(
+    v: iv_var_ptr_t): boolean; options(val_param); internal;
+label
+  1, 9;
+var
+  ok, same: boolean;
+  i: instr_ptr_t;
+  first, l, ln, t: iv_lts_ptr_t;
+  inp: iv_jbi_ptr_t;
+  p: ^iv_lts_ptr_t;
+  lastbb, b, cur: bb_ptr_t;
+  x: iv_lts_ptr_t;
+  s: lts_ptr_t;
+  cnt: integer;
+begin
+  ok := true;
+  i := utils_ins_$operands_instruction(v^.lts^.refs);
+  first := nil;
+  same := ok;
+  inp := i^.opnds[3].ptr;
+  while inp <> nil do begin
+    if interval_contains_bb(inp^.lts^.bb, iv_head) then begin
+      l := iv_lts_ptr_t(inp^.lts^.l24);
+      if (l = nil) or (l^.ivar <> v) then begin
+        ok := false;
+        goto 1;
+      end;
+      if same then
+        if first = nil then begin
+          first := l;
+          same := l^.h.known;
+        end
+        else
+          same := increments_are_equal(first, l);
+    end;
+    inp := inp^.next_op;
+  end;
+1:
+  ivr_$mark_lifetime_segments_as_induction_variables(i^.opnds[2].lts);
+  p := addr(v^.ltss);
+  l := v^.ltss;
+  lastbb := nil;
+  while l <> nil do begin
+    ln := l^.next;
+    b := l^.lts^.bb;
+    if l^.h.kind = 1 then begin
+      t := l;
+      iv_utils_$delete_induction_lts(t);
+      p^ := ln;
+    end
+    else begin
+      l^.h.first_in_bb := lastbb <> b;
+      p := addr(l^.next);
+      lastbb := b;
+    end;
+    l := ln;
+  end;
+  x := v^.ltss;
+  cur := nil;
+  while x <> nil do begin
+    s := x^.lts;
+    if s^.bb <> cur then begin
+      cnt := 0;
+      cur := s^.bb;
+    end;
+    if s^.f2.first_in_bb then begin
+      cnt := cnt + 1;
+      if cnt > 1 then begin
+        ok := false;
+        goto 9;
+      end;
+    end;
+    if s^.f2.exposed then
+      if s^.l44 <> nil then begin
+        l := iv_lts_ptr_t(lts_ptr_t(s^.l44)^.l24);
+        if l <> nil then
+          if not l^.h.first_in_bb then begin
+            ok := false;
+            goto 9;
+          end;
+      end
+      else begin
+        i := utils_ins_$operands_instruction(s^.refs);
+        if i^.opc = 203 then begin      { join_bp }
+          inp := i^.opnds[3].ptr;
+          while inp <> nil do begin
+            l := iv_lts_ptr_t(inp^.lts^.l24);
+            if l <> nil then
+              if not l^.h.first_in_bb then
+                if interval_contains_bb(inp^.lts^.bb, iv_head) then begin
+                  ok := false;
+                  exit;
+                end;
+            inp := inp^.next_op;
+          end;
+        end;
+      end;
+    x := x^.next;
+  end;
+  if ok then begin
+    v^.f48.verified := true;
+    if same then begin
+      v^.f48.known := true;
+      v^.incr := iv_utils_$duplicate_expression(first^.incr);
+    end;
+  end;
+9:
+  ivr_$verify_candidate_is_induction_variable := ok;
+end;
+
+{ ivr_$finalize_induction_variables - each primary variable verified
+  (made final, its multiplier 1) or deleted.  0x23D238, 0x50 bytes, no
+  A5. }
+
+procedure ivr_$finalize_induction_variables; internal;
+var
+  v, n: iv_var_ptr_t;
+begin
+  v := iv_vars;
+  while v <> nil do begin
+    n := v^.next;
+    if ivr_$verify_candidate_is_induction_variable(v) then begin
+      v^.f48.final := true;
+      v^.mult := iv_utils_$create_value_expression(1);
+    end
+    else
+      iv_utils_$delete_induction_variable(v);
+    v := n;
+  end;
+end;
+
+{ iv_$walk_basic_blocks_in_order - the blocks of the interval headed by
+  bb in order: pre and each called for bb, each for its members, a
+  member that heads an interval (+18 bit 6) walked in turn, then post
+  for bb (any of them nil).  0x23D288, 0xB8 bytes: recursive; every
+  argument by address, copied to locals for the inner calls. }
+
+procedure iv_$walk_basic_blocks_in_order(
+    var bb: bb_ptr_t;
+    var pre: iv_bb_proc_t;
+    var each: iv_bb_proc_t;
+    var post: iv_bb_proc_t);
+var
+  b, c, t: bb_ptr_t;
+  p1, p2, p3: iv_bb_proc_t;
+  q1, q2, q3: iv_bb_proc_t;
+begin
+  p1 := pre;
+  b := bb;
+  p2 := each;
+  p3 := post;
+  if p1 <> nil then begin
+    t := b;
+    p1^(t);
+  end;
+  if p2 <> nil then begin
+    t := b;
+    p2^(t);
+  end;
+  c := iv_bb_v_ptr_t(b)^.first138;
+  while c <> nil do begin
+    if c^.f.b18_6 then begin
+      q3 := p3;
+      q2 := p2;
+      q1 := p1;
+      t := c;
+      iv_$walk_basic_blocks_in_order(t, q1, q2, q3);
+    end
+    else if p2 <> nil then begin
+      t := c;
+      p2^(t);
+    end;
+    c := iv_bb_v_ptr_t(c)^.next142;
+  end;
+  if p3 <> nil then begin
+    t := b;
+    p3^(t);
+  end;
+end;
+
+{ operand_is_any_induction_expression - o is a register whose segment
+  has an induction lts, or is exposed (not a join's) with a final
+  segment that has one.  0x23D340, 0x5A bytes, no A5. }
+
+function operand_is_any_induction_expression(
+    o: opnd_ptr_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+  s: lts_ptr_t;
+  i: instr_ptr_t;
+begin
+  r := false;
+  if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
+    s := o^.lts;
+    if s^.l24 <> 0 then
+      r := true
+    else if s^.f2.exposed then begin
+      i := utils_ins_$operands_instruction(s^.refs);
+      if i^.opc <> 203 then             { join_bp }
+        if lts_ptr_t(s^.l44)^.l24 <> 0 then
+          r := true;
+    end;
+  end;
+  operand_is_any_induction_expression := r;
+end;
