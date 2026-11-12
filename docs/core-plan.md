@@ -484,3 +484,13 @@ insert changed (inline_$inline_expand keeps globals_from_backend's
 heading; inline_$mark_reference_params keeps opt_vector's local
 heading's types).  process_operand and its seven nested routines are
 not written (declared extern in the unit; a TODO in its header).
+
+Translator LL (2026-11-11), the last non-back-end leftovers: loc_build.c
+(33 routines, C; its records in us1/.../loc_private.h, its prototypes in
+loc_build.h, loc.h, loc_pack.h and the derived loc_codes.h, loc_sets.h
+stubs), const_op.ftn (14 routines, FORTRAN 77), c_data.asm (GNU as,
+byte-identical), empty.pas (an empty module), std_lib.pas (section
+libdsc byte-identical; std_lib's pointers TODO, question 147) and
+opinfo.pas (the seven tables .blocks names, byte-identical).  No shared
+insert changed; the users' extern names for opinfo's tables and the
+prelude's std_lib_rtns are left for the merge (questions 147, 148).

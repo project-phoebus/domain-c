@@ -1111,3 +1111,69 @@ revisited.
    4, 4, 4, 8, 8, 0, 0, 0, 16) like delay.pas's class_size; and the
    names' serial at +0x5EF4 is a longword whose low word assign_name
    reads (+0x5EF6, an integer32 assigned to an integer).
+
+143. Translator LL, loc_build.c: the C unit's six headers (loc.h,
+   loc_private.h, the derived loc_codes.h and loc_sets.h, loc_build.h,
+   loc_pack.h) are not in the tree; loc_private.h (the holder and the
+   30-byte node, as one union) and loc_build.h (the prototypes) are
+   written from the code, the other four are stubs with a TODO, and the
+   location codes appear in loc_build.c as numbers.  The families are
+   written as unsigned char arrays of the bytes .rwdi records, because
+   the one at A5+80 has room for at most 4 bytes; was there a family
+   structure (and the +80 object something else)?
+144. Translator LL, loc_build.c: kept slips of the image: close_pool
+   scraps each range's successor rather than the range (and reads the
+   scrapped node's link; cc never calls close_pool); stmt_range with
+   line1 > line2 makes the range (start, start) where an exchange
+   seems meant; dump_pool's total adds the piece's count after the
+   write loop has brought it to 0 (it always returns 0 on success);
+   loc_holder_alloc allocates one byte short for the NUL of a 13- or
+   37-byte holder, and loc_holder_dispose files a 14-byte holder on
+   the small list.  Were these in the original source?
+145. Translator LL, const_op.ftn: r8_math's operations 9, 11 and 12 are
+   the FPP emulator's words 0x0158 (one operand), 0x0180 and 0x0178
+   (two), written LOG10, SIGN and MOD (kfold.pas's builtins 12 and 13
+   use the last two and fold them as sign transfer and a truncating
+   remainder); operation 10 (0x0154 0x0068, a round to a longword, then
+   the longword loaded) is written IDNINT.  r8i4_expon pushes the low
+   word of its INTEGER*4 exponent for 0x0138 (a power by an
+   integer*2): written A ** INT2(E).  Confirm from an FPP operation
+   list if one turns up.
+146. Translator LL, empty.pas: the unit has no routines, no data and no
+   insert in either binary (its .blocks record is the module block
+   alone); its recorded code start lies inside other code (cc.m68k
+   cg_top's return_proc; cc.a88k the ISC routines without records), so
+   the survey's 4396 and 293168 bytes are spans to the next unit, not
+   its contents (the a88k span is not the ISC tables: those are the
+   named sections operand_string .. zzzzz_readonly_tables and the ISC
+   units' data).  Written as `module empty;' alone.  The ISC code
+   without records remains open item 1 of docs/survey.md.
+147. Translator LL, std_lib.pas: the derived unit's two sections are
+   decoded: libdsc holds 176 LIB_DSC descriptors (kind 159; register
+   bits, argument sizes, the name: m$mis$llw .. monexit, the table in
+   std_lib.pas's header), and std_lib's longword k points at
+   descriptor k (so std_lib_rtns[17] is pas_$nlg2, [18] and [21]
+   fpp_$, [19] fpp_$eslv, [20] fpp_$esla, [22] fpp_$eslc: question
+   75's cg_fp elements).  std_lib.pas writes libdsc's bytes as one
+   word array (std_lib_dsc, a name of ours); the std_lib pointers are
+   not initialized because the prelude's globals_from_backend.ins.pas
+   declares the section (std_lib_rtns) without initializers, and
+   std_lib.pas opens the prelude.  Should the section's declaration
+   move out of the prelude into std_lib.pas (one variable per routine,
+   named after it, initialized with addr() of its descriptor), the
+   other units declaring what they use?  The .blocks record also names
+   `stdlib_dummy', not a routine: what was it?
+148. Translator LL, opinfo.pas: the unit's .blocks record names its
+   public tables: insind (0x2CE8D8, the generic operations' lists),
+   cc_table (0x2CF4D8), class_table (0x2CF5EC), optohex (0x2CF9E2),
+   oprw_table (0x2CFDD8), opcontext (0x2D01CE) and opname (0x2D05C4);
+   the users declare them extern under other names (emit.pas
+   opinfo_insts; final.pas opinfo_cc, opinfo_cc_class, opinfo_access,
+   opinfo_size; banshee.pas opinfo_sizes; instr_reorder.pas's access
+   table; outbin.pas opinfo_opword, opinfo_names) and with bounds
+   [0..367] where the tables run to 506.  Rename the users' externs to
+   the original names and bounds at the merge (left alone here: final
+   is still being finished)?  opinfo.pas declares the lists
+   (ins_lists, our name) before insind because insind's initializer
+   names them; the image has insind first and the lists in reverse
+   order of their operations.
