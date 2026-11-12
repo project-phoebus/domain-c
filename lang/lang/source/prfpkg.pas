@@ -20,8 +20,9 @@
     A5 0x19CCE4 (cc.m68k), 0x31CD54 (cc.a88k): the module's data, to
     +0xE88: +0 proc2_$get_info's buffer (228 bytes), +0xE8 the 44
     phases' records (40 bytes each), +0x7C8 the process's UID, +0x7D0
-    the listing line, +0x8D4..+0x8F7 the active phase's starting counts
-    and clocks, +0x8F8 and +0x8FC prf_gspace_peak and prf_gspace_in_use,
+    the listing line (a length and 256 characters), +0x8D4..+0x8F7
+    the active phase's starting counts and clocks, +0x8F8 and +0x8FC
+    prf_gspace_peak and prf_gspace_in_use,
     +0x900 the active phase (43: none), +0x908 the phases' names (32
     characters each, initialized; nothing else is).
 
@@ -174,6 +175,15 @@ type
 
   prf_name_t = array [1..32] of char;
 
+  { The listing line: a length word and 256 characters, 258 bytes (the
+    image's start_faults follows it 260 bytes on, at +0x8D4; a varying
+    [256] of char takes 262, language reference 3.11.4.1).  Passed to
+    PRTSUB's routines and listln as univ.  docs/questions.md 279. }
+  prf_line_t = record
+    length: integer;
+    body: prtsub_$chars_t;
+  end;
+
   { The object module's lists (IL's globals +0x10C, +0x110, +0x118):
     a node's next, name and sizes by offset. }
   prf_section_ptr_t = ^prf_section_t;
@@ -191,7 +201,7 @@ var
   info: proc2_$info_t;                  { +0x0 }
   phases: array [0..43] of prf_phase_t; { +0xE8 }
   my_uid: uid_$t;                       { +0x7C8 }
-  line: prtsub_$line_t;                 { +0x7D0 }
+  line: prf_line_t;                     { +0x7D0 }
   start_faults: integer32;              { +0x8D4 }
   start_net_io: integer32;              { +0x8DC }
   start_disk_io: integer32;             { +0x8E0 }
@@ -346,7 +356,7 @@ end;
   hundredths were truncated or rounded (0x0068 taken for trunc). }
 
 procedure hhmmss(
-    in out s: prtsub_$line_t;
+    in out s: prf_line_t;
     in clock: time_$clock_t); internal;
 var
   seconds: real;                        { -48, -44 }

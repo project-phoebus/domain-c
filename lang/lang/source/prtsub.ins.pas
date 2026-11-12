@@ -4,7 +4,11 @@
 
   No Apollo copy survives; the headings are read off prtsub.pas (cc.m68k
   0x09829C..0x09852A) and its callers.  Counts, widths and values by value
-  (val_param), the line and strings by address.
+  (val_param), the line and strings by address.  The line is univ: some
+  callers' lines are a length word and 256 characters, 258 bytes, not a
+  varying [256] of char's 262 (prfpkg's, opt_reachdef's: the next cell
+  260 bytes on; docs/questions.md 279); the routines read only the
+  length word and the characters.
 
   Not known from the original: every type and parameter name here.
 }
@@ -18,26 +22,26 @@ type
 
 { PRTCATC - c to the end of s, unless s is full.  0x09829C. }
 procedure prtcatc(
-    in out s: prtsub_$line_t;
+    in out s: univ prtsub_$line_t;
     c: char); options(val_param); extern;
 
 { PRTCATS - n characters of t to the end of s, as many as fit.
   0x0982C6. }
 procedure prtcats(
-    in out s: prtsub_$line_t;
+    in out s: univ prtsub_$line_t;
     in t: univ prtsub_$chars_t;
     n: integer); options(val_param); extern;
 
 { PRTCATB - `true' or `false' to the end of s.  0x09832C. }
 procedure prtcatb(
-    in out s: prtsub_$line_t;
+    in out s: univ prtsub_$line_t;
     b: boolean); options(val_param); extern;
 
 { PRTINT - n in decimal to the end of s: a `-' first when negative; with
   zero_fill, zeros in front to width digits; more digits than width lose
   the leading ones.  0x098378. }
 procedure prtint(
-    in out s: prtsub_$line_t;
+    in out s: univ prtsub_$line_t;
     n: integer32;
     width: integer;
     zero_fill: boolean); options(val_param); extern;
@@ -45,14 +49,14 @@ procedure prtint(
 { PRTHEX - the last width of n's eight hexadecimal digits to the end of
   s.  0x098456. }
 procedure prthex(
-    in out s: prtsub_$line_t;
+    in out s: univ prtsub_$line_t;
     n: integer32;
     width: integer); options(val_param); extern;
 
 { PRTTAB - blanks to the end of s until it is column - 1 long (at most
   256).  0x0984A8. }
 procedure prttab(
-    in out s: prtsub_$line_t;
+    in out s: univ prtsub_$line_t;
     column: integer); options(val_param); extern;
 
 { PRTSUB_$EQUAL - whether a and b are the same characters.  0x0984E2. }

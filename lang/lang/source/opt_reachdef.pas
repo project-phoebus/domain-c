@@ -52,8 +52,9 @@
     0x0E4316  0x2B1506  init_block (in reachingdefinitions)
     0x0E462C  0x2B181C  reachingdefinitions
     A5 0x352F8C (cc.m68k), 0x513938 (cc.a88k): the module's data, 328
-    bytes: +0 the dump's line, +260.. the tables by variable number
-    and by block (pointers into opt_main's +0x14 pool), +316.. the sets'
+    bytes: +0 the dump's line (a length and 256 characters; +258
+    unused), +260.. the tables by variable number and by block
+    (pointers into opt_main's +0x14 pool), +316.. the sets'
     sizes, the statement at hand (+322), the region's variables
     (+324) and markuses' flag (+326).  No other unit reads them.
 
@@ -102,6 +103,15 @@ procedure kfold(
     var t: il_$node_ptr_t); extern;
 
 type
+  { The dump's line: a length word and 256 characters, 258 bytes (the
+    image's tables begin 260 bytes on, at +260; a varying [256] of char
+    takes 262, language reference 3.11.4.1).  Passed to PRTSUB's
+    routines and listln as univ.  docs/questions.md 279. }
+  rd_line_t = record
+    length: integer;
+    body: prtsub_$chars_t;
+  end;
+
   { An rd set: bit b of longword w stands for the statement of region
     number opt_region - 1 + b + 32 * (w - 1) (bset, bclr,
     stmt_index_from_rdset); rd_words longwords allocated, rd_used of
@@ -141,7 +151,7 @@ type
   rd_bytes_ptr_t = ^char;
 
 var
-  line: prtsub_$line_t;                 { +0: the dump's line }
+  line: rd_line_t;                      { +0: the dump's line }
   unused_258: integer;                  { +258 }
   assigned: rd_flags_ptr_t;             { +260: the variables some block
                                           assigns (reachingdefinitions) }
