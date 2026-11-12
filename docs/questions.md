@@ -1100,3 +1100,18 @@ revisited.
    named sections operand_string .. zzzzz_readonly_tables and the ISC
    units' data).  Written as `module empty;' alone.  The ISC code
    without records remains open item 1 of docs/survey.md.
+140. Translator LL, std_lib.pas: the derived unit's two sections are
+   decoded: libdsc holds 176 LIB_DSC descriptors (kind 159; register
+   bits, argument sizes, the name: m$mis$llw .. monexit, the table in
+   std_lib.pas's header), and std_lib's longword k points at
+   descriptor k (so std_lib_rtns[17] is pas_$nlg2, [18] and [21]
+   fpp_$, [19] fpp_$eslv, [20] fpp_$esla, [22] fpp_$eslc: question
+   75's cg_fp elements).  std_lib.pas writes libdsc's bytes as one
+   word array (std_lib_dsc, a name of ours); the std_lib pointers are
+   not initialized because the prelude's globals_from_backend.ins.pas
+   declares the section (std_lib_rtns) without initializers, and
+   std_lib.pas opens the prelude.  Should the section's declaration
+   move out of the prelude into std_lib.pas (one variable per routine,
+   named after it, initialized with addr() of its descriptor), the
+   other units declaring what they use?  The .blocks record also names
+   `stdlib_dummy', not a routine: what was it?

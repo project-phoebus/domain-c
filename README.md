@@ -173,4 +173,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang2/source/ftn/source/const_op.ftn` | 14 | reconstructed (FORTRAN 77; not checked by the gate: read against the disassembly; r8_math's operations 9, 11, 12 by guess, docs/questions.md 138) |
 | `lang/c_compiler/source/c_data.asm` | 0 | reconstructed (assembly, GNU as syntax; not checked by the gate: assembled with m68k-elf-as, byte-identical to both binaries' 18384 bytes; c_globals.ins.pas's names kept) |
 | `lang/lang/source/empty.pas` | 0 | translated (an empty module: no routines, no data in either binary; docs/questions.md 139) |
+| `ivory/volume_3/.../std_lib.mac/hf398b043.001/std_lib.pas` | 0 | translated (data only: section libdsc's 176 descriptors as words, dpc's section byte-identical to the image; their table in the header; std_lib's pointers TODO, docs/questions.md 140) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
