@@ -2322,6 +2322,53 @@ revisited.
    +284, so it takes 260 bytes, less than a varying [256]'s 262; is it a
    record like list_tree's line?  Worth the same check: lst_line_t,
    std_$string_t, time_$line_t, prtobj_$line_t.
+   **Answered by translator QC: yes; four more cells are records, the
+   rest fit.**  Every cell of a varying type (or of a type built on one)
+   laid out in module data, measured from the next cell the image's
+   code addresses (A5 displacements) or .rwdi sets:
+   - Not a varying [256] (the next cell 260 bytes on, under the 262 a
+     varying [256] takes): com_name (com, +24, com_284 at +284),
+     lst's line (+0x10, the scale letters at +0x114 in .rwdi, read at
+     (276,A0)), prfpkg's line (+0x7D0, start_faults at +0x8D4, both
+     binaries), opt_reachdef's line (+0, the tables from +260, both
+     binaries), as list_tree's (+0x18, countdown at +0x11C).  Each is
+     filled to 256 characters (add_char's `cmpi.w #256',
+     sym_$fully_qualified_routine_name's `n < 256', PRTSUB's bound), so
+     a smaller varying ([254] or [255], 260 bytes) would not hold what
+     the code writes: each is now a unit-local record of a length word
+     and 256 characters (com_name_t, lst_text_line_t, prf_line_t,
+     rd_line_t, as list_tree's lt_line_t).  dpc lays them so that
+     opt_reachdef's and com's later cells sit where the image has them;
+     lst's +0x112..+0x113 and opt_reachdef's +258 are bytes no
+     instruction reads.
+   - Not a varying [520]: c_lex_pp's lex_text (c_globals.ins.pas,
+     +0x24DE, lex_tokens at +0x26E8: 522 bytes, under 526); the text is
+     read in at character 9 up to 512 characters (520 in all), so a
+     record of a length and 520 characters (lex_text_t).
+   - PRTSUB's routines (prtcatc, prtcats, prtcatb, prtint, prthex,
+     prttab) now take the line `in out s: univ prtsub_$line_t', so
+     that prfpkg's and opt_reachdef's 258-byte lines can be passed
+     (same code; core change).
+   - Consistent with a varying (left as they are): outbin's line
+     (+0xE8, shown at +0x1F0: 264), dmp_line (+0, dmp_scale at +0x108:
+     264), at_backend's at_name and at_query_name (+720, +984, at_heap
+     +1248: 264 each), sym_line (sym's whole block, 264 bytes), diag's
+     line, line_prefix and prefix (varying [200], 208 apart, the last
+     ending at +622: 206), ass's prefix_before (+2, column_before at
+     +208: 206 exactly) and program_name (varying [80], +216, the
+     call-back at +304: 88 for 86).  A 264-byte gap does not tell a
+     varying [256] (262, then 2 bytes) from a varying [257] or [258];
+     [256] kept.
+   - Never laid out in data, so the image does not size them (used
+     only as univ or by-address parameter types, or for frame locals):
+     lst_line_t, std_$string_t (its append routines have no callers in
+     either image), time_$line_t, prtobj_$line_t, iosub_$line_t,
+     token_$vstring_t, ass_$description_t, c_main's arg_t and bin's
+     name_t (frame locals).  Left as they are.
+   The original's line type is open: two sizes coexist (258 and 262)
+   among units that all pass their line to PRTSUB, so PRTSUB's
+   parameter was presumably univ or the units declared their own types
+   (question 278).
 280. Translator QB, list_tree's size_letters (question 259): array
    [0..12] with 12 values, array [0..13], or padding before mrh's
    8-aligned data?  No instruction reads +0x148..+0x14B; the gate passes
