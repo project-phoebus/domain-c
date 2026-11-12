@@ -995,14 +995,26 @@ class Lister:
             txt = ''.join(chr(c) if 32 <= c < 127 else '.' for c in b)
             return '%06X: %08X   %-10s %s' % (a, w, 'DC.L', "h'%08X  ; %s" % (w, txt))
         ins = insns[0]
-        flag = '+' if ins.pair else ' '
         body = self.prasm_line(ins) if self.prasm else self.classic(ins)
+        # lst.pas (lst_$display_code_cell): a continued instruction (an
+        # integer word with bit 31, issued with the floating word after
+        # it; and an fp_control word, whose FPCTL2 follows) ends in " R"
+        # in the classic listing, ", ..." in -PRASM; the word that
+        # continues it has no location of its own
+        cont = ins.pair or getattr(ins.op, 'cls', None) == 'fp_control'
+        if cont and not self.prasm:
+            body += ' R'
+        elif cont:
+            # -PRASM: ", ..." after the instruction, before the `;' column
+            alg, sep, rest = body.partition(';')
+            body = ('%-37s' % (alg.rstrip() + ', ...')) + sep + rest
         c = self.comment(ins)
         if status.startswith('ambiguous'):
             c = (c + ' ' if c else '') + '(or ' + ', '.join(i.op.mnem for i in insns[1:]) + ')'
         if status.endswith('after-pair'):
             c = (c + ' ' if c else '') + '(integer word after a pair)'
-        s = '%06X: %08X %s %s' % (a, w, flag, body)
+        loc = '        ' if space == 'fp' else '%06X: ' % a
+        s = '%s%08X   %s' % (loc, w, body)
         if c:
             s = '%-64s ; %s' % (s, c)
         return s

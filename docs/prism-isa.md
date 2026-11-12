@@ -1016,7 +1016,11 @@ copys/movei/pcopys, mfnextcc/mfippsw, jump/return, svc/svc2; the
 conditional traps are their branches, as asm encodes them).  `--stats`
 walks each routine from its entry (routines from .blocks, or from
 .unwind where .blocks does not describe them) and checks the result;
-`--prasm` lists in lst's -PRASM form.  Run
+`--prasm` lists in lst's -PRASM form.  As lst_$display_code_cell does, a
+continued instruction (an integer word with bit 31, issued with the
+floating word after it, and an fp_control word before its FPCTL2) ends
+in " R" in the classic form and ", ..." in -PRASM, and the word that
+continues it is listed without a location of its own.  Run
 `tools/prism_dis.py FILE --stats -v`, `tools/prism_dis.py FILE --routine
 NAME`, `tools/prism_dis.py --table`.
 
