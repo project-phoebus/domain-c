@@ -1800,6 +1800,18 @@ revisited.
    against lir's copy: lir was not reached.  lir's data (A5 0x487180)
    holds no run of instr_size's words at its start (its +0 .. +0x320
    are other tables), so lir's copy, if it has one, lies further in.
+   **Answered by translator PA6 (questions 205 and 221): 384 entries.**
+   lir's copy is the first table of the section lir_readonly_tables
+   (0x2BDA2C; lir_$opt_new_instruction reads it for an instruction of
+   default size): the same 212 words as iv's, then zero words to word
+   383, the next table (solution_kind) at +0x300, as iv_opc_set follows
+   iv's at +0x300.  instr_size.init now declares 0..383 (`172 of 0'
+   after opc$adj_move) and holds the declaration only: iv.pas opens a
+   plain `var' before including it, lir will open `var
+   (lir_readonly_tables)'; iv's data now matches the image at +0x300
+   (iv_opc_set) and after.  iv_opc_kind (iv +0x330) is likewise 384
+   words in the image (question 205) but is iv.pas's own table, left
+   at 212 (batch C's).
 
 
 222. Translator PA5, fg_utils: reverse_depth_first_search (cc.a88k
@@ -1927,3 +1939,24 @@ revisited.
    routine).  at_backend_$begin_compilation passes its word p to
    exs_$initialise as `p in [5]' twice (both arguments the same: a
    slip, or two flags that coincide for C?).
+234. Translator PA6, post: post_$reschedule_spill_loads (cc.a88k 0x264114),
+   making the alias descriptor of the store before a spill load, sets
+   the load's descriptor's inexact flag (`bset #7,(-133,A6)`, the
+   load's at -152) instead of the store's (-64), and passes
+   alias_$get_alias_desc the store's first operand's link while it
+   tests the kind of its second.  Kept as the image has it; slips of
+   the original?
+235. Translator PA6, post: post_$sprinkle_mfnextcc (0x263A7A) passes the
+   MOVE block (D6), not the branch's block, as fill_er_up's block, so
+   move_bundle_to_new_bb updates that block's first/last when the
+   stolen bundle lands at an end of the branch's block.  Kept; a slip?
+236. Translator PA6, post: droppable_jump_addr (0x261990) returns whatever
+   D0 holds after its bug check, and ipccnop_shuffle_trapcc (0x2633E6)
+   an unset D5 when its argument is not an ungrouped IPCCNOP (pattern
+   142); post_$sprinkle_fpquiesce inserts its FPQUIESCE with an unset
+   anchor after its bug check.  Kept.
+237. Translator PA6, post: the seven trace_ routines (0x2612A4 ..
+   0x2612B0) are bare `rts' though post calls them some 120 times with
+   names, messages, blocks and instructions: debugging bodies compiled
+   out (an `%if' in the source), most likely.  Written as empty
+   procedures with the parameters the calls pass.

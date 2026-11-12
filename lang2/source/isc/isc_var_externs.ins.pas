@@ -14,6 +14,12 @@ var
   { batch A (PA4): solutions lir_utils_$flesh_out_new_load_or_store
     builds a memory home's address from (no home: +0x330, a frame
     temporary; a home that is not static: +0x340). }
+  isc_user_routines_31c: extern solution_ptr_t;    { +0x31C: set to +0x320
+                                          by lir_$begin_compilation (batch
+                                          A, PA6) }
+  isc_user_routines_320: extern solution_ptr_t;    { +0x320: register 31's
+                                          physical solution (lir_3e60[31];
+                                          lir_$begin_compilation) }
   isc_user_routines_328: extern solution_ptr_t;    { +0x328: the return
                                           address register's (lir_main) }
   isc_user_routines_32c: extern solution_ptr_t;    { +0x32C (lir_main:
@@ -22,9 +28,17 @@ var
   isc_user_routines_330: extern solution_ptr_t;    { +0x330 (0x481130) }
   isc_user_routines_338: extern solution_ptr_t;    { +0x338: the DB
                                           register's home (lir_main) }
+  isc_user_routines_334: extern solution_ptr_t;    { +0x334: the well-known
+                                          register LB's (lir_$begin_
+                                          compilation; batch A, PA6) }
   isc_user_routines_33c: extern solution_ptr_t;    { +0x33C: the argument
                                           pointer's (lir_main) }
   isc_user_routines_340: extern solution_ptr_t;    { +0x340 (0x481140) }
+  isc_user_routines_344: extern univ_ptr;          { +0x344, +0x348: the
+                                          other well-known type nodes
+                                          (isc_$init_well_known_types' first
+                                          two; batch A, PA6) }
+  isc_user_routines_348: extern univ_ptr;
   isc_user_routines_34c: extern univ_ptr;          { +0x34C: a well-known
                                           type node
                                           (isc_$init_well_known_types; the

@@ -1041,3 +1041,20 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
    the bits), gap 28 (ra_$build_conflict_graph, 0x1000 bytes: a write's
    conflicts, its going live and a call's clobbers left out of the
    check) and gap 37 (its boolean cells at +0x662..+0x66A).
+41. **A 4-character string constant passed by address.**  lir's
+   initialize_physical_solutions and lir_$begin_compilation pass the
+   well-known registers' names ('PC  ', 'AP  ', 'DB  ', 'RPC ', ...) to
+   isc_$init_well_known_ip_reg, whose first parameter is an `in'
+   packed array [1..4] of char (`pea (0x242DB0,PC)': the four bytes in
+   the routine's constants).  dpc: "a string constant passed by address
+   (as a 4-byte object) is not supported yet" (gap 34 is the same
+   constant by value).  The gate passes a module variable instead
+   (translator PA6).  Reproducer:
+
+       module g41;
+       type n4 = packed array [1..4] of char;
+       procedure q(in name: n4; k: integer32); options(val_param); extern;
+       procedure p;
+       begin
+         q('AP  ', -1);
+       end;

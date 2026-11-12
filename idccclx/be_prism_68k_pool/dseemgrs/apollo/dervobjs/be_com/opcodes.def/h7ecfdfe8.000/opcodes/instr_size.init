@@ -1,16 +1,22 @@
 { instr_size.init - the bytes an instruction of each opcode takes when
-  made with its default operands (44 and 12 for each operand), for
-  opc$undefined .. opc$adj_move: a DSEE derived object of
-  be_com/opcodes.def (the opcode generator's), included by iv and lir
-  after the opcode enumeration (a module variable of each: iv's data
-  +0).
+  made with its default operands (44 and 12 for each operand), by
+  opcode (opc$t's whole range, 0..383; opc$adj_move (211) is the last
+  with a size): a DSEE derived object of be_com/opcodes.def (the opcode
+  generator's), included by iv and lir after the opcode enumeration.
 
-  No Apollo copy survives; reconstructed from cc.a88k's .rwdi records
-  for iv's data (A5 0x486500, 212 words).  The variable's name is not
-  known from the original. }
+  The file holds the declaration only: each includer opens the var
+  section it goes in (iv a plain `var': its data +0; lir `var
+  (lir_readonly_tables)': that section's first table, 0x2BDA2C, read by
+  lir_$opt_new_instruction for an instruction of default size).
 
-var
-  instr_size: array [0..211] of integer := [
+  No Apollo copy survives; reconstructed from cc.a88k: iv's .rwdi
+  records (A5 0x486500, 212 words) and lir's copy, the section
+  lir_readonly_tables (+0 .. +0x2FF: the same 212 words, then zeros to
+  word 383; the next table, solution_kind.init's, starts at +0x300), so
+  the table has 384 entries (docs/questions.md 205, 221; translator
+  PA6).  The variable's name is not known from the original. }
+
+  instr_size: array [0..383] of integer := [
     0, 56, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68,  { 0 }
     68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 92, 92, 92, 92,  { 16 }
     92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92,  { 32 }
@@ -24,5 +30,5 @@ var
     92, 104, 92, 104, 104, 104, 92, 80, 104, 80, 104, 128, 128, 104, 80, 80,  { 160 }
     128, 128, 80, 80, 80, 92, 92, 104, 128, 128, 80, 80, 68, 116, 116, 80,  { 176 }
     44, 44, 68, 68, 80, 80, 56, 56, 56, 44, 44, 80, 56, 56, 56, 56,  { 192 }
-    44, 44, 44, 56  { 208 }
-    ];
+    44, 44, 44, 56,  { 208 }
+    172 of 0];  { 212 .. 383: no .rwdi record (iv), zero words (lir) }

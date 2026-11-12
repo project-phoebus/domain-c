@@ -1,0 +1,15 @@
+{ solution_string_length.init - a DSEE derived object of the ISC
+  generator's input (cc.a88k only): the lengths of solution_string's
+  names (25 words).  Included by lir.pas after solution_string.init, in
+  the section lir_readonly_tables (+0x660 .. +0x691; the section's last
+  two bytes are padding).
+
+  The declaration only (lir.pas's `var (lir_readonly_tables)').  No
+  Apollo copy survives; reconstructed from the section's bytes
+  (translator PA6).
+
+  Not known from the original: the variable's name. }
+
+  solution_string_length: array [0..24] of integer := [
+    4, 14, 16, 15, 13, 12, 7, 4, 6, 11, 11, 6, 12, 13, 15, 15,  { 0 }
+    13, 6, 6, 5, 12, 10, 14, 4, 5];  { 16 }
