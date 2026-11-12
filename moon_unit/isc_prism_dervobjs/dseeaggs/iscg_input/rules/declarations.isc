@@ -689,8 +689,19 @@ end;
 operator isc_db_register il db_register children 0 image 16#0E3C60;
 end;
 operator isc_dindex_node il dindex_node children 2 image 16#0E3C9C;
-  fixed;
-  pass_1 1: derived, 2: derived;
+  child 1 il.p24
+    fetch_precision <- isc_$precision_from_rlen_and_size(5, -1);
+    immediate_parent_wants_lvalue <- il.l4.20;
+    parent_il_kind <- dindex_node;
+    required_arithmetic <- rlen_arith(5);
+    required_precision <- isc_$precision_from_rlen_and_size(5, -1);
+    permissible derived;
+  child 2 il.p36
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w42, -1);
+    parent_il_kind <- dindex_node;
+    required_arithmetic <- rlen_arith(il.w42);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w42, -1);
+    permissible derived;
 end;
 operator isc_disp_node il disp_node children 1 image 16#0E3EBA;
   child 1 il.p24

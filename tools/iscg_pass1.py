@@ -475,7 +475,7 @@ class Lifter:
             # the default inherited attributes' bit (inside_a_cse) and other
             # bit copies: btst #b,X; sne R; clrl R2; lsrb #7,R; lslb #c,R;
             # orb R,R2; andib #m,Y; orb R2,Y
-            m = re.match(r'btst #(\d),(.*)$', t)
+            m = re.match(r'btst #(\d+),(.*)$', t)
             if m and k + 7 < len(ins):
                 seq = [ins[k + j][1] for j in range(1, 8)]
                 m1 = re.match(r'sne %(d\d)$', seq[0])
@@ -1344,6 +1344,7 @@ def emit_unit(rules, unions_by_il, kinds, il_index, text):
     e = enums()
     todo = [op['name'] for op in ops
             if op['fixed'] and op['name'] not in DISPATCHERS
+            and op['name'] != 'isc_unrecognized_il_node'
             and op['name'] not in text.P1_ROUTINES]
     addrs = sorted([(op['image'], op['name']) for op in ops if op['image']] +
                    [(a, n) for n, a in FIXED_ADDRESSES])

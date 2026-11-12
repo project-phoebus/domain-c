@@ -35,6 +35,12 @@ dseeaggs/iscg_input/hd69fbe76.000/iscg_input):
                            readonly_tables (each rule's result kind, the
                            six opcode maps) and isc_readonly_tables (the
                            ISC's own tables, from readonly.isc).
+  isc_pass_1_main.pas      pass 1: the operator routines from the operator
+                           declarations, isc_pass_1_begin_compilation's
+                           dispatch from their names, and the fixed text
+                           (pass_1, cross_product_to_solutions_of_parent,
+                           isc_unrecognized_il_node, the dispatchers):
+                           tools/iscg_pass1.py.
   iscg_names.txt           the manifest: each generated anonymous
                            routine's name and its address in cc.a88k
                            (from the rule file's `image' clauses), for

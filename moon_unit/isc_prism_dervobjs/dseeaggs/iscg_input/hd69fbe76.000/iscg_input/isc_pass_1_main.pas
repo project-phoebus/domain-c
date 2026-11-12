@@ -227,16 +227,15 @@
 
   Not generated yet (declared extern below; the operator
   declarations mark them `fixed'; their text is to be read off the
-  image into tools/iscg_text.py P1_ROUTINES): 55 routines,
-    isc_unrecognized_il_node, isc_addr_con, isc_assign_node_agg_aop,
-    isc_assign_node_div_by_aop, isc_assign_node_fp_aop,
-    isc_assign_node_isc_agg_aop, isc_assign_node_isc_agg_zero_aop,
-    isc_assign_node_isc_mul_to_aop, isc_assign_node_pack_aop,
-    isc_assign_node_scalar_aop, isc_at_lib_dsc, isc_bit_field_assign,
-    isc_blk_end_node, isc_branch_node, isc_case_node_range_check,
-    isc_cbranch_node, isc_char_string_ob,
+  image into tools/iscg_text.py P1_ROUTINES): 53 routines,
+    isc_addr_con, isc_assign_node_agg_aop, isc_assign_node_div_by_aop,
+    isc_assign_node_fp_aop, isc_assign_node_isc_agg_aop,
+    isc_assign_node_isc_agg_zero_aop, isc_assign_node_isc_mul_to_aop,
+    isc_assign_node_pack_aop, isc_assign_node_scalar_aop, isc_at_lib_dsc,
+    isc_bit_field_assign, isc_blk_end_node, isc_branch_node,
+    isc_case_node_range_check, isc_cbranch_node, isc_char_string_ob,
     isc_cmp_tree_node_bit_field_cmp_top, isc_cmp_tree_node_compare_top,
-    isc_dindex_node, isc_entry_blk, isc_fortran_symbol, isc_function_blk,
+    isc_entry_blk, isc_fortran_symbol, isc_function_blk,
     isc_insert_bit_field, isc_lib_dsc, isc_namelist_constant_ob,
     isc_nlbranch_node, isc_procedure_blk, isc_raise_exception,
     isc_return_node, isc_set_con_ob, isc_tree_node_addr_top,
@@ -2976,7 +2975,7 @@ begin
   number_of_children := 0;
 end;
 
-{ isc_dindex_node (0x0E3C9C): not generated yet (the unit's header). }
+{ isc_dindex_node - the proper_subtree il_dindex_node, 2 children (0x0E3C9C). }
 
 procedure isc_dindex_node(
     il: univ_ptr;
@@ -2988,7 +2987,52 @@ procedure isc_dindex_node(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1, inh_2: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_dindex_node);
+  number_of_children := 2;
+  inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[6]);
+  inh_1^.call := inh^.call;
+  inh_1^.top := inh^.top;
+  inh_1^.precision := inh^.precision;
+  inh_1^.f38.preserve := inh^.f38.preserve;
+  inh_1^.stmt := inh^.stmt;
+  inh_1^.f38.arith := inh^.f38.arith;
+  inh_1^.available := inh^.available;
+  inh_1^.pos := inh^.pos;
+  inh_1^.precision := isc_$precision_from_rlen_and_size(5, -1);
+  inh_1^.f38.b5 := p1_node_bytes_ptr_t(il)^[5].b4;
+  p1_inh_view_ptr_t(inh_1)^.parent_il_kind := ord(il_dindex_node);
+  inh_1^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[5];
+  inh_1^.available := isc_$precision_from_rlen_and_size(5, -1);
+  children[1] := pass_1(isc_node_ptr_t(il)^.xp[6], inh_1, depth + 1,
+      [solution$ip_reg, solution$processor_reg]);
+  if solution_list$empty(children[1]) then
+    no_solutions := true
+  else begin
+    inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[9]);
+    inh_2^.call := inh^.call;
+    inh_2^.top := inh^.top;
+    inh_2^.precision := inh^.precision;
+    inh_2^.f38.preserve := inh^.f38.preserve;
+    inh_2^.stmt := inh^.stmt;
+    inh_2^.f38.arith := inh^.f38.arith;
+    inh_2^.available := inh^.available;
+    inh_2^.pos := inh^.pos;
+    inh_2^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[21], -1);
+    p1_inh_view_ptr_t(inh_2)^.parent_il_kind := ord(il_dindex_node);
+    inh_2^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[21]];
+    inh_2^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[21], -1);
+    children[2] := pass_1(isc_node_ptr_t(il)^.xp[9], inh_2, depth + 1,
+        [solution$ip_reg, solution$ip_reg_scaled, solution$literal_32_bits]);
+    if solution_list$empty(children[2]) then
+      no_solutions := true;
+  end;
+end;
 
 { isc_disp_node - the proper_subtree il_disp_node, 1 child (0x0E3EBA). }
 

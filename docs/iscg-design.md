@@ -796,7 +796,7 @@ modules, isc_pass_1_main's operator routines.
    the named units, so that pass_2 and pattern_matcher end where the
    image's code does.  cc_check.sh calls it for files the manifest names
    and .blocks does not.
-3. isc_pass_1_main: generated (10.5); 54 operator routines remain
+3. isc_pass_1_main: generated (10.5); 53 operator routines remain
    `fixed' (extern, listed in the unit's header).
 4. isc_main's preserve_solution table and isc_debug's dump_solution
    field list (question 270: hand-translated units, generated parts by
@@ -813,11 +813,11 @@ transforms' code; iscg_extract.py's `operators()`/`pass1_operators()`
 and iscg_gen.py's `Rules.parse` (`operator') and `isc_pass_1_main()`
 call it).
 
-- **132 of 186 routines generated**: pass_1, cross_product_to_solutions_
+- **133 of 186 routines generated**: pass_1, cross_product_to_solutions_
   of_parent, isc_unrecognized_il_node, isc_pass_1_begin_compilation,
   the three dispatchers (isc_tree_node, isc_cmp_tree_node,
-  isc_assign_node: one template) and 125 operator routines lifted
-  from the image.  **54 remain** (`fixed;' in the rule file with their
+  isc_assign_node: one template) and 126 operator routines lifted
+  from the image.  **53 remain** (`fixed;' in the rule file with their
   pass_1 calls' sets; declared extern in the unit and listed in its
   header): the lifter stops at their first construct it does not know
   (a field compare such as `cmpi.w #59,(36,A1)' in the div/mod family,

@@ -11,10 +11,11 @@ moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/rules):
   declarations.isc   the solution kinds, the attribute declarations
                      (dump_solution's names, with the offset each is
                      read at), the operator declarations (isc_pass_1_
-                     main's isc_<kind>[_<op>] routines: their il$t, the
-                     number of children and the permissible set of each
-                     pass_1 call, where it is not the union of the
-                     kinds the matcher tests), and the six opcode maps
+                     main's isc_<kind>[_<op>] routines lifted by
+                     tools/iscg_pass1.py: their il$t, children,
+                     inherited attributes and permissible sets, or
+                     `fixed' for those it does not understand), and the
+                     six opcode maps
                      (isc_tool_generated_readonly_tables by il$t)
   NN_topic.isc       one file per section, NN 01..25 in the image's
                      address order (the pass-1 and pass-2 modules of the
