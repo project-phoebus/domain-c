@@ -360,8 +360,7 @@ end;
   the other way; bug_check when b is found neither way.
 
   0x27C51E, 0x1BC bytes: the direction a word (`bcc' of the numbers),
-  the two passes by `dbf'; the message's text is the image's (its
-  "position: i" is missing). }
+  the two passes by `dbf'. }
 
 function tr_utils_$relative_instr_position(
     a: instr_ptr_t;
@@ -415,7 +414,7 @@ begin
     backward := not backward;
   end;
   if n = 0 then
-    bug_check('TR_UTILS_$relative_instr_positnstrs not in same bb%$');
+    bug_check('TR_UTILS_$relative_instr_position: instrs not in same bb%$');
   tr_utils_$relative_instr_position := n;
 end;
 
@@ -647,7 +646,7 @@ begin
            and ((opnd_bytes_ptr_t(o)^.rrp & 12) <> 0)
            and o^.lts^.lr^.f2.b3_2 then begin
           if o^.lts^.f2.b3_4 then
-            bug_check('TR_UTILS_$separate_partis: LTS was aon exit%$');
+            bug_check('TR_UTILS_$separate_partitions: LTS was active on exit%$');
           l := utils_$find_last_lts_in_bb(o^.lts^.lr, p^.bb, prev);
           o^.lts^.f2.b3_6 := false;
           l^.f2.b3_6 := true;
@@ -3378,7 +3377,7 @@ var
 begin
   if anchor <> nil then
     if anchor^.bb <> bb then
-      bug_check('TR_UTILS_$move_add_to_nebb: prev_instr not in new_bb%$');
+      bug_check('TR_UTILS_$move_add_to_new_bb: prev_instr not in new_bb%$');
   old := add^.bb;
   if add^.prev <> nil then
     add^.prev^.next := add^.next
