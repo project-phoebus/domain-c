@@ -2389,27 +2389,33 @@ procedure sched_utils_$end_routine(
   at_backend. }
 procedure sched_utils_$end_compilation; extern;
 
-{ SCHED_UTILS_$OPERAND_DELAY - 0x279266, 0x5E8 bytes; called from
-  ra_utils.  Frame 8:a; 12:al; 16:w; 17:?.  Result: D0 (callers: D0b1
-  D0l2). }
+{ batch B (PB4): sched_utils' headings narrowed from its bodies.  The
+  delays' flags: element 0, a condition code read costs one more;
+  element 1, the delay is taken from the definition to its reader (a
+  word: sched's pass 1 passes [1], oli [0]). }
+type
+  sched_utils_$flags_t = set of 0..15;
+
+{ SCHED_UTILS_$OPERAND_DELAY - the delay of op, an operand of instr, in
+  cycles.  0x279266, 0x5E8 bytes; called from ra_utils. }
 function sched_utils_$operand_delay(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: integer;
-    p4: integer32): boolean; options(val_param); extern;
+    instr: instr_ptr_t;
+    op: opnd_ptr_t;
+    flags: sched_utils_$flags_t): integer32; options(val_param); extern;
 
-{ SCHED_UTILS_$FILL_IN_OPERAND_DELAYS - 0x279A42, 0x76 bytes; called from
-  oli sched.  Frame 8:al; 12:lw; 14:b. }
+{ SCHED_UTILS_$FILL_IN_OPERAND_DELAYS - each operand's delay in its +2
+  bits 3..0.  0x279A42, 0x76 bytes; called from oli sched (trace is not
+  read). }
 procedure sched_utils_$fill_in_operand_delays(
-    p1: univ_ptr;
-    p2: integer32;
-    p3: boolean); options(val_param); extern;
+    bb: bb_ptr_t;
+    flags: sched_utils_$flags_t;
+    trace: boolean); options(val_param); extern;
 
-{ SCHED_UTILS_$CALCULATE_PRECEDENCE - 0x279BC4, 0x118 bytes; called from
-  oli.  Frame 8:l; 12:bw. }
+{ SCHED_UTILS_$CALCULATE_PRECEDENCE - the instructions' heights (+28, a
+  word).  0x279BC4, 0x118 bytes; called from oli (p2 kept, not read). }
 procedure sched_utils_$calculate_precedence(
-    p1: integer32;
-    p2: integer); options(val_param); extern;
+    bb: bb_ptr_t;
+    p2: boolean); options(val_param); extern;
 
 { SCHED_UTILS_$INSERT_SNUGGLE_MOVES - 0x27A398, 0x7E bytes; called from
   com xtp.  Frame 8:al. }
