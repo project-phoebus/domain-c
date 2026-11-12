@@ -12,12 +12,11 @@
   testcc; the same address: sameaddr) and edit them (detach, makejump,
   makecbr, moverefcell, movejump, reversecond, label_merge).
 
-  TODO(pascal) final.pas is not finished: 118 of its 120 routines are
+  TODO(pascal) final.pas is not finished: 119 of its 120 routines are
   translated.  Not yet translated (cc.m68k address, bytes):
-    0x10F6C4 0x4C0  opta
     0x10FB84 0x3D4  floatop
-  Both are declared extern before peepholer (peepholer_ops calls them)
-  until they are written.
+  It is declared extern before peepholer (peepholer_ops calls it) until
+  it is written.
 
   Image addresses (DOMAIN C 6.9; cc.m68k only: cc.a88k has no final):
     cc.m68k   cc.a88k
@@ -4777,6 +4776,172 @@ begin
   try_post_incr := r;
 end;
 
+{ opta - an address or immediate instruction c simplified: a pea or lea
+  (kind 4, ops 105, 106) of 0 handed to opttest; an immediate (kinds 8,
+  5) final_$try_reducing_literal; an adda.l of a data register (op 18)
+  final_$collapsed_index_calc; then merge_add_sub, merge_move_sub,
+  final_$merge_movea_adjust, try_post_incr and try_pre_dec (each done
+  ends it) and merge_stack_adjusts; a movea (op 5) of a register to
+  itself or already done (final_$redundant_movea) removed, and a move
+  after it that undoes it or repeats it removed; an lea (op 12) of
+  (d,An) into An made nothing (d 0), an addq or subq of d (up to 8), or
+  of (An) into another register a movea, or removed when it repeats an
+  earlier one (final_$redundant_lea); a pea, adda or suba (ops 106, 17,
+  18, 34, 35) of a 16-bit integer constant made a pea of the word (op
+  105, f6 1) or an lea of the displacement (op 12, mode 2 on the
+  destination register); then a pea or lea of 0 and compares with an
+  immediate (ops 107..109) handed to opttest.  The cell after c (c may
+  have become the one before it).
+
+  0x10F6C4, 0x4C0 bytes, no A5 load: three registers saved one by one;
+  c passed on by its own address (the routines that may replace it);
+  final_$collapsed_index_calc's cell at -8, the removed cell at -8;
+  kind and size set by one `move.l #0x50002'; opttest's and
+  final_$collapsed_index_calc's cells returned as they are (A0, A3). }
+
+function opta(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+label
+  8, 9;
+var
+  r: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+  n: codegen_$cell_ptr_t;
+  nd: il_$node_ptr_t;
+  d: integer32;
+begin
+  if (c^.kind = a_instyp) and ((c^.op = 105) or (c^.op = 106)) then
+    if final_$is_int(c^.ads1, 0) then begin
+      r := opttest(c);
+      goto 9;
+    end;
+  if (c^.kind = i_instyp) or (c^.kind = q_instyp) then
+    final_$try_reducing_literal(c);
+  if c^.op = 18 then begin
+    t := c;
+    if final_$collapsed_index_calc(t) then begin
+      r := t;
+      goto 9;
+    end;
+  end;
+  if merge_add_sub(c) then begin
+    r := c;
+    goto 9;
+  end;
+  if merge_move_sub(c) then begin
+    r := c;
+    goto 9;
+  end;
+  if final_$merge_movea_adjust(c) then begin
+    r := c;
+    goto 9;
+  end;
+  if try_post_incr(c) then begin
+    r := c;
+    goto 9;
+  end;
+  if try_pre_dec(c) then begin
+    r := c;
+    goto 9;
+  end;
+  merge_stack_adjusts(c);
+  if c^.op = 5 then begin
+    if sameaddr(c^.ads1, c^.ads2) or final_$redundant_movea(c) then begin
+      t := c;
+      c := c^.prev;
+      detach(t);
+      goto 8;
+    end;
+    n := nxtlcc(c);
+    if ((n^.kind = a_instyp) and (n^.op = 5)) or
+       ((n^.kind = move_instyp) and (n^.op = 2)) then
+      if not involves(c^.ads1, c^.ads2.f2) then
+        if sameaddr(c^.ads1, n^.ads2) and sameaddr(n^.ads1, c^.ads2) then
+          detach(n)
+        else if sameaddr(c^.ads1, n^.ads1) and sameaddr(c^.ads2, n^.ads2) then
+          detach(n);
+  end
+  else if c^.op = 12 then begin
+    if (c^.ads1.f1 = 2) and (c^.ads1.f2 = c^.ads2.f2) then begin
+      if c^.ads1.y = 0 then begin
+        t := c;
+        c := c^.prev;
+        detach(t);
+        goto 8;
+      end;
+      d := c^.ads1.y;
+      if d > 0 then begin
+        if d <= 8 then begin
+          c^.op := 24;
+          c^.kind := q_instyp;
+          c^.size := 2;
+          c^.ads1.f1 := 3;
+          c^.ads1.x := integer32(smcontk(81, c^.ads1.y));
+          c^.ads1.y := 0;
+          c^.ads1.f6 := 2;
+          c^.size := ilength(c);
+          c := c^.prev;
+        end;
+      end
+      else if d >= -8 then begin
+        c^.op := 33;
+        c^.kind := q_instyp;
+        c^.size := 2;
+        c^.ads1.f1 := 3;
+        c^.ads1.x := integer32(smcontk(81, -c^.ads1.y));
+        c^.ads1.y := 0;
+        c^.ads1.f6 := 2;
+        c^.size := ilength(c);
+        c := c^.prev;
+      end;
+    end
+    else if (c^.ads1.f1 = 2) and (c^.ads1.y = 0) then begin
+      c^.op := 5;
+      c^.ads1.f1 := 1;
+    end
+    else if final_$redundant_lea(c) then begin
+      t := c;
+      c := c^.prev;
+      detach(t);
+    end;
+  end
+  else if ((c^.op = 106) or (c^.op = 35) or (c^.op = 34) or (c^.op = 17) or
+           (c^.op = 18)) and (c^.ads1.f1 = 3) then begin
+    nd := il_$node_ptr_t(c^.ads1.x);
+    if (nd^.kind in [77..87, 101, 200]) and (nd^.int_value >= -32767) and
+       (nd^.int_value <= 32767) then begin
+      if (c^.op = 35) or (c^.op = 34) then
+        c^.ads1.x := integer32(smcontk(81, -nd^.int_value));
+      if c^.op = 106 then begin
+        c^.ads1.f6 := 1;
+        c^.op := 105;
+      end
+      else begin
+        c^.ads1.f1 := 2;
+        c^.ads1.f2 := c^.ads2.f2;
+        c^.ads1.y := il_$node_ptr_t(c^.ads1.x)^.int_value;
+        c^.op := 12;
+      end;
+      c^.size := ilength(c);
+    end;
+  end;
+8:
+  if ((c^.op = 105) or (c^.op = 106)) and (c^.ads1.f1 = 3) then begin
+    nd := il_$node_ptr_t(c^.ads1.x);
+    if (nd^.kind in [77..87, 101, 200]) and (nd^.int_value = 0) then begin
+      c := opttest(c);
+      c := c^.prev;
+    end;
+  end;
+  if c^.op in [107..109] then begin
+    c := opttest(c);
+    c := c^.prev;
+  end;
+  r := c^.next;
+9:
+  opta := r;
+end;
+
 { final_$logicize_opts - scc c (ops 124..139) followed by two
   instructions of ops 58 and 8 (not labels, lines or block marks)
   replaced by one instruction (kind 8, op 41) of the immediate 1 (f6 2)
@@ -5093,12 +5258,9 @@ begin
   final_$unlink_opts := nx;
 end;
 
-{ TODO(pascal) opta (0x10F6C4) and floatop (0x10FB84) are not
-  translated yet: declared here (headings read off their frames and
-  peepholer_ops's calls) until they are written. }
-
-function opta(
-    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); extern;
+{ TODO(pascal) floatop (0x10FB84) is not translated yet: declared here
+  (its heading read off its frame and peepholer_ops's calls) until it
+  is written. }
 
 function floatop(
     c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); extern;
