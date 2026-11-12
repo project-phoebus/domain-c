@@ -52,29 +52,35 @@ type
 
   { batch A (PA5): the attributes a top-level node's instructions
     inherit (lir.pas +0x3B80, 40 bytes): lir_main's
-    top_level_inherited_attributes sets node and clears l12, then
-    lir_$complete_top_level_node_inherited_attrs fills it;
-    clean_up_canned_inherited clears l4, l12 and w34.  The address is
-    what lir_$get_new_instruction_no_exceptions and the
-    lir_$..._instruction routines take as their first argument. }
+    top_level_inherited_attributes sets il and clears original_il,
+    then lir_$complete_top_level_node_inherited_attrs fills it;
+    clean_up_canned_inherited clears exception_frame, original_il and
+    stmt_number.  The address is what lir_$get_new_instruction_no_
+    exceptions and the lir_$..._instruction routines take as their
+    first argument.  The ISC's inherited_attributes_t
+    (isc_attribute_records.ins.pas) under another name: the fields
+    named here carry its names, the image's (isc_print_il_node prints
+    each inherited attribute under its name: docs/questions.md 271). }
   lir_inherited_ptr_t = ^lir_inherited_t;
   lir_inherited_t = record
-    node: univ_ptr;                     { +0 }
-    l4: integer32;                      { +4 }
+    il: univ_ptr;                       { +0 }
+    exception_frame: integer32;         { +4 }
     l8: integer32;                      { +8 }
-    l12: integer32;                     { +12 }
-    l16: integer32;                     { +16 }
-    l20: integer32;                     { +20: what begin_instruction
+    original_il: integer32;             { +12 }
+    conditional_target: integer32;      { +16 }
+    call_instruction_ptr: integer32;    { +20: what begin_instruction
                                           keeps in lir_41ec (batch A,
                                           PA7) }
-    l24: integer32;                     { +24 }
-    l28: integer32;                     { +28 }
-    w32: integer;                       { +32: the node's +20 word
+    fetch_precision: integer32;         { +24 }
+    required_precision: integer32;      { +28 }
+    source_line_number: integer;        { +32: the node's +20 word
                                           (lir_$complete_top_level_node_
                                           inherited_attrs; batch A, PA6) }
-    w34: integer;                       { +34: the node's +43..+44
+    stmt_number: integer;               { +34: the node's +43..+44
                                           word (likewise) }
-    l36: integer32;                     { +36 }
+    l36: integer32;                     { +36: parent_il_kind, +37,
+                                          required_arithmetic and the
+                                          flags of +39 }
   end;
 
   { The physical registers' solutions (lir +0x3C60, +0x3D60: by
@@ -129,8 +135,8 @@ var
   { lir_main.pas's data (A5 0x48B3AC). }
   lir_main_250: extern solution_t;      { +0x250: the address solution of
                                           a frame or memory home access
-                                          (lir_utils: +0x280 its disp,
-                                          +0x288 its w56) }
+                                          (lir_utils: +0x280 its literal_32_bits_value,
+                                          +0x288 its bytes) }
   lir_main_760: extern solution_t;      { +0x760: the address solution of
                                           a static home's access through
                                           the DB register (+0x790 disp);

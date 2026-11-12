@@ -304,21 +304,22 @@ end;
 function top_level_inherited_attributes(
     node: univ_ptr): univ_ptr; options(val_param, internal);
 begin
-  lir_3b80.node := node;
-  lir_3b80.l12 := 0;
+  lir_3b80.il := node;
+  lir_3b80.original_il := 0;
   lir_$complete_top_level_node_inherited_attrs(addr(lir_3b80));
   top_level_inherited_attributes := addr(lir_3b80);
 end;
 
-{ clean_up_canned_inherited - lir_3b80's l4, l12 and w34 cleared.
+{ clean_up_canned_inherited - lir_3b80's exception_frame,
+  original_il and stmt_number cleared.
 
   0x248B00, 0x1E bytes, no frame. }
 
 procedure clean_up_canned_inherited; options(internal);
 begin
-  lir_3b80.l4 := 0;
-  lir_3b80.l12 := 0;
-  lir_3b80.w34 := 0;
+  lir_3b80.exception_frame := 0;
+  lir_3b80.original_il := 0;
+  lir_3b80.stmt_number := 0;
 end;
 
 { formal_local_transfer_setup - xfer filled for the formal arg (a
@@ -397,8 +398,8 @@ begin
       end;
       if sol <> nil then begin
         sym := arg^.sym;
-        sol^.node := sym;
-        sol^.lr^.node20 := sym;
+        sol^.object_with_name := sym;
+        sol^.live_range^.node20 := sym;
         sym^.xp[15] := il_$node_ptr_t(sol);
         sym^.xc[32] := chr(ord(sym^.xc[32]) ! 2);
       end;
@@ -437,8 +438,8 @@ begin
   in_reg := (vat = 5) or ((flags & 16#800) <> 0);
   xfer^.b11 := (flags & 16#40000000) <> 0;
   lir_main_400.kind := lm_kind_by_loc[arg^.f18.loc];
-  lir_main_400.lr := nil;
-  lir_main_400.node := nil;
+  lir_main_400.live_range := nil;
+  lir_main_400.object_with_name := nil;
   if arg^.f18.loc = ord(arg_loc$memory) then begin
     if home = nil then begin
       if (flags & 16#40000000) <> 0 then
@@ -447,9 +448,9 @@ begin
         result := 0;
     end
     else begin
-      lir_main_400.node := home^.node;
-      lir_main_400.lr := home^.lr;
-      lir_main_400.lr2 := home^.lr2;
+      lir_main_400.object_with_name := home^.object_with_name;
+      lir_main_400.live_range := home^.live_range;
+      lir_main_400.live_range_of_imaginary_part := home^.live_range_of_imaginary_part;
       if xfer^.split then begin
         result := 2;
         n := loads^[3];
@@ -470,26 +471,26 @@ begin
     end;
   end
   else begin
-    lir_main_5b0.f78.reg := arg^.f22.reg;
+    lir_main_5b0.f78.physical_register_number := arg^.f22.reg;
     lir_main_5b0.kind := lm_kind_by_loc[arg^.f18.loc];
-    lir_main_5b0.lr := nil;
+    lir_main_5b0.live_range := nil;
     if home <> nil then begin
-      lir_main_400.node := home^.node;
-      lir_main_400.lr := home^.lr;
-      lir_main_400.lr2 := home^.lr2;
+      lir_main_400.object_with_name := home^.object_with_name;
+      lir_main_400.live_range := home^.live_range;
+      lir_main_400.live_range_of_imaginary_part := home^.live_range_of_imaginary_part;
       if (home^.kind = 8) and (arg^.f18.loc = ord(arg_loc$ip_reg)) then
         result := 8
       else if (home^.kind = 9) and (arg^.f18.loc = ord(arg_loc$ip_reg)) then begin
         if arg^.w6 = 0 then
           lir_main_400.kind := 2
         else begin
-          lir_main_400.node := nil;
+          lir_main_400.object_with_name := nil;
           lir_main_400.kind := 3;
         end;
-        lir_main_400.lr := home^.lr;
+        lir_main_400.live_range := home^.live_range;
         result := 8;
       end
-      else if home^.f78.physical then
+      else if home^.f78.physical_register then
         result := 9
       else begin
         if xfer^.quad then
@@ -520,13 +521,13 @@ begin
       n := stores^[0];
   end;
   if in_reg then begin
-    if lir_main_400.lr <> nil then
-      lir_main_400.lr^.rrp := lir_main_400.lr^.rrp + [rrp$unique_value];
-    if lir_main_400.lr2 <> nil then
-      lir_main_400.lr2^.rrp := lir_main_400.lr2^.rrp + [rrp$unique_value];
+    if lir_main_400.live_range <> nil then
+      lir_main_400.live_range^.rrp := lir_main_400.live_range^.rrp + [rrp$unique_value];
+    if lir_main_400.live_range_of_imaginary_part <> nil then
+      lir_main_400.live_range_of_imaginary_part^.rrp := lir_main_400.live_range_of_imaginary_part^.rrp + [rrp$unique_value];
   end;
-  lir_main_250.node := arg^.sym;
-  lir_main_250.disp := arg^.w6;
+  lir_main_250.object_with_name := arg^.sym;
+  lir_main_250.literal_32_bits_value := arg^.w6;
   xfer^.ldst := n;
   formal_local_transfer_setup := result;
 end;
@@ -534,7 +535,7 @@ end;
 { lir_main_$add_live_range - a new live range for sol, its node sol's;
   a physical register's (reg its number, no_modify and serialize
   clear in both) when reg is not negative, else an integer register's
-  with unique_value and safe_base_address; sol's lr.
+  with unique_value and safe_base_address; sol's live_range.
 
   0x249020, 0x66 bytes: sol (8) in A2, reg (12) in D2; the live range
   in A0. }
@@ -548,25 +549,25 @@ begin
   lr := lir_$new_live_range;
   if reg < 0 then begin
     lr^.rrp := [rrp$unique_value, rrp$safe_base_address, rrp$ip_reg];
-    sol^.f78.physical := false;
+    sol^.f78.physical_register := false;
   end
   else begin
     lr^.f2.physical := true;
     lr^.f2.reg := reg;
     lr^.f2.no_modify := false;
     lr^.f2.serialize := false;
-    sol^.f78.physical := true;
-    sol^.f78.reg := reg;
-    sol^.f78.no_modify := false;
-    sol^.f78.serialize := false;
+    sol^.f78.physical_register := true;
+    sol^.f78.physical_register_number := reg;
+    sol^.f78.physical_register_is_no_modify := false;
+    sol^.f78.physical_register_user_declared := false;
   end;
-  lr^.node20 := sol^.node;
-  sol^.lr := lr;
+  lr^.node20 := sol^.object_with_name;
+  sol^.live_range := lr;
   lir_main_$add_live_range := lr;
 end;
 
 { lir_main_$add_ip_reg_physical_lr - integer register reg's physical
-  live range given sol's node and to sol (physical, its register, its
+  live range given sol's object_with_name and to sol (physical, its register, its
   no_modify and serialize copied).
 
   0x249086, 0x80 bytes: sol (8) in A0, reg (12) in D0; A0. }
@@ -578,13 +579,13 @@ var
   lr: lr_ptr_t;
 begin
   lr := lir_4090[reg];
-  lr^.node20 := sol^.node;
+  lr^.node20 := sol^.object_with_name;
   lr^.rrp := [rrp$unique_value, rrp$safe_base_address, rrp$ip_reg];
-  sol^.f78.physical := true;
-  sol^.f78.reg := reg;
-  sol^.f78.no_modify := lr^.f2.no_modify;
-  sol^.f78.serialize := lr^.f2.serialize;
-  sol^.lr := lr;
+  sol^.f78.physical_register := true;
+  sol^.f78.physical_register_number := reg;
+  sol^.f78.physical_register_is_no_modify := lr^.f2.no_modify;
+  sol^.f78.physical_register_user_declared := lr^.f2.serialize;
+  sol^.live_range := lr;
   lir_main_$add_ip_reg_physical_lr := lr;
 end;
 
@@ -622,7 +623,7 @@ begin
         skip := true
       else begin
         sol := lir_3e60[k];
-        sol^.node := lir_main_ac0[k];
+        sol^.object_with_name := lir_main_ac0[k];
         lr := lir_main_$add_live_range(sol, k);
         lir_4090[k] := lr;
         lr^.rrp := [rrp$ip_reg];
@@ -633,7 +634,7 @@ begin
     else begin
       if which > 0 then begin
         sol := lir_3d60[k];
-        sol^.node := lir_main_b40[k];
+        sol^.object_with_name := lir_main_b40[k];
         lr := lir_main_$add_live_range(sol, k);
         lr^.node20 := lir_main_b40[k];
         lir_3f90[k] := lr;
@@ -649,11 +650,11 @@ begin
       end
       else begin
         sol := lir_3c60[k];
-        sol^.f78.physical := true;
-        sol^.f78.reg := k;
-        sol^.node := lir_main_b40[k];
+        sol^.f78.physical_register := true;
+        sol^.f78.physical_register_number := k;
+        sol^.object_with_name := lir_main_b40[k];
         lr := lir_3f90[k];
-        sol^.lr := lr;
+        sol^.live_range := lr;
       end;
       if k >= 32 then
         regs := cv^.fp60[0]
@@ -662,7 +663,7 @@ begin
     end;
     if not skip then begin
       lr^.f2.no_modify := (k & 31) in bv_word_t(regs);
-      sol^.f78.no_modify := (k & 31) in bv_word_t(regs);
+      sol^.f78.physical_register_is_no_modify := (k & 31) in bv_word_t(regs);
     end;
   end;
 end;
@@ -857,7 +858,7 @@ begin
     v^.xl[8] := 16#4000;
     v^.xp[7] := isc_user_routines_34c;
   end;
-  lr := isc_$get_home_solution(v)^.lr;
+  lr := isc_$get_home_solution(v)^.live_range;
   lr^.memory_home := home;
   lr^.rrp := lr^.rrp + [rrp$unique_value, rrp$safe_base_address];
 end;
@@ -977,10 +978,10 @@ begin
     for j := 1 to conv^.nargs do begin
       arg := addr(conv^.args[j]);
       if not arg^.by_value or (arg^.num <> 0) then begin
-        lir_main_760.disp := arg^.offset + 16;
+        lir_main_760.literal_32_bits_value := arg^.offset + 16;
         lir_main_400.kind := 11;
-        lir_main_400.lr := nil;
-        lir_main_250.node := arg^.sym;
+        lir_main_400.live_range := nil;
+        lir_main_250.object_with_name := arg^.sym;
         if arg^.w6 = 0 then begin
           v := arg^.sym;
           if v^.kind = 109 then
@@ -1008,11 +1009,11 @@ begin
             done := true;
           end;
           3: begin
-            lir_main_760.sym := arg^.sym;
+            lir_main_760.il := arg^.sym;
             lir_$load_instruction(inh, lm_prolog_xfer.ldst, 0, addr(lir_main_760),
                                   isc_user_routines_33c, lm_prolog_xfer.sol,
                                   arg^.sym, arg^.w6, arg^.w6, 7);
-            lir_main_760.sym := nil;
+            lir_main_760.il := nil;
             if lm_prolog_xfer.b11 then
               lir_$store_instruction(inh, ord(opc$storel), 0, lm_prolog_xfer.sol,
                                      addr(lir_main_250), isc_user_routines_340,
@@ -1020,21 +1021,21 @@ begin
             done := true;
           end;
           2: begin
-            lir_main_760.sym := arg^.sym;
+            lir_main_760.il := arg^.sym;
             if arg^.w6 = 0 then begin
               lir_main_400.kind := 2;
               lir_$load_instruction(inh, lm_prolog_xfer.ldst, 0, addr(lir_main_760),
                                     isc_user_routines_33c, addr(lir_main_400),
-                                    arg^.sym, arg^.w6, lir_main_760.disp,
+                                    arg^.sym, arg^.w6, lir_main_760.literal_32_bits_value,
                                     7);
-              lir_main_760.disp := lir_main_760.disp + 4;
+              lir_main_760.literal_32_bits_value := lir_main_760.literal_32_bits_value + 4;
             end;
             lir_main_400.kind := 3;
             lir_$load_instruction(inh, lm_prolog_xfer.ldst, 0, addr(lir_main_760),
                                   isc_user_routines_33c, addr(lir_main_400),
-                                  arg^.sym, arg^.w6, lir_main_760.disp,
+                                  arg^.sym, arg^.w6, lir_main_760.literal_32_bits_value,
                                   7);
-            lir_main_760.sym := nil;
+            lir_main_760.il := nil;
             done := true;
           end;
           4: begin
@@ -1051,12 +1052,12 @@ begin
                                    addr(lir_main_250), isc_user_routines_33c,
                                    arg^.sym, arg^.w6, arg^.w6, 7);
             lir_main_400.kind := 3;
-            lir_main_250.disp := 4;
+            lir_main_250.literal_32_bits_value := 4;
             lir_$store_instruction(inh, ord(opc$stores), 0, addr(lir_main_400),
                                    addr(lir_main_250), isc_user_routines_33c,
                                    arg^.sym, arg^.w6 + 4, arg^.w6 + 4,
                                    7);
-            lir_main_250.disp := 0;
+            lir_main_250.literal_32_bits_value := 0;
             done := true;
           end;
           7:
@@ -1076,18 +1077,18 @@ begin
         end;
         if not done and arg^.b25 then begin
           if lm_prolog_xfer.split then begin
-            lir_main_760.sym := arg^.sym;
+            lir_main_760.il := arg^.sym;
             lir_main_400.kind := 2;
             lir_$store_instruction(inh, ord(opc$stores), 0, addr(lir_main_400),
                                    addr(lir_main_760), isc_user_routines_33c,
                                    arg^.sym, arg^.w6, arg^.w6, 7);
             lir_main_400.kind := 3;
-            lir_main_760.disp := lir_main_760.disp + 4;
+            lir_main_760.literal_32_bits_value := lir_main_760.literal_32_bits_value + 4;
             lir_$store_instruction(inh, ord(opc$stores), 0, addr(lir_main_400),
                                    addr(lir_main_760), isc_user_routines_33c,
                                    arg^.sym, arg^.w6 + 4, arg^.w6 + 4,
                                    7);
-            lir_main_760.sym := nil;
+            lir_main_760.il := nil;
           end
           else if lm_prolog_xfer.b11 then
             lir_$store_instruction(inh, ord(opc$storel), 0, lm_prolog_xfer.sol,
@@ -1128,7 +1129,7 @@ begin
         if not (first and lm_no_xsb) then begin
           d := v^.xl[3] - prev;
           if d <= 32767 then begin
-            lir_main_760.disp := d;
+            lir_main_760.literal_32_bits_value := d;
             lir_$simple_instruction(inh, ord(opc$add), 0, addr(lir_main_760),
                                     prev_sol, sol, nil);
             if first then
@@ -1136,7 +1137,7 @@ begin
           end
           else begin
             lir_main_400.kind := 11;
-            lir_main_400.lr := nil;
+            lir_main_400.live_range := nil;
             sh := -1;
             if (d <= 262143) and ((d & 7) = 0) then
               sh := 3
@@ -1145,31 +1146,31 @@ begin
             else if (d <= 65535) and not odd(d) then
               sh := 1
             else begin
-              lir_main_250.node := smcontk(82, d);
-              lir_main_250.w56 := 4;
+              lir_main_250.object_with_name := smcontk(82, d);
+              lir_main_250.bytes := 4;
               lir_$load_instruction(inh, ord(opc$loadl), 0, addr(lir_main_250),
                                     isc_user_routines_330, addr(lir_main_400),
                                     nil, 0, 0, 3);
             end;
             if sh >= 0 then begin
-              lir_main_760.disp := rshft(d, sh);
+              lir_main_760.literal_32_bits_value := rshft(d, sh);
               lir_$simple_instruction(inh, ord(opc$move), 0, addr(lir_main_400),
                                       addr(lir_main_760), nil, nil);
               lir_main_400.kind := 13;
-              lir_main_400.f78.shift := sh;
+              lir_main_400.f78.scale := sh;
             end;
             lir_$simple_instruction(inh, ord(opc$add), 0, addr(lir_main_400),
                                     prev_sol, sol, nil);
             lir_main_400.kind := 11;
-            lir_main_400.f78.shift := 0;
+            lir_main_400.f78.scale := 0;
           end;
         end;
-        if sol^.lr <> nil then
-          if sol^.lr^.memory_home <> nil then begin
-            lir_main_250.node := sol^.lr^.memory_home;
+        if sol^.live_range <> nil then
+          if sol^.live_range^.memory_home <> nil then begin
+            lir_main_250.object_with_name := sol^.live_range^.memory_home;
             lir_$store_instruction(inh, ord(opc$storel), 0, sol,
                                    addr(lir_main_250), isc_user_routines_340,
-                                   sol^.lr^.memory_home, 0, 0, 0);
+                                   sol^.live_range^.memory_home, 0, 0, 0);
           end;
         first := false;
         prev_sol := sol;
@@ -1219,7 +1220,7 @@ begin
   lir_$label(nd^.xp[15]);
   lir_$simple_instruction(top_level_inherited_attributes(nd), ord(opc$move), 0,
                           lir_3e60[0], isc_user_routines_328, nil, nil);
-  lir_main_760.sym := nil;
+  lir_main_760.il := nil;
   clean_up_canned_inherited;
   if nd^.xp[16] = nil then
     nd^.xp[16] := lir_$new_label;
@@ -1415,15 +1416,15 @@ begin
       else
         kind := 1;
       v := get_addr_con(kind, v, off, il_180^.xp[48], true);
-      lir_main_760.sym := v;
-      lir_main_760.disp := v^.xl[4];
+      lir_main_760.il := v;
+      lir_main_760.literal_32_bits_value := v^.xl[4];
       lir_$load_instruction(inh, ord(opc$loadl), 16#1000, addr(lir_main_760),
                             isc_user_routines_338, isc_user_routines_328,
                             nil, 0, v^.xl[4], 7);
     end
     else if vat in [1, 4] then begin
-      lir_main_760.sym := v;
-      lir_main_760.disp := v^.xl[14];
+      lir_main_760.il := v;
+      lir_main_760.literal_32_bits_value := v^.xl[14];
       lir_$simple_instruction(inh, ord(opc$add), 0, addr(lir_main_760),
                               isc_user_routines_338, isc_user_routines_328, nil);
     end
@@ -1432,7 +1433,7 @@ begin
     lir_$branch_instruction(inh, h^.xp[16], ord(opc$jump), 0);
     p := p^.next;
   end;
-  lir_main_760.sym := nil;
+  lir_main_760.il := nil;
   clean_up_canned_inherited;
 end;
 
@@ -1567,24 +1568,24 @@ begin
                                   arg^.sym,
                                   arg^.w6, arg^.w6, 7);
             if lm_epilog_xfer.quad then begin
-              lir_main_5b0.f78.reg := lir_main_5b0.f78.reg + 2;
-              lir_main_5b0.lr := nil;
-              lir_main_250.disp := 8;
+              lir_main_5b0.f78.physical_register_number := lir_main_5b0.f78.physical_register_number + 2;
+              lir_main_5b0.live_range := nil;
+              lir_main_250.literal_32_bits_value := 8;
               lir_$load_instruction(addr(lir_3b80), lm_epilog_xfer.ldst, 0,
                                     addr(lir_main_250), isc_user_routines_340,
                                     addr(lir_main_5b0),
                                     arg^.sym,
                                     arg^.w6, arg^.w6, 7);
-              lir_main_250.disp := 0;
+              lir_main_250.literal_32_bits_value := 0;
             end;
           end;
           7: begin
             lir_$simple_instruction(addr(lir_3b80), lm_epilog_xfer.opc, 0,
                                     lm_epilog_xfer.sol, addr(lir_main_5b0), nil, nil);
             if lm_epilog_xfer.quad then begin
-              lir_main_5b0.f78.reg := lir_main_5b0.f78.reg + 2;
-              lir_main_5b0.lr := nil;
-              lir_main_400.lr := lir_main_400.lr2;
+              lir_main_5b0.f78.physical_register_number := lir_main_5b0.f78.physical_register_number + 2;
+              lir_main_5b0.live_range := nil;
+              lir_main_400.live_range := lir_main_400.live_range_of_imaginary_part;
               lir_$simple_instruction(addr(lir_3b80), lm_epilog_xfer.opc, 0,
                                       addr(lir_main_400), addr(lir_main_5b0), nil, nil);
             end;
@@ -1593,8 +1594,8 @@ begin
             bug_check('LIR_MAIN_$BUILD_INITIAL_EPILOG -- unexpected result from formal_local_transfer_setup%$');
         end;
         if lm_epilog_xfer.quad then begin
-          lir_main_5b0.f78.reg := lir_main_5b0.f78.reg - 2;
-          lir_main_5b0.lr := lir_3f90[lir_main_5b0.f78.reg];
+          lir_main_5b0.f78.physical_register_number := lir_main_5b0.f78.physical_register_number - 2;
+          lir_main_5b0.live_range := lir_3f90[lir_main_5b0.f78.physical_register_number];
           num := num + 1;
           lm_forms[6].num := num;
           lm_forms[6].form := lm_form_by_loc[arg^.f18.loc];
@@ -1602,8 +1603,8 @@ begin
           build_fp_reg_pair_odd_operand(univ_ptr(addr(ret^.opnds[num])),
                                         univ_ptr(addr(ret^.opnds[num + 1])));
           num := num + 1;
-          lir_main_5b0.f78.reg := lir_main_5b0.f78.reg + 2;
-          lir_main_5b0.lr := lir_3f90[lir_main_5b0.f78.reg];
+          lir_main_5b0.f78.physical_register_number := lir_main_5b0.f78.physical_register_number + 2;
+          lir_main_5b0.live_range := lir_3f90[lir_main_5b0.f78.physical_register_number];
         end;
         num := num + 1;
         lm_forms[6].num := num;
@@ -1841,7 +1842,7 @@ begin
       add_prolog_register_read(addr(entry^.opnds[k]), addr(ins^.opnds[1]),
                                addr(lim^.opnds[num]));
       ins^.opnds[1].h.num := 1;
-      lir_main_760.disp := disp;
+      lir_main_760.literal_32_bits_value := disp;
       lir_$build_operand(addr(ins^.opnds[2]), addr(lir_main_760), attr^.opnds[2]);
       lir_$build_operand(addr(ins^.opnds[3]), isc_user_routines_340, attr^.opnds[3]);
       if opc = ord(opc$stored) then begin
@@ -2004,7 +2005,7 @@ begin
     ins^.h.width := (ins^.h.width & 16#F1) ! ((disp * 2) & 14);
     ins^.h.b2_1 := true;
     ins^.h.b2_0 := true;
-    lir_main_760.disp := disp;
+    lir_main_760.literal_32_bits_value := disp;
     lir_$build_operand(addr(ins^.opnds[1]), addr(lir_main_760), attr^.opnds[1]);
     lir_$build_operand(addr(ins^.opnds[2]), isc_user_routines_340, attr^.opnds[2]);
     add_epilog_register_write(use, addr(ins^.opnds[3]));

@@ -921,70 +921,82 @@ type
     an operand from (the ISC's matcher fills one for each operand of a
     pattern; lir_utils_$flesh_out_new_load_or_store fills post's,
     lir_main's +0x250 and +0x760 and takes isc_user_routines' +0x330 and
-    +0x340): node (+0) the object (a memory home, a constant), lr (+20)
-    the live range of a register, disp (+48) a displacement, w56 (+56)
-    4 for a constant from smcontk, reg (+78) the register of a physical
-    live range, +83 the live range's physical (bit 3), no_modify (bit
-    1) and serialize (bit 0), kind (+108) its solution$ kind (the
-    SOLUTION$ identifiers: 3 fp_reg_pair_low, 8 fp_reg, 9 fp_reg_pair,
-    11 ip_reg).  The rest by offset (build_operand reads +8, +79, +100,
-    +104).  batch A (PA5, lir_main): 432 bytes (lir_$begin_compilation
-    zeroes lir_main's five and post's with 16#1B0, and lir_main's lie
-    16#1B0 apart); lr2 (+24) the odd half's live range of a pair (the
-    formals' registers marked unique_value through +20 and +24), shift
-    (+79) a scaled index's shift (lir_main: kind 13 with the shift),
-    sym (+100) the variable an access is made for (lir_main sets it
-    around a formal's loads). }
+    +0x340): object_with_name (+0) the object (a memory home, a
+    constant), live_range (+20) the live range of a register,
+    literal_32_bits_value (+48) a displacement, bytes (+56) 4 for a
+    constant from smcontk, physical_register_number (+78) the register
+    of a physical live range, +83 the live range's physical_register
+    (bit 3), physical_register_is_no_modify (bit 1) and
+    physical_register_user_declared (bit 0), kind (+108) its solution$
+    kind (the SOLUTION$ identifiers: 3 fp_reg_pair_low, 8 fp_reg, 9
+    fp_reg_pair, 11 ip_reg).  The rest by offset (build_operand reads
+    +8, +79, +100, +104).  batch A (PA5, lir_main): 432 bytes
+    (lir_$begin_compilation zeroes lir_main's five and post's with
+    16#1B0, and lir_main's lie 16#1B0 apart);
+    live_range_of_imaginary_part (+24) the odd half's live range of a
+    pair (the formals' registers marked unique_value through +20 and
+    +24), scale (+79) a scaled index's shift (lir_main: kind 13 with
+    the shift), il (+100) the variable an access is made for (lir_main
+    sets it around a formal's loads).
+
+    The ISC's view of the same record is isc_solution_fields.ins.pas's
+    isc_solution_t (every field; this insert cannot open it: sym and
+    other units that read a solution open no ISC insert).  The fields
+    named here carry the same names, the image's (dump_solution prints
+    each after its name: docs/questions.md 267, 250); the unnamed ones
+    are by offset. }
   solution_ptr_t = ^solution_t;
   solution_t = record
-    node: univ_ptr;                     { +0 }
-    l4: integer32;                      { +4 }
-    l8: integer32;                      { +8 }
+    object_with_name: univ_ptr;         { +0 }
+    base_register: integer32;           { +4 }
+    index_register: integer32;          { +8 }
     l12: integer32;                     { +12 }
-    l16: integer32;                     { +16 }
-    lr: lr_ptr_t;                       { +20 }
-    lr2: lr_ptr_t;                      { +24 }
-    l28: integer32;                     { +28: added to disp
+    false_label: integer32;             { +16 }
+    live_range: lr_ptr_t;               { +20 }
+    live_range_of_imaginary_part: lr_ptr_t;     { +24 }
+    advancing_displacement: integer32;  { +28: added to
+                                          literal_32_bits_value
                                           (lir_$build_operand; batch A,
                                           PA7) }
     space32: array [32..47] of char;    { +32 }
-    disp: integer32;                    { +48 }
-    l52: integer32;                     { +52 }
-    w56: integer;                       { +56 }
+    literal_32_bits_value: integer32;   { +48 }
+    pass_1_size: integer32;             { +52 }
+    bytes: integer;                     { +56 }
     space58: array [58..77] of char;    { +58 }
     f78: packed record                  { +78 }
-      reg: 0..255;                      { +78 }
-      shift: 0..255;                    { +79 (was b79) }
-      b80: 0..255;                      { +80 }
+      physical_register_number: 0..255; { +78 }
+      scale: 0..255;                    { +79 }
+      slevel_attribute: 0..255;         { +80 }
       b81: 0..255;                      { +81 }
-      b82_7: boolean;                   { +82 .7: with b84_6, a
+      has_a_symbolic_displacement: boolean;     { +82 .7: with
+                                          uses_the_displacement, a
                                           constant that must stay in a
                                           register (lir_$build_operand) }
       b82_6_0: 0..127;
       b83_7_4: 0..15;                   { +83 }
-      physical: boolean;                { .3 }
-      b83_2: boolean;
-      no_modify: boolean;               { .1 }
-      serialize: boolean;               { .0 }
+      physical_register: boolean;       { .3 }
+      physical_register_from_function_call: boolean;    { .2 }
+      physical_register_is_no_modify: boolean;  { .1 }
+      physical_register_user_declared: boolean; { .0 }
       end;
     f84: packed record                  { +84 (batch A, PA7) }
-      b84_7: boolean;
-      b84_6: boolean;                   { .6: a constant (built by its
+      uses_the_base_register: boolean;  { .7 }
+      uses_the_displacement: boolean;   { .6: a constant (built by its
                                           literal_32_bits action, or as an
                                           immediate) }
-      b84_5: boolean;                   { .5: an integer register through
-                                          the solution at +8 (l8) }
+      uses_the_index_register: boolean; { .5: an integer register
+                                          through the solution at +8
+                                          (index_register) }
       b84_4_0: 0..31;
       b85: 0..255;
       end;
     space86: array [86..99] of char;    { +86 }
-    sym: univ_ptr;                      { +100 (was l100) }
-    l104: univ_ptr;                     { +104: the statement whose
+    il: univ_ptr;                       { +100 }
+    inherited_attributes: univ_ptr;     { +104: the statement whose
                                           line (+32) lir_$build_operand's
-                                          dump prints (batch A, PA7: was
-                                          integer32) }
+                                          dump prints (batch A, PA7) }
     kind: integer;                      { +108 }
-    w110: integer;                      { +110 }
+    memory_references: integer;         { +110 }
     space112: array [112..431] of char; { +112 }
   end;
 

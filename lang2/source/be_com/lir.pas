@@ -160,7 +160,8 @@ type
   end;
 
   { An instruction's +32 as words: the line add_instruction_to_basic_block
-    keeps (the inherited attributes' w34 an instruction is made with). }
+    keeps (the inherited attributes' stmt_number an instruction is
+    made with). }
   lir_ipos_ptr_t = ^lir_ipos_t;
   lir_ipos_t = record
     space0: array [0..31] of char;      { +0 }
@@ -491,10 +492,10 @@ var
   p: ^lir_inherited_t;
 begin
   p := attrs;
-  if flag_ptr_t(p^.node)^.b7 then
-    true_il := univ_ptr(p^.l12)
+  if flag_ptr_t(p^.il)^.b7 then
+    true_il := univ_ptr(p^.original_il)
   else
-    true_il := p^.node;
+    true_il := p^.il;
 end;
 
 { zero - n bytes from p cleared, a longword at a time ((n + 3) div 4 of
@@ -556,20 +557,20 @@ begin
           name[1] := 'R';
           lir_3e60[k] := isc_$init_well_known_ip_reg(name, k);
         end;
-        lir_main_ac0[k] := lir_3e60[k]^.node;
+        lir_main_ac0[k] := lir_3e60[k]^.object_with_name;
       end;
     end
     else if which > 0 then begin
       name[1] := 'F';
       lir_3d60[k] := isc_$init_well_known_fp_reg(name, k);
-      lir_main_b40[k] := lir_3d60[k]^.node;
+      lir_main_b40[k] := lir_3d60[k]^.object_with_name;
     end
     else if odd(k) then
       lir_3c60[k] := nil
     else begin
       name[1] := 'X';
       lir_3c60[k] := isc_$init_well_known_fp_reg_pair(name, k);
-      lir_3c60[k]^.node := lir_main_b40[k];
+      lir_3c60[k]^.object_with_name := lir_main_b40[k];
     end;
   end;
 end;
@@ -597,7 +598,7 @@ begin
   zero(addr(lir_main_760), 16#1B0);
   lir_main_760.kind := 14;
   zero(addr(lir_main_5b0), 16#1B0);
-  lir_main_5b0.f78.physical := true;
+  lir_main_5b0.f78.physical_register := true;
   zero(addr(ra_utils_10), 16#1B0);
   zero(addr(lir_main_400), 16#1B0);
   zero(addr(lir_main_250), 16#1B0);
@@ -635,7 +636,7 @@ begin
   isc_user_routines_328 := isc_$init_well_known_ip_reg('ER  ', -1);
   isc_user_routines_334 := isc_$init_well_known_ip_reg('LB  ', -1);
   isc_user_routines_340 := isc_$init_well_known_ip_reg('SF  ', -1);
-  lir_41ac := isc_user_routines_340^.node;
+  lir_41ac := isc_user_routines_340^.object_with_name;
   lir_41b0 := nil;
   lir_41b4 := mrh_$mark(lir_3c00);
   lir_41c8 := mrh_$mark(lir_ea8);
@@ -683,8 +684,8 @@ begin
 end;
 
 { LIR_$COMPLETE_TOP_LEVEL_NODE_INHERITED_ATTRS - for a statement of one
-  of twenty kinds, attrs' l4 the statement's +12, w34 its +43..+44
-  word, w32 its +20 word.
+  of twenty kinds, attrs' exception_frame the statement's +12,
+  stmt_number its +43..+44 word, source_line_number its +20 word.
 
   0x242E7E, 0x58 bytes: the kinds a constant set after the routine
   (`btst' of 0x242ED6, the elements 239..0). }
@@ -711,9 +712,9 @@ begin
   s := true_il(attrs);
   if s^.kind in [139, 140, 141, 142, 144, 148, 149, 150, 151, 188, 191,
                  214, 215, 223, 224, 225, 227, 228, 231, 233] then begin
-    p^.l4 := s^.l12;
-    p^.w34 := rshft(s^.l42 & 16#FFFF00, 8);
-    p^.w32 := s^.w20;
+    p^.exception_frame := s^.l12;
+    p^.stmt_number := rshft(s^.l42 & 16#FFFF00, 8);
+    p^.source_line_number := s^.w20;
   end;
 end;
 
@@ -729,7 +730,7 @@ end;
   none (the operand dropped), 13 home given (its alias descriptor
   made), 21 the atomic sequence begins, 22 a volatile location, 24 the
   descriptor inexact, 27 do not delete (lir$do_not_delete: stores
-  only).  A new statement (attrs' w34) after more than 1000
+  only).  A new statement (attrs' stmt_number) after more than 1000
   instructions in the block, or the atomic sequence's start, ends the
   block (lir_4222, lir_421c).
 
@@ -773,8 +774,8 @@ begin
   end
   else begin
     lir_$complete_top_level_node_inherited_attrs(attrs);
-    lir_41ec := attrs^.l20;
-    line := attrs^.w34;
+    lir_41ec := attrs^.call_instruction_ptr;
+    line := attrs^.stmt_number;
   end;
   cls := a^.class;
   lir_2f58.class := chr(cls);
@@ -1714,8 +1715,8 @@ begin
   op^.h.num := form.num;
   action := build_action[sol^.kind, form.form].v;
   if action = 0 then begin
-    if sol^.f84.b84_6 then begin
-      if not sol^.f78.b82_7 then
+    if sol^.f84.uses_the_displacement then begin
+      if not sol^.f78.has_a_symbolic_displacement then
         action := build_action[14, form.form].v
       else if form.form in [8, 10, 11, 21, 24, 25, 26, 27, 28, 29, 30, 31,
                             36, 37, 39, 40, 42] then
@@ -1723,15 +1724,15 @@ begin
       else
         action := 29;
     end
-    else if sol^.f84.b84_5 then begin
+    else if sol^.f84.uses_the_index_register then begin
       if not (form.form in [6, 7, 9, 10, 11, 12, 14, 16, 18, 21, 23, 26, 27,
                             28, 29, 30, 31, 33, 34, 36, 39, 42]) then begin
         n := form.num;
         bug_check('LIR_$BUILD_OPERAND -- %a cannot take IP register as operand #%ld%$',
                   instruction_mnemonic[lir_2f58.opc], 12, n);
       end;
-      sol := solution_ptr_t(sol^.l8);
-      if sol^.f78.shift = 0 then
+      sol := solution_ptr_t(sol^.index_register);
+      if sol^.f78.scale = 0 then
         action := build_action[11, form.form].v
       else if form.form in [3, 7, 10, 21, 33, 34, 36, 37, 39, 42] then
         action := build_action[13, form.form].v
@@ -1754,65 +1755,65 @@ begin
   end
   else begin
     if action = 3 then begin
-      if (sol^.disp < 0) and ((sol^.disp & 16#FFFF) <> 0) then
+      if (sol^.literal_32_bits_value < 0) and ((sol^.literal_32_bits_value & 16#FFFF) <> 0) then
         action := 17
       else
         action := 2;
     end
     else if action = 1 then begin
-      if ((~sol^.disp) & 16#FFFF) = 0 then
+      if ((~sol^.literal_32_bits_value) & 16#FFFF) = 0 then
         action := 7
-      else if ((~sol^.disp) & 16#FFFF0000) = 0 then
+      else if ((~sol^.literal_32_bits_value) & 16#FFFF0000) = 0 then
         action := 12
       else
         action := 2;
     end;
     if action = 2 then
-      if sol^.disp = 0 then begin
+      if sol^.literal_32_bits_value = 0 then begin
         sol := isc_user_routines_320;
         action := 21;
       end
-      else if (sol^.disp & 16#FFFF) <> 0 then
+      else if (sol^.literal_32_bits_value & 16#FFFF) <> 0 then
         action := 11
       else
         action := 6;
   end;
-  if sol^.f78.shift <> 0 then
+  if sol^.f78.scale <> 0 then
     if action <> 20 then
       bug_check('LIR_$BUILD_OPERAND -- unexpected non-zero scale factor: %wd, %a%$',
-                sol^.f78.shift, instruction_mnemonic[lir_2f58.opc], 12)
-    else if sol^.f78.shift > 3 then
+                sol^.f78.scale, instruction_mnemonic[lir_2f58.opc], 12)
+    else if sol^.f78.scale > 3 then
       bug_check('LIR_$BUILD_OPERAND -- scale factor greater than 3: %wd, %a%$',
-                sol^.f78.shift, instruction_mnemonic[lir_2f58.opc], 12);
+                sol^.f78.scale, instruction_mnemonic[lir_2f58.opc], 12);
   if action in [21, 22, 23] then
-    if sol^.lr <> nil then
-      if sol^.f78.physical or sol^.lr^.f2.physical then
-        if (sol^.f78.reg <> sol^.lr^.f2.reg)
-           or (sol^.f78.serialize <> sol^.lr^.f2.serialize)
-           or (sol^.f78.physical <> sol^.lr^.f2.physical)
-           or (sol^.f78.no_modify <> sol^.lr^.f2.no_modify) then begin
+    if sol^.live_range <> nil then
+      if sol^.f78.physical_register or sol^.live_range^.f2.physical then
+        if (sol^.f78.physical_register_number <> sol^.live_range^.f2.reg)
+           or (sol^.f78.physical_register_user_declared <> sol^.live_range^.f2.serialize)
+           or (sol^.f78.physical_register <> sol^.live_range^.f2.physical)
+           or (sol^.f78.physical_register_is_no_modify <> sol^.live_range^.f2.no_modify) then begin
           writeln('* * * * Physical register attributes are different');
-          if sol^.l104 <> nil then begin
-            writeln('at source line ', stmt_v_ptr_t(sol^.l104)^.line:1, '.');
+          if sol^.inherited_attributes <> nil then begin
+            writeln('at source line ', stmt_v_ptr_t(sol^.inherited_attributes)^.line:1, '.');
           end;
           writeln('                                     sol^.    sol^.live_range^.');
           writeln('---------------------------------------------------------------');
-          writeln('physical_register                    ', sol^.f78.physical:5, '   ', sol^.lr^.f2.physical:5);
-          writeln('physical_register_is_no_modify       ', sol^.f78.no_modify:5, '   ', sol^.lr^.f2.no_modify:5);
-          writeln('physical_register_user_declared      ', sol^.f78.serialize:5, '   ', sol^.lr^.f2.serialize:5);
-          v1 := sol^.f78.reg;
-          v2 := sol^.lr^.f2.reg;
+          writeln('physical_register                    ', sol^.f78.physical_register:5, '   ', sol^.live_range^.f2.physical:5);
+          writeln('physical_register_is_no_modify       ', sol^.f78.physical_register_is_no_modify:5, '   ', sol^.live_range^.f2.no_modify:5);
+          writeln('physical_register_user_declared      ', sol^.f78.physical_register_user_declared:5, '   ', sol^.live_range^.f2.serialize:5);
+          v1 := sol^.f78.physical_register_number;
+          v2 := sol^.live_range^.f2.reg;
           writeln('physical_register_number             ', v1:5, '   ', v2:5);
           writeln('solution_kind                        ', sol^.kind);
           writeln;
-          sol^.f78.physical := sol^.lr^.f2.physical;
-          sol^.f78.no_modify := sol^.lr^.f2.no_modify;
-          sol^.f78.serialize := sol^.lr^.f2.serialize;
-          sol^.f78.reg := sol^.lr^.f2.reg;
+          sol^.f78.physical_register := sol^.live_range^.f2.physical;
+          sol^.f78.physical_register_is_no_modify := sol^.live_range^.f2.no_modify;
+          sol^.f78.physical_register_user_declared := sol^.live_range^.f2.serialize;
+          sol^.f78.physical_register_number := sol^.live_range^.f2.reg;
         end;
   if action in [21, 22, 23] then
-    if sol^.lr <> nil then begin
-      lr := sol^.lr;
+    if sol^.live_range <> nil then begin
+      lr := sol^.live_range;
       if ((action = 21) and (rrp$fp_reg in lr^.rrp))
          or ((action <> 21) and (rrp$ip_reg in lr^.rrp)) then begin
         n := form.num;
@@ -1820,19 +1821,19 @@ begin
                   lr^.num, instruction_mnemonic[lir_2f58.opc], 12, n);
       end;
       if lr^.f2.physical then
-        if (sol^.f78.reg <> lr^.f2.reg)
-           or (sol^.f78.serialize <> lr^.f2.serialize)
-           or (sol^.f78.no_modify <> lr^.f2.no_modify)
-           or not sol^.f78.physical then
+        if (sol^.f78.physical_register_number <> lr^.f2.reg)
+           or (sol^.f78.physical_register_user_declared <> lr^.f2.serialize)
+           or (sol^.f78.physical_register_is_no_modify <> lr^.f2.no_modify)
+           or not sol^.f78.physical_register then
           bug_check('LIR_$BUILD_OPERAND -- assigned LR properties not propagated to solution%$');
     end;
-  if sol^.f78.physical then
+  if sol^.f78.physical_register then
     action := build_physical[action].v;
   opnd_bytes_ptr_t(op)^.b3 := (opnd_bytes_ptr_t(op)^.b3 & 16#E0) ! build_kind[action].v;
   rrp := build_properties[action];
   access := rshft(form.b2 & 16#C0, 6);
   rrp := rrp + build_access[access];
-  disp := sol^.disp + sol^.l28;
+  disp := sol^.literal_32_bits_value + sol^.advancing_displacement;
   readmod := false;
   case action of
     5: goto 50;
@@ -1848,12 +1849,12 @@ begin
 50:
       if (disp < target_properties.p_60) or (disp > target_properties.p_5c) then
         goto 90;
-      if sym_$reformat_literal_operand(sol^.node, sol^.w56, disp, op) then begin
+      if sym_$reformat_literal_operand(sol^.object_with_name, sol^.bytes, disp, op) then begin
         if op^.h.kind <> operand$displacement_literal_pool then
           bug_check('LIR_$BUILD_OPERAND -- improper literal pool operand%$');
       end
       else begin
-        nd := sol^.node;
+        nd := sol^.object_with_name;
         if nd^.kind = 109 then begin
           if nd^.w72 in [1, 3, 4, 7, 8, 10, 11] then begin
             disp := disp + nd^.l56;
@@ -1880,13 +1881,13 @@ begin
         end
         else
           flags := 0;
-        op^.link := sol^.node;
+        op^.link := sol^.object_with_name;
         if ((flags & 16#400) <> 0) and ((flags & 16#40000000) = 0) then
           op^.h.kind := operand$displacement_arg_block
         else
           op^.h.kind := operand$displacement_stack_frame;
       end;
-      al := alignment_from_il_node(sol^.node);
+      al := alignment_from_il_node(sol^.object_with_name);
       mask := ord(operand_forms_mask[form.form]);
       if ((disp ! lshft(-1, al)) & mask) <> 0 then begin
         v1 := disp & mask;
@@ -1908,30 +1909,30 @@ begin
       end;
       if (disp < build_low_bound[action]) or (disp > build_high_bound[action]) then
         goto 90;
-      nd := sol^.node;
+      nd := sol^.object_with_name;
       if nd = nil then
-        nd := sol^.sym
+        nd := sol^.il
       else if not (nd^.kind in [77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
                                 89, 90, 92, 93, 101, 109, 110, 156, 163, 176,
                                 198, 200]) then
-        nd := sol^.sym;
+        nd := sol^.il;
       op^.link := sym_$object_with_immediate_disp(nd);
       op^.value := disp;
       goto 80;
 60:
       if disp <> 0 then
         goto 90;
-      op^.link := sol^.node;
+      op^.link := sol^.object_with_name;
       op^.value := disp;
       goto 80;
 70:
-      disp := sol^.f78.reg;
+      disp := sol^.f78.physical_register_number;
       if disp = 30 then
         goto 90;
       if disp = 31 then
         op^.h.count := 0
       else
-        op^.h.count := sol^.f78.shift;
+        op^.h.count := sol^.f78.scale;
       if disp > 31 then
         goto 90;
       goto 20;
@@ -1941,9 +1942,9 @@ begin
       op^.value := lir_41a8;
       goto 80;
 72:
-      if sol^.f78.reg < 30 then
+      if sol^.f78.physical_register_number < 30 then
         goto 20;
-      if sol^.f78.reg = 30 then begin
+      if sol^.f78.physical_register_number = 30 then begin
         op^.value := lir_41a8;
         op^.h.kind := operand$ip_reg_like;
       end
@@ -1957,13 +1958,13 @@ begin
       end;
       goto 80;
 20:
-      reg := sol^.f78.reg;
+      reg := sol^.f78.physical_register_number;
       lr := build_physical_lrs[action]^[reg];
-      if sol^.lr = nil then
-        sol^.lr := lr
+      if sol^.live_range = nil then
+        sol^.live_range := lr
       else if lir_422a then
-        lr := sol^.lr
-      else if sol^.lr <> lr then
+        lr := sol^.live_range
+      else if sol^.live_range <> lr then
         bug_check('LIR_$BUILD_OPERAND -- multiple physical live_ranges!%$');
       if lr^.f2.no_modify then begin
         opnd_bytes_ptr_t(op)^.b3 := (opnd_bytes_ptr_t(op)^.b3 & 16#E0) ! build_like_kind[action].v;
@@ -1986,11 +1987,11 @@ begin
       if not (instruction_attributes[lir_2f58.opc].class in
               [0, 3, 8, 12, 15, 16, 17, 21, 22, 23]) then
         goto 30;
-      nd := sol^.sym;
+      nd := sol^.il;
       if nd <> nil then
         if nd^.kind = 203 then
-          if ((build_arg_loc[action].v = nd^.w4) and (sol^.f78.reg = nd^.w6))
-             or ((nd^.w6 = (sol^.f78.reg & 16#FE)) and (action = 27)
+          if ((build_arg_loc[action].v = nd^.w4) and (sol^.f78.physical_register_number = nd^.w6))
+             or ((nd^.w6 = (sol^.f78.physical_register_number & 16#FE)) and (action = 27)
                  and (nd^.w4 = 2)) then begin
             lir_2f58.l28 := lir_2f58.l28 ! 16#8000;
             goto 30;
@@ -2014,8 +2015,8 @@ begin
       goto 30;
 75:
       if action = 20 then
-        op^.h.count := sol^.f78.shift;
-      lr := sol^.lr;
+        op^.h.count := sol^.f78.scale;
+      lr := sol^.live_range;
       if lr <> nil then
         goto 40;
       if not (rrp$write in rrp) then
@@ -2023,7 +2024,7 @@ begin
                   instruction_mnemonic[lir_2f58.opc], 12);
       lr := lir_$new_live_range_for_kind(ord(op^.h.kind));
 30:
-      sol^.lr := lr;
+      sol^.live_range := lr;
 40:
       if sol^.kind in [2, 3, 9] then begin
         if lr^.mate = nil then begin
@@ -2280,14 +2281,14 @@ begin
   hw.h := i^.h;
   src := lir_inherited_ptr_t(i^.l32);
   if src <> nil then
-    if src^.l4 <> lir_41e4 then begin
+    if src^.exception_frame <> lir_41e4 then begin
       cls := a^.class;
       if not ((cls in [class$branch, class$fp_branch])
               and (ord(i^.opnds[1].h.kind) in [15, 16])) then
         if not (cls in [4, 6, 10, 14, 18, 19, 24, 26]) then begin
           if not ((i^.opc = ord(opc$call)) and odd(hw.h.lsq)) then
             lir_421c := true;
-          lir_41e4 := src^.l4;
+          lir_41e4 := src^.exception_frame;
           lir_4222 := true;
         end;
     end;
@@ -2544,7 +2545,7 @@ begin
   i^.h := hw.h;
   src := lir_inherited_ptr_t(i^.l32);
   if src <> nil then begin
-    lir_ipos_ptr_t(i)^.line := src^.w34;
+    lir_ipos_ptr_t(i)^.line := src^.stmt_number;
     lir_ipos_ptr_t(i)^.w34 := 0;
   end;
   if (flags & 16#2000000) <> 0 then begin
@@ -2579,7 +2580,7 @@ begin
       xb := univ_ptr(xop);
       xb^.b3 := (xb^.b3 & 16#E0) ! 28;
       xop^.h.num := k;
-      exs_$start_exception_handler_enquiry(univ_ptr(src^.l4), true_il(src),
+      exs_$start_exception_handler_enquiry(univ_ptr(src^.exception_frame), true_il(src),
           isbr, false, handled, exc, lir_exc_opnd_ptr_t(xop)^.handler,
           lir_exc_opnd_ptr_t(xop)^.flag, lir_exc_opnd_ptr_t(xop)^.word);
       if exc <> nil then
@@ -2840,7 +2841,7 @@ begin
     bug_check('LIR_$TRAP_INSTRUCTION -- illegal opcode: %a%$',
               instruction_mnemonic[opc], 12);
   lir_$complete_top_level_node_inherited_attrs(attrs);
-  exs_$exception_raise_strategy(univ_ptr(attrs^.l4), true_il(attrs), handled,
+  exs_$exception_raise_strategy(univ_ptr(attrs^.exception_frame), true_il(attrs), handled,
                                 exc, handler);
   if handled then begin
     lab := prolog_label_for_specific_exception(handler, exc);
@@ -2889,9 +2890,9 @@ var
   n: integer;
 begin
   if opc = ord(opc$cmp) then
-    if ((sol1^.kind = 14) and (sol1^.disp = 0))
-       or ((sol1^.f78.reg = 31) and (sol1^.kind = 11)
-           and sol1^.f78.physical) then begin
+    if ((sol1^.kind = 14) and (sol1^.literal_32_bits_value = 0))
+       or ((sol1^.f78.physical_register_number = 31) and (sol1^.kind = 11)
+           and sol1^.f78.physical_register) then begin
       opc := ord(opc$tst);
       sol1 := sol2;
     end;
@@ -2905,14 +2906,14 @@ begin
     goto 99;
   end;
   if instruction_attributes[opc].b6_0 then
-    if (sol1^.kind = sol2^.kind) and (sol1^.f78.shift = sol2^.f78.shift)
-       and (sol1^.f78.physical = sol2^.f78.physical) then
-      if sol1^.f78.physical then begin
-        if sol1^.f78.reg = sol2^.f78.reg then
+    if (sol1^.kind = sol2^.kind) and (sol1^.f78.scale = sol2^.f78.scale)
+       and (sol1^.f78.physical_register = sol2^.f78.physical_register) then
+      if sol1^.f78.physical_register then begin
+        if sol1^.f78.physical_register_number = sol2^.f78.physical_register_number then
           goto 99;
       end
-      else if sol2^.lr <> nil then
-        if sol2^.lr = sol1^.lr then
+      else if sol2^.live_range <> nil then
+        if sol2^.live_range = sol1^.live_range then
           goto 99;
   begin_instruction(attrs, opc, flags, nil, 0);
   n := instruction_attributes[opc].nresults;
@@ -3008,7 +3009,7 @@ begin
     lir_421c := true;
     if (ord(il_180^.xc[374]) & 16#20) = 0 then begin
       begin_instruction(attrs, ord(opc$and), 0, nil, 0);
-      lir_main_760.disp := -4;
+      lir_main_760.literal_32_bits_value := -4;
       lir_$build_operand(addr(lir_2f58.opnds[1]), addr(lir_main_760),
           instr_attr_view_ptr_t(addr(instruction_attributes[ord(opc$and)]))^.opnds[1]);
       lir_$build_operand(addr(lir_2f58.opnds[2]), isc_user_routines_330,
@@ -3022,8 +3023,8 @@ begin
   if home <> nil then
     flags := flags ! 16#2000;
   if sol_a^.kind = 14 then
-    if sol_a^.disp < 0 then
-      if sol_b^.lr = isc_user_routines_338^.lr then begin
+    if sol_a^.literal_32_bits_value < 0 then
+      if sol_b^.live_range = isc_user_routines_338^.live_range then begin
         flags := flags ! 16#1000;
         flags := flags & (~16#2000);
       end;
@@ -3032,17 +3033,17 @@ begin
       bug_check('LIR_$LOAD_INSTRUCTION -- advancing_address_mode but B operand is not NIL%$');
     sol_b := sol_a;
     sz := lshft(1, instruction_attributes[opc].w18 & 7);
-    adv := sol_a^.l28;
+    adv := sol_a^.advancing_displacement;
     save := adv;
     bits := bits + adv;
     adv := adv + sz;
     if (flags & 16#20) <> 0 then begin
-      sol_a^.l28 := adv;
-      lir_main_760.disp := sz;
+      sol_a^.advancing_displacement := adv;
+      lir_main_760.literal_32_bits_value := sz;
       sol_a := addr(lir_main_760);
     end;
     if sol_b^.kind = 5 then
-      sol_b := solution_ptr_t(sol_b^.l4);
+      sol_b := solution_ptr_t(sol_b^.base_register);
   end
   else
     save := 0;
@@ -3065,7 +3066,7 @@ begin
   if (flags & 48) <> 0 then
     convert_to_intend_to_modify(univ_ptr(addr(lir_2f58.opnds[2])))
   else if (flags & 16#40) <> 0 then
-    sol_a^.l28 := adv;
+    sol_a^.advancing_displacement := adv;
   lir_$complete_instruction(copy_build_instruction);
 end;
 
@@ -3211,25 +3212,25 @@ begin
               instruction_mnemonic[opc], 12);
   if home <> nil then
     flags := flags ! 16#2000;
-  if sol_b^.sym <> nil then
-    if sym_v_ptr_t(sol_b^.sym)^.kind = 204 then
+  if sol_b^.il <> nil then
+    if sym_v_ptr_t(sol_b^.il)^.kind = 204 then
       flags := flags ! 16#8000;
   if (flags & 16#40) <> 0 then begin
     if sol_c <> nil then
       bug_check('LIR_$STORE_INSTRUCTION -- advancing_address_mode but B operand is not NIL%$');
     sol_c := sol_b;
     sz := lshft(1, instruction_attributes[opc].w18 & 7);
-    adv := sol_b^.l28;
+    adv := sol_b^.advancing_displacement;
     save := adv;
     bits := bits + adv;
     adv := adv + sz;
     if (flags & 16#20) <> 0 then begin
-      sol_b^.l28 := adv;
-      lir_main_760.disp := sz;
+      sol_b^.advancing_displacement := adv;
+      lir_main_760.literal_32_bits_value := sz;
       sol_b := addr(lir_main_760);
     end;
     if sol_c^.kind = 5 then
-      sol_c := solution_ptr_t(sol_c^.l4);
+      sol_c := solution_ptr_t(sol_c^.base_register);
   end
   else
     save := 0;
@@ -3254,7 +3255,7 @@ begin
   if (flags & 48) <> 0 then
     convert_to_intend_to_modify(univ_ptr(addr(lir_2f58.opnds[3])))
   else if (flags & 16#40) <> 0 then
-    sol_b^.l28 := adv;
+    sol_b^.advancing_displacement := adv;
   lir_$complete_instruction(copy_build_instruction);
 end;
 
@@ -3481,7 +3482,7 @@ begin
   a := addr(instruction_attributes[instr^.opc]);
   n.l := instruction_attributes[instr^.opc].nresults;
   if target^.kind = 5 then
-    target := solution_ptr_t(target^.l4);
+    target := solution_ptr_t(target^.base_register);
   lir_$build_operand(addr(instr^.opnds[1]), target, a^.opnds[1]);
   lir_$build_operand(addr(instr^.opnds[2]), sol2, a^.opnds[2]);
   if instr^.opc = ord(opc$call) then begin
@@ -3696,8 +3697,8 @@ begin
   rtn^.f226.internal_db := ((ord(node^.xc[379]) & 16#40) = 0) and conv^.nested;
   zero(addr(lir_3b80), 40);
   stmt := node^.xp[25];
-  lir_3b80.l4 := integer32(stmt^.xp[3]);
-  lir_3b80.w34 := (ord(stmt^.xc[43]) * 256) ! ord(stmt^.xc[44]);
+  lir_3b80.exception_frame := integer32(stmt^.xp[3]);
+  lir_3b80.stmt_number := (ord(stmt^.xc[43]) * 256) ! ord(stmt^.xc[44]);
   lir_main_$reinit_physical_regs(rtn, conv, 0);
   lir_main_$reinit_physical_regs(rtn, conv, 1);
   lir_main_$reinit_physical_regs(rtn, conv, -1);
@@ -3733,10 +3734,10 @@ begin
   rtn^.l112 := lts_ptr_t(lir_main_$add_live_range(lir_main_da0, -1));
   lr_ptr_t(rtn^.l112)^.memory_home := lr_ptr_t(rtn^.l112)^.node20;
   if lir_41b0 <> nil then begin
-    r := lir_41b0^.f78.reg;
-    lir_41b0^.lr := lir_4090[r];
-    lir_41b0^.lr^.node20 := lir_main_ac0[r];
-    lir_41b0^.node := lir_main_ac0[r];
+    r := lir_41b0^.f78.physical_register_number;
+    lir_41b0^.live_range := lir_4090[r];
+    lir_41b0^.live_range^.node20 := lir_main_ac0[r];
+    lir_41b0^.object_with_name := lir_main_ac0[r];
     lir_3e60[r] := lir_41b0;
     lir_41b0 := nil;
   end;
@@ -3766,7 +3767,7 @@ begin
         end;
         if not lr^.f2.no_modify then begin
           lr^.f2.serialize := true;
-          sol^.f78.serialize := true;
+          sol^.f78.physical_register_user_declared := true;
           mask^ := mask^ + [reg & 31];
           lir_41f4 := lir_41f4 + 1;
           lr^.node20 := q;
@@ -3774,8 +3775,8 @@ begin
         if hi = 2 then
           if not lir_3f90[reg + 1]^.f2.no_modify then begin
             lir_3f90[reg + 1]^.f2.serialize := true;
-            lir_3d60[reg + 1]^.f78.serialize := true;
-            lir_3c60[reg]^.f78.serialize := true;
+            lir_3d60[reg + 1]^.f78.physical_register_user_declared := true;
+            lir_3c60[reg]^.f78.physical_register_user_declared := true;
             mask^ := mask^ + [(reg + 1) & 31];
             lir_41f4 := lir_41f4 + 1;
           end;
@@ -3785,14 +3786,14 @@ begin
     end;
     p := p^.next;
   end;
-  isc_user_routines_340^.node := lir_41ac;
+  isc_user_routines_340^.object_with_name := lir_41ac;
   rtn^.frame_lr := lir_main_$add_ip_reg_physical_lr(isc_user_routines_340,
                                                     conv^.w20);
   lr := rtn^.frame_lr;
   node^.xp[14] := lr^.node20;
-  isc_user_routines_340^.f78.no_modify := lr^.f2.no_modify;
-  isc_user_routines_340^.f78.serialize := lr^.f2.serialize;
-  isc_user_routines_340^.f78.reg := lr^.f2.reg;
+  isc_user_routines_340^.f78.physical_register_is_no_modify := lr^.f2.no_modify;
+  isc_user_routines_340^.f78.physical_register_user_declared := lr^.f2.serialize;
+  isc_user_routines_340^.f78.physical_register_number := lr^.f2.reg;
   lir_41b0 := lir_3e60[conv^.w20];
   lir_3e60[conv^.w20] := isc_user_routines_340;
   if lir_4090[conv^.w16]^.f2.no_modify then
@@ -3801,14 +3802,14 @@ begin
     lr := lir_main_$add_live_range(isc_user_routines_338, -1);
   rtn^.db_lr := lr;
   node^.xp[13] := lr^.node20;
-  isc_user_routines_338^.f78.physical := lr^.f2.physical;
-  isc_user_routines_338^.f78.no_modify := lr^.f2.no_modify;
+  isc_user_routines_338^.f78.physical_register := lr^.f2.physical;
+  isc_user_routines_338^.f78.physical_register_is_no_modify := lr^.f2.no_modify;
   if conv^.b30 then
-    isc_user_routines_32c^.lr := isc_user_routines_33c^.lr
+    isc_user_routines_32c^.live_range := isc_user_routines_33c^.live_range
   else
-    isc_user_routines_32c^.lr := lir_main_$add_live_range(isc_user_routines_32c, -1);
-  rtn^.l120 := isc_user_routines_32c^.lr;
-  node^.xp[15] := isc_user_routines_32c^.lr^.node20;
+    isc_user_routines_32c^.live_range := lir_main_$add_live_range(isc_user_routines_32c, -1);
+  rtn^.l120 := isc_user_routines_32c^.live_range;
+  node^.xp[15] := isc_user_routines_32c^.live_range^.node20;
   lir_4090[30] := addr(lir_d88);
   lir_4090[31] := addr(lir_de0);
 end;

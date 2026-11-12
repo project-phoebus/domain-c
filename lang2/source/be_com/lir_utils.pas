@@ -743,7 +743,7 @@ end;
   flags, desc's kind, form desc^.form), for a pair (kind 9) reg2 the
   odd half (lts2, form2) and reg even, reg2 odd; the address: with no
   home, a frame temporary (base from isc_user_routines_330, the home a
-  constant 0.0 for a pair, else smcontk(81, 0) with lir_main_250's w56
+  constant 0.0 for a pair, else smcontk(81, 0) with lir_main_250's bytes
   4); a static home through the DB register (the routine needs it: at
   _backend_4fc's needs_db; db_lts, made by new_db_lts the first time,
   read by a new ip_reg operand, its displacement sym_$displacement in
@@ -788,19 +788,19 @@ begin
   lts^.rrp := rrp$set_t(integer(lts^.rrp) ! integer(desc^.rrp));
   lr^.rrp := rrp$set_t(integer(lr^.rrp) ! integer(desc^.rrp));
   ra_utils_10.kind := desc^.kind;
-  ra_utils_10.lr := lr;
-  ra_utils_10.f78.physical := lr^.f2.physical;
-  ra_utils_10.f78.no_modify := lr^.f2.no_modify;
-  ra_utils_10.f78.serialize := lr^.f2.serialize;
-  ra_utils_10.f78.reg := lr^.f2.reg;
+  ra_utils_10.live_range := lr;
+  ra_utils_10.f78.physical_register := lr^.f2.physical;
+  ra_utils_10.f78.physical_register_is_no_modify := lr^.f2.no_modify;
+  ra_utils_10.f78.physical_register_user_declared := lr^.f2.serialize;
+  ra_utils_10.f78.physical_register_number := lr^.f2.reg;
   lir_$build_operand(reg, addr(ra_utils_10), desc^.form);
   reg^.lts := lts;
   if desc^.kind = 9 then begin
     lr := lts2^.lr;
     lts2^.rrp := rrp$set_t(integer(lts2^.rrp) ! integer(desc^.rrp2));
     lr^.rrp := rrp$set_t(integer(lr^.rrp) ! integer(desc^.rrp2));
-    ra_utils_10.lr := lr;
-    ra_utils_10.f78.reg := lr^.f2.reg;
+    ra_utils_10.live_range := lr;
+    ra_utils_10.f78.physical_register_number := lr^.f2.reg;
     lir_$build_operand(reg2, addr(ra_utils_10), desc^.form2);
     reg2^.lts := lts2;
     reg^.h.fp_reg_even_only := true;
@@ -813,9 +813,9 @@ begin
       home := dpcontk(0.0)
     else begin
       home := smcontk(81, 0);
-      lir_main_250.w56 := 4;
+      lir_main_250.bytes := 4;
     end;
-    lir_main_250.disp := 0;
+    lir_main_250.literal_32_bits_value := 0;
     sol := addr(lir_main_250);
   end
   else if sym_$is_static_vat(home) then begin
@@ -824,17 +824,17 @@ begin
       db_lts := new_db_lts;
     add_new_operand(instr, spill_instr_forms.forms[1].num, operand$ip_reg,
                     16, db_lts, db_last);
-    lir_main_760.disp := sym_$displacement(home);
+    lir_main_760.literal_32_bits_value := sym_$displacement(home);
     sol := addr(lir_main_760);
   end
   else begin
     lir_$build_operand(base, isc_user_routines_340, spill_instr_forms.forms[1]);
-    lir_main_250.disp := 0;
+    lir_main_250.literal_32_bits_value := 0;
     sol := addr(lir_main_250);
   end;
-  sol^.node := home;
+  sol^.object_with_name := home;
   lir_$build_operand(addr_op, sol, spill_instr_forms.forms[3]);
-  lir_main_760.node := nil;
+  lir_main_760.object_with_name := nil;
   if desc^.kind = 3 then
     addr_op^.value := addr_op^.value + 4;
   instr^.h.b2_6 := true;

@@ -7,8 +7,11 @@
   an operand from one).  backend.ins.pas declares it as batch A's
   solution_t (the fields the LIR units read); the ISC units read it
   through isc_solution_t below, the whole record as the ISC sees it,
-  cast from solution_ptr_t where a batch A heading takes one (batch A
-  owns solution_t's names: docs/translator-brief.md).
+  cast from solution_ptr_t where a batch A heading takes one.  The two
+  views are kept (backend.ins.pas is opened by units that open no ISC
+  insert, and solution_t's packed groups f78 and f84 differ from f76
+  here), and both carry the image's names for the fields they name
+  (docs/questions.md 267).
 
   No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
   cc.a88k (translator PD).  The solution kinds are the SOLUTION$
