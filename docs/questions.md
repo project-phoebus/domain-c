@@ -1960,3 +1960,51 @@ revisited.
    names, messages, blocks and instructions: debugging bodies compiled
    out (an `%if' in the source), most likely.  Written as empty
    procedures with the parameters the calls pass.
+350. Translator PA7, lir: call_or_svc_argument_register (cc.a88k
+   0x247BDC), taking a written floating register out of a call's
+   clobbered sets, computes the register's and its pair's bits in two
+   frame longwords and then stores `regs.s8 - [r2]' into regs.s4 (for
+   0..31) or `regs.s4 - [r2]' into regs.s0 (32..63): an eight-byte set
+   difference stored from its second longword, the register's own bit
+   never used and the next set's bits copied over the floating set.
+   Translated as the image does it; a Rev 8.89 miscompilation of a
+   set difference on the conventions' two-longword floating sets, or a
+   slip of the original?
+351. Translator PA7, lir: backend.ins.pas declares lir_3f94, lir_3f98 and
+   lir_3f9c (com's) as cells of their own, but they are lir_3f90's
+   elements 1..3 (the floating registers' physical live ranges, a
+   64-entry array lir defines at +0x3F90): lir.pas does not define them.
+   Should com read lir_3f90[1..3] instead?
+352. Translator PA7, lir_$build_operand's dump (dpc gap 4) prints the
+   solution's kind through the SOLUTION$ identifier table (0x24526E), so
+   solution_t.kind (+108) is an enumerated type in the original
+   (solution$t?, solution_string.init's 25 names), and the dump's
+   headings give the original names of four fields: solution_t +78
+   physical_register_number, +83 bit 3 physical_register, bit 1
+   physical_register_is_no_modify, bit 0 physical_register_user_declared
+   (batch A's f78.reg, physical, no_modify, serialize), +20
+   live_range (lr), and lr_t's the same names for +2, +3 bits 7, 6, 5.
+   Kept by the existing names (kind an integer, its users compare
+   numbers); rename to the original's?
+353. Translator PA7, lir: three slips kept as the image has them?
+   lir_$complete_instruction's 'set CCs request on %a' names the build
+   area's opcode (lir_2f58), not the instruction's; its combined pre- and
+   postmodify test has a dead first arm; lir_$build_operand's scale
+   factor messages pass the byte's address to %wd (the next byte read
+   with it).  And the messages' routine names 'LIR_ BEGIN_INSTRUCTION',
+   'LIR_\COPY_BUILD_INSTRUCTION', 'LIR_ \PROLOG_LABEL_FOR_SPECIFIC_
+   EXCEPTION' are the bytes.
+354. Translator PA7: question 198 more broadly: lir's own calls of
+   lir_$get_new_instruction(_no_exceptions) and begin_instruction push
+   three or four of the five longwords too (get_basic_block's JUMP,
+   lir_$dispatch_instruction, lir_$trap_instruction, lir_$simple_
+   instruction), and copy_build_instruction is called with an argument
+   it does not read; the translation passes nil and 0.  So the heading
+   was most likely `options(variable)' (or the trailing parameters
+   optional) in the original.
+355. Translator PA7: lir_$end_routine reads the routine from lir_41e0,
+   not from a parameter (at_backend passes none: pattern 132, question
+   233), and lir_$complete_instruction leaves D0 unset (lir_main read it
+   as a function's result: now a procedure, lir_main's discards gone).
+   lir_$begin_call_or_svc's second and lir_$end_call_or_svc's first
+   parameter are not read (kept as p2, p1 for the ISC's calls).
