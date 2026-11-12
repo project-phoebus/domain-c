@@ -2242,6 +2242,18 @@ revisited.
    what "classic codegen" (question 151) implies, and the image keeps
    the original's `let result <- ...;'.  Residue the decompiler cannot
    lift is written by hand in the same language.
+   **Owner (2026-11-12), on the result:** the .isc files buy boilerplate
+   removal but not a compact syntax, and little of it has evidence.  The
+   evidence: nine pass-2 messages quote `let result <- ...;' with the
+   input line number (patterns 358 at 31,146 .. 422 at 34,259): about 49
+   input lines per rule over 358..422, 24-27 for small ones; ours take
+   107 for the same rules (124 over all 563), about twice as long.  Only
+   `<-', `let result <- ...;', `;', "pattern N", the attribute, operator
+   and solution-kind names and the 25 sections are attested; the rest of
+   the syntax is ours.  The owner's reading: the original probably had
+   more abstract, semantic operations that each encode several
+   assignments (the full-copy pass-2 actions and the copy/sum runs point
+   that way).  To be revisited later; no rewrite now.
 270. Translator GA: **isc_main and isc_debug.**  Both are derived objects
    of the input but mostly ordinary code.  The generated parts found:
    preserve_solution's per-rule byte table and switch (isc_main) and
