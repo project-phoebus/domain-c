@@ -776,7 +776,8 @@ modules, isc_pass_1_main's operator routines.
 
 ### 10.4 What remains
 
-1. **The action bodies** (the next step): the decompiler from the
+1. **The action bodies**: pass 2 done (10.6, translator GC); pass 1
+   remains.  The decompiler from the
    pass-1 and pass-2 actions to the statement language (section 4),
    macros for the templates of 2.5, the cost tables of 2.6, and the
    generator's emission of the 50 modules.  The action headings are
@@ -788,7 +789,9 @@ modules, isc_pass_1_main's operator routines.
    `pea (A2)' for the var records).  The rule file's `pass_1 image ...;`
    placeholders become the statement lists; the image addresses move to
    the manifest only.
-2. **The action modules' gate** (question 268): `tools/cc_isc_check.py`
+2. **The action modules' gate** (question 268): done (10.6) for the
+   pass-2 modules and the named units before anonymous code; the pass-1
+   modules need their `module' lines in the manifest.  `tools/cc_isc_check.py`
    driven by iscg_names.txt (extended with each module's file, A5 and
    code range: the section clauses have the A5s), reusing coff_compare's
    compile_program/compare_object with `starts` augmented by the
@@ -859,3 +862,110 @@ call it).
   cc_datacheck_known.txt entry (no .blocks unit owns it).  The writes
   are gap 4 (a rewrite line for the unit).
 - Questions 420 .. 423; patterns 173 .. 343.
+
+### 10.6 The pass-2 actions (translator GC, 2026-11-12)
+
+All 563 pass-2 actions are in the rule file as bodies in the statement
+language, lifted from the image (none written by hand), and the 25
+modules `isc_pass_2_<nn>_<topic>.pas` are generated and compile with
+errors=0 under the gate.
+
+**The tools.**
+
+- `tools/cc_isc_check.py [--keep DIR] [--diff] [-v] FILE.pas ...`
+  (`--list` prints the manifest's modules): compiles each file as the
+  gate does (cc_datacheck's gap rewrites and inserts) and compares it
+  through coff_compare's library (pascal_progress.compare_object): a
+  module's routines at the manifest's addresses with the module's A5 as
+  its data base, a named unit's at its .blocks addresses, every routine
+  ending at the next start .blocks or the manifest gives (pass_2 now
+  0.64 instead of 0.00); then cc_datacheck's check on the same object (a
+  module standing for a .blocks unit with its A5).  It fails when dpc
+  fails, a module routine the manifest names is not in the object, or
+  the data differ.  tools/cc_check.sh hands it every file under
+  iscg_input that the manifest names (`module' or `unit' lines:
+  isc_pass_1_main.pas, isc_pass_2_main.pas and the 25 modules).
+- The manifest (iscg_names.txt) gains `module<TAB>FILE<TAB>A5<TAB>START
+  <TAB>END' for the pass-2 modules (A5 `-' for sections 21 and 22, whose
+  actions are all empty and load none; the ranges from the actions'
+  addresses, the last ending at hard_work 0x20042C) and
+  `unit<TAB>FILE<TAB>named' lines (cc_datacheck reads only the two-field
+  routine lines).
+- `tools/iscg_p2lang.py`: the statement language (its docstring is the
+  grammar): abstract syntax, printer, parser, and the translation to
+  Pascal with the insert's field names (no rename, question 267) and the
+  casts the types need.  `tools/iscg_p2lift.py [RULE ...] | --stats`: the
+  decompiler (below).  `tools/iscg_p2gen.py`: the rule file's pass_2
+  clauses (`pass_2 image 16#A empty;`, `... begin ... end;`, `... hand
+  begin ... end;` kept by the extractor, `... residue;` which keeps the
+  section's module from being generated) and the modules' emission.
+  iscg_extract.py writes the lifted bodies (about 20 s more);
+  iscg_gen.py emits a module for each section none of whose actions is
+  residue (all 25 now).
+
+**The language as built** (section 4's proposal, made concrete): `path
+<- expr;`, `emit KIND(args);` (debug_lir_$KIND_instruction with
+result.inherited_attributes; `emit label`), `let result <- e line N;`
+(solution.live_range <- e and the nil check with the original's message:
+rules 358, 392, 414, 416..418, 420..422, the image's lines), procedure
+calls, `if/elsif/else ... end;`, `for v := lo to hi do ... end;`, `temp
+t: type;`.  Paths: the parameters self, subject, result, solution
+(self and result are the same solution, read through different
+parameters: the language keeps which); `$K` (subject.$K); attributes by
+the image's names; the rule's own fields by offset (`c137` a choice
+byte, `w136`, `l352`); `opc$NAME`; the tables `opcode_rr[...]` etc.,
+`isc_literal_solutions[k]`, `lir_3c60/3d60/3e60/3f90[...]`,
+`readonly_wN[...]` (isc_readonly_tables' unnamed word tables), IL node
+fields by offset (`self.il.l4`, `.w26`, `.b14`: the node's kind is not
+known to the action, question 287); `&`, `!`, lshft/rshft/arshft;
+unsigned comparisons `u<` etc.
+
+**The decompiler** follows the control flow from the prologue to the
+single epilogue, executing symbolically: registers, frame temporaries
+and the argument pushes hold expressions; a store is an assignment, a
+`jsr` a call whose arguments are the pending pushes matched to the
+heading's parameters by size (headings read from the inserts the
+modules open); a conditional branch an `if` whose arms run to the
+nearest post-dominator with no argument pending (cross-jumped argument
+tails are duplicated into the arms); a `dbf` loop a `for` (its loop
+variables temps); a register value used across a statement that may
+have changed it (a call's value used twice or later, a field stored
+meanwhile, a value differing between the arms) a `temp`; the rest is
+written where used.  Idioms: the boolean copy (sne/lsr/lsl/or into a
+cleared bit), signed division (bpl/addq/asr), merged word pushes,
+partial pops, `move.l (SP),-(SP)`, field addresses (lea/add to a
+solution pointer), the `movea.l A0,A0` filler.  The printer and parser
+must agree on every body (checked when lifting).
+
+Coverage: 518 non-empty actions, 0 residue, 0 hand-written; 6,996
+assignments, 8,581 emits, 920 other calls, 5,380 ifs, 18 for loops, 37
+let-results; 3,948 temps in 297 actions (question 286).  Forms lifted but
+not named: 44 actions read IL node fields by offset, 8 isc_readonly_tables
+word tables.
+
+**The modules.**  Each opens GB's INCLUDES, declares only the views it
+needs (p2_flags_t: the booleans the insert lumps in b81_7_2 and
+b83_7_4; p2_locals_t: the rule's words and misaligned longwords; p2_node_t;
+p2_readonly_t; lir_3c60/3d60, which lir.pvt.pas declares and the ISC
+does not open), and one routine per rule (`transform_<r>_pass_2`, the
+heading of p2_pass_2_action_t; an empty action `begin end`, a bare `rts`
+as in the image).  No module data: the image's four bytes are what Rev
+8.89 gives every module (pattern 177, std's precedent), nothing reads
+them; dpc allocates none and loads no A5 (pattern 1).  Similarity (cc.a88k,
+mean over the non-identical routines): 0.39 (05) .. 0.68 (03), most
+0.5 - 0.6; 30 routines `same' (empty actions mostly) besides sections 21 and
+22.  dpc gaps met: 7 (real constants: address_mode_for_single/
+double_value's argument in modules 03, 04, 06, 10, 24; the check drops
+the call) and 25 (15 actions of several hundred statements: 02's 153,
+157, 169, 170; 09's 445, 448, 450, 474; 14's 384; 24's 178, 180, 181,
+186; 25's 120, 123; the check compiles them with an empty body).
+tools/cc_typecheck.sh on the modules reports only gap 7's message.
+
+**What remains for pass 2.**  Names: the temps (t1..), the modules',
+routines' and parameters' (question 266), IL node fields by kind
+(question 287), the readonly tables (413).  Macros for the statement
+templates of 2.5 (copy all pass-2 attributes from $1: 39 actions) are
+not used: the bodies are written out.  The pass-1 modules' data still go
+to cc_datacheck_known.txt's isc_pass_1_main entry; their `module' lines
+in the manifest would let cc_isc_check own them.  Questions 410 .. 415,
+patterns 177 .. 338.

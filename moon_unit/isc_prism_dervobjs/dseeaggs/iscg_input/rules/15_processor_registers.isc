@@ -10,60 +10,284 @@ section 15 processor_registers  image pass_1 a5 16#465164, pass_2 a5 16#480090;
 
 transform 241  processor_reg <- dindex_node ($1: processor_reg, $2: ip_reg)
   pass_1 image 16#14BE50;
-  pass_2 image 16#1C3998;
+  pass_2 image 16#1C3998 begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+    result.base_register <- $2;
+  end;
 end;
 
 transform 242  processor_reg <- dindex_node ($1: processor_reg, $2: [ip_reg, ip_reg_scaled])
   pass_1 image 16#14C4D4;
-  pass_2 image 16#1C3A16;
+  pass_2 image 16#1C3A16 begin
+    temp t1: solution;
+    t1 <- create_solution_for_ip_reg();
+    emit simple(opc$add, 0, $2, $1.base_register, t1);
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+    result.base_register <- t1;
+  end;
 end;
 
 transform 243  processor_reg <- dindex_node ($1: processor_reg, $2: ip_reg)
   pass_1 image 16#14CB12;
-  pass_2 image 16#1C3AB8;
+  pass_2 image 16#1C3AB8 begin
+    temp t1: solution;
+    t1 <- create_solution_for_ip_reg();
+    emit simple(opc$lsl, 0, $2, find_well_known_literal_solution(subject.il.w40), t1);
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+    result.base_register <- t1;
+  end;
 end;
 
 transform 244  processor_reg <- dindex_node ($1: processor_reg, $2: ip_reg)
   pass_1 image 16#14D162;
-  pass_2 image 16#1C3B68;
+  pass_2 image 16#1C3B68 begin
+    temp t1: solution;
+    t1 <- create_solution_for_ip_reg();
+    emit simple(opc$add, 0, ip_reg_to_ip_reg_scaled($2, subject.il.w40), $1.base_register, t1);
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+    result.base_register <- t1;
+  end;
 end;
 
 transform 245  processor_reg <- disp_node ($1: processor_reg)
   pass_1 image 16#14D7AC;
-  pass_2 image 16#1C3C1E;
+  pass_2 image 16#1C3C1E begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 246  processor_reg <- disp_node ($1: processor_reg)
   pass_1 image 16#14DD76;
-  pass_2 image 16#1C3C96;
+  pass_2 image 16#1C3C96 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: integer32;
+    if result.c136 = 1 then
+      emit simple(opc$add, 0, find_well_known_literal_solution(subject.il.l32), $1.base_register, nil);
+      t3 <- 0;
+    else
+      t1 <- create_solution_for_ip_reg();
+      if result.c137 = 1 then
+        emit simple(opc$move, 0, find_well_known_literal_solution(subject.il.l32), t1, nil);
+      else
+        t2 <- address_mode_for_integer32_value(subject.il.l32);
+        emit load(opc$loadl, 0, t2, t2.base_register, t1, t2.il, 0, t2.bits_known, t2.bits_trusted);
+      end;
+      if result.c138 = 1 then
+        emit simple(opc$add, 0, $1.base_register, t1, t1);
+      end;
+      t3 <- t1;
+    end;
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+    result.base_register <- t3;
+  end;
 end;
 
 transform 247  void <- pack_aop ($1: processor_reg, $2: [ip_reg, ip_reg_field, literal_32_bits])
   pass_1 image 16#14E3F6;
-  pass_2 image 16#1C3DE0;
+  pass_2 image 16#1C3DE0 begin
+    temp t1: integer32;
+    temp t2: integer32;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    if $1.is_volatile then
+      t1 <- 2048;
+    else
+      t1 <- 0;
+    end;
+    if $1.is_volatile then
+      t2 <- 16#400000;
+    else
+      t2 <- 0;
+    end;
+    if result.c136 = 1 then
+      t3 <- $2;
+    else
+      t4 <- create_solution_for_ip_reg();
+      emit mfpr(opc$mfpr, t1 + t2, $1, $1.base_register, t4, $1.object_with_name);
+      if result.c137 = 1 then
+        emit field(opc$transfer, 0, result.l352, $2, find_well_known_literal_solution(result.l356), t4);
+      elsif result.c138 = 1 then
+        if result.c139 = 1 then
+          t5 <- find_well_known_literal_solution($2.literal_32_bits_value);
+        else
+          t6 <- create_solution_for_ip_reg();
+          if result.c140 = 1 then
+            emit simple(opc$move, 0, find_well_known_literal_solution($2.literal_32_bits_value), t6, nil);
+          else
+            t7 <- address_mode_for_integer32_value($2.literal_32_bits_value);
+            emit load(opc$loadl, 0, t7, t7.base_register, t6, t7.il, 0, t7.bits_known, t7.bits_trusted);
+          end;
+        end;
+        emit field(opc$insert, 0, result.l352, t5, find_well_known_literal_solution(result.l356), t4);
+      else
+        emit field(opc$insert, 0, result.l352, $2, find_well_known_literal_solution(result.l356), t4);
+      end;
+    end;
+    emit mtpr(opc$mtpr, t1 + t2, t3, $1, $1.base_register, $1.object_with_name);
+  end;
 end;
 
 transform 248  void <- scalar_aop ($1: processor_reg, $2: [ip_reg, ip_reg_field, literal_32_bits])
   pass_1 image 16#14E7BE;
-  pass_2 image 16#1C3FB6;
+  pass_2 image 16#1C3FB6 begin
+    temp t1: integer32;
+    temp t2: integer32;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    if $1.is_volatile then
+      t1 <- 2048;
+    else
+      t1 <- 0;
+    end;
+    if $1.is_volatile then
+      t2 <- 16#400000;
+    else
+      t2 <- 0;
+    end;
+    if result.c136 = 1 then
+      t3 <- $2;
+    else
+      t4 <- create_solution_for_ip_reg();
+      emit mfpr(opc$mfpr, t1 + t2, $1, $1.base_register, t4, $1.object_with_name);
+      if result.c137 = 1 then
+        emit field(opc$transfer, 0, result.l352, $2, find_well_known_literal_solution(result.l356), t4);
+      elsif result.c138 = 1 then
+        if result.c139 = 1 then
+          t5 <- find_well_known_literal_solution($2.literal_32_bits_value);
+        else
+          t6 <- create_solution_for_ip_reg();
+          if result.c140 = 1 then
+            emit simple(opc$move, 0, find_well_known_literal_solution($2.literal_32_bits_value), t6, nil);
+          else
+            t7 <- address_mode_for_integer32_value($2.literal_32_bits_value);
+            emit load(opc$loadl, 0, t7, t7.base_register, t6, t7.il, 0, t7.bits_known, t7.bits_trusted);
+          end;
+        end;
+        emit field(opc$insert, 0, result.l352, t5, find_well_known_literal_solution(result.l356), t4);
+      else
+        emit field(opc$insert, 0, result.l352, $2, find_well_known_literal_solution(result.l356), t4);
+      end;
+    end;
+    emit mtpr(opc$mtpr, t1 + t2, t3, $1, $1.base_register, $1.object_with_name);
+  end;
 end;
 
 transform 249  processor_reg <- var_name
   pass_1 image 16#14EB52;
-  pass_2 image 16#1C418C;
+  pass_2 image 16#1C418C begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    if result.c136 <> 1 then
+      t1 <- create_solution_for_ip_reg();
+      if result.c137 = 1 then
+        emit simple(opc$move, 0, find_well_known_literal_solution(result.l352), t1, nil);
+      else
+        t2 <- address_mode_for_integer32_value(result.l352);
+        emit load(opc$loadl, 0, t2, t2.base_register, t1, t2.il, 0, t2.bits_known, t2.bits_trusted);
+      end;
+      t3 <- t1;
+    else
+      t3 <- 0;
+    end;
+    if result.c356 & 128 <> 0 then
+      result.base_register <- isc_user_routines_31c;
+    else
+      result.base_register <- t3;
+    end;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 250  ip_reg_field <- processor_reg
   pass_1 image 16#14EE10;
-  pass_2 image 16#1C424C;
+  pass_2 image 16#1C424C begin
+    temp t1: integer32;
+    temp t2: integer32;
+    if subject.is_volatile then
+      t1 <- 2048;
+    else
+      t1 <- 0;
+    end;
+    if subject.is_volatile then
+      t2 <- 16#400000;
+    else
+      t2 <- 0;
+    end;
+    emit mfpr(opc$mfpr, t2 + t1, subject, subject.base_register, solution, subject.object_with_name);
+  end;
 end;
 
 transform 251  processor_reg <- processor_reg
   pass_1 image 16#14F2CE;
-  pass_2 image 16#1C42B8;
+  pass_2 image 16#1C42B8 begin
+    result.base_register <- subject.base_register;
+    result.index_register <- subject.index_register;
+    result.false_label <- subject.false_label;
+    result.object_with_name <- subject.object_with_name;
+    result.live_range <- subject.live_range;
+    result.live_range_of_imaginary_part <- subject.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- subject.already_through_pass_2;
+  end;
 end;
 
 transform 252  processor_reg <- processor_reg
   pass_1 image 16#14F710;
-  pass_2 image 16#1C4314;
+  pass_2 image 16#1C4314 begin
+    temp t1: solution;
+    t1 <- create_solution_for_ip_reg();
+    emit simple(opc$sub, 0, find_well_known_literal_solution(result.l352), subject.base_register, t1);
+    result.base_register <- subject.base_register;
+    result.index_register <- subject.index_register;
+    result.false_label <- subject.false_label;
+    result.object_with_name <- subject.object_with_name;
+    result.live_range <- subject.live_range;
+    result.live_range_of_imaginary_part <- subject.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- subject.already_through_pass_2;
+    result.base_register <- t1;
+  end;
 end;

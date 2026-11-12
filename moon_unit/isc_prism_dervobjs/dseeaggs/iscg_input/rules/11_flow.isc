@@ -15,22 +15,40 @@ end;
 
 transform 228  void <- block_entry_node
   pass_1 image 16#13BBCA;
-  pass_2 image 16#1BB67A;
+  pass_2 image 16#1BB67A begin
+    debug_lir_main_$entry(self.il);
+  end;
 end;
 
 transform 229  void <- branch_node ($1: irrelevant)
   pass_1 image 16#13BCB4;
-  pass_2 image 16#1BB6A2;
+  pass_2 image 16#1BB6A2 begin
+    emit branch(isc_$get_label($1.il), opc$jump, 0);
+  end;
 end;
 
 transform 230  void <- case_node_range_check ($1: irrelevant, $2: ip_reg, $3: flow, $4: ip_reg)
   pass_1 image 16#13BDB8;
-  pass_2 image 16#1BB6F2;
+  pass_2 image 16#1BB6F2 begin
+    temp t1: solution;
+    temp t2: solution;
+    t1 <- create_solution_for_case_jump_base(self.il);
+    t2 <- create_solution_for_ip_reg();
+    emit simple(opc$add, 0, $4, t1, t2);
+    emit dispatch(t2, opc$dispatch, 16#800000);
+  end;
 end;
 
 transform 231  void <- case_node_no_range_check ($1: ip_reg)
   pass_1 image 16#13BF10;
-  pass_2 image 16#1BB768;
+  pass_2 image 16#1BB768 begin
+    temp t1: solution;
+    temp t2: solution;
+    t1 <- create_solution_for_case_jump_base(self.il);
+    t2 <- create_solution_for_ip_reg();
+    emit simple(opc$add, 0, $1, t1, t2);
+    emit dispatch(t2, opc$dispatch, 16#800000);
+  end;
 end;
 
 transform 232  void <- cbranch_node ($1: irrelevant, $2: flow)
@@ -40,37 +58,132 @@ end;
 
 transform 233  void <- cbranch_node ($1: irrelevant, $2: [ip_reg, literal_32_bits])
   pass_1 image 16#13C15E;
-  pass_2 image 16#1BB7E0;
+  pass_2 image 16#1BB7E0 begin
+    if result.c136 = 1 then
+      if result.c137 <> 1 then
+        emit branch($2.inherited_attributes.conditional_target, opc$jump, 0);
+      end;
+    elsif result.c138 = 1 then
+      emit branch($2.inherited_attributes.conditional_target, opc$jump, 0);
+    end;
+  end;
 end;
 
 transform 234  void <- cbranch_node ($1: irrelevant, $2: ip_reg_field)
   pass_1 image 16#13C35C;
-  pass_2 image 16#1BB83C;
+  pass_2 image 16#1BB83C begin
+    temp t1: solution;
+    t1 <- create_solution_for_ip_reg();
+    emit field(opc$extractu, 0, $2.field_precision, $2, find_well_known_literal_solution($2.bit_position_of_lsb), t1);
+    if result.c136 = 1 then
+      emit simple(opc$move, 8, t1, create_solution_for_ip_reg(), nil);
+      emit branch($2.inherited_attributes.conditional_target, opc$beq, 0);
+    elsif result.c136 = 2 then
+      emit simple(opc$move, 8, t1, create_solution_for_ip_reg(), nil);
+      emit branch($2.inherited_attributes.conditional_target, opc$bne, 0);
+    elsif result.c136 = 3 then
+      emit simple(opc$move, 4, t1, create_solution_for_ip_reg(), nil);
+      emit branch($2.inherited_attributes.conditional_target, opc$blo, 0);
+    elsif result.c136 = 4 then
+      emit simple(opc$move, 4, t1, create_solution_for_ip_reg(), nil);
+      emit branch($2.inherited_attributes.conditional_target, opc$bls, 0);
+    elsif result.c136 = 5 then
+      emit simple(opc$move, 4, t1, create_solution_for_ip_reg(), nil);
+      emit branch($2.inherited_attributes.conditional_target, opc$bhi, 0);
+    elsif result.c136 = 6 then
+      emit simple(opc$move, 4, t1, create_solution_for_ip_reg(), nil);
+      emit branch($2.inherited_attributes.conditional_target, opc$bhs, 0);
+    elsif result.c136 = 7 then
+      emit simple(opc$move, 2, t1, create_solution_for_ip_reg(), nil);
+      emit branch($2.inherited_attributes.conditional_target, opc$blt, 0);
+    elsif result.c136 = 8 then
+      emit simple(opc$move, 2, t1, create_solution_for_ip_reg(), nil);
+      emit branch($2.inherited_attributes.conditional_target, opc$ble, 0);
+    elsif result.c136 = 9 then
+      emit simple(opc$move, 2, t1, create_solution_for_ip_reg(), nil);
+      emit branch($2.inherited_attributes.conditional_target, opc$bgt, 0);
+    elsif result.c136 = 10 then
+      emit simple(opc$move, 2, t1, create_solution_for_ip_reg(), nil);
+      emit branch($2.inherited_attributes.conditional_target, opc$bge, 0);
+    elsif result.c136 = 11 then
+      emit branch($2.inherited_attributes.conditional_target, opc$jump, 0);
+    elsif result.c136 <> 12 then
+      pattern_match_error(11, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+  end;
 end;
 
 transform 235  void <- cbranch_node ($1: irrelevant, $2: ip_reg)
   pass_1 image 16#13C5B6;
-  pass_2 image 16#1BBB1E;
+  pass_2 image 16#1BBB1E begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    t1 <- create_solution_for_ip_reg();
+    t2 <- create_solution_for_ip_reg();
+    t3 <- create_solution_for_ip_reg();
+    if result.c136 = 1 then
+      if result.c137 = 1 then
+        t4 <- $2;
+      else
+        emit simple(opc$extend7, 0, $2, t1, nil);
+      end;
+      if result.c138 = 1 then
+        emit simple(opc$move, 2, t4, create_solution_for_ip_reg(), nil);
+        emit branch($2.inherited_attributes.conditional_target, opc$blt, 0);
+      else
+        emit simple(opc$move, 2, t4, create_solution_for_ip_reg(), nil);
+        emit branch($2.inherited_attributes.conditional_target, opc$bge, 0);
+      end;
+    elsif result.c139 = 1 then
+      if result.c140 = 1 then
+        t5 <- $2;
+      else
+        emit field(opc$extractu, 0, 8, $2, find_well_known_literal_solution(0), t2);
+      end;
+      emit simple(opc$move, 8, t5, create_solution_for_ip_reg(), nil);
+      emit branch($2.inherited_attributes.conditional_target, opc$bne, 0);
+    else
+      if result.c141 = 1 then
+        t6 <- $2;
+      else
+        emit field(opc$extractu, 0, 8, $2, find_well_known_literal_solution(0), t3);
+      end;
+      emit simple(opc$move, 8, t6, create_solution_for_ip_reg(), nil);
+      emit branch($2.inherited_attributes.conditional_target, opc$beq, 0);
+    end;
+  end;
 end;
 
 transform 236  void <- exception_handler_entry
   pass_1 image 16#13C87E;
-  pass_2 image 16#1BBCF0;
+  pass_2 image 16#1BBCF0 begin
+    debug_lir_main_$handler_reentry(self.il);
+  end;
 end;
 
 transform 237  void <- label_node
   pass_1 image 16#13C968;
-  pass_2 image 16#1BBD18;
+  pass_2 image 16#1BBD18 begin
+    emit label(isc_$get_label(self.il));
+  end;
 end;
 
 transform 238  void <- nlbranch_node ($1: ip_reg)
   pass_1 image 16#13CA52;
-  pass_2 image 16#1BBD5C;
+  pass_2 image 16#1BBD5C begin
+    emit dispatch($1, opc$dispatch, 16#40000);
+  end;
 end;
 
 transform 239  void <- raise_exception
   pass_1 image 16#13CF4E;
-  pass_2 image 16#1BBD9E;
+  pass_2 image 16#1BBD9E begin
+    emit simple(opc$trap, 0, nil, nil, nil);
+  end;
 end;
 
 transform 240  void <- return_node

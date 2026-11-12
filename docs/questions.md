@@ -2353,3 +2353,52 @@ revisited.
    inherited_attributes_t byte b36 (isc_attribute_records.ins.pas),
    written through a view (p1_inh_view_t) as an il$t ordinal.  Rename
    b36 to parent_il_kind (0..255) with question 271's rename?
+285. Translator GC, the pass-2 actions: **two procedures whose callers
+   read A0 after the call.**  22 actions (435..440, 442..444, 471..473,
+   489..492, 534, 539, 542, 543, 545, 547) use A0 after `jsr
+   set_isc_is_cse_on_live_range_if_local_cse' (into live_range) or
+   `side_effect_set_var_$address_exposed' (into a frame temporary):
+   the value is the pointer argument each loads into A0 (lr, sym:
+   isc_user_routines 0x216742, 0x216766).  In the original these were
+   probably functions returning their argument (`result.live_range <-
+   set_isc_is_cse_on_live_range_if_local_cse(...)`) whose body never
+   assigns the result (Rev 8.89 returns whatever A0 holds).
+   isc_routine_externs.ins.pas declares procedures; the lifter writes
+   the argument again after the call (rev889-patterns 185).  Make them
+   functions (and isc_user_routines' bodies assign the argument)?
+286. Translator GC: **the actions' temporaries.**  The lifter makes a
+   `temp t<n>' of a register value the code keeps across a statement
+   that may have changed it (a function's value used twice or after
+   another statement, a value that differs between an if's arms, a
+   loop variable, a field stored meanwhile): 3,948 in 297 actions,
+   most of them function values (labels, new solutions) and the
+   requests words built by conditions.  Rev 8.89 keeps them in
+   registers and frame temporaries; whether the input named them
+   (locals of the action) or the compiler made them is not known.
+   Names (and fewer of them: macros for the requests words)?
+287. Translator GC: **IL node fields read by offset.**  44 actions read
+   their node's fields (`self.il.l4 & 16#400000', `subject.il.b11',
+   `self.il.b14' bit 7): the language writes them by offset and the
+   modules read them through a view (p2_node_t).  Named by the node's
+   kind, with isc_print_il_node's static attribute names (question
+   272), the generator would need the IL description and each action
+   the kind of its node (the rule's operator gives it for subject.il,
+   not for a child's).  Worth it?
+288. Translator GC: **isc_readonly_tables' unnamed word tables.**
+   Eight actions index words of isc_readonly_tables at +16, +128 and
+   +2986 (rules 121, 129, 130, 309, 310, 316, 442, 471) by an il$t or a
+   precision; isc_types.ins.pas's view has fillers there (x0, xb2c).
+   The language calls them `readonly_w<offset>' and the modules read
+   them through a view.  Names (and fields in the view)?
+289. Translator GC: **self and result.**  pass_2 passes the same
+   solution as both var parameters; the actions read some fields
+   through self (fp+8: `result.object_with_name <- self.il') and set
+   them through result (fp+16), and `let result' through the fourth
+   parameter.  The language keeps which parameter the code uses (the
+   image's loads differ); one name would read better.  Merge?
+290. Translator GC: **the pass-1 modules in cc_isc_check.**  The
+   manifest has `module' lines for the pass-2 modules only; the pass-1
+   modules' data (cc_datacheck_known.txt's isc_pass_1_main entry,
+   +0x720..+0x30BA0) would move to cc_isc_check once the pass-1 action
+   modules are generated and the generator writes their lines.  Agreed
+   as the plan?
