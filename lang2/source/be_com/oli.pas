@@ -164,6 +164,7 @@ module oli;
 %include 'lang2/source/lt_utils/source/bug_check.ins.pas';
 %include 'lang2/source/lt_utils/source/mrh.ins.pas';
 %include 'lang/lang/source/globals.ins.pas';
+%include 'lang/lang/source/alias.ins.pas';
 %include 'lang2/source/be_com/backend.ins.pas';
 %include 'lang/lang/source/prtsub.ins.pas';
 %include 'lang2/source/be_prism/target.ins.pas';
@@ -198,16 +199,36 @@ type
     l12: integer32;                     { +12 }
   end;
 
+  { A step of a data flow path (16 bytes from the bookkeeping heap): an
+    instruction (+4), the operand by which it reads the previous step's
+    value (+8) and the one by which it writes the next's (+12). }
+  oli_step_ptr_t = ^oli_step_t;
+  oli_step_t = record
+    next: oli_step_ptr_t;               { +0 }
+    instr: instr_ptr_t;                 { +4 }
+    in_k: integer32;                    { +8 }
+    out_k: integer32;                   { +12 }
+  end;
+
+  { A data flow path (8 bytes): its steps, the first the writer;
+    chained at next. }
+  oli_path_ptr_t = ^oli_path_t;
+  oli_path_t = record
+    next: oli_path_ptr_t;               { +0 }
+    steps: oli_step_ptr_t;              { +4 }
+  end;
+
   { A recurrence (28 bytes from the bookkeeping heap): from an
-    instruction (+4) to one (+8) a distance (+12) of iterations later;
+    instruction (+4) to one (+8) a distance (+12) of iterations later,
+    the data flow paths from the second back to the first (+16);
     chained from oli_recurrences at next. }
   oli_rec_ptr_t = ^oli_rec_t;
   oli_rec_t = record
     next: oli_rec_ptr_t;                { +0 }
-    from: univ_ptr;                     { +4 }
-    upto: univ_ptr;                     { +8 }
+    from: instr_ptr_t;                  { +4 }
+    upto: instr_ptr_t;                  { +8 }
     dist: integer32;                    { +12 }
-    l16: integer32;                     { +16 }
+    paths: oli_path_ptr_t;              { +16 }
     l20: integer32;                     { +20 }
     l24: integer32;                     { +24 }
   end;
@@ -904,4 +925,793 @@ begin
   if n <= 100 then
     size_and_shape_ok := true;
 99:
+end;
+
+{ mem_ref_via_non_const_induction_variable - i is a load or store
+  whose base (base: a load's operand 2, a store's 3) and displacement
+  (disp: operand 1, 2) are not both constant, each one either a
+  constant or a register whose segment is a confirmed induction
+  variable's (iv's induction lts of kind 2 at its l24).  0x258940, 0xDE
+  bytes: the constant kinds the set 16#10FF0001 (none, flow_graph_edge
+  .. immediate, spare_2), the registers 16#FFE (ip_reg ..
+  well_behaved_memory). }
+
+function mem_ref_via_non_const_induction_variable(
+    i: instr_ptr_t;
+    var base: opnd_ptr_t;
+    var disp: opnd_ptr_t): boolean; options(val_param); internal;
+label
+  99;
+var
+  cls: integer;
+  o: opnd_ptr_t;
+  l: iv_lts_ptr_t;
+begin
+  mem_ref_via_non_const_induction_variable := false;
+  cls := instruction_attributes[i^.opc].class;
+  if cls = class$load then begin
+    base := addr(i^.opnds[2]);
+    o := addr(i^.opnds[1]);
+  end
+  else if cls = class$store then begin
+    base := addr(i^.opnds[3]);
+    o := addr(i^.opnds[2]);
+  end
+  else
+    goto 99;
+  disp := o;
+  if base^.h.kind in [operand$none, operand$flow_graph_edge..
+      operand$immediate, operand$spare_2] then
+    if disp^.h.kind in [operand$none, operand$flow_graph_edge..
+        operand$immediate, operand$spare_2] then
+      goto 99;
+  if not (base^.h.kind in [operand$none, operand$flow_graph_edge..
+      operand$immediate, operand$spare_2]) then begin
+    if not (base^.h.kind in [operand$ip_reg..
+        operand$well_behaved_memory]) then
+      goto 99;
+    l := iv_lts_ptr_t(base^.lts^.l24);
+    if l = nil then
+      goto 99;
+    if l^.h.kind <> 2 then
+      goto 99;
+  end;
+  if not (disp^.h.kind in [operand$none, operand$flow_graph_edge..
+      operand$immediate, operand$spare_2]) then begin
+    if not (disp^.h.kind in [operand$ip_reg..
+        operand$well_behaved_memory]) then
+      goto 99;
+    l := iv_lts_ptr_t(disp^.lts^.l24);
+    if l = nil then
+      goto 99;
+    if l^.h.kind <> 2 then
+      goto 99;
+  end;
+  mem_ref_via_non_const_induction_variable := true;
+99:
+end;
+
+{ reduction_class_of - the classes of value (oli_red_kind's bits) s
+  can be a reduction in: for the first segment of its live range in
+  the block, oli_red_cls when the segment exposed at the loop's head
+  (followed along the live range within the loop) is the one
+  is_exposed_reduction examines; else, when s has one reader, an
+  instruction that does not set the condition codes and can reduce,
+  through the segment it writes, back to an exposed or join-defined
+  segment (the pair's other half for a register pair half), the
+  classes of that one and its opcode's.  0x258A1E, 0x208 bytes: each
+  search's `for' left at its last operand when nothing matched, by a
+  test of the index after the operand's (`cmp.l D4,D1; beq'). }
+
+function reduction_class_of(
+    s: lts_ptr_t): integer; options(val_param); internal;
+label
+  10, 20, 30, 99;
+var
+  r: integer;
+  t: lts_ptr_t;
+  i: instr_ptr_t;
+  n, k, c: integer32;
+begin
+  r := 0;
+  if s^.f2.first_in_bb then begin
+    if s^.refs^.link <> nil then
+      goto 99;
+    t := s;
+    while (t^.next <> nil) and (t^.next^.bb = oli_bb) and
+        not t^.f2.exposed do
+      t := t^.next;
+    if not t^.f2.exposed then
+      goto 99;
+    if t <> oli_red_lts then
+      goto 99;
+    r := oli_red_cls;
+    goto 99;
+  end;
+  t := s;
+  if s^.refs^.link^.link <> nil then
+    goto 99;
+  i := utils_ins_$operands_instruction(s^.refs^.link);
+  if i^.h.sets_cc then
+    goto 99;
+  if oli_red_kind[i^.opc] = 0 then
+    goto 99;
+  if i^.h.fp_ccs then
+    goto 99;
+  n := i^.h.nopnds;
+  if (opnd_bytes_ptr_t(s^.refs^.link)^.rrp & 3) <> 0 then begin
+    for k := 1 to n do begin
+      if i^.opnds[k].h.kind in [operand$ip_reg..
+          operand$well_behaved_memory] then
+        if i^.opnds[k].lts^.lr = s^.refs^.link^.lts^.lr^.mate then begin
+          t := i^.opnds[k].lts;
+          goto 10;
+        end;
+      if k = n then
+        goto 99;
+    end;
+10:
+    if not is_exposed_or_produced_by_jbi(t) then
+      goto 99;
+    if t^.refs^.link^.link <> nil then
+      goto 99;
+    for k := 1 to n do begin
+      if (opnd_bytes_ptr_t(addr(i^.opnds[k]))^.rrp & 12) <> 0 then begin
+        t := i^.opnds[k].lts;
+        goto 20;
+      end;
+      if k = n then
+        goto 99;
+    end;
+20:
+    if t^.lr^.mate = nil then
+      goto 99;
+    goto 30;
+  end
+  else begin
+    c := 0;
+    for k := 1 to n do
+      if (opnd_bytes_ptr_t(addr(i^.opnds[k]))^.rrp & 12) <> 0 then begin
+        c := c + 1;
+        if c > 1 then
+          goto 99;
+      end;
+    if n - 1 < 0 then
+      goto 99;
+    for k := 1 to n do
+      if (opnd_bytes_ptr_t(addr(i^.opnds[k]))^.rrp & 12) <> 0 then begin
+        t := i^.opnds[k].lts;
+        goto 30;
+      end;
+    goto 99;
+  end;
+30:
+  r := reduction_class_of(t) & oli_red_kind[i^.opc];
+99:
+  reduction_class_of := r;
+end;
+
+{ create_reduction_variable - a reduction of class cls for s's live
+  range, put on oli_reductions and at the l24 of s, the live range's
+  final segment in the loop, and, for a pair, its mate's exposed and
+  final segments there.  0x258C26, 0x9A bytes. }
+
+procedure create_reduction_variable(
+    s: lts_ptr_t;
+    cls: integer); options(val_param); internal;
+var
+  r: oli_red_ptr_t;
+begin
+  r := mrh_$alloc(oli_heap, 16);
+  r^.lr := s^.lr;
+  r^.next := oli_reductions;
+  r^.h.kind := 5;
+  r^.cls := cls;
+  oli_reductions := r;
+  s^.l24 := integer32(r);
+  utils_$find_final_lts(s^.lr, oli_bb)^.l24 := integer32(r);
+  if s^.lr^.mate <> nil then begin
+    utils_$find_exposed_lts(s^.lr^.mate, oli_bb)^.l24 := integer32(r);
+    utils_$find_final_lts(s^.lr^.mate, oli_bb)^.l24 := integer32(r);
+  end;
+end;
+
+{ is_exposed_reduction - s (exposed at the loop's head) is a reduction
+  in exactly one class, made one: unless cargs_$options.fpra, not for a
+  floating register (rrp's fp_reg_even_only, fp_reg_odd_only, fp_reg).
+  The segment examined is s, or for a join birthpoint's the join's
+  result.  0x258CC0, 0xC6 bytes: fpra tested with `btst D2,...', D2
+  holding false (bit 0; pattern 123); the join's result is left unset
+  when the join writes nothing (kept). }
+
+function is_exposed_reduction(
+    s: lts_ptr_t): boolean; options(val_param); internal;
+label
+  99;
+var
+  i: instr_ptr_t;
+  t: lts_ptr_t;
+  c, k: integer;
+  n: integer32;
+begin
+  is_exposed_reduction := false;
+  if not cargs_$options.fpra then
+    if (integer(s^.rrp) & 16#4003) <> 0 then
+      goto 99;
+  oli_red_lts := s;
+  i := utils_ins_$operands_instruction(s^.refs);
+  if instruction_attributes[i^.opc].class = class$join_bp then begin
+    for n := 1 to i^.h.nopnds do
+      if (opnd_bytes_ptr_t(addr(i^.opnds[n]))^.rrp & 12) <> 0 then begin
+        t := i^.opnds[n].lts;
+        exit;
+      end;
+  end
+  else
+    t := s;
+  c := reduction_class_of(t);
+  for k := 0 to 2 do
+    if c = lshft(1, k) then begin
+      create_reduction_variable(s, k);
+      is_exposed_reduction := true;
+      exit;
+    end;
+99:
+end;
+
+{ induction_increment_of - the increment per iteration of the address
+  a load or store's operands a and b compute: each operand's variable's
+  increment (0 for a constant), scaled by its shift (+2 bits 5..4);
+  b's left out of a postmodify (+3 bits 7..6 = 1).  0x258D86, 0x10A
+  bytes. }
+
+function induction_increment_of(
+    a: opnd_ptr_t;
+    b: opnd_ptr_t;
+    i: instr_ptr_t): iv_expr_ptr_t; options(val_param); internal;
+var
+  ea, eb: iv_expr_ptr_t;
+  sh: integer;
+begin
+  if a^.h.kind in [operand$none, operand$flow_graph_edge..
+      operand$immediate, operand$spare_2] then
+    ea := iv_utils_$create_value_expression(0)
+  else begin
+    ea := iv_lts_ptr_t(a^.lts^.l24)^.ivar^.incr;
+    sh := a^.h.count;
+    if sh <> 0 then
+      ea := iv_utils_$create_mul_expression(
+          iv_utils_$create_value_expression(lshft(1, sh)), ea);
+  end;
+  if (i^.h.modify = 1) or (b^.h.kind in [operand$none,
+      operand$flow_graph_edge..operand$immediate, operand$spare_2]) then
+    eb := iv_utils_$create_value_expression(0)
+  else begin
+    eb := iv_lts_ptr_t(b^.lts^.l24)^.ivar^.incr;
+    sh := b^.h.count;
+    if sh <> 0 then
+      eb := iv_utils_$create_mul_expression(
+          iv_utils_$create_value_expression(lshft(1, sh)), eb);
+  end;
+  induction_increment_of := iv_utils_$canonicalize_expression(
+      iv_utils_$duplicate_expression(
+      iv_utils_$create_add_expression(ea, eb)));
+end;
+
+{ induction_initial_value_of - the address a load or store's operands
+  a and b compute in the first iteration: each operand's variable's
+  initial value plus its segment's increment from it (the operand
+  itself for a constant, b's value for an immediate), scaled by its
+  shift; b's left out of a postmodify.  0x258E90, 0x15C bytes. }
+
+function induction_initial_value_of(
+    a: opnd_ptr_t;
+    b: opnd_ptr_t;
+    i: instr_ptr_t): iv_expr_ptr_t; options(val_param); internal;
+var
+  ea, eb: iv_expr_ptr_t;
+  l: iv_lts_ptr_t;
+  sh: integer;
+begin
+  if a^.h.kind in [operand$none, operand$flow_graph_edge..
+      operand$immediate, operand$spare_2] then
+    ea := iv_utils_$create_operand_expression(a^)
+  else begin
+    l := iv_lts_ptr_t(a^.lts^.l24);
+    ea := l^.ivar^.init;
+    if l^.incr <> nil then
+      ea := iv_utils_$create_add_expression(ea, l^.incr);
+    sh := a^.h.count;
+    if sh <> 0 then
+      ea := iv_utils_$create_mul_expression(
+          iv_utils_$create_value_expression(lshft(1, sh)), ea);
+  end;
+  if i^.h.modify = 1 then
+    eb := iv_utils_$create_value_expression(0)
+  else if b^.h.kind in [operand$none, operand$flow_graph_edge..
+      operand$immediate, operand$spare_2] then begin
+    if b^.h.kind = operand$immediate then
+      eb := iv_utils_$create_value_expression(b^.value)
+    else
+      eb := iv_utils_$create_operand_expression(b^);
+  end
+  else begin
+    l := iv_lts_ptr_t(b^.lts^.l24);
+    eb := l^.ivar^.init;
+    if l^.incr <> nil then
+      eb := iv_utils_$create_add_expression(eb, l^.incr);
+    sh := b^.h.count;
+    if sh <> 0 then
+      eb := iv_utils_$create_mul_expression(
+          iv_utils_$create_value_expression(lshft(1, sh)), eb);
+  end;
+  induction_initial_value_of := iv_utils_$canonicalize_expression(
+      iv_utils_$duplicate_expression(
+      iv_utils_$create_add_expression(ea, eb)));
+end;
+
+{ iv_expressions_differ_by_const - a and b are the same address but
+  for a constant, d (a - b).  0x258FEC, 0x6C bytes. }
+
+function iv_expressions_differ_by_const(
+    a: iv_expr_ptr_t;
+    b: iv_expr_ptr_t;
+    out d: integer32): boolean; options(val_param); internal;
+var
+  e: iv_expr_ptr_t;
+begin
+  iv_expressions_differ_by_const := false;
+  if iv_utils_$compare_address_expressions(a, b) then begin
+    e := iv_utils_$canonicalize_expression(
+        iv_utils_$create_sub_expression(iv_utils_$duplicate_expression(a),
+        iv_utils_$duplicate_expression(b)));
+    if e^.kind = iv_value then begin
+      d := e^.value;
+      iv_expressions_differ_by_const := true;
+    end;
+  end;
+end;
+
+{ record_recurrence - a recurrence from a to b d iterations later (from
+  b to a, -d, for d <= 0) put on oli_recurrences.  0x259058, 0x66
+  bytes. }
+
+procedure record_recurrence(
+    a: instr_ptr_t;
+    b: instr_ptr_t;
+    d: integer32); options(val_param); internal;
+var
+  r: oli_rec_ptr_t;
+begin
+  r := mrh_$alloc(oli_heap, 28);
+  if d > 0 then begin
+    r^.from := a;
+    r^.upto := b;
+    r^.dist := d;
+  end
+  else begin
+    r^.from := b;
+    r^.upto := a;
+    r^.dist := -d;
+  end;
+  r^.l20 := 0;
+  r^.next := oli_recurrences;
+  oli_recurrences := r;
+end;
+
+{ delay_along_data_flow_path - the cycles a data flow path takes: for
+  each step the delays of the writer's operand and of the reader's,
+  and one more unless either instruction is of the classes
+  size_and_shape_ok does not count.  0x2590BE, 0x98 bytes. }
+
+function delay_along_data_flow_path(
+    p: oli_step_ptr_t): integer32; options(val_param); internal;
+var
+  d: integer32;
+  q: oli_step_ptr_t;
+begin
+  d := 0;
+  while (p <> nil) and (p^.next <> nil) do begin
+    q := p^.next;
+    d := d + (p^.instr^.opnds[p^.out_k].h.b2_3_0
+        + q^.instr^.opnds[q^.in_k].h.b2_3_0);
+    if not (instruction_attributes[p^.instr^.opc].class in
+        [4..7, 18, 19, 26]) then
+      if not (instruction_attributes[q^.instr^.opc].class in
+          [4..7, 18, 19, 26]) then
+        d := d + 1;
+    p := q;
+  end;
+  delay_along_data_flow_path := d;
+end;
+
+{ data_flow_paths - the paths of data flow from i to target: for each
+  register i writes, each reader, the reader itself when it is target
+  (a path of two steps), else the paths from the reader, each given i
+  as its first step.  0x259156, 0x150 bytes: the list from the reader
+  is put in front of those found so far by its first cell (its link
+  set to them), and the walk that adds i's step then goes on through
+  them too (kept). }
+
+function data_flow_paths(
+    i: instr_ptr_t;
+    target: instr_ptr_t): oli_path_ptr_t; options(val_param); internal;
+var
+  res, c: oli_path_ptr_t;
+  n, s: oli_step_ptr_t;
+  k: integer32;
+  o, r: opnd_ptr_t;
+  ri: instr_ptr_t;
+begin
+  res := nil;
+  for k := 1 to i^.h.nopnds do begin
+    o := addr(i^.opnds[k]);
+    if o^.h.kind in [operand$ip_reg..operand$well_behaved_memory] then
+      if (opnd_bytes_ptr_t(o)^.rrp & 12) <> 0 then begin
+        r := o^.link;
+        while r <> nil do begin
+          ri := utils_ins_$operands_instruction(r);
+          if ri = target then begin
+            n := mrh_$alloc(oli_heap, 16);
+            n^.next := nil;
+            n^.instr := target;
+            n^.in_k := r^.h.num;
+            c := mrh_$alloc(oli_heap, 8);
+            c^.steps := n;
+            s := mrh_$alloc(oli_heap, 16);
+            s^.next := c^.steps;
+            c^.steps := s;
+            s^.instr := i;
+            s^.out_k := o^.h.num;
+            c^.next := res;
+            res := c;
+          end
+          else begin
+            c := data_flow_paths(ri, target);
+            if c <> nil then begin
+              c^.next := res;
+              res := c;
+              repeat
+                s := mrh_$alloc(oli_heap, 16);
+                s^.next := c^.steps;
+                c^.steps := s;
+                s^.instr := i;
+                s^.out_k := o^.h.num;
+                s^.next^.in_k := r^.h.num;
+                c := c^.next;
+              until c = nil;
+            end;
+          end;
+          r := r^.link;
+        end;
+      end;
+  end;
+  data_flow_paths := res;
+end;
+
+{ find_data_flow_paths - each recurrence's paths, from its later
+  instruction back to its earlier.  0x2592A6, 0x2E bytes. }
+
+procedure find_data_flow_paths; internal;
+var
+  r: oli_rec_ptr_t;
+begin
+  r := oli_recurrences;
+  while r <> nil do begin
+    r^.paths := data_flow_paths(r^.upto, r^.from);
+    r := r^.next;
+  end;
+end;
+
+{ simple_test - for two references with constant increments a and b
+  whose initial addresses e1, e2 differ by a constant d, of sizes x and
+  y (true: oli_$compare_memory_references takes them as disjoint): d
+  at least the larger size with equal nonzero
+  increments; else, unequal increments, d mod (b - a) nonzero and equal
+  sizes, or a remainder (d mod (b - a), or (b - a) mod d when b - a is
+  not below d) beyond the larger size; or a zero remainder with d and
+  b - a of opposite signs.  0x2592D4, 0xE8 bytes: m$ois$lll the
+  remainder. }
+
+function simple_test(
+    a: integer32;
+    b: integer32;
+    e1: iv_expr_ptr_t;
+    e2: iv_expr_ptr_t;
+    x: integer32;
+    y: integer32): boolean; options(val_param); internal;
+label
+  99;
+var
+  dep: boolean;
+  d, m, diff, r: integer32;
+begin
+  dep := false;
+  if iv_expressions_differ_by_const(e1, e2, d) then begin
+    m := x;
+    if m < y then
+      m := y;
+    if abs(d) >= m then
+      if a = b then
+        if d <> 0 then begin
+          dep := true;
+          goto 99;
+        end;
+    if a = b then
+      goto 99;
+    diff := b - a;
+    r := d mod diff;
+    if r <> 0 then begin
+      if x = y then begin
+        dep := true;
+        goto 99;
+      end;
+      if diff < d then
+        if abs(r) > m then begin
+          dep := true;
+          goto 99;
+        end;
+      if abs(diff mod d) > m then
+        dep := true;
+    end
+    else if ((d > 0) and (diff < 0)) or ((d < 0) and (diff > 0)) then
+      dep := true;
+  end;
+99:
+  simple_test := dep;
+end;
+
+{ gcd_test - references with increments a and b and initial addresses
+  differing by a constant d: a remainder of d by gcd(a, b) with equal
+  sizes, or one not below the larger size.  0x2593BC, 0x8A bytes. }
+
+function gcd_test(
+    a: integer32;
+    b: integer32;
+    e1: iv_expr_ptr_t;
+    e2: iv_expr_ptr_t;
+    x: integer32;
+    y: integer32): boolean; options(val_param); internal;
+var
+  dep: boolean;
+  d, m: integer32;
+begin
+  dep := false;
+  if iv_expressions_differ_by_const(e1, e2, d) then
+    if ((d mod gcd(a, b)) <> 0) and (x = y) then
+      dep := true
+    else begin
+      m := x;
+      if m < y then
+        m := y;
+      if d mod gcd(a, b) >= m then
+        dep := true;
+    end;
+  gcd_test := dep;
+end;
+
+{ slope_test - references with increments a and b and initial addresses
+  differing by a constant d: |d| at least the larger size with the
+  increments of opposite signs moving apart, or d zero and both
+  increments of one sign at least that large.  0x259446, 0xB2 bytes. }
+
+function slope_test(
+    a: integer32;
+    b: integer32;
+    e1: iv_expr_ptr_t;
+    e2: iv_expr_ptr_t;
+    x: integer32;
+    y: integer32): boolean; options(val_param); internal;
+var
+  dep: boolean;
+  d, m: integer32;
+begin
+  dep := false;
+  if iv_expressions_differ_by_const(e1, e2, d) then begin
+    m := x;
+    if m < y then
+      m := y;
+    if (abs(d) >= m) and (((a < 0) and (b > 0) and (d < 0)) or
+        ((d > 0) and (a > 0) and (b < 0))) then
+      dep := true
+    else if (d = 0) and (abs(a) >= m) and (abs(b) >= m) then
+      if ((a > 0) and (b > 0)) or ((a < 0) and (b < 0)) then
+        dep := true;
+  end;
+  slope_test := dep;
+end;
+
+{ constant_trip_count - n the loop's trip count when the counter's
+  initial value is a constant (that plus one): the counter's exposed
+  segment in the loop, its induction variable's initial value.
+  0x2594F8, 0x56 bytes. }
+
+function constant_trip_count(
+    out n: integer32): boolean; internal;
+var
+  s: lts_ptr_t;
+  e: iv_expr_ptr_t;
+begin
+  constant_trip_count := false;
+  s := oli_bb^.exposed;
+  while s <> nil do begin
+    if s^.lr = oli_counter then
+      exit;
+    s := s^.next_exposed;
+  end;
+  e := iv_lts_ptr_t(s^.l24)^.ivar^.init;
+  if e^.kind = iv_value then begin
+    constant_trip_count := true;
+    n := e^.value + 1;
+  end;
+end;
+
+{ banarjees_test - with a constant trip count n and equal sizes,
+  references with increments a and b and initial addresses differing by
+  d: the bounds of d's change over the loop (Banerjee's) both of one
+  sign.  0x25954E, 0xEE bytes: m$mis$lll the products. }
+
+function banarjees_test(
+    a: integer32;
+    b: integer32;
+    e1: iv_expr_ptr_t;
+    e2: iv_expr_ptr_t;
+    x: integer32;
+    y: integer32): boolean; options(val_param); internal;
+var
+  dep: boolean;
+  n, d, hi, lo: integer32;
+begin
+  dep := false;
+  if constant_trip_count(n) then
+    if iv_expressions_differ_by_const(e1, e2, d) then
+      if x = y then begin
+        if a >= 0 then
+          if b >= 0 then begin
+            lo := d - b * n;
+            hi := a * n + d;
+          end
+          else begin
+            lo := d;
+            hi := (a - b) * n + d;
+          end
+        else if b >= 0 then begin
+          lo := (a - b) * n + d;
+          hi := d;
+        end
+        else begin
+          lo := a * n + d;
+          hi := d - b * n;
+        end;
+        if ((hi < 0) and (lo < 0)) or ((hi > 0) and (lo > 0)) then
+          dep := true;
+      end;
+  banarjees_test := dep;
+end;
+
+{ recurrence_test - references i1, i2 with equal increments a and
+  initial addresses differing by d make a recurrence, recorded: for a
+  zero increment, the same address when one is a store (distance 1),
+  or d below either size; else d a multiple of a when one is a store
+  (distance d div a).  0x25963C, 0xFA bytes: m$dis$lll the quotient. }
+
+function recurrence_test(
+    a: integer32;
+    b: integer32;
+    e1: iv_expr_ptr_t;
+    e2: iv_expr_ptr_t;
+    i1: instr_ptr_t;
+    i2: instr_ptr_t;
+    x: integer32;
+    y: integer32): boolean; options(val_param); internal;
+label
+  99;
+var
+  dep: boolean;
+  d: integer32;
+begin
+  dep := false;
+  if iv_expressions_differ_by_const(e1, e2, d) then
+    if a = b then
+      if a = 0 then begin
+        if d = 0 then begin
+          if (instruction_attributes[i1^.opc].class <> class$store) and
+              (instruction_attributes[i2^.opc].class <> class$store) then
+            goto 99;
+        end
+        else if (d >= x) and (d >= y) then
+          goto 99;
+        record_recurrence(i1, i2, 1);
+        dep := true;
+      end
+      else if d mod a = 0 then
+        if (instruction_attributes[i1^.opc].class = class$store) or
+            (instruction_attributes[i2^.opc].class = class$store) then begin
+          record_recurrence(i1, i2, d div a);
+          dep := true;
+        end;
+99:
+  recurrence_test := dep;
+end;
+
+{ OLI_$COMPARE_MEMORY_REFERENCES - the address comparison mmt_utils
+  uses while oli runs (oli_$process_routine sets it): mmt_utils_$addr_
+  compare's answer, refined for a store and another load or store whose
+  addresses are induction expressions: 3 (disjoint) when the increments
+  are constants and simple_test answers true, or when increments and
+  initial values differ by constants not dividing; oli_mem_dep 2 for
+  references not so addressed, and 1 when one of the dependence tests
+  finds a dependence (unless the alias descriptors say they are
+  unrelated).  0x259736, 0x312 bytes: the sizes 1 shl (the opcode's
+  +19 bits 2..0); simple_test given init_b in A0 (the same value). }
+
+function oli_$compare_memory_references(
+    a: instr_ptr_t;
+    b: instr_ptr_t;
+    report: boolean;
+    out disp: integer32): integer;
+label
+  99;
+var
+  r: integer;
+  ca, cb: integer;
+  va: boolean;
+  base_a, disp_a, base_b, disp_b: opnd_ptr_t;
+  inc_a, inc_b, init_a, init_b: iv_expr_ptr_t;
+  sa, sb, d1, d2: integer32;
+begin
+  if a = b then begin
+    r := 1;
+    goto 99;
+  end;
+  r := mmt_utils_$addr_compare(a, b, report, disp);
+  ca := instruction_attributes[a^.opc].class;
+  cb := instruction_attributes[b^.opc].class;
+  if (ca <> class$store) and (cb <> class$store) then
+    goto 99;
+  if oli_mem_dep = 2 then
+    goto 99;
+  if not ((ca in [class$load, class$store]) and
+      (cb in [class$load, class$store])) then
+    goto 99;
+  va := mem_ref_via_non_const_induction_variable(a, base_a, disp_a);
+  if not (mem_ref_via_non_const_induction_variable(b, base_b, disp_b)
+      and va) then begin
+    oli_mem_dep := 2;
+    goto 99;
+  end;
+  inc_a := induction_increment_of(base_a, disp_a, a);
+  inc_b := induction_increment_of(base_b, disp_b, b);
+  init_a := induction_initial_value_of(base_a, disp_a, a);
+  init_b := induction_initial_value_of(base_b, disp_b, b);
+  sa := lshft(1, instruction_attributes[a^.opc].w18 & 7);
+  sb := lshft(1, instruction_attributes[b^.opc].w18 & 7);
+  if (r <> 1) and (r <> 3) then
+    if (inc_a^.kind = iv_value) and (inc_b^.kind = iv_value) then begin
+      if simple_test(inc_a^.value, inc_b^.value, init_a, init_b, sa,
+          sb) then
+        r := 3;
+    end
+    else begin
+      va := iv_expressions_differ_by_const(inc_a, inc_b, d1);
+      if iv_expressions_differ_by_const(init_a, init_b, d2) and va then
+        if sa = sb then
+          if d2 mod d1 <> 0 then
+            r := 3;
+    end;
+  if a^.h.b2_7 and b^.h.b2_7 then
+    if not alias_$related(alias_$desc_ptr_t(integer32(a) - 24)^,
+        alias_$desc_ptr_t(integer32(b) - 24)^) then
+      goto 99;
+  oli_mem_dep := 2;
+  if (inc_a^.kind = iv_value) and (inc_b^.kind = iv_value) then
+    if gcd_test(inc_a^.value, inc_b^.value, init_a, init_b, sa, sb)
+        or slope_test(inc_a^.value, inc_b^.value, init_a, init_b, sa, sb)
+        or banarjees_test(inc_a^.value, inc_b^.value, init_a, init_b, sa,
+        sb)
+        or recurrence_test(inc_a^.value, inc_b^.value, init_a, init_b, a,
+        b, sa, sb) then
+      oli_mem_dep := 1;
+99:
+  oli_$compare_memory_references := r;
 end;
