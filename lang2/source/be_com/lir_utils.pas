@@ -189,6 +189,342 @@ begin
   lir_utils_$add_lts_after_lts := l;
 end;
 
+{ lir_utils_$trans_insert_move - a move put next to op's instruction so
+  that op's segment, a physical register's, is separated from it by a
+  new live range of op's class (a pair for a pair operand of a mated
+  live range): for a read (op's +1 bit 4) the move goes before the
+  instruction, reading op's old segment and writing a new one that op
+  then reads (op must be the segment's only reader); for a write the
+  move goes after it, op writing a new segment that the move reads, the
+  move writing op's old one for its reader (op must have one reader at
+  most; none, nothing is done).  The new segments' rrp are the old
+  one's without parity, modify, intend_to_modify, unconsumed, spare_1
+  and true_write (`andi.w #-1256'), with read and write (24); a pair's
+  halves get even_only and odd_only and the move's four operands
+  (move_opcode[fp_reg_pair]: 1 and 2 the even halves, 3 and 4 the odd)
+  are filled here, k (1 even, 3 odd) the half op is, the mate's
+  operands (utils_$find_mate_operand of op for a fp_reg_pair, else of
+  the segment's definition or reader) moved the same way.
+
+  0x24C312, 0x912 bytes: op (8) in D6 (the write path D7); the
+  instruction computed inline (`move.b (A1),D0; lsl.w #2; ...;
+  subi.l #32; sub.l D1,D2': utils_ins_$operands_instruction's body,
+  docs/rev889-patterns.md 121) in A4 (A3); lr -20, def -36, the pair's
+  move -48, new_lts -16, other_lts -12, rrp D4 (D2), the other half's
+  rrp D3 (D5), pair D5 (D3, `sne'), k D2 (D4).  The kinds' sets:
+  16#4048 (`btst D5,D7': fp_reg_pair, _physical, _like), 16#2024
+  (fp_reg's), 16#21012 (ip_reg's and case_jump_base).  lr's mate is
+  tested first, then the operand's kind again (`btst D0,D7', not the
+  boolean), and the boolean once more before the other half's
+  add_lts_to_lr.  In the non-pair read the move's operand 2 gets def's
+  parity when the instruction is a DIVI (`cmpi.w #179,(20,A4)') or the
+  new live range has a mate, else op loses its own (`andi.b #-4').
+  The write path's "Multiple physical outputs" check passes -48 (the
+  pair's move, never set on that path) as the instruction (`move.l
+  (-48,A6),-(SP)', its +42 and its block's +10): kept
+  (docs/questions.md 250).  The messages' arguments: the line, LTS
+  lr.num.lts.num (the segment's number zero-extended to a longword at
+  -116), inst bb.num:instr.num.
+
+  Not known from the original: the names of the locals; whether the
+  pair's move was built by a routine of its own (it is inline here). }
+
+procedure lir_utils_$trans_insert_move(
+    op: opnd_ptr_t);
+var
+  instr: instr_ptr_t;
+  mi: instr_ptr_t;
+  pm: instr_ptr_t;
+  lr: lr_ptr_t;
+  nlr: lr_ptr_t;
+  olr: lr_ptr_t;
+  def: opnd_ptr_t;
+  rd: opnd_ptr_t;
+  mop: opnd_ptr_t;
+  mdef: opnd_ptr_t;
+  d: opnd_ptr_t;
+  s: opnd_ptr_t;
+  new_lts: lts_ptr_t;
+  other_lts: lts_ptr_t;
+  rrp: integer;
+  orrp: integer;
+  pair: boolean;
+  k: integer32;
+  n: integer32;
+begin
+  if op^.h.read then begin
+    lr := op^.lts^.lr;
+    instr := instr_ptr_t(integer32(op) - 32 - 12 * op^.h.num);
+    if at_backend_switches.level >= 4 then
+      vfmt_$write('Enter LIR_UTILS_$TRANS_INSERT_MOVE (read) for instruction %3ZWD%.',
+                  instr^.num);
+    def := op^.lts^.refs;
+    if (def^.h.read and (def <> op))
+       or (not def^.h.read and (def^.link <> op))
+       or (op^.link <> nil) then begin
+      n := op^.lts^.f2.num;
+      instr_bug_check('LIR_UTILS_$TRANS_INSERT_MOVE: physical LTS has multiple consumers: near line %LD, LTS %3ZWD.%2ZLD, inst %3ZWD:%3ZWD%$',
+                      instr^, op^.lts^.lr^.num, n, instr^.bb^.num, instr^.num);
+    end;
+    rrp := (integer(op^.lts^.rrp) & 16#FB18) ! 24;
+    pair := op^.h.kind in [operand$fp_reg_pair, operand$fp_reg_pair_physical,
+                           operand$fp_reg_pair_like];
+    if (lr^.mate <> nil)
+       and (op^.h.kind in [operand$fp_reg_pair,
+                           operand$fp_reg_pair_physical,
+                           operand$fp_reg_pair_like]) then begin
+      if rrp$fp_reg_even_only in op^.lts^.rrp then begin
+        k := 1;
+        nlr := lir_$new_live_range_fp_reg_pair;
+        olr := nlr^.mate;
+        orrp := rrp ! 2;
+        rrp := rrp ! 1;
+      end
+      else begin
+        k := 3;
+        olr := lir_$new_live_range_fp_reg_pair;
+        nlr := olr^.mate;
+        orrp := rrp ! 1;
+        rrp := rrp ! 2;
+      end;
+      olr^.rrp := rrp$set_t(orrp);
+      if pair then
+        lir_utils_$add_lts_to_lr(orrp, olr, op^.lts^.bb, other_lts);
+    end
+    else if op^.h.kind in [operand$fp_reg, operand$fp_reg_physical,
+                           operand$fp_reg_like] then
+      nlr := lir_$new_live_range_fp_reg
+    else if op^.h.kind in [operand$ip_reg, operand$ip_reg_physical,
+                           operand$ip_reg_like,
+                           operand$case_jump_base] then
+      nlr := lir_$new_live_range_ip_reg
+    else
+      nlr := lir_$new_live_range;
+    nlr^.rrp := rrp$set_t(rrp);
+    lir_utils_$add_lts_to_lr(rrp, nlr, op^.lts^.bb, new_lts);
+    if pair then begin
+      mi := lir_$optimizer_new_instruction(instr,
+              move_opcode[operand$fp_reg_pair], false);
+      d := addr(mi^.opnds[k + 1]);
+      d^.h.kind := op^.h.kind;
+      opnd_bytes_ptr_t(d)^.rrp := 8 ! (rrp & 3);
+      d^.lts := new_lts;
+      d^.link := op;
+      new_lts^.refs := d;
+      d^.h.num := k + 1;
+      s := addr(mi^.opnds[k]);
+      s^.h.kind := def^.h.kind;
+      opnd_bytes_ptr_t(s)^.rrp := 16 ! (rrp & 3);
+      s^.lts := op^.lts;
+      s^.link := nil;
+      s^.h.num := k;
+      if def = op then
+        op^.lts^.refs := s
+      else
+        def^.link := s;
+      op^.lts := new_lts;
+      if op^.h.kind = operand$fp_reg_pair then begin
+        mop := utils_$find_mate_operand(op);
+        mdef := mop^.lts^.refs;
+        if mop^.lts^.lr^.mate <> lr then begin
+          n := op^.lts^.f2.num;
+          instr_bug_check('LIR_UTILS_$TRANS_INSERT_MOVE 1 -- found operand but LRs are not mated: near line %LD, LTS %3ZWD.%2ZLD, inst %3ZWD:%3ZWD%$',
+                          instr^, op^.lts^.lr^.num, n, instr^.bb^.num, instr^.num);
+        end;
+      end
+      else begin
+        mdef := utils_$find_mate_operand(def);
+        mop := mdef^.link;
+        if mdef^.lts^.lr^.mate <> lr then begin
+          n := op^.lts^.f2.num;
+          instr_bug_check('LIR_UTILS_$TRANS_INSERT_MOVE 2 -- found operand but LRs are not mated: near line %LD, LTS %3ZWD.%2ZLD, inst %3ZWD:%3ZWD%$',
+                          instr^, op^.lts^.lr^.num, n, instr^.bb^.num, instr^.num);
+        end;
+      end;
+      d := addr(mi^.opnds[5 - k]);
+      if mop = nil then
+        d^.h.kind := operand$fp_reg
+      else
+        d^.h.kind := mop^.h.kind;
+      opnd_bytes_ptr_t(d)^.rrp := 8 ! (orrp & 3);
+      d^.lts := other_lts;
+      d^.link := mop;
+      other_lts^.refs := d;
+      d^.h.num := 5 - k;
+      s := addr(mi^.opnds[4 - k]);
+      s^.h.kind := mdef^.h.kind;
+      opnd_bytes_ptr_t(s)^.rrp := 16 ! (orrp & 3);
+      s^.lts := mdef^.lts;
+      s^.link := nil;
+      s^.h.num := 4 - k;
+      if mdef = mop then
+        mop^.lts^.refs := s
+      else
+        mdef^.link := s;
+      if mop <> nil then
+        mop^.lts := other_lts;
+    end
+    else begin
+      pm := lir_utils_$create_preference_move(op^.h.kind, instr, false);
+      opnd_bytes_ptr_t(addr(pm^.opnds[2]))^.rrp :=
+        (opnd_bytes_ptr_t(def)^.rrp & 64) ! 8;
+      if (instr^.opc = ord(opc$divi)) or (new_lts^.lr^.mate <> nil) then
+        opnd_bytes_ptr_t(addr(pm^.opnds[2]))^.rrp :=
+          opnd_bytes_ptr_t(addr(pm^.opnds[2]))^.rrp
+          ! (opnd_bytes_ptr_t(def)^.rrp & 3)
+      else
+        opnd_bytes_ptr_t(op)^.rrp := opnd_bytes_ptr_t(op)^.rrp & 16#FC;
+      pm^.opnds[2].lts := new_lts;
+      pm^.opnds[2].link := op;
+      new_lts^.refs := addr(pm^.opnds[2]);
+      pm^.opnds[1].lts := op^.lts;
+      pm^.opnds[1].link := nil;
+      if def = op then
+        op^.lts^.refs := addr(pm^.opnds[1])
+      else
+        def^.link := addr(pm^.opnds[1]);
+      op^.lts := new_lts;
+    end;
+  end
+  else begin
+    rd := op^.link;
+    if rd = nil then
+      return;
+    if rd^.link <> nil then begin
+      n := op^.lts^.f2.num;
+      instr_bug_check('LIR_UTILS_$TRANS_INSERT_MOVE: Multiple physical outputs: near line %LD, LTS %3ZWD.%2ZLD, inst %3ZWD:%3ZWD%$',
+                      mi^, op^.lts^.lr^.num, n, mi^.bb^.num, mi^.num);
+    end;
+    lr := op^.lts^.lr;
+    instr := instr_ptr_t(integer32(op) - 32 - 12 * op^.h.num);
+    if at_backend_switches.level >= 4 then
+      vfmt_$write('Enter lir_utils_$trans_insert_move (write) for instruction %3ZWD%.',
+                  instr^.num);
+    rrp := (integer(op^.lts^.rrp) & 16#FB18) ! 24;
+    pair := op^.h.kind in [operand$fp_reg_pair, operand$fp_reg_pair_physical,
+                           operand$fp_reg_pair_like];
+    if (lr^.mate <> nil)
+       and (op^.h.kind in [operand$fp_reg_pair,
+                           operand$fp_reg_pair_physical,
+                           operand$fp_reg_pair_like]) then begin
+      if rrp$fp_reg_even_only in op^.lts^.rrp then begin
+        k := 1;
+        nlr := lir_$new_live_range_fp_reg_pair;
+        olr := nlr^.mate;
+        orrp := rrp ! 2;
+        rrp := rrp ! 1;
+      end
+      else begin
+        k := 3;
+        olr := lir_$new_live_range_fp_reg_pair;
+        nlr := olr^.mate;
+        orrp := rrp ! 1;
+        rrp := rrp ! 2;
+      end;
+      olr^.rrp := rrp$set_t(orrp);
+      if pair then
+        lir_utils_$add_lts_to_lr(orrp, olr, op^.lts^.bb, other_lts);
+    end
+    else if op^.h.kind in [operand$fp_reg, operand$fp_reg_physical,
+                           operand$fp_reg_like] then
+      nlr := lir_$new_live_range_fp_reg
+    else if op^.h.kind in [operand$ip_reg, operand$ip_reg_physical,
+                           operand$ip_reg_like,
+                           operand$case_jump_base] then
+      nlr := lir_$new_live_range_ip_reg
+    else
+      nlr := lir_$new_live_range;
+    nlr^.rrp := rrp$set_t(rrp);
+    lir_utils_$add_lts_to_lr(rrp, nlr, op^.lts^.bb, new_lts);
+    if pair then begin
+      mi := lir_$optimizer_new_instruction(instr,
+              move_opcode[operand$fp_reg_pair], true);
+      d := addr(mi^.opnds[k + 1]);
+      d^.h := op^.h;
+      d^.h.kind := rd^.h.kind;
+      d^.lts := op^.lts;
+      d^.link := op^.link;
+      d^.lts^.refs := d;
+      opnd_bytes_ptr_t(d)^.rrp := (opnd_bytes_ptr_t(d)^.rrp & 123) ! 8;
+      d^.h.num := k + 1;
+      d^.h.b2_3_0 := 0;
+      s := addr(mi^.opnds[k]);
+      s^.h := rd^.h;
+      s^.h.kind := op^.h.kind;
+      opnd_bytes_ptr_t(s)^.rrp := (opnd_bytes_ptr_t(s)^.rrp & 3) ! 16;
+      s^.h.count := 0;
+      s^.h.num := k;
+      s^.lts := new_lts;
+      s^.link := nil;
+      op^.link := s;
+      new_lts^.refs := op;
+      op^.lts := new_lts;
+      if op^.h.kind = operand$fp_reg_pair then begin
+        mdef := utils_$find_mate_operand(op);
+        mop := mdef^.link;
+        if mdef^.lts^.lr^.mate <> lr then begin
+          n := op^.lts^.f2.num;
+          instr_bug_check('LIR_UTILS_$TRANS_INSERT_MOVE 3 -- found operand but LRs are not mated: near line %LD, LTS %3ZWD.%2ZLD, inst %3ZWD:%3ZWD%$',
+                          instr^, op^.lts^.lr^.num, n, instr^.bb^.num, instr^.num);
+        end;
+      end
+      else begin
+        mop := utils_$find_mate_operand(rd);
+        mdef := mop^.lts^.refs;
+        if mop^.lts^.lr^.mate <> lr then begin
+          n := op^.lts^.f2.num;
+          instr_bug_check('LIR_UTILS_$TRANS_INSERT_MOVE 4 -- found operand but LRs are not mated: near line %LD, LTS %3ZWD.%2ZLD, inst %3ZWD:%3ZWD%$',
+                          instr^, op^.lts^.lr^.num, n, instr^.bb^.num, instr^.num);
+        end;
+      end;
+      if mop <> nil then begin
+        if (mdef^.link <> mop) or (mop^.link <> nil) then
+          instr_bug_check('LIR_UTILS_$TRANS_INSERT_MOVE: badly formed LTS on register pair near line %LD%$',
+                          mi^);
+        d := addr(mi^.opnds[5 - k]);
+        d^.h := mdef^.h;
+        d^.h.kind := mop^.h.kind;
+        d^.lts := mdef^.lts;
+        d^.link := mdef^.link;
+        d^.lts^.refs := d;
+        opnd_bytes_ptr_t(d)^.rrp := (opnd_bytes_ptr_t(d)^.rrp & 123) ! 8;
+        d^.h.num := 5 - k;
+        d^.h.b2_3_0 := 0;
+        s := addr(mi^.opnds[4 - k]);
+        s^.h := mop^.h;
+        s^.h.kind := mdef^.h.kind;
+        opnd_bytes_ptr_t(s)^.rrp := (opnd_bytes_ptr_t(s)^.rrp & 3) ! 16;
+        s^.h.count := 0;
+        s^.h.num := 4 - k;
+        s^.lts := other_lts;
+        s^.link := nil;
+        mdef^.link := s;
+        other_lts^.refs := mdef;
+        mdef^.lts := other_lts;
+        mi^.opnds[1].h.fp_reg_even_only := true;
+        mi^.opnds[2].h.fp_reg_even_only := true;
+        mi^.opnds[3].h.fp_reg_odd_only := true;
+        mi^.opnds[4].h.fp_reg_odd_only := true;
+      end;
+    end
+    else begin
+      pm := lir_utils_$create_preference_move(op^.h.kind, instr, true);
+      pm^.opnds[2].lts := op^.lts;
+      pm^.opnds[2].link := op^.link;
+      pm^.opnds[2].lts^.refs := addr(pm^.opnds[2]);
+      opnd_bytes_ptr_t(addr(pm^.opnds[2]))^.rrp :=
+        opnd_bytes_ptr_t(addr(pm^.opnds[2]))^.rrp
+        ! (opnd_bytes_ptr_t(op)^.rrp & 67);
+      pm^.opnds[1].lts := new_lts;
+      pm^.opnds[1].link := nil;
+      op^.link := addr(pm^.opnds[1]);
+      new_lts^.refs := op;
+      op^.lts := new_lts;
+      opnd_bytes_ptr_t(op)^.rrp := opnd_bytes_ptr_t(op)^.rrp & 16#FC;
+    end;
+  end;
+end;
+
 { assign_spill_id - the routine's next spill id (its +196 counted up;
   bug_check when it overflows) to id (the counter's low word).
 

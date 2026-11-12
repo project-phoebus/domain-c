@@ -2092,10 +2092,12 @@ function lir_utils_$add_lts_after_lts(
     rrp: integer;
     bb: bb_ptr_t): lts_ptr_t; options(val_param); extern;
 
-{ LIR_UTILS_$TRANS_INSERT_MOVE - 0x24C312, 0x912 bytes; called from com
-  sched_utils.  Frame 8:al. }
+{ LIR_UTILS_$TRANS_INSERT_MOVE - op's physical segment separated from
+  it by a move and a new live range (before op's instruction for a
+  read, after it for a write).  0x24C312, 0x912 bytes; called from com
+  sched_utils.  Frame 8:al.  No result (batch A, PA4: p1 narrowed). }
 procedure lir_utils_$trans_insert_move(
-    p1: univ_ptr); options(val_param); extern;
+    op: opnd_ptr_t); options(val_param); extern;
 
 { LIR_UTILS_$ADD_MEMORY_HOME - lr (or its even mate) given a memory
   home with a spill id: its old one kept when big enough, else a new
