@@ -1308,6 +1308,13 @@ procedure asm_$end_compilation; extern;
 
 { at_backend.pas (cc.a88k). }
 
+{ The bug check reporters' control string and arguments, as
+  bug_check.ins.pas's bug_check_$string_t and bug_check_$arg_t: rewrite
+  opens this insert before bug_check.ins.pas (translator PD). }
+type
+  backend_$bug_string_t = array [1..256] of char;
+  backend_$bug_arg_t = integer32;
+
 { INSTR_BUG_CHECK - bug_check's message with the instruction's source
   line (its +32 word, or the word at +4 of what +32 points to when its
   +0 bit 1 is set; mapped through lst_13c's table, 99999 without it;
@@ -1316,26 +1323,26 @@ procedure asm_$end_compilation; extern;
   each argument by address (instr, the record, compared with nil),
   the rest passed on as they are. }
 procedure instr_bug_check(
-    in control_string: univ bug_check_$string_t;
+    in control_string: univ backend_$bug_string_t;
     in instr: univ instr_t;
     in a1, a2, a3, a4, a5, a6, a7, a8, a9:
-       univ bug_check_$arg_t); options(variable); extern;
+       univ backend_$bug_arg_t); options(variable); extern;
 
 { PHASE_BUG_CHECK - bug_check's message with the running phase's name
   (at_backend's table, by at_backend_phase) as the first argument.
   0x221B18, 0x66 bytes; called from sanity. }
 procedure phase_bug_check(
-    in control_string: univ bug_check_$string_t;
+    in control_string: univ backend_$bug_string_t;
     in a1, a2, a3, a4, a5, a6, a7, a8, a9:
-       univ bug_check_$arg_t); options(variable); extern;
+       univ backend_$bug_arg_t); options(variable); extern;
 
 { PHASE_INSTR_BUG_CHECK - instr_bug_check's, the phase's name first.
   0x221B7E, 0xAC bytes; called from sanity. }
 procedure phase_instr_bug_check(
-    in control_string: univ bug_check_$string_t;
+    in control_string: univ backend_$bug_string_t;
     in instr: univ instr_t;
     in a1, a2, a3, a4, a5, a6, a7, a8:
-       univ bug_check_$arg_t); options(variable); extern;
+       univ backend_$bug_arg_t); options(variable); extern;
 
 { bin.pas (cc.a88k). }
 
