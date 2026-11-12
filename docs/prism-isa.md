@@ -120,3 +120,79 @@ image.  Translator PB, 2026-11-11; extended unit by unit.
 - The return address register is register 22 (bin_$unwind_bits); a
   frame register above 23 is noted in the unwind scope; a pushed frame
   of at most 128 bytes uses an ECB.
+
+## The encoding (asm.pas, read but not yet translated)
+
+asm_$process_routine (0x21F6D4, 0x19A2 bytes) builds each instruction's
+word (stored at the instruction's +24, which zzzzz copies to the code
+cell's +12) as the OR of a template and the operands' fields.  What
+follows is read from its encoder (0x2205A8..0x220FAA); bit 31 is the
+most significant.  The translation of asm.pas will check it.
+
+- The template is instruction_assembly's +0 for the register form and
+  +4 for the immediate form: an operand that is an immediate switches
+  to +4 (0x220742).
+- Each operand has a field kind, instruction_assembly's word for it
+  (+36 + 2(k-1)) bits 7..3, 0..17 (a jump table at 0x2206BE):
+
+  | kind | field |
+  |------|-------|
+  | 0 | none |
+  | 1 | integer register in bits 20..16 |
+  | 2 | integer register in bits 25..21 |
+  | 3 | a register pair (its number halved) in bits 25..21 |
+  | 4, 5 | an integer register in bits 4..0; otherwise the immediate form, the value by the operand's form (below) |
+  | 6 | a single (number times 4) or a 13-bit unsigned immediate in bits 12..0 |
+  | 7 | a register in bits 20..16, or a 5-bit immediate there with bit 8 set |
+  | 8 | a register in bits 25..21, or a 5-bit immediate there with bit 8 set |
+  | 9 | a 4-bit immediate in bits 9..6 |
+  | 10 | a single held in a double register: the double's number in bits 25..21; an odd single turns stores into storeso and loads into loadso (their templates) |
+  | 11 | a floating register (0..63) in bits 23..18 |
+  | 12 | a floating register in bits 29..24 |
+  | 13 | a floating register's even part in bits 29..24, its low bit in bit 0 |
+  | 14 | a floating register in bits 11..6 and again in bits 5..0 |
+  | 15 | a floating register in bits 5..0 (divi wants an odd one) |
+  | 16 | a floating register in bits 11..6 |
+  | 17 | a floating register in bits 17..12 |
+
+  So the integer registers take 5-bit fields and the floating registers
+  6-bit ones (64 singles; a double is an even/odd pair).
+- An integer register's scale (the operand's +2 bits 5..4: x1, x2, x4,
+  x8) goes into bits 6..5.
+- Immediates of kinds 4 and 5, by the operand's form (of$t):
+  - a branch target (forms ip_reg_or_long_pc_disp,
+    ip_reg_or_basic_block): the word displacement to the target block's
+    first instruction, 18 bits in bits 17..0 (a call's is left to bin);
+  - ip_compare_a_operand: the value negated, bits 15..0 (a compare with
+    an immediate is an add of its negation, hence lst's "ADD");
+  - s_immed8 forms: bits 6..0 and the sign in bit 15;
+  - the 16-bit immediates and displacements: bits 15..0; for a load or
+    store that modifies its base or has a qualifier, an 8-bit signed
+    displacement (bits 6..0, sign in bit 15) with the register form's
+    template and bit 27 set; argument block, stack frame and literal
+    pool displacements left at 0 for bin; XSB displacements biased
+    (lir_main's base), at most 32767;
+  - ip_reg_or_u_i16_or_hi_i16 (and the and/bic form): a value whose
+    high half is zero goes in bits 15..0; one whose low half is zero
+    puts its high half there with bit 27 set (a "high" immediate);
+    otherwise its complement is tried, AND (opcode 84) becoming BIC
+    (214) and back.
+- After the operands:
+  - a branch's squash mode (the cell's +3 bits 7..6) goes into bits
+    19..18 through the constant 57: .SN 1, .ST 2, .SF 3, .SA 0;
+  - an insert's or extract's width less one, bits 13..9;
+  - a load's or store's addressing mode (am$t) in bits 10..9 and its
+    qualifier (lsq$t) in bits 8..7 (register form);
+  - load_pair's offset in bits 10..5 with its sign in bit 15;
+  - a synch takes a byte of the routine's record (+116's +2) in bits
+    20..16;
+  - setting the floating condition codes is bit 24; setting the
+    integer ones bit 26 for an immediate compare-form operand 1 (forms
+    3 and 10) in the immediate form, else bit 14;
+  - bit 31 marks an instruction that continues into the next cell (the
+    cell's +2 bit 7, or bit 6 outside the two-word floating classes).
+- Register operands get their physical register from the live range
+  (the segment's +48, its +2) or from lir_main's table of physical
+  registers by the operand's number, and the operand's +0 is
+  overwritten with it: after asm an operand's +0 is the register
+  (zzzzz's test against 31; docs/questions.md 153).
