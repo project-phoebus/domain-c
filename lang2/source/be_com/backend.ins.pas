@@ -457,7 +457,10 @@ type
     node: il_$node_ptr_t;               { +0 }
     space4: array [4..51] of char;      { +4 }
     lrs: lr_ptr_t;                      { +52 }
-    space56: array [56..75] of char;    { +56 }
+    lrs_last: lr_ptr_t;                 { +56: the last live range
+                                          (lir_$alloc_live_range,
+                                          mmt_utils) }
+    space60: array [60..75] of char;    { +60 }
     bbs: bb_ptr_t;                      { +76 }
     space80: array [80..87] of char;    { +80 }
     cells: cell_ptr_t;                  { +88 }
@@ -1327,12 +1330,13 @@ procedure lir_$break_basic_block; extern;
 
 { LIR_$OPTIMIZER_NEW_N_OPR_INSTR - 0x243DD8, 0x2C bytes; called from com
   mmt mmt_utils ra_utils.  Frame 8:al; 12:lw; 14:b; 16:al.  Result: read
-  (callers: A05). }
+  (callers: A05).  As lir_$optimizer_new_instruction with n operands
+  (mmt_utils' reading of its call: opc a word, n a longword). }
 function lir_$optimizer_new_n_opr_instr(
-    p1: univ_ptr;
-    p2: integer32;
-    p3: boolean;
-    p4: univ_ptr): univ_ptr; options(val_param); extern;
+    anchor: instr_ptr_t;
+    opc: integer;
+    after: boolean;
+    n: integer32): instr_ptr_t; options(val_param); extern;
 
 { LIR_$OPTIMIZER_NEW_INSTRUCTION - a new instruction of opcode opc, of
   the opcode's default size (lir_$opt_new_instruction with true, nil),
