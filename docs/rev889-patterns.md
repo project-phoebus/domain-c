@@ -1320,3 +1320,47 @@ cc.m68k unless marked.
     constant rlen is `move.b 0x2BCF47,(38,A2)' (isc_dindex_node), with
     a variable one `movea.l #0x2BCDFC,A1; move.w (24,A0),D1; add.w
     D1,D1; lea (0,A1,D1.w),A1; move.b (321,A1),(38,A2)' (0x0E6196).
+
+## The generated pass-2 actions (translator GC, cc.a88k)
+
+330. **Every module has a data block, four bytes at least.**  The 25
+    pass-2 modules declare nothing (their actions read no module
+    variable) yet own four bytes each: A5 0x480058 + 4k in section
+    order, k = 0..24, including 0x4800A8 and 0x4800AC of sections 21
+    and 22, whose actions are all empty and never load them.  std's
+    four bytes (lang/common/source/std.pas) are the same thing.  dpc
+    allocates nothing for such a module (nothing to compare).
+331. **Two constant word arguments pushed as one longword.**
+    pattern_match_error(pme, kind, math, line), four words: `move.w
+    (32,A1),-(SP); clr.l -(SP); move.w #2,-(SP)' (0x1F722A, rule 120's
+    action): kind and math, both 0, by one `clr.l'.
+332. **`movea.l A0,A0' as a filler.**  0x2048 before a `dbf' loop's
+    head (0x1CFB4E, rule 211's action, after the count is set up), and
+    as the word after a module's last routine to keep 4-byte alignment
+    (0x1CF06E after rule 1's `rts'); dpc pads with the same word
+    (`.balignw 4,0x2048').
+333. **A pop that keeps part of the arguments as the next call's pad.**
+    After debug_lir_$label (8 bytes of arguments) `addq.l #6,SP'
+    (0x1F014C), after a 24-byte simple_instruction `lea (22,SP),SP'
+    (0x1F0122): the two bytes left are the `subq.l #2,SP' pad the next
+    call with a word argument would push.
+334. **An argument pushed again from the stack.**  `move.l (SP),-(SP)'
+    (0x1F9AE6, rule 122's action): the value just pushed for this call
+    is pushed once more for the next parameter.
+335. **A boolean copied between packed bytes.**  `btst #3,(115,A2); sne
+    D0; clr.l D1; lsr.b #7,D0; lsl.b #3,D0; or.b D0,D1; andi.b
+    #-9,(115,A0); or.b D1,(115,A0)' (0x1BBEBA, rule 16's action):
+    result.already_through_pass_2 := $1.already_through_pass_2.
+336. **Signed division by a power of two.**  `move.l (360,A2),D1; bpl
+    +2; addq.l #3,D1; asr.l #2,D1' (0x1AA724, rule 12's action): l360
+    div 4, then the `beq' of the asr's flags is the `for' loop's guard.
+337. **A call's arguments left on the stack to the epilogue.**  The
+    pattern_match_error call at 0x1BC1C4 (rule 33's action) is not
+    popped; the arm joins the other with eight bytes more on the stack
+    and `unlk' discards them.
+338. **A0 read after a procedure's call.**  `jsr
+    set_isc_is_cse_on_live_range_if_local_cse; move.l A0,(20,A2)'
+    (0x1A7AEC, rule 489's action) and `jsr
+    side_effect_set_var_$address_exposed; move.l A0,(-8,A6)' (0x1AB17E,
+    rule 442's action): the callers use the pointer argument the
+    procedure left in A0 (docs/questions.md 410).
