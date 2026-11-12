@@ -1620,3 +1620,81 @@ revisited.
    +0x300 and +0x330 .. +0x630; iv_opc_set sits between at +0x300),
    the words past 211 zero (no .rwdi record).  Should both be indexed
    0..383 (the opcode enumeration's range)?
+
+
+193. Translator PB4, dbg_life.pas: dbg_life_$find_symbols' test of
+   whether the call before an instruction clobbered a floating register
+   reads register r above 31 in the call's set of 0..31 (+48 after the
+   operands: never true) and r up to 31 in the set of 32..63 (+44),
+   while dbg_life_$initialize and find_symbols' own closing loops use
+   +48 for 0..31 and +44 for 32..63; and find_symbols tests for a call
+   inside its loop over the operands (an instruction without operands
+   is never taken for a call), where initialize tests after it.  Both
+   kept as the image has them.  Slips of the original?
+194. Translator PB4, dbg_life.pas: fields batch A owns that the phase
+   uses, read through views (for the owner to name): lr_t +8 a byte,
+   the operand kind of the live range's register (set on the live
+   ranges map_physical_to_virtual_lr makes; mmt's "kind 28 made 27"
+   is the same byte), +44 and +48 the first and the current of its pc
+   ranges, +72 their count (lr_t's l44, l48, exposed); rtn_t +16 the
+   routine's calling conventions (nargs at +22, 26-byte argument
+   records from +60 + 26: sym +6, arg_loc_t byte +12, register +17,
+   a flag +18; the routine's IL node's +128 has the same record), +116
+   the stack frame's live range (compared with a load's or store's
+   base operand), +208 the stack frame's register.  The IL nodes:
+   VAR_NAME +28 (the variable a spill slot was made for), +32 flags
+   (bit 29 a spill slot, bit 14 not for the debugger), +56 offset, +60
+   the block last written in (dbg_life's), +64 spill records, +68
+   debug records, +72 storage class, +74 spill slot number; FORTRAN
+   symbol (110) +11 bits 7..4 storage class, +12 offset, +16 slot,
+   +24 flags, +36, +50, +54 as +60, +64, +68.  Where should the debug
+   records' type (dbg_life's dbg_rec_t, read by whoever writes the
+   .dst: bin or debug_sym_dmp) live?
+195. Translator PB4, dbg_life.pas: map_physical_to_virtual_lr loads A5
+   (a global routine, its parameters by address: no val_param) while
+   every other routine of the unit but the two entry points is
+   internal; nothing outside the unit calls it.  Was it declared in an
+   insert (dbg_life's own, lost), or simply left global?
+196. Translator PB4, sched_utils.pas: the snuggle checks' messages
+   name COM_$PRESCAN_INST, and the operand delays' word parameter has
+   two flags (element 0: a condition code read costs a cycle more;
+   element 1: delays taken from the definition to its reader rather
+   than from the reader back) whose names are not known:
+   sched_utils_$flags_t = set of 0..15 in backend.ins.pas.  sched's
+   pass 1 passes [1] and the switches' sw9, oli [0] and false (one
+   longword, 0x10000).  Rename if the original's names are known.
+197. Translator PA4, lir_utils: lir_utils_$trans_insert_move's write
+   path bug-checks "Multiple physical outputs" with the frame slot of
+   the pair's move (-48) as the instruction (its +42 and its block's
+   +10 printed), which that path never sets: kept (a local `mi' read
+   uninitialized).  A slip of the original (op's instruction meant)?
+198. Translator PA4: lir_$get_new_instruction_no_exceptions reads five
+   frame longwords, but lir_utils pushes three or four
+   (docs/rev889-patterns.md 132): was its heading `options(variable)'
+   in the original, or were the callers compiled against an older
+   heading?  The translation's heading has five parameters (node, opc,
+   flags, home, p5) and the calls pass nil for the rest.
+199. Translator PA4: the section spill_instr_forms (cc.a88k 0x513E30, 264
+   bytes, initialized from .rwdi, read and written by lir_utils and
+   ra_utils) is declared in lir.pvt.pas and defined with its data in
+   lir_utils.pas; which unit held the initializer is not known (ra_utils
+   could; nothing in the image decides).  Its pointers (load_ptrs,
+   store_ptrs) are written addr(spill_instr_forms.loads[k]).
+200. Translator PA4, lir_utils_$fix_store_through_lrs: an exposed segment
+   of the memory (lir_3ba8) or the DB register found in a block is put
+   at the head of its live range's list (`move.l head,(8,A1); move.l
+   A1,(36,A4); addq.w #1,(56,A4)') without being unlinked from where it
+   is, and its count bumped; a slip, or the lists were emptied just
+   before (step 2 clears every live range's list, so a found segment is
+   one this walk added)?  Kept.
+201. Translator PA4, sym: sym_$allocate_static_variable places a variable
+   at (next free + mask - 1) and not mask (`add.l (20,A2),D4; subq.l
+   #1,D4; and.l' with the complement), so a 4-byte variable after an odd
+   free byte overlaps its predecessor's last byte unless the routine
+   block's +20 is "last used" rather than "next free"; kept.  And
+   sym_$displacement's "unknown object type" message ends in '%.' (the
+   bytes), unlike the others' '%$'.
+202. Translator PA4: isc_$get_il_live_range's heading is in backend.ins.pas
+   (sym calls it and opens no ISC insert; the original must have
+   declared it in an insert sym opens, or in sym itself).  Whoever fills
+   isc_lir.ins.pas must not declare it a second time.

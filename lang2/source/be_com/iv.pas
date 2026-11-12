@@ -174,14 +174,13 @@ module iv;
 type
   iv_cost_t = array [1..2] of integer;
 
-  { iv's view of a block (fields batch A has not named; backend.ins.pas
-    bb_t): an interval head's first member (+138) and the next member
-    of the interval a block is in (+142; com's next142). }
+  { iv's view of a block (a field batch A has not named; backend.ins.pas
+    bb_t's space138): an interval head's first member (+138), the
+    members chained at bb_t.next142 (+142). }
   iv_bb_v_ptr_t = ^iv_bb_v_t;
   iv_bb_v_t = record
     space0: array [0..137] of char;
     first138: bb_ptr_t;                 { +138 }
-    next142: bb_ptr_t;                  { +142 }
   end;
 
   { A join birthpoint's input, as utils.pas's ut_jbi_t: chained from
@@ -1734,18 +1733,18 @@ begin
           c := e^.child[n];
           if c^.kind = iv_value then begin
             if not lir_$can_encode_as_immediate_operand(c^.value,
-                       iv_opc[1, e^.kind], univ_ptr(pos)) then
+                       iv_opc[1, e^.kind], pos) then
               if (pos <> 1) and (iv_commuted[e^.kind] <> 0)
                   and first_operand_can_change(e)
                   and lir_$can_encode_as_immediate_operand(c^.value,
-                          iv_opc[1, iv_commuted[e^.kind]], univ_ptr(1)) then begin
+                          iv_opc[1, iv_commuted[e^.kind]], 1) then begin
                 x := e^.right;
                 e^.right := e^.left;
                 e^.left := x;
                 e^.kind := iv_commuted[e^.kind];
               end
               else if lir_$can_encode_as_immediate_operand(c^.value,
-                          ord(opc$move), univ_ptr(1)) then begin
+                          ord(opc$move), 1) then begin
                 e^.child[n] := create_move_expression(e^.child[n]);
                 e^.child[n]^.rclass := 1;
               end
@@ -1872,9 +1871,9 @@ begin
   r := elaborate_expression(e, rclass, true);
   p := pos;
   if r^.kind = iv_value then begin
-    if not lir_$can_encode_as_immediate_operand(r^.value, opc, univ_ptr(p)) then
+    if not lir_$can_encode_as_immediate_operand(r^.value, opc, p) then
       if lir_$can_encode_as_immediate_operand(r^.value, ord(opc$move),
-                                              univ_ptr(1)) then begin
+                                              1) then begin
         r := create_move_expression(r);
         r^.rclass := 1;
       end
@@ -2061,7 +2060,7 @@ begin
           end;
         end;
       i := lir_$optimizer_new_instruction(at, opc, false);
-      i^.h.b0_6 := false;
+      i^.h.preference := false;
       for k := 1 to i^.h.nopnds do
         i^.opnds[k].h.num := k;
       for k := 1 to n do begin
@@ -2090,7 +2089,7 @@ begin
         opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 16;
         i^.opnds[2].h.kind := operand$ip_reg_like;
         i^.opnds[2].value := lir_main_c48;   { a segment (lir_main +0xC48) }
-        i^.h.b2_5 := false;
+        i^.h.may_generate_an_exception := false;
         n := 2;
       end;
       r := addr(i^.opnds[n + 1]);
@@ -2179,7 +2178,7 @@ begin
       n := iv_nchildren[e^.kind];
       opc := iv_opc[e^.rclass, e^.kind];
       i := lir_$optimizer_new_instruction(bb^.first, opc, false);
-      i^.h.b0_6 := false;
+      i^.h.preference := false;
       for k := 1 to i^.h.nopnds do
         i^.opnds[k].h.num := k;
       for k := 1 to n do begin
@@ -2218,7 +2217,7 @@ begin
         opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 16;
         i^.opnds[2].h.kind := operand$ip_reg_like;
         i^.opnds[2].value := lir_main_c48;   { a segment (lir_main +0xC48) }
-        i^.h.b2_5 := false;
+        i^.h.may_generate_an_exception := false;
         n := 2;
       end;
       opnd_bytes_ptr_t(addr(i^.opnds[n + 1]))^.rrp := 8;
@@ -3514,8 +3513,8 @@ end;
 
 { iv_$walk_basic_blocks_in_order - the blocks of the interval headed by
   bb in order: pre and each called for bb, each for its members, a
-  member that heads an interval (+18 bit 6) walked in turn, then post
-  for bb (any of them nil).  0x23D288, 0xB8 bytes: recursive; every
+  member that heads an interval (+18 bit 6, distinguished_entry)
+  walked in turn, then post for bb (any of them nil).  0x23D288, 0xB8 bytes: recursive; every
   argument by address (in: the callers pass the routines as constants
   placed after their code, pattern 116), copied to locals for the inner
   calls. }
@@ -3544,7 +3543,7 @@ begin
   end;
   c := iv_bb_v_ptr_t(b)^.first138;
   while c <> nil do begin
-    if c^.f.b18_6 then begin
+    if c^.f.distinguished_entry then begin
       q3 := p3;
       q2 := p2;
       q1 := p1;
@@ -3555,7 +3554,7 @@ begin
       t := c;
       p2^(t);
     end;
-    c := iv_bb_v_ptr_t(c)^.next142;
+    c := c^.next142;
   end;
   if p3 <> nil then begin
     t := b;
@@ -5271,7 +5270,7 @@ end;
 
 { iv_$locate_induction_variables_at_loop_end - the walk's exit from the
   loop headed by bb: its variables finalized; when some remain and the
-  head is not marked (+18 bit 5), its blocks scanned for induction
+  loop is not irreducible (+18 bit 5), its blocks scanned for induction
   expressions and the transformations made; the enclosing state popped
   (`dispose').  0x23FA6A, 0x90 bytes: the walk's routines passed as
   constants by address (nil, scan, nil), placed after the routine. }
@@ -5285,7 +5284,7 @@ begin
   b := bb;
   ivr_$finalize_induction_variables(b);
   if iv_vars <> nil then
-    if not b^.f.b18_5 then begin
+    if not b^.f.irreducible then begin
       t := b;
       iv_$walk_basic_blocks_in_order(t, nil,
           addr(ixr_$scan_basic_block_for_induction_expressions), nil);
@@ -5312,20 +5311,20 @@ begin
   iv_intervals := nil;
   b := rtn^.bbs;
   while b <> nil do begin
-    if b^.f.b18_6 then
+    if b^.f.distinguished_entry then
       iv_bb_v_ptr_t(b)^.first138 := nil;
-    iv_bb_v_ptr_t(b)^.next142 := nil;
+    b^.next142 := nil;
     b := b^.next;
   end;
   b := rtn^.bbs72;
   while b <> nil do begin
     h := b^.l70;
     if h <> nil then begin
-      iv_bb_v_ptr_t(b)^.next142 := iv_bb_v_ptr_t(h)^.first138;
+      b^.next142 := iv_bb_v_ptr_t(h)^.first138;
       iv_bb_v_ptr_t(h)^.first138 := b;
     end
     else begin
-      iv_bb_v_ptr_t(b)^.next142 := iv_intervals;
+      b^.next142 := iv_intervals;
       iv_intervals := b;
     end;
     b := b^.next114;
@@ -5508,14 +5507,14 @@ begin
   iv_$build_nested_reverse_postorder_lists(rtn);
   b := iv_intervals;
   while b <> nil do begin
-    if b^.f.b18_6 then begin
+    if b^.f.distinguished_entry then begin
       t := b;
       iv_$walk_basic_blocks_in_order(t,
           addr(iv_$locate_induction_variables_at_loop_start),
           addr(iv_$locate_induction_variables_for_basic_block),
           addr(iv_$locate_induction_variables_at_loop_end));
     end;
-    b := iv_bb_v_ptr_t(b)^.next142;
+    b := b^.next142;
   end;
   if iv_changed then begin
     if not at_backend_switches.sw14 then begin
@@ -5536,11 +5535,11 @@ begin
     df_utils_$global_walk(rtn, rtn^.l192, 0, 0);
     b := iv_intervals;
     while b <> nil do begin
-      if b^.f.b18_6 then begin
+      if b^.f.distinguished_entry then begin
         t := b;
         iv_$walk_basic_blocks_in_order(t, addr(recompute_for_oli), nil, nil);
       end;
-      b := iv_bb_v_ptr_t(b)^.next142;
+      b := b^.next142;
     end;
   end;
 end;

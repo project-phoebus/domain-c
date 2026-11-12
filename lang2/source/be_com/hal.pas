@@ -125,7 +125,7 @@ begin
   while bb <> nil do begin
     if bb^.mark146 <> mark then begin
       bb^.mark146 := mark;
-      if not bb^.f.b19_7 then begin
+      if not bb^.f.hammock_entry then begin
         if bb^.l82 = nil then
           h := nil
         else
@@ -134,14 +134,14 @@ begin
       end
       else begin
         first := bb;
-        while first^.f.b19_6 do begin
+        while first^.f.hammock_exit do begin
           first := first^.preds^.source;
-          if not first^.f.b19_7 then
+          if not first^.f.hammock_entry then
             first := first^.l82;
           first^.mark146 := mark;
         end;
         last := bb;
-        while hal_hammock_ptr_t(last^.l98)^.tail^.f.b19_7 do begin
+        while hal_hammock_ptr_t(last^.l98)^.tail^.f.hammock_entry do begin
           last := hal_hammock_ptr_t(last^.l98)^.tail;
           last^.mark146 := mark;
         end;
@@ -241,7 +241,7 @@ begin
   bb^.avail_out := vec;
   child := bb^.l46;
   if child <> nil then begin
-    if not bb^.f.b18_3 and not bb^.f.b18_1 then
+    if not bb^.f.additional_entry and not bb^.f.loop_exit then
       if not bb_contains_final_call(bb) then begin
         bb^.l150 := list;
         list := bb;
@@ -280,7 +280,7 @@ var
   e: fg_edge_ptr_t;
   s: bb_ptr_t;
 begin
-  if bb^.f.b18_3 or (bb^.order > head^.order) then begin
+  if bb^.f.additional_entry or (bb^.order > head^.order) then begin
     result := false;
     if test then begin
       collect_or_test_hammock_contents := false;
@@ -297,7 +297,7 @@ begin
         bb^.l106 := head^.l102;
         head^.l102 := bb;
       end;
-      if bb^.f.b19_7 then begin
+      if bb^.f.hammock_entry then begin
         collect_or_test_hammock_contents :=
           collect_or_test_hammock_contents(
               hal_hammock_ptr_t(bb^.l98)^.tail, head, tail, test, mark);
@@ -308,8 +308,8 @@ begin
     while e <> nil do begin
       s := e^.target;
       if (s <> tail) and (s^.mark146 < mark) then begin
-        if s^.f.b18_6 then
-          head^.f.b19_5 := true;
+        if s^.f.distinguished_entry then
+          head^.f.hammock_with_loops := true;
         if not collect_or_test_hammock_contents(s, head, tail, test,
                                                 mark) then begin
           result := false;
@@ -333,7 +333,7 @@ end;
 function bb_interval(
     bb: bb_ptr_t): bb_ptr_t; options(val_param); internal;
 begin
-  if bb^.f.b18_6 and not bb^.f.b18_5 then
+  if bb^.f.distinguished_entry and not bb^.f.irreducible then
     bb_interval := bb
   else
     bb_interval := bb^.l70;
@@ -352,7 +352,7 @@ var
   b: bb_ptr_t;
 begin
   bb_inside_loop := false;
-  if bb^.f.b16 >= head^.f.b16 then begin
+  if bb^.f.depth >= head^.f.depth then begin
     b := bb;
     while b <> nil do begin
       if b = head then begin
@@ -446,9 +446,9 @@ begin
     bb^.mark146 := 0;
     bb^.l82 := nil;
     bb^.l106 := nil;
-    bb^.f.b19_7 := false;
-    bb^.f.b19_6 := false;
-    bb^.f.b19_5 := false;
+    bb^.f.hammock_entry := false;
+    bb^.f.hammock_exit := false;
+    bb^.f.hammock_with_loops := false;
     bb := bb^.next;
   end;
   nbytes := rshft((rtn^.bbs^.order + 31) & 16#FFFFFFE0, 3);
@@ -463,11 +463,11 @@ begin
     k := head^.order;
     while tail <> nil do begin
       found := false;
-      if not tail^.f.b18_3 and (tail^.f.b16 = head^.f.b16) then begin
+      if not tail^.f.additional_entry and (tail^.f.depth = head^.f.depth) then begin
         iv := bb_interval(tail);
         if iv = bb_interval(head) then
           if (k mod 32) in tail^.avail_out^[k div 32] then
-            if not head^.f.b18_6 or loop_header_safe(head, tail) then
+            if not head^.f.distinguished_entry or loop_header_safe(head, tail) then
               found := no_path_through_head_in_hammock(rtn, head, tail);
       end;
       if found then begin
@@ -475,9 +475,9 @@ begin
         head^.l98 := univ_ptr(rec);
         rec^.head := head;
         rec^.tail := tail;
-        head^.f.b19_7 := true;
+        head^.f.hammock_entry := true;
         head^.l102 := nil;
-        tail^.f.b19_6 := true;
+        tail^.f.hammock_exit := true;
         rtn^.marks := rtn^.marks + 1;
         discard(collect_or_test_hammock_contents(head, head, tail, false,
                                                  rtn^.marks));
@@ -517,7 +517,7 @@ begin
   bb^.next114 := nb;
   nb^.l70 := bb^.l70;
   if nb^.l70 <> nil then
-    nb^.f.b16 := nb^.l70^.f.b16;
+    nb^.f.depth := nb^.l70^.f.depth;
   nb^.l78 := bb^.l78;
   bb^.l78 := nb;
   nb^.preds := edges;
@@ -617,7 +617,7 @@ var
 begin
   bb := rtn^.bbs;
   while bb <> nil do begin
-    if bb^.f.b18_6 and not bb^.f.b18_5 then
+    if bb^.f.distinguished_entry and not bb^.f.irreducible then
       guarantee_header(bb);
     bb := bb^.next;
   end;
@@ -636,7 +636,7 @@ var
   b: bb_ptr_t;
 begin
   b := bb;
-  while (b <> nil) and then (b^.f.b16 >= head^.f.b16) do begin
+  while (b <> nil) and then (b^.f.depth >= head^.f.depth) do begin
     if b = head then begin
       bb_is_in_loop := true;
       return;
@@ -669,14 +669,14 @@ var
 begin
   bb := rtn^.bbs72;
   while bb <> nil do begin
-    if bb^.f.b18_1 or (bb^.f.b18_6 and (bb^.l74 = nil)) then
+    if bb^.f.loop_exit or (bb^.f.distinguished_entry and (bb^.l74 = nil)) then
      if bb^.succs^.next_succ <> nil then
       if bb^.succs^.next_succ^.next_succ = nil then begin
-        if bb^.f.b18_6 then
+        if bb^.f.distinguished_entry then
           head := bb
         else
           head := bb^.l70;
-        if not head^.f.b18_5 then begin
+        if not head^.f.irreducible then begin
           e := nil;
           if not bb_is_in_loop(bb^.succs^.target, head) then
             e := bb^.succs
@@ -687,7 +687,7 @@ begin
             if e^.target <> rtn^.bb80 then begin
               b := e^.target^.l54;
               while (b <> head) and (b <> nil) and then
-                    (b^.f.b16 >= head^.f.b16) do
+                    (b^.f.depth >= head^.f.depth) do
                 b := b^.l54;
               if b <> head then begin
                 edges := fg_utils_$separate_loop_header_edges(e^.target,

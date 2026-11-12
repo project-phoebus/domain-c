@@ -1,0 +1,18 @@
+{ amse_postmod_immed_high.init - a DSEE derived object of be_com/backend.ins.pas (cc.a88k
+  only): the initializer of the section amse_postmod_immed_high (0x2B6D80: 8
+  longwords, the highest displacement a postmodifying (or unmodified) load or store takes, by instr_attr_t's amse).  Included by tm_utils.pas.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k, the section's bytes.
+
+  How the section is shared (docs/questions.md 161, settled by
+  translator PB2): backend.ins.pas declares the section's variable for
+  every unit (`var (amse_postmod_immed_high) amse_postmod_immed_high: ...'); this file, included by
+  the one unit that holds the data, gives it its initial value with a
+  `define' statement (the language reference's section 7.2.2, method 2).
+  dpc lays the defined variable out in the named section with its data.
+
+  Not known from the original: the file's layout. }
+
+define amse_postmod_immed_high := [
+    0, 15, 0, 8191, 127, 127, 8191, 0];

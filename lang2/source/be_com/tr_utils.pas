@@ -278,7 +278,7 @@ begin
   if src^.h.kind in [operand$ip_reg..operand$well_behaved_memory] then begin
     instr := utils_ins_$operands_instruction(src);
     mv := lir_$optimizer_new_instruction(instr, ord(opc$move), true);
-    mv^.h.b0_6 := true;
+    mv^.h.preference := true;
     mv^.opnds[1].h.num := 1;
     count := src^.h.count;
     src^.h.count := 0;
@@ -883,7 +883,7 @@ var
   lr: lr_ptr_t;
   lts: lts_ptr_t;
 begin
-  if instr^.h.sets_cc or instr^.h.b0_3 then begin
+  if instr^.h.sets_cc or instr^.h.fp_ccs then begin
     lr := lir_$new_live_range_for_kind(ord(instr^.opnds[2].h.kind));
     lir_utils_$add_lts_to_lr(8, lr, instr^.bb, lts);
     instr^.opnds[2].lts := lts;
@@ -994,7 +994,7 @@ begin
         if o^.link = nil then
           return;
         i := utils_ins_$operands_instruction(o^.link);
-        if (o^.link^.link = nil) and i^.h.b0_6
+        if (o^.link^.link = nil) and i^.h.preference
            and (instr^.opnds[k - 1].h.kind
                 in [operand$ip_reg..operand$well_behaved_memory])
            and ((rrp$intend_to_modify in instr^.opnds[k - 1].lts^.rrp)
@@ -1213,7 +1213,7 @@ procedure tr_utils_$attempt_copy_elimination(
 begin
   tr_rtn := rtn;
   if instruction_attributes[instr^.opc].b6_0 and not instr^.h.sets_cc
-     and not instr^.h.b0_3
+     and not instr^.h.fp_ccs
      and (instr^.opnds[1].h.kind
           in [operand$ip_reg..operand$fp_reg_pair_physical])
      and (instr^.opnds[2].h.kind
@@ -1286,7 +1286,7 @@ end;
 function bb_interval(
     bb: bb_ptr_t): bb_ptr_t; options(val_param); internal;
 begin
-  if bb^.f.b18_6 then
+  if bb^.f.distinguished_entry then
     bb_interval := bb
   else
     bb_interval := bb^.l70;
@@ -1359,7 +1359,7 @@ begin
       if bb_interval(bb) = nil then
         find_complex_driving_ltss := not tr_rtn^.f228.b228_2
       else
-        find_complex_driving_ltss := not bb_interval(bb)^.f.b18_5;
+        find_complex_driving_ltss := not bb_interval(bb)^.f.irreducible;
       return;
     end;
     bb^.mark146 := m;
@@ -1409,7 +1409,7 @@ begin
       tr_32 := false;
     if not find_complex_driving_ltss(nil, lr1, lr2, e^.source, valid, ok,
                                      serial, arg, sols) then begin
-      if e^.source^.f.b16 >= bb^.f.b16 then begin
+      if e^.source^.f.depth >= bb^.f.depth then begin
         find_complex_driving_ltss := false;
         return;
       end;
@@ -1555,7 +1555,7 @@ begin
   if instr^.h.nopnds = 3 then begin
     instr^.opnds[3].h.kind := operand$none;
     instr^.opnds[3].h.num := 0;
-    instr^.h.b0_6 := instr^.opnds[1].h.kind
+    instr^.h.preference := instr^.opnds[1].h.kind
                      in [operand$ip_reg..operand$fp_reg_pair_physical];
     instr^.h.nopnds := 2;
   end
@@ -1563,7 +1563,7 @@ begin
     move_operand(addr(instr^.opnds[4]), addr(instr^.opnds[3]));
     if instr^.opnds[3].h.kind = operand$none then begin
       instr^.opnds[3].h.num := 0;
-      instr^.h.b0_6 := instr^.opnds[1].h.kind
+      instr^.h.preference := instr^.opnds[1].h.kind
                        in [operand$ip_reg..operand$fp_reg_pair_physical];
     end;
     instr^.h.nopnds := 3;
@@ -1721,7 +1721,7 @@ begin
             convert_add_to_move(i);
       end
       else if creator <> nil then
-        if i^.bb^.f.b16 < creator^.bb^.f.b16 then begin
+        if i^.bb^.f.depth < creator^.bb^.f.depth then begin
           neg := -disp;
           if tm_utils_$can_encode_as_immediate_operand(neg, ord(opc$add),
                                                        1) then begin
@@ -3087,7 +3087,7 @@ function validate_lts_for_auto(
     out pair: tr_pair_t): integer; options(val_param);
 begin
   pair.a := nil;
-  if (lts^.refs = nil) or bb^.f.b17_6 then
+  if (lts^.refs = nil) or bb^.f.atomic then
     validate_lts_for_auto := 0
   else begin
     pair.b := lts;
@@ -3287,7 +3287,7 @@ begin
         r := r^.link;
       end;
     end;
-    if b^.f.b19_7 then
+    if b^.f.hammock_entry then
       if not could_adjust_hammock_contents(b^.l102, lr, disp, any) then begin
         could_adjust_hammock_contents := false;
         return;
@@ -3339,7 +3339,7 @@ begin
         r := r^.link;
       end;
     end;
-    if b^.f.b19_7 then
+    if b^.f.hammock_entry then
       adjust_hammock_contents(b^.l102, final, disp);
     b := b^.l106;
   end;
@@ -3541,7 +3541,7 @@ var
   ok: boolean;
 begin
   bb := add^.bb;
-  if not bb^.f.b19_6 then begin
+  if not bb^.f.hammock_exit then begin
     move_add_to_hammock_head := false;
     return;
   end;
@@ -3556,9 +3556,9 @@ begin
     return;
   end;
   head := bb^.preds^.source;
-  if not head^.f.b19_7 then
+  if not head^.f.hammock_entry then
     head := head^.l82;
-  if head^.f14.b14 = 1 then begin
+  if head^.f14.kind = 1 then begin
     move_add_to_hammock_head := false;
     return;
   end;
@@ -3597,7 +3597,7 @@ var
   r, t, last, op2, o: opnd_ptr_t;
 begin
   bb := add^.bb;
-  if not bb^.f.b19_7 then begin
+  if not bb^.f.hammock_entry then begin
     move_add_to_hammock_tail := false;
     return;
   end;
@@ -3612,7 +3612,7 @@ begin
     return;
   end;
   target := bb^.l98^.target;
-  if target^.f14.b14 = 2 then begin
+  if target^.f14.kind = 2 then begin
     move_add_to_hammock_tail := false;
     return;
   end;
@@ -3785,7 +3785,7 @@ begin
       end;
     end;
     last := lts;
-    if not i^.h.b0_6 then begin
+    if not i^.h.preference then begin
       find_suitable_driving_lts_for_tst := lts;
       return;
     end;
@@ -3995,7 +3995,7 @@ begin
     return;
   end;
   i := utils_ins_$operands_instruction(l^.refs);
-  if i^.h.sets_cc or i^.h.b0_3 then begin
+  if i^.h.sets_cc or i^.h.fp_ccs then begin
     if not allow_set then begin
       find_driver_for_tst := driver;
       return;
@@ -4081,9 +4081,9 @@ begin
   if not only_test then begin
     instr^.opnds[instr^.h.nopnds].h.kind := operand$none;
     instr^.opnds[instr^.h.nopnds].h.num := 0;
-    instr^.h.b0_6 := true;
+    instr^.h.preference := true;
     instr^.h.sets_cc := false;
-    instr^.h.b0_3 := false;
+    instr^.h.fp_ccs := false;
   end
   else
     utils_$excise_instruction_cleanly(instr, true);
@@ -4162,8 +4162,8 @@ begin
   if tst^.h.sets_cc then
     d^.h.sets_cc := true
   else
-    d^.h.b0_3 := true;
-  d^.h.b0_6 := false;
+    d^.h.fp_ccs := true;
+  d^.h.preference := false;
   excise_tst_instr(tst);
 end;
 
@@ -4184,7 +4184,7 @@ var
   p: instr_ptr_t;
   l: lts_ptr_t;
 begin
-  if bb^.f.b17_6 then begin
+  if bb^.f.atomic then begin
     ok_to_add_tst := 0;
     return;
   end;
@@ -4415,7 +4415,7 @@ begin
       if i = nil then
         i := build_tst_instr(tmpl, lts, s^.entries[k].bb);
       o := addr(i^.opnds[i^.h.nopnds]);
-      if i^.h.sets_cc or i^.h.b0_3 then
+      if i^.h.sets_cc or i^.h.fp_ccs then
         l := o^.lts
       else begin
         l := utils_$get_new_lts(lr, i^.bb, false);
@@ -4437,11 +4437,11 @@ begin
         utils_$put_lts_on_final_list(l);
         if kind = 7 then begin
           i^.h.sets_cc := true;
-          if i^.h.b0_3 then
+          if i^.h.fp_ccs then
             bug_check('TR_UTILS_$move_cc_creations:  instr sets fp and ip ccs.%$');
         end
         else if kind = 8 then begin
-          i^.h.b0_3 := true;
+          i^.h.fp_ccs := true;
           if i^.h.sets_cc then
             bug_check('TR_UTILS_$move_cc_creations:  instr sets fp and ip ccs.%$');
         end
@@ -4507,7 +4507,7 @@ begin
   end
   else begin
     i := utils_ins_$operands_instruction(drv^.refs);
-    if i^.h.b0_6 then begin
+    if i^.h.preference then begin
       drv := i^.opnds[1].lts;
       if (i^.opnds[1].h.kind in [operand$fp_reg_pair,
                                  operand$fp_reg_pair_physical,

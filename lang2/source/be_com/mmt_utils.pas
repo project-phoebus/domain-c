@@ -404,7 +404,7 @@ begin
   lir_main_heap := addr(mmt_seq_heap);
   i := lir_$optimizer_new_n_opr_instr(anchor, ord(opc$mmt_seq), after, n);
   lir_main_heap := save;
-  i^.h.b2_5 := true;
+  i^.h.may_generate_an_exception := true;
   build_mmt_seq_instr := i;
 end;
 
@@ -1367,7 +1367,7 @@ begin
       end;
       if keep then begin
         iprev := i;
-        i^.h.b2_5 := false;
+        i^.h.may_generate_an_exception := false;
       end
       else begin
         if iprev = nil then
@@ -1599,7 +1599,7 @@ var
 begin
   i := bb^.first;
   while i <> nil do begin
-    if (i^.opc = ord(opc$mmt_seq)) and i^.h.b2_5 then begin
+    if (i^.opc = ord(opc$mmt_seq)) and i^.h.may_generate_an_exception then begin
       n := i^.h.nopnds;
       c := mmt_utils_$get_mmt_seq_instruction(n);
       src := longs_ptr_t(i);
@@ -1614,7 +1614,7 @@ begin
         bb^.last := c
       else
         i^.next^.prev := c;
-      c^.h.b2_5 := false;
+      c^.h.may_generate_an_exception := false;
     end;
     i := i^.next;
   end;

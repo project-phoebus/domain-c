@@ -984,3 +984,40 @@ cc.m68k unless marked.
     (A2)'; `addq.w #4,SP' after) for ivr_$finalize_induction_variables,
     which never reads (8,A6): written as an unused parameter (cf. item
     103, where the push belonged to another call).
+
+
+## The debugger's lifetimes and the scheduler's utilities (translator PB4, cc.a88k dbg_life, sched_utils)
+
+129. **A for loop's longword limit read as its low word.**  dbg_life's
+    fill_not_killed_sets counts its live ranges `for i := 1 to
+    rtn^.l192' with an integer index as `move.w (194,A1),D4; subq.w
+    #1,D4' (the longword at +192 read at +194), the slots `move.w
+    (198,A2)' of rtn +196, and write_register's words `move.w
+    (34,A5)' of a longword module variable at +32; write_spilled_var
+    computes `slot + words * 32' into an integer in word arithmetic
+    from the same low word (`lsl.w #5'), where kill_spilled_var,
+    whose result is a longword, reads the whole longword.  dpc reads
+    the longword and narrows.
+130. **A 2-byte argument pad left on the stack across a call for the
+    next call's word.**  find_symbols pops 14 of the 16 bytes pushed
+    for dbg_life_$open_pc_range (`lea (14,SP),SP') and pushes the next
+    call's word without `subq.l #2,SP'; dbg_life_$process_routine pops
+    2 of 4 after dbg_life_$initialize (`addq.l #2,SP') before mrh_$alloc's
+    word: pattern 51 for internal routines.
+
+## The LIR utilities, continued (translator PA4, lir_utils; cc.a88k)
+
+131. **utils_ins_$operands_instruction inline in a unit that opens
+    utils.ins.pas.**  lir_utils_$trans_insert_move (cc.a88k 0x24C312)
+    finds op's instruction as `move.b (A1),D0; lsl.w #2,D0; ...; subi.l
+    #32,D2; sub.l D1,D2' (pattern 121's expression) though lir_utils
+    opens utils.ins.pas and has no copy of the insert's routine
+    (pattern 98): written as the expression.
+132. **A call pushing fewer arguments than the callee reads.**
+    lir_$get_new_instruction_no_exceptions (0x2433C2) passes its five
+    frame longwords (8, 12:w, 14, 18, 22) on to begin_instruction, but
+    fix_store_through_lrs pushes three (`subq.l #2,SP; clr.l -(SP);
+    move.w (10,A3),-(SP); move.l #0x48AD00,-(SP)') or four (with the
+    memory home after `pea 0x2000'): the slots not pushed are read as
+    whatever lies above (begin_instruction reads 18 only under flag
+    bit 13).  dpc pushes every parameter (nil or 0 here).

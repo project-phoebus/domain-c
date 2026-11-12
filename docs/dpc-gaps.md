@@ -33,6 +33,12 @@ when this tree is merged).
   returning a 4-byte array) and 34 (string constants to short char
   arrays): fixed in 3e7b09c and ca0dd28.**  Their rules removed, but
   for cg_call's gap 22 rule: without it the routine meets gap 28.
+- **Gap 30 (`in' on a set held in a register, as a value or under
+  `and'): fixed in 8cd3f59.**  Its rules (reg_save, com, dbg_life)
+  removed.
+- **Gap 35 (the internal error): fixed in c83ade9** (a plain bug fix:
+  a call inside another unit's array index cleared the held array
+  bases).  sched_utils' temporary removed.
 - Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
   spiller finds values to spill but runs out of virtual register
   numbers (240 per class) adding the reloads, and the colouring's
@@ -42,7 +48,7 @@ when this tree is merged).
   purpose (the image cannot tell it from `repeat ... until false'):
   write such loops with a label.
 - All compile best effort (a warning; `--strict' still refuses).  Their
-  rewrites are gone from tools/cc_gap_rewrites.txt (279 rules removed in all);
+  rewrites are gone from tools/cc_gap_rewrites.txt (282 rules removed in all);
   the full gate is clean without them.
 - Gaps 4 (write/writeln) and 7 (real arithmetic) are not being worked
   on in dpc for now (the domain-pascal owner's choice).
@@ -787,6 +793,10 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
            n := 1;
          s := s + [k];
        end;
+   Also dbg_life.pas dbg_life_$find_symbols (cc.a88k 0x22DC08, translator
+   PB4): `clobbered := (reg in set32) or (reg + 1 in set32)' with set32
+   a local set of 0..31 (the image keeps it in D5: `btst D0,D5' and
+   `btst D6,D5'); same message.  The rewrite tests the record's set.
 
 31. **A set expression of more than a longword compared with `[]'.**
    final.pas floatop (cc.m68k 0x10FDF0): a double's low 29 bits tested
@@ -890,3 +900,37 @@ tools/cc_gap_rewrites.txt under tr_utils.
 Translator PB3 (dmp.pas) also met gap 4 (dmp_$instruction writes an
 IL node kind as an enumerated value: `write('<object.kind= ',
 an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
+
+35. **An internal error on a function result dereferenced inside an
+   index inside an `in' test, in a large routine.**
+   sched_utils.pas sched_utils_$operand_delay (cc.a88k 0x279266, 0x5E8
+   bytes, translator PB4): `if instruction_attributes[
+   utils_ins_$operands_instruction(o)^.opc].class in su_branchy then'
+   in one arm of a long `case'.  dpc panics: "internal error: insertion
+   index (is 1) should be <= len (is 0) (at .../alloc/src/vec/mod.rs:
+   1972; please report)", at the routine's first line.  The same
+   expression elsewhere in the routine compiles, and so does the whole
+   routine when any one arm is removed; no small reproducer was found.
+   Worked around in the source with a temporary
+   (`i := utils_ins_$operands_instruction(o)'), which the image's code
+   allows (the result is in A0 either way); no gate rule.
+36. **A pointer result of a call through a routine parameter.**
+   lir_utils_$flesh_out_new_load_or_store (translator PA4, cc.a88k
+   0x24D34C) takes `function new_db_lts: lts_ptr_t' (fix_store_through_
+   lrs passes its nested routine, through a trampoline) and calls it
+   for the DB register's segment (`jsr (A1)', the result in A0).  dpc:
+   "a pointer result of a call through a routine pointer is not
+   supported yet".  The rewrite assigns nil.  Reproducer:
+
+       module g35;
+       type p_t = ^integer;
+       procedure q(var r: p_t; function f: p_t); options(val_param);
+       begin
+         r := f;
+       end;
+
+   Translator PA4 also met gap 21's nested case (new_db_lts passed;
+   the rewrite passes a module-level stand-in), gap 7 (dpcontk(0.0)),
+   gap 25 (fix_store_through_lrs: the stores after a written
+   store-through register left out of the check) and gap 32
+   (lir.pvt.pas's section spill_instr_forms).

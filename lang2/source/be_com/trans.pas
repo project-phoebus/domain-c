@@ -270,7 +270,7 @@ begin
         utils_$get_canonical_birthpoint(d^.opnds[1].lts, 1, bp);
         if bp.has_base and (d^.opnds[2].h.count = 0) then
           if lir_$can_encode_as_immediate_operand(bp.base, ord(opc$move),
-                                                  univ_ptr(1)) then begin
+                                                  1) then begin
             ok := true;
             utils_$set_instruction_opcode(d, ord(opc$move));
             v := bp.base;
@@ -278,13 +278,13 @@ begin
       end;
     end;
     if ok then
-      if lir_$can_encode_as_immediate_operand(v, i^.opc, univ_ptr(1)) then begin
+      if lir_$can_encode_as_immediate_operand(v, i^.opc, 1) then begin
         make_immediate_operand(o, v);
         r := true;
       end
       else if i^.opc = ord(opc$sub) then
         if lir_$can_encode_as_immediate_operand(-v, ord(opc$add),
-                                                univ_ptr(1)) then begin
+                                                1) then begin
           utils_$set_instruction_opcode(i, ord(opc$add));
           make_immediate_operand(o, -v);
           r := true;
@@ -1298,8 +1298,8 @@ begin
     get_omega_candidate := nil
   else if ((opnd_bytes_ptr_t(l^.refs)^.rrp & 12) = 0)
       or (trans_bb_v_ptr_t(to_bb)^.l42 <> trans_bb_v_ptr_t(from_bb)^.l42)
-      or from_bb^.f.b17_6
-      or (to_bb^.f.b16 > from_bb^.f.b16) then
+      or from_bb^.f.atomic
+      or (to_bb^.f.depth > from_bb^.f.depth) then
     get_omega_candidate := nil
   else begin
     i := utils_ins_$operands_instruction(l^.refs);
@@ -1347,8 +1347,8 @@ begin
     head := trans_bb_v_ptr_t(bb)^.work;
     trans_bb_v_ptr_t(bb)^.work := nil;
     if bb^.preds <> nil then
-      if not bb^.f.b17_6 then
-        if bb^.f14.b14 <> 2 then
+      if not bb^.f.atomic then
+        if bb^.f14.kind <> 2 then
           if bb^.preds^.next_pred <> nil then begin
             lr := bv_$find_next(rtn, bb^.live_in, nil);
             while lr <> nil do begin
@@ -1698,7 +1698,7 @@ begin
     if (l = nil) or (l^.refs = nil) then
       ok := false
     else if ((opnd_bytes_ptr_t(l^.refs)^.rrp & 12) <> 0)
-        or from_bb^.f.b17_6 then
+        or from_bb^.f.atomic then
       ok := false
     else
       o := l^.refs;
@@ -1768,9 +1768,9 @@ begin
   repeat
     trans_bb_v_ptr_t(b)^.unprec := nil;
     if b^.succs <> nil then
-      if b^.f14.b14 <> 1 then
-        if not b^.f.b17_6 then
-          if not b^.f.b18_7 then
+      if b^.f14.kind <> 1 then
+        if not b^.f.atomic then
+          if not b^.f.hidden_successor_edges then
             if b^.succs^.next_succ <> nil then begin
               ok := true;
               e := b^.succs;
@@ -1780,7 +1780,7 @@ begin
                   ok := false
                 else if t^.preds^.next_pred <> nil then
                   ok := false
-                else if b^.f.b16 > t^.f.b16 then
+                else if b^.f.depth > t^.f.depth then
                   ok := false
                 else if trans_bb_v_ptr_t(b)^.l42 <> trans_bb_v_ptr_t(t)^.l42 then
                   ok := false
@@ -2093,7 +2093,7 @@ begin
   if x^.h.sets_cc then
     tr_utils_$attempt_test_elimination(trans_0, x)
   else
-    x^.h.b0_6 := true;
+    x^.h.preference := true;
 end;
 
 { trans_$copy_elimination - copy elimination tried on every
@@ -2184,7 +2184,7 @@ begin
   lir_main_c84 := 4;
   b := rtn^.bbs72;
   while b <> nil do begin
-    if not b^.f.b17_6 then
+    if not b^.f.atomic then
       trans_branches(b);
     b := b^.next114;
   end;
@@ -2202,7 +2202,7 @@ begin
         if o <> nil then
           if (opnd_bytes_ptr_t(o)^.rrp & 12) <> 0 then begin
             i := utils_ins_$operands_instruction(o);
-            if not i^.bb^.f.b17_6 then
+            if not i^.bb^.f.atomic then
               if i^.h.b2_6 then
                 case i^.opc of
                   97:                   { extractu }
@@ -2215,7 +2215,7 @@ begin
                                        operand$fp_condition_codes] then
                         tr_utils_$attempt_test_elimination(rtn, i);
                   161, 144:             { copyd, copys }
-                    if i^.h.b0_3 then
+                    if i^.h.fp_ccs then
                       if o^.h.kind in [operand$ip_condition_codes,
                                        operand$fp_condition_codes] then
                         tr_utils_$attempt_test_elimination(rtn, i);
@@ -2254,7 +2254,7 @@ begin
               o := o^.link;
               while o <> nil do begin
                 i := utils_ins_$operands_instruction(o);
-                if i^.bb^.f.b17_6 then
+                if i^.bb^.f.atomic then
                   exit;
                 if (i^.opc = ord(opc$beq)) or (i^.opc = ord(opc$bne)) then
                   attempt_special_zero_branches(i);
