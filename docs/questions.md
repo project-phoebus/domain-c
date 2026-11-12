@@ -1598,3 +1598,25 @@ revisited.
    with the variable assigned on that path only.  A slip of the
    original?
 
+260. Translator PC5, iv.pas: iv_utils_$live_range_from_elaborated_expression
+   (cc.a88k 0x23B8EE) copies an operand child into the instruction's
+   slot pos (iv_opnd_pos) but numbers it k, the child's index (`move.b
+   D5,(32,A2)'), not pos: for an add or sub (children 1, 2 in slots 2,
+   1) the copied operand's number names the other slot.
+   create_operand_from_elaborated_expression keeps the slot's number.
+   Kept as the image has it; a slip of the original?
+261. Translator PC5, iv.pas: ixr_$find_current_lts_for_iv (0x23D39A), in a
+   block with an exposed segment of the variable, returns the first of
+   the variable's segments in the block whose definition precedes the
+   operand, but when none does it returns the last one it examined
+   (whose definition follows the operand) rather than failing; and
+   ixt_$instantiate_induction_expr (0x23F054) passes
+   lir_utils_$add_lts_after_lts the previous run's new segment, which
+   is not set when the first run's segment is neither exposed nor
+   final in a new block.  Both kept; slips of the original?
+262. Translator PC5, iv.pas: instr_size.init (iv's data +0) and
+   iv_opc_kind (+0x330) are declared for opc$undefined..opc$adj_move
+   (212 entries), but the image's tables are 384 words each (+0 ..
+   +0x300 and +0x330 .. +0x630; iv_opc_set sits between at +0x300),
+   the words past 211 zero (no .rwdi record).  Should both be indexed
+   0..383 (the opcode enumeration's range)?

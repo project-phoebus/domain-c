@@ -952,3 +952,35 @@ cc.m68k unless marked.
     a static link.**  ltss_on_stores_to_same_addr's nested
     get_the_right_instr (0x229968) is called `pea (A0); bsr' with its
     one argument only, and reads no frame of its parent.
+## The induction variables (translator PC5, cc.a88k iv)
+
+200. **A function returning a 12-byte record through its caller's
+    space.**  ixr_$get_induction_instantiation_from_operand (cc.a88k
+    0x23D9A0) is called `pea (-68,A6)' after its arguments, so the
+    result's address is at (8) and the parameters start at (12); it
+    builds the record in a local and copies it out at the end (`lea
+    (-56,A6),A0; movea.l (8,A6),A1' and three `move.l (A0)+,(A1)+');
+    the callers copy it again to a local of their own.  dpc does the
+    same for a function of a record type (checked in its output).
+201. **Routine pointers passed by reference as constants placed after
+    the routine.**  iv_$locate_induction_variables_at_loop_end
+    (0x23FA6A) calls iv_$walk_basic_blocks_in_order with `pea
+    (0x23FAFA,PC)' (a longword 0: nil) for both nil arguments and `pea
+    (0x23FAFE,PC)' (the longword 0x0023E2B6, the scanner's address);
+    iv_$process_routine's four constants are at 0x240152..0x24015E, and
+    its second walk pushes the nil constant's address twice (`move.l
+    (SP),-(SP)').  The walk's parameters are `in' (item 116 for routine
+    addresses); dpc places and shares the constants the same way.
+202. **Stack pops merged across calls with uneven counts.**
+    ixt_$replace_induction_expr (0x23EC12) pushes 32 bytes for
+    ixt_$create_increment_instruction and pops 30 (`lea (30,SP),SP'),
+    then pushes 10 for ixr_$find_induction_expr and pops 12;
+    create_operand_from_elaborated_expression leaves
+    lir_utils_$add_lts_to_lr's 16 bytes on the stack on its way to the
+    epilogue.  The two-byte pads after a longword (item 125's) are
+    popped with the next call's arguments.
+203. **An argument pushed for a callee that reads none.**
+    iv_$locate_induction_variables_at_loop_end pushes the block (`pea
+    (A2)'; `addq.w #4,SP' after) for ivr_$finalize_induction_variables,
+    which never reads (8,A6): written as an unused parameter (cf. item
+    103, where the push belonged to another call).
