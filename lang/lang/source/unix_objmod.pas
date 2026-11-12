@@ -361,7 +361,7 @@ var
   scnhdr_base: integer32;               { +0x5C70 }
   first_sym: integer32;                 { +0x5C74 }
   data_sym: integer32;                  { +0x5C78 }
-  data_section: il_$node_ptr_t;         { +0x5C7C: the section whose
+  data_section_node: il_$node_ptr_t;    { +0x5C7C: the section whose
                                           data are emitted }
   sect_cursor: il_$node_ptr_t;          { +0x5C80 }
   nrels: unix_objmod_$count_t;          { +0x5C88 }
@@ -1106,7 +1106,7 @@ var
         off := uobj_obj_pos + data_count + 6;
       store_fixup_info(sect, off, value);
       sym := get_reloc_symndx(v, 0);
-      store_rel_info(data_section, off, sym);
+      store_rel_info(data_section_node, off, sym);
       nrelocs_5c58 := nrelocs_5c58 + 1;
     end
     else if t^.kind = 163 then begin
@@ -1134,7 +1134,7 @@ var
         off := uobj_obj_pos + data_count + 6;
       store_fixup_info(sect, off, value);
       sym := s^.xw[22];
-      store_rel_info(data_section, off, sym);
+      store_rel_info(data_section_node, off, sym);
       nrelocs_5c58 := nrelocs_5c58 + 1;
     end
     else
@@ -1439,7 +1439,7 @@ var
       off := uobj_direct_index + uobj_direct_base - 4
     else
       off := uobj_obj_pos + data_count + 6;
-    store_rel_info(data_section, off, sym);
+    store_rel_info(data_section_node, off, sym);
     nrelocs_5c58 := nrelocs_5c58 + 1;
   end;
   { emit_addr_con - the longword (or other form) of address constant p
@@ -1625,7 +1625,7 @@ var
         else
           off := uobj_obj_pos + data_count + 6;
         store_fixup_info(p^.xp[6], off, v);
-        store_rel_info(data_section, off, sym);
+        store_rel_info(data_section_node, off, sym);
         nrelocs_5c58 := nrelocs_5c58 + 1;
         emit_16(0);
         return;
@@ -1679,7 +1679,7 @@ var
       off := uobj_direct_index + uobj_direct_base - 4
     else
       off := uobj_obj_pos + data_count + 6;
-    store_rel_info(data_section, off, sym);
+    store_rel_info(data_section_node, off, sym);
     nrelocs_5c58 := nrelocs_5c58 + 1;
   end;
   { emit_ecb - the entry control block of routine r (in section sect)
@@ -1781,7 +1781,7 @@ var
           off := uobj_obj_pos + data_count + 6;
         store_fixup_info(r^.xp[47], off, start);
         sym := r^.xp[47]^.xw[32];
-        store_rel_info(data_section, off, sym);
+        store_rel_info(data_section_node, off, sym);
         nrelocs_5c58 := nrelocs_5c58 + 1;
       end;
       0: begin
@@ -1797,7 +1797,7 @@ var
             off := uobj_obj_pos + data_count + 6;
           store_fixup_info(r^.xp[48], off, v);
           sym := sect^.xw[22];
-          store_rel_info(data_section, off, sym);
+          store_rel_info(data_section_node, off, sym);
           nrelocs_5c58 := nrelocs_5c58 + 1;
         end;
         emit_16(16#4EF9);
@@ -1808,7 +1808,7 @@ var
           off := uobj_obj_pos + data_count + 6;
         store_fixup_info(r^.xp[47], off, r^.xp[25]^.xl[14]);
         sym := r^.xp[47]^.xw[32];
-        store_rel_info(data_section, off, sym);
+        store_rel_info(data_section_node, off, sym);
         nrelocs_5c58 := nrelocs_5c58 + 1;
         if (ord(r^.xc[294]) > 0) and (ord(r^.xc[294]) <= 127) and
            ((ord(r^.xc[376]) & 16) = 0) then begin
@@ -1831,7 +1831,7 @@ var
           off := uobj_obj_pos + data_count + 6;
         store_fixup_info(r^.xp[47], off, start);
         sym := r^.xp[47]^.xw[32];
-        store_rel_info(data_section, off, sym);
+        store_rel_info(data_section_node, off, sym);
         nrelocs_5c58 := nrelocs_5c58 + 1;
         emit_32(0);
         v := -r^.xp[48]^.xl[4];
@@ -1841,7 +1841,7 @@ var
           off := uobj_obj_pos + data_count + 6;
         store_fixup_info(r^.xp[48], off, v);
         sym := r^.xp[48]^.xw[22];
-        store_rel_info(data_section, off, sym);
+        store_rel_info(data_section_node, off, sym);
         nrelocs_5c58 := nrelocs_5c58 + 1;
       end;
       otherwise
@@ -3678,7 +3678,7 @@ var
       uobj_pad_from := 0;
       ndirectives := 0;
       data_count := 0;
-      data_section := sect_cursor;
+      data_section_node := sect_cursor;
       if not cargs_$options.compress and cargs_$options.ncompress then
         data_sections(sect_cursor, 0, true, true)
       else
@@ -3696,7 +3696,7 @@ var
       uobj_pad_from := 0;
       ndirectives := 0;
       data_count := 0;
-      data_section := sect_cursor;
+      data_section_node := sect_cursor;
       data_sections(sect_cursor, 2, cargs_$options.ncompress, true);
       sect_cursor := sect_cursor^.xp[2];
     end;
@@ -3740,7 +3740,7 @@ var
       while sect_cursor <> nil do begin
         if block_sect = nil then begin
           block_sect := idntk(76, '.rwdi', 5);
-          data_section := block_sect;
+          data_section_node := block_sect;
         end;
         compressed := true;
         uobj_pad_from := 0;
@@ -3756,7 +3756,7 @@ var
       while sect_cursor <> nil do begin
         if block_sect = nil then begin
           block_sect := idntk(76, '.rwdi', 5);
-          data_section := block_sect;
+          data_section_node := block_sect;
         end;
         compressed := true;
         uobj_pad_from := 0;
@@ -4168,7 +4168,7 @@ begin
   patched := false;
   uobj_nsyms := 1;
   fixup_head := nil;
-  data_section := nil;
+  data_section_node := nil;
   uobj_sym_sect := nil;
   main_symbols := nil;
   if cargs_$options.db <> 0 then

@@ -697,10 +697,10 @@ end;
 
 procedure init_basic_types; internal;
 begin
-  char_type := gspace(8);
-  char_type^.kind := 122;
-  char_type^.len := 1;
-  char_type^.signed := true;
+  char_ptype := gspace(8);
+  char_ptype^.kind := 122;
+  char_ptype^.len := 1;
+  char_ptype^.signed := true;
   short_type := gspace(8);
   short_type^.kind := 122;
   short_type^.len := 2;
@@ -730,8 +730,8 @@ begin
   double_type := gspace(6);
   double_type^.kind := 123;
   double_type^.len := 7;
-  void_type := gspace(4);
-  void_type^.kind := 210;
+  void_ptype := gspace(4);
+  void_ptype^.kind := 210;
   cexs_23b8 := gspace(4);
   cexs_23b8^.kind := 136;
 end;

@@ -1387,8 +1387,8 @@ begin
   decl.flags := [];
   decl.unused_28 := 0;
   case kind of
-    0: decl.dtype := void_type;
-    1: decl.dtype := char_type;
+    0: decl.dtype := void_ptype;
+    1: decl.dtype := char_ptype;
     2: decl.dtype := short_type;
     4: decl.dtype := int_type;
     5: decl.dtype := def_ptr(int_type, nil);
@@ -1589,7 +1589,7 @@ begin
   cexs_23bc := cexs_23bc + 1;
   with cexs_stack[cexs_23bc] do begin
     node := n^.opnd[1];
-    type_exp(char_type, addr(typ));
+    type_exp(char_ptype, addr(typ));
     init_aux(aux, typ);
     if pos then begin
       if (node^.kind = 137) and (c_tree_ptr_t(node)^.op = 12) and
@@ -1715,7 +1715,7 @@ begin
       cexs_23bc := cexs_23bc + 1;
       with cexs_stack[cexs_23bc] do begin
         node := tr^.opnd[2];
-        type_exp(char_type, addr(typ));
+        type_exp(char_ptype, addr(typ));
         init_aux(aux, typ);
         if not ((node^.kind = 82) or (node^.kind = 81) or
                 (node^.kind = 80)) then begin

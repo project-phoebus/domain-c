@@ -103,7 +103,7 @@ lang/c_compiler/source/c_syntax.pas	s/^(\s*)v := trunc\(orig\^\.real_value\);/${
 lang/lang/source/cg_call.pas	if ((/^  \{ The registers and objects the call may change\. \}/ .. /^  \{ The result.s register\. \}/) && !/The result.s register/) { $_ = "  { gap 28 }\n" }
 # gap 4 (add_node): writeln (dropped, for the check)
 lang/lang/source/add_node.pas	s/^(\s*)writeln\('Compiler internal warning.*,$/$1; { gap 4 }/
-lang/lang/source/add_node.pas	s/^\s*an_kind_t\(.*\), '\) is not top-level\.'\);$//
+lang/lang/source/add_node.pas	s/^\s*il_\$kind_t\(.*\), '\) is not top-level\.'\);$//
 # gap 7 (add_node): real conversions and constants (dropped or zero, for the check)
 lang/lang/source/add_node.pas	s/^(\s*)v1 := trunc\(node\^\.real_value\)$/$1v1 := 0/
 lang/lang/source/add_node.pas	s/^(\s*)else if node\^\.real_value <= 2147483647\.0 then/$1else if v1 = 0 then { gap 7 }/

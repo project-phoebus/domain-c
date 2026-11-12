@@ -2127,7 +2127,7 @@ begin
     if ok then
       p^.ptr_to := st
     else
-      p^.ptr_to := void_type;
+      p^.ptr_to := void_ptype;
     a.flags := [];
     discard(merge_attribs(a, il_$node_ptr_t(p^.ptr_to)));
     attr_tattr_to_vattr(a, p^.ptr_attr);
@@ -2336,7 +2336,7 @@ begin
       isbf := false;
       if w^.int_value = 8 then begin
         if neg then
-          ftype := char_type
+          ftype := char_ptype
         else
           ftype := uchar_type;
         if bitoff = 8 then

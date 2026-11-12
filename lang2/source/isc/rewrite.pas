@@ -1748,7 +1748,7 @@ begin
   n^.desc.size := 4;
   n^.desc.rlen := 5;
   n^.count := 2;
-  n^.opnd[1] := rw_ptr_t(addr(at_lib_dsc[16#10EC]));
+  n^.opnd[1] := rw_ptr_t(addr(at_lib_dsc_bytes[16#10EC]));
   n^.opnd[2] := rw_ptr_t(smcontk(82, size));
   make_call_to_rws_$alloc_temp := n;
 end;

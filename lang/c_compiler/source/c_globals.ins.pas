@@ -188,7 +188,7 @@ var
                                           attr_check_align (`movea.l
                                           #0x140440' and k * 64 less
                                           60 or 12) }
-  char_type: extern c_type_ptr_t;       { +0x2390: signed, 1 }
+  char_ptype: extern c_type_ptr_t;      { +0x2390: signed, 1 }
   short_type: extern c_type_ptr_t;      { +0x2394: signed, 2 (cc also
                                           stores it in runbackend_10) }
   int_type: extern c_type_ptr_t;        { +0x2398: signed, 4 (and in
@@ -199,7 +199,7 @@ var
   uint_type: extern c_type_ptr_t;       { +0x23A4: unsigned, 4 }
   float_type: extern c_type_ptr_t;      { +0x23A8: floating, 6 }
   double_type: extern c_type_ptr_t;     { +0x23AC: floating, 7 }
-  void_type: extern c_type_ptr_t;       { +0x23B0: kind 210 }
+  void_ptype: extern c_type_ptr_t;      { +0x23B0: kind 210 }
   cexs_23b4: extern c_type_ptr_t;       { +0x23B4: uint_type's node
                                           again (c_expr_syn, c_main) }
   cexs_23b8: extern c_type_ptr_t;       { +0x23B8: kind 136 (c_main) }

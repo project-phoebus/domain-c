@@ -73,7 +73,7 @@
     enters (+0x20..+0x40), +0x44 (il_178), the cells c_globals.ins.pas
     declares (+0x48..+0x204; but +0x1EC, csyn_1ec, declared here),
     and the basic types' cells by specifier (+0x208, initialized data:
-    the addresses of char_type .. double_type).
+    the addresses of char_ptype .. double_type).
 
   The declaration contexts (ctx, the declaration routines' first
   parameter): 0 file level, 1 a prototype's parameters, 2 an old-style
@@ -204,7 +204,7 @@ var
   { +0x208: the basic types' cells by type specifier (char, short, int,
     float, double) and unsigned. }
   basic_types: array [0..4, 0..1] of ^c_type_ptr_t := [
-    [addr(char_type), addr(uchar_type)],
+    [addr(char_ptype), addr(uchar_type)],
     [addr(short_type), addr(ushort_type)],
     [addr(int_type), addr(uint_type)],
     [addr(float_type), addr(float_type)],
@@ -1347,7 +1347,7 @@ var
           check_add_spec(10, specs);
           d.name := lex_token;
           if 0 in specs then
-            d.dtype := char_type
+            d.dtype := char_ptype
           else if 4 in specs then
             d.dtype := short_type
           else
@@ -1414,7 +1414,7 @@ begin
   res := (sc <> 216) or (d.flags <> []) or (specs <> []);
   if d.dtype = il_174 then
     if specs = [8] then
-      d.dtype := void_type
+      d.dtype := void_ptype
     else begin
       if 7 in specs then
         u := 1

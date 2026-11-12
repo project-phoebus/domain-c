@@ -105,7 +105,7 @@ module c_expr_sem;
 
 define
   cexs_stack;                           { +0x390 (c_globals.ins.pas) }
-  char_type;                            { +0x2390 }
+  char_ptype;                           { +0x2390 }
   short_type;                           { +0x2394 }
   int_type;                             { +0x2398 }
   uchar_type;                           { +0x239C }
@@ -113,7 +113,7 @@ define
   uint_type;                            { +0x23A4 }
   float_type;                           { +0x23A8 }
   double_type;                          { +0x23AC }
-  void_type;                            { +0x23B0 }
+  void_ptype;                           { +0x23B0 }
   cexs_23b4;                            { +0x23B4 }
   cexs_23b8;                            { +0x23B8 }
   cexs_23bc;                            { +0x23BC }
@@ -263,7 +263,7 @@ begin
     if kind = 122 then
       d.flags.b6 := (kind = 127) or (t.base = double_type) or
                     (t.base = float_type) or (t.base = int_type) or
-                    (t.base = char_type) or (t.base = short_type);
+                    (t.base = char_ptype) or (t.base = short_type);
   d.size := t.size;
 end;
 
@@ -336,7 +336,7 @@ begin
       else
         sgn := true;
       if len = 1 then
-        if sgn then t := char_type else t := uchar_type
+        if sgn then t := char_ptype else t := uchar_type
       else if len = 2 then
         if sgn then t := short_type else t := ushort_type
       else
@@ -488,7 +488,7 @@ begin
     if not (node^.kind in [80..86, 200]) then begin
       sgn := typ.base^.signed;
       case t.size of
-        1: if sgn then type_exp(char_type, addr(tt))
+        1: if sgn then type_exp(char_ptype, addr(tt))
            else type_exp(uchar_type, addr(tt));
         2: if sgn then type_exp(short_type, addr(tt))
            else type_exp(ushort_type, addr(tt));
@@ -556,7 +556,7 @@ begin
     if (6 in cargs_$options.cpu) <> cargs_$options.alnchk then
       if t.base^.ptr_attr.align > typ.base^.ptr_attr.align then begin
         p := def_drop_tnames(typ.base^.ptr_to);
-        if (p = char_type) or (p = uchar_type) or (p^.kind = 210) then
+        if (p = char_ptype) or (p = uchar_type) or (p^.kind = 210) then
           error1(249, line, sym)
         else
           error1(242, line, sym);
@@ -1343,7 +1343,7 @@ begin
           if (v >= -128) and (v <= 127) then begin
             typ.size := 1;
             if typ.base^.kind <> 129 then
-              typ.base := char_type;
+              typ.base := char_ptype;
           end
           else if (v >= -32768) and (v <= 32767) then begin
             typ.size := 2;
@@ -1756,7 +1756,7 @@ var
 procedure boolean_result;
 begin
   with cexs_stack[bas] do begin
-    typ.base := char_type;
+    typ.base := char_ptype;
     typ.low := 0;
     typ.high := 1;
     typ.size := 1;
@@ -1906,7 +1906,7 @@ var
 begin
   with cexs_stack[ia] do begin
     if len = 1 then
-      if sgn then bt := char_type else bt := uchar_type
+      if sgn then bt := char_ptype else bt := uchar_type
     else if len = 2 then
       if sgn then bt := short_type else bt := ushort_type
     else
@@ -2064,7 +2064,7 @@ procedure mult_div_mod_sign(
 begin
   with cexs_stack[k] do
     if typ.size = 1 then
-      if sgn then typ.base := char_type else typ.base := uchar_type
+      if sgn then typ.base := char_ptype else typ.base := uchar_type
     else if typ.size = 2 then
       if sgn then typ.base := short_type else typ.base := ushort_type
     else
@@ -3585,7 +3585,7 @@ begin
     desc.rlen := 1;
     add_tn(op, desc, cexs_23bc - 1, cexs_23bc);
     with cexs_stack[cexs_23bc] do begin
-      typ.base := char_type;
+      typ.base := char_ptype;
       typ.low := 0;
       typ.high := 1;
       typ.size := 1;

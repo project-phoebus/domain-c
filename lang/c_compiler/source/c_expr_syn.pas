@@ -145,7 +145,7 @@ var
     ft^.kind := 234;
     case kind of
       0: ft^.fn_result := double_type;
-      1: ft^.fn_result := def_ptr(char_type, nil);
+      1: ft^.fn_result := def_ptr(char_ptype, nil);
       2: ft^.fn_result := int_type;
       3: if cargs_$options.xansi then
            ft^.fn_result := cexs_23b4
@@ -177,9 +177,9 @@ begin
   dbl2^.count := 2;
   dbl2^.types[1] := double_type;
   dbl2^.types[2] := double_type;
-  ccp := def_ptr(char_type, nil);
+  ccp := def_ptr(char_ptype, nil);
   ccp^.ptr_attr.bits := [19];
-  cp := def_ptr(char_type, nil);
+  cp := def_ptr(char_ptype, nil);
   cpy := gspace(12);
   cpy^.count := 2;
   cpy^.types[1] := cp;
@@ -462,7 +462,7 @@ end;
   0x0507A2, 0x16C bytes, link #-176.  The index type is
   int_type's subrange 0..-1 (def_subr of the constants con_zero and
   con_minus_one: -168 and its copy -152), into the declaration -96 (+4
-  int_type, +12 cleared, +32 the line); the element (-136) char_type
+  int_type, +12 cleared, +32 the line); the element (-136) char_ptype
   with 8 bits (+16) and +20 0, or for a wide string uint_type with 32
   and 2; the array type (def_arr, the last argument `attr_curr_align_env
   = 0', `tst.w; seq') in the declaration -56 (+12 and +28 cleared);
@@ -494,8 +494,8 @@ begin
   idx.flags := [];
   def_subr(lo, hi, idx);
   if token_kind = ctk_string then begin
-    elem.dtype := char_type;
-    elem.name := char_type;
+    elem.dtype := char_ptype;
+    elem.name := char_ptype;
     elem.size_bits := 8;
     elem.align := 0;
   end
