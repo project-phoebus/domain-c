@@ -885,6 +885,38 @@ cc.m68k unless marked.
     ('x'): the character in the word's high byte, printed with %M1ZA
     from (16,A6).
 
+
+## The dumps (translator PB3, cc.a88k dmp)
+
+119. **String constants overlapped in the pool.**  dmp_$instruction
+    (0x230A2E) pads an operand kind's name from a 24-blank constant at
+    0x231D72 whose last two blanks are the start of '  fw=%ld%$'
+    (0x231D88, used by the width lines): the pool shares a constant's
+    head with the tail of another (a suffix of one string the prefix of
+    the next).  Likewise 'AVAIL_ON_ENTRY', 'KILLED', 'LIVE_ON_ENTRY'
+    (passed with their lengths, no terminator) lie back to back
+    (pattern 113), and identical control strings ('%.', ' %$', ' ]%.')
+    are one constant for the whole unit, referenced from routines far
+    apart.  dpc lays each out on its own.
+120. **A test of a pointer just cleared, folded into a jump.**
+    display_ra_info (0x2336CA) clears A3 (`suba.l A3,A3') and branches
+    straight to its epilogue (`bra.w 0x233878'): the loop over the
+    conflicts' displacements and the preferenced set that follow are
+    never reached, though their code is there, and the loop's test at
+    its bottom is skipped too.  Written as `c := nil; if c <> nil then
+    begin repeat ... until c = nil; ... end': Rev 8.89 knows the
+    register's value from the clear (pattern 75) and drops the test.
+121. **An operand's instruction computed inline.**  print_lts_list
+    (0x233054) finds the instruction of a segment's operand as
+    `operand - 32 - 12 * operand^.num' (`move.b (A0),D1; lsl.w #2;
+    ...; subi.l #32; sub.l D4'), utils_ins_$operands_instruction's
+    body, without a call: dmp does not open utils.ins.pas (an inline
+    function or a macro in the original; written as the expression).
+122. **A record after the object it describes, reached by a negative
+    displacement.**  print_alias_desc (0x230834) reads a load's or
+    store's alias descriptor (alias_$desc_t, 24 bytes) at the
+    instruction's address less 24 (`subi.l #24'): lir allocates it in
+    front of the instruction.
 ## The calling conventions and the LIR checks (translator PA3, call_conv, sanity, lir_utils; cc.a88k)
 
 150. **A boolean register as a `btst' bit number.**  at_call_conv

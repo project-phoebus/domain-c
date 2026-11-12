@@ -79,6 +79,7 @@ Conventions the translators should know:
 | `lang2/source/be_com/lst.pas` | 33 | the assembler listing, classic and -PRASM (translator PB; dpc gaps 7, 8, 28) |
 | `lang2/source/be_com/bin.pas` | 32 | the code's bytes, displacements, exception stubs, .lines and unwind scopes (translator PB; dpc gaps 7, 13, 22) |
 | `lang2/source/be_com/asm.pas` | 21 | the encoder (pass 2), the layout and pipeline NOPs (pass 1), the literal pools, case tables (translator PB2; dpc gaps 22, 25, 32; the .init files by `define`, questions 161) |
+| `lang2/source/be_com/dmp.pas` | 27 | the phases' dumps: blocks, instructions, live ranges, interference graph, MRH (translator PB3; batch A's record fields read through views, their meanings in its comments; phase$ constants in backend.ins.pas; dpc gaps 4, 33, 34) |
 
 exs.pas (27 routines, 4168 bytes, nested routines with uplevel
 references) was not reached with the core; batch A translated it

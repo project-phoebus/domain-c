@@ -1,0 +1,29 @@
+{ rrp_string.init - a DSEE derived object of be_com/backend.ins.pas
+  (cc.a88k only): the names of a lifetime segment's properties (rrp$t), 16 of 17
+  characters; dmp_$instruction prints an operand's with them.
+  Included by dmp.pas after its other inserts.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k: dmp's data +0x130 (272 bytes, set by .rwdi).
+
+  Not known from the original: the declaration's form (its name is the
+  file's). }
+
+var
+  rrp_string: array [rrp$t] of packed array [1..17] of char := [
+    'fp_reg_even_only ',
+    'fp_reg_odd_only  ',
+    'modify           ',
+    'write            ',
+    'read             ',
+    'intend_to_modify ',
+    'unconsumed       ',
+    'spare_1          ',
+    'life_mark        ',
+    'ra_marked        ',
+    'true_write       ',
+    'store_through    ',
+    'unique_value     ',
+    'safe_base_address',
+    'fp_reg           ',
+    'ip_reg           '];
