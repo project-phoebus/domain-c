@@ -159,6 +159,13 @@ type
           op: integer;                  { +48: the instruction (outbin's
                                           tables are indexed by it) }
           c5_50: integer);              { +50 }
+      { A cell as final.pas's scans chain it: +20 links the cells a scan
+        has visited (scancc, testcc: nil when not visited). }
+      6: (c6_8: integer;                { +8 }
+          c6_10: integer;               { +10 }
+          c6_12: integer32;             { +12 }
+          c6_16: integer32;             { +16 }
+          visit: codegen_$cell_ptr_t);  { +20 }
   end;
 
 { INIT_CELPKG - no cells allocated.  0x0B645C (final's f_initialize). }
