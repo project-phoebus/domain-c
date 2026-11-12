@@ -1043,3 +1043,24 @@ cc.m68k unless marked.
     gives a boolean module variable one byte.  dpc gives each two
     (docs/dpc-gaps.md 37).
 
+
+## The register allocator's utilities (translator PB5, cc.a88k ra_utils)
+
+137. **A real constant stored to a single real field as its bits.**
+    choose_spill_cost (cc.a88k 0x26EC9A) stores a live range's spill cost
+    (+28, a single) as `clrl (28,A2)' for 0.0 and `move.l #0x3F800000,
+    (28,A2)' for 1.0: no FPP call for a constant assignment.  The
+    integer-times-real roundings (`round(n * 0.9)') go through fpp_$
+    (0x00BC for a word operand pushed by value, 0x00C4 for a longword,
+    0x00A0 and the double, 0x0154 0x0068 the round to D0).
+138. **A routine passed as a parameter set up at the parent's entry.**
+    ra_utils_$add_spill_code (0x270F0C) builds new_db_lts's trampoline
+    (item 12) and calls cache_$clear first thing, though the routine is
+    passed only deep inside two loops (to lir_utils_$flesh_out_new_load_
+    or_store), and on paths that return early too.
+139. **A word of flags cleared once per outer iteration, reset per
+    operand.**  add_spill_code's reload facts (-106, a byte count and a
+    byte of flags) are `clr.w' for each instruction and `move.w #128'
+    for each read operand; a write operand that is not also read sees
+    the flags its instruction's previous operands left.  Written as a
+    variant record (ru_fl_t) with the word's view.

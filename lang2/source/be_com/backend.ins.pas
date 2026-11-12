@@ -1193,8 +1193,14 @@ var
                                           lists are kept: 0 by block, 1
                                           by live range (utils; xtp sets
                                           it to 1) }
-  lir_main_c88: extern boolean;         { +0xC88 }
-  lir_main_c89: extern boolean;         { +0xC89 }
+  lir_main_c88: extern char;            { +0xC88: the most floating
+                                          registers live at once in the
+                                          routine, a byte (batch B, PB5:
+                                          ra_utils compares it with the
+                                          floating registers there are;
+                                          was boolean) }
+  lir_main_c89: extern char;            { +0xC89: the most integer
+                                          registers live at once (likewise) }
   lir_main_c8c: extern boolean;         { +0xC8C }
   lir_main_c8d: extern boolean;         { +0xC8D: the live ranges'
                                           hints valid (utils) }
@@ -1245,11 +1251,20 @@ var
   ra_654: extern integer32;             { ra +0x654 (lir_main) }
   ra_658: extern integer32;             { ra +0x658 (lir_main) }
   sched_3158: extern integer32;         { sched +0x3158 (lir_main) }
-  post_6b8: extern solution_t;          { post +0x6B8 (0x48FB04): the
+  ra_utils_10: extern solution_t;       { ra_utils +0x10 (0x48FB04): the
                                           solution of a new load's or
                                           store's register operand
                                           (lir_utils_$flesh_out_new_load_
-                                          or_store; batch A, PA4) }
+                                          or_store; batch A, PA4).  batch
+                                          B (PB5): was post_6b8, but
+                                          0x48FB04 is in ra_utils' data
+                                          (A5 0x48FAF4; post's is
+                                          0x48F438, ra's 0x48F488), which
+                                          defines it; lir_$begin_
+                                          compilation clears 0x1B0 bytes
+                                          there, as at lir_main +0x250
+                                          and +0x400: solution_t is 432
+                                          bytes }
 
   { batch B: cells lst reaches. }
   lir_main_ac0: extern array [0..31] of univ_ptr;    { lir_main +0xAC0

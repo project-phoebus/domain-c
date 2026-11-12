@@ -214,6 +214,13 @@ when this tree is merged).
    0x251878): a single literal held as a double converted for
    lib_$cv_sfp_out (FPP 0x0074 0x00D4 0xFF3E); the check leaves it
    unset.
+   Also ra_utils.pas (translator PB5): spill costs stored as single
+   real constants (`cost.r := 0.0', `:= 1.0': `clr.l', `move.l
+   #0x3F800000'), and `round(n * 0.9)', `round(n * 0.75)', `round(n *
+   0.6)' of integers (FPP 0x00BC or 0x00C4, 0x00A0 <double>, 0x0154
+   0x0068): "a real constant is not supported yet", "undefined
+   identifier `round`"; the check stores the bits and uses integer
+   arithmetic.
 
 8. **`in` on a constant set with a word element.**  `t^.kind in [77..87,
    101, 200]` (token.pas set_is_nil 0x09930E: `move.w #207,D0; sub.w
@@ -505,6 +512,12 @@ when this tree is merged).
        procedure q(t: p_t); options(val_param);
        begin
          walk(t, kf, false);
+
+   Also ra_utils.pas ra_utils_$add_spill_code (translator PB5): its
+   nested new_db_lts passed to lir_utils_$flesh_out_new_load_or_store
+   (the image's 18-byte trampoline at -148, then cache_$clear), as in
+   lir_utils' fix_store_through_lrs: "the address of a nested routine
+   cannot be taken"; the check passes a module-level stand-in.
 22. **`ord` of a boolean.**  attributes.pas attr_curr_align_env
    (cc.m68k 0x0A63F6: `moveq #1,D0; and.b 0x2C3677,D0', the packed
    boolean cargs_$options.b28b_0 as 0 or 1 in a word result).  The
@@ -681,6 +694,12 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
    path's record of the register's new contents; the floating store
    through a floating register).
 
+   Also ra_utils.pas ra_utils_$add_spill_code (translator PB5, cc.a88k
+   0x270F0C, 0xD5E bytes): the reads that keep their live range or are
+   narrowed to a smaller load (moves, TST/TSTB/TSTW, EXTEND7/15,
+   EXTRACTU, floating control) are left out of the check; gap 28
+   follows once they are.
+
 26. **`substr`** (reference 4-189, an extension).  outbin.pas
    assert_is_an_fpx_command_instr (cc.m68k 0x0BBE28): `substr(chars, 1,
    len) = 'CommandCIR'' of a string constant's characters (pas_$ctov of
@@ -741,6 +760,10 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
    Also lst.pas lst_$display_code_cell (translator PB, cc.a88k
    0x250A0A, 0xD28 bytes): the classic form's registers' column (a
    loop of three) is left out of the check.
+   Also ra_utils.pas ra_utils_$add_spill_code (translator PB5, cc.a88k
+   0x270F0C, 0xD5E bytes, after gap 25's cut): the linking of a
+   store's later readers to the stored register is left out of the
+   check (a conditional variable that is not set).
 
 29. **`in` on a 32-byte set variable with an element beyond 0..255.**
    list_tree.pas print_top_node (cc.m68k 0x08356A): `i in
