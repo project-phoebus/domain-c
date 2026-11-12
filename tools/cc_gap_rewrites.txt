@@ -5,9 +5,6 @@
 lang/common/source/diag.pas	s/^(\s*)line_prefix := prefix;/$1line_prefix.length := prefix.length; { gap 1 }/
 # gap 4: write and writeln (dropped, for the check)
 lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
-# gap 5: displacements beyond 16 bits (the block shrunk to two elements, for the check)
-lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)tles: array \[0\.\.255\] of mu_\$tle_t;/$1tles: array [0..1] of mu_\$tle_t; { gap 5 }/
-lang/c_compiler/source/c_macro_utl.pas	s/tles\[255\]/tles[1] { gap 5 }/
 # gap 6: a real passed to an in double parameter (pass an unset double local, for the check)
 lang/common/source/token.pas	s/^    r: real\): token_\$t;$/    r: real): token_\$t;\nvar\n  r_gap6: double; { gap 6 }/
 lang/common/source/token.pas	s/rlcontk\(r\);/rlcontk(r_gap6); { gap 6 }/
@@ -268,13 +265,12 @@ lang2/source/be_com/ra.pas	s/^(          \{ \(out of the pipe first\) \})$/%if g
 lang2/source/be_com/ra.pas	s/^(          \{ It may die at once\. \})$/%endif { gap 28 }\n$1/
 lang2/source/be_com/ra.pas	s/^(        \{ The clobbers of a call or SVC\. \})$/%if gap28w %then { gap 28 }\n$1/
 lang2/source/be_com/ra.pas	s/^(        \{ Ready for the next instruction\. \})$/%endif { gap 28 }\n$1/
-# gap 40 (ra, translator PB6): a frame beyond link.w (ra_$collapse_conflict_graph's 256K table of aversions: the table shrunk to two entries, for the check)
-lang2/source/be_com/ra.pas	s/^  ra_ap_table_t = array \[0\.\.65535\] of ra_ap_ptr_t;$/  ra_ap_table_t = array [0..1] of ra_ap_ptr_t; { gap 40 }/
-lang2/source/be_com/ra.pas	s/\.r < 1\.0e-4/.i < 16#38D1B717 { gap 7 }/
 # gap 4 (konst, translator PB6): writeln (dropped, for the check)
 lang2/source/be_com/konst.pas	s/^(\s*)writeln\(.*\);\s*$/${1}; { gap 4 }/
 # gap 7 (konst, translator PB6): a double literal converted to a single (left unset, for the check)
 lang2/source/be_com/konst.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
-# gap 41 (lir, translator PA6): a 4-character string constant passed by address (a module variable, for the check)
-lang2/source/be_com/lir.pas	s/^(  lir_name_t = packed array \[1\.\.4\] of char;)$/$1\nvar gap41_name: lir_name_t; { gap 41 }\ntype/
-lang2/source/be_com/lir.pas	s/_reg(_pair)?\('[^']{4}', /_reg$1(gap41_name, /g
+# gap 5 (c_macro_utl): displacements beyond 16 bits (the block shrunk to two elements, for the check) [still needed with dpc d6d6a24: an indexed field beyond 16 bits through a pointer, b^.used_words[w]]
+lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)tles: array \[0\.\.255\] of mu_\$tle_t;/$1tles: array [0..1] of mu_\$tle_t; { gap 5 }/
+lang/c_compiler/source/c_macro_utl.pas	s/tles\[255\]/tles[1] { gap 5 }/
+# gap 7 (ra, translator PB6): a single-real comparison with a constant (the bits compared, for the check)
+lang2/source/be_com/ra.pas	s/\.r < 1\.0e-4/.i < 16#38D1B717 { gap 7 }/
