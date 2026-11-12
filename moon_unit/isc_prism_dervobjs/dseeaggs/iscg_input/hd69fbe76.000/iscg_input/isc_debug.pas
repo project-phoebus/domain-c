@@ -2072,7 +2072,7 @@ begin
         write('static bp: ', il_node_to_string(pin_blk_end_node_ptr_t(node)^.bp));
         writeln('.');
         indent(depth);
-        write('static block_kind: ', an_kind_t(pin_blk_end_node_ptr_t(node)^.bp^.kind):1);
+        write('static block_kind: ', pin_blk_end_node_ptr_t(node)^.bp^.kind:1);
         writeln('.');
         indent(depth);
         write('static returns_dynamic_results: ', pin_blk_end_node_ptr_t(node)^.bp^.f378.returns_dynamic_results:1);
@@ -3900,10 +3900,13 @@ begin
         indent(depth);
         write('static vattributes: ', vatt_set_to_string(pin_var_name_ptr_t(node)^.vattributes));
         writeln('.');
-        { ends at d337a }
         end;
-      { the kinds without static attributes }
-      ap_register, at_lib_dsc, db_register, display_register, exception_register, lb_register, lib_dsc, pf_call, sb_register, use_def_ob:
+      { The kinds without static attributes (their table entries all go
+        to the case's end, so their places among the arms are not
+        known). }
+      ap_register, at_lib_dsc, db_register, display_register,
+      exception_register, lb_register, lib_dsc, pf_call, sb_register,
+      use_def_ob:
         ;
       { iscg: end }
     otherwise
