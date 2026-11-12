@@ -18,11 +18,9 @@
     birthpoint instructions', +24 their inputs', +48 the dominator
     buckets'), then the cells the routines below use.
 
-  TODO(pascal) fg_utils: 35 of 53 routines (with the insert's
+  TODO(pascal) fg_utils: 40 of 53 routines (with the insert's
   utils_ins_$operands_instruction; the first ones in address order,
-  through replace_exposed_lts, 0x2365CC); not translated yet:
-  fg_utils_$generate_join_birthpoint, fg_utils_$insert_join_birthpoint,
-  traverse, fg_utils_$add_jbi, add_join_birthpoint_inputs,
+  through add_join_birthpoint_inputs, 0x236BEA); not translated yet:
   fg_utils_$dominators, drop_jbis_on_exposed_list,
   drop_unconsumed_exposed_segments, drop_unconsumed_final_segments,
   fg_utils_$drop_old_join_birthpoints, fg_utils_$recompute_postnum,
@@ -1683,4 +1681,265 @@ begin
     utils_$put_lts_on_exposed_list(nw);
   end;
   replace_exposed_lts := nw;
+end;
+
+{ fg_utils_$generate_join_birthpoint - a join birthpoint for the
+  exposed segment lts and the final segment fin of one live range in
+  lts's block: a JOIN_BP made first in the block after its labels (from
+  the join birthpoint instructions' heap, lir_main_heap switched for
+  the call), its operand 1 a reader of lts (read and intend_to_modify,
+  lts's parity), operand 2 the definition of fin (modify), operand 3
+  the inputs (join_birthpoint_inputs, none yet); the operands' kind
+  that of the live range's first referenced segment (a pair's halves
+  fp_reg; bug_check without one).  The live range read, intend_to_
+  modify and modify; lts read and intend_to_modify; fin modify.  The
+  JOIN_BP.
+
+  0x2366F8, 0x138 bytes: lts (8) in D3, fin (12) in D5; the live range
+  A2, the block D4, the kind D2; opcode and `after' pushed as one
+  longword (16#CB0000, pattern 105). }
+
+function fg_utils_$generate_join_birthpoint(
+    lts: lts_ptr_t;
+    fin: lts_ptr_t): instr_ptr_t;
+var
+  lr: lr_ptr_t;
+  bb: bb_ptr_t;
+  kind: integer;
+  s: lts_ptr_t;
+  i: instr_ptr_t;
+  save: univ_ptr;
+  ni: instr_ptr_t;
+begin
+  lr := lts^.lr;
+  kind := 0;
+  bb := lts^.bb;
+  s := lr^.ltss;
+  while s <> nil do
+    if s^.refs <> nil then begin
+      kind := ord(s^.refs^.h.kind);
+      s := nil;
+    end
+    else
+      s := s^.next;
+  if kind = 0 then
+    bug_check('FG_UTILS_$INSERT_JOIN_BIRTHPOINT: Live Range has no Kind, LR %3WZD%$',
+              lr^.num);
+  if kind = ord(operand$fp_reg_pair) then
+    kind := ord(operand$fp_reg);
+  lr^.rrp := lr^.rrp + [rrp$modify, rrp$read, rrp$intend_to_modify];
+  lts^.rrp := lts^.rrp + [rrp$read, rrp$intend_to_modify];
+  fin^.rrp := fin^.rrp + [rrp$modify];
+  i := bb^.first;
+  while i^.opc = ord(opc$label) do
+    i := i^.next;
+  save := lir_main_heap;
+  lir_main_heap := addr(jbi_heap);
+  ni := lir_$optimizer_new_instruction(i, ord(opc$join_bp), false);
+  lir_main_heap := save;
+  ni^.bb := bb;
+  ni^.opnds[1].h.kind := operand$t(kind);
+  ni^.opnds[1].h.num := 1;
+  opnd_bytes_ptr_t(addr(ni^.opnds[1]))^.rrp := (opnd_bytes_ptr_t(lts)^.rrp & 3) ! 16#30;
+  ni^.opnds[1].lts := lts;
+  lts^.refs := addr(ni^.opnds[1]);
+  ni^.opnds[2].h.kind := operand$t(kind);
+  ni^.opnds[2].h.num := 2;
+  opnd_bytes_ptr_t(addr(ni^.opnds[2]))^.rrp := (opnd_bytes_ptr_t(fin)^.rrp & 3) ! 4;
+  ni^.opnds[2].lts := fin;
+  ni^.opnds[2].link := fin^.refs;
+  fin^.refs := addr(ni^.opnds[2]);
+  ni^.opnds[3].h.kind := operand$join_birthpoint_inputs;
+  ni^.opnds[3].h.num := 3;
+  fg_utils_$generate_join_birthpoint := ni;
+end;
+
+{ fg_utils_$insert_join_birthpoint - lr's join birthpoint in bb: the
+  JOIN_BP already reading its exposed segment there, or one made for
+  a new exposed segment (replace_exposed_lts; the old one the join's
+  definition) or, when the exposed segment is new, for it and a final
+  segment (made final); the two segments' l44 and l28 cleared.
+
+  0x236874, 0xA0 bytes: lr (8), bb (12); created (-32). }
+
+function fg_utils_$insert_join_birthpoint(
+    lr: lr_ptr_t;
+    bb: bb_ptr_t): instr_ptr_t;
+var
+  created: boolean;
+  x: lts_ptr_t;
+  e: lts_ptr_t;
+  i: instr_ptr_t;
+begin
+  x := utils_$get_exposed_lts(lr, bb, created);
+  if not created then begin
+    if x^.refs <> nil then begin
+      i := utils_ins_$operands_instruction(x^.refs);
+      if i^.opc = ord(opc$join_bp) then begin
+        fg_utils_$insert_join_birthpoint := i;
+        return;
+      end;
+    end;
+    e := replace_exposed_lts(lr, bb);
+  end
+  else begin
+    e := x;
+    x := utils_$get_final_lts(lr, bb, created);
+    x^.f2.final := true;
+  end;
+  e^.l44 := nil;
+  e^.l28 := nil;
+  x^.l44 := nil;
+  x^.l28 := nil;
+  fg_utils_$insert_join_birthpoint := fg_utils_$generate_join_birthpoint(e, x);
+end;
+
+{ traverse - the SSA form walk over the dominator tree from bb: unless
+  bb is the start block or an entry, each live range live into bb
+  (live_in) is given a join birthpoint in bb (and its bit in bb's
+  transparent set) when its reaching definition (bb itself when the
+  live range is defined there, avail_out, else the block on top of the
+  live range's stack, lr +60; bug_check, after a dump at debug level 3,
+  when the stack is empty) is bb, or does not pass it through
+  (transparent) and is not the first block; never in a final block.
+  Then each live range available into bb (avail_in) that bb defines or
+  passes through, or every one when bb is the first block, has bb
+  pushed on its stack (a 16-byte entry from the dominator buckets'
+  heap: the block +0, the next +12); bb's children traversed; and the
+  same live ranges' stacks popped (bug_check when empty).
+
+  0x236914, 0x200 bytes: bb (8) in D2; the live range A3, the
+  definition A2. }
+
+procedure traverse(
+    bb: bb_ptr_t); options(val_param, internal);
+type
+  stk_ptr_t = ^stk_t;
+  stk_t = record
+    bb: bb_ptr_t;                       { +0 }
+    space4: array [4..11] of char;      { +4 }
+    next: stk_ptr_t;                    { +12 }
+  end;
+var
+  lr: lr_ptr_t;
+  d: bb_ptr_t;
+  s: stk_ptr_t;
+  c: bb_ptr_t;
+begin
+  lr := nil;
+  if bb^.f14.kind <> 1 then
+    if not bb^.f.entry then
+      repeat
+        lr := bv_$find_next(dom_rtn, bb^.live_in, lr);
+        if lr <> nil then begin
+          if bv_$test(bb^.avail_out, lr) then
+            d := bb
+          else begin
+            s := stk_ptr_t(lr^.l60);
+            if s = nil then begin
+              if dfs_level >= 3 then
+                dmp_$whole_routine(dom_rtn, at_backend_switches.sw5, true);
+              bug_check('FG_UTILS_$TRAVERSE: birthpoint stack is NIL, 1, BB %3WZD, LR %3WZD%$',
+                        bb^.num, lr^.num);
+            end;
+            d := s^.bb;
+          end;
+          if bb^.f14.kind <> 2 then
+            if (bb = d)
+               or (not bv_$test(d^.transparent, lr) and (d <> dom_rtn^.dfs_first)) then begin
+              discard(fg_utils_$insert_join_birthpoint(lr, bb));
+              bv_$set(bb^.transparent, lr);
+            end;
+        end;
+      until lr = nil;
+  lr := nil;
+  repeat
+    lr := bv_$find_next(dom_rtn, bb^.avail_in, lr);
+    if lr <> nil then
+      if bv_$test(bb^.avail_out, lr) or bv_$test(bb^.transparent, lr)
+         or (bb = dom_rtn^.dfs_first) then begin
+        s := mrh_$alloc_fixed(bucket_heap);
+        s^.bb := bb;
+        s^.next := stk_ptr_t(lr^.l60);
+        lr^.l60 := integer32(s);
+      end;
+  until lr = nil;
+  c := bb^.l46;
+  while c <> nil do begin
+    traverse(c);
+    c := c^.l50;
+  end;
+  lr := nil;
+  repeat
+    lr := bv_$find_next(dom_rtn, bb^.avail_in, lr);
+    if lr <> nil then
+      if bv_$test(bb^.avail_out, lr) or bv_$test(bb^.transparent, lr)
+         or (bb = dom_rtn^.dfs_first) then begin
+        s := stk_ptr_t(lr^.l60);
+        if s = nil then
+          bug_check('FG_UTILS_$TRAVERSE: birthpoint stack is NIL, 2, BB %3WZD, LR %3WZD%$',
+                    bb^.num, lr^.num);
+        lr^.l60 := integer32(s^.next);
+      end;
+  until lr = nil;
+end;
+
+{ fg_utils_$add_jbi - lts made an input of the JOIN_BP join: a record
+  from the inputs' heap (utils' ut_jbi_t: next +0 on lts's l44 list,
+  next_op +4 on join's operand 3 link (+72), lts +8, join +12).
+
+  0x236B9C, 0x4E bytes: join (8) in D2, lts (12) in A2. }
+
+procedure fg_utils_$add_jbi(
+    join: instr_ptr_t;
+    lts: lts_ptr_t);
+type
+  jbi_ptr_t = ^jbi_t;
+  jbi_t = record
+    next: jbi_ptr_t;                    { +0 }
+    next_op: jbi_ptr_t;                 { +4 }
+    lts: lts_ptr_t;                     { +8 }
+    join: instr_ptr_t;                  { +12 }
+  end;
+var
+  r: jbi_ptr_t;
+begin
+  r := mrh_$alloc_fixed(jbi_input_heap);
+  r^.lts := lts;
+  r^.join := join;
+  r^.next := lts^.l44;
+  lts^.l44 := r;
+  r^.next_op := jbi_ptr_t(join^.opnds[3].link);
+  join^.opnds[3].link := opnd_ptr_t(r);
+end;
+
+{ add_join_birthpoint_inputs - from bb back through its predecessors
+  not yet marked mark (mark146 set), each block whose current segment
+  (next142, a segment during the walk) is not lts searched further,
+  and one whose is gives its final segment (l134) as an input of join.
+
+  0x236BEA, 0x60 bytes, no A5: join (8), mark (12) in D2, lts (16) in
+  A2, bb (20). }
+
+procedure add_join_birthpoint_inputs(
+    join: instr_ptr_t;
+    mark: integer32;
+    lts: lts_ptr_t;
+    bb: bb_ptr_t); options(val_param, internal);
+var
+  e: fg_edge_ptr_t;
+  s: bb_ptr_t;
+begin
+  e := bb^.preds;
+  while e <> nil do begin
+    s := e^.source;
+    if mark <> s^.mark146 then begin
+      s^.mark146 := mark;
+      if lts <> lts_ptr_t(s^.next142) then
+        add_join_birthpoint_inputs(join, mark, lts, s)
+      else
+        fg_utils_$add_jbi(join, s^.l134);
+    end;
+    e := e^.next_pred;
+  end;
 end;

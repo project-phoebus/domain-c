@@ -1774,20 +1774,20 @@ function fg_utils_$end_senseless_loops(
 { FG_UTILS_$GENERATE_JOIN_BIRTHPOINT - 0x2366F8, 0x138 bytes; called from
   iv.  Frame 8:al; 12:al.  Result: read (callers: A01). }
 function fg_utils_$generate_join_birthpoint(
-    p1: univ_ptr;
-    p2: univ_ptr): univ_ptr; options(val_param); extern;
+    lts: lts_ptr_t;
+    fin: lts_ptr_t): instr_ptr_t; options(val_param); extern;
 
 { FG_UTILS_$INSERT_JOIN_BIRTHPOINT - 0x236874, 0xA0 bytes; called from
   utils.  Frame 8:al; 12:al.  Result: read (callers: A01). }
 function fg_utils_$insert_join_birthpoint(
-    p1: univ_ptr;
-    p2: univ_ptr): univ_ptr; options(val_param); extern;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t): instr_ptr_t; options(val_param); extern;
 
 { FG_UTILS_$ADD_JBI - 0x236B9C, 0x4E bytes; called from iv utils.  Frame
   8:al; 12:al. }
 procedure fg_utils_$add_jbi(
-    p1: univ_ptr;
-    p2: univ_ptr); options(val_param); extern;
+    join: instr_ptr_t;
+    lts: lts_ptr_t); options(val_param); extern;
 
 { FG_UTILS_$DOMINATORS - 0x236C4A, 0x4D6 bytes; called from dfa.  Frame
   8:al; 12:b; 14:l. }
