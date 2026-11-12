@@ -121,6 +121,11 @@ Language reference:
   - The full gate takes several minutes: run `tools/cc_check.sh FILE.pas`
     for the units you touch, and the full gate once before your report
     (in the background if your tool times out).
+  - The last two columns of `docs/survey-tables.md`'s unit rows are one
+    binary's routine bytes and span, not the two binaries' sizes.  Each
+    binary has a table of its own; the "only in cc.m68k" / "only in
+    cc.a88k" lines say which units a binary lacks.  (A lead's brief once
+    read them as m68k and a88k sizes.)
 
 ## Report
 
