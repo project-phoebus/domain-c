@@ -484,3 +484,5 @@ lang/lang/source/opt_strength.pas	s/if \(t\^\.kind = 137\) and check_tree_node\(
 lang/lang/source/opt_strength.pas	s/^(\s*)(new|dispose)\((\w+)\);/$1pas_\$$2($3, 8); { gap 3 }/
 # gap 24 (opt_strength): recognize_induction_variables' call as a right operand of and (compared with true, for the check)
 lang/lang/source/opt_strength.pas	s/^(\s+)opt_str_\$is_loop_constant_integer\(r\^\.opnd\[2\], loop\) then$/$1(opt_str_\$is_loop_constant_integer(r^.opnd[2], loop) = true) then { gap 24 }/
+# gap 24 (opt_strength): reduce's call as a right operand of and (compared with true, for the check)
+lang/lang/source/opt_strength.pas	s/^(\s+)il_utils_\$is_strength_reduction_temp\(y\^\.opnd\[2\]\) then begin$/$1(il_utils_\$is_strength_reduction_temp(y^.opnd[2]) = true) then begin { gap 24 }/
