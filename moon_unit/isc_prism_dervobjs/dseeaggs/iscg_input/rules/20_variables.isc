@@ -10,140 +10,230 @@ section 20 variables  image pass_1 a5 16#468E94, pass_2 a5 16#4800A4;
 
 transform 35  ip_reg <- fortran_symbol
   pass_1 image 16#15DBEC;
-  pass_2 image 16#1CE7D4;
+  pass_2 image 16#1CE7D4 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 36  ip_reg_field <- fortran_symbol
   pass_1 image 16#15DEE8;
-  pass_2 image 16#1CE7FA;
+  pass_2 image 16#1CE7FA begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 37  ip_reg <- fortran_symbol
   pass_1 image 16#15E1B8;
-  pass_2 image 16#1CE820;
+  pass_2 image 16#1CE820 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 38  fp_reg <- fortran_symbol
   pass_1 image 16#15E462;
-  pass_2 image 16#1CE846;
+  pass_2 image 16#1CE846 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 39  fp_reg_pair <- fortran_symbol
   pass_1 image 16#15E70E;
-  pass_2 image 16#1CE86C;
+  pass_2 image 16#1CE86C begin
+    if result.c136 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    result.live_range <- result.l352;
+    result.live_range_of_imaginary_part <- get_live_range_of_imaginary_part(self.il);
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 40  fp_reg_quad <- fortran_symbol
   pass_1 image 16#15E9D0;
-  pass_2 image 16#1CE8CA;
+  pass_2 image 16#1CE8CA begin
+    if result.c136 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    result.live_range <- result.l352;
+    result.live_range_of_imaginary_part <- get_live_range_of_imaginary_part(self.il);
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 41  address_mode <- fortran_symbol
   pass_1 image 16#15EC92;
-  pass_2 image 16#1CE928;
+  pass_2 image 16#1CE928 begin
+    result.base_register <- isc_user_routines_340;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 42  address_mode <- fortran_symbol
   pass_1 image 16#15EEBC;
-  pass_2 image 16#1CE958;
+  { not lifted: a field +12 of a node }
+  pass_2 image 16#1CE958 residue;
 end;
 
 transform 43  ip_reg_field <- fortran_symbol
   pass_1 image 16#15F1AA;
-  pass_2 image 16#1CEA3C;
+  pass_2 image 16#1CEA3C begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 44  ip_reg <- fortran_symbol
   pass_1 image 16#15F47E;
-  pass_2 image 16#1CEA62;
+  pass_2 image 16#1CEA62 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 45  address_mode <- fortran_symbol
   pass_1 image 16#15F6F2;
-  pass_2 image 16#1CEA88;
+  pass_2 image 16#1CEA88 begin
+    result.base_register <- isc_user_routines_33c;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 46  address_mode <- fortran_symbol
   pass_1 image 16#15F8FC;
-  pass_2 image 16#1CEAB8;
+  { not lifted: 0x1CEAD2: a4 not known }
+  pass_2 image 16#1CEAB8 residue;
 end;
 
 transform 47  ip_reg <- fortran_symbol
   pass_1 image 16#15FBC6;
-  pass_2 image 16#1CEB84;
+  pass_2 image 16#1CEB84 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 48  address_mode <- fortran_symbol
   pass_1 image 16#15FDC2;
-  pass_2 image 16#1CEBAA;
+  { not lifted: a field +48 of a node }
+  pass_2 image 16#1CEBAA residue;
 end;
 
 transform 49  address_mode <- var_name
   pass_1 image 16#15FF38;
-  pass_2 image 16#1CEBE4;
+  { not lifted: 0x1CEBFE: a4 not known }
+  pass_2 image 16#1CEBE4 residue;
 end;
 
 transform 50  ip_reg <- var_name
   pass_1 image 16#1601EA;
-  pass_2 image 16#1CECB0;
+  pass_2 image 16#1CECB0 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 51  ip_reg_field <- var_name
   pass_1 image 16#160484;
-  pass_2 image 16#1CECD6;
+  pass_2 image 16#1CECD6 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 52  ip_reg <- var_name
   pass_1 image 16#160726;
-  pass_2 image 16#1CECFC;
+  pass_2 image 16#1CECFC begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 53  fp_reg <- var_name
   pass_1 image 16#1609A4;
-  pass_2 image 16#1CED22;
+  pass_2 image 16#1CED22 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 54  fp_reg_pair <- var_name
   pass_1 image 16#160C2E;
-  pass_2 image 16#1CED48;
+  pass_2 image 16#1CED48 begin
+    if result.c136 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 55  address_mode <- var_name
   pass_1 image 16#160ECE;
-  pass_2 image 16#1CED96;
+  pass_2 image 16#1CED96 begin
+    result.base_register <- isc_user_routines_340;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 56  address_mode <- var_name
   pass_1 image 16#1610C8;
-  pass_2 image 16#1CEDC6;
+  { not lifted: 0x1CEDE0: a4 not known }
+  pass_2 image 16#1CEDC6 residue;
 end;
 
 transform 57  ip_reg <- var_name
   pass_1 image 16#161392;
-  pass_2 image 16#1CEE92;
+  pass_2 image 16#1CEE92 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 58  address_mode <- var_name
   pass_1 image 16#1615EA;
-  pass_2 image 16#1CEEB8;
+  pass_2 image 16#1CEEB8 begin
+    result.base_register <- isc_user_routines_33c;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 59  address_mode <- var_name
   pass_1 image 16#1617CC;
-  pass_2 image 16#1CEEE8;
+  { not lifted: 0x1CEF02: a4 not known }
+  pass_2 image 16#1CEEE8 residue;
 end;
 
 transform 60  ip_reg <- var_name
   pass_1 image 16#161A92;
-  pass_2 image 16#1CEFB4;
+  pass_2 image 16#1CEFB4 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 61  fp_reg <- var_name
   pass_1 image 16#161CE2;
-  pass_2 image 16#1CEFDA;
+  pass_2 image 16#1CEFDA begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 62  fp_reg_pair <- var_name
   pass_1 image 16#161F4C;
-  pass_2 image 16#1CF000;
+  pass_2 image 16#1CF000 begin
+    if result.c136 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;

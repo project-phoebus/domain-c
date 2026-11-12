@@ -11,125 +11,244 @@ section 01 address_modes  image pass_1 a5 16#44F308, pass_2 a5 16#480058;
 transform 63  address_mode <- dindex_node ($1: ip_reg, $2: [ip_reg, literal_32_bits])
   no_could_deadlock_child;
   pass_1 image 16#0F0C34;
-  pass_2 image 16#18C7C4;
+  pass_2 image 16#18C7C4 begin
+    result.base_register <- $1;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- nil;
+  end;
 end;
 
 transform 64  address_mode <- dindex_node ($1: ip_reg, $2: literal_32_bits)
   no_could_deadlock_child;
   pass_1 image 16#0F0F46;
-  pass_2 image 16#18C7F0;
+  pass_2 image 16#18C7F0 begin
+    result.base_register <- $1;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- nil;
+  end;
 end;
 
 transform 65  address_mode <- dindex_node ($1: ip_reg, $2: ip_reg)
   no_could_deadlock_child;
   pass_1 image 16#0F128E;
-  pass_2 image 16#18C81C;
+  pass_2 image 16#18C81C begin
+    result.base_register <- $1;
+    result.index_register <- $2;
+    result.object_with_name <- nil;
+  end;
 end;
 
 transform 66  address_mode <- dindex_node ($1: ip_reg, $2: ip_reg_scaled)
   no_could_deadlock_child;
   pass_1 image 16#0F15B6;
-  pass_2 image 16#18C846;
+  pass_2 image 16#18C846 begin
+    result.base_register <- $1;
+    result.index_register <- $2;
+    result.object_with_name <- nil;
+  end;
 end;
 
 transform 67  address_mode <- dindex_node ($1: ip_reg, $2: ip_reg)
   no_could_deadlock_child;
   pass_1 image 16#0F18DA;
-  pass_2 image 16#18C870;
+  { not lifted: a field +40 of a node }
+  pass_2 image 16#18C870 residue;
 end;
 
 transform 68  address_mode <- dindex_node ($1: ip_reg, $2: ip_reg)
   pass_1 image 16#0F1C0A;
-  pass_2 image 16#18C8B8;
+  { not lifted: a field +40 of a node }
+  pass_2 image 16#18C8B8 residue;
 end;
 
 transform 69  address_mode <- disp_node ($1: address_mode)
   pass_1 image 16#0F1F5A;
-  pass_2 image 16#18C91E;
+  pass_2 image 16#18C91E begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 70  address_mode <- disp_node ($1: address_mode)
   pass_1 image 16#0F254C;
-  pass_2 image 16#18C996;
+  pass_2 image 16#18C996 begin
+    result.base_register <- $1.base_register;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- $1.object_with_name;
+  end;
 end;
 
 transform 71  address_mode <- disp_node ($1: address_mode)
   pass_1 image 16#0F2B6C;
-  pass_2 image 16#18C9D0;
+  { not lifted: a field +32 of a node }
+  pass_2 image 16#18C9D0 residue;
 end;
 
 transform 72  ip_reg_field <- disp_node ($1: ip_reg_field)
   pass_1 image 16#0F31E6;
-  pass_2 image 16#18CA7E;
+  pass_2 image 16#18CA7E begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 73  ip_reg <- disp_node ($1: ip_reg)
   pass_1 image 16#0F3734;
-  pass_2 image 16#18CAF6;
+  pass_2 image 16#18CAF6 begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 74  ip_reg_field <- disp_node ($1: ip_reg)
   pass_1 image 16#0F3C70;
-  pass_2 image 16#18CB6E;
+  pass_2 image 16#18CB6E begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 75  fp_reg <- disp_node ($1: fp_reg)
   pass_1 image 16#0F41F8;
-  pass_2 image 16#18CBE6;
+  pass_2 image 16#18CBE6 begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 76  fp_reg_pair <- disp_node ($1: fp_reg_pair)
   pass_1 image 16#0F4740;
-  pass_2 image 16#18CC5E;
+  pass_2 image 16#18CC5E begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 77  fp_reg_quad <- disp_node ($1: fp_reg_quad)
   pass_1 image 16#0F4C88;
-  pass_2 image 16#18CCD6;
+  pass_2 image 16#18CCD6 begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 78  ip_reg_field <- disp_node ($1: fp_reg)
   pass_1 image 16#0F51D0;
-  pass_2 image 16#18CD4E;
+  pass_2 image 16#18CD4E begin
+    temp t1: solution;
+    t1 <- create_solution_for_ip_reg();
+    emit simple(opc$mffp, 0, $1, t1, nil);
+    result.live_range <- t1.live_range;
+    result.object_with_name <- $1.object_with_name;
+  end;
 end;
 
 transform 79  ip_reg_field <- disp_node ($1: fp_reg_pair)
   pass_1 image 16#0F533A;
-  pass_2 image 16#18CDA0;
+  pass_2 image 16#18CDA0 begin
+    temp t1: solution;
+    temp t2: solution;
+    t1 <- high_half_of_fp_reg_pair($1);
+    t2 <- create_solution_for_ip_reg();
+    emit simple(opc$mffp, 0, t1, t2, nil);
+    result.live_range <- t2.live_range;
+    result.object_with_name <- $1.object_with_name;
+  end;
 end;
 
 transform 80  fp_reg <- disp_node ($1: fp_reg_pair)
   pass_1 image 16#0F54C6;
-  pass_2 image 16#18CE02;
+  pass_2 image 16#18CE02 begin
+    temp t1: solution;
+    t1 <- high_half_of_fp_reg_pair($1);
+    result.live_range <- t1.live_range;
+    result.object_with_name <- $1.object_with_name;
+  end;
 end;
 
 transform 81  fp_reg <- disp_node ($1: fp_reg_pair)
   pass_1 image 16#0F5A28;
-  pass_2 image 16#18CE3A;
+  pass_2 image 16#18CE3A begin
+    temp t1: solution;
+    t1 <- low_half_of_fp_reg_pair($1);
+    result.live_range <- t1.live_range;
+    result.object_with_name <- $1.object_with_name;
+  end;
 end;
 
 transform 82  literal_32_bits <- disp_node ($1: dpreal_ob())
   pass_1 image 16#0F5F8E;
-  pass_2 image 16#18CE72;
+  pass_2 image 16#18CE72 begin
+    result.object_with_name <- $1.il;
+  end;
 end;
 
 transform 83  address_mode <- ptr_node ($1: addr_top($1: address_mode))
   pass_1 image 16#0F60C6;
-  pass_2 image 16#18CE9C;
+  pass_2 image 16#18CE9C begin
+    result.base_register <- $1.$1.base_register;
+    result.index_register <- $1.$1.index_register;
+    result.false_label <- $1.$1.false_label;
+    result.object_with_name <- $1.$1.object_with_name;
+    result.live_range <- $1.$1.live_range;
+    result.live_range_of_imaginary_part <- $1.$1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.$1.already_through_pass_2;
+  end;
 end;
 
 transform 84  address_mode <- ptr_node ($1: ip_reg)
   no_could_deadlock_child;
   pass_1 image 16#0F66BA;
-  pass_2 image 16#18CF36;
+  pass_2 image 16#18CF36 begin
+    result.base_register <- $1;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- nil;
+  end;
 end;
 
 transform 85  address_mode <- sym_disp_node ($1: address_mode)
   pass_1 image 16#0F6920;
-  pass_2 image 16#18CF62;
+  { not lifted: a field +32 of a node }
+  pass_2 image 16#18CF62 residue;
 end;
 
 transform 86  address_mode <- sym_disp_node ($1: address_mode)
   pass_1 image 16#0F6F28;
-  pass_2 image 16#18CFE2;
+  { not lifted: a field +32 of a node }
+  pass_2 image 16#18CFE2 residue;
 end;

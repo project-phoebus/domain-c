@@ -10,228 +10,795 @@ section 06 double_float  image pass_1 a5 16#45A80C, pass_2 a5 16#48006C;
 
 transform 489  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
   pass_1 image 16#116E58;
-  pass_2 image 16#1A7A64;
+  { not lifted: a field +4 of a node }
+  pass_2 image 16#1A7A64 residue;
 end;
 
 transform 490  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
   pass_1 image 16#1173DA;
-  pass_2 image 16#1A7B06;
+  { not lifted: a field +4 of a node }
+  pass_2 image 16#1A7B06 residue;
 end;
 
 transform 491  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
   pass_1 image 16#117972;
-  pass_2 image 16#1A7C04;
+  { not lifted: a field +4 of a node }
+  pass_2 image 16#1A7C04 residue;
 end;
 
 transform 492  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
   pass_1 image 16#117EB6;
-  pass_2 image 16#1A7CA6;
+  { not lifted: a field +4 of a node }
+  pass_2 image 16#1A7CA6 residue;
 end;
 
 transform 493  fp_reg_pair <- f_add_top ($1: fp_reg_pair, $2: fp_reg_pair)
   pass_1 image 16#11844E;
-  pass_2 image 16#1A7DE2;
+  pass_2 image 16#1A7DE2 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    t1 <- high_half_of_fp_reg_pair($1);
+    t2 <- low_half_of_fp_reg_pair($1);
+    t3 <- high_half_of_fp_reg_pair($2);
+    t4 <- low_half_of_fp_reg_pair($2);
+    t5 <- high_half_of_fp_reg_pair(solution);
+    t6 <- low_half_of_fp_reg_pair(solution);
+    emit simple(opc$adds, 0, t1, t3, t5);
+    emit simple(opc$adds, 0, t2, t4, t6);
+    result.live_range <- t5.live_range;
+    result.live_range_of_imaginary_part <- t6.live_range;
+  end;
 end;
 
 transform 494  fp_reg_quad <- f_add_top ($1: fp_reg_quad, $2: fp_reg_quad)
   pass_1 image 16#118622;
-  pass_2 image 16#1A7EAA;
+  pass_2 image 16#1A7EAA begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    t1 <- high_half_of_fp_reg_quad($1);
+    t2 <- low_half_of_fp_reg_quad($1);
+    t3 <- high_half_of_fp_reg_quad($2);
+    t4 <- low_half_of_fp_reg_quad($2);
+    t5 <- high_half_of_fp_reg_quad(solution);
+    t6 <- low_half_of_fp_reg_quad(solution);
+    emit simple(opc$addd, 0, t1, t3, t5);
+    emit simple(opc$addd, 0, t2, t4, t6);
+    result.live_range <- t5.live_range;
+    result.live_range_of_imaginary_part <- t6.live_range;
+  end;
 end;
 
 transform 495  fp_reg_pair <- f_div_top ($1: fp_reg_pair, $2: fp_reg_pair)
   no_could_deadlock_child;
   pass_1 image 16#1187F6;
-  pass_2 image 16#1A7F72;
+  pass_2 image 16#1A7F72 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    temp t8: solution;
+    temp t9: solution;
+    temp t10: solution;
+    t1 <- high_half_of_fp_reg_pair($1);
+    t2 <- low_half_of_fp_reg_pair($1);
+    t3 <- high_half_of_fp_reg_pair($2);
+    t4 <- low_half_of_fp_reg_pair($2);
+    t5 <- high_half_of_fp_reg_pair(solution);
+    t6 <- low_half_of_fp_reg_pair(solution);
+    t7 <- create_solution_for_fp_reg();
+    t8 <- create_solution_for_fp_reg();
+    t9 <- create_solution_for_fp_reg();
+    t10 <- create_solution_for_fp_reg();
+    emit simple(opc$muls, 0, t3, t3, t7);
+    emit simple(opc$muls, 0, t4, t4, t8);
+    emit simple(opc$adds, 0, t7, t8, t9);
+    emit simple(opc$muls, 0, t1, t3, t7);
+    emit simple(opc$muls, 0, t2, t4, t8);
+    emit simple(opc$adds, 0, t7, t8, t10);
+    emit simple(opc$divs, 0, t9, t10, t5);
+    emit simple(opc$muls, 0, t2, t3, t7);
+    emit simple(opc$muls, 0, t1, t4, t8);
+    emit simple(opc$subs, 0, t8, t7, t10);
+    emit simple(opc$divs, 0, t9, t10, t6);
+    result.live_range <- t5.live_range;
+    result.live_range_of_imaginary_part <- t6.live_range;
+  end;
 end;
 
 transform 496  fp_reg_pair <- f_div_top ($1: fp_reg_pair, $2: fp_reg_pair)
   no_could_deadlock_child;
   pass_1 image 16#1189CE;
-  pass_2 image 16#1A817A;
+  pass_2 image 16#1A817A begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    temp t8: solution;
+    temp t9: solution;
+    temp t10: solution;
+    temp t11: solution;
+    temp t12: solution;
+    temp t13: solution;
+    t1 <- high_half_of_fp_reg_pair($1);
+    t2 <- low_half_of_fp_reg_pair($1);
+    t3 <- high_half_of_fp_reg_pair($2);
+    t4 <- low_half_of_fp_reg_pair($2);
+    t5 <- high_half_of_fp_reg_pair(solution);
+    t6 <- low_half_of_fp_reg_pair(solution);
+    t7 <- create_solution_for_fp_reg();
+    t8 <- create_solution_for_fp_reg();
+    t9 <- create_solution_for_fp_reg();
+    t10 <- create_solution_for_fp_reg();
+    t11 <- create_solution_for_fp_reg_pair();
+    t12 <- high_half_of_fp_reg_pair(t11);
+    t13 <- low_half_of_fp_reg_pair(t11);
+    emit simple(opc$muls, 0, t3, t3, t7);
+    emit simple(opc$muls, 0, t4, t4, t8);
+    emit simple(opc$adds, 0, t7, t8, t9);
+    emit simple(opc$muls, 0, t1, t3, t7);
+    emit simple(opc$muls, 0, t2, t4, t8);
+    emit simple(opc$adds, 0, t7, t8, t10);
+    emit simple(opc$divs, 0, t9, t10, t12);
+    emit simple(opc$muls, 0, t2, t3, t7);
+    emit simple(opc$muls, 0, t1, t4, t8);
+    emit simple(opc$subs, 0, t8, t7, t10);
+    emit simple(opc$divs, 0, t9, t10, t13);
+    emit simple(opc$copyd, 0, t11, solution, nil);
+    result.live_range <- t5.live_range;
+    result.live_range_of_imaginary_part <- t6.live_range;
+  end;
 end;
 
 transform 497  fp_reg_quad <- f_div_top ($1: fp_reg_quad, $2: fp_reg_quad)
   no_could_deadlock_child;
   pass_1 image 16#118BA6;
-  pass_2 image 16#1A83CC;
+  pass_2 image 16#1A83CC begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    temp t8: solution;
+    temp t9: solution;
+    temp t10: solution;
+    t1 <- high_half_of_fp_reg_quad($1);
+    t2 <- low_half_of_fp_reg_quad($1);
+    t3 <- high_half_of_fp_reg_quad($2);
+    t4 <- low_half_of_fp_reg_quad($2);
+    t5 <- high_half_of_fp_reg_quad(solution);
+    t6 <- low_half_of_fp_reg_quad(solution);
+    t7 <- create_solution_for_fp_reg_pair();
+    t8 <- create_solution_for_fp_reg_pair();
+    t9 <- create_solution_for_fp_reg_pair();
+    t10 <- create_solution_for_fp_reg_pair();
+    emit simple(opc$muld, 0, t3, t3, t7);
+    emit simple(opc$muld, 0, t4, t4, t8);
+    emit simple(opc$addd, 0, t7, t8, t9);
+    emit simple(opc$muld, 0, t1, t3, t7);
+    emit simple(opc$muld, 0, t2, t4, t8);
+    emit simple(opc$addd, 0, t7, t8, t10);
+    emit simple(opc$divd, 0, t9, t10, t5);
+    emit simple(opc$muld, 0, t2, t3, t7);
+    emit simple(opc$muld, 0, t1, t4, t8);
+    emit simple(opc$subd, 0, t8, t7, t10);
+    emit simple(opc$divd, 0, t9, t10, t6);
+    result.live_range <- t5.live_range;
+    result.live_range_of_imaginary_part <- t6.live_range;
+  end;
 end;
 
 transform 498  fp_reg_quad <- f_div_top ($1: fp_reg_quad, $2: fp_reg_quad)
   no_could_deadlock_child;
   pass_1 image 16#118D7E;
-  pass_2 image 16#1A85D4;
+  pass_2 image 16#1A85D4 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    temp t8: solution;
+    temp t9: solution;
+    temp t10: solution;
+    temp t11: solution;
+    temp t12: solution;
+    t1 <- high_half_of_fp_reg_quad($1);
+    t2 <- low_half_of_fp_reg_quad($1);
+    t3 <- high_half_of_fp_reg_quad($2);
+    t4 <- low_half_of_fp_reg_quad($2);
+    t5 <- high_half_of_fp_reg_quad(solution);
+    t6 <- low_half_of_fp_reg_quad(solution);
+    t7 <- create_solution_for_fp_reg_pair();
+    t8 <- create_solution_for_fp_reg_pair();
+    t9 <- create_solution_for_fp_reg_pair();
+    t10 <- create_solution_for_fp_reg_pair();
+    t11 <- create_solution_for_fp_reg_pair();
+    t12 <- create_solution_for_fp_reg_pair();
+    emit simple(opc$muld, 0, t3, t3, t7);
+    emit simple(opc$muld, 0, t4, t4, t8);
+    emit simple(opc$addd, 0, t7, t8, t9);
+    emit simple(opc$muld, 0, t1, t3, t7);
+    emit simple(opc$muld, 0, t2, t4, t8);
+    emit simple(opc$addd, 0, t7, t8, t10);
+    emit simple(opc$divd, 0, t9, t10, t11);
+    emit simple(opc$muld, 0, t2, t3, t7);
+    emit simple(opc$muld, 0, t1, t4, t8);
+    emit simple(opc$subd, 0, t8, t7, t10);
+    emit simple(opc$divd, 0, t9, t10, t12);
+    emit simple(opc$copyd, 0, t11, t5, nil);
+    emit simple(opc$copyd, 0, t12, t6, nil);
+    result.live_range <- t5.live_range;
+    result.live_range_of_imaginary_part <- t6.live_range;
+  end;
 end;
 
 transform 499  fp_reg_pair <- f_extend_top ($1: ip_reg, $2: void)
   pass_1 image 16#118F56;
-  pass_2 image 16#1A882C;
+  { not lifted: global 0x48AEE0 }
+  pass_2 image 16#1A882C residue;
 end;
 
 transform 500  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: void)
   pass_1 image 16#119232;
-  pass_2 image 16#1A89EE;
+  { not lifted: global 0x48AEE0 }
+  pass_2 image 16#1A89EE residue;
 end;
 
 transform 501  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: fp_reg)
   pass_1 image 16#11941A;
-  pass_2 image 16#1A8AD2;
+  pass_2 image 16#1A8AD2 begin
+    temp t1: solution;
+    temp t2: solution;
+    t1 <- high_half_of_fp_reg_pair(solution);
+    t2 <- low_half_of_fp_reg_pair(solution);
+    emit simple(opc$copys, 0, $1, t1, nil);
+    emit simple(opc$copys, 0, $2, t2, nil);
+    result.live_range <- t1.live_range;
+    result.live_range_of_imaginary_part <- t2.live_range;
+  end;
 end;
 
 transform 502  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#1195F8;
-  pass_2 image 16#1A8B56;
+  { not lifted: global 0x48AEE0 }
+  pass_2 image 16#1A8B56 residue;
 end;
 
 transform 503  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: fp_reg_pair)
   pass_1 image 16#119840;
-  pass_2 image 16#1A8C7E;
+  pass_2 image 16#1A8C7E begin
+    temp t1: solution;
+    temp t2: solution;
+    t1 <- high_half_of_fp_reg_pair(solution);
+    t2 <- low_half_of_fp_reg_pair(solution);
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(opc$cvtds, 0, $1, t1, nil);
+    emit simple(opc$cvtds, 0, $2, t2, nil);
+    result.live_range <- t1.live_range;
+    result.live_range_of_imaginary_part <- t2.live_range;
+  end;
 end;
 
 transform 504  fp_reg_quad <- f_extend_top ($1: ip_reg, $2: void)
   pass_1 image 16#119A7E;
-  pass_2 image 16#1A8D42;
+  { not lifted: a string at 0x1A8EC0 }
+  pass_2 image 16#1A8D42 residue;
 end;
 
 transform 505  fp_reg_quad <- f_extend_top ($1: fp_reg, $2: void)
   pass_1 image 16#119D02;
-  pass_2 image 16#1A8EC8;
+  { not lifted: a string at 0x1A8EC0 }
+  pass_2 image 16#1A8EC8 residue;
 end;
 
 transform 506  fp_reg_quad <- f_extend_top ($1: fp_reg, $2: fp_reg)
   pass_1 image 16#119EF0;
-  pass_2 image 16#1A8FAA;
+  pass_2 image 16#1A8FAA begin
+    temp t1: solution;
+    temp t2: solution;
+    t1 <- high_half_of_fp_reg_quad(solution);
+    t2 <- low_half_of_fp_reg_quad(solution);
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(opc$cvtsd, 0, $1, t1, nil);
+    emit simple(opc$cvtsd, 0, $2, t2, nil);
+    result.live_range <- t1.live_range;
+    result.live_range_of_imaginary_part <- t2.live_range;
+  end;
 end;
 
 transform 507  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11A12E;
-  pass_2 image 16#1A906E;
+  { not lifted: a string at 0x1A8EC0 }
+  pass_2 image 16#1A906E residue;
 end;
 
 transform 508  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: fp_reg_pair)
   pass_1 image 16#11A2B8;
-  pass_2 image 16#1A910C;
+  pass_2 image 16#1A910C begin
+    temp t1: solution;
+    temp t2: solution;
+    t1 <- high_half_of_fp_reg_quad(solution);
+    t2 <- low_half_of_fp_reg_quad(solution);
+    emit simple(opc$copyd, 0, $1, t1, nil);
+    emit simple(opc$copyd, 0, $2, t2, nil);
+    result.live_range <- t1.live_range;
+    result.live_range_of_imaginary_part <- t2.live_range;
+  end;
 end;
 
 transform 509  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11A496;
-  pass_2 image 16#1A9190;
+  pass_2 image 16#1A9190 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    t1 <- high_half_of_fp_reg_pair($1);
+    t2 <- low_half_of_fp_reg_pair($1);
+    t3 <- high_half_of_fp_reg_quad(solution);
+    t4 <- low_half_of_fp_reg_quad(solution);
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(opc$cvtsd, 0, t1, t3, nil);
+    emit simple(opc$cvtsd, 0, t2, t4, nil);
+    result.live_range <- t3.live_range;
+    result.live_range_of_imaginary_part <- t4.live_range;
+  end;
 end;
 
 transform 510  ip_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11A686;
-  pass_2 image 16#1A9274;
+  pass_2 image 16#1A9274 begin
+    temp t1: solution;
+    temp t2: solution;
+    t1 <- high_half_of_fp_reg_pair($1);
+    t2 <- create_solution_for_fp_reg();
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(opc$truncsi, 0, t1, t2, nil);
+    emit simple(opc$mffp, 0, t2, solution, nil);
+  end;
 end;
 
 transform 511  fp_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11A880;
-  pass_2 image 16#1A9334;
+  pass_2 image 16#1A9334 begin
+    emit simple(opc$copys, 0, high_half_of_fp_reg_pair($1), solution, nil);
+  end;
 end;
 
 transform 512  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11AA02;
-  pass_2 image 16#1A9386;
+  pass_2 image 16#1A9386 begin
+    temp t1: solution;
+    t1 <- high_half_of_fp_reg_pair($1);
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(opc$cvtsd, 0, t1, solution, nil);
+  end;
 end;
 
 transform 513  ip_reg <- f_extend_top ($1: fp_reg_quad, $2: void)
   pass_1 image 16#11ABE8;
-  pass_2 image 16#1A941E;
+  pass_2 image 16#1A941E begin
+    temp t1: solution;
+    temp t2: solution;
+    t1 <- high_half_of_fp_reg_quad($1);
+    t2 <- create_solution_for_fp_reg();
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(opc$truncdi, 0, t1, t2, nil);
+    emit simple(opc$mffp, 0, t2, solution, nil);
+  end;
 end;
 
 transform 514  fp_reg <- f_extend_top ($1: fp_reg_quad, $2: void)
   pass_1 image 16#11ADE2;
-  pass_2 image 16#1A94DE;
+  pass_2 image 16#1A94DE begin
+    temp t1: solution;
+    t1 <- high_half_of_fp_reg_quad($1);
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(opc$cvtds, 0, t1, solution, nil);
+  end;
 end;
 
 transform 515  fp_reg_pair <- f_extend_top ($1: fp_reg_quad, $2: void)
   pass_1 image 16#11AFC8;
-  pass_2 image 16#1A9576;
+  pass_2 image 16#1A9576 begin
+    emit simple(opc$copyd, 0, high_half_of_fp_reg_quad($1), solution, nil);
+  end;
 end;
 
 transform 516  fp_reg_pair <- f_extend_top ($1: fp_reg_quad, $2: void)
   pass_1 image 16#11B14A;
-  pass_2 image 16#1A95C8;
+  pass_2 image 16#1A95C8 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    t1 <- high_half_of_fp_reg_quad($1);
+    t2 <- low_half_of_fp_reg_quad($1);
+    t3 <- high_half_of_fp_reg_pair(solution);
+    t4 <- low_half_of_fp_reg_pair(solution);
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(opc$cvtds, 0, t1, t3, nil);
+    emit simple(opc$cvtds, 0, t2, t4, nil);
+    result.live_range <- t3.live_range;
+    result.live_range_of_imaginary_part <- t4.live_range;
+  end;
 end;
 
 transform 517  fp_reg <- f_math_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11B33A;
-  pass_2 image 16#1A96AC;
+  pass_2 image 16#1A96AC begin
+    emit simple(opc$copys, 0, low_half_of_fp_reg_pair($1), solution, nil);
+  end;
 end;
 
 transform 518  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11B4BC;
-  pass_2 image 16#1A96FE;
+  pass_2 image 16#1A96FE begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    t1 <- high_half_of_fp_reg_pair($1);
+    t2 <- low_half_of_fp_reg_pair($1);
+    t3 <- high_half_of_fp_reg_pair(solution);
+    t4 <- low_half_of_fp_reg_pair(solution);
+    emit simple(opc$copys, 0, t1, t3, nil);
+    emit simple(opc$negs, 0, t2, t4, nil);
+    result.live_range <- t3.live_range;
+    result.live_range_of_imaginary_part <- t4.live_range;
+  end;
 end;
 
 transform 519  fp_reg_pair <- f_math_top ($1: fp_reg_quad, $2: void)
   pass_1 image 16#11B644;
-  pass_2 image 16#1A97A2;
+  pass_2 image 16#1A97A2 begin
+    emit simple(opc$copyd, 0, low_half_of_fp_reg_quad($1), solution, nil);
+  end;
 end;
 
 transform 520  fp_reg_quad <- f_math_top ($1: fp_reg_quad, $2: void)
   pass_1 image 16#11B7C6;
-  pass_2 image 16#1A97F4;
+  pass_2 image 16#1A97F4 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    t1 <- high_half_of_fp_reg_quad($1);
+    t2 <- low_half_of_fp_reg_quad($1);
+    t3 <- high_half_of_fp_reg_quad(solution);
+    t4 <- low_half_of_fp_reg_quad(solution);
+    emit simple(opc$copyd, 0, t1, t3, nil);
+    emit simple(opc$negd, 0, t2, t4, nil);
+    result.live_range <- t3.live_range;
+    result.live_range_of_imaginary_part <- t4.live_range;
+  end;
 end;
 
 transform 521  fp_reg_pair <- f_mul_top ($1: fp_reg_pair, $2: fp_reg_pair)
   no_could_deadlock_child;
   pass_1 image 16#11B94E;
-  pass_2 image 16#1A9898;
+  pass_2 image 16#1A9898 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    temp t8: solution;
+    t1 <- high_half_of_fp_reg_pair($1);
+    t2 <- low_half_of_fp_reg_pair($1);
+    t3 <- high_half_of_fp_reg_pair($2);
+    t4 <- low_half_of_fp_reg_pair($2);
+    t5 <- high_half_of_fp_reg_pair(solution);
+    t6 <- low_half_of_fp_reg_pair(solution);
+    t7 <- create_solution_for_fp_reg();
+    t8 <- create_solution_for_fp_reg();
+    emit simple(opc$muls, 0, t1, t3, t7);
+    emit simple(opc$muls, 0, t2, t4, t8);
+    emit simple(opc$subs, 0, t8, t7, t5);
+    emit simple(opc$muls, 0, t1, t4, t7);
+    emit simple(opc$muls, 0, t2, t3, t8);
+    emit simple(opc$adds, 0, t7, t8, t6);
+    result.live_range <- t5.live_range;
+    result.live_range_of_imaginary_part <- t6.live_range;
+  end;
 end;
 
 transform 522  fp_reg_pair <- f_mul_top ($1: fp_reg_pair, $2: fp_reg_pair)
   no_could_deadlock_child;
   pass_1 image 16#11BB26;
-  pass_2 image 16#1A99F0;
+  pass_2 image 16#1A99F0 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    temp t8: solution;
+    temp t9: solution;
+    temp t10: solution;
+    temp t11: solution;
+    t1 <- high_half_of_fp_reg_pair($1);
+    t2 <- low_half_of_fp_reg_pair($1);
+    t3 <- high_half_of_fp_reg_pair($2);
+    t4 <- low_half_of_fp_reg_pair($2);
+    t5 <- high_half_of_fp_reg_pair(solution);
+    t6 <- low_half_of_fp_reg_pair(solution);
+    t7 <- create_solution_for_fp_reg();
+    t8 <- create_solution_for_fp_reg();
+    t9 <- create_solution_for_fp_reg_pair();
+    t10 <- high_half_of_fp_reg_pair(t9);
+    t11 <- low_half_of_fp_reg_pair(t9);
+    emit simple(opc$muls, 0, t1, t3, t7);
+    emit simple(opc$muls, 0, t2, t4, t8);
+    emit simple(opc$subs, 0, t8, t7, t10);
+    emit simple(opc$muls, 0, t1, t4, t7);
+    emit simple(opc$muls, 0, t2, t3, t8);
+    emit simple(opc$adds, 0, t7, t8, t11);
+    emit simple(opc$copyd, 0, t9, solution, nil);
+    result.live_range <- t5.live_range;
+    result.live_range_of_imaginary_part <- t6.live_range;
+  end;
 end;
 
 transform 523  fp_reg_quad <- f_mul_top ($1: fp_reg_quad, $2: fp_reg_quad)
   no_could_deadlock_child;
   pass_1 image 16#11BCFE;
-  pass_2 image 16#1A9B92;
+  pass_2 image 16#1A9B92 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    temp t8: solution;
+    t1 <- high_half_of_fp_reg_quad($1);
+    t2 <- low_half_of_fp_reg_quad($1);
+    t3 <- high_half_of_fp_reg_quad($2);
+    t4 <- low_half_of_fp_reg_quad($2);
+    t5 <- high_half_of_fp_reg_quad(solution);
+    t6 <- low_half_of_fp_reg_quad(solution);
+    t7 <- create_solution_for_fp_reg_pair();
+    t8 <- create_solution_for_fp_reg_pair();
+    emit simple(opc$muld, 0, t1, t3, t7);
+    emit simple(opc$muld, 0, t2, t4, t8);
+    emit simple(opc$subd, 0, t8, t7, t5);
+    emit simple(opc$muld, 0, t1, t4, t7);
+    emit simple(opc$muld, 0, t2, t3, t8);
+    emit simple(opc$addd, 0, t7, t8, t6);
+    result.live_range <- t5.live_range;
+    result.live_range_of_imaginary_part <- t6.live_range;
+  end;
 end;
 
 transform 524  fp_reg_quad <- f_mul_top ($1: fp_reg_quad, $2: fp_reg_quad)
   no_could_deadlock_child;
   pass_1 image 16#11BED6;
-  pass_2 image 16#1A9CEA;
+  pass_2 image 16#1A9CEA begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    temp t8: solution;
+    temp t9: solution;
+    temp t10: solution;
+    t1 <- high_half_of_fp_reg_quad($1);
+    t2 <- low_half_of_fp_reg_quad($1);
+    t3 <- high_half_of_fp_reg_quad($2);
+    t4 <- low_half_of_fp_reg_quad($2);
+    t5 <- high_half_of_fp_reg_quad(solution);
+    t6 <- low_half_of_fp_reg_quad(solution);
+    t7 <- create_solution_for_fp_reg_pair();
+    t8 <- create_solution_for_fp_reg_pair();
+    t9 <- create_solution_for_fp_reg_pair();
+    t10 <- create_solution_for_fp_reg_pair();
+    emit simple(opc$muld, 0, t1, t3, t7);
+    emit simple(opc$muld, 0, t2, t4, t8);
+    emit simple(opc$subd, 0, t8, t7, t9);
+    emit simple(opc$muld, 0, t1, t4, t7);
+    emit simple(opc$muld, 0, t2, t3, t8);
+    emit simple(opc$addd, 0, t7, t8, t10);
+    emit simple(opc$copyd, 0, t9, t5, nil);
+    emit simple(opc$copyd, 0, t10, t6, nil);
+    result.live_range <- t5.live_range;
+    result.live_range_of_imaginary_part <- t6.live_range;
+  end;
 end;
 
 transform 525  fp_reg_pair <- f_neg_top ($1: fp_reg_pair)
   pass_1 image 16#11C0AE;
-  pass_2 image 16#1A9E92;
+  pass_2 image 16#1A9E92 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    t1 <- high_half_of_fp_reg_pair($1);
+    t2 <- low_half_of_fp_reg_pair($1);
+    t3 <- high_half_of_fp_reg_pair(solution);
+    t4 <- low_half_of_fp_reg_pair(solution);
+    emit simple(opc$negs, 0, t1, t3, nil);
+    emit simple(opc$negs, 0, t2, t4, nil);
+    result.live_range <- t3.live_range;
+    result.live_range_of_imaginary_part <- t4.live_range;
+  end;
 end;
 
 transform 526  fp_reg_quad <- f_neg_top ($1: fp_reg_quad)
   pass_1 image 16#11C212;
-  pass_2 image 16#1A9F36;
+  pass_2 image 16#1A9F36 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    t1 <- high_half_of_fp_reg_quad($1);
+    t2 <- low_half_of_fp_reg_quad($1);
+    t3 <- high_half_of_fp_reg_quad(solution);
+    t4 <- low_half_of_fp_reg_quad(solution);
+    emit simple(opc$negd, 0, t1, t3, nil);
+    emit simple(opc$negd, 0, t2, t4, nil);
+    result.live_range <- t3.live_range;
+    result.live_range_of_imaginary_part <- t4.live_range;
+  end;
 end;
 
 transform 527  fp_reg_pair <- f_sub_top ($1: fp_reg_pair, $2: fp_reg_pair)
   pass_1 image 16#11C376;
-  pass_2 image 16#1A9FDA;
+  pass_2 image 16#1A9FDA begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    t1 <- high_half_of_fp_reg_pair($1);
+    t2 <- low_half_of_fp_reg_pair($1);
+    t3 <- high_half_of_fp_reg_pair($2);
+    t4 <- low_half_of_fp_reg_pair($2);
+    t5 <- high_half_of_fp_reg_pair(solution);
+    t6 <- low_half_of_fp_reg_pair(solution);
+    emit simple(opc$subs, 0, t3, t1, t5);
+    emit simple(opc$subs, 0, t4, t2, t6);
+    result.live_range <- t5.live_range;
+    result.live_range_of_imaginary_part <- t6.live_range;
+  end;
 end;
 
 transform 528  fp_reg_quad <- f_sub_top ($1: fp_reg_quad, $2: fp_reg_quad)
   pass_1 image 16#11C54A;
-  pass_2 image 16#1AA0A2;
+  pass_2 image 16#1AA0A2 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    t1 <- high_half_of_fp_reg_quad($1);
+    t2 <- low_half_of_fp_reg_quad($1);
+    t3 <- high_half_of_fp_reg_quad($2);
+    t4 <- low_half_of_fp_reg_quad($2);
+    t5 <- high_half_of_fp_reg_quad(solution);
+    t6 <- low_half_of_fp_reg_quad(solution);
+    emit simple(opc$subd, 0, t3, t1, t5);
+    emit simple(opc$subd, 0, t4, t2, t6);
+    result.live_range <- t5.live_range;
+    result.live_range_of_imaginary_part <- t6.live_range;
+  end;
 end;
 
 transform 529  fp_reg_pair <- fp_reg_pair
   pass_1 image 16#11C71E;
-  pass_2 image 16#1AA16A;
+  pass_2 image 16#1AA16A begin
+    temp t1: solution;
+    temp t2: solution;
+    t1 <- high_half_of_fp_reg_pair(solution);
+    t2 <- low_half_of_fp_reg_pair(solution);
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(opc$copyd, 0, subject, solution, nil);
+    result.live_range <- t1.live_range;
+    result.live_range_of_imaginary_part <- t2.live_range;
+  end;
 end;
 
 transform 530  fp_reg_quad <- fp_reg_quad
   pass_1 image 16#11CB9E;
-  pass_2 image 16#1AA212;
+  pass_2 image 16#1AA212 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    t1 <- high_half_of_fp_reg_quad(subject);
+    t2 <- low_half_of_fp_reg_quad(subject);
+    t3 <- high_half_of_fp_reg_quad(solution);
+    t4 <- low_half_of_fp_reg_quad(solution);
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(opc$copyd, 0, t1, t3, nil);
+    emit simple(opc$copyd, 0, t2, t4, nil);
+    result.live_range <- t3.live_range;
+    result.live_range_of_imaginary_part <- t4.live_range;
+  end;
 end;
 
 transform 531  fp_reg_pair <- isc_func_call_top
   pass_1 image 16#11D01E;
-  pass_2 image 16#1AA2F2;
+  { not lifted: 0x1AA35A: bit 7 of +14 }
+  pass_2 image 16#1AA2F2 residue;
 end;
 
 transform 532  fp_reg_quad <- isc_func_call_top
   pass_1 image 16#11D224;
-  pass_2 image 16#1AA39E;
+  { not lifted: 0x1AA406: bit 7 of +14 }
+  pass_2 image 16#1AA39E residue;
 end;

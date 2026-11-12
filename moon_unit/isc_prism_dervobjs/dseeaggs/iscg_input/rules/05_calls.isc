@@ -20,35 +20,68 @@ end;
 
 transform 342  ip_reg <- isc_call_top
   pass_1 image 16#115F12;
-  pass_2 image 16#1A7740;
+  { not lifted: 0x1A7762: bit 7 of +14 }
+  pass_2 image 16#1A7740 residue;
 end;
 
 transform 343  ip_reg <- isc_fio_init ($1: ip_reg)
   pass_1 image 16#116036;
-  pass_2 image 16#1A778E;
+  pass_2 image 16#1A778E begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 344  address_mode <- isc_func_call_hidden_temp_top
   pass_1 image 16#116566;
-  pass_2 image 16#1A7806;
+  { not lifted: 0x1A782A: bit 7 of +14 }
+  pass_2 image 16#1A7806 residue;
 end;
 
 transform 345  ip_reg <- isc_func_call_top
   pass_1 image 16#1166E2;
-  pass_2 image 16#1A785E;
+  { not lifted: 0x1A7882: bit 7 of +14 }
+  pass_2 image 16#1A785E residue;
 end;
 
 transform 346  fp_reg <- isc_func_call_top
   pass_1 image 16#1168A4;
-  pass_2 image 16#1A78AE;
+  { not lifted: 0x1A78D2: bit 7 of +14 }
+  pass_2 image 16#1A78AE residue;
 end;
 
 transform 347  fp_reg_pair <- isc_func_call_top
   pass_1 image 16#116A7E;
-  pass_2 image 16#1A78FE;
+  { not lifted: 0x1A7944: bit 7 of +14 }
+  pass_2 image 16#1A78FE residue;
 end;
 
 transform 348  ip_reg <- pf_call ($1: address_mode)
   pass_1 image 16#116C78;
-  pass_2 image 16#1A7970;
+  pass_2 image 16#1A7970 begin
+    temp t1: solution;
+    if result.c136 = 1 then
+      if result.c137 = 1 then
+        if solution.object_with_name <> nil then
+          solution.object_with_name <- solution.object_with_name;
+        else
+          solution.object_with_name <- $1.base_register.object_with_name;
+        end;
+        emit simple(opc$move, 0, $1.base_register, solution, nil);
+        emit simple(opc$adj_move, 0, nil, nil, nil);
+      else
+        emit simple(opc$add, 0, $1, $1.base_register, solution);
+      end;
+    elsif result.c138 = 1 then
+      emit simple(opc$move, 0, find_well_known_literal_solution($1.literal_32_bits_value), solution, nil);
+    else
+      t1 <- address_mode_for_integer32_value($1.literal_32_bits_value);
+      emit load(opc$loadl, 0, t1, t1.base_register, solution, t1.il, 0, t1.bits_known, t1.bits_trusted);
+    end;
+  end;
 end;

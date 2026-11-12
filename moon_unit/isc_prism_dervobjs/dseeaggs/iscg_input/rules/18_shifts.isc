@@ -15,47 +15,119 @@ end;
 
 transform 350  ip_reg <- alshf_top | arshf_top | lshf_top | rshf_top ($1: ip_reg, $2: [ip_reg, literal_32_bits])
   pass_1 image 16#157FF2;
-  pass_2 image 16#1CC6C6;
+  pass_2 image 16#1CC6C6 begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 351  ip_reg <- alshf_top ($1: ip_reg, $2: literal_32_bits)
   pass_1 image 16#1585B2;
-  pass_2 image 16#1CC73E;
+  pass_2 image 16#1CC73E begin
+    emit simple(opc$lsl, 0, $1, find_well_known_literal_solution(result.l352), solution);
+  end;
 end;
 
 transform 352  ip_reg <- alshf_top ($1: ip_reg, $2: ip_reg)
   pass_1 image 16#1587CE;
-  pass_2 image 16#1CC78E;
+  pass_2 image 16#1CC78E begin
+    emit simple(opc$lsl, 0, $1, $2, solution);
+  end;
 end;
 
 transform 353  ip_reg <- arshf_top ($1: ip_reg, $2: literal_32_bits)
   pass_1 image 16#15898C;
-  pass_2 image 16#1CC7D4;
+  pass_2 image 16#1CC7D4 begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 354  ip_reg <- arshf_top ($1: ip_reg, $2: literal_32_bits)
   pass_1 image 16#158EE6;
-  pass_2 image 16#1CC84C;
+  pass_2 image 16#1CC84C begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    t1 <- create_solution_for_ip_reg();
+    t2 <- create_solution_for_ip_reg();
+    if result.c136 = 1 then
+      if result.c137 = 1 then
+        t3 <- $1;
+      else
+        emit simple(opc$extend7, 0, $1, t2, nil);
+      end;
+    elsif result.c136 = 2 then
+      if result.c138 <> 1 then
+        emit simple(opc$extend15, 0, $1, t2, nil);
+      end;
+    end;
+    emit simple(opc$asr, 0, t3, find_well_known_literal_solution(result.l352), solution);
+  end;
 end;
 
 transform 355  ip_reg <- arshf_top ($1: ip_reg, $2: ip_reg)
   pass_1 image 16#159182;
-  pass_2 image 16#1CC910;
+  pass_2 image 16#1CC910 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    t1 <- create_solution_for_ip_reg();
+    t2 <- create_solution_for_ip_reg();
+    if result.c136 = 1 then
+      if result.c137 = 1 then
+        t3 <- $1;
+      else
+        emit simple(opc$extend7, 0, $1, t2, nil);
+      end;
+    elsif result.c136 = 2 then
+      if result.c138 <> 1 then
+        emit simple(opc$extend15, 0, $1, t2, nil);
+      end;
+    end;
+    emit simple(opc$asr, 0, t3, $2, solution);
+  end;
 end;
 
 transform 356  ip_reg <- arshf_top ($1: ip_reg, $2: literal_32_bits)
   pass_1 image 16#1593CA;
-  pass_2 image 16#1CC9CA;
+  pass_2 image 16#1CC9CA begin
+    emit simple(opc$asr, 0, $1, find_well_known_literal_solution(result.l352), solution);
+  end;
 end;
 
 transform 357  ip_reg <- arshf_top ($1: ip_reg, $2: ip_reg)
   pass_1 image 16#1595E8;
-  pass_2 image 16#1CCA1A;
+  pass_2 image 16#1CCA1A begin
+    emit simple(opc$asr, 0, $1, $2, solution);
+  end;
 end;
 
 transform 358  ip_reg <- arshf_top ($1: lshf_top($1: ip_reg, $2: literal_32_bits), $2: literal_32_bits)
   pass_1 image 16#1597B2;
-  pass_2 image 16#1CCA60;
+  pass_2 image 16#1CCA60 begin
+    if result.c136 = 1 then
+      if result.c137 = 1 then
+        let result <- $1.$1.live_range line 31146;
+      else
+        emit simple(opc$extend7, 0, $1.$1, solution, nil);
+      end;
+    elsif result.c138 = 1 then
+      let result <- $1.$1.live_range line 31146;
+    else
+      emit simple(opc$extend15, 0, $1.$1, solution, nil);
+    end;
+  end;
 end;
 
 transform 359  literal_32_bits <- lshf_top ($1: literal_32_bits, $2: literal_32_bits)
@@ -65,52 +137,200 @@ end;
 
 transform 360  ip_reg <- lshf_top ($1: rshf_top($1: ip_reg, $2: literal_32_bits), $2: literal_32_bits)
   pass_1 image 16#159B28;
-  pass_2 image 16#1CCB66;
+  pass_2 image 16#1CCB66 begin
+    result.base_register <- $1.$1.base_register;
+    result.index_register <- $1.$1.index_register;
+    result.false_label <- $1.$1.false_label;
+    result.object_with_name <- $1.$1.object_with_name;
+    result.live_range <- $1.$1.live_range;
+    result.live_range_of_imaginary_part <- $1.$1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.$1.already_through_pass_2;
+  end;
 end;
 
 transform 361  ip_reg_scaled <- lshf_top ($1: ip_reg, $2: literal_32_bits)
   pass_1 image 16#15A1D0;
-  pass_2 image 16#1CCC00;
+  pass_2 image 16#1CCC00 begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 362  ip_reg <- lshf_top ($1: ip_reg, $2: literal_32_bits)
   pass_1 image 16#15A788;
-  pass_2 image 16#1CCC78;
+  pass_2 image 16#1CCC78 begin
+    emit simple(opc$lsl, 0, $1, find_well_known_literal_solution(result.l352), solution);
+  end;
 end;
 
 transform 363  ip_reg <- lshf_top ($1: ip_reg, $2: ip_reg)
   pass_1 image 16#15A9A4;
-  pass_2 image 16#1CCCC8;
+  pass_2 image 16#1CCCC8 begin
+    emit simple(opc$lsl, 0, $1, $2, solution);
+  end;
 end;
 
 transform 364  ip_reg <- lshf_top ($1: rshf_top($1: ip_reg, $2: literal_32_bits), $2: literal_32_bits)
   pass_1 image 16#15AB62;
-  pass_2 image 16#1CCD0E;
+  pass_2 image 16#1CCD0E begin
+    temp t1: integer32;
+    temp t2: solution;
+    t1 <- make_bit_mask_1(result.l356, 0);
+    if result.c136 = 1 then
+      t2 <- $1.$1;
+      emit simple(opc$and, 0, find_well_known_literal_solution(result.l360), t2, solution);
+    else
+      emit field(opc$isolate, 0, result.l356, $1.$1, find_well_known_literal_solution(result.l352), solution);
+    end;
+  end;
 end;
 
 transform 365  ip_reg_field <- rshf_top ($1: bit_test_top($1: literal_32_bits, $2: address_mode), $2: literal_32_bits)
   pass_1 image 16#15B232;
-  pass_2 image 16#1CCDAA;
+  pass_2 image 16#1CCDAA begin
+    temp t1: integer32;
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    temp t6: pointer;
+    temp t7: solution;
+    temp t8: solution;
+    temp t9: solution;
+    temp t10: integer32;
+    temp t11: integer32;
+    temp t12: pointer;
+    if $1.$2.is_physical then
+      t1 <- 128;
+    else
+      t1 <- 0;
+    end;
+    if $1.$2.is_volatile then
+      t2 <- 2048;
+    else
+      t2 <- 0;
+    end;
+    if $1.$2.is_volatile then
+      t3 <- 16#400000;
+    else
+      t3 <- 0;
+    end;
+    if solution.object_with_name <> nil then
+      solution.object_with_name <- solution.object_with_name;
+    else
+      solution.object_with_name <- $1.$2.object_with_name;
+    end;
+    if result.c136 = 1 then
+      t4 <- $1.$2.bits_trusted;
+      t5 <- $1.$2.bits_known;
+      t6 <- $1.$2.il;
+      t7 <- $1.$2.base_register;
+      emit load(opc$loadbu, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset($1.$2, 0), t7, solution, t6, 0, t5, t4);
+    else
+      t8 <- create_solution_for_ip_reg();
+      if result.c137 = 1 then
+        if result.c138 = 1 then
+          if t8.object_with_name <> nil then
+            t8.object_with_name <- t8.object_with_name;
+          else
+            t8.object_with_name <- $1.$2.base_register.object_with_name;
+          end;
+          emit simple(opc$move, 0, $1.$2.base_register, t8, nil);
+          emit simple(opc$adj_move, 0, nil, nil, nil);
+        else
+          emit simple(opc$add, 0, $1.$2, $1.$2.base_register, t8);
+        end;
+      elsif result.c139 = 1 then
+        emit simple(opc$move, 0, find_well_known_literal_solution($1.$2.literal_32_bits_value), t8, nil);
+      else
+        t9 <- address_mode_for_integer32_value($1.$2.literal_32_bits_value);
+        emit load(opc$loadl, 0, t9, t9.base_register, t8, t9.il, 0, t9.bits_known, t9.bits_trusted);
+      end;
+      t10 <- $1.$2.bits_trusted;
+      t11 <- $1.$2.bits_known;
+      t12 <- $1.$2.il;
+      emit load(opc$loadbu, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t8, solution, t12, 0, t11, t10);
+    end;
+    if result.c140 = 1 then
+      emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, $1.$2.il, 0, 0, 0);
+    end;
+  end;
 end;
 
 transform 366  ip_reg_field <- rshf_top ($1: bit_test_top($1: literal_32_bits, $2: [ip_reg, ip_reg_field]), $2: literal_32_bits)
   pass_1 image 16#15B51A;
-  pass_2 image 16#1CCFEE;
+  pass_2 image 16#1CCFEE begin
+    result.base_register <- $1.$2.base_register;
+    result.index_register <- $1.$2.index_register;
+    result.false_label <- $1.$2.false_label;
+    result.object_with_name <- $1.$2.object_with_name;
+    result.live_range <- $1.$2.live_range;
+    result.live_range_of_imaginary_part <- $1.$2.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.$2.already_through_pass_2;
+  end;
 end;
 
 transform 367  ip_reg <- rshf_top ($1: bit_test_top($1: [ip_reg, literal_32_bits], $2: [ip_reg, ip_reg_field]), $2: literal_32_bits)
   pass_1 image 16#15BB80;
-  pass_2 image 16#1CD088;
+  pass_2 image 16#1CD088 begin
+    temp t1: integer32;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    t1 <- make_bit_mask_1(1, 0);
+    if result.c136 = 1 then
+      if result.c137 = 1 then
+        t2 <- create_solution_for_ip_reg();
+        t3 <- $1.$1;
+        emit simple(opc$add, 0, find_well_known_literal_solution($1.$2.bit_position_of_lsb), t3, t2);
+      else
+        t4 <- find_well_known_literal_solution($1.$2.bit_position_of_lsb + $1.$1.literal_32_bits_value);
+      end;
+    end;
+    if result.c138 = 1 then
+      t5 <- create_solution_for_ip_reg();
+      t6 <- create_solution_for_ip_reg();
+      emit simple(opc$rsub, 0, find_well_known_literal_solution(30), t2, t5);
+      emit simple(opc$lsl, 0, $1.$2, t5, t6);
+      emit simple(opc$asr, 0, t6, find_well_known_literal_solution(30), solution);
+    else
+      emit field(opc$extractu, 0, 1, $1.$2, t2, solution);
+    end;
+  end;
 end;
 
 transform 368  ip_reg <- rshf_top ($1: compare_top($1: [ip_reg, ip_reg_field], $2: literal_32_bits), $2: literal_32_bits)
   pass_1 image 16#15BD98;
-  pass_2 image 16#1CD1FA;
+  pass_2 image 16#1CD1FA begin
+    temp t1: solution;
+    if result.c136 = 1 then
+      emit field(opc$extractu, 0, 1, $1.$1, find_well_known_literal_solution(result.l352), solution);
+    else
+      t1 <- create_solution_for_ip_reg();
+      emit field(opc$extractu, 0, 1, $1.$1, find_well_known_literal_solution(result.l352), t1);
+      emit simple(opc$xor, 0, isc_literal_solutions[1], t1, solution);
+    end;
+  end;
 end;
 
 transform 369  ip_reg_field <- rshf_top ($1: ip_reg, $2: literal_32_bits)
   pass_1 image 16#15C030;
-  pass_2 image 16#1CD2B6;
+  pass_2 image 16#1CD2B6 begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 370  literal_32_bits <- rshf_top ($1: ip_reg, $2: literal_32_bits)
@@ -120,20 +340,36 @@ end;
 
 transform 371  ip_reg <- rshf_top ($1: ip_reg, $2: literal_32_bits)
   pass_1 image 16#15C716;
-  pass_2 image 16#1CD330;
+  pass_2 image 16#1CD330 begin
+    emit field(opc$extractu, 0, $1.inherited_attributes.fetch_precision - result.l352, $1, find_well_known_literal_solution(result.l352), solution);
+  end;
 end;
 
 transform 372  ip_reg <- rshf_top ($1: ip_reg, $2: ip_reg)
   pass_1 image 16#15C95A;
-  pass_2 image 16#1CD38A;
+  pass_2 image 16#1CD38A begin
+    temp t1: solution;
+    temp t2: solution;
+    if result.c136 = 1 then
+      t1 <- $1;
+    else
+      t2 <- create_solution_for_ip_reg();
+      emit field(opc$extractu, 0, $1.inherited_attributes.fetch_precision, $1, find_well_known_literal_solution(0), t2);
+    end;
+    emit simple(opc$lsr, 0, t1, $2, solution);
+  end;
 end;
 
 transform 373  ip_reg <- rshf_top ($1: ip_reg, $2: literal_32_bits)
   pass_1 image 16#15CB88;
-  pass_2 image 16#1CD416;
+  pass_2 image 16#1CD416 begin
+    emit simple(opc$lsr, 0, $1, find_well_known_literal_solution(result.l352), solution);
+  end;
 end;
 
 transform 374  ip_reg <- rshf_top ($1: ip_reg, $2: ip_reg)
   pass_1 image 16#15CDA6;
-  pass_2 image 16#1CD466;
+  pass_2 image 16#1CD466 begin
+    emit simple(opc$lsr, 0, $1, $2, solution);
+  end;
 end;

@@ -1,0 +1,859 @@
+#!/usr/bin/env python3
+"""iscg_p2lang.py - the ISC generator's statement language for the pass-2 actions.
+
+The rule file's pass-2 bodies (docs/iscg-design.md 4, 10.5) are written
+in a small Pascal-flavoured statement language; this module is its
+abstract syntax, its printer (the decompiler, tools/iscg_p2lift.py,
+writes bodies through it), its parser and its translation to Pascal
+(tools/iscg_gen.py emits the 25 isc_pass_2_<nn>_<topic>.pas modules
+through it).
+
+    body     := 'begin' {stmt} 'end'
+    stmt     := path '<-' expr ';'
+              | 'let' 'result' '<-' expr 'line' NUMBER ';'
+              | 'emit' KIND '(' [args] ')' ';'
+              | NAME ['(' [args] ')'] ';'                 a procedure call
+              | 'if' expr 'then' {stmt} {'elsif' expr 'then' {stmt}}
+                ['else' {stmt}] 'end' ';'
+              | 'for' NAME ':=' expr 'to' expr 'do' {stmt} 'end' ';'
+              | 'temp' NAME ':' TYPE ';'                  a local of the action
+    expr     := Pascal's (or, and, not, = <> < <= > >=, + - * div mod,
+                unary -), with
+                NUMBER, 16#HEX, nil, true, false, 'string', opc$NAME,
+                NAME(args) (a function), addr(path), path
+    path     := base {'.' sel}
+    base     := self | subject | result | solution | $K | NAME
+    sel      := ATTRIBUTE | $K | cNNN | wNNN | lNNN | sNNN
+
+- self, subject, result and solution are the action's parameters (the
+  solution the rule made, the solution it was made from, the solution
+  whose attributes are set: self again, and self's pointer); `$K' is
+  subject.$K, the subject's child K; `.' reaches through a pointer.
+- Attributes are the image's names (dump_solution's, declarations.isc;
+  the inherited attributes' as isc_print_il_node prints them, docs/
+  questions.md 271).  cNNN, wNNN and lNNN are the rule's own fields at
+  offset NNN (a byte, a word, a longword: the alternatives' choice bytes
+  from +136, the pointer locals from +352; the generator lays nothing
+  out, the offsets are the image's); sNNN a solution longword the
+  attribute declarations do not name.
+- `emit KIND(args)' is debug_lir_$KIND_instruction(result.inherited_
+  attributes, args) (debug_lir_$label for label).
+- `let result <- e line N;' sets solution.live_range to e and stops
+  with the original's message when it is nil (the image keeps the
+  statement and its line in the input: docs/iscg-design.md 1.2).
+- Unsigned comparisons are written u<, u<=, u>, u>= (the image's bhi,
+  bcs, ...); the generator compiles them as the plain ones (the operands
+  are the unsigned fields).
+"""
+import os
+import re
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, '..'))
+
+
+class LangError(Exception):
+    pass
+
+
+PARAMS = ('self', 'subject', 'result', 'solution')
+EMIT_KINDS = ('simple', 'load', 'store', 'field', 'branch', 'dispatch', 'mfpr', 'mtpr',
+              'operate_and_branch', 'pa_risc_shift_double', 'label')
+
+# --------------------------------------------------------------------------
+# the solution's fields: the image's attribute name -> (offset, size, bit)
+# and the insert's field (isc_solution_fields.ins.pas: no rename,
+# docs/questions.md 267) with its type class
+
+# offset -> (insert path, class) for the whole longwords, words, bytes
+SOL_FIELDS = {
+    (0, 4): ('obj_w_name', 'up'), (4, 4): ('base_reg', 'lr'), (8, 4): ('index_reg', 'lr'),
+    (12, 4): ('l12', 'i32'), (16, 4): ('l16', 'i32'), (20, 4): ('live_range', 'lr'),
+    (24, 4): ('lr2', 'lr'), (28, 4): ('l28', 'i32'), (32, 4): ('bits_known', 'i32'),
+    (36, 4): ('bits_trusted', 'i32'), (40, 4): ('l40', 'i32'), (44, 4): ('l44', 'i32'),
+    (48, 4): ('disp', 'i32'), (52, 4): ('l52', 'i32'),
+    (56, 2): ('w56', 'i16'), (58, 2): ('fp_reg_max', 'i16'), (60, 2): ('fp_reg_result', 'i16'),
+    (62, 2): ('fp_reg_pair_max', 'i16'), (64, 2): ('fp_reg_pair_result', 'i16'),
+    (66, 2): ('fp_reg_quad_max', 'i16'), (68, 2): ('fp_reg_quad_result', 'i16'),
+    (70, 2): ('ip_reg_max', 'i16'), (72, 2): ('ip_reg_result', 'i16'), (74, 2): ('w74', 'i16'),
+    (76, 1): ('f76.b76', 'u8'), (77, 1): ('f76.b77', 'u8'), (78, 1): ('f76.reg', 'u8'),
+    (79, 1): ('f76.shift', 'u8'), (80, 1): ('f76.b80', 'u8'), (85, 1): ('f76.b85', 'u8'),
+    (86, 1): ('f76.b86', 'u8'), (87, 1): ('f76.b87', 'u8'),
+    (88, 4): ('chain', 'isp'), (92, 2): ('code_bytes', 'u16'), (94, 2): ('delay', 'u16'),
+    (96, 2): ('eval_order', 'i16'), (98, 2): ('w98', 'i16'), (100, 4): ('sym', 'up'),
+    (104, 4): ('inherited', 'inh'), (108, 2): ('kind', 'i16'), (110, 2): ('memory_refs', 'u16'),
+    (112, 2): ('rule', 'i16'), (114, 1): ('f114.nchildren', 'u8'),
+}
+for _k in range(5):
+    SOL_FIELDS[(116 + 4 * _k, 4)] = ('children[%d]' % (_k + 1), 'isp')
+# (offset, bit) -> insert path, for the booleans the insert names
+SOL_BITS = {
+    (81, 1): 'f76.embedded_sr_temp', (81, 0): 'f76.b81_0', (82, 7): 'f76.has_sym_disp',
+    (82, 6): 'f76.b82_6', (82, 5): 'f76.b82_5', (82, 4): 'f76.b82_4', (82, 3): 'f76.b82_3',
+    (82, 2): 'f76.b82_2', (82, 1): 'f76.b82_1', (82, 0): 'f76.b82_0', (83, 3): 'f76.physical',
+    (83, 2): 'f76.b83_2', (83, 1): 'f76.no_modify', (83, 0): 'f76.serialize',
+    (84, 7): 'f76.b84_7', (84, 6): 'f76.uses_disp', (84, 5): 'f76.uses_index_reg',
+    (115, 7): 'f114.copied', (115, 6): 'f114.b6', (115, 5): 'f114.b5',
+    (115, 4): 'f114.preserved', (115, 3): 'f114.pass_2_done', (115, 2): 'f114.b2',
+    (115, 1): 'f114.b1', (115, 0): 'f114.b0',
+}
+# the booleans the insert lumps into one field (b81_7_2, b83_7_4,
+# b84_4_0): reached through the module's view p2_flags_t (bytes 81..84)
+VIEW_BITS = {(81, b) for b in range(2, 8)} | {(83, b) for b in range(4, 8)}
+
+# the inherited attributes (isc_attribute_records.ins.pas, the image's
+# names: docs/questions.md 271): name -> (offset, size or bit, insert
+# path, class)
+INH_ATTRS = {
+    'il': (0, 4, 'node', 'up'), 'exception_frame': (4, 4, 'top', 'up'),
+    'original_il': (12, 4, 'stmt', 'up'), 'conditional_target': (16, 4, 'l16', 'i32'),
+    'call_instruction_ptr': (20, 4, 'call', 'up'), 'fetch_precision': (24, 4, 'precision', 'i32'),
+    'required_precision': (28, 4, 'available', 'i32'),
+    'source_line_number': (32, 2, 'pos.line', 'i16'), 'stmt_number': (34, 2, 'pos.stmt', 'i16'),
+    'parent_il_kind': (36, 1, 'b36', 'char'), 'required_arithmetic': (38, 1, 'f38.arith', 'u8'),
+    'conditional_sense': (39, 'b7', 'f38.b7', 'bool'),
+    'immediate_parent_has_signed': (39, 'b6', 'f38.b6', 'bool'),
+    'immediate_parent_wants_lvalue': (39, 'b5', 'f38.b5', 'bool'),
+    'immediate_parent_wants_set_temporary': (39, 'b4', 'f38.b4', 'bool'),
+    'immediate_parent_wants_signed': (39, 'b3', 'f38.b3', 'bool'),
+    'inside_a_cse': (39, 'b2', 'f38.preserve', 'bool'),
+}
+INH_BY_OFF = {}
+for _n, (_o, _s, _p, _c) in INH_ATTRS.items():
+    INH_BY_OFF[(_o, _s if isinstance(_s, int) else int(_s[1:]) + 100)] = _n
+
+PASCAL_TYPE = {'isp': 'isc_solution_ptr_t', 'sp': 'solution_ptr_t', 'lr': 'lr_ptr_t',
+               'up': 'univ_ptr', 'inh': 'inherited_attributes_ptr_t', 'i16': 'integer',
+               'u16': 'integer', 'i32': 'integer32', 'u8': 'integer', 'bool': 'boolean',
+               'char': 'char'}
+POINTERS = ('isp', 'sp', 'lr', 'up', 'inh')
+TEMP_TYPES = {'solution': 'isp', 'pointer': 'up', 'integer': 'i16', 'integer32': 'i32',
+              'boolean': 'bool', 'live_range': 'lr'}
+TEMP_TYPE_NAMES = {v: k for k, v in TEMP_TYPES.items()}
+
+# the globals the actions read: name -> class (isc_var_externs.ins.pas,
+# backend.ins.pas)
+GLOBALS = {}
+
+
+def attribute_table(rules_dir=None):
+    """{name: (offset, size, bit)} from declarations.isc's attribute lines
+    (size 1, 2, 4; bit None but for a boolean)."""
+    d = rules_dir or os.path.join(ROOT, 'moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/rules')
+    out = {'object_with_name': (0, 4, None)}
+    text = open(os.path.join(d, 'declarations.isc')).read()
+    for m in re.finditer(r'^attribute (\w+) \+(\d+)(?:\.(\d))? (\w+);', text, re.M):
+        name, off, bit, typ = m.group(1), int(m.group(2)), m.group(3), m.group(4)
+        if typ == 'local':
+            continue
+        size = {'integer': 2, 'integer32': 4, 'byte': 1, 'pointer': 4, 'boolean': 1}[typ]
+        out[name] = (off, size, int(bit) if bit is not None else None)
+    return out
+
+
+ATTRS = None
+ATTR_BY_OFF = None
+
+
+def attrs():
+    global ATTRS, ATTR_BY_OFF
+    if ATTRS is None:
+        ATTRS = attribute_table()
+        ATTR_BY_OFF = {}
+        for n, (o, s, b) in ATTRS.items():
+            ATTR_BY_OFF[(o, s, b)] = n
+    return ATTRS
+
+
+def sol_name(off, size, bit=None):
+    """The language's name of a solution field (None if it has none)."""
+    attrs()
+    n = ATTR_BY_OFF.get((off, size, bit))
+    if n:
+        return n
+    if bit is not None:
+        return None
+    if 116 <= off < 136 and size == 4 and off % 4 == 0:
+        return '$%d' % ((off - 116) // 4 + 1)
+    if 136 <= off < 432:
+        return {1: 'c', 2: 'w', 4: 'l'}[size] + str(off)
+    if (off, size) in SOL_FIELDS:
+        return 's%d' % off if size == 4 else ('h%d' % off if size == 2 else 'b%d' % off)
+    return None
+
+
+# --------------------------------------------------------------------------
+# routine headings (the inserts the modules open)
+
+HEADING = re.compile(r'\b(procedure|function)\s+([\w$]+)\s*(\((.*?)\))?\s*(?::\s*([\w$]+))?\s*;'
+                     r'\s*(?:options\s*\(([^)]*)\)\s*;)?\s*extern\s*;', re.S | re.I)
+
+
+def strip_comments(text):
+    out, depth = [], 0
+    for ch in text:
+        if ch == '{':
+            depth += 1
+        elif ch == '}':
+            depth -= 1
+        elif depth == 0:
+            out.append(ch)
+    return ''.join(out)
+
+
+def type_class(t):
+    t = t.strip().lower()
+    for k, v in PASCAL_TYPE.items():
+        if v == t and k not in ('u16', 'u8'):
+            return k
+    if t in ('il_$node_ptr_t',):
+        return 'up'
+    return 'other:' + t
+
+
+def read_headings(include_text):
+    """{name (lower): {'params': [(name, mode, class, univ)], 'ret': class or
+    None, 'val_param': bool, 'variable': bool}} from the inserts the
+    INCLUDES text opens (the tree's)."""
+    out = {}
+    for path in re.findall(r"%include '([^']+)'", include_text):
+        p = os.path.join(ROOT, path.lstrip('/'))
+        if not os.path.exists(p):
+            continue
+        text = strip_comments(open(p, encoding='latin-1').read())
+        for m in HEADING.finditer(text):
+            name = m.group(2).lower()
+            params = []
+            if m.group(4):
+                for grp in m.group(4).split(';'):
+                    if ':' not in grp:
+                        continue
+                    names, typ = grp.rsplit(':', 1)
+                    mode = 'value'
+                    names = names.strip()
+                    for md in ('in out', 'var', 'in', 'out'):
+                        if names.lower().startswith(md + ' '):
+                            mode = md
+                            names = names[len(md):].strip()
+                            break
+                    univ = typ.strip().lower().startswith('univ ')
+                    if univ:
+                        typ = typ.strip()[5:]
+                    for n in names.split(','):
+                        params.append((n.strip(), mode, type_class(typ), univ))
+            opts = (m.group(6) or '').lower()
+            out[name] = {'params': params, 'ret': type_class(m.group(5)) if m.group(5) else None,
+                         'val_param': 'val_param' in opts, 'variable': 'variable' in opts}
+        # the globals the actions may read
+        for m in re.finditer(r'^\s*([\w$]+)\s*:\s*extern\s+([\w$]+)\s*;', text, re.M):
+            GLOBALS.setdefault(m.group(1).lower(), type_class(m.group(2)))
+    return out
+
+
+# --------------------------------------------------------------------------
+# the abstract syntax
+#
+# expressions: ('num', v) ('nil',) ('bool', b) ('str', s) ('opc', name)
+#   ('path', base, [sel...])  base a parameter, '$K' or a name; sel an
+#   attribute name, '$K', cNNN ...
+#   ('call', name, [args]) ('addr', path) ('bin', op, a, b) ('un', op, a)
+# statements: ('set', path, expr) ('let', expr, line) ('emit', kind, [args])
+#   ('call', name, [args]) ('if', [(cond, [stmts])...], [else stmts] or None)
+#   ('for', name, lo, hi, [stmts]) ('temp', name, type)
+
+PREC = {'or': 1, 'and': 2, '=': 3, '<>': 3, '<': 3, '<=': 3, '>': 3, '>=': 3,
+        'u<': 3, 'u<=': 3, 'u>': 3, 'u>=': 3, '+': 4, '-': 4, '*': 5, 'div': 5, 'mod': 5}
+
+
+def fmt_expr(e, prec=0):
+    k = e[0]
+    if k == 'num':
+        v = e[1]
+        return ('16#%X' % v if v >= 4096 else str(v)) if v >= 0 else (
+            '-16#%X' % -v if -v >= 4096 else str(v))
+    if k == 'nil':
+        return 'nil'
+    if k == 'bool':
+        return 'true' if e[1] else 'false'
+    if k == 'str':
+        return "'" + e[1].replace("'", "''") + "'"
+    if k == 'opc':
+        return e[1]
+    if k == 'path':
+        base, sels = e[1], e[2]
+        if isinstance(base, tuple):
+            base = fmt_expr(base)
+        if base == 'subject' and sels and sels[0].startswith('$'):
+            return '.'.join(sels)
+        return '.'.join([base] + list(sels))
+    if k == 'index':
+        return '%s[%s]' % (e[1], fmt_expr(e[2]))
+    if k == 'call':
+        return '%s(%s)' % (e[1], ', '.join(fmt_expr(a) for a in e[2]))
+    if k == 'addr':
+        return 'addr(%s)' % fmt_expr(e[1])
+    if k == 'un':
+        if e[1] == 'not':
+            s = 'not ' + fmt_expr(e[2], 6)
+        else:
+            s = '-' + fmt_expr(e[2], 6)
+        return '(%s)' % s if prec > 5 else s
+    if k == 'bin':
+        p = PREC[e[1]]
+        s = '%s %s %s' % (fmt_expr(e[2], p), e[1], fmt_expr(e[3], p + 1))
+        return '(%s)' % s if p < prec or (p == 3 and prec == 3) else s
+    raise LangError('expression %r' % (e,))
+
+
+def fmt_stmts(stmts, ind):
+    out = []
+    for s in stmts:
+        out.extend(fmt_stmt(s, ind))
+    return out
+
+
+def fmt_stmt(s, ind):
+    k = s[0]
+    if k == 'set':
+        return [ind + '%s <- %s;' % (fmt_expr(s[1]), fmt_expr(s[2]))]
+    if k == 'let':
+        return [ind + 'let result <- %s line %d;' % (fmt_expr(s[1]), s[2])]
+    if k == 'emit':
+        return [ind + 'emit %s(%s);' % (s[1], ', '.join(fmt_expr(a) for a in s[2]))]
+    if k == 'call':
+        return [ind + ('%s(%s);' % (s[1], ', '.join(fmt_expr(a) for a in s[2]))
+                       if s[2] else '%s;' % s[1])]
+    if k == 'temp':
+        return [ind + 'temp %s: %s;' % (s[1], s[2])]
+    if k == 'if':
+        out = []
+        for j, (c, body) in enumerate(s[1]):
+            out.append(ind + ('if ' if j == 0 else 'elsif ') + fmt_expr(c) + ' then')
+            out.extend(fmt_stmts(body, ind + '  '))
+        if s[2] is not None:
+            out.append(ind + 'else')
+            out.extend(fmt_stmts(s[2], ind + '  '))
+        out.append(ind + 'end;')
+        return out
+    if k == 'for':
+        out = [ind + 'for %s := %s to %s do' % (s[1], fmt_expr(s[2]), fmt_expr(s[3]))]
+        out.extend(fmt_stmts(s[4], ind + '  '))
+        out.append(ind + 'end;')
+        return out
+    raise LangError('statement %r' % (s,))
+
+
+def fmt_body(stmts, ind='    '):
+    if not stmts:
+        return []
+    return [ind[:-2] + 'begin'] + fmt_stmts(stmts, ind) + [ind[:-2] + 'end;']
+
+
+# --------------------------------------------------------------------------
+# parsing
+
+TOK = re.compile(r"\s*(16#[0-9A-Fa-f]+|'(?:[^']|'')*'|\$\d+|<-|:=|<>|<=|>=|u<=|u>=|u<|u>|"
+                 r"[A-Za-z_][A-Za-z0-9_$]*|\d+|\S)")
+
+
+def tokenize(text):
+    out, pos = [], 0
+    text = strip_comments(text)
+    while True:
+        m = TOK.match(text, pos)
+        if not m:
+            if text[pos:].strip():
+                raise LangError('cannot read %r' % text[pos:pos + 20])
+            return out
+        out.append(m.group(1))
+        pos = m.end()
+
+
+class Parser:
+    def __init__(self, toks):
+        self.t = toks
+        self.i = 0
+
+    def peek(self, k=0):
+        return self.t[self.i + k] if self.i + k < len(self.t) else None
+
+    def next(self):
+        tok = self.peek()
+        self.i += 1
+        return tok
+
+    def expect(self, tok):
+        if self.peek() != tok:
+            raise LangError('expected %r, found %r (in %s)' % (
+                tok, self.peek(), ' '.join(self.t[max(0, self.i - 8):self.i + 4])))
+        self.i += 1
+
+    def body(self):
+        self.expect('begin')
+        stmts = self.stmts(('end',))
+        self.expect('end')
+        if self.peek() == ';':
+            self.i += 1
+        return stmts
+
+    def stmts(self, stops):
+        out = []
+        while self.peek() not in stops:
+            if self.peek() is None:
+                raise LangError('unexpected end')
+            out.append(self.stmt())
+        return out
+
+    def stmt(self):
+        t = self.peek()
+        if t == 'if':
+            self.i += 1
+            arms = []
+            c = self.expr()
+            self.expect('then')
+            arms.append((c, self.stmts(('elsif', 'else', 'end'))))
+            els = None
+            while True:
+                if self.peek() == 'elsif':
+                    self.i += 1
+                    c = self.expr()
+                    self.expect('then')
+                    arms.append((c, self.stmts(('elsif', 'else', 'end'))))
+                elif self.peek() == 'else':
+                    self.i += 1
+                    els = self.stmts(('end',))
+                else:
+                    break
+            self.expect('end')
+            self.expect(';')
+            return ('if', arms, els)
+        if t == 'for':
+            self.i += 1
+            v = self.next()
+            self.expect(':=')
+            lo = self.expr()
+            self.expect('to')
+            hi = self.expr()
+            self.expect('do')
+            body = self.stmts(('end',))
+            self.expect('end')
+            self.expect(';')
+            return ('for', v, lo, hi, body)
+        if t == 'temp':
+            self.i += 1
+            n = self.next()
+            self.expect(':')
+            typ = self.next()
+            self.expect(';')
+            return ('temp', n, typ)
+        if t == 'let':
+            self.i += 1
+            self.expect('result')
+            self.expect('<-')
+            e = self.expr()
+            self.expect('line')
+            line = int(self.next())
+            self.expect(';')
+            return ('let', e, line)
+        if t == 'emit':
+            self.i += 1
+            kind = self.next()
+            args = self.args()
+            self.expect(';')
+            return ('emit', kind, args)
+        lhs = self.primary()
+        if self.peek() == '<-':
+            self.i += 1
+            e = self.expr()
+            self.expect(';')
+            return ('set', lhs, e)
+        self.expect(';')
+        if lhs[0] == 'call':
+            return ('call', lhs[1], lhs[2])
+        if lhs[0] == 'path' and not lhs[2]:
+            return ('call', lhs[1], [])
+        raise LangError('not a statement: %s' % fmt_expr(lhs))
+
+    def args(self):
+        self.expect('(')
+        out = []
+        while self.peek() != ')':
+            out.append(self.expr())
+            if self.peek() == ',':
+                self.i += 1
+        self.expect(')')
+        return out
+
+    def expr(self, prec=1):
+        left = self.unary()
+        while True:
+            op = self.peek()
+            if op not in PREC or PREC[op] < prec:
+                return left
+            self.i += 1
+            right = self.expr(PREC[op] + 1)
+            left = ('bin', op, left, right)
+
+    def unary(self):
+        if self.peek() == 'not':
+            self.i += 1
+            return ('un', 'not', self.unary())
+        if self.peek() == '-':
+            self.i += 1
+            e = self.unary()
+            if e[0] == 'num':
+                return ('num', -e[1])
+            return ('un', '-', e)
+        return self.primary()
+
+    def primary(self):
+        t = self.next()
+        if t == '(':
+            e = self.expr()
+            self.expect(')')
+            return e
+        if t.startswith('16#'):
+            return ('num', int(t[3:], 16))
+        if t.isdigit():
+            return ('num', int(t))
+        if t.startswith("'"):
+            return ('str', t[1:-1].replace("''", "'"))
+        if t == 'nil':
+            return ('nil',)
+        if t in ('true', 'false'):
+            return ('bool', t == 'true')
+        if t.lower().startswith('opc$'):
+            return ('opc', t.lower())
+        if t == 'addr':
+            self.expect('(')
+            p = self.primary()
+            self.expect(')')
+            return ('addr', p)
+        if self.peek() == '(':
+            return ('call', t.lower(), self.args())
+        if self.peek() == '[':
+            self.i += 1
+            ix = self.expr()
+            self.expect(']')
+            e = ('index', t.lower(), ix)
+            if self.peek() != '.':
+                return e
+            base = e
+            sels = []
+            while self.peek() == '.':
+                self.i += 1
+                sels.append(self.next())
+            return ('path', base, sels)
+        base = t
+        sels = []
+        if base.startswith('$'):
+            base, sels = 'subject', [t]
+        while self.peek() == '.':
+            self.i += 1
+            sels.append(self.next())
+        return ('path', base, sels)
+
+
+def parse_body(text):
+    p = Parser(tokenize(text))
+    out = p.body()
+    if p.peek() is not None:
+        raise LangError('text after the body: %r' % p.peek())
+    return out
+
+
+# --------------------------------------------------------------------------
+# Pascal
+
+class Emitter:
+    """One action's body as Pascal (Domain Pascal for dpc), with the
+    insert's field names and the casts the types need."""
+
+    def __init__(self, rule, headings, line_of=None):
+        self.rule = rule
+        self.h = headings
+        self.temps = {}
+        attrs()
+
+    # ---- paths
+    def path(self, e):
+        """(Pascal text, class, kind) of a path; kind 'rec' for a record
+        variable (self, result), else a value."""
+        base, sels = e[1], list(e[2])
+        if isinstance(base, tuple):
+            text, cls = self.expr1(base)
+        elif base in ('self', 'result'):
+            text, cls = base, 'rec'
+        elif base in ('subject', 'solution'):
+            text, cls = base, 'isp'
+        elif base in self.temps:
+            text, cls = base, self.temps[base]
+        elif base.lower() in GLOBALS:
+            text, cls = base.lower(), GLOBALS[base.lower()]
+        else:
+            raise LangError('rule %d: unknown name %s' % (self.rule, base))
+        for s in sels:
+            text, cls = self.select(text, cls, s)
+        return text, cls
+
+    def deref(self, text, cls):
+        if cls == 'rec':
+            return text
+        if cls == 'isp':
+            return text + '^'
+        if cls in ('sp', 'up', 'lr'):
+            return 'isc_solution_ptr_t(%s)^' % text
+        raise LangError('rule %d: %s is not a solution' % (self.rule, text))
+
+    def select(self, text, cls, s):
+        if cls == 'other:at_switches_t':
+            return '%s.%s' % (text, s), 'bool'
+        if cls == 'inh':
+            if s not in INH_ATTRS:
+                raise LangError('rule %d: no inherited attribute %s' % (self.rule, s))
+            _, _, p, c = INH_ATTRS[s]
+            return '%s^.%s' % (text, p), c
+        r = self.deref(text, cls)
+        if s.startswith('$'):
+            return '%s.children[%s]' % (r, s[1:]), 'isp'
+        m = re.match(r'([cwls])(\d+)$', s)
+        if m and not s in ATTRS:
+            kind, off = m.group(1), int(m.group(2))
+            if kind == 'c' and 136 <= off < 352:
+                return '%s.space136[%d]' % (r, off), 'char'
+            if kind == 'l' and off >= 352 and off % 4 == 0:
+                return '%s.fields[%d]' % (r, (off - 352) // 4), 'isp'
+            if kind == 's' and (off, 4) in SOL_FIELDS:
+                p, c = SOL_FIELDS[(off, 4)]
+                return '%s.%s' % (r, p), c
+            if kind in 'wl' and 136 <= off < 352:
+                v = 'p2_locals_ptr_t(addr(%s))^.' % r
+                return v + ('w[%d]' % (off // 2) if kind == 'w' else 'l[%d]' % (off // 4)), \
+                    'i16' if kind == 'w' else 'i32'
+            raise LangError('rule %d: field %s' % (self.rule, s))
+        if s not in ATTRS:
+            raise LangError('rule %d: no attribute %s' % (self.rule, s))
+        off, size, bit = ATTRS[s]
+        if bit is not None:
+            if (off, bit) in SOL_BITS:
+                return '%s.%s' % (r, SOL_BITS[(off, bit)]), 'bool'
+            if (off, bit) in VIEW_BITS:
+                return 'p2_flags_ptr_t(addr(%s.f76))^.%s' % (r, s), 'bool'
+            raise LangError('rule %d: bit %s' % (self.rule, s))
+        if s == 'il_kind':
+            return '%s.w98' % r, 'i16'
+        p, c = SOL_FIELDS[(off, size)]
+        if s == 'false_label':
+            c = 'i32'
+        return '%s.%s' % (r, p), c
+
+    # ---- expressions
+    def expr(self, e, want=None):
+        text, cls = self.expr1(e)
+        return self.coerce(text, cls, want) if want else text
+
+    def coerce(self, text, cls, want):
+        if want is None or cls == want:
+            return text
+        if cls == 'rec':
+            return text
+        if want in POINTERS:
+            if cls == 'num' and text == '0':
+                return 'nil'
+            if cls in ('i32', 'i16'):
+                return '%s(%s)' % (PASCAL_TYPE[want], text)
+            if cls in ('up', 'nil', 'str') or want == 'up':
+                return text
+            if cls in POINTERS:
+                return '%s(%s)' % (PASCAL_TYPE[want], text)
+            return text
+        if want == 'i32' and cls in POINTERS:
+            return 'integer32(%s)' % text
+        if want in ('i16', 'u8', 'u16', 'i32') and cls == 'char':
+            return 'ord(%s)' % text
+        if want == 'char' and cls in ('i16', 'u8', 'u16', 'i32', 'num'):
+            return 'chr(%s)' % text
+        if want.startswith('other:') and cls in ('i16', 'u8', 'u16', 'i32', 'num'):
+            return '%s(%s)' % (want[6:], text)
+        return text
+
+    def expr1(self, e):
+        k = e[0]
+        if k == 'num':
+            v = e[1]
+            if v >= 4096:
+                return '16#%X' % v, 'num'
+            if v <= -4096:
+                return '-16#%X' % -v, 'num'
+            return str(v), 'num'
+        if k == 'nil':
+            return 'nil', 'nil'
+        if k == 'bool':
+            return ('true' if e[1] else 'false'), 'bool'
+        if k == 'str':
+            return "'" + e[1].replace("'", "''") + "'", 'str'
+        if k == 'opc':
+            return 'ord(%s)' % e[1], 'num'
+        if k == 'path':
+            t, c = self.path(e)
+            return t, c
+        if k == 'addr':
+            t, c = self.path(e[1])
+            return 'addr(%s)' % t, 'up'
+        if k == 'index':
+            if e[1] == 'isc_literal_solutions':
+                return 'isc_literal_solutions[%s]' % self.expr(e[2]), 'sp'
+            if e[1].startswith('opcode_'):
+                return 'isc_tool_generated_readonly_tables.%s[il$t(%s)]' % (
+                    e[1], self.expr(e[2])), 'i16'
+            raise LangError('rule %d: no table %s' % (self.rule, e[1]))
+        if k == 'call':
+            h = self.h.get(e[1])
+            if not h or h['ret'] is None:
+                raise LangError('rule %d: no function %s' % (self.rule, e[1]))
+            return self.call_text(e[1], e[2]), h['ret']
+        if k == 'un':
+            if e[1] == 'not':
+                return 'not ' + self.paren(e[2], 6), 'bool'
+            t, c = self.expr1(e[2])
+            return '-' + self.paren(e[2], 6), c if c != 'num' else 'num'
+        if k == 'bin':
+            op = e[1]
+            p = PREC[op]
+            if op in ('and', 'or'):
+                return '%s %s %s' % (self.paren(e[2], p), op, self.paren(e[3], p + 1)), 'bool'
+            lt, lc = self.expr1(e[2])
+            rt, rc = self.expr1(e[3])
+            numeric = ('num', 'i16', 'u16', 'u8', 'i32')
+            # a pointer field in arithmetic or compared with a number
+            if lc in POINTERS and rc in numeric:
+                lt, lc = 'integer32(%s)' % lt, 'i32'
+            if rc in POINTERS and lc in numeric:
+                rt, rc = 'integer32(%s)' % rt, 'i32'
+            if lc == 'char' and rc in numeric:
+                lt, lc = 'ord(%s)' % lt, 'i16'
+            if rc == 'char' and lc in numeric:
+                rt, rc = 'ord(%s)' % rt, 'i16'
+            if lc in POINTERS and rc in POINTERS and lc != rc and 'up' not in (lc, rc):
+                rt = '%s(%s)' % (PASCAL_TYPE[lc], rt)
+            lt = self.wrap(e[2], lt, p)
+            rt = self.wrap(e[3], rt, p + 1)
+            pop = op[1:] if op.startswith('u') else op
+            cls = 'bool' if p == 3 else (lc if lc != 'num' else rc)
+            return '%s %s %s' % (lt, pop, rt), cls
+        raise LangError('rule %d: expression %r' % (self.rule, e))
+
+    def wrap(self, e, text, prec):
+        if e[0] == 'bin' and PREC[e[1]] < prec or (e[0] == 'bin' and PREC[e[1]] == 3
+                                                    and prec >= 3):
+            return '(%s)' % text
+        return text
+
+    def paren(self, e, prec):
+        t, _ = self.expr1(e)
+        return self.wrap(e, t, prec) if e[0] == 'bin' else (
+            '(%s)' % t if e[0] == 'un' and prec > 5 else t)
+
+    def call_text(self, name, args):
+        h = self.h.get(name)
+        if h is None:
+            raise LangError('rule %d: no heading for %s' % (self.rule, name))
+        ps = h['params']
+        if len(args) != len(ps) and not h['variable']:
+            raise LangError('rule %d: %s takes %d arguments, %d given'
+                            % (self.rule, name, len(ps), len(args)))
+        out = []
+        for k, a in enumerate(args):
+            want = ps[k][2] if k < len(ps) else None
+            if want and (ps[k][3] or (want.startswith('other:') and a[0] == 'str')):
+                want = None
+            out.append(self.expr(a, want))
+        return '%s(%s)' % (name, ', '.join(out)) if args else name
+
+    # ---- statements
+    def stmts(self, ss, ind):
+        out = []
+        for s in ss:
+            out.extend(self.stmt(s, ind))
+        return out
+
+    def stmt(self, s, ind):
+        k = s[0]
+        if k == 'temp':
+            return []
+        if k == 'set':
+            lt, lc = self.path(s[1])
+            return self.lines(ind, '%s := %s;' % (lt, self.expr(s[2], lc)))
+        if k == 'let':
+            t = self.expr(s[1], 'lr')
+            msg = ("ISC: A ''let result <- ...;'' in pattern %d (line number %d) used a nil "
+                   "live_range.%%$" % (self.rule, s[2]))
+            return (self.lines(ind, 'solution^.live_range := %s;' % t)
+                    + [ind + 'if solution^.live_range = nil then',
+                       ind + '  if not at_backend_switches.sw11 then',
+                       ind + "    bug_check('%s');" % msg])
+        if k == 'emit':
+            name = 'debug_lir_$label' if s[1] == 'label' else 'debug_lir_$%s_instruction' % s[1]
+            args = [('path', 'result', ['inherited_attributes'])] + list(s[2])
+            return self.lines(ind, self.call_text(name, args) + ';')
+        if k == 'call':
+            return self.lines(ind, self.call_text(s[1], s[2]) + ';')
+        if k == 'if':
+            out = []
+            for j, (c, body) in enumerate(s[1]):
+                out.append(ind + ('if ' if j == 0 else 'else if ') + self.expr(c) + ' then begin')
+                out.extend(self.stmts(body, ind + '  '))
+                out.append(ind + 'end')
+            if s[2] is not None:
+                out[-1] += ' else begin'
+                out.extend(self.stmts(s[2], ind + '  '))
+                out.append(ind + 'end')
+            out[-1] += ';'
+            return out
+        if k == 'for':
+            out = [ind + 'for %s := %s to %s do begin' % (s[1], self.expr(s[2], 'i32'),
+                                                          self.expr(s[3], 'i32'))]
+            out.extend(self.stmts(s[4], ind + '  '))
+            out.append(ind + 'end;')
+            return out
+        raise LangError('rule %d: statement %r' % (self.rule, s))
+
+    def lines(self, ind, text):
+        if len(ind) + len(text) <= 78:
+            return [ind + text]
+        # break after commas
+        out, cur = [], ind
+        for part in re.split(r'(?<=,) ', text):
+            if len(cur) + len(part) + 1 > 78 and cur.strip():
+                out.append(cur.rstrip())
+                cur = ind + '    '
+            cur += part + ' '
+        out.append(cur.rstrip())
+        return out
+
+    def routine(self, stmts):
+        """The body's declarations and statements."""
+        decl = []
+        for s in walk(stmts):
+            if s[0] == 'temp':
+                if s[2] not in TEMP_TYPES:
+                    raise LangError('rule %d: temp type %s' % (self.rule, s[2]))
+                self.temps[s[1]] = TEMP_TYPES[s[2]]
+                decl.append('  %s: %s;' % (s[1], PASCAL_TYPE[TEMP_TYPES[s[2]]]))
+            elif s[0] == 'for' and s[1] not in self.temps:
+                self.temps[s[1]] = 'i32'
+                decl.append('  %s: integer32;' % s[1])
+        body = self.stmts(stmts, '  ')
+        return (['var'] + decl if decl else []), body
+
+
+def walk(stmts):
+    for s in stmts:
+        yield s
+        if s[0] == 'if':
+            for _, b in s[1]:
+                yield from walk(b)
+            if s[2]:
+                yield from walk(s[2])
+        elif s[0] == 'for':
+            yield from walk(s[4])

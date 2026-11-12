@@ -10,42 +10,81 @@ section 12 leaves  image pass_1 a5 16#461838, pass_2 a5 16#480084;
 
 transform 13  address_mode <- addr_con ($1: irrelevant)
   pass_1 image 16#13D124;
-  pass_2 image 16#1BBDD8;
+  pass_2 image 16#1BBDD8 begin
+    result.base_register <- isc_user_routines_338;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 14  address_mode <- addr_con ($1: irrelevant)
   pass_1 image 16#13D330;
-  pass_2 image 16#1BBE08;
+  pass_2 image 16#1BBE08 begin
+    result.base_register <- isc_user_routines_338;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 15  address_mode <- addr_con ($1: irrelevant)
   pass_1 image 16#13D530;
-  pass_2 image 16#1BBE38;
+  pass_2 image 16#1BBE38 begin
+    result.base_register <- isc_user_routines_338;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 16  address_mode <- addr_con ($1: address_mode)
   pass_1 image 16#13D6F2;
-  pass_2 image 16#1BBE68;
+  pass_2 image 16#1BBE68 begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 17  ip_reg <- addr_con ($1: ip_reg)
   pass_1 image 16#13DC64;
-  pass_2 image 16#1BBEE0;
+  pass_2 image 16#1BBEE0 begin
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+  end;
 end;
 
 transform 18  address_mode <- addr_con ($1: irrelevant)
   pass_1 image 16#13E1CC;
-  pass_2 image 16#1BBF58;
+  pass_2 image 16#1BBF58 begin
+    result.base_register <- isc_user_routines_338;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 19  ip_reg <- ap_register
   pass_1 image 16#13E390;
-  pass_2 image 16#1BBF88;
+  pass_2 image 16#1BBF88 begin
+    result.live_range <- isc_user_routines_33c.live_range;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 20  address_mode <- argument_block_location_ob
   pass_1 image 16#13E550;
-  pass_2 image 16#1BBFBA;
+  pass_2 image 16#1BBFBA begin
+    result.base_register <- isc_user_routines_340;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 21  address_mode <- at_lib_dsc
@@ -55,12 +94,16 @@ end;
 
 transform 22  literal_32_bits <- cache_top
   pass_1 image 16#13E830;
-  pass_2 image 16#1BBFEC;
+  pass_2 image 16#1BBFEC begin
+    emit simple(opc$synch, 0, nil, nil, nil);
+  end;
 end;
 
 transform 23  local_routine <- cc_call
   pass_1 image 16#13E92C;
-  pass_2 image 16#1BC022;
+  pass_2 image 16#1BC022 begin
+    pattern_match_error(9, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+  end;
 end;
 
 transform 24  address_mode <- cs_temp
@@ -70,27 +113,41 @@ end;
 
 transform 25  ip_reg <- db_register
   pass_1 image 16#13EB3A;
-  pass_2 image 16#1BC05A;
+  pass_2 image 16#1BC05A begin
+    result.live_range <- isc_user_routines_338.live_range;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 26  ip_reg <- display_register
   pass_1 image 16#13ECFA;
-  pass_2 image 16#1BC08C;
+  pass_2 image 16#1BC08C begin
+    result.live_range <- isc_user_routines_32c.live_range;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 27  ip_reg <- exception_register
   pass_1 image 16#13EEBA;
-  pass_2 image 16#1BC0BE;
+  pass_2 image 16#1BC0BE begin
+    result.live_range <- isc_user_routines_328.live_range;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 28  local_routine <- entry_blk | function_blk | procedure_blk
   pass_1 image 16#13F076;
-  pass_2 image 16#1BC0F0;
+  pass_2 image 16#1BC0F0 begin
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 29  ip_reg <- lb_register
   pass_1 image 16#13F186;
-  pass_2 image 16#1BC110;
+  pass_2 image 16#1BC110 begin
+    result.live_range <- isc_user_routines_334.live_range;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 30  address_mode <- lib_dsc
@@ -100,20 +157,35 @@ end;
 
 transform 31  ip_reg <- physical_register_ob
   pass_1 image 16#13F46A;
-  pass_2 image 16#1BC144;
+  pass_2 image 16#1BC144 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 32  fp_reg <- physical_register_ob
   pass_1 image 16#13F624;
-  pass_2 image 16#1BC16A;
+  pass_2 image 16#1BC16A begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 33  fp_reg_pair <- physical_register_ob
   pass_1 image 16#13F7E0;
-  pass_2 image 16#1BC190;
+  pass_2 image 16#1BC190 begin
+    if result.c136 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 34  ip_reg <- sb_register
   pass_1 image 16#13F9B2;
-  pass_2 image 16#1BC1DE;
+  pass_2 image 16#1BC1DE begin
+    result.live_range <- isc_user_routines_340.live_range;
+    result.object_with_name <- self.il;
+  end;
 end;
