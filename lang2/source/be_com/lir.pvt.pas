@@ -7,10 +7,17 @@
   +0x7C (lir, lir_utils), and the headings of the routines only they
   call (docs/backend-plan.md).
 
-  No Apollo copy survives.  A stub, created with the back end's core
-  (translator MM) so that the parallel translators extend one file;
-  nothing in it yet.
+  No Apollo copy survives.  Created as a stub with the back end's core
+  (translator MM); batch A fills it as its units are translated.
 
   Not known from the original: everything about its contents. }
 
 { TODO(pascal) lir.pvt.pas: the cells and headings listed above }
+
+var
+  { lir.pas's data (A5 0x487180). }
+  lir_3c00: extern mrh_$heap_t;         { +0x3C00 (0x48AD80): the fixed
+                                          heap of lifetime segments
+                                          (lir_utils_$add_lts_to_lr,
+                                          _add_lts_after_lts:
+                                          mrh_$alloc_fixed) }

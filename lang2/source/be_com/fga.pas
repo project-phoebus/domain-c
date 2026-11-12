@@ -196,7 +196,7 @@ begin
   end
   else if op^.h.kind in [operand$ip_reg..operand$well_behaved_memory] then begin
     lts := op^.lts;
-    if lts^.lr^.f2.b3_7 then begin
+    if lts^.lr^.f2.physical then begin
       is_const := result;
       result := (lts^.lr^.f2.reg = 0)
                 and ((lts^.rrp * [rrp$modify, rrp$write]) = []);
@@ -369,7 +369,7 @@ begin
   res := nil;
   for k := 1 to call^.h.nopnds do begin
     op := addr(call^.opnds[k]);
-    if (op^.lts^.lr^.f2.reg = 0) and op^.lts^.lr^.f2.b3_7
+    if (op^.lts^.lr^.f2.reg = 0) and op^.lts^.lr^.f2.physical
        and op^.h.write and (op^.h.kind = operand$ip_reg) then begin
       res := op;
       exit;

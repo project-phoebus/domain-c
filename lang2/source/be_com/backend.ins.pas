@@ -546,12 +546,16 @@ type
                                           range of a physical register
                                           (asm; sanity excepts 30 and
                                           31; batch A (PA3): was b2) }
-      b3_7: boolean;                    { .7 (tr_utils: its uses depend
-                                          on every instruction; utils
-                                          tests it with `tst.b (3)':
-                                          batch A read +2 as a word w2
-                                          and 16#80) }
-      b3_6, b3_5, b3_4, b3_3: boolean;
+      physical: boolean;                { .7: a physical register's live
+                                          range, reg its number (sanity,
+                                          asm; translator PC3's reading;
+                                          tr_utils: its uses depend on
+                                          every instruction; batch A
+                                          (PA3): was b3_7) }
+      b3_6, b3_5: boolean;
+      b3_4: boolean;                    { .4 (set by make_entering_lts:
+                                          translator PC3) }
+      b3_3: boolean;
       b3_2: boolean;                    { .2 (tr_utils: marked) }
       b3_1, b3_0: boolean;
       end;
@@ -570,9 +574,17 @@ type
     node20: univ_ptr;                   { +20: an IL node (a VAR_NAME,
                                           109, or 110: utils reads its
                                           flags; batch C: l20) }
-    sym: univ_ptr;                      { +24 }
+    memory_home: univ_ptr;              { +24: its home in memory, a
+                                          variable (109) or a common
+                                          member (110): the original's
+                                          name (lir_utils_$add_memory_home's
+                                          message "LR^.memory_home");
+                                          batch A (PA3): was sym }
     l28: integer32;                     { +28 }
-    l32: integer32;                     { +32 }
+    home_lr: lr_ptr_t;                  { +32: the live range whose memory
+                                          home it shares (lir_utils_$add_memory_home
+                                          gives that one a home first;
+                                          batch A, PA3: was l32) }
     ltss: lts_ptr_t;                    { +36 }
     l40: integer32;                     { +40 (tr_utils: a serial
                                           number) }
@@ -667,7 +679,10 @@ type
     l192: integer32;                    { +192: its complex live
                                           ranges, the last complex id
                                           given (bv) }
-    space196: array [196..199] of char; { +196 }
+    spills: integer32;                  { +196: the spill ids given
+                                          (lir_utils' assign_spill_id
+                                          counts up, a word id from its
+                                          low half; batch A, PA3) }
     l200: integer32;                    { +200: the number of the last
                                           live range life splits
                                           (batch A) }
@@ -1998,18 +2013,22 @@ procedure lir_main_$save_and_restore_code(
 
 { lir_utils.pas (cc.a88k). }
 
-{ LIR_UTILS_$EXCISE_INST - 0x24C0FC, 0x52 bytes; called from com fg_utils
-  mmt mmt_utils tr_utils utils.  Frame 8:al.  Result: read (callers:
-  D0l1). }
-function lir_utils_$excise_inst(
-    p1: univ_ptr): integer32; options(val_param); extern;
+{ LIR_UTILS_$EXCISE_INST - instr unlinked from its block, its +2 bit 6
+  cleared.  0x24C0FC, 0x52 bytes; called from com fg_utils mmt mmt_utils
+  tr_utils utils.  No result (A0 is left holding instr; batch A, PA3:
+  was a function). }
+procedure lir_utils_$excise_inst(
+    instr: instr_ptr_t); options(val_param); extern;
 
-{ LIR_UTILS_$CREATE_PREFERENCE_MOVE - 0x24C14E, 0xFC bytes; called from
-  com ra_utils.  Frame 8:w; 10:al; 14:bw.  Result: read (callers: A08). }
+{ LIR_UTILS_$CREATE_PREFERENCE_MOVE - a register move (move_opcode by
+  kind) put next to anchor (after it when after), its operands' kinds
+  kind and its non-_like form.  0x24C14E, 0xFC bytes; called from com
+  ra_utils.  Frame 8:w; 10:al; 14:b (callers push `st'/`clr.b': batch A,
+  PA3, was integer).  Result: A0. }
 function lir_utils_$create_preference_move(
-    p1: integer;
-    p2: univ_ptr;
-    p3: integer): univ_ptr; options(val_param); extern;
+    kind: operand$t;
+    anchor: instr_ptr_t;
+    after: boolean): instr_ptr_t; options(val_param); extern;
 
 { LIR_UTILS_$ADD_LTS_TO_LR - 0x24C24A, 0x5E bytes; called from com iv mmt
   mmt_utils ra_utils tr_utils.  Frame 8:w; 10:al; 14:l; 18:a: a new
@@ -2028,7 +2047,7 @@ procedure lir_utils_$add_lts_to_lr(
   A04). }
 function lir_utils_$add_lts_after_lts(
     lts: lts_ptr_t;
-    p2: integer;
+    rrp: integer;
     bb: bb_ptr_t): lts_ptr_t; options(val_param); extern;
 
 { LIR_UTILS_$TRANS_INSERT_MOVE - 0x24C312, 0x912 bytes; called from com
@@ -2036,12 +2055,15 @@ function lir_utils_$add_lts_after_lts(
 procedure lir_utils_$trans_insert_move(
     p1: univ_ptr); options(val_param); extern;
 
-{ LIR_UTILS_$ADD_MEMORY_HOME - 0x24D0F2, 0x18C bytes; called from
-  ra_utils.  Frame 8:l; 12:al; 16:bw.  Result: read (callers: D0l1). }
-function lir_utils_$add_memory_home(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: integer): integer32; options(val_param); extern;
+{ LIR_UTILS_$ADD_MEMORY_HOME - lr (or its even mate) given a memory
+  home with a spill id: its old one kept when big enough, else a new
+  temporary (allocated static when static).  0x24D0F2, 0x18C bytes;
+  called from ra_utils.  Frame 8:l; 12:al; 16:b.  No result (batch A,
+  PA3: was a function). }
+procedure lir_utils_$add_memory_home(
+    rtn: rtn_ptr_t;
+    lr: lr_ptr_t;
+    static: boolean); options(val_param); extern;
 
 { LIR_UTILS_$FLESH_OUT_NEW_LOAD_OR_STORE - 0x24D34C, 0x288 bytes; called
   from ra_utils.  Frame 8:al; 12:al; 16:al; 20:al; 24:l; 28:a; 32:al;
@@ -2061,12 +2083,15 @@ function lir_utils_$flesh_out_new_load_or_store(
     p12: integer32;
     p13: univ_ptr): integer32; options(val_param); extern;
 
-{ LIR_UTILS_$GET_NEXT_ASYNC_EXPOSED_LR - 0x24D65A, 0xF4 bytes; called from
-  df_utils mmt.  Frame 8:l; 12:al; 16:a.  Result: D0 (callers: D0l3). }
+{ LIR_UTILS_$GET_NEXT_ASYNC_EXPOSED_LR - the next complex id after lr's
+  (all from 0 when lr is nil) live into an asynchronous path's block,
+  the start block's edges walked through edge (nil to begin); 0 at the
+  end.  0x24D65A, 0xF4 bytes; called from df_utils mmt.  Frame 8:l;
+  12:al; 16:a.  Result: D0. }
 function lir_utils_$get_next_async_exposed_lr(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: univ_ptr): integer32; options(val_param); extern;
+    rtn: rtn_ptr_t;
+    lr: lr_ptr_t;
+    var edge: univ fg_edge_ptr_t): integer32; options(val_param); extern;
 
 { LIR_UTILS_$FIX_STORE_THROUGH_LRS - 0x24D808, 0xC8E bytes; called from
   fga.  Frame 8:al. }
@@ -2077,7 +2102,7 @@ procedure lir_utils_$fix_store_through_lrs(
   sched_utils tr_utils trans utils.  Frame 8:al.  Result: read (callers:
   A014 D0w1). }
 function lir_utils_$find_mate_operand(
-    p1: univ_ptr): univ_ptr; options(val_param); extern;
+    op: opnd_ptr_t): opnd_ptr_t; options(val_param); extern;
 
 { lst.pas (cc.a88k). }
 
@@ -2429,8 +2454,8 @@ function sym_$allocation_size_in_bytes(
 { SYM_$ALLOCATE_STATIC_VARIABLE - 0x27B2C6, 0xE4 bytes; called from
   lir_utils rewrite.  Frame 8:a; 12:al. }
 procedure sym_$allocate_static_variable(
-    p1: univ_ptr;
-    p2: univ_ptr); options(val_param); extern;
+    sym: univ_ptr;
+    size: integer32); options(val_param); extern;
 
 { SYM_$REFORMAT_LITERAL - 0x27B47A, 0x1F2 bytes; called from asm.  Frame
   8:al.  Result: A0 (callers: A02). }

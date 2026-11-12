@@ -605,7 +605,7 @@ begin
         zero := (lr2^.f2.reg = 31) or (lr2^.f2.reg = 30)
       else
         zero := false;
-      if lr2^.f2.b3_7 and not lr2^.f2.b3_5 then
+      if lr2^.f2.physical and not lr2^.f2.b3_5 then
         physical := not zero
       else
         physical := false;
