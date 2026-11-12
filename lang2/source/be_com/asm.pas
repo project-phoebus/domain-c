@@ -1252,7 +1252,8 @@ end;
     is branch-like (its delay slot).  The walk reads nil^ when no
     block has code.
   - Pass 1 by block (+17 bit 1 skips one); each instruction's shadow
-    (a branch-like one squashing on bit 6 of its mode) noted for the
+    (a branch-like one whose delay slot runs on the transfer:
+    bit 6 of its mode; docs/prism-isa.md, the squash correction) noted for the
     next; LIMIT gives rtn's +210 and the node's +280 (the low words'
     difference from the ENTRY) and is excised; entries, PMOVEs, labels
     and join birthpoints take the location and no state; a transfer's

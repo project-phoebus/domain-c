@@ -505,7 +505,7 @@ end;
   the mask 0x210000 (`btst D1,D3'); the register operands the kinds
   1..6 (the mask 126); read is the operand's +1 bit 4, write and
   modify the mask 12.  A call (opcode 129) with +3 bit 7 (its delay
-  slot squashed on sequential flow) is taken after the next
+  slot run on sequential flow; docs/prism-isa.md) is taken after the next
   instruction.  The final loop's bounds are the vectors' live range
   and slot words (`dbf' over longword counts). }
 

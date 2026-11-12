@@ -1046,10 +1046,12 @@ type
       2: (width: 0..255);
       3: (offset: -128..127);
       4: (b3_7: boolean;                { .7: modify's (the squash
-                                          mode's) high bit; of a label
+                                          mode's) high bit: the delay
+                                          slot runs on the fall-through; of a label
                                           instruction, its block needs
                                           a label (asm) }
-          b3_6: boolean;                { .6: modify's low bit }
+          b3_6: boolean;                { .6: modify's low bit: the
+                                          slot runs on the transfer }
           b3_5_0: 0..63);
   end;
 

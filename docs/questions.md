@@ -2636,3 +2636,6 @@ revisited.
    bit 6"), dbg_life.pas ("its delay slot squashed on sequential
    flow"), dmp.pas and backend.ins.pas use the squash reading.  Should
    their owners reword them (no code change)?
+   **Lead (2026-11-12):** done: the comments in asm.pas, dbg_life.pas,
+   dmp.pas and backend.ins.pas now say when the delay slot runs (no code
+   change).

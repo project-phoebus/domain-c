@@ -178,8 +178,9 @@ type
           volatile_location: boolean;   { .4 }
           do_not_delete: boolean;       { .3 }
           b2_2_0: 0..7;
-          s_seq: boolean;               { +3 .7 }
-          s_xfer: boolean;              { .6 }
+          s_seq: boolean;               { +3 .7: the delay slot runs on
+                                          sequential flow }
+          s_xfer: boolean;              { .6: it runs on the transfer }
           possible_nonlocal_return: boolean;     { .5 }
           no_return: boolean;           { .4 }
           final_call: boolean;          { .3 }
