@@ -574,8 +574,9 @@ var
                                           instructions }
   oli_bb: bb_ptr_t;                     { +0x2E64: the loop (its one
                                           block) }
-  oli_red_cls: integer;                 { +0x2E6C: the class of the
-                                          reduction being examined }
+  oli_red_cls: integer := 7;            { +0x2E6C: the class of the
+                                          reduction being examined
+                                          (.rwdi: initially 7) }
   oli_mem_dep: integer;                 { +0x2E6E: what the memory
                                           references' analysis found }
   oli_dep: integer;                     { +0x2E70: analyze_dependencies'

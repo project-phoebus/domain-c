@@ -317,8 +317,9 @@ var
     0, 0, 0, 0, 0, 0, 0, 29692, 0, 28932,
     29184, 29188, 29192, 29168, 29172, 0, 0, 0, 0, 0,
     0];
-  { +0x3B8: the FPA instructions' names (prtads, dbcod, wr_instr); two
-    entries .rwdi leaves unset (84, 103) are blanks here. }
+  { +0x3B8: the FPA instructions' names (prtads, dbcod, wr_instr); 84,
+    105 and 146 repeat the name before them (.rwdi repeat records, read
+    as unset at first: docs/questions.md 238). }
   fpa_ops: array [0..160] of outbin_fpa_name_t := [
     'FSLV  ', 'FSLA  ', 'FSLC  ', 'FDLA  ', 'FDLC  ', 'CLA   ', 'CLC   ', 'DCLA  ',
     'DCLC  ', 'FSAV  ', 'FSAA  ', 'FSAC  ', 'FDAA  ', 'FDAC  ', 'CAA   ', 'CAC   ',
@@ -330,15 +331,15 @@ var
     'FSIDC ', 'FDIDA ', 'FDIDC ', 'CIDA  ', 'CIDC  ', 'DCIDA ', 'DCIDC ', 'FSSTA ',
     'FDSTA ', 'CSTA  ', 'DCSTA ', 'FSSTX ', 'FDSTX ', 'CSTX  ', 'DCSTX ', 'FSSTWX',
     'FDSTWX', 'FSSTLX', 'FDSTLX', 'FSLWV ', 'FSLLV ', 'FDLWV ', 'FDLLV ', 'FDCNV ',
-    'FSCNV ', 'CCNV  ', 'DCCNV ', 'FNEG  ', '      ', 'FSCVX ', 'FSCAX ', 'FSCCX ',
+    'FSCNV ', 'CCNV  ', 'DCCNV ', 'FNEG  ', 'FNEG  ', 'FSCVX ', 'FSCAX ', 'FSCCX ',
     'FDCAX ', 'FDCCX ', 'FCCAX ', 'FCCCX ', 'FDCCAX', 'FDCCCX', 'E$21V ', 'E$22V ',
     'E$22A ', 'E$22C ', 'E$61V ', 'E$62V ', 'E$62A ', 'E$62C ', 'E$66A ', 'E$66C ',
-    'FABS  ', '      ', 'FSSIN ', 'FDSIN ', 'FSCOS ', 'FDCOS ', 'FSTAN ', 'FDTAN ',
+    'FABS  ', 'FABS  ', 'FSSIN ', 'FDSIN ', 'FSCOS ', 'FDCOS ', 'FSTAN ', 'FDTAN ',
     'FSLOG ', 'FDLOG ', 'FSLG10', 'FDLG10', 'FSEXP ', 'FDEXP ', 'FSATAN', 'FDATAN',
     'FSAT2V', 'FSAT2A', 'FSAT2C', 'FDAT2A', 'FDAT2C', 'FSSQRT', 'FDSQRT', 'FSTRNC',
     'FDTRNC', 'FSNINT', 'FDNINT', 'SMAXV ', 'SMAXA ', 'SMAXC ', 'DMAXA ', 'DMAXC ',
     'SMINV ', 'SMINA ', 'SMINC ', 'DMINA ', 'DMINC ', 'CCONJ ', 'DCCONJ', 'CSWAP ',
-    'DCSWAP', 'TSTX  ', '      ', 'FBUSY ', 'FEXIT ', 'INTACC', 'IMULT ', 'IDIV  ',
+    'DCSWAP', 'TSTX  ', 'TSTX  ', 'FBUSY ', 'FEXIT ', 'INTACC', 'IMULT ', 'IDIV  ',
     'IIDIV ', 'FSLPIA', 'FDLPIA', 'SLUV  ', 'DLUV  ', 'FSFAC ', 'FDFAC ', 'SUTLX ',
     'DUTLX '];
   { +0x780: their operation words (assemble). }
