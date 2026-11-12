@@ -551,3 +551,7 @@ lang/lang/source/fpa.pas	s/address\((rl|dp)contk\((-1|0)\.0\), 0, k\)/address(sm
 lang/lang/source/fpa.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
 # gap 8 (banshee, translator HH): in on the cell kinds' constant sets (word elements; the comparisons, as cg_top's rule)
 lang/lang/source/banshee.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
+# gap 8 (opt_inline): in on constant sets with word elements (the comparisons)
+lang/lang/source/opt_inline.pas	s/r\^\.kind in \[107, 108, 159, 167, 171, 173, 174\]/((r^.kind = 107) or (r^.kind = 108) or (r^.kind = 159) or (r^.kind = 167) or (r^.kind = 171) or (r^.kind = 173) or (r^.kind = 174)) { gap 8 }/
+# gap 24 (opt_inline): calls as right operands of `and' and `or' (compared, for the check)
+lang/lang/source/opt_inline.pas	s/\(b\^\.kind = 108\) and assert_routine_returns_void\(b\) then/(b^.kind = 108) and (assert_routine_returns_void(b) = true) then { gap 24 }/
