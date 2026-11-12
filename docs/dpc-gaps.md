@@ -28,11 +28,16 @@ when this tree is merged).
   image builds an 18-byte trampoline in the parent's frame, sent to
   domain-pascal), whose rules are marked "[still needed with dpc
   78f475b]".
+- **Gaps 17 (string constant to a varying string), 18 (string constant
+  to a varying parameter), 22 (`ord' of a boolean), 33 (a function
+  returning a 4-byte array) and 34 (string constants to short char
+  arrays): fixed in 3e7b09c and ca0dd28.**  Their rules removed, but
+  for cg_call's gap 22 rule: without it the routine meets gap 28.
 - Gap 32 is queued in domain-pascal; `while true do' is refused on
   purpose (the image cannot tell it from `repeat ... until false'):
   write such loops with a label.
 - All compile best effort (a warning; `--strict' still refuses).  Their
-  rewrites are gone from tools/cc_gap_rewrites.txt (270 rules removed in all);
+  rewrites are gone from tools/cc_gap_rewrites.txt (279 rules removed in all);
   the full gate is clean without them.
 - Gaps 4 (write/writeln) and 7 (real arithmetic) are not being worked
   on in dpc for now (the domain-pascal owner's choice).

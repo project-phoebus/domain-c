@@ -223,14 +223,14 @@ begin
   fg_utils_$drop_old_join_birthpoints(rtn);
   lr := rtn^.lrs;
   while lr <> nil do begin
-    if lr^.sym <> nil then begin
-      sym := lr^.sym;
+    if lr^.memory_home <> nil then begin
+      sym := lr^.memory_home;
       if sym^.kind = 109 then
         flags := sym^.flags32
       else
         flags := sym^.flags24;
       if (flags & 16#2000) <> 0 then
-        lr^.sym := nil;
+        lr^.memory_home := nil;
     end;
     lr := lr^.next;
   end;
