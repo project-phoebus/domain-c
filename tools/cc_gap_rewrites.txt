@@ -537,3 +537,10 @@ lang/lang/source/final.pas	s{\((\w+(\((?:[^()]++|(?2))*\))) (=|<>) ([a-z]\w*)\)}
 lang/lang/source/final.pas	s/^(\s*)24, 28:$/${1}1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 25, 26, 34, 35, 36, 37, 38, 24, 28: { gap 2 }/
 # gap 2 (final): deltest's case of 8 labels over 22 (the otherwise's ops added, for the check)
 lang/lang/source/final.pas	s/^(\s*)107, 108, 109, 119, 123:$/${1}105, 106, 110, 111, 112, 113, 114, 115, 116, 117, 118, 120, 121, 122: ; { gap 2 }\n${1}107, 108, 109, 119, 123:/
+# gap 7 (final): floatop's real constant, trunc and real compare (the longwords used, for the check)
+lang/lang/source/final.pas	s/^(\s*)if \(n\^\.real_value = 0\.0\) or$/$1if (n^.bits[1] = 0) or { gap 7 }/
+lang/lang/source/final.pas	s/^(\s*)iv := trunc\(v\.d\);$/$1iv := v.l[1]; { gap 7 }/
+lang/lang/source/final.pas	s/^(\s*)if iv <> v\.d then$/$1if iv <> v.l[1] then { gap 7 }/
+lang/lang/source/final.pas	s/^(\s*)v\.d := n\^\.real_value;$/$1v.l[1] := n^.bits[1]; v.l[2] := n^.bits[2]; { gap 7 }/
+# gap 31 (final): an 8-byte set expression compared with [] (the low longword masked, for the check)
+lang/lang/source/final.pas	s/\(v\.s \* \[0\.\.28\] = \[\]\)/((v.l[2] \& 16#1FFFFFFF) = 0) { gap 31 }/

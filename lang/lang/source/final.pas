@@ -12,11 +12,14 @@
   testcc; the same address: sameaddr) and edit them (detach, makejump,
   makecbr, moverefcell, movejump, reversecond, label_merge).
 
-  TODO(pascal) final.pas is not finished: 119 of its 120 routines are
-  translated.  Not yet translated (cc.m68k address, bytes):
-    0x10FB84 0x3D4  floatop
-  It is declared extern before peepholer (peepholer_ops calls it) until
-  it is written.
+  peepholer_ops (nested in peepholer) drives the optimizations by the
+  cells' kinds: opttest (tests and compares removed where deltest
+  finds the codes already set on every path), optmove, opta (merged
+  adds and subtracts, predecrement and postincrement, redundant leas
+  and moveas), final_$try_reducing_literal and
+  final_$collapsed_index_calc (shorter immediates, folded index
+  computations), floatop (68881 constants, singles, integers) and its
+  own try_ routines.
 
   Image addresses (DOMAIN C 6.9; cc.m68k only: cc.a88k has no final):
     cc.m68k   cc.a88k
@@ -147,12 +150,12 @@
     bits, +0x88 the conditions' codes, +0xA8 and +0x250 brimply's and
     f_brimply's answers, +0x230 and +0x298 the complements, +0x3A0 and
     +0x3B0..+0x6AC try_reducing_fabs_op's op and patterns, +0x60..+0x87
-    final_$try_reducing_literal's; +0, +36 and +42 deltest's test);
-    +12 and +0x84 have no user found; +0x2A4..+0x39F are used only by
-    routines not yet translated (+0x2E8: the 68881's constant ROM, 16 doubles
-    each after its offset word).  Absolute: cargs's options
-    (+0x280..+0x288), opinfo's tables (0x2CF4D8, 0x2CF5EC, 0x2CFDD8,
-    0x2D01CE), cg_null_ads (0x356600), il_180.
+    final_$try_reducing_literal's, +0x2A8, +0x2B8 and +0x2E8 (the
+    68881's ROM constants) floatop's; +0, +36 and +42 deltest's
+    test); +12, +0x84, +0x2C8 and +0x2D8 have no user found.
+    Absolute: cargs's options (+0x280..+0x288), opinfo's tables
+    (0x2CF4D8, 0x2CF5EC, 0x2CFDD8, 0x2D01CE), cg_null_ads (0x356600),
+    il_180.
 
   The code cells are read through codegen.ins.pas's codegen_$cell_t:
   the kind (+8), the operands' descriptors (ads1 +24, ads2 +36: f1 the
@@ -219,6 +222,24 @@ type
 
   { The condition codes (0..5: opinfo_cc's columns) as a word. }
   fn_ccs_t = set of 0..15;
+
+  { A real constant as floatop reads it: the double, its bits as a set
+    (element 0 the lowest), its longwords. }
+  fn_dbl_t = record
+    case integer of
+      1: (d: double);
+      2: (s: set of 0..63);
+      3: (l: array [1..2] of integer32);
+  end;
+
+  { One of the 68881's ROM constants (10 bytes, indexed by `10 * i'):
+    its offset in the ROM (fmovecr's operand) and the double's
+    longwords. }
+  fn_cr_t = record
+    tag: integer;                       { +0 }
+    hi: integer32;                      { +2 }
+    lo: integer32;                      { +6 }
+  end;
 
   { An immediate's value as final_$try_reducing_literal reads its
     parts: the longword, its words, its bytes. }
@@ -339,6 +360,39 @@ var
                                           (ops less 436) }
   fn_fbr_complement: array [436..441] of integer := [
     437, 436, 439, 438, 441, 440];      { +0x298 }
+
+  { +0x2A8 and +0x2B8: the load (225..229) floatop makes of an FP
+    operation on memory (ops 271..275, 247..251) when it exchanges it
+    with the move before it (`(138,A1)' and `(202,A1)', A1 A5 plus twice
+    the op).  The words +0x2C8 (1, 2, 4, .., 128) and +0x2D8 (358..363)
+    after them have no user found. }
+  fn_fop_a: array [271..275] of integer := [225, 226, 227, 228, 229];
+  fn_fop_b: array [247..251] of integer := [225, 226, 227, 228, 229];
+
+  { +0x2E8: the 68881's ROM constants floatop looks a move's double up
+    in (`(736,A1)', `(740,A1)', the offset at `(734,A1)', A1 A5 plus 10
+    times the index from 1): pi, log10(2), e, log2(e), log10(e), 0.0,
+    ln(2), ln(10), 1.0, 10.0, 100.0, 1e4 (written 0.0 in the image),
+    1e8, 1e16, 1e32, 1e64, 1e128, 1e256. }
+  fn_fmovecr: array [1..18] of fn_cr_t := [
+    [tag := 16#00, hi := 16#400921FB, lo := 16#54442D18],
+    [tag := 16#0B, hi := 16#3FD34413, lo := 16#509F79FF],
+    [tag := 16#0C, hi := 16#4005BF0A, lo := 16#8B145769],
+    [tag := 16#0D, hi := 16#3FF71547, lo := 16#652B82FE],
+    [tag := 16#0E, hi := 16#3FDBCB7B, lo := 16#1526E50E],
+    [tag := 16#0F, hi := 0, lo := 0],
+    [tag := 16#30, hi := 16#3FE62E42, lo := 16#FEFA39EF],
+    [tag := 16#31, hi := 16#40026BB1, lo := 16#BBB55516],
+    [tag := 16#32, hi := 16#3FF00000, lo := 0],
+    [tag := 16#33, hi := 16#40240000, lo := 0],
+    [tag := 16#34, hi := 16#40590000, lo := 0],
+    [tag := 16#35, hi := 0, lo := 0],
+    [tag := 16#36, hi := 16#4197D784, lo := 0],
+    [tag := 16#37, hi := 16#4341C379, lo := 16#37E08000],
+    [tag := 16#38, hi := 16#4693B8B5, lo := 16#B5056E17],
+    [tag := 16#39, hi := 16#4D384F03, lo := 16#E93FF9F5],
+    [tag := 16#3A, hi := 16#5A827748, lo := 16#F9301D32],
+    [tag := 16#3B, hi := 16#75154FDD, lo := 16#7F73BF3C]];
 
   { +0x3A0: the op a matched fabs pattern's operation (310..315) takes
     on the test's cell (try_reducing_fabs_op: `move.w (308,A1)' with A1
@@ -4942,6 +4996,145 @@ begin
   opta := r;
 end;
 
+{ floatop - an FP instruction c simplified: an FP compare (kind 40, ops
+  304..309) repeating the one before it removed; under -CPU 5700 an
+  operation on memory (ops 247..251, 271..275) after a move between FP
+  registers (kind 41, op 224) into its register: the two exchanged (the
+  move becomes a load of the operand, op by fn_fop_b or fn_fop_a, and
+  the operation one between registers, op 246 or 270, on the move's
+  source); then for an immediate real (kinds 88, 89) source of a move
+  or operation (kinds 40, 37): under -CPU 5700 without MATHLIB a move of
+  one of the 68881's ROM constants made an fmovecr (kind 48, op 237,
+  the ROM offset; fn_fmovecr); not under -CPU FPX: a double that a
+  single holds exactly (0.0, or its low 29 bits clear and the
+  exponent as read in range) made a single (rlcontk, f6 4, 4 bytes
+  shorter, op - 1); an integral value (trunc, under a cleanup handler
+  that gives up on a floating-point fault) made an integer immediate
+  (smcontk; op - 1, - 2 for a double; f6 2, or 1 and 2 bytes shorter
+  for 16 bits; a single's only when it is 16 bits).  The cell after c.
+
+  0x10FB84, 0x3D4 bytes, no A5 load: the answer at -140; the real at
+  -104 (its 29 low bits tested by `and.l' with an 8-byte constant at
+  0x10FF7C, a set [0..28]); the cleanup record at -80, the status at
+  -108; the exponent `(high word and 0x7FFF) - 1023' in D6 (the high
+  longword's upper 16 bits, the sign and exponent of a 68881 extended,
+  not a double's), then trunc's value; the FPP's 0x0074 0xFF34 (a
+  compare with 0.0), 0x0074 0x00D0 (trunc), 0x00C4 0x00B4 (the integer
+  compared with the real); the op sets at 0x10FF58 (271..275) and
+  0x10FF84 (247..251); the MATHLIB test `and.w #0x3FFC' of +0x284 and
+  #0x600.
+
+  Not known from the original: how it read the real's bits (a
+  variant record here). }
+
+function floatop(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+label
+  9;
+var
+  r: codegen_$cell_ptr_t;
+  p: codegen_$cell_ptr_t;
+  n: il_$node_ptr_t;
+  k: integer;
+  op1: integer;
+  op2: integer;
+  save: codegen_$ads_t;
+  v: fn_dbl_t;
+  e: integer32;
+  iv: integer32;
+  i: integer;
+  crec: pfm_$cleanup_rec;
+  status: status_$t;
+begin
+  r := nxtlcc(c);
+  p := prvlcc(c);
+  if (c^.kind = m68881_src_ext_instyp) and (c^.op in [304..309]) then
+    if final_$redundant_compare(c) then begin
+      detach(c);
+      goto 9;
+    end;
+  if (c^.kind = m68881_src_ext_instyp) and (c^.ads1.f1 <> 3) and
+     ((c^.op in [271..275]) or (c^.op in [247..251])) and
+     (p^.kind = m68881_reg_reg_instyp) and (p^.op = 224) and
+     (p^.ads2.f2 = c^.ads2.f2) and (4 in cargs_$options.cpu) then begin
+    k := p^.kind;
+    save := p^.ads1;
+    if c^.op in [247..251] then begin
+      op2 := 246;
+      op1 := fn_fop_b[c^.op];
+    end
+    else begin
+      op2 := 270;
+      op1 := fn_fop_a[c^.op];
+    end;
+    p^.kind := c^.kind;
+    p^.ads1 := c^.ads1;
+    p^.op := op1;
+    c^.kind := k;
+    c^.ads1 := save;
+    c^.op := op2;
+  end;
+  if (c^.kind <> m68881_src_ext_instyp) and (c^.kind <> tern_src_ext_instyp) then
+    goto 9;
+  if c^.ads1.f1 <> 3 then
+    goto 9;
+  n := il_$node_ptr_t(c^.ads1.x);
+  if (n^.kind <> 88) and (n^.kind <> 89) then
+    goto 9;
+  v.d := n^.real_value;
+  if (c^.op in [224..229]) and (4 in cargs_$options.cpu) and
+     not (9 in cargs_$options.cpu) and not (10 in cargs_$options.cpu) then
+    for i := 1 to 18 do
+      if (n^.bits[1] = fn_fmovecr[i].hi) and (n^.bits[2] = fn_fmovecr[i].lo) then begin
+        c^.kind := m68881_i_instyp;
+        c^.op := 237;
+        c^.size := 4;
+        c^.ads1.x := integer32(smcontk(81, fn_fmovecr[i].tag));
+        goto 9;
+      end;
+  if 5 in cargs_$options.cpu then
+    goto 9;
+  e := (rshft(n^.bits[1], 16) & 16#7FFF) - 1023;
+  if n^.kind = 89 then
+    if (n^.real_value = 0.0) or
+       ((n^.kind = 89) and (v.s * [0..28] = []) and (e <= 128) and
+        (e >= -127)) then begin
+      c^.ads1.x := integer32(rlcontk(n^.real_value));
+      c^.ads1.f6 := 4;
+      c^.size := c^.size - 4;
+      c^.op := c^.op - 1;
+    end;
+  status := pfm_$cleanup(crec);
+  if status.all <> pfm_$cleanup_set then
+    if (status.subsys = 5) or (status.subsys = 0) then begin
+      pfm_$enable;
+      goto 9;
+    end
+    else
+      pfm_$signal(status);
+  iv := trunc(v.d);
+  pfm_$rls_cleanup(crec, status);
+  if iv <> v.d then
+    goto 9;
+  if c^.ads1.f6 = 4 then
+    if not final_$in_15bit_range(iv) then
+      goto 9;
+  c^.ads1.x := integer32(smcontk(81, iv));
+  if c^.ads1.f6 = 5 then begin
+    c^.size := c^.size - 4;
+    c^.op := c^.op - 1;
+  end;
+  c^.op := c^.op - 1;
+  c^.ads1.f6 := 2;
+  if final_$in_15bit_range(iv) then begin
+    c^.size := c^.size - 2;
+    c^.op := c^.op - 1;
+    c^.ads1.f6 := 1;
+  end;
+9:
+  floatop := r;
+end;
+
 { final_$logicize_opts - scc c (ops 124..139) followed by two
   instructions of ops 58 and 8 (not labels, lines or block marks)
   replaced by one instruction (kind 8, op 41) of the immediate 1 (f6 2)
@@ -5257,13 +5450,6 @@ begin
 9:
   final_$unlink_opts := nx;
 end;
-
-{ TODO(pascal) floatop (0x10FB84) is not translated yet: declared here
-  (its heading read off its frame and peepholer_ops's calls) until it
-  is written. }
-
-function floatop(
-    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); extern;
 
 { DOBANSHEEFPX - the FPX instructions of a routine's code cells, from
   first to the section's head, scheduled (banshee.pas 0x0EE84C, not
