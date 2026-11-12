@@ -6,6 +6,73 @@
   Image addresses (DOMAIN C 6.9; cc.a88k only):
     cc.m68k   cc.a88k
     --------  0x27C18C  utils_ins_$operands_instruction (utils.ins.pas)
+    --------  0x27C1AE  tr_utils_$begin_compilation
+    --------  0x27C1F0  tr_utils_$init_for_routine
+    --------  0x27C1F2  tr_utils_$end_routine
+    --------  0x27C20E  tr_utils_$end_compilation
+    --------  0x27C210  index_operand
+    --------  0x27C24A  base_operand
+    --------  0x27C284  is_base_operand
+    --------  0x27C2D6  move_operand
+    --------  0x27C356  make_copy
+    --------  0x27C468  drop_operand_from_lts
+    --------  0x27C4B2  find_operand_of_kind
+    --------  0x27C51E  tr_utils_$relative_instr_position
+    --------  0x27C614  tr_utils_$guarantee_operand_order
+    --------  0x27C6F0  tr_utils_$mark_dependents
+    --------  0x27C930  tr_utils_$separate_partitions
+    --------  0x27CB98  maintain_complex_props
+    --------  0x27CC5E  tr_utils_$merge_lrs
+    --------  0x27CEF4  write_cc_or_delete_instr
+    --------  0x27CF9C  simple_ends_before_next_complex
+    --------  0x27D02C  copy$simple_dest
+    --------  0x27D2CA  copy$simple_complex
+    --------  0x27D540  copy$complex_complex
+    --------  0x27D5EE  tr_utils_$attempt_copy_elimination
+    --------  0x27D6BE  add_solution
+    --------  0x27D73C  just_join_bp
+    --------  0x27D778  bb_interval
+    --------  0x27D78A  find_complex_driving_ltss
+    --------  0x27DA16  validate (in solutions_dont_interfere)
+    --------  0x27DA9C  solutions_dont_interfere
+    --------  0x27DBCA  print_solutions_for_debugging
+    --------  0x27DBCC  convert_add_to_move
+    --------  0x27DC9C  convert_move_to_add
+    --------  0x27DD68  adjustable_creation_point
+    --------  0x27E130  can_preserve_operation
+    --------  0x27E2D2  preserve_operation
+    --------  0x27E424  is_well_understood_intend_input_to_modify
+    --------  0x27E4F0  tr_utils_$try_twiddling_disp
+    --------  0x27E91C  transform_to_autoindex
+    --------  0x27EA74  mem_ref_positioned_for_postincrement
+    --------  0x27ECF4  mem_ref_positioned_for_preincrement
+    --------  0x27EEA0  can_adjust_creation_point
+    --------  0x27EFC2  autoindex_within_bb
+    --------  0x27F5E0  autoincrement_solutions_acceptable
+    --------  0x27F8A4  apply_autoincrement_solutions
+    --------  0x27FB64  ok_to_add_auto
+    --------  0x27FB7A  validate_lts_for_auto
+    --------  0x27FBBA  try_autoincrement
+    --------  0x27FEA8  could_adjust_hammock_contents
+    --------  0x27FF36  adjust_hammock_contents
+    --------  0x27FFFE  move_add_to_new_bb
+    --------  0x2803E4  move_add_to_hammock_head
+    --------  0x280498  move_add_to_hammock_tail
+    --------  0x280610  tr_utils_$attempt_autoincrement
+    --------  0x280774  find_suitable_driving_lts_for_tst
+    --------  0x280856  safe_to_move_cc
+    --------  0x280974  high_bits_safe
+    --------  0x2809F0  test_lts_for_n_bit_unconsumed
+    --------  0x280A6A  n_bit_unconsumed
+    --------  0x280AD4  find_driver_for_tst
+    --------  0x280CF8  excise_tst_instr
+    --------  0x280D86  br_consuming_tst_ccs_involves_v_bit
+    --------  0x280E50  tst_elim_within_bb
+    --------  0x280F28  ok_to_add_tst
+    --------  0x280FC8  validate_lts_for_tst
+    --------  0x2810C8  build_tst_instr
+    --------  0x281440  move_cc_creations
+    --------  0x28163E  tr_utils_$attempt_test_elimination
     A5 0x492F80: the module's data (0x24 bytes): the complex lifetime
     segments' heap (20 bytes at +0, "TR_UTILS find complex heap"), the
     routine being transformed (+20, set by the attempt_ entries), +24,
@@ -45,6 +112,17 @@ type
       b: univ_ptr;
       bb: bb_ptr_t;
       end;
+  end;
+
+  { What test elimination passes its validators (arg): the driving
+    segment's live range, the condition codes' live range, the test,
+    whether a branch reading them involves the V bit. }
+  tr_tst_arg_ptr_t = ^tr_tst_arg_t;
+  tr_tst_arg_t = record
+    lr0: lr_ptr_t;                      { +0 }
+    lr: lr_ptr_t;                       { +4 }
+    tst: instr_ptr_t;                   { +8 }
+    v_bit: boolean;                     { +12 }
   end;
 
   { A validator find_complex_driving_ltss calls (`jsr (A0)'): 0 no, 1
@@ -3657,4 +3735,860 @@ begin
     discard(move_add_to_hammock_head(add, disp, true));
   end;
   tr_utils_$attempt_autoincrement := false;
+end;
+
+{ find_suitable_driving_lts_for_tst - the segment whose definition can
+  set the condition codes a test of lts would: lts (its even half for a
+  floating pair, kinds 3, 6, 14: the mate operand's segment when lts is
+  the odd one, nil without a mate), then back through copies (+0 bit
+  6: their operand 1's segment; for a pair the copy's operand 3 must be
+  the mate's def) while the definition writes and its opcode can set
+  them (+14 bit 0; for a pair the mate's definition writes too): the
+  last segment that qualified (nil for none).
+
+  0x280774, 0xE2 bytes, no A5. }
+
+function find_suitable_driving_lts_for_tst(
+    lts: lts_ptr_t): lts_ptr_t; options(val_param); internal;
+var
+  pair: boolean;
+  m: opnd_ptr_t;
+  last: lts_ptr_t;
+  i: instr_ptr_t;
+begin
+  if lts^.def^.h.kind in [operand$fp_reg_pair, operand$fp_reg_pair_physical,
+                          operand$fp_reg_pair_like] then begin
+    pair := true;
+    if rrp$fp_reg_odd_only in lts^.rrp then begin
+      m := lir_utils_$find_mate_operand(lts^.def);
+      if m = nil then begin
+        find_suitable_driving_lts_for_tst := nil;
+        return;
+      end;
+      lts := m^.lts;
+    end;
+  end
+  else
+    pair := false;
+  last := nil;
+  repeat
+    i := utils_ins_$operands_instruction(lts^.def);
+    if ((opnd_bytes_ptr_t(lts^.def)^.rrp & 12) = 0)
+       or not instruction_attributes[i^.opc].b14_0 then begin
+      find_suitable_driving_lts_for_tst := last;
+      return;
+    end;
+    if pair then begin
+      m := lir_utils_$find_mate_operand(lts^.def);
+      if (opnd_bytes_ptr_t(m)^.rrp & 12) = 0 then begin
+        find_suitable_driving_lts_for_tst := last;
+        return;
+      end;
+    end;
+    last := lts;
+    if not i^.h.b0_6 then begin
+      find_suitable_driving_lts_for_tst := lts;
+      return;
+    end;
+    lts := i^.opnds[1].lts;
+    if pair then begin
+      m := lir_utils_$find_mate_operand(lts^.def);
+      if m <> i^.opnds[3].lts^.def then begin
+        find_suitable_driving_lts_for_tst := last;
+        return;
+      end;
+    end;
+  until false;
+end;
+
+{ safe_to_move_cc - whether instr can set lr's condition codes that lts
+  (its readers, in instr's block) needs: yes when lts is elsewhere or
+  instr defines it or its last reader is not after instr; else no when
+  an instruction between them that depends on instr has a trailing
+  condition code operand of lr; otherwise the dependents separated
+  (tr_utils_$separate_partitions) and yes.
+
+  0x280856, 0x11E bytes, no A5 (its callers'): the trailing operands
+  from the last down while their kind is 7 or 8. }
+
+function safe_to_move_cc(
+    lr: lr_ptr_t;
+    lts: lts_ptr_t;
+    instr: instr_ptr_t): boolean; options(val_param); internal;
+var
+  r: opnd_ptr_t;
+  last, p, stop, def: instr_ptr_t;
+  mark: integer32;
+  k: integer32;
+begin
+  if lts = nil then begin
+    safe_to_move_cc := true;
+    return;
+  end;
+  if lts^.bb <> instr^.bb then begin
+    safe_to_move_cc := true;
+    return;
+  end;
+  def := utils_ins_$operands_instruction(lts^.def);
+  if def = instr then begin
+    safe_to_move_cc := true;
+    return;
+  end;
+  tr_utils_$guarantee_operand_order(lts);
+  r := lts^.def;
+  while r^.link <> nil do
+    r := r^.link;
+  last := utils_ins_$operands_instruction(r);
+  if tr_utils_$relative_instr_position(instr, last) <= 0 then begin
+    safe_to_move_cc := true;
+    return;
+  end;
+  tr_rtn^.l180 := tr_rtn^.l180 + 1;
+  mark := tr_rtn^.l180;
+  tr_utils_$mark_dependents(instr, last, mark);
+  if last <> nil then
+    stop := last^.next
+  else
+    stop := nil;
+  p := instr^.next;
+  while p <> stop do begin
+    if p^.l16 = instr^.l16 then
+      for k := p^.h.nopnds downto 1 do begin
+        if not (p^.opnds[k].h.kind in [operand$ip_condition_codes,
+                                       operand$fp_condition_codes]) then
+          exit;
+        if p^.opnds[k].lts^.lr = lr then begin
+          safe_to_move_cc := false;
+          return;
+        end;
+      end;
+    p := p^.next;
+  end;
+  tr_utils_$separate_partitions(instr, last);
+  safe_to_move_cc := true;
+end;
+
+{ high_bits_safe - whether instr leaves the high nbits of its result as
+  a test of the narrower width needs: an EXTEND7 for 24, an EXTEND15
+  for 16, an EXTRACTU of an immediate position (operand 2) whose width
+  (+3) and position stay below 32 - nbits.
+
+  0x280974, 0x7C bytes (loads A5): both by address (the constants 16
+  and 24 after find_driver_for_tst, instr through a frame slot). }
+
+function high_bits_safe(
+    in nbits: integer32;
+    in instr: instr_ptr_t): boolean;
+begin
+  if (nbits = 24) and (instr^.opc = ord(opc$extend7)) then
+    high_bits_safe := true
+  else if (nbits = 16) and (instr^.opc = ord(opc$extend15)) then
+    high_bits_safe := true
+  else if (instr^.opc = ord(opc$extractu))
+          and (instr^.opnds[2].h.kind = operand$immediate)
+          and (instr^.h.width + instr^.opnds[2].value < 32 - nbits) then
+    high_bits_safe := true
+  else
+    high_bits_safe := false;
+end;
+
+{ test_lts_for_n_bit_unconsumed - whether every reader of lts (after its
+  def when that writes) is a branch that does not read the N bit (not
+  BGT, BLE, BGE, BLT, BNN, BN: `btst' in 0x30F00 after a range check).
+  0x2809F0, 0x7A bytes (loads A5): a callback of
+  utils_$apply_func_to_all_uses (its first argument not read). }
+
+function test_lts_for_n_bit_unconsumed(
+    unused: univ_ptr;
+    lts: lts_ptr_t): boolean; options(val_param);
+var
+  r: opnd_ptr_t;
+  i: instr_ptr_t;
+begin
+  if (lts^.rrp * [rrp$modify, rrp$write]) = [] then
+    r := lts^.def
+  else
+    r := lts^.def^.link;
+  while r <> nil do begin
+    i := utils_ins_$operands_instruction(r);
+    if (instruction_attributes[i^.opc].class <> class$branch)
+       or (i^.opc in [8..11, 16, 17]) then begin
+      test_lts_for_n_bit_unconsumed := false;
+      return;
+    end;
+    r := r^.link;
+  end;
+  test_lts_for_n_bit_unconsumed := true;
+end;
+
+{ n_bit_unconsumed - whether the integer condition codes instr sets (its
+  last operand, kind 7) are read without the N bit, here and, when
+  final, in every use (utils_$apply_func_to_all_uses with
+  test_lts_for_n_bit_unconsumed's address).
+
+  0x280A6A, 0x6A bytes, no A5 (its callers': +20). }
+
+function n_bit_unconsumed(
+    instr: instr_ptr_t): boolean; options(val_param); internal;
+var
+  o: opnd_ptr_t;
+  lts: lts_ptr_t;
+begin
+  o := addr(instr^.opnds[instr^.h.nopnds]);
+  if o^.h.kind <> operand$ip_condition_codes then begin
+    n_bit_unconsumed := false;
+    return;
+  end;
+  lts := o^.lts;
+  if not test_lts_for_n_bit_unconsumed(lts, lts) then begin
+    n_bit_unconsumed := false;
+    return;
+  end;
+  if not lts^.f2.b3_4 then begin
+    n_bit_unconsumed := true;
+    return;
+  end;
+  n_bit_unconsumed := utils_$apply_func_to_all_uses(tr_rtn,
+                        addr(test_lts_for_n_bit_unconsumed), lts);
+end;
+
+{ find_driver_for_tst - the instruction defining lts's suitable segment
+  (find_suitable_driving_lts_for_tst) that can set the condition codes
+  tst sets (a MOVE, WIDENW, WIDENB tests as TST, TSTW, TSTB): one that
+  sets them already (only when allow_set); one whose opcode sets them
+  (+14 bit 0, +19 bit 7 clear) as a TST does (+19 bits 2..0: 2, or a
+  load whose N bit is not read: n_bit_unconsumed), a TSTW (1, or the
+  high bits safe for 16) or a TSTB (0, or safe for 24); for another
+  test, such an opcode or COPYS / COPYD, of a floating pair for TSTD
+  (COPYD made MOVED) and otherwise for TSTS (COPYS made MOVES); in each
+  case safe_to_move_cc for the condition codes' live range and after.
+  Nil for none.
+
+  0x280AD4, 0x21C bytes, no A5: high_bits_safe given 16 and 24 by
+  address from after the routine. }
+
+function find_driver_for_tst(
+    tst: instr_ptr_t;
+    after: lts_ptr_t;
+    lts: lts_ptr_t;
+    allow_set: boolean): instr_ptr_t; options(val_param); internal;
+var
+  op: integer;
+  lr: lr_ptr_t;
+  driver: instr_ptr_t;
+  l: lts_ptr_t;
+  i, t: instr_ptr_t;
+  ok: boolean;
+  form: integer;
+begin
+  op := tst^.opc;
+  if op = ord(opc$move) then
+    op := ord(opc$tst)
+  else if op = ord(opc$widenw) then
+    op := ord(opc$tstw)
+  else if op = ord(opc$widenb) then
+    op := ord(opc$tstb);
+  lr := tst^.opnds[tst^.h.nopnds].lts^.lr;
+  driver := nil;
+  l := find_suitable_driving_lts_for_tst(lts);
+  if l = nil then begin
+    find_driver_for_tst := driver;
+    return;
+  end;
+  i := utils_ins_$operands_instruction(l^.def);
+  if i^.h.sets_cc or i^.h.b0_3 then begin
+    if not allow_set then begin
+      find_driver_for_tst := driver;
+      return;
+    end;
+    ok := safe_to_move_cc(lr, after, i);
+  end
+  else begin
+    form := instruction_attributes[i^.opc].w18;
+    if (op = ord(opc$tstb)) or (op = ord(opc$tst)) or (op = ord(opc$tstw))
+    then begin
+      if instruction_attributes[i^.opc].b14_0 and ((form & 16#80) = 0) then begin
+        if op = ord(opc$tst) then begin
+          if (form & 7) = 2 then
+            ok := true
+          else if (instruction_attributes[i^.opc].class = class$load)
+                  and n_bit_unconsumed(tst) then
+            ok := true
+          else begin
+            find_driver_for_tst := driver;
+            return;
+          end;
+        end
+        else if op = ord(opc$tstw) then begin
+          t := i;
+          ok := high_bits_safe(16, t) or ((form & 7) = 1);
+        end
+        else begin
+          t := i;
+          ok := high_bits_safe(24, t) or ((form & 7) = 0);
+        end;
+      end
+      else
+        ok := false;
+      if ok then
+        ok := safe_to_move_cc(lr, after, i);
+    end
+    else begin
+      ok := false;
+      if (instruction_attributes[i^.opc].b14_0 and ((form & 16#80) = 0))
+         or (i^.opc = ord(opc$copys)) or (i^.opc = ord(opc$copyd)) then begin
+        if l^.def^.h.kind = operand$fp_reg_pair then begin
+          if op = ord(opc$tstd) then
+            if safe_to_move_cc(lr, after, i) then begin
+              if i^.opc = ord(opc$copyd) then
+                utils_$set_instruction_opcode(i, ord(opc$moved));
+              driver := i;
+            end;
+        end
+        else if op = ord(opc$tsts) then
+          if safe_to_move_cc(lr, after, i) then begin
+            if i^.opc = ord(opc$copys) then
+              utils_$set_instruction_opcode(i, ord(opc$moves));
+            driver := i;
+          end;
+      end;
+    end;
+  end;
+  if ok then
+    driver := i;
+  find_driver_for_tst := driver;
+end;
+
+{ excise_tst_instr - a test whose condition codes another instruction
+  now sets: when one of its other operands writes (a copy), only its
+  condition code operand (the last) is emptied, the instruction a copy
+  again (+0 bit 6) setting none (+0 bits 4, 3 cleared); else excised.
+
+  0x280CF8, 0x8E bytes, no A5. }
+
+procedure excise_tst_instr(
+    instr: instr_ptr_t); options(val_param); internal;
+var
+  only_test: boolean;
+  k: integer32;
+begin
+  only_test := true;
+  for k := 1 to instr^.h.nopnds - 1 do
+    if (instr^.opnds[k].h.kind <> operand$none)
+       and ((opnd_bytes_ptr_t(addr(instr^.opnds[k]))^.rrp & 12) <> 0) then begin
+      only_test := false;
+      exit;
+    end;
+  if not only_test then begin
+    instr^.opnds[instr^.h.nopnds].h.kind := operand$none;
+    instr^.opnds[instr^.h.nopnds].h.num := 0;
+    instr^.h.b0_6 := true;
+    instr^.h.sets_cc := false;
+    instr^.h.b0_3 := false;
+  end
+  else
+    discard(utils_$excise_instruction_cleanly(instr, true));
+end;
+
+{ br_consuming_tst_ccs_involves_v_bit - whether a reader of instr's
+  condition codes (its last operand's segment) is final elsewhere, an
+  IPCCNOP whose own readers do, or a BGT or BLE; a BLT becomes BN and a
+  BGE BNN (without the V bit).  0x280D86, 0xCA bytes, no A5,
+  recursive. }
+
+function br_consuming_tst_ccs_involves_v_bit(
+    instr: instr_ptr_t): boolean; options(val_param); internal;
+var
+  r: opnd_ptr_t;
+  i: instr_ptr_t;
+begin
+  r := instr^.opnds[instr^.h.nopnds].lts^.def;
+  while r <> nil do begin
+    if r^.lts^.f2.b3_4 then begin
+      br_consuming_tst_ccs_involves_v_bit := true;
+      return;
+    end;
+    if r^.h.read then begin
+      i := utils_ins_$operands_instruction(r);
+      if i^.opc = ord(opc$ipccnop) then
+        if br_consuming_tst_ccs_involves_v_bit(i) then begin
+          br_consuming_tst_ccs_involves_v_bit := true;
+          return;
+        end;
+      if i^.opc = ord(opc$blt) then
+        utils_$set_instruction_opcode(i, ord(opc$bn))
+      else if i^.opc = ord(opc$bge) then
+        utils_$set_instruction_opcode(i, ord(opc$bnn))
+      else if (i^.opc = ord(opc$bgt)) or (i^.opc = ord(opc$ble))
+              or (i^.opc = ord(opc$blt)) or (i^.opc = ord(opc$bge)) then begin
+        br_consuming_tst_ccs_involves_v_bit := true;
+        return;
+      end;
+    end;
+    r := r^.link;
+  end;
+  br_consuming_tst_ccs_involves_v_bit := false;
+end;
+
+{ tst_elim_within_bb - tst (of a register or memory operand) eliminated
+  inside its block: the driver (find_driver_for_tst, after the condition
+  codes' next segment, not one that sets them already) takes tst's
+  condition code operand as its last and sets them (+0 bit 4 or 3 as
+  tst, no longer a copy); not when the driver is arithmetic that sets
+  the V bit (NEG, ADD, ADDC, SUB, SUBC, RSUB: the set [77, 79..83], 4
+  bytes from 95 down) and a branch on them involves it.  Then
+  excise_tst_instr.
+
+  0x280E50, 0xCC bytes, no A5. }
+
+procedure tst_elim_within_bb(
+    tst: instr_ptr_t); options(val_param); internal;
+var
+  d: instr_ptr_t;
+  n: integer32;
+begin
+  if not (tst^.opnds[1].h.kind
+          in [operand$ip_reg..operand$well_behaved_memory]) then
+    return;
+  d := find_driver_for_tst(tst, tst^.opnds[tst^.h.nopnds].lts^.next,
+                           tst^.opnds[1].lts, false);
+  if d = nil then
+    return;
+  if d^.opc in [77, 79..83] then
+    if br_consuming_tst_ccs_involves_v_bit(tst) then
+      return;
+  n := d^.h.nopnds;
+  d^.opnds[n].h.num := n;
+  move_operand(addr(tst^.opnds[tst^.h.nopnds]), addr(d^.opnds[n]));
+  if tst^.h.sets_cc then
+    d^.h.sets_cc := true
+  else
+    d^.h.b0_3 := true;
+  d^.h.b0_6 := false;
+  excise_tst_instr(tst);
+end;
+
+{ ok_to_add_tst - whether a test may be added at the end of bb: no when
+  bb's +17 bit 6 is set or its instruction before the last has +3 bit 3
+  or 5; yes when the condition codes' live range has no segment in bb or
+  one that is not read (no def, or no read in its rrp); no when that
+  segment is final.
+
+  0x280F28, 0xA0 bytes (loads A5): a validator (tr_valid_t). }
+
+function ok_to_add_tst(
+    lts: lts_ptr_t;
+    bb: bb_ptr_t;
+    arg: univ_ptr;
+    out pair: tr_pair_t): integer; options(val_param);
+var
+  p: instr_ptr_t;
+  l: lts_ptr_t;
+begin
+  if bb^.f.b17_6 then begin
+    ok_to_add_tst := 0;
+    return;
+  end;
+  if bb^.last <> nil then
+    if bb^.last^.prev <> nil then begin
+      p := bb^.last^.prev;
+      if ((p^.h.width & 8) <> 0) or ((p^.h.width & 16#20) <> 0) then begin
+        ok_to_add_tst := 0;
+        return;
+      end;
+    end;
+  l := tr_tst_arg_ptr_t(arg)^.lr^.ltss;
+  while l <> nil do begin
+    if l^.bb = bb then
+      exit;
+    l := l^.next;
+  end;
+  if l = nil then
+    ok_to_add_tst := 1
+  else if l^.f2.b3_4 then
+    ok_to_add_tst := 0
+  else if (l^.def = nil) or not (rrp$read in l^.rrp) then
+    ok_to_add_tst := 1
+  else
+    ok_to_add_tst := 0;
+end;
+
+{ validate_lts_for_tst - a segment (lts) found for test elimination in
+  bb: the condition codes' final (else last) segment in bb; its
+  definer, unless arithmetic setting V when a branch involves it, is the
+  solution when it is a test of the same opcode testing lts; else the
+  driver for the test there (find_driver_for_tst, allowed to set them
+  already; not V arithmetic when that matters) is, when it is the final
+  segment's definer or there is none final.  pair.a the instruction.
+
+  0x280FC8, 0x100 bytes (loads A5): a validator. }
+
+function validate_lts_for_tst(
+    lts: lts_ptr_t;
+    bb: bb_ptr_t;
+    arg: univ_ptr;
+    out pair: tr_pair_t): integer; options(val_param);
+var
+  a: tr_tst_arg_ptr_t;
+  l, prev: lts_ptr_t;
+  fin, i, d: instr_ptr_t;
+begin
+  a := arg;
+  pair.b := nil;
+  l := utils_$find_final_lts(a^.lr, bb);
+  if l = nil then
+    l := utils_$find_last_lts_in_bb(a^.lr, bb, prev);
+  fin := nil;
+  if l <> nil then begin
+    i := utils_ins_$operands_instruction(l^.def);
+    if a^.v_bit and (i^.opc in [77, 79..83]) then begin
+      validate_lts_for_tst := 0;
+      return;
+    end;
+    if (i^.opc = a^.tst^.opc) and (i^.opnds[1].lts = lts) then begin
+      pair.a := i;
+      validate_lts_for_tst := 1;
+      return;
+    end;
+    if l^.f2.b3_4 then
+      fin := i;
+  end;
+  d := find_driver_for_tst(a^.tst, l, lts, true);
+  if d = nil then begin
+    validate_lts_for_tst := 0;
+    return;
+  end;
+  if a^.v_bit and (d^.opc in [77, 79..83]) then begin
+    validate_lts_for_tst := 0;
+    return;
+  end;
+  if (fin = nil) or (fin = d) then begin
+    pair.a := d;
+    validate_lts_for_tst := 1;
+  end
+  else
+    validate_lts_for_tst := 0;
+end;
+
+{ build_tst_instr - a new test like tmpl (its opcode) before bb's last
+  instruction (resequenced), reading lts's live range's final segment in
+  bb (a new one exposed and chained after the live range's definition
+  there; it must have a number: bug_check) as operand 1 (rrp its low two
+  bits and read, lts's def's kind), for a floating pair also the mate's
+  (operand 3 for a copy, else 2; a pair without a mate is a bug); a copy
+  (MOVE, COPYD, COPYS) also writes a new segment of a new live range of
+  the kind (operand 2, and of its mate operand 4).  The test.
+
+  0x2810C8, 0x2FE bytes, no A5: the kinds 16456 (pairs), 135186
+  (integer registers), 8228 (floating) by `btst'. }
+
+function build_tst_instr(
+    tmpl: instr_ptr_t;
+    lts: lts_ptr_t;
+    bb: bb_ptr_t): instr_ptr_t; options(val_param); internal;
+var
+  copy: boolean;
+  n: instr_ptr_t;
+  lr, nlr: lr_ptr_t;
+  f, dl, nl: lts_ptr_t;
+  created: boolean;
+  r: opnd_ptr_t;
+  k: integer32;
+  kind: integer;
+begin
+  copy := (tmpl^.opc = ord(opc$move)) or (tmpl^.opc = ord(opc$copyd))
+          or (tmpl^.opc = ord(opc$copys));
+  n := lir_$optimizer_new_instruction(bb^.last, tmpl^.opc, false);
+  utils_$resequence_inserted_instruction(n);
+  lr := lts^.lr;
+  f := utils_$get_final_lts(lr, bb, created);
+  if created then begin
+    if lr^.w4 = 0 then
+      bug_check('TR_UTILS_$build_tst_instr:  unable to find LTS to test.%$');
+    utils_$put_lts_on_exposed_list(f);
+    dl := utils_$locate_definition(lr, bb);
+    if dl <> nil then begin
+      f^.l44 := dl;
+      f^.l28 := dl^.l28;
+      dl^.l28 := f;
+    end;
+  end;
+  f^.rrp := f^.rrp + [rrp$read];
+  n^.opnds[1].h.num := 1;
+  opnd_bytes_ptr_t(addr(n^.opnds[1]))^.rrp := (integer(f^.rrp) & 3) ! 16;
+  n^.opnds[1].lts := f;
+  n^.opnds[1].h.kind := lts^.def^.h.kind;
+  if f^.def = nil then
+    f^.def := addr(n^.opnds[1])
+  else begin
+    r := f^.def;
+    while r^.link <> nil do
+      r := r^.link;
+    r^.link := addr(n^.opnds[1]);
+  end;
+  if n^.opnds[1].h.kind in [operand$fp_reg_pair, operand$fp_reg_pair_physical,
+                            operand$fp_reg_pair_like] then begin
+    if lr^.l16 = nil then
+      bug_check('TR_UTILS_$build_tst_instr:  want fp_reg_pair but mate is NIL.%$');
+    f := utils_$get_final_lts(lr^.l16, bb, created);
+    if created then begin
+      utils_$put_lts_on_exposed_list(f);
+      dl := utils_$locate_definition(lr^.l16, bb);
+      if dl <> nil then begin
+        f^.l44 := dl;
+        f^.l28 := dl^.l28;
+        dl^.l28 := f;
+      end;
+    end;
+    f^.rrp := f^.rrp + [rrp$read];
+    if copy then
+      k := 3
+    else
+      k := 2;
+    n^.opnds[k].h.num := k;
+    opnd_bytes_ptr_t(addr(n^.opnds[k]))^.rrp := (integer(f^.rrp) & 3) ! 16;
+    n^.opnds[k].lts := f;
+    n^.opnds[k].h.kind := n^.opnds[1].h.kind;
+    if f^.def = nil then
+      f^.def := addr(n^.opnds[k])
+    else begin
+      r := f^.def;
+      while r^.link <> nil do
+        r := r^.link;
+      r^.link := addr(n^.opnds[k]);
+    end;
+  end;
+  if copy then begin
+    kind := ord(n^.opnds[1].h.kind);
+    if kind in [3, 6, 14] then
+      nlr := lir_$new_live_range_fp_reg_pair
+    else if kind in [1, 4, 12, 17] then
+      nlr := lir_$new_live_range_ip_reg
+    else if kind in [2, 5, 13] then
+      nlr := lir_$new_live_range_fp_reg
+    else
+      nlr := lir_$new_live_range;
+    lir_utils_$add_lts_to_lr(8, nlr, bb, nl);
+    n^.opnds[2].h.num := 2;
+    opnd_bytes_ptr_t(addr(n^.opnds[2]))^.rrp := (integer(nl^.rrp) & 3) ! 8;
+    n^.opnds[2].lts := nl;
+    n^.opnds[2].h.kind := n^.opnds[1].h.kind;
+    nl^.def := addr(n^.opnds[2]);
+    if nlr^.l16 <> nil then begin
+      lir_utils_$add_lts_to_lr(8, nlr^.l16, bb, nl);
+      n^.opnds[4].h.num := 4;
+      opnd_bytes_ptr_t(addr(n^.opnds[4]))^.rrp := (integer(nl^.rrp) & 3) ! 8;
+      n^.opnds[4].lts := nl;
+      n^.opnds[4].h.kind := n^.opnds[3].h.kind;
+      nl^.def := addr(n^.opnds[4]);
+    end;
+  end;
+  build_tst_instr := n;
+end;
+
+{ move_cc_creations - each solution's instruction (a new test built
+  where there is none: build_tst_instr) made to set the condition codes
+  of kind (7 integer, 8 floating; another kind is a bug): unless it sets
+  them already, its last operand defines a new segment of lr in its
+  block (rrp write; the next segment in the block loses +3 bit 6, and
+  must not be final), which is put on the final list, and the
+  instruction marked (+0 bit 4 or 3; both is a bug).
+
+  0x281440, 0x152 bytes, no A5. }
+
+procedure move_cc_creations(
+    sols: tr_sol_ptr_t;
+    tmpl: instr_ptr_t;
+    lts: lts_ptr_t;
+    lr: lr_ptr_t;
+    kind: integer); options(val_param); internal;
+var
+  s: tr_sol_ptr_t;
+  k: integer32;
+  i: instr_ptr_t;
+  o: opnd_ptr_t;
+  l, nx: lts_ptr_t;
+begin
+  s := sols;
+  while s <> nil do begin
+    for k := 1 to s^.count do begin
+      i := s^.entries[k].a;
+      if i = nil then
+        i := build_tst_instr(tmpl, lts, s^.entries[k].bb);
+      o := addr(i^.opnds[i^.h.nopnds]);
+      if i^.h.sets_cc or i^.h.b0_3 then
+        l := o^.lts
+      else begin
+        l := utils_$get_new_lts(lr, i^.bb, 0);
+        o^.h.kind := operand$t(kind);
+        o^.h.num := i^.h.nopnds;
+        opnd_bytes_ptr_t(o)^.rrp := 8;
+        o^.lts := l;
+        l^.def := o;
+        l^.rrp := l^.rrp + [rrp$write];
+        nx := l^.next;
+        if nx <> nil then
+          if (l^.bb = nx^.bb) and nx^.f2.b3_6 then begin
+            nx^.f2.b3_6 := false;
+            if nx^.f2.b3_4 then
+              bug_check('TR_UTILS_$move_cc_creations:  more than one active on exit LTS.%$');
+          end;
+      end;
+      if not l^.f2.b3_4 then begin
+        utils_$put_lts_on_final_list(l);
+        if kind = 7 then begin
+          i^.h.sets_cc := true;
+          if i^.h.b0_3 then
+            bug_check('TR_UTILS_$move_cc_creations:  instr sets fp and ip ccs.%$');
+        end
+        else if kind = 8 then begin
+          i^.h.b0_3 := true;
+          if i^.h.sets_cc then
+            bug_check('TR_UTILS_$move_cc_creations:  instr sets fp and ip ccs.%$');
+        end
+        else
+          bug_check('TR_UTILS_$move_cc_creations:  unknown cc_kind.%$');
+      end;
+    end;
+    s := s^.next;
+  end;
+end;
+
+{ tr_utils_$attempt_test_elimination - tst (testing a register or memory
+  operand into condition codes, its last operand) eliminated by having
+  the instructions that create its operand set the condition codes: the
+  driving segment (find_suitable_driving_lts_for_tst, else operand 1's,
+  through a JOIN_BP to its operand 1; through a copy to its operand 1,
+  but a floating pair copy whose operand 3 is not read goes to
+  tst_elim_within_bb); inside the block (tst_elim_within_bb) when the
+  condition codes' next segment is in the same block or the driving
+  segment is written there.  Else every path must reach a creation
+  (find_complex_driving_ltss with validate_lts_for_tst and
+  ok_to_add_tst, from the heap's mark, released at the end) whose
+  solutions do not interfere (else tst_elim_within_bb): the creations
+  set the condition codes (move_cc_creations); the old condition code
+  segment, when final, gives its readers to a new segment after it
+  (written no more, exposed, put on the final list) and is excised;
+  tst excised when +2 bit 6; the live range's SSA form recomputed; then
+  each solution that is a copy (MOVE, COPYD, COPYS) has its own test
+  eliminated in turn.
+
+  0x28163E, 0x2C8 bytes: rtn stored at +20 first; the validators by
+  address (`move.l #0x280FC8', `#0x280F28'); print_solutions_for_debugging
+  pops 6 of its 8 bytes. }
+
+procedure tr_utils_$attempt_test_elimination(
+    rtn: rtn_ptr_t;
+    tst: instr_ptr_t);
+var
+  o1: opnd_ptr_t;
+  drv: lts_ptr_t;
+  i: instr_ptr_t;
+  cc, nl, old: lts_ptr_t;
+  within: boolean;
+  mark: mrh_$mark_t;
+  sols, s: tr_sol_ptr_t;
+  arg: tr_tst_arg_t;
+  serial: integer32;
+  k: integer32;
+  r: opnd_ptr_t;
+begin
+  tr_rtn := rtn;
+  o1 := addr(tst^.opnds[1]);
+  if not (o1^.h.kind in [operand$ip_reg..operand$well_behaved_memory]) then
+    return;
+  drv := find_suitable_driving_lts_for_tst(o1^.lts);
+  if drv = nil then begin
+    drv := o1^.lts;
+    if (drv^.rrp * [rrp$modify, rrp$write]) <> [] then begin
+      i := utils_ins_$operands_instruction(drv^.def);
+      if i^.opc = ord(opc$join_bp) then
+        drv := i^.opnds[1].lts;
+    end;
+  end
+  else begin
+    i := utils_ins_$operands_instruction(drv^.def);
+    if i^.h.b0_6 then begin
+      drv := i^.opnds[1].lts;
+      if (i^.opnds[1].h.kind in [operand$fp_reg_pair,
+                                 operand$fp_reg_pair_physical,
+                                 operand$fp_reg_pair_like])
+         and not i^.opnds[3].h.read then begin
+        tst_elim_within_bb(tst);
+        return;
+      end;
+    end;
+  end;
+  cc := tst^.opnds[tst^.h.nopnds].lts;
+  if cc^.next <> nil then
+    within := cc^.next^.bb = cc^.bb
+  else
+    within := false;
+  if within or ((drv^.rrp * [rrp$modify, rrp$write]) <> []) then begin
+    tst_elim_within_bb(tst);
+    return;
+  end;
+  mark := mrh_$mark(tr_heap);
+  sols := nil;
+  arg.tst := tst;
+  arg.lr := cc^.lr;
+  arg.lr0 := drv^.lr;
+  arg.v_bit := br_consuming_tst_ccs_involves_v_bit(tst);
+  if find_complex_driving_ltss(drv, drv^.lr, cc^.lr, drv^.bb,
+                               addr(validate_lts_for_tst),
+                               addr(ok_to_add_tst), serial, addr(arg),
+                               sols) then begin
+    print_solutions_for_debugging(tst^.opnds[1].lts, sols);
+    if solutions_dont_interfere(sols, tst^.bb, cc^.lr, serial, true) then begin
+      move_cc_creations(sols, tst, drv, cc^.lr,
+                        ord(tst^.opnds[tst^.h.nopnds].h.kind));
+      if not cc^.f2.b3_4 then begin
+        old := nil;
+        nl := cc;
+      end
+      else begin
+        old := cc;
+        if cc^.def^.link = nil then
+          nl := nil
+        else begin
+          nl := lir_utils_$add_lts_after_lts(cc, 16, cc^.bb);
+          nl^.def := old^.def;
+          nl^.rrp := old^.rrp;
+          old^.def := nil;
+          r := nl^.def;
+          while r <> nil do begin
+            r^.lts := nl;
+            r := r^.link;
+          end;
+        end;
+      end;
+      if nl <> nil then begin
+        nl^.rrp := nl^.rrp - [rrp$write];
+        nl^.def := nl^.def^.link;
+        utils_$put_lts_on_exposed_list(nl);
+      end;
+      if old <> nil then begin
+        utils_$excise_lts_cleanly(old, true);
+        if nl <> nil then
+          utils_$put_lts_on_final_list(nl);
+      end;
+      if tst^.h.b2_6 then
+        excise_tst_instr(tst);
+      fg_utils_$recompute_ssa_form_for_lr(cc^.lr);
+      s := sols;
+      while s <> nil do begin
+        for k := 1 to s^.count do begin
+          i := s^.entries[k].a;
+          if i <> nil then
+            if (i^.opc = ord(opc$move)) or (i^.opc = ord(opc$copyd))
+               or (i^.opc = ord(opc$copys)) then
+              tr_utils_$attempt_test_elimination(rtn, i);
+        end;
+        s := s^.next;
+      end;
+    end
+    else
+      tst_elim_within_bb(tst);
+  end;
+  mrh_$release_to_mark(tr_heap, mark);
 end;

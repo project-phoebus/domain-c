@@ -2144,8 +2144,8 @@ function tr_utils_$attempt_autoincrement(
 { TR_UTILS_$ATTEMPT_TEST_ELIMINATION - 0x28163E, 0x2C8 bytes; called from
   com trans.  Frame 8:l; 12:al. }
 procedure tr_utils_$attempt_test_elimination(
-    p1: integer32;
-    p2: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    tst: instr_ptr_t); options(val_param); extern;
 
 { trans.pas (cc.a88k). }
 
