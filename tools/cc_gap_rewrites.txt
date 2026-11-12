@@ -15,15 +15,9 @@ lang/common/source/token.pas	s/rlcontk\(r\);/rlcontk(r_gap6); { gap 6 }/
 lang/lang/source/token.pas	s/^(\s*)r := 1\.0 \/ t\^\.real_value;/${1}{ gap 7 }/
 lang/lang/source/token.pas	s/floating_token\(r, t\^\.kind\)/floating_token(t^.real_value, t^.kind)/
 lang/lang/source/token.pas	s/^(\s*)s([ab])\.r := ([ab]);/$1s$2.i := 0; { gap 7 }/
-# gap 9: a nested forward routine (search_point stops instead of walking on)
-lang/lang/source/il_utils.pas	s/^\s*procedure search_walk\(t: il_\$node_ptr_t\); forward;/{ gap 9 }/
-lang/lang/source/il_utils.pas	s/^(\s*)search_walk\(t\)(;?)$/${1}found := found$2 { gap 9 }/
-lang/lang/source/il_utils.pas	s/^(\s*)procedure search_walk;/${1}procedure search_walk(t: il_\$node_ptr_t);/
 # gap 10: ordering arrays of char (compare the lengths instead)
 lang/lang/source/sortidntk.pas	s/\^\.idnt_name ([<>]) pivot\^\.idnt_name/^.idnt_len $1 pivot^.idnt_len { gap 10 }/g
 lang/bind/source/objio.pas	s/^(\s*)writeln\(.*\);\s*$/$1; { gap 4 }\n/
-# gap 11: nil as a pointer function's result (return another pointer, for the check)
-lang/lang/source/cargs.pas	s/^(\s*)arg_option_parameter := nil$/$1arg_option_parameter := argv^[0] { gap 11 }/
 # gap 4 (prfpkg): write and writeln (dropped, for the check)
 lang/lang/source/prfpkg.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
 # gap 7 (prfpkg): real arithmetic (the hundredths printed as 0)
@@ -49,10 +43,6 @@ lang/c_compiler/source/c_main.pas	s/^(\s*)(ptoc|ctop)\((\w+)\);/${1}{ gap 16 }/
 lang/c_compiler/source/c_main.pas	s/^(\s*)arg := '[^']*';/${1}arg.length := 0; { gap 17 }/
 # gap 1 (c_main): whole varying assignment (the length only, for the check)
 lang/c_compiler/source/c_main.pas	s/^(\s*)arg := tmp;/${1}arg.length := tmp.length; { gap 1 }/
-# gap 9 (unix_objmod): nested forward routines (the forward headings dropped, the bodies given the parameters, the earlier calls replaced)
-lang/lang/source/unix_objmod.pas	s/^(\s*)procedure (emit_(?:abs_)?addr_con)\(p: il_\$node_ptr_t; offset: integer32\); options\(val_param\); forward;/${1}{ gap 9 }/
-lang/lang/source/unix_objmod.pas	s/^(\s*)procedure (emit_(?:abs_)?addr_con);/$1procedure $2(p: il_\$node_ptr_t; offset: integer32); options(val_param);/
-lang/lang/source/unix_objmod.pas	s/^(\s*)emit_(?:abs_)?addr_con\([^)]*\)(;?) \{ forward \}$/${1}emit_32(0)$2 { gap 9 }/
 # gap 19 (unix_objmod): a function returning real (the single taken as a longword, for the check)
 lang/lang/source/unix_objmod.pas	s/^(\s*)line: integer\): real; options\(val_param\); extern;/$1line: integer): integer32; options(val_param); extern; { gap 19 }/
 lang/lang/source/unix_objmod.pas	s/^(\s*)single: real;/$1single: integer32; { gap 19 }/
@@ -65,8 +55,6 @@ lang/c_compiler/source/c_expr_syn.pas	s/^(\s*)eval_expr\(s \+ \[ctk_rparen\]\);/
 lang/c_compiler/source/c_stmt_sem.pas	s/(dp|rl)contk\(([01])\.0\)/smcontk(81, $2) { gap 7 }/
 # gap 22 (attributes): ord of a boolean (an if statement, for the check)
 lang/lang/source/attributes.pas	s/^(\s*)attr_curr_align_env := ord\(cargs_\$options\.b28b_0\);/${1}if cargs_\$options.b28b_0 then attr_curr_align_env := 1 else attr_curr_align_env := 0; { gap 22 }/
-# gap 23 (alias): in on a one-word constant set with a byte element (the element widened, for the check)
-lang/lang/source/alias.pas	s/\b(\w+)\.class in \[/($1.class + 0) in [/g
 # gap 21 (spos): routine parameters (the routine pointers of before, for the check)
 lang/common/source/spos.ins.pas	s/^(\s*)procedure proc\(region: integer32\)\); extern;/$1proc: spos_\$region_proc_t); options(val_param); extern; { gap 21 }/
 lang/common/source/spos.ins.pas	s/^(\s*)procedure proc\(region: integer32; mark: integer32\)\); extern;/$1proc: spos_\$marked_region_proc_t); options(val_param); extern; { gap 21 }/
@@ -117,9 +105,6 @@ lang/lang/source/outbin.pas	s/^(\s*)line: integer\): real; options\(val_param\);
 lang/lang/source/outbin.pas	s/\bv\.r := dbl_to_real/v.l := dbl_to_real { gap 19 }/
 # gap 26 (outbin): substr (the length compared instead, for the check)
 lang/lang/source/outbin.pas	s/:= substr\(fpx_chars_ptr_t\(addr\(s\^\.str_chars\)\)\^, 1, s\^\.str_len\) = 'CommandCIR';/:= s^.str_len = 10; { gap 26 }/
-# gap 9 (outbin): a nested forward routine (the forward heading dropped, the earlier call replaced)
-lang/lang/source/outbin.pas	s/^\s*procedure coff_lines_instruction; forward;/{ gap 9 }/
-lang/lang/source/outbin.pas	s/^(\s*)coff_lines_instruction;  \{ forward \}/${1}lines_pending := true; { gap 9 }/
 # gap 25 (outbin): a routine needing more registers than dpc has (wr_instr's listing case dropped, for the check)
 lang/lang/source/outbin.pas	$s=1 if /^      case c\^\.kind of$/; if ($s) { $e = /^      end;$/; $_ = $e ? "      { gap 25 }\n" : ""; $s = 0 if $e; }
 # gap 20 (c_syntax): set expressions passed to in parameters (the first operand passed, for the check)
@@ -152,8 +137,6 @@ lang/lang/source/add_node.pas	s/^(  \{ Constant folding\. \})$/%var gap25a;\n%if
 lang/lang/source/add_node.pas	s/^(  \{ Calls entered in the routine's references\. \})$/%endif { gap 25 }\n$1/
 lang/lang/source/add_node.pas	s/^(  \{ Constants moved out of trees of the same operator\. \})$/%var gap25b;\n%if gap25b %then { gap 25 }\n$1/
 lang/lang/source/add_node.pas	s/^(  \{ The registers, and the operands swapped for the costlier first\. \})$/%endif { gap 25 }\n$1/
-# gap 11 (add_node): a pointer function of the one statement `f := nil' (il_178, for the check)
-lang/lang/source/add_node.pas	s/^(\s*)make(_char)?_temp := nil;/$1make$2_temp := il_178; { gap 11 }/
 # gap 7 (cg_misc): a real constant in a comparison (the double tested by its longwords, for the check)
 lang/lang/source/cg_misc.pas	s/n\^\.real_value <> 0\.0/(n^.bits[1] <> 0) or (n^.bits[2] <> 0) { gap 7 }/
 # gap 7 (opt_general): real arithmetic in is_scale_candidate (the bits tested instead, for the check)
@@ -163,14 +146,8 @@ lang/lang/source/opt_general.pas	s/if a <= 4\.0e307 then/if x.lo >= 0 then { gap
 lang/lang/source/opt_general.pas	s/^(\s*)r := 1\.0 \/ x\.d;/${1}{ gap 7 }/
 lang/lang/source/opt_general.pas	s/^(\s*)x\.d := r;/${1}x.lo := 0; { gap 7 }/
 lang/lang/source/opt_general.pas	s/^(\s*)x\.d := c\^\.real_value;/${1}x.hi := c^.bits[1]; x.lo := c^.bits[2]; { gap 7 }/
-# gap 23 (opt_assign): in on a one-word constant set with a byte element (the comparisons)
-lang/lang/source/opt_assign.pas	s/\(da\.class in \[alias_ref_thru_param_ptr, alias_random_pointer\]\)/((da.class = alias_ref_thru_param_ptr) or (da.class = alias_random_pointer)) { gap 23 }/
 # gap 19 (opt_assign): a function returning a single real (the line stored instead, for the check)
 lang/lang/source/opt_assign.pas	s/^(\s*)rv\.r := dbl_to_real\(x, p\^\.line\);/$1rv.l := p^.line; { gap 19 }/
-# gap 9 (list_tree): a nested forward routine (sanity_check_walk walks a call's spine operands as trees)
-lang/lang/source/list_tree.pas	s/^\s*procedure sanity_check_walk_spine\(mode: integer32; t: lt_ptr_t\); options\(val_param\); forward;/{ gap 9 }/
-lang/lang/source/list_tree.pas	s/sanity_check_walk_spine\(mode, t\^\.opnd\[i\]\)/sanity_check_walk(mode, t^.opnd[i]) { gap 9 }/
-lang/lang/source/list_tree.pas	s/^(\s*)procedure sanity_check_walk_spine;/${1}procedure sanity_check_walk_spine(mode: integer32; t: lt_ptr_t); options(val_param);/
 # gap 29 (list_tree): in on a 32-byte set with a longword element (the range test only, for the check)
 lang/lang/source/list_tree.pas	s/\(i in t\^\.st_used\^\)/(i <= 255) { gap 29 }/
 # gap 7 (cg_addr): a real constant in a comparison (the double tested by its longwords, for the check)
@@ -247,8 +224,6 @@ lang/lang/source/final.pas	s/^(\s*)if iv <> v\.d then$/$1if iv <> v.l[1] then { 
 lang/lang/source/final.pas	s/^(\s*)v\.d := n\^\.real_value;$/$1v.l[1] := n^.bits[1]; v.l[2] := n^.bits[2]; { gap 7 }/
 # gap 31 (final): an 8-byte set expression compared with [] (the low longword masked, for the check)
 lang/lang/source/final.pas	s/\(v\.s \* \[0\.\.28\] = \[\]\)/((v.l[2] \& 16#1FFFFFFF) = 0) { gap 31 }/
-# gap 11 (tr_utils, translator PC): nil as a pointer function's last result (another operand, for the check)
-lang2/source/be_com/tr_utils.pas	s/^(\s*)(index|base)_operand := nil;/$1$2_operand := addr(instr^.opnds[4]); { gap 11 }/
 # gap 7 (lst): real := double (the single literal left unset, for the check)
 lang2/source/be_com/lst.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
 # gap 28 (lst): lst_$display_code_cell's values exceed dpc's registers (the classic form's registers' column dropped, for the check)
@@ -260,9 +235,6 @@ lang2/source/be_com/bin.pas	s/if stmt_bits\^\[stmt\] then/if stmt_bits <> nil th
 lang2/source/be_com/bin.pas	s/if stmt_bits\^\[0\] and \(map\^\[0\] <> 0\) then begin/if (stmt_bits <> nil) and (map^[0] <> 0) then begin { gap 13 }/
 # gap 22 (bin): ord of a boolean (an if statement, for the check)
 lang2/source/be_com/bin.pas	s/^(\s*)(\w+) := ord\(([^()]*(?:\([^()]*\))?[^()]*)\) & 1;/${1}if $3 then $2 := 1 else $2 := 0; { gap 22 }/
-# gap 23 (mmt, translator PC2): in on a one-word constant set with a byte element (the comparisons)
-lang2/source/be_com/mmt.pas	s/\(nt\^\.desc\.class in \[1, 13\.\.15\]\)/((nt^.desc.class = 1) or ((nt^.desc.class >= 13) and (nt^.desc.class <= 15))) { gap 23 }/
-lang2/source/be_com/mmt.pas	s/\(d\^\.class in \[1\.\.15\]\)/((d^.class >= 1) and (d^.class <= 15)) { gap 23 }/
 # gap 32 (backend.ins.pas, translator PB2): an initialized overlay section named as its variable (the sections the .init files define renamed, for the check)
 lang2/source/be_com/backend.ins.pas	s/^var \((instruction_mnemonic|instruction_mnemonic_length|instruction_assembly|operand_string|operand_string_length)\)/var (${1}_s) { gap 32 }/
 # gap 22 (asm, translator PB2): ord of a boolean (an if statement, for the check)
