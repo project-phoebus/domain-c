@@ -185,5 +185,7 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang2/source/be_com/sem_utils.pas` | 7 | translated (cc.a88k only; best effort; instructions and operands through backend.ins.pas) |
 | `lang2/source/be_com/xtp.pas` | 7 | translated (cc.a88k only; best effort; instructions, operands and segments through backend.ins.pas) |
 | `lang2/source/be_com/zzzzz.pas` | 9 | translated (cc.a88k only; best effort; code cells through backend.ins.pas's cell_t, code_cell_size initialized; dpc gap 2) |
+| `lang2/source/be_com/tr_utils.pas` | 68 | translated (cc.a88k only; best effort, translator PC; instructions, operands, segments, live ranges and blocks through backend.ins.pas; validators as routine pointers; dpc gaps 8, 11, 12, 15, 24) |
+| `lang2/source/be_com/mmt_utils.pas` | 37 | begun: 15 of 37 (translator PC; the leaf routines: memory live ranges and MMT_SEQ instructions kept for reuse; the rest listed in the file's TODO) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
 | PRISM back-end core (`lang2/source/be_com/backend.ins.pas`, `utils.ins.pas`, the opcode enumeration, ...) | | settled: headings of every cross-unit routine, shared cells, the records the leaf units use (docs/backend-plan.md) |

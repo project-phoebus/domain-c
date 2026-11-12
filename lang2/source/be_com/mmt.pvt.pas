@@ -9,7 +9,19 @@
 
   Not known from the original: every parameter name. }
 
-{ TODO(pascal) mmt.pvt.pas: the shared types and cells }
+{ TODO(pascal) mmt.pvt.pas: the shared types and cells (mmt's +0xC0..
+  +0x1A8 that mmt_utils reaches: +0xC0, +0xC4, +0xE0, +0xE4, +0xE8,
+  +0x100, +0x140, +0x1A8 when mmt_utils' remaining routines are
+  translated) }
+
+var
+  { mmt.pas's data (A5 0x48C368) that mmt_utils reaches absolutely
+    (translator PC); mmt defines them. }
+  mmt_rtn: extern rtn_ptr_t;            { +0xC8: the routine }
+  mmt_seq_heap: extern mrh_$heap_t;     { +0xCC: the MMT_SEQ
+                                          instructions' heap (made
+                                          lir_main_heap around their
+                                          allocation) }
 
 { mmt.pas (cc.a88k). }
 
@@ -33,7 +45,7 @@ procedure mmt_$insert_blocks_intra_bb_seq(
 { MMT_UTILS_$LR_IS_FOR_MEMORY - 0x255364, 0x56 bytes; called from mmt.
   Frame 8:al.  Result: D0 (callers: D0b3). }
 function mmt_utils_$lr_is_for_memory(
-    p1: univ_ptr): boolean; options(val_param); extern;
+    lr: lr_ptr_t): boolean; options(val_param); extern;
 
 { MMT_UTILS_$MMT_SEQ_EMIT - 0x255576, 0x34E bytes; called from mmt.  Frame
   8:al; 12:bw.  Result: A0 (callers: A05). }

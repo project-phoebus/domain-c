@@ -719,3 +719,12 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
        begin
          b := s * [0..28] = [];
        end;
+
+Translator PC (cc.a88k tr_utils) met gaps 8 (`opc in [77, 79..83]', a
+word element: tst_elim_within_bb, validate_lts_for_tst), 11
+(index_operand, base_operand: `:= nil' last), 12 (a pointer function
+compared with a variable: bb_interval, base_operand,
+utils_ins_$operands_instruction), 15 (bb_interval and
+find_suitable_driving_lts_for_tst returning a parameter) and 24 (calls
+as right operands of `and'); the rewrites are in
+tools/cc_gap_rewrites.txt under tr_utils.

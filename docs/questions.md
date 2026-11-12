@@ -1309,3 +1309,26 @@ revisited.
 156. Translator MM: basic_block_label (zzzzz 0x2880E8) reads the old
    first instruction's +28 even when the block is empty (nil^ in the
    image); kept.
+157. Translator PC, tr_utils: three bug_check messages have characters
+   missing from their middle in the image: 'TR_UTILS_$relative_instr_
+   positnstrs not in same bb%$' (0x27C5DA; "position: i" expected),
+   'TR_UTILS_$separate_partis: LTS was aon exit%$' (0x27CB60) and
+   'TR_UTILS_$move_add_to_nebb: prev_instr not in new_bb%$' (0x2803AC).
+   The translation keeps the image's bytes.  Typos in the source, or a
+   compiler or editor artifact (a line break inside a literal)?
+158. Translator PC, tr_utils: copy$complex_complex is jumped over
+   entirely (docs/rev889-patterns.md 101), so a copy between two
+   complex live ranges is never eliminated.  Written as `return' first;
+   was it an `%if' or a disabled transformation in the source?
+159. Translator PC: an operand's +1 byte is stored and masked whole by
+   the optimizer (8 write, 16 read, `and.b #0xD3'; find_operand_of_kind
+   ands it with a mask parameter), which suggests a set field (`set of
+   rrp$fp_reg_even_only..rrp$spare_1') in the original operand record
+   rather than MM's eight booleans; backend.ins.pas now has
+   opnd_bytes_t, a view of the first longword as four bytes, for those
+   stores.  Re-lay opnd_hdr_t's +1 as a set?
+160. Translator PC: the operands' roles as the optimizer uses them: a
+   MOVE's operand 1 is its source and operand 2 its destination; an ADD
+   or SUB's operand 1 the immediate (or a register), 2 the source, 3
+   the result; condition codes the last operand.  backend.ins.pas
+   documents none of this yet (to confirm against lir when translated).

@@ -757,3 +757,35 @@ cc.m68k unless marked.
     cleared with `clr.l (A0)+' and `subq.l #1; bne', `beq' on n's move
     for 0 (the flags of `move.l (8,SP),D0' survive `movea.l').  Each
     unit has its own copy (the same name, internal).
+## The optimizer's utilities (translator PC, cc.a88k tr_utils)
+
+101. **A routine whose whole body is jumped over.**  tr_utils's
+    copy$complex_complex (cc.a88k 0x27D540, 0xAE bytes) branches from
+    its saves straight to its epilogue (`bra.w 0x27D5DE'); the code in
+    between (a loop over the operands whose `dbf' counter is never set
+    up, a merge of the live ranges, write_cc_or_delete_instr) is kept.
+    Written as `return' first with the code after it; dpc compiles the
+    dead code too.
+102. **A constant set stored only from its significant bytes.**
+    tst_elim_within_bb (0x280EA6) and validate_lts_for_tst test an
+    opcode against [77, 79..83] as `moveq #95,D3; sub.w opc,D3; bcs;
+    lsr.w #3,D3; btst opc,(0x280F1C,PC,D3.w); ble': the set's bound is
+    95 but the constant after the routine is 4 bytes (00 0F A0 00, the
+    elements 95..64 from the top), the bytes for 0..63 (all zero) left
+    out.  dpc refuses `in' on such a set (docs/dpc-gaps.md 8).
+103. **A parameterless call between another call's pushed arguments.**
+    make_copy (0x27C3BA) pushes `pea (-8,A6); move.l (12,A2),-(SP)',
+    calls lir_$new_live_range_ip_reg (which reads no parameters) and
+    then pushes only its result and a word for
+    lir_utils_$add_lts_to_lr, which finds the two earlier longwords as
+    its third and fourth arguments (`lea (16,SP),SP' after it): item
+    63 for an inner call with no arguments of its own.  tools/cc_params.py
+    reads such pushes as the inner callee's parameters (its heading was
+    narrowed to none).
+104. **Validators passed by address and called through a register.**
+    tr_utils_$attempt_autoincrement's and attempt_test_elimination's
+    searches pass module-level routines as `move.l #0x27FB7A,-(SP)'
+    and call them with `jsr (A0)' (find_complex_driving_ltss 0x27D8BE);
+    utils_$apply_func_to_all_uses is given test_lts_for_n_bit_unconsumed
+    the same way.  Written as routine pointer types (tr_valid_t) given
+    addr(...), as docs/dpc-gaps.md 21's first case.

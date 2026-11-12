@@ -48,7 +48,7 @@ procedure utils_$end_compilation; extern;
   read (callers: D01). }
 function utils_$excise_instruction_cleanly(
     p1: univ_ptr;
-    p2: integer): integer32; options(val_param); extern;
+    p2: boolean): integer32; options(val_param); extern;
 
 { UTILS_$EXCISE_INSTRUCTION_IF_UNCONSUMED - 0x284B90, 0x7E bytes; called
   from iv.  Frame 8:a; 12:b.  Result: D0 (callers: D0b1). }
@@ -76,7 +76,7 @@ procedure utils_$remove_lts_from_final_list(
   fg_utils iv sanity tr_utils trans.  Frame 8:al; 12:bw. }
 procedure utils_$excise_lts_cleanly(
     p1: univ_ptr;
-    p2: integer); options(val_param); extern;
+    p2: boolean); options(val_param); extern;
 
 { UTILS_$MAYBE_MERGE_SOURCE_STATEMENTS - 0x285110, 0x10E bytes; called
   from tr_utils trans.  Frame 8:al; 12:al. }
@@ -125,11 +125,12 @@ procedure utils_$put_lts_on_final_list(
 
 { UTILS_$FIND_LAST_LTS_IN_BB - 0x285714, 0xAA bytes; called from com
   fg_utils iv tr_utils trans.  Frame 8:al; 12:al; 16:a.  Result: A0
-  (callers: A010). }
+  (callers: A010).  lr's last segment in bb; the one before it through
+  prev (tr_utils' reading of its calls). }
 function utils_$find_last_lts_in_bb(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr): univ_ptr; options(val_param); extern;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t;
+    out prev: lts_ptr_t): lts_ptr_t; options(val_param); extern;
 
 { UTILS_$GET_NEW_LTS - 0x2857BE, 0xDA bytes; called from com ra_utils
   tr_utils trans.  Frame 8:al; 12:al; 16:bw.  Result: A0 (callers: A09). }
@@ -142,17 +143,19 @@ function utils_$get_new_lts(
   iv lir_utils ra_utils tr_utils trans.  Frame 8:al; 12:al; 16:a.  Result:
   A0 (callers: A020). }
 function utils_$get_exposed_lts(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr): univ_ptr; options(val_param); extern;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t;
+    out created: boolean): lts_ptr_t; options(val_param); extern;
 
 { UTILS_$GET_FINAL_LTS - 0x28590A, 0x7C bytes; called from com fg_utils iv
   tr_utils trans.  Frame 8:al; 12:l; 16:a.  Result: A0 (callers: A015
-  D0w1). }
+  D0w1).  lr's final segment in bb (nil for no lr), a new one put on
+  the final list when there is none (created true; the body read by
+  tr_utils' translator). }
 function utils_$get_final_lts(
-    p1: univ_ptr;
-    p2: integer32;
-    p3: univ_ptr): univ_ptr; options(val_param); extern;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t;
+    out created: boolean): lts_ptr_t; options(val_param); extern;
 
 { UTILS_$COMPARE_BIRTHPOINTS - 0x285986, 0x70 bytes; called from com
   mmt_utils.  Frame 8:a; 12:a.  Result: D0 (callers: D0b3). }
@@ -205,7 +208,7 @@ procedure utils_$strip_extraneous_modifies(
 procedure utils_$move_definition(
     p1: univ_ptr;
     p2: univ_ptr;
-    p3: integer); options(val_param); extern;
+    p3: boolean); options(val_param); extern;
 
 { UTILS_$LOCATE_DEFINITION - 0x286B88, 0xD2 bytes; called from com oli
   tr_utils.  Frame 8:al; 12:al.  Result: A0 (callers: A012). }
