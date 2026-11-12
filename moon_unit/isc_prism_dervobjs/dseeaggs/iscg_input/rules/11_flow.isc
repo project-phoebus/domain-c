@@ -205,8 +205,47 @@ transform 234  void <- cbranch_node ($1: irrelevant, $2: ip_reg_field)
 end;
 
 transform 235  void <- cbranch_node ($1: irrelevant, $2: ip_reg)
-  { not lifted: 0x13C680: andb %a0@(377),%d1 }
-  pass_1 image 16#13C5B6 residue;
+  pass_1 image 16#13C5B6 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    condition not $2.physical_register or $2.kind <> 11 or $2.physical_register_number <> isc_user_routines_31c.physical_register_number;
+    t2 <- make_bit_mask_1(8, 0);
+    t3 <- make_bit_mask_1(8, 0);
+    if rshft(il_180.b377 & 112, 4) = 2 then
+      result.c136 <- 1;
+      if $2.bit_7_was_sign_extended then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+      if subject.il.b60 = -1 then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    else
+      result.c136 <- 2;
+      if subject.il.b60 = -1 then
+        result.c139 <- 1;
+        if verify_bits($2.bits_known, $2.bits_trusted, 8, 24, 0) then
+          result.c140 <- 1;
+        else
+          result.c140 <- 2;
+        end;
+      else
+        result.c139 <- 2;
+        if verify_bits($2.bits_known, $2.bits_trusted, 8, 24, 0) then
+          result.c141 <- 1;
+        else
+          result.c141 <- 2;
+        end;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(8, 8)[result.c138] + words(8, 8)[result.c139] + words(0, 4)[result.c140] + words(0, 4)[result.c141] + $1.code_bytes + $2.code_bytes;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- bytes(1, 1)[result.c138] + bytes(1, 1)[result.c139] + $1.delay + $2.delay;
+    copy ip_reg_max, fp_reg_max, fp_reg_pair_max from $2;
+  end;
   pass_2 image 16#1BBB1E begin
     temp t1: solution;
     temp t2: solution;

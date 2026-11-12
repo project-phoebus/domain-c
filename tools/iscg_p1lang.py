@@ -60,6 +60,28 @@ ALREADY = ['already_address_mode', 'already_fp_reg', 'already_fp_reg_pair',
 TRACE = 'isc_user_routines_354'
 L.PREC.setdefault('in', 3)          # `k in set' (a set's element)
 L.BUILTINS.setdefault('abs', 'i32')
+# inserts globals.ins.pas opens whose routines the actions call
+EXTRA_INSERTS = ['lang/lang/source/debug_sym_dmp.ins.pas',
+                 'lang/lang/source/globals_from_frontend.ins.pas']
+
+
+def extra_headings():
+    """The headings of EXTRA_INSERTS (iscg_p2lang's EXTRA set aside: its
+    lookup recurses)."""
+    saved = dict(L.EXTRA)
+    L.EXTRA.clear()
+    try:
+        out = {}
+        for path in EXTRA_INSERTS:
+            for k, v in L.read_headings("%%include '%s';" % path).items():
+                out.setdefault(k, v)
+        return out
+    finally:
+        L.EXTRA.update(saved)
+# the run time's arithmetic (the lifter writes them as operators)
+RUNTIME_HEADINGS = {n: {'params': [('a', 'value', 'i32', False), ('b', 'value', 'i32', False)],
+                        'ret': 'i32', 'val_param': True, 'variable': False}
+                    for n in ('m$mis$lll', 'm$dis$lll', 'm$ois$lll')}
 # the prelude's cells the actions read that the inserts the modules open
 # declare only through globals.ins.pas
 EXTRA_GLOBALS = {'il_180': 'node', 'cargs_$options': 'other:cargs_$options_t'}
@@ -522,7 +544,7 @@ class Emitter(L.Emitter):
             off = int(m.group(1))
             return 'p1_int_fields_ptr_t(addr(%s))^.i[%d]' % (r, (off - 352) // 4), 'i32'
         if cls == 'other:cargs_$options_t':
-            return '%s.%s' % (text, s), 'set'
+            return '%s.%s' % (text, s), ('set' if s.startswith('flags') else 'bool')
         m = re.match(r'c(34[2-8])$', s)
         if m and cls in ('rec', 'isp', 'sp', 'up', 'lr'):
             r = self.deref(text, cls)
@@ -539,6 +561,10 @@ class Emitter(L.Emitter):
             # a byte table of isc_readonly_tables at +N: the module's view
             return 'p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[%d + %s]' % (
                 int(e[1][10:]), self.paren(e[2], 4)), 'u8'
+        if e[0] == 'bin' and e[1] in ('=', '<>') and e[3] == ('nil',):
+            t, c = self.expr1(e[2])
+            if c in ('i32', 'i16', 'u16', 'u8', 'num'):
+                return '%s %s 0' % (t, e[1]), 'bool'
         if e[0] == 'bin' and e[1] in ('and', 'or'):
             # Pascal binds and/or tighter than the comparisons
             def opnd(x):
@@ -622,6 +648,11 @@ def check_emit(c, kind, headings, gen):
     gen.routine(c.rule, {'p1_clause': c, 'kind': kind}, headings, tables)
 
 
+POINTER_ATTRS = ('before_transform', 'il', 'inherited_attributes', 'base_register',
+                 'index_register', 'false_label', 'live_range', 'live_range_of_imaginary_part',
+                 'object_with_name')
+
+
 def int_fields(stmts, headings):
     """The rule's own longwords (+352 ..) the clause gives numbers: set
     from a number other than 0, arithmetic or an integer function, or
@@ -644,6 +675,13 @@ def int_fields(stmts, headings):
             return True
         if e[0] == 'cost':
             return True
+        if e[0] == 'path' and e[2]:
+            n = e[2][-1]
+            if re.match(r'(w|b|sb)\d+$', n):
+                return True
+            a = L.attrs().get(n)
+            if a and a[2] is None and n not in POINTER_ATTRS:
+                return True
         if e[0] == 'call':
             h = headings.get(e[1])
             return (bool(h) and h['ret'] in ('i32', 'i16', 'u8')) or e[1] in L.BUILTINS

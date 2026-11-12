@@ -21,8 +21,19 @@ transform 140  void <- agg_aop | fp_aop | scalar_aop
 end;
 
 transform 141  void <- agg_aop | fp_aop | scalar_aop ($1: ip_reg_field, $2: [ip_reg, ip_reg_field])
-  { not lifted: register a4 not known }
-  pass_1 image 16#0F72D0 residue;
+  pass_1 image 16#0F72D0 begin
+    temp t2: integer32;
+    condition not (subject.il.l48 u> 4 or $1.bit_position_of_lsb <> $2.bit_position_of_lsb);
+    condition $1.field_precision u>= subject.il.l48 * 8;
+    condition available_precision_function($2) >= subject.il.l48 * 8;
+    result.l352 <- $1.bit_position_of_lsb;
+    result.l356 <- subject.il.l48 * 8;
+    t2 <- make_bit_mask_1(subject.il.l48 * 8, 0);
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.evaluation_order <- 1;
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#18D022 begin
     emit field(opc$transfer, 0, result.l356, $2, find_well_known_literal_solution(result.l352), $1);
   end;
@@ -5793,7 +5804,7 @@ transform 157  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: fp_r
 end;
 
 transform 158  void <- agg_aop ($1: address_mode, $2: address_mode)
-  { not lifted: no heading for m$ois$lll }
+  { not lifted: no heading for m$ois$wlw }
   pass_1 image 16#0FFCE2 residue;
   pass_2 image 16#1972E2 begin
     temp t1: pointer;
@@ -8908,7 +8919,7 @@ transform 170  void <- fp_aop ($1: address_mode, $2: address_mode)
 end;
 
 transform 171  void <- scalar_aop ($1: address_mode, $2: [address_mode, literal_32_bits])
-  { not lifted: register a3 not known }
+  { not lifted: 0x106D18: swap %d3 }
   pass_1 image 16#106B0A residue;
   pass_2 image 16#19F868 begin
     temp t1: solution;

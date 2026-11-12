@@ -441,6 +441,8 @@ def modules(gen, includes, gen_note):
     import iscg_p2gen as P2G
     import iscg_gen
     headings = L.read_headings(includes)
+    for k, v in L1.extra_headings().items():
+        headings.setdefault(k, v)
     for k, v in L1.EXTRA_GLOBALS.items():
         L.GLOBALS.setdefault(k, v)
     out = {}

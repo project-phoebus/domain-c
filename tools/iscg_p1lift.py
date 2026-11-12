@@ -66,6 +66,10 @@ GLOBAL_CELLS = {0x2E9E60: ('il_180', 'node')}      # il.ins.pas: the routine's b
 # the element of the byte's bit 0) (cargs.ins.pas: flags_286 runs from
 # element 20 at +0x286 bit 7 down)
 GLOBAL_BITS = {0x4437F6: ('cargs_$options', 'flags_286', 13)}
+# single booleans of cargs_$options the actions test: (address, bit) -> field
+GLOBAL_FLAGS = {(0x4437EC, 1): ('cargs_$options', 'b27c_1')}
+# the run time's 32-bit arithmetic (the operator each call is)
+RUNTIME_OPS = {'m$mis$lll': '*', 'm$dis$lll': 'div', 'm$ois$lll': 'mod'}
 PARAMS = {8: 'subject', 12: 'il', 16: 'inh', 20: 'work', 24: 'result'}
 
 
@@ -310,8 +314,17 @@ class Lifter(P2.Lifter):
         return super().push_value(op, st, out, x)
 
     def call(self, x, st, out):
-        # a by-reference argument given as a global's address
         name = self.callee(x)
+        if name in RUNTIME_OPS:
+            # Rev 8.89's 32-bit multiply, divide, remainder: an operator
+            vals = self.take_args(name, st.stack, x)
+            e = ('bin', RUNTIME_OPS[name], self.val(vals[0]), self.val(vals[1]))
+            for r in ('d0', 'd1', 'a0', 'a1'):
+                st.regs.pop(r, None)
+            st.flags = None
+            st.regs['d0'] = self.mkcell(e, 'int32', False, out)
+            return None
+        # a by-reference argument given as a global's address
         h = self.heading(name)
         vals_pending = [it for it in st.stack if it[0] == 'a']
         for it in vals_pending:
@@ -378,6 +391,54 @@ class Lifter(P2.Lifter):
                 st.regs[r] = self.mkcell(e, 'int32', False, out)
                 st.flags = ('tst', st.regs[r], SZ[sz])
                 return None
+        if mn == 'lea' and x.ops[0].startswith('%pc@('):
+            # constants the code holds, copied by postincrement
+            st.regs[x.ops[1][1:]] = ('ptrconst', parse_operand(x.ops[0])[1])
+            return None
+        if mn in ('move', 'movea') and x.ops[0].startswith('%a') and (
+                x.ops[0].endswith('@+') or x.ops[0].endswith('@')) and \
+                isinstance(st.regs.get(x.ops[0][1:3]), tuple) and \
+                st.regs[x.ops[0][1:3]][0] == 'ptrconst':
+            r0 = x.ops[0][1:3]
+            size = SZ[sz]
+            a = st.regs[r0][1]
+            v = ('num', int.from_bytes(self.im.read(a, size), 'big', signed=True))
+            if x.ops[0].endswith('@+'):
+                st.regs[r0] = ('ptrconst', a + size)
+            if x.ops[1].endswith('@+'):
+                r = x.ops[1][1:3]
+                b = st.regs.get(r)
+                if not (isinstance(b, tuple) and b[0] == 'ptroff'):
+                    raise Unliftable('0x%X: %s' % (x.addr, x.text))
+                self.store(('ind', r, 0), size, v, st, out, x)
+                st.regs[r] = ('ptroff', b[1], b[2] + size)
+            else:
+                self.store(parse_operand(x.ops[1]), size, v, st, out, x)
+            st.flags = None
+            return None
+        if mn in ('and', 'andi') and sz in 'bw' and x.ops[1].startswith('%d') and \
+                not isinstance(st.regs.get(x.ops[1][1:]), tuple) or (
+                mn in ('and',) and sz in 'bw' and x.ops[1].startswith('%d') and
+                isinstance(st.regs.get(x.ops[1][1:]), tuple) and
+                st.regs[x.ops[1][1:]][0] == 'num' and not x.ops[0].startswith('%d')):
+            r = x.ops[1][1:]
+            v = st.regs.get(r)
+            if v is not None and self.as_bool(v) is None:
+                a = self.read(parse_operand(x.ops[0]), SZ[sz], st, out, x)
+                e = ('bin', '&', self.val(a), self.val(v))
+                st.regs[r] = self.mkcell(e, 'int32', False, out)
+                st.flags = ('tst', st.regs[r], SZ[sz])
+                return None
+        if mn == 'lsl' and sz == 'b' and x.ops[1].startswith('%d') and x.ops[0].startswith('#') \
+                and not (isinstance(st.regs.get(x.ops[1][1:]), tuple) and
+                         st.regs[x.ops[1][1:]][0] in ('boolshift', 'boolbyte')):
+            r = x.ops[1][1:]
+            v = st.regs.get(r)
+            if v is None:
+                raise Unliftable('0x%X: %s not known' % (x.addr, r))
+            n = parse_operand(x.ops[0])[1]
+            st.regs[r] = self.mkcell(('bin', '*', self.val(v), ('num', 1 << n)), 'int32', False, out)
+            return None
         if mn in ('move', 'movea') and x.ops[1].endswith('@+') and x.ops[1].startswith('%a'):
             size = SZ[sz]
             op0 = parse_operand(x.ops[0])
@@ -594,6 +655,9 @@ class Lifter(P2.Lifter):
                     sh = 8 * (o + sz - 1 - loc[2]) + bit
                     return ('bin', '<>', ('bin', '&', self.sel(bexpr2, n), ('num', 1 << sh)),
                             ('num', 0))
+        if loc[0] == 'abs' and (loc[1], bit) in GLOBAL_FLAGS:
+            name, field = GLOBAL_FLAGS[(loc[1], bit)]
+            return ('path', name, [field])
         if loc[0] == 'abs' and loc[1] in GLOBAL_BITS:
             name, field, base = GLOBAL_BITS[loc[1]]
             return ('bin', 'in', ('num', base + bit), ('path', name, [field]))
@@ -616,11 +680,9 @@ class Lifter(P2.Lifter):
             c = self.condition1(x, st)
             # `not c' falls through
             return self.arms(x, L1.negate(c), self.ins[k + 1].addr, x.target, st, out, stops)
-        cond, t, f, written = comp
-        for r in written:
-            st.regs.pop(r, None)
+        cond, t, f, st_t, st_f = comp
         st.flags = None
-        return self.arms(x, cond, t, f, st, out, stops)
+        return self.arms(x, cond, t, f, st, out, stops, st_t, st_f)
 
     # ---- compound conditions: short-circuit `and' and `or'
     PURE_CMP = ('cmp', 'cmpi', 'cmpa', 'tst', 'btst')
@@ -733,7 +795,10 @@ class Lifter(P2.Lifter):
             red = self.reduce(collections.OrderedDict((a, list(n)) for a, n in nodes.items()))
             if red is not None:
                 c, t, f = red
-                return c, t, f, sorted(written)
+                # the state at each exit: what every way into it agrees on
+                st_t, st_f = states[t].copy(), states[f].copy()
+                st_t.flags = st_f.flags = None
+                return c, t, f, st_t, st_f
             # not one condition: the last block is a statement's (an exit)
             del nodes[max(nodes)]
         return None
@@ -799,15 +864,15 @@ class Lifter(P2.Lifter):
                 a = self.ins[self.at[a] + 1].addr
         return False
 
-    def arms(self, x, cond, t, f, st, out, stops):
+    def arms(self, x, cond, t, f, st, out, stops, st_t=None, st_f=None):
         """`if cond then <t> else <f>' to the merge point (p2's branch)."""
         self.use(cond)
         m = self.merge_point(x.addr)
         stop2 = set(stops) | {m}
         self.bound += 1
-        b_then, s_then, e1 = self.run(t, st.copy(), stop2)
+        b_then, s_then, e1 = self.run(t, (st_t or st).copy(), stop2)
         self.bound += 1
-        b_else, s_else, e2 = self.run(f, st.copy(), stop2)
+        b_else, s_else, e2 = self.run(f, (st_f or st).copy(), stop2)
         self.bound += 1
         if e1 != e2:
             raise Unliftable('0x%X: the arms end at 0x%X and 0x%X' % (x.addr, e1, e2))
@@ -1159,6 +1224,8 @@ def headings():
     if _HEADINGS is None:
         import iscg_gen
         _HEADINGS = L.read_headings(iscg_gen.INCLUDES)
+        for k, v in list(L1.extra_headings().items()) + list(L1.RUNTIME_HEADINGS.items()):
+            _HEADINGS.setdefault(k, v)
     return _HEADINGS
 
 
