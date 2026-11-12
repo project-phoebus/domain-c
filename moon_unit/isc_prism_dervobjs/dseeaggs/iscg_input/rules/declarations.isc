@@ -825,8 +825,31 @@ operator isc_tree_node_ada_expon_top il ada_expon_top children 2 image 16#0E5E74
   solutions_made;
 end;
 operator isc_tree_node_add_top il add_top children 2 image 16#0E5F98;
-  fixed;
-  pass_1 inherited, 1: derived -np, 2: derived -np;
+  if il_node_has_integer_value(il.p40) and not il_node_has_integer_value(il.p44);
+    trace rewrite;
+    let n2 <- mrh_$alloc(isc_preserve_heap, 48);
+    n2.w2 <- 137;
+    n2.b0 <- true;
+    n2.p40 <- il.p44;
+    n2.p44 <- il.p40;
+    n2.w36 <- 1;
+    n2.b30.7 <- il.b30.7;
+    n2.w24 <- il.w24;
+    child solutions n2 copy_all
+      il <- n2;
+      original_il <- il;
+      permissible inherited;
+    solutions_made;
+  else;
+    child 1 il.p40
+      fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+      required_arithmetic <- rlen_arith(il.w24);
+      permissible derived -np;
+    child 2 il.p44
+      fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+      required_arithmetic <- rlen_arith(il.w24);
+      permissible derived -np;
+  endif;
 end;
 operator isc_tree_node_addr_top il addr_top children 1 image 16#0E62EE;
   fixed;
@@ -871,8 +894,30 @@ operator isc_tree_node_alshf_top il alshf_top children 2 image 16#0E67B2;
     permissible derived;
 end;
 operator isc_tree_node_and_top il and_top children 2 image 16#0E69B8;
-  fixed;
-  pass_1 inherited, 1: [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled] -np, 2: [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits] -np;
+  if il_node_has_integer_value(il.p40) and not il_node_has_integer_value(il.p44);
+    trace rewrite;
+    let n2 <- mrh_$alloc(isc_preserve_heap, 48);
+    n2.w2 <- 137;
+    n2.b0 <- true;
+    n2.p40 <- il.p44;
+    n2.p44 <- il.p40;
+    n2.w36 <- 9;
+    n2.w24 <- il.w24;
+    child solutions n2 copy_all
+      il <- n2;
+      original_il <- il;
+      permissible inherited;
+    solutions_made;
+  else;
+    child 1 il.p40
+      fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+      required_arithmetic <- rlen_arith(il.w24);
+      permissible [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled] -np;
+    child 2 il.p44
+      fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+      required_arithmetic <- rlen_arith(il.w24);
+      permissible [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits] -np;
+  endif;
 end;
 operator isc_tree_node_arshf_top il arshf_top children 2 image 16#0E6CE8;
   child 1 il.p40
@@ -936,8 +981,30 @@ operator isc_tree_node_div_top il div_top children 2 image 16#0E7F20;
   pass_1 inherited, inherited, inherited, inherited;
 end;
 operator isc_tree_node_eor_top il eor_top children 2 image 16#0E855C;
-  fixed;
-  pass_1 inherited, 1: derived -np, 2: derived -np;
+  if il_node_has_integer_value(il.p40) and not il_node_has_integer_value(il.p44);
+    trace rewrite;
+    let n2 <- mrh_$alloc(isc_preserve_heap, 48);
+    n2.w2 <- 137;
+    n2.b0 <- true;
+    n2.p40 <- il.p44;
+    n2.p44 <- il.p40;
+    n2.w36 <- 44;
+    n2.w24 <- il.w24;
+    child solutions n2 copy_all
+      il <- n2;
+      original_il <- il;
+      permissible inherited;
+    solutions_made;
+  else;
+    child 1 il.p40
+      fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+      required_arithmetic <- rlen_arith(il.w24);
+      permissible derived -np;
+    child 2 il.p44
+      fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+      required_arithmetic <- rlen_arith(il.w24);
+      permissible derived -np;
+  endif;
 end;
 operator isc_tree_node_expon_top il expon_top children 2 image 16#0E8886;
   trace rewrite;
@@ -1185,12 +1252,58 @@ operator isc_tree_node_mark_dynamic_space_top il mark_dynamic_space_top children
   solutions_made;
 end;
 operator isc_tree_node_max_top il max_top children 2 image 16#0EBD94;
-  fixed;
-  pass_1 inherited, 1: derived, 2: derived;
+  if il_node_has_integer_value(il.p40) and not il_node_has_integer_value(il.p44);
+    trace rewrite;
+    let n2 <- mrh_$alloc(isc_preserve_heap, 48);
+    n2.w2 <- 137;
+    n2.b0 <- true;
+    n2.p40 <- il.p44;
+    n2.p44 <- il.p40;
+    n2.w36 <- 45;
+    n2.w24 <- il.w24;
+    n2.b30.6 <- il.b30.6;
+    child solutions n2 copy_all
+      il <- n2;
+      original_il <- il;
+      permissible inherited;
+    solutions_made;
+  else;
+    child 1 il.p40
+      fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+      required_arithmetic <- rlen_arith(il.w24);
+      permissible derived;
+    child 2 il.p44
+      fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+      required_arithmetic <- rlen_arith(il.w24);
+      permissible derived;
+  endif;
 end;
 operator isc_tree_node_min_top il min_top children 2 image 16#0EC0B6;
-  fixed;
-  pass_1 inherited, 1: derived, 2: derived;
+  if il_node_has_integer_value(il.p40) and not il_node_has_integer_value(il.p44);
+    trace rewrite;
+    let n2 <- mrh_$alloc(isc_preserve_heap, 48);
+    n2.w2 <- 137;
+    n2.b0 <- true;
+    n2.p40 <- il.p44;
+    n2.p44 <- il.p40;
+    n2.w36 <- 46;
+    n2.w24 <- il.w24;
+    n2.b30.6 <- il.b30.6;
+    child solutions n2 copy_all
+      il <- n2;
+      original_il <- il;
+      permissible inherited;
+    solutions_made;
+  else;
+    child 1 il.p40
+      fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+      required_arithmetic <- rlen_arith(il.w24);
+      permissible derived;
+    child 2 il.p44
+      fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+      required_arithmetic <- rlen_arith(il.w24);
+      permissible derived;
+  endif;
 end;
 operator isc_tree_node_mod_top il mod_top children 2 image 16#0EC404;
   fixed;
@@ -1219,8 +1332,30 @@ operator isc_tree_node_not_top il not_top children 1 image 16#0ED216;
     permissible [fp_reg, ip_reg, ip_reg_field] -np;
 end;
 operator isc_tree_node_or_top il or_top children 2 image 16#0ED33C;
-  fixed;
-  pass_1 inherited, 1: derived -np, 2: derived -np;
+  if il_node_has_integer_value(il.p40) and not il_node_has_integer_value(il.p44);
+    trace rewrite;
+    let n2 <- mrh_$alloc(isc_preserve_heap, 48);
+    n2.w2 <- 137;
+    n2.b0 <- true;
+    n2.p40 <- il.p44;
+    n2.p44 <- il.p40;
+    n2.w36 <- 10;
+    n2.w24 <- il.w24;
+    child solutions n2 copy_all
+      il <- n2;
+      original_il <- il;
+      permissible inherited;
+    solutions_made;
+  else;
+    child 1 il.p40
+      fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+      required_arithmetic <- rlen_arith(il.w24);
+      permissible derived -np;
+    child 2 il.p44
+      fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+      required_arithmetic <- rlen_arith(il.w24);
+      permissible derived -np;
+  endif;
 end;
 operator isc_tree_node_physical_top il physical_top children 1 image 16#0ED666;
   child 1 il.p40
