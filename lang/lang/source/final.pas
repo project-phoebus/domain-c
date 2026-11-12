@@ -12,17 +12,15 @@
   testcc; the same address: sameaddr) and edit them (detach, makejump,
   makecbr, moverefcell, movejump, reversecond, label_merge).
 
-  TODO(pascal) final.pas is not finished: 113 of its 120 routines are
+  TODO(pascal) final.pas is not finished: 115 of its 120 routines are
   translated.  Not yet translated (cc.m68k address, bytes):
-    0x10DD5A 0x1DC  transform_ptr_in_d_use
-    0x10DF52 0x7E2  optmove
     0x10E8EA 0x332  merge_add_sub
     0x10EF30 0x3BA  try_pre_dec
     0x10F30C 0x3B8  try_post_incr
     0x10F6C4 0x4C0  opta
     0x10FB84 0x3D4  floatop
-  The three of them that peepholer_ops calls (optmove, opta, floatop)
-  are declared extern before peepholer until they are written.
+  The two of them that peepholer_ops calls (opta, floatop) are declared
+  extern before peepholer until they are written.
 
   Image addresses (DOMAIN C 6.9; cc.m68k only: cc.a88k has no final):
     cc.m68k   cc.a88k
@@ -3907,6 +3905,232 @@ begin
   opttest := r;
 end;
 
+{ transform_ptr_in_d_use - a move.l (kind 1, op 2) from (-4,An) (mode
+  2) to an operand not using An, after a movea.l (kind 4, op 5) of data
+  register Dx to An, after an addq (kind 5, op 24) of the integer
+  constant 4 to Dx: the source made (An)+ (mode 8), a move.l of An to Dx
+  put after c, the addq removed.
+
+  0x10DD5A, 0x1DC bytes, no A5 load: the cells before c in D2 and D3;
+  the integer constants' kinds on a set at 0x10DF36; getcodecell's 1 a
+  word after the routine; D0 holds 2, read by no caller. }
+
+procedure transform_ptr_in_d_use(
+    c: codegen_$cell_ptr_t); options(val_param); internal;
+var
+  pv: codegen_$cell_ptr_t;
+  pp: codegen_$cell_ptr_t;
+  k: codegen_$cell_ptr_t;
+  n: il_$node_ptr_t;
+begin
+  pv := prvlcc(c);
+  pp := prvlcc(pv);
+  n := il_$node_ptr_t(pp^.ads1.x);
+  if (c^.kind = move_instyp) and (c^.op = 2) and (c^.ads1.f1 = 2) and
+     (c^.ads1.y = -4) and not involves(c^.ads2, c^.ads1.f2) and
+     (pv^.kind = a_instyp) and (pv^.op = 5) and (pv^.ads1.f1 = 1) and
+     (pv^.ads1.f2 in [0..7]) and (pv^.ads2.f1 = 1) and
+     (pv^.ads2.f2 = c^.ads1.f2) and (pp^.kind = q_instyp) and
+     (pp^.op = 24) and (pp^.ads1.f1 = 3) and
+     (n^.kind in [77..87, 101, 200]) and (n^.int_value = 4) and
+     (pp^.ads2.f1 = 1) and (pp^.ads2.f2 = pv^.ads1.f2) then begin
+    c^.ads1.f1 := 8;
+    c^.ads1.y := 0;
+    k := getcodecell(move_instyp);
+    k^.op := 2;
+    k^.ads1.f1 := 1;
+    k^.ads1.f2 := c^.ads1.f2;
+    k^.ads2.f1 := 1;
+    k^.ads2.f2 := pv^.ads1.f2;
+    after(c, k);
+    detach(pp);
+  end;
+end;
+
+{ optmove - move c simplified: a move.b of 255 (op 0) whose codes are
+  not tested made st (kind 19, op 124); two pushes of word immediates
+  (op 1, -(SP)) made one of a long (op 2); a move of 0 (or a real 88
+  whose high word is 0) made a clr (kind 3, op + 9), unless to
+  untouchable memory before the 68020; pushes (op 0..2 to -(SP)):
+  following pushes of the same source (not SP, c not 2 bytes long, no
+  untouchable memory) made copies of the top of the stack, a push of a
+  16-bit constant whose codes are not tested made a pea (kind 16, op
+  13) of the absolute address (mode 12), a push of an address register
+  a pea of (An); then a move that undoes the move before it, or a move
+  of an operand to itself (when its codes are tested made a tst, kind
+  3, op + 113, and opttest), removed; a move to a register or (mode 2)
+  memory just written by the move before it of the same size makes that
+  one useless; a move of memory to a data register followed by a move of
+  the same memory gives the second the register; a move from a register
+  to the place a move of the same size from that register wrote just
+  before makes that one useless; transform_ptr_in_d_use.  The cell
+  after c (c may have become the cell before it).
+
+  0x10DF52, 0x7E2 bytes, no A5 load: three registers saved one by one
+  (`pea (A3); pea (A2); move.l D2,-(SP)'); the cell before c in A2; the
+  removed cell kept at -12; has_xcrement_addressing of both operands
+  or-ed whole (the first at -22); c^.kind and c^.size set by one
+  `move.l #0x100004'.
+
+  Not known from the original: the order of the tests where the image
+  merges them. }
+
+function optmove(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+label
+  5, 7, 9;
+var
+  p: codegen_$cell_ptr_t;
+  pv: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+  nx: codegen_$cell_ptr_t;
+  n: il_$node_ptr_t;
+begin
+  if (c^.op = 0) and (c^.ads1.f1 = 3) then begin
+    n := il_$node_ptr_t(c^.ads1.x);
+    if (n^.kind in [77..87, 101, 200]) and ((n^.int_value & 255) = 255) and
+       not has_untouchable_mem_attrs(c^.ads2) then
+      if not testcc(nxtcc(c), 15) then begin
+        c^.kind := logicize_instyp;
+        c^.op := 124;
+        c^.size := ilength(c);
+        c^.ads1.f1 := 0;
+      end;
+  end;
+  p := nxtlcc(c);
+  if (p^.kind = move_instyp) and (p^.op = 1) and (c^.op = 1) and
+     (p^.ads1.f1 = 3) and (c^.ads1.f1 = 3) and (p^.ads2.f1 = 9) and
+     (p^.ads2.f2 = 15) and (c^.ads2.f1 = 9) and (c^.ads2.f2 = 15) then begin
+    c^.op := 2;
+    c^.ads1.x := integer32(smcontk(81,
+        lshft(il_$node_ptr_t(p^.ads1.x)^.int_value, 16) !
+        (il_$node_ptr_t(c^.ads1.x)^.int_value & 16#FFFF)));
+    c^.ads1.f6 := 2;
+    c^.size := ilength(c);
+    detach(p);
+  end;
+  if (c^.op <= 2) and (c^.ads1.f1 = 3) then
+    if not has_untouchable_mem_attrs(c^.ads2) or (3 in cargs_$options.cpu) then begin
+      n := il_$node_ptr_t(c^.ads1.x);
+      if ((n^.kind in [77..87, 101, 200]) and (n^.int_value = 0)) or
+         ((n^.kind = 88) and (n^.bits[1] = 0)) then begin
+        c^.kind := dest1_sz_instyp;
+        c^.op := c^.op + 9;
+        c^.ads1.f1 := 0;
+        c^.size := ilength(c);
+        goto 5;
+      end;
+    end;
+  if (c^.op <= 2) and (c^.ads2.f1 = 9) and (c^.ads2.f2 = 15) then begin
+    p := c;
+    p := nxtlcc(p);
+    while (p^.kind = move_instyp) and (p^.op = c^.op) and (p^.ads2.f1 = 9) and
+          (p^.ads2.f2 = 15) and (c^.ads1.f2 <> 15) and (c^.size <> 2) and
+          sameaddr(c^.ads1, p^.ads1) and
+          not has_untouchable_mem_attrs(c^.ads1) do begin
+      p^.ads1.f1 := 2;
+      p^.ads1.f2 := 15;
+      p^.ads1.y := 0;
+      p^.size := 2;
+      p := nxtlcc(p);
+    end;
+    if (c^.op = 2) and (c^.ads1.f1 = 3) then begin
+      n := il_$node_ptr_t(c^.ads1.x);
+      if (n^.kind in [77..87, 101, 200]) and (n^.int_value <= 32767) and
+         (n^.int_value >= -32768) then
+        if not testcc(nxtcc(c), 15) then begin
+          c^.ads1.f1 := 12;
+          c^.ads1.f6 := 1;
+          c^.kind := dest1_instyp;
+          c^.size := 4;
+          c^.op := 13;
+          c^.ads2 := c^.ads1;
+          c^.ads1.f1 := 0;
+        end;
+    end;
+    if (c^.op = 2) and (c^.ads1.f1 = 1) and (c^.ads1.f2 in [8..15]) then begin
+      c^.ads1.f1 := 2;
+      c^.kind := dest1_instyp;
+      c^.ads1.x := 0;
+      c^.ads1.y := 0;
+      c^.op := 13;
+      c^.ads2 := c^.ads1;
+      c^.ads1.f1 := 0;
+    end;
+  end;
+5:
+  pv := prvlcc(c);
+  if (c^.op <= 2) and (pv^.kind = move_instyp) and (pv^.op = c^.op) and
+     sameaddr(c^.ads1, pv^.ads2) and sameaddr(pv^.ads1, c^.ads2) and
+     not has_untouchable_mem_attrs(c^.ads1) and
+     not has_untouchable_mem_attrs(c^.ads2) then
+    if not (has_xcrement_addressing(c^.ads2) or
+            has_xcrement_addressing(c^.ads1)) then
+      goto 7;
+  if (c^.op <= 2) and sameaddr(c^.ads1, c^.ads2) and
+     not (c^.ads1.f1 in [8, 9, 11, 12]) and
+     not has_untouchable_mem_attrs(c^.ads2) then begin
+    if not testcc(nxtcc(c), 15) then
+      goto 7;
+    c^.kind := dest1_sz_instyp;
+    c^.size := ilength(c);
+    c^.op := c^.op + 113;
+    c := opttest(c);
+    c := c^.prev;
+    goto 9;
+  end;
+  if (c^.kind = move_instyp) and (pv^.kind = move_instyp) and
+     (c^.op = pv^.op) then begin
+    if (c^.ads2.f1 = 1) and sameaddr(c^.ads2, pv^.ads2) and
+       not involves(c^.ads1, pv^.ads2.f2) and
+       not has_untouchable_mem_attrs(c^.ads1) and
+       not has_untouchable_mem_attrs(pv^.ads1) and
+       not has_xcrement_addressing(c^.ads1) and
+       not has_xcrement_addressing(pv^.ads1) then
+      detach(pv)
+    else if (c^.ads2.f1 = 2) and sameaddr(c^.ads2, pv^.ads2) and
+            not has_untouchable_mem_attrs(c^.ads2) and
+            not has_untouchable_mem_attrs(pv^.ads2) and
+            not has_untouchable_mem_attrs(c^.ads1) and
+            not has_untouchable_mem_attrs(pv^.ads1) and
+            not has_xcrement_addressing(c^.ads2) and
+            not has_xcrement_addressing(pv^.ads2) and
+            not has_xcrement_addressing(c^.ads1) and
+            not has_xcrement_addressing(pv^.ads1) then
+      detach(pv);
+  end
+  else if (c^.kind = move_instyp) and (c^.ads2.f1 = 1) and
+          (c^.ads1.f1 <> 1) and (c^.next^.kind = move_instyp) and
+          (c^.next^.ads2.f1 = 1) and sameaddr(c^.ads1, c^.next^.ads1) and
+          not has_untouchable_mem_attrs(c^.ads1) and
+          not has_untouchable_mem_attrs(c^.next^.ads1) and
+          not has_xcrement_addressing(c^.ads1) and
+          (c^.op = c^.next^.op) then begin
+    nx := c^.next;
+    nx^.ads1.f1 := 1;
+    nx^.ads1.f2 := c^.ads2.f2;
+    nx^.ads1.x := c^.ads2.x;
+    nx^.size := ilength(nx);
+  end;
+  goto 9;
+7:
+  t := c;
+  c := c^.prev;
+  detach(t);
+9:
+  pv := prvlcc(c);
+  if (c^.kind = move_instyp) and (pv^.kind = move_instyp) and
+     (c^.ads1.f1 = 1) and (pv^.ads1.f1 = 1) and (c^.ads1.f2 = pv^.ads1.f2) and
+     sameaddr(c^.ads2, pv^.ads2) and
+     (final_$sizeof(c, 1) = final_$sizeof(pv, 1)) and
+     not has_untouchable_mem_attrs(c^.ads2) and
+     not has_untouchable_mem_attrs(pv^.ads2) and
+     not has_xcrement_addressing(pv^.ads2) then
+    detach(pv);
+  transform_ptr_in_d_use(c);
+  optmove := c^.next;
+end;
+
 { test_add_sub - c adds (ops 17..24: '+') or subtracts (28..35: '-') an
   immediate integer constant (kinds 8, 5, 4); ch the sign.
 
@@ -4420,13 +4644,9 @@ begin
   final_$unlink_opts := nx;
 end;
 
-{ TODO(pascal) optmove (0x10DF52), opta (0x10F6C4) and floatop
-  (0x10FB84) are not translated yet: declared here
-  (headings read off their frames and peepholer_ops's calls) until
-  they are written. }
-
-function optmove(
-    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); extern;
+{ TODO(pascal) opta (0x10F6C4) and floatop (0x10FB84) are not
+  translated yet: declared here (headings read off their frames and
+  peepholer_ops's calls) until they are written. }
 
 function opta(
     c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); extern;
