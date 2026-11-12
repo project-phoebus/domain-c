@@ -168,6 +168,7 @@ module iv;
 %include 'lang2/source/be_prism/target.ins.pas';
 %include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/opcodes.def/h7ecfdfe8.000/opcodes/opcode_enumeration.ins.pas';
 %include 'lang2/source/be_com/iv.ins.pas';
+var
 %include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/opcodes.def/h7ecfdfe8.000/opcodes/instr_size.init';
 %include 'lang2/source/be_com/utils.ins.pas';
 

@@ -1800,6 +1800,18 @@ revisited.
    against lir's copy: lir was not reached.  lir's data (A5 0x487180)
    holds no run of instr_size's words at its start (its +0 .. +0x320
    are other tables), so lir's copy, if it has one, lies further in.
+   **Answered by translator PA6 (questions 205 and 221): 384 entries.**
+   lir's copy is the first table of the section lir_readonly_tables
+   (0x2BDA2C; lir_$opt_new_instruction reads it for an instruction of
+   default size): the same 212 words as iv's, then zero words to word
+   383, the next table (solution_kind) at +0x300, as iv_opc_set follows
+   iv's at +0x300.  instr_size.init now declares 0..383 (`172 of 0'
+   after opc$adj_move) and holds the declaration only: iv.pas opens a
+   plain `var' before including it, lir will open `var
+   (lir_readonly_tables)'; iv's data now matches the image at +0x300
+   (iv_opc_set) and after.  iv_opc_kind (iv +0x330) is likewise 384
+   words in the image (question 205) but is iv.pas's own table, left
+   at 212 (batch C's).
 
 
 222. Translator PA5, fg_utils: reverse_depth_first_search (cc.a88k
