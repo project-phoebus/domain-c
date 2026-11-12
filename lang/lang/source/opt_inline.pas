@@ -1299,3 +1299,406 @@ begin
   end;
   actual_actual := r;
 end;
+
+{ pass_method - how actual a (formal f, parameter p, the k-th) of edge
+  e is bound: 0 substituted, 1 by reference, 2 through its address, 3
+  copied to a temporary.  Without p's mode (+44) a language 1 callee's
+  parameter of class (+394 + 2k) 7 or more is by reference; a language
+  1 parameter of mode 2 and class below 7, not +46 bit 7, is
+  substituted; a language 2 actual whose class differs from the
+  formal's (but for operators 12, 23, 40, 24), or a language 1
+  parameter of +46 bit 7, is copied; constants (77..82, 87..90) and
+  trees (137, 143, 198, 200) are substituted, other constants (83..86,
+  92, 93, 101, 156, 176) copied, and references go through their
+  address when they reach a variable (109, 110, 111, 163, 195).
+
+  0x090012, 0x15E bytes, link #-32: k a word at (12,A6); the kinds
+  against the 26- and 24-byte sets after the routine; the result a
+  word in D0. }
+
+function pass_method(
+    e: oi_edge_ptr_t;
+    k: integer;
+    a: il_$node_ptr_t;
+    f: il_$node_ptr_t;
+    p: il_$node_ptr_t): integer; options(val_param); internal;
+var
+  r: integer;
+  d1: add_node_$desc_t;
+  d2: add_node_$desc_t;
+  ind: il_$node_ptr_t;
+  x: il_$node_ptr_t;
+  done: boolean;
+begin
+  if (p = nil) or (p^.xw[22] = 0) then begin
+    if (language = 1) and ((e^.callee^.xw[197 + k] & 16#FFFF) >= 7) then
+      pass_method := 1
+    else
+      pass_method := 0;
+    return;
+  end;
+  if (language = 1) and (p <> nil) then
+    if p^.xw[22] = 2 then
+      if (e^.callee^.xw[197 + k] & 16#FFFF) < 7 then
+        if ord(p^.xc[46]) < 128 then begin
+          pass_method := 0;
+          return;
+        end;
+  if language = 2 then begin
+    r := 3;
+    get_size_rlen(a, d1);
+    get_size_rlen(f, d2);
+    if d1.rlen = 0 then begin
+      pass_method := r;
+      return;
+    end;
+    done := false;
+    if a^.kind = 137 then
+      if (a^.xw[18] = 12) or (a^.xw[18] = 23) or (a^.xw[18] = 40) or
+         (a^.xw[18] = 24) then
+        done := true;
+    if not done then
+      if d1.rlen <> d2.rlen then begin
+        pass_method := r;
+        return;
+      end;
+  end;
+  if (language = 1) and (p <> nil) then
+    if ord(p^.xc[46]) >= 128 then begin
+      pass_method := 3;
+      return;
+    end;
+  if a^.kind in [77..82, 87..90, 137, 143, 198, 200] then
+    r := 0
+  else if a^.kind in [83..86, 92, 93, 101, 156, 176] then
+    r := 3
+  else begin
+    x := actual_actual(a, ind);
+    if x^.kind in [109, 110, 111, 163, 195] then
+      r := 2
+    else
+      r := 3;
+  end;
+  pass_method := r;
+end;
+
+{ put_on_bct - variable v (109, or a temporary 110) added to the end
+  of block b's variables (+16 first, +20 last; through a 109's +16, a
+  110's +4), owned by e's caller (a 109's +20, a 110's +40 unless of
+  class 1 by +44), whose count of variables (+290) is raised.
+
+  0x0901BC, 0x82 bytes, link #-12. }
+
+procedure put_on_bct(
+    e: oi_edge_ptr_t;
+    b: il_$node_ptr_t;
+    v: il_$node_ptr_t); options(val_param); internal;
+begin
+  if v^.kind = 110 then begin
+    v^.xp[1] := nil;
+    if rshft(ord(v^.xc[44]) & 16#F0, 4) <> 1 then
+      v^.xp[10] := e^.caller;
+  end
+  else begin
+    v^.xp[4] := nil;
+    v^.xp[5] := e^.caller;
+  end;
+  if b^.xp[5] = nil then
+    b^.xp[4] := v
+  else if b^.xp[5]^.kind = 110 then
+    b^.xp[5]^.xp[1] := v
+  else
+    b^.xp[5]^.xp[4] := v;
+  b^.xp[5] := v;
+  e^.caller^.xw[145] := e^.caller^.xw[145] + 1;
+end;
+
+{ copy_const - a copy of constant c (40 bytes from gspace).
+
+  0x09023E, 0x36 bytes: e not read; lib_$data_move from c's frame slot
+  to a local holding the copy's address, the length a longword after
+  the routine. }
+
+function copy_const(
+    e: oi_edge_ptr_t;
+    c: il_$node_ptr_t): il_$node_ptr_t; options(val_param); internal;
+var
+  n: il_$node_ptr_t;
+begin
+  n := gspace(40);
+  lib_$data_move(c, n, 40);
+  copy_const := n;
+end;
+
+{ copy_var - a copy of variable v (109, 110) for the caller: in a
+  language 2 callee 72 bytes and its +70 (rounded to longwords plus 4
+  under -MAP), else 84 (92 for a language 1 variable of storage class
+  10, +72); a parameter (121) stands for its +48 when it has one, and
+  is made a variable (109: its fields moved to a variable's places,
+  storage class 1 in the main program's block (105), else 2).  A
+  variable's type that is a parameter becomes the parameter's (+16).
+
+  0x090278, 0x140 bytes, link #-20: the length passed in a local
+  longword, v stored back to its frame slot for lib_$data_move. }
+
+function copy_var(
+    e: oi_edge_ptr_t;
+    v: il_$node_ptr_t): il_$node_ptr_t; options(val_param); internal;
+var
+  size: integer;
+  n: il_$node_ptr_t;
+  len: integer32;
+begin
+  if language = 2 then begin
+    if cargs_$options.map then
+      size := lshft(rshft((v^.xw[35] & 16#FFFF) + 9, 2), 2) + 72
+    else
+      size := 72 + v^.xw[35];
+  end
+  else begin
+    size := 84;
+    if v^.kind = 121 then
+      if v^.xp[12] <> nil then
+        v := v^.xp[12];
+    if language = 1 then
+      if v^.kind = 109 then
+        if v^.xw[36] = 10 then
+          size := 92;
+  end;
+  n := gspace(size);
+  if (v^.kind = 110) or (v^.kind = 109) then begin
+    len := size;
+    lib_$data_move(v, n, len);
+  end
+  else if v^.kind = 121 then begin
+    n^.kind := 109;
+    n^.xp[7] := v^.xp[4];
+    n^.xp[8] := v^.xp[5];
+    n^.xp[1] := v^.xp[2];
+    n^.xp[2] := v^.xp[3];
+    n^.xp[9] := v^.xp[7];
+    n^.xp[10] := v^.xp[6];
+    n^.xw[23] := v^.xw[16];
+    n^.xw[22] := v^.xw[17];
+    n^.xw[24] := v^.xw[18];
+    if e^.caller^.kind = 105 then
+      n^.xw[36] := 1
+    else
+      n^.xw[36] := 2;
+  end;
+  if n^.kind = 109 then
+    if n^.xp[7] <> nil then
+      if n^.xp[7]^.kind = 121 then
+        n^.xp[7] := n^.xp[7]^.xp[4];
+  copy_var := n;
+end;
+
+{ align - x aligned to 2**n bytes: up, or down when down is set.
+
+  0x0903B8, 0x3A bytes: x by address, n and down words. }
+
+procedure align(
+    var x: integer32;
+    n: integer;
+    down: integer); options(val_param); internal;
+var
+  m: integer32;
+begin
+  m := lshft(-1, n) & x;
+  if m <> x then
+    if down = 0 then
+      x := m + lshft(1, n)
+    else
+      x := m;
+end;
+
+{ allocate_space - size bytes for a variable of e's caller, aligned
+  to 2**n: static ones from the data section's record (the caller's
+  +192: +20 the offset, class 1; past 24K and too large for what is
+  left, unless -CPU M020, its +24, class 7, reported as unexpected),
+  others from the frame (the caller's +112, downward, class 2; past
+  -24K likewise its +176, class 6, reported).
+
+  0x0903F2, 0x16A bytes, link #-4: n a word at (16,A6), static a byte
+  at (18,A6), class and offset by address; the limits' quarters by
+  `lsr.l #2'. }
+
+procedure allocate_space(
+    e: oi_edge_ptr_t;
+    size: integer32;
+    n: integer;
+    static: boolean;
+    out class: integer;
+    out offset: integer32); options(val_param); internal;
+var
+  d: il_$node_ptr_t;
+  b: il_$node_ptr_t;
+  t: integer32;
+begin
+  if static then begin
+    d := e^.caller^.xp[48];
+    if (size + d^.xl[5] > 24576) and
+       (rshft(32768 - d^.xl[5], 2) < size) and
+       not (3 in cargs_$options.cpu) then begin
+      align(d^.xl[6], n, 0);
+      offset := e^.caller^.xp[48]^.xl[6];
+      e^.caller^.xp[48]^.xl[6] := e^.caller^.xp[48]^.xl[6] + size;
+      class := 7;
+      cgerr_no_source(28, integer32(strtk('unexpected IL encountered', 25)));
+    end
+    else begin
+      align(d^.xl[5], n, 0);
+      offset := e^.caller^.xp[48]^.xl[5];
+      e^.caller^.xp[48]^.xl[5] := e^.caller^.xp[48]^.xl[5] + size;
+      class := 1;
+    end;
+  end
+  else begin
+    b := e^.caller;
+    t := b^.xl[28] - size;
+    if (t < -24576) and (rshft(b^.xl[28] + 31000, 2) < size) and
+       not (3 in cargs_$options.cpu) then begin
+      align(b^.xl[44], n, 0);
+      offset := e^.caller^.xl[44];
+      e^.caller^.xl[44] := e^.caller^.xl[44] + size;
+      class := 6;
+      cgerr_no_source(28, integer32(strtk('unexpected IL encountered', 25)));
+    end
+    else begin
+      b^.xl[28] := t;
+      align(e^.caller^.xl[28], n, 1);
+      offset := e^.caller^.xl[28];
+      class := 2;
+    end;
+  end;
+end;
+
+{ allocate_local_var - variable v given storage in e's caller: its
+  alignment by its class (get_size_rlen: 1, 2, 4 or 8 bytes; another
+  class reported), static in the main program's block (105) unless
+  +26 (language 2) or +34 bit 14; a language 2 variable takes the
+  largest of its equivalence ring (+28; sz_fsym) from the ring's
+  lowest offset (+12), and each member its class (+11 bits 7..4) and
+  offset moved, +25 bit 2 and +44 bit 0 set (and v's +44 class 3);
+  another its class (+72) and offset (+56), +33 bit 2.  The size is
+  made even.
+
+  0x09055C, 0x1E6 bytes, link #-40: the alignment by a jump table of
+  13; the message's length 66 though the text is shorter. }
+
+procedure allocate_local_var(
+    e: oi_edge_ptr_t;
+    v: il_$node_ptr_t); options(val_param); internal;
+var
+  d: add_node_$desc_t;
+  static: boolean;
+  n: integer;
+  class: integer;
+  offset: integer32;
+  size: integer32;
+  low: integer32;
+  s: integer32;
+  w: il_$node_ptr_t;
+begin
+  static := false;
+  get_size_rlen(v, d);
+  case d.rlen of
+    0, 1:
+      n := 0;
+    2:
+      n := 1;
+    4, 5, 6:
+      n := 2;
+    7, 8:
+      n := 3;
+    9, 10:
+      n := 2;
+    11, 12:
+      n := 3;
+    otherwise
+      cgerr_no_source(28, integer32(strtk(
+        'Bad rlen encountered in \\opt_inline\allocate_local_var', 66)));
+  end;
+  if language = 2 then begin
+    if e^.caller^.kind = 105 then
+      if (v^.xw[13] & 16#4000) = 0 then
+        static := true;
+    size := sz_fsym(v);
+    low := v^.xl[3];
+    w := v^.xp[7];
+    if w <> nil then
+      while w <> v do begin
+        s := sz_fsym(w);
+        if size < s then
+          size := s;
+        if low > w^.xl[3] then
+          low := w^.xl[3];
+        w := w^.xp[7];
+      end;
+  end
+  else begin
+    if e^.caller^.kind = 105 then
+      if (v^.xw[17] & 16#4000) = 0 then
+        static := true;
+    size := d.size;
+  end;
+  if odd(size) then
+    size := size + 1;
+  allocate_space(e, size, n, static, class, offset);
+  if language = 2 then begin
+    v^.xc[11] := chr((ord(v^.xc[11]) & 15) ! (lshft(class, 4) & 16#F0));
+    v^.xl[3] := v^.xl[3] - low + offset;
+    v^.xc[25] := chr(ord(v^.xc[25]) ! 4);
+    v^.xc[44] := chr(ord(v^.xc[44]) ! 1);
+    v^.xc[44] := chr((ord(v^.xc[44]) & 15) ! 16#30);
+    w := v^.xp[7];
+    if w <> nil then
+      while w <> v do begin
+        w^.xc[11] := chr((ord(w^.xc[11]) & 15) ! (lshft(class, 4) & 16#F0));
+        w^.xl[3] := w^.xl[3] - low + offset;
+        w^.xc[25] := chr(ord(w^.xc[25]) ! 4);
+        w^.xc[44] := chr(ord(w^.xc[44]) ! 1);
+        w := w^.xp[7];
+      end;
+  end
+  else begin
+    v^.xw[36] := class;
+    v^.xl[14] := offset;
+    v^.xc[33] := chr(ord(v^.xc[33]) ! 4);
+  end;
+end;
+
+{ set_address_exposed - the variable whose address t takes (an
+  operator 137 of op 26, else reported) marked address exposed: a
+  110's +26 bit 4, a 109's +34 bit 4, directly or as the base (+28) of
+  a reference (145, 146, 205, 147).
+
+  0x09077A, 0x9E bytes, link #-8: the message a varying string
+  constant after the routine (token_$make_string_token). }
+
+procedure set_address_exposed(
+    t: il_$node_ptr_t); options(val_param); internal;
+var
+  x: il_$node_ptr_t;
+  y: il_$node_ptr_t;
+begin
+  if (t^.kind <> 137) or (t^.xw[18] <> 26) then
+    cgerr_no_source(28, integer32(token_$make_string_token(
+      'set_address_exposed --- top is not addr_top.')));
+  x := t^.xp[10];
+  case x^.kind of
+    110:
+      x^.xc[26] := chr(ord(x^.xc[26]) ! 16);
+    109:
+      x^.xc[34] := chr(ord(x^.xc[34]) ! 16);
+    145, 146, 205, 147: begin
+      y := x^.xp[7];
+      if y^.kind = 110 then
+        y^.xc[26] := chr(ord(y^.xc[26]) ! 16)
+      else if y^.kind = 109 then
+        y^.xc[34] := chr(ord(y^.xc[34]) ! 16);
+    end;
+    otherwise
+      ;
+  end;
+end;
