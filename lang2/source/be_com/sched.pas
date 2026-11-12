@@ -1449,8 +1449,8 @@ end;
   classes (`cmpi.w #24; bcc' to the end); the 2 is the shifts' count
   register (`moveq #2,D1; lsl.w D1,D0', where the unit's other
   products use `lsl.w #2'), so the base is a constant the compiler
-  reused (rev889-patterns 75, 280; docs/questions.md 340).  A load's -1 jumps straight to the
-  clamp's 0. }
+  reused (rev889-patterns 75, 280; docs/questions.md 340).  A load's
+  -1 jumps straight to the clamp's 0. }
 
 function register_pressure(
     i: sc_instr_ptr_t): integer32; options(val_param, internal);
