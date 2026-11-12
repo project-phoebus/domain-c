@@ -306,8 +306,13 @@ type
     l4: integer32;                      { +4 }
     w8: integer;                        { +8 }
     num: integer;                       { +10 }
-    w12: integer;                       { +12 }
-    w14: integer;                       { +14 }
+    w12: integer;                       { +12: its position (tr_utils
+                                          orders segments by it) }
+    f14: packed record                  { +14 }
+      b14: 0..255;                      { (tr_utils: compared with 1 and
+                                          2) }
+      b15: 0..255;
+      end;
     f: bb_flags_t;                      { +16 }
     f20: packed record                  { +20 }
       b20_7: boolean;
@@ -330,7 +335,9 @@ type
     space42: array [42..69] of char;    { +42 }
     l70: bb_ptr_t;                      { +70: the head of its interval
                                           (tr_utils' bb_interval) }
-    space74: array [74..85] of char;    { +74 }
+    space74: array [74..81] of char;    { +74 }
+    l82: bb_ptr_t;                      { +82 (tr_utils: the hammock
+                                          head, of a block not one) }
     l86: univ_ptr;                      { +86: a bit vector of live
                                           ranges (tr_utils: of those
                                           final in the block) }
@@ -338,7 +345,12 @@ type
                                           exposed) }
     l94: univ_ptr;                      { +94: a bit vector (tr_utils:
                                           exposed) }
-    space98: array [98..109] of char;   { +98 }
+    l98: bb_edge_ptr_t;                 { +98: an edge (tr_utils: its
+                                          target follows the hammock) }
+    l102: bb_ptr_t;                     { +102: the first block of its
+                                          hammock (tr_utils) }
+    l106: bb_ptr_t;                     { +106: the next block of the
+                                          hammock (tr_utils) }
     l110: univ_ptr;                     { +110: a bit vector (tr_utils:
                                           written) }
     space114: array [114..117] of char; { +114 }
@@ -2126,8 +2138,8 @@ function tr_utils_$try_twiddling_disp(
 { TR_UTILS_$ATTEMPT_AUTOINCREMENT - 0x280610, 0x130 bytes; called from iv
   trans.  Frame 8:l; 12:a.  Result: D0 (callers: D0b1). }
 function tr_utils_$attempt_autoincrement(
-    p1: integer32;
-    p2: univ_ptr): boolean; options(val_param); extern;
+    rtn: rtn_ptr_t;
+    add: instr_ptr_t): boolean; options(val_param); extern;
 
 { TR_UTILS_$ATTEMPT_TEST_ELIMINATION - 0x28163E, 0x2C8 bytes; called from
   com trans.  Frame 8:l; 12:al. }

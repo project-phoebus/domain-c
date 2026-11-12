@@ -52,7 +52,7 @@ type
   tr_valid_t = ^function(
       lts: lts_ptr_t;
       bb: bb_ptr_t;
-      arg: integer32;
+      arg: univ_ptr;
       out pair: tr_pair_t): integer; options(val_param);
 
 var
@@ -1242,7 +1242,7 @@ function find_complex_driving_ltss(
     valid: tr_valid_t;
     ok: tr_valid_t;
     var serial: integer32;
-    arg: integer32;
+    arg: univ_ptr;
     var sols: tr_sol_ptr_t): boolean; options(val_param); internal;
 var
   m: integer32;
@@ -1451,6 +1451,7 @@ end;
 { print_solutions_for_debugging - nothing (2 bytes).  0x27DBCA. }
 
 procedure print_solutions_for_debugging(
+    lts: lts_ptr_t;
     sols: tr_sol_ptr_t); options(val_param); internal;
 begin
 end;
@@ -2722,7 +2723,7 @@ begin
           end;
           l3 := add^.opnds[3].lts;
           if l3^.f2.b3_4 then begin
-            utils_$move_definition(l3, lts, 0);
+            utils_$move_definition(l3, lts, false);
             utils_$excise_lts_cleanly(add^.opnds[3].lts, false);
             utils_$put_lts_on_final_list(lts);
           end
@@ -2962,7 +2963,7 @@ begin
         lts^.rrp := lts^.rrp + [rrp$intend_to_modify];
         b^.h.intend_to_modify := true;
         if (lts^.rrp * [rrp$modify, rrp$write]) <> [] then
-          utils_$move_definition(lts, nl, 0);
+          utils_$move_definition(lts, nl, false);
         x := index_operand(mem);
         if x^.value = 0 then begin
           x^.value := disp;
@@ -2992,7 +2993,7 @@ end;
 function ok_to_add_auto(
     lts: lts_ptr_t;
     bb: bb_ptr_t;
-    arg: integer32;
+    arg: univ_ptr;
     out pair: tr_pair_t): integer; options(val_param);
 begin
   ok_to_add_auto := 0;
@@ -3005,7 +3006,7 @@ end;
 function validate_lts_for_auto(
     lts: lts_ptr_t;
     bb: bb_ptr_t;
-    arg: integer32;
+    arg: univ_ptr;
     out pair: tr_pair_t): integer; options(val_param);
 begin
   pair.a := nil;
@@ -3015,4 +3016,645 @@ begin
     pair.b := lts;
     validate_lts_for_auto := 1;
   end;
+end;
+
+{ try_autoincrement - add folded into the loads and stores of its block
+  (autoindex_within_bb), or, with try_both, across blocks: operand 2's
+  segment (of a live range with a number, exposed or defined by a
+  modifying JOIN_BP) has its readers before add adjusted by disp and
+  moved to add's result, and add moved before its first reader; then
+  every path into the block must reach an acceptable segment
+  (find_complex_driving_ltss with validate_lts_for_auto and
+  ok_to_add_auto, from the routine's heap mark), the solutions must not
+  interfere and take the increment
+  (solutions_dont_interfere, autoincrement_solutions_acceptable,
+  apply_autoincrement_solutions); add's result's segment (which must
+  follow operand 2's: bug_check) is excised, its readers given to
+  operand 2's segment (and its place on the final list), and add
+  excised; the live range's SSA form recomputed.
+
+  0x27FBBA, 0x2B8 bytes: validate_lts_for_auto and ok_to_add_auto by
+  their addresses (`move.l #0x27FB7A', `#0x27FB64'); the routine's
+  heap mark (mrh_$mark) kept and not used; print_solutions_for_debugging
+  pops 6 of its 8 bytes. }
+
+function try_autoincrement(
+    add: instr_ptr_t;
+    try_both: boolean;
+    disp: integer32): boolean;
+var
+  lts, l3: lts_ptr_t;
+  r, first, op2, last, t: opnd_ptr_t;
+  i: instr_ptr_t;
+  mark: mrh_$mark_t;
+  sols: tr_sol_ptr_t;
+  lr: lr_ptr_t;
+  lrv: lr_ptr_t;
+  serial: integer32;
+begin
+  if autoindex_within_bb(add, try_both, disp) then begin
+    try_autoincrement := true;
+    return;
+  end;
+  if not try_both then begin
+    try_autoincrement := false;
+    return;
+  end;
+  lts := add^.opnds[2].lts;
+  if lts^.lr^.w4 = 0 then begin
+    try_autoincrement := false;
+    return;
+  end;
+  if not lts^.f2.b3_7 then begin
+    r := lts^.def;
+    if not r^.h.modify then begin
+      try_autoincrement := false;
+      return;
+    end;
+    i := utils_ins_$operands_instruction(r);
+    if i^.opc <> ord(opc$join_bp) then begin
+      try_autoincrement := false;
+      return;
+    end;
+  end;
+  tr_utils_$guarantee_operand_order(lts);
+  r := lts^.def;
+  if r^.h.read then
+    first := r
+  else
+    first := r^.link;
+  op2 := addr(add^.opnds[2]);
+  if first <> op2 then begin
+    r := first;
+    repeat
+      if not can_preserve_operation(r, disp, 0) then begin
+        try_autoincrement := false;
+        return;
+      end;
+      r := r^.link;
+    until r = op2;
+    l3 := add^.opnds[3].lts;
+    r := first;
+    repeat
+      t := r;
+      preserve_operation(t, disp);
+      r := t;
+      r^.lts := l3;
+      last := r;
+      r := r^.link;
+    until r = op2;
+    r := lts^.def;
+    if not r^.h.read then
+      r := r^.link;
+    if r = lts^.def then
+      lts^.def := op2
+    else
+      lts^.def^.link := op2;
+    last^.link := add^.opnds[3].link;
+    add^.opnds[3].link := r;
+    add^.prev^.next := add^.next;
+    if add^.next <> nil then
+      add^.next^.prev := add^.prev
+    else
+      add^.bb^.last := add^.prev;
+    i := utils_ins_$operands_instruction(r);
+    add^.prev := i^.prev;
+    if i^.prev <> nil then
+      i^.prev^.next := add
+    else
+      i^.bb^.first := add;
+    add^.next := i;
+    i^.prev := add;
+  end;
+  mark := mrh_$mark(tr_heap);
+  sols := nil;
+  lr := lts^.lr;
+  lrv := lr;
+  if not find_complex_driving_ltss(lts, lr, lr, lts^.bb,
+                                   addr(validate_lts_for_auto),
+                                   addr(ok_to_add_auto), serial, addr(lrv),
+                                   sols) then begin
+    try_autoincrement := false;
+    return;
+  end;
+  print_solutions_for_debugging(lts, sols);
+  if not solutions_dont_interfere(sols, add^.bb, lr, serial, false) then begin
+    try_autoincrement := false;
+    return;
+  end;
+  if not autoincrement_solutions_acceptable(sols, add, disp) then begin
+    try_autoincrement := false;
+    return;
+  end;
+  apply_autoincrement_solutions(sols, lr, disp, add);
+  l3 := add^.opnds[3].lts;
+  if l3^.next <> lts then
+    bug_check('TR_UTILS_$try_autoincrement:  LTS list out of order%$');
+  if l3^.f2.b3_4 then begin
+    utils_$remove_lts_from_final_list(l3);
+    utils_$put_lts_on_final_list(lts);
+  end;
+  last := nil;
+  r := l3^.def^.link;
+  while r <> nil do begin
+    r^.lts := lts;
+    last := r;
+    r := r^.link;
+  end;
+  if last <> nil then begin
+    last^.link := add^.opnds[2].link;
+    add^.opnds[2].link := l3^.def^.link;
+  end;
+  l3^.def^.link := nil;
+  utils_$excise_lts_cleanly(l3, false);
+  lts^.l44 := nil;
+  discard(utils_$excise_instruction_cleanly(add, false));
+  fg_utils_$recompute_ssa_form_for_lr(lr);
+  try_autoincrement := true;
+end;
+
+{ could_adjust_hammock_contents - whether lr's final segments in the
+  blocks of a hammock (from bb along +106, and the inner hammocks of
+  the blocks that have one, +19 bit 7, from their +102) are all
+  exposed (any set when there is one) and their readers keep their
+  effect when the value changes by disp.
+
+  0x27FEA8, 0x8E bytes, no A5, recursive. }
+
+function could_adjust_hammock_contents(
+    bb: bb_ptr_t;
+    lr: lr_ptr_t;
+    disp: integer32;
+    var any: boolean): boolean; options(val_param); internal;
+var
+  b: bb_ptr_t;
+  l: lts_ptr_t;
+  r: opnd_ptr_t;
+begin
+  any := false;
+  b := bb;
+  while b <> nil do begin
+    l := utils_$find_final_lts(lr, b);
+    if l <> nil then begin
+      if not l^.f2.b3_7 then begin
+        could_adjust_hammock_contents := false;
+        return;
+      end;
+      any := true;
+      r := l^.def;
+      while r <> nil do begin
+        if not can_preserve_operation(r, disp, 0) then begin
+          could_adjust_hammock_contents := false;
+          return;
+        end;
+        r := r^.link;
+      end;
+    end;
+    if b^.f.b19_7 then
+      if not could_adjust_hammock_contents(b^.l102, lr, disp, any) then begin
+        could_adjust_hammock_contents := false;
+        return;
+      end;
+    b := b^.l106;
+  end;
+  could_adjust_hammock_contents := true;
+end;
+
+{ adjust_hammock_contents - final's live range's final segments in the
+  hammock's blocks (and inner hammocks) chained after final instead of
+  their old final segment (+44, +28), their readers adjusted by disp
+  (preserve_operation).  0x27FF36, 0xC8 bytes, no A5, recursive. }
+
+procedure adjust_hammock_contents(
+    bb: bb_ptr_t;
+    final: lts_ptr_t;
+    disp: integer32); options(val_param); internal;
+var
+  b: bb_ptr_t;
+  l, f: lts_ptr_t;
+  r, t: opnd_ptr_t;
+begin
+  b := bb;
+  while b <> nil do begin
+    l := utils_$find_final_lts(final^.lr, b);
+    if l <> nil then begin
+      if l^.l44 <> nil then begin
+        f := l^.l44;
+        if f^.l28 = l then
+          f^.l28 := l^.l28
+        else begin
+          f := f^.l28;
+          while f^.l28 <> l do
+            f := f^.l28;
+          f^.l28 := l^.l28;
+        end;
+      end;
+      l^.l44 := final;
+      if final <> nil then begin
+        l^.l28 := final^.l28;
+        final^.l28 := l;
+      end;
+      r := l^.def;
+      while r <> nil do begin
+        t := r;
+        preserve_operation(t, disp);
+        r := t;
+        r := r^.link;
+      end;
+    end;
+    if b^.f.b19_7 then
+      adjust_hammock_contents(b^.l102, final, disp);
+    b := b^.l106;
+  end;
+end;
+
+{ move_add_to_new_bb - add moved to bb: after anchor (which must be in
+  bb: bug_check), else at the tail (before the closing branches,
+  classes 1, 5, 6, 24) or at the head (after the JOIN_BPs and labels);
+  at the tail, operand 2 reads lr's final segment in bb (a new one
+  exposed and chained after the old final) and the result defines a new
+  final segment there (the old one, its def moved to it, made exposed
+  and excised when nothing defines it); at the head, the result
+  defines lr's exposed segment in bb (taken off the exposed list, its
+  chains cleared, the old segment's definition moved to it and the old
+  segment excised; put on the final list when chained) and operand 2
+  reads a new exposed segment chained after operand 2's old final (its
+  old segment put on the final list).
+
+  0x27FFFE, 0x3AE bytes, no A5: utils_$remove_reader_from_lts's result
+  dropped; the head's segment's def overwritten without its chain. }
+
+procedure move_add_to_new_bb(
+    add: instr_ptr_t;
+    bb: bb_ptr_t;
+    anchor: instr_ptr_t;
+    at_tail: boolean); options(val_param); internal;
+var
+  old: bb_ptr_t;
+  p: instr_ptr_t;
+  l2, l3, f: lts_ptr_t;
+  created: boolean;
+  op2: opnd_ptr_t;
+  r: opnd_ptr_t;
+  was_final: boolean;
+begin
+  if anchor <> nil then
+    if anchor^.bb <> bb then
+      bug_check('TR_UTILS_$move_add_to_nebb: prev_instr not in new_bb%$');
+  old := add^.bb;
+  if add^.prev <> nil then
+    add^.prev^.next := add^.next
+  else
+    old^.first := add^.next;
+  if add^.next <> nil then
+    add^.next^.prev := add^.prev
+  else
+    old^.last := add^.prev;
+  if anchor <> nil then
+    p := anchor^.next
+  else if at_tail then begin
+    p := bb^.last;
+    while p <> nil do begin
+      if not (instruction_attributes[p^.opc].class
+              in [class$branch, class$fp_branch, class$jump, class$return])
+      then
+        exit;
+      p := p^.prev;
+    end;
+    if p = nil then
+      p := bb^.first
+    else
+      p := p^.next;
+  end
+  else begin
+    p := bb^.first;
+    while p <> nil do begin
+      if (p^.opc <> ord(opc$join_bp)) and (p^.opc <> ord(opc$label)) then
+        exit;
+      p := p^.next;
+    end;
+  end;
+  if p <> nil then begin
+    if p^.prev <> nil then
+      p^.prev^.next := add
+    else
+      bb^.first := add;
+    add^.prev := p^.prev;
+    add^.next := p;
+    p^.prev := add;
+  end
+  else begin
+    bb^.last^.next := add;
+    add^.prev := bb^.last;
+    bb^.last := add;
+    add^.next := nil;
+  end;
+  add^.bb := bb;
+  if at_tail then begin
+    l2 := utils_$get_final_lts(add^.opnds[2].lts^.lr, bb, created);
+    if created then begin
+      utils_$put_lts_on_exposed_list(l2);
+      l2^.l44 := add^.opnds[2].lts^.l44;
+      if l2^.l44 <> nil then begin
+        l2^.l28 := l2^.l44^.l28;
+        l2^.l44^.l28 := l2;
+      end;
+    end;
+    op2 := addr(add^.opnds[2]);
+    discard(utils_$remove_reader_from_lts(op2, false));
+    add^.opnds[2].lts := l2;
+    if l2^.def = nil then
+      l2^.def := op2
+    else begin
+      r := l2^.def;
+      while r^.link <> nil do
+        r := r^.link;
+      r^.link := op2;
+    end;
+    add^.opnds[2].link := nil;
+    if l2^.f2.b3_4 then begin
+      was_final := true;
+      utils_$remove_lts_from_final_list(l2);
+    end
+    else
+      was_final := false;
+    f := utils_$get_final_lts(add^.opnds[3].lts^.lr, bb, created);
+    if was_final and ((l2^.rrp * [rrp$modify, rrp$write]) <> []) then
+      utils_$move_definition(l2, f, false);
+    l3 := add^.opnds[3].lts;
+    utils_$move_definition(l3, f, true);
+    l3^.def := l3^.def^.link;
+    l3^.rrp := l3^.rrp - [rrp$modify, rrp$write];
+    utils_$put_lts_on_exposed_list(l3);
+    if l3^.def = nil then
+      utils_$excise_lts_cleanly(l3, false);
+    f^.def := addr(add^.opnds[3]);
+    add^.opnds[3].lts := f;
+    add^.opnds[3].link := nil;
+    f^.rrp := rrp$set_t(integer(f^.rrp)
+                        ! (opnd_bytes_ptr_t(addr(add^.opnds[3]))^.rrp & 12));
+  end
+  else begin
+    l3 := utils_$get_exposed_lts(add^.opnds[3].lts^.lr, bb, created);
+    if not created then
+      if l3^.l44 <> nil then begin
+        f := l3^.l44;
+        if f^.l28 = l3 then
+          f^.l28 := l3^.l28
+        else begin
+          while f^.l28 <> l3 do
+            f := f^.l28;
+          f^.l28 := l3^.l28;
+        end;
+      end;
+    utils_$remove_lts_from_exposed_list(l3);
+    l3^.l28 := nil;
+    l3^.l44 := nil;
+    f := add^.opnds[3].lts;
+    utils_$move_definition(f, l3, false);
+    if not l3^.f2.b3_4 then
+      if (l3^.l28 <> nil) or (l3^.l44 <> nil) then
+        utils_$put_lts_on_final_list(l3);
+    f^.def := nil;
+    utils_$excise_lts_cleanly(f, false);
+    add^.opnds[3].lts := l3;
+    add^.opnds[3].link := l3^.def;
+    l3^.def := addr(add^.opnds[3]);
+    l3^.rrp := rrp$set_t(integer(l3^.rrp)
+                         ! (opnd_bytes_ptr_t(addr(add^.opnds[3]))^.rrp & 12));
+    l2 := utils_$get_exposed_lts(add^.opnds[2].lts^.lr, bb, created);
+    f := add^.opnds[2].lts;
+    if (f^.rrp * [rrp$modify, rrp$write]) = [] then
+      f := f^.l44;
+    if f <> nil then begin
+      l2^.l44 := f;
+      l2^.l28 := f^.l28;
+      f^.l28 := l2;
+    end;
+    utils_$put_lts_on_final_list(add^.opnds[2].lts);
+    op2 := addr(add^.opnds[2]);
+    discard(utils_$remove_reader_from_lts(op2, false));
+    l2^.def := op2;
+    add^.opnds[2].lts := l2;
+    add^.opnds[2].link := nil;
+    if add^.opnds[2].h.intend_to_modify then
+      l2^.rrp := l2^.rrp + [rrp$intend_to_modify];
+  end;
+end;
+
+{ move_add_to_hammock_head - add (in a hammock's join block, +19 bit 6,
+  reading an exposed segment of a register defined once) moved to the
+  end of the hammock's head (the source of the block's first edge in,
+  or that block's +82 when it heads none), unless the head's +14 is 1,
+  when the hammock's contents can take the change
+  (could_adjust_hammock_contents) and some was found or force; the
+  contents adjusted (adjust_hammock_contents).
+
+  0x2803E4, 0xB4 bytes, no A5: adjust_hammock_contents pops 10 of its
+  12 bytes. }
+
+function move_add_to_hammock_head(
+    add: instr_ptr_t;
+    disp: integer32;
+    force: boolean): boolean; options(val_param); internal;
+var
+  bb, head: bb_ptr_t;
+  l: lts_ptr_t;
+  any: boolean;
+  ok: boolean;
+begin
+  bb := add^.bb;
+  if not bb^.f.b19_6 then begin
+    move_add_to_hammock_head := false;
+    return;
+  end;
+  if not (add^.opnds[2].h.kind
+          in [operand$ip_reg..operand$well_behaved_memory]) then begin
+    move_add_to_hammock_head := false;
+    return;
+  end;
+  l := add^.opnds[2].lts;
+  if not l^.f2.b3_7 or (l^.def^.link <> nil) then begin
+    move_add_to_hammock_head := false;
+    return;
+  end;
+  head := bb^.l26^.source;
+  if not head^.f.b19_7 then
+    head := head^.l82;
+  if head^.f14.b14 = 1 then begin
+    move_add_to_hammock_head := false;
+    return;
+  end;
+  any := false;
+  ok := could_adjust_hammock_contents(head^.l102, l^.lr, disp, any);
+  if not ok or not (force or any) then begin
+    move_add_to_hammock_head := false;
+    return;
+  end;
+  adjust_hammock_contents(head^.l102, add^.opnds[3].lts, disp);
+  move_add_to_new_bb(add, head, nil, true);
+  move_add_to_hammock_head := true;
+end;
+
+{ move_add_to_hammock_tail - add (in a hammock's head, +19 bit 7, with a
+  final register result) moved to the head of the block after the
+  hammock (the target of the block's edge +98, unless its +14 is 2),
+  after anchor when given: the hammock's contents must take the change
+  by -disp (could_adjust_hammock_contents; when none was found, the
+  result's live range must be exposed in that block), and the result's
+  readers keep their effect; they are adjusted and moved to operand
+  2's segment, the contents adjusted after operand 2's final segment.
+
+  0x280498, 0x178 bytes, no A5. }
+
+function move_add_to_hammock_tail(
+    add: instr_ptr_t;
+    disp: integer32;
+    anchor: instr_ptr_t): boolean; options(val_param); internal;
+var
+  bb, target: bb_ptr_t;
+  l, l2, fin: lts_ptr_t;
+  any: boolean;
+  ok: boolean;
+  neg: integer32;
+  r, t, last, op2, o: opnd_ptr_t;
+begin
+  bb := add^.bb;
+  if not bb^.f.b19_7 then begin
+    move_add_to_hammock_tail := false;
+    return;
+  end;
+  if not (add^.opnds[3].h.kind
+          in [operand$ip_reg..operand$well_behaved_memory]) then begin
+    move_add_to_hammock_tail := false;
+    return;
+  end;
+  l := add^.opnds[3].lts;
+  if not l^.f2.b3_4 then begin
+    move_add_to_hammock_tail := false;
+    return;
+  end;
+  target := bb^.l98^.target;
+  if target^.f14.b14 = 2 then begin
+    move_add_to_hammock_tail := false;
+    return;
+  end;
+  any := false;
+  neg := -disp;
+  ok := could_adjust_hammock_contents(bb^.l102, l^.lr, neg, any);
+  if not ok then begin
+    move_add_to_hammock_tail := false;
+    return;
+  end;
+  if not any then
+    if utils_$find_exposed_lts(l^.lr, target) = nil then begin
+      move_add_to_hammock_tail := false;
+      return;
+    end;
+  r := add^.opnds[3].link;
+  if r <> nil then begin
+    repeat
+      if not can_preserve_operation(r, neg, 0) then begin
+        move_add_to_hammock_tail := false;
+        return;
+      end;
+      r := r^.link;
+    until r = nil;
+    l2 := add^.opnds[2].lts;
+    r := add^.opnds[3].link;
+    repeat
+      t := r;
+      preserve_operation(t, neg);
+      r := t;
+      r^.lts := l2;
+      last := r;
+      r := r^.link;
+    until r = nil;
+    op2 := addr(add^.opnds[2]);
+    last^.link := op2;
+    if l2^.def = op2 then
+      l2^.def := add^.opnds[3].link
+    else begin
+      o := l2^.def;
+      while o^.link <> op2 do
+        o := o^.link;
+      o^.link := add^.opnds[3].link;
+    end;
+    add^.opnds[3].link := nil;
+  end;
+  fin := add^.opnds[2].lts;
+  if (fin^.rrp * [rrp$modify, rrp$write]) = [] then
+    fin := fin^.l44;
+  adjust_hammock_contents(bb^.l102, fin, neg);
+  move_add_to_new_bb(add, target, anchor, false);
+  move_add_to_hammock_tail := true;
+end;
+
+{ tr_utils_$attempt_autoincrement - add (an ADD or SUB whose operands 2
+  and 3 are one live range, not setting the condition codes) folded
+  into a pre- or postmodification (try_autoincrement: across blocks
+  when operand 1 is an immediate, disp its value, negated for a SUB;
+  bug_check for another opcode); failing that, moved to the head of
+  its hammock and tried again (moved back after its old predecessor
+  when that fails), then to the tail and tried again (moved back to
+  the head when that fails).
+
+  0x280610, 0x130 bytes: rtn stored at +20 first; disp unset for a
+  register operand 1. }
+
+function tr_utils_$attempt_autoincrement(
+    rtn: rtn_ptr_t;
+    add: instr_ptr_t): boolean;
+var
+  disp: integer32;
+  try_both: boolean;
+  prev: instr_ptr_t;
+begin
+  tr_rtn := rtn;
+  if add^.opnds[2].lts^.lr <> add^.opnds[3].lts^.lr then begin
+    tr_utils_$attempt_autoincrement := false;
+    return;
+  end;
+  if add^.h.sets_cc then begin
+    tr_utils_$attempt_autoincrement := false;
+    return;
+  end;
+  if add^.opnds[1].h.kind = operand$immediate then begin
+    if add^.opc = ord(opc$add) then
+      disp := add^.opnds[1].value
+    else if add^.opc = ord(opc$sub) then
+      disp := -add^.opnds[1].value
+    else
+      bug_check('TR_UTILS_$try_autoincrement:  expected ADD or SUB%$');
+    try_both := true;
+  end
+  else
+    try_both := false;
+  if try_autoincrement(add, try_both, disp) then begin
+    tr_utils_$attempt_autoincrement := true;
+    return;
+  end;
+  if not try_both then begin
+    tr_utils_$attempt_autoincrement := false;
+    return;
+  end;
+  prev := add^.prev;
+  if move_add_to_hammock_head(add, disp, false) then begin
+    if try_autoincrement(add, try_both, disp) then begin
+      tr_utils_$attempt_autoincrement := true;
+      return;
+    end;
+    if not move_add_to_hammock_tail(add, disp, prev) then begin
+      tr_utils_$attempt_autoincrement := false;
+      return;
+    end;
+  end;
+  if move_add_to_hammock_tail(add, disp, nil) then begin
+    if try_autoincrement(add, try_both, disp) then begin
+      tr_utils_$attempt_autoincrement := true;
+      return;
+    end;
+    discard(move_add_to_hammock_head(add, disp, true));
+  end;
+  tr_utils_$attempt_autoincrement := false;
 end;

@@ -143,9 +143,9 @@ function utils_$get_new_lts(
   iv lir_utils ra_utils tr_utils trans.  Frame 8:al; 12:al; 16:a.  Result:
   A0 (callers: A020). }
 function utils_$get_exposed_lts(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr): univ_ptr; options(val_param); extern;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t;
+    out created: boolean): lts_ptr_t; options(val_param); extern;
 
 { UTILS_$GET_FINAL_LTS - 0x28590A, 0x7C bytes; called from com fg_utils iv
   tr_utils trans.  Frame 8:al; 12:l; 16:a.  Result: A0 (callers: A015
@@ -208,7 +208,7 @@ procedure utils_$strip_extraneous_modifies(
 procedure utils_$move_definition(
     p1: univ_ptr;
     p2: univ_ptr;
-    p3: integer); options(val_param); extern;
+    p3: boolean); options(val_param); extern;
 
 { UTILS_$LOCATE_DEFINITION - 0x286B88, 0xD2 bytes; called from com oli
   tr_utils.  Frame 8:al; 12:al.  Result: A0 (callers: A012). }
