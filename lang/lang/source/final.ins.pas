@@ -99,3 +99,10 @@ function testcc(
 procedure instr_reorder(
     first: univ_ptr;
     psect: univ_ptr); options(val_param); extern;
+
+{ DOBANSHEEFPX - the 68881 cells from first up to last rewritten for
+  the FPX (banshee.pas 0x0EE84C): two pointers by value (final's
+  peepholer passes its first cell and the section's +20). }
+procedure dobansheefpx(
+    first: codegen_$cell_ptr_t;
+    last: codegen_$cell_ptr_t); options(val_param); extern;
