@@ -157,5 +157,9 @@ translations once batch A has filled the ISC inserts.  The generated
 units (isc_pass_1_main, isc_pass_2_main, isc_vars, isc_pattern_matcher,
 isc_debug, isc_main: about 1.05 MB, some 1080 routines without names,
 near-duplicate pattern actions) are probably better reconstructed as
-the generator's input than translated routine by routine:
-docs/questions.md 151 asks the owner.
+the generator's input than translated routine by routine.
+Decided (docs/questions.md 151, the owner, 2026-11-11): reconstruct
+the generator's input (the pattern description) and a generator in
+tools/ that emits Pascal of the image's shape, checked by the gate
+against cc.a88k; do not hand-translate the ~1080 unnamed actions.
+Scheduled after batch A has filled the ISC inserts.

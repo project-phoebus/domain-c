@@ -1262,6 +1262,16 @@ revisited.
    want: (a) hand translation, routine by routine, named by address;
    (b) a reconstructed pattern description and generator; (c) the
    generated units left as data (not translated)?  Not decided here.
+   **Decided by the owner (2026-11-11): (b).**  "We don't want 1080
+   unnamed near-duplicate routines; this is classic codegen."  The
+   generated units are reconstructed as the ISC generator's input (the
+   pattern description, recovered from the action bodies and the
+   matcher's tables) plus a generator (tools/) that emits Pascal of the
+   image's shape, checked against cc.a88k by the gate; no routine-by-
+   routine hand translation of the unnamed actions.  Named routines
+   that are ordinary code (isc_main, the named routine of
+   isc_pass_2_main, any others with .blocks records) and the
+   hand-written lang2/source/isc units are translated as usual.
 152. Translator MM: the opcode enumeration's type name is not in the
    image (OPC$ is its elements' prefix): opcode_enumeration.ins.pas
    calls it opc$t (after the ISC's ARITH$T_MAX, a `<prefix>$t' usage);
