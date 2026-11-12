@@ -1182,3 +1182,26 @@ cc.m68k unless marked.
     generate_stall_cycle and branches back to the slots' clearing
     (`bra' 0x278980), not to the loop's test of the ready queue
     (0x278D90): a repeat ... until inside the while.
+## The LIR builder (translator PA7, cc.a88k lir)
+
+159. **Module variables declared in an include file laid out in the
+    reverse of their declaration order.**  lir's twelve build_ tables
+    (build_action.init .. build_properties.init in the include order)
+    lie at +0x3A0 (build_action) down to +0x000 (build_properties), each
+    table's own entries ascending; the messages the build_message table
+    points to lie before A5 (0x486D98 .. 0x48717F, the last kind's
+    first), with the output file's variable at A5 - 0x3EC.  dpc lays
+    defined cells out in define-list order: lir.pas defines them in
+    address order and the .init files give their values with second
+    define statements.
+160. **An eight-byte set difference stored from its second longword.**
+    call_or_svc_argument_register (0x247BDC) builds [r] and [r2] in two
+    frame longwords, subtracts them from the eight bytes at the sets'
+    address (`move.l (A3)+,D6; not.l D6; and.l (A0)+,D6; move.l D6,(A4)+'
+    twice) and stores the second result into the first set
+    (docs/questions.md 248).
+161. **A constant word argument of the form `move.l #0x10010,-(SP)' for
+    a word pair.**  lir_$complete_instruction and lir_$common_lhs_rhs_
+    token pass build_non_register_reference's number and properties (1
+    and 16, 2 and 8) as one longword: pattern 105 for an internal
+    callee.

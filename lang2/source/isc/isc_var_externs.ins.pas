@@ -14,6 +14,11 @@ var
   { batch A (PA4): solutions lir_utils_$flesh_out_new_load_or_store
     builds a memory home's address from (no home: +0x330, a frame
     temporary; a home that is not static: +0x340). }
+  isc_user_routines_258: extern solution_t;        { +0x258: the
+                                          solution lir_$build_operand
+                                          takes for a form with no action
+                                          that a constant may fill (its
+                                          action 17; batch A, PA7) }
   isc_user_routines_31c: extern solution_ptr_t;    { +0x31C: set to +0x320
                                           by lir_$begin_compilation (batch
                                           A, PA6); what a solution's

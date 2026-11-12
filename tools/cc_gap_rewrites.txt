@@ -286,3 +286,5 @@ lang2/source/isc/isc_to_lir.pas	s/\bwrite(ln)?(\(.*\))?;\s*$/; { gap 4 }\n/
 lang2/source/be_com/sched.pas	s/\b([nk]( \+ \d+)?) in regs\b/$1 <= 95 { gap 29 }/g
 # gap 38 (sched, translator PB7): a run-time member added to a 12-byte set (left out, for the check)
 lang2/source/be_com/sched.pas	s/regs := regs \+ \[n\];/{ gap 38 }/
+# gap 4 (lir, translator PA7): lir_$build_operand's dump of a physical register's attributes (writeln to output: dropped, for the check)
+lang2/source/be_com/lir.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/

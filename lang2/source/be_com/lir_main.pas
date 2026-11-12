@@ -959,21 +959,21 @@ begin
     sched_3158 := n;
     ra_658 := integer32(s1);
     ra_654 := integer32(s2);
-    discard(lir_$complete_instruction(ins));
+    lir_$complete_instruction(ins);
     ins^.bb^.f.entry := true;
     discard(lir_$add_flow_graph_edge(lir_41f0, ins^.bb));
     ins2 := lir_$get_new_instruction_no_exceptions(nil, ord(opc$limit), 0, nil, 96);
     ins^.opnds[1].ptr := ins2;
-    discard(lir_$complete_instruction(ins2));
+    lir_$complete_instruction(ins2);
     lir_4216 := 1024;
     lir_$simple_instruction(inh, ord(opc$move), 16#2000000, lir_3e60[1],
-                            isc_user_routines_33c, nil, 0);
+                            isc_user_routines_33c, nil, nil);
     if not rtn^.db_lr^.f2.no_modify then
       lir_$simple_instruction(inh, ord(opc$move), 16#2000000,
-                              lir_3e60[conv^.w16], isc_user_routines_338, nil, 0);
+                              lir_3e60[conv^.w16], isc_user_routines_338, nil, nil);
     if not conv^.b30 then
       lir_$simple_instruction(inh, ord(opc$move), 0, lir_3e60[conv^.w12],
-                              isc_user_routines_32c, nil, 0);
+                              isc_user_routines_32c, nil, nil);
     for j := 1 to conv^.nargs do begin
       arg := addr(conv^.args[j]);
       if not arg^.by_value or (arg^.num <> 0) then begin
@@ -995,28 +995,28 @@ begin
             done := true;
           1: begin
             lir_$load_instruction(inh, ord(opc$loadl), 0, addr(lir_main_760),
-                                  isc_user_routines_33c, addr(lir_main_400), 0, 0, 0, 7);
-            lir_$store_instruction(integer32(inh), ord(opc$storel), 0, addr(lir_main_400),
+                                  isc_user_routines_33c, addr(lir_main_400), nil, 0, 0, 7);
+            lir_$store_instruction(inh, ord(opc$storel), 0, addr(lir_main_400),
                                    addr(lir_main_250), isc_user_routines_340,
-                                   integer32(arg^.sym), arg^.w6, arg^.w6, 7);
+                                   arg^.sym, arg^.w6, arg^.w6, 7);
             done := true;
           end;
           6: begin
-            lir_$store_instruction(integer32(inh), ord(opc$storel), 0, addr(lir_main_5b0),
+            lir_$store_instruction(inh, ord(opc$storel), 0, addr(lir_main_5b0),
                                    addr(lir_main_250), isc_user_routines_340,
-                                   integer32(arg^.sym), arg^.w6, arg^.w6, 7);
+                                   arg^.sym, arg^.w6, arg^.w6, 7);
             done := true;
           end;
           3: begin
             lir_main_760.sym := arg^.sym;
             lir_$load_instruction(inh, lm_prolog_xfer.ldst, 0, addr(lir_main_760),
                                   isc_user_routines_33c, lm_prolog_xfer.sol,
-                                  integer32(arg^.sym), arg^.w6, arg^.w6, 7);
+                                  arg^.sym, arg^.w6, arg^.w6, 7);
             lir_main_760.sym := nil;
             if lm_prolog_xfer.b11 then
-              lir_$store_instruction(integer32(inh), ord(opc$storel), 0, lm_prolog_xfer.sol,
+              lir_$store_instruction(inh, ord(opc$storel), 0, lm_prolog_xfer.sol,
                                      addr(lir_main_250), isc_user_routines_340,
-                                     0, 0, 0, 7);
+                                     nil, 0, 0, 7);
             done := true;
           end;
           2: begin
@@ -1025,46 +1025,46 @@ begin
               lir_main_400.kind := 2;
               lir_$load_instruction(inh, lm_prolog_xfer.ldst, 0, addr(lir_main_760),
                                     isc_user_routines_33c, addr(lir_main_400),
-                                    integer32(arg^.sym), arg^.w6, lir_main_760.disp,
+                                    arg^.sym, arg^.w6, lir_main_760.disp,
                                     7);
               lir_main_760.disp := lir_main_760.disp + 4;
             end;
             lir_main_400.kind := 3;
             lir_$load_instruction(inh, lm_prolog_xfer.ldst, 0, addr(lir_main_760),
                                   isc_user_routines_33c, addr(lir_main_400),
-                                  integer32(arg^.sym), arg^.w6, lir_main_760.disp,
+                                  arg^.sym, arg^.w6, lir_main_760.disp,
                                   7);
             lir_main_760.sym := nil;
             done := true;
           end;
           4: begin
-            lir_$store_instruction(integer32(inh), lm_prolog_xfer.ldst, 0, addr(lir_main_5b0),
+            lir_$store_instruction(inh, lm_prolog_xfer.ldst, 0, addr(lir_main_5b0),
                                    addr(lir_main_250), isc_user_routines_33c,
-                                   integer32(arg^.sym), arg^.w6, arg^.w6, 7);
+                                   arg^.sym, arg^.w6, arg^.w6, 7);
             done := true;
           end;
           5: begin
             lir_$simple_instruction(inh, ord(opc$copyd), 0, addr(lir_main_5b0),
-                                    addr(lir_main_400), nil, 0);
+                                    addr(lir_main_400), nil, nil);
             lir_main_400.kind := 2;
-            lir_$store_instruction(integer32(inh), ord(opc$stores), 0, addr(lir_main_400),
+            lir_$store_instruction(inh, ord(opc$stores), 0, addr(lir_main_400),
                                    addr(lir_main_250), isc_user_routines_33c,
-                                   integer32(arg^.sym), arg^.w6, arg^.w6, 7);
+                                   arg^.sym, arg^.w6, arg^.w6, 7);
             lir_main_400.kind := 3;
             lir_main_250.disp := 4;
-            lir_$store_instruction(integer32(inh), ord(opc$stores), 0, addr(lir_main_400),
+            lir_$store_instruction(inh, ord(opc$stores), 0, addr(lir_main_400),
                                    addr(lir_main_250), isc_user_routines_33c,
-                                   integer32(arg^.sym), arg^.w6 + 4, arg^.w6 + 4,
+                                   arg^.sym, arg^.w6 + 4, arg^.w6 + 4,
                                    7);
             lir_main_250.disp := 0;
             done := true;
           end;
           7:
             lir_$simple_instruction(inh, lm_prolog_xfer.opc, 0, addr(lir_main_5b0),
-                                    lm_prolog_xfer.sol, nil, 0);
+                                    lm_prolog_xfer.sol, nil, nil);
           8: begin
             lir_$simple_instruction(inh, ord(opc$mtfp), 0, addr(lir_main_5b0),
-                                    addr(lir_main_400), nil, 0);
+                                    addr(lir_main_400), nil, nil);
             if (lm_prolog_xfer.sol^.kind = 9) and (arg^.w6 = 0) and (arg^.size <= 4) then
               if conv^.args[j + 1].f18.loc <> 4 then
                 done := true;
@@ -1078,25 +1078,25 @@ begin
           if lm_prolog_xfer.split then begin
             lir_main_760.sym := arg^.sym;
             lir_main_400.kind := 2;
-            lir_$store_instruction(integer32(inh), ord(opc$stores), 0, addr(lir_main_400),
+            lir_$store_instruction(inh, ord(opc$stores), 0, addr(lir_main_400),
                                    addr(lir_main_760), isc_user_routines_33c,
-                                   integer32(arg^.sym), arg^.w6, arg^.w6, 7);
+                                   arg^.sym, arg^.w6, arg^.w6, 7);
             lir_main_400.kind := 3;
             lir_main_760.disp := lir_main_760.disp + 4;
-            lir_$store_instruction(integer32(inh), ord(opc$stores), 0, addr(lir_main_400),
+            lir_$store_instruction(inh, ord(opc$stores), 0, addr(lir_main_400),
                                    addr(lir_main_760), isc_user_routines_33c,
-                                   integer32(arg^.sym), arg^.w6 + 4, arg^.w6 + 4,
+                                   arg^.sym, arg^.w6 + 4, arg^.w6 + 4,
                                    7);
             lir_main_760.sym := nil;
           end
           else if lm_prolog_xfer.b11 then
-            lir_$store_instruction(integer32(inh), ord(opc$storel), 0, lm_prolog_xfer.sol,
+            lir_$store_instruction(inh, ord(opc$storel), 0, lm_prolog_xfer.sol,
                                    addr(lir_main_250), isc_user_routines_340,
-                                   0, 0, 0, 7)
+                                   nil, 0, 0, 7)
           else
-            lir_$store_instruction(integer32(inh), lm_prolog_xfer.ldst, 0, lm_prolog_xfer.sol,
+            lir_$store_instruction(inh, lm_prolog_xfer.ldst, 0, lm_prolog_xfer.sol,
                                    addr(lir_main_760), isc_user_routines_33c,
-                                   0, 0, 0, 7);
+                                   nil, 0, 0, 7);
         end;
       end;
     end;
@@ -1130,7 +1130,7 @@ begin
           if d <= 32767 then begin
             lir_main_760.disp := d;
             lir_$simple_instruction(inh, ord(opc$add), 0, addr(lir_main_760),
-                                    prev_sol, sol, 0);
+                                    prev_sol, sol, nil);
             if first then
               lir_41fc^.last^.opnds[1].h.kind := operand$displacement_XSB_base;
           end
@@ -1149,17 +1149,17 @@ begin
               lir_main_250.w56 := 4;
               lir_$load_instruction(inh, ord(opc$loadl), 0, addr(lir_main_250),
                                     isc_user_routines_330, addr(lir_main_400),
-                                    0, 0, 0, 3);
+                                    nil, 0, 0, 3);
             end;
             if sh >= 0 then begin
               lir_main_760.disp := rshft(d, sh);
               lir_$simple_instruction(inh, ord(opc$move), 0, addr(lir_main_400),
-                                      addr(lir_main_760), nil, 0);
+                                      addr(lir_main_760), nil, nil);
               lir_main_400.kind := 13;
               lir_main_400.f78.shift := sh;
             end;
             lir_$simple_instruction(inh, ord(opc$add), 0, addr(lir_main_400),
-                                    prev_sol, sol, 0);
+                                    prev_sol, sol, nil);
             lir_main_400.kind := 11;
             lir_main_400.f78.shift := 0;
           end;
@@ -1167,9 +1167,9 @@ begin
         if sol^.lr <> nil then
           if sol^.lr^.memory_home <> nil then begin
             lir_main_250.node := sol^.lr^.memory_home;
-            lir_$store_instruction(integer32(inh), ord(opc$storel), 0, sol,
+            lir_$store_instruction(inh, ord(opc$storel), 0, sol,
                                    addr(lir_main_250), isc_user_routines_340,
-                                   integer32(sol^.lr^.memory_home), 0, 0, 0);
+                                   sol^.lr^.memory_home, 0, 0, 0);
           end;
         first := false;
         prev_sol := sol;
@@ -1218,7 +1218,7 @@ begin
   li^.l32 := (li^.l32 & 16#FFFF) ! lshft(rshft(nd^.xl2[10] & 16#FFFF00, 8), 16);
   lir_$label(nd^.xp[15]);
   lir_$simple_instruction(top_level_inherited_attributes(nd), ord(opc$move), 0,
-                          lir_3e60[0], isc_user_routines_328, nil, 0);
+                          lir_3e60[0], isc_user_routines_328, nil, nil);
   lir_main_760.sym := nil;
   clean_up_canned_inherited;
   if nd^.xp[16] = nil then
@@ -1419,13 +1419,13 @@ begin
       lir_main_760.disp := v^.xl[4];
       lir_$load_instruction(inh, ord(opc$loadl), 16#1000, addr(lir_main_760),
                             isc_user_routines_338, isc_user_routines_328,
-                            0, 0, v^.xl[4], 7);
+                            nil, 0, v^.xl[4], 7);
     end
     else if vat in [1, 4] then begin
       lir_main_760.sym := v;
       lir_main_760.disp := v^.xl[14];
       lir_$simple_instruction(inh, ord(opc$add), 0, addr(lir_main_760),
-                              isc_user_routines_338, isc_user_routines_328, 0);
+                              isc_user_routines_338, isc_user_routines_328, nil);
     end
     else
       bug_check('LIR_MAIN_\BY_BRANCH_PROLOGS_FOR_HANDLER -- exception has unexpected .vat%$');
@@ -1513,7 +1513,7 @@ begin
   if rtn^.f226.internal_db then
     if not lir_4090[conv^.w16]^.f2.no_modify then begin
       lir_$simple_instruction(addr(lir_3b80), ord(opc$move), 0,
-                              isc_user_routines_338, lir_3e60[conv^.w16], nil, 0);
+                              isc_user_routines_338, lir_3e60[conv^.w16], nil, nil);
       n := n + 1;
     end;
   n := n + 4;
@@ -1557,12 +1557,14 @@ begin
           4:
             lir_$load_instruction(addr(lir_3b80), lm_epilog_xfer.ldst, 0,
                                   addr(lir_main_250), isc_user_routines_33c,
-                                  addr(lir_main_5b0), integer32(arg^.sym),
+                                  addr(lir_main_5b0),
+                                  arg^.sym,
                                   arg^.w6, arg^.w6, 7);
           6: begin
             lir_$load_instruction(addr(lir_3b80), lm_epilog_xfer.ldst, 0,
                                   addr(lir_main_250), isc_user_routines_340,
-                                  addr(lir_main_5b0), integer32(arg^.sym),
+                                  addr(lir_main_5b0),
+                                  arg^.sym,
                                   arg^.w6, arg^.w6, 7);
             if lm_epilog_xfer.quad then begin
               lir_main_5b0.f78.reg := lir_main_5b0.f78.reg + 2;
@@ -1570,20 +1572,21 @@ begin
               lir_main_250.disp := 8;
               lir_$load_instruction(addr(lir_3b80), lm_epilog_xfer.ldst, 0,
                                     addr(lir_main_250), isc_user_routines_340,
-                                    addr(lir_main_5b0), integer32(arg^.sym),
+                                    addr(lir_main_5b0),
+                                    arg^.sym,
                                     arg^.w6, arg^.w6, 7);
               lir_main_250.disp := 0;
             end;
           end;
           7: begin
             lir_$simple_instruction(addr(lir_3b80), lm_epilog_xfer.opc, 0,
-                                    lm_epilog_xfer.sol, addr(lir_main_5b0), nil, 0);
+                                    lm_epilog_xfer.sol, addr(lir_main_5b0), nil, nil);
             if lm_epilog_xfer.quad then begin
               lir_main_5b0.f78.reg := lir_main_5b0.f78.reg + 2;
               lir_main_5b0.lr := nil;
               lir_main_400.lr := lir_main_400.lr2;
               lir_$simple_instruction(addr(lir_3b80), lm_epilog_xfer.opc, 0,
-                                      addr(lir_main_400), addr(lir_main_5b0), nil, 0);
+                                      addr(lir_main_400), addr(lir_main_5b0), nil, nil);
             end;
           end;
           otherwise
@@ -1663,7 +1666,7 @@ begin
       lir_$build_operand(op, lir_3d60[k], f);
     end;
   end;
-  discard(lir_$complete_instruction(ret));
+  lir_$complete_instruction(ret);
   for k := 1 to ret^.h.nopnds do
     if ret^.opnds[k].h.write then
       if ret^.opnds[k].h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then

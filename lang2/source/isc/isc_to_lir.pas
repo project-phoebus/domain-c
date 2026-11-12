@@ -461,36 +461,32 @@ begin
       case q^.kind of
         1: lir_$branch_instruction(q^.inh, q^.target, q^.opc, q^.requests);
         2: lir_$break_basic_block;
-        3: lir_$common_lhs_rhs_token(integer32(q^.inh));
-        4: lir_$disjoint_lhs_and_rhs_tokens(integer32(q^.inh),
-               integer32(q^.lhs), integer32(q^.rhs));
-        5: lir_$dispatch_instruction(integer32(q^.inh), integer32(q^.op1),
-               q^.opc, q^.requests);
+        3: lir_$common_lhs_rhs_token(q^.inh);
+        4: lir_$disjoint_lhs_and_rhs_tokens(q^.inh, q^.lhs, q^.rhs);
+        5: lir_$dispatch_instruction(q^.inh, solution_ptr_t(q^.op1), q^.opc,
+               q^.requests);
         6: lir_$emit_call_or_svc(q^.inh, q^.tree, q^.call, q^.requests,
-               q^.op1, integer32(q^.linkage_reg));
+               solution_ptr_t(q^.op1), q^.linkage_reg);
         7: lir_$end_call_or_svc(integer32(q^.inh), q^.call);
-        8: lir_$field_instruction(integer32(q^.inh), q^.opc, q^.requests,
-               q^.siz, integer32(q^.op1), integer32(q^.op2),
-               integer32(q^.op3));
+        8: lir_$field_instruction(q^.inh, q^.opc, q^.requests, q^.siz,
+               solution_ptr_t(q^.op1), solution_ptr_t(q^.op2), solution_ptr_t(q^.op3));
         9: lir_$label(q^.target);
-        10: lir_$load_instruction(q^.inh, q^.opc, q^.requests, q^.index,
-                q^.base, q^.result, integer32(q^.tree), q^.disp_off_tree,
-                q^.bits_known, q^.bits_trusted);
-        11: lir_$mfpr_instruction(integer32(q^.inh), q^.opc, q^.requests,
-                integer32(q^.index), integer32(q^.base), integer32(q^.result),
-                integer32(q^.var_name));
-        12: lir_$mtpr_instruction(integer32(q^.inh), q^.opc, q^.requests,
-                integer32(q^.source), integer32(q^.index), integer32(q^.base),
-                integer32(q^.var_name));
-        13: lir_$operate_and_branch_instruction(integer32(q^.inh), q^.opc,
-                q^.requests, integer32(q^.index), integer32(q^.base),
-                integer32(q^.target));
-        14: lir_$simple_instruction(q^.inh, q^.opc, q^.requests, q^.op1,
-                q^.op2, q^.op3, integer32(q^.op4));
-        15: lir_$simple_instruction(q^.inh, q^.opc, q^.requests, q^.op1,
-                q^.op2, q^.op3, 0);   { the image pushes six arguments }
-        16: lir_$store_instruction(integer32(q^.inh), q^.opc, q^.requests,
-                q^.source, q^.index, q^.base, integer32(q^.tree),
+        10: lir_$load_instruction(q^.inh, q^.opc, q^.requests,
+                solution_ptr_t(q^.index), solution_ptr_t(q^.base), solution_ptr_t(q^.result), q^.tree,
+                q^.disp_off_tree, q^.bits_known, q^.bits_trusted);
+        11: lir_$mfpr_instruction(q^.inh, q^.opc, q^.requests,
+                solution_ptr_t(q^.index), solution_ptr_t(q^.base), solution_ptr_t(q^.result), q^.var_name);
+        12: lir_$mtpr_instruction(q^.inh, q^.opc, q^.requests,
+                solution_ptr_t(q^.source), solution_ptr_t(q^.index), solution_ptr_t(q^.base), q^.var_name);
+        13: lir_$operate_and_branch_instruction(q^.inh, q^.opc,
+                q^.requests, solution_ptr_t(q^.index), solution_ptr_t(q^.base), q^.target);
+        14: lir_$simple_instruction(q^.inh, q^.opc, q^.requests,
+                solution_ptr_t(q^.op1), solution_ptr_t(q^.op2), solution_ptr_t(q^.op3), solution_ptr_t(q^.op4));
+        15: lir_$simple_instruction(q^.inh, q^.opc, q^.requests,
+                solution_ptr_t(q^.op1), solution_ptr_t(q^.op2), solution_ptr_t(q^.op3), nil);
+                                        { the image pushes six arguments }
+        16: lir_$store_instruction(q^.inh, q^.opc, q^.requests,
+                solution_ptr_t(q^.source), solution_ptr_t(q^.index), solution_ptr_t(q^.base), q^.tree,
                 q^.disp_off_tree, q^.bits_known, q^.bits_trusted);
         17: lir_main_$entry(q^.node);
         18: lir_main_$handler_reentry(q^.node);

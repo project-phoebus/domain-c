@@ -160,7 +160,13 @@ when this tree is merged).
    file at (-4,A5); `write(m^.name:m^.name_len)' passes the array, its
    size and the width).  dpc: "undefined identifier `writeln`"; with a
    width, "expected `)`, found `:`".  Also lang/bind/source/objio.pas's
-   check_init (0x088028, PAS_$WRITE and PAS_$WRITELN).  Reproducer:
+   check_init (0x088028, PAS_$WRITE and PAS_$WRITELN).  Also be_com
+   lir.pas lir_$build_operand (translator PA7, cc.a88k 0x2443A8): the
+   dump of a physical register's attributes that differ between a
+   solution and its live range (strings, booleans and integers with
+   widths, an enumerated value: the solution's kind, through the
+   SOLUTION$ identifier table at 0x24526E), to the output file at A5
+   -0x3EC.  Reproducer:
 
        module g4;
        var s: array [1..10] of char; n: integer;
