@@ -41,7 +41,7 @@
     queue (+0x618), the queue (+0x61C), the displaced line's number
     and length (+0x620, +0x622), the counts of actual and formal
     parameters (+0x624, +0x626), the formals' length (+0x628),
-    mr_std_include_state (+0x62A), the displaced line's comment flags
+    mr_std_include_state (+0x62A, initially 2), the displaced line's comment flags
     (+0x62C, +0x62E), whether the line read had a comment (+0x630),
     mr_open_quote (+0x632) and the quote of the string
     get_decommented_line is in (+0x634).
@@ -84,7 +84,7 @@ module c_macro_read;
 define
   mr_time;                              { +0x600 (macro_read.ins.pas) }
   mr_date;                              { +0x608 }
-  mr_std_include_state;                 { +0x62A (c_pre_proc.ins.pas) }
+  mr_std_include_state := 2;            { +0x62A (c_pre_proc.ins.pas) }
   mr_open_quote;                        { +0x632 (macro_read.ins.pas) }
 
 var

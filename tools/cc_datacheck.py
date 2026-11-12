@@ -198,6 +198,32 @@ class Image:
             return self.sections[n[:-2]]
         return None
 
+    def cells(self):
+        """{NAME: image address} of the cells other units' comments place
+        (cell_hints over every unit file; a name two units place
+        differently is left out): another unit's cell a pointer in this
+        unit's data names."""
+        if getattr(self, '_cells', None) is None:
+            out, bad = {}, set()
+            for f in all_units():
+                if not f.endswith('.pas'):
+                    continue
+                try:
+                    u = cc.pick_unit(self.coff, os.path.splitext(os.path.basename(f))[0],
+                                     unit_key(f))
+                except SystemExit:
+                    continue
+                b = unit_data_base(self.coff, u)
+                if b is None:
+                    continue
+                text = open(os.path.join(ROOT, f), encoding='latin-1').read()
+                for n, o in cell_hints(text, b).items():
+                    if n in out and out[n] != b + o:
+                        bad.add(n)
+                    out[n] = b + o
+            self._cells = {n: a for n, a in out.items() if n not in bad}
+        return self._cells
+
     def block_end(self, base, unit_section):
         """The end of the data block at base: the next unit's block, or
         the end of the section holding it."""
@@ -507,6 +533,9 @@ def check(f, binkey, img, obj, verbose=False):
         sec = img.section(name)
         if sec is not None:
             return sec[1] + addend
+        a = img.cells().get(u)
+        if a is not None:
+            return a + addend
         return None
 
     # the image offset less ours of each byte of a module data block
@@ -539,7 +568,10 @@ def check(f, binkey, img, obj, verbose=False):
         ourend = max(at) + 1 if at else 0
         hi = ourend
         if what[s.index] == 'moddata':
-            hi = max(hi, img.block_end(base, None) - base)
+            # the image's block ends at the next unit's: what lies past
+            # it is not this unit's
+            hi = img.block_end(base, None) - base
+            ourend = min(ourend, hi)
         theirs = img.read(base, hi)
         runs, cur = [], None
         for io in range(hi):
@@ -662,6 +694,11 @@ def check(f, binkey, img, obj, verbose=False):
                 continue
             mine[off:off + 4] = (t & 0xFFFFFFFF).to_bytes(4, 'big')
         lst = by_sec.get(s.index, [])
+        if what[s.index] == 'moddata' and s.size > img.block_end(base, None) - base:
+            nlayout += 1
+            out.append(('layout', '%s %s %s: dpc\'s block is 0x%X bytes, the image\'s 0x%X '
+                        '(to the next unit\'s); the rest is not compared' % (
+                            f, binkey, s.name, s.size, img.block_end(base, None) - base)))
         res = compare(s, base, mine, care, [0] * s.size, lst)
         how = None
         if res[1] and what[s.index] == 'moddata':

@@ -1110,3 +1110,19 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
          v[0].w := 0;
        end;
 
+
+43. **An initialized varying string.**  ass.pas's program_name
+   (translator QA, the data check): the image's data block holds its
+   initial value, `ass_$' (+216: the length word 5, then the
+   characters).  dpc: "initialising a varying string (length word,
+   trailing null) is not supported yet".  The gate drops the
+   initializer in the scratch copy (tools/cc_gap_rewrites.txt), so
+   tools/cc_datacheck.py reports the five bytes as a difference.
+   Reproducer:
+
+       module g43;
+       var name: varying [80] of char := 'ass_$';
+       procedure p;
+       begin
+         name.length := 0;
+       end;

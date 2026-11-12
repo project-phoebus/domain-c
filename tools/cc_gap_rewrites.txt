@@ -286,3 +286,5 @@ lang2/source/isc/isc_to_lir.pas	s/\bwrite(ln)?(\(.*\))?;\s*$/; { gap 4 }\n/
 lang2/source/be_com/sched.pas	s/\b([nk]( \+ \d+)?) in regs\b/$1 <= 95 { gap 29 }/g
 # gap 38 (sched, translator PB7): a run-time member added to a 12-byte set (left out, for the check)
 lang2/source/be_com/sched.pas	s/regs := regs \+ \[n\];/{ gap 38 }/
+# gap 43 (ass, translator QA): an initialized varying string (the initializer dropped, for the check)
+lang/common/source/ass.pas	s/^(  program_name: varying \[80\] of char) := 'ass_\$';/$1; { gap 43 }/
