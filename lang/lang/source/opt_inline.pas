@@ -1430,12 +1430,13 @@ end;
 
 { copy_const - a copy of constant c (40 bytes from gspace).
 
-  0x09023E, 0x36 bytes: e not read; lib_$data_move from c's frame slot
+  0x09023E, 0x36 bytes: b not read (process_variables passes the
+  caller's block); lib_$data_move from c's frame slot
   to a local holding the copy's address, the length a longword after
   the routine. }
 
 function copy_const(
-    e: oi_edge_ptr_t;
+    b: il_$node_ptr_t;
     c: il_$node_ptr_t): il_$node_ptr_t; options(val_param); internal;
 var
   n: il_$node_ptr_t;
@@ -2130,4 +2131,244 @@ begin
     end;
     put_hash_info(e, f, v, fl, empty_info);
   end;
+end;
+
+{ process_display_ptrs - the callee's display pointers (its +240,
+  variables through +12, each naming a block by +4) mapped to the
+  caller's: a Fortran statement function's single one to the caller's
+  (reported when the caller has none); in a language 1 callee each
+  pointer of a block other than the caller's to the caller's pointer
+  of the same block, found in the caller's list (ordered by the
+  blocks' levels, deepest first) or copied into it there (the
+  caller's count +292 raised).
+
+  0x0912AA, 0x194 bytes, link #-28: the levels signed bytes (+294). }
+
+procedure process_display_ptrs(
+    e: oi_edge_ptr_t); options(val_param); internal;
+var
+  a: il_$node_ptr_t;
+  b: il_$node_ptr_t;
+  d: il_$node_ptr_t;
+  q: il_$node_ptr_t;
+  prev: il_$node_ptr_t;
+  blk: il_$node_ptr_t;
+  v: il_$node_ptr_t;
+  more: boolean;
+begin
+  if inline_$is_fortran_asf(e^.caller) then begin
+    a := e^.callee^.xp[60];
+    if a <> nil then begin
+      b := e^.caller^.xp[60];
+      if b <> nil then
+        put_hash_info(e, a, b, [], empty_info)
+      else
+        cgerr_no_source(28, integer32(strtk('unexpected IL encountered', 25)));
+    end;
+  end
+  else if language = 1 then begin
+    d := e^.callee^.xp[60];
+    if d <> nil then begin
+      prev := nil;
+      q := e^.caller^.xp[60];
+      while d <> nil do begin
+        blk := find_block(e^.callee, d^.xp[1]);
+        if blk^.xp[74] <> e^.caller^.xp[74] then begin
+          more := true;
+          while more do
+            if q = nil then
+              more := false
+            else if q^.xp[1] = d^.xp[1] then
+              more := false
+            else if oi_level_ptr_t(find_block(e^.caller, q^.xp[1]))^.level <
+                    oi_level_ptr_t(blk)^.level then
+              more := false
+            else begin
+              prev := q;
+              q := q^.xp[3];
+            end;
+          if (q <> nil) and (q^.xp[1] = d^.xp[1]) then
+            put_hash_info(e, d, q, [], empty_info)
+          else begin
+            v := copy_var(e, d);
+            put_on_bct(e, e^.caller, v);
+            e^.caller^.xc[292] := chr(ord(e^.caller^.xc[292]) + 1);
+            if prev <> nil then begin
+              v^.xp[3] := prev^.xp[3];
+              prev^.xp[3] := v;
+            end
+            else begin
+              v^.xp[3] := e^.caller^.xp[60];
+              e^.caller^.xp[60] := v;
+            end;
+            prev := v^.xp[3];
+            put_hash_info(e, d, v, [], empty_info);
+          end;
+        end;
+        d := d^.xp[3];
+      end;
+    end;
+  end;
+end;
+
+{ process_variables - the variables of the callee and of the blocks it
+  contains (next_contained_block), each block's copies put on the
+  caller's block its own maps to (from caller_blk), mapped
+  (put_hash_info) to copies: a language 2 callee's temporaries (110)
+  of class 6 by +44 whose base (+48) has a copy (their copies based on
+  it), and those of class 1, 2, 6 or 7 by +11 that are not +24 bit 23,
+  with their equivalence rings (+28) copied (class 2 and 6 allocated);
+  another callee's constants (116, copy_const) and variables (109) of
+  class 1, 2, 6 or 7 by +72, not +32 bit 23 (class 2 and 6 allocated),
+  with flag 3.  A variable already mapped with flag 3 ends the block's
+  walk: the caller's block's list is joined to its copy and its last
+  variable mapped to the block's (+20).  In language 2 the mapped
+  variables without flags then get flag 3.
+
+  0x09143E, 0x35C bytes, link #-80: the class sets by `btst' of 198
+  and 68; the copies' value kept in D6 across get_hash_info (stored
+  to the frame before each call); put_on_bct after copy_const pops 10
+  (pattern 51). }
+
+procedure process_variables(
+    e: oi_edge_ptr_t); options(val_param); internal;
+var
+  b: il_$node_ptr_t;
+  cb: il_$node_ptr_t;
+  v: il_$node_ptr_t;
+  nv: il_$node_ptr_t;
+  x: il_$node_ptr_t;
+  w: il_$node_ptr_t;
+  c: il_$node_ptr_t;
+  first: il_$node_ptr_t;
+  last: il_$node_ptr_t;
+  fl: oi_flags_t;
+  info: oi_info_t;
+  k: integer;
+  joined: boolean;
+begin
+  b := e^.callee;
+  cb := caller_blk;
+  repeat
+    v := b^.xp[4];
+    joined := false;
+    while (v <> nil) and not joined do begin
+      get_hash_info(e, v, nv, fl, info);
+      if 3 in fl then begin
+        if cb^.xp[5] = nil then
+          cb^.xp[4] := nv
+        else if language = 2 then
+          cb^.xp[5]^.xp[1] := nv
+        else
+          cb^.xp[5]^.xp[4] := nv;
+        get_hash_info(e, cb^.xp[5], b^.xp[5], fl, info);
+        joined := true;
+      end
+      else if language = 2 then begin
+        if nv = nil then
+          if (v^.kind = 110) and (rshft(ord(v^.xc[44]) & 16#F0, 4) = 6) then begin
+            get_hash_info(e, v^.xp[12], x, fl, info);
+            if x <> nil then begin
+              nv := copy_var(e, v);
+              put_on_bct(e, cb, nv);
+              nv^.xp[12] := x;
+              put_hash_info(e, v, nv, [], empty_info);
+            end;
+          end
+          else if v^.kind = 110 then begin
+            k := rshft(ord(v^.xc[11]) & 16#F0, 4);
+            if k in [1, 2, 6, 7] then
+              if (v^.xl[6] & 16#800000) = 0 then begin
+                nv := copy_var(e, v);
+                put_on_bct(e, cb, nv);
+                if v^.xp[7] <> nil then begin
+                  first := nv;
+                  last := nv;
+                  w := nv^.xp[7];
+                  while w <> v do begin
+                    c := copy_var(e, w);
+                    put_on_bct(e, cb, c);
+                    last^.xp[7] := c;
+                    last := c;
+                    w := w^.xp[7];
+                  end;
+                  last^.xp[7] := first;
+                end;
+                k := rshft(ord(v^.xc[11]) & 16#F0, 4);
+                if k in [2, 6] then
+                  allocate_local_var(e, nv);
+                put_hash_info(e, v, nv, [], empty_info);
+                if v^.xp[7] <> nil then begin
+                  w := v^.xp[7];
+                  c := nv^.xp[7];
+                  while w <> v do begin
+                    put_hash_info(e, w, c, [], empty_info);
+                    w := w^.xp[7];
+                    c := c^.xp[7];
+                  end;
+                end;
+              end;
+          end;
+        v := v^.xp[1];
+      end
+      else begin
+        if v^.kind = 116 then begin
+          nv := copy_const(cb, v);
+          put_on_bct(e, cb, nv);
+          put_hash_info(e, v, nv, [3], empty_info);
+        end
+        else if (nv = nil) and (v^.kind = 109) then
+          if v^.xw[36] in [1, 2, 6, 7] then
+            if (v^.xl[8] & 16#800000) = 0 then begin
+              nv := copy_var(e, v);
+              put_on_bct(e, cb, nv);
+              if v^.xw[36] in [2, 6] then
+                allocate_local_var(e, nv);
+              put_hash_info(e, v, nv, [3], empty_info);
+            end;
+        v := v^.xp[4];
+      end;
+    end;
+    if language = 2 then begin
+      w := b^.xp[4];
+      while w <> nil do begin
+        get_hash_info(e, w, nv, fl, info);
+        if 3 in fl then
+          w := nil
+        else begin
+          if (nv <> nil) and (fl = []) then
+            put_hash_info(e, w, nv, [3], empty_info);
+          w := w^.xp[1];
+        end;
+      end;
+    end;
+    b := next_contained_block(e^.callee, b);
+    get_hash_info(e, b, cb, fl, info);
+  until cb = nil;
+end;
+
+{ process_labels - the callee's labels (144) copied (84 bytes,
+  lib_$data_move; e's caller's count +272 raised) and mapped, from
+  the callee's first statement (+100) to its end (149 of the callee,
+  +48).
+
+  0x09179A, 0x84 bytes, link #-16: the length a longword after the
+  routine. }
+
+procedure process_labels(
+    e: oi_edge_ptr_t); options(val_param); internal;
+var
+  s: il_$node_ptr_t;
+  n: il_$node_ptr_t;
+begin
+  s := e^.callee^.xp[25];
+  repeat
+    if s^.kind = 144 then begin
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      n := gspace(84);
+      lib_$data_move(s, n, 84);
+      put_hash_info(e, s, n, [], empty_info);
+    end;
+    s := s^.xp[2];
+  until (s^.kind = 149) and (s^.xp[12] = e^.callee);
 end;
