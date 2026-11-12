@@ -42,6 +42,13 @@ when this tree is merged).
 - **Gap 36 (a pointer result of a call through a routine pointer or
   parameter): fixed in 3bad22b.**  Its rule removed (lir_utils still
   needs gap 21's stand-in for the nested new_db_lts).
+- Gap 37 is a version difference, not a dpc bug: dpc's one word per
+  byte module variable is the SR10.2 kernel compiler's rule (verified
+  against the kernel image; domain-pascal docs/codegen-patterns.md,
+  "Byte-sized module variables"), while Rev 8.89 packs them one per
+  byte.  A Rev 8.89 layout mode in dpc is an owner's decision
+  (docs/questions.md 224); until then the cells after such booleans
+  sit at other offsets than the image's.
 - Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
   spiller finds values to spill but runs out of virtual register
   numbers (240 per class) adding the reloads, and the colouring's

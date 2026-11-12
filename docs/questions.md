@@ -1820,4 +1820,16 @@ revisited.
    is not the first block; the first case reads oddly (a block that
    defines the live range gets a join for its live-in value).  Kept as
    the image has it.
-
+224. Lead (2026-11-11), for the owner: **should dpc get a Rev 8.89
+   module-data layout mode?**  The DOMAIN C 6.9 binaries were built
+   with Pascal Rev 8.89, which packs byte-sized module variables one
+   per byte (be_com lir_main's booleans at +0xC88, +0xC89,
+   +0xC8B..+0xC8E, reached absolutely by other units).  dpc gives each
+   a word, the SR10.2 kernel compiler's rule, which domain-pascal
+   verified against the kernel image (343 module variables, none at an
+   odd address), so its default cannot change.  A mode (e.g. selected
+   by a flag or a `-config') would let these units' data lay out as
+   the image's; without it the gate still passes, but the cells after
+   such booleans sit at other offsets (docs/dpc-gaps.md 37).  This is
+   the domain-pascal owner's call; recorded in its bead
+   domain-pascal-338r.
