@@ -16,9 +16,8 @@
   image).
 
   The headings of utils.pas's global routines that other units call
-  were read off its frames and the callers' pushes (a pointer univ_ptr,
-  a longword integer32, a word integer, a byte boolean; p1..pn): the
-  translator of utils.pas narrows them.
+  were read off its frames and the callers' pushes, then narrowed from
+  utils.pas's bodies (translator PA).
 
   Not known from the original: every parameter name. }
 
@@ -34,7 +33,33 @@ begin
     instr_ptr_t(integer32(o) - 32 - o^.h.num * 12);
 end;
 
-{ utils.pas (cc.a88k). }
+{ utils.pas (cc.a88k).  The headings checked against utils.pas's bodies
+  (translator PA): instructions, operands, segments, live ranges and
+  blocks by their backend.ins.pas types; excise_instruction_cleanly,
+  remove_reader_from_lts, get_canonical_birthpoint,
+  complete_copied_instr and add_birthpoint are procedures (their
+  callers' reads of D0 were the register's other uses). }
+
+type
+  { A birthpoint (utils_$get_canonical_birthpoint, compared by
+    utils_$compare_birthpoints; the callers' frames give it 24
+    bytes): the segment that defines the value (nil when it is not
+    known), the live range whose value is unique, the displacement
+    added on the way, and a constant base it is known to have. }
+  utils_$birthpoint_t = record
+    lts: lts_ptr_t;                     { +0 }
+    lr: lr_ptr_t;                       { +4 }
+    offset: integer32;                  { +8 }
+    base: integer32;                    { +12 }
+    has_base: boolean;                  { +16 }
+  end;
+
+  { What utils_$apply_func_to_all_defs and _uses apply to each pair
+    (a definition's segment and a use's, the order the walk found
+    them in): the first false ends the walk. }
+  utils_$pair_func_t = ^function(
+      a: lts_ptr_t;
+      b: lts_ptr_t): boolean; options(val_param);
 
 { UTILS_$BEGIN_COMPILATION - 0x28493E, 0x44 bytes; called from at_backend.
   }
@@ -43,230 +68,236 @@ procedure utils_$begin_compilation; extern;
 { UTILS_$END_COMPILATION - 0x2849A6, 0x1C bytes; called from at_backend. }
 procedure utils_$end_compilation; extern;
 
-{ UTILS_$EXCISE_INSTRUCTION_CLEANLY - 0x2849C2, 0x18E bytes; called from
-  com fg_utils konst sanity tr_utils trans.  Frame 8:al; 12:bw.  Result:
-  read (callers: D01). }
-function utils_$excise_instruction_cleanly(
-    p1: univ_ptr;
-    p2: integer): integer32; options(val_param); extern;
+{ UTILS_$EXCISE_INSTRUCTION_CLEANLY - instr taken out, its operands
+  off their segments (segments left without references excised,
+  and with cascade the instructions that then define nothing used).
+  0x2849C2, 0x18E bytes; called from com fg_utils konst sanity tr_utils
+  trans. }
+procedure utils_$excise_instruction_cleanly(
+    instr: instr_ptr_t;
+    cascade: boolean); options(val_param); extern;
 
-{ UTILS_$EXCISE_INSTRUCTION_IF_UNCONSUMED - 0x284B90, 0x7E bytes; called
-  from iv.  Frame 8:a; 12:b.  Result: D0 (callers: D0b1). }
+{ UTILS_$EXCISE_INSTRUCTION_IF_UNCONSUMED - excised (true) when nothing
+  reads what it writes and it may be.  0x284B90, 0x7E bytes; called from
+  iv. }
 function utils_$excise_instruction_if_unconsumed(
-    p1: univ_ptr;
-    p2: boolean): boolean; options(val_param); extern;
+    instr: instr_ptr_t;
+    cascade: boolean): boolean; options(val_param); extern;
 
 { UTILS_$REMOVE_READER_FROM_LTS - 0x284C0E, 0xC0 bytes; called from com
-  konst tr_utils trans.  Frame 8:al; 12:b.  Result: read (callers: D01). }
-function utils_$remove_reader_from_lts(
-    p1: univ_ptr;
-    p2: boolean): integer32; options(val_param); extern;
+  konst tr_utils trans. }
+procedure utils_$remove_reader_from_lts(
+    op: opnd_ptr_t;
+    cascade: boolean); options(val_param); extern;
 
 { UTILS_$REMOVE_LTS_FROM_EXPOSED_LIST - 0x284D3A, 0xB6 bytes; called from
-  com fg_utils tr_utils trans.  Frame 8:al. }
+  com fg_utils tr_utils trans. }
 procedure utils_$remove_lts_from_exposed_list(
-    p1: univ_ptr); options(val_param); extern;
+    lts: lts_ptr_t); options(val_param); extern;
 
 { UTILS_$REMOVE_LTS_FROM_FINAL_LIST - 0x284E36, 0xB6 bytes; called from
-  com fg_utils tr_utils trans.  Frame 8:a. }
+  com fg_utils tr_utils trans. }
 procedure utils_$remove_lts_from_final_list(
-    p1: univ_ptr); options(val_param); extern;
+    lts: lts_ptr_t); options(val_param); extern;
 
 { UTILS_$EXCISE_LTS_CLEANLY - 0x284F28, 0x128 bytes; called from com
-  fg_utils iv sanity tr_utils trans.  Frame 8:al; 12:bw. }
+  fg_utils iv sanity tr_utils trans. }
 procedure utils_$excise_lts_cleanly(
-    p1: univ_ptr;
-    p2: integer); options(val_param); extern;
+    lts: lts_ptr_t;
+    cascade: boolean); options(val_param); extern;
 
-{ UTILS_$MAYBE_MERGE_SOURCE_STATEMENTS - 0x285110, 0x10E bytes; called
-  from tr_utils trans.  Frame 8:al; 12:al. }
+{ UTILS_$MAYBE_MERGE_SOURCE_STATEMENTS - src's statement numbers added
+  to dst's when src writes a variable that matters.  0x285110, 0x10E
+  bytes; called from tr_utils trans. }
 procedure utils_$maybe_merge_source_statements(
-    p1: univ_ptr;
-    p2: univ_ptr); options(val_param); extern;
+    dst: instr_ptr_t;
+    src: instr_ptr_t); options(val_param); extern;
 
 { UTILS_$GUARANTEE_INSTR_SEQUENCE - 0x28521E, 0x56 bytes; called from mmt
-  trans.  Frame 8:al. }
+  trans. }
 procedure utils_$guarantee_instr_sequence(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { UTILS_$RESEQUENCE_INSERTED_INSTRUCTION - 0x285274, 0x5A bytes; called
-  from tr_utils.  Frame 8:al. }
+  from tr_utils. }
 procedure utils_$resequence_inserted_instruction(
-    p1: univ_ptr); options(val_param); extern;
+    instr: instr_ptr_t); options(val_param); extern;
 
 { UTILS_$INITIALIZE_LTS_HINT_POINTERS - 0x2852CE, 0x3E bytes; called from
-  mmt_utils.  Frame 8:al. }
+  mmt_utils. }
 procedure utils_$initialize_lts_hint_pointers(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { UTILS_$FIND_EXPOSED_LTS - 0x28530C, 0xEA bytes; called from com fg_utils
-  lir_utils oli tr_utils trans.  Frame 8:al; 12:al.  Result: A0 (callers:
-  A014). }
+  lir_utils oli tr_utils trans. }
 function utils_$find_exposed_lts(
-    p1: univ_ptr;
-    p2: univ_ptr): univ_ptr; options(val_param); extern;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t): lts_ptr_t; options(val_param); extern;
 
 { UTILS_$FIND_FINAL_LTS - 0x2853F6, 0xEA bytes; called from df_utils iv
-  oli sched tr_utils trans.  Frame 8:al; 12:al.  Result: A0 (callers:
-  A019). }
+  oli sched tr_utils trans. }
 function utils_$find_final_lts(
-    p1: univ_ptr;
-    p2: univ_ptr): univ_ptr; options(val_param); extern;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t): lts_ptr_t; options(val_param); extern;
 
 { UTILS_$PUT_LTS_ON_EXPOSED_LIST - 0x2854E0, 0xDC bytes; called from com
-  fg_utils iv tr_utils trans.  Frame 8:al. }
+  fg_utils iv tr_utils trans. }
 procedure utils_$put_lts_on_exposed_list(
-    p1: univ_ptr); options(val_param); extern;
+    lts: lts_ptr_t); options(val_param); extern;
 
 { UTILS_$PUT_LTS_ON_FINAL_LIST - 0x2855FC, 0xDE bytes; called from com
-  fg_utils iv tr_utils trans.  Frame 8:al. }
+  fg_utils iv tr_utils trans. }
 procedure utils_$put_lts_on_final_list(
-    p1: univ_ptr); options(val_param); extern;
+    lts: lts_ptr_t); options(val_param); extern;
 
-{ UTILS_$FIND_LAST_LTS_IN_BB - 0x285714, 0xAA bytes; called from com
-  fg_utils iv tr_utils trans.  Frame 8:al; 12:al; 16:a.  Result: A0
-  (callers: A010). }
+{ UTILS_$FIND_LAST_LTS_IN_BB - lr's segment in bb (nil for none), prev
+  the last one before it.  0x285714, 0xAA bytes; called from com
+  fg_utils iv tr_utils trans. }
 function utils_$find_last_lts_in_bb(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr): univ_ptr; options(val_param); extern;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t;
+    var prev: lts_ptr_t): lts_ptr_t; options(val_param); extern;
 
 { UTILS_$GET_NEW_LTS - 0x2857BE, 0xDA bytes; called from com ra_utils
-  tr_utils trans.  Frame 8:al; 12:al; 16:bw.  Result: A0 (callers: A09). }
+  tr_utils trans. }
 function utils_$get_new_lts(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: integer): univ_ptr; options(val_param); extern;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t;
+    at_end: boolean): lts_ptr_t; options(val_param); extern;
 
-{ UTILS_$GET_EXPOSED_LTS - 0x285898, 0x72 bytes; called from com fg_utils
-  iv lir_utils ra_utils tr_utils trans.  Frame 8:al; 12:al; 16:a.  Result:
-  A0 (callers: A020). }
+{ UTILS_$GET_EXPOSED_LTS - lr's exposed segment in bb, made (created)
+  when it has none.  0x285898, 0x72 bytes; called from com fg_utils iv
+  lir_utils ra_utils tr_utils trans. }
 function utils_$get_exposed_lts(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr): univ_ptr; options(val_param); extern;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t;
+    var created: boolean): lts_ptr_t; options(val_param); extern;
 
 { UTILS_$GET_FINAL_LTS - 0x28590A, 0x7C bytes; called from com fg_utils iv
-  tr_utils trans.  Frame 8:al; 12:l; 16:a.  Result: A0 (callers: A015
-  D0w1). }
+  tr_utils trans. }
 function utils_$get_final_lts(
-    p1: univ_ptr;
-    p2: integer32;
-    p3: univ_ptr): univ_ptr; options(val_param); extern;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t;
+    var created: boolean): lts_ptr_t; options(val_param); extern;
 
 { UTILS_$COMPARE_BIRTHPOINTS - 0x285986, 0x70 bytes; called from com
-  mmt_utils.  Frame 8:a; 12:a.  Result: D0 (callers: D0b3). }
+  mmt_utils. }
 function utils_$compare_birthpoints(
-    p1: univ_ptr;
-    p2: univ_ptr): boolean; options(val_param); extern;
+    in a: utils_$birthpoint_t;
+    in b: utils_$birthpoint_t): boolean; extern;
 
-{ UTILS_$GET_CANONICAL_BIRTHPOINT - 0x285ABA, 0x400 bytes; called from com
-  mmt_utils trans.  Frame 8:al; 12:w; 14:al.  Result: A0 (callers: D01). }
-function utils_$get_canonical_birthpoint(
-    p1: univ_ptr;
-    p2: integer;
-    p3: univ_ptr): integer32; options(val_param); extern;
+{ UTILS_$GET_CANONICAL_BIRTHPOINT - where lts's value was born, through
+  the copies and (by follow's bits: 0 adds and subtracts of
+  immediates, 1 loads and stores, 2 joins) the operations that keep
+  it.  0x285ABA, 0x400 bytes; called from com mmt_utils trans. }
+procedure utils_$get_canonical_birthpoint(
+    lts: lts_ptr_t;
+    follow: integer;
+    var bp: utils_$birthpoint_t); options(val_param); extern;
 
 { UTILS_$SET_INSTRUCTION_OPCODE - 0x285F16, 0x44 bytes; called from oli
-  ra_utils tr_utils trans.  Frame 8:a; 12:w. }
+  ra_utils tr_utils trans. }
 procedure utils_$set_instruction_opcode(
-    p1: univ_ptr;
-    p2: integer); options(val_param); extern;
+    instr: instr_ptr_t;
+    opc: integer); options(val_param); extern;
 
 { UTILS_$COPY_INSTR_TEMPLATE_TO_BB_END - 0x286128, 0x62 bytes; called from
-  com fg_utils oli.  Frame 8:al; 12:al.  Result: D0 (callers: A03 D0l1). }
+  com fg_utils oli. }
 function utils_$copy_instr_template_to_bb_end(
-    p1: univ_ptr;
-    p2: univ_ptr): univ_ptr; options(val_param); extern;
+    template: instr_ptr_t;
+    bb: bb_ptr_t): instr_ptr_t; options(val_param); extern;
 
 { UTILS_$COPY_INSTR_TEMPLATE_TO_BB_HEAD - 0x28618A, 0x50 bytes; called
-  from com oli ra_utils.  Frame 8:al; 12:al.  Result: D0 (callers: A03). }
+  from com oli ra_utils. }
 function utils_$copy_instr_template_to_bb_head(
-    p1: univ_ptr;
-    p2: univ_ptr): univ_ptr; options(val_param); extern;
+    template: instr_ptr_t;
+    bb: bb_ptr_t): instr_ptr_t; options(val_param); extern;
 
 { UTILS_$COMPLETE_COPIED_INSTR - 0x286230, 0x14E bytes; called from com
-  fg_utils oli ra_utils.  Frame 8:al.  Result: read (callers: D01). }
-function utils_$complete_copied_instr(
-    p1: univ_ptr): integer32; options(val_param); extern;
+  fg_utils oli ra_utils. }
+procedure utils_$complete_copied_instr(
+    instr: instr_ptr_t); options(val_param); extern;
 
 { UTILS_$COMPLETE_COPIED_INSTR_AT_BB_HEAD - 0x28637E, 0x1E6 bytes; called
-  from com ra_utils.  Frame 8:al. }
+  from com ra_utils. }
 procedure utils_$complete_copied_instr_at_bb_head(
-    p1: univ_ptr); options(val_param); extern;
+    instr: instr_ptr_t); options(val_param); extern;
 
 { UTILS_$STRIP_EXTRANEOUS_MODIFIES - 0x286700, 0x19A bytes; called from
-  life ra.  Frame 8:al. }
+  life ra. }
 procedure utils_$strip_extraneous_modifies(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
-{ UTILS_$MOVE_DEFINITION - 0x286A22, 0xD6 bytes; called from com tr_utils
-  trans.  Frame 8:al; 12:al; 16:bw. }
+{ UTILS_$MOVE_DEFINITION - what def_from reached (its exposed
+  segments, its join inputs) now reached from def; with relink lts
+  itself too.  0x286A22, 0xD6 bytes; called from com tr_utils trans. }
 procedure utils_$move_definition(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: integer); options(val_param); extern;
+    lts: lts_ptr_t;
+    def: lts_ptr_t;
+    relink: boolean); options(val_param); extern;
 
-{ UTILS_$LOCATE_DEFINITION - 0x286B88, 0xD2 bytes; called from com oli
-  tr_utils.  Frame 8:al; 12:al.  Result: A0 (callers: A012). }
+{ UTILS_$LOCATE_DEFINITION - the segment of lr defined in a block that
+  reaches bb (nil when lir_main_c8e is clear or there is none).
+  0x286B88, 0xD2 bytes; called from com oli tr_utils. }
 function utils_$locate_definition(
-    p1: univ_ptr;
-    p2: univ_ptr): univ_ptr; options(val_param); extern;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t): lts_ptr_t; options(val_param); extern;
 
-{ UTILS_$FIND_JOIN_BP - 0x286C5A, 0x48 bytes; called from trans.  Frame
-  8:a.  Result: A0 (callers: A03). }
+{ UTILS_$FIND_JOIN_BP - 0x286C5A, 0x48 bytes; called from trans. }
 function utils_$find_join_bp(
-    p1: univ_ptr): univ_ptr; options(val_param); extern;
+    lts: lts_ptr_t): instr_ptr_t; options(val_param); extern;
 
-{ UTILS_$ADD_BIRTHPOINT - 0x286CA2, 0x12A bytes; called from fg_utils iv
-  oli trans.  Frame 8:al; 12:al; 16:bw.  Result: read (callers: D02). }
-function utils_$add_birthpoint(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: integer): integer32; options(val_param); extern;
+{ UTILS_$ADD_BIRTHPOINT - def (a segment) a birthpoint of its live
+  range's exposed segment in bb (a join made when it has another).
+  0x286CA2, 0x12A bytes; called from fg_utils iv oli trans. }
+procedure utils_$add_birthpoint(
+    def: lts_ptr_t;
+    bb: bb_ptr_t;
+    clear_transparent: boolean); options(val_param); extern;
 
 { UTILS_$APPLY_FUNC_TO_ALL_DEFS - 0x286FDA, 0x134 bytes; called from com.
-  Frame 8:l; 12:al; 16:l.  Result: D0 (callers: D0l1). }
+  }
 function utils_$apply_func_to_all_defs(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: integer32): integer32; options(val_param); extern;
+    rtn: rtn_ptr_t;
+    f: utils_$pair_func_t;
+    lts: lts_ptr_t): boolean; options(val_param); extern;
 
 { UTILS_$APPLY_FUNC_TO_ALL_USES - 0x28720E, 0xEA bytes; called from com
-  tr_utils.  Frame 8:al; 12:al; 16:al.  Result: D0 (callers: D0b2). }
+  tr_utils. }
 function utils_$apply_func_to_all_uses(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr): boolean; options(val_param); extern;
+    rtn: rtn_ptr_t;
+    f: utils_$pair_func_t;
+    lts: lts_ptr_t): boolean; options(val_param); extern;
 
-{ UTILS_$FIND_MATE_OPERAND - 0x28733A, 0x182 bytes; called from com
-  lir_utils ra_utils tm_utils.  Frame 8:al.  Result: A0 (callers: A015). }
+{ UTILS_$FIND_MATE_OPERAND - the other half of an fp_reg_pair operand.
+  0x28733A, 0x182 bytes; called from com lir_utils ra_utils tm_utils. }
 function utils_$find_mate_operand(
-    p1: univ_ptr): univ_ptr; options(val_param); extern;
+    op: opnd_ptr_t): opnd_ptr_t; options(val_param); extern;
 
 { UTILS_$INSTR_IS_REF_TO_ARGUMENT_BLOCK - 0x287608, 0x34 bytes; called
-  from lir.  Frame 8:al.  Result: D0 (callers: D0b2). }
+  from lir. }
 function utils_$instr_is_ref_to_argument_block(
-    p1: univ_ptr): boolean; options(val_param); extern;
+    instr: instr_ptr_t): boolean; options(val_param); extern;
 
 { UTILS_$INSTR_IS_REF_TO_MEMORY_HOME - 0x28763C, 0x196 bytes; called from
-  lir_main ra_utils.  Frame 8:al.  Result: D0 (callers: D0b3). }
+  lir_main ra_utils. }
 function utils_$instr_is_ref_to_memory_home(
-    p1: univ_ptr): boolean; options(val_param); extern;
+    instr: instr_ptr_t): boolean; options(val_param); extern;
 
 { UTILS_$INSTRS_CONSUME_IDENTICAL_SYMBOLS - 0x2877D2, 0x16C bytes; called
-  from ra_utils.  Frame 8:al; 12:al.  Result: D0 (callers: D0b1). }
+  from ra_utils. }
 function utils_$instrs_consume_identical_symbols(
-    p1: univ_ptr;
-    p2: univ_ptr): boolean; options(val_param); extern;
+    a: instr_ptr_t;
+    b: instr_ptr_t): boolean; options(val_param); extern;
 
 { UTILS_$STRIP_MAY_GEN_EXCEPTION - 0x28793E, 0xB0 bytes; called from lir.
-  Frame 8:al. }
+  }
 procedure utils_$strip_may_gen_exception(
-    p1: univ_ptr); options(val_param); extern;
+    instr: instr_ptr_t); options(val_param); extern;
 
-{ UTILS_$FIND_UNUSED_OPERAND_SLOT - 0x2879EE, 0x80 bytes; called from lir.
-  Frame 8:al; 12:al.  Result: D0 (callers: D0l4). }
+{ UTILS_$FIND_UNUSED_OPERAND_SLOT - the first operand from first (1 at
+  least) of kind none; bug_check past the last.  0x2879EE, 0x80 bytes;
+  called from lir. }
 function utils_$find_unused_operand_slot(
-    p1: univ_ptr;
-    p2: univ_ptr): integer32; options(val_param); extern;
+    instr: instr_ptr_t;
+    first: integer32): integer32; options(val_param); extern;

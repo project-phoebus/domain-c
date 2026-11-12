@@ -277,6 +277,11 @@ when this tree is merged).
             b := f(1) = p;
           end;
 
+   Also utils.pas (translator PA): utils_$remove_lts_from_exposed_list
+   and _final_list's `if utils_$find_exposed_lts(lr, bb) <> lts'
+   (cc.a88k 0x284D58: `bsr.w; addq.w #8,SP; cmpa.l A2,A0; beq'); the
+   rewrite swaps the operands.
+
 13. **Testing an element of a packed array of more than 256 booleans.**
    pds.pas's bitmaps of the files a bucket or a scope refers to
    (`packed array [1..2048] of boolean', reached through a pointer):

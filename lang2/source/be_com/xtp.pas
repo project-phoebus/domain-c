@@ -118,7 +118,7 @@ begin
     bug_check('SCHED_$insert_ipccnop: no IP CC operand (%3ZWD:%3ZWD)%$',
               instr^.bb^.num, instr^.num);
   if cc^.link = nil then begin
-    if not cc^.lts^.f2.b3_4 then
+    if not cc^.lts^.f2.final then
       return;
   end
   else begin
@@ -157,7 +157,7 @@ begin
   end;
   with nop^.opnds[2].lts^ do
     rrp := rrp - [rrp$write] + [rrp$modify];
-  nop^.opnds[2].lts^.def := addr(nop^.opnds[2]);
+  nop^.opnds[2].lts^.refs := addr(nop^.opnds[2]);
   lts := lir_utils_$add_lts_after_lts(cc^.lts, 0, instr^.bb);
   nop^.opnds[1].lts := lts;
   with nop^.opnds[1] do begin
@@ -171,7 +171,7 @@ begin
     lts^.rrp := lts^.rrp + [rrp$write];
   if cc^.h.modify then
     lts^.rrp := lts^.rrp + [rrp$modify];
-  lts^.def := cc;
+  lts^.refs := cc;
   cc^.lts := lts;
   cc^.link := addr(nop^.opnds[1]);
   lts^.lr^.rrp := lts^.lr^.rrp + [rrp$modify, rrp$read, rrp$intend_to_modify];

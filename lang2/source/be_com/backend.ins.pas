@@ -312,9 +312,13 @@ type
     l4: integer32;                      { +4 }
     w8: integer;                        { +8 }
     num: integer;                       { +10 }
-    w12: integer;                       { +12 }
+    order: 0..65535;                    { +12: its place in the order
+                                          the live ranges' segment lists
+                                          follow (utils; batch A: was
+                                          w12) }
     w14: integer;                       { +14 }
-    f: bb_flags_t;                      { +16 }
+    f: bb_flags_t;                      { +16 (utils: +19 bit 1 marks a
+                                          block find_definition saw) }
     { batch A: +20..+31 were l20, l24, l28 }
     w20: integer;                       { +20 }
     succs: fg_edge_ptr_t;               { +22: edges out (bv) }
@@ -324,7 +328,17 @@ type
     first: instr_ptr_t;                 { +34 }
     last: instr_ptr_t;                  { +38 }
     { batch A: +42..+117 were space42 }
-    space42: array [42..85] of char;    { +42 }
+    space42: array [42..53] of char;    { +42 }
+    l54: bb_ptr_t;                      { +54: a list of blocks
+                                          utils_$locate_definition
+                                          searches first }
+    space58: array [58..61] of char;    { +58 }
+    exposed: lts_ptr_t;                 { +62: its exposed segments
+                                          (with lir_main_c86 0; chained
+                                          at their +16) }
+    finals: lts_ptr_t;                  { +66: its final segments
+                                          (chained at +20) }
+    space70: array [70..85] of char;    { +70 }
     live_out: bv_ptr_t;                 { +86: the union of the
                                           successors' live_in (bv) }
     live_gen: bv_ptr_t;                 { +90: read before written }
@@ -343,6 +357,9 @@ type
     avail_out: bv_ptr_t;                { +126: (avail_in and
                                           transparent) or avail_gen }
     avail_gen: bv_ptr_t;                { +130 }
+    space134: array [134..145] of char; { +134 }
+    mark146: integer32;                 { +146: utils' look_for_path
+                                          marks }
   end;
 
   { batch A: a flow graph edge (bv: a block's succs chained at +8, its
@@ -359,19 +376,39 @@ type
     condition code segment's that needs no IPCCNOP when clear); def
     (+4) the operand that defines it; next (+8) in its live range's
     list; +40 a longword dfa clears; lr (+48) its live range. }
+  { batch A (utils): num, exposed, first_in_bb, final, refs (was def),
+    bb .. mark named; l44 was integer32.  The operands that refer to a
+    segment (its definition first, then its readers) are chained from
+    its refs through their link (+4); an
+    exposed segment's l44 is the final segment (of another block) that
+    reaches it, whose l28 heads the exposed segments it reaches
+    (chained at their l28); a join birthpoint's segment's l44 heads its
+    inputs (records chained at +0, utils' ut_jbi_t). }
   lts_t = record
     rrp: rrp$set_t;                     { +0 }
     f2: packed record                   { +2 }
-      b2: 0..255;
-      b3_7, b3_6, b3_5: boolean;
-      b3_4: boolean;                    { .4 (xtp) }
+      num: 0..255;                      { its number in the live range
+                                          (printed lr.num) }
+      exposed: boolean;                 { +3.7: on an exposed list }
+      first_in_bb: boolean;             { .6: the live range's first in
+                                          its block }
+      b3_5: boolean;
+      final: boolean;                   { .4: on a final list (xtp) }
       b3_3_0: 0..15;
       end;
-    def: opnd_ptr_t;                    { +4 }
-    next: lts_ptr_t;                    { +8 }
-    space12: array [12..39] of char;    { +12 }
+    refs: opnd_ptr_t;                   { +4 }
+    next: lts_ptr_t;                    { +8: in its live range's list,
+                                          by block order }
+    bb: bb_ptr_t;                       { +12 }
+    next_exposed: lts_ptr_t;            { +16 }
+    next_final: lts_ptr_t;              { +20 }
+    l24: integer32;                     { +24 (utils clears it in phase
+                                          9) }
+    l28: lts_ptr_t;                     { +28 }
+    l32: integer32;                     { +32 }
+    mark: integer32;                    { +36: the walks' marks }
     l40: integer32;                     { +40 (dfa clears it) }
-    l44: integer32;                     { +44 }
+    l44: univ_ptr;                      { +44 }
     lr: lr_ptr_t;                       { +48 }
   end;
 
@@ -386,16 +423,29 @@ type
     { batch A: +4..+7 were l4 }
     id: 0..65535;                       { +4: its complex id, its bit
                                           in the bit vectors (bv) }
-    w6: integer;                        { +6 }
+    num: integer;                       { +6: its number (printed;
+                                          batch A: was w6) }
     l8: integer32;                      { +8 }
     next: lr_ptr_t;                     { +12 }
     lr16: lr_ptr_t;                     { +16: made complex with it
                                           (bv; was l16) }
-    l20: integer32;                     { +20 }
+    node20: univ_ptr;                   { +20: an IL node (a VAR_NAME,
+                                          109, or 110: utils reads its
+                                          flags; batch A: was l20) }
     sym: univ_ptr;                      { +24 }
     l28: integer32;                     { +28 }
     l32: integer32;                     { +32 }
     ltss: lts_ptr_t;                    { +36 }
+    { batch A (utils): the segment lists by block (lir_main_c86 1) and
+      their hints (the last found and the one before it, valid with
+      lir_main_c8d). }
+    space40: array [40..63] of char;    { +40 }
+    exposed_hint: lts_ptr_t;            { +64 }
+    exposed_prev: lts_ptr_t;            { +68 }
+    exposed: lts_ptr_t;                 { +72 }
+    finals: lts_ptr_t;                  { +76 }
+    final_hint: lts_ptr_t;              { +80 }
+    final_prev: lts_ptr_t;              { +84 }
   end;
 
   { A routine being compiled: what at_backend's phases are passed.
@@ -424,7 +474,9 @@ type
     space96: array [96..111] of char;   { +96 }
     l112: lts_ptr_t;                    { +112 }
     { batch A: +116..+191 were space116 }
-    space116: array [116..183] of char; { +116 }
+    space116: array [116..179] of char; { +116 }
+    marks: integer32;                   { +180: utils' walk marks,
+                                          counted up }
     nbbs: integer32;                    { +184: its blocks (bv) }
     l188: integer32;                    { +188 }
     l192: integer32;                    { +192: its complex live
@@ -542,12 +594,17 @@ var
                                           block has, 0, 4 or 7 (bv; xtp:
                                           nonzero skips the global
                                           walk) }
-  lir_main_c86: extern integer;         { +0xC86 (xtp sets it to 1) }
+  lir_main_c86: extern integer;         { +0xC86: where the segment
+                                          lists are kept: 0 by block, 1
+                                          by live range (utils; xtp sets
+                                          it to 1) }
   lir_main_c88: extern boolean;         { +0xC88 }
   lir_main_c89: extern boolean;         { +0xC89 }
   lir_main_c8c: extern boolean;         { +0xC8C }
-  lir_main_c8d: extern boolean;         { +0xC8D }
-  lir_main_c8e: extern boolean;         { +0xC8E }
+  lir_main_c8d: extern boolean;         { +0xC8D: the live ranges'
+                                          hints valid (utils) }
+  lir_main_c8e: extern boolean;         { +0xC8E: definitions may be
+                                          located (utils) }
   lir_main_da4: extern boolean;         { +0xDA4: set by
                                           at_backend_$begin_compilation
                                           from the options; dfa and xtp

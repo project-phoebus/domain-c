@@ -588,3 +588,6 @@ lang/lang/source/opt_inline.pas	s/x\^\.kind in \[109, 110, 111, 163, 195\]/((x^.
 lang/lang/source/opt_inline.pas	s/ed\^\.callee\^\.kind in \[105\.\.108, 172, 209\]/(((ed^.callee^.kind >= 105) and (ed^.callee^.kind <= 108)) or (ed^.callee^.kind = 172) or (ed^.callee^.kind = 209)) { gap 8 }/
 # gap 2 (zzzzz): a case of 5 labels over a range of 15 (the empty labels added, for the check)
 lang2/source/be_com/zzzzz.pas	s/^(\s*)75:(\s*)\{ move \}$/${1}76, 77, 78, 80, 82, 83, 84, 85, 86, 87: ; { gap 2 }\n${1}75:${2}{ move }/
+# gap 12 (utils, translator PA): an A0 function result compared with a variable (the operands swapped)
+lang2/source/be_com/utils.pas	s/if utils_\$find_exposed_lts\(lr, bb\) <> lts then/if lts <> utils_\$find_exposed_lts(lr, bb) then { gap 12 }/
+lang2/source/be_com/utils.pas	s/if utils_\$find_final_lts\(lr, bb\) <> lts then/if lts <> utils_\$find_final_lts(lr, bb) then { gap 12 }/
