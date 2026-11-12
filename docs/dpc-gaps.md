@@ -66,6 +66,12 @@ when this tree is merged).
   record) is with the domain-pascal owner: the reference shows a
   variant's fields initialized only by name (3.10.4); rewrite.pas's
   second view type stays.
+- **Gaps 44 (short strings blank-padded in initializers; now dpc's
+  rule) and 45 (a `for' loop from a negative start): fixed in 5534be4**,
+  with gap 43 (an initialized varying string).  The rules removed and
+  the gap 44 data cases (cargs, prfpkg, list_tree's line) now match; ass's
+  program_name still differs: the image has the length, the text and
+  one NUL with the rest unset, dpc blank-pads (reported).
 - Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
   spiller finds values to spill but runs out of virtual register
   numbers (240 per class) adding the reloads, and the colouring's
@@ -75,7 +81,7 @@ when this tree is merged).
   purpose (the image cannot tell it from `repeat ... until false'):
   write such loops with a label.
 - All compile best effort (a warning; `--strict' still refuses).  Their
-  rewrites are gone from tools/cc_gap_rewrites.txt (295 rules removed in all);
+  rewrites are gone from tools/cc_gap_rewrites.txt (298 rules removed in all);
   the full gate is clean without them.
 - Gaps 4 (write/writeln) and 7 (real arithmetic) are not being worked
   on in dpc for now (the domain-pascal owner's choice).
