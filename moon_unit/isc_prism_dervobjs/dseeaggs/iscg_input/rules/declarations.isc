@@ -890,8 +890,25 @@ operator isc_function_blk il function_blk children 0 image 16#0E463C;
   pass_1 inherited;
 end;
 operator isc_insert_bit_field il insert_bit_field children 3 image 16#0E4864;
-  fixed;
-  pass_1 1: derived, 2: derived, 3: derived;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 1;
+    required_precision <- 32;
+    permissible derived;
+  child 3 il.p72
+    exception_frame <- il.p12;
+    fetch_precision <- rlen_bits(il.w52);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- il.l76;
+    permissible derived;
 end;
 operator isc_integer_ob il integer_ob children 0 image 16#0E4ACA;
 end;

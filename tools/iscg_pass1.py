@@ -639,6 +639,23 @@ class Lifter:
                     low.append(('store', ('inh', dst[1], n), 'inh.' + n))
                 k += 3
                 continue
+            # rlen_bits: (moveal #READONLY,A); movew X,D; lslw #2,D;
+            # lea A@(0,D:w),A; movel A@(372),Y@(off)
+            m = re.match(r'lslw #2,%(d\d)$', t)
+            if m and regs.get(m.group(1), ('',))[0] == 'field' and k + 2 < len(ins):
+                d = m.group(1)
+                m3 = re.match(r'lea %(a\d)@\(0x0,%' + d + r':w\),%(a\d)$', ins[k + 1][1])
+                m4 = re.match(r'movel %(a\d)@\(372\),%(a\d)@\((\d+)\)$', ins[k + 2][1])
+                if m3 and m4 and regs.get(m3.group(1)) == ('abs', READONLY) and \
+                        m4.group(1) == m3.group(2) and \
+                        regs.get(m4.group(2), ('',))[0] == 'newinh':
+                    n = INH_BY_OFF.get((int(m4.group(3)), 4))
+                    if n is None:
+                        self.fail(k, 'rlen_bits target')
+                    low.append(('store', ('inh', regs[m4.group(2)][1], n),
+                                'rlen_bits(%s)' % regs[d][1]))
+                    k += 3
+                    continue
             # rlen_arith: (moveal #READONLY,A); movew X,D; addw D,D;
             # lea A@(0,D:w),A; moveb A@(321),Y@(38)
             m = re.match(r'addw %(d\d),%(d\d)$', t)
@@ -1438,9 +1455,12 @@ def expr(e):
         e = re.sub(r'\b%s\b' % re.escape(g), pas, e)
     e = re.sub(r'\binh\.(\w+)', lambda m: inh_ref('inh', m.group(1)), e)
     e = re.sub(r'\brlen_arith\(', 'p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[', e)
-    if 'rlen_arith[' in e:
+    e = re.sub(r'\brlen_bits\(', 'isc_readonly_tables.rlen_bits[', e)
+    for tb in ('rlen_arith[', 'rlen_bits['):
+        if tb not in e:
+            continue
         # the call's closing parenthesis becomes the index's bracket
-        i = e.index('rlen_arith[') + len('rlen_arith[')
+        i = e.index(tb) + len(tb)
         depth = 0
         for j in range(i, len(e)):
             if e[j] == '(':
