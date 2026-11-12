@@ -1571,3 +1571,79 @@ begin
   else
     initialize_symbol(il);
 end;''')
+
+
+def _compare(name, addr):
+    return _p1(name, '''the
+  proper_subtree il_compare_top, 2 children: a comparison of a
+  constant with a variable is rewritten with its operands swapped (a
+  new tree node, op 12, the relation, +28, replaced by its converse
+  from the word table at isc_readonly_tables +0x30 by the relation's
+  absolute value; +26 and bit 6 of +30 copied), and that node's
+  solutions; otherwise child 1 (+40) and child 2 (+44) at the
+  comparison's precision (opmod1, +26), signed as the node's bit 6.
+
+  %s, 0x3A0 bytes: the two tests and-ed through -42 (`not.b', `and.b',
+  `bpl'); the absolute value by `bpl', `neg.w'; A3 il, D7 inh.
+
+  Not known from the original: the table's name.''' % addr, '''
+var
+  n: univ_ptr;
+  inh_1, inh_2: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_compare_top);
+  number_of_children := 2;
+  if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
+      and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
+    @TRACE
+    n := mrh_$alloc(isc_preserve_heap, 48);
+    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
+    isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
+    isc_node_ptr_t(n)^.xw[18] := 12;
+    isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+    isc_node_ptr_t(n)^.xw[14] :=
+        p1_readonly_words_ptr_t(addr(isc_readonly_tables))^[24 + abs(isc_node_ptr_t(il)^.xw[14])];
+    p1_node_bytes_ptr_t(n)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+    solutions_made := true;
+  end
+  else begin
+    inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
+    @COPY inh_1
+    inh_1^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+    inh_1^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[13]];
+    inh_1^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+    inh_1^.f38.b6 := true;
+    inh_1^.f38.b3 := p1_node_bytes_ptr_t(il)^[30].b6;
+    children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
+        [solution$ip_reg, solution$ip_reg_field]);
+    if solution_list$empty(children[1]) then
+      no_solutions := true
+    else begin
+      inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
+      @COPY inh_2
+      inh_2^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+      inh_2^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[13]];
+      inh_2^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+      inh_2^.f38.b6 := true;
+      inh_2^.f38.b3 := p1_node_bytes_ptr_t(il)^[30].b6;
+      children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
+          [solution$ip_reg, solution$ip_reg_field, solution$literal_32_bits]);
+      if solution_list$empty(children[2]) then
+        no_solutions := true;
+    end;
+  end;
+end;''')
+
+
+P1_ROUTINES['isc_tree_node_compare_top'] = _compare('isc_tree_node_compare_top', '0x0E7B80')
+P1_ROUTINES['isc_cmp_tree_node_compare_top'] = _compare('isc_cmp_tree_node_compare_top',
+                                                        '0x0E30D0')
