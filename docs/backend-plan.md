@@ -129,6 +129,14 @@ Question 174 is answered: these units open the prelude (fga, hal, life and sanit
 
 Remaining in batch A after PA3: lir_utils' three routines; lir, lir_main, sym, fg_utils, tm_utils, post.  Translator PA2's remaining list read: sanity_$check_entire_routine; call_conv (question 167), lir_utils, lir, lir_main, sym, fg_utils, tm_utils, post.  Notes for whoever continues: sym, tm_utils (and fga, hal, life, sanity) open backend.ins.pas without the lang prelude: backend.ins.pas must not use the prelude's types (rtn_t.node is univ_ptr for that reason), and a unit that needs il_180, cargs_$options or idntk declares them through views of its own (fga.pas; docs/questions.md 174).  sym calls isc_$get_il_live_range without opening an ISC insert.  tm_utils includes the named sections' initializers (operand_forms_mask.init, the amse_*.init), which question 161 has not settled.
 
+Batch A continued (translator PA5, 2026-11-11):
+
+| unit | routines | notes |
+|------|----------|-------|
+| `lang2/source/be_com/lir_main.pas` | 25 | done: the module's data (0xDB8 bytes) every cell extern and defined in address order (byte cells shifted: dpc gap 37, questions 282), the section lir_main_readonly_tables; solution_t 432 bytes (lr2, shift, sym named); rtn_t conv (+16), frame_size (+48), saved_ip/saved_fp (+160..), l172, l176, save_end (+204), w218, w222, w224; lir_3b80 a record (lir_inherited_t); lir_3e60/3f90/4090 typed; lir_main_b40 an array, lir_main_c48 lts_ptr_t; lir_main_$ headings named; ISC: isc_user_routines_328..358, isc_$is_a_register_candidate, isc_$get_home_solution, rewrite_$entry |
+
+Remaining in batch A after PA5: fg_utils, post, lir (see PA4's notes; instr_size.init still to confirm, questions 284).
+
 Batch C (translators PC, PC2, PC3, PC4, PC5, 2026-11-11):
 
 | unit | routines | notes |

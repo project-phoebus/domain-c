@@ -1020,4 +1020,26 @@ cc.m68k unless marked.
     which never reads (8,A6): written as an unused parameter (cf. item
     103, where the push belonged to another call).
 
+## The LIR's frame code (translator PA5, lir_main; cc.a88k)
+
+220. **A set held in a register ored from a frame copy that is never
+    stored.**  lir_main_$entry (cc.a88k 0x249756) counts the
+    conventions' floating registers into two `set of 0..31' kept in D1
+    and D2 (`clr.l D0; move.l D0,D1; move.l D0,D2'), but each union is
+    built in frame temporaries from the variable's frame home (`lea
+    (-32,A6),A1; move.l (A1)+,D6; or.l (A0)+,D6'), which nothing ever
+    writes, and the result is loaded back into D1 (`move.l (-168,A6),
+    D1'): the union's left operand read from the variable's memory
+    home while its value lives in a register (cf. item 127, dpc gap
+    30).  Written `s1 := s1 + [r] + [r - 1]'.
+221. **A call's argument area popped short and the next call pushed
+    without its pad.**  lir_main_$entry pops 6 of lir_$add_flow_graph_
+    edge's 8 bytes (`addq.l #6,SP', 0x249878) and lir_main_$handler_
+    reentry 2 of lir_$label's 4 (`addq.l #2,SP', 0x24A182): item 130
+    for global callees.
+222. **Byte module variables packed one to a byte.**  lir_main's data
+    has booleans at +0xC88, +0xC89 and +0xC8B..+0xC8E (and +0xDA4,
+    +0xDA8, +0xDAA, +0xDB4 followed by unaddressed bytes): Rev 8.89
+    gives a boolean module variable one byte.  dpc gives each two
+    (docs/dpc-gaps.md 37).
 

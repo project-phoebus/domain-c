@@ -1697,4 +1697,35 @@ revisited.
    the words past 211 zero (no .rwdi record).  Should both be indexed
    0..383 (the opcode enumeration's range)?
 
+280. Translator PA5, lir_main_$entry: after formal_local_transfer_setup's
+   case 8 (a register formal moved into an integer register home of a
+   pair's kind) the test of a by-value double's next slot reads
+   `cmpi.b #4,(0x62,A1,D4.l)' with D4 still 26 times the formal's
+   number (the index register of its descriptor), i.e. the next
+   formal's loc (conv^.args[j + 1].f18.loc), not this one's.  Written
+   so; a slip of the original (this formal's loc meant), or the next
+   formal (the pair's other half) intended?
+281. Translator PA5, formal_local_transfer_setup: for a memory formal
+   without a home (results 0 and 1) the load/store opcode it returns
+   (xfer +6) is the variable's size in bits, the register both live
+   in (D1): written as one variable used for both.  And the
+   bug_check message names LOCAL_FORMAL_TRANSFER_SETUP (the routine's
+   .blocks name is formal_local_transfer_setup); entry's and
+   build_initial_epilog's messages name LIR_MAIN_$BEGIN_ROUTINE and
+   ...BUILD_INITIAL_EPILOG.  Taken from the bytes.
+282. Translator PA5, lir_main: dpc gives each byte module variable two
+   bytes (docs/dpc-gaps.md 37), so backend.ins.pas's booleans
+   lir_main_c89 and lir_main_c8b..c8e cannot sit at their addresses
+   (they are 0xC8A, 0xC8C..0xC92 in the translation; every other cell
+   of the 0xDB8 bytes is at its address).  Fix in dpc, or declare the
+   byte cells as one packed record (renaming their users)?
+283. Translator PA5, lir_main_$save_and_restore_code: the singles'
+   loop tests the register it computed (0/1 plus an even number)
+   against -1 (`cmpi.l #-1,D5'), never true; and with no RETURN block
+   the RETURN's block slot (-120) is read unset only by the code the
+   no_return_block test skips.  Kept.
+284. Translator PA5: instr_size.init (question 205) is not confirmed
+   against lir's copy: lir was not reached.  lir's data (A5 0x487180)
+   holds no run of instr_size's words at its start (its +0 .. +0x320
+   are other tables), so lir's copy, if it has one, lies further in.
 
