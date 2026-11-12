@@ -1999,3 +1999,49 @@ revisited.
    bug_check.ins.pas.  Did the original declare them in at_base.ins.pas
    or elsewhere?
 
+
+244. Translator PB7, sched: register_pressure (cc.a88k 0x275382) starts
+   its count from 2 and returns 2 for the classes it does not count:
+   the only 2 in the routine is `moveq #2,D1', which also serves as
+   the shift count of the opcode's index (`lsl.w D1,D0', where every
+   other index in the unit uses `lsl.w #2'), and the loop adds to D1
+   without clearing it.  Translated as `p := 2' first (the compiler
+   reusing a constant's register, rev889-patterns 155); if the source
+   left p unset, the 2 is an accident of register allocation.  Which?
+245. Translator PB7, sched (slips kept as the image has them?):
+   select_first_instruction's search tests `(h and not 3) = 3' (`moveq
+   #-4; and.l D3,D0; cmpi.l #3'), never true, before its other stop;
+   only_final_call_and_seq never looks at the queue's last item; and
+   p2_process_lts's "LTS doesn't go anywhere" names the last reader's
+   instruction, which is unset when there is no reader (the case the
+   message reports).
+246. Translator PB7, sched: fp_registers_busy.init is written as a
+   variable of its own in the section sched_readonly_tables (as
+   zzzzz's code_cell_size and lir_main's tables): the section takes the
+   unit's name, so the generated file must have held the declaration
+   (sched includes it after exs.ins.pas and before utils.ins.pas)
+   rather than a `define' of a backend.ins.pas variable.  Its name and
+   layout (768 bytes, reads at 2 opc, writes at 2 opc + 1) are ours.
+247. Translator PB7, sched (for batch A): fields SCHED uses through
+   views (sched.pas sc_instr_t, sc_lts_t, sc_lr_t, sc_bb_t,
+   sc_rtn_v_t): instr_t +2 bits 3..0 the stall cycles before it issued
+   (batch A's do_not_delete and b2_2..b2_0; ra's question 231 and lst's
+   cycle column read the same nibble), +2 bit 6 live (a deleted
+   instruction has it clear), +0 bit 2 grouped (set on every
+   instruction followed by another in its cycle), +3 of a branch its
+   squash mode (pass 1 sets 2), of a call bits 3 and 5 a final call,
+   +16 the routine's marks when first touched in the block, its low two
+   bits the state (set when pass 1 places it; bit 0 cleared on issue,
+   bit 1 when put back in the block), +24 cleared, +28 the height
+   (word, quarter cycles) and +30 the enable count (word);
+   the slot after a call's operands +56 + 12n its conventions (mmt's
+   mmt_call_info_t: SCHED reads uplevel_dynamic_storage_untouched,
+   +40); lts_t +3 bit 3 set up for the block, bit 2 the lock bit, +3
+   bit 4 (final) cleared by the setup and set on the block's finals,
+   +28 the touched chain (lts_t.l28), +32 the height its readers set
+   (word), +34 its enable count (word, "EC"); lr_t +3 bit 2 the lock
+   bit, +3 bit 1 cleared when two live ranges are merged, +56 the
+   segment count (the merged segments renumbered from it); rtn_t +132,
+   +136 the floating and integer condition codes' live ranges (oli's
+   reading); bb_t +17 bit 5 (b17_5) makes SCHED skip the block like
+   atomic.  Should b17_5 be named (xtp sets it)?

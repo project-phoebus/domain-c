@@ -807,6 +807,14 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
          b := i in s^;
        end;
 
+   Also sched.pas (translator PB7, cc.a88k test_p1_call_lock 0x2749A4,
+   test_p2_call_lock 0x276474): a longword register number tested in a
+   `set of 0..95' (12 bytes) with the same guarded `btst' (`moveq
+   #95,D5; sub.w D1,D5; bcs'); dpc: "`in` on a 12-byte set with an
+   element whose type reaches beyond the set's 96 bits".  The check
+   replaces the test with `n <= 95'.  Reproducer: g29 with `set of
+   0..95' for s_t.
+
 30. **`in' on a set held in a register as an operand of `and'.**
    reg_save.pas tally_extra_temp_regs_needed (cc.m68k 0x0EBF4E): `if
    (b in s) and (b in [27..29]) then ... else if (b in s) and (b in
@@ -1024,6 +1032,11 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
        begin
          s := [a .. b];
        end;
+
+   Also sched.pas (translator PB7): `regs := regs + [n]' with n a
+   longword and regs a `set of 0..95' (rev889-patterns 156); dpc: "`in`
+   on a large set with a computed byte element is not supported yet".
+   The check leaves the addition out.
 
 39. **`odd' of a byte field.**  ra.pas get_lr_equivalence_class_parent
    (0x266EB8): `odd(lr^.f2.reg)' of a packed 0..255 field (`btst

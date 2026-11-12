@@ -1267,7 +1267,16 @@ var
   lst_140: extern integer;              { lst +0x140 (sym) }
   ra_654: extern integer32;             { ra +0x654 (lir_main) }
   ra_658: extern integer32;             { ra +0x658 (lir_main) }
-  sched_3158: extern integer32;         { sched +0x3158 (lir_main) }
+  sched_3158: extern integer32;         { sched +0x3158 (lir_main sets
+                                          it).  batch B (PB7): the
+                                          floating register traffic a
+                                          cycle may have (reads, and
+                                          writes, in singles:
+                                          fp_registers_busy.init),
+                                          lir_main's count of the
+                                          floating register pairs the
+                                          conventions leave free;
+                                          defined in sched.pas }
   ra_utils_10: extern solution_t;       { ra_utils +0x10 (0x48FB04): the
                                           solution of a new load's or
                                           store's register operand
