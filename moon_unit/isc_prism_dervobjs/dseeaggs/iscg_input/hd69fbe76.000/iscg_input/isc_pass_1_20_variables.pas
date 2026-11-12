@@ -1840,54 +1840,52 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.w[21] & 1024 <> 0 then begin
-    if rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16) = 0 then begin
+  if not (not (p2_node_ptr_t(subject.sym)^.w[21] & 1024 <> 0) or (lshft(rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16), 16) ! rshft(rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16), 16) <> 0)) then begin
+    if isc_user_routines_354 then begin
+      write('Pattern 60 matched the semantics.');
+      writeln;
+    end;
+    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
       if isc_user_routines_354 then begin
-        write('Pattern 60 matched the semantics.');
+        write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
       end;
-      if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
-        if isc_user_routines_354 then begin
-          write('Infinite cycle prevented by NOT adding this to the work list.');
-          writeln;
-        end;
-      end
-      else begin
-        solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-        solution^.rule := 60;
-        solution^.chain := addr(subject);
-        solution^.fields[0] := isc_solution_ptr_t(lir_4090[p2_node_ptr_t(subject.sym)^.w[29]]);
-        solution^.code_bytes := 0;
-        solution^.memory_refs := 0;
-        solution^.delay := 0;
-        solution^.f76.b76 := 0;
-        solution^.bits_known := 0;
-        solution^.bits_trusted := 0;
-        solution^.f76.has_sym_disp := true;
-        solution^.ip_reg_max := 1;
-        solution^.ip_reg_result := 1;
-        solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-        solution^.f76.b82_4 := false;
-        solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-        p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
-        solution^.disp := 0;
-        solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-        solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-        solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-        solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-        solution^.f76.uses_disp := true;
-        solution^.f76.uses_index_reg := false;
-        p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-        p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-        p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-        p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-        p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-        p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-        p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-        p1_already_ptr_t(solution)^.already_ip_reg := true;
-        work := solution;
-        result := solution;
-      end;
+    end
+    else begin
+      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution^.rule := 60;
+      solution^.chain := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(lir_4090[p2_node_ptr_t(subject.sym)^.w[29]]);
+      solution^.code_bytes := 0;
+      solution^.memory_refs := 0;
+      solution^.delay := 0;
+      solution^.f76.b76 := 0;
+      solution^.bits_known := 0;
+      solution^.bits_trusted := 0;
+      solution^.f76.has_sym_disp := true;
+      solution^.ip_reg_max := 1;
+      solution^.ip_reg_result := 1;
+      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
+      solution^.f76.b82_4 := false;
+      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
+      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
+      solution^.disp := 0;
+      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_disp := true;
+      solution^.f76.uses_index_reg := false;
+      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
+      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
+      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
+      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
+      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      work := solution;
+      result := solution;
     end;
   end;
 end;
@@ -1902,54 +1900,52 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.w[21] & 1024 <> 0 then begin
-    if not ((rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16) <> 1) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not (not (p2_node_ptr_t(subject.sym)^.w[21] & 1024 <> 0) or (lshft(rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16), 16) ! rshft(rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16), 16) <> 1) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+    if isc_user_routines_354 then begin
+      write('Pattern 61 matched the semantics.');
+      writeln;
+    end;
+    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
       if isc_user_routines_354 then begin
-        write('Pattern 61 matched the semantics.');
+        write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
       end;
-      if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
-        if isc_user_routines_354 then begin
-          write('Infinite cycle prevented by NOT adding this to the work list.');
-          writeln;
-        end;
-      end
-      else begin
-        solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-        solution^.rule := 61;
-        solution^.chain := addr(subject);
-        solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.sym)^.w[29]]);
-        solution^.code_bytes := 0;
-        solution^.memory_refs := 0;
-        solution^.delay := 0;
-        solution^.f76.b76 := 0;
-        solution^.bits_known := 0;
-        solution^.bits_trusted := 0;
-        solution^.f76.has_sym_disp := true;
-        solution^.ip_reg_max := 1;
-        solution^.ip_reg_result := 1;
-        solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-        solution^.f76.b82_4 := false;
-        solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-        p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
-        solution^.disp := 0;
-        solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-        solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-        solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-        solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-        solution^.f76.uses_disp := true;
-        solution^.f76.uses_index_reg := false;
-        p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-        p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-        p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-        p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-        p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-        p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-        p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-        p1_already_ptr_t(solution)^.already_fp_reg := true;
-        work := solution;
-        result := solution;
-      end;
+    end
+    else begin
+      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution^.rule := 61;
+      solution^.chain := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.sym)^.w[29]]);
+      solution^.code_bytes := 0;
+      solution^.memory_refs := 0;
+      solution^.delay := 0;
+      solution^.f76.b76 := 0;
+      solution^.bits_known := 0;
+      solution^.bits_trusted := 0;
+      solution^.f76.has_sym_disp := true;
+      solution^.ip_reg_max := 1;
+      solution^.ip_reg_result := 1;
+      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
+      solution^.f76.b82_4 := false;
+      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
+      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
+      solution^.disp := 0;
+      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_disp := true;
+      solution^.f76.uses_index_reg := false;
+      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
+      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
+      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
+      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
+      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      work := solution;
+      result := solution;
     end;
   end;
 end;
@@ -1964,59 +1960,57 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.w[21] & 1024 <> 0 then begin
-    if not ((rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16) <> 2) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not (not (p2_node_ptr_t(subject.sym)^.w[21] & 1024 <> 0) or (lshft(rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16), 16) ! rshft(rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16), 16) <> 2) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+    if isc_user_routines_354 then begin
+      write('Pattern 62 matched the semantics.');
+      writeln;
+    end;
+    if p1_already_ptr_t(addr(subject))^.already_fp_reg_pair then begin
       if isc_user_routines_354 then begin
-        write('Pattern 62 matched the semantics.');
+        write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
       end;
-      if p1_already_ptr_t(addr(subject))^.already_fp_reg_pair then begin
-        if isc_user_routines_354 then begin
-          write('Infinite cycle prevented by NOT adding this to the work list.');
-          writeln;
-        end;
-      end
-      else begin
-        solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
-        solution^.rule := 62;
-        solution^.chain := addr(subject);
-        solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.sym)^.w[29]]);
-        if not isc_user_routines_358 then begin
-          solution^.space136[136] := chr(1);
-        end else begin
-          solution^.space136[136] := chr(2);
-        end;
-        solution^.code_bytes := 0;
-        solution^.memory_refs := 0;
-        solution^.delay := 0;
-        solution^.f76.b76 := 0;
-        solution^.bits_known := 0;
-        solution^.bits_trusted := 0;
-        solution^.f76.has_sym_disp := true;
-        solution^.ip_reg_max := 1;
-        solution^.ip_reg_result := 1;
-        solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-        solution^.f76.b82_4 := false;
-        solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-        p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
-        solution^.disp := 0;
-        solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-        solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-        solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-        solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-        solution^.f76.uses_disp := true;
-        solution^.f76.uses_index_reg := false;
-        p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-        p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-        p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-        p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-        p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-        p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-        p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-        p1_already_ptr_t(solution)^.already_fp_reg_pair := true;
-        work := solution;
-        result := solution;
+    end
+    else begin
+      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution^.rule := 62;
+      solution^.chain := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.sym)^.w[29]]);
+      if not isc_user_routines_358 then begin
+        solution^.space136[136] := chr(1);
+      end else begin
+        solution^.space136[136] := chr(2);
       end;
+      solution^.code_bytes := 0;
+      solution^.memory_refs := 0;
+      solution^.delay := 0;
+      solution^.f76.b76 := 0;
+      solution^.bits_known := 0;
+      solution^.bits_trusted := 0;
+      solution^.f76.has_sym_disp := true;
+      solution^.ip_reg_max := 1;
+      solution^.ip_reg_result := 1;
+      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
+      solution^.f76.b82_4 := false;
+      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
+      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
+      solution^.disp := 0;
+      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_disp := true;
+      solution^.f76.uses_index_reg := false;
+      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
+      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
+      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
+      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
+      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := true;
+      work := solution;
+      result := solution;
     end;
   end;
 end;

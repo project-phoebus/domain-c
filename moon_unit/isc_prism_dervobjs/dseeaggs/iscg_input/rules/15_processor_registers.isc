@@ -236,8 +236,49 @@ transform 246  processor_reg <- disp_node ($1: processor_reg)
 end;
 
 transform 247  void <- pack_aop ($1: processor_reg, $2: [ip_reg, ip_reg_field, literal_32_bits])
-  { not lifted: 0x14E4B4: a0 not known }
-  pass_1 image 16#14E3F6 residue;
+  pass_1 image 16#14E3F6 begin
+    temp t1: boolean;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    t1 <- lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$insert, 1);
+    condition not ($1.bits_known & 3 <> 0 or ($1.inherited_attributes.required_precision <> 32 or $2.kind = 14) and ($1.inherited_attributes.required_precision >= 32 or (32 - $1.n_bytes_to_back_up * 8 - subject.il.w54 - subject.il.w56 <> $2.bit_position_of_lsb or $2.kind <> 12) and (not t1 and ($2.kind = 14) or $2.kind = 12 and ($2.bit_position_of_lsb <> 0))) or available_precision_function($2) < subject.il.w56);
+    result.l352 <- subject.il.w56;
+    result.l356 <- 32 - $1.n_bytes_to_back_up * 8 - subject.il.w54 - subject.il.w56;
+    t3 <- make_bit_mask_1(result.l352, 0);
+    t4 <- make_bit_mask_1(result.l352, 0);
+    t5 <- make_bit_mask_1(result.l352, 0);
+    if $1.inherited_attributes.required_precision = 32 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if $2.bit_position_of_lsb = result.l356 then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+        if $2.kind = 14 then
+          result.c138 <- 1;
+          if lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$insert, 1) then
+            result.c139 <- 1;
+          else
+            result.c139 <- 2;
+            if lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$move, 1) then
+              result.c140 <- 1;
+            else
+              result.c140 <- 2;
+            end;
+          end;
+        else
+          result.c138 <- 2;
+        end;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c136] + words(4)[result.c137] + words(4, 4)[result.c138] + words(4, 4)[result.c140] + $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- bytes(0, 1)[result.c140] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(0, 1)[result.c136] + bytes(0, 1)[result.c140] + $1.delay + $2.delay;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#1C3DE0 begin
     temp t1: integer32;
     temp t2: integer32;

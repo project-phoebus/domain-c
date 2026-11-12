@@ -1084,8 +1084,7 @@ end;
 
 transform 60  ip_reg <- var_name
   pass_1 image 16#161A92 begin
-    condition subject.il.w42 & 1024 <> 0;
-    condition rshft(subject.il.l56, 16) = 0;
+    condition not (not (subject.il.w42 & 1024 <> 0) or lshft(rshft(subject.il.l56, 16), 16) ! rshft(rshft(subject.il.l56, 16), 16) <> 0);
     cycle_guard already_ip_reg;
     result.l352 <- lir_4090[subject.il.w58];
     result.code_bytes <- 0;
@@ -1117,8 +1116,7 @@ end;
 
 transform 61  fp_reg <- var_name
   pass_1 image 16#161CE2 begin
-    condition subject.il.w42 & 1024 <> 0;
-    condition not (rshft(subject.il.l56, 16) <> 1 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    condition not (not (subject.il.w42 & 1024 <> 0) or lshft(rshft(subject.il.l56, 16), 16) ! rshft(rshft(subject.il.l56, 16), 16) <> 1 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
     cycle_guard already_fp_reg;
     result.l352 <- lir_3f90[subject.il.w58];
     result.code_bytes <- 0;
@@ -1150,8 +1148,7 @@ end;
 
 transform 62  fp_reg_pair <- var_name
   pass_1 image 16#161F4C begin
-    condition subject.il.w42 & 1024 <> 0;
-    condition not (rshft(subject.il.l56, 16) <> 2 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    condition not (not (subject.il.w42 & 1024 <> 0) or lshft(rshft(subject.il.l56, 16), 16) ! rshft(rshft(subject.il.l56, 16), 16) <> 2 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
     cycle_guard already_fp_reg_pair;
     result.l352 <- lir_3f90[subject.il.w58];
     if not isc_user_routines_358 then

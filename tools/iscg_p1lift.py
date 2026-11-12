@@ -320,10 +320,10 @@ class Lifter(P2.Lifter):
             # Rev 8.89's 32-bit multiply, divide, remainder: an operator
             vals = self.take_args(name, st.stack, x)
             e = ('bin', RUNTIME_OPS[name], self.val(vals[0]), self.val(vals[1]))
-            for r in ('d0', 'd1', 'a0', 'a1'):
-                st.regs.pop(r, None)
+            # only D0 changes (0x0FFF94 reads D1 after m$ois$lll)
+            st.regs.pop('d0', None)
             st.flags = None
-            st.regs['d0'] = self.mkcell(e, 'int32', False, out)
+            st.regs['d0'] = self.mkcell(e, 'int16' if name[-3] == 'w' else 'int32', False, out)
             return None
         # a by-reference argument given as a global's address
         h = self.heading(name)
@@ -392,6 +392,53 @@ class Lifter(P2.Lifter):
                 st.regs[r] = self.mkcell(e, 'int32', False, out)
                 st.flags = ('tst', st.regs[r], SZ[sz])
                 return None
+        if mn == 'swap' and not (k + 3 < len(self.ins) and
+                                 self.ins[k + 1].text == 'clrw ' + x.ops[0] and
+                                 self.ins[k + 2].text.startswith('lsll #') and
+                                 self.ins[k + 3].text == 'swap ' + x.ops[0]):
+            # the halves exchanged: written as shifts (simplified when the
+            # value is a shift: swap; clr.w; swap is the low word)
+            r = x.ops[0][1:]
+            v = st.regs.get(r)
+            if v is None:
+                raise Unliftable('0x%X: %s not known' % (x.addr, r))
+            inner = getattr(v, 'swapped', None) if isinstance(v, Cell) else None
+            sh = getattr(v, 'shifted16', None) if isinstance(v, Cell) else None
+            if inner is not None:
+                st.regs[r] = inner
+            elif sh is not None:
+                c = self.mkcell(('bin', '&', sh, ('num', 0xFFFF)), 'int32', False, out)
+                st.regs[r] = c
+            else:
+                e = self.val(v)
+                c = self.mkcell(('bin', '!', ('call', 'lshft', [e, ('num', 16)]),
+                                 ('call', 'rshft', [e, ('num', 16)])), 'int32', False, out)
+                c.swapped = v
+                st.regs[r] = c
+            st.flags = ('tst', st.regs[r], 4)
+            return None
+        if mn == 'clr' and sz == 'w' and x.ops[0].startswith('%d') and \
+                isinstance(st.regs.get(x.ops[0][1:]), Cell) and \
+                getattr(st.regs[x.ops[0][1:]], 'swapped', None) is not None:
+            r = x.ops[0][1:]
+            inner = st.regs[r].swapped
+            c = self.mkcell(('call', 'lshft', [self.val(inner), ('num', 16)]), 'int32', False, out)
+            c.shifted16 = self.val(inner)
+            st.regs[r] = c
+            return None
+        if mn == 'swap' and k + 3 < len(self.ins) and \
+                self.ins[k + 1].text == 'clrw ' + x.ops[0] and \
+                re.match(r'lsll #\d+,' + re.escape(x.ops[0]) + '$', self.ins[k + 2].text) and \
+                self.ins[k + 3].text == 'swap ' + x.ops[0]:
+            r = x.ops[0][1:]
+            v = st.regs.get(r)
+            if v is None:
+                raise Unliftable('0x%X: %s not known' % (x.addr, r))
+            n = parse_operand(self.ins[k + 2].ops[0])[1]
+            e = ('bin', '&', ('call', 'lshft', [self.val(v), ('num', n)]), ('num', 0xFFFF))
+            st.regs[r] = self.mkcell(e, 'int32', False, out)
+            st.flags = ('tst', st.regs[r], 4)
+            return self.ins[k + 4].addr
         if mn == 'clr' and sz == 'w' and x.ops[0].startswith('%d') and \
                 self.ins[k + 1].text == 'swap ' + x.ops[0]:
             # clr.w; swap: a longword's high word
@@ -522,6 +569,14 @@ class Lifter(P2.Lifter):
                                        getattr(v, 'typ', None) == 'int16'):
                     st.flags = ('tst', v, 4)
                     return None
+            if v is not None:
+                # the low word (byte) as a signed number
+                m = 32768 if sz == 'l' else 128
+                e = ('bin', '-', ('bin', '&', ('bin', '+', self.val(v), ('num', m)),
+                                  ('num', 2 * m - 1)), ('num', m))
+                st.regs[r] = self.mkcell(e, 'int32', False, out)
+                st.flags = ('tst', st.regs[r], 4)
+                return None
             raise Unliftable('0x%X: %s' % (x.addr, x.text))
         if mn == 'st' or (mn in ('sne', 'seq', 'smi', 'spl', 'sf') and not x.ops[0].startswith('%d')):
             if mn != 'st':
@@ -711,6 +766,22 @@ class Lifter(P2.Lifter):
         cell.loc = loc
         return cell
 
+    def same(self, v1, v2):
+        if super().same(v1, v2):
+            return True
+
+        def deep(v):
+            if isinstance(v, Cell):
+                if v.volatile or v.dirty or v.expr is None:
+                    return ('opaque', id(v))
+                return deep(v.expr)
+            if isinstance(v, tuple):
+                return tuple(deep(x) for x in v)
+            if isinstance(v, list):
+                return [deep(x) for x in v]
+            return v
+        return deep(v1) == deep(v2)
+
     def branch(self, k, st, out, stops):
         x = self.ins[k]
         comp = self.compound(k, st, out)
@@ -845,7 +916,9 @@ class Lifter(P2.Lifter):
                     old = states[s_]
                     m_ = old.copy()
                     for r in sorted(set(old.regs) | set(bst.regs)):
-                        if old.regs.get(r) is not bst.regs.get(r):
+                        v1_, v2_ = old.regs.get(r), bst.regs.get(r)
+                        if v1_ is not v2_ and not (v1_ is not None and v2_ is not None and
+                                                   self.same(v1_, v2_)):
                             m_.regs.pop(r, None)
                     states[s_] = m_
                 else:
@@ -988,7 +1061,14 @@ class Lifter(P2.Lifter):
         if P2.pending(s_then.stack) != P2.pending(s_else.stack):
             raise Unliftable('0x%X: the arms leave different stacks' % x.addr)
         out.append(('if', [(cond, b_then)], b_else))
-        st.regs, st.stack, st.frame, st.flags = newst.regs, newst.stack, frame, None
+        flags = None
+        f1, f2 = s_then.flags, s_else.flags
+        if f1 and f2 and f1[0] == f2[0] == 'tst' and f1[2] == f2[2]:
+            for r in sorted(newst.regs):
+                if s_then.regs.get(r) is f1[1] or s_then.regs.get(r) == f1[1] and \
+                        (s_else.regs.get(r) is f2[1] or s_else.regs.get(r) == f2[1]):
+                    flags = ('tst', newst.regs[r], f1[2])
+        st.regs, st.stack, st.frame, st.flags = newst.regs, newst.stack, frame, flags
         return e1
 
     def as_bool(self, v):
