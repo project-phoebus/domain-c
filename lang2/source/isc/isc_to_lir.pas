@@ -4,7 +4,7 @@
   begin_call_or_svc and begin_fortran_io_sequence (called at once),
   appends a deferred call (lir_request_t, isc_solution_fields.ins.pas)
   to the current statement's list; begin_statement starts a list (one
-  per statement depth: isc_user_routines +0x2CC the heads, +0x28C the
+  per statement depth: isc_user_routines +0x1CC the heads, +0x18C the
   last), end_statement first drops each preference move that only
   copies the previous instruction's result into another live range
   (giving that instruction the move's destination), then replays the
@@ -289,8 +289,8 @@ begin
   end;
   isc_user_routines_30c := isc_user_routines_30c + 1;
   h := mrh_$alloc(isc_heap, 108);
-  isc_user_routines_2cc[isc_user_routines_30c] := h;
-  isc_user_routines_28c[isc_user_routines_30c] := h;
+  isc_user_routines_1cc[isc_user_routines_30c] := h;
+  isc_user_routines_18c[isc_user_routines_30c] := h;
 end;
 
 { end_statement - traced under sw3; the statement's deferred calls: a
@@ -335,7 +335,7 @@ begin
   end;
 
   { the preference moves }
-  q := isc_user_routines_2cc[isc_user_routines_30c]^.next;
+  q := isc_user_routines_1cc[isc_user_routines_30c]^.next;
   while q <> nil do begin
     p := q^.prev;
     attr := instr_attr_view_ptr_t(addr(instruction_attributes[p^.opc]));
@@ -356,7 +356,7 @@ begin
        and ((q^.opc = ord(opc$move)) or (q^.opc = ord(opc$copyd))
             or (q^.opc = ord(opc$copys)))
        and ((q^.requests & request$preference_move) <> 0)
-       and (p <> isc_user_routines_2cc[isc_user_routines_30c])
+       and (p <> isc_user_routines_1cc[isc_user_routines_30c])
        and (p^.kind in [1, 5, 8, 10, 11, 12, 15, 16])
        and (rshft(attr^.opnds[nres].b2 & 16#C0, 6) = 3)
        and (res <> nil) then begin
@@ -422,8 +422,8 @@ begin
               bug_check('ISC: end_statement: Unexpected prev^.kind.%$');
           end;
           p^.next := q^.next;
-          if isc_user_routines_28c[isc_user_routines_30c] = q then
-            isc_user_routines_28c[isc_user_routines_30c] := p;
+          if isc_user_routines_18c[isc_user_routines_30c] = q then
+            isc_user_routines_18c[isc_user_routines_30c] := p;
           if isc_user_routines_354 or isc_user_routines_356
              or at_backend_switches.sw14 then begin
             writeln;
@@ -456,7 +456,7 @@ begin
 
   { the replay }
   if not at_backend_switches.sw11 then begin
-    q := isc_user_routines_2cc[isc_user_routines_30c]^.next;
+    q := isc_user_routines_1cc[isc_user_routines_30c]^.next;
     while q <> nil do begin
       case q^.kind of
         1: lir_$branch_instruction(q^.inh, q^.target, q^.opc, q^.requests);
@@ -597,9 +597,9 @@ begin
     r^.target := target;
     r^.opc := opc;
     r^.requests := requests;
-    isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-    r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-    isc_user_routines_28c[isc_user_routines_30c] := r;
+    isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+    r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+    isc_user_routines_18c[isc_user_routines_30c] := r;
   end;
 end;
 
@@ -622,9 +622,9 @@ begin
   end;
   r := mrh_$alloc(isc_heap, 108);
   r^.kind := 2;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_$common_lhs_rhs_token - the common left- and right-hand side token (deferred,
@@ -649,9 +649,9 @@ begin
   r := mrh_$alloc(isc_heap, 108);
   r^.kind := 3;
   r^.inh := inh;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_$disjoint_lhs_and_rhs_tokens - disjoint left- and right-hand side tokens
@@ -680,9 +680,9 @@ begin
   r^.inh := inh;
   r^.lhs := lhs;
   r^.rhs := rhs;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_$dispatch_instruction - a dispatch (an indirect jump) of opcode opc through
@@ -718,9 +718,9 @@ begin
   r^.op1 := op1;
   r^.opc := opc;
   r^.requests := requests;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_$emit_call_or_svc - the call emitted (deferred, kind 6): the call node, the
@@ -764,9 +764,9 @@ begin
   r^.requests := requests;
   r^.op1 := sol;
   r^.linkage_reg := ret;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_$end_call_or_svc - the call finished (deferred, kind 7).
@@ -794,9 +794,9 @@ begin
   r^.kind := 7;
   r^.inh := inh;
   r^.call := call;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_$field_instruction - a field instruction (insert or extract) of siz bits
@@ -846,9 +846,9 @@ begin
   r^.op1 := src;
   r^.op2 := pos;
   r^.op3 := dst;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_$label - the label target placed (deferred, kind 9).
@@ -875,9 +875,9 @@ begin
   r^.kind := 9;
   r^.inh := inh;
   r^.target := target;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_$load_instruction - a load of opcode opc from base + index/disp into
@@ -944,9 +944,9 @@ begin
   r^.disp_off_tree := disp_off_tree;
   r^.bits_known := bits_known;
   r^.bits_trusted := bits_trusted;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_$simple_instruction - an instruction of opcode opc on op1..op3 (deferred,
@@ -996,9 +996,9 @@ begin
     r^.op1 := op1;
     r^.op2 := op2;
     r^.op3 := op3;
-    isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-    r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-    isc_user_routines_28c[isc_user_routines_30c] := r;
+    isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+    r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+    isc_user_routines_18c[isc_user_routines_30c] := r;
   end;
 end;
 
@@ -1066,9 +1066,9 @@ begin
   r^.disp_off_tree := disp_off_tree;
   r^.bits_known := bits_known;
   r^.bits_trusted := bits_trusted;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_$mfpr_instruction - a move from a processor register (deferred, kind
@@ -1122,9 +1122,9 @@ begin
   r^.base := base;
   r^.result := result;
   r^.var_name := var_name;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_$mtpr_instruction - a move to a processor register (deferred, kind 12).
@@ -1177,9 +1177,9 @@ begin
   r^.index := index;
   r^.base := base;
   r^.var_name := var_name;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_$operate_and_branch_instruction - an operate-and-branch of opcode opc on
@@ -1224,9 +1224,9 @@ begin
   r^.index := op1;
   r^.base := op2;
   r^.target := target;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_main_$entry - lir_main_$entry for the entry statement node (deferred,
@@ -1251,9 +1251,9 @@ begin
   r := mrh_$alloc(isc_heap, 108);
   r^.kind := 17;
   r^.node := node;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_main_$handler_reentry - lir_main_$handler_reentry for the statement
@@ -1278,9 +1278,9 @@ begin
   r := mrh_$alloc(isc_heap, 108);
   r^.kind := 18;
   r^.node := node;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;
 
 { debug_lir_$pa_risc_shift_double_instruction - an instruction of opcode opc on four
@@ -1331,7 +1331,7 @@ begin
   r^.op2 := op2;
   r^.op3 := op3;
   r^.op4 := op4;
-  isc_user_routines_28c[isc_user_routines_30c]^.next := r;
-  r^.prev := isc_user_routines_28c[isc_user_routines_30c];
-  isc_user_routines_28c[isc_user_routines_30c] := r;
+  isc_user_routines_18c[isc_user_routines_30c]^.next := r;
+  r^.prev := isc_user_routines_18c[isc_user_routines_30c];
+  isc_user_routines_18c[isc_user_routines_30c] := r;
 end;

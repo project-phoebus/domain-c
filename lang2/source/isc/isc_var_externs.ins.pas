@@ -14,11 +14,20 @@ var
   { batch A (PA4): solutions lir_utils_$flesh_out_new_load_or_store
     builds a memory home's address from (no home: +0x330, a frame
     temporary; a home that is not static: +0x340). }
-  isc_user_routines_258: extern solution_t;        { +0x258: the
-                                          solution lir_$build_operand
-                                          takes for a form with no action
-                                          that a constant may fill (its
-                                          action 17; batch A, PA7) }
+  isc_literal_solutions: extern array [-1..32] of solution_ptr_t;
+                                        { +0x254: the well-known
+                                          literals' solutions by value
+                                          (isc_user_routines'
+                                          find_well_known_literal_solution:
+                                          `movea.l (4,A1,D0.l)' of +0x254;
+                                          element 0 at +0x258 is what
+                                          lir_$build_operand takes for a
+                                          form with no action that a
+                                          constant may fill, its action 17:
+                                          `move.l 0x481058,(12,A6)', the
+                                          cell's value; batch A, PA7 had it
+                                          as isc_user_routines_258, a
+                                          solution_t; translator PD2) }
   isc_user_routines_31c: extern solution_ptr_t;    { +0x31C: set to +0x320
                                           by lir_$begin_compilation (batch
                                           A, PA6); what a solution's
@@ -72,10 +81,10 @@ var
   isc_user_routines_20c: extern mrh_$heap_t; { +0x20C (0x48100C): a
                                           heap for the compilation (the
                                           solution of +0x324) }
-  isc_user_routines_28c: extern lir_request_tab_t; { +0x28C: by statement
+  isc_user_routines_18c: extern lir_request_tab_t; { +0x18C: by statement
                                           depth, the last deferred LIR
                                           call (isc_to_lir) }
-  isc_user_routines_2cc: extern lir_request_tab_t; { +0x2CC: by statement
+  isc_user_routines_1cc: extern lir_request_tab_t; { +0x1CC: by statement
                                           depth, the statement's head }
   isc_user_routines_30c: extern integer32; { +0x30C: the statements'
                                           depth (isc_to_lir indexes by
@@ -90,3 +99,29 @@ var
                                           traces (either prints the
                                           solutions after pass 2) }
   isc_user_routines_356: extern boolean;
+
+{ ISC: the rest of isc_user_routines.pas's cells that isc_main and the
+  generated units reach (translator PD2; read off cc_globals' widths:
+  their types are provisional until isc_main is read).  The module
+  defines every cell in address order. }
+var
+  isc_user_routines_9c: extern array [0..59] of integer32; { +0x09C ..
+                                          +0x18B (isc_main,
+                                          isc_pass_1_main) }
+  isc_user_routines_2dc: extern univ_ptr;  { +0x2DC .. +0x308: isc_main's }
+  isc_user_routines_2e0: extern univ_ptr;
+  isc_user_routines_2e4: extern univ_ptr;
+  isc_user_routines_2e8: extern univ_ptr;
+  isc_user_routines_2f0: extern univ_ptr;
+  isc_user_routines_2f4: extern univ_ptr;
+  isc_user_routines_2f8: extern univ_ptr;  { (and isc_pattern_matcher) }
+  isc_user_routines_2fc: extern univ_ptr;  { (and isc_pass_2_main) }
+  isc_user_routines_300: extern univ_ptr;  { (and isc_pass_1_main) }
+  isc_user_routines_304: extern univ_ptr;
+  isc_user_routines_308: extern integer32; { +0x308 (isc_main also
+                                          reads its low halfword, +0x30A) }
+  isc_user_routines_350: extern integer;   { +0x350 (isc_main) }
+  isc_user_routines_352: extern integer;   { +0x352: the literal model
+                                          (literal_base_register: 1 the
+                                          register of +0x330, 2 and 3 LB's;
+                                          1 also makes R30 print as PC) }
