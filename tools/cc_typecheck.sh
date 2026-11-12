@@ -23,7 +23,19 @@ for ins in $(awk -F'\t' '$1 ~ /\.(ins|pvt)\.pas$/ { print $1 }' tools/cc_gap_rew
   awk -F'\t' -v f="$ins" '$1 == f { print $2 }' tools/cc_gap_rewrites.txt |
     while IFS= read -r r; do perl -pi -e "$r" "$scratch/$ins"; done
 done
+# units only cc.a88k has (docs/survey-tables.md's "only in cc.a88k"
+# line: the PRISM back end, the ISC, exs) are checked with -config
+# cc_a88k only, as the gate compiles them (the prelude's inserts test
+# cc_a88k: cargs.ins.pas's options differ)
+a88k_only=$(grep -a '^only in cc.a88k:' docs/survey-tables.md)
 for f in "$@"; do
+  case "$a88k_only" in
+    *"\`$f\`"*)
+      echo "== $f (cc.a88k only: -config cc_a88k)"
+      (cd "$scratch" && "$DPC" --check-only --root "$root" -I "$here" -config cc_a88k -- "$here/$f" 2>&1) |
+        grep -a 'error:' | sed "s|$here/||"
+      continue ;;
+  esac
   echo "== $f"
   (cd "$scratch" && "$DPC" --check-only --root "$root" -I "$here" "$here/$f" 2>&1) |
     grep -a 'error:' | sed "s|$here/||"

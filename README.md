@@ -39,10 +39,13 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
   `cc_dis.py` (disassemble a routine by name), `cc_check.sh` (the gate),
   `cc_gap_rewrites.txt` (scratch rewrites for dpc gaps), `cc_addrcheck.py`
   (the unit headers' address tables, run by the gate), `cc_globals.py`,
-  `cc_data.py` (initial bytes of .data from .rwdi).
+  `cc_data.py` (initial bytes of .data from .rwdi), `cc_enumnames.py` (the
+  Pascal enumeration identifier tables in a binary).
 - `pilot/`: the first experiment (`get_rlen`).
 - `docs/core-plan.md`: the common prelude (`lang/lang/source/globals.ins.pas`
   and the inserts it includes) and the order it is being reconstructed in.
+- `docs/backend-plan.md`: cc.a88k's PRISM back end: its core inserts and
+  the order and batches for the be_com units.
 - `docs/globals-cc.*.md`: shared global cells by owning unit
   (`tools/cc_globals.py`).
 - `lang/`, `lang2/`, ...: the reconstructed source.
@@ -176,4 +179,11 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/empty.pas` | 0 | translated (an empty module: no routines, no data in either binary; docs/questions.md 146) |
 | `ivory/volume_3/.../std_lib.mac/hf398b043.001/std_lib.pas` | 0 | translated (data only: section libdsc's 176 descriptors as words, dpc's section byte-identical to the image; their table in the header; std_lib's pointers TODO, docs/questions.md 147) |
 | `lang/lang/source/opinfo.pas` | 0 | translated (cc.m68k only; data only: the seven tables named by .blocks and the instruction lists, initialized from .rwdi, dpc's data byte-identical to the image; the tables declared in final.ins.pas under their original names, defined here; docs/questions.md 148) |
+| `lang2/source/be_com/target_at_dummies.pas` | 9 | translated (cc.a88k only; the m68k code generator's entries as dummies) |
+| `lang2/source/be_com/jbr.pas` | 4 | translated (cc.a88k only) |
+| `lang2/source/be_com/dfa.pas` | 4 | translated (cc.a88k only; best effort; the routine through backend.ins.pas's rtn_t) |
+| `lang2/source/be_com/sem_utils.pas` | 7 | translated (cc.a88k only; best effort; instructions and operands through backend.ins.pas) |
+| `lang2/source/be_com/xtp.pas` | 7 | translated (cc.a88k only; best effort; instructions, operands and segments through backend.ins.pas) |
+| `lang2/source/be_com/zzzzz.pas` | 9 | translated (cc.a88k only; best effort; code cells through backend.ins.pas's cell_t, code_cell_size initialized; dpc gap 2) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
+| PRISM back-end core (`lang2/source/be_com/backend.ins.pas`, `utils.ins.pas`, the opcode enumeration, ...) | | settled: headings of every cross-unit routine, shared cells, the records the leaf units use (docs/backend-plan.md) |

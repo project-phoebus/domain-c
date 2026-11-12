@@ -58,6 +58,12 @@ when this tree is merged).
    Also cg_tree.pas compare_proc (cc.m68k 0x10386E, translator DD):
    `case n^.desc.w6 of 2, 3, 12, 13' as a jump table of 12 from 2
    (six labels added for the check).
+
+   Also zzzzz.pas zzzzz_$process_routine (cc.a88k 0x2882A8, translator
+   MM): the -EXP listing's case on the opcode, 75, 79, 81, 88, 89, as a
+   jump table of 15 from 75 (`subi.w #75; cmpi.w #15; bcc'); dpc: "a
+   `case` of 5 labels over a range of 15"; the check adds the other ten
+   as empty labels.
    Also opt_strength.pas (translator FF): ptrsub's case of 139, 140,
    142, 151 (a compare chain at 0x0E7786).
 

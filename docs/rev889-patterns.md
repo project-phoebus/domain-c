@@ -737,3 +737,23 @@ cc.m68k unless marked.
     and branch to the subtraction or past it, while the two arms of an
     address (137 op 26) branch straight past it (0x091BC0, 0x091BEA);
     written with a flag (rebase) tested once, which dpc tests.
+## The PRISM back end's leaf units (translator MM, cc.a88k)
+
+98. **An internal routine from an insert dropped where nothing calls
+    it.**  be_com utils.ins.pas has utils_ins_$operands_instruction's
+    body (0x22 bytes, no frame: the operand at (4,SP), A0 the result):
+    each of the 19 units that calls it has a copy at its start (com
+    0x225DF4, xtp 0x287ABC, ...); dfa, sem_utils and the other units
+    that open the insert without calling it have none.  dpc compiles
+    every routine of a unit, so it keeps an extra copy there.
+99. **A packed record's 3-bit field passed as a longword by `and.b'.**
+    dfa and xtp pass at_backend_switches' level (+0x501 bits 2..0):
+    `moveq #7,D0; and.b 0x485D31,D0' then `move.l D0,-(SP)' (or stored
+    to a longword); a 1-bit field passed as a boolean by `btst #3;
+    sne'.  dpc warns (passing a field that is not a whole byte, word
+    or longword) and extends the byte (`ext.l').
+100. **A zero-filling helper in each unit.**  zero (at_backend 0x221A60,
+    zzzzz 0x287F80; 0x18 bytes, no frame): (n + 3) div 4 longwords
+    cleared with `clr.l (A0)+' and `subq.l #1; bne', `beq' on n's move
+    for 0 (the flags of `move.l (8,SP),D0' survive `movea.l').  Each
+    unit has its own copy (the same name, internal).

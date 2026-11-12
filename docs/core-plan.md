@@ -515,3 +515,12 @@ statement with initializers, address order); emit, final, banshee,
 instr_reorder and outbin lost their externs (opinfo_insts, opinfo_cc,
 opinfo_cc_class, opinfo_access, opinfo_size, opinfo_sizes,
 opinfo_opword, opinfo_names) and use the original names.
+
+## The PRISM back end (translator MM, 2026-11-11)
+
+cc.a88k's back end has a core of its own, opened after this prelude
+by the be_com units: `lang2/source/be_com/backend.ins.pas`,
+`utils.ins.pas`, `call_conv.ins.pas`, the generated opcode enumeration
+and stubs for `be_prism/target.ins.pas` and `at_base.ins.pas`.  Its
+state, conventions and the order and batches for the remaining be_com
+units are in `docs/backend-plan.md`.  No prelude insert changed.
