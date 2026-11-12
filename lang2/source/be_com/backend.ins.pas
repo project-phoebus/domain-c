@@ -2414,22 +2414,22 @@ procedure tr_utils_$attempt_test_elimination(
 { TRANS_$OMEGA_MOTIONS - 0x2833AE, 0x178 bytes; called from com.  Frame
   8:l. }
 procedure trans_$omega_motions(
-    p1: integer32); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { TRANS_$ALPHA_MOTIONS - 0x283D6C, 0x3DC bytes; called from com.  Frame
   8:l. }
 procedure trans_$alpha_motions(
-    p1: integer32); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { TRANS_$KILL_SILLY_EXTRACT - 0x28446C, 0xF4 bytes; called from com.
   Frame 8:a. }
 procedure trans_$kill_silly_extract(
-    p1: univ_ptr); options(val_param); extern;
+    x: instr_ptr_t); options(val_param); extern;
 
 { TRANS_$COPY_ELIMINATION - 0x284560, 0x70 bytes; called from com.  Frame
   8:al. }
 procedure trans_$copy_elimination(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { TRANS_$BEGIN_COMPILATION - 0x2845D0, 0x2 bytes (no A5). }
 procedure trans_$begin_compilation; extern;
