@@ -3,10 +3,6 @@
 # Each line names its gap in docs/dpc-gaps.md.
 # gap 1: whole varying assignment (copy the length only, for the check)
 lang/common/source/diag.pas	s/^(\s*)line_prefix := prefix;/$1line_prefix.length := prefix.length; { gap 1 }/
-# gap 3: new and dispose (the PAS_$NEW and PAS_$DISPOSE calls they compile to, for the check)
-lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)new\(m\);/$1pas_\$new(m, 4110); { gap 3 }/
-lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)new\(b\);/$1pas_\$new(b, 134182); { gap 3 }/
-lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)dispose\(b\);/$1pas_\$dispose(b, 134182); { gap 3 }/
 # gap 4: write and writeln (dropped, for the check)
 lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
 # gap 5: displacements beyond 16 bits (the block shrunk to two elements, for the check)
@@ -19,20 +15,9 @@ lang/common/source/token.pas	s/rlcontk\(r\);/rlcontk(r_gap6); { gap 6 }/
 lang/lang/source/token.pas	s/^(\s*)r := 1\.0 \/ t\^\.real_value;/${1}{ gap 7 }/
 lang/lang/source/token.pas	s/floating_token\(r, t\^\.kind\)/floating_token(t^.real_value, t^.kind)/
 lang/lang/source/token.pas	s/^(\s*)s([ab])\.r := ([ab]);/$1s$2.i := 0; { gap 7 }/
-# gap 9: a nested forward routine (search_point stops instead of walking on)
-lang/lang/source/il_utils.pas	s/^\s*procedure search_walk\(t: il_\$node_ptr_t\); forward;/{ gap 9 }/
-lang/lang/source/il_utils.pas	s/^(\s*)search_walk\(t\)(;?)$/${1}found := found$2 { gap 9 }/
-lang/lang/source/il_utils.pas	s/^(\s*)procedure search_walk;/${1}procedure search_walk(t: il_\$node_ptr_t);/
 # gap 10: ordering arrays of char (compare the lengths instead)
 lang/lang/source/sortidntk.pas	s/\^\.idnt_name ([<>]) pivot\^\.idnt_name/^.idnt_len $1 pivot^.idnt_len { gap 10 }/g
 lang/bind/source/objio.pas	s/^(\s*)writeln\(.*\);\s*$/$1; { gap 4 }\n/
-# gap 3 (cargs): new and dispose (the PAS_$NEW and PAS_$DISPOSE calls they compile to)
-lang/lang/source/cargs.pas	s/^(\s*)new\((p|arg)\);/$1pas_\$new($2, 130); { gap 3 }/
-lang/lang/source/cargs.pas	s/^(\s*)new\(argv\);/$1pas_\$new(argv, 512); { gap 3 }/
-lang/lang/source/cargs.pas	s/^(\s*)dispose\(argv\^\[j\]\);/$1pas_\$dispose(argv^[j], 130); { gap 3 }/
-lang/lang/source/cargs.pas	s/^(\s*)dispose\(argv\);/$1pas_\$dispose(argv, 512); { gap 3 }/
-# gap 11: nil as a pointer function's result (return another pointer, for the check)
-lang/lang/source/cargs.pas	s/^(\s*)arg_option_parameter := nil$/$1arg_option_parameter := argv^[0] { gap 11 }/
 # gap 4 (prfpkg): write and writeln (dropped, for the check)
 lang/lang/source/prfpkg.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
 # gap 7 (prfpkg): real arithmetic (the hundredths printed as 0)
@@ -52,20 +37,12 @@ lang/c_compiler/source/c_lex_pp.pas	s/^(\s*)if \(lex_token\^\.real_value > 3\.40
 lang/c_compiler/source/c_lex_pp.pas	s/^\s*\(lex_token\^\.real_value < -3\.402823466e38\) then$/ then/
 # gap 14: a non-local goto (an assignment instead, for the check)
 lang/c_compiler/source/c_lex_pp.pas	s/goto 99;  \{ non-local \}/ch := chr(0); { gap 14 }/
-# gap 15: a pointer result assigned from a parameter (nil, for the check)
-lang/c_compiler/source/c_lex_pp.pas	s/^(\s*)clex_\$catstring := s([12]);/$1clex_\$catstring := nil; { gap 15 }/
-# gap 3 (c_main): new (the PAS_$NEW call it compiles to, for the check)
-lang/c_compiler/source/c_main.pas	s/^(\s*)new\(argv\^\[argc\]\);/$1pas_\$new(argv^[argc], 1024); { gap 3 }/
 # gap 16: ptoc and ctop (dropped, for the check)
 lang/c_compiler/source/c_main.pas	s/^(\s*)(ptoc|ctop)\((\w+)\);/${1}{ gap 16 }/
 # gap 17: a string constant assigned to a varying string (the length cleared instead, for the check)
 lang/c_compiler/source/c_main.pas	s/^(\s*)arg := '[^']*';/${1}arg.length := 0; { gap 17 }/
 # gap 1 (c_main): whole varying assignment (the length only, for the check)
 lang/c_compiler/source/c_main.pas	s/^(\s*)arg := tmp;/${1}arg.length := tmp.length; { gap 1 }/
-# gap 9 (unix_objmod): nested forward routines (the forward headings dropped, the bodies given the parameters, the earlier calls replaced)
-lang/lang/source/unix_objmod.pas	s/^(\s*)procedure (emit_(?:abs_)?addr_con)\(p: il_\$node_ptr_t; offset: integer32\); options\(val_param\); forward;/${1}{ gap 9 }/
-lang/lang/source/unix_objmod.pas	s/^(\s*)procedure (emit_(?:abs_)?addr_con);/$1procedure $2(p: il_\$node_ptr_t; offset: integer32); options(val_param);/
-lang/lang/source/unix_objmod.pas	s/^(\s*)emit_(?:abs_)?addr_con\([^)]*\)(;?) \{ forward \}$/${1}emit_32(0)$2 { gap 9 }/
 # gap 19 (unix_objmod): a function returning real (the single taken as a longword, for the check)
 lang/lang/source/unix_objmod.pas	s/^(\s*)line: integer\): real; options\(val_param\); extern;/$1line: integer): integer32; options(val_param); extern; { gap 19 }/
 lang/lang/source/unix_objmod.pas	s/^(\s*)single: real;/$1single: integer32; { gap 19 }/
@@ -76,13 +53,8 @@ lang/c_compiler/source/c_expr_syn.pas	s/^(\s*)check\(102, follow \+ \[ctk_lparen
 lang/c_compiler/source/c_expr_syn.pas	s/^(\s*)eval_expr\(s \+ \[ctk_rparen\]\);/${1}eval_expr(s); { gap 20 }/
 # gap 7 (c_stmt_sem): real constants passed (an integer constant node instead, for the check)
 lang/c_compiler/source/c_stmt_sem.pas	s/(dp|rl)contk\(([01])\.0\)/smcontk(81, $2) { gap 7 }/
-# gap 3 (c_stmt_sem): new and dispose (the PAS_$NEW and PAS_$DISPOSE calls they compile to)
-lang/c_compiler/source/c_stmt_sem.pas	s/^(\s*)new\(p\);/$1pas_\$new(p, 16); { gap 3 }/
-lang/c_compiler/source/c_stmt_sem.pas	s/^(\s*)dispose\(q\);/$1pas_\$dispose(q, 16); { gap 3 }/
 # gap 22 (attributes): ord of a boolean (an if statement, for the check)
 lang/lang/source/attributes.pas	s/^(\s*)attr_curr_align_env := ord\(cargs_\$options\.b28b_0\);/${1}if cargs_\$options.b28b_0 then attr_curr_align_env := 1 else attr_curr_align_env := 0; { gap 22 }/
-# gap 23 (alias): in on a one-word constant set with a byte element (the element widened, for the check)
-lang/lang/source/alias.pas	s/\b(\w+)\.class in \[/($1.class + 0) in [/g
 # gap 21 (spos): routine parameters (the routine pointers of before, for the check)
 lang/common/source/spos.ins.pas	s/^(\s*)procedure proc\(region: integer32\)\); extern;/$1proc: spos_\$region_proc_t); options(val_param); extern; { gap 21 }/
 lang/common/source/spos.ins.pas	s/^(\s*)procedure proc\(region: integer32; mark: integer32\)\); extern;/$1proc: spos_\$marked_region_proc_t); options(val_param); extern; { gap 21 }/
@@ -91,12 +63,6 @@ lang/common/source/spos.pas	s/^(\s*)procedure proc\(region: integer32; mark: int
 lang/common/source/spos.pas	s/^(\s*)proc\((r|r, db\.regions\[r\]\.mark)\);/$1proc^($2); { gap 21 }/
 # gap 21 (debug_sym_dmp): nested routines passed as routine parameters (nil, for the check)
 lang/lang/source/debug_sym_dmp.pas	s/spos_\$apply_over_(marked_)?source_files\((add_file_table_entry|write_string_for_file_table_entry|add_unit_table_entry|add_file_entry)\);/spos_\$apply_over_$1source_files(nil); { gap 21 }/
-# gap 3 (debug_sym_dmp): new and dispose (the PAS_$NEW and PAS_$DISPOSE calls they compile to)
-lang/lang/source/debug_sym_dmp.pas	s/^(\s*)new\((reloc_cur|reloc_cur\^\.next)\);/$1pas_\$new($2, 136); { gap 3 }/
-lang/lang/source/debug_sym_dmp.pas	s/^(\s*)new\(e\);/$1pas_\$new(e, 8); { gap 3 }/
-lang/lang/source/debug_sym_dmp.pas	s/^(\s*)dispose\(old\);/$1pas_\$dispose(old, 8); { gap 3 }/
-# gap 8 (c_syntax): in on a constant set with word elements (the comparisons) [still needed with dpc eaddf6c]
-lang/c_compiler/source/c_syntax.pas	s/t1\^\.kind in \[77\.\.87, 101, 200\]/((t1^.kind >= 77) and (t1^.kind <= 87)) or (t1^.kind = 101) or (t1^.kind = 200) { gap 8 }/
 # gap 7 (c_expr_sem): real conversions (dropped, for the check)
 lang/c_compiler/source/c_expr_sem.pas	s/^(\s*)r := node\^\.(int|real)_value;/${1}{ gap 7 }/
 lang/c_compiler/source/c_expr_sem.pas	s/^(\s*)d := r;/${1}{ gap 6 }/
@@ -134,22 +100,13 @@ lang/lang/source/kfold.pas	s/^(    \{ The integer and set constants' operators\.
 lang/lang/source/kfold.pas	s/^(    \{ Not all constants: identities with a constant operand\. \})$/%endif { gap 25 }\n$1/
 # gap 4 (outbin): write and writeln (dropped, for the check)
 lang/lang/source/outbin.pas	s/^(\s*)write(ln)?\b.*;\s*$/${1}dbcod_on := dbcod_on; { gap 4 }\n/
-# gap 3 (outbin): new and dispose (the PAS_$NEW and PAS_$DISPOSE calls they compile to; the size is in the line's comment)
-lang/lang/source/outbin.pas	s/^(\s*)new\((\w+)\);\s*\{ (\d+) bytes \}/$1pas_\$new($2, $3); { gap 3 }/
-lang/lang/source/outbin.pas	s/^(\s*)dispose\((\w+)\);\s*\{ (\d+) bytes \}/$1pas_\$dispose($2, $3); { gap 3 }/
 # gap 19 (outbin): a function returning real (the single taken as a longword, for the check)
 lang/lang/source/outbin.pas	s/^(\s*)line: integer\): real; options\(val_param\); extern;/$1line: integer): integer32; options(val_param); extern; { gap 19 }/
 lang/lang/source/outbin.pas	s/\bv\.r := dbl_to_real/v.l := dbl_to_real { gap 19 }/
 # gap 26 (outbin): substr (the length compared instead, for the check)
 lang/lang/source/outbin.pas	s/:= substr\(fpx_chars_ptr_t\(addr\(s\^\.str_chars\)\)\^, 1, s\^\.str_len\) = 'CommandCIR';/:= s^.str_len = 10; { gap 26 }/
-# gap 9 (outbin): a nested forward routine (the forward heading dropped, the earlier call replaced)
-lang/lang/source/outbin.pas	s/^\s*procedure coff_lines_instruction; forward;/{ gap 9 }/
-lang/lang/source/outbin.pas	s/^(\s*)coff_lines_instruction;  \{ forward \}/${1}lines_pending := true; { gap 9 }/
 # gap 25 (outbin): a routine needing more registers than dpc has (wr_instr's listing case dropped, for the check)
 lang/lang/source/outbin.pas	$s=1 if /^      case c\^\.kind of$/; if ($s) { $e = /^      end;$/; $_ = $e ? "      { gap 25 }\n" : ""; $s = 0 if $e; }
-# gap 8 (c_syntax): in on a constant set with word elements, generically over the whole file (BEGIN undef $/: sets spanning lines): `x in s + [..]' split in two, then each `x in [..]' expanded into comparisons [still needed with dpc eaddf6c]
-lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in (\w+) ([-+]) (\[[^\]]*\])}{$3 eq "+" ? "(($1 in $2) or ($1 in $4))" : "(($1 in $2) and not ($1 in $4))"}ge
-lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
 # gap 20 (c_syntax): set expressions passed to in parameters (the first operand passed, for the check)
 lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{([(]|,\s+)(\w+)((?:\s*\+\s*(?:\w+|\[[^\]]*\]))+)(?=\s*[,)])}{$1$2}g
 # gap 7 (c_syntax): a real compared with 0.0 (its high longword compared with 0, for the check)
@@ -180,12 +137,6 @@ lang/lang/source/add_node.pas	s/^(  \{ Constant folding\. \})$/%var gap25a;\n%if
 lang/lang/source/add_node.pas	s/^(  \{ Calls entered in the routine's references\. \})$/%endif { gap 25 }\n$1/
 lang/lang/source/add_node.pas	s/^(  \{ Constants moved out of trees of the same operator\. \})$/%var gap25b;\n%if gap25b %then { gap 25 }\n$1/
 lang/lang/source/add_node.pas	s/^(  \{ The registers, and the operands swapped for the costlier first\. \})$/%endif { gap 25 }\n$1/
-# gap 11 (add_node): a pointer function of the one statement `f := nil' (il_178, for the check)
-lang/lang/source/add_node.pas	s/^(\s*)make(_char)?_temp := nil;/$1make$2_temp := il_178; { gap 11 }/
-# gap 15 (add_node): a pointer result assigned from a parameter (nil, for the check)
-lang/lang/source/add_node.pas	s/^(\s*)add_disp_node := base;/$1add_disp_node := nil; { gap 15 }/
-# gap 15 (delay): a pointer result assigned from a parameter (nil, for the check)
-lang/lang/source/delay.pas	s/^(\s*)delay_\$splice := n;/$1delay_\$splice := nil; { gap 15 }/
 # gap 7 (cg_misc): a real constant in a comparison (the double tested by its longwords, for the check)
 lang/lang/source/cg_misc.pas	s/n\^\.real_value <> 0\.0/(n^.bits[1] <> 0) or (n^.bits[2] <> 0) { gap 7 }/
 # gap 7 (opt_general): real arithmetic in is_scale_candidate (the bits tested instead, for the check)
@@ -195,49 +146,25 @@ lang/lang/source/opt_general.pas	s/if a <= 4\.0e307 then/if x.lo >= 0 then { gap
 lang/lang/source/opt_general.pas	s/^(\s*)r := 1\.0 \/ x\.d;/${1}{ gap 7 }/
 lang/lang/source/opt_general.pas	s/^(\s*)x\.d := r;/${1}x.lo := 0; { gap 7 }/
 lang/lang/source/opt_general.pas	s/^(\s*)x\.d := c\^\.real_value;/${1}x.hi := c^.bits[1]; x.lo := c^.bits[2]; { gap 7 }/
-# gap 3 (opt_select): new (the PAS_$NEW call it compiles to, for the check)
-lang/lang/source/opt_select.pas	s/^(\s*)new\(c\);/$1pas_\$new(c, 16); { gap 3 }/
-# gap 15 (opt_select): a pointer result assigned from a parameter (a field of it, for the check)
-lang/lang/source/opt_select.pas	s/^(\s*)eval := v$/$1eval := v^.lbl { gap 15 }/
-# gap 23 (opt_assign): in on a one-word constant set with a byte element (the comparisons)
-lang/lang/source/opt_assign.pas	s/\(da\.class in \[alias_ref_thru_param_ptr, alias_random_pointer\]\)/((da.class = alias_ref_thru_param_ptr) or (da.class = alias_random_pointer)) { gap 23 }/
 # gap 19 (opt_assign): a function returning a single real (the line stored instead, for the check)
 lang/lang/source/opt_assign.pas	s/^(\s*)rv\.r := dbl_to_real\(x, p\^\.line\);/$1rv.l := p^.line; { gap 19 }/
-# gap 12 (opt_assign): a pointer function's result compared with another (the first operand a variable, for the check) [still needed with dpc eaddf6c]
-lang/lang/source/opt_assign.pas	s/^(\s*)alias_\$ind_for_captured_lvalue\(a\^\.asg_lhs\) <>$/$1a^.asg_lhs <> { gap 12 }/
-# gap 8 (opt_assign): in on constant sets with word elements (the comparisons) [still needed with dpc eaddf6c]
-lang/lang/source/opt_assign.pas	s/([\w\^\.]+)\^\.kind in \[77\.\.87, 101, 200\]/(($1^.kind >= 77) and ($1^.kind <= 87)) { gap 8 }/g
-lang/lang/source/opt_assign.pas	s/([\w\^\.]+)\^\.kind in \[77\.\.90, 92, 93, 101, 156, 176, 198, 200\]/(($1^.kind >= 77) and ($1^.kind <= 90)) { gap 8 }/g
-# gap 9 (list_tree): a nested forward routine (sanity_check_walk walks a call's spine operands as trees)
-lang/lang/source/list_tree.pas	s/^\s*procedure sanity_check_walk_spine\(mode: integer32; t: lt_ptr_t\); options\(val_param\); forward;/{ gap 9 }/
-lang/lang/source/list_tree.pas	s/sanity_check_walk_spine\(mode, t\^\.opnd\[i\]\)/sanity_check_walk(mode, t^.opnd[i]) { gap 9 }/
-lang/lang/source/list_tree.pas	s/^(\s*)procedure sanity_check_walk_spine;/${1}procedure sanity_check_walk_spine(mode: integer32; t: lt_ptr_t); options(val_param);/
 # gap 29 (list_tree): in on a 32-byte set with a longword element (the range test only, for the check)
 lang/lang/source/list_tree.pas	s/\(i in t\^\.st_used\^\)/(i <= 255) { gap 29 }/
 # gap 7 (cg_addr): a real constant in a comparison (the double tested by its longwords, for the check)
 lang/lang/source/cg_addr.pas	s/(\w+)\^\.real_value = 0\.0/(($1^.bits[1] = 0) and ($1^.bits[2] = 0)) { gap 7 }/g
-# gap 3 (opt_loop): add_constant's new (the PAS_$NEW call it compiles to, for the check)
-lang/lang/source/opt_loop.pas	s/^(\s*)new\(q\);/$1pas_\$new(q, 10); { gap 3 }/
 # gap 7 (opt_loop): walkt's real constants (nil and the high longword tested, for the check)
 lang/lang/source/opt_loop.pas	s/walkt\(rlcontk\((0\.5|1\.0)\)\);/walkt(nil); { gap 7 }/
 lang/lang/source/opt_loop.pas	s/if t\^\.real_value = 0\.0 then/if t^.xl[3] = 0 then { gap 7 }/
 # gap 7 (opt_vector): a real constant compared with 0.0 (the high longword tested, for the check)
 lang/lang/source/opt_vector.pas	s/if r\^\.real_value = 0\.0 then/if r^.xl[3] = 0 then { gap 7 }/
-# gap 8 (cg_assign): in on constant sets with word elements, over the whole file (the comparisons) [still needed with dpc eaddf6c]
-lang/lang/source/cg_assign.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
 # gap 7 (cg_assign): real arithmetic (count * 2 <= body * 1.5 compared in integers, for the check)
 lang/lang/source/cg_assign.pas	s/if count \* 2 <= \(cg_asn_\$block_move_body_size\(count\) \* 2 \+ 8\) \* 1\.5 then/if count * 4 <= (cg_asn_\$block_move_body_size(count) * 2 + 8) * 3 then { gap 7 }/
-# gap 24 (cg_assign): `and not (k in getphase(...))' (the set test compared with false, for the check) [still needed with dpc eaddf6c]
-lang/lang/source/cg_assign.pas	s/and not \((\d) in getphase\(([^()]*)\)\)/and (($1 in getphase($2)) = false) { gap 24 }/g
 # gap 25 (cg_assign): assign_proc exceeds the virtual registers: its constant masks (and, or, exclusive or in memory), unary operators and shifts left out of the check (a conditional variable not set)
 lang/lang/source/cg_assign.pas	s/^(    \{ Constant masks: and, or, exclusive or\. \})$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
 lang/lang/source/cg_assign.pas	s/^(    \{ Aggregates, sets, bit fields, the floating operators\. \})$/%endif { gap 25 }\n$1/
 # gap 25 (cg_assign): and the register path's record of the register's new contents
 lang/lang/source/cg_assign.pas	s/^(  \{ The register.s new contents\. \})$/%var gap25d;\n%if gap25d %then { gap 25 }\n$1/
 lang/lang/source/cg_assign.pas	s/^(  \{ In memory\. \})$/%endif { gap 25 }\n$1/
-# gap 24 (cg_assign): boolean functions as right operands of and/or (compared with true or false, for the check) [still needed with dpc eaddf6c]
-lang/lang/source/cg_assign.pas	s/\b(and|or) (not )?(check_use|register_tickle|zero_check|unaligned)\(([^()]*)\)/"$1 ($3($4) = " . ($2 ? "false" : "true") . ")"/ge
-lang/lang/source/cg_assign.pas	s/^  if \(rlen = 5\) and \(\(peek\(s\.right, 4\) <> 31\) or \(s\.asnop <> 0\)\) then$/  if ((peek(s.right, 4) <> 31) or (s.asnop <> 0)) and (rlen = 5) then { gap 24 }/
 # gap 25 (cg_assign): and the floating store through a floating register
 lang/lang/source/cg_assign.pas	s/^(  \{ Through a floating register when one holds either side\. \})$/%var gap25e;\n%if gap25e %then { gap 25 }\n$1/
 lang/lang/source/cg_assign.pas	s/^(  \{ Else moved, or through the floating stack or the FPA\. \})$/%endif { gap 25 }\n$1/
@@ -273,30 +200,8 @@ lang/lang/source/reg_color_68k.pas	s/^(\s*)p\(reg_ranges\^\[c\^\.num\]\);/$1p^(r
 lang/lang/source/reg_color_68k.pas	s/walkconflicts\((checkout|targetfunctionresult|computecommonregs|setcommonregs), /walkconflicts(nil, /
 # gap 30 (reg_save): `in' on a set parameter held in a register as an operand of `and' (the parameter's test dropped, for the check)
 lang/lang/source/reg_save.pas	s/\(b in s\) and \(b in \[/(b in [/
-# gap 3 (opt_strength): new and dispose of the 8-byte list cells (the PAS_$NEW and PAS_$DISPOSE calls they compile to, for the check)
-lang/lang/source/opt_strength.pas	s/^(\s*)(new|dispose)\((\w+)\);/$1pas_\$$2($3, 8); { gap 3 }/
 # gap 26 (final): substr (the length compared instead, for the check)
 lang/lang/source/final.pas	s/^(\s*)substr\(fn_chars_ptr_t\(addr\(n\^\.xc\[12\]\)\)\^, 1, 7\) = 'fp040_\$'/$1n^.xw[4] = 7 { gap 26 }/
-# gap 8 (final): in on constant sets with word elements (the comparisons) [still needed with dpc eaddf6c]
-lang/lang/source/final.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d., ]+)\]}{my $v=$1; "(".join(" or ", map { /^(\d+)\.\.(\d+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $_)" } split(/,\s*/, $2)).") { gap 8 }"}ge
-# gap 24 (final): calls of boolean functions as operands of and/or (compared with true, for the check) [still needed with dpc eaddf6c]
-lang/lang/source/final.pas	s{(?<!function )\b(final_\$(?:is_call|is_branch|sets_m881_codes_for_fp0|is_fp040_libcall|is_int|is_int_load|in_15bit_range|is_call_or_branch|is_unmoveable_fp_inst|is_unmoveable_ftest)|assert_is_\w+|has_\w+|sameaddr|involves|testcc|odd|fpx_instruction|cc_change|scancc|isbranch|uncondjmpp|eqlbitfield|correct_cc_set|reg_mod|crossjump|local_var_ref|final_\$stack_is_altered|final_\$local_var_refs|final_\$redundant_\w+|final_\$unity_compare_and_branch|test_add_sub|is_stack_adjuster|merge_move_sub|final_\$merge_movea_adjust|final_\$reg_is_(?:killed|index|dead_henceforth|simple_deferred)|final_\$fp_reg_is_killed|final_\$reg_implicitly_used_by_inst)(\((?:[^()]++|(?2))*\))}{(($1$2) = true)}g
-# gap 24 (final): a negated call as an operand of and/or (compared with false, for the check) [still needed with dpc eaddf6c]
-lang/lang/source/final.pas	s{\bnot \(\(((?:\w|\$)+(\((?:[^()]++|(?2))*\)))\) = true\)}{(($1) = false)}g
-# gap 12 (final): a pointer function's result compared with a variable (the operands swapped) [still needed with dpc eaddf6c]
-lang/lang/source/final.pas	s/:= alias_\$ind_for_captured_lvalue\(n\) = t;/:= t = alias_\$ind_for_captured_lvalue(n); { gap 12 }/
-# gap 2 (final): a case of 5 labels over a range of 14 (the other modes added, for the check) [still needed with dpc eaddf6c]
-lang/lang/source/final.pas	s/^(\s*)5: begin$/$1 3, 4, 6, 7, 10, 11, 12, 13, 14: ; { gap 2 }\n$1 5: begin/
-# gap 15 (final): a pointer result assigned from a parameter (prvlcc of it, for the check)
-lang/lang/source/final.pas	s/^(\s*)setlabel := c$/$1setlabel := prvlcc(c) { gap 15 }/
-# gap 12 (final): a pointer function's result compared with a variable (the operands swapped) [still needed with dpc eaddf6c]
-lang/lang/source/final.pas	s{\b(if|while|until) (\w+(\((?:[^()]++|(?3))*\))) = ([a-z]\w*)\b(?!\()}{$1 $4 = $2 { gap 12 }}g
-# gap 2 (final): a case of 4 labels over a range of 12 (the ops between added, for the check) [still needed with dpc eaddf6c]
-lang/lang/source/final.pas	s/^(\s*)140: change_br_value := 144;$/${1}142, 143, 144, 145, 146, 147, 148, 149: change_br_value := op; { gap 2 }\n${1}140: change_br_value := 144;/
-lang/lang/source/final.pas	s/^(\s*)if br_target\(x\) = nxtlcc\(xa\) then begin$/$1if xa = br_target(x) then begin { gap 12 }/
-lang/lang/source/final.pas	s{\((\w+(\((?:[^()]++|(?2))*\))) (=|<>) ([a-z]\w*)\)}{($4 $3 $1 { gap 12 })}g
-# gap 2 (final): unlink_opts's case of 13 labels over 40 (the kinds of its otherwise listed with 24, 28, for the check) [still needed with dpc eaddf6c]
-lang/lang/source/final.pas	s/^(\s*)24, 28:$/${1}1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 25, 26, 34, 35, 36, 37, 38, 24, 28: { gap 2 }/
 # gap 7 (emit, translator HH): a real constant compared with 0.0 (the double tested by its longwords, for the check)
 lang/lang/source/emit.pas	s/n\^\.real_value = 0\.0/(n^.bits[1] = 0) and (n^.bits[2] = 0) { gap 7 }/
 # gap 7 (fpa, translator HH): the real constants -1.0 and 0.0 passed to rlcontk and dpcontk (an integer constant node instead, for the check)
@@ -312,8 +217,6 @@ lang/lang/source/opt_main.pas	s/n := trunc\(e\^\.real_value\);/n := e^.xl[3]; { 
 lang/lang/source/opt_main.pas	s/if n <> e\^\.real_value then/if n <> n then { gap 7 }/
 # gap 29 (opt_main): make_new_postorder_node_list's guarded test of a word in a 32-byte set (the range test only, for the check)
 lang/lang/source/opt_main.pas	s/\(k in e\^\.vset\^\)/(k <= 255) { gap 29 }/
-# gap 2 (final): deltest's case of 8 labels over 22 (the otherwise's ops added, for the check) [still needed with dpc eaddf6c]
-lang/lang/source/final.pas	s/^(\s*)107, 108, 109, 119, 123:$/${1}105, 106, 110, 111, 112, 113, 114, 115, 116, 117, 118, 120, 121, 122: ; { gap 2 }\n${1}107, 108, 109, 119, 123:/
 # gap 7 (final): floatop's real constant, trunc and real compare (the longwords used, for the check)
 lang/lang/source/final.pas	s/^(\s*)if \(n\^\.real_value = 0\.0\) or$/$1if (n^.bits[1] = 0) or { gap 7 }/
 lang/lang/source/final.pas	s/^(\s*)iv := trunc\(v\.d\);$/$1iv := v.l[1]; { gap 7 }/
@@ -321,22 +224,6 @@ lang/lang/source/final.pas	s/^(\s*)if iv <> v\.d then$/$1if iv <> v.l[1] then { 
 lang/lang/source/final.pas	s/^(\s*)v\.d := n\^\.real_value;$/$1v.l[1] := n^.bits[1]; v.l[2] := n^.bits[2]; { gap 7 }/
 # gap 31 (final): an 8-byte set expression compared with [] (the low longword masked, for the check)
 lang/lang/source/final.pas	s/\(v\.s \* \[0\.\.28\] = \[\]\)/((v.l[2] \& 16#1FFFFFFF) = 0) { gap 31 }/
-# gap 11 (tr_utils, translator PC): nil as a pointer function's last result (another operand, for the check)
-lang2/source/be_com/tr_utils.pas	s/^(\s*)(index|base)_operand := nil;/$1$2_operand := addr(instr^.opnds[4]); { gap 11 }/
-# gap 15 (tr_utils): a pointer result assigned from a parameter (the other arm's, for the check)
-lang2/source/be_com/tr_utils.pas	s/^(\s*)bb_interval := bb$/$1bb_interval := bb^.l70 { gap 15 }/
-# gap 12 (tr_utils): a pointer function's result compared with a variable (two variables, for the check) [still needed with dpc eaddf6c]
-lang2/source/be_com/tr_utils.pas	s/if bb_interval\(bb\) <> tr_24 then/if tr_28 <> tr_24 then { gap 12 }/
-lang2/source/be_com/tr_utils.pas	s/\(base_operand\(i\) <> r\)/(i <> instr) { gap 12 }/
-lang2/source/be_com/tr_utils.pas	s/if utils_ins_\$operands_instruction\(last\) = add then/if last = base then { gap 12 }/
-# gap 24 (tr_utils): a call as a right operand of `and' (compared with true, for the check) [still needed with dpc eaddf6c]
-lang2/source/be_com/tr_utils.pas	s/and can_adjust_creation_point\(p, add\^\.opnds\[2\]\.lts, add, disp, 0\)/and (can_adjust_creation_point(p, add^.opnds[2].lts, add, disp, 0) = true) { gap 24 }/
-lang2/source/be_com/tr_utils.pas	s/if not retry and mem_ref_positioned_for_postincrement\($/if not retry and (true = mem_ref_positioned_for_postincrement( { gap 24 }/
-lang2/source/be_com/tr_utils.pas	s/^(\s*)cur, nil, true, disp, offset\) then begin$/$1cur, nil, true, disp, offset)) then begin/
-# gap 8 (tr_utils): in on a constant set with a word element (the comparisons, for the check) [still needed with dpc eaddf6c]
-lang2/source/be_com/tr_utils.pas	s/([a-z]+)\^\.opc in \[77, 79\.\.83\]/(($1^.opc = 77) or (($1^.opc >= 79) and ($1^.opc <= 83))) { gap 8 }/
-lang2/source/be_com/tr_utils.pas	s/and n_bit_unconsumed\(tst\) then/and (n_bit_unconsumed(tst) = true) then { gap 24 }/
-lang2/source/be_com/tr_utils.pas	s/^(\s*)find_suitable_driving_lts_for_tst := lts;/$1find_suitable_driving_lts_for_tst := last; { gap 15 }/
 # gap 7 (lst): real := double (the single literal left unset, for the check)
 lang2/source/be_com/lst.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
 # gap 28 (lst): lst_$display_code_cell's values exceed dpc's registers (the classic form's registers' column dropped, for the check)
@@ -348,10 +235,12 @@ lang2/source/be_com/bin.pas	s/if stmt_bits\^\[stmt\] then/if stmt_bits <> nil th
 lang2/source/be_com/bin.pas	s/if stmt_bits\^\[0\] and \(map\^\[0\] <> 0\) then begin/if (stmt_bits <> nil) and (map^[0] <> 0) then begin { gap 13 }/
 # gap 22 (bin): ord of a boolean (an if statement, for the check)
 lang2/source/be_com/bin.pas	s/^(\s*)(\w+) := ord\(([^()]*(?:\([^()]*\))?[^()]*)\) & 1;/${1}if $3 then $2 := 1 else $2 := 0; { gap 22 }/
-# gap 23 (mmt, translator PC2): in on a one-word constant set with a byte element (the comparisons)
-lang2/source/be_com/mmt.pas	s/\(nt\^\.desc\.class in \[1, 13\.\.15\]\)/((nt^.desc.class = 1) or ((nt^.desc.class >= 13) and (nt^.desc.class <= 15))) { gap 23 }/
-lang2/source/be_com/mmt.pas	s/\(d\^\.class in \[1\.\.15\]\)/((d^.class >= 1) and (d^.class <= 15)) { gap 23 }/
-# gap 11 (trans, translator PC3): nil as a pointer function's last result (the block's last instruction, for the check)
-lang2/source/be_com/trans.pas	s/^(\s*)get_(omega|alpha)_candidate := nil$/$1get_$2_candidate := from_bb^.last { gap 11 }/
-# gap 23 (trans): in on a one-word constant set with a byte element (the class widened, for the check)
-lang2/source/be_com/trans.pas	s/^(\s*)while instruction_attributes\[i\^\.opc\]\.class$/$1while (instruction_attributes[i^.opc].class + 0) { gap 23 }/
+# gap 32 (backend.ins.pas, translator PB2): an initialized overlay section named as its variable (the sections the .init files define renamed, for the check)
+lang2/source/be_com/backend.ins.pas	s/^var \((instruction_mnemonic|instruction_mnemonic_length|instruction_assembly|operand_string|operand_string_length)\)/var (${1}_s) { gap 32 }/
+# gap 22 (asm, translator PB2): ord of a boolean (an if statement, for the check)
+lang2/source/be_com/asm.pas	s/^(\s*)(\w+) := ord\(([^()]*(?:\([^()]*\))?[^()]*)\) & 1;/${1}if $3 then $2 := 1 else $2 := 0; { gap 22 }/
+# gap 25 (asm, translator PB2): asm_$process_routine exceeds dpc's virtual registers (pass 1's literals and instruction kinds, pass 2's immediate forms left out of the check)
+lang2/source/be_com/asm.pas	s/^(  \{ Its literals\. \})$/%var gap25b;\n%if gap25b %then { gap 25 }\n$1/
+lang2/source/be_com/asm.pas	s/^(2:)$/%endif { gap 25 }\n$1/
+lang2/source/be_com/asm.pas	s/^(                case form of)$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
+lang2/source/be_com/asm.pas	s/^(                \{ The forms done\. \})$/%endif { gap 25 }\n$1/

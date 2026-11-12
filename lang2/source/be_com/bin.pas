@@ -554,7 +554,7 @@ begin
   while e <> nil do begin
     if at_backend_switches.sw10 then
       vfmt_$write('obj emit_literal:  object=%8lh   next=%8lh   size=%4lh   location=%8lh   value=%8lh%.',
-                  e^.lit, e^.l0, e^.size, e^.addr, e^.lit^.value);
+                  e^.lit, e^.next, e^.size, e^.addr, e^.lit^.value);
     if emitting then begin
       bin_$advance_to_location(e^.addr);
       lit := e^.lit;
@@ -596,7 +596,7 @@ begin
     end;
     if listing then
       lst_$display_literal(e);
-    e := univ_ptr(e^.l0);
+    e := e^.next;
   end;
 end;
 
@@ -939,7 +939,7 @@ begin
                               cur_frame);
     cur_frame := nil;
   end;
-  node := rtn^.node;
+  node := bin_node_ptr_t(rtn^.node);
   bin_$unwind_bits(rtn, frame_reg, pushed, big_reg, ecb);
   if at_backend_switches.sw9 then begin
     vfmt_$write('%.');
@@ -1042,7 +1042,7 @@ begin
     r := ranges;
     if r <> nil then begin
       ranges := nil;
-      node := rtn^.node;
+      node := bin_node_ptr_t(rtn^.node);
       size := emit_108.e110 - node^.code^.start;
       get_include_file_index(node^.pos, file_index, line);
       if file_index < 0 then
@@ -1078,7 +1078,7 @@ begin
   stmt_index := rtn^.stmt_index;
   stmt_blocks := rtn^.stmt_blocks;
   cur_rtn := rtn;
-  cur_node := rtn^.node;
+  cur_node := bin_node_ptr_t(rtn^.node);
 end;
 
 { resolve_ap_or_sf_relative_disp - an argument block or stack frame
@@ -1465,7 +1465,7 @@ begin
     while rtn <> nil do begin
       set_current_routine(rtn);
       first := true;
-      node := rtn^.node;
+      node := bin_node_ptr_t(rtn^.node);
       if verbose then begin
         discard(sym_$fully_qualified_routine_name(addr(name), node, -1));
         n := name.length;
@@ -1511,7 +1511,7 @@ begin
               if cell^.l16 <> 0 then
                 emit_dot_lines_for_cc(cell)
               else begin
-                get_include_file_index(rtn^.node^.pos, file_index, line);
+                get_include_file_index(bin_node_ptr_t(rtn^.node)^.pos, file_index, line);
                 if file_index < 0 then
                   file_index := 1;
                 gen_debug_$lines_def(file_index, line, 0, cell^.l8);

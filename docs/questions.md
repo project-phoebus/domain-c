@@ -1346,6 +1346,15 @@ revisited.
    `extern' and the including units `define' them with the
    initializers (if dpc accepts an initializer on a defined variable),
    or (c) leave them uninitialized in the translation?
+   **Settled by translator PB2 (asm.pas):** (b) without the extern:
+   backend.ins.pas keeps its declarations; each .init file holds a
+   `define <section> := [...]' statement (the reference's section
+   7.2.2, method 2, which it recommends for %include files), which
+   dpc accepts after the var declaration.  instr_assembly.init,
+   operand_string*.init (asm) and instr_mnemonic*.init (lst) are
+   filled from the sections' bytes.  dpc does not yet lay out such an
+   initialized section whose variable has the section's name
+   (docs/dpc-gaps.md 32): the gate renames the sections.
 162. Translator PB, lst.pas: the -PRASM listing writes the integer
    registers as ".n" (`move.w #0x2E00' before the number), the singles
    ".FSn", the doubles ".FDn", and register 30 of kind ip_reg_like as
@@ -1384,7 +1393,6 @@ revisited.
    at_call_conv (0x1B3C bytes) needs the conventions record and the
    IL type nodes' layouts.  It remains, with lir_utils and the rest of
    batch A.
-
 168. Translator PC2: **question 157 is answered: not the source's.**  The
    three tr_utils messages are whole in the image ('TR_UTILS_$relative_
    instr_position: instrs not in same bb%$', 'TR_UTILS_$separate_
@@ -1420,4 +1428,68 @@ revisited.
    writes, class 16, only what is passed, class 1, static, dynamic
    classes); mmt.pas reads them through a view (mmt_call_info_t) until
    call_conv.ins.pas declares the record.
+
+172. Translator PA2, backend.ins.pas rtn_t +112: zzzzz compares a
+   returning jump's operand 1 segment with it (`cmpa.l (112,A0),A2'
+   with the operand's +8), but df_utils and life pass it to
+   bv_$make_live_range_complex and compare live ranges with it, as
+   with the routine's +100 (the argument pointer's live range, fga's
+   messages), +108, +140 and +144 (the memory live range).  Kept as
+   l112: lts_ptr_t (cast to lr_ptr_t in df_utils and life) so zzzzz is
+   unchanged.  Is it a live range (the return address's, most likely),
+   and zzzzz's comparison a slip of the original or a reading of
+   operand +8 after register allocation?
+173. Translator PA2, fga.pas: conditionally_asynchronous tries the
+   identifier SETJMP (upper case) unless cargs +0x288 bit 3 is set
+   (cargs.ins.pas: flags_286's element 0, -MGBL by perfsummary's
+   printout).  An upper-case setjmp seems tied to case folding rather
+   than to -MGBL; is flags_286's element 0 named right?
+174. Translator PA2: fga, hal, life, sanity, sym and tm_utils open
+   backend.ins.pas without the lang prelude (their .blocks include
+   lists), yet fga reads il.pas's +0x180 and cargs' options and calls
+   idntk, and backend.ins.pas used il_$node_ptr_t (now univ_ptr).  fga
+   declares the three through views of its own (il_180: extern
+   fga_node_ptr_t, cargs_$options: extern array of char, idntk with a
+   univ string).  Apollo's units must have seen them through an insert
+   they open (be_prism/target.ins.pas or at_base.ins.pas, both stubs
+   here) or through declarations in the unit; should a small insert of
+   the prelude's cells for the back end be made instead?
+175. Translator PA2, fga_$process_routine: the instructions chained
+   from lir_main_c44 at their +32 are unchained (+32 cleared) but
+   lir_main_c44 itself is left pointing to the first; df_utils's async
+   walk (do_global_walk) clears it.  Kept as the image has it; a slip?
+176. Translator PA2, backend.ins.pas bb_t +110: batch A named it
+   transparent (bv: all ones initially, "not written in the block"),
+   batch C written; df_utils's process_marked_instructions sets a live
+   range's bit there for each write it reaches (bv_$set), which fits
+   batch C's reading for the dfa vectors (bv_$create_dfa_bit_vectors)
+   and batch A's for the availability ones.  The field keeps its name;
+   the two vector sets may lay out +86..+130 differently.
+177. Translator PB2, asm.pas: asm_658 (asm +0x658, set by lir and
+   ra_utils) is compared with the value (+8) of the operand after a
+   displacement operand: equal, the displacement is a stack-frame
+   access (bounds-checked against the register save area or the
+   argument block, the access size added) and an arg-block/frame/
+   literal-pool displacement's register byte gets bit 7.  It looks
+   like the frame base register's segment or live range; batch A
+   (lir) should name it.
+178. Translator PB2, asm.pas: in asm an instruction's +28 is its
+   location (bump_locations adds to it, build_dispatch_table and the
+   branch displacements subtract them, the code base's +56 is set
+   from it), while backend.ins.pas calls +28 a source position zzzzz
+   copies to a cell's +8 (which bin indeed reads as the location).
+   The reading "location" fits both; batch A owns instr_t's l28.
+179. Translator PB2, asm.pas: the pipeline's state table (asm +0x470:
+   8 states x 10 instruction kinds, flags and next state) is kept as
+   numbers; the states' and kinds' meanings (which PRISM pipeline
+   hazards they model: the delay slot of squashing calls, the
+   floating unit's two-word instructions) are read only from what
+   pass 1 does with the flags.  Names, if the owner knows the DN10000
+   pipeline rules.
+180. Translator PB2, asm.pas: three traces are wrong in the image and
+   kept: add_literal_to_literal_pool prints the literal's kind with
+   %6ld (the kind and length words as one longword), dump_literal_pool's
+   this_bb line has five arguments for six conversions, bump_locations
+   reads the end block's number when it is nil (process_routine's
+   calls).  Slips of the original?
 

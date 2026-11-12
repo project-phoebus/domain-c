@@ -9,21 +9,23 @@ when this tree is merged).
 
 ## Status (dpc fixes)
 
-- **Gaps 2, 8, 12, 24: fixed in domain-pascal eaddf6c (2026-11-11)**,
-  compiled best effort (a warning; `--strict' still refuses).  Their
-  rewrites were removed from tools/cc_gap_rewrites.txt (188 rules),
-  except where the units still need them, marked "[still needed with
-  dpc eaddf6c]":
-  - gap 8 variant: `in' on a 14-byte set that is not a variable
-    (c_syntax.pas, 3 sites).
-  - gap 24 variant: a call deeper inside a right operand of plain
-    `and'/`or' than a comparison of the result or the result itself
-    (cg_assign.pas, final.pas).
-  - gap 12 variant: a function result in A0 compared other than
-    `='/`<>' with a constant (final.pas, opt_assign.pas).
-  - tr_utils.pas: without its gap 12/24 rules it meets gap 15 (a
-    pointer result in a body of several statements assigned other than
-    a function result, variable or nil).
+- **Gaps 2, 8, 12, 24: fixed in domain-pascal eaddf6c; their remaining
+  variants (`in' on a set expression of more than a longword, any
+  calling right operand of plain `and'/`or', two pointer functions'
+  results compared) in 72d3ee3 (2026-11-11).**
+- **Gap 3 (short-form `new'/`dispose') and gap 15 (a parameter assigned
+  to a pointer result): fixed in fad3e37.**  The long form of `new'
+  with tag constants is still refused.
+- **Gaps 9 (nested `forward'), 11 (`nil' as a pointer function's
+  result) and 23 (`in' on a one-word constant set with a char, byte or
+  4-byte element; a boolean element is still refused): fixed in
+  6aabd92 and 1240eb7.**  Their 18 rules removed.
+- Gap 32 is queued in domain-pascal; `while true do' is refused on
+  purpose (the image cannot tell it from `repeat ... until false'):
+  write such loops with a label.
+- All compile best effort (a warning; `--strict' still refuses).  Their
+  rewrites are gone from tools/cc_gap_rewrites.txt (260 rules removed in all);
+  the full gate is clean without them.
 - Gaps 4 (write/writeln) and 7 (real arithmetic) are not being worked
   on in dpc for now (the domain-pascal owner's choice).
 
@@ -765,6 +767,36 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
        begin
          b := s * [0..28] = [];
        end;
+
+32. **An initialized overlay section named as its variable.**  The
+   back end's named sections (`var (instruction_assembly)
+   instruction_assembly: ...' in backend.ins.pas) are given their data
+   by the .init files with a `define' statement (reference 7.2.2,
+   method 2; docs/questions.md 161): asm.pas defines
+   instruction_assembly, operand_string and operand_string_length,
+   lst.pas instruction_mnemonic and instruction_mnemonic_length.  In
+   Apollo's object module the variable is the section itself (offset
+   0); dpc emits a global label for the variable beside the section's
+   symbol and refuses the clash: "an overlay section named like a
+   routine or variable symbol of the unit (`INSTRUCTION_MNEMONIC`) is
+   not supported yet" (an uninitialized section, a .comm, passes).
+   The gate renames the five sections (`_s') in backend.ins.pas's
+   scratch copy.  Reproducer:
+
+       module g32;
+       var (tab) tab: array [0..1] of integer;
+       define tab := [1, 2];
+       procedure p;
+       begin
+         tab[0] := tab[1];
+       end;
+
+   Translator PB2 (asm.pas) also met gaps 22 (the traces' flags as 0
+   or 1) and 25 (asm_$process_routine, 0x19A2 bytes: the check leaves
+   out pass 1's literal and pipeline-kind code, from `{ Its
+   literals. }' to label 2, and pass 2's immediate forms, `case form
+   of' to `{ The forms done. }').  dpc refused `while true do' in
+   dump_literal_pool (codegen-patterns 7.2: written with a label).
 
 Translator PC (cc.a88k tr_utils) met gaps 8 (`opc in [77, 79..83]', a
 word element: tst_elim_within_bb, validate_lts_for_tst), 11
