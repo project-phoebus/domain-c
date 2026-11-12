@@ -646,3 +646,166 @@ itself, sched.pas, is not translated yet).
   needs it; the allocator can then use the register elsewhere.  A
   physical result with two readers, or a modify of a physical register,
   is a bug check.
+
+## Register classes and conventions (ra, ra_utils, call_conv, target_properties; new)
+
+Translator PB5.  The register files as the allocator sees them come
+from target_properties' PRISM entry (the fourth of the section
+target_properties_read_only, cc.a88k 0x2B6800 + 3 x 328; its +0x10 is
+3) and from call_conv's presets (call_conv.pas preset_0 .. preset_3).
+
+- **Integer registers (32).**  ra_$begin_compilation (0x266C90) makes
+  the allocatable set from target_properties +0x1C (the first, 0) and
+  +0x24 (how many, 24): R0..R23; R24..R31 are never allocated (ra
+  +0x5C8 holds the complement).  Two are named reserved (ra +0x5B4): the
+  zero register (+0x14: R31, reads as zero) and the PC-like register
+  (+0x18: R30, lst's "PC"); target_properties +0x34 (0xC0000000) is the
+  same pair as a mask.
+- **Floating registers (64 singles).**  F0..F63 are all allocatable
+  (target_properties +0x3C first 0, +0x44 how many 64); there is no
+  floating zero register (+0x38 = -1).  A double is an even/odd pair (a
+  live range and its mate: operand kind fp_reg_pair, the halves' rrp
+  fp_reg_even_only / fp_reg_odd_only); the spill code loads and stores
+  the halves separately (LOADS/STORES, +4 for the odd half) or
+  together (LOADD/STORED).  The allocator runs once for each class (ra
+  +0x660: 1 integer, 2 floating singles, 3 pairs; ra's dumps' "IP
+  REGISTERS", "FP REGISTERS", "FP REGISTER PAIRS").
+- **Condition codes as registers.**  The integer and floating condition
+  codes are allocated as registers 30 and 31 of the live range
+  numbering (dmp, above); XTP inserts an IPCCNOP where a value of the
+  condition codes must survive an instruction that sets them.
+- **The ordinary conventions** (preset_1; preset_2 and _3, ftn_$stop's
+  and the run-time library's, have the same register sets):
+  - caller-saved (clobbered by a call): R0..R9, R22, R23 (0x00C003FF);
+    F0..F3, F8..F51 (0xFFFFFF0F of 0..31, 0x000FFFFF of 32..63);
+  - callee-saved (preserved): R10..R21 (0x003FFC00); F4..F7 and F52..F63
+    (0xF0, and 0xFFF00000 of 32..63);
+  - reserved, never modified: R24..R31 (0xFF000000);
+  - arguments: integers and addresses in R4..R9 (a result returned by
+    reference takes R4 first), floating singles in F8..F19 and doubles
+    in even-aligned pairs there (a double also uses up two integer
+    argument registers), the rest in memory (at_call_conv's part 4:
+    nint from 4 to 9, nfp from 8 to 19);
+  - R22 is the return address (call_conv_$t w14, bin_$unwind_bits); R23
+    is read by every call (w20, the preset's reg40); the conventions
+    also name R21 (w18), R2 or R21 (w16: R21 for a nested callee whose
+    block needs its static link) and R3 (w12): the static link and
+    frame registers, most likely.
+  - The C conventions under cargs flags_286 element 15 (preset_0): only
+    R0..R9, R22, R26 (0x044003FF) and F0..F3 clobbered; R23..R25 and
+    R27..R31 reserved (0xFB800000); F4..F63 in the preset's third set
+    (fp16); reg40 R26.
+- A routine's own sets: the registers it writes (rtn +148, +152), those
+  RA saves in the prologue (+160, +164), and the calls' and SVCs'
+  clobbers accumulated by ra_$initialize_basic_block (ra +0x614 ..
+  +0x61C) less the reserved sets.
+
+## The spill model (ra_utils, ra; new)
+
+Translator PB5 (ra_utils.pas; ra.pas read in part, not translated).
+
+- **Live ranges, not variables, are spilled.**  A live range's spill
+  cost is a single real (lr +28) that ra_$initialize_basic_block adds
+  to for each reference, weighted by the block's loop depth (a power
+  through the FPP: 16 to the depth, the depth capped at 24, most
+  likely; FPP words 0x00C4, 0x00A0 4.0, 0x007C, 0x0078 2.0, 0x0148), a
+  read and a write counting differently (lr +44 the reload cost).  A
+  rematerializable live range costs nothing to spill.
+- **Never spilled:** the routine's argument pointer, DB register, +112
+  and +120 live ranges (rrp life_mark), physical registers; a user
+  declared register (lr +3 bit 5, "spill victim is user declared
+  register") or a no_modify one (bit 6) chosen as a victim is a bug
+  check.
+- **Rematerialization** (ra_utils_$rematerialize): a live range with one
+  definition (a pair's halves each one, by a double access), not
+  modified, is recomputed instead of reloaded when its defining
+  instruction reads only complex unique values that are never spilled,
+  writes nothing else, is no slower than a load (its operand delay
+  against LOADL's, LOADS's or LOADD's), and, for a load, reads constant
+  memory (an immediate's, alias class 0 or 11) and is not grouped or
+  continued; a move is followed to its source (at most 20 deep).  The
+  copy is put before each reader (rematerialize_result; a LOADD
+  narrowed to LOADS, a COPYD to COPYS, for one half of a pair).
+- **Spill code** (ra_utils_$add_spill_code, after a colouring that left
+  spill victims, lr +3 bit 0): each read of a victim gets a reload into
+  a new live range just before it; later readers share the reload while
+  they are within 20 instructions (0.6 of the readers' span; unbounded
+  in the first pass) and no instruction in between has more registers
+  live than three quarters of the block's peak (at least the registers
+  there less 2).  Each write gets a store to the victim's memory home
+  just after it, moved later by the store's latency (the definition's
+  and the store's operand delays, less the instructions between) while
+  nothing in the way touches the value, its home or memory slot, or
+  transfers control, or (with latency left) has more than the live
+  registers before it plus 4.  A move whose only purpose was the victim
+  becomes a TST (TSTS, TSTD) or is deleted; a byte or halfword
+  EXTRACTU, EXTEND or TST of a reloaded word becomes a byte or halfword
+  load (displacement +3 or +2: big-endian).  Before the first pass a
+  victim with one definition has its segments inside loops below the
+  definition split off into live ranges of their own, joined to it by
+  preference moves at the dominator one loop level out, so that only
+  the loops' entries reload.
+- **The memory home** is a stack-frame temporary made for the live
+  range (lir_utils_$add_memory_home) or its variable's own slot (a
+  VAR_NAME or FORTRAN symbol): the reload's displacement operand is a
+  stack-frame displacement from the frame register's segment
+  (asm_658).  ra_$allocate_stack_frame packs the frame's objects by
+  alignment, 8 bytes first (sizes 1, 2, 4, 8 by the access), into rtn
+  +48; a frame of more than 24 bytes sets the routine's needs_frame
+  (+226 bit 0).
+- **Pass-through spilling before scheduling** (XTP, ra_utils_$spill_
+  pass_through_lrs): when the routine's peak demand (lir_main +0xC89,
+  +0xC88) exceeds the registers (24 integer, 64 floating; a tenth
+  fewer with lir_main_da4), live ranges that pass untouched through a
+  hammock (a single-entry single-exit region) needing too many
+  registers are stored before it and reloaded after it:
+  rematerializable ones first (no store), then those with one
+  definition, then the rest; adjacent hammocks' reloads and stores are
+  coalesced and stores a dominator already made are dropped.
+
+## The scheduler's pipeline model (sched; new)
+
+Translator PB5, from sched.pas's routines (not translated yet) with
+sched_utils (above) and asm's pass 1.
+
+- **Two issue slots a cycle.**  SCHED (phase 12, before RA, block by
+  block, skipping atomic and forwarded blocks) builds each cycle from
+  an integer-side slot (sched +0x3118) and a floating slot (+0x3128).
+  instr_would_fit (0x2774F4): a floating operation (classes fp_double,
+  fp_single, immediate) joins a cycle whose integer slot is not a call
+  and whose floating slot is empty, or holds a multiply it can be
+  fused with (can_be_5opified: the five-operand multiply-and-add forms
+  adds5, subd5, ...: asm's "5op"); calls, entries, LIMITs, SVCs and
+  floating control instructions need the whole cycle; SEQ and join
+  birthpoints take no slot; two integer instructions share a cycle
+  only as two single-word loads or stores of adjacent words (the same
+  literal pool entry or variable, displacements 4 apart; debug switch
+  sw11), most likely made one double access.  With debug switch sw14
+  nothing pairs.
+- **Floating register traffic per cycle is limited.**  The section
+  sched_readonly_tables (0x2BE108, two bytes by opcode: the generated
+  fp_registers_busy.init) gives the floating registers (in singles) each
+  opcode reads and writes: ADDD, MULD, DIVD 4 and 2; ADDS, MULS 2 and 1;
+  LOADD 0 and 2; STORED 2 and 0; CMPD 4 and 0; COPYD and the double
+  traps 2 and 2; a cycle's reads and writes (with the instruction's own
+  +41) must stay within sched_3158, which lir_main sets.
+- **Latencies as a 16-cycle ring.**  The values an issued instruction
+  produces are entered in the list of the cycle they become available
+  (16 lists of up to 130 segments, sched +0 .. +0x2080, their counts at
+  +0x2080); instr_would_stall (0x276F90) refuses an instruction that
+  reads a register or memory operand still pending; when nothing can
+  issue, generate_stall_cycle advances the clock and empties the next
+  list.  The delays are sched_utils_$operand_delay's.
+- **Two passes.**  Pass 1 (0x27549C) locks what may not move (the
+  closing branch, a RETURN after the branches, the condition code
+  chains, the call protocol: a call's physical argument and result
+  registers written and read next to it, bus-locking instructions, the
+  conditional traps' drivers) and computes the precedence heights;
+  pass 2 (0x278900) issues by height cycle by cycle and can make a
+  move and an operation one read-modify-write instruction.
+  register_pressure (0x275382) scores an instruction by the registers
+  reads (+1 each) against those it writes (-1 each), at least 0 and,
+  above 4, 3 (a call, return, SVC: -1 or +1 by class).
+- After RA, ASM's pass 1 applies the last pipeline rules (its state
+  machine, above): NOPs for a squashing call's delay slot and the
+  floating unit's two-word instructions.

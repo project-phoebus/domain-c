@@ -739,7 +739,7 @@ end;
 
 { lir_utils_$flesh_out_new_load_or_store - the operands of a new load or
   store instr, as desc describes it: reg the register (segment lts,
-  solution post_6b8 with lts's live range, its physical register and
+  solution ra_utils_10 with lts's live range, its physical register and
   flags, desc's kind, form desc^.form), for a pair (kind 9) reg2 the
   odd half (lts2, form2) and reg even, reg2 odd; the address: with no
   home, a frame temporary (base from isc_user_routines_330, the home a
@@ -787,21 +787,21 @@ begin
   lr := lts^.lr;
   lts^.rrp := rrp$set_t(integer(lts^.rrp) ! integer(desc^.rrp));
   lr^.rrp := rrp$set_t(integer(lr^.rrp) ! integer(desc^.rrp));
-  post_6b8.kind := desc^.kind;
-  post_6b8.lr := lr;
-  post_6b8.f78.physical := lr^.f2.physical;
-  post_6b8.f78.no_modify := lr^.f2.no_modify;
-  post_6b8.f78.serialize := lr^.f2.serialize;
-  post_6b8.f78.reg := lr^.f2.reg;
-  lir_$build_operand(reg, addr(post_6b8), desc^.form);
+  ra_utils_10.kind := desc^.kind;
+  ra_utils_10.lr := lr;
+  ra_utils_10.f78.physical := lr^.f2.physical;
+  ra_utils_10.f78.no_modify := lr^.f2.no_modify;
+  ra_utils_10.f78.serialize := lr^.f2.serialize;
+  ra_utils_10.f78.reg := lr^.f2.reg;
+  lir_$build_operand(reg, addr(ra_utils_10), desc^.form);
   reg^.lts := lts;
   if desc^.kind = 9 then begin
     lr := lts2^.lr;
     lts2^.rrp := rrp$set_t(integer(lts2^.rrp) ! integer(desc^.rrp2));
     lr^.rrp := rrp$set_t(integer(lr^.rrp) ! integer(desc^.rrp2));
-    post_6b8.lr := lr;
-    post_6b8.f78.reg := lr^.f2.reg;
-    lir_$build_operand(reg2, addr(post_6b8), desc^.form2);
+    ra_utils_10.lr := lr;
+    ra_utils_10.f78.reg := lr^.f2.reg;
+    lir_$build_operand(reg2, addr(ra_utils_10), desc^.form2);
     reg2^.lts := lts2;
     reg^.h.fp_reg_even_only := true;
     reg2^.h.fp_reg_even_only := false;
