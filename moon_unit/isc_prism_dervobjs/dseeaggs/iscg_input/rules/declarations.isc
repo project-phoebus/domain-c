@@ -648,8 +648,15 @@ operator isc_bit_field_assign il bit_field_assign children 5 image 16#0E1A60;
   pass_1 1: derived, 2: derived, 3: derived, 4: derived, 5: derived, inherited;
 end;
 operator isc_blk_end_node il blk_end_node children 0 image 16#0E1F26;
-  fixed;
-  pass_1 inherited;
+  if il.p48.b378.1 and ((il.p48.w2 = 108) or (il.p48.w2 = 107));
+    trace rewrite;
+    let n2 <- rewrite_$routine_call(il, 0, inh);
+    child solutions n2 copy_all
+      il <- n2;
+      original_il <- il;
+      permissible inherited;
+    solutions_made;
+  endif;
 end;
 operator isc_block_entry_node il block_entry_node children 0 image 16#0E2068;
 end;
@@ -906,8 +913,15 @@ operator isc_ptr_node il ptr_node children 1 image 16#0E549E;
     permissible [ip_reg];
 end;
 operator isc_raise_exception il raise_exception children 0 image 16#0E55BA;
-  fixed;
-  pass_1 inherited;
+  if not lir_$use_trap_for_exception_raise(il.p12, il);
+    trace rewrite;
+    let n2 <- rewrite_$routine_call(il, 0, inh);
+    child solutions n2 copy_all
+      il <- n2;
+      original_il <- il;
+      permissible inherited;
+    solutions_made;
+  endif;
 end;
 operator isc_real_ob il real_ob children 0 image 16#0E56F0;
 end;
@@ -1365,12 +1379,24 @@ operator isc_tree_node_isc_mul_top il isc_mul_top children 2 image 16#0EAF0C;
   pass_1 1: derived, 2: derived, inherited;
 end;
 operator isc_tree_node_isc_signed_mod_top il isc_signed_mod_top children 2 image 16#0EB4A8;
-  fixed;
-  pass_1 1: derived, 2: derived;
+  child 1 il.p40
+    immediate_parent_has_signed <- true;
+    immediate_parent_wants_signed <- true;
+    permissible derived;
+  child 2 il.p44
+    immediate_parent_has_signed <- true;
+    immediate_parent_wants_signed <- true;
+    permissible derived;
 end;
 operator isc_tree_node_isc_signed_rem_top il isc_signed_rem_top children 2 image 16#0EB624;
-  fixed;
-  pass_1 1: derived, 2: derived;
+  child 1 il.p40
+    immediate_parent_has_signed <- true;
+    immediate_parent_wants_signed <- true;
+    permissible derived;
+  child 2 il.p44
+    immediate_parent_has_signed <- true;
+    immediate_parent_wants_signed <- true;
+    permissible derived;
 end;
 operator isc_tree_node_isc_unsigned_mod_top il isc_unsigned_mod_top children 2 image 16#0EB7A0;
   fixed;

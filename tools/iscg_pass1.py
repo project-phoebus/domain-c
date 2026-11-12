@@ -92,6 +92,11 @@ GLOBAL_NODES = {0x2E9E60: 'il_180'}
 GLOBAL_PASCAL = {'target_properties.p_be': 'target_properties.p_be',
                  'target_properties.l180': 'p1_target_view_ptr_t(addr(target_properties))^.l180'}
 
+# functions whose boolean result the operator routines test
+BOOL_FUNCS = {'lir_$use_trap_for_exception_raise', 'return_value_needs_assign_node',
+              'il_node_has_integer_value', 'is_power_of_2', 'invertible_in_sp',
+              'invertible_in_dp', 'il_node_is_literal'}
+
 # condition codes: the relation a branch (or scc) takes, its negation
 CC_REL = {'eq': '=', 'ne': '<>', 'gt': '>', 'ge': '>=', 'lt': '<', 'le': '<='}
 REL_NOT = {'=': '<>', '<>': '=', '>': '<=', '>=': '<', '<': '>=', '<=': '>'}
@@ -457,7 +462,7 @@ class Lifter:
                     k += 4
                     continue
                 elif name in ('isc_$precision_from_rlen_and_size', 'not_permissible_function',
-                              'il_node_has_integer_value'):
+                              'il_node_has_integer_value') or name in BOOL_FUNCS:
                     regs['d0'] = ('expr', '%s(%s)' % (name, ', '.join(args)))
                 else:
                     low.append(['call', '%s(%s)' % (name, ', '.join(args)), False, len(low)])
@@ -522,6 +527,21 @@ class Lifter:
                     low.append(('store', dst, src) if dst[0] == 'inh' else ('nstore', dst[1], src))
                     k += 8
                     continue
+            m = re.match(r'or([wb]) %(d\d),%(a\d)@\((\d+)\)$', t)
+            if m and regs.get(m.group(2), ('',))[0] == 'const' and \
+                    regs.get(m.group(3), ('',))[0] == 'newinh' and \
+                    (m.group(1), int(m.group(4))) in (('w', 38), ('b', 39)):
+                v = regs[m.group(2)][1]
+                if not 0 < v < 256:
+                    self.fail(k, 'bits set')
+                for b in range(7, -1, -1):
+                    if v >> b & 1:
+                        n = INH_BY_OFF.get((39, 'b%d' % b))
+                        if n is None:
+                            self.fail(k, 'bits set')
+                        low.append(('store', ('inh', regs[m.group(3)][1], n), 'true'))
+                k += 1
+                continue
             m = re.match(r'b(set|clr) #(\d),(.*)$', t)
             if m:
                 dst = self.bit_target(m.group(3), int(m.group(2)))
@@ -655,11 +675,21 @@ class Lifter:
                 mb = re.match(r'b(eq|ne|gt|ge|lt|le|mi|pl)[sw]? 0x([0-9a-f]+)$', nxt)
                 if mb:
                     tgt = int(mb.group(2), 16)
-                    cond = cond_not(self.cond(mt, mb.group(1)))
-                    if low and low[-1][0] == 'if' and low[-1][2] == tgt:
-                        low[-1] = ('if', low[-1][1] + ' and ' + cond_text(cond, True), tgt)
+                    taken = self.cond(mt, mb.group(1))
+                    nxt_addr = ins[k + 2][0] if k + 2 < len(ins) else None
+                    if low and low[-1][0] == 'if' and len(low[-1]) > 3 and low[-1][2] == tgt:
+                        # and: both tests leave for the else part
+                        low[-1] = ('if', None, tgt, cond_and(low[-1][3], cond_not(taken)), nxt_addr)
+                    elif low and low[-1][0] == 'if' and len(low[-1]) > 3 and \
+                            low[-1][2] == nxt_addr:
+                        # or: the test before jumps over this one to the then part
+                        c = cond_or(cond_not(low[-1][3]), cond_not(taken))
+                        low[-1] = ('if', None, tgt, c, nxt_addr)
+                        if len(low) > 1 and low[-2][0] == 'if' and len(low[-2]) > 3 and \
+                                low[-2][2] == tgt:
+                            low[-2:] = [('if', None, tgt, cond_and(low[-2][3], c), nxt_addr)]
                     else:
-                        low.append(('if', cond_text(cond, True), tgt))
+                        low.append(('if', None, tgt, cond_not(taken), nxt_addr))
                     saved.setdefault(tgt, dict(regs))
                     k += 2
                     continue
@@ -679,6 +709,9 @@ class Lifter:
             self.fail(k, 'not understood')
         if end is None:
             self.fail(k, 'no epilogue')
+        for j, x in enumerate(low):
+            if x[0] == 'if' and len(x) > 3:
+                low[j] = ('if', cond_text(x[3], True), x[2])
         self.exit_addr = ins[end][0]
         self.low = low
         self.group(low)
@@ -693,6 +726,10 @@ class Lifter:
         if m and m.group(3) in self.regs:
             return ('cmp', self.render(self.regs[m.group(3)]),
                     self.val(m.group(2), {'l': 4, 'w': 2, 'b': 1}[m.group(1)]))
+        m = re.match(r'tstb %d0$', t)
+        if m and self.regs.get('d0', ('',))[0] == 'expr' and \
+                self.regs['d0'][1].split('(')[0] in BOOL_FUNCS:
+            return ('bool', self.regs['d0'][1])
         m = re.match(r'tst([bwl]) (.*)$', t)
         if m and m.group(2) != '%d0':
             size = {'l': 4, 'w': 2, 'b': 1}[m.group(1)]
@@ -732,6 +769,8 @@ class Lifter:
                 return 'inh.' + n
         if base == ('param', 8):
             return 'il.b%d.%d' % (off, bit)
+        if base and base[0] in ('field', 'gnode'):
+            return '%s.b%d.%d' % (re.sub(r'\.l(\d+)$', r'.p\1', self.render(base)), off, bit)
         raise NotLifted('bit operand %s' % src)
 
     def bit_operand_reg(self, reg, bit):
@@ -890,12 +929,31 @@ class Lifter:
 def cond_not(c):
     if c[0] == 'rel':
         return ('rel', c[1], REL_NOT[c[2]], c[3])
+    if c[0] == 'and':
+        return ('or', [cond_not(x) for x in c[1]])
+    if c[0] == 'or':
+        return ('and', [cond_not(x) for x in c[1]])
     return ('bool', c[1], not c[2])
 
 
+def cond_and(a, b):
+    return ('and', (a[1] if a[0] == 'and' else [a]) + (b[1] if b[0] == 'and' else [b]))
+
+
+def cond_or(a, b):
+    return ('or', (a[1] if a[0] == 'or' else [a]) + (b[1] if b[0] == 'or' else [b]))
+
+
 def cond_text(c, paren):
+    """A condition's text; paren: a relation in parentheses (an operand of
+    and/or, the whole of an if's condition)."""
     if c[0] == 'rel':
         t = '%s %s %s' % (c[1], c[2], c[3])
+        return '(%s)' % t if paren else t
+    if c[0] == 'and':
+        return ' and '.join(cond_text(x, True) for x in c[1])
+    if c[0] == 'or':
+        t = ' or '.join(cond_text(x, True) for x in c[1])
         return '(%s)' % t if paren else t
     return c[1] if c[2] else 'not ' + c[1]
 
