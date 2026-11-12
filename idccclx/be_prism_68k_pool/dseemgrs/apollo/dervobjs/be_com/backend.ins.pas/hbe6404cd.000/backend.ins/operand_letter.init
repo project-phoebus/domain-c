@@ -1,0 +1,39 @@
+{ operand_letter.init - a DSEE derived object of be_com/backend.ins.pas
+  (cc.a88k only): one letter for each operand kind (operand$t), which
+  dmp_$instr_print_single_line writes before an operand: I, F and P
+  the integer, single and pair registers (physical and "like" kinds
+  too), C and G the condition codes, K, M and W the memory kinds, E a
+  flow graph edge, R a routine, A, S, =, B the displacements, # an
+  immediate, : a symbol definition, L a label.  Included by dmp.pas
+  after its other inserts.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k: dmp's data +0x3C8 (32 bytes, set by .rwdi), read by
+  dmp_$instr_print_single_line (`lea (0,A5,D0.w),A0; pea (968,A0)'
+  with the kind).
+
+  Not known from the original: the declaration's form (its name is the
+  file's). }
+
+var
+  operand_letter: array [operand$t] of char := [
+    chr(0), 'I', 'F', 'P',              { none, ip_reg, fp_reg,
+                                          fp_reg_pair }
+    'I', 'F', 'P',                      { the physical registers }
+    'C', 'G',                           { ip_ and fp_condition_codes }
+    'K', 'M', 'W',                      { argument_block, inscrutable,
+                                          well_behaved memory }
+    'X', 'Y', 'Z',                      { the _like kinds }
+    chr(0),                             { forward_label_reference }
+    'E', 'J', 'R',                      { flow_graph_edge,
+                                          case_jump_base,
+                                          displacement_routine }
+    'A', 'S', '=', 'B',                 { displacement_arg_block,
+                                          _stack_frame, _literal_pool,
+                                          _XSB_base }
+    '#', 'V', ':', 'L', '*', 'T',       { immediate, bind_time_immediate,
+                                          symbol_definition,
+                                          label_reference,
+                                          join_birthpoint_inputs,
+                                          exception_information }
+    chr(0), chr(0), chr(0)];            { the spares }

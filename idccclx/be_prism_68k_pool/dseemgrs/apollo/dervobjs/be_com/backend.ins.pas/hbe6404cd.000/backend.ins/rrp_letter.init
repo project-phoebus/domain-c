@@ -1,0 +1,21 @@
+{ rrp_letter.init - a DSEE derived object of be_com/backend.ins.pas
+  (cc.a88k only): one letter for each lifetime segment property
+  (rrp$t), which dmp's print_properties writes for a segment's or a
+  live range's properties; the properties without a letter are not
+  shown.  Included by dmp.pas after its other inserts.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k: dmp's data +0x3E8 (16 bytes, set by .rwdi), read by
+  print_properties (`tst.b (1000,A0)' with the property's number).
+
+  Not known from the original: the declaration's form (its name is the
+  file's). }
+
+var
+  rrp_letter: array [rrp$t] of char := [
+    'e', 'o', 'm', 'w', 'r', 'i', 'u',  { fp_reg_even_only .. unconsumed }
+    chr(0), chr(0), chr(0), chr(0),     { spare_1, life_mark, ra_marked,
+                                          true_write }
+    's', '1', 'b', 'F', 'I'];           { store_through, unique_value,
+                                          safe_base_address, fp_reg,
+                                          ip_reg }

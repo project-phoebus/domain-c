@@ -1,0 +1,17 @@
+{ lsq_string.init - a DSEE derived object of be_com/backend.ins.pas
+  (cc.a88k only): the names of the load and store qualifiers (lsq$t), 4 of 8
+  characters.
+  Included by dmp.pas after its other inserts.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k: dmp's data +0x260 (32 bytes, set by .rwdi).
+
+  Not known from the original: the declaration's form (its name is the
+  file's). }
+
+var
+  lsq_string: array [lsq$t] of packed array [1..8] of char := [
+    'normal  ',
+    'lock    ',
+    'unlock  ',
+    'physical'];
