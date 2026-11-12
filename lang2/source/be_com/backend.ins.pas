@@ -801,7 +801,11 @@ type
                                           (batch A) }
     save_end: integer32;                { +204: the end of the register
                                           save area (lir_main_c6c too) }
-    space208: array [208..217] of char; { +208 }
+    w208: integer;                      { +208: the stack frame's
+                                          register (dbg_life; lir's
+                                          build_operand gives asm_658 its
+                                          physical segment; batch A, PA7) }
+    space210: array [210..217] of char; { +210 }
     w218: integer;                      { +218: where the save area
                                           starts in the frame (16, or
                                           past the block's +268) }
@@ -914,7 +918,10 @@ type
     l16: integer32;                     { +16 }
     lr: lr_ptr_t;                       { +20 }
     lr2: lr_ptr_t;                      { +24 }
-    space28: array [28..47] of char;    { +28 }
+    l28: integer32;                     { +28: added to disp
+                                          (lir_$build_operand; batch A,
+                                          PA7) }
+    space32: array [32..47] of char;    { +32 }
     disp: integer32;                    { +48 }
     l52: integer32;                     { +52 }
     w56: integer;                       { +56 }
@@ -924,16 +931,32 @@ type
       shift: 0..255;                    { +79 (was b79) }
       b80: 0..255;                      { +80 }
       b81: 0..255;                      { +81 }
-      b82: 0..255;                      { +82 }
+      b82_7: boolean;                   { +82 .7: with b84_6, a
+                                          constant that must stay in a
+                                          register (lir_$build_operand) }
+      b82_6_0: 0..127;
       b83_7_4: 0..15;                   { +83 }
       physical: boolean;                { .3 }
       b83_2: boolean;
       no_modify: boolean;               { .1 }
       serialize: boolean;               { .0 }
       end;
-    space84: array [84..99] of char;    { +84 }
+    f84: packed record                  { +84 (batch A, PA7) }
+      b84_7: boolean;
+      b84_6: boolean;                   { .6: a constant (built by its
+                                          literal_32_bits action, or as an
+                                          immediate) }
+      b84_5: boolean;                   { .5: an integer register through
+                                          the solution at +8 (l8) }
+      b84_4_0: 0..31;
+      b85: 0..255;
+      end;
+    space86: array [86..99] of char;    { +86 }
     sym: univ_ptr;                      { +100 (was l100) }
-    l104: integer32;                    { +104 }
+    l104: univ_ptr;                     { +104: the statement whose
+                                          line (+32) lir_$build_operand's
+                                          dump prints (batch A, PA7: was
+                                          integer32) }
     kind: integer;                      { +108 }
     w110: integer;                      { +110 }
     space112: array [112..431] of char; { +112 }

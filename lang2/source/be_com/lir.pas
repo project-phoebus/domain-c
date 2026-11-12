@@ -6,9 +6,9 @@
 
   TODO(pascal) lir.pas: begun by translator PA6 (7 routines, 0x242820 ..
   0x242ED4) and continued by PA7 in address order through
-  convert_to_intend_to_modify (0x244078): 36 of 63.  The other 27
-  (lir_$build_operand 0x24409A .. lir_$strip_may_gen_exception
-  0x248A60) remain, with the module's data: lir's own cells are
+  lir_$build_operand (0x24409A): 37 of 63.  The other 26
+  (note_entry_to_handler_from_runtime 0x245710 .. lir_$strip_may_gen_
+  exception 0x248A60) remain, with the module's data: lir's own cells are
   declared extern below (lir_<offset>, the build_ tables by their .init
   files' names), and must be defined in address order with the data
   (as lir_main.pas does) when the unit is complete; the lir.dir/
@@ -298,8 +298,11 @@ var
   lir_41e0: extern rtn_ptr_t;           { +0x41E0: the routine }
   lir_41e4: extern integer32;           { +0x41E4: the exception frame of
                                           new blocks }
+  lir_41e8: extern integer32;           { +0x41E8: the last case jump
+                                          base's node }
   lir_41ec: extern integer32;           { +0x41EC: the inherited
                                           attributes' l20 }
+  lir_4200: extern integer32;           { +0x4200 }
   lir_4214: extern integer;             { +0x4214: the instructions in the
                                           current block }
   lir_421a: extern boolean;             { +0x421A: cargs +0x251 bit 3: the
@@ -1469,4 +1472,460 @@ begin
   opnd_bytes_ptr_t(op)^.rrp := (opnd_bytes_ptr_t(op)^.rrp & 16#F3) ! 16#30;
   op^.rrp := (op^.rrp - [rrp$write, rrp$modify]) +
              [rrp$read, rrp$intend_to_modify];
+end;
+
+{ LIR_$BUILD_OPERAND - op (empty, else a bug check) made from the
+  solution sol as an operand of form form (form.num its number,
+  form.b2 bits 7..6 its access: build_access).  The build kind
+  (build_action by the solution's kind and the form; 0 none: a
+  constant's literal row, 5 or 29 by the form, an integer register
+  through sol's l8 (scaled or not), else a case jump base from
+  isc_user_routines_258 (17) or the zero register isc_user_routines_31c;
+  1 and 3 a constant whose value decides 7, 12, 17 or 2, 2 an immediate
+  that is 0 (the zero register's solution, 21), or 11, or 6) chooses,
+  through the build_ tables, the operand's kind (build_kind, or its
+  physical register's build_physical), properties (build_properties
+  and the access), the bounds of a displacement or immediate
+  (build_low_bound .. build_high_bound, build_message's text when out
+  of range) and how the operand is filled: 5 a literal pool or frame
+  displacement, 6..18 an immediate of the object (sym_$object_with_
+  immediate_disp) checked against operand_forms_mask's alignment, 19
+  a zero displacement, 20..23 a register (a new live range for a write
+  without one; a pair's halves made mates), 24 a case jump base, 25 the
+  PC or the zero register, 26..28 a physical register (its segment from
+  build_physical_ltss for a no_modify register; a write to a
+  serialized one reads it too, or modifies the earlier operand that
+  reads it).  A physical register's attributes that differ between the
+  solution and its live range are written to the output (gap 4) and
+  copied.
+
+  0x24409A, 0xF58 bytes: the build kinds' jump table (5..28); the form
+  sets constants after the routine (pattern 102); the bug checks'
+  mnemonic length a constant by address (pattern 116); the IL kinds an
+  immediate's own object is taken for a constant set (elements 207..0);
+  `btst d4,(83,A1)' with the set 16#E00000 in D4 (bit 0: pattern 148);
+  the scale factor messages pass the byte's address to %wd; the
+  register's properties a word (D4) whose low byte is stored at +1.
+  Not known from the original: the build kinds' names. }
+
+procedure lir_$build_operand(
+    op: opnd_ptr_t;
+    sol: solution_ptr_t;
+    form: instr_attr_opnd_t);
+label
+  10, 20, 30, 40, 50, 60, 70, 71, 72, 75, 80, 85, 90, 99;
+type
+  node_v_ptr_t = ^node_v_t;
+  node_v_t = record
+    w0: integer;                        { +0 }
+    kind: integer;                      { +2 }
+    w4: integer;                        { +4 }
+    w6: integer;                        { +6 }
+    space8: array [8..10] of char;      { +8 }
+    b11: char;                          { +11: bits 7..4 a FORTRAN
+                                          symbol's storage class }
+    l12: integer32;                     { +12 }
+    space16: array [16..23] of char;    { +16 }
+    l24: integer32;                     { +24 }
+    space28: array [28..31] of char;    { +28 }
+    l32: integer32;                     { +32 }
+    space36: array [36..55] of char;    { +36 }
+    l56: integer32;                     { +56 }
+    space60: array [60..71] of char;    { +60 }
+    w72: integer;                       { +72: a variable's storage
+                                          class }
+  end;
+  stmt_v_ptr_t = ^stmt_v_t;
+  stmt_v_t = record
+    space0: array [0..31] of char;      { +0 }
+    line: integer;                      { +32 }
+  end;
+var
+  action: integer;
+  n: integer32;
+  rrp: rrp$set_t;
+  sb: lir_set_bytes_t;
+  access: integer;
+  disp: integer32;
+  mask: integer32;
+  al: integer;
+  nd: node_v_ptr_t;
+  flags: integer32;
+  lr: lr_ptr_t;
+  m: lr_ptr_t;
+  pre: lir_pre_opnd_ptr_t;
+  lts: lts_ptr_t;
+  reg: integer32;
+  k: integer32;
+  readmod: boolean;
+  half: rrp$set_t;
+  v1, v2, v3: integer32;
+begin
+  if ord(op^.h.kind) <> 0 then begin
+    n := form.num;
+    bug_check('LIR_$BUILD_OPERAND -- operand slot %ld is already in use: %a%$',
+              n, instruction_mnemonic[lir_2f58.opc], 12);
+  end;
+  op^.h.num := form.num;
+  action := build_action[sol^.kind, form.form].v;
+  if action = 0 then begin
+    if sol^.f84.b84_6 then begin
+      if not sol^.f78.b82_7 then
+        action := build_action[14, form.form].v
+      else if form.form in [8, 10, 11, 21, 24, 25, 26, 27, 28, 29, 30, 31,
+                            36, 37, 39, 40, 42] then
+        action := 5
+      else
+        action := 29;
+    end
+    else if sol^.f84.b84_5 then begin
+      if not (form.form in [6, 7, 9, 10, 11, 12, 14, 16, 18, 21, 23, 26, 27,
+                            28, 29, 30, 31, 33, 34, 36, 39, 42]) then begin
+        n := form.num;
+        bug_check('LIR_$BUILD_OPERAND -- %a cannot take IP register as operand #%ld%$',
+                  instruction_mnemonic[lir_2f58.opc], 12, n);
+      end;
+      sol := solution_ptr_t(sol^.l8);
+      if sol^.f78.shift = 0 then
+        action := build_action[11, form.form].v
+      else if form.form in [3, 7, 10, 21, 33, 34, 36, 37, 39, 42] then
+        action := build_action[13, form.form].v
+      else begin
+        n := form.num;
+        bug_check('LIR_$BUILD_OPERAND -- %a cannot take any scaled IP register as operand #%ld%$',
+                  instruction_mnemonic[lir_2f58.opc], 12, n);
+      end;
+    end
+    else if form.form in [3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 21,
+                          23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36,
+                          37, 38, 39, 40, 42] then begin
+      sol := addr(isc_user_routines_258);
+      action := 17;
+    end
+    else begin
+      sol := isc_user_routines_31c;
+      action := build_action[11, form.form].v;
+    end;
+  end
+  else begin
+    if action = 3 then begin
+      if (sol^.disp < 0) and ((sol^.disp & 16#FFFF) <> 0) then
+        action := 17
+      else
+        action := 2;
+    end
+    else if action = 1 then begin
+      if ((~sol^.disp) & 16#FFFF) = 0 then
+        action := 7
+      else if ((~sol^.disp) & 16#FFFF0000) = 0 then
+        action := 12
+      else
+        action := 2;
+    end;
+    if action = 2 then
+      if sol^.disp = 0 then begin
+        sol := isc_user_routines_320;
+        action := 21;
+      end
+      else if (sol^.disp & 16#FFFF) <> 0 then
+        action := 11
+      else
+        action := 6;
+  end;
+  if sol^.f78.shift <> 0 then
+    if action <> 20 then
+      bug_check('LIR_$BUILD_OPERAND -- unexpected non-zero scale factor: %wd, %a%$',
+                sol^.f78.shift, instruction_mnemonic[lir_2f58.opc], 12)
+    else if sol^.f78.shift > 3 then
+      bug_check('LIR_$BUILD_OPERAND -- scale factor greater than 3: %wd, %a%$',
+                sol^.f78.shift, instruction_mnemonic[lir_2f58.opc], 12);
+  if action in [21, 22, 23] then
+    if sol^.lr <> nil then
+      if sol^.f78.physical or sol^.lr^.f2.physical then
+        if (sol^.f78.reg <> sol^.lr^.f2.reg)
+           or (sol^.f78.serialize <> sol^.lr^.f2.serialize)
+           or (sol^.f78.physical <> sol^.lr^.f2.physical)
+           or (sol^.f78.no_modify <> sol^.lr^.f2.no_modify) then begin
+          writeln('* * * * Physical register attributes are different');
+          if sol^.l104 <> nil then begin
+            writeln('at source line ', stmt_v_ptr_t(sol^.l104)^.line:1, '.');
+          end;
+          writeln('                                     sol^.    sol^.live_range^.');
+          writeln('---------------------------------------------------------------');
+          writeln('physical_register                    ', sol^.f78.physical:5, '   ', sol^.lr^.f2.physical:5);
+          writeln('physical_register_is_no_modify       ', sol^.f78.no_modify:5, '   ', sol^.lr^.f2.no_modify:5);
+          writeln('physical_register_user_declared      ', sol^.f78.serialize:5, '   ', sol^.lr^.f2.serialize:5);
+          v1 := sol^.f78.reg;
+          v2 := sol^.lr^.f2.reg;
+          writeln('physical_register_number             ', v1:5, '   ', v2:5);
+          writeln('solution_kind                        ', sol^.kind);
+          writeln;
+          sol^.f78.physical := sol^.lr^.f2.physical;
+          sol^.f78.no_modify := sol^.lr^.f2.no_modify;
+          sol^.f78.serialize := sol^.lr^.f2.serialize;
+          sol^.f78.reg := sol^.lr^.f2.reg;
+        end;
+  if action in [21, 22, 23] then
+    if sol^.lr <> nil then begin
+      lr := sol^.lr;
+      if ((action = 21) and (rrp$fp_reg in lr^.rrp))
+         or ((action <> 21) and (rrp$ip_reg in lr^.rrp)) then begin
+        n := form.num;
+        bug_check('LIR_$BUILD_OPERAND -- properties of LR %wd conflict with requirements of %a operand %ld%$',
+                  lr^.num, instruction_mnemonic[lir_2f58.opc], 12, n);
+      end;
+      if lr^.f2.physical then
+        if (sol^.f78.reg <> lr^.f2.reg)
+           or (sol^.f78.serialize <> lr^.f2.serialize)
+           or (sol^.f78.no_modify <> lr^.f2.no_modify)
+           or not sol^.f78.physical then
+          bug_check('LIR_$BUILD_OPERAND -- assigned LR properties not propagated to solution%$');
+    end;
+  if sol^.f78.physical then
+    action := build_physical[action].v;
+  opnd_bytes_ptr_t(op)^.b3 := (opnd_bytes_ptr_t(op)^.b3 & 16#E0) ! build_kind[action].v;
+  rrp := build_properties[action];
+  access := rshft(form.b2 & 16#C0, 6);
+  rrp := rrp + build_access[access];
+  disp := sol^.disp + sol^.l28;
+  readmod := false;
+  case action of
+    5: goto 50;
+    6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18: goto 10;
+    19: goto 60;
+    24: goto 71;
+    25: goto 72;
+    26: goto 70;
+    27, 28: goto 20;
+    20, 21, 22, 23: goto 75;
+    otherwise goto 85;
+  end;
+50:
+      if (disp < target_properties.p_60) or (disp > target_properties.p_5c) then
+        goto 90;
+      if sym_$reformat_literal_operand(sol^.node, sol^.w56, disp, op) then begin
+        if op^.h.kind <> operand$displacement_literal_pool then
+          bug_check('LIR_$BUILD_OPERAND -- improper literal pool operand%$');
+      end
+      else begin
+        nd := sol^.node;
+        if nd^.kind = 109 then begin
+          if nd^.w72 in [1, 3, 4, 7, 8, 10, 11] then begin
+            disp := disp + nd^.l56;
+            action := build_action[14, form.form].v;
+            opnd_bytes_ptr_t(op)^.b3 := (opnd_bytes_ptr_t(op)^.b3 & 16#E0) ! build_kind[action].v;
+            goto 10;
+          end;
+          flags := nd^.l32;
+          if (flags & 16#400) = 0 then
+            flags := flags ! 16#10000000;
+          nd^.l32 := flags;
+        end
+        else if nd^.kind = 110 then begin
+          if rshft(ord(nd^.b11) & 16#F0, 4) in [1, 3, 4, 7, 8, 10, 11] then begin
+            disp := disp + nd^.l12;
+            action := build_action[14, form.form].v;
+            opnd_bytes_ptr_t(op)^.b3 := (opnd_bytes_ptr_t(op)^.b3 & 16#E0) ! build_kind[action].v;
+            goto 10;
+          end;
+          flags := nd^.l24;
+          if (flags & 16#400) = 0 then
+            flags := flags ! 16#10000000;
+          nd^.l24 := flags;
+        end
+        else
+          flags := 0;
+        op^.link := sol^.node;
+        if ((flags & 16#400) <> 0) and ((flags & 16#40000000) = 0) then
+          op^.h.kind := operand$displacement_arg_block
+        else
+          op^.h.kind := operand$displacement_stack_frame;
+      end;
+      al := alignment_from_il_node(sol^.node);
+      mask := ord(operand_forms_mask[form.form]);
+      if ((disp ! lshft(-1, al)) & mask) <> 0 then begin
+        v1 := disp & mask;
+        v2 := mask + 1;
+        n := form.num;
+        bug_check('LIR_$BUILD_OPERAND -- (known-low-bits ! offset) is %ld MOD %ld for operand %ld of %a%$',
+                  v1, v2, n, instruction_mnemonic[lir_2f58.opc], 12);
+      end;
+      op^.value := disp;
+      goto 80;
+10:
+      mask := ord(operand_forms_mask[form.form]);
+      if (disp & mask) <> 0 then begin
+        v1 := disp & mask;
+        v2 := mask + 1;
+        n := form.num;
+        bug_check('LIR_$BUILD_OPERAND -- displacement is %ld MOD %ld for operand %ld of %a%$',
+                  v1, v2, n, instruction_mnemonic[lir_2f58.opc], 12);
+      end;
+      if (disp < build_low_bound[action]) or (disp > build_high_bound[action]) then
+        goto 90;
+      nd := sol^.node;
+      if nd = nil then
+        nd := sol^.sym
+      else if not (nd^.kind in [77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
+                                89, 90, 92, 93, 101, 109, 110, 156, 163, 176,
+                                198, 200]) then
+        nd := sol^.sym;
+      op^.link := sym_$object_with_immediate_disp(nd);
+      op^.value := disp;
+      goto 80;
+60:
+      if disp <> 0 then
+        goto 90;
+      op^.link := sol^.node;
+      op^.value := disp;
+      goto 80;
+70:
+      disp := sol^.f78.reg;
+      if disp = 30 then
+        goto 90;
+      if disp = 31 then
+        op^.h.count := 0
+      else
+        op^.h.count := sol^.f78.shift;
+      if disp > 31 then
+        goto 90;
+      goto 20;
+71:
+      lir_41e8 := sol^.l12;
+      op^.link := univ_ptr(sol^.l12);
+      op^.value := lir_41a8;
+      goto 80;
+72:
+      if sol^.f78.reg < 30 then
+        goto 20;
+      if sol^.f78.reg = 30 then begin
+        op^.value := lir_41a8;
+        op^.h.kind := operand$ip_reg_like;
+      end
+      else if form.form in [3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 21,
+                            23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35,
+                            36, 37, 38, 39, 40, 42] then
+        op^.h.kind := operand$immediate
+      else begin
+        op^.value := lir_4200;
+        op^.h.kind := operand$ip_reg_like;
+      end;
+      goto 80;
+20:
+      reg := sol^.f78.reg;
+      lr := build_physical_lrs[action]^[reg];
+      if sol^.lr = nil then
+        sol^.lr := lr
+      else if lir_422a then
+        lr := sol^.lr
+      else if sol^.lr <> lr then
+        bug_check('LIR_$BUILD_OPERAND -- multiple physical live_ranges!%$');
+      if lr^.f2.no_modify then begin
+        opnd_bytes_ptr_t(op)^.b3 := (opnd_bytes_ptr_t(op)^.b3 & 16#E0) ! build_like_kind[action].v;
+        lts := build_physical_ltss[action]^[lr^.f2.reg];
+        if lts = nil then begin
+          lts := mrh_$alloc_fixed(lir_3c00);
+          lts^.lr := lr;
+          build_physical_ltss[action]^[lr^.f2.reg] := lts;
+          if lr^.f2.reg = lir_41e0^.w208 then
+            asm_658 := integer32(lts);
+        end;
+        lr^.rrp := lr^.rrp + rrp;
+        lts^.rrp := lts^.rrp + rrp;
+        op^.lts := lts;
+        goto 80;
+      end;
+      lr^.rrp := rrp$set_t(integer(lr^.rrp) ! lir_4216);
+      if not (rrp$write in rrp) then
+        goto 30;
+      if not (instruction_attributes[lir_2f58.opc].class in
+              [0, 3, 8, 12, 15, 16, 17, 21, 22, 23]) then
+        goto 30;
+      nd := sol^.sym;
+      if nd <> nil then
+        if nd^.kind = 203 then
+          if ((build_arg_loc[action].v = nd^.w4) and (sol^.f78.reg = nd^.w6))
+             or ((nd^.w6 = (sol^.f78.reg & 16#FE)) and (action = 27)
+                 and (nd^.w4 = 2)) then begin
+            lir_2f58.l28 := lir_2f58.l28 ! 16#8000;
+            goto 30;
+          end;
+      if not lr^.f2.serialize then
+        goto 30;
+      rrp := rrp - [rrp$write];
+      k := form.num - 1;
+      while k > 0 do begin
+        if (lir_2f58.opnds[k].h.kind = op^.h.kind)
+           and (lir_pre_opnd_ptr_t(addr(lir_2f58.opnds[k]))^.lr = lr)
+           and lir_2f58.opnds[k].h.read then begin
+          convert_to_intend_to_modify(addr(lir_2f58.opnds[k]));
+          rrp := rrp + [rrp$modify];
+          goto 30;
+        end;
+        k := k - 1;
+      end;
+      rrp := rrp + [rrp$read];
+      readmod := true;
+      goto 30;
+75:
+      if action = 20 then
+        op^.h.count := sol^.f78.shift;
+      lr := sol^.lr;
+      if lr <> nil then
+        goto 40;
+      if not (rrp$write in rrp) then
+        bug_check('LIR_$BUILD_OPERAND -- read (or modify) solution lacks live_range: %a%$',
+                  instruction_mnemonic[lir_2f58.opc], 12);
+      lr := lir_$new_live_range_for_kind(ord(op^.h.kind));
+30:
+      sol^.lr := lr;
+40:
+      if sol^.kind in [2, 3, 9] then begin
+        if lr^.mate = nil then begin
+          m := lir_$new_live_range_for_kind(ord(op^.h.kind));
+          m^.node20 := lr^.node20;
+          m^.mate := lr;
+          lr^.mate := m;
+        end;
+        if sol^.kind = 3 then begin
+          rrp := rrp + [rrp$fp_reg_odd_only];
+          half := [rrp$fp_reg_even_only];
+        end
+        else begin
+          rrp := rrp + [rrp$fp_reg_even_only];
+          half := [rrp$fp_reg_odd_only];
+        end;
+        if lr^.rrp * half <> [] then
+          lr := lr^.mate;
+        lr^.mate^.rrp := lr^.mate^.rrp + half + [rrp$fp_reg];
+        lr^.rrp := lr^.rrp + rrp;
+      end;
+      rrp := rrp + lr^.rrp * [rrp$fp_reg_even_only, rrp$fp_reg_odd_only];
+      pre := univ_ptr(op);
+      pre^.lr := lr;
+      pre^.rrp := rrp;
+      if readmod then begin
+        sb.s := rrp;
+        opnd_bytes_ptr_t(op)^.rrp := sb.lo;
+        if access = 3 then begin
+          lir_41a4.l := lir_41a4.l + 12;
+          lir_2f58.h.nopnds := lir_2f58.h.nopnds + 1;
+        end;
+        convert_to_intend_to_modify(pre);
+        goto 99;
+      end;
+      goto 80;
+85:
+      bug_check('LIR_$BUILD_OPERAND -- no action: %a, %a, %a%$',
+                solution_string[sol^.kind], solution_string_length[sol^.kind],
+                of_string[form.form], of_string_length[form.form],
+                instruction_mnemonic[lir_2f58.opc], 12);
+80:
+  sb.s := rrp;
+  opnd_bytes_ptr_t(op)^.rrp := sb.lo;
+  goto 99;
+90:
+  v3 := disp;
+  bug_check(build_message[action]^, v3, instruction_mnemonic[lir_2f58.opc], 12);
+99:
 end;

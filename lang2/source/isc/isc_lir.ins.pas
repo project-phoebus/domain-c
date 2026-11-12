@@ -68,3 +68,11 @@ function isc_$init_well_known_fp_reg(
 function isc_$init_well_known_fp_reg_pair(
     in name: isc_$reg_name_t;
     k: integer32): solution_ptr_t; options(val_param); extern;
+
+{ ALIGNMENT_FROM_IL_NODE - the known alignment of the object node (an IL
+  node; nil allowed) as a power of two (the low bits of its address
+  that are zero).  isc_user_routines 0x210628, 0x3C8 bytes: node a
+  longword at 8, the result a word in D0; called from lir's
+  lir_$build_operand.  batch A (PA7). }
+function alignment_from_il_node(
+    node: univ_ptr): integer; options(val_param); extern;

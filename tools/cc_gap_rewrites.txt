@@ -274,3 +274,5 @@ lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)tles: array \[0\.\.255\] of mu_\$
 lang/c_compiler/source/c_macro_utl.pas	s/tles\[255\]/tles[1] { gap 5 }/
 # gap 7 (ra, translator PB6): a single-real comparison with a constant (the bits compared, for the check)
 lang2/source/be_com/ra.pas	s/\.r < 1\.0e-4/.i < 16#38D1B717 { gap 7 }/
+# gap 4 (lir, translator PA7): lir_$build_operand's dump of a physical register's attributes (writeln to output: dropped, for the check)
+lang2/source/be_com/lir.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
