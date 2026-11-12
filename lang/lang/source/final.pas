@@ -182,6 +182,16 @@ var
     'F', 'D', 'X'), indexed by the cell's +48. }
   opinfo_size: extern array [0..367] of packed array [1..2] of char;
 
+  { opinfo.pas's data (cc.m68k 0x2CF5EC, 0x2CF4D8, absolute): each
+    instruction's class for the condition codes, and each class's effect
+    on the codes (0..5; 2 the code changed), cc_change's. }
+  opinfo_cc_class: extern array [0..367] of integer;
+  opinfo_cc: extern array [0..22] of array [0..5] of integer;
+
+  { cg_tree.pas's empty operand (cc.m68k 0x356600, absolute; cg.ins.pas
+    declares it, which final does not open). }
+  cg_null_ads: extern codegen_$uads_t;
+
   { The module's data (A5 0x3566F8). }
   fn_0: array [0..3] of integer32;      { +0 }
   fn_ads: codegen_$ads_t;               { +16 }
@@ -189,7 +199,8 @@ var
                                           works on }
   fn_32: codegen_$cell_ptr_t;           { +32 }
   fn_36: codegen_$cell_ptr_t;           { +36 }
-  fn_40: integer;                       { +40 }
+  fn_ccset: set of 0..15;               { +40: the condition codes
+                                          cc_change asks about (0..5) }
   fn_42: char;                          { +42 }
   fn_changed: boolean;                  { +44: a cell was detached }
   fn_regmask: array [0..23] of 0..65535 := [
@@ -197,6 +208,15 @@ var
     256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
     1, 2, 4, 8, 16, 32, 64, 128];       { +0x30: each register's bit in
                                           a movem's mask }
+  fn_60: array [0..9] of integer32 := [
+    255, 65535, 255, 65535, 1, 0, 3, 2, 1];  { +0x60: TODO(pascal) its
+                                          users not translated yet }
+  fn_cond_cc: array [0..15] of integer := [
+    0, 0, 10, 10, 8, 8, 2, 2, 4, 4, 1, 1, 5, 5, 7, 7];  { +0x88: the
+                                          codes each condition (T, F,
+                                          HI, LS, CC, CS, NE, EQ, VC, VS,
+                                          PL, MI, GE, LT, GT, LE) tests:
+                                          1 N, 2 Z, 4 V, 8 C }
 
 
 { assert_is_lea - c is a lea (kind 4, op 12).
@@ -1139,4 +1159,521 @@ begin
     end;
   end;
   final_$contiguous_distinct_addresses := r;
+end;
+
+{ fpx_instruction - c is an FPX instruction: kinds 41 and 44, and kinds
+  40 (its source) and 42, 50 (its destination) whose operand is not an
+  extended real ('X' in opinfo's sizes).
+
+  0x10AC58, 0x64 bytes, no frame: a `case' of the kind through a table
+  of 11 from 40. }
+
+function fpx_instruction(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+begin
+  r := false;
+  case c^.kind of
+    41, 44:
+      r := true;
+    40:
+      r := opinfo_size[c^.op][1] <> 'X';
+    42, 50:
+      r := opinfo_size[c^.op][2] <> 'X';
+    otherwise
+      ;
+  end;
+  fpx_instruction := r;
+end;
+
+{ br_target - the instruction a branch c goes to: after its label (the
+  owner of the destination's reference cell).
+
+  0x10ACBC, 0x1E bytes, no A5 load: nxtcc's A0 returned. }
+
+function br_target(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+begin
+  br_target := nxtcc(codegen_$cell_ptr_t(c^.ads2.y)^.owner);
+end;
+
+{ cc_change - c changes one of the condition codes in fn_ccset (+40):
+  its op's class (opinfo_cc_class) marks the code 2 in opinfo_cc; under
+  -CPU FPX an FPX instruction's class is op 1's.  Codes 4 and 5 are
+  asked about first.
+
+  0x10ACDA, 0x14C bytes, no A5 load: the set's elements by `btst' of
+  +41. }
+
+function cc_change(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+label
+  1;
+var
+  r: boolean;
+  op: integer;
+begin
+  r := true;
+  op := c^.op;
+  if (4 in fn_ccset) and (opinfo_cc[opinfo_cc_class[op]][4] = 2) then
+    goto 1;
+  if (5 in fn_ccset) and (opinfo_cc[opinfo_cc_class[op]][5] = 2) then
+    goto 1;
+  if 5 in cargs_$options.cpu then
+    if fpx_instruction(c) then
+      op := 1;
+  if (0 in fn_ccset) and (opinfo_cc[opinfo_cc_class[op]][0] = 2) then
+    goto 1;
+  if (1 in fn_ccset) and (opinfo_cc[opinfo_cc_class[op]][1] = 2) then
+    goto 1;
+  if (2 in fn_ccset) and (opinfo_cc[opinfo_cc_class[op]][2] = 2) then
+    goto 1;
+  if (3 in fn_ccset) and (opinfo_cc[opinfo_cc_class[op]][3] = 2) then
+    goto 1;
+  r := false;
+1:
+  cc_change := r;
+end;
+
+{ cc_use - the condition codes c tests (fn_cond_cc, +0x88, by its
+  condition): a conditional branch (18; ops 140..153 from 138, the
+  others from 152), an scc (19, from 124), a dbcc (23, from 182); a
+  floating branch or set (39, 43): 32 for ops 449, 448, 436, 437, else
+  48; anything else 0.
+
+  0x10AE26, 0xA2 bytes, no frame: the table indexed from A5 (`lea
+  (0,A5,D1.w)' and +136, -112, -228). }
+
+function cc_use(
+    c: codegen_$cell_ptr_t): integer; options(val_param); internal;
+var
+  r: integer;
+  base: integer;
+begin
+  case c^.kind of
+    cbr_instyp: begin
+      if c^.op in [140..153] then
+        base := 138
+      else
+        base := 152;
+      r := fn_cond_cc[c^.op - base];
+    end;
+    logicize_instyp:
+      r := fn_cond_cc[c^.op - 124];
+    dbcc_instyp:
+      r := fn_cond_cc[c^.op - 182];
+    fbr_instyp, m68881_set_byte_instyp:
+      if (c^.op = 449) or (c^.op = 448) or (c^.op = 436) or (c^.op = 437) then
+        r := 32
+      else
+        r := 48;
+    otherwise
+      r := 0;
+  end;
+  cc_use := r;
+end;
+
+function cc_mod(
+    c: codegen_$cell_ptr_t): integer; options(val_param); internal; forward;
+
+{ scancc - the condition codes in mask are tested from c on before
+  they are set: each cell marked visited (+20, chained from fn_32, +32;
+  a visited cell answers false); a use of them true; by what the cell
+  does to them (cc_mod): 0 nothing (a bra followed, an rts false, a
+  conditional branch both ways), 1 and 2 the integer codes or Z (mask
+  & ~15, ~2) set and 3 the floating ones (~48), false when none is
+  left, 4 all of them (false); the section's head true.
+
+  0x10AEC8, 0x10A bytes, no A5 load: a `case' of cc_mod through a table
+  of 5. }
+
+function scancc(
+    c: codegen_$cell_ptr_t;
+    mask: integer): boolean; options(val_param); internal;
+label
+  1, 9;
+var
+  r: boolean;
+begin
+1:
+  if c^.visit <> nil then begin
+    r := false;
+    goto 9;
+  end;
+  c^.visit := fn_32;
+  fn_32 := c;
+  while c <> fn_sect^.head do begin
+    if (cc_use(c) & mask) <> 0 then begin
+      r := true;
+      goto 9;
+    end;
+    case cc_mod(c) of
+      0:
+        case c^.kind of
+          br_instyp: begin
+            c := br_target(c);
+            goto 1;
+          end;
+          rts_instyp: begin
+            r := false;
+            goto 9;
+          end;
+          cbr_instyp, fbr_instyp: begin
+            if scancc(nxtcc(c), mask) then begin
+              r := true;
+              goto 9;
+            end;
+            c := br_target(c);
+            goto 1;
+          end;
+          otherwise
+            c := nxtcc(c);
+        end;
+      1: begin
+        if (mask & ~15) = 0 then begin
+          r := false;
+          goto 9;
+        end;
+        mask := mask & ~15;
+        c := nxtcc(c);
+      end;
+      2: begin
+        if (mask & ~2) = 0 then begin
+          r := false;
+          goto 9;
+        end;
+        mask := mask & ~2;
+        c := nxtcc(c);
+      end;
+      3: begin
+        if (mask & ~48) = 0 then begin
+          r := false;
+          goto 9;
+        end;
+        mask := mask & ~48;
+        c := nxtcc(c);
+      end;
+      4: begin
+        r := false;
+        goto 9;
+      end;
+      otherwise
+        ;
+    end;
+  end;
+  r := true;
+9:
+  scancc := r;
+end;
+
+{ testcc - scancc from c, then the visited marks cleared.
+
+  0x10AFD2, 0x42 bytes, A5 loaded: the chain's head (+32) cleared
+  first. }
+
+function testcc;
+var
+  r: boolean;
+  p: codegen_$cell_ptr_t;
+  q: codegen_$cell_ptr_t;
+begin
+  fn_32 := nil;
+  r := scancc(c, mask);
+  p := fn_32;
+  while p <> nil do begin
+    q := p^.visit;
+    p^.visit := nil;
+    p := q;
+  end;
+  testcc := r;
+end;
+
+{ label_merge - the labels after label cell lab (alignments passed)
+  merged into it: their attributes (the destination's f5) or-ed into
+  lab's, their references moved to lab (a temporary label node, 144, of
+  a referring operand given lab's node, and its +80 lab when it was the
+  merged label), their lists joined to lab's, the labels delinked.
+
+  0x10B014, 0x11A bytes, no A5 load (the flag at +44 set when
+  references move). }
+
+procedure label_merge(
+    lab: codegen_$cell_ptr_t); options(val_param); internal;
+var
+  l: codegen_$cell_ptr_t;
+  r: codegen_$cell_ptr_t;
+  first: codegen_$cell_ptr_t;
+  c: codegen_$cell_ptr_t;
+  n: il_$node_ptr_t;
+begin
+  l := nxtlcc(lab);
+  while l^.kind = align_instyp do
+    l := nxtlcc(l);
+  while l^.kind = def_lbl_instyp do begin
+    lab^.ads2.f5 := lab^.ads2.f5 ! l^.ads2.f5;
+    r := l^.refs;
+    if r <> nil then begin
+      first := r;
+      repeat
+        c := codegen_$cell_ptr_t(r^.target);
+        if (c^.ads1.f1 = 7) and (c^.ads1.x <> 0) then begin
+          n := il_$node_ptr_t(c^.ads1.x);
+          if n^.kind = 144 then begin
+            if n^.xp[20] = il_$node_ptr_t(l) then
+              n^.xp[20] := il_$node_ptr_t(lab);
+            c^.ads1.x := lab^.ads2.x;
+          end;
+        end;
+        c := codegen_$cell_ptr_t(r^.target);
+        if (c^.ads2.f1 = 7) and (c^.ads2.x <> 0) then begin
+          n := il_$node_ptr_t(c^.ads2.x);
+          if n^.kind = 144 then begin
+            if n^.xp[20] = il_$node_ptr_t(l) then
+              n^.xp[20] := il_$node_ptr_t(lab);
+            c^.ads2.x := lab^.ads2.x;
+          end;
+        end;
+        r^.owner := lab;
+        r := r^.next;
+      until r = first;
+      join(lab^.refs, r);
+      fn_changed := true;
+      l^.refs := nil;
+    end;
+    delink(l);
+    l := nxtlcc(lab);
+  end;
+end;
+
+{ setlabel - a label cell at c: c itself, the label before it, or a new
+  label put before it (after the cell before it).
+
+  0x10B12E, 0x4E bytes, no A5 load: the cell in A0. }
+
+function setlabel(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+var
+  p: codegen_$cell_ptr_t;
+  l: codegen_$cell_ptr_t;
+begin
+  if c^.kind = def_lbl_instyp then
+    setlabel := c
+  else begin
+    p := prvlcc(c);
+    if p^.kind = def_lbl_instyp then
+      setlabel := p
+    else begin
+      l := getlabcell(nil);
+      after(p, l);
+      setlabel := l;
+    end;
+  end;
+end;
+
+{ lines_equiv - line number cell b's line, and the lines equivalent to
+  it, entered on line number cell a's list of equivalent lines (6-byte
+  elements from gspace: the next, the line), each once and not a's own
+  line; b's list taken over.
+
+  0x10B17C, 0xB2 bytes, no A5 load. }
+
+procedure lines_equiv(
+    a: codegen_$cell_ptr_t;
+    b: codegen_$cell_ptr_t); options(val_param); internal;
+type
+  line_ptr_t = ^line_t;
+  line_t = record
+    next: line_ptr_t;                   { +0 }
+    line: integer;                      { +4 }
+  end;
+label
+  1, 2;
+var
+  ln: integer;
+  e: line_ptr_t;
+  prev: line_ptr_t;
+  nx: line_ptr_t;
+  q: line_ptr_t;
+begin
+  if (a^.kind = line_no_instyp) and (b^.kind = line_no_instyp) then begin
+    if b^.line <> a^.line then begin
+      ln := b^.line;
+      prev := nil;
+      e := line_ptr_t(a^.blk);
+      while e <> nil do begin
+        if e^.line = ln then
+          goto 1;
+        prev := e;
+        e := e^.next;
+      end;
+      e := gspace(6);
+      e^.next := nil;
+      e^.line := ln;
+      if prev = nil then
+        a^.blk := il_$node_ptr_t(e)
+      else
+        prev^.next := e;
+    end;
+    e := line_ptr_t(b^.blk);
+    b^.blk := nil;
+    while e <> nil do begin
+      nx := e^.next;
+      if e^.line <> a^.line then begin
+        q := line_ptr_t(a^.blk);
+        while q <> nil do begin
+          if q^.line = e^.line then
+            goto 2;
+          q := q^.next;
+        end;
+      2:
+        if q = nil then begin
+          e^.next := line_ptr_t(a^.blk);
+          a^.blk := il_$node_ptr_t(e);
+        end;
+      end;
+      e := nx;
+    end;
+  end;
+1:
+end;
+
+{ makejump - a bra to target put after c (fnl_slct op 21, size 5, its
+  destination a label operand, mode 7, from cg_null_ads: the label
+  setlabel gives target, a reference cell to it), then the cells after
+  it up to a label, a case jump or the end of a block other than a
+  routine's detached (but for lines and block marks); while they match
+  the cells from target on kind for kind, their lines are entered as
+  equivalent to target's (lines_equiv).  The cell where it stopped.
+
+  0x10B22E, 0x1A6 bytes, A5 loaded: the change flag (+44) set first;
+  the match flag in D2, the lines' flag in D3, the two line cells at
+  -32 and -28; a set of 0..47 at 0x10B3D4 (the cells that end the
+  matching of lines). }
+
+function makejump;
+label
+  1;
+var
+  lab: codegen_$cell_ptr_t;
+  u: codegen_$uads_t;
+  j: codegen_$cell_ptr_t;
+  p: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+  nx: codegen_$cell_ptr_t;
+  la: codegen_$cell_ptr_t;
+  lb: codegen_$cell_ptr_t;
+  k: integer;
+  match: boolean;
+  lines: boolean;
+begin
+  fn_changed := true;
+  lab := setlabel(target);
+  u := cg_null_ads;
+  u.f1 := 7;
+  j := fnl_slct(21, 5, 0, u, cg_null_ads);
+  j^.ads2.y := integer32(getrefcell(integer32(j), lab));
+  j^.ads2.x := lab^.ads2.x;
+  after(c, j);
+  p := j^.next;
+  t := target;
+  la := get_line(p);
+  lb := get_line(t);
+  lines := true;
+  match := lines;
+  while p^.kind = line_no_instyp do begin
+    la := p;
+    p := p^.next;
+  end;
+  while p^.kind <> def_lbl_instyp do begin
+    k := p^.kind;
+    if k = casejmp_instyp then
+      goto 1;
+    if k = block_end_instyp then
+      if p^.blk^.kind <> 172 then
+        goto 1;
+    if lines and match then
+      if not (k in [17..18, 22, 30, 32..34, 39]) then begin
+        lines_equiv(lb, la);
+        lines := false;
+      end;
+    nx := p^.next;
+    if not ((p^.kind = block_end_instyp) or (p^.kind = block_start_instyp) or
+            (p^.kind = line_no_instyp)) then begin
+      if p = t then
+        t := t^.prev;
+      detach(p);
+    end;
+    p := nx;
+    while p^.kind = line_no_instyp do begin
+      la := p;
+      p := p^.next;
+      lines := true;
+    end;
+    if match then
+      if not ((p^.kind = block_end_instyp) or
+              (p^.kind = block_start_instyp)) then begin
+        t := t^.next;
+        while t^.kind in [0, 24, 32..33] do begin
+          if t^.kind = line_no_instyp then begin
+            lb := t;
+            lines := true;
+          end;
+          t := t^.next;
+        end;
+      end;
+    match := p^.kind = t^.kind;
+  end;
+1:
+  makejump := p;
+end;
+
+{ cc_mod - what c does to the condition codes: 0 nothing, 1 sets the
+  integer codes, 2 sets Z, 3 sets the floating codes, 4 clobbers them
+  (an FPX instruction under -CPU FPX, a bsr, a jsr); by the kind (lea
+  ops 105, 106 1, a move to an address register 0, kind 16's op 13 0
+  and op 119 4).
+
+  0x10BBB2, 0x11A bytes, no A5 load: a `case' of the kind through a
+  table of 51. }
+
+function cc_mod;
+var
+  r: integer;
+begin
+  if (5 in cargs_$options.cpu) and fpx_instruction(c) then
+    r := 4
+  else
+    case c^.kind of
+      a_instyp:
+        if (c^.op = 105) or (c^.op = 106) then
+          r := 1
+        else
+          r := 0;
+      0, 17, 18, 19, 20, 21, 23, 24, 26, 28, 29, 30, 32, 33, 34, 39, 43:
+        r := 0;
+      q_instyp:
+        if (c^.ads2.f1 = 1) and (c^.ads2.f2 >= 8) then
+          r := 0
+        else
+          r := 1;
+      i_w_instyp, dest2_instyp:
+        r := 2;
+      dest1_instyp:
+        if c^.op = 13 then
+          r := 0
+        else if c^.op = 119 then
+          r := 4
+        else
+          r := 1;
+      bsr_instyp:
+        r := 4;
+      3, 6, 7, 9, 25, 45, 46, 47:
+        r := 1;
+      36, 37, 38, 40, 41, 42, 44, 48, 50:
+        r := 3;
+      otherwise
+        r := 1;
+    end;
+  cc_mod := r;
 end;
