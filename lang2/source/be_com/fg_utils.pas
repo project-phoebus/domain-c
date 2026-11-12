@@ -14,18 +14,54 @@
     --------  0x234A94  n_edges (internal)
     --------  0x234AB8  fg_utils_$drop_this_block
     --------  0x234C3C  fg_utils_$forward_this_block
+    --------  0x2350BE  order_successor_lists (internal)
+    --------  0x23519E  add_final_edges (internal)
+    --------  0x235216  depth_first_search (internal)
+    --------  0x2352FA  final_edge_fixup (internal)
+    --------  0x2353D2  reorder_start_bb_successor_list (internal)
+    --------  0x2354E0  fg_utils_$compute_dfs_lists
+    --------  0x235582  in_interval (internal)
+    --------  0x2355A2  loop_entry_is_conditional (internal)
+    --------  0x2355E0  visit_interval_contents (internal)
+    --------  0x235676  fg_utils_$intervals
+    --------  0x235822  fg_utils_$separate_loop_header_edges
+    --------  0x2358B0  an_exit_has_multiple_successors (internal)
+    --------  0x23592E  build_exit (internal)
+    --------  0x235A28  copy_bb_contents (internal)
+    --------  0x235B84  build_loop_header (internal)
+    --------  0x235D74  n_instrs (internal)
+    --------  0x235DC2  every_interval_block_exits (internal)
+    --------  0x235E5C  make_loops_unconditional (internal)
+    --------  0x235F04  fg_utils_$make_loops_unconditional
+    --------  0x235F34  fg_utils_$forward_empty_blocks
+    --------  0x23619E  fg_utils_$end_senseless_loops
+    --------  0x236390  reverse_depth_first_search (internal)
+    --------  0x236424  compress (internal)
+    --------  0x2364A0  eval (internal)
+    --------  0x2364C6  evaldef (internal)
+    --------  0x2364EC  compute_rel (internal)
+    --------  0x2365CC  replace_exposed_lts (internal)
+    --------  0x2366F8  fg_utils_$generate_join_birthpoint
+    --------  0x236874  fg_utils_$insert_join_birthpoint
+    --------  0x236914  traverse (internal)
+    --------  0x236B9C  fg_utils_$add_jbi
+    --------  0x236BEA  add_join_birthpoint_inputs (internal)
+    --------  0x236C4A  fg_utils_$dominators
+    --------  0x23715A  drop_jbis_on_exposed_list (internal)
+    --------  0x237204  drop_unconsumed_exposed_segments (internal)
+    --------  0x237264  drop_unconsumed_final_segments (internal)
+    --------  0x2372C4  fg_utils_$drop_old_join_birthpoints
+    --------  0x23743A  fg_utils_$recompute_postnum
+    --------  0x237482  fg_utils_$recompute_dominators_and_dfs_lists
+    --------  0x237514  mark_live_on_entry_blocks (internal)
+    --------  0x237554  mark_active_on_exit_blocks (internal)
+    --------  0x2375E6  init_and_compute_exposure (internal)
+    --------  0x237660  fg_utils_$compute_lr_lifetime
+    --------  0x23771C  compute_reach_of_definition (internal)
+    --------  0x2377A0  fg_utils_$recompute_ssa_form_for_lr
     A5 0x48646C: the module's data: three heaps (+0 the join
     birthpoint instructions', +24 their inputs', +48 the dominator
     buckets'), then the cells the routines below use.
-
-  TODO(pascal) fg_utils: 47 of 53 routines (with the insert's
-  utils_ins_$operands_instruction; the first ones in address order,
-  through fg_utils_$recompute_dominators_and_dfs_lists, 0x237482); not
-  translated yet: mark_live_on_entry_blocks,
-  mark_active_on_exit_blocks, init_and_compute_exposure,
-  fg_utils_$compute_lr_lifetime, compute_reach_of_definition,
-  fg_utils_$recompute_ssa_form_for_lr (they stay extern through
-  backend.ins.pas meanwhile).
 
   Not known from the original: every local and parameter name, the
   module variables' names. }
@@ -64,7 +100,9 @@ var
                                           vectors' size) }
   final_bb: bb_ptr_t;                   { +88: the block add_final_edges
                                           gives an edge to }
-  fg_92: integer;                       { +92 }
+  fg_92: boolean;                       { +92: a block two definitions
+                                          reach (compute_reach_of_
+                                          definition) }
   fg_94: boolean;                       { +94: set for each routine:
                                           intervals clears nothing }
   fg_96: boolean;                       { +96: set for each routine:
@@ -2395,4 +2433,335 @@ begin
     fg_utils_$intervals(rtn);
   fg_utils_$dominators(rtn, (how & 2) <> 0, level);
   lir_main_c8d := save;
+end;
+
+{ The lifetime and SSA walks below keep their state in each block's
+  +20 bits (f20): b20_6 the live range is live on entry, b20_5 it has
+  an exposed segment there, b20_4 it is written there, b20_3 it is
+  active on exit; l134 the reaching definition (a segment, or a block
+  used as a marker), mark146 1 for a block two definitions reach. }
+
+{ mark_live_on_entry_blocks - bb and, back through its predecessors,
+  every block not yet marked and not writing the live range marked live
+  on entry.
+
+  0x237514, 0x40 bytes, no A5. }
+
+procedure mark_live_on_entry_blocks(
+    bb: bb_ptr_t); options(val_param, internal);
+var
+  e: fg_edge_ptr_t;
+begin
+  bb^.f20.b20_6 := true;
+  e := bb^.preds;
+  while e <> nil do begin
+    if not e^.source^.f20.b20_6 then
+      if not e^.source^.f20.b20_4 then
+        mark_live_on_entry_blocks(e^.source);
+    e := e^.next_pred;
+  end;
+end;
+
+{ mark_active_on_exit_blocks - from bb forward through the successors
+  live on entry: bb active on exit, each successor reached by lts (its
+  l134; a birthpoint added for lts when add and the successor has an
+  exposed segment) and, unless already active or writing, walked on.
+
+  0x237554, 0x92 bytes, no A5: bb (8) in A3, lts (12) in A2, add (16)
+  in D2. }
+
+procedure mark_active_on_exit_blocks(
+    bb: bb_ptr_t;
+    lts: lts_ptr_t;
+    add: boolean); options(val_param, internal);
+var
+  e: fg_edge_ptr_t;
+  t: bb_ptr_t;
+begin
+  e := bb^.succs;
+  while e <> nil do begin
+    t := e^.target;
+    if t^.f20.b20_6 then begin
+      bb^.f20.b20_3 := true;
+      if t^.l134 <> lts then begin
+        t^.l134 := lts;
+        if add then
+          if t^.f20.b20_5 then
+            utils_$add_birthpoint(lts, t, false);
+      end;
+      if not t^.f20.b20_3 then
+        if not t^.f20.b20_4 then
+          mark_active_on_exit_blocks(t, lts, add);
+    end;
+    e := e^.next_succ;
+  end;
+end;
+
+{ init_and_compute_exposure - the blocks' +20 bits 6..3 and l134
+  cleared; each block with a written segment of lr marked writing, each
+  with an exposed one marked so and, back from it, live on entry.
+
+  0x2375E6, 0x7A bytes, no A5 load: lr (8) in A0; the routine
+  dom_rtn's. }
+
+procedure init_and_compute_exposure(
+    lr: lr_ptr_t); options(val_param, internal);
+var
+  b: bb_ptr_t;
+  s: lts_ptr_t;
+begin
+  b := dom_rtn^.bbs72;
+  while b <> nil do begin
+    b^.f20.b20_6 := false;
+    b^.f20.b20_5 := false;
+    b^.f20.b20_4 := false;
+    b^.f20.b20_3 := false;
+    b^.l134 := nil;
+    b := b^.next114;
+  end;
+  s := lr^.ltss;
+  while s <> nil do begin
+    if (integer(s^.rrp) & 12) <> 0 then
+      s^.bb^.f20.b20_4 := true;
+    s := s^.next;
+  end;
+  s := lr^.ltss;
+  while s <> nil do begin
+    if s^.f2.exposed then begin
+      s^.bb^.f20.b20_5 := true;
+      mark_live_on_entry_blocks(s^.bb);
+    end;
+    s := s^.next;
+  end;
+end;
+
+{ fg_utils_$compute_lr_lifetime - lr's lifetime over the blocks: live
+  on entry and active on exit marked from its exposed and final
+  segments; a block live on entry none of whose predecessors is active
+  on exit unmarked; the blocks of the lifetime chained (newest first)
+  at l150.
+
+  0x237660, 0xBC bytes: lr (8) in A2. }
+
+procedure fg_utils_$compute_lr_lifetime(
+    lr: lr_ptr_t);
+var
+  s: lts_ptr_t;
+  prev: bb_ptr_t;
+  b: bb_ptr_t;
+  e: fg_edge_ptr_t;
+begin
+  init_and_compute_exposure(lr);
+  s := lr^.ltss;
+  while s <> nil do begin
+    if s^.f2.final then
+      if s^.bb^.f20.b20_4 then
+        mark_active_on_exit_blocks(s^.bb, s, false);
+    s := s^.next;
+  end;
+  prev := nil;
+  b := dom_rtn^.bbs72;
+  while b <> nil do begin
+    if b^.f20.b20_6 then begin
+      e := b^.preds;
+      while e <> nil do
+        if e^.source^.f20.b20_3 then
+          e := nil
+        else begin
+          e := e^.next_pred;
+          if e = nil then
+            b^.f20.b20_6 := false;
+        end;
+      if b^.preds = nil then
+        b^.f20.b20_6 := false;
+    end;
+    if b^.f20.b20_4 or b^.f20.b20_6 or b^.f20.b20_5 then begin
+      b^.l150 := prev;
+      prev := b;
+    end;
+    b := b^.next114;
+  end;
+end;
+
+{ compute_reach_of_definition - from bb forward through the successors
+  live on entry: bb active on exit; a successor reached by another
+  definition (and not writing) marked (mark146 1, fg_92 set), one not
+  reached yet given lts and walked on unless it writes.
+
+  0x23771C, 0x84 bytes, no A5 load: bb (8) in A3, lts (12) in A2. }
+
+procedure compute_reach_of_definition(
+    bb: bb_ptr_t;
+    lts: univ_ptr); options(val_param, internal);
+var
+  e: fg_edge_ptr_t;
+  t: bb_ptr_t;
+begin
+  e := bb^.succs;
+  while e <> nil do begin
+    t := e^.target;
+    if t^.f20.b20_6 then begin
+      bb^.f20.b20_3 := true;
+      if t^.l134 <> nil then begin
+        if t^.l134 <> lts then
+          if not t^.f20.b20_4 then begin
+            t^.mark146 := 1;
+            fg_92 := true;
+          end;
+      end
+      else begin
+        t^.l134 := lts;
+        if not t^.f20.b20_4 then
+          compute_reach_of_definition(t, lts);
+      end;
+    end;
+    e := e^.next_succ;
+  end;
+end;
+
+{ fg_utils_$recompute_ssa_form_for_lr - lr's join birthpoints made
+  again (a complex live range with segments only): its hints cleared
+  (lir_main_c8d set), each JOIN_BP reading one of its exposed segments
+  alone removed (its definition's first reference dropped, write and
+  modify cleared, its inputs cleared; the definition excised when
+  unreferenced, else put on the exposed list), the segments' l28 and
+  l44 cleared; with segments left: the reach of each writing block's
+  definition (its own block as the marker) found, a block reached by
+  two (and its neighbours: fg_92) made a writing block with an exposed
+  segment, repeated until stable; then each writing block's exposed
+  segment made (with one) and, when active on exit, its last segment
+  (bug_check without one) a join birthpoint when it does not write, and
+  put on the final list; final segments of blocks not active on exit
+  taken off; the active-on-exit marks made again with birthpoints;
+  lir_main_c8d cleared.
+
+  0x2377A0, 0x284 bytes: lr (8) in D2; the blocks chained at l150 from
+  D3; created (-36), the previous segment (-8).  With no segments
+  left, the routine returns with lir_main_c8d still set (the image's
+  branch to the epilogue). }
+
+procedure fg_utils_$recompute_ssa_form_for_lr(
+    lr: lr_ptr_t);
+var
+  s: lts_ptr_t;
+  n: lts_ptr_t;
+  f: lts_ptr_t;
+  j: instr_ptr_t;
+  list: bb_ptr_t;
+  b: bb_ptr_t;
+  created: boolean;
+  prev: lts_ptr_t;
+begin
+  if lr^.ltss = nil then
+    return;
+  if lr^.id = 0 then
+    return;
+  lr^.exposed_hint := nil;
+  lr^.exposed_prev := nil;
+  lr^.final_hint := nil;
+  lr^.final_prev := nil;
+  lir_main_c8d := true;
+  s := lr^.ltss;
+  repeat
+    n := s^.next;
+    if s^.f2.exposed then
+      if s^.refs <> nil then
+        if s^.refs^.link = nil then begin
+          j := utils_ins_$operands_instruction(s^.refs);
+          if j^.opc = ord(opc$join_bp) then begin
+            f := j^.opnds[2].lts;
+            f^.refs := f^.refs^.link;
+            f^.rrp := f^.rrp - [rrp$modify, rrp$write];
+            j^.opnds[3].link := nil;
+            utils_$excise_instruction_cleanly(j, false);
+            if f^.refs = nil then
+              utils_$excise_lts_cleanly(f, false)
+            else
+              utils_$put_lts_on_exposed_list(f);
+          end;
+        end;
+    s := n;
+  until s = nil;
+  s := lr^.ltss;
+  while s <> nil do begin
+    s^.l28 := nil;
+    s^.l44 := nil;
+    s^.l28 := nil;
+    s^.l44 := nil;
+    s := s^.next;
+  end;
+  if lr^.ltss = nil then
+    return;
+  init_and_compute_exposure(lr);
+  list := nil;
+  b := dom_rtn^.bbs72;
+  while b <> nil do begin
+    if b^.f20.b20_4 or b^.f20.b20_6 then begin
+      b^.l150 := list;
+      list := b;
+    end;
+    b^.mark146 := 0;
+    b := b^.next114;
+  end;
+  repeat
+    fg_92 := false;
+    b := list;
+    while b <> nil do begin
+      if b^.f20.b20_4 then
+        compute_reach_of_definition(b, b);
+      b := b^.l150;
+    end;
+    if fg_92 then begin
+      b := list;
+      while b <> nil do begin
+        if b^.mark146 = 1 then begin
+          b^.f20.b20_5 := true;
+          b^.f20.b20_4 := true;
+          b^.mark146 := 0;
+        end;
+        b^.f20.b20_3 := true;
+        b^.l134 := nil;
+        b := b^.l150;
+      end;
+    end;
+  until not fg_92;
+  b := list;
+  while b <> nil do begin
+    if b^.f20.b20_4 then begin
+      if b^.f20.b20_5 then
+        discard(utils_$get_exposed_lts(lr, b, created));
+      if b^.f20.b20_3 then begin
+        s := utils_$find_last_lts_in_bb(lr, b, prev);
+        if s = nil then
+          bug_check('FG_UTILS_$RECOMPUTE_SSA_FORM_FOR_LR: can''t find final LTS%$');
+        if b^.f20.b20_4 then
+          if (integer(s^.rrp) & 12) = 0 then
+            discard(fg_utils_$insert_join_birthpoint(lr, b));
+        if not s^.f2.final then
+          utils_$put_lts_on_final_list(s);
+      end;
+    end;
+    b := b^.l150;
+  end;
+  s := lr^.ltss;
+  while s <> nil do begin
+    if s^.f2.final then
+      if not s^.bb^.f20.b20_3 then
+        utils_$remove_lts_from_final_list(s);
+    s := s^.next;
+  end;
+  b := list;
+  while b <> nil do begin
+    b^.f20.b20_3 := false;
+    b^.l134 := nil;
+    b := b^.l150;
+  end;
+  s := lr^.ltss;
+  while s <> nil do begin
+    if s^.f2.final then
+      if s^.bb^.f20.b20_4 then
+        mark_active_on_exit_blocks(s^.bb, s, true);
+    s := s^.next;
+  end;
+  lir_main_c8d := false;
 end;

@@ -140,7 +140,9 @@ Batch A continued (translator PA5, 2026-11-11):
 |------|----------|-------|
 | `lang2/source/be_com/lir_main.pas` | 25 | done: the module's data (0xDB8 bytes) every cell extern and defined in address order (byte cells shifted: dpc gap 37, questions 282), the section lir_main_readonly_tables; solution_t 432 bytes (lr2, shift, sym named); rtn_t conv (+16), frame_size (+48), saved_ip/saved_fp (+160..), l172, l176, save_end (+204), w218, w222, w224; lir_3b80 a record (lir_inherited_t); lir_3e60/3f90/4090 typed; lir_main_b40 an array, lir_main_c48 lts_ptr_t; lir_main_$ headings named; ISC: isc_user_routines_328..358, isc_$is_a_register_candidate, isc_$get_home_solution, rewrite_$entry |
 
-Remaining in batch A after PA5: fg_utils, post, lir (see PA4's notes; instr_size.init still to confirm, questions 284).
+| `lang2/source/be_com/fg_utils.pas` | 53 | done: rtn_t l84 (the blocks without an interval head), dfs_first/dfs_last (+64, +68), bb_t members (+138); the headings named (drop_this_block, generate/insert_join_birthpoint, add_jbi, dominators' ssa, recompute_postnum, recompute_dominators_and_dfs_lists' how, compute_lr_lifetime, recompute_ssa_form_for_lr); its walks keep state in bb +20 bits 6..3 (f20), l134, next142, mark146, l150, members (documented in the unit) |
+
+Remaining in batch A after PA5: post, lir (see PA4's notes; instr_size.init still to confirm, questions 284).  post_6b8 is ra_utils_10 (PB5): post defines none of the solutions.
 
 Batch C (translators PC, PC2, PC3, PC4, PC5, 2026-11-11):
 

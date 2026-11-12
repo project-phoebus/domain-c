@@ -1816,12 +1816,12 @@ procedure fg_utils_$recompute_dominators_and_dfs_lists(
 { FG_UTILS_$COMPUTE_LR_LIFETIME - 0x237660, 0xBC bytes; called from
   tr_utils.  Frame 8:al. }
 procedure fg_utils_$compute_lr_lifetime(
-    p1: univ_ptr); options(val_param); extern;
+    lr: lr_ptr_t); options(val_param); extern;
 
 { FG_UTILS_$RECOMPUTE_SSA_FORM_FOR_LR - 0x2377A0, 0x284 bytes; called from
   com tr_utils.  Frame 8:al. }
 procedure fg_utils_$recompute_ssa_form_for_lr(
-    p1: univ_ptr); options(val_param); extern;
+    lr: lr_ptr_t); options(val_param); extern;
 
 { fga.pas (cc.a88k). }
 
