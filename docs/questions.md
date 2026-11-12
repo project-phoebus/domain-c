@@ -2127,3 +2127,45 @@ revisited.
    pairs (the last four `**' by a repeat record) and leaves the
    block's last 4 bytes (to +0x14C) unset: 12 entries (written so) or
    14 with two zero ones?
+260. Translator PD2, isc_user_routines (slips kept as the image has
+   them?): alignment_from_sr_info compares each literal increment's
+   alignment with D2 before anything sets it (the step alignment
+   uninitialized for the first literal step); local_initialize_symbol
+   tests cargs' db = 3 twice (once only when attribute bit 14 is clear,
+   `and.l #16#18000' of +0x282 both times); low_half_of_fp_reg_quad's
+   nil test guards only the copy, then reads sol^.lr2 and writes the
+   nil copy; log_2 (x not a power of two), invertible_in_sp/_dp (a node
+   not of kind 89) leave the result unset; expression_has_side_effects
+   tests the reference kinds and 110, 109 but every path returns true;
+   verify_any_bits shifts its mask as a halfword (`lsl.w') and compares
+   the masked bit with expected itself.
+261. Translator PD2, isc_types.ins.pas: the section isc_readonly_tables
+   (cc.a88k 0x2BCDFC, 3120 bytes, file bytes) has no unit of its name;
+   isc_user_routines reads it at +0x140, +0x174 and +0xAA8 and the
+   generated units probably more.  Declared as an extern view (no
+   initial value).  Was it an insert's `var (isc_readonly_tables)' with
+   initial values, overlaid in each ISC unit?  If so the insert should
+   carry the image's 3120 bytes (like lir_main_readonly_tables).
+262. Translator PD2, isc_solution_fields.ins.pas: isc_solution_t's
+   base_reg (+4) and index_reg (+8) are typed lr_ptr_t (the CSE
+   accessors' types), but every writer stores a solution there
+   (isc_user_routines_31c for none, +0x340 the frame, literal_base_
+   register for literals) and solution_to_string prints index_reg as a
+   solution.  Retype them isc_solution_ptr_t (and the accessors
+   pass_2_cse_*_base_reg/_index_reg)?  isc_user_routines casts for now.
+263. Translator PD2, isc_main: new_solution and duplicate_solution count
+   a solution made from the ISC heap by comparing the heap record with
+   isc_heap by contents (five longwords, `cmpm.l'/`dbne'), not by
+   address.  Written as an internal helper same_heap; was the source
+   `heap = isc_heap' on records (a Domain Pascal extension?) or a
+   comparison of a 20-byte field?
+264. Translator PD2, isc_var_externs.ins.pas: isc_main's metering names
+   the cells +0x2DC .. +0x304 and +0x350 (calls_to_pass_1,
+   max_solutions_for_one_il_node, ...).  They keep the offset names
+   (isc_user_routines_2dc ...) with the printed names in comments, as
+   the insert's other cells; rename them after the printout?
+265. Translator PD2, solution_to_string: a literal's value is written
+   twice, the second with PAS_$WRITE code 4214 (the plain integer32 is
+   2673): perhaps a hexadecimal or unsigned form.  Written as `:1'
+   both times; which format?
+

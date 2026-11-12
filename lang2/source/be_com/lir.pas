@@ -1625,7 +1625,7 @@ end;
   (build_action by the solution's kind and the form; 0 none: a
   constant's literal row, 5 or 29 by the form, an integer register
   through sol's l8 (scaled or not), else a case jump base from
-  isc_user_routines_258 (17) or the zero register isc_user_routines_31c;
+  isc_literal_solutions[0] (17) or the zero register isc_user_routines_31c;
   1 and 3 a constant whose value decides 7, 12, 17 or 2, 2 an immediate
   that is 0 (the zero register's solution, 21), or 11, or 6) chooses,
   through the build_ tables, the operand's kind (build_kind, or its
@@ -1744,7 +1744,7 @@ begin
     else if form.form in [3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 21,
                           23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36,
                           37, 38, 39, 40, 42] then begin
-      sol := addr(isc_user_routines_258);
+      sol := isc_literal_solutions[0];
       action := 17;
     end
     else begin

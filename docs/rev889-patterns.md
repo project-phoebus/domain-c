@@ -1205,3 +1205,18 @@ cc.m68k unless marked.
     token pass build_non_register_reference's number and properties (1
     and 16, 2 and 8) as one longword: pattern 105 for an internal
     callee.
+162. **A case whose arms end in a write share the last call.**  The
+    printers of isc_user_routines (il_node_to_string 0x21805C,
+    solution_to_string 0x219FA6, block_rec_to_string, label_to_string,
+    vatt_rec_to_string) push each arm's last PAS_$WRITE arguments and
+    branch to one `jsr pas_$write' (0x219434, 0x21AA1A, ...), even
+    where the arms write different kinds (a string, a character, an
+    integer): cross-jumping of the identical call tail.  Write each arm
+    as it is; the shared tail is the compiler's (translator PD2).
+163. **Two case labels with the same action kept apart.**
+    il_node_has_integer_value (0x2121E6) and il_node_to_integer_value
+    compile `77 .. 86, 200: ...; 87: ...' (one label list of eleven,
+    then 87 with an identical arm) as a comparison chain ending in two
+    copies of the action: the source's two arms, not one (translator
+    PD2).
+

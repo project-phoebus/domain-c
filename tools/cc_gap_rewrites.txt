@@ -282,6 +282,18 @@ lang2/source/isc/rewrite.pas	s/^(  \{ FORTRAN I\/O \})$/%var gap25s;\n%if gap25s
 lang2/source/isc/rewrite.pas	s/^(  \{ a statement: an EVAL_NODE \})$/%endif { gap 25 }\n$1/
 # gap 4 (isc_to_lir): write and writeln (dropped, for the check; also after `then')
 lang2/source/isc/isc_to_lir.pas	s/\bwrite(ln)?(\(.*\))?;\s*$/; { gap 4 }\n/
+# gap 4 (isc_main): write, writeln, read and readln (a self-assignment of the trace flag instead, for the check)
+moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_main.pas	s/\b(write|read)(ln)?(\(.*\))?;\s*$/isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
+# gap 45 (isc_main): a for loop over an array from index -1 (shifted by one, for the check)
+moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_main.pas	s/^  for k := -1 to 32 do$/  for k := 0 to 33 do { gap 45 }/
+moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_main.pas	s/^    isc_literal_solutions\[k\] := solution_ptr_t\(well_known_literal\(k\)\);$/    isc_literal_solutions[k - 1] := solution_ptr_t(well_known_literal(k - 1)); { gap 45 }/
+# gap 6 (isc_user_routines): a single real assigned to a double (dropped, for the check)
+lang2/source/isc/isc_user_routines.pas	s/^  d := v;(\s*\{ fpp_\$eslv: dpc gap 6 \})$/  ;$1/
+# gap 7 (isc_user_routines): a real constant in a comparison (the double tested by its longwords, for the check)
+lang2/source/isc/isc_user_routines.pas	s/il_\$node_ptr_t\(node\)\^\.real_value = 0\.0;/(il_\$node_ptr_t(node)^.bits[1] = 0) and (il_\$node_ptr_t(node)^.bits[2] = 0); { gap 7 }/
+lang2/source/isc/isc_user_routines.pas	s/^  t := d;(\s*\{ a double copied: dpc gap 7 \})$/  ;$1/
+# gap 4 (isc_user_routines): write and writeln (a self-assignment of the trace flag instead, for the check: a trace block may hold nothing else)
+lang2/source/isc/isc_user_routines.pas	s/\bwrite(ln)?(\(.*\))?;\s*$/isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
 # gap 4 (lir, translator PA7): lir_$build_operand's dump of a physical register's attributes (writeln to output: dropped, for the check)
 lang2/source/be_com/lir.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
 # gap 43 (ass, translator QA): an initialized varying string (the initializer dropped, for the check)
