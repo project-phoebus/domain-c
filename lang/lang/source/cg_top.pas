@@ -172,7 +172,8 @@ var
   cg_top_f8: codegen_$uads_t;                   { +0xF8 }
   cg_top_fp_long: array [16..23] of boolean;    { +0x110: from +0x100 +
                                                   16; initialize clears
-                                                  18..23 }
+                                                  18..23; fpa.pas sets
+                                                  them (absolutely) }
   cg_top_118: il_$node_ptr_t;                   { +0x118 }
   cg_top_11c: codegen_$cell_ptr_t;              { +0x11C }
   cg_top_124: codegen_$cell_ptr_t;              { +0x124 }
@@ -188,7 +189,7 @@ var
 
 define
   cg_stmt, cg_code_bytes, cg_top_13a, cg_data_reg, cg_pass, cg_line,
-  cg_settled, at_backend_506, cg_top_130,
+  cg_settled, at_backend_506, cg_top_130, cg_top_fp_long,
   updateregassign, f_initialize, codegen;
 
 { skip_reg_list - the statement after n, past register lists (191).

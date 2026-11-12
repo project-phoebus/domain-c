@@ -418,3 +418,24 @@ dobansheefpx (banshee.pas is not started) and a copy of celpkg's empty
 descriptor.  peepholer_ops and its six nested try_ routines, deltest,
 opttest, optmove, opta, floatop and seven more are not written (a TODO
 in the header; peepholer_ops declared extern at module level).
+Translator HH (2026-11-11), reg_save (finished, 23 of 23): the six
+routines EE left (registers_consumed_by_tree_operator, _agg_aop,
+_assign_operator, assert_tree_result_depends_on_operands,
+registers_consumed_by_object, registers_preserved_by_statement); no
+insert changed (the statements through g_opt_stmt_t's variants, the
+trees through cg_tree_t).
+Translator HH, emit (finished, 11 of 11): emit.pas defines emit_108
+(+0x108, the record outbin, jmp_br_resolve and unix_objmod declare) and
+declares opinfo's instruction lists (opinfo_insts, 0x2CE8D8) and
+delay's class_size.  Core change: emit_assign's heading moved from
+cg.ins.pas to fpa.ins.pas with `in' descriptors (question 105).
+Translator HH, fpa (finished, 20 of 20): the module's data defined
+(fpa_ops, the three descriptors); fpa.ins.pas's descriptors `in' (the
+bodies only read or copy them) and its headings checked against the
+bodies (emit_jsr's x a word, push_fpa_opr's k 1 a load and 63 a store,
+x the FPA register or 31 the stack); cg_top.pas defines
+cg_top_fp_long, which fpa sets absolutely.
+Translator HH, banshee (finished, 1 of 1): dobansheefpx's heading in
+final.ins.pas (final's peepholer calls it); celpkg.pas defines
+null_ads, which banshee copies absolutely; opinfo's operand sizes
+(0x2D01CE) declared in the unit.

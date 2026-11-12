@@ -3304,15 +3304,6 @@ end;
 
 procedure peepholer_ops; extern;
 
-{ DOBANSHEEFPX - the FPX instructions of a routine's code cells, from
-  first to the section's head, scheduled (banshee.pas 0x0EE84C, not
-  translated: a pointer by address and one by value, read off its
-  frame). }
-
-procedure dobansheefpx(
-    first: univ_ptr;
-    head: codegen_$cell_ptr_t); options(val_param); extern;
-
 { peepholer - the peephole pass over a routine's code cells in section
   sect from first: peepholer_init; under -OPT's optimization 27 (`btst
   #4' of +0x280) peepholer_ops; peepholer_cleanup; under optimization

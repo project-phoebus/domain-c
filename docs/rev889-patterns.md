@@ -672,3 +672,11 @@ cc.m68k unless marked.
     op less 138 (or 152), and as `(-112,A1)' and `(-228,A1)' with D1 the
     op itself (ops from 124 and 182): the lower bound folded into the
     displacement, so a table's offset can look negative.
+
+## Sets (translator HH, emit.pas)
+
+89. **Two removals from a register set kept apart.**  fnl_slct (cc.m68k
+    0x0B74D0) takes the 68881's features out of its missing set with
+    `andi.w #-9; andi.w #-2' (two statements, `- [3]' and `- [0]'),
+    not merged into one mask as consecutive constant stores to packed
+    fields are (item 10).  dpc does the same.

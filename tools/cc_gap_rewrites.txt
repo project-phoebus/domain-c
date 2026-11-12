@@ -533,3 +533,21 @@ lang/lang/source/final.pas	s/^(\s*)if br_target\(x\) = nxtlcc\(xa\) then begin$/
 lang/lang/source/final.pas	s{\((\w+(\((?:[^()]++|(?2))*\))) (=|<>) ([a-z]\w*)\)}{($4 $3 $1 { gap 12 })}g
 # gap 2 (final): unlink_opts's case of 13 labels over 40 (the kinds of its otherwise listed with 24, 28, for the check)
 lang/lang/source/final.pas	s/^(\s*)24, 28:$/${1}1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 25, 26, 34, 35, 36, 37, 38, 24, 28: { gap 2 }/
+# gap 24 (reg_save, translator HH): a call as the right operand of `or' (the result compared with true, for the check)
+lang/lang/source/reg_save.pas	s/^(\s*)cg_call_\$is_proc_var_call\(t\^\.opnd\[1\]\) then$/$1(cg_call_\$is_proc_var_call(t^.opnd[1]) = true) then { gap 24 }/
+lang/lang/source/reg_save.pas	s/if unaligned\(s\^\.asg_rhs\) or unaligned\(s\^\.asg_lhs\) then/if (unaligned(s^.asg_rhs) = true) or (unaligned(s^.asg_lhs) = true) then { gap 24 }/
+# gap 8 (reg_save, translator HH): in on the constant kind sets over the whole file (sets spanning lines; the comparisons, as cg_top's rule)
+lang/lang/source/reg_save.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
+# gap 7 (emit, translator HH): a real constant compared with 0.0 (the double tested by its longwords, for the check)
+lang/lang/source/emit.pas	s/n\^\.real_value = 0\.0/(n^.bits[1] = 0) and (n^.bits[2] = 0) { gap 7 }/
+# gap 24 (emit, translator HH): calls as the right operands of `and' (the results compared with true, for the check)
+lang/lang/source/emit.pas	s/ok := chk_op_restr\(dst, e\^\[i\]\.dst\) and chk_op_restr\(src, e\^\[i\]\.src\) and$/ok := (chk_op_restr(dst, e^[i].dst) = true) and (chk_op_restr(src, e^[i].src) = true) and { gap 24 }/
+lang/lang/source/emit.pas	s/^(\s*)chk_sz_restr\(size, e\^\[i\]\.sz\);$/$1(chk_sz_restr(size, e^[i].sz) = true); { gap 24 }/
+# gap 8 (emit, translator HH): in on constant sets with word elements over the whole file (the comparisons, as cg_top's rule)
+lang/lang/source/emit.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
+# gap 7 (fpa, translator HH): the real constants -1.0 and 0.0 passed to rlcontk and dpcontk (an integer constant node instead, for the check)
+lang/lang/source/fpa.pas	s/address\((rl|dp)contk\((-1|0)\.0\), 0, k\)/address(smcontk(81, $2), 0, k) { gap 7 }/
+# gap 8 (fpa, translator HH): in on a constant set with word elements (emit_jsr's operations; the comparisons, as cg_top's rule)
+lang/lang/source/fpa.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
+# gap 8 (banshee, translator HH): in on the cell kinds' constant sets (word elements; the comparisons, as cg_top's rule)
+lang/lang/source/banshee.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
