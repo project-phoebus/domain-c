@@ -1086,3 +1086,22 @@ cc.m68k unless marked.
     +0xDA8, +0xDAA, +0xDB4 followed by unaddressed bytes): Rev 8.89
     gives a boolean module variable one byte.  dpc gives each two
     (docs/dpc-gaps.md 37).
+
+## The POST phase and the LIR builder (translator PA6, cc.a88k post, lir)
+
+260. **`bset' with a bit number above 7 on a byte in memory.**
+    lir_$begin_compilation (cc.a88k 0x242A52) sets two flags of
+    lir_main_250 as `bset #14,0x48B650' and `bset #15,0x48B64E': the
+    68000 takes a memory bit number modulo 8, so these are bits 6 and
+    7 of the bytes +84 and +82; Rev 8.89 wrote the flag's number within
+    its word (the field's word offset) for a byte access.  dpc emits
+    the byte's own bit numbers.
+261. **Tables of a byte-sized type laid out two bytes an element, the
+    value in the first byte.**  lir's module data (+0x130 .. +0x16F,
+    +0x260 .. +0x2DF, +0x3A0 .. +0xC05) and the section
+    lir_readonly_tables (+0x300, solution_kind.init's operand kind to
+    solution kind) hold 0..31 values (operand$t, solution$) as one
+    byte followed by an unset byte (the .rwdi records set the even
+    addresses only).  Written as two-byte packed records (solution_
+    kind.init); dpc gives an array of 0..255 a word each with the value
+    in the low byte.
