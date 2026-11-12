@@ -142,6 +142,12 @@ Batch A continued (translator PA5, 2026-11-11):
 
 | `lang2/source/be_com/fg_utils.pas` | 53 | done: rtn_t l84 (the blocks without an interval head), dfs_first/dfs_last (+64, +68), bb_t members (+138); the headings named (drop_this_block, generate/insert_join_birthpoint, add_jbi, dominators' ssa, recompute_postnum, recompute_dominators_and_dfs_lists' how, compute_lr_lifetime, recompute_ssa_form_for_lr); its walks keep state in bb +20 bits 6..3 (f20), l134, next142, mark146, l150, members (documented in the unit) |
 
+Batch A continued (translator PA6, 2026-11-11):
+
+| unit | routines | notes |
+|------|----------|-------|
+| `lang2/source/be_com/post.pas` | 66 | done: the module's data (80 bytes at A5 0x48F438: the heap, the condition bits table, counts, the routine, the minimal switch) private to the unit; no shared insert changed; the registers numbered 0..99 (96/97 the condition codes, 98 memory, 99 a pending floating exception) in the operands' num and the conflict sets; a block's +138 its first transfer (post_bb_v_t, a view); an instruction's +3 bits 7..6 the shadow mode, +2 bit 6 still in the block |
+
 Remaining in batch A after PA5: post, lir (see PA4's notes; instr_size.init still to confirm, questions 221).  post_6b8 is ra_utils_10 (PB5): post defines none of the solutions.
 
 Batch C (translators PC, PC2, PC3, PC4, PC5, 2026-11-11):

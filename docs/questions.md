@@ -1821,3 +1821,24 @@ revisited.
    defines the live range gets a join for its live-in value).  Kept as
    the image has it.
 
+320. Translator PA6, post: post_$reschedule_spill_loads (cc.a88k 0x264114),
+   making the alias descriptor of the store before a spill load, sets
+   the load's descriptor's inexact flag (`bset #7,(-133,A6)`, the
+   load's at -152) instead of the store's (-64), and passes
+   alias_$get_alias_desc the store's first operand's link while it
+   tests the kind of its second.  Kept as the image has it; slips of
+   the original?
+321. Translator PA6, post: post_$sprinkle_mfnextcc (0x263A7A) passes the
+   MOVE block (D6), not the branch's block, as fill_er_up's block, so
+   move_bundle_to_new_bb updates that block's first/last when the
+   stolen bundle lands at an end of the branch's block.  Kept; a slip?
+322. Translator PA6, post: droppable_jump_addr (0x261990) returns whatever
+   D0 holds after its bug check, and ipccnop_shuffle_trapcc (0x2633E6)
+   an unset D5 when its argument is not an ungrouped IPCCNOP (pattern
+   142); post_$sprinkle_fpquiesce inserts its FPQUIESCE with an unset
+   anchor after its bug check.  Kept.
+323. Translator PA6, post: the seven trace_ routines (0x2612A4 ..
+   0x2612B0) are bare `rts' though post calls them some 120 times with
+   names, messages, blocks and instructions: debugging bodies compiled
+   out (an `%if' in the source), most likely.  Written as empty
+   procedures with the parameters the calls pass.
