@@ -1216,10 +1216,10 @@ begin
             desc := addr(spill_instr_forms.loads[6]);
           if lr^.memory_home = nil then
             ni := lir_$get_new_instruction_no_exceptions(addr(lir_3b80),
-                    desc^.opc, 0, nil, nil)
+                    desc^.opc, 0, nil, 0)
           else
             ni := lir_$get_new_instruction_no_exceptions(addr(lir_3b80),
-                    desc^.opc, 16#2000, lr^.memory_home, nil);
+                    desc^.opc, 16#2000, lr^.memory_home, 0);
           ni^.bb := bb;
           e1 := utils_$get_exposed_lts(lr, bb, created);
           e2 := utils_$get_exposed_lts(lr^.mate, bb, created);
@@ -1370,7 +1370,7 @@ begin
           else
             desc := spill_instr_forms.store_ptrs[3];
           ni := lir_$get_new_instruction_no_exceptions(nil, desc^.opc,
-                  16#2000, lr^.memory_home, nil);
+                  16#2000, lr^.memory_home, 0);
           ni^.bb := bb;
           if op^.h.kind <> operand$fp_reg_pair then
             e2 := nil

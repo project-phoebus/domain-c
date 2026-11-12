@@ -19,3 +19,22 @@
 function make_expression_temporary(
     kind: integer;
     bits: integer32): univ_ptr; options(val_param); extern;
+
+{ ISC_$IS_A_REGISTER_CANDIDATE - whether the variable (109) or common
+  member (110) sym may live in a register.  isc_user_routines 0x213198;
+  called from lir_main.  Result: D0.  batch A (PA5). }
+function isc_$is_a_register_candidate(
+    sym: univ_ptr): boolean; options(val_param); extern;
+
+{ ISC_$GET_HOME_SOLUTION - the solution of sym's home (a variable's
+  +60).  isc_user_routines 0x213D22; called from lir_main.  Result: A0. }
+function isc_$get_home_solution(
+    sym: univ_ptr): solution_ptr_t; options(val_param); extern;
+
+{ REWRITE_$ENTRY - rewrite.pas 0x21D926; called from lir_main_$entry
+  with the entry statement, lir_main +0xDB4 and +0xD9C (set there:
+  no_xsb a boolean, second the node of a second entry). }
+procedure rewrite_$entry(
+    node: univ_ptr;
+    var no_xsb: boolean;
+    var second: univ_ptr); options(val_param); extern;

@@ -694,7 +694,15 @@ type
                                           members referenced uplevel,
                                           chained at their +76 or +66
                                           (sym) }
-    space16: array [16..51] of char;    { +16 }
+    conv: univ_ptr;                     { +16: the routine's calling
+                                          conventions, a call_conv_$ptr_t
+                                          (call_conv.ins.pas is opened
+                                          after this insert; lir_main,
+                                          dbg_life; batch A, PA5) }
+    space20: array [20..47] of char;    { +20 }
+    frame_size: integer32;              { +48: the stack frame's bytes
+                                          (lir_main_$save_and_restore_code;
+                                          0 without a frame) }
     lrs: lr_ptr_t;                      { +52 }
     lrs_last: lr_ptr_t;                 { +56: the last live range
                                           (lir_$alloc_live_range,
@@ -744,7 +752,18 @@ type
     written_fp: array [0..1] of integer32;     { +152: written_fp; the floating
                                           registers 32..63, 0..31 it
                                           clobbers (call_conv) }
-    space160: array [160..179] of char; { +160 }
+    saved_ip: integer32;                { +160: the preserved integer
+                                          registers it writes, saved in
+                                          the prologue (written_ip and
+                                          the conventions' ip_preserved;
+                                          lir_main, batch A, PA5) }
+    saved_fp: array [0..1] of integer32;    { +164: likewise of the
+                                          floating registers 32..63, 0..31 }
+    l172: integer32;                    { +172: the frame size, with a
+                                          frame (lir_main) }
+    l176: integer32;                    { +176: the largest frame size
+                                          without one; the argument area
+                                          lir_main_$entry reserves }
     marks: integer32;                   { +180: the walks' marks and
                                           serial numbers, counted up
                                           (utils, tr_utils_$mark_dependents;
@@ -761,7 +780,19 @@ type
     l200: integer32;                    { +200: the number of the last
                                           live range life splits
                                           (batch A) }
-    space204: array [204..225] of char; { +204 }
+    save_end: integer32;                { +204: the end of the register
+                                          save area (lir_main_c6c too) }
+    space208: array [208..217] of char; { +208 }
+    w218: integer;                      { +218: where the save area
+                                          starts in the frame (16, or
+                                          past the block's +268) }
+    space220: array [220..221] of char; { +220 }
+    w222: integer;                      { +222: the register the frame
+                                          pointer's old value is kept in
+                                          (-1 none; pick_register) }
+    w224: integer;                      { +224: the register the return
+                                          address is kept in (-1 none;
+                                          32.. a floating one) }
     f226: packed record                 { +226 (batch A: fga) }
       save_sl: boolean;                 { .7 (dmp's names, batch A, PA4:
                                           were b226_7 .. b226_2, b226_0,
@@ -848,7 +879,13 @@ type
     1) and serialize (bit 0), kind (+108) its solution$ kind (the
     SOLUTION$ identifiers: 3 fp_reg_pair_low, 8 fp_reg, 9 fp_reg_pair,
     11 ip_reg).  The rest by offset (build_operand reads +8, +79, +100,
-    +104); its size is not known (112 here). }
+    +104).  batch A (PA5, lir_main): 432 bytes (lir_$begin_compilation
+    zeroes lir_main's five and post's with 16#1B0, and lir_main's lie
+    16#1B0 apart); lr2 (+24) the odd half's live range of a pair (the
+    formals' registers marked unique_value through +20 and +24), shift
+    (+79) a scaled index's shift (lir_main: kind 13 with the shift),
+    sym (+100) the variable an access is made for (lir_main sets it
+    around a formal's loads). }
   solution_ptr_t = ^solution_t;
   solution_t = record
     node: univ_ptr;                     { +0 }
@@ -857,14 +894,15 @@ type
     l12: integer32;                     { +12 }
     l16: integer32;                     { +16 }
     lr: lr_ptr_t;                       { +20 }
-    space24: array [24..47] of char;    { +24 }
+    lr2: lr_ptr_t;                      { +24 }
+    space28: array [28..47] of char;    { +28 }
     disp: integer32;                    { +48 }
     l52: integer32;                     { +52 }
     w56: integer;                       { +56 }
     space58: array [58..77] of char;    { +58 }
     f78: packed record                  { +78 }
       reg: 0..255;                      { +78 }
-      b79: 0..255;                      { +79 }
+      shift: 0..255;                    { +79 (was b79) }
       b80: 0..255;                      { +80 }
       b81: 0..255;                      { +81 }
       b82: 0..255;                      { +82 }
@@ -875,10 +913,11 @@ type
       serialize: boolean;               { .0 }
       end;
     space84: array [84..99] of char;    { +84 }
-    l100: integer32;                    { +100 }
+    sym: univ_ptr;                      { +100 (was l100) }
     l104: integer32;                    { +104 }
     kind: integer;                      { +108 }
     w110: integer;                      { +110 }
+    space112: array [112..431] of char; { +112 }
   end;
 
   { The current phase's debug switches (at_backend +0x500: the phase
@@ -1111,10 +1150,18 @@ var
 
   { lir_main.pas's data (A5 0x48B3AC): the cells units other than lir,
     lir_main and lir_utils reach (theirs are lir.pvt.pas's). }
-  lir_main_b40: extern integer32;       { +0xB40 (address taken: lir, lst) }
+  lir_main_b40: extern array [0..63] of univ_ptr;   { +0xB40: by floating
+                                          register, its symbol (the
+                                          physical live ranges' nodes:
+                                          lir_main_$reinit_physical_regs;
+                                          batch A, PA5: was integer32) }
   lir_main_c40: extern integer32;       { +0xC40 }
   lir_main_c44: extern univ_ptr;        { +0xC44 }
-  lir_main_c48: extern integer32;       { +0xC48 }
+  lir_main_c48: extern lts_ptr_t;       { +0xC48: the literal pool base
+                                          register's segment (iv: +8 of
+                                          operand 2 of a literal-pool
+                                          load; batch A, PA5: was
+                                          integer32) }
   lir_main_c4c: extern integer32;       { +0xC4C }
   lir_main_c50: extern integer32;       { +0xC50 }
   lir_main_c54: extern integer32;       { +0xC54 }
@@ -1161,15 +1208,25 @@ var
 
   { lir.pas's data (A5 0x487180), reached by units other than
     lir_main, lir_utils and ra_utils. }
-  lir_3e60: extern integer32;           { +0x3E60 (ISC) }
+  lir_3e60: extern array [0..31] of solution_ptr_t;    { +0x3E60: by
+                                          integer register, the
+                                          solution of its physical live
+                                          range (ISC; lir_main; batch A,
+                                          PA5: was integer32) }
   lir_3f60: extern integer32;           { +0x3F60 (address taken:
                                           call_conv, rewrite) }
   lir_3f78: extern integer32;           { +0x3F78 (call_conv) }
-  lir_3f90: extern integer32;           { +0x3F90 (address taken) }
+  lir_3f90: extern array [0..63] of lr_ptr_t;  { +0x3F90: by floating
+                                          register, its physical live
+                                          range (batch A, PA5: was
+                                          integer32) }
   lir_3f94: extern integer32;           { +0x3F94 (com) }
   lir_3f98: extern integer32;           { +0x3F98 (com) }
   lir_3f9c: extern integer32;           { +0x3F9C (com) }
-  lir_4090: extern integer32;           { +0x4090 (address taken) }
+  lir_4090: extern array [0..31] of lr_ptr_t;  { +0x4090: by integer
+                                          register, its physical live
+                                          range (batch A, PA5: was
+                                          integer32) }
   lir_4204: extern integer32;           { +0x4204 (ra) }
   lir_4208: extern integer32;           { +0x4208 (ra) }
   lir_420c: extern integer32;           { +0x420C (address taken: ra) }
@@ -1856,13 +1913,15 @@ procedure lir_$complete_top_level_node_inherited_attrs(
   bytes; called from lir_main lir_utils ra_utils.  Frame 8:l; 12:w;
   14:l; 18:l; 22:l, passed on to begin_instruction; lir_utils pushes
   only node, opc and flags (and home with flag 13): docs/questions.md
-  198 (batch A, PA4: named).  Result: A0. }
+  198 (batch A, PA4: named; PA5: the fifth the operands an instruction
+  of a variable count gets: lir_main's ENTRY 106, LIMIT 96, RETURN its
+  count).  Result: A0. }
 function lir_$get_new_instruction_no_exceptions(
     node: univ_ptr;
     opc: integer;
     flags: integer32;
     home: univ_ptr;
-    p5: univ_ptr): instr_ptr_t; options(val_param); extern;
+    nopnds: integer32): instr_ptr_t; options(val_param); extern;
 
 { LIR_$ADD_FLOW_GRAPH_EDGE - 0x243402, 0x68 bytes; called from asm
   fg_utils fga hal lir_main oli post utils.  Frame 8:al; 12:al.  Result:
@@ -2024,14 +2083,14 @@ procedure lir_$field_instruction(
 procedure lir_$load_instruction(
     p1: univ_ptr;
     p2: integer;
-    p3: univ_ptr;
+    p3: integer32;
     p4: univ_ptr;
     p5: univ_ptr;
     p6: univ_ptr;
     p7: integer32;
     p8: integer32;
     p9: integer32;
-    p10: univ_ptr); options(val_param); extern;
+    p10: integer32); options(val_param); extern;
 
 { LIR_$MFPR_INSTRUCTION - 0x2473D8, 0xC8 bytes; called from isc_to_lir.
   Frame 8:l; 12:w; 14:l; 18:l; 22:l; 26:l; 30:l. }
@@ -2069,7 +2128,7 @@ procedure lir_$store_instruction(
     p7: integer32;
     p8: integer32;
     p9: integer32;
-    p10: univ_ptr); options(val_param); extern;
+    p10: integer32); options(val_param); extern;
 
 { LIR_$MTPR_INSTRUCTION - 0x247968, 0xC8 bytes; called from isc_to_lir.
   Frame 8:l; 12:w; 14:l; 18:l; 22:l; 26:l; 30:l. }
@@ -2121,50 +2180,53 @@ procedure lir_$end_routine(
 
 { lir_main.pas (cc.a88k). }
 
-{ LIR_MAIN_$ADD_LIVE_RANGE - 0x249020, 0x66 bytes; called from lir.  Frame
-  8:al; 12:al.  Result: read (callers: A08). }
+{ LIR_MAIN_$ADD_LIVE_RANGE - a new live range for the solution sol (a
+  physical register's when reg is not negative).  0x249020, 0x66 bytes;
+  called from lir lir_main.  Result: A0 (batch A, PA5: named). }
 function lir_main_$add_live_range(
-    p1: univ_ptr;
-    p2: univ_ptr): univ_ptr; options(val_param); extern;
+    sol: solution_ptr_t;
+    reg: integer32): lr_ptr_t; options(val_param); extern;
 
-{ LIR_MAIN_$ADD_IP_REG_PHYSICAL_LR - 0x249086, 0x80 bytes; called from
-  lir.  Frame 8:al; 12:l.  Result: A0 (callers: A01). }
+{ LIR_MAIN_$ADD_IP_REG_PHYSICAL_LR - integer register reg's physical
+  live range (lir_4090) given to the solution sol.  0x249086, 0x80
+  bytes; called from lir.  Result: A0. }
 function lir_main_$add_ip_reg_physical_lr(
-    p1: univ_ptr;
-    p2: integer32): univ_ptr; options(val_param); extern;
+    sol: solution_ptr_t;
+    reg: integer32): lr_ptr_t; options(val_param); extern;
 
-{ LIR_MAIN_$REINIT_PHYSICAL_REGS - 0x249106, 0x182 bytes; called from lir.
-  Frame 8:l; 12:al; 16:al. }
+{ LIR_MAIN_$REINIT_PHYSICAL_REGS - the physical registers' live ranges
+  and solutions made again for a routine of conventions conv (a
+  call_conv_$ptr_t): which 0 the integer registers, 1 the floating
+  ones, -1 the floating pairs.  0x249106, 0x182 bytes; called from lir
+  (rtn not read). }
 procedure lir_main_$reinit_physical_regs(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    conv: univ_ptr;
+    which: integer32); options(val_param); extern;
 
-{ LIR_MAIN_$BEGIN_ROUTINE - 0x249288, 0x30A bytes; called from at_backend.
-  Frame 8:al. }
+{ LIR_MAIN_$BEGIN_ROUTINE - 0x249288, 0x30A bytes; called from at_backend. }
 procedure lir_main_$begin_routine(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
-{ LIR_MAIN_$ENTRY - 0x249610, 0xAC4 bytes; called from isc_to_lir.  Frame
-  8:al; 102:?. }
+{ LIR_MAIN_$ENTRY - an entry statement's ENTRY and LIMIT instructions
+  and the formals' transfers.  0x249610, 0xAC4 bytes; called from
+  isc_to_lir: the statement node (the body reads only fp+8). }
 procedure lir_main_$entry(
-    p1: univ_ptr;
-    p2: integer32); options(val_param); extern;
+    node: univ_ptr); options(val_param); extern;
 
 { LIR_MAIN_$HANDLER_REENTRY - 0x24A124, 0xBC bytes; called from
-  isc_to_lir.  Frame 8:al. }
+  isc_to_lir: the statement node. }
 procedure lir_main_$handler_reentry(
-    p1: univ_ptr); options(val_param); extern;
+    node: univ_ptr); options(val_param); extern;
 
 { LIR_MAIN_$BUILD_INITIAL_EPILOG - 0x24A746, 0x74C bytes; called from
-  at_backend.  Frame 8:al. }
+  at_backend. }
 procedure lir_main_$build_initial_epilog(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
-{ LIR_MAIN_$SAVE_AND_RESTORE_CODE - 0x24B618, 0xA20 bytes; called from ra.
-  Frame 8:al. }
+{ LIR_MAIN_$SAVE_AND_RESTORE_CODE - 0x24B618, 0xA20 bytes; called from ra. }
 procedure lir_main_$save_and_restore_code(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { lir_utils.pas (cc.a88k). }
 
