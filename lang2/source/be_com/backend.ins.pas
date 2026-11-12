@@ -517,7 +517,10 @@ type
                                           df_utils rebuilds the live
                                           ranges' lists; fga walks the
                                           blocks through it (batch A) }
-    space138: array [138..141] of char; { +138 }
+    members: bb_ptr_t;                  { +138: an interval head's first
+                                          member, the members chained at
+                                          next142 (iv, translator PC5;
+                                          batch A, PA5: was space138) }
     next142: bb_ptr_t;                  { +142: the link of com's block
                                           lists (loop contents, entries,
                                           exits; PC4's reading) }
@@ -581,7 +584,8 @@ type
     next_exposed: lts_ptr_t;            { +16 }
     next_final: lts_ptr_t;              { +20 }
     l24: integer32;                     { +24 (utils clears it in phase
-                                          9) }
+                                          9; iv's induction back-pointer,
+                                          cast there: a pointer) }
     l28: lts_ptr_t;                     { +28 (chained from l44's) }
     l32: integer32;                     { +32 }
     mark: integer32;                    { +36: the walks' marks }
@@ -615,7 +619,9 @@ type
                                           (PA3): was b3_7) }
       no_modify: boolean;               { .6: dmp's NO_MODIFY (batch A,
                                           PA4: was b3_6) }
-      serialize: boolean;               { .5: dmp's SERIALIZE (was b3_5) }
+      serialize: boolean;               { .5: dmp's SERIALIZE (was b3_5);
+                                          a user-declared register
+                                          (ra_utils' message) }
       b3_4: boolean;                    { .4 (set by make_entering_lts:
                                           translator PC3) }
       b3_3: boolean;
@@ -643,7 +649,8 @@ type
                                           name (lir_utils_$add_memory_home's
                                           message "LR^.memory_home");
                                           batch A (PA3): was sym }
-    l28: integer32;                     { +28 }
+    l28: integer32;                     { +28: the spill cost, a single
+                                          real (ra_utils, translator PB5) }
     home_lr: lr_ptr_t;                  { +32: the live range whose memory
                                           home it shares (lir_utils_$add_memory_home
                                           gives that one a home first;
@@ -657,7 +664,7 @@ type
                                           live ranges' chain) }
     w56: integer;                       { +56: its segments' count }
     w58: integer;                       { +58 }
-    l60: integer32;                     { +60 }
+    l60: integer32;                     { +60: the instruction that rematerializes it (ra_utils, PB5) }
     { batch A (utils): the segment lists by block (lir_main_c86 1) and
       their hints (the last found and the one before it, valid with
       lir_main_c8d). }
