@@ -13,6 +13,8 @@
     --------  0x226514  find_exit_writer (internal)
     --------  0x22670C  make_entering_lts (internal)
     --------  0x22676E  find_calls_snuggle_move (internal)
+    --------  0x226898  com_$replace_oprs_value (internal)
+    --------  0x226E38  no_reg_like_kinds (internal)
     --------  0x22C02A  com_$begin_compilation
     --------  0x22C064  com_$end_compilation
     --------  0x22C080  com_$end_routine
@@ -23,9 +25,8 @@
 
   Not known from the original: every local, parameter and cell name. }
 
-{ TODO(pascal) com: 10 of the image's 63 routines.  Remaining, in
-  address order: com_$replace_oprs_value
-  (0x226898), no_reg_like_kinds (0x226E38), build_loads (0x226E62),
+{ TODO(pascal) com: 12 of the image's 63 routines.  Remaining, in
+  address order: build_loads (0x226E62),
   build_stores (0x22723E), replace_mem_instrs (0x2274D0),
   ip_mem_reference (0x227A0A), analyze_candidates (0x227A8C),
   add_lr_to_list (0x227C1A), add_lr_to_list_uniquely (0x227C6A),
@@ -534,12 +535,13 @@ end;
 { make_entering_lts - lr's exposed segment in bb (made when it has
   none: chained to f, the final segment that reaches it, when f is of
   another block), marked read and its live range +3 bit 4.  0x22670C,
-  0x62 bytes, no A5. }
+  0x62 bytes, no A5: the result utils_$get_exposed_lts's, left in A0
+  (pattern 32; a function: com_$replace_oprs_value reads A0). }
 
-procedure make_entering_lts(
+function make_entering_lts(
     lr: lr_ptr_t;
     bb: bb_ptr_t;
-    f: lts_ptr_t); options(val_param); internal;
+    f: lts_ptr_t): lts_ptr_t; options(val_param); internal;
 var
   l: lts_ptr_t;
   created: boolean;
@@ -554,6 +556,7 @@ begin
         l^.l28 := f^.l28;
         f^.l28 := l;
       end;
+  make_entering_lts := l;
 end;
 
 { find_calls_snuggle_move - o's instruction when o has no reader; else
@@ -590,6 +593,225 @@ begin
   if not i^.h.b0_6 then
     bug_check('COM_$find_calls_snuggle_move:  failed to find snuggle move.%$');
   find_calls_snuggle_move := i;
+end;
+
+{ com_$replace_oprs_value - the readers of old's value (and of its mate
+  for a register pair) made to read new's instead, at `at': nothing
+  when old's segments have no readers and are not final; a call's
+  operands replaced by those of their snuggle moves (the move unlinked
+  from its block afterwards); a value that is not in a register given
+  to old's readers directly when old's segments are neither final nor
+  meant to be modified; else new's segment (or the segment a new
+  complex live range gets from a preference MOVE after new's
+  instruction, or the one find_exit_writer finds, when new is of
+  another block than at) entering at's block is given old's readers
+  (local_replace_output); old's mate cleared.  0x226898, 0x536 bytes,
+  no A5: com_rtn read through the caller's A5; the kinds `btst' in
+  16#4048, 126, 16#21012 and 16#2024; the mate's readers relabelled
+  from the mate operand itself. }
+
+procedure com_$replace_oprs_value(
+    new: opnd_ptr_t;
+    old: opnd_ptr_t;
+    at: instr_ptr_t); options(val_param); internal;
+var
+  nm, om, p: opnd_ptr_t;
+  snug, i, mv: instr_ptr_t;
+  fin, itm, notreg, merge: boolean;
+  w, nl, nl2, e1, e2, f: lts_ptr_t;
+  nlr: lr_ptr_t;
+  b: bb_ptr_t;
+begin
+  merge := false;
+  if new^.h.kind in [operand$fp_reg_pair, operand$fp_reg_pair_physical,
+                     operand$fp_reg_pair_like] then
+    nm := lir_utils_$find_mate_operand(new)
+  else
+    nm := nil;
+  if old^.h.kind in [operand$fp_reg_pair, operand$fp_reg_pair_physical,
+                     operand$fp_reg_pair_like] then
+    om := lir_utils_$find_mate_operand(old)
+  else
+    om := nil;
+  if old^.link = nil then
+    if (old^.lts^.lr^.id = 0) or not old^.lts^.f2.final then begin
+      if om = nil then
+        return;
+      if om^.link = nil then begin
+        if om^.lts^.lr^.id = 0 then
+          return;
+        if not om^.lts^.f2.final then
+          return;
+      end;
+    end;
+  if om <> nil then
+    if nm = nil then
+      bug_check('COM_$replace_oprs_value: dst is reg_pair bug src is not.%$');
+  snug := nil;
+  if old^.lts^.lr^.f2.b3_7 then begin
+    i := utils_ins_$operands_instruction(old);
+    if i^.opc = ord(opc$call) then begin
+      snug := find_calls_snuggle_move(old);
+      if snug = i then
+        snug := nil
+      else begin
+        old^.link := nil;
+        old := addr(snug^.opnds[2]);
+        if om <> nil then begin
+          om^.link := nil;
+          om := lir_utils_$find_mate_operand(old);
+          if om = nil then
+            bug_check('COM_$replace_oprs_value:  failed to find mate.%$');
+        end;
+      end;
+    end;
+  end;
+  if new^.lts^.lr^.f2.b3_7 then
+    if utils_ins_$operands_instruction(new)^.opc = ord(opc$call) then begin
+      new := addr(find_calls_snuggle_move(new)^.opnds[2]);
+      if nm <> nil then begin
+        nm := lir_utils_$find_mate_operand(new);
+        if nm = nil then
+          bug_check('COM_$replace_oprs_value:  failed to find mate.%$');
+      end;
+    end;
+  fin := old^.lts^.f2.final;
+  itm := rrp$intend_to_modify in old^.lts^.rrp;
+  if om <> nil then begin
+    if om^.lts^.f2.final then
+      fin := true;
+    if rrp$intend_to_modify in om^.lts^.rrp then
+      itm := true;
+  end;
+  notreg := not (new^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical]);
+  if notreg and not fin and not itm then begin
+    p := old^.link;
+    while p <> nil do begin
+      p^.h.kind := new^.h.kind;
+      p^.ptr := new^.ptr;
+      utils_ins_$operands_instruction(p)^.h.b0_6 := false;
+      p := p^.link;
+    end;
+    old^.link := nil;
+    if om <> nil then begin
+      om := lir_utils_$find_mate_operand(old);
+      p := om;
+      while p <> nil do begin
+        p^.h.kind := nm^.h.kind;
+        p^.ptr := nm^.ptr;
+        p := p^.link;
+      end;
+      om^.link := nil;
+    end;
+    return;
+  end;
+  if not notreg and (new^.lts^.bb <> at^.bb) then begin
+    w := find_exit_writer(new, nm);
+    if w <> nil then begin
+      nlr := w^.lr;
+      f := w;
+    end
+    else begin
+      if new^.h.kind in [operand$ip_reg, operand$ip_reg_physical,
+                         operand$ip_reg_like, operand$case_jump_base] then
+        nlr := lir_$new_live_range_ip_reg
+      else if new^.h.kind in [operand$fp_reg, operand$fp_reg_physical,
+                              operand$fp_reg_like] then
+        nlr := lir_$new_live_range_fp_reg
+      else if new^.h.kind in [operand$fp_reg_pair,
+                              operand$fp_reg_pair_physical,
+                              operand$fp_reg_pair_like] then
+        nlr := lir_$new_live_range_fp_reg_pair
+      else
+        nlr := lir_$new_live_range;
+      lir_utils_$add_lts_to_lr(8, nlr, new^.lts^.bb, nl);
+      if nlr^.mate <> nil then
+        lir_utils_$add_lts_to_lr(8, nlr^.mate, new^.lts^.bb, nl2);
+      bv_$make_live_range_complex(com_rtn, nlr);
+      nl^.f2.first_in_bb := true;
+      nlr^.f2.b3_1 := true;
+      nl^.f2.final := true;
+      nl^.next_final := new^.lts^.bb^.finals;
+      new^.lts^.bb^.finals := nl;
+      if nlr^.mate <> nil then begin
+        nl2^.f2.first_in_bb := true;
+        nlr^.mate^.f2.b3_1 := true;
+        nl2^.f2.final := true;
+        nl2^.next_final := new^.lts^.bb^.finals;
+        new^.lts^.bb^.finals := nl2;
+      end;
+      mv := lir_utils_$create_preference_move(ord(new^.h.kind),
+          utils_ins_$operands_instruction(new), -1);
+      opnd_bytes_ptr_t(addr(mv^.opnds[1]))^.rrp :=
+          opnd_bytes_ptr_t(addr(mv^.opnds[1]))^.rrp
+          ! (opnd_bytes_ptr_t(new)^.rrp & 3);
+      mv^.opnds[1].lts := new^.lts;
+      mv^.opnds[1].link := new^.link;
+      new^.link := addr(mv^.opnds[1]);
+      mv^.opnds[2].link := nil;
+      mv^.opnds[2].lts := nl;
+      nl^.refs := addr(mv^.opnds[2]);
+      if nlr^.mate <> nil then begin
+        mv^.opnds[3].lts := nm^.lts;
+        mv^.opnds[3].link := nm^.link;
+        nm^.link := addr(mv^.opnds[3]);
+        mv^.opnds[4].link := nil;
+        mv^.opnds[4].lts := nl2;
+        nl2^.refs := addr(mv^.opnds[4]);
+      end;
+      f := nl;
+    end;
+    if f^.f2.exposed then
+      f := f^.l44;
+    e1 := make_entering_lts(nlr, at^.bb, f);
+    if nlr^.mate = nil then
+      e2 := nil
+    else
+      e2 := make_entering_lts(nlr^.mate, at^.bb,
+                              utils_$locate_definition(nlr^.mate, at^.bb));
+    merge := true;
+  end
+  else begin
+    e1 := new^.lts;
+    if nm = nil then
+      e2 := nil
+    else
+      e2 := nm^.lts;
+  end;
+  discard(local_replace_output(e1, e2, old, at, merge, notreg));
+  if om <> nil then
+    om^.h.kind := operand$none;
+  if snug <> nil then begin
+    snug^.h.b2_6 := false;
+    b := snug^.bb;
+    if snug^.prev = nil then
+      b^.first := snug^.next
+    else
+      snug^.prev^.next := snug^.next;
+    if snug^.next = nil then
+      b^.last := snug^.prev
+    else
+      snug^.next^.prev := snug^.prev;
+  end;
+end;
+
+{ no_reg_like_kinds - the register kind of a like kind (ip_reg_like,
+  fp_reg_like, fp_reg_pair_like), any other kind itself.  0x226E38,
+  0x2A bytes, no frame: k a word on the stack. }
+
+function no_reg_like_kinds(
+    k: operand$t): operand$t; options(val_param); internal;
+begin
+  case k of
+    operand$ip_reg_like:
+      no_reg_like_kinds := operand$ip_reg;
+    operand$fp_reg_like:
+      no_reg_like_kinds := operand$fp_reg;
+    operand$fp_reg_pair_like:
+      no_reg_like_kinds := operand$fp_reg_pair;
+    otherwise
+      no_reg_like_kinds := k;
+  end;
 end;
 
 { com_$begin_compilation - com_heap made (flags 1, items of 8 bytes).
