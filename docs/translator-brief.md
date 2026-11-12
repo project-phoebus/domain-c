@@ -134,3 +134,12 @@ committed, gate clean.  Reply with: units finished (routines each),
 units started but unfinished and where, core changes made, dpc gaps and
 patterns added, questions added, and anything the lead must know to
 merge.
+  - Shared records have one owner.  In the PRISM back end the records
+    of backend.ins.pas (bb_t, lts_t, lr_t, rtn_t, instr_t, opnd_t, the
+    edges) belong to batch A, the views of the opcode tables and code
+    cells to batch B.  A translator of another batch does not rename or
+    split their fields: it reads what it needs through a unit-local
+    view (or by offset) and reports the offset and meaning for the
+    owner to name.  (Batches A and C named the same fields differently
+    in parallel and a reconciler had to merge them: docs/backend-plan.md
+    "Reconciliation of batches A-C".)
