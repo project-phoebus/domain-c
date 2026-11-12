@@ -214,7 +214,7 @@ var
   case_fold: boolean;                   { +80 }
   merge_tail: bucket_list_p_t;          { +84 }
   merge_head: bucket_list_p_t;          { +88 }
-  dag_depth: integer;                   { +92 }
+  dag_depth: integer := 1;              { +92 }
   visit_count: integer;                 { +94 }
 
 { alloc_rec - a record of size bytes from the general pool, its kind
