@@ -2309,3 +2309,20 @@ revisited.
    sets it after (`bclr #3' at 0x18C75C, `bset #3' at 0x18C790); hard_work
    reads `appended' and `wanted' (D4, D3) uninitialized when the pass-1
    action gives a work solution but no result (0x200966).
+277. Translator QB, outbin.pas: fpx_names are `varying [8]' or `[9]' of
+   char?  Both take 14 bytes (n + 5 or 6, rounded to even), which is the
+   image's spacing; no read tells them apart.  [8] chosen.
+278. Translator QB, list_tree.pas: the image's line is a record of a
+   length and 256 characters (258 bytes, blank-padded, no NUL), not a
+   varying [256] (262 bytes).  Declared as a unit-local lt_line_t,
+   passed to listln and emit as univ iosub_$line_t.  Did the original
+   declare its own type?  (outbin's prtsub_$line_t takes 262 bytes, so
+   iosub_$line_t cannot itself be such a record.)
+279. Translator QB, com.pas (cc.a88k): com_name (+24) is followed by
+   +284, so it takes 260 bytes, less than a varying [256]'s 262; is it a
+   record like list_tree's line?  Worth the same check: lst_line_t,
+   std_$string_t, time_$line_t, prtobj_$line_t.
+280. Translator QB, list_tree's size_letters (question 259): array
+   [0..12] with 12 values, array [0..13], or padding before mrh's
+   8-aligned data?  No instruction reads +0x148..+0x14B; the gate passes
+   either way.

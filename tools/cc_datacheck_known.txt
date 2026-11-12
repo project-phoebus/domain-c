@@ -6,12 +6,9 @@
 # Add a line only after checking the bytes (the table found whole in
 # dpc's block elsewhere, tools/cc_data.py for the image's).
 lang/c_compiler/source/c_expr_sem.pas	*	+0x0-+0x390	the own tables: dpc lays them after the defined cells, word-aligned (all present)
-lang/lang/source/list_tree.pas	*	+0x18-+0x11C	the line: length 0 and 256 blanks in the image, an initialized varying string (dpc gap 43; questions 256)
-lang/lang/source/list_tree.pas	*	+0x11C-+0x12C	countdown and the cells after it: dpc's line is 4 bytes longer
 lang/lang/source/gen_debug.pas	*	+0x0-+0x34	range_template: dpc lays it after the buffers it points into (all present)
 lang/lang/source/unix_objmod.pas	*	+0x0-+0x20	target_aligns, target_bases: dpc lays them after the defined cells (all present)
 lang/lang/source/opt_strength.pas	m68k	+0xA8-+0xB4	an initialized descriptor no instruction addresses, not declared (questions 255)
-lang/lang/source/outbin.pas	m68k	+0x8C8-+0xC48	fpx_names: a NUL after each name in the image (varying strings, dpc gap 43), blanks here (questions 256)
 lang2/source/be_com/dmp.pas	a88k	+0x108-+0x3F8	the .init tables: shorter in dpc (questions 257), all their set bytes present
 lang2/source/be_com/lst.pas	a88k	+0x0-+0x10	squash_suffix: dpc lays the defined cells (register_letter, lsq_suffix) first (all present)
 lang2/source/be_com/lst.pas	a88k	+0x190-+0x1C0	register_letter, lsq_suffix: defined cells, first in dpc's block (all present)
@@ -20,3 +17,4 @@ lang2/source/be_com/ra.pas	a88k	+0x590-+0x5A0	ra_masks: dpc lays them after the 
 lang2/source/be_com/ra_utils.pas	a88k	+0x0-+0x10	the spill classes' kinds: dpc lays them after the defined cells (all present)
 lang/lang/source/cg_tree.pas	m68k	+0x1A0-+0x1B4	cg_null_ads: a defined cell, laid out after the own ones by dpc (all present)
 lang2/source/be_com/lir.pas	a88k	+0x170-+0x1DC	build_message: pointers to the message strings, which the image places before A5 and dpc after the cells (the strings all present; rev889-patterns 159)
+lang/lang/source/outbin.pas	m68k	+0xCD0-+0xD30	the integer registers' names, the static tables of prt_int_regs, prtads, dbcod (+0xD40 wr_instr's): dpc lays all four after the module's cells, from its +0xD20; the content alignment then maps dpc's unset scalars over the first three (all present)
