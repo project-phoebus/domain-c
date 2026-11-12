@@ -79,6 +79,15 @@ Conventions the translators should know:
 exs.pas (27 routines, 4168 bytes, nested routines with uplevel
 references) was not reached: it heads batch A.
 
+Batch A (translator PA, 2026-11-11):
+
+| unit | routines | notes |
+|------|----------|-------|
+| `lang2/source/be_com/bv.pas` | 32 | done: vectors as sets of 0..31 (bv_t), the blocks' data flow vectors (bb_t +86 .. +130), lir_main_c78 .. c84 named; bv headings narrowed |
+| `lang/common/source/exs.pas` | 27 | done: exs.ins.pas checked against the bodies (IL nodes univ_ptr in the headings) |
+| `lang2/source/be_com/utils.pas` | 54 | done: utils.ins.pas narrowed (utils_$birthpoint_t, utils_$pair_func_t); lts_t, lr_t, bb_t, rtn_t fields for the segment lists |
+| call_conv, lir_utils, lir, lir_main, sym, df_utils, fg_utils, tm_utils, sanity, fga, hal, life, post | | not reached (docs/questions.md 160) |
+
 ## Order: leaves first by the call graph
 
 Remaining: 34 units, 391,102 bytes of code, 1291 routines.  Levels by
