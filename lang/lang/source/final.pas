@@ -12,10 +12,8 @@
   testcc; the same address: sameaddr) and edit them (detach, makejump,
   makecbr, moverefcell, movejump, reversecond, label_merge).
 
-  TODO(pascal) final.pas is not finished: 106 of its 120 routines are
+  TODO(pascal) final.pas is not finished: 108 of its 120 routines are
   translated.  Not yet translated (cc.m68k address, bytes):
-    0x109BB6 0x8DA  final_$collapsed_index_calc
-    0x10A492 0x7C4  final_$try_reducing_literal
     0x10C51C 0xB2   backov (in deltest)
     0x10C5CE 0x60C  deltest
     0x10CD7E 0x316  final_$redundant_lea
@@ -28,9 +26,8 @@
     0x10F30C 0x3B8  try_post_incr
     0x10F6C4 0x4C0  opta
     0x10FB84 0x3D4  floatop
-  The five of them that peepholer_ops calls (final_$try_reducing_literal,
-  opttest, optmove, opta, floatop) are declared extern before peepholer
-  until they are written.
+  The four of them that peepholer_ops calls (opttest, optmove, opta,
+  floatop) are declared extern before peepholer until they are written.
 
   Image addresses (DOMAIN C 6.9; cc.m68k only: cc.a88k has no final):
     cc.m68k   cc.a88k
@@ -230,6 +227,15 @@ type
     (`cmpm.l', `dbne' 2). }
   fn_ads_words_t = array [1..3] of integer32;
 
+  { An immediate's value as final_$try_reducing_literal reads its
+    parts: the longword, its words, its bytes. }
+  fn_lit_t = record
+    case integer of
+      1: (l: integer32);
+      2: (w: array [1..2] of integer);
+      3: (c: array [1..4] of char);
+  end;
+
   { A cell of a pattern try_reducing_fabs_op matches (76 bytes, indexed
     by `76 * i'): the kinds it may have (`btst' from 63), whether its op
     is checked and the ops it may have (from 511), whether its source
@@ -278,9 +284,23 @@ var
     256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
     1, 2, 4, 8, 16, 32, 64, 128];       { +0x30: each register's bit in
                                           a movem's mask }
-  fn_60: array [0..9] of integer32 := [
-    255, 65535, 255, 65535, 1, 0, 3, 2, 1];  { +0x60: TODO(pascal) its
-                                          users not translated yet }
+  fn_mask: array [1..2] of array [0..1] of integer32 := [
+    [255, 65535], [255, 65535]];        { +0x60: a constant source's
+                                          mask when a move of size
+                                          [1..2] (word, long) is made one
+                                          of size [0..1] (byte, word):
+                                          final_$try_reducing_literal,
+                                          `(0x58,A1,D0.w)' with A1 A5
+                                          plus 8 times the old size }
+  fn_adjust: array [1..2] of array [0..1] of integer32 := [
+    [1, 0], [3, 2]];                    { +0x70: the displacement added
+                                          to a memory source then
+                                          (`(0x68,A1,D4.w)') }
+  fn_size_f6: array [0..1] of integer := [
+    0, 1];                              { +0x80: the immediate's size
+                                          (f6) for a move of that size
+                                          (`(129,A1)', the low byte) }
+  fn_84: integer32;                     { +0x84: no user found }
   fn_cond_cc: array [0..15] of integer := [
     0, 0, 10, 10, 8, 8, 2, 2, 4, 4, 1, 1, 5, 5, 7, 7];  { +0x88: the
                                           codes each condition (T, F,
@@ -1307,6 +1327,381 @@ begin
     end;
   end;
   final_$contiguous_distinct_addresses := r;
+end;
+
+{ final_$collapsed_index_calc - under -CPU M020 (`btst #5' of +0x285),
+  an index register computed just before cell c (by address) and used
+  in the cell after it (n) folded into n's addressing, the cells that
+  computed it removed and c set to n:
+  - c an addq or addi (ops 24, 21) of a constant to data register x,
+    after a move.l (kind 1, op 2) to x from another data register y:
+    where n uses x as an index, the index made y and the displacement
+    given the constant times the scale;
+  - c an add.l (op 16) of data register y to x after a move.l of a
+    constant to x: likewise;
+  - c an adda.l (op 18) of data register y to address register a
+    after a movea (kind 4, op 5) to a from address register b: where n
+    uses a as (a), the operand made (b,y.l) (mode 4, f5 bit 1 set);
+  - c an addi of a 16-bit constant to x after a move.l from y to x,
+    after a movea from b to a, n an adda.l (kind 4, op 18) of x to a:
+    n made an adda.l of y, a lea (kind 4, op 12) of the constant from
+    b to a put after c, the three removed.
+  In the first three x must die at n (reg_is_killed, or
+  reg_is_dead_henceforth after it) and the new displacement (the old
+  one plus the constant, unscaled) fit in 16 bits.  Whether it was
+  done.
+
+  0x109BB6, 0x8DA bytes, no A5 load: c by address in D4, the cell
+  before it in D5, the one before that at -16, n in A3; the registers'
+  classes `btst' in #0xFF and #0xFF00; the scale 1 shifted by the
+  operand's f4 multiplied with M$MIS$LLL; the three first cases share
+  their end (n's length, the two removed, c := n); the fourth gives the
+  lea c's length (`ilength' of c). }
+
+function final_$collapsed_index_calc(
+    in out c: codegen_$cell_ptr_t): boolean; internal;
+label
+  9;
+var
+  r: boolean;
+  m: codegen_$cell_ptr_t;
+  mm: codegen_$cell_ptr_t;
+  n: codegen_$cell_ptr_t;
+  k: codegen_$cell_ptr_t;
+begin
+  r := false;
+  if not (3 in cargs_$options.cpu) then
+    goto 9;
+  m := prvlcc(c);
+  mm := prvlcc(m);
+  n := nxtlcc(c);
+  if ((c^.op = 24) or (c^.op = 21)) and (c^.ads2.f1 = 1) and
+     (c^.ads2.f2 in [0..7]) and (m^.kind = move_instyp) and (m^.op = 2) and
+     sameaddr(m^.ads2, c^.ads2) and (m^.ads1.f1 = 1) and
+     (m^.ads1.f2 in [0..7]) and (m^.ads1.f2 <> c^.ads2.f2) and
+     (final_$reg_is_killed(n, c^.ads2.f2) or
+      final_$reg_is_dead_henceforth(n^.next, c^.ads2.f2)) and
+     (final_$reg_is_index(n^.ads1, c^.ads2.f2) or
+      final_$reg_is_index(n^.ads2, c^.ads2.f2)) then begin
+    if final_$reg_is_index(n^.ads1, c^.ads2.f2) then begin
+      if not final_$in_15bit_range(n^.ads1.y +
+                                   il_$node_ptr_t(c^.ads1.x)^.int_value) then
+        goto 9;
+      n^.ads1.f3 := m^.ads1.f2;
+      n^.ads1.y := n^.ads1.y + lshft(1, n^.ads1.f4) *
+                   il_$node_ptr_t(c^.ads1.x)^.int_value;
+    end;
+    if final_$reg_is_index(n^.ads2, c^.ads2.f2) then begin
+      if not final_$in_15bit_range(n^.ads2.y +
+                                   il_$node_ptr_t(c^.ads1.x)^.int_value) then
+        goto 9;
+      n^.ads2.f3 := m^.ads1.f2;
+      n^.ads2.y := n^.ads2.y + lshft(1, n^.ads2.f4) *
+                   il_$node_ptr_t(c^.ads1.x)^.int_value;
+    end;
+    n^.size := ilength(n);
+    detach(m);
+    detach(c);
+    c := n;
+    r := true;
+  end
+  else if (c^.op = 16) and (c^.ads2.f1 = 1) and (c^.ads2.f2 in [0..7]) and
+          (m^.kind = move_instyp) and (m^.op = 2) and
+          sameaddr(m^.ads2, c^.ads2) and (m^.ads1.f1 = 3) and
+          (c^.ads1.f1 = 1) and (c^.ads1.f2 in [0..7]) and
+          (m^.ads2.f2 <> c^.ads1.f2) and
+          (final_$reg_is_killed(n, c^.ads2.f2) or
+           final_$reg_is_dead_henceforth(n^.next, c^.ads2.f2)) and
+          (final_$reg_is_index(n^.ads1, c^.ads2.f2) or
+           final_$reg_is_index(n^.ads2, c^.ads2.f2)) then begin
+    if final_$reg_is_index(n^.ads1, c^.ads2.f2) then begin
+      if not final_$in_15bit_range(n^.ads1.y +
+                                   il_$node_ptr_t(m^.ads1.x)^.int_value) then
+        goto 9;
+      n^.ads1.f3 := c^.ads1.f2;
+      n^.ads1.y := n^.ads1.y + lshft(1, n^.ads1.f4) *
+                   il_$node_ptr_t(m^.ads1.x)^.int_value;
+    end;
+    if final_$reg_is_index(n^.ads2, c^.ads2.f2) then begin
+      if not final_$in_15bit_range(n^.ads2.y +
+                                   il_$node_ptr_t(m^.ads1.x)^.int_value) then
+        goto 9;
+      n^.ads2.f3 := c^.ads1.f2;
+      n^.ads2.y := n^.ads2.y + lshft(1, n^.ads2.f4) *
+                   il_$node_ptr_t(m^.ads1.x)^.int_value;
+    end;
+    n^.size := ilength(n);
+    detach(m);
+    detach(c);
+    c := n;
+    r := true;
+  end
+  else if (c^.op = 18) and (c^.ads2.f1 = 1) and (c^.ads2.f2 in [8..15]) and
+          (m^.kind = a_instyp) and (m^.op = 5) and
+          sameaddr(m^.ads2, c^.ads2) and (m^.ads1.f1 = 1) and
+          (m^.ads1.f2 in [8..15]) and (c^.ads1.f1 = 1) and
+          (c^.ads1.f2 in [0..7]) and
+          (final_$reg_is_killed(n, c^.ads2.f2) or
+           final_$reg_is_dead_henceforth(n^.next, c^.ads2.f2)) and
+          (final_$reg_is_simple_deferred(n^.ads1, c^.ads2.f2) or
+           final_$reg_is_simple_deferred(n^.ads2, c^.ads2.f2)) then begin
+    if final_$reg_is_simple_deferred(n^.ads1, c^.ads2.f2) then begin
+      n^.ads1.f1 := 4;
+      n^.ads1.f2 := m^.ads1.f2;
+      n^.ads1.f3 := c^.ads1.f2;
+      n^.ads1.f5 := n^.ads1.f5 ! 2;
+    end;
+    if final_$reg_is_simple_deferred(n^.ads2, c^.ads2.f2) then begin
+      n^.ads2.f1 := 4;
+      n^.ads2.f2 := m^.ads1.f2;
+      n^.ads2.f3 := c^.ads1.f2;
+      n^.ads2.f5 := n^.ads2.f5 ! 2;
+    end;
+    n^.size := ilength(n);
+    detach(m);
+    detach(c);
+    c := n;
+    r := true;
+  end
+  else if (c^.op = 21) and (c^.ads2.f1 = 1) and (c^.ads2.f2 in [0..7]) and
+          final_$in_15bit_range(il_$node_ptr_t(c^.ads1.x)^.int_value) and
+          (n^.kind = a_instyp) and (n^.op = 18) and
+          sameaddr(n^.ads1, c^.ads2) and (n^.ads2.f1 = 1) and
+          (n^.ads2.f2 in [8..15]) and (m^.kind = a_instyp) and (m^.op = 5) and
+          (m^.ads1.f1 = 1) and (m^.ads1.f2 in [8..15]) and
+          sameaddr(m^.ads2, n^.ads2) and (mm^.kind = move_instyp) and
+          (mm^.op = 2) and (mm^.ads1.f1 = 1) and (mm^.ads1.f2 in [0..7]) and
+          sameaddr(mm^.ads2, c^.ads2) and
+          final_$reg_is_dead_henceforth(n^.next, c^.ads2.f2) then begin
+    n^.ads1 := mm^.ads1;
+    k := getcodecell(a_instyp);
+    k^.op := 12;
+    k^.ads1.f1 := 2;
+    k^.ads1.f2 := m^.ads1.f2;
+    k^.ads1.y := il_$node_ptr_t(c^.ads1.x)^.int_value;
+    k^.ads2 := n^.ads2;
+    k^.size := ilength(c);
+    after(c, k);
+    detach(m);
+    detach(mm);
+    detach(c);
+    c := n;
+    r := true;
+  end;
+9:
+  final_$collapsed_index_calc := r;
+end;
+
+{ final_$try_reducing_literal - an instruction c (by address) with an
+  immediate source made cheaper, unless final_$collapsed_index_calc
+  folded it already; only for kind 8:
+  - a compare (ops 107..109) of 1 or -1 before a conditional branch made
+    a subtract (kind 3, op + 6), the branch's condition shifted (as
+    peepholer_init does);
+  - an operation on memory (not ops 107..109 or 45..47, not a register
+    destination, no untouchable memory, no conditional branch after it,
+    even past a line) whose long immediate has a zero low word made a
+    word (op - 1) or, when the second byte is 0 (255 for op 41), a byte
+    operation (op - 2) on the high part, two bytes shorter; a word
+    immediate with a zero low byte (255 for op 40) a byte one;
+  - an and (op 41 or 40) of 255 or 65535 with a data register: after
+    lsl.l #8 (kind 11, op 80) of a move.l from a data register, made a
+    clr.w (kind 3, op 11) before the move, which becomes op 1, the shift
+    op 85 and c that shift; an and.w of 255 then and.l of 65535 (the
+    next) made an and.l of 255; then an ext (ops 7, 6) of the register
+    of c's size before it removed, and a move into the register (ops
+    0, 2, 1) before it made a clr (kind 3, op 11 for and.l, 10 for
+    and.w) and c a move of a byte or word (op 0 for 255, 1 for 65535) of
+    its source, put after it: a memory source's displacement advanced
+    (fn_adjust) or a constant masked (fn_mask, fn_size_f6) when the
+    move is narrower; not for 255 from an address register.
+
+  0x10A492, 0x7C4 bytes, no A5 load: c by address in A3; the constant
+  at -8 (its bytes and words read alone: `tst.w (-6,A6)', `move.b
+  (-7,A6)', `move.w (-8,A6)'); a `case' of the branch's op less 142
+  through a table of 10; the searches' flags in D2 and D3; the
+  instructions' kinds tested on prvcc's set at 0x108BE8; getcodecell's
+  3 a word after the routine; the empty descriptor celpkg's (0x2CE68C,
+  fn_null_ads).
+
+  Not known from the original: how it read the constant's parts (a
+  variant record here). }
+
+procedure final_$try_reducing_literal(
+    in out c: codegen_$cell_ptr_t); internal;
+label
+  9;
+var
+  n: codegen_$cell_ptr_t;
+  nx: codegen_$cell_ptr_t;
+  p: codegen_$cell_ptr_t;
+  p1: codegen_$cell_ptr_t;
+  p2: codegen_$cell_ptr_t;
+  k: codegen_$cell_ptr_t;
+  ok: boolean;
+  found: boolean;
+  done: boolean;
+  v: fn_lit_t;
+  old: integer;
+begin
+  if final_$collapsed_index_calc(c) then
+    goto 9;
+  if c^.kind <> i_instyp then
+    goto 9;
+  n := nxtlcc(c);
+  if (c^.op in [107..109]) and (n^.kind = cbr_instyp) then begin
+    ok := true;
+    if il_$node_ptr_t(c^.ads1.x)^.int_value = 1 then
+      case n^.op of
+        142: n^.op := 144;
+        143: n^.op := 145;
+        150: n^.op := 152;
+        151: n^.op := 153;
+        otherwise
+          ok := false;
+      end
+    else if il_$node_ptr_t(c^.ads1.x)^.int_value = -1 then
+      case n^.op of
+        152: n^.op := 148;
+        153: n^.op := 149;
+        otherwise
+          ok := false;
+      end
+    else
+      ok := false;
+    if ok then begin
+      c^.op := c^.op + 6;
+      c^.kind := dest1_sz_instyp;
+    end;
+  end;
+  v.l := il_$node_ptr_t(c^.ads1.x)^.int_value;
+  if not (c^.op in [107..109]) and not (c^.op in [45..47]) and
+     (c^.ads2.f1 <> 1) and not has_untouchable_mem_attrs(c^.ads2) then begin
+    nx := c^.next;
+    if nx^.kind = cbr_instyp then
+      goto 9;
+    if (nx^.kind = line_no_instyp) and (nx^.next <> nil) then
+      if nx^.next^.kind = cbr_instyp then
+        goto 9;
+    if (c^.ads1.f6 = 2) and (v.w[2] = 0) and (c^.op <> 41) then begin
+      if ((ord(v.c[2]) = 0) and (c^.op <> 41)) or
+         ((ord(v.c[2]) = 255) and (c^.op = 41)) then begin
+        c^.ads1.x := integer32(smcontk(81, ord(v.c[1])));
+        c^.op := c^.op - 2;
+        c^.ads1.f6 := 0;
+      end
+      else begin
+        c^.ads1.x := integer32(smcontk(81, v.w[1]));
+        c^.op := c^.op - 1;
+        c^.ads1.f6 := 1;
+      end;
+      c^.size := c^.size - 2;
+    end
+    else if c^.ads1.f6 = 1 then
+      if ((ord(v.c[4]) = 0) and (c^.op <> 40)) or
+         ((ord(v.c[4]) = 255) and (c^.op = 40)) then begin
+        c^.ads1.x := integer32(smcontk(81, ord(v.c[3])));
+        c^.op := c^.op - 1;
+        c^.ads1.f6 := 0;
+        c^.size := ilength(c);
+      end;
+    goto 9;
+  end;
+  if (c^.ads2.f1 = 1) and ((c^.op = 41) or (c^.op = 40)) and
+     ((v.l = 255) or (v.l = 65535)) then begin
+    p1 := prvlcc(c);
+    p2 := prvlcc(p1);
+    if (c^.op = 41) and (v.l = 255) and (p1^.kind = shft_cnt_instyp) and
+       (p1^.op = 80) and final_$is_int(p1^.ads1, 8) and
+       sameaddr(p1^.ads2, c^.ads2) and (p2^.kind = move_instyp) and
+       (p2^.op = 2) and (p2^.ads1.f1 = 1) and sameaddr(p2^.ads2, c^.ads2) then
+      if not testcc(nxtlcc(c), 15) then begin
+        k := getcodecell(dest1_sz_instyp);
+        k^.op := 11;
+        k^.ads1 := fn_null_ads;
+        k^.ads2 := c^.ads2;
+        k^.size := ilength(k);
+        after(p2^.prev, k);
+        p2^.op := 1;
+        p2^.size := ilength(p2);
+        p1^.op := 85;
+        p1^.size := ilength(p1);
+        detach(c);
+        c := p1;
+        goto 9;
+      end;
+    if (c^.op = 40) and (v.l = 255) and (n^.kind = i_instyp) and
+       (n^.op = 41) and (il_$node_ptr_t(n^.ads1.x)^.int_value = 65535) and
+       sameaddr(c^.ads2, n^.ads2) then begin
+      c^.op := 41;
+      c^.ads1.f6 := 2;
+      c^.size := ilength(c);
+      detach(n);
+    end;
+    found := false;
+    p := c;
+    done := found;
+    repeat
+      p := prvlcc(p);
+      if not (p^.kind in [0, 24, 32..33]) and ((p^.op = 7) or (p^.op = 6)) and
+         sameaddr(p^.ads2, c^.ads2) and not involves(p^.ads1, c^.ads2.f2) and
+         (final_$sizeof(p, 2) = final_$sizeof(c, 2)) then
+        found := true
+      else
+        done := (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+                sameaddr(p^.ads1, c^.ads2) or involves(p^.ads1, c^.ads2.f2) or
+                final_$reg_is_killed(p, c^.ads2.f2);
+      done := done or (p = fn_sect^.head);
+    until found or done;
+    if found then
+      detach(p);
+    found := false;
+    p := c;
+    done := found;
+    repeat
+      p := prvlcc(p);
+      if not (p^.kind in [0, 24, 32..33]) and
+         ((p^.op = 0) or (p^.op = 2) or (p^.op = 1)) and
+         sameaddr(p^.ads2, c^.ads2) and not involves(p^.ads1, c^.ads2.f2) then
+        found := true
+      else
+        done := (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+                sameaddr(p^.ads1, c^.ads2) or involves(p^.ads1, c^.ads2.f2) or
+                final_$reg_is_killed(p, c^.ads2.f2);
+      done := done or (p = fn_sect^.head);
+    until found or done;
+    if found then begin
+      if v.l = 255 then
+        if assert_is_direct_use_of_address_reg(p^.ads1) then
+          goto 9;
+      c^.kind := p^.kind;
+      p^.kind := dest1_sz_instyp;
+      old := p^.op;
+      if c^.op = 41 then
+        p^.op := 11
+      else
+        p^.op := 10;
+      if v.l = 255 then
+        c^.op := 0
+      else
+        c^.op := 1;
+      c^.ads1 := p^.ads1;
+      if old > c^.op then
+        if c^.ads1.f1 in [2, 4..6, 12, 15] then
+          c^.ads1.y := c^.ads1.y + fn_adjust[old][c^.op]
+        else if c^.ads1.f1 = 3 then begin
+          c^.ads1.x := integer32(smcontk(81,
+              il_$node_ptr_t(c^.ads1.x)^.int_value & fn_mask[old][c^.op]));
+          c^.ads1.f6 := fn_size_f6[c^.op];
+        end;
+      p^.ads1.f1 := 0;
+      p^.size := ilength(p);
+      c^.size := ilength(c);
+      delink(c);
+      after(p, c);
+    end;
+  end;
+9:
 end;
 
 { fpx_instruction - c is an FPX instruction: kinds 41 and 44, and kinds
@@ -3330,13 +3725,10 @@ begin
   final_$unlink_opts := nx;
 end;
 
-{ TODO(pascal) final_$try_reducing_literal (0x10A492), opttest
-  (0x10D600), optmove (0x10DF52), opta (0x10F6C4) and floatop (0x10FB84)
-  are not translated yet: declared here (headings read off their
-  frames and peepholer_ops's calls) until they are written. }
-
-procedure final_$try_reducing_literal(
-    in out c: codegen_$cell_ptr_t); extern;
+{ TODO(pascal) opttest (0x10D600), optmove (0x10DF52), opta (0x10F6C4)
+  and floatop (0x10FB84) are not translated yet: declared here
+  (headings read off their frames and peepholer_ops's calls) until
+  they are written. }
 
 function opttest(
     c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); extern;
