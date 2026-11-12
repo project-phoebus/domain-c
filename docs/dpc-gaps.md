@@ -33,6 +33,11 @@ when this tree is merged).
   returning a 4-byte array) and 34 (string constants to short char
   arrays): fixed in 3e7b09c and ca0dd28.**  Their rules removed, but
   for cg_call's gap 22 rule: without it the routine meets gap 28.
+- Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
+  spiller finds values to spill but runs out of virtual register
+  numbers (240 per class) adding the reloads, and the colouring's
+  message is reported.  Widening the numbering, with the
+  domain-pascal owner as part of 25, would cover both.
 - Gap 32 is queued in domain-pascal; `while true do' is refused on
   purpose (the image cannot tell it from `repeat ... until false'):
   write such loops with a label.
