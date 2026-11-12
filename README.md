@@ -166,4 +166,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/reg_save.pas` | 23 | translated (cc.m68k only; best effort; trees through cg.ins.pas's cg_tree_t, statements through g_opt.ins.pas's g_opt_stmt_t, other nodes by offset; dpc gaps 8, 24, 30) |
 | `lang/lang/source/emit.pas` | 11 | translated (cc.m68k only; best effort; opinfo's instruction lists through em_entry_t, cells through codegen.ins.pas, nodes by offset; dpc gaps 7, 8, 24) |
 | `lang/lang/source/fpa.pas` | 20 | translated (cc.m68k only; best effort; descriptors through codegen_$uads_t, trees through cg_tree_t, the module's data initialized; dpc gaps 7, 8) |
+| `lang/lang/source/banshee.pas` | 1 | translated (cc.m68k only; best effort; cells through codegen.ins.pas, the module's descriptors initialized; dpc gap 8) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

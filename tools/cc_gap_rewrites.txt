@@ -517,3 +517,5 @@ lang/lang/source/emit.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^
 lang/lang/source/fpa.pas	s/address\((rl|dp)contk\((-1|0)\.0\), 0, k\)/address(smcontk(81, $2), 0, k) { gap 7 }/
 # gap 8 (fpa, translator HH): in on a constant set with word elements (emit_jsr's operations; the comparisons, as cg_top's rule)
 lang/lang/source/fpa.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
+# gap 8 (banshee, translator HH): in on the cell kinds' constant sets (word elements; the comparisons, as cg_top's rule)
+lang/lang/source/banshee.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge

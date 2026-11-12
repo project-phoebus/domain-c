@@ -419,3 +419,7 @@ bodies only read or copy them) and its headings checked against the
 bodies (emit_jsr's x a word, push_fpa_opr's k 1 a load and 63 a store,
 x the FPA register or 31 the stack); cg_top.pas defines
 cg_top_fp_long, which fpa sets absolutely.
+Translator HH, banshee (finished, 1 of 1): dobansheefpx's heading in
+final.ins.pas (final's peepholer calls it); celpkg.pas defines
+null_ads, which banshee copies absolutely; opinfo's operand sizes
+(0x2D01CE) declared in the unit.
