@@ -2088,7 +2088,7 @@ begin
         i^.opnds[1].h.bytes := 4;
         opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 16;
         i^.opnds[2].h.kind := operand$ip_reg_like;
-        i^.opnds[2].value := lir_main_c48;   { a segment (lir_main +0xC48) }
+        i^.opnds[2].lts := lir_main_c48;     { a segment (lir_main +0xC48) }
         i^.h.may_generate_an_exception := false;
         n := 2;
       end;
@@ -2216,7 +2216,7 @@ begin
         i^.opnds[1].h.bytes := 4;
         opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 16;
         i^.opnds[2].h.kind := operand$ip_reg_like;
-        i^.opnds[2].value := lir_main_c48;   { a segment (lir_main +0xC48) }
+        i^.opnds[2].lts := lir_main_c48;     { a segment (lir_main +0xC48) }
         i^.h.may_generate_an_exception := false;
         n := 2;
       end;

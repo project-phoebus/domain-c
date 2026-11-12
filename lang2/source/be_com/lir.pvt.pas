@@ -12,8 +12,8 @@
 
   Not known from the original: everything about its contents. }
 
-{ TODO(pascal) lir.pvt.pas: the cells and headings listed above (lir,
-  lir_main and ra_utils not translated yet) }
+{ TODO(pascal) lir.pvt.pas: the cells and headings listed above (lir
+  and ra_utils not translated yet; lir_main's are here) }
 
 type
   { batch A (PA4): how a spill or store-through load or store is made
@@ -52,6 +52,27 @@ type
     l104: integer32;                    { +0x104 }
   end;
 
+  { batch A (PA5): the attributes a top-level node's instructions
+    inherit (lir.pas +0x3B80, 40 bytes): lir_main's
+    top_level_inherited_attributes sets node and clears l12, then
+    lir_$complete_top_level_node_inherited_attrs fills it;
+    clean_up_canned_inherited clears l4, l12 and w34.  The address is
+    what lir_$get_new_instruction_no_exceptions and the
+    lir_$..._instruction routines take as their first argument. }
+  lir_inherited_t = record
+    node: univ_ptr;                     { +0 }
+    l4: integer32;                      { +4 }
+    l8: integer32;                      { +8 }
+    l12: integer32;                     { +12 }
+    space16: array [16..33] of char;    { +16 }
+    w34: integer;                       { +34 }
+    l36: integer32;                     { +36 }
+  end;
+
+  { The physical registers' solutions (lir +0x3C60, +0x3D60: by
+    floating register; lir_3e60 by integer register). }
+  lir_sol_tab_t = array [0..63] of solution_ptr_t;
+
 var (spill_instr_forms)
   spill_instr_forms: spill_instr_forms_t;
 
@@ -62,10 +83,32 @@ var
                                           (lir_utils_$add_lts_to_lr,
                                           _add_lts_after_lts:
                                           mrh_$alloc_fixed) }
-  lir_3b80: extern array [0..9] of integer32;  { +0x3B80 (0x48AD00): an
-                                          IL node lir_utils' new loads
-                                          are made for (begin_instruction's
-                                          node; batch A, PA4) }
+  lir_3b80: extern lir_inherited_t;     { +0x3B80 (0x48AD00): the
+                                          inherited attributes lir_utils'
+                                          new loads are made with
+                                          (begin_instruction's first
+                                          argument; batch A, PA4; PA5: a
+                                          record) }
+  lir_3c18: extern mrh_$heap_t;         { +0x3C18: a fixed heap of
+                                          segments (the memory's, lir_main's
+                                          prologue stores) }
+  lir_3c30: extern mrh_$heap_t;         { +0x3C30, +0x3C48: heaps
+                                          lir_main_$build_initial_epilog
+                                          releases }
+  lir_3c48: extern mrh_$heap_t;
+  lir_3c60: extern lir_sol_tab_t;       { +0x3C60: by floating register,
+                                          the solution of its pair }
+  lir_3d60: extern lir_sol_tab_t;       { +0x3D60: by floating register,
+                                          the solution of its physical
+                                          live range }
+  lir_41f0: extern bb_ptr_t;            { +0x41F0: the entry block (the
+                                          ENTRY's block is its successor) }
+  lir_41f4: extern integer32;           { +0x41F4: the RETURN's operands
+                                          beyond the registers }
+  lir_41f8: extern bb_ptr_t;            { +0x41F8: the exit block }
+  lir_41fc: extern bb_ptr_t;            { +0x41FC: the return block }
+  lir_4216: extern integer;             { +0x4216: rrp bits new register
+                                          operands' live ranges get }
   lir_3ba8: extern lr_t;                { +0x3BA8 (0x48AD28): the live
                                           range of the memory the
                                           store-through loads and stores
@@ -80,7 +123,16 @@ var
                                           +0x288 its w56) }
   lir_main_760: extern solution_t;      { +0x760: the address solution of
                                           a static home's access through
-                                          the DB register (+0x790 disp) }
+                                          the DB register (+0x790 disp);
+                                          lir_main: of the frame (the
+                                          formals' and saves' slots) }
+  lir_main_400: extern solution_t;      { +0x400: a register's (lir_main:
+                                          a formal's home) }
+  lir_main_5b0: extern solution_t;      { +0x5B0: an argument register's }
+  lir_main_910: extern solution_t;      { +0x910 (lir: kind 3) }
+  lir_main_da0: extern solution_ptr_t;  { +0xDA0: the solution of the
+                                          ENTRY's and RETURN's symbol
+                                          operand (set by lir) }
 
 { LIR_UTILS_$FLESH_OUT_NEW_LOAD_OR_STORE - the operands of a new load or
   store instr made from desc (spill_desc_t): reg (and

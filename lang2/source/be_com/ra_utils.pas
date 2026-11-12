@@ -505,7 +505,7 @@ begin
     end;
   end;
   home := ru_homes^[lr^.id];
-  instr := lir_$get_new_instruction_no_exceptions(nil, opc, 16#2000, home, nil);
+  instr := lir_$get_new_instruction_no_exceptions(nil, opc, 16#2000, home, 0);
   instr^.bb := bb;
   instr^.h.b2_6 := true;
   if at_head then begin
@@ -1542,18 +1542,18 @@ var
 begin
   if mlts <> nil then
     x := lir_$get_new_instruction_no_exceptions(addr(lir_3b80),
-        tmpl^.opc, 0, nil, nil)
+        tmpl^.opc, 0, nil, 0)
   else if tmpl^.opc = ord(opc$loadd) then
     x := lir_$get_new_instruction_no_exceptions(addr(lir_3b80),
-        ord(opc$loads), 0, nil, nil)
+        ord(opc$loads), 0, nil, 0)
   else if tmpl^.opc = ord(opc$copyd) then
     x := lir_$get_new_instruction_no_exceptions(addr(lir_3b80),
-        ord(opc$copys), 0, nil, nil)
+        ord(opc$copys), 0, nil, 0)
   else if instruction_attributes[tmpl^.opc].class = class$fp_double then
     bug_check('RA_UTILS: REMATERIALIZE_RESULT - unexpected DP instruction without 2nd LTS%$')
   else
     x := lir_$get_new_instruction_no_exceptions(addr(lir_3b80),
-        tmpl^.opc, 0, nil, nil);
+        tmpl^.opc, 0, nil, 0);
   first := nil;
   second := nil;
   x^.h.b2_6 := true;
@@ -2849,7 +2849,7 @@ begin
               form := pick_instruction(kind, fl.w, op, d7,
                   addr(spill_instr_forms.load_ptrs), v^.memory_home);
               ni := lir_$get_new_instruction_no_exceptions(
-                  addr(lir_3b80), form^.opc, 16#2000, v^.memory_home, nil);
+                  addr(lir_3b80), form^.opc, 16#2000, v^.memory_home, 0);
               spill_instr_forms.forms[3].num := 1;
               spill_instr_forms.forms[1].num := 2;
               tmp88 := nil;
@@ -2972,7 +2972,7 @@ begin
           form := pick_instruction(kind, 0, op, d7,
               addr(spill_instr_forms.store_ptrs), v^.memory_home);
           ni := lir_$get_new_instruction_no_exceptions(
-              addr(lir_3b80), form^.opc, 16#2000, v^.memory_home, nil);
+              addr(lir_3b80), form^.opc, 16#2000, v^.memory_home, 0);
           spill_instr_forms.forms[3].num := 2;
           spill_instr_forms.forms[1].num := 3;
           tmp88 := nil;

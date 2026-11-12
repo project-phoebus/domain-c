@@ -1020,8 +1020,6 @@ cc.m68k unless marked.
     which never reads (8,A6): written as an unused parameter (cf. item
     103, where the push belonged to another call).
 
-
-
 ## The register allocator's utilities (translator PB5, cc.a88k ra_utils)
 
 137. **A real constant stored to a single real field as its bits.**
@@ -1042,3 +1040,49 @@ cc.m68k unless marked.
     for each read operand; a write operand that is not also read sees
     the flags its instruction's previous operands left.  Written as a
     variant record (ru_fl_t) with the word's view.
+## The loop optimizer (translator PC6, cc.a88k oli)
+
+140. **A longword module variable multiplied as its low word.**
+    oli's excess_register_pressure and build_bookkeeping_structures
+    size their tables `move.w (11842,A5),D0; muls.w (11834,A5),D0;
+    lsl.w #3,D0' (cc.a88k 0x25B6BA, 0x25C1AC): the interval and the
+    iteration count are longwords at +0x2E40 and +0x2E38, read at +2
+    and multiplied as words for mrh_$alloc's word size (pattern 129
+    for a product).  dpc multiplies the longwords and narrows.
+141. **An array's leading elements folded into the index's
+    displacement.**  oli's tables by instruction number (element k at
+    A5 + base + 4k, k from 1) are reached `lea (4,A5),A0' then
+    `(5652,A0)' with A0 stepping by 4 (reverse_iteration_numbers
+    0x258030), or `lea (0,A5,D1.l),A0; move.b #0,(11255,A0)' for a
+    boolean array from 1 (init_sched 0x258630): the displacements
+    name the nonexistent element 0, so the declared arrays (from 1)
+    sit 4 (or 1) bytes above them.  Not a difference; noted for
+    reading offsets.
+142. **A routine that ends without setting its result on a path.**
+    consumed_in_downstream_bb (0x25BE02) returns D0 as it holds the
+    parameter's address when the final segment reaches no other block;
+    get_materialized_in_re_duction_lr returns A0's leftovers on two
+    paths.  Written with the result unassigned there.
+
+## The LIR's frame code (translator PA5, lir_main; cc.a88k)
+
+143. **A set held in a register ored from a frame copy that is never
+    stored.**  lir_main_$entry (cc.a88k 0x249756) counts the
+    conventions' floating registers into two `set of 0..31' kept in D1
+    and D2 (`clr.l D0; move.l D0,D1; move.l D0,D2'), but each union is
+    built in frame temporaries from the variable's frame home (`lea
+    (-32,A6),A1; move.l (A1)+,D6; or.l (A0)+,D6'), which nothing ever
+    writes, and the result is loaded back into D1 (`move.l (-168,A6),
+    D1'): the union's left operand read from the variable's memory
+    home while its value lives in a register (cf. item 127, dpc gap
+    30).  Written `s1 := s1 + [r] + [r - 1]'.
+144. **A call's argument area popped short and the next call pushed
+    without its pad.**  lir_main_$entry pops 6 of lir_$add_flow_graph_
+    edge's 8 bytes (`addq.l #6,SP', 0x249878) and lir_main_$handler_
+    reentry 2 of lir_$label's 4 (`addq.l #2,SP', 0x24A182): item 130
+    for global callees.
+145. **Byte module variables packed one to a byte.**  lir_main's data
+    has booleans at +0xC88, +0xC89 and +0xC8B..+0xC8E (and +0xDA4,
+    +0xDA8, +0xDAA, +0xDB4 followed by unaddressed bytes): Rev 8.89
+    gives a boolean module variable one byte.  dpc gives each two
+    (docs/dpc-gaps.md 37).

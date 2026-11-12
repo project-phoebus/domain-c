@@ -42,6 +42,13 @@ when this tree is merged).
 - **Gap 36 (a pointer result of a call through a routine pointer or
   parameter): fixed in 3bad22b.**  Its rule removed (lir_utils still
   needs gap 21's stand-in for the nested new_db_lts).
+- Gap 37 is a version difference, not a dpc bug: dpc's one word per
+  byte module variable is the SR10.2 kernel compiler's rule (verified
+  against the kernel image; domain-pascal docs/codegen-patterns.md,
+  "Byte-sized module variables"), while Rev 8.89 packs them one per
+  byte.  A Rev 8.89 layout mode in dpc is an owner's decision
+  (docs/questions.md 224); until then the cells after such booleans
+  sit at other offsets than the image's.
 - Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
   spiller finds values to spill but runs out of virtual register
   numbers (240 per class) adding the reloads, and the colouring's
@@ -960,3 +967,23 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
    gap 25 (fix_store_through_lrs: the stores after a written
    store-through register left out of the check) and gap 32
    (lir.pvt.pas's section spill_instr_forms).
+
+37. **Byte module variables given a word each.**  lir_main's data
+   (translator PA5, cc.a88k A5 0x48B3AC) has boolean cells at
+   consecutive bytes (+0xC88, +0xC89, +0xC8B..+0xC8E), as Rev 8.89
+   lays out byte variables; dpc pads every boolean or char module
+   variable (own or defined) to two bytes, so the define list cannot
+   reproduce the layout.  No rewrite: the translation keeps the cells
+   (they shift by a byte or more, docs/questions.md 219).  Reproducer:
+
+       module g37;
+       var a: extern boolean; b: extern boolean; c: extern integer;
+       define a, b, c;
+       procedure p;
+       begin
+         a := b; c := 1;
+       end;
+
+   (A at +0, B at +2, C at +4 in dpc's output; the image's layout
+   would put B at +1.)
+

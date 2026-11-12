@@ -597,6 +597,12 @@ define
   ra_654;                               { +0x654 (lir_main sets it) }
   ra_658;                               { +0x658 (lir_main sets it) }
 
+{ ISC_$IS_A_REGISTER_CANDIDATE - isc_lir.ins.pas's heading (batch A,
+  PA5), which ra does not open (its .blocks include list): declared
+  here for ra_$process_routine.  isc_user_routines 0x213198. }
+function isc_$is_a_register_candidate(
+    sym: univ_ptr): boolean; options(val_param); extern;
+
 { zero - n bytes from p cleared, a longword at a time ((n + 3) div 4 of
   them; nothing for 0): rev889-patterns 100.
 
@@ -627,7 +633,7 @@ end;
   constant 0xFFFFFFFF (`not; and' with 0x266E24, 0x266E28): the
   ranges' constructors, whose upper bounds the compiler clamps (`cmpi.w
   #31; bls') and whose loops it skips for an empty range (`bcs'; dpc
-  refuses a run-time range: docs/dpc-gaps.md 37); a 64-bit
+  refuses a run-time range: docs/dpc-gaps.md 38); a 64-bit
   set built in dpc's layout and stored halves swapped (-8 to +0x5C4, -4
   to +0x5C0); the reserved integer set from ra_ip_zero's low word (+0x5EE)
   but the PC-like register from target_properties' own word (+0x1A),
@@ -3925,7 +3931,7 @@ end;
   so opened, lir_main's ra_654/ra_658 and every odd register.
 
   0x26BD72, 0x2A2 bytes, internal: the ranges' set constructors as in
-  ra_$begin_compilation (docs/dpc-gaps.md 37); ra_class set to 2. }
+  ra_$begin_compilation (docs/dpc-gaps.md 38); ra_class set to 2. }
 
 procedure ra_$determine_available_registers(
     conv: call_conv_$ptr_t); options(val_param); internal;

@@ -1697,8 +1697,6 @@ revisited.
    the words past 211 zero (no .rwdi record).  Should both be indexed
    0..383 (the opcode enumeration's range)?
 
-
-
 206. Translator PB5, ra_utils_$add_spill_code: its two bug checks on a
    spill victim read the live range's +3 bit 5 as "spill victim is user
    declared register" and bit 6 as "no_modify register"; batch A named
@@ -1744,3 +1742,94 @@ revisited.
    floating clobbers, +226 bit 1 needs_db); at_backend_4fc can be
    narrowed to rtn_ptr_t when at_backend is translated
    (docs/backend-plan.md has the phase table's layout).
+212. Translator PC6, oli.pas: find_open_slot (cc.a88k 0x25A44A)'s last
+   search for a truncdi (0x25AC12 .. 0x25AC3E) tests the cycle and wraps
+   without stepping to the previous cycle (no `subq.l #1,D2' before
+   `tst.l D2'), so after a full first cycle it gives up at once; every
+   other search steps.  Kept; a statement lost from the original?
+213. Translator PC6, oli.pas: data_flow_paths (0x259156) puts the paths
+   found from a reader in front of those found so far by setting the
+   first returned cell's link to them, then walks on through the old
+   ones too when prefixing the writer's step, so earlier paths get the
+   step again and paths from the same reader after the first are
+   dropped.  Kept; a slip of the original (an append meant)?
+214. Translator PC6, oli.pas: get_dp_zero (0x258184), when a 0.0 pair
+   exists, copies it into a new pair and stores the new live range in
+   the single-precision zero's cell (+0x2DC0), not the pair's; and
+   is_5op_candidate's addd branch tests can_join twice with the same
+   operands and keeps searching after a match.  Both kept; slips?
+215. Translator PC6, oli.pas: swap_inputs (0x25A35E) exchanges an
+   instruction's operands 1 and 2 without relinking their segments'
+   operand chains (it relinks 4 and 5 for an addd).  Kept as the image
+   has it; are the chains rebuilt later (generate_ltss), or a slip?
+216. Translator PC6, oli.pas: build_bookkeeping_structures' and
+   excess_register_pressure's table sizes use the counts' low words
+   (pattern 140), and the cells +0x2DA4 .. +0x2E72 are named only where
+   their use was read (oli_2e14 .. oli_2e20 count the floating
+   instructions placed with and without a multiply partner; oli_2e24,
+   oli_2e2c, oli_2e30 and oli_2e00 are set or compared in routines not
+   translated yet).  Rename when the remaining routines are read.
+217. Translator PA5, lir_main_$entry: after formal_local_transfer_setup's
+   case 8 (a register formal moved into an integer register home of a
+   pair's kind) the test of a by-value double's next slot reads
+   `cmpi.b #4,(0x62,A1,D4.l)' with D4 still 26 times the formal's
+   number (the index register of its descriptor), i.e. the next
+   formal's loc (conv^.args[j + 1].f18.loc), not this one's.  Written
+   so; a slip of the original (this formal's loc meant), or the next
+   formal (the pair's other half) intended?
+218. Translator PA5, formal_local_transfer_setup: for a memory formal
+   without a home (results 0 and 1) the load/store opcode it returns
+   (xfer +6) is the variable's size in bits, the register both live
+   in (D1): written as one variable used for both.  And the
+   bug_check message names LOCAL_FORMAL_TRANSFER_SETUP (the routine's
+   .blocks name is formal_local_transfer_setup); entry's and
+   build_initial_epilog's messages name LIR_MAIN_$BEGIN_ROUTINE and
+   ...BUILD_INITIAL_EPILOG.  Taken from the bytes.
+219. Translator PA5, lir_main: dpc gives each byte module variable two
+   bytes (docs/dpc-gaps.md 37), so backend.ins.pas's booleans
+   lir_main_c89 and lir_main_c8b..c8e cannot sit at their addresses
+   (they are 0xC8A, 0xC8C..0xC92 in the translation; every other cell
+   of the 0xDB8 bytes is at its address).  Fix in dpc, or declare the
+   byte cells as one packed record (renaming their users)?
+220. Translator PA5, lir_main_$save_and_restore_code: the singles'
+   loop tests the register it computed (0/1 plus an even number)
+   against -1 (`cmpi.l #-1,D5'), never true; and with no RETURN block
+   the RETURN's block slot (-120) is read unset only by the code the
+   no_return_block test skips.  Kept.
+221. Translator PA5: instr_size.init (question 205) is not confirmed
+   against lir's copy: lir was not reached.  lir's data (A5 0x487180)
+   holds no run of instr_size's words at its start (its +0 .. +0x320
+   are other tables), so lir's copy, if it has one, lies further in.
+
+
+222. Translator PA5, fg_utils: reverse_depth_first_search (cc.a88k
+   0x236390) remembers the previous edge only after recursing through
+   it (`move.l A2,D0' after the call), not for an edge from a block
+   already visited, so dropping a later edge from a block with l150 nil
+   unlinks it from the wrong predecessor; reorder_start_bb_successor_
+   list (0x2353D2), when no ENTRY outside an ENTRY statement is found,
+   falls out of its loop into the append with A0 holding the last
+   block or node it loaded (translated as moving nothing); and
+   fg_utils_$recompute_ssa_form_for_lr returns with lir_main_c8d still
+   set when excising the old join birthpoints leaves the live range no
+   segments.  Slips of the original?  The first and third are kept as
+   the image has them.
+223. Translator PA5, fg_utils: traverse (0x236914) gives a live range a
+   join birthpoint in bb when its reaching definition is bb itself
+   (avail_out has its bit) or a block that does not pass it through and
+   is not the first block; the first case reads oddly (a block that
+   defines the live range gets a join for its live-in value).  Kept as
+   the image has it.
+224. Lead (2026-11-11), for the owner: **should dpc get a Rev 8.89
+   module-data layout mode?**  The DOMAIN C 6.9 binaries were built
+   with Pascal Rev 8.89, which packs byte-sized module variables one
+   per byte (be_com lir_main's booleans at +0xC88, +0xC89,
+   +0xC8B..+0xC8E, reached absolutely by other units).  dpc gives each
+   a word, the SR10.2 kernel compiler's rule, which domain-pascal
+   verified against the kernel image (343 module variables, none at an
+   odd address), so its default cannot change.  A mode (e.g. selected
+   by a flag or a `-config') would let these units' data lay out as
+   the image's; without it the gate still passes, but the cells after
+   such booleans sit at other offsets (docs/dpc-gaps.md 37).  This is
+   the domain-pascal owner's call; recorded in its bead
+   domain-pascal-338r.
