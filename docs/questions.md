@@ -3,6 +3,13 @@
 Decisions taken conservatively while working unattended; each can be
 revisited.
 
+**Policy (the owner, 2026-11-12): "keep as found".**  While the project
+is in archaeology mode, apparent slips in the original (dead tests,
+unset results, wrong indices, misspelt messages, inverted comparisons)
+are reproduced as the image has them and noted, never fixed.  Every
+question below that only asks "a slip, kept as the image has it?" is
+answered by this policy and needs no reply.
+
 1. Commit trailers: commits end with a `Co-Authored-By: Claude` line.
    Keep or drop?
 2. Placement of the prelude's foreign declarations (2026-11-10): no

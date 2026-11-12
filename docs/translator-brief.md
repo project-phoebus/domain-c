@@ -170,3 +170,7 @@ merge.
     tools/cc_data.py and write it whole: never NUL characters inside a
     string literal (outbin had three), and mind that a run of equal
     values is often one repeat record.
+  - Keep as found (the owner's policy, 2026-11-12): reproduce an
+    apparent slip of the original exactly as the image has it and note
+    it in the routine's comment; do not fix it, and do not raise a
+    question just to ask whether to keep it.
