@@ -8,12 +8,10 @@
   call (docs/backend-plan.md).
 
   No Apollo copy survives.  Created as a stub with the back end's core
-  (translator MM); batch A fills it as its units are translated.
+  (translator MM); filled by batch A as lir_utils, lir_main and lir were
+  translated (complete with lir: translator PA7).
 
   Not known from the original: everything about its contents. }
-
-{ TODO(pascal) lir.pvt.pas: the cells and headings listed above (lir
-  and ra_utils not translated yet; lir_main's are here) }
 
 type
   { batch A (PA4): how a spill or store-through load or store is made
@@ -116,7 +114,9 @@ var
   lir_41f4: extern integer32;           { +0x41F4: the RETURN's operands
                                           beyond the registers }
   lir_41f8: extern bb_ptr_t;            { +0x41F8: the exit block }
-  lir_41fc: extern bb_ptr_t;            { +0x41FC: the return block }
+  lir_41fc: extern bb_ptr_t;            { +0x41FC: the current block (the
+                                          last made: lir_main's return
+                                          block; PA7) }
   lir_4216: extern integer;             { +0x4216: rrp bits new register
                                           operands' live ranges get }
   lir_3ba8: extern lr_t;                { +0x3BA8 (0x48AD28): the live

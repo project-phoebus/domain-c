@@ -1,14 +1,25 @@
-{ build_like_kind.init - a DSEE derived object of be_com/lir.pas (lir.dir) (cc.a88k
-  only), included by lir.pas after solution_string_length.init (the
-  build_* files in the image's include order).  One of the tables lir's
-  operand builder (lir_$build_operand, by the solution's kind or the
-  operand's form) reads.
+{ build_like_kind.init - a DSEE derived object of be_com/lir.pas (lir.dir), included
+  by lir.pas after solution_string_length.init (cc.a88k only),
+  By build kind, the operand kind (operand$t) of a physical register's
+  operand when the register is no_modify (25, 26 ip_reg_like 12, 27
+  fp_reg_like, 28 fp_reg_pair_like): lir's data +0x260, 30 two-byte
+  entries, the value first.
 
-  A stub (translator PA6): lir.pas is not translated yet.  lir's module
-  data (A5 0x487180) holds initialized tables from +0x28 to +0xC06 and
-  at +0x4190 (docs/backend-plan.md, PA6's notes); this file's is one of
-  them, which one is not settled.
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k, lir's .rwdi records (translator PA7).
 
-  Not known from the original: everything about its contents. }
+  How the table is shared (docs/questions.md 161, translator PB2's
+  scheme): lir.pas declares the variable `extern' and defines it, with
+  the module's other cells, in address order (the image lays these
+  tables out in the reverse of their include order: build_properties at
+  +0 .. build_action at +0x3A0); this file gives it its initial value
+  with a second `define' statement (the language reference's section
+  7.2.2, method 2), which dpc accepts after the first and lays out where
+  the first put the variable.
 
-{ TODO(pascal) build_like_kind.init: the table's declaration with its data }
+  Not known from the original: the element type. }
+
+define build_like_kind := [
+    [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0],  { 0 }
+    [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0],  { 10 }
+    [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [12, 0], [12, 0], [13, 0], [14, 0], [0, 0]];  { 20 }

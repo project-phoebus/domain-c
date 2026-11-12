@@ -4,27 +4,24 @@
   use for them (lir_$new_*, lir_$optimizer_new_*), the calls'
   argument registers, the routine's reinitialization and its end.
 
-  TODO(pascal) lir.pas: the module's data.  Every routine is translated
-  (translator PA6: 0x242820 .. 0x242ED4; PA7: begin_instruction
-  0x242EF4 .. lir_$strip_may_gen_exception 0x248A60, in address order).
-  What remains: lir's own cells are
-  declared extern below (lir_<offset>, the build_ tables by their .init
-  files' names), and must be defined in address order with the data
-  (as lir_main.pas does) when the unit is complete; the lir.dir/
-  build_*.init and build_access.init files are stubs.  Their tables
-  (read by lir_$build_operand; PA7) lie in the module data in the
-  reverse of their include order: build_properties +0x000 (30 rrp
-  words, by build kind 0..29), build_physical_ltss +0x040,
-  build_physical_lrs +0x0B8 (30 pointers each), build_physical +0x130
-  (30 two-byte), build_message +0x170 (30 pointers to the messages laid
-  out before A5, 0x486D98 ..), build_low_bound +0x1E8 (30 longwords),
-  build_like_kind +0x260, build_kind +0x2A0 (30 two-byte each),
-  build_high_bound +0x2E0, build_arg_loc +0x358 (30 two-byte),
-  build_access +0x398 (4 words), build_action +0x3A0 (25 solution kinds
-  x 43 forms, two-byte).  The section lir_readonly_tables (0x2BDA2C,
-  0x694 bytes) is complete: instr_size.init (+0, 384 words),
-  solution_kind.init (+0x300), solution_string.init (+0x340),
-  solution_string_length.init (+0x660).
+  Translated by translators PA6 (0x242820 .. 0x242ED4) and PA7
+  (begin_instruction 0x242EF4 .. lir_$strip_may_gen_exception 0x248A60,
+  and the module's data), in address order.  The module's data (A5
+  0x487180, 0x422C bytes) is declared extern (backend.ins.pas's,
+  lir.pvt.pas's and the unit's own cells) and defined in address order
+  after solution_string_length.init (every cell at its image offset);
+  the build_ tables lie in the reverse of their include order
+  (build_properties +0x000 .. build_action +0x3A0, by build kind 0..29
+  or by solution kind and form) and their .init files give their values
+  with second define statements (docs/questions.md 161's scheme); the
+  messages build_message points to are laid out before A5 in the image
+  and after the cells here.  The section lir_readonly_tables (0x2BDA2C,
+  0x694 bytes): instr_size.init (+0, 384 words), solution_kind.init
+  (+0x300), solution_string.init (+0x340), solution_string_length.init
+  (+0x660).
+
+  dpc gaps (docs/dpc-gaps.md): 4 (lir_$build_operand's dump to the
+  output file).
 
   Image addresses (DOMAIN C 6.9; cc.a88k only):
     cc.m68k   cc.a88k
@@ -125,20 +122,6 @@ var (lir_readonly_tables)
 %include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/backend.ins.pas/hbe6404cd.000/backend.ins/solution_kind.init';
 %include 'moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/solution_string.init';
 %include 'moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/solution_string_length.init';
-%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_action.init';
-%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/backend.ins.pas/hbe6404cd.000/backend.ins/build_access.init';
-%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_arg_loc.init';
-%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_high_bound.init';
-%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_kind.init';
-%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_like_kind.init';
-%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_low_bound.init';
-%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_message.init';
-%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_physical.init';
-%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_physical_lrs.init';
-%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_physical_ltss.init';
-%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_properties.init';
-%include 'lang2/source/be_com/utils.ins.pas';
-
 type
   lir_name_t = packed array [1..4] of char;
 
@@ -370,6 +353,119 @@ var
   { cargs.pas's data +0x258 (cargs_$options' flags; bit 7 read by
     lir_$disjoint_lhs_and_rhs_tokens). }
   cargs_258: extern char;
+  { The messages build_message points to (build_message.init gives
+    their text; the image lays them out before lir's A5, 0x486D98 ..,
+    the last kind's first). }
+  build_message_5: extern packed array [1..63] of char;
+  build_message_6: extern packed array [1..65] of char;
+  build_message_7: extern packed array [1..65] of char;
+  build_message_8: extern packed array [1..59] of char;
+  build_message_9: extern packed array [1..59] of char;
+  build_message_10: extern packed array [1..60] of char;
+  build_message_11: extern packed array [1..60] of char;
+  build_message_12: extern packed array [1..61] of char;
+  build_message_13: extern packed array [1..57] of char;
+  build_message_14: extern packed array [1..57] of char;
+  build_message_15: extern packed array [1..58] of char;
+  build_message_16: extern packed array [1..58] of char;
+  build_message_17: extern packed array [1..58] of char;
+  build_message_18: extern packed array [1..66] of char;
+  build_message_19: extern packed array [1..67] of char;
+  build_message_26: extern packed array [1..57] of char;
+  { The spans of the module's data no instruction addresses (the
+    heaps' fourth longwords, the tables' ends). }
+  lir_unused_3c: extern integer32;      { +0x03C }
+  lir_unused_16c: extern integer32;     { +0x16C }
+  lir_unused_29c: extern integer32;     { +0x29C }
+  lir_unused_2dc: extern integer32;     { +0x2DC }
+  lir_unused_394: extern integer32;     { +0x394 }
+  lir_unused_c06: extern integer;       { +0xC06 }
+  lir_unused_ea4: extern integer32;     { +0xEA4 }
+  lir_unused_ebc: extern integer32;     { +0xEBC }
+  lir_unused_ed4: extern integer32;     { +0xED4 }
+  lir_unused_eec: extern integer32;     { +0xEEC }
+  lir_unused_f04: extern integer32;     { +0xF04 }
+  lir_unused_f1c: extern integer32;     { +0xF1C }
+  lir_unused_f34: extern integer32;     { +0xF34 }
+  lir_unused_2f54: extern integer32;    { +0x2F54 }
+  lir_unused_3c14: extern integer32;    { +0x3C14 }
+  lir_unused_3c2c: extern integer32;    { +0x3C2C }
+  lir_unused_3c44: extern integer32;    { +0x3C44 }
+  lir_unused_3c5c: extern integer32;    { +0x3C5C }
+  lir_unused_3f64: extern array [0..4] of integer32;  { +0x3F64: the rest
+                                          of the heap lir_3f60 (declared a
+                                          longword in backend.ins.pas,
+                                          which mrh.ins.pas follows) }
+  lir_unused_3f7c: extern array [0..4] of integer32;  { +0x3F7C }
+
+{ The module's data (A5 0x487180, 0x422C bytes) in address order (dpc
+  lays defined cells out in define-list order; the unit has no own
+  variables): the build_ tables (their .init files, included below, give
+  them their values with second define statements), lir's cells, the
+  messages last (the image's are before A5).  dpc gives each byte cell
+  two bytes (docs/dpc-gaps.md 37), which is the image's spacing for
+  +0x4218 .. +0x422A.  lir_3f94, lir_3f98 and lir_3f9c (backend.ins.pas,
+  com's) are lir_3f90's elements 1..3: not defined here
+  (docs/questions.md 351). }
+define
+  build_properties, lir_unused_3c, build_physical_ltss, build_physical_lrs,
+  build_physical, lir_unused_16c, build_message, build_low_bound,
+  build_like_kind, lir_unused_29c, build_kind, lir_unused_2dc,
+  build_high_bound, build_arg_loc, lir_unused_394, build_access,
+  build_action, lir_unused_c06,
+  lir_c08, lir_d08, lir_d88, lir_de0, lir_e38,
+  lir_e90, lir_unused_ea4, lir_ea8, lir_unused_ebc, lir_ec0, lir_unused_ed4,
+  lir_ed8, lir_unused_eec, lir_ef0, lir_unused_f04, lir_f08, lir_unused_f1c,
+  lir_f20, lir_unused_f34, lir_f38, lir_2f40, lir_unused_2f54, lir_2f58,
+  lir_3b78, lir_3b80, lir_3ba8,
+  lir_3c00, lir_unused_3c14, lir_3c18, lir_unused_3c2c, lir_3c30,
+  lir_unused_3c44, lir_3c48, lir_unused_3c5c,
+  lir_3c60, lir_3d60, lir_3e60, lir_3f60, lir_unused_3f64, lir_3f78,
+  lir_unused_3f7c, lir_3f90, lir_4090,
+  lir_4190, lir_4194, lir_4198, lir_419c,
+  lir_41a0, lir_41a4, lir_41a8, lir_41ac, lir_41b0, lir_41b4, lir_41b8,
+  lir_41bc, lir_41c0, lir_41c4, lir_41c8, lir_41cc, lir_41d0, lir_41d4,
+  lir_41d8, lir_41dc, lir_41e0, lir_41e4, lir_41e8, lir_41ec, lir_41f0,
+  lir_41f4, lir_41f8, lir_41fc, lir_4200, lir_4204, lir_4208, lir_420c,
+  lir_4210, lir_4212, lir_4214, lir_4216, lir_4218, lir_421a, lir_421c,
+  lir_421e, lir_4220, lir_4222, lir_4224, lir_4226, lir_4228, lir_422a,
+  build_message_5,
+  build_message_6,
+  build_message_7,
+  build_message_8,
+  build_message_9,
+  build_message_10,
+  build_message_11,
+  build_message_12,
+  build_message_13,
+  build_message_14,
+  build_message_15,
+  build_message_16,
+  build_message_17,
+  build_message_18,
+  build_message_19,
+  build_message_26;
+
+{ +0x4190 .. +0x419F: the operand forms the image initializes (an
+  access of 3; of$ip_reg_or_s_immed8 (7); of$ip_reg (18); none). }
+define lir_4190 := [0, 0, 16#C0, 0];
+define lir_4194 := [7, 0, 0, 0];
+define lir_4198 := [18, 0, 0, 0];
+define lir_419c := [0, 0, 0, 0];
+
+%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_action.init';
+%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/backend.ins.pas/hbe6404cd.000/backend.ins/build_access.init';
+%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_arg_loc.init';
+%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_high_bound.init';
+%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_kind.init';
+%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_like_kind.init';
+%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_low_bound.init';
+%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_message.init';
+%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_physical.init';
+%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_physical_lrs.init';
+%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_physical_ltss.init';
+%include 'idccclx/be_prism_68k_pool/dseemgrs/apollo/dervobjs/be_com/lir.pas/h10ed710e.001/lir.dir/build_properties.init';
+%include 'lang2/source/be_com/utils.ins.pas';
 
 { LIR_$ISC_BUGCHECK - 'ISC pass 2 failure'.
 

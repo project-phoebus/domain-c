@@ -1,14 +1,66 @@
-{ build_message.init - a DSEE derived object of be_com/lir.pas (lir.dir) (cc.a88k
-  only), included by lir.pas after solution_string_length.init (the
-  build_* files in the image's include order).  One of the tables lir's
-  operand builder (lir_$build_operand, by the solution's kind or the
-  operand's form) reads.
+{ build_message.init - a DSEE derived object of be_com/lir.pas (lir.dir), included
+  by lir.pas after solution_string_length.init (cc.a88k only),
+  By build kind, the message lir_$build_operand reports a displacement
+  or immediate out of the kind's bounds with (bug_check: the value, the
+  mnemonic): lir's data +0x170, 30 pointers, to the messages the image
+  lays out before lir's A5 (0x486D98 .. 0x48717F; here the variables
+  build_message_k defined after the module's cells).
 
-  A stub (translator PA6): lir.pas is not translated yet.  lir's module
-  data (A5 0x487180) holds initialized tables from +0x28 to +0xC06 and
-  at +0x4190 (docs/backend-plan.md, PA6's notes); this file's is one of
-  them, which one is not settled.
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k, lir's .rwdi records (translator PA7).
 
-  Not known from the original: everything about its contents. }
+  How the table is shared (docs/questions.md 161, translator PB2's
+  scheme): lir.pas declares the variable `extern' and defines it, with
+  the module's other cells, in address order (the image lays these
+  tables out in the reverse of their include order: build_properties at
+  +0 .. build_action at +0x3A0); this file gives it its initial value
+  with a second `define' statement (the language reference's section
+  7.2.2, method 2), which dpc accepts after the first and lays out where
+  the first put the variable.
 
-{ TODO(pascal) build_message.init: the table's declaration with its data }
+  Not known from the original: the messages' variables (build_message_k) and their
+  place. }
+
+define build_message_5 :=
+    'LIR_$BUILD_OPERAND - displacement offset out of range: %d, %a%$';
+define build_message_6 :=
+    'LIR_$BUILD_OPERAND - high_immed16_low_0000 out of range: %d, %a%$';
+define build_message_7 :=
+    'LIR_$BUILD_OPERAND - high_immed16_low_ffff out of range: %d, %a%$';
+define build_message_8 :=
+    'LIR_$BUILD_OPERAND - unsigned_immed4 out of range: %d, %a%$';
+define build_message_9 :=
+    'LIR_$BUILD_OPERAND - unsigned_immed5 out of range: %d, %a%$';
+define build_message_10 :=
+    'LIR_$BUILD_OPERAND - unsigned_immed13 out of range: %d, %a%$';
+define build_message_11 :=
+    'LIR_$BUILD_OPERAND - unsigned_immed16 out of range: %d, %a%$';
+define build_message_12 :=
+    'LIR_$BUILD_OPERAND - high_ffff_immed16 out of range: %d, %a%$';
+define build_message_13 :=
+    'LIR_$BUILD_OPERAND - signed_immed5 out of range: %d, %a%$';
+define build_message_14 :=
+    'LIR_$BUILD_OPERAND - signed_immed8 out of range: %d, %a%$';
+define build_message_15 :=
+    'LIR_$BUILD_OPERAND - signed_immed11 out of range: %d, %a%$';
+define build_message_16 :=
+    'LIR_$BUILD_OPERAND - signed_immed14 out of range: %d, %a%$';
+define build_message_17 :=
+    'LIR_$BUILD_OPERAND - signed_immed16 out of range: %d, %a%$';
+define build_message_18 :=
+    'LIR_$BUILD_OPERAND - negated_signed_immed16 out of range: %d, %a%$';
+define build_message_19 :=
+    'LIR_$BUILD_OPERAND - non-zero routine displacement offset: %d, %a%$';
+define build_message_26 :=
+    'LIR_$BUILD_OPERAND - illegal scaled IP register: %d, %a%$';
+define build_message := [
+    nil, nil, nil,  { 0 }
+    nil, nil, addr(build_message_5),  { 3 }
+    addr(build_message_6), addr(build_message_7), addr(build_message_8),  { 6 }
+    addr(build_message_9), addr(build_message_10), addr(build_message_11),  { 9 }
+    addr(build_message_12), addr(build_message_13), addr(build_message_14),  { 12 }
+    addr(build_message_15), addr(build_message_16), addr(build_message_17),  { 15 }
+    addr(build_message_18), addr(build_message_19), nil,  { 18 }
+    nil, nil, nil,  { 21 }
+    nil, nil, addr(build_message_26),  { 24 }
+    nil, nil, nil];  { 27 }
