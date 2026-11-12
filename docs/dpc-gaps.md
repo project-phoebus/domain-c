@@ -57,9 +57,9 @@ when this tree is merged).
 - **Gaps 40 (a local beyond link.w: link.w, suba.l, the saves below,
   a base pointer in a frame slot), 5 (an offset beyond 16 bits through
   a pointer) and 41 (a string constant passed by address to a packed
-  array of char): fixed in d6d6a24 and 608fb88.**  Their rules removed,
-  but for c_macro_utl's gap 5 pair: `b^.used_words[w]', an indexed
-  field beyond 16 bits through a pointer, is still refused.
+  array of char): fixed in d6d6a24 and 608fb88**; the last gap 5 case
+  (a loop's array stepped by a pointer whose displacement exceeds 16
+  bits, c_macro_utl) in d6cccc1.  All their rules removed.
 - Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
   spiller finds values to spill but runs out of virtual register
   numbers (240 per class) adding the reloads, and the colouring's
@@ -69,7 +69,7 @@ when this tree is merged).
   purpose (the image cannot tell it from `repeat ... until false'):
   write such loops with a label.
 - All compile best effort (a warning; `--strict' still refuses).  Their
-  rewrites are gone from tools/cc_gap_rewrites.txt (291 rules removed in all);
+  rewrites are gone from tools/cc_gap_rewrites.txt (293 rules removed in all);
   the full gate is clean without them.
 - Gaps 4 (write/writeln) and 7 (real arithmetic) are not being worked
   on in dpc for now (the domain-pascal owner's choice).

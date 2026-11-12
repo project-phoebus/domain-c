@@ -269,8 +269,5 @@ lang2/source/be_com/ra.pas	s/^(        \{ Ready for the next instruction\. \})$/
 lang2/source/be_com/konst.pas	s/^(\s*)writeln\(.*\);\s*$/${1}; { gap 4 }/
 # gap 7 (konst, translator PB6): a double literal converted to a single (left unset, for the check)
 lang2/source/be_com/konst.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
-# gap 5 (c_macro_utl): displacements beyond 16 bits (the block shrunk to two elements, for the check) [still needed with dpc d6d6a24: an indexed field beyond 16 bits through a pointer, b^.used_words[w]]
-lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)tles: array \[0\.\.255\] of mu_\$tle_t;/$1tles: array [0..1] of mu_\$tle_t; { gap 5 }/
-lang/c_compiler/source/c_macro_utl.pas	s/tles\[255\]/tles[1] { gap 5 }/
 # gap 7 (ra, translator PB6): a single-real comparison with a constant (the bits compared, for the check)
 lang2/source/be_com/ra.pas	s/\.r < 1\.0e-4/.i < 16#38D1B717 { gap 7 }/
