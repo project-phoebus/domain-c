@@ -275,7 +275,11 @@ type
     b0_1: boolean;
     b0_0: boolean;
     nopnds: 0..255;                     { +1 }
-    b2_7, b2_6, b2_5, b2_4, b2_3, b2_2, b2_1, b2_0: boolean;   { +2 }
+    b2_7, b2_6, b2_5, b2_4, b2_3, b2_2, b2_1, b2_0: boolean;   { +2
+                                          (b2_6: df_utils marks an
+                                          instruction the global walk
+                                          reached, fga and hal one that
+                                          must stay) }
     width: 0..255;                      { +3 }
   end;
   instr_t = record
@@ -283,12 +287,17 @@ type
     next: instr_ptr_t;                  { +4 }
     prev: instr_ptr_t;                  { +8 }
     bb: bb_ptr_t;                       { +12 }
-    l16: integer32;                     { +16 }
+    l16: integer32;                     { +16: a walk's mark (tr_utils;
+                                          df_utils: queued in this walk) }
     opc: opc$w_t;                       { +20 }
     w22: integer;                       { +22 }
-    l24: integer32;                     { +24 }
+    l24: integer32;                     { +24 (df_utils: the next in its
+                                          work queue, the last pointing
+                                          to itself) }
     l28: integer32;                     { +28: source position }
-    l32: integer32;                     { +32: source position }
+    l32: integer32;                     { +32: source position (df_utils,
+                                          fga: the next on lir_main_c44's
+                                          chain) }
     l36: integer32;                     { +36 }
     class: char;                        { +40: class$... }
     b41: char;                          { +41 }
@@ -2165,7 +2174,7 @@ function ra_utils_$spill_pass_through_lrs(
 { LIR_UTILS_$REPAIR_LTS_PROPERTIES - 0x273C46, 0x24 bytes; called from
   com.  Frame 8:al. }
 procedure lir_utils_$repair_lts_properties(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { LIR_UTILS_$SANITY_CHECK - 0x273C6A, 0x24 bytes; called from com dfa fga
   hal iv life mmt oli sched trans xtp.  Frame 8:al. }

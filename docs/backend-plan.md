@@ -99,6 +99,9 @@ Batch A continued (translator PA2, 2026-11-11):
 | `lang2/source/be_com/fga.pas` | 11 | done: the FGA phase; rtn_t return_instr (+96), ap_lr (+100, was lr100), f226 (+226, +227 bits) named; bb_t l134 univ_ptr (fga walks blocks through it); fg_utils_$forward_this_block named (rtn, bb, jump); opnd_t's +4 of an immediate or XSB displacement is its node |
 | `lang2/source/be_com/hal.pas` | 19 | done: the HAL phase; bb_t l46, l50 (dominator tree), l58 (candidate hammock ends), l74, l78, l150 named, l54/next114/l98/avail_out uses documented; fg_utils_$separate_loop_header_edges named (bb, head, p3: boolean): fg_edge_ptr_t |
 | `lang2/source/be_com/life.pas` | 14 | done: the LIFE phase; rtn_t l200 named; lts_t's lr/mark and lr_t's l52 serve life's union-find (cast there, documented in life.pas) |
+| `lang2/source/be_com/sanity.pas` | 6 | begun, 5 of 6: sanity_$check_entire_routine (0x2721B4, 0xD76) remains (extern in the unit meanwhile); lir_utils_$repair_lts_properties named (rtn) |
+
+Remaining in batch A after PA2: sanity_$check_entire_routine; call_conv (question 167), lir_utils, lir, lir_main, sym, fg_utils, tm_utils, post.  Notes for whoever continues: sym, tm_utils (and fga, hal, life, sanity) open backend.ins.pas without the lang prelude: backend.ins.pas must not use the prelude's types (rtn_t.node is univ_ptr for that reason), and a unit that needs il_180, cargs_$options or idntk declares them through views of its own (fga.pas; docs/questions.md 182).  sym calls isc_$get_il_live_range without opening an ISC insert.  tm_utils includes the named sections' initializers (operand_forms_mask.init, the amse_*.init), which question 161 has not settled.
 
 ## Order: leaves first by the call graph
 
