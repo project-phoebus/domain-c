@@ -918,12 +918,8 @@ procedure emit_line_eop(
     in b: codegen_$uads_t;
     line: integer); options(val_param); extern;
 
-{ EMIT_ASSIGN - a move of size size from src to dst (FPA1).  emit
-  0x0B7F54: 8 a word, 10 and 14 the descriptors' addresses. }
-procedure emit_assign(
-    size: integer;
-    in out dst: codegen_$uads_t;
-    in out src: codegen_$uads_t); options(val_param); extern;
+{ EMIT_ASSIGN (fpa 0x0B7F54) is declared in fpa.ins.pas (docs/questions.md
+  105). }
 
 { EMIT - a code cell of instruction op (the generic instruction:
   fnl_slct picks the machine instruction from op and size) on operands

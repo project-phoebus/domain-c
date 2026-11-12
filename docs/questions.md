@@ -810,6 +810,9 @@ revisited.
    (0x0B7A8C..), not emit's, though cg.ins.pas declares it under emit;
    emit_mul_add, emit_div_sub and push_fpa_opr are fpa's too and are
    in fpa.ins.pas.  Move emit_assign there?
+   Translator HH (2026-11-11): moved to fpa.ins.pas with `in' modes
+   (emit_assign only reads them; emit, whose descriptors are `in',
+   passes them on).
 106. cg_assign: its module data has +0 and +24 two operand descriptors
    (opa, opb) 24 bytes apart (20 used), the operators' instruction
    table at +0x30 and the target at +0x7C, with +0x62..+0x7B and

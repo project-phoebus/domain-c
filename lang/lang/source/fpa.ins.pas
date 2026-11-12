@@ -22,6 +22,15 @@ procedure emit_load_store(
     in out b: codegen_$uads_t;
     size: integer); options(val_param); extern;
 
+{ EMIT_ASSIGN - a move of size size from src to dst, a floating
+  register's under FPA1 (emit passes its moves to and from one).  fpa
+  0x0B7F54 (in fpa.pas's range, not emit's: docs/questions.md 105): 8 a
+  word, 10 and 14 the descriptors' addresses, only read. }
+procedure emit_assign(
+    size: integer;
+    in dst: codegen_$uads_t;
+    in src: codegen_$uads_t); options(val_param); extern;
+
 { EMIT_MUL_ADD, EMIT_DIV_SUB - an FPA1 operation op of size size on
   operands a and b (cg_assign's floating assignment operators).  fpa
   0x0B8246, 0x0B831C: 8 and 10 words, 12 and 16 the descriptors'
