@@ -53,7 +53,8 @@
     0x0865E8  0x087FC8  list_tree_$sanity_check
     A5 0x169DFC (cc.m68k), 0x2E9E6C (cc.a88k): the module's data, 332
     bytes: +0 24 blanks (the names' padding), +0x18 the line (a
-    varying string: its length 0 and 256 blanks initialized), +0x11C
+    length word and 256 characters: length 0 and 256 blanks
+    initialized, 258 bytes, not a varying [256]), +0x11C
     countdown (3), +0x120 the routine the lines go to, +0x124 the
     inline depth, +0x126 the statement index last printed, +0x128 the
     node last numbered, +0x12A the line's indent (all 0), +0x130 the
@@ -117,6 +118,15 @@ type
   { A variable's attributes (+32 of a 109 node), named by print_variable:
     0 var_$volatile .. 31 var_$withrecord. }
   lt_vattr_t = set of 0..31;
+
+  { The line being built: a length and 256 characters, 258 bytes (the
+    image's countdown follows it at +0x11C; a varying [256] of char
+    takes 262, language reference 3.11.4.1, as outbin's line does).
+    Passed to listln and emit as an iosub_$line_t. }
+  lt_line_t = record
+    length: integer;
+    body: array [1..256] of char;
+  end;
 
   { Where a dump's lines go (listln's heading). }
   lt_emit_t = ^procedure(
@@ -378,10 +388,9 @@ type
 var
   { The module's data, A5 0x169DFC (cc.m68k), 0x2E9E6C (cc.a88k). }
   blanks: array [1..24] of char := '                        ';  { +0 }
-  line: iosub_$line_t;                  { +0x18: the line being built (the
-                                          image's has length 0 and 256
-                                          blanks; dpc refuses '' for a
-                                          varying string's initializer) }
+  line: lt_line_t := [length := 0, body := ' '];   { +0x18: the line
+                                          being built (.rwdi: length 0
+                                          and 256 blanks, no null) }
   countdown: integer32 := 3;            { +0x11C: sanity_check_countdown }
   emit: lt_emit_t := nil;               { +0x120: where lines go (nil:
                                           diag_$writeln) }

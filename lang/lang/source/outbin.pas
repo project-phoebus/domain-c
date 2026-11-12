@@ -193,10 +193,7 @@ type
   outbin_reg_names_t = array [0..15] of outbin_reg_name_t;
   outbin_fp_name_t = array [1..3] of char;
   outbin_fpa_name_t = array [1..6] of char;
-  outbin_fpx_name_t = record
-    length: integer;
-    body: array [1..12] of char;
-  end;
+  outbin_fpx_name_t = varying [8] of char;
 
   { The stack of inlined blocks' .lines elements (stack_debug_$...;
     purge_stack replays them): 18-byte elements, 240 to a 4324-byte
@@ -362,42 +359,21 @@ var
     0, 0, 0, 0, 0, 468, 472, 592, 596, 600,
     604];
   { +0x8C8: the 68881 commands' names by their command field
-    (attempt_fpx_command_opcode_disassembly): a length and 12
-    characters (.rwdi sets the name and a null after it; blanks here). }
+    (attempt_fpx_command_opcode_disassembly): varying strings, 14 bytes
+    apart (`muls' by 14 as add, neg, lsl: the length at +0x8C8, the
+    body at +0x8CA); .rwdi sets the length word, the name and a null
+    after it, an empty name's length and null too.  14 bytes is a
+    varying [8] or [9] of char (the maximum and 5 or 6 more, even:
+    language reference 3.11.4.1, as ass's varying [80] and outbin's
+    line take); [8] is not known from the original. }
   fpx_names: array [0..63] of outbin_fpx_name_t := [
-    [length := 5, body := 'FMOVE       '], [length := 4, body := 'FINT        '],
-    [length := 5, body := 'FSINH       '], [length := 6, body := 'FINTRZ      '],
-    [length := 5, body := 'FSQRT       '], [length := 0, body := '            '],
-    [length := 7, body := 'FLOGNP1     '], [length := 0, body := '            '],
-    [length := 7, body := 'FETOXM1     '], [length := 5, body := 'FTANH       '],
-    [length := 5, body := 'FATAN       '], [length := 0, body := '            '],
-    [length := 5, body := 'FASIN       '], [length := 6, body := 'FATANH      '],
-    [length := 4, body := 'FSIN        '], [length := 4, body := 'FTAN        '],
-    [length := 5, body := 'FETOX       '], [length := 7, body := 'FTWOTOX     '],
-    [length := 7, body := 'FTENTOX     '], [length := 0, body := '            '],
-    [length := 5, body := 'FLOGN       '], [length := 6, body := 'FLOG10      '],
-    [length := 5, body := 'FLOG2       '], [length := 0, body := '            '],
-    [length := 4, body := 'FABS        '], [length := 5, body := 'FCOSH       '],
-    [length := 4, body := 'FNEG        '], [length := 0, body := '            '],
-    [length := 5, body := 'FACOS       '], [length := 4, body := 'FCOS        '],
-    [length := 7, body := 'FGETEXP     '], [length := 7, body := 'FGETMAN     '],
-    [length := 4, body := 'FDIV        '], [length := 4, body := 'FMOD        '],
-    [length := 4, body := 'FADD        '], [length := 4, body := 'FMUL        '],
-    [length := 7, body := 'FSGLDIV     '], [length := 4, body := 'FREM        '],
-    [length := 6, body := 'FSCALE      '], [length := 7, body := 'FSGLMUL     '],
-    [length := 4, body := 'FSUB        '], [length := 0, body := '            '],
-    [length := 0, body := '            '], [length := 0, body := '            '],
-    [length := 0, body := '            '], [length := 0, body := '            '],
-    [length := 0, body := '            '], [length := 0, body := '            '],
-    [length := 0, body := '            '], [length := 0, body := '            '],
-    [length := 0, body := '            '], [length := 0, body := '            '],
-    [length := 0, body := '            '], [length := 0, body := '            '],
-    [length := 0, body := '            '], [length := 0, body := '            '],
-    [length := 4, body := 'FCMP        '], [length := 0, body := '            '],
-    [length := 4, body := 'FTST        '], [length := 0, body := '            '],
-    [length := 0, body := '            '], [length := 0, body := '            '],
-    [length := 0, body := '            '], [length := 0, body := '            ']
-];
+    'FMOVE', 'FINT', 'FSINH', 'FINTRZ', 'FSQRT', '', 'FLOGNP1', '',
+    'FETOXM1', 'FTANH', 'FATAN', '', 'FASIN', 'FATANH', 'FSIN', 'FTAN',
+    'FETOX', 'FTWOTOX', 'FTENTOX', '', 'FLOGN', 'FLOG10', 'FLOG2', '',
+    'FABS', 'FCOSH', 'FNEG', '', 'FACOS', 'FCOS', 'FGETEXP', 'FGETMAN',
+    'FDIV', 'FMOD', 'FADD', 'FMUL', 'FSGLDIV', 'FREM', 'FSCALE',
+    'FSGLMUL', 'FSUB', '', '', '', '', '', '', '', '', '', '', '', '',
+    '', '', '', 'FCMP', '', 'FTST', '', '', '', '', ''];
   fmt_letters: array [0..7] of char := 'LSXPWDBP';    { +0xC48 }
   bit_masks: array [0..7] of integer := [
     1, 2, 4, 8, 16, 32, 64, 128];       { +0xC50: no routine reads it }

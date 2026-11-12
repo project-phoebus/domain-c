@@ -35,6 +35,12 @@ dseeaggs/iscg_input/hd69fbe76.000/iscg_input):
                            readonly_tables (each rule's result kind, the
                            six opcode maps) and isc_readonly_tables (the
                            ISC's own tables, from readonly.isc).
+  isc_pass_1_main.pas      pass 1: the operator routines from the operator
+                           declarations, isc_pass_1_begin_compilation's
+                           dispatch from their names, and the fixed text
+                           (pass_1, cross_product_to_solutions_of_parent,
+                           isc_unrecognized_il_node, the dispatchers):
+                           tools/iscg_pass1.py.
   iscg_names.txt           the manifest: each generated anonymous
                            routine's name and its address in cc.a88k
                            (from the rule file's `image' clauses), for
@@ -62,7 +68,8 @@ ROOT = os.path.abspath(os.path.join(HERE, '..'))
 ISCG = 'moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input'
 RULES_DIR = os.path.join(ROOT, ISCG, 'rules')
 OUT_DIR = os.path.join(ROOT, ISCG, 'hd69fbe76.000', 'iscg_input')
-OUTPUTS = ['isc_pattern_matcher.pas', 'isc_pass_2_main.pas', 'isc_vars.pas', 'iscg_names.txt']
+OUTPUTS = ['isc_pattern_matcher.pas', 'isc_pass_2_main.pas', 'isc_vars.pas', 'iscg_names.txt',
+           'isc_pass_1_main.pas']
 
 # The image's attribute names -> isc_solution_t's fields (questions 267).
 FIELD_MAP = {
@@ -176,7 +183,9 @@ class Rules:
             elif t == 'attribute':
                 self.attributes.append(upto(';'))
             elif t == 'operator':
-                self.operators.append(upto(';'))
+                # isc_pass_1_main's operator declarations (tools/iscg_pass1.py)
+                op, i = iscg_pass1.parse_operator(ts, i, fn, num)
+                self.operators.append(op)
             elif t == 'map':
                 name = ts[i]
                 i += 1
@@ -652,16 +661,34 @@ class Gen:
         out = {'isc_pattern_matcher.pas': self.isc_pattern_matcher(),
                'isc_pass_2_main.pas': self.isc_pass_2_main(),
                'isc_vars.pas': self.isc_vars(),
-               'iscg_names.txt': self.names()}
+               'iscg_names.txt': self.names(),
+               'isc_pass_1_main.pas': self.isc_pass_1_main()}
         # the pass-2 modules of the sections whose actions are all written
         out.update(iscg_p2gen.modules(self, INCLUDES, GEN_NOTE))
         return out
+
+    # ---- isc_pass_1_main (tools/iscg_pass1.py)
+    def isc_pass_1_main(self):
+        # each operator's derived permissible sets: by il$t and child
+        # position, the union of the kinds its patterns test there
+        unions = {}
+        for f, v, tries in self.arms(guards=True):
+            if f != 98:
+                continue
+            for r, guard in tries:
+                for path, fld, op, val in guard:
+                    if len(path) == 1 and fld == 108:
+                        u = unions.setdefault(v, {})
+                        u[path[0]] = u.get(path[0], 0) | ((1 << val) if op == '=' else val)
+        import iscg_text
+        return iscg_pass1.emit_unit(self.r, unions, self.kinds, self.il_index, iscg_text)
 
 
 MAP_ORDER = ['opcode_rr_reversed', 'opcode_rr', 'opcode_immediate', 'opcode_double',
              'opcode_immediate_negated', 'opcode_single']
 
 sys.path.insert(0, HERE)
+import iscg_pass1  # noqa: E402
 from iscg_text import (PM_HEAD, PM_TYPES, HARD_WORK, PATTERN_MATCHER,  # noqa: E402
                        P2_HEAD, P2_TYPES, PASS_2, VARS_HEAD, UNRECOGNIZED, GEN_NOTE)
 import iscg_p2gen  # noqa: E402

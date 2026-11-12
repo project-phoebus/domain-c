@@ -2309,3 +2309,47 @@ revisited.
    sets it after (`bclr #3' at 0x18C75C, `bset #3' at 0x18C790); hard_work
    reads `appended' and `wanted' (D4, D3) uninitialized when the pass-1
    action gives a work solution but no result (0x200966).
+277. Translator QB, outbin.pas: fpx_names are `varying [8]' or `[9]' of
+   char?  Both take 14 bytes (n + 5 or 6, rounded to even), which is the
+   image's spacing; no read tells them apart.  [8] chosen.
+278. Translator QB, list_tree.pas: the image's line is a record of a
+   length and 256 characters (258 bytes, blank-padded, no NUL), not a
+   varying [256] (262 bytes).  Declared as a unit-local lt_line_t,
+   passed to listln and emit as univ iosub_$line_t.  Did the original
+   declare its own type?  (outbin's prtsub_$line_t takes 262 bytes, so
+   iosub_$line_t cannot itself be such a record.)
+279. Translator QB, com.pas (cc.a88k): com_name (+24) is followed by
+   +284, so it takes 260 bytes, less than a varying [256]'s 262; is it a
+   record like list_tree's line?  Worth the same check: lst_line_t,
+   std_$string_t, time_$line_t, prtobj_$line_t.
+280. Translator QB, list_tree's size_letters (question 259): array
+   [0..12] with 12 values, array [0..13], or padding before mrh's
+   8-aligned data?  No instruction reads +0x148..+0x14B; the gate passes
+   either way.
+281. Translator GD, isc_pass_1_main (docs/iscg-design.md 10.5): **the
+   operator routines' parameters and the module data are unnamed in the
+   image.**  The generated unit calls them il, inh, depth, permissible,
+   var il_kind, number_of_children, solutions, children,
+   solutions_made, no_solutions (the type p1_operator_t), and the four
+   dispatch tables p1_tree_op (+0), p1_cmp_op (+360), p1_assign_op
+   (+720), p1_kind (+872).  The rule file's statement names (child,
+   permissible, copy_all, trace rewrite, let, solutions_made, if/else/
+   endif) are ours too.  Other names?
+282. Translator GD: **process_eval_node's second parameter.**
+   isc_routine_externs.ins.pas declares process_eval_node(eval, parent:
+   isc_node_ptr_t); isc_eval_node (0x0E4280) passes (il, inh): the
+   node's inherited attributes.  The generated call casts inh to
+   isc_node_ptr_t.  Should the heading (and isc_user_routines'
+   definition, a hand-written unit) say inh: inherited_attributes_ptr_t?
+283. Translator GD: **isc_readonly_tables at +0x140.**  The operator
+   routines read a word table by rlen there (its low byte, the child's
+   required_arithmetic); isc_types.ins.pas's isc_readonly_tables_t has
+   the range inside x0d4.  isc_pass_1_main reads it through a view of
+   its own (p1_readonly_view_t.rlen_arith).  Split x0d4 in the shared
+   insert (x0d4 [0..107], rlen_arith [0..25]: isc_vars' define would be
+   regenerated, the bytes unchanged)?
+284. Translator GD: **parent_il_kind is a byte.**  The operator routines
+   store it with `move.b #67,(36,A0)' (isc_disp_node): the
+   inherited_attributes_t byte b36 (isc_attribute_records.ins.pas),
+   written through a view (p1_inh_view_t) as an il$t ordinal.  Rename
+   b36 to parent_il_kind (0..255) with question 271's rename?
