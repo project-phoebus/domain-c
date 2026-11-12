@@ -757,3 +757,34 @@ cc.m68k unless marked.
     cleared with `clr.l (A0)+' and `subq.l #1; bne', `beq' on n's move
     for 0 (the flags of `move.l (8,SP),D0' survive `movea.l').  Each
     unit has its own copy (the same name, internal).
+
+## The LIR utilities (translator PA, bv, exs, utils; cc.a88k)
+
+101. **Two constant word arguments pushed as one longword.**
+    utils_$begin_compilation (0x28494E) passes mrh_$initialize's flags
+    and default size (1 and 8, then 1 and 248) as `move.l
+    #0x10008,-(SP)' and `move.l #0x100F8,-(SP)': item 92's merging of
+    adjacent constant stores, for the argument area.  dpc pushes each
+    word.
+102. **A shared tail entered at a conditional branch.**
+    utils_$complete_copied_instr_at_bb_head (0x28641A) tests the
+    operand's live range's +3 bit 6 (`btst #6,(3,A1)') and then `bra'
+    to the `beq' after the other path's `btst #6,(3,A3)' of a new
+    segment, both followed by utils_$put_lts_on_final_list: item 23's
+    shared tails, cut at the branch so that the flags of two different
+    tests reach one `beq'.
+103. **A boolean module variable set with a longword store.**  exs's
+    cache flag (A5 +4, read with `tst.b') is set by `moveq #-1,D0;
+    move.l D0,(4,A5)' (0x069B1C) and cleared by `move.l #0,(4,A5)':
+    the three bytes after it are not otherwise used (merged stores of
+    neighbours never read, or a longword-sized flag).
+104. **A redundant nil test kept.**  utils_$get_canonical_birthpoint
+    (0x285E44) tests the load's segment (`tst.l (-16,A6)'; beq) and,
+    further on, `cmpa.w #0,A1' of the same value before a bug_check,
+    an `if ... = nil then bug_check' the earlier test makes dead; Rev
+    8.89 does not remove it.
+105. **Loops over vectors counted with a word index and an unsigned
+    longword limit, tested at the bottom.**  bv's vector operations
+    (bv_$copy 0x224E84 ...: `clr.w D1', `addq.w #1,D1', `clr.l D0;
+    move.w D1,D0; cmp.l D2,D0; bls') run once even when the limit
+    ((n + 31) div 32 - 1, unsigned) would be -1; written as for loops.

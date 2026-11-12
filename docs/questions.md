@@ -1299,3 +1299,26 @@ revisited.
 156. Translator MM: basic_block_label (zzzzz 0x2880E8) reads the old
    first instruction's +28 even when the block is empty (nil^ in the
    image); kept.
+157. Translator PA, utils.pas: look_for_path (cc.a88k 0x286564) answers
+   from target_bb's mark146 (`movea.l (44,A5),A0; move.l (146,A0),D0;
+   cmp.l (56,A5),D0'), not from the block it is asked about, though
+   it marks the blocks it visits; it looks like a slip in the
+   original (the memo never hits), kept as the image has it.
+158. Translator PA, utils.pas: utils_$put_lts_on_final_list sets the
+   segment's first_in_bb (+3 bit 6) with final (`or.w #0x50,(2,A2)'),
+   while utils_$get_new_lts and utils_$excise_lts_cleanly keep bit 6
+   as "the live range's first segment in its block" (complex live
+   ranges only).  The name first_in_bb may be wrong; kept by offset
+   otherwise.
+159. Translator PA, backend.ins.pas: an lts's +4 (MM's def) is the
+   head of the operands that refer to the segment (the definition
+   first, then the readers, chained through the operands' link):
+   renamed refs, and xtp's uses follow.  Its +44 holds either the
+   final segment that reaches an exposed segment or (for a join
+   birthpoint's segment) the list of the join's inputs; it is a
+   univ_ptr, cast where used.
+160. Translator PA: call_conv.pas (batch A's third unit) was skipped for
+   utils.pas, whose 40 cross-unit headings batches B and C call;
+   at_call_conv (0x1B3C bytes) needs the conventions record and the
+   IL type nodes' layouts.  It remains, with lir_utils and the rest of
+   batch A.
