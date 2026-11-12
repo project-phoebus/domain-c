@@ -8,9 +8,53 @@
   loop rebuilt as a prologue, a pipelined body and an epilogue
   (build_pipelined_loop).
 
-  TODO(oli): translator PC6 did not reach every routine; those below
-  marked TODO are not in this file yet (the table lists all of the
-  image's).
+  TODO(oli): translator PC6 translated 77 of the 120 routines (0x257D60
+  .. 0x25CECA, link_final_induction_vars, in address order: callees
+  come first, no routine calls a later one).  The 43 marked TODO in
+  the table are not in this file yet: get_induction_variable_adjustment
+  0x25CFE2 (global: returns an 8-byte oli_mval_t through its caller's
+  space, pattern 133; reads a segment's l24 at +32 .. +44, which iv's
+  36-byte induction lts does not have: adjust_induction_vars 0x25F64A
+  rewrites l24, read it first), copys_in_prolog 0x25D496,
+  get_exposed_operand 0x25D50C, precedes_in_schedule 0x25D90E,
+  get_new_lr_pair 0x25D954, find_new_intend_to_modify_operand 0x25D978,
+  get_write_lr 0x25DAB8, fill_in_live_ranges 0x25E046, generate_jump
+  0x25E4EA, generate_jumps 0x25E57A, generate_control_flow_instructions
+  0x25E654, generate_ltss 0x25ECC6, generate_birthpoints 0x25EDB6,
+  modify_operand 0x25F258, post_adds_a_loop_invariant_to 0x25F3F4,
+  adds_unscaled_loop_invariant 0x25F4D4, find_other_addend 0x25F5BA,
+  adjust_induction_vars 0x25F64A, restore_induction_vars 0x25FB04,
+  materialize_induction_variable_increments 0x25FE74,
+  reduce_partial_sums 0x2600DE, add_reduction_partial_sums 0x2603CE,
+  copy_to_end_of 0x26061E, build_bbs_and_fges 0x260850, mark_buckets
+  0x260A52, move_from_body_to_tail 0x260AC4, fill_in_tail 0x260B4A,
+  adjust_final_induction_vars 0x260C3A, build_pipelined_loop 0x260C3C,
+  find_loop_instrs 0x260CF4, recurrence_constraints_ok 0x260DE0,
+  clear_walk_marks 0x260E6E, increase_precedence 0x260EE0,
+  increase_recurrence_precedence 0x260F5E, decrease_precedence
+  0x260F9C, restore_precedence 0x261020, software_pipeline 0x261054,
+  init_depend 0x26111E, overlap_loop_iterations 0x261128,
+  mem_refs_good_for_align_unroll 0x26116C, unroll_for_alignment
+  0x261170, oli_$process_routine 0x26118E, oli_$end_routine 0x2612A0.
+  Read already (PC6's notes): find_loop_instrs sets oli_branch (the
+  last instruction, a bhs whose operand 2 is an edge back to the
+  block), oli_decr (the sub of 1 defining its condition) and
+  oli_counter; software_pipeline is init_software_pipelining,
+  adjust_induction_vars, sched_utils_$fill_in_operand_delays(bb,
+  [0], false: one longword 16#10000), sched_utils_$calculate_precedence
+  (bb, false), assign_sequence_numbers, oli_ii := iteration_interval,
+  then schedule / excess_register_pressure / recurrence_constraints_ok
+  / increase_recurrence_precedence until it fits or the interval
+  doubles (oli_fp_spare counted down), then build_pipelined_loop
+  (oli_bv released once, oli_cfg_changed) or restore_induction_vars;
+  oli_$process_routine returns unless cargs_$options.opt >= 6, not
+  at_backend_switches.sw15 and not cargs_$options.subchk, sets
+  oli_$compare_memory_references as mmt_utils' comparison, walks each
+  outermost loop head (bb +18 bit 6, +16 = 1: depth 1) with
+  next_inner_loop twice (unroll_for_alignment, which does nothing,
+  then overlap_loop_iterations), and after a rebuilt loop recomputes
+  the dominators (fg_utils_$recompute_dominators_and_dfs_lists(rtn, 1,
+  0)) and hal_$find_hammocks.
 
   Image addresses (DOMAIN C 6.9; cc.a88k only):
     cc.m68k   cc.a88k
@@ -44,53 +88,53 @@
     --------  0x258E90  induction_initial_value_of (internal)
     --------  0x258FEC  iv_expressions_differ_by_const (internal)
     --------  0x259058  record_recurrence (internal)
-    --------  0x2590BE  delay_along_data_flow_path (internal) TODO
-    --------  0x259156  data_flow_paths (internal) TODO
-    --------  0x2592A6  find_data_flow_paths (internal) TODO
-    --------  0x2592D4  simple_test (internal) TODO
-    --------  0x2593BC  gcd_test (internal) TODO
-    --------  0x259446  slope_test (internal) TODO
-    --------  0x2594F8  constant_trip_count (internal) TODO
-    --------  0x25954E  banarjees_test (internal) TODO
-    --------  0x25963C  recurrence_test (internal) TODO
-    --------  0x259736  oli_$compare_memory_references TODO
-    --------  0x259A48  analyze_memory_references (internal) TODO
-    --------  0x259A64  analyze_dependencies (internal) TODO
-    --------  0x259AFE  modified (internal) TODO
-    --------  0x259B22  parity_matches (internal) TODO
-    --------  0x259B7A  can_join (internal) TODO
-    --------  0x259BDC  is_5op_candidate (internal) TODO
-    --------  0x259F56  max_recurrence_slope (internal) TODO
-    --------  0x259FB8  iteration_interval (internal) TODO
-    --------  0x25A18A  assign_enable_counts (internal) TODO
-    --------  0x25A300  decrement_ienable_count (internal) TODO
-    --------  0x25A31E  decrement_lenable_count TODO
-    --------  0x25A35E  swap_inputs (internal) TODO
-    --------  0x25A44A  find_open_slot (internal) TODO
-    --------  0x25ACB8  schedule_instr (internal) TODO
-    --------  0x25AEDC  find_data_flow_constraints (internal) TODO
-    --------  0x25B12C  ticks_to_most_remote_consumer (internal) TODO
-    --------  0x25B3FA  schedule (internal) TODO
-    --------  0x25B6B0  excess_register_pressure (internal) TODO
-    --------  0x25BA5C  int_const_in_fp_reg (internal) TODO
-    --------  0x25BC08  operand_gets_materialized_value (internal) TODO
-    --------  0x25BDC0  exposed_at TODO
-    --------  0x25BE02  consumed_in_downstream_bb TODO
-    --------  0x25BE68  get_materialized_in_re_duction_lr (internal) TODO
-    --------  0x25C108  build_bookkeeping_structures (internal) TODO
-    --------  0x25C22A  build_fan_in_seq_instr TODO
-    --------  0x25C3F2  build_fan_out_seq_instrs TODO
-    --------  0x25C5CE  enlist_sorted (internal) TODO
-    --------  0x25C6BA  add_instruction_in_sequence (internal) TODO
-    --------  0x25C79C  five_oppify (internal) TODO
-    --------  0x25C91E  un_five_oppify (internal) TODO
-    --------  0x25C994  record_live_exposed_lr (internal) TODO
-    --------  0x25CA4E  get_live_exposed_lr (internal) TODO
-    --------  0x25CB2A  find_final_lr_in_column (internal) TODO
-    --------  0x25CB70  record_final_lr_in_column (internal) TODO
-    --------  0x25CC16  build_final_lr_in_col_list (internal) TODO
-    --------  0x25CCCC  link_lrs (internal) TODO
-    --------  0x25CECA  link_final_induction_vars (internal) TODO
+    --------  0x2590BE  delay_along_data_flow_path (internal)
+    --------  0x259156  data_flow_paths (internal)
+    --------  0x2592A6  find_data_flow_paths (internal)
+    --------  0x2592D4  simple_test (internal)
+    --------  0x2593BC  gcd_test (internal)
+    --------  0x259446  slope_test (internal)
+    --------  0x2594F8  constant_trip_count (internal)
+    --------  0x25954E  banarjees_test (internal)
+    --------  0x25963C  recurrence_test (internal)
+    --------  0x259736  oli_$compare_memory_references
+    --------  0x259A48  analyze_memory_references (internal)
+    --------  0x259A64  analyze_dependencies (internal)
+    --------  0x259AFE  modified (internal)
+    --------  0x259B22  parity_matches (internal)
+    --------  0x259B7A  can_join (internal)
+    --------  0x259BDC  is_5op_candidate (internal)
+    --------  0x259F56  max_recurrence_slope (internal)
+    --------  0x259FB8  iteration_interval (internal)
+    --------  0x25A18A  assign_enable_counts (internal)
+    --------  0x25A300  decrement_ienable_count (internal)
+    --------  0x25A31E  decrement_lenable_count
+    --------  0x25A35E  swap_inputs (internal)
+    --------  0x25A44A  find_open_slot (internal)
+    --------  0x25ACB8  schedule_instr (internal)
+    --------  0x25AEDC  find_data_flow_constraints (internal)
+    --------  0x25B12C  ticks_to_most_remote_consumer (internal)
+    --------  0x25B3FA  schedule (internal)
+    --------  0x25B6B0  excess_register_pressure (internal)
+    --------  0x25BA5C  int_const_in_fp_reg (internal)
+    --------  0x25BC08  operand_gets_materialized_value (internal)
+    --------  0x25BDC0  exposed_at
+    --------  0x25BE02  consumed_in_downstream_bb
+    --------  0x25BE68  get_materialized_in_re_duction_lr (internal)
+    --------  0x25C108  build_bookkeeping_structures (internal)
+    --------  0x25C22A  build_fan_in_seq_instr
+    --------  0x25C3F2  build_fan_out_seq_instrs
+    --------  0x25C5CE  enlist_sorted (internal)
+    --------  0x25C6BA  add_instruction_in_sequence (internal)
+    --------  0x25C79C  five_oppify (internal)
+    --------  0x25C91E  un_five_oppify (internal)
+    --------  0x25C994  record_live_exposed_lr (internal)
+    --------  0x25CA4E  get_live_exposed_lr (internal)
+    --------  0x25CB2A  find_final_lr_in_column (internal)
+    --------  0x25CB70  record_final_lr_in_column (internal)
+    --------  0x25CC16  build_final_lr_in_col_list (internal)
+    --------  0x25CCCC  link_lrs (internal)
+    --------  0x25CECA  link_final_induction_vars (internal)
     --------  0x25CFE2  get_induction_variable_adjustment TODO
     --------  0x25D496  copys_in_prolog (internal) TODO
     --------  0x25D50C  get_exposed_operand (internal) TODO
