@@ -395,6 +395,31 @@ def layout_shift(size, lst, hints, block_len, mine=None, theirs=None):
     return shift
 
 
+def content_shift(mine, theirs, limit=40000):
+    """Our offsets' image offsets less ours from aligning our block's
+    bytes with the image's (difflib, gaps allowed; an unset image byte
+    taken as 0); a byte outside the matching runs follows the run
+    before it.  None for a block past limit bytes."""
+    import difflib
+    if len(mine) > limit or len(theirs) > limit:
+        return None
+    b = bytes(0 if x is None else x for x in theirs)
+    sm = difflib.SequenceMatcher(None, bytes(mine), b, autojunk=False)
+    shift, cur, k = [0] * len(mine), 0, 0
+    for i, j, n in sm.get_matching_blocks():
+        while k < i:
+            shift[k] = cur
+            k += 1
+        cur = j - i
+        while k < i + n and k < len(mine):
+            shift[k] = cur
+            k += 1
+    while k < len(mine):
+        shift[k] = cur
+        k += 1
+    return shift
+
+
 def unit_key(f):
     return os.path.splitext(f)[0]
 
@@ -638,20 +663,46 @@ def check(f, binkey, img, obj, verbose=False):
             mine[off:off + 4] = (t & 0xFFFFFFFF).to_bytes(4, 'big')
         lst = by_sec.get(s.index, [])
         res = compare(s, base, mine, care, [0] * s.size, lst)
-        if any(shifts[s.index]):
-            # aligned by name: kept when it explains differences
-            alt = compare(s, base, mine, care, shifts[s.index], lst)
-            if alt[1] < res[1]:
-                res = alt
-                moved = []
-                for v, n in lst:
-                    if v < s.size and shifts[s.index][v]:
-                        moved.append('%s +0x%X at +0x%X' % (n, v, v + shifts[s.index][v]))
-                nlayout += 1
-                out.append(('layout', '%s %s %s: aligned by name (dpc gap 37, or dpc\'s '
-                            'order of own and defined cells): %s' % (
-                                f, binkey, s.name, ', '.join(moved[:12]) + (
-                                    ', ...' if len(moved) > 12 else ''))))
+        how = None
+        if res[1] and what[s.index] == 'moddata':
+            # other layouts, kept when they leave fewer differences: by
+            # name (the hints), and by content (our block aligned with
+            # the image's, gaps allowed: dpc's alignment and order of
+            # cells, rev889-patterns 50, dpc gap 37)
+            cands = []
+            if any(shifts[s.index]):
+                cands.append(('by name', shifts[s.index]))
+            blk = img.read(base, max(s.size, img.block_end(base, None) - base))
+            sh = content_shift(mine, blk)
+            if sh is not None and any(sh):
+                cands.append(('by content', sh))
+            if any(shifts[s.index]):
+                # by name, then by content
+                sn = shifts[s.index]
+                n = max(j + sn[j] for j in range(s.size)) + 1
+                perm = bytearray(n)
+                for j in range(s.size):
+                    perm[j + sn[j]] = mine[j]
+                sc = content_shift(perm, blk)
+                if sc is not None:
+                    cands.append(('by name and content',
+                                  [sn[j] + sc[j + sn[j]] for j in range(s.size)]))
+            for why, sh in cands:
+                alt = compare(s, base, mine, care, sh, lst)
+                if alt[1] < res[1]:
+                    res, how = alt, (why, sh)
+        if how:
+            why, sh = how
+            moved, prev = [], 0
+            for j in range(s.size):
+                if sh[j] != prev:
+                    moved.append('our +0x%X at +0x%X' % (j, j + sh[j]))
+                    prev = sh[j]
+            nlayout += 1
+            out.append(('layout', '%s %s %s: laid out otherwise (aligned %s: dpc gap 37, '
+                        'dpc\'s order or alignment of cells): %s' % (
+                            f, binkey, s.name, why, ', '.join(moved[:10]) + (
+                                ', ...' if len(moved) > 10 else ''))))
         out.extend(res[0])
         ndata += res[1]
         nlayout += res[2]
