@@ -1,0 +1,28 @@
+{ instr_size.init - the bytes an instruction of each opcode takes when
+  made with its default operands (44 and 12 for each operand), for
+  opc$undefined .. opc$adj_move: a DSEE derived object of
+  be_com/opcodes.def (the opcode generator's), included by iv and lir
+  after the opcode enumeration (a module variable of each: iv's data
+  +0).
+
+  No Apollo copy survives; reconstructed from cc.a88k's .rwdi records
+  for iv's data (A5 0x486500, 212 words).  The variable's name is not
+  known from the original. }
+
+var
+  instr_size: array [0..211] of integer := [
+    0, 56, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68,  { 0 }
+    68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 92, 92, 92, 92,  { 16 }
+    92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92,  { 32 }
+    116, 116, 116, 116, 116, 116, 116, 116, 116, 116, 116, 116, 116, 116, 116, 116,  { 48 }
+    116, 116, 116, 116, 68, 56, 56, 68, 68, 68, 80, 80, 68, 80, 80, 92,  { 64 }
+    104, 92, 104, 92, 92, 92, 92, 80, 80, 80, 92, 92, 92, 92, 92, 104,  { 80 }
+    104, 92, 92, 92, 68, 68, 68, 116, 116, 116, 104, 104, 104, 116, 92, 68,  { 96 }
+    56, 68, 56, 104, 80, 44, 116, 116, 116, 116, 116, 116, 128, 104, 68, 68,  { 112 }
+    68, 164, 152, 152, 80, 80, 68, 68, 68, 80, 80, 80, 80, 80, 80, 92,  { 128 }
+    80, 68, 80, 80, 80, 92, 68, 80, 68, 80, 92, 92, 80, 68, 68, 92,  { 144 }
+    92, 104, 92, 104, 104, 104, 92, 80, 104, 80, 104, 128, 128, 104, 80, 80,  { 160 }
+    128, 128, 80, 80, 80, 92, 92, 104, 128, 128, 80, 80, 68, 116, 116, 80,  { 176 }
+    44, 44, 68, 68, 80, 80, 56, 56, 56, 44, 44, 80, 56, 56, 56, 56,  { 192 }
+    44, 44, 44, 56  { 208 }
+    ];
