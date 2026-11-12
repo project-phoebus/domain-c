@@ -116,6 +116,20 @@ Question 174 is answered: these units open the prelude (fga, hal, life and sanit
 
 Remaining in batch A after PA3: lir_utils' three routines; lir, lir_main, sym, fg_utils, tm_utils, post.  Translator PA2's remaining list read: sanity_$check_entire_routine; call_conv (question 167), lir_utils, lir, lir_main, sym, fg_utils, tm_utils, post.  Notes for whoever continues: sym, tm_utils (and fga, hal, life, sanity) open backend.ins.pas without the lang prelude: backend.ins.pas must not use the prelude's types (rtn_t.node is univ_ptr for that reason), and a unit that needs il_180, cargs_$options or idntk declares them through views of its own (fga.pas; docs/questions.md 174).  sym calls isc_$get_il_live_range without opening an ISC insert.  tm_utils includes the named sections' initializers (operand_forms_mask.init, the amse_*.init), which question 161 has not settled.
 
+Batch C (translators PC, PC2, PC3, PC4, 2026-11-11):
+
+| unit | routines | notes |
+|------|----------|-------|
+| `lang2/source/be_com/tr_utils.pas` | 68 | done (PC): the transformations' utilities |
+| `lang2/source/be_com/mmt_utils.pas` | 37 | done (PC, PC2): descriptors, tokens, MMT_SEQs |
+| `lang2/source/be_com/mmt.pas` | 39 | done (PC2): the memory model; mmt.pvt.pas's views of lr_t, rtn_t |
+| `lang2/source/be_com/trans.pas` | 37 | done (PC2, PC3): the alpha and omega motions, branches, copy elimination; bb_t +42, +122, +150 through trans_bb_v_t |
+| `lang2/source/be_com/com.pas` | 63 | done (PC3, PC4): the CSE pass over the dominator tree, load/store elimination, loop hoisting, memory kept in registers across loops, sinking into loop exits, a88k_$cossin; bb_t +42 and +142 (com's block lists), the IL node's +192 and an address constant's +16 through views; com_$compute_cses narrowed (rtn, level); rtn_t lr108 read as the DB register's live range, lir_main_c4c as the zero register's segment; dpc gap 30 (a local set in a register) |
+| `lang2/source/be_com/iv.pas` | 127 | begun (PC4), 43 of 127: the heaps and the expressions; iv.ins.pas iv_expr_t and the iv_ kinds, the expression headings narrowed (duplicate_expression takes one argument); opcodes/instr_size.init reconstructed from iv's .rwdi (lir includes it too); the rest listed in the file's TODO |
+| oli | | not reached by PC4 |
+
+Remaining in batch A after PA2: sanity_$check_entire_routine; call_conv (question 167), lir_utils, lir, lir_main, sym, fg_utils, tm_utils, post.  Notes for whoever continues: sym, tm_utils (and fga, hal, life, sanity) open backend.ins.pas without the lang prelude: backend.ins.pas must not use the prelude's types (rtn_t.node is univ_ptr for that reason), and a unit that needs il_180, cargs_$options or idntk declares them through views of its own (fga.pas; docs/questions.md 174).  sym calls isc_$get_il_live_range without opening an ISC insert.  tm_utils includes the named sections' initializers (operand_forms_mask.init, the amse_*.init), which question 161 has not settled.
+
 ## Order: leaves first by the call graph
 
 Remaining: 34 units, 391,102 bytes of code, 1291 routines.  Levels by

@@ -769,6 +769,25 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
            n := 1;
        end;
 
+   Also com.pas process_instruction (translator PC4, cc.a88k 0x22B46C):
+   a local `seen: set of 0..31' (the operand numbers whose birthpoints
+   are cached) that the image keeps in D6 (`btst D5,D6' after `cmpi.l
+   #31,D5; bgt'; an element added by `bset' into a cleared frame
+   longword and `or.l' into D6): `if (k <= 31) and (k in seen) then'
+   draws the same message.  The rewrite makes the test `k <= 0' (never
+   cached) in the scratch copy.  Reproducer:
+
+       module g30b;
+       var n: integer32;
+       procedure p(k: integer32); options(val_param);
+       var s: set of 0..31;
+       begin
+         s := [];
+         if (k <= 31) and (k in s) then
+           n := 1;
+         s := s + [k];
+       end;
+
 31. **A set expression of more than a longword compared with `[]'.**
    final.pas floatop (cc.m68k 0x10FDF0): a double's low 29 bits tested
    as `v.s * [0..28] = []' with v.s a `set of 0..63' view of the real
