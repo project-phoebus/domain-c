@@ -959,12 +959,12 @@ begin
     sched_3158 := n;
     ra_658 := integer32(s1);
     ra_654 := integer32(s2);
-    discard(lir_$complete_instruction(ins));
+    lir_$complete_instruction(ins);
     ins^.bb^.f.entry := true;
     discard(lir_$add_flow_graph_edge(lir_41f0, ins^.bb));
     ins2 := lir_$get_new_instruction_no_exceptions(nil, ord(opc$limit), 0, nil, 96);
     ins^.opnds[1].ptr := ins2;
-    discard(lir_$complete_instruction(ins2));
+    lir_$complete_instruction(ins2);
     lir_4216 := 1024;
     lir_$simple_instruction(inh, ord(opc$move), 16#2000000, lir_3e60[1],
                             isc_user_routines_33c, nil, 0);
@@ -1663,7 +1663,7 @@ begin
       lir_$build_operand(op, lir_3d60[k], f);
     end;
   end;
-  discard(lir_$complete_instruction(ret));
+  lir_$complete_instruction(ret);
   for k := 1 to ret^.h.nopnds do
     if ret^.opnds[k].h.write then
       if ret^.opnds[k].h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then

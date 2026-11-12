@@ -6,9 +6,9 @@
 
   TODO(pascal) lir.pas: begun by translator PA6 (7 routines, 0x242820 ..
   0x242ED4) and continued by PA7 in address order through
-  lir_$build_operand (0x24409A): 37 of 63.  The other 26
-  (note_entry_to_handler_from_runtime 0x245710 .. lir_$strip_may_gen_
-  exception 0x248A60) remain, with the module's data: lir's own cells are
+  lir_$complete_instruction (0x2457F4): 41 of 63.  The other 22
+  (lir_$dispatch_instruction 0x2467B6 .. lir_$strip_may_gen_exception
+  0x248A60) remain, with the module's data: lir's own cells are
   declared extern below (lir_<offset>, the build_ tables by their .init
   files' names), and must be defined in address order with the data
   (as lir_main.pas does) when the unit is complete; the lir.dir/
@@ -237,6 +237,19 @@ type
 
   lir_msg_ptr_t = ^bug_check_$string_t;
 
+  { The exception information operand (operand kind 28) as
+    lir_$complete_instruction fills it from exs_$start_exception_
+    handler_enquiry: +4 the handler, +8 a word, +10 a flag, +11 the
+    predefined exception (exs_$map_to_predefined_exception). }
+  lir_exc_opnd_ptr_t = ^lir_exc_opnd_t;
+  lir_exc_opnd_t = record
+    h: opnd_hdr_t;                      { +0 }
+    handler: univ_ptr;                  { +4 }
+    word: integer;                      { +8 }
+    flag: boolean;                      { +10 }
+    predef: char;                       { +11 }
+  end;
+
 var
   { lir.pas's own cells (A5 0x487180 + offset), to be defined with the
     module's data. }
@@ -279,6 +292,17 @@ var
   lir_2f58: extern instr_t;             { +0x2F58: the build area, the
                                           instruction begin_instruction
                                           begins (0xC20 bytes) }
+  lir_3b78: extern array [1..2] of lir_label_ptr_t;  { +0x3B78: the
+                                          labels a flags bit 17
+                                          instruction may reach (lir_41c0
+                                          of them) }
+  lir_4190: extern instr_attr_opnd_t;   { +0x4190 .. +0x419C: operand
+                                          forms (initialized: +0x4190 an
+                                          access of 3, +0x4194 form 7,
+                                          +0x4198 18, of$ip_reg) }
+  lir_4194: extern instr_attr_opnd_t;
+  lir_4198: extern instr_attr_opnd_t;
+  lir_419c: extern instr_attr_opnd_t;
   lir_41a0: extern integer32;           { +0x41A0: the highest argument
                                           block offset in lir_f38 }
   lir_41a4: extern lir_count_t;         { +0x41A4: the build area's size }
@@ -289,10 +313,15 @@ var
   lir_41b8: extern integer32;           { +0x41B8: the last line put in a
                                           block }
   lir_41bc: extern lir_count_t;         { +0x41BC: the labels made }
+  lir_41c0: extern integer32;           { +0x41C0: lir_3b78's labels }
   lir_41c4: extern mrh_$mark_t;         { +0x41C4: lir_e90's mark }
   lir_41c8: extern mrh_$mark_t;         { +0x41C8: lir_ea8's mark }
   lir_41cc: extern mrh_$mark_t;         { +0x41CC: lir_ec0's mark }
   lir_41d0: extern mrh_$mark_t;         { +0x41D0: lir_ed8's mark }
+  lir_41d4: extern lr_ptr_t;            { +0x41D4: the memory a load
+                                          reads (inscrutable_memory) }
+  lir_41d8: extern lr_ptr_t;            { +0x41D8: the memory a store
+                                          writes }
   lir_41dc: extern lts_ptr_t;           { +0x41DC: the free segments,
                                           chained at next }
   lir_41e0: extern rtn_ptr_t;           { +0x41E0: the routine }
@@ -303,8 +332,13 @@ var
   lir_41ec: extern integer32;           { +0x41EC: the inherited
                                           attributes' l20 }
   lir_4200: extern integer32;           { +0x4200 }
+  lir_4210: extern integer;             { +0x4210: the block's count at
+                                          the last sets_cc }
+  lir_4212: extern integer;             { +0x4212: at the last fp_ccs }
   lir_4214: extern integer;             { +0x4214: the instructions in the
                                           current block }
+  lir_4218: extern boolean;             { +0x4218: the argument block's
+                                          memory was written }
   lir_421a: extern boolean;             { +0x421A: cargs +0x251 bit 3: the
                                           trace }
   lir_421c: extern boolean;             { +0x421C: the current block falls
@@ -1928,4 +1962,561 @@ begin
   v3 := disp;
   bug_check(build_message[action]^, v3, instruction_mnemonic[lir_2f58.opc], 12);
 99:
+end;
+
+{ note_entry_to_handler_from_runtime - the handler (an exception
+  handler's node) may be entered from the run-time: its +68 set, its
+  label (+60) noted a target of asynchronous flow (its block's edge
+  from the entry block) once.
+
+  0x245710, 0x36 bytes, internal. }
+
+procedure note_entry_to_handler_from_runtime(
+    handler: univ_ptr); options(val_param, internal);
+type
+  handler_v_ptr_t = ^handler_v_t;
+  handler_v_t = record
+    space0: array [0..59] of char;      { +0 }
+    lab: lir_label_ptr_t;               { +60 }
+    space64: array [64..67] of char;    { +64 }
+    b68: boolean;                       { +68 }
+  end;
+var
+  h: handler_v_ptr_t;
+  lab: lir_label_ptr_t;
+begin
+  h := handler;
+  h^.b68 := true;
+  lab := h^.lab;
+  if lab <> nil then
+    if not lab^.f10.async_target then begin
+      lab^.f10.async_target := true;
+      lir_$note_target_of_asynchronous_flow(lab^.bb);
+    end;
+end;
+
+{ no_associated_modify_operand - whether no operand of instr after op
+  modifies op's live range.
+
+  0x245746, 0x56 bytes, internal. }
+
+function no_associated_modify_operand(
+    instr: instr_ptr_t;
+    op: lir_pre_opnd_ptr_t): boolean; options(val_param, internal);
+var
+  k: integer32;
+  n: integer32;
+begin
+  k := op^.h.num;
+  n := instr^.h.nopnds;
+  while k < n do begin
+    k := k + 1;
+    if instr^.opnds[k].h.modify then
+      if lir_pre_opnd_ptr_t(addr(instr^.opnds[k]))^.lr = op^.lr then begin
+        no_associated_modify_operand := false;
+        return;
+      end;
+  end;
+  no_associated_modify_operand := true;
+end;
+
+{ create_associated_modify_operand - instr's operand k made op's copy
+  that modifies op's live range (read and intend_to_modify replaced by
+  modify).
+
+  0x24579C, 0x58 bytes, internal. }
+
+procedure create_associated_modify_operand(
+    instr: instr_ptr_t;
+    op: lir_pre_opnd_ptr_t;
+    k: integer32); options(val_param, internal);
+var
+  q: lir_pre_opnd_ptr_t;
+begin
+  q := addr(instr^.opnds[k]);
+  q^.h := op^.h;
+  q^.h.num := k;
+  opnd_bytes_ptr_t(q)^.rrp := (opnd_bytes_ptr_t(q)^.rrp & 16#CF) ! 4;
+  q^.rrp := (op^.rrp - [rrp$read, rrp$intend_to_modify]) + [rrp$modify];
+  q^.lr := op^.lr;
+end;
+
+{ LIR_$COMPLETE_INSTRUCTION - instr (from lir_$get_new_instruction..,
+  its operands built) put in the current block: deferred to the
+  inherited attributes' l20's list when its flags' bit 15 asks; first
+  the instructions attached to it (+24), then, unless the call's
+  properties' b35, an instruction 202 reading the argument block
+  offsets' memory live ranges they marked (lir_f38); the block broken
+  at a new exception frame; the condition codes' register operand
+  (lir_4226); the addressing mode (flags bits 4, 5: post- and premodify)
+  and load/store qualifiers (bits 7, 8, 9: lsq 3, 1, 2; 9 ends the
+  atomic sequence) checked and set; intend_to_modify operands given
+  their modify copies and pairs their odd halves' operands; the
+  register operands' segments made; the condition codes' operands
+  (sets_cc, fp_ccs from the opcode or the call's properties, flags bits
+  3..0); the memory operands (the argument block's lir_e38, lir_f38's
+  by offset, or lir_41d4/lir_41d8); then the header stored, the line
+  from the inherited attributes, lir_main_c44's chain (bit 25), the
+  block (bit 20 pfm_cleanup), the labels' hidden edges (bit 17:
+  lir_3b78, bit 16: the routine's l8), the exception information
+  operand (target_properties +0xC1: exs_ enquiry), the edges a trap or
+  CALL to the exit block takes, and the block ended after a transfer
+  (bits 9, 16, 17, 19; a branch falls through).
+
+  0x2457F4, 0xDCE bytes: the 'set CCs request' message names the build
+  area's opcode (lir_2f58), not instr's; the combined pre- and
+  postmodify test's first arm is dead (`btst #4' after `btst #4; bne').
+  The image leaves D0 as it is: written as a procedure (lir_main
+  discarded the value). }
+
+procedure lir_$complete_instruction(
+    instr_p: univ_ptr);
+type
+  defer_v_ptr_t = ^defer_v_t;
+  defer_v_t = record
+    space0: array [0..23] of char;      { +0 }
+    l24: instr_ptr_t;                   { +24 }
+  end;
+  props_ptr_t = ^call_conv_$ptr_t;
+var
+  i: instr_ptr_t;
+  flags: integer32;
+  a2: instr_ptr_t;
+  props: call_conv_$ptr_t;
+  ni: instr_ptr_t;
+  cnt: integer32;
+  j: integer32;
+  k: integer32;
+  lr: lr_ptr_t;
+  a: instr_attr_ptr_t;
+  hw: lir_ihdr_t;
+  src: lir_inherited_ptr_t;
+  cls: integer;
+  nres: integer32;
+  slot: integer32;
+  op: lir_pre_opnd_ptr_t;
+  q: lir_pre_opnd_ptr_t;
+  s: lts_ptr_t;
+  d2: integer;
+  d4: integer;
+  memw: boolean;
+  flag: boolean;
+  mkind: integer;
+  keep: integer;
+  off: integer32;
+  bb: bb_ptr_t;
+  lab: lir_label_ptr_t;
+  isbr: boolean;
+  handled: boolean;
+  handled2: boolean;
+  exc: univ_ptr;
+  h: univ_ptr;
+  xop: opnd_ptr_t;
+  xb: ^opnd_bytes_t;
+begin
+  i := instr_p;
+  flags := i^.l28;
+  if (flags & 16#8000) <> 0 then begin
+    flags := flags & (~16#8000);
+    i^.l28 := flags;
+    i^.next := defer_v_ptr_t(lir_41ec)^.l24;
+    defer_v_ptr_t(lir_41ec)^.l24 := i;
+    return;
+  end;
+  a2 := instr_ptr_t(i^.l24);
+  if a2 <> nil then begin
+    i^.l24 := 0;
+    lir_41a0 := 0;
+    repeat
+      lir_$complete_instruction(a2);
+      a2 := a2^.next;
+    until a2 = nil;
+    if instruction_attributes[i^.opc].class = class$call then
+      props := props_ptr_t(addr(i^.opnds[i^.h.nopnds + 1]))^
+    else
+      props := nil;
+    if (props = nil) or not props^.no_arg_block_read then
+      if lir_41a0 <> 0 then begin
+        cnt := 0;
+        for k := lir_41a0 downto 1 do
+          if lir_f38[k] <> nil then
+            if lir_f38[k]^.f2.b3_4 then
+              cnt := cnt + 1;
+        if cnt <> 0 then begin
+          ni := lir_$get_new_instruction_no_exceptions(nil, 202, 0, nil,
+                                                       cnt + 2);
+          k := lir_41a0;
+          j := cnt;
+          repeat
+            lr := lir_f38[k];
+            if lr <> nil then
+              if lr^.f2.b3_4 then begin
+                lr^.f2.b3_4 := false;
+                build_non_register_reference(addr(ni^.opnds[j]), 9, j,
+                                             [rrp$read], lr);
+                j := j - 1;
+              end;
+            k := k - 1;
+          until k = 0;
+          ni^.h.b2_2 := true;
+          lir_$complete_instruction(ni);
+        end;
+      end;
+  end;
+  if i^.opc = 0 then
+    bug_check('LIR_$COMPLETE_INSTRUCTION -- opcode is missing/undefined%$');
+  a := addr(instruction_attributes[i^.opc]);
+  hw.h := i^.h;
+  src := lir_inherited_ptr_t(i^.l32);
+  if src <> nil then
+    if src^.l4 <> lir_41e4 then begin
+      cls := a^.class;
+      if not ((cls in [class$branch, class$fp_branch])
+              and (ord(i^.opnds[1].h.kind) in [15, 16])) then
+        if not (cls in [4, 6, 10, 14, 18, 19, 24, 26]) then begin
+          if not ((i^.opc = ord(opc$call)) and odd(hw.h.lsq)) then
+            lir_421c := true;
+          lir_41e4 := src^.l4;
+          lir_4222 := true;
+        end;
+    end;
+  if lir_4226 then begin
+    k := 1;
+    while ord(i^.opnds[k].h.kind) <> 0 do
+      k := k + 1;
+    lir_4198.num := k;
+    lir_$build_operand(addr(i^.opnds[k]), lir_3e60[1], lir_4198);
+  end;
+  if (flags & 944) <> 0 then begin
+    if not (a^.class in [class$load, class$store]) then
+      bug_check('LIR_$COMPLETE_INSTRUCTION -- request requires address mode: %a%$',
+                instruction_mnemonic[i^.opc], 12);
+    if (flags & 48) <> 0 then
+      if (flags & 16) = 0 then begin
+        if not (a^.amse in [1, 3, 4, 5, 6]) then
+          bug_check('LIR_$COMPLETE_INSTRUCTION -- postmodify addressing not supported: %a%$',
+                    instruction_mnemonic[i^.opc], 12);
+        hw.h.modify := 1;
+      end
+      else if (flags & 32) = 0 then begin
+        if not (a^.amse in [1, 2, 3, 4, 5, 6]) then
+          bug_check('LIR_$COMPLETE_INSTRUCTION -- premodify addressing not supported: %a%$',
+                    instruction_mnemonic[i^.opc], 12);
+        hw.h.modify := 2;
+      end
+      else if (flags & 16) = 0 then
+        hw.h.modify := 1
+      else
+        bug_check('LIR_$COMPLETE_INSTRUCTION -- both pre & post-modify: %a%$',
+                  instruction_mnemonic[i^.opc], 12);
+    if (flags & 896) <> 0 then
+      if (flags & 640) = 0 then
+        hw.h.lsq := 1
+      else if (flags & 384) = 0 then begin
+        lir_4228 := false;
+        lir_4226 := false;
+        hw.h.lsq := 2;
+        if a^.class = class$load then begin
+          lir_41fc^.last^.h.grouped := true;
+          lir_41fc^.last^.h.quad_aligned := true;
+        end;
+      end
+      else if (flags & 768) = 0 then
+        hw.h.lsq := 3
+      else
+        bug_check('LIR_$COMPLETE_INSTRUCTION -- mutliple conflicting qualifiers: %a%$',
+                  instruction_mnemonic[i^.opc], 12);
+  end;
+  nres := a^.nresults;
+  if a^.class in [class$call, class$svc] then
+    while ord(i^.opnds[nres + 1].h.kind) <> 0 do
+      nres := nres + 1;
+  slot := nres + 1;
+  for k := 1 to nres do begin
+    op := addr(i^.opnds[k]);
+    if op^.h.intend_to_modify then
+      if no_associated_modify_operand(i, op) then begin
+        slot := utils_$find_unused_operand_slot(i, slot);
+        create_associated_modify_operand(i, op, slot);
+      end;
+    if op^.h.kind = operand$fp_reg_pair then begin
+      slot := utils_$find_unused_operand_slot(i, slot);
+      q := addr(i^.opnds[slot]);
+      q^.h := op^.h;
+      q^.h.num := slot;
+      q^.h.fp_reg_even_only := false;
+      q^.h.fp_reg_odd_only := true;
+      q^.rrp := (op^.rrp - [rrp$fp_reg_even_only]) + [rrp$fp_reg_odd_only];
+      q^.lr := op^.lr^.mate;
+      q^.lr^.rrp := rrp$set_t(integer(q^.lr^.rrp) ! lir_4216);
+      op^.h.fp_reg_even_only := true;
+      op^.rrp := op^.rrp + [rrp$fp_reg_even_only];
+      if q^.h.intend_to_modify then
+        if no_associated_modify_operand(i, q) then begin
+          slot := utils_$find_unused_operand_slot(i, slot);
+          create_associated_modify_operand(i, q, slot);
+        end;
+    end;
+  end;
+  for k := 1 to hw.h.nopnds do begin
+    op := addr(i^.opnds[k]);
+    if ord(op^.h.kind) in [1, 2, 3, 4, 5, 6] then begin
+      s := get_lts_in_current_bb(op^.lr, op^.rrp);
+      if s^.l40 = 0 then
+        s^.refs := univ_ptr(op)
+      else
+        opnd_ptr_t(s^.l40)^.link := univ_ptr(op);
+      s^.l40 := integer32(op);
+      opnd_ptr_t(op)^.lts := s;
+      opnd_ptr_t(op)^.link := nil;
+    end;
+  end;
+  if a^.class = class$call then begin
+    props := props_ptr_t(addr(i^.opnds[hw.h.nopnds + 1]))^;
+    hw.h.fp_ccs := not props^.no_fp_cc_write;
+    hw.h.sets_cc := not props^.no_ip_cc_write;
+  end
+  else begin
+    props := nil;
+    hw.h.fp_ccs := (a^.w18 & 16#100) <> 0;
+    hw.h.sets_cc := (a^.w18 & 16#200) <> 0;
+  end;
+  if (flags & 15) <> 0 then begin
+    if not a^.b14_0 then
+      bug_check('LIR_$COMPLETE_INSTRUCTION -- set CCs request on %a%$',
+                instruction_mnemonic[lir_2f58.opc], 12);
+    if (a^.w18 & 16#80) <> 0 then
+      hw.h.fp_ccs := true
+    else
+      hw.h.sets_cc := true;
+    hw.h.preference := false;
+  end;
+  if hw.h.preference then
+    if i^.opnds[1].lts^.lr^.f2.physical then
+      if i^.opnds[2].lts^.lr^.f2.physical then
+        hw.h.preference := false;
+  if (a^.w18 & 16#40) <> 0 then begin
+    d2 := hw.h.nopnds;
+    if a^.b14_0 or hw.h.sets_cc then
+      d2 := d2 - 1;
+    if (a^.w18 & 16#80) <> 0 then
+      build_non_register_reference(addr(i^.opnds[d2]), 8, d2, [rrp$read],
+                                   addr(lir_de0))
+    else
+      build_non_register_reference(addr(i^.opnds[d2]), 7, d2, [rrp$read],
+                                   addr(lir_d88));
+  end;
+  if hw.h.fp_ccs then begin
+    lir_4212 := lir_4214;
+    build_non_register_reference(addr(i^.opnds[hw.h.nopnds]), 8,
+                                 hw.h.nopnds, [rrp$write], addr(lir_de0));
+  end;
+  if hw.h.sets_cc then begin
+    lir_4210 := lir_4214;
+    d2 := hw.h.nopnds;
+    if hw.h.fp_ccs then
+      d2 := d2 - 1;
+    build_non_register_reference(addr(i^.opnds[d2]), 7, d2, [rrp$write],
+                                 addr(lir_d88));
+  end;
+  if ((a^.w18 & 16#100) <> 0) and ((a^.w18 & 16#200) <> 0) then begin
+    hw.h.fp_ccs := false;
+    hw.h.sets_cc := false;
+  end;
+  if (a^.class in [2, 4, 7, 14, 15, 16, 20, 21, 22, 23, 24, 27])
+     and ((flags & 16#1000) = 0) then begin
+    utils_$strip_may_gen_exception(i);
+    hw.h.may_generate_an_exception := i^.h.may_generate_an_exception;
+    if (i^.opc = 202) and (ord(i^.opnds[1].h.kind) = 0) then begin
+      build_non_register_reference(addr(i^.opnds[1]), 9, 1, [rrp$read],
+          lir_pre_opnd_ptr_t(addr(i^.opnds[1]))^.lr);
+      build_non_register_reference(addr(i^.opnds[2]), 9, 2, [rrp$write],
+          lir_pre_opnd_ptr_t(addr(i^.opnds[2]))^.lr);
+      lir_4218 := true;
+    end;
+    d4 := hw.h.nopnds;
+    if a^.b14_0 then
+      d4 := d4 - 1
+    else if ord(i^.opnds[hw.h.nopnds].h.kind) <> 0 then
+      if ord(i^.opnds[hw.h.nopnds - 1].h.kind) <> 0 then
+        d4 := d4 - 2
+      else
+        d4 := d4 - 1;
+    memw := false;
+    if (a^.class in [2, 4, 7, 12, 14, 20, 21, 23, 24])
+       or ((a^.class in [class$load_pair, class$mfpr])
+           and ((flags & 16#800) <> 0)) then begin
+      d4 := d4 - 1;
+      memw := true;
+      if utils_$instr_is_ref_to_argument_block(i) then begin
+        lr := addr(lir_e38);
+        mkind := 9;
+      end
+      else if not i^.h.b2_2 then begin
+        lr := lir_41d8;
+        mkind := 10;
+      end
+      else if (a^.class = class$store) or (i^.opc = 202) then begin
+        lr := addr(lir_e38);
+        mkind := 9;
+      end
+      else begin
+        lr := lir_41d8;
+        mkind := 10;
+      end;
+    end
+    else if utils_$instr_is_ref_to_argument_block(i) then begin
+      lr := addr(lir_e38);
+      mkind := 9;
+    end
+    else begin
+      lr := lir_41d4;
+      mkind := 10;
+    end;
+    keep := d4;
+    if (props = nil) or not props^.no_memory_read or props^.b29 then
+      build_non_register_reference(addr(i^.opnds[d4]), mkind, d4, [rrp$read],
+                                   lr);
+    if memw then begin
+      if i^.h.b2_2 and (mkind = 9) and (a^.class = class$store) then begin
+        if i^.opnds[2].h.kind <> operand$immediate then
+          bug_check('LIR_$COMPLETE_INSTRUCTION -- non-immediate arg block offset%$');
+        off := i^.opnds[2].value;
+        if off < 2048 then begin
+          if off > lir_41a0 then
+            lir_41a0 := off;
+          lr := lir_f38[off];
+          if lr = nil then begin
+            lr := lir_$new_live_range;
+            lir_f38[off] := lr;
+          end;
+        end;
+        lr^.f2.b3_4 := true;
+      end
+      else if mkind = 9 then
+        lr := addr(lir_e38)
+      else
+        lr := lir_41d8;
+      if (props = nil) or not props^.no_memory_write or props^.b29 then begin
+        if lr = addr(lir_e38) then
+          lir_4218 := true;
+        d4 := d4 + 1;
+        build_non_register_reference(addr(i^.opnds[d4]), mkind, d4,
+                                     [rrp$write], lr);
+      end;
+    end;
+    flag := false;
+    d2 := keep - 1;
+    if i^.opc = 197 then begin
+      memw := false;
+      flag := true;
+    end
+    else if a^.class = class$svc then begin
+      memw := true;
+      flag := true;
+    end
+    else if props <> nil then
+      if not props^.no_arg_block_read or lir_4218
+         or not props^.no_arg_block_write then begin
+        memw := true;
+        flag := true;
+      end;
+    if flag then begin
+      if memw then
+        build_non_register_reference(addr(i^.opnds[d2 - 1]), 9, d2 - 1,
+                                     [rrp$read], addr(lir_e38));
+      build_non_register_reference(addr(i^.opnds[d2]), 9, d2, [rrp$write],
+                                   addr(lir_e38));
+      lir_4218 := false;
+    end;
+  end;
+  i^.h := hw.h;
+  src := lir_inherited_ptr_t(i^.l32);
+  if src <> nil then begin
+    lir_ipos_ptr_t(i)^.line := src^.w34;
+    lir_ipos_ptr_t(i)^.w34 := 0;
+  end;
+  if (flags & 16#2000000) <> 0 then begin
+    i^.l32 := integer32(lir_main_c44);
+    lir_main_c44 := i;
+  end;
+  bb := get_basic_block;
+  add_instruction_to_basic_block(i, bb);
+  if (flags & 16#100000) <> 0 then
+    bb^.f.pfm_cleanup := true;
+  if (flags & 16#20000) <> 0 then
+    if lir_41c0 <> 0 then begin
+      for k := 1 to lir_41c0 do
+        add_fge_to_labeled_basic_block(nil, lir_3b78[k]);
+      if a^.class in [class$call, class$svc] then
+        i^.h.lsq := i^.h.lsq ! 2;
+    end;
+  if (flags & 16#10000) <> 0 then begin
+    lab := lir_41e0^.l8;
+    while lab <> nil do begin
+      add_fge_to_labeled_basic_block(nil, lab);
+      lab := lab^.next;
+    end;
+    if a^.class in [class$call, class$svc] then
+      i^.h.lsq := i^.h.lsq ! 2;
+  end;
+  isbr := a^.class = class$call;
+  if ord(target_properties.p_bf[2]) >= 128 then
+    if isbr or hw.h.may_generate_an_exception then begin
+      k := utils_$find_unused_operand_slot(i, 1);
+      xop := addr(i^.opnds[k]);
+      xb := univ_ptr(xop);
+      xb^.b3 := (xb^.b3 & 16#E0) ! 28;
+      xop^.h.num := k;
+      exs_$start_exception_handler_enquiry(univ_ptr(src^.l4), true_il(src),
+          isbr, false, handled, exc, lir_exc_opnd_ptr_t(xop)^.handler,
+          lir_exc_opnd_ptr_t(xop)^.flag, lir_exc_opnd_ptr_t(xop)^.word);
+      if exc <> nil then
+        lir_exc_opnd_ptr_t(xop)^.predef :=
+            chr(exs_$map_to_predefined_exception(exc));
+      if a^.class <> class$call then begin
+        h := exs_$next_exception_handler;
+        if h <> nil then
+          note_entry_to_handler_from_runtime(h);
+        exs_$end_exception_handler_enquiry(handled);
+      end
+      else begin
+        repeat
+          h := exs_$next_exception_handler;
+          if h <> nil then
+            note_entry_to_handler_from_runtime(h);
+        until h = nil;
+        exs_$end_exception_handler_enquiry(handled2);
+      end;
+    end;
+  if ((i^.opc = ord(opc$call)) and odd(hw.h.lsq))
+     or (a^.class = class$trap) then begin
+    bb^.f.hidden_successor_edges := true;
+    discard(lir_$add_flow_graph_edge(bb, lir_41f8));
+    lir_4224 := false;
+    lir_421c := false;
+    lir_4222 := true;
+  end
+  else if ((flags & 16#10200) <> 0)
+          or (((flags & 16#20000) <> 0) and (lir_41c0 > 0))
+          or ((flags & 16#80000) <> 0) then begin
+    if ((flags & 16#10200) = 0)
+       and not (((flags & 16#20000) <> 0) and (lir_41c0 > 0)) then
+      lir_421e := true;
+    lir_4224 := false;
+    lir_421c := true;
+    lir_4222 := true;
+  end
+  else if a^.class in [1, 5, 6, 24] then
+    if a^.class in [class$branch, class$fp_branch] then begin
+      lir_4224 := true;
+      lir_421c := true;
+    end
+    else begin
+      lir_4224 := false;
+      lir_421c := false;
+      lir_4222 := true;
+    end;
+  if lir_421a then
+    dmp_$instruction(i);
 end;

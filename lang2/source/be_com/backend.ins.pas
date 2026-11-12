@@ -2079,8 +2079,8 @@ procedure lir_$build_operand(
 
 { LIR_$COMPLETE_INSTRUCTION - 0x2457F4, 0xDCE bytes; called from lir_main.
   Frame 8:al.  Result: read (callers: D0l1). }
-function lir_$complete_instruction(
-    p1: univ_ptr): integer32; options(val_param); extern;
+procedure lir_$complete_instruction(
+    instr_p: univ_ptr); options(val_param); extern;
 
 { LIR_$DISPATCH_INSTRUCTION - 0x2467B6, 0x108 bytes; called from
   isc_to_lir.  Frame 8:l; 12:l; 16:w; 18:l. }
