@@ -648,3 +648,9 @@ cc.m68k unless marked.
     (0x107976) assign the routine on 4 of the 11 entries of a jump
     table.  The registers keep their callers' values; the translation
     leaves the variable unset there too.
+85. **A by-address boolean constant at the next routine's first byte.**
+    opt_strength's doinsert (0x0E7BDC) and add_assign (0x0E8C8A) pass
+    fixupchildren's `in' flag as `pea' of 0x0E7BFC, the entry of
+    check_tree_node right after doinsert (byte 0x4E, false to the
+    callee's `tst.b; bpl'), as pattern 31 passes the empty string.
+    dpc puts the constant after the routine.

@@ -402,3 +402,8 @@ the set).  registers_consumed_by_tree_operator, _agg_aop,
 _assign_operator, assert_tree_result_depends_on_operands,
 registers_consumed_by_object and registers_preserved_by_statement are
 declared extern in the unit (a TODO in its header).
+Translator FF, opt_strength finished (59 of 59): no core change; the
+routines of other units it calls without an insert heading (opt_loop's
+fixupchildren, opt_main's fixup_blocks and
+opt_main_$symidx_of_varn_or_fsym, kfold) are declared extern in the
+unit file, as opt_reachdef does kfold (docs/questions.md 124-126).
