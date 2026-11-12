@@ -823,3 +823,22 @@ revisited.
    bug_check message ends `support!%.' (not `%$').  cg_tree's operands
    at +0x1B8 .. +0x230 lie 24 bytes apart, as cg_assign's (question
    99) and do_const_mul's frame operands (-432, -456).
+108. Translator GG, final: probable slips of the original kept:
+   merge_stack_adjusts (cc.m68k 0x10EE1E) makes a lea of the merged
+   adjustment's magnitude (`neg.l D2' before `move.l D2,(32,A0)'), so a
+   net downward adjustment of more than 8 becomes an upward one;
+   assert_bfextu_requires_test (0x10C3BA) answers true whatever ends
+   its scan (`st D0' after the loop), so bit_field_inst_which_obviates_
+   test never keeps a bfextu's test.  Is either a misreading?
+109. final: the module data's +0..+15, +36, +42 and the initialized
+   tables from +0x60 to +0x87 and beyond +0x2A4 (to about +0x6AC: more
+   descriptor-like 20-byte entries, and from about +0x2EC doubles each
+   after a word tag: pi, 0x0B..0x0F, 0x30..0x3B, used by floatop)
+   belong to the routines not yet translated; fn_0, fn_32/fn_36 names
+   and fn_60's initializer are placeholders.  brimply's table at +0xA8
+   (14 by 14 words) has 133 entries .rwdi leaves unset, written as 0:
+   is a partial initializer intended (dpc has no syntax for one)?
+110. final: plab and backtrack call makejump and final_$unlink_opts and
+   ignore the cell they return (no store of A0); written as dead
+   assignments (nx := makejump(...), j := final_$unlink_opts(j)).
+   merge_move_sub's boolean is likewise never read by its caller.

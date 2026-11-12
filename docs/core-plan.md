@@ -333,3 +333,14 @@ the headings of cg_tree_$needs_lib_support (t and rtn by address) and
 cg_tree_$is_decomposable_const_mul, which reg_save calls.  generate and
 its 21 nested routines are not written (declared extern in the unit
 for walker; a TODO in its header).
+Translator GG (2026-11-11), final (started, 99 of 120): final.pas
+reads the cells through codegen.ins.pas's codegen_$cell_t, which gets a
+sixth variant (+20 a pointer, `visit': scancc's chain of visited
+cells); final.ins.pas gets jmp_br_resolve's heading (finaldriver calls
+it).  final declares opinfo's tables it reads (sizes 0x2D01CE, access
+0x2CFDD8, the condition codes' classes 0x2CF5EC and effects 0x2CF4D8),
+cg_null_ads (it does not open cg.ins.pas), dfetch, banshee's
+dobansheefpx (banshee.pas is not started) and a copy of celpkg's empty
+descriptor.  peepholer_ops and its six nested try_ routines, deltest,
+opttest, optmove, opta, floatop and seven more are not written (a TODO
+in the header; peepholer_ops declared extern at module level).

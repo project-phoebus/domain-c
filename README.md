@@ -155,4 +155,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/opt_livevar.pas` | 19 | translated (best effort; statements through g_opt.ins.pas's views (opt_4009c's entries), other nodes by offset; dpc gaps 2, 8, 24) |
 | `lang/lang/source/opt_loop.pas` | 12 | translated (best effort; statements and trees through g_opt.ins.pas's views, other nodes by offset; dpc gaps 2, 3, 7, 8) |
 | `lang/lang/source/opt_vector.pas` | 20 | translated (best effort; statements and trees through the unit's views ov_stmt_t, ov_tree_t, other nodes by offset; dpc gaps 7, 8) |
+| `lang/lang/source/final.pas` | 120 | started: 99 of 120 (all but peepholer_ops and its 6 try_ routines, deltest with backov, opttest, optmove, opta, floatop, try_pre_dec, try_post_incr, merge_add_sub, transform_ptr_in_d_use, cmp_branch_becomes_eor, redundant_lea, collapsed_index_calc, try_reducing_literal; cc.m68k only; cells through codegen_$cell_t; dpc gaps 2, 8, 12, 15, 24, 26) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |

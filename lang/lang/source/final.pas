@@ -1,8 +1,43 @@
 { final - the m68k back end's final phase (cc.m68k only): the peephole
-  optimizer over a routine's code cells (CELPKG's).
+  optimizer over a routine's code cells (CELPKG's).  peepholer readies
+  the cells (peepholer_init: the link's frame size, compares with 1,
+  the label operands' reference cells), runs the optimizations
+  (peepholer_ops) and then peepholer_cleanup (moveq for small moves,
+  inline constants pooled at the end of each inner block, labels
+  merged and cross-jumped, branches simplified: pcondjmp, puncondjmp,
+  f_pcondjmp), again after instr_reorder, and puts nops before the
+  68040's trapped instructions; finaldriver times jmp_br_resolve.  The
+  helpers answer questions about the cells (registers used, killed or
+  dead, the condition codes set and tested: cc_mod, cc_use, scancc,
+  testcc; the same address: sameaddr) and edit them (detach, makejump,
+  makecbr, moverefcell, movejump, reversecond, label_merge).
 
-  TODO(pascal) final.pas is not finished; the routines not yet
-  translated are listed below the address table.
+  TODO(pascal) final.pas is not finished: 99 of its 120 routines are
+  translated.  Not yet translated (cc.m68k address, bytes):
+    0x109BB6 0x8DA  final_$collapsed_index_calc
+    0x10A492 0x7C4  final_$try_reducing_literal
+    0x10C51C 0xB2   backov (in deltest)
+    0x10C5CE 0x60C  deltest
+    0x10CD7E 0x316  final_$redundant_lea
+    0x10D28A 0x372  final_$cmp_branch_becomes_eor
+    0x10D600 0x75A  opttest
+    0x10DD5A 0x1DC  transform_ptr_in_d_use
+    0x10DF52 0x7E2  optmove
+    0x10E8EA 0x332  merge_add_sub
+    0x10EF30 0x3BA  try_pre_dec
+    0x10F30C 0x3B8  try_post_incr
+    0x10F6C4 0x4C0  opta
+    0x10FB84 0x3D4  floatop
+    0x110CB4 0x242  try_loading_from_fp_reg (in peepholer_ops)
+    0x110F14 0x21C  try_loading_monadic_src_here (in peepholer_ops)
+    0x111130 0x322  try_long_extend_opts (in peepholer_ops)
+    0x111452 0x214  try_reducing_fabs_op (in peepholer_ops)
+    0x111666 0x1F0  try_removing_previous_clr (in peepholer_ops)
+    0x111856 0xFA   try_widening_clr (in peepholer_ops)
+    0x111950 0x638  peepholer_ops (in peepholer; an extern heading at
+                    module level stands for it)
+  peepholer_ops is the only caller of the others (opttest and optmove
+  call some of them too), so nothing translated calls them.
 
   Image addresses (DOMAIN C 6.9; cc.m68k only: cc.a88k has no final):
     cc.m68k   cc.a88k
@@ -126,8 +161,16 @@
     0x112042  --------  damn_the_040s_hide_anyway (in peepholer)
     0x1120A0  --------  peepholer
     0x112116  --------  finaldriver
-    A5 0x3566F8: the module's data (the last module's), laid out as the
-    variables below.  Absolute: cargs's options (+0x282..+0x288).
+    A5 0x3566F8: the module's data (the last module's, to about
+    +0x6AC), laid out as the variables below: +16 a descriptor, +28 the
+    section, +32 scancc's chain, +36, +40 cc_change's set of codes, +42,
+    +44 the change flag, then initialized tables (+0x30 the registers'
+    bits, +0x88 the conditions' codes, +0xA8 and +0x250 brimply's and
+    f_brimply's answers, +0x230 and +0x298 the complements); +0..+15,
+    +36, +42, +0x60..+0x87 and the tables beyond +0x2A4 are used only by
+    routines not yet translated.  Absolute: cargs's options
+    (+0x280..+0x288), opinfo's tables (0x2CF4D8, 0x2CF5EC, 0x2CFDD8,
+    0x2D01CE), cg_null_ads (0x356600), il_180.
 
   The code cells are read through codegen.ins.pas's codegen_$cell_t:
   the kind (+8), the operands' descriptors (ads1 +24, ads2 +36: f1 the

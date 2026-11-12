@@ -608,3 +608,21 @@ cc.m68k unless marked.
     with a `for' of 32 counted by `dbf D3' and stores the bit's index
     in D3 when it leaves: the result is not set on the other path, so
     the allocator gives it the trip count's register.
+
+## Results and data (translator GG, final.pas)
+
+81. **A function's result assigned to a dead variable is not stored.**
+    plab (cc.m68k 0x10BE36) and backtrack (0x1103FA) call makejump and
+    final_$unlink_opts and go on without touching A0; the Pascal must
+    have assigned the result somewhere (a function cannot be called as a
+    procedure), so Rev 8.89 drops the store of a value never read.
+82. **A nested function's result left in D0 as its caller's.**
+    final_$contiguous_distinct_addresses (0x109A80) assigns
+    adjacent_disps's answer to its own result, which stays in D0 from
+    the call to the return (no move to a register variable).
+83. **Module data addressed by index from A5 with the table's offset as
+    the displacement.**  cc_use (0x10AE26) reads the conditions' table
+    at +0x88 as `lea (0,A5,D1.w),A1; move.w (136,A1),D0' with D1 the
+    op less 138 (or 152), and as `(-112,A1)' and `(-228,A1)' with D1 the
+    op itself (ops from 124 and 182): the lower bound folded into the
+    displacement, so a table's offset can look negative.
