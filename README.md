@@ -169,7 +169,7 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/fpa.pas` | 20 | translated (cc.m68k only; best effort; descriptors through codegen_$uads_t, trees through cg_tree_t, the module's data initialized; dpc gaps 7, 8) |
 | `lang/lang/source/banshee.pas` | 1 | translated (cc.m68k only; best effort; cells through codegen.ins.pas, the module's descriptors initialized; dpc gap 8) |
 | `lang/lang/source/final.pas` | 120 | translated (best effort; translators GG, JJ; cc.m68k only; cells through codegen_$cell_t; peepholer_ops nested in peepholer; dpc gaps 2, 7, 8, 12, 15, 24, 26, 31) |
-| `lang/lang/source/opt_inline.pas` | 62 | started: 54 of 62 (all but process_operand and its 7 nested routines, declared extern; both binaries one body; dpc gaps 8, 15, 24) |
+| `lang/lang/source/opt_inline.pas` | 62 | translated (best effort; translators KK, NN; both binaries one body; nodes by offset; dpc gaps 8, 15, 24) |
 | `us1/us1/lib/dblib/loc/src/loc_build.c` | 33 | reconstructed (C; not checked by the gate: read against the disassembly, syntax-checked with a host C compiler; headers loc_private.h and loc_build.h, the others stubs) |
 | `lang2/source/ftn/source/const_op.ftn` | 14 | reconstructed (FORTRAN 77; not checked by the gate: read against the disassembly; r8_math's operations 9, 11, 12 by guess, docs/questions.md 145) |
 | `lang/c_compiler/source/c_data.asm` | 0 | reconstructed (assembly, GNU as syntax; not checked by the gate: assembled with m68k-elf-as, byte-identical to both binaries' 18384 bytes; c_globals.ins.pas's names kept) |

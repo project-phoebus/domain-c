@@ -481,7 +481,9 @@ when this tree is merged).
        end;
 
    Also opt_inline.pas (translator KK): function_return's `(b^.kind =
-   108) and assert_routine_returns_void(b)' (cc.m68k 0x08F690).
+   108) and assert_routine_returns_void(b)' (cc.m68k 0x08F690);
+   process_operand's `(t^.xp[17]^.kind = 155) and not
+   inline_$is_fortran_asf(e^.caller)' (translator NN, 0x0924F6).
    Also opt_strength.pas (translator FF): `and check_tree_node(t)'
    (checkauto 0x0E7F92), `and opt_str_$is_loop_constant_integer(...)'
    (recognize_induction_variables 0x0EA862), `and

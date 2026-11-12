@@ -494,3 +494,13 @@ libdsc byte-identical; std_lib's pointers TODO, question 147) and
 opinfo.pas (the seven tables .blocks names, byte-identical).  No shared
 insert changed; the users' extern names for opinfo's tables and the
 prelude's std_lib_rtns are left for the merge (questions 147, 148).
+Translator NN (2026-11-11), opt_inline (done, 62 of 62):
+process_operand and its seven nested routines (get_sym_ind_info with
+substitutee_sym_ind, adjust_disp, disp_offset, apply_disp,
+process_index_opr, process_opr_ind), placed after process_labels as
+the image nests them; the extern removed.  The unit's own records
+renamed by use: oi_info_t's fields node, disp (an integer32),
+disp_sym, sdn_var, sdn_sym, ind; oi_ctx_t's call, sdn, sym, v (were
+c4, c12, c16, c20); oi_call_t's +0 is blk, the block the copied
+statement is in (process_operand sets it at each 148 and 149).  No
+shared insert changed.  docs/dpc-gaps.md 24 (also); question 149.
