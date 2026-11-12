@@ -504,3 +504,14 @@ disp_sym, sdn_var, sdn_sym, ind; oi_ctx_t's call, sdn, sym, v (were
 c4, c12, c16, c20); oi_call_t's +0 is blk, the block the copied
 statement is in (process_operand sets it at each 148 and 149).  No
 shared insert changed.  docs/dpc-gaps.md 24 (also); question 149.
+
+Translator OO (2026-11-11), opinfo's names (question 148): final.ins.pas
+declares opinfo's seven public tables under the names .blocks gives
+them and their true bounds (insind [0..77] of opinfo_list_ptr_t;
+cc_table [0..22] of [0..5]; class_table, optohex (0..16#FFFF),
+oprw_table, opcontext, opname [0..506]) and the list entry
+opinfo_entry_t (emit's em_entry_t); opinfo.pas defines them (define
+statement with initializers, address order); emit, final, banshee,
+instr_reorder and outbin lost their externs (opinfo_insts, opinfo_cc,
+opinfo_cc_class, opinfo_access, opinfo_size, opinfo_sizes,
+opinfo_opword, opinfo_names) and use the original names.

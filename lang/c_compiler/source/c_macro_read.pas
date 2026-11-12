@@ -927,11 +927,12 @@ end;
   macro is not redefined (kind 2), a different definition replaces
   the old one (kind 2: `already declared'), the same one is dropped
   and the next line read; a new macro is entered and the next line
-  read.  The messages are copied into line in pieces (str_copy);
-  two pieces are copied to positions that do not follow the piece
-  before (`Formals list of macro "' name: the closing text at
-  line[n + 18]; `Text follows the valid #undef of ' name: at
-  line[n + 22], and the length n + 51), as the image does.
+  read.  The messages are copied into line in pieces (str_copy), each
+  after the one before (`Formals list of macro "' name: the closing
+  text at line[n + 24], `pea (0x17,A1,D0.l)'; `Text follows the valid
+  #undef of ' name: at line[n + 34], `(0x21,A1,D3.l)'); the #undef
+  message's length is n + 51, 5 short of its 56 characters, as the
+  image has it (`addi.w #51'; docs/questions.md 150).
 
   When the line had a comment its marks (128) become blanks.  #undef
   (stripped): a predefined macro is kept (kind 2); else
@@ -1084,7 +1085,7 @@ restart:
           kind := 1;
           str_copy(23, 'Formals list of macro "', line);
           str_copy(n, name, line[24]);
-          str_copy(32, '" is missing closing parenthesis', line[n + 18]);
+          str_copy(32, '" is missing closing parenthesis', line[n + 24]);
           len := n + 55;
           mu_$free_tle_list(body);
           return;
@@ -1194,7 +1195,7 @@ restart:
       kind := 2;
       str_copy(33, 'Text follows the valid #undef of ', line);
       str_copy(n, name, line[34]);
-      str_copy(23, '", it has been ignored.', line[n + 22]);
+      str_copy(23, '", it has been ignored.', line[n + 34]);
       len := n + 51;
     end;
   end

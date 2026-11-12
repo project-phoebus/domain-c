@@ -196,10 +196,11 @@ end;
   when at most 32767 (`bhi'), else the longword (6 bytes, 4 counted).
   Else its offset := the entry offset less base; for each handler
   (+28, the chain at +72, +24 of them; the counted loops `dbf' with the
-  high word's borrow) with variables (+52 not 0), each variable (+48
-  + 4 * j, j to the word at +70) a tag 9 (8 bytes, the handler's
-  sym_$displacement above 32767) or tag 3 (6) record: an address
-  constant (kind 163) its +18 and +1 bits 7..6 := 2; else it must be a
+  high word's borrow) with variables (+52 not 0), each variable (+72
+  + 4 * j, `(0x48,A2,D2.l)', j to the word at +70) a tag 9 (8 bytes,
+  the handler's sym_$displacement above 32767) or tag 3 (6) record: an
+  address constant (kind 163) its +18 and +1 bits 7..6 := 2; else it
+  must be a
   variable (109), static (its +72 in [1, 4, 7, 8]: `move.w #402; btst')
   in the main section (+20's +192 = IL's +0x110), its +58, bits 7..6
   cleared; a handler left over fails a precondition; a cleanup (+32,
@@ -325,7 +326,7 @@ begin
     for i := 1 to f^.xl[6] do begin
       if h^.xl[13] <> 0 then
         for j := 1 to h^.xw[35] do begin
-          v := h^.xp[12 + j];
+          v := h^.xp[18 + j];
           disp := sym_$displacement(h);
           if disp > 32767 then begin
             e := allocate(offset, 8);

@@ -291,13 +291,6 @@ var
   delay_378: extern array [0..15] of integer;
   delay_398: extern array [0..15] of integer;
 
-  { opinfo.pas's data (the unit without code; cc.m68k 0x2CF9E2 and
-    0x2D05C4, absolute): each instruction's operation word (assemble,
-    genfpinst) and its 9-character name (dbcod), indexed by the cell's
-    +48. }
-  opinfo_opword: extern array [0..367] of integer;
-  opinfo_names: extern array [0..367] of array [1..9] of char;
-
   { The module's data, in the image's order. }
   fp_names: array [16..23] of outbin_fp_name_t := [
     'FP0', 'FP1', 'FP2', 'FP3', 'FP4', 'FP5', 'FP6', 'FP7'];   { +0 }
@@ -1887,7 +1880,7 @@ begin
         if c^.kind = fop_instyp then
           prtcats(s, fpa_ops[c^.op], 6)
         else
-          prtcats(s, opinfo_names[c^.op], 9);
+          prtcats(s, opname[c^.op], 9);
         prtcats(s, '    ', 4);
         if c^.kind = moverm_instyp then
           prt_int_regs(s, c)
@@ -2063,7 +2056,7 @@ var
 
 begin
   c := cell;
-  w := opinfo_opword[c^.op];
+  w := optohex[c^.op];
   case c^.kind of
     tern_src_ext_instyp, m68881_src_ext_instyp: begin
       if ((c^.kind = m68881_reg_reg_instyp) or
@@ -2151,7 +2144,7 @@ var
   dst, src: integer;
   d: unix_objmod_$count_t;
 begin
-  w := opinfo_opword[c^.op];
+  w := optohex[c^.op];
   case c^.kind of
     move_instyp: begin
       if c^.ads2.f1 = 10 then
@@ -3360,7 +3353,7 @@ var
           il_c4 := il_c4 ! 16;
       end;
       m68881_set_byte_instyp: begin
-        write_proc(opinfo_opword[c^.op]);
+        write_proc(optohex[c^.op]);
         wr_addr_ext(c^.ads2);
         if 2 in cargs_$options.cpu then
           il_c4 := 4
@@ -3424,13 +3417,13 @@ var
         wr_addr_ext(c^.ads2);
       end;
       m881_movemr_instyp: begin
-        write_proc(opinfo_opword[c^.op] +
+        write_proc(optohex[c^.op] +
             il_$node_ptr_t(c^.ads2.x)^.int_value);
         wr_addr_ext(c^.ads1);
         il_c4 := il_c4 ! 16;
       end;
       m881_moverm_instyp: begin
-        write_proc(opinfo_opword[c^.op] +
+        write_proc(optohex[c^.op] +
             il_$node_ptr_t(c^.ads1.x)^.int_value);
         wr_addr_ext(c^.ads2);
         il_c4 := il_c4 ! 16;
@@ -3452,7 +3445,7 @@ var
       if c^.kind = fop_instyp then
         prtcats(line, fpa_ops[c^.op], 6)
       else
-        prtcats(line, opinfo_names[c^.op], 9);
+        prtcats(line, opname[c^.op], 9);
       case c^.kind of
         dest1_sz_instyp, dest1_instyp, br_instyp, cbr_instyp,
             logicize_instyp, unlk_instyp, case_instyp, bsr_instyp,

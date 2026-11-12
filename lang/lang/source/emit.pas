@@ -32,10 +32,10 @@
   adrlen only ilength calls); the others are internal (tst_imd and
   sz_case leaves without a frame, docs/rev889-patterns.md 16).  The
   operations' instruction lists are opinfo.pas's data (the unit without
-  code, cc.m68k 0x2CE8D8: a pointer per operation 0..77, nil for 32
-  and 33; each list of 12-byte entries ending with the one whose flags
-  have element 5), declared here as outbin.pas and instr_reorder.pas
-  declare opinfo's other tables.
+  code, cc.m68k 0x2CE8D8: insind, a pointer per operation 0..77, nil
+  for 32 and 33; each list of 12-byte entries, opinfo_entry_t, ending
+  with the one whose flags have element 5), declared in final.ins.pas
+  with opinfo's other tables (docs/questions.md 148).
 
   Not known from the original: the names of the module's variables,
   the locals and the instruction entries' fields; the meaning of the
@@ -62,23 +62,6 @@ module emit;
 %include 'lang/lang/source/final.ins.pas';
 
 type
-  { An instruction of a generic operation (opinfo's lists, 12 bytes):
-    the restriction codes of the destination and the source
-    (chk_op_restr) and of the size (chk_sz_restr), the code cell's kind
-    and the machine instruction (the cell's +48), and flags: elements
-    0..4 the cpu features the instruction needs (fnl_slct's missing
-    set), 5 the list's last entry. }
-  em_entry_t = record
-    dst: integer;                       { +0 }
-    src: integer;                       { +2 }
-    sz: integer;                        { +4 }
-    kind: integer;                      { +6 }
-    op: integer;                        { +8 }
-    flags: set of 0..15;                { +10 }
-  end;
-  em_list_t = array [0..63] of em_entry_t;
-  em_list_ptr_t = ^em_list_t;
-
   { A section (il_180^.xp[47], as cg_top.pas's top_sect_t): its code
     cells' last at +24. }
   em_sect_ptr_t = ^em_sect_t;
@@ -101,10 +84,6 @@ var
   emit_11c: integer32;                  { +0x11C: not addressed }
   emit_line: integer;                   { +0x120: the line of the last
                                           line number cell }
-
-  { opinfo.pas's data (cc.m68k 0x2CE8D8, absolute): each generic
-    operation's instructions. }
-  opinfo_insts: extern array [0..77] of em_list_ptr_t;
 
   { delay.pas's class_size (its +888, cc.m68k 0x169968): the bytes of
     each register class (docs/questions.md 115). }
@@ -634,7 +613,7 @@ end;
   one (its node's +80; +72 bit 7 set), else a new label cell; a line
   (33) bug_check (emit_line_eop makes those); 39 an inline constant
   (504, or 505 for a class wider than 4 bytes).  Others: the first of
-  the operation's instructions (opinfo_insts[op]) whose restrictions
+  the operation's instructions (insind[op]) whose restrictions
   the operands and the size meet and whose cpu features are there
   (missing: the 68000's [0..4], the 160's [2..4], the 68020's [0, 1,
   3, 4]; the 68881 supplies 3 and 0, the FPA1 4), its cell made with
@@ -664,7 +643,7 @@ label
 var
   ok: boolean;
   missing: set of 0..15;
-  e: em_list_ptr_t;
+  e: opinfo_list_ptr_t;
   c: codegen_$cell_ptr_t;
   r: codegen_$cell_ptr_t;
   lab: il_$node_ptr_t;
@@ -708,7 +687,7 @@ begin
   end
   else begin
     i := -1;
-    e := opinfo_insts[op];
+    e := insind[op];
     missing := [0..4];
     if 2 in cargs_$options.cpu then
       missing := [2..4]

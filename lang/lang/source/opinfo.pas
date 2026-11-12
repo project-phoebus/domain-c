@@ -8,48 +8,52 @@
   opcontext, optohex and opname (the names written here; they are not
   in address order there).  The tables are in .data, between
   jmp_br_resolve's data and outbin's, reached absolutely by their users
-  (which declare them extern under names of their own, kept until the
-  merge: docs/questions.md 148):
+  (lang/lang/source/final.ins.pas declares them extern, with these
+  names and bounds; this unit defines them: docs/questions.md 148):
     0x2CE8D8  insind       78 longwords: generic operation k's list of
                            instructions (nil for 32, 33); emit.pas
-                           opinfo_insts
     0x2CEA10  ins_lists    230 entries of 12 bytes, the lists (private:
                            not named in .blocks; the lists lie in
                            reverse order of their operations, 77's
                            first)
     0x2CF4D8  cc_table     23 x 6 words: each condition-code class's
                            effect on the codes (0..4; 2 changed);
-                           final.pas opinfo_cc
+                           final.pas
     0x2CF5EC  class_table  507 words: each instruction's class;
-                           final.pas opinfo_cc_class
+                           final.pas
     0x2CF9E2  optohex      507 words: each instruction's operation word;
-                           outbin.pas opinfo_opword
+                           outbin.pas (unsigned: wr_instr zero-extends
+                           it, clr.l then move.w, before adding)
     0x2CFDD8  oprw_table   507 x 2 characters: each operand's access, R
                            read, W written, - none; final.pas,
-                           instr_reorder.pas opinfo_access
+                           instr_reorder.pas
     0x2D01CE  opcontext    507 x 2 characters: each operand's size, B W
                            L byte, word, long, F D X single, double,
                            extended, Q S A (by their users: a quick
-                           constant, ?, an address), - none; final.pas
-                           opinfo_size, banshee.pas opinfo_sizes
+                           constant, ?, an address), - none; final.pas,
+                           banshee.pas
     0x2D05C4  opname       507 x 9 characters: each instruction's
                            mnemonic, blank-padded (MOVE.B .. ; 239 has
-                           none, all NUL); outbin.pas opinfo_names
+                           none, all NUL); outbin.pas
   ending at 0x2D1797 (outbin's cell for pas_$output follows at
-  0x2D1798).  The users declare the per-instruction tables [0..367];
-  they run to 506 (each table is 1014 bytes, or 4563 for the names, up
-  to the next one's address; the last instruction with data is 506).
+  0x2D1798).  The per-instruction tables run to 506 (each table is
+  1014 bytes, or 4563 for the names, up to the next one's address; the
+  last instruction with data is 506).
 
   The initial values are .rwdi's (tools/cc_data.py; bytes no record
   sets are 0), generated into the initializers below; insind's
   pointers are written addr(ins_lists[k]) by the entry they point at.
+  The public tables are defined by the define statement (the reference's
+  method 2, after final.ins.pas's extern declarations), in address
+  order: dpc lays out an own variable (ins_lists) first and the defined
+  cells after it in define-list order.
   Checked: dpc's module data for this file is 11968 bytes, as the
   image's 0x2CE8D8..0x2D1797, and byte for byte the image's (the lists
   and insind exchanged; insind's 76 pointers name the image's
-  entries).
-  A list entry is emit.pas's em_entry_t (the operand forms, size and
-  kind it serves, the instruction, the flags: elements 0..4 the CPU
-  features it needs, 5 the list's last entry).
+  entries); the seven tables are global symbols of dpc's object.
+  A list entry is final.ins.pas's opinfo_entry_t (the operand forms,
+  size and kind it serves, the instruction, the flags: elements 0..4
+  the CPU features it needs, 5 the list's last entry).
 
   Not known from the original: the lists' names and how they were
   declared (one variable per list, most likely, in reverse order);
@@ -64,21 +68,6 @@ module opinfo;
 %include 'lang/lang/source/codegen.ins.pas';
 %include 'lang/lang/source/prtsub.ins.pas';
 %include 'lang/lang/source/final.ins.pas';
-
-type
-  { A list entry, 12 bytes (emit.pas's em_entry_t). }
-  opinfo_entry_t = record
-    dst: integer;                       { +0 }
-    src: integer;                       { +2 }
-    sz: integer;                        { +4 }
-    kind: integer;                      { +6 }
-    op: integer;                        { +8: the instruction }
-    flags: set of 0..15;                { +10 }
-  end;
-  opinfo_entry_ptr_t = ^opinfo_entry_t;
-
-define
-  class_table, cc_table, insind, oprw_table, opcontext, optohex, opname;
 
 var
   { 0x2CEA10: the lists (dst, src, sz, kind, op, flags), after
@@ -201,8 +190,10 @@ var
       [24, 5, 7, 54, 501, [4]], [20, 10, 7, 40, 225, [0]],
       [10, 20, 8, 42, 231, [0]], [20, 20, 7, 41, 224, [0, 5]]];
 
+{ The public tables (final.ins.pas declares them), in address order. }
+define
   { 0x2CE8D8: generic operation k's instructions. }
-  insind: array [0..77] of opinfo_entry_ptr_t := [
+  insind := [
       addr(ins_lists[213]), addr(ins_lists[205]), addr(ins_lists[197]),
       addr(ins_lists[192]), addr(ins_lists[188]), addr(ins_lists[186]),
       addr(ins_lists[183]), addr(ins_lists[180]), addr(ins_lists[177]),
@@ -231,7 +222,7 @@ var
       addr(ins_lists[3]), addr(ins_lists[1]), addr(ins_lists[0])];
 
   { 0x2CF4D8: each class's effect on the codes. }
-  cc_table: array [0..22] of array [0..5] of integer := [
+  cc_table := [
       [1, 0, 0, 0, 0, 0], [2, 2, 3, 3, 1, 1], [2, 2, 0, 0, 1, 1], [2, 2, 3, 3, 1, 1],
       [2, 2, 3, 3, 1, 1], [2, 2, 3, 0, 1, 1], [2, 2, 3, 0, 1, 1], [2, 2, 3, 3, 1, 1],
       [1, 3, 1, 0, 0, 0], [3, 3, 0, 0, 1, 1], [2, 2, 3, 3, 1, 1], [2, 2, 0, 3, 1, 1],
@@ -240,7 +231,7 @@ var
       [3, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]];
 
   { 0x2CF5EC: each instruction's class. }
-  class_table: array [0..506] of integer := [
+  class_table := [
       2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1,
       1, 0, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -275,7 +266,7 @@ var
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
   { 0x2CF9E2: each instruction's operation word. }
-  optohex: packed array [0..506] of 0..16#FFFF := [
+  optohex := [
       16#1000, 16#3000, 16#2000, 16#7000, 16#3040, 16#2040, 16#4880, 16#48C0,
       16#49C0, 16#4200, 16#4240, 16#4280, 16#41C0, 16#4840, 16#D000, 16#D040,
       16#D080, 16#D0C0, 16#D1C0, 16#0600, 16#0640, 16#0680, 16#5000, 16#5040,
@@ -342,7 +333,7 @@ var
       16#0000, 16#0000, 16#0000];
 
   { 0x2CFDD8: each instruction's operands' access. }
-  oprw_table: array [0..506] of packed array [1..2] of char := [
+  oprw_table := [
       'RW', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], '-W',
       '-W', '-W', 'RW', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
       [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)],
@@ -396,7 +387,7 @@ var
       [chr(0), chr(0)], [chr(0), chr(0)], '--', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)]];
 
   { 0x2D01CE: each instruction's operands' sizes. }
-  opcontext: array [0..506] of packed array [1..2] of char := [
+  opcontext := [
       'BB', 'WW', 'LL', 'BL', 'WL', 'LL', 'BW', 'WL', 'BL', '-B',
       '-W', '-L', '-L', '-L', 'BB', 'WW', 'LL', 'WL', 'LL', 'BB',
       'WW', 'LL', 'QB', 'QW', 'QL', 'BB', 'WW', 'LL', 'BB', 'WW',
@@ -450,7 +441,7 @@ var
       'FF', 'DD', '--', [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)], [chr(0), chr(0)]];
 
   { 0x2D05C4: each instruction's mnemonic. }
-  opname: array [0..506] of packed array [1..9] of char := [
+  opname := [
       'MOVE.B   ', 'MOVE.W   ', 'MOVE.L   ', 'MOVEQ.L  ', 'MOVEA.W  ',
       'MOVEA.L  ', 'EXT.W    ', 'EXT.L    ', 'EXTB.L   ', 'CLR.B    ',
       'CLR.W    ', 'CLR.L    ', 'LEA      ', 'PEA      ', 'ADD.B    ',

@@ -153,13 +153,13 @@ var
 
   0x068908, 0x64 bytes: RWS_$ALLOC_HEAP (0x06892C) of size * 4 + 16 (in
   (-20,A6)); count := 0, size, mask := size - 1, +0 := the mask; a
-  `for' from 0 to size - 1 clears bucket i (`clr.l (10,A0,D1.l)').  The
-  result left in A0 (and D0).
+  `for' from 0 to size - 1 clears bucket i (`clr.l (0x10,A0,D1.l)',
+  D1 4 * i: the buckets follow the four header longwords).  The result
+  left in A0 (and D0).
 
   Not known from the original:
-  - the declaration that puts bucket i at +10 + 4 * i, so that clearing
-    bucket 0 clears the size's low word (and the mask's high word);
-    no unit of DOMAIN C calls HTM_'s table routines. }
+  - how the header and the buckets were declared (no unit of DOMAIN C
+    calls HTM_'s table routines). }
 
 function htm_$create_table(
     size: integer32): htm_$table_ptr_t;
