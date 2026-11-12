@@ -9,7 +9,33 @@
 section 03 single_float  image pass_1 a5 16#45887C, pass_2 a5 16#480060;
 
 transform 306  fp_reg <- f_add_top | f_div_top | f_mul_top | f_sub_top ($1: fp_reg, $2: fp_reg)
-  pass_1 image 16#107A18;
+  pass_1 image 16#107A18 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w24 = 6;
+    cycle_guard already_fp_reg;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_max, $2.fp_reg_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_max;
+    if t2 = $2.fp_reg_max then
+      result.fp_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_max then
+        t3 <- $2.fp_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_max <- t3;
+    end;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1A06E0 begin
     if result.c136 = 1 then
       pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -19,7 +45,38 @@ transform 306  fp_reg <- f_add_top | f_div_top | f_mul_top | f_sub_top ($1: fp_r
 end;
 
 transform 307  fp_reg_pair <- f_add_top | f_div_top | f_mul_top | f_sub_top ($1: fp_reg_pair, $2: fp_reg_pair)
-  pass_1 image 16#107C6E;
+  pass_1 image 16#107C6E begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w24 = 7;
+    cycle_guard already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_pair_max, $2.fp_reg_pair_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_pair_max;
+    if t2 = $2.fp_reg_pair_max then
+      result.fp_reg_pair_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_pair_max then
+        t3 <- $2.fp_reg_pair_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_pair_max <- t3;
+    end;
+    result.fp_reg_pair_result <- 1;
+  end;
   pass_2 image 16#1A0758 begin
     if result.c136 = 1 then
       pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -32,12 +89,16 @@ transform 307  fp_reg_pair <- f_add_top | f_div_top | f_mul_top | f_sub_top ($1:
 end;
 
 transform 308  ip_reg <- f_expon_top ($1: ip_reg, $2: ip_reg)
-  pass_1 image 16#107E9C;
+  pass_1 image 16#107E9C begin
+    cycle_guard already_ip_reg;
+    sum code_bytes, memory_references, delay of $1, $2;
+  end;
   pass_2 image 16#1A07F2 empty;
 end;
 
 transform 309  fp_reg <- f_math_top ($1: fp_reg, $2: void)
-  pass_1 image 16#107FF2;
+  { not lifted: the cost tables are not laid out in the reverse of the clause }
+  pass_1 image 16#107FF2 residue;
   pass_2 image 16#1A07F4 begin
     temp t1: solution;
     temp t2: solution;
@@ -65,7 +126,32 @@ transform 309  fp_reg <- f_math_top ($1: fp_reg, $2: void)
 end;
 
 transform 310  fp_reg <- f_math_top ($1: fp_reg_pair, $2: void)
-  pass_1 image 16#108278;
+  pass_1 image 16#108278 begin
+    condition not (readonly_b424[subject.il.w26] & 128 = 0 or subject.il.w24 <> 5 and (subject.il.w24 <> 4) and (subject.il.w24 <> 1 and (subject.il.w24 <> 2)));
+    cycle_guard already_fp_reg;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if subject.il.w24 = 5 or subject.il.b30 & 128 = 0 or subject.il.w24 = 4 then
+      result.c137 <- 2;
+    else
+      result.c137 <- 1;
+      if subject.inherited_attributes.fetch_precision = 8 then
+        result.c138 <- 1;
+      elsif subject.inherited_attributes.fetch_precision = 16 then
+        result.c138 <- 2;
+      else
+        result.c138 <- 3;
+      end;
+    end;
+    result.code_bytes <- words(16)[result.c137] + words(4, 4)[result.c138] + $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- bytes(1)[result.c137] + $1.delay + $2.delay + 2;
+    result.fp_reg_max <- $1.fp_reg_max + 1;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1A0962 begin
     temp t1: solution;
     temp t2: solution;
@@ -90,7 +176,33 @@ end;
 
 transform 311  fp_reg <- f_math_top ($1: fp_reg, $2: fp_reg)
   no_could_deadlock_child;
-  pass_1 image 16#1084EA;
+  pass_1 image 16#1084EA begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w26 = 12;
+    cycle_guard already_fp_reg;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 20;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 6;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_max, $2.fp_reg_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_max;
+    if t2 = $2.fp_reg_max then
+      result.fp_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_max then
+        t3 <- $2.fp_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_max <- t3;
+    end;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1A0A9E begin
     temp t1: pointer;
     temp t2: pointer;
@@ -111,7 +223,33 @@ end;
 
 transform 312  fp_reg <- f_math_top ($1: fp_reg, $2: fp_reg)
   no_could_deadlock_child;
-  pass_1 image 16#108704;
+  pass_1 image 16#108704 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w26 = 13;
+    cycle_guard already_fp_reg;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 20;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 6;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_max, $2.fp_reg_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_max;
+    if t2 = $2.fp_reg_max then
+      result.fp_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_max then
+        t3 <- $2.fp_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_max <- t3;
+    end;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1A0BA6 begin
     temp t1: pointer;
     temp t2: pointer;
@@ -132,7 +270,37 @@ end;
 
 transform 313  ip_reg <- f_math_top ($1: fp_reg, $2: void)
   no_could_deadlock_child;
-  pass_1 image 16#10891E;
+  pass_1 image 16#10891E begin
+    condition not (subject.il.w26 <> 11 or subject.il.w24 <> 5 and (subject.il.w24 <> 4) and (subject.il.w24 <> 1 and (subject.il.w24 <> 2)));
+    cycle_guard already_ip_reg;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c138 <- 1;
+    else
+      result.c138 <- 2;
+    end;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c139 <- 1;
+    else
+      result.c139 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 80;
+    result.memory_references <- $1.memory_references + $2.memory_references + 3;
+    result.delay <- $1.delay + $2.delay + 22;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+    result.fp_reg_max <- $1.fp_reg_max;
+    result.fp_reg_result <- 0;
+  end;
   pass_2 image 16#1A0CAE begin
     temp t1: pointer;
     temp t2: pointer;
@@ -198,7 +366,35 @@ end;
 
 transform 314  fp_reg <- f_math_top ($1: fp_reg, $2: void)
   no_could_deadlock_child;
-  pass_1 image 16#108B8C;
+  pass_1 image 16#108B8C begin
+    condition not (subject.il.w26 <> 11 or subject.il.w24 <> 6);
+    cycle_guard already_fp_reg;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c138 <- 1;
+    else
+      result.c138 <- 2;
+    end;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c139 <- 1;
+    else
+      result.c139 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 72;
+    result.memory_references <- $1.memory_references + $2.memory_references + 3;
+    result.delay <- $1.delay + $2.delay + 21;
+    result.fp_reg_max <- $1.fp_reg_max + 1;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1A1066 begin
     temp t1: pointer;
     temp t2: pointer;
@@ -260,7 +456,8 @@ transform 314  fp_reg <- f_math_top ($1: fp_reg, $2: void)
 end;
 
 transform 315  fp_reg <- f_math_top ($1: fp_reg, $2: void)
-  pass_1 image 16#108DD8;
+  { not lifted: 0x108E10: orb %a4@(424),%d0 }
+  pass_1 image 16#108DD8 residue;
   pass_2 image 16#1A13F8 begin
     if result.c136 = 1 then
       pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -271,7 +468,25 @@ transform 315  fp_reg <- f_math_top ($1: fp_reg, $2: void)
 end;
 
 transform 316  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
-  pass_1 image 16#108F9A;
+  pass_1 image 16#108F9A begin
+    condition not (readonly_b424[subject.il.w26] & 128 = 0 or subject.il.w24 <> 7);
+    cycle_guard already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max + 1;
+    result.fp_reg_pair_result <- 1;
+  end;
   pass_2 image 16#1A147E begin
     if result.c136 = 1 then
       pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -285,7 +500,38 @@ end;
 
 transform 317  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: fp_reg_pair)
   no_could_deadlock_child;
-  pass_1 image 16#109188;
+  pass_1 image 16#109188 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w26 = 12;
+    cycle_guard already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 20;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 6;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_pair_max, $2.fp_reg_pair_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_pair_max;
+    if t2 = $2.fp_reg_pair_max then
+      result.fp_reg_pair_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_pair_max then
+        t3 <- $2.fp_reg_pair_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_pair_max <- t3;
+    end;
+    result.fp_reg_pair_result <- 1;
+  end;
   pass_2 image 16#1A151A begin
     temp t1: pointer;
     temp t2: pointer;
@@ -309,7 +555,38 @@ end;
 
 transform 318  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: fp_reg_pair)
   no_could_deadlock_child;
-  pass_1 image 16#1093B8;
+  pass_1 image 16#1093B8 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition subject.il.w26 = 13;
+    cycle_guard already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 20;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 6;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.fp_reg_pair_max, $2.fp_reg_pair_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_pair_max;
+    if t2 = $2.fp_reg_pair_max then
+      result.fp_reg_pair_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_pair_max then
+        t3 <- $2.fp_reg_pair_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_pair_max <- t3;
+    end;
+    result.fp_reg_pair_result <- 1;
+  end;
   pass_2 image 16#1A1644 begin
     temp t1: pointer;
     temp t2: pointer;
@@ -333,7 +610,42 @@ end;
 
 transform 319  ip_reg <- f_math_top ($1: fp_reg_pair, $2: void)
   no_could_deadlock_child;
-  pass_1 image 16#1095E8;
+  pass_1 image 16#1095E8 begin
+    condition not (subject.il.w26 <> 11 or subject.il.w24 <> 5 and (subject.il.w24 <> 4) and (subject.il.w24 <> 1 and (subject.il.w24 <> 2)));
+    cycle_guard already_ip_reg;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c138 <- 1;
+    else
+      result.c138 <- 2;
+    end;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c139 <- 1;
+    else
+      result.c139 <- 2;
+    end;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c140 <- 1;
+    else
+      result.c140 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 80;
+    result.memory_references <- $1.memory_references + $2.memory_references + 3;
+    result.delay <- $1.delay + $2.delay + 22;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max;
+    result.fp_reg_pair_result <- 0;
+  end;
   pass_2 image 16#1A176E begin
     temp t1: pointer;
     temp t2: pointer;
@@ -402,7 +714,40 @@ end;
 
 transform 320  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
   no_could_deadlock_child;
-  pass_1 image 16#10986C;
+  pass_1 image 16#10986C begin
+    condition not (subject.il.w26 <> 11 or subject.il.w24 <> 7);
+    cycle_guard already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c138 <- 1;
+    else
+      result.c138 <- 2;
+    end;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c139 <- 1;
+    else
+      result.c139 <- 2;
+    end;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c140 <- 1;
+    else
+      result.c140 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 72;
+    result.memory_references <- $1.memory_references + $2.memory_references + 3;
+    result.delay <- $1.delay + $2.delay + 21;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max + 1;
+    result.fp_reg_pair_result <- 1;
+  end;
   pass_2 image 16#1A1B5C begin
     temp t1: pointer;
     temp t2: pointer;
@@ -467,7 +812,8 @@ transform 320  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
 end;
 
 transform 321  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
-  pass_1 image 16#109ACE;
+  { not lifted: 0x109B06: orb %a4@(424),%d0 }
+  pass_1 image 16#109ACE residue;
   pass_2 image 16#1A1F0A begin
     if result.c136 = 1 then
       pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -481,7 +827,20 @@ transform 321  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
 end;
 
 transform 322  fp_reg <- f_neg_top ($1: fp_reg)
-  pass_1 image 16#109CB6;
+  pass_1 image 16#109CB6 begin
+    condition subject.il.w24 = 6;
+    cycle_guard already_fp_reg;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + 4;
+    result.memory_references <- $1.memory_references;
+    result.delay <- $1.delay + 2;
+    result.fp_reg_max <- $1.fp_reg_max + 1;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1A1FB2 begin
     if result.c136 = 1 then
       pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -491,7 +850,25 @@ transform 322  fp_reg <- f_neg_top ($1: fp_reg)
 end;
 
 transform 323  fp_reg_pair <- f_neg_top ($1: fp_reg_pair)
-  pass_1 image 16#109E66;
+  pass_1 image 16#109E66 begin
+    condition subject.il.w24 = 7;
+    cycle_guard already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + 4;
+    result.memory_references <- $1.memory_references;
+    result.delay <- $1.delay + 2;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max + 1;
+    result.fp_reg_pair_result <- 1;
+  end;
   pass_2 image 16#1A2018 begin
     if result.c136 = 1 then
       pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);

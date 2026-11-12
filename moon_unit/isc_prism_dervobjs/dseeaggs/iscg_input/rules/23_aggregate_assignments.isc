@@ -9,7 +9,49 @@
 section 23 aggregate_assignments  image pass_1 a5 16#469054, pass_2 a5 16#4800B0;
 
 transform 206  void <- agg_len_aop ($1: address_mode, $2: address_mode)
-  pass_1 image 16#162BE4;
+  pass_1 image 16#162BE4 begin
+    temp t1: boolean;
+    temp t2: boolean;
+    t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
+    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $1.uses_the_displacement) and not $1.has_a_symbolic_displacement or not $1.is_physical and not $1.is_atomic) or $1.kind <> 5;
+    t2 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
+    condition lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) and ((t2 or not $2.uses_the_displacement) and not $2.has_a_symbolic_displacement or not $2.is_physical and not $2.is_atomic) or $2.kind <> 5;
+    if $1.uses_the_base_register then
+      result.c136 <- 1;
+      if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+        result.c137 <- 2;
+      else
+        result.c137 <- 1;
+      end;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    end;
+    if $2.uses_the_base_register then
+      result.c139 <- 1;
+      if $2.literal_32_bits_value <> 0 or $2.uses_the_index_register or $2.has_a_symbolic_displacement then
+        result.c140 <- 2;
+      else
+        result.c140 <- 1;
+      end;
+    else
+      result.c139 <- 2;
+      if lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$move, 1) then
+        result.c141 <- 1;
+      else
+        result.c141 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(4, 4)[result.c138] + words(0, 4)[result.c140] + words(4, 4)[result.c141] + $1.code_bytes + $2.code_bytes + 36;
+    result.memory_references <- bytes(0, 1)[result.c138] + bytes(0, 1)[result.c141] + $1.memory_references + $2.memory_references + 3;
+    result.delay <- bytes(0, 1)[result.c138] + bytes(0, 1)[result.c141] + $1.delay + $2.delay + 4;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#1CF070 begin
     temp t1: integer32;
     temp t2: integer32;
@@ -106,12 +148,18 @@ transform 206  void <- agg_len_aop ($1: address_mode, $2: address_mode)
 end;
 
 transform 207  void <- isc_agg_aop ($3: [ip_reg, literal_32_bits])
-  pass_1 image 16#162FA4;
+  pass_1 image 16#162FA4 begin
+    condition $3.kind = 14 and ($3.literal_32_bits_value = 0) or $3.physical_register_number = isc_user_routines_31c.physical_register_number and ($3.kind = 11) and $3.physical_register;
+    sum code_bytes, memory_references, delay of $1, $2, $3;
+    result.evaluation_order <- 1;
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#1CF476 empty;
 end;
 
 transform 208  void <- isc_agg_aop ($1: address_mode, $2: address_mode, $3: ip_reg)
-  pass_1 image 16#16314E;
+  { not lifted: 0x1632FE: a table at ('num', 2870780) }
+  pass_1 image 16#16314E residue;
   pass_2 image 16#1CF478 begin
     temp t1: integer32;
     temp t2: integer32;
@@ -212,17 +260,25 @@ transform 208  void <- isc_agg_aop ($1: address_mode, $2: address_mode, $3: ip_r
 end;
 
 transform 209  void <- isc_agg_zero_aop ($1: address_mode, $2: ip_reg)
-  pass_1 image 16#1635CE;
+  pass_1 image 16#1635CE begin
+    sum code_bytes, memory_references, delay of $1, $2;
+  end;
   pass_2 image 16#1CF918 empty;
 end;
 
 transform 210  void <- isc_fill_aop ($3: [ip_reg, literal_32_bits])
-  pass_1 image 16#1636E8;
+  pass_1 image 16#1636E8 begin
+    condition $3.kind = 14 and ($3.literal_32_bits_value = 0) or $3.physical_register_number = isc_user_routines_31c.physical_register_number and ($3.kind = 11) and $3.physical_register;
+    sum code_bytes, memory_references, delay of $1, $2, $3;
+    result.evaluation_order <- 1;
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#1CF91A empty;
 end;
 
 transform 211  void <- isc_fill_aop ($1: address_mode, $2: literal_32_bits, $3: literal_32_bits)
-  pass_1 image 16#163892;
+  { not lifted: no heading for m$mis$lll }
+  pass_1 image 16#163892 residue;
   pass_2 image 16#1CF91C begin
     temp t1: solution;
     temp t2: pointer;
@@ -413,7 +469,8 @@ transform 211  void <- isc_fill_aop ($1: address_mode, $2: literal_32_bits, $3: 
 end;
 
 transform 212  void <- isc_fill_aop ($1: address_mode, $2: literal_32_bits, $3: ip_reg)
-  pass_1 image 16#164320;
+  { not lifted: 0x16448C: a table at ('num', 2870780) }
+  pass_1 image 16#164320 residue;
   pass_2 image 16#1D02B6 begin
     temp t1: integer32;
     temp t2: integer32;
@@ -481,7 +538,8 @@ transform 212  void <- isc_fill_aop ($1: address_mode, $2: literal_32_bits, $3: 
 end;
 
 transform 213  void <- isc_fill_aop ($1: ip_reg_field, $2: literal_32_bits, $3: literal_32_bits)
-  pass_1 image 16#164712;
+  { not lifted: solution field +50 (2 bytes) }
+  pass_1 image 16#164712 residue;
   pass_2 image 16#1D05F8 begin
     temp t1: integer32;
     temp t2: integer32;
@@ -511,7 +569,8 @@ transform 213  void <- isc_fill_aop ($1: ip_reg_field, $2: literal_32_bits, $3: 
 end;
 
 transform 214  void <- isc_fill_aop ($1: ip_reg, $2: literal_32_bits, $3: literal_32_bits)
-  pass_1 image 16#16497A;
+  { not lifted: solution field +50 (2 bytes) }
+  pass_1 image 16#16497A residue;
   pass_2 image 16#1D0726 begin
     temp t1: integer32;
     temp t2: solution;
@@ -539,19 +598,53 @@ transform 214  void <- isc_fill_aop ($1: ip_reg, $2: literal_32_bits, $3: litera
 end;
 
 transform 215  void <- isc_slice_aop ($1: address_mode, $2: address_mode, $3: ip_reg)
-  pass_1 image 16#164BE2;
+  pass_1 image 16#164BE2 begin
+    sum code_bytes, memory_references, delay of $1, $2, $3;
+  end;
   pass_2 image 16#1D0842 empty;
 end;
 
 transform 216  void <- pack_aop ($1: [ip_reg, ip_reg_field], $2: [ip_reg, ip_reg_field])
-  pass_1 image 16#164D0C;
+  pass_1 image 16#164D0C begin
+    temp t2: integer32;
+    condition available_precision_function($1) >= subject.il.w56;
+    condition not (available_precision_function($2) < subject.il.w56 or $1.bit_position_of_lsb + $1.inherited_attributes.fetch_precision - subject.il.w54 - subject.il.w56 <> $2.bit_position_of_lsb);
+    result.l352 <- $1.bit_position_of_lsb + $1.inherited_attributes.fetch_precision - subject.il.w54 - subject.il.w56;
+    result.l356 <- subject.il.w56;
+    t2 <- make_bit_mask_1(subject.il.w56, 0);
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#1D0844 begin
     emit field(opc$transfer, 0, result.l356, $2, find_well_known_literal_solution(result.l352), $1);
   end;
 end;
 
 transform 217  void <- pack_aop ($1: [ip_reg, ip_reg_field], $2: literal_32_bits)
-  pass_1 image 16#164F3A;
+  pass_1 image 16#164F3A begin
+    temp t2: integer32;
+    condition available_precision_function($1) >= subject.il.w56;
+    result.l352 <- $1.bit_position_of_lsb + $1.inherited_attributes.fetch_precision - subject.il.w54 - subject.il.w56;
+    result.l356 <- subject.il.w56;
+    t2 <- make_bit_mask_1(subject.il.w56, 0);
+    if lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$insert, 1) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$move, 1) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(4, 4)[result.c137] + $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- bytes(0, 1)[result.c137] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(0, 1)[result.c137] + $1.delay + $2.delay;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#1D0898 begin
     temp t1: solution;
     temp t2: solution;
@@ -572,14 +665,26 @@ transform 217  void <- pack_aop ($1: [ip_reg, ip_reg_field], $2: literal_32_bits
 end;
 
 transform 218  void <- pack_aop ($1: [ip_reg, ip_reg_field], $2: [ip_reg, ip_reg_field])
-  pass_1 image 16#1651AA;
+  pass_1 image 16#1651AA begin
+    temp t2: integer32;
+    condition available_precision_function($1) >= subject.il.w56;
+    condition not (available_precision_function($2) < subject.il.w56 or $2.bit_position_of_lsb <> 0);
+    result.l352 <- $1.bit_position_of_lsb + $1.inherited_attributes.fetch_precision - subject.il.w54 - subject.il.w56;
+    result.l356 <- subject.il.w56;
+    t2 <- make_bit_mask_1(subject.il.w56, 0);
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#1D0988 begin
     emit field(opc$insert, 0, result.l356, $2, find_well_known_literal_solution(result.l352), $1);
   end;
 end;
 
 transform 219  void <- pack_aop ($1: address_mode, $2: [ip_reg, ip_reg_field])
-  pass_1 image 16#1653B8;
+  { not lifted: 0x165478: a0 not known }
+  pass_1 image 16#1653B8 residue;
   pass_2 image 16#1D09DC begin
     temp t1: integer32;
     temp t2: integer32;
@@ -598,7 +703,8 @@ transform 219  void <- pack_aop ($1: address_mode, $2: [ip_reg, ip_reg_field])
 end;
 
 transform 220  void <- pack_aop ($1: address_mode, $2: ip_reg_field)
-  pass_1 image 16#1655FC;
+  { not lifted: a value not known }
+  pass_1 image 16#1655FC residue;
   pass_2 image 16#1D0A58 begin
     temp t1: solution;
     temp t2: integer32;
@@ -949,7 +1055,8 @@ transform 220  void <- pack_aop ($1: address_mode, $2: ip_reg_field)
 end;
 
 transform 221  void <- pack_aop ($1: address_mode, $2: literal_32_bits)
-  pass_1 image 16#16629C;
+  { not lifted: 0x1663AC: a table at ('num', 2870780) }
+  pass_1 image 16#16629C residue;
   pass_2 image 16#1D1B78 begin
     temp t1: solution;
     temp t2: integer32;
@@ -1314,7 +1421,8 @@ transform 221  void <- pack_aop ($1: address_mode, $2: literal_32_bits)
 end;
 
 transform 222  void <- pack_aop ($1: address_mode, $2: [ip_reg, ip_reg_field])
-  pass_1 image 16#166F70;
+  { not lifted: 0x1670A8: a table at ('num', 2870780) }
+  pass_1 image 16#166F70 residue;
   pass_2 image 16#1D2D48 begin
     temp t1: solution;
     temp t2: integer32;
@@ -1665,7 +1773,49 @@ transform 222  void <- pack_aop ($1: address_mode, $2: [ip_reg, ip_reg_field])
 end;
 
 transform 223  void <- strcat_aop ($1: address_mode, $2: address_mode)
-  pass_1 image 16#167BDC;
+  pass_1 image 16#167BDC begin
+    temp t1: boolean;
+    temp t2: boolean;
+    t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
+    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $1.uses_the_displacement) and not $1.has_a_symbolic_displacement or not $1.is_physical and not $1.is_atomic) or $1.kind <> 5;
+    t2 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
+    condition lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) and ((t2 or not $2.uses_the_displacement) and not $2.has_a_symbolic_displacement or not $2.is_physical and not $2.is_atomic) or $2.kind <> 5;
+    if $1.uses_the_base_register then
+      result.c136 <- 1;
+      if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+        result.c137 <- 2;
+      else
+        result.c137 <- 1;
+      end;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    end;
+    if $2.uses_the_base_register then
+      result.c139 <- 1;
+      if $2.literal_32_bits_value <> 0 or $2.uses_the_index_register or $2.has_a_symbolic_displacement then
+        result.c140 <- 2;
+      else
+        result.c140 <- 1;
+      end;
+    else
+      result.c139 <- 2;
+      if lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$move, 1) then
+        result.c141 <- 1;
+      else
+        result.c141 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(4, 4)[result.c138] + words(0, 4)[result.c140] + words(4, 4)[result.c141] + $1.code_bytes + $2.code_bytes + 40;
+    result.memory_references <- bytes(0, 1)[result.c138] + bytes(0, 1)[result.c141] + $1.memory_references + $2.memory_references + 3;
+    result.delay <- bytes(0, 1)[result.c138] + bytes(0, 1)[result.c141] + $1.delay + $2.delay + 5;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#1D3E60 begin
     temp t1: pointer;
     temp t2: pointer;
@@ -1770,7 +1920,49 @@ transform 223  void <- strcat_aop ($1: address_mode, $2: address_mode)
 end;
 
 transform 224  void <- strcpy_aop ($1: address_mode, $2: address_mode)
-  pass_1 image 16#167FB0;
+  pass_1 image 16#167FB0 begin
+    temp t1: boolean;
+    temp t2: boolean;
+    t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
+    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $1.uses_the_displacement) and not $1.has_a_symbolic_displacement or not $1.is_physical and not $1.is_atomic) or $1.kind <> 5;
+    t2 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
+    condition lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) and ((t2 or not $2.uses_the_displacement) and not $2.has_a_symbolic_displacement or not $2.is_physical and not $2.is_atomic) or $2.kind <> 5;
+    if $1.uses_the_base_register then
+      result.c136 <- 1;
+      if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+        result.c137 <- 2;
+      else
+        result.c137 <- 1;
+      end;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    end;
+    if $2.uses_the_base_register then
+      result.c139 <- 1;
+      if $2.literal_32_bits_value <> 0 or $2.uses_the_index_register or $2.has_a_symbolic_displacement then
+        result.c140 <- 2;
+      else
+        result.c140 <- 1;
+      end;
+    else
+      result.c139 <- 2;
+      if lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$move, 1) then
+        result.c141 <- 1;
+      else
+        result.c141 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(4, 4)[result.c138] + words(0, 4)[result.c140] + words(4, 4)[result.c141] + $1.code_bytes + $2.code_bytes + 24;
+    result.memory_references <- bytes(0, 1)[result.c138] + bytes(0, 1)[result.c141] + $1.memory_references + $2.memory_references + 2;
+    result.delay <- bytes(0, 1)[result.c138] + bytes(0, 1)[result.c141] + $1.delay + $2.delay + 3;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#1D42A0 begin
     temp t1: pointer;
     temp t2: pointer;
@@ -1869,7 +2061,49 @@ end;
 
 transform 225  void <- strncat_aop ($1: address_mode, $2: address_mode, $3: ip_reg)
   no_could_deadlock_child;
-  pass_1 image 16#168384;
+  pass_1 image 16#168384 begin
+    temp t1: boolean;
+    temp t2: boolean;
+    t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
+    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $1.uses_the_displacement) and not $1.has_a_symbolic_displacement or not $1.is_physical and not $1.is_atomic) or $1.kind <> 5;
+    t2 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
+    condition lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) and ((t2 or not $2.uses_the_displacement) and not $2.has_a_symbolic_displacement or not $2.is_physical and not $2.is_atomic) or $2.kind <> 5;
+    if $1.uses_the_base_register then
+      result.c136 <- 1;
+      if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+        result.c137 <- 2;
+      else
+        result.c137 <- 1;
+      end;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    end;
+    if $2.uses_the_base_register then
+      result.c139 <- 1;
+      if $2.literal_32_bits_value <> 0 or $2.uses_the_index_register or $2.has_a_symbolic_displacement then
+        result.c140 <- 2;
+      else
+        result.c140 <- 1;
+      end;
+    else
+      result.c139 <- 2;
+      if lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$move, 1) then
+        result.c141 <- 1;
+      else
+        result.c141 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(4, 4)[result.c138] + words(0, 4)[result.c140] + words(4, 4)[result.c141] + $1.code_bytes + $2.code_bytes + $3.code_bytes + 64;
+    result.memory_references <- bytes(0, 1)[result.c138] + bytes(0, 1)[result.c141] + $1.memory_references + $2.memory_references + $3.memory_references + 4;
+    result.delay <- bytes(0, 1)[result.c138] + bytes(0, 1)[result.c141] + $1.delay + $2.delay + $3.delay + 6;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#1D463C begin
     temp t1: pointer;
     temp t2: pointer;
@@ -1983,7 +2217,49 @@ end;
 
 transform 226  void <- strncpy_aop ($1: address_mode, $2: address_mode, $3: ip_reg)
   no_could_deadlock_child;
-  pass_1 image 16#168770;
+  pass_1 image 16#168770 begin
+    temp t1: boolean;
+    temp t2: boolean;
+    t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
+    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $1.uses_the_displacement) and not $1.has_a_symbolic_displacement or not $1.is_physical and not $1.is_atomic) or $1.kind <> 5;
+    t2 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
+    condition lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) and ((t2 or not $2.uses_the_displacement) and not $2.has_a_symbolic_displacement or not $2.is_physical and not $2.is_atomic) or $2.kind <> 5;
+    if $1.uses_the_base_register then
+      result.c136 <- 1;
+      if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+        result.c137 <- 2;
+      else
+        result.c137 <- 1;
+      end;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    end;
+    if $2.uses_the_base_register then
+      result.c139 <- 1;
+      if $2.literal_32_bits_value <> 0 or $2.uses_the_index_register or $2.has_a_symbolic_displacement then
+        result.c140 <- 2;
+      else
+        result.c140 <- 1;
+      end;
+    else
+      result.c139 <- 2;
+      if lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$move, 1) then
+        result.c141 <- 1;
+      else
+        result.c141 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(4, 4)[result.c138] + words(0, 4)[result.c140] + words(4, 4)[result.c141] + $1.code_bytes + $2.code_bytes + $3.code_bytes + 68;
+    result.memory_references <- bytes(0, 1)[result.c138] + bytes(0, 1)[result.c141] + $1.memory_references + $2.memory_references + $3.memory_references + 3;
+    result.delay <- bytes(0, 1)[result.c138] + bytes(0, 1)[result.c141] + $1.delay + $2.delay + $3.delay + 7;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#1D4B60 begin
     temp t1: pointer;
     temp t2: pointer;

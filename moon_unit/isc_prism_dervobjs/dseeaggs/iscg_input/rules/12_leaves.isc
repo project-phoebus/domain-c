@@ -9,7 +9,8 @@
 section 12 leaves  image pass_1 a5 16#461838, pass_2 a5 16#480084;
 
 transform 13  address_mode <- addr_con ($1: irrelevant)
-  pass_1 image 16#13D124;
+  { not lifted: 0x13D232: lea %pc@(0x13d324),%a0 }
+  pass_1 image 16#13D124 residue;
   pass_2 image 16#1BBDD8 begin
     result.base_register <- isc_user_routines_338;
     result.index_register <- isc_user_routines_31c;
@@ -18,7 +19,8 @@ transform 13  address_mode <- addr_con ($1: irrelevant)
 end;
 
 transform 14  address_mode <- addr_con ($1: irrelevant)
-  pass_1 image 16#13D330;
+  { not lifted: 0x13D450: extl %d0 }
+  pass_1 image 16#13D330 residue;
   pass_2 image 16#1BBE08 begin
     result.base_register <- isc_user_routines_338;
     result.index_register <- isc_user_routines_31c;
@@ -27,7 +29,8 @@ transform 14  address_mode <- addr_con ($1: irrelevant)
 end;
 
 transform 15  address_mode <- addr_con ($1: irrelevant)
-  pass_1 image 16#13D530;
+  { not lifted: 0x13D63E: lea %pc@(0x13d324),%a0 }
+  pass_1 image 16#13D530 residue;
   pass_2 image 16#1BBE38 begin
     result.base_register <- isc_user_routines_338;
     result.index_register <- isc_user_routines_31c;
@@ -36,7 +39,8 @@ transform 15  address_mode <- addr_con ($1: irrelevant)
 end;
 
 transform 16  address_mode <- addr_con ($1: address_mode)
-  pass_1 image 16#13D6F2;
+  { not lifted: 0x13DBD6: lea %pc@(0x13d324),%a0 }
+  pass_1 image 16#13D6F2 residue;
   pass_2 image 16#1BBE68 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -49,7 +53,8 @@ transform 16  address_mode <- addr_con ($1: address_mode)
 end;
 
 transform 17  ip_reg <- addr_con ($1: ip_reg)
-  pass_1 image 16#13DC64;
+  { not lifted: 0x13E160: a table at ('num', 2870780) }
+  pass_1 image 16#13DC64 residue;
   pass_2 image 16#1BBEE0 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -62,7 +67,8 @@ transform 17  ip_reg <- addr_con ($1: ip_reg)
 end;
 
 transform 18  address_mode <- addr_con ($1: irrelevant)
-  pass_1 image 16#13E1CC;
+  { not lifted: 0x13E2E2: lea %pc@(0x13e380),%a1 }
+  pass_1 image 16#13E1CC residue;
   pass_2 image 16#1BBF58 begin
     result.base_register <- isc_user_routines_338;
     result.index_register <- isc_user_routines_31c;
@@ -71,7 +77,21 @@ transform 18  address_mode <- addr_con ($1: irrelevant)
 end;
 
 transform 19  ip_reg <- ap_register
-  pass_1 image 16#13E390;
+  pass_1 image 16#13E390 begin
+    cycle_guard already_ip_reg;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 7;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_destroyable <- false;
+    result.physical_register <- get_live_range_assigned(isc_user_routines_33c.live_range);
+    result.physical_register_number <- get_live_range_register(isc_user_routines_33c.live_range);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(isc_user_routines_33c.live_range);
+    result.physical_register_user_declared <- get_live_range_serialize(isc_user_routines_33c.live_range);
+  end;
   pass_2 image 16#1BBF88 begin
     result.live_range <- isc_user_routines_33c.live_range;
     result.object_with_name <- self.il;
@@ -79,7 +99,8 @@ transform 19  ip_reg <- ap_register
 end;
 
 transform 20  address_mode <- argument_block_location_ob
-  pass_1 image 16#13E550;
+  { not lifted: global 0x44E748 }
+  pass_1 image 16#13E550 residue;
   pass_2 image 16#1BBFBA begin
     result.base_register <- isc_user_routines_340;
     result.index_register <- isc_user_routines_31c;
@@ -88,31 +109,66 @@ transform 20  address_mode <- argument_block_location_ob
 end;
 
 transform 21  address_mode <- at_lib_dsc
-  pass_1 image 16#13E70C;
+  pass_1 image 16#13E70C begin
+    cycle_guard already_address_mode;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+  end;
   pass_2 image 16#1BBFEA empty;
 end;
 
 transform 22  literal_32_bits <- cache_top
-  pass_1 image 16#13E830;
+  pass_1 image 16#13E830 begin
+    result.code_bytes <- 4;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- -1;
+    result.literal_32_bits_value <- 0;
+  end;
   pass_2 image 16#1BBFEC begin
     emit simple(opc$synch, 0, nil, nil, nil);
   end;
 end;
 
 transform 23  local_routine <- cc_call
-  pass_1 image 16#13E92C;
+  pass_1 image 16#13E92C begin
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+  end;
   pass_2 image 16#1BC022 begin
     pattern_match_error(9, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
   end;
 end;
 
 transform 24  address_mode <- cs_temp
-  pass_1 image 16#13EA16;
+  pass_1 image 16#13EA16 begin
+    cycle_guard already_address_mode;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+  end;
   pass_2 image 16#1BC058 empty;
 end;
 
 transform 25  ip_reg <- db_register
-  pass_1 image 16#13EB3A;
+  pass_1 image 16#13EB3A begin
+    cycle_guard already_ip_reg;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 7;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_destroyable <- false;
+    result.physical_register <- get_live_range_assigned(isc_user_routines_338.live_range);
+    result.physical_register_number <- get_live_range_register(isc_user_routines_338.live_range);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(isc_user_routines_338.live_range);
+    result.physical_register_user_declared <- get_live_range_serialize(isc_user_routines_338.live_range);
+  end;
   pass_2 image 16#1BC05A begin
     result.live_range <- isc_user_routines_338.live_range;
     result.object_with_name <- self.il;
@@ -120,7 +176,21 @@ transform 25  ip_reg <- db_register
 end;
 
 transform 26  ip_reg <- display_register
-  pass_1 image 16#13ECFA;
+  pass_1 image 16#13ECFA begin
+    cycle_guard already_ip_reg;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 7;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_destroyable <- false;
+    result.physical_register <- get_live_range_assigned(isc_user_routines_32c.live_range);
+    result.physical_register_number <- get_live_range_register(isc_user_routines_32c.live_range);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(isc_user_routines_32c.live_range);
+    result.physical_register_user_declared <- get_live_range_serialize(isc_user_routines_32c.live_range);
+  end;
   pass_2 image 16#1BC08C begin
     result.live_range <- isc_user_routines_32c.live_range;
     result.object_with_name <- self.il;
@@ -128,7 +198,21 @@ transform 26  ip_reg <- display_register
 end;
 
 transform 27  ip_reg <- exception_register
-  pass_1 image 16#13EEBA;
+  pass_1 image 16#13EEBA begin
+    cycle_guard already_ip_reg;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_destroyable <- false;
+    result.physical_register <- get_live_range_assigned(isc_user_routines_328.live_range);
+    result.physical_register_number <- get_live_range_register(isc_user_routines_328.live_range);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(isc_user_routines_328.live_range);
+    result.physical_register_user_declared <- get_live_range_serialize(isc_user_routines_328.live_range);
+  end;
   pass_2 image 16#1BC0BE begin
     result.live_range <- isc_user_routines_328.live_range;
     result.object_with_name <- self.il;
@@ -136,14 +220,29 @@ transform 27  ip_reg <- exception_register
 end;
 
 transform 28  local_routine <- entry_blk | function_blk | procedure_blk
-  pass_1 image 16#13F076;
+  { not lifted: 0x13F09C: andw %a3@(376),%d0 }
+  pass_1 image 16#13F076 residue;
   pass_2 image 16#1BC0F0 begin
     result.object_with_name <- self.il;
   end;
 end;
 
 transform 29  ip_reg <- lb_register
-  pass_1 image 16#13F186;
+  pass_1 image 16#13F186 begin
+    cycle_guard already_ip_reg;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 7;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_destroyable <- false;
+    result.physical_register <- get_live_range_assigned(isc_user_routines_334.live_range);
+    result.physical_register_number <- get_live_range_register(isc_user_routines_334.live_range);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(isc_user_routines_334.live_range);
+    result.physical_register_user_declared <- get_live_range_serialize(isc_user_routines_334.live_range);
+  end;
   pass_2 image 16#1BC110 begin
     result.live_range <- isc_user_routines_334.live_range;
     result.object_with_name <- self.il;
@@ -151,12 +250,18 @@ transform 29  ip_reg <- lb_register
 end;
 
 transform 30  address_mode <- lib_dsc
-  pass_1 image 16#13F346;
+  pass_1 image 16#13F346 begin
+    cycle_guard already_address_mode;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+  end;
   pass_2 image 16#1BC142 empty;
 end;
 
 transform 31  ip_reg <- physical_register_ob
-  pass_1 image 16#13F46A;
+  { not lifted: 0x13F53A: a table at ('num', 4764176) }
+  pass_1 image 16#13F46A residue;
   pass_2 image 16#1BC144 begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -164,7 +269,20 @@ transform 31  ip_reg <- physical_register_ob
 end;
 
 transform 32  fp_reg <- physical_register_ob
-  pass_1 image 16#13F624;
+  pass_1 image 16#13F624 begin
+    condition subject.il.w4 = 1;
+    cycle_guard already_fp_reg;
+    result.l352 <- lir_3f90[subject.il.w6];
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.fp_reg_max <- 0;
+    result.fp_reg_result <- 1;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+  end;
   pass_2 image 16#1BC16A begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -172,7 +290,25 @@ transform 32  fp_reg <- physical_register_ob
 end;
 
 transform 33  fp_reg_pair <- physical_register_ob
-  pass_1 image 16#13F7E0;
+  pass_1 image 16#13F7E0 begin
+    condition subject.il.w4 = 2;
+    cycle_guard already_fp_reg_pair;
+    result.l352 <- lir_3f90[subject.il.w6];
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.fp_reg_pair_max <- 0;
+    result.fp_reg_pair_result <- 1;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+  end;
   pass_2 image 16#1BC190 begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -183,7 +319,21 @@ transform 33  fp_reg_pair <- physical_register_ob
 end;
 
 transform 34  ip_reg <- sb_register
-  pass_1 image 16#13F9B2;
+  pass_1 image 16#13F9B2 begin
+    cycle_guard already_ip_reg;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 7;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_destroyable <- false;
+    result.physical_register <- get_live_range_assigned(isc_user_routines_340.live_range);
+    result.physical_register_number <- get_live_range_register(isc_user_routines_340.live_range);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(isc_user_routines_340.live_range);
+    result.physical_register_user_declared <- get_live_range_serialize(isc_user_routines_340.live_range);
+  end;
   pass_2 image 16#1BC1DE begin
     result.live_range <- isc_user_routines_340.live_range;
     result.object_with_name <- self.il;

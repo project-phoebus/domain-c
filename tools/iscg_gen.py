@@ -159,6 +159,7 @@ class Rules:
 
     def parse(self, fn, text):
         text, bodies = iscg_p2gen.extract_bodies(text)     # the pass_2 bodies
+        text, p1bodies = iscg_p1gen.extract_bodies(text)   # the pass_1 clauses
         ts = tokens(text)
         i = 0
 
@@ -239,6 +240,8 @@ class Rules:
                                 tr['p2_empty'] = True
                             if which == 'pass_2':
                                 iscg_p2gen.clause(tr, body, bodies)
+                            else:
+                                iscg_p1gen.clause(tr, body, p1bodies)
                     else:
                         raise Bad('%s: transform %d: %r' % (fn, r, ts[i]))
                 expect('end')
@@ -645,6 +648,7 @@ class Gen:
              '#   module<TAB>FILE<TAB>A5<TAB>START<TAB>END  an anonymous module (A5 `-\': no',
              '#                                           routine loads one)',
              '#   unit<TAB>FILE<TAB>named                   a named unit before anonymous code']
+        L.extend(iscg_p1gen.manifest_lines(self.r))
         L.extend(self.p2_manifest_lines())
         for r in range(1, self.r.nrules + 1):
             t = self.r.transforms[r]
@@ -665,6 +669,8 @@ class Gen:
                'isc_pass_1_main.pas': self.isc_pass_1_main()}
         # the pass-2 modules of the sections whose actions are all written
         out.update(iscg_p2gen.modules(self, INCLUDES, GEN_NOTE))
+        # the pass-1 modules likewise (tools/iscg_p1gen.py)
+        out.update(iscg_p1gen.modules(self, INCLUDES, GEN_NOTE))
         return out
 
     # ---- isc_pass_1_main (tools/iscg_pass1.py)
@@ -692,6 +698,7 @@ import iscg_pass1  # noqa: E402
 from iscg_text import (PM_HEAD, PM_TYPES, HARD_WORK, PATTERN_MATCHER,  # noqa: E402
                        P2_HEAD, P2_TYPES, PASS_2, VARS_HEAD, UNRECOGNIZED, GEN_NOTE)
 import iscg_p2gen  # noqa: E402
+import iscg_p1gen  # noqa: E402
 
 
 def main():

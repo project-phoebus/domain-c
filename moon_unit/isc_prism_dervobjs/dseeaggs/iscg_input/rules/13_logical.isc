@@ -9,28 +9,96 @@
 section 13 logical  image pass_1 a5 16#46183C, pass_2 a5 16#480088;
 
 transform 324  ip_reg <- and_top | eor_top | or_top ($1: ip_reg, $2: ip_reg_scaled)
-  pass_1 image 16#13FB74;
+  pass_1 image 16#13FB74 begin
+    temp t2: integer;
+    temp t3: integer;
+    cycle_guard already_ip_reg;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.bits_known <- bits_known_function(subject.il_kind, $1.bits_known, $2.bits_known);
+    result.bits_trusted <- bits_trusted_function(subject.il_kind, $1.bits_trusted, $2.bits_trusted);
+    result.embedded_strength_reduction_temporary <- $1.embedded_strength_reduction_temporary or $2.embedded_strength_reduction_temporary;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.ip_reg_max;
+    if t2 = $2.ip_reg_max then
+      result.ip_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.ip_reg_max then
+        t3 <- $2.ip_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.ip_reg_max <- t3;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1BC210 begin
     emit simple(opcode_rr[subject.il_kind], 0, $2, $1, solution);
   end;
 end;
 
 transform 325  ip_reg <- and_top | eor_top | or_top ($1: ip_reg_scaled, $2: ip_reg)
-  pass_1 image 16#13FDE4;
+  pass_1 image 16#13FDE4 begin
+    temp t2: integer;
+    temp t3: integer;
+    cycle_guard already_ip_reg;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.bits_known <- bits_known_function(subject.il_kind, $1.bits_known, $2.bits_known);
+    result.bits_trusted <- bits_trusted_function(subject.il_kind, $1.bits_trusted, $2.bits_trusted);
+    result.embedded_strength_reduction_temporary <- $1.embedded_strength_reduction_temporary or $2.embedded_strength_reduction_temporary;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.ip_reg_max;
+    if t2 = $2.ip_reg_max then
+      result.ip_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.ip_reg_max then
+        t3 <- $2.ip_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.ip_reg_max <- t3;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1BC266 begin
     emit simple(opcode_rr_reversed[subject.il_kind], 0, $1, $2, solution);
   end;
 end;
 
 transform 326  ip_reg <- and_top | eor_top | or_top ($1: ip_reg, $2: [ip_reg, literal_32_bits])
-  pass_1 image 16#140016;
+  pass_1 image 16#140016 begin
+    temp t2: integer;
+    temp t3: integer;
+    condition lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opcode_rr[subject.il_kind], 1) or $2.kind <> 14;
+    cycle_guard already_ip_reg;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.bits_known <- bits_known_function(subject.il_kind, $1.bits_known, $2.bits_known);
+    result.bits_trusted <- bits_trusted_function(subject.il_kind, $1.bits_trusted, $2.bits_trusted);
+    result.embedded_strength_reduction_temporary <- $1.embedded_strength_reduction_temporary or $2.embedded_strength_reduction_temporary;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.ip_reg_max;
+    if t2 = $2.ip_reg_max then
+      result.ip_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.ip_reg_max then
+        t3 <- $2.ip_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.ip_reg_max <- t3;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1BC2BC begin
     emit simple(opcode_rr[subject.il_kind], 0, $2, $1, solution);
   end;
 end;
 
 transform 327  ip_reg_field <- and_top | eor_top | or_top ($1: ip_reg_field, $2: literal_32_bits)
-  pass_1 image 16#14027E;
+  { not lifted: 0x140308: notl %d1 }
+  pass_1 image 16#14027E residue;
   pass_2 image 16#1BC312 begin
     temp t1: integer32;
     t1 <- validate_shift_count($1.bit_position_of_lsb);
@@ -39,7 +107,8 @@ transform 327  ip_reg_field <- and_top | eor_top | or_top ($1: ip_reg_field, $2:
 end;
 
 transform 328  ip_reg_field <- and_top | eor_top | or_top ($1: ip_reg_field, $2: ip_reg_field)
-  pass_1 image 16#14051E;
+  { not lifted: 0x140640: d1 not known }
+  pass_1 image 16#14051E residue;
   pass_2 image 16#1BC392 begin
     temp t1: solution;
     temp t2: integer32;
@@ -68,7 +137,8 @@ transform 328  ip_reg_field <- and_top | eor_top | or_top ($1: ip_reg_field, $2:
 end;
 
 transform 329  ip_reg_field <- and_top | eor_top | or_top ($1: ip_reg_field, $2: ip_reg_field)
-  pass_1 image 16#1407C6;
+  { not lifted: 0x1408F4: d1 not known }
+  pass_1 image 16#1407C6 residue;
   pass_2 image 16#1BC49C begin
     temp t1: integer32;
     temp t2: solution;
@@ -95,14 +165,69 @@ transform 329  ip_reg_field <- and_top | eor_top | or_top ($1: ip_reg_field, $2:
 end;
 
 transform 330  fp_reg <- and_top | eor_top | or_top ($1: fp_reg, $2: fp_reg)
-  pass_1 image 16#140A7A;
+  pass_1 image 16#140A7A begin
+    temp t2: integer;
+    temp t3: integer;
+    condition il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286);
+    cycle_guard already_fp_reg;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.bits_known <- bits_known_function(subject.il_kind, $1.bits_known, $2.bits_known);
+    result.bits_trusted <- bits_trusted_function(subject.il_kind, $1.bits_trusted, $2.bits_trusted);
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t2 <- $1.fp_reg_max;
+    if t2 = $2.fp_reg_max then
+      result.fp_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.fp_reg_max then
+        t3 <- $2.fp_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.fp_reg_max <- t3;
+    end;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1BC5A2 begin
     emit simple(opcode_immediate[subject.il_kind], 0, $2, $1, solution);
   end;
 end;
 
 transform 331  ip_reg <- and_top ($1: ip_reg, $2: literal_32_bits)
-  pass_1 image 16#140CA0;
+  pass_1 image 16#140CA0 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer;
+    temp t6: integer;
+    condition is_sequence_of_ones($2.literal_32_bits_value);
+    condition number_of_leftmost_zeroes($2.literal_32_bits_value) > 0;
+    condition number_of_rightmost_zeroes($2.literal_32_bits_value) > 0;
+    cycle_guard already_ip_reg;
+    result.l356 <- length_of_sequence_of_ones($2.literal_32_bits_value);
+    result.l352 <- number_of_rightmost_zeroes($2.literal_32_bits_value);
+    t2 <- make_bit_mask_2(31, number_of_rightmost_zeroes($2.literal_32_bits_value) + result.l356);
+    t3 <- make_bit_mask_2(number_of_rightmost_zeroes($2.literal_32_bits_value) + result.l356 - 1, result.l352);
+    t4 <- make_bit_mask_2(result.l352 - 1, 0);
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.bits_known <- t3 & $1.bits_known;
+    result.bits_trusted <- t4 + t3 & $1.bits_trusted + t2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t5 <- $1.ip_reg_max;
+    if t5 = $2.ip_reg_max then
+      result.ip_reg_max <- t5 + 1;
+    else
+      if t5 u<= $2.ip_reg_max then
+        t6 <- $2.ip_reg_max;
+      else
+        t6 <- t5;
+      end;
+      result.ip_reg_max <- t6;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1BC5F8 begin
     temp t1: integer32;
     t1 <- make_bit_mask_1(result.l356, 0);
@@ -111,7 +236,40 @@ transform 331  ip_reg <- and_top ($1: ip_reg, $2: literal_32_bits)
 end;
 
 transform 332  ip_reg <- and_top ($1: ip_reg, $2: literal_32_bits)
-  pass_1 image 16#140F34;
+  pass_1 image 16#140F34 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    temp t6: integer;
+    temp t7: integer;
+    condition is_sequence_of_ones($2.literal_32_bits_value);
+    condition number_of_leftmost_zeroes($2.literal_32_bits_value) > 0;
+    condition number_of_rightmost_zeroes($2.literal_32_bits_value) = 0;
+    cycle_guard already_ip_reg;
+    t2 <- length_of_sequence_of_ones($2.literal_32_bits_value);
+    result.l352 <- t2;
+    t3 <- make_bit_mask_2(31, t2);
+    t4 <- make_bit_mask_2(t2 - 1, 0);
+    t5 <- make_bit_mask_1(result.l352, 0);
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.bits_known <- t4 & $1.bits_known;
+    result.bits_trusted <- $1.bits_trusted & t4 + t3;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t6 <- $1.ip_reg_max;
+    if t6 = $2.ip_reg_max then
+      result.ip_reg_max <- t6 + 1;
+    else
+      if t6 u<= $2.ip_reg_max then
+        t7 <- $2.ip_reg_max;
+      else
+        t7 <- t6;
+      end;
+      result.ip_reg_max <- t7;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1BC658 begin
     emit field(opc$extractu, 0, result.l352, $1, find_well_known_literal_solution(0), solution);
   end;
@@ -119,7 +277,46 @@ end;
 
 transform 333  ip_reg <- and_top ($1: ip_reg, $2: literal_32_bits)
   no_could_deadlock_child;
-  pass_1 image 16#1411A4;
+  pass_1 image 16#1411A4 begin
+    temp t2: integer32;
+    temp t3: integer;
+    temp t4: integer;
+    condition $1.is_destroyable;
+    condition is_sequence_of_zeroes($2.literal_32_bits_value);
+    cycle_guard already_ip_reg;
+    result.l356 <- length_of_sequence_of_zeroes($2.literal_32_bits_value);
+    result.l352 <- number_of_rightmost_ones($2.literal_32_bits_value);
+    t2 <- make_bit_mask_1(result.l356, 0);
+    if lir_$can_encode_as_immediate_operand(0, opc$insert, 1) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand(0, opc$move, 1) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(4, 4)[result.c137] + $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- bytes(0, 1)[result.c137] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(0, 1)[result.c137] + $1.delay + $2.delay;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.bits_known <- bits_known_function(subject.il_kind, $1.bits_known, $2.bits_known);
+    result.bits_trusted <- bits_trusted_function(subject.il_kind, $1.bits_trusted, $2.bits_trusted);
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t3 <- $1.ip_reg_max;
+    if t3 = $2.ip_reg_max then
+      result.ip_reg_max <- t3 + 1;
+    else
+      if t3 u<= $2.ip_reg_max then
+        t4 <- $2.ip_reg_max;
+      else
+        t4 <- t3;
+      end;
+      result.ip_reg_max <- t4;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1BC6AA begin
     temp t1: solution;
     temp t2: solution;
@@ -147,7 +344,34 @@ transform 333  ip_reg <- and_top ($1: ip_reg, $2: literal_32_bits)
 end;
 
 transform 334  ip_reg <- and_top ($1: ip_reg, $2: not_top($1: ip_reg))
-  pass_1 image 16#14186C;
+  pass_1 image 16#14186C begin
+    temp t2: integer;
+    temp t3: integer;
+    cycle_guard already_ip_reg;
+    if lir_$can_encode_as_immediate_operand(-1, opc$xor, 1) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- words(4, 4)[result.c136] + $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.bits_known <- bits_known_function(subject.il_kind, $1.bits_known, bits_known_function($2.il_kind, $2.$1.bits_known, 0));
+    result.bits_trusted <- bits_trusted_function(subject.il_kind, $1.bits_trusted, bits_trusted_function($2.il_kind, $2.$1.bits_trusted, 0));
+    result.embedded_strength_reduction_temporary <- $1.embedded_strength_reduction_temporary or $2.$1.embedded_strength_reduction_temporary;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.$1.ip_reg_max, legal_evaluation_orders($1, $2.$1));
+    t2 <- $1.ip_reg_max;
+    if t2 = $2.$1.ip_reg_max then
+      result.ip_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.$1.ip_reg_max then
+        t3 <- $2.$1.ip_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.ip_reg_max <- t3;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1BC7DC begin
     temp t1: solution;
     t1 <- create_solution_for_ip_reg();
@@ -161,7 +385,34 @@ transform 334  ip_reg <- and_top ($1: ip_reg, $2: not_top($1: ip_reg))
 end;
 
 transform 335  ip_reg <- and_top ($1: not_top($1: ip_reg), $2: ip_reg)
-  pass_1 image 16#141B0C;
+  pass_1 image 16#141B0C begin
+    temp t2: integer;
+    temp t3: integer;
+    cycle_guard already_ip_reg;
+    if lir_$can_encode_as_immediate_operand(-1, opc$xor, 1) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- words(4, 4)[result.c136] + $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.bits_known <- bits_known_function(subject.il_kind, bits_known_function($1.il_kind, $1.$1.bits_known, 0), $2.bits_known);
+    result.bits_trusted <- bits_trusted_function(subject.il_kind, bits_trusted_function($1.il_kind, $1.$1.bits_trusted, 0), $2.bits_trusted);
+    result.embedded_strength_reduction_temporary <- $1.$1.embedded_strength_reduction_temporary or $2.embedded_strength_reduction_temporary;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.$1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1.$1, $2));
+    t2 <- $1.$1.ip_reg_max;
+    if t2 = $2.ip_reg_max then
+      result.ip_reg_max <- t2 + 1;
+    else
+      if t2 u<= $2.ip_reg_max then
+        t3 <- $2.ip_reg_max;
+      else
+        t3 <- t2;
+      end;
+      result.ip_reg_max <- t3;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1BC872 begin
     temp t1: solution;
     t1 <- create_solution_for_ip_reg();
@@ -175,7 +426,21 @@ transform 335  ip_reg <- and_top ($1: not_top($1: ip_reg), $2: ip_reg)
 end;
 
 transform 336  ip_reg_field <- not_top ($1: ip_reg_field)
-  pass_1 image 16#141DB0;
+  pass_1 image 16#141DB0 begin
+    condition $1.field_requires_sign_extend;
+    cycle_guard already_ip_reg_field;
+    if lir_$can_encode_as_immediate_operand(-1, opc$xor, 1) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- words(4, 4)[result.c136] + $1.code_bytes;
+    copy memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.bits_known <- bits_known_function(subject.il_kind, $1.bits_known, 0);
+    result.bits_trusted <- bits_trusted_function(subject.il_kind, $1.bits_trusted, 0);
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1BC908 begin
     if result.c136 = 1 then
       emit simple(opc$xor, 0, isc_literal_solutions[-1], $1, solution);
@@ -186,7 +451,20 @@ transform 336  ip_reg_field <- not_top ($1: ip_reg_field)
 end;
 
 transform 337  ip_reg <- not_top ($1: ip_reg)
-  pass_1 image 16#14237C;
+  pass_1 image 16#14237C begin
+    cycle_guard already_ip_reg;
+    if lir_$can_encode_as_immediate_operand(-1, opc$xor, 1) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- words(4, 4)[result.c136] + $1.code_bytes;
+    copy memory_references, delay from $1;
+    result.bits_known <- bits_known_function(subject.il_kind, $1.bits_known, 0);
+    result.bits_trusted <- bits_trusted_function(subject.il_kind, $1.bits_trusted, 0);
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1BC970 begin
     if result.c136 = 1 then
       emit simple(opc$xor, 0, isc_literal_solutions[-1], $1, solution);
@@ -197,7 +475,17 @@ transform 337  ip_reg <- not_top ($1: ip_reg)
 end;
 
 transform 338  fp_reg <- not_top ($1: fp_reg)
-  pass_1 image 16#142542;
+  pass_1 image 16#142542 begin
+    condition il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286);
+    cycle_guard already_fp_reg;
+    result.code_bytes <- $1.code_bytes + 4;
+    result.memory_references <- $1.memory_references;
+    result.delay <- $1.delay + 2;
+    result.bits_known <- bits_known_function(subject.il_kind, $1.bits_known, 0);
+    result.bits_trusted <- bits_trusted_function(subject.il_kind, $1.bits_trusted, 0);
+    result.fp_reg_max <- $1.fp_reg_max + 1;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1BC9D8 begin
     emit simple(opc$comi, 0, $1, solution, nil);
   end;
@@ -205,7 +493,57 @@ end;
 
 transform 339  ip_reg_field <- or_top ($1: [ip_reg, ip_reg_field], $2: literal_32_bits)
   no_could_deadlock_child;
-  pass_1 image 16#1426F2;
+  pass_1 image 16#1426F2 begin
+    temp t1: integer32;
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t5: integer32;
+    temp t6: integer32;
+    temp t7: integer32;
+    temp t8: integer32;
+    temp t9: integer;
+    temp t10: integer;
+    condition $1.is_destroyable;
+    t1 <- available_precision_function($1);
+    t2 <- validate_shift_count(32 - t1);
+    t3 <- validate_shift_count($1.bit_position_of_lsb);
+    condition is_sequence_of_ones(lshft($2.literal_32_bits_value & rshft(-1, t2), t3));
+    cycle_guard already_ip_reg_field;
+    t5 <- available_precision_function($1);
+    t6 <- validate_shift_count(32 - t5);
+    t7 <- validate_shift_count($1.bit_position_of_lsb);
+    result.l352 <- lshft(rshft(-1, t6) & $2.literal_32_bits_value, t7);
+    t8 <- make_bit_mask_1(length_of_sequence_of_ones(lshft(rshft(-1, t6) & $2.literal_32_bits_value, t7)), 0);
+    if lir_$can_encode_as_immediate_operand(-1, opc$insert, 1) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand(-1, opc$move, 1) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(4, 4)[result.c137] + $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- bytes(0, 1)[result.c137] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(0, 1)[result.c137] + $1.delay + $2.delay;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.bits_known <- bits_known_function(subject.il_kind, $1.bits_known, $2.bits_known);
+    result.bits_trusted <- bits_trusted_function(subject.il_kind, $1.bits_trusted, $2.bits_trusted);
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t9 <- $1.ip_reg_max;
+    if t9 = $2.ip_reg_max then
+      result.ip_reg_max <- t9 + 1;
+    else
+      if t9 u<= $2.ip_reg_max then
+        t10 <- $2.ip_reg_max;
+      else
+        t10 <- t9;
+      end;
+      result.ip_reg_max <- t10;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1BCA1C begin
     temp t1: solution;
     temp t2: solution;

@@ -9,6 +9,10 @@
 section 22 use_def  image pass_1 a5 16#469050, pass_2 a5 none;
 
 transform 1  void <- use_def_ob
-  pass_1 image 16#162AFC;
+  pass_1 image 16#162AFC begin
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+  end;
   pass_2 image 16#1CF06C empty;
 end;

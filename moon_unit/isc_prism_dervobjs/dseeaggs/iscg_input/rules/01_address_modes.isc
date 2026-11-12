@@ -10,7 +10,8 @@ section 01 address_modes  image pass_1 a5 16#44F308, pass_2 a5 16#480058;
 
 transform 63  address_mode <- dindex_node ($1: ip_reg, $2: [ip_reg, literal_32_bits])
   no_could_deadlock_child;
-  pass_1 image 16#0F0C34;
+  { not lifted: 0xF0DB0: extw %d1 }
+  pass_1 image 16#0F0C34 residue;
   pass_2 image 16#18C7C4 begin
     result.base_register <- $1;
     result.index_register <- isc_user_routines_31c;
@@ -20,7 +21,8 @@ end;
 
 transform 64  address_mode <- dindex_node ($1: ip_reg, $2: literal_32_bits)
   no_could_deadlock_child;
-  pass_1 image 16#0F0F46;
+  { not lifted: 0xF10BC: extw %d1 }
+  pass_1 image 16#0F0F46 residue;
   pass_2 image 16#18C7F0 begin
     result.base_register <- $1;
     result.index_register <- isc_user_routines_31c;
@@ -30,7 +32,8 @@ end;
 
 transform 65  address_mode <- dindex_node ($1: ip_reg, $2: ip_reg)
   no_could_deadlock_child;
-  pass_1 image 16#0F128E;
+  { not lifted: 0xF13D6: extw %d1 }
+  pass_1 image 16#0F128E residue;
   pass_2 image 16#18C81C begin
     result.base_register <- $1;
     result.index_register <- $2;
@@ -40,7 +43,8 @@ end;
 
 transform 66  address_mode <- dindex_node ($1: ip_reg, $2: ip_reg_scaled)
   no_could_deadlock_child;
-  pass_1 image 16#0F15B6;
+  { not lifted: 0xF16FA: extw %d1 }
+  pass_1 image 16#0F15B6 residue;
   pass_2 image 16#18C846 begin
     result.base_register <- $1;
     result.index_register <- $2;
@@ -50,7 +54,8 @@ end;
 
 transform 67  address_mode <- dindex_node ($1: ip_reg, $2: ip_reg)
   no_could_deadlock_child;
-  pass_1 image 16#0F18DA;
+  { not lifted: 0xF1A2A: extw %d1 }
+  pass_1 image 16#0F18DA residue;
   pass_2 image 16#18C870 begin
     result.base_register <- $1;
     result.index_register <- ip_reg_to_ip_reg_scaled($2, subject.il.w40);
@@ -59,7 +64,8 @@ transform 67  address_mode <- dindex_node ($1: ip_reg, $2: ip_reg)
 end;
 
 transform 68  address_mode <- dindex_node ($1: ip_reg, $2: ip_reg)
-  pass_1 image 16#0F1C0A;
+  { not lifted: 0xF1D7A: extw %d1 }
+  pass_1 image 16#0F1C0A residue;
   pass_2 image 16#18C8B8 begin
     temp t1: solution;
     t1 <- create_solution_for_ip_reg();
@@ -71,7 +77,20 @@ transform 68  address_mode <- dindex_node ($1: ip_reg, $2: ip_reg)
 end;
 
 transform 69  address_mode <- disp_node ($1: address_mode)
-  pass_1 image 16#0F1F5A;
+  pass_1 image 16#0F1F5A begin
+    condition not $1.uses_the_index_register;
+    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value + subject.il.l32, opc$loadl, 1);
+    cycle_guard already_address_mode;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.bits_known <- $1.bits_known + subject.il.l32;
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.is_atomic <- subject.il.b7 & 1 <> 0;
+    result.is_physical <- subject.il.l4 & 16#80000 <> 0;
+    result.is_volatile <- subject.il.l4 & 16#10000 <> 0;
+    result.literal_32_bits_value <- $1.literal_32_bits_value + subject.il.l32;
+    result.uses_the_displacement <- true;
+  end;
   pass_2 image 16#18C91E begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -84,7 +103,24 @@ transform 69  address_mode <- disp_node ($1: address_mode)
 end;
 
 transform 70  address_mode <- disp_node ($1: address_mode)
-  pass_1 image 16#0F254C;
+  pass_1 image 16#0F254C begin
+    condition not (not lir_$can_encode_as_immediate_operand(subject.il.l32, opc$loadl, 1) or $1.kind = 5 and ($1.uses_the_displacement or not $1.uses_the_base_register or $1.uses_the_index_register));
+    cycle_guard already_address_mode;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.bits_known <- $1.bits_known + subject.il.l32;
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.has_a_symbolic_displacement <- false;
+    result.ip_reg_max <- $1.ip_reg_max;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b7 & 1 <> 0;
+    result.is_physical <- subject.il.l4 & 16#80000 <> 0;
+    result.is_volatile <- subject.il.l4 & 16#10000 <> 0;
+    result.literal_32_bits_value <- subject.il.l32;
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#18C996 begin
     result.base_register <- $1.base_register;
     result.index_register <- isc_user_routines_31c;
@@ -93,7 +129,31 @@ transform 70  address_mode <- disp_node ($1: address_mode)
 end;
 
 transform 71  address_mode <- disp_node ($1: address_mode)
-  pass_1 image 16#0F2B6C;
+  pass_1 image 16#0F2B6C begin
+    condition not (lir_$can_encode_as_immediate_operand(subject.il.l32, opc$loadl, 1) or $1.kind = 5 and ($1.uses_the_displacement or not $1.uses_the_base_register or $1.uses_the_index_register));
+    cycle_guard already_address_mode;
+    if lir_$can_encode_as_immediate_operand(subject.il.l32, opc$move, 1) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- words(4, 4)[result.c136] + $1.code_bytes;
+    result.memory_references <- bytes(0, 1)[result.c136] + $1.memory_references;
+    result.delay <- bytes(0, 1)[result.c136] + $1.delay;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.bits_known <- $1.bits_known + subject.il.l32;
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.has_a_symbolic_displacement <- false;
+    result.ip_reg_max <- $1.ip_reg_max;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b7 & 1 <> 0;
+    result.is_physical <- subject.il.l4 & 16#80000 <> 0;
+    result.is_volatile <- subject.il.l4 & 16#10000 <> 0;
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- false;
+    result.uses_the_index_register <- true;
+  end;
   pass_2 image 16#18C9D0 begin
     temp t1: solution;
     temp t2: solution;
@@ -111,7 +171,8 @@ transform 71  address_mode <- disp_node ($1: address_mode)
 end;
 
 transform 72  ip_reg_field <- disp_node ($1: ip_reg_field)
-  pass_1 image 16#0F31E6;
+  { not lifted: 0xF36B6: lslb #3,%d1 }
+  pass_1 image 16#0F31E6 residue;
   pass_2 image 16#18CA7E begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -124,7 +185,11 @@ transform 72  ip_reg_field <- disp_node ($1: ip_reg_field)
 end;
 
 transform 73  ip_reg <- disp_node ($1: ip_reg)
-  pass_1 image 16#0F3734;
+  pass_1 image 16#0F3734 begin
+    condition subject.il.l32 = nil;
+    cycle_guard already_ip_reg;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#18CAF6 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -137,7 +202,8 @@ transform 73  ip_reg <- disp_node ($1: ip_reg)
 end;
 
 transform 74  ip_reg_field <- disp_node ($1: ip_reg)
-  pass_1 image 16#0F3C70;
+  { not lifted: 0xF4158: lslb #3,%d1 }
+  pass_1 image 16#0F3C70 residue;
   pass_2 image 16#18CB6E begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -150,7 +216,11 @@ transform 74  ip_reg_field <- disp_node ($1: ip_reg)
 end;
 
 transform 75  fp_reg <- disp_node ($1: fp_reg)
-  pass_1 image 16#0F41F8;
+  pass_1 image 16#0F41F8 begin
+    condition not (subject.il.l32 <> nil or $1.inherited_attributes.fetch_precision <> 32);
+    cycle_guard already_fp_reg;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#18CBE6 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -163,7 +233,11 @@ transform 75  fp_reg <- disp_node ($1: fp_reg)
 end;
 
 transform 76  fp_reg_pair <- disp_node ($1: fp_reg_pair)
-  pass_1 image 16#0F4740;
+  pass_1 image 16#0F4740 begin
+    condition not (subject.il.l32 <> nil or $1.inherited_attributes.fetch_precision <> 64);
+    cycle_guard already_fp_reg_pair;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#18CC5E begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -176,7 +250,11 @@ transform 76  fp_reg_pair <- disp_node ($1: fp_reg_pair)
 end;
 
 transform 77  fp_reg_quad <- disp_node ($1: fp_reg_quad)
-  pass_1 image 16#0F4C88;
+  pass_1 image 16#0F4C88 begin
+    condition not (subject.il.l32 <> nil or $1.inherited_attributes.fetch_precision <> 128);
+    cycle_guard already_fp_reg_quad;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#18CCD6 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -189,7 +267,8 @@ transform 77  fp_reg_quad <- disp_node ($1: fp_reg_quad)
 end;
 
 transform 78  ip_reg_field <- disp_node ($1: fp_reg)
-  pass_1 image 16#0F51D0;
+  { not lifted: 0xF52B2: lslb #3,%d0 }
+  pass_1 image 16#0F51D0 residue;
   pass_2 image 16#18CD4E begin
     temp t1: solution;
     t1 <- create_solution_for_ip_reg();
@@ -200,7 +279,8 @@ transform 78  ip_reg_field <- disp_node ($1: fp_reg)
 end;
 
 transform 79  ip_reg_field <- disp_node ($1: fp_reg_pair)
-  pass_1 image 16#0F533A;
+  { not lifted: 0xF5444: lslb #3,%d0 }
+  pass_1 image 16#0F533A residue;
   pass_2 image 16#18CDA0 begin
     temp t1: solution;
     temp t2: solution;
@@ -213,7 +293,13 @@ transform 79  ip_reg_field <- disp_node ($1: fp_reg_pair)
 end;
 
 transform 80  fp_reg <- disp_node ($1: fp_reg_pair)
-  pass_1 image 16#0F54C6;
+  pass_1 image 16#0F54C6 begin
+    condition not (subject.inherited_attributes.immediate_parent_wants_lvalue or subject.il.l32 <> nil or subject.inherited_attributes.fetch_precision <> 32);
+    cycle_guard already_fp_reg;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.fp_reg_max <- $1.fp_reg_max + 1;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#18CE02 begin
     temp t1: solution;
     t1 <- high_half_of_fp_reg_pair($1);
@@ -223,7 +309,13 @@ transform 80  fp_reg <- disp_node ($1: fp_reg_pair)
 end;
 
 transform 81  fp_reg <- disp_node ($1: fp_reg_pair)
-  pass_1 image 16#0F5A28;
+  pass_1 image 16#0F5A28 begin
+    condition not (subject.inherited_attributes.immediate_parent_wants_lvalue or subject.il.l32 <> 4 or subject.inherited_attributes.fetch_precision <> 32);
+    cycle_guard already_fp_reg;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+    result.fp_reg_max <- $1.fp_reg_max + 1;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#18CE3A begin
     temp t1: solution;
     t1 <- low_half_of_fp_reg_pair($1);
@@ -233,14 +325,25 @@ transform 81  fp_reg <- disp_node ($1: fp_reg_pair)
 end;
 
 transform 82  literal_32_bits <- disp_node ($1: dpreal_ob())
-  pass_1 image 16#0F5F8E;
+  pass_1 image 16#0F5F8E begin
+    condition not (subject.il.l32 <> 4 or subject.inherited_attributes.fetch_precision <> 32);
+    copy code_bytes, memory_references, delay from $1;
+    result.bits_known <- $1.il.l16;
+    result.bits_trusted <- -1;
+    result.literal_32_bits_value <- $1.il.l16;
+    result.literal_derived_from_floating_constant <- true;
+  end;
   pass_2 image 16#18CE72 begin
     result.object_with_name <- $1.il;
   end;
 end;
 
 transform 83  address_mode <- ptr_node ($1: addr_top($1: address_mode))
-  pass_1 image 16#0F60C6;
+  pass_1 image 16#0F60C6 begin
+    cycle_guard already_address_mode;
+    copy code_bytes, memory_references, delay from $1;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1.$1;
+  end;
   pass_2 image 16#18CE9C begin
     result.base_register <- $1.$1.base_register;
     result.index_register <- $1.$1.index_register;
@@ -254,7 +357,8 @@ end;
 
 transform 84  address_mode <- ptr_node ($1: ip_reg)
   no_could_deadlock_child;
-  pass_1 image 16#0F66BA;
+  { not lifted: 0xF67B6: extw %d1 }
+  pass_1 image 16#0F66BA residue;
   pass_2 image 16#18CF36 begin
     result.base_register <- $1;
     result.index_register <- isc_user_routines_31c;
@@ -263,7 +367,8 @@ transform 84  address_mode <- ptr_node ($1: ip_reg)
 end;
 
 transform 85  address_mode <- sym_disp_node ($1: address_mode)
-  pass_1 image 16#0F6920;
+  { not lifted: 0xF6E4C: a table at ('num', 2870780) }
+  pass_1 image 16#0F6920 residue;
   pass_2 image 16#18CF62 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -277,7 +382,8 @@ transform 85  address_mode <- sym_disp_node ($1: address_mode)
 end;
 
 transform 86  address_mode <- sym_disp_node ($1: address_mode)
-  pass_1 image 16#0F6F28;
+  { not lifted: 0xF706E: a table at ('num', 2870780) }
+  pass_1 image 16#0F6F28 residue;
   pass_2 image 16#18CFE2 begin
     result.base_register <- $1.base_register;
     result.index_register <- isc_user_routines_31c;
