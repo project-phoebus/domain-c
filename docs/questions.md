@@ -1714,3 +1714,10 @@ revisited.
    an instruction's +29 and +31 the floating and integer registers live
    at it, a block's +2 and +6 the most of each live in it.  For batch A
    to name (ra_utils reads them through views).
+275. Translator PB5: **question 188 is answered (read, not translated):**
+   at_backend's get_calling_conventions (0x2222D6) allocates the record
+   at +0x4FC from the routine heap (+1248) and fills it as an rtn_t (+0
+   the IL node, +16 the conventions, +148 and +152 their integer and
+   floating clobbers, +226 bit 1 needs_db); at_backend_4fc can be
+   narrowed to rtn_ptr_t when at_backend is translated
+   (docs/backend-plan.md has the phase table's layout).
