@@ -49,6 +49,11 @@ when this tree is merged).
   byte.  A Rev 8.89 layout mode in dpc is an owner's decision
   (docs/questions.md 224); until then the cells after such booleans
   sit at other offsets than the image's.
+- **Gaps 38 (a set constructor with a run-time range) and 39 (`odd' of
+  a byte value): fixed in 1c64d15.**  Their ra rules removed.  Gap 40's
+  form (link.w, then suba.l for the big local, the saves below it, the
+  array reached through a base pointer kept in a frame slot) was sent
+  to domain-pascal from the image.
 - Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
   spiller finds values to spill but runs out of virtual register
   numbers (240 per class) adding the reloads, and the colouring's
@@ -58,7 +63,7 @@ when this tree is merged).
   purpose (the image cannot tell it from `repeat ... until false'):
   write such loops with a label.
 - All compile best effort (a warning; `--strict' still refuses).  Their
-  rewrites are gone from tools/cc_gap_rewrites.txt (283 rules removed in all);
+  rewrites are gone from tools/cc_gap_rewrites.txt (287 rules removed in all);
   the full gate is clean without them.
 - Gaps 4 (write/writeln) and 7 (real arithmetic) are not being worked
   on in dpc for now (the domain-pascal owner's choice).
