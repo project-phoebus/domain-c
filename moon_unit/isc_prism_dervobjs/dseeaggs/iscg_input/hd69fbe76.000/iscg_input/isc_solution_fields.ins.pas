@@ -144,9 +144,12 @@ type
     children: array [1..5] of isc_solution_ptr_t;  { +116 }
     space136: array [136..351] of char; { +136 }
     fields: array [0..19] of isc_solution_ptr_t;   { +352: the
-                                          pattern's own solutions
-                                          (preserve_solution copies them
-                                          by rule) }
+                                          rule's own fields, laid out
+                                          per rule (preserve_solution
+                                          copies pointers at +352..+376
+                                          and, for rules 114 and 115,
+                                          +358: a variant record in the
+                                          original; docs/isc-notes.md) }
   end;
 
   { A list of solutions (isc_main's solution_list$...: an 8-byte head

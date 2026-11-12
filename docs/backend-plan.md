@@ -299,3 +299,19 @@ the generator's input (the pattern description) and a generator in
 tools/ that emits Pascal of the image's shape, checked by the gate
 against cc.a88k; do not hand-translate the ~1080 unnamed actions.
 Scheduled after batch A has filled the ISC inserts.
+
+### ISC (hand-written)
+
+Translator PD (2026-11-11).  The ISC inserts filled from what the units
+use; the generated units' notes in docs/isc-notes.md.
+
+| unit | routines | notes |
+|------|----------|-------|
+| ISC inserts | | isc_attribute_records (inherited_attributes_t), isc_solution_fields (solution$t, solution$set_t, isc_solution_t: the ISC's view of the 432-byte solution, field names from isc_cse_handling's accessors; solution lists), isc_enumeration (il$t, 178 names), isc.pvt.pas (pass_1, pass_2, dump_solution), isc_consts (the request bits, from requests_to_string), isc_types (arith$t, isc_lr_t, isc_node_t: IL node views), isc_routine_externs (isc_main's, isc_user_routines', isc_to_lir's, the call and CSE handlers'); ISC blocks in isc_var_externs (the two heaps, +0x2EC, +0x31C, the traces +0x354/+0x356) |
+| `lang2/source/isc/isc_call_handling.pas` | 6 | done: the call trees' pass 1 and pass 2 (dpc gap 4) |
+| `lang2/source/isc/isc_cse_handling.pas` | 57 | done: CSE solutions chosen, preserved, generated, moved; the accessors (dpc gap 4) |
+| `lang2/source/isc/rewrite.pas` | 16 | done: calls into ISC call trees, multiplies by constants, case statements, the entry's rws_$alloc_temp, ISC_AGG; module data byte for byte with m32_prism_and_pa.pas and m16_prism.pas (be_com) included in the tables' declarations; dpc gaps 25/28 (two regions of rewrite_$routine_call out of the check) |
+| `lang2/source/isc/isc_to_lir.pas` | 30 | not reached: a deferred queue of LIR calls (begin_statement allocates a 108-byte record per statement; each debug_lir_ wrapper traces and appends a record of its kind 1..18; end_statement merges preference moves and replays them through the lir_ routines; tables at isc_user_routines +0x28C and +0x2CC by statement depth +0x30C) |
+| `lang2/source/isc/isc_user_routines.pas` | 138 | not reached |
+| `moon_unit/.../isc_main.pas` | 18 | not reached (ordinary code; headings in isc_routine_externs) |
+
