@@ -33,3 +33,25 @@ var
   isc_user_routines_358: extern boolean;           { +0x358 (lir_main_$begin_routine:
                                           neither -NO_FP nor il_180's
                                           +374 bit 4) }
+
+{ ISC: isc_user_routines.pas's cells the ISC units reach (translator
+  PD).  The two heaps are passed by address (`move.l #0x48103C,-(SP)'). }
+var
+  isc_preserve_heap: extern mrh_$heap_t;   { +0x224 (0x481024): where
+                                          preserve_solution and
+                                          solution_list$preserve copy }
+  isc_heap: extern mrh_$heap_t;         { +0x23C (0x48103C): the ISC's
+                                          solutions, inherited attributes
+                                          and lists }
+  isc_user_routines_2ec: extern integer32; { +0x2EC: counts the
+                                          solutions and copies made from
+                                          isc_heap (new_solution,
+                                          duplicate_solution) }
+  isc_user_routines_31c: extern lr_ptr_t;  { +0x31C: what a solution's
+                                          base_reg and index_reg hold when
+                                          it has none (new_solution,
+                                          pass_2) }
+  isc_user_routines_354: extern boolean;   { +0x354, +0x356: the ISC's
+                                          traces (either prints the
+                                          solutions after pass 2) }
+  isc_user_routines_356: extern boolean;
