@@ -315,10 +315,10 @@ begin
   while bb <> nil do begin
     instr := bb^.first;
     while instr <> nil do begin
-      if instr^.h.b0_6 then
+      if instr^.h.preference then
         if not (instr^.opnds[1].h.kind
                 in [operand$ip_reg..operand$well_behaved_memory]) then
-          instr^.h.b0_6 := false;
+          instr^.h.preference := false;
       attr := addr(instruction_attributes[instr^.opc]);
       if at_backend_phase > 3 then
         if attr^.class in [class$branch, class$call, class$fp_branch,
@@ -605,7 +605,7 @@ begin
         zero := (lr2^.f2.reg = 31) or (lr2^.f2.reg = 30)
       else
         zero := false;
-      if lr2^.f2.physical and not lr2^.f2.b3_5 then
+      if lr2^.f2.physical and not lr2^.f2.serialize then
         physical := not zero
       else
         physical := false;

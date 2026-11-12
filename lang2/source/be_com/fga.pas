@@ -126,7 +126,7 @@ var
   op: opnd_ptr_t;
   found: boolean;
 begin
-  if rtn^.f226.b226_0 then begin
+  if rtn^.f226.needs_frame then begin
     lr := rtn^.ap_lr;
     if rrp$read in lr^.rrp then begin
       ret := rtn^.return_instr;
@@ -354,7 +354,7 @@ begin
   pred := nil;
   e := bb^.preds;
   while e <> nil do begin
-    if ord(e^.source^.f14.b14) <> 1 then begin
+    if ord(e^.source^.f14.kind) <> 1 then begin
       if pred <> nil then
         goto 99;
       pred := e^.source;
@@ -377,7 +377,7 @@ begin
   end;
   if res = nil then
     goto 99;
-  if pred^.f.b17_3 then begin
+  if pred^.f.pfm_cleanup then begin
     if value <> 16#03040003 then
       goto 99;
   end
@@ -455,8 +455,8 @@ procedure mark_asynchronous_path(
 var
   e: fg_edge_ptr_t;
 begin
-  if not bb^.f.b17_2 then begin
-    bb^.f.b17_2 := true;
+  if not bb^.f.asynchronous_path then begin
+    bb^.f.asynchronous_path := true;
     e := bb^.succs;
     while e <> nil do begin
       mark_asynchronous_path(e^.target);
@@ -479,7 +479,7 @@ var
 begin
   bb := rtn^.bbs;
   while bb <> nil do begin
-    if bb^.f.b17_4 then begin
+    if bb^.f.asynchronous_return then begin
       if not conditionally_asynchronous(rtn, bb, target) then
         target := bb;
       mark_asynchronous_path(target);
@@ -563,7 +563,7 @@ begin
     bb := rtn^.bbs;
     while bb <> nil do begin
       nx := bb_ptr_t(bb^.l134);
-      if ord(bb^.f14.b14) <> 1 then begin
+      if ord(bb^.f14.kind) <> 1 then begin
         first := bb^.first;
         if (first = bb^.last) and (first <> nil) then
           if instruction_attributes[first^.opc].class = class$jump then
@@ -575,17 +575,17 @@ begin
     end;
   end;
   fg_utils_$compute_dfs_lists(rtn, level, at_backend_switches.sw3);
-  if rtn^.f226.b226_2 or rtn^.f226.b227_6 then
-    rtn^.f226.b226_0 := true;
+  if rtn^.f226.contains_call or rtn^.f226.asynchronous_return then
+    rtn^.f226.needs_frame := true;
   fga_$optimize_ap_read_in_return(rtn);
-  if rtn^.f226.b227_6 then
+  if rtn^.f226.asynchronous_return then
     fga_$compute_asynchronous_paths(rtn);
   handlers := ((ord(il_180^.xc[379]) & 16#10) <> 0) or lir_main_c8c;
   added := false;
   if handlers then begin
     bb := rtn^.bbs;
     while bb <> nil do begin
-      if bb^.f.b17_7 then begin
+      if bb^.f.entry then begin
         added := true;
         discard(lir_$add_flow_graph_edge(rtn^.bb80, bb));
       end;
@@ -593,7 +593,7 @@ begin
     end;
   end;
   rtn^.l192 := rtn^.l192 + 96;
-  if (handlers or rtn^.f226.b227_6) and not at_backend_switches.sw9 then begin
+  if (handlers or rtn^.f226.asynchronous_return) and not at_backend_switches.sw9 then begin
     df_utils_$global_walk_with_async_protection(rtn, rtn^.l192, 1, level);
     lir_utils_$sanity_check(rtn);
     lir_utils_$fix_store_through_lrs(rtn);

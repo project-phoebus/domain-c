@@ -946,7 +946,7 @@ begin
       vfmt_$write('    best recent:  i = %4LD   location = %8ZLH   pool_begin = %8ZLH%.',
                   i, ltorg_cand[i].loc, pool_begin);
       if i >= 0 then begin
-        n := ord(ltorg_cand[i].this_bb^.f.b17_0) & 1;
+        n := ord(ltorg_cand[i].this_bb^.f.sequential_flow_out) & 1;
         vfmt_$write('        this_bb = BB#%3ZWD %8ZLH  .seq_out = %2LD    target = BB#%3ZWD %8ZLH   target^.inst_head^.loc = %8ZLH%.',
                     ltorg_cand[i].this_bb^.num, ltorg_cand[i].this_bb, n,
                     ltorg_cand[i].target^.num, ltorg_cand[i].target);
@@ -958,7 +958,7 @@ begin
                   location_counter, pool_end, i);
     end;
     if i >= 0 then
-      if ltorg_cand[i].this_bb^.f.b17_0 then begin
+      if ltorg_cand[i].this_bb^.f.sequential_flow_out then begin
         { The block falls through to its target: a JUMP around the
           pool. }
         j := lir_$new_instruction(ord(opc$jump));
@@ -975,7 +975,7 @@ begin
         j^.opnds[1].h.kind := operand$flow_graph_edge;
         ltorg_cand[i].inst^.next := j;
         ltorg_cand[i].inst := j;
-        ltorg_cand[i].this_bb^.f.b17_0 := false;
+        ltorg_cand[i].this_bb^.f.sequential_flow_out := false;
         pool_begin := j^.l28 + 4;
       end;
     if i < 0 then
@@ -1374,7 +1374,7 @@ begin
   { The routine's last instruction in a delay slot gets a NOP. }
   bb := rtn^.bbs72;
   while bb <> nil do begin
-    if not bb^.f.b17_1 then
+    if not bb^.f.forwarded then
       if bb^.last <> nil then
         goto 5;
     bb := bb^.next114;
@@ -1399,13 +1399,13 @@ begin
   if bb = nil then
     goto 30;
 10:
-  if bb^.f.b17_1 then
+  if bb^.f.forwarded then
     goto 20;
   dump := false;
   if at_backend_switches.sw9 then begin
-    n1 := ord(bb^.f.b17_6) & 1;
-    n2 := bb^.f.b16;
-    n3 := ord(bb^.f.b17_0) & 1;
+    n1 := ord(bb^.f.atomic) & 1;
+    n2 := bb^.f.depth;
+    n3 := ord(bb^.f.sequential_flow_out) & 1;
     vfmt_$write('pass1 BB: block=%lh  BB#%3ZWD, 1st_inst=%lh, last=%lh  sequential_flow_out=%ld  loop_depth=%ld  atomic=%1d%.',
                 bb, bb^.num, bb^.first, bb^.last, n3, n2, n1);
   end;
@@ -1471,9 +1471,9 @@ begin
             nb := lir_$new_basic_block;
             prev^.next := nil;
             i^.prev := nil;
-            nb^.f.b16 := bb^.f.b16;
-            nb^.f.b17_0 := bb^.f.b17_0;
-            bb^.f.b17_0 := true;
+            nb^.f.depth := bb^.f.depth;
+            nb^.f.sequential_flow_out := bb^.f.sequential_flow_out;
+            bb^.f.sequential_flow_out := true;
             nb^.first := i;
             nb^.last := bb^.last;
             bb^.last := scan;
@@ -1489,8 +1489,8 @@ begin
             ltorg_cand[66].this_bb := bb;
             ltorg_cand[66].target := nb;
             if at_backend_switches.sw10 then begin
-              n1 := ord(nb^.f.b17_0) & 1;
-              n2 := bb^.f.b16;
+              n1 := ord(nb^.f.sequential_flow_out) & 1;
+              n2 := bb^.f.depth;
               vfmt_$write('      splitting BB:  (old BB#%3ZWD %8ZLH)  (new BB#%3ZWD %8ZLH)  loop depth=%4ld  sequential_flow_out=%2ld %.',
                           bb^.num, bb, nb^.num, nb, n2, n1);
               vfmt_$write('                     literal_scope_base = %8ZLH  pending.size = %5ZLH  committed.size = %5ZLH%.',
@@ -1524,22 +1524,22 @@ begin
       scan := scan^.next;
       cell_head_ptr_t(scan)^.b2 := cell_head_ptr_t(scan)^.b2 & 15;
       scls := instruction_attributes[scan^.opc].class;
-      if (scls in fp_classes) or (bb^.f.b17_6 and (scls = class$load)) then begin
+      if (scls in fp_classes) or (bb^.f.atomic and (scls = class$load)) then begin
         i^.h.b2_7 := true;
         goto 1;
       end;
     end;
     if i^.opc = ord(opc$call) then
       if cell_head_ptr_t(i)^.b3_7 then
-        if i^.h.b0_5 then
+        if i^.h.quad_aligned then
           kind := 5
         else
           kind := 4
-      else if i^.h.b0_5 then
+      else if i^.h.quad_aligned then
         kind := 8
       else
         kind := 7
-    else if i^.h.b0_5 then
+    else if i^.h.quad_aligned then
       kind := 2
     else
       kind := 1;
@@ -1616,7 +1616,7 @@ begin
         if at_backend_switches.sw9 and prev^.h.grouped then
           dump_pass_one_instruction(i, bb, '+', location_counter, state);
       end
-      else if bb^.f.b17_6 then
+      else if bb^.f.atomic then
         if instruction_attributes[i^.opc].class = class$load then begin
           prev^.h.grouped := false;
           prev^.h.b2_7 := false;
@@ -1673,17 +1673,17 @@ begin
       dump := false;
     end;
     if not shadow then
-      if not bb^.f.b17_0 then begin
+      if not bb^.f.sequential_flow_out then begin
         ltorg_cand[0].inst := prev;
         ltorg_cand[0].loc := location_counter;
         ltorg_cand[0].this_bb := bb;
         ltorg_cand[0].target := bb^.next;
       end
       else begin
-        depth := bb^.f.b16;
+        depth := bb^.f.depth;
         if bb^.next <> nil then
-          if bb^.next^.f.b16 < depth then
-            depth := bb^.next^.f.b16;
+          if bb^.next^.f.depth < depth then
+            depth := bb^.next^.f.depth;
         if depth > 64 then
           depth := 64;
         ltorg_cand[depth + 1].inst := prev;
@@ -1861,7 +1861,7 @@ begin
                   1, 2:
                     if op^.h.kind = operand$flow_graph_edge then begin
                       tb := fg_edge_ptr_t(v)^.target;
-                      if tb^.f.b17_1 then
+                      if tb^.f.forwarded then
                         bug_check('ASM_$PROCESS_ROUTINE -- target of branch is forwarded basic block%$');
                       word.disp18 := arshft(tb^.first^.l28 - i^.l28, 2) & 16#3FFFF;
                     end
@@ -2055,7 +2055,7 @@ begin
         end
         else if instruction_attributes[opc].class = class$synch then
           word.r16 := r^.p116^.b2 & 31;
-        if i^.h.b0_3 then
+        if i^.h.fp_ccs then
           word.b24 := true;
         if i^.h.sets_cc then
           if ((instr_attr_view_ptr_t(addr(instruction_attributes[opc]))^.opnds[1].form = 3)

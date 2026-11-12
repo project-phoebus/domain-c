@@ -210,7 +210,7 @@ begin
   special_p := (instruction_attributes[instr^.opc].class in
                 [class$branch, class$fp_branch, class$jump, class$label,
                  class$return])
-               or bb^.f.b17_6;
+               or bb^.f.atomic;
 end;
 
 { memory_home_is_initialized_fsym - whether sym (a live range's +24) is
@@ -373,7 +373,7 @@ begin
   while lr <> nil do begin
     lts := lr^.ltss;
     if lr^.f2.physical or (lr = rtn^.lr140) or (lr = rtn^.memory_lr)
-       or (lr = rtn^.lr108) then
+       or (lr = rtn^.db_lr) then
       complex := true
     else if lts = nil then
       complex := false
@@ -734,7 +734,7 @@ begin
         if not rebuild_bb_exposed_and_final_lists(lr) then begin
           lr^.f2.b3_4 := false;
           if ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) <> [])
-             and not lr^.f2.physical and (lr <> rtn^.lr108) then
+             and not lr^.f2.physical and (lr <> rtn^.db_lr) then
             lr^.id := 0;
         end;
       end

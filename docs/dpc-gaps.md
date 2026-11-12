@@ -914,3 +914,23 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
    Worked around in the source with a temporary
    (`i := utils_ins_$operands_instruction(o)'), which the image's code
    allows (the result is in A0 either way); no gate rule.
+36. **A pointer result of a call through a routine parameter.**
+   lir_utils_$flesh_out_new_load_or_store (translator PA4, cc.a88k
+   0x24D34C) takes `function new_db_lts: lts_ptr_t' (fix_store_through_
+   lrs passes its nested routine, through a trampoline) and calls it
+   for the DB register's segment (`jsr (A1)', the result in A0).  dpc:
+   "a pointer result of a call through a routine pointer is not
+   supported yet".  The rewrite assigns nil.  Reproducer:
+
+       module g35;
+       type p_t = ^integer;
+       procedure q(var r: p_t; function f: p_t); options(val_param);
+       begin
+         r := f;
+       end;
+
+   Translator PA4 also met gap 21's nested case (new_db_lts passed;
+   the rewrite passes a module-level stand-in), gap 7 (dpcontk(0.0)),
+   gap 25 (fix_store_through_lrs: the stores after a written
+   store-through register left out of the check) and gap 32
+   (lir.pvt.pas's section spill_instr_forms).

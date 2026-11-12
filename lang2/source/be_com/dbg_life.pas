@@ -1529,7 +1529,7 @@ var
   c: integer;
   r: dbg_rec_ptr_t;
 begin
-  if rtn^.f226.b226_0 then begin
+  if rtn^.f226.needs_frame then begin
     bb := rtn^.bbs;
     while bb^.first = nil do
       bb := bb^.next;

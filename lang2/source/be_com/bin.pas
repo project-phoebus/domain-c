@@ -1467,7 +1467,7 @@ begin
       first := true;
       node := bin_node_ptr_t(rtn^.node);
       if verbose then begin
-        discard(sym_$fully_qualified_routine_name(addr(name), node, -1));
+        sym_$fully_qualified_routine_name(addr(name), node, true);
         n := name.length;
         vfmt_$write('BIN: emitting "%a"%.', name.body, n);
       end;

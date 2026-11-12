@@ -1,0 +1,23 @@
+{ operand_forms_mask.init - a DSEE derived object of
+  be_com/backend.ins.pas (cc.a88k only): the initializer of the section
+  operand_forms_mask (0x2B6DA0: 44 bytes, by of$t: the low bits an
+  immediate of the form must have clear, 1 for the 0_mod_2 forms, 3
+  0_mod_4, 7 0_mod_8, 15 0_mod_16).  Included by tm_utils.pas.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k, the section's bytes.
+
+  How the section is shared (docs/questions.md 161, settled by
+  translator PB2): backend.ins.pas declares the section's variable for
+  every unit (`var (operand_forms_mask) operand_forms_mask: ...'); this file, included by
+  the one unit that holds the data, gives it its initial value with a
+  `define' statement (the language reference's section 7.2.2, method 2).
+  dpc lays the defined variable out in the named section with its data.
+
+  Not known from the original: the file's layout. }
+
+define operand_forms_mask := [
+    chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0),
+    chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0),
+    chr(0), chr(0), chr(1), chr(3), chr(0), chr(1), chr(3), chr(7), chr(15), chr(0), chr(0),
+    chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0), chr(0)];

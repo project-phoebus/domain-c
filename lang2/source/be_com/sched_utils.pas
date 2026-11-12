@@ -492,7 +492,7 @@ end;
 function test_phys_lr(
     lr: lr_ptr_t): boolean; options(val_param); internal;
 begin
-  test_phys_lr := lr^.f2.physical and not lr^.f2.b3_5;
+  test_phys_lr := lr^.f2.physical and not lr^.f2.serialize;
 end;
 
 { check_snuggle_writes - an instruction writing a physical register
@@ -694,7 +694,7 @@ begin
     i := bb^.first;
     while i <> nil do begin
       if not (instruction_attributes[i^.opc].class in su_calls) then
-        if not bb^.f.b17_6 then begin
+        if not bb^.f.atomic then begin
           check_snuggle_writes(i);
           check_snuggle_reads(i);
         end;

@@ -213,7 +213,7 @@ lang2/source/be_com/lst.pas	if ((/^      \{ The registers' column of the classic
 # gap 7 (bin): real := double (the single literal left unset, for the check)
 lang2/source/be_com/bin.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
 # gap 32 (backend.ins.pas, translator PB2): an initialized overlay section named as its variable (the sections the .init files define renamed, for the check)
-lang2/source/be_com/backend.ins.pas	s/^var \((instruction_mnemonic|instruction_mnemonic_length|instruction_assembly|operand_string|operand_string_length)\)/var (${1}_s) { gap 32 }/
+lang2/source/be_com/backend.ins.pas	s/^var \((instruction_mnemonic|instruction_mnemonic_length|instruction_assembly|operand_string|operand_string_length|operand_forms_mask|amse_premod_immed_low|amse_premod_immed_high|amse_postmod_immed_low|amse_postmod_immed_high)\)/var (${1}_s) { gap 32 }/
 # gap 25 (asm, translator PB2): asm_$process_routine exceeds dpc's virtual registers (pass 1's literals and instruction kinds, pass 2's immediate forms left out of the check)
 lang2/source/be_com/asm.pas	s/^(  \{ Its literals\. \})$/%var gap25b;\n%if gap25b %then { gap 25 }\n$1/
 lang2/source/be_com/asm.pas	s/^(2:)$/%endif { gap 25 }\n$1/
@@ -230,3 +230,15 @@ lang2/source/be_com/call_conv.pas	s/^(        \{ An aggregate by value: its long
 lang2/source/be_com/call_conv.pas	s/^(        \{ The aggregate done\. \})$/%endif { gap 25 }\n$1/
 # gap 22 (cg_call): ord of a boolean (0, for the check) [kept with dpc ca0dd28: without it the routine meets gap 28, more values live than registers]
 lang/lang/source/cg_call.pas	s/ord\(pass_len\)/0 { gap 22 }/
+# gap 7 (lir_utils, translator PA4): a real constant passed to dpcontk (nil, for the check)
+lang2/source/be_com/lir_utils.pas	s/dpcontk\(0\.0\)/nil { gap 7 }/
+# gap 21 (lir_utils, translator PA4): fix_store_through_lrs's nested new_db_lts passed to flesh_out_new_load_or_store (a module-level stand-in, for the check) [still needed with dpc ca0dd28]
+lang2/source/be_com/lir_utils.pas	s/^procedure lir_utils_\$fix_store_through_lrs\($/function lir_utils_gap21: lts_ptr_t; begin lir_utils_gap21 := nil; end; { gap 21 }\nprocedure lir_utils_\$fix_store_through_lrs(/
+lang2/source/be_com/lir_utils.pas	s/^(\s*)new_db_lts\);/$1lir_utils_gap21); { gap 21 }/
+# gap 32 (lir.pvt.pas, translator PA4): the initialized section spill_instr_forms named as its variable (renamed, for the check)
+lang2/source/be_com/lir.pvt.pas	s/^var \(spill_instr_forms\)/var (spill_instr_forms_s) { gap 32 }/
+# gap 36 (lir_utils, translator PA4): a pointer result of a call through a routine parameter (nil, for the check)
+lang2/source/be_com/lir_utils.pas	s/^(\s*)db_lts := new_db_lts;/$1db_lts := nil; { gap 36 }/
+# gap 25 (lir_utils, translator PA4): fix_store_through_lrs exceeds dpc's virtual registers (the stores after a written store-through register left out of the check)
+lang2/source/be_com/lir_utils.pas	s/^(        \{ The stores after the instruction\. \})$/%var gap25a;\n%if gap25a %then { gap 25 }\n$1/
+lang2/source/be_com/lir_utils.pas	s/^(        \{ The stores done\. \})$/%endif { gap 25 }\n$1/

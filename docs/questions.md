@@ -1640,3 +1640,38 @@ revisited.
    sched_utils_$flags_t = set of 0..15 in backend.ins.pas.  sched's
    pass 1 passes [1] and the switches' sw9, oli [0] and false (one
    longword, 0x10000).  Rename if the original's names are known.
+197. Translator PA4, lir_utils: lir_utils_$trans_insert_move's write
+   path bug-checks "Multiple physical outputs" with the frame slot of
+   the pair's move (-48) as the instruction (its +42 and its block's
+   +10 printed), which that path never sets: kept (a local `mi' read
+   uninitialized).  A slip of the original (op's instruction meant)?
+198. Translator PA4: lir_$get_new_instruction_no_exceptions reads five
+   frame longwords, but lir_utils pushes three or four
+   (docs/rev889-patterns.md 132): was its heading `options(variable)'
+   in the original, or were the callers compiled against an older
+   heading?  The translation's heading has five parameters (node, opc,
+   flags, home, p5) and the calls pass nil for the rest.
+199. Translator PA4: the section spill_instr_forms (cc.a88k 0x513E30, 264
+   bytes, initialized from .rwdi, read and written by lir_utils and
+   ra_utils) is declared in lir.pvt.pas and defined with its data in
+   lir_utils.pas; which unit held the initializer is not known (ra_utils
+   could; nothing in the image decides).  Its pointers (load_ptrs,
+   store_ptrs) are written addr(spill_instr_forms.loads[k]).
+200. Translator PA4, lir_utils_$fix_store_through_lrs: an exposed segment
+   of the memory (lir_3ba8) or the DB register found in a block is put
+   at the head of its live range's list (`move.l head,(8,A1); move.l
+   A1,(36,A4); addq.w #1,(56,A4)') without being unlinked from where it
+   is, and its count bumped; a slip, or the lists were emptied just
+   before (step 2 clears every live range's list, so a found segment is
+   one this walk added)?  Kept.
+201. Translator PA4, sym: sym_$allocate_static_variable places a variable
+   at (next free + mask - 1) and not mask (`add.l (20,A2),D4; subq.l
+   #1,D4; and.l' with the complement), so a 4-byte variable after an odd
+   free byte overlaps its predecessor's last byte unless the routine
+   block's +20 is "last used" rather than "next free"; kept.  And
+   sym_$displacement's "unknown object type" message ends in '%.' (the
+   bytes), unlike the others' '%$'.
+202. Translator PA4: isc_$get_il_live_range's heading is in backend.ins.pas
+   (sym calls it and opens no ISC insert; the original must have
+   declared it in an insert sym opens, or in sym itself).  Whoever fills
+   isc_lir.ins.pas must not declare it a second time.
