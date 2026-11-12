@@ -50,6 +50,7 @@ AT_SWITCHES = 0x485D30          # at_backend_switches (backend.ins.pas)
 LIR_TABS = [('lir_3c60', 0x487180 + 0x3C60), ('lir_3d60', 0x487180 + 0x3D60),
             ('lir_3e60', 0x487180 + 0x3E60)]
 ISC_READONLY = 0x2BCDFC         # isc_readonly_tables (isc_types.ins.pas)
+LIR_3F90 = 0x487180 + 0x3F90    # lir_3f90 (backend.ins.pas): live ranges by floating register
 TOOL_TABLES = 0x2BC13C          # isc_tool_generated_readonly_tables (isc.pvt.pas)
 MAPS = ['opcode_rr_reversed', 'opcode_rr', 'opcode_immediate', 'opcode_double',
         'opcode_immediate_negated', 'opcode_single']
@@ -452,9 +453,11 @@ class Lifter:
         """Statements from a to the first of stops; (stmts, state, stop)."""
         out = []
         loops = {}
+        seen = set()
         while True:
             if a in stops:
                 return out, st, a
+            seen.add(a)
             if a not in self.at:
                 raise Unliftable('no instruction at 0x%X' % a)
             k = self.at[a]
@@ -469,7 +472,9 @@ class Lifter:
                 a = self.branch(k, st, out, stops)
                 continue
             if x.mn == 'bra':
-                if x.target <= a:
+                # a backward branch into a shared argument tail (Rev 8.89
+                # cross-jumping) is followed; a cycle is not lifted
+                if x.target <= a and x.target in seen:
                     raise Unliftable('0x%X: a backward branch' % a)
                 a = x.target
                 continue
@@ -482,13 +487,40 @@ class Lifter:
         cnt = st.regs.get(reg)
         if cnt is None:
             raise Unliftable('0x%X: a loop count not known' % head)
-        hi = self.simplify(('bin', '+', self.val(cnt), ('num', 1)))
+        ce = self.val(cnt)
+        if ce[0] == 'cell' and not ce[1].need and ce[1].expr is not None:
+            ce = ce[1].expr
+        hi = self.simplify(('bin', '+', ce, ('num', 1)))
         body_st = st.copy()
         body_st.regs.pop(reg, None)
+        # registers the body sets that hold a value into the loop: loop
+        # variables (a temp set before the loop and at the body's end)
+        carried = {}
+        for y in self.ins[self.at[head]:self.at[dbf.addr]]:
+            m = re.search(r',%([ad][0-7])$', y.text)
+            r = m.group(1) if m else None
+            if r and r != reg and r in st.regs and y.mn not in ('movea', 'move', 'moveq', 'lea',
+                                                                 'clr'):
+                if r not in carried:
+                    c = Cell(self.val(st.regs[r]), 'int32' if r[0] == 'd' else 'sol', False,
+                             self.bound)
+                    c.need = True
+                    c.phi = True
+                    c.uses = 1
+                    self.cells.append(c)
+                    c.mark = ['mark', c]
+                    out.append(c.mark)
+                    carried[r] = c
+                    body_st.regs[r] = c
         self.bound += 1
         self.heads.add(head)
         body, end_st, _ = self.run(head, body_st, {dbf.addr})
         self.heads.discard(head)
+        for r, c in carried.items():
+            v = end_st.regs.get(r)
+            if v is None:
+                raise Unliftable('0x%X: a loop variable %s lost' % (head, r))
+            body.append(['phi', c, v])
         self.bound += 1
         self.tempn += 1
         var = 'i%d' % self.tempn
@@ -501,6 +533,8 @@ class Lifter:
         for r in list(st.regs):
             if end_st.regs.get(r) is not st.regs.get(r):
                 st.regs.pop(r, None)
+        for r, c in carried.items():
+            st.regs[r] = c
         st.regs.pop(reg, None)
         st.flags = None
         return self.ins[k].addr
@@ -538,6 +572,11 @@ class Lifter:
             if v1 is v2:
                 continue
             if v1 is not None and v2 is not None and self.same(v1, v2):
+                continue
+            if v1 is None or v2 is None:
+                # known on one arm only (a loop's body set it): not known
+                # after (a read of it then fails)
+                newst.regs.pop(r, None)
                 continue
             if self.live(e1, r):
                 c = Cell(None, (v1 or v2).typ if isinstance(v1 or v2, Cell) else 'int32', False,
@@ -592,7 +631,12 @@ class Lifter:
         return False
 
     def same(self, v1, v2):
-        return self.val(v1) == self.val(v2)
+        if v1 == v2:
+            return True
+        try:
+            return self.val(v1) == self.val(v2)
+        except Unliftable:
+            return False
 
     # ---- conditions
     def condition(self, x, st):
@@ -790,6 +834,14 @@ class Lifter:
         """A word of a table indexed by a register: the opcode maps of
         isc_tool_generated_readonly_tables by an il$t (index doubled)."""
         _, b, i, disp = loc
+        if isinstance(b, tuple) and b[0] == 'num' and b[1] == LIR_3F90 and size == 4:
+            iv = self.val(i)
+            if iv[0] == 'cell':
+                iv = iv[1].expr
+            if not (iv[0] == 'bin' and iv[1] == '*' and iv[3] == ('num', 4)) or disp % 4:
+                raise Unliftable('0x%X: lir_3f90 indexed by %r' % (x.addr, iv))
+            e = iv[2] if disp == 0 else self.simplify(('bin', '+', iv[2], ('num', disp // 4)))
+            return ('index', 'lir_3f90', e)
         if isinstance(b, tuple) and b[0] == 'num' and b[1] == ISC_READONLY and size == 2:
             iv = self.val(i)
             if iv[0] == 'cell':
@@ -888,11 +940,6 @@ class Lifter:
         k = loc[0]
         if k == 'reg':
             v = st.regs.get(loc[1])
-            if v is None and loc[1] == 'a0' and getattr(st, 'kept_a0', None) is not None:
-                # A0 read after a procedure's call: its value before the
-                # call (docs/rev889-patterns.md 331)
-                v = st.kept_a0
-                self.kept_a0 = True
             if v is None:
                 raise Unliftable('0x%X: %s not known' % (x.addr, loc[1]))
             return v
@@ -910,7 +957,8 @@ class Lifter:
             m = ('mem', loc[1], loc[2], size)
             return self.mkcell(self.load_expr(m), self.mem_type(m), False, out)
         if k == 'tabmem':
-            return self.mkcell(self.table_expr(loc, size, x), 'int16', False, out)
+            e = self.table_expr(loc, size, x)
+            return self.mkcell(e, 'lr' if e[1] == 'lir_3f90' else 'int16', False, out)
         if k == 'sp':
             # a push of what is pushed already (Rev 8.89 copies an argument
             # it pushed for the call before)
@@ -1000,9 +1048,6 @@ class Lifter:
                     return ('frameaddr', op[2])
                 raise Unliftable('0x%X: the address of a parameter' % x.addr)
             b = st.regs.get(r)
-            if b is None and r == 'a0' and st.kept_a0 is not None:
-                b = st.kept_a0
-                self.kept_a0 = True
             if b is None:
                 raise Unliftable('0x%X: %s not known' % (x.addr, r))
             if isinstance(b, tuple) and b[0] == 'ptroff':
@@ -1028,7 +1073,8 @@ class Lifter:
         x = self.ins[k]
         mn, sz = x.mn, x.sz
         ops = [parse_operand(o) for o in x.ops] if mn not in ('movem', 'jsr') else None
-        if mn == 'nop':
+        if mn == 'nop' or (mn == 'movea' and x.ops[0] == x.ops[1]):
+            # movea.l A0,A0: the filler before a loop's head (pattern 332)
             return None
         if mn == 'movea' and ops[0][0] == 'imm' and \
                 ISC_USER_A5 <= ops[0][1] < ISC_USER_A5 + 0x400:
@@ -1179,7 +1225,7 @@ class Lifter:
             if isinstance(v, tuple) and v[0] == 'boolshift' and mn == 'lsl':
                 st.regs[ops[1][1]] = ('boolshift', v[1], v[2] + n)
                 return None
-            if mn == 'lsl' and sz == 'l':
+            if mn == 'lsl' and sz in 'wl':
                 st.regs[ops[1][1]] = self.mkcell(('bin', '*', self.val(v), ('num', 1 << n)),
                                                  'int32', False, out)
                 return None
@@ -1368,7 +1414,6 @@ class Lifter:
                     if e == ('num', 0) and cls in L.POINTERS:
                         e = ('nil',)
                     args.append(e)
-        st.kept_a0 = st.regs.get('a0') if h['ret'] is None else None
         for r in ('d0', 'd1', 'a0', 'a1'):
             st.regs.pop(r, None)
         st.flags = None
@@ -1377,6 +1422,13 @@ class Lifter:
         if h['ret'] is None:
             out.append(('call', name, args))
             self.boundary()
+            if name in CALLEE_A0:
+                # the action reads A0 after the call: the pointer argument
+                # the procedure left there (docs/questions.md 410)
+                k, typ = CALLEE_A0[name]
+                self.use(args[k])
+                st.regs['a0'] = self.mkcell(args[k], typ, False, out)
+                self.kept_a0 = True
             # a call may change any field: earlier loads are dirty
             for c in self.cells:
                 if not c.volatile and c.expr is not None and not c.temp and has_sel(c.expr):
@@ -1500,6 +1552,13 @@ class Lifter:
 
 
 OPCODES = None
+
+# procedures after whose call the actions read A0: the argument (by
+# position) each leaves there, and its type (isc_user_routines loads it
+# into A0; in the input they were probably functions whose result is the
+# argument: docs/questions.md 410)
+CALLEE_A0 = {'set_isc_is_cse_on_live_range_if_local_cse': (1, 'lr'),
+             'side_effect_set_var_$address_exposed': (0, 'node')}
 
 
 def pop_items(st, n, x):

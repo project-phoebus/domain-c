@@ -207,7 +207,7 @@ begin
   end;
   result.fields[0] := duplicate_address_mode(result.fields[0]);
   if integer32(result.fields[2]) div 4 <> 0 then begin
-    for i1 := 1 to integer32(result.fields[2]) div 4 - 1 + 1 do begin
+    for i1 := 1 to integer32(result.fields[2]) div 4 do begin
       debug_lir_$store_instruction(result.inherited, ord(opc$storel), 64,
           isc_solution_ptr_t(isc_user_routines_31c), result.fields[0], nil,
           result.fields[0]^.sym, 0, result.fields[0]^.bits_known,

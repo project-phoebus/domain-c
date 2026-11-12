@@ -2457,8 +2457,16 @@ end;
 
 transform 398  ip_reg <- literal_32_bits
   pass_1 image 16#14B68E;
-  { not lifted: no heading for smcontk }
-  pass_2 image 16#1C3776 residue;
+  pass_2 image 16#1C3776 begin
+    temp t1: solution;
+    if result.c136 = 1 then
+      emit simple(opc$move, 0, find_well_known_literal_solution(result.l352), solution, nil);
+    else
+      t1 <- address_mode_for_integer32_value(result.l352);
+      emit load(opc$loadl, 0, t1, t1.base_register, solution, t1.il, 0, t1.bits_known, t1.bits_trusted);
+    end;
+    result.object_with_name <- smcontk(81, result.l352);
+  end;
 end;
 
 transform 399  fp_reg <- literal_32_bits

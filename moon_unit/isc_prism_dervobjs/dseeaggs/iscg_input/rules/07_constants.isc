@@ -124,7 +124,7 @@ transform 12  address_mode <- set_con_ob
     end;
     result.l352 <- duplicate_address_mode(result.l352);
     if result.l360 div 4 <> 0 then
-      for i1 := 1 to result.l360 div 4 - 1 + 1 do
+      for i1 := 1 to result.l360 div 4 do
         emit store(opc$storel, 64, isc_user_routines_31c, result.l352, nil, result.l352.il, 0, result.l352.bits_known, result.l352.bits_trusted);
       end;
     end;

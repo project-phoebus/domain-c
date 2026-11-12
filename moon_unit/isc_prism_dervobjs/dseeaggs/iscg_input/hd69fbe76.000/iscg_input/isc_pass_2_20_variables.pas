@@ -148,7 +148,7 @@ begin
         subject^.inherited^.pos.line);
   end;
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.lr2 := get_live_range_of_imaginary_part(self.sym);
+  result.lr2 := get_live_range_of_imaginary_part(isc_node_ptr_t(self.sym));
   result.obj_w_name := self.sym;
 end;
 
@@ -163,7 +163,7 @@ begin
         subject^.inherited^.pos.line);
   end;
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.lr2 := get_live_range_of_imaginary_part(self.sym);
+  result.lr2 := get_live_range_of_imaginary_part(isc_node_ptr_t(self.sym));
   result.obj_w_name := self.sym;
 end;
 

@@ -86,7 +86,7 @@ procedure transform_342_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_isc_call(subject^.sym,
+  pass_2_isc_call(isc_node_ptr_t(subject^.sym),
       p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,
       p2_node_ptr_t(subject^.sym)^.b[12] & 128 <> 0,
       p2_node_ptr_t(subject^.sym)^.b[14] & 128 <> 0, subject^.inherited, 0);
@@ -114,7 +114,7 @@ procedure transform_344_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_isc_call(subject^.sym,
+  pass_2_isc_call(isc_node_ptr_t(subject^.sym),
       p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,
       p2_node_ptr_t(subject^.sym)^.b[12] & 128 <> 0,
       p2_node_ptr_t(subject^.sym)^.b[14] & 128 <> 0, subject^.inherited, 0);
@@ -128,7 +128,7 @@ procedure transform_345_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_isc_call(subject^.sym,
+  pass_2_isc_call(isc_node_ptr_t(subject^.sym),
       p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,
       p2_node_ptr_t(subject^.sym)^.b[12] & 128 <> 0,
       p2_node_ptr_t(subject^.sym)^.b[14] & 128 <> 0, subject^.inherited, 0);
@@ -141,7 +141,7 @@ procedure transform_346_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_isc_call(subject^.sym,
+  pass_2_isc_call(isc_node_ptr_t(subject^.sym),
       p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,
       p2_node_ptr_t(subject^.sym)^.b[12] & 128 <> 0,
       p2_node_ptr_t(subject^.sym)^.b[14] & 128 <> 0, subject^.inherited, 0);
@@ -158,7 +158,7 @@ begin
     pattern_match_error(4, il$t(subject^.w98), 0,
         subject^.inherited^.pos.line);
   end;
-  pass_2_isc_call(subject^.sym,
+  pass_2_isc_call(isc_node_ptr_t(subject^.sym),
       p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,
       p2_node_ptr_t(subject^.sym)^.b[12] & 128 <> 0,
       p2_node_ptr_t(subject^.sym)^.b[14] & 128 <> 0, subject^.inherited, 0);

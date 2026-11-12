@@ -11,7 +11,7 @@ section 06 double_float  image pass_1 a5 16#45A80C, pass_2 a5 16#48006C;
 transform 489  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
   pass_1 image 16#116E58;
   pass_2 image 16#1A7A64 begin
-    temp t1: solution;
+    temp t1: live_range;
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
     result.false_label <- $1.false_label;
@@ -19,8 +19,8 @@ transform 489  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
     result.live_range <- $1.live_range;
     result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
     result.already_through_pass_2 <- $1.already_through_pass_2;
-    t1 <- $1;
-    set_isc_is_cse_on_live_range_if_local_cse(subject.il.l4 & 16#400000 <> 0, t1.live_range);
+    set_isc_is_cse_on_live_range_if_local_cse(subject.il.l4 & 16#400000 <> 0, $1.live_range);
+    t1 <- $1.live_range;
     result.live_range <- t1;
   end;
 end;
@@ -30,6 +30,8 @@ transform 490  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
   pass_2 image 16#1A7B06 begin
     temp t1: solution;
     temp t2: solution;
+    temp t3: live_range;
+    temp t4: live_range;
     t1 <- high_half_of_fp_reg_pair(solution);
     t2 <- low_half_of_fp_reg_pair(solution);
     if result.c136 = 1 then
@@ -45,16 +47,18 @@ transform 490  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
     end;
     emit simple(opc$copyd, 0, $1, solution, nil);
     set_isc_is_cse_on_live_range_if_local_cse(subject.il.l4 & 16#400000 <> 0, t1.live_range);
-    result.live_range <- t1;
+    t3 <- t1.live_range;
+    result.live_range <- t3;
     set_isc_is_cse_on_live_range_if_local_cse(subject.il.l4 & 16#400000 <> 0, t2.live_range);
-    result.live_range_of_imaginary_part <- t2;
+    t4 <- t2.live_range;
+    result.live_range_of_imaginary_part <- t4;
   end;
 end;
 
 transform 491  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
   pass_1 image 16#117972;
   pass_2 image 16#1A7C04 begin
-    temp t1: solution;
+    temp t1: live_range;
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
     result.false_label <- $1.false_label;
@@ -62,8 +66,8 @@ transform 491  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
     result.live_range <- $1.live_range;
     result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
     result.already_through_pass_2 <- $1.already_through_pass_2;
-    t1 <- $1;
-    set_isc_is_cse_on_live_range_if_local_cse(subject.il.l4 & 16#400000 <> 0, t1.live_range);
+    set_isc_is_cse_on_live_range_if_local_cse(subject.il.l4 & 16#400000 <> 0, $1.live_range);
+    t1 <- $1.live_range;
     result.live_range <- t1;
   end;
 end;
@@ -75,6 +79,8 @@ transform 492  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
     temp t2: solution;
     temp t3: solution;
     temp t4: solution;
+    temp t5: live_range;
+    temp t6: live_range;
     t1 <- high_half_of_fp_reg_quad($1);
     t2 <- low_half_of_fp_reg_quad($1);
     t3 <- high_half_of_fp_reg_quad(solution);
@@ -93,9 +99,11 @@ transform 492  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
     emit simple(opc$copyd, 0, t1, t3, nil);
     emit simple(opc$copyd, 0, t2, t4, nil);
     set_isc_is_cse_on_live_range_if_local_cse(subject.il.l4 & 16#400000 <> 0, t3.live_range);
-    result.live_range <- t3;
+    t5 <- t3.live_range;
+    result.live_range <- t5;
     set_isc_is_cse_on_live_range_if_local_cse(subject.il.l4 & 16#400000 <> 0, t4.live_range);
-    result.live_range_of_imaginary_part <- t4;
+    t6 <- t4.live_range;
+    result.live_range_of_imaginary_part <- t6;
   end;
 end;
 
@@ -999,12 +1007,30 @@ end;
 
 transform 531  fp_reg_pair <- isc_func_call_top
   pass_1 image 16#11D01E;
-  { not lifted: 0x1AA38C: lslw #2,%d0 }
-  pass_2 image 16#1AA2F2 residue;
+  pass_2 image 16#1AA2F2 begin
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    pass_2_isc_call(subject.il, subject.il.b13 & 128 <> 0, subject.il.b12 & 128 <> 0, subject.il.b14 & 128 <> 0, subject.inherited_attributes, 0);
+    result.live_range <- result.l352;
+    result.live_range_of_imaginary_part <- lir_3f90[subject.il.b11 + 1];
+  end;
 end;
 
 transform 532  fp_reg_quad <- isc_func_call_top
   pass_1 image 16#11D224;
-  { not lifted: 0x1AA438: lslw #2,%d0 }
-  pass_2 image 16#1AA39E residue;
+  pass_2 image 16#1AA39E begin
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    pass_2_isc_call(subject.il, subject.il.b13 & 128 <> 0, subject.il.b12 & 128 <> 0, subject.il.b14 & 128 <> 0, subject.inherited_attributes, 0);
+    result.live_range <- result.l352;
+    result.live_range_of_imaginary_part <- lir_3f90[subject.il.b11 + 2];
+  end;
 end;

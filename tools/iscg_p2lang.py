@@ -211,6 +211,20 @@ def type_class(t):
     return 'other:' + t
 
 
+# routines whose heading lies in an insert the INCLUDES list opens only
+# through another (globals.ins.pas): name -> insert
+EXTRA = {'smcontk': 'lang/lang/source/token.ins.pas'}
+
+
+def extra_heading_text(name):
+    """The heading of EXTRA's routine as its insert writes it."""
+    text = strip_comments(open(os.path.join(ROOT, EXTRA[name]), encoding='latin-1').read())
+    for m in HEADING.finditer(text):
+        if m.group(2).lower() == name:
+            return ' '.join(m.group(0).split())
+    raise LangError('no heading for %s in %s' % (name, EXTRA[name]))
+
+
 def read_headings(include_text):
     """{name (lower): {'params': [(name, mode, class, univ)], 'ret': class or
     None, 'val_param': bool, 'variable': bool}} from the inserts the
@@ -247,7 +261,16 @@ def read_headings(include_text):
         # the globals the actions may read
         for m in re.finditer(r'^\s*([\w$]+)\s*:\s*extern\s+([\w$]+)\s*;', text, re.M):
             GLOBALS.setdefault(m.group(1).lower(), type_class(m.group(2)))
+    for name, path in EXTRA.items():
+        if name not in out:
+            sub = read_headings_of(path)
+            if name in sub:
+                out[name] = sub[name]
     return out
+
+
+def read_headings_of(path):
+    return read_headings("%%include '%s';" % path) if path else {}
 
 
 # --------------------------------------------------------------------------
@@ -702,6 +725,8 @@ class Emitter:
             return 'ord(%s)' % text
         if want == 'char' and cls in ('i16', 'u8', 'u16', 'i32', 'num'):
             return 'chr(%s)' % text
+        if want.startswith('other:') and want.endswith('_ptr_t') and cls in POINTERS:
+            return '%s(%s)' % (want[6:], text)
         if want.startswith('other:') and cls in ('i16', 'u8', 'u16', 'i32', 'num'):
             return '%s(%s)' % (want[6:], text)
         return text
@@ -736,6 +761,8 @@ class Emitter:
         if k == 'index':
             if e[1] in ('isc_literal_solutions', 'lir_3c60', 'lir_3d60', 'lir_3e60'):
                 return '%s[%s]' % (e[1], self.expr(e[2])), 'sp'
+            if e[1] == 'lir_3f90':
+                return 'lir_3f90[%s]' % self.expr(e[2]), 'lr'
             m = re.match(r'readonly_w(\d+)$', e[1])
             if m:
                 # a word table of isc_readonly_tables at +N (isc_types.ins.pas
@@ -767,9 +794,9 @@ class Emitter:
             rt, rc = self.expr1(e[3])
             numeric = ('num', 'i16', 'u16', 'u8', 'i32')
             # a pointer field in arithmetic or compared with a number
-            if lc in POINTERS and rc in numeric:
+            if lc in POINTERS and (rc in numeric or p > 3):
                 lt, lc = 'integer32(%s)' % lt, 'i32'
-            if rc in POINTERS and lc in numeric:
+            if rc in POINTERS and (lc in numeric or p > 3):
                 rt, rc = 'integer32(%s)' % rt, 'i32'
             if lc == 'char' and rc in numeric:
                 lt, lc = 'ord(%s)' % lt, 'i16'
