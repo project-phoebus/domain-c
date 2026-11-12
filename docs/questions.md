@@ -1210,3 +1210,10 @@ revisited.
    the symbols and two places in wr_instr, where optohex's 0..16#FFFF
    is now zero-extended before the add (`clr.l; move.w'), as the image
    does (outbin's integer had sign-extended).
+149. Translator OO, c_macro_read.pas (the hexindex audit,
+   docs/audit-hexindex.md): get_par_cooked_line's #undef diagnostic
+   (`Text follows the valid #undef of ' name `", it has been
+   ignored.'') is 33 + n + 23 = n + 56 characters, but the image sets
+   its length to n + 51 (cc.m68k 0x057D62 `addi.w #51,D2'), so the last
+   five characters (`ored.') are not shown; the #define one's n + 55 is
+   exact.  Kept as the image has it (a slip of the original?).

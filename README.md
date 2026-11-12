@@ -32,6 +32,8 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
   opened).
 - `docs/rev889-patterns.md`: Rev 8.89 code generation vs dpc.
 - `docs/dpc-gaps.md`: constructs dpc refuses (bug reports for dpc).
+- `docs/audit-hexindex.md`: the audit of the early units for indexed
+  displacements misread as decimal.
 - `tools/`: `coff_compare.py` (a patched copy of
   `source/domain_os/tools/coff_compare.py`, to merge back), `cc_survey.py`,
   `cc_dis.py` (disassemble a routine by name), `cc_check.sh` (the gate),

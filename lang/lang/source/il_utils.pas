@@ -241,9 +241,9 @@ end;
   0x07DCF8, 0x320 bytes: a `case' on the kind (137..232, a table of 96;
   the image loops for the kinds that go on to one node instead of
   calling itself).  140, 227: the operands at +64, +68, +72; 139: the
-  +50 operands from +34, last first; 150, 151, 214, 215, 224, 225: +48;
+  +50 operands from +52, last first; 150, 151, 214, 215, 224, 225: +48;
   142: +56; 228: +48..+64.  137, 138, 143: the count (+16) grows by
-  delta; when it reaches 0 the +38 operands from +28 lose 1; when delta
+  delta; when it reaches 0 the +38 operands from +40 lose 1; when delta
   is positive and the count is delta (first use) they gain 1, an
   operand on the spine (tree_node_operand_is_spine of the operator at
   +36) through set_uc_walk_spine while a spine is kept.  164: likewise
@@ -275,7 +275,7 @@ begin
       end;
       139: begin
         for i := p^.xw[25] downto 1 do
-          il_utils_$adjust_uc(p^.xp2[7 + i], delta);
+          il_utils_$adjust_uc(p^.xp[12 + i], delta);
         return;
       end;
       150, 151, 214, 215, 224, 225: begin
@@ -298,7 +298,7 @@ begin
         p^.xw[8] := p^.xw[8] + delta;
         if p^.xw[8] = 0 then begin
           for i := 1 to p^.xw[19] do
-            il_utils_$adjust_uc(p^.xp[6 + i], -1);
+            il_utils_$adjust_uc(p^.xp[9 + i], -1);
         end
         else if (delta > 0) and (delta = p^.xw[8]) then begin
           for i := 1 to p^.xw[19] do begin
@@ -306,9 +306,9 @@ begin
             if kept_spine <> nil then
               on_spine := il_utils_$tree_node_operand_is_spine(p^.xw[18], i);
             if on_spine then
-              il_utils_$set_uc_walk_spine(p^.xp[6 + i], kept_spine)
+              il_utils_$set_uc_walk_spine(p^.xp[9 + i], kept_spine)
             else
-              il_utils_$adjust_uc(p^.xp[6 + i], 1);
+              il_utils_$adjust_uc(p^.xp[9 + i], 1);
           end;
         end;
         return;
@@ -509,9 +509,9 @@ var
   { search_walk - search_point over t's operands while nothing is found.
 
     0x07E252, 0x182 bytes: nothing when found or t is nil; by kind
-    (compared in turn): 139 the +50 operands from +34, last first; 142
+    (compared in turn): 139 the +50 operands from +52, last first; 142
     +56; 140 +68, +72, +64; 151, 188 +48; 143, 137 the +38 operands from
-    +28; 147, 146, 205 +24; 145 +24, +36; 164 +20, +24; 175, 171 +16. }
+    +40; 147, 146, 205 +24; 145 +24, +36; 164 +20, +24; 175, 171 +16. }
 
   procedure search_walk;
   var
@@ -521,7 +521,7 @@ var
       case t^.kind of
         139:
           for i := t^.xw[25] downto 1 do
-            search_point(t, t^.xp2[7 + i]);
+            search_point(t, t^.xp[12 + i]);
         142:
           search_point(t, t^.xp[14]);
         140: begin
@@ -533,7 +533,7 @@ var
           search_point(t, t^.xp[12]);
         143, 137:
           for i := 1 to t^.xw[19] do
-            search_point(t, t^.xp[6 + i]);
+            search_point(t, t^.xp[9 + i]);
         147, 146, 205:
           search_point(t, t^.xp[6]);
         145: begin
@@ -615,7 +615,7 @@ end;
   138, 143: the operators (+36) equal, the 16 bytes at +20 equal (`cmpm.l'
   four times), +4 equal under 16#1B611F and a's +4 without a bit of
   16#9001F; then an operator in the 12-byte set at 0x07E7B4 compares the
-  +38 operands from +28, 48 and 26 compare +40, others are 4.  145: +42,
+  +38 operands from +40, 48 and 26 compare +40, others are 4.  145: +42,
   +40, +32, +22, +23 equal, +4 under the mask, then +24 and +36
   equivalent.  147: +32 and +4 under the mask, then +24.  205: +24 and
   +32 equivalent.  146: +28 the same, then +24 and +28 equivalent.
@@ -653,7 +653,7 @@ begin
       if op in [0..10, 13, 14, 17, 18, 27..29, 33..39, 41..46, 49..53,
                 57, 59..62, 74..77, 86] then begin
         for i := 1 to a^.xw[19] do
-          if il_utils_$trees_equivalent(a^.xp[6 + i], b^.xp[6 + i]) <> 0
+          if il_utils_$trees_equivalent(a^.xp[9 + i], b^.xp[9 + i]) <> 0
           then
             return;
         il_utils_$trees_equivalent := 0;

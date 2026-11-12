@@ -454,7 +454,7 @@ begin
       if callee^.xp[3] <> nil then
         if callee^.xp[3]^.kind = 168 then
           for i := 2 to call^.xw[19] do begin
-            a := call^.xp[6 + i];
+            a := call^.xp[9 + i];
             if a^.kind = 110 then
               if not assert_is_fortran_array(a) then
                 if assert_is_fortran_array(callee^.xp[3]^.xp[3 * i - 3]) then begin
@@ -518,7 +518,7 @@ end;
   the calls' arguments walked last first for the operators in a set of
   0..47 (2, 4, 5, 6, 11, 15, 16, 21, 35, 37), else first first, from 2
   for operators 16 and 15 (calls, then analyzed); kind 139's operands
-  (+50, a word zero-extended) last first from +34; kinds 148 and 149
+  (+50, a word zero-extended) last first from +52; kinds 148 and 149
   set module +0x4; checks of kinds 165, 109 and 110 as bug_checks.
 
   Not known from the original: whether kind 139's count is unsigned
@@ -555,16 +555,16 @@ begin
         first := 1;
       if n^.xw[18] in [2, 4, 5, 6, 11, 15, 16, 21, 35, 37] then
         for i := n^.xw[19] downto first do
-          build_call_graph_walk_il(n^.xp[6 + i])
+          build_call_graph_walk_il(n^.xp[9 + i])
       else
         for i := first to n^.xw[19] do
-          build_call_graph_walk_il(n^.xp[6 + i]);
+          build_call_graph_walk_il(n^.xp[9 + i]);
       if first = 2 then
         analyze_call_site_for_call_graph(t);
     end;
     139:
       for i := n^.xw[25] downto 1 do
-        build_call_graph_walk_il(n^.xp2[i + 7]);
+        build_call_graph_walk_il(n^.xp[i + 12]);
     140, 227: begin
       build_call_graph_walk_il(n^.xp[16]);
       build_call_graph_walk_il(n^.xp[17]);
@@ -841,7 +841,7 @@ begin
     137, 138, 143: begin
       t^.xw[8] := 0;
       for i := t^.xw[19] downto 1 do
-        normalize_il(t^.xp[6 + i], fold);
+        normalize_il(t^.xp[9 + i], fold);
       if t^.xw[18] = 41 then begin
         size := t^.xw[12];
         case t^.xw[13] of
@@ -861,7 +861,7 @@ begin
     end;
     139:
       for i := t^.xw[25] downto 1 do
-        normalize_il(t^.xp2[i + 7], fold);
+        normalize_il(t^.xp[i + 12], fold);
     140: begin
       if not (8 in cargs_$options.opt_on) then
         if 0 in getphase(t^.xp[16]) then begin

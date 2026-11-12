@@ -353,7 +353,7 @@ begin
     else
       first := 1;
     for i := first to b^.xw[19] do
-      r := r or contains_same_lvalue(a, b^.xp[6 + i]);
+      r := r or contains_same_lvalue(a, b^.xp[9 + i]);
   end;
   contains_same_lvalue := r;
 end;

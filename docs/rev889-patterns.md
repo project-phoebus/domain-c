@@ -294,7 +294,11 @@ cc.m68k unless marked.
     difference, a reading trap: `move.b (11,A2,D0.w),D3' at 0x0551AC
     is displacement 0x11 (the extension word 0x0011), a string node's
     characters at +18 indexed from 1; `(fffffffffffffffc,A0,D2.l)' is
-    -4.  Plain displacements `(9439,A0)' are decimal.
+    -4.  Plain displacements `(9439,A0)' are decimal.  The units
+    translated before cc_dis.py's hexindex() were audited for this:
+    docs/audit-hexindex.md (seven slips in htm, c_macro_read,
+    il_utils and gen_exception, two copied into runbackend and
+    commit_top_node).
 39. **Varying string constants laid out as varying strings.**  c_main's
     preprocess assigns string constants to a varying [1024] (`arg :=
     '-Dunix''): the pool holds the length word and the characters

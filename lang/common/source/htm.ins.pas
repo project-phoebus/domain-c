@@ -21,9 +21,9 @@ type
     key: integer32;                     { +4 }
   end;
 
-  { A table: a header of four longwords, and the buckets, which the
-    code addresses from +10 (bucket i at +10 + 4 * i: the first overlaps
-    the size's low word and the mask's high word). }
+  { A table: a header of four longwords, and the buckets from +16
+    (bucket i at +16 + 4 * i: `(0x10,An,Dn.l)' with Dn 4 * i;
+    htm_$create_table allocates size * 4 + 16 bytes). }
   htm_$table_ptr_t = ^htm_$table_t;
   htm_$table_t = record
     case integer of
@@ -32,8 +32,8 @@ type
           size: 0..2147483647;          { +8: the buckets (compared
                                           unsigned, `bcc') }
           mask: integer32);             { +12: size - 1 }
-      2: (unused_0: array [0..4] of integer;    { +0 }
-          buckets: array [0..32767] of htm_$entry_ptr_t);  { +10 }
+      2: (unused_0: array [0..3] of integer32;  { +0 }
+          buckets: array [0..32767] of htm_$entry_ptr_t);  { +16 }
   end;
 
   { The characters hashed. }
