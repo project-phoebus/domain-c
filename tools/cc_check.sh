@@ -41,7 +41,20 @@ for ins in $(awk -F'\t' '$1 ~ /\.(ins|pvt)\.pas$/ { print $1 }' tools/cc_gap_rew
   awk -F'\t' -v f="$ins" '$1 == f { print $2 }' tools/cc_gap_rewrites.txt |
     while IFS= read -r r; do perl -pi -e "$r" "$inc/$ins"; done
 done
+# the generated ISC's action modules (no .blocks record) and the named
+# units before them are compared by tools/cc_isc_check.py, driven by the
+# generator's manifest (docs/questions.md 268)
+manifest=moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/iscg_names.txt
+isc_files=
 for f in "$@"; do
+  case "$f" in
+    *iscg_input/*.pas)
+      if awk -F'\t' -v b="$(basename "$f")" '($1 == "module" || $1 == "unit") && $2 == b { found = 1 }
+           END { exit !found }' "$manifest"; then
+        isc_files="$isc_files $f"
+        continue
+      fi ;;
+  esac
   # dpc gaps (docs/dpc-gaps.md): compile a rewritten scratch copy, named
   # as the unit (coff_compare picks the binary's unit by the file name)
   src=$here/$f
@@ -74,6 +87,9 @@ for f in "$@"; do
     fi
   done
 done
+if [ -n "$isc_files" ]; then
+  python3 tools/cc_isc_check.py $isc_files || fail=1
+fi
 python3 tools/cc_addrcheck.py "$@" || fail=1
 # the generated ISC (docs/iscg-design.md): the committed units must be
 # what tools/iscg_gen.py generates from the rule file
