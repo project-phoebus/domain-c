@@ -244,3 +244,5 @@ lang2/source/be_com/asm.pas	s/^(  \{ Its literals\. \})$/%var gap25b;\n%if gap25
 lang2/source/be_com/asm.pas	s/^(2:)$/%endif { gap 25 }\n$1/
 lang2/source/be_com/asm.pas	s/^(                case form of)$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
 lang2/source/be_com/asm.pas	s/^(                \{ The forms done\. \})$/%endif { gap 25 }\n$1/
+# gap 30 (com): `in' on a local set held in a register as an operand of `and' (process_instruction's cache of birthpoints: the test dropped, for the check)
+lang2/source/be_com/com.pas	s/if \(k <= 31\) and \(k in seen\) then/if k <= 0 then { gap 30 }/

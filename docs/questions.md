@@ -1493,3 +1493,27 @@ revisited.
    reads the end block's number when it is nil (process_routine's
    calls).  Slips of the original?
 
+230. Translator PC4, com.pas: excise_a_store (cc.a88k 0x2297D2) gives
+   the readers of the memory segment a store writes to that segment's
+   +8 (the next segment on its live range's list: `movea.l (8,A1),A3;
+   movea.l (8,A3),A2'), not to the segment the store's read memory
+   operand (the operand before it, whose link it rewires) holds;
+   replace_mem_instrs, doing the same job, uses the read operand's
+   segment.  The two agree only if a live range's list puts the read
+   segment right after the written one.  Kept as the image has it;
+   is lts_t +8 here the segment before it in the block (a list kept
+   newest first), or a slip?
+231. Translator PC4, com.pas: build_loads's MMT_SEQs (0x226E62) cut a
+   long list of memory live ranges at 255 operands and resume the next
+   MMT_SEQ at the chunk index after the last one taken, but that index
+   is not reset to 1 when the walk moves to the next chunk of the list
+   (com_lrs_t, 126 live ranges each), so after a cut the following
+   chunks start mid-way.  Kept; a slip of the original?
+232. Translator PC4, com.pas: destroy_instr (0x22AFF0) clears modify
+   and intend_to_modify from a live range (`andi.w #-37' through
+   (-20,A6)) whenever no segment modifies it, but the slot is set only
+   when the live range has exactly one writer (`move.l
+   (48,A2),(-20,A6)' on that path); on the other path it holds the
+   value of an earlier operand's iteration or nothing.  Translated
+   with the variable assigned on that path only.  A slip of the
+   original?
