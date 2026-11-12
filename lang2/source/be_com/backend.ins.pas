@@ -198,63 +198,69 @@ type
   end;
   instr_attrs_t = array [0..211] of instr_attr_t;
 
-  { An operand (12 bytes; an instruction's k-th at its +32 + 12k).  num
-    (+0) is k.  +1: bit 4 set for an operand that is read (sem_utils);
-    +2 bits 5..4 a count sem_utils subtracts; +3 bits 4..0 the kind
-    (operand$t).  link (+4) the operand it is tied to (the definition a
-    use reads: utils_ins_$operands_instruction of it); +8 the immediate
-    value, or the live range of a register operand. }
+  { An operand (12 bytes; an instruction's k-th at its +32 + 12k).  The
+    first longword is one packed record (dpc lays a 0..255 field of an
+    unpacked record out as a word): num (+0) is k; +1 the low byte of
+    rrp$set_t (xtp copies its bits 3..2 to a segment's rrp and sets
+    0x30 for an operand that reads and means to modify; sem_utils tests
+    read); +2 bits 5..4 a count sem_utils subtracts; +3 bits 4..0 the
+    kind (operand$t).  link (+4) the operand it is tied to (the
+    definition a use reads: utils_ins_$operands_instruction of it); +8
+    the immediate value, or a register operand's lifetime segment. }
+  opnd_hdr_t = packed record
+    num: 0..255;                        { +0 }
+    spare_1: boolean;                   { +1 .7 (rrp$'s elements 7..0) }
+    unconsumed: boolean;
+    intend_to_modify: boolean;
+    read: boolean;                      { .4 }
+    write: boolean;
+    modify: boolean;
+    fp_reg_odd_only: boolean;
+    fp_reg_even_only: boolean;
+    b2_7, b2_6: boolean;                { +2 }
+    count: 0..3;                        { .5..4 }
+    b2_3_0: 0..15;
+    b3_7, b3_6, b3_5: boolean;          { +3 }
+    kind: operand$t;                    { .4..0 }
+  end;
   opnd_t = record
-    num: 0..255;                        { +0 (a byte) }
-    f1: packed record                   { +1 }
-      b7, b6, b5: boolean;
-      read: boolean;                    { .4 }
-      b3, b2, b1, b0: boolean;
-      end;
-    f2: packed record                   { +2 }
-      b7, b6: boolean;
-      count: 0..3;                      { .5..4 }
-      b3_0: 0..15;
-      end;
-    f3: packed record                   { +3 }
-      b7, b6, b5: boolean;
-      kind: operand$t;                  { .4..0 }
-      end;
+    h: opnd_hdr_t;                      { +0 }
     link: opnd_ptr_t;                   { +4 }
     case integer of                     { +8 }
       1: (value: integer32);
-      2: (lr: lr_ptr_t);
+      2: (lts: lts_ptr_t);
       3: (ptr: univ_ptr);
   end;
 
   { An instruction (lir's opt_new_instruction: 44 bytes and 12 for each
-    operand, from the routine's heap).  +0: b6 the opcode's b6_0, b4
-    marks one that needs an IPCCNOP after it (xtp), b2 one of a group
-    that runs on (xtp: insert_ipccnop skips them), b1 copied from the
-    instruction it is put next to; nopnds (+1) its operands; +2 bit 5
-    the opcode's b11_7; +3 bit 5 set by zzzzz on a label.  next/prev
-    (+4, +8) in its block, bb (+12) the block; opc (+20); +28 and +32
-    the source position zzzzz copies to a code cell (+32 copied from
-    the instruction it is put next to); class (+40, the opcode's);
-    num (+42) its serial number (lir +0x4214). }
+    operand, from the routine's heap).  The first longword (h) is one
+    packed record: +0 b6 the opcode's b6_0, b4 (needs_ipccnop) marks
+    one that needs an IPCCNOP after it (xtp), b2 (grouped) one of a
+    group that runs on (xtp: insert_ipccnop skips them), b1 copied from
+    the instruction it is put next to (instr_bug_check: then +32 points
+    to the source position); nopnds (+1) its operands; +2 bit 5 the
+    opcode's b11_7; width (+3) the field width of an insert or extract
+    (sem_utils).  next/prev (+4, +8) in its block, bb (+12) the block;
+    opc (+20); +28 and +32 the source position zzzzz copies to a code
+    cell (+32 the line, a word, or a pointer; copied from the
+    instruction it is put next to); class (+40, the opcode's); num
+    (+42) its serial number (lir +0x4214).  zzzzz makes a label's
+    instruction its own code cell (cell_t's layout over it). }
+  instr_hdr_t = packed record
+    b0_7: boolean;                      { +0 }
+    b0_6: boolean;
+    b0_5: boolean;
+    needs_ipccnop: boolean;             { .4 }
+    b0_3: boolean;
+    grouped: boolean;                   { .2 }
+    b0_1: boolean;
+    b0_0: boolean;
+    nopnds: 0..255;                     { +1 }
+    b2_7, b2_6, b2_5, b2_4, b2_3, b2_2, b2_1, b2_0: boolean;   { +2 }
+    width: 0..255;                      { +3 }
+  end;
   instr_t = record
-    f0: packed record                   { +0 }
-      b7: boolean;
-      b6: boolean;
-      b5: boolean;
-      needs_ipccnop: boolean;           { .4 }
-      b3: boolean;
-      grouped: boolean;                 { .2 }
-      b1: boolean;
-      b0: boolean;
-      end;
-    nopnds: 0..255;                     { +1 (a byte) }
-    f2: packed record                   { +2 }
-      b7, b6, b5, b4, b3, b2, b1, b0: boolean;
-      end;
-    f3: packed record                   { +3 }
-      b7, b6, b5, b4, b3, b2, b1, b0: boolean;
-      end;
+    h: instr_hdr_t;                     { +0 }
     next: instr_ptr_t;                  { +4 }
     prev: instr_ptr_t;                  { +8 }
     bb: bb_ptr_t;                       { +12 }
@@ -272,9 +278,19 @@ type
   end;
 
   { A basic block.  num (+10) its number (printed with an
-    instruction's num as nnn:nnn); +17 bit 5 (xtp), +19 bit 4 (zzzzz:
-    it needs a label); first and last instructions (+34, +38); next
-    in code order (+118). }
+    instruction's num as nnn:nnn); +16..+19 one packed record: +17 bit
+    5 (xtp), +19 bit 4 (needs_label: zzzzz); first and last
+    instructions (+34, +38); next in code order (+118). }
+  bb_flags_t = packed record
+    b16: 0..255;                        { +16 }
+    b17_7, b17_6: boolean;              { +17 }
+    b17_5: boolean;                     { .5 (xtp) }
+    b17_4, b17_3, b17_2, b17_1, b17_0: boolean;
+    b18: 0..255;                        { +18 }
+    b19_7, b19_6, b19_5: boolean;       { +19 }
+    needs_label: boolean;               { .4 (zzzzz) }
+    b19_3, b19_2, b19_1, b19_0: boolean;
+  end;
   bb_t = record
     l0: integer32;                      { +0 }
     l4: integer32;                      { +4 }
@@ -282,18 +298,7 @@ type
     num: integer;                       { +10 }
     w12: integer;                       { +12 }
     w14: integer;                       { +14 }
-    b16: char;                          { +16 }
-    f17: packed record                  { +17 }
-      b7, b6: boolean;
-      b5: boolean;                      { .5 (xtp) }
-      b4, b3, b2, b1, b0: boolean;
-      end;
-    b18: char;                          { +18 }
-    f19: packed record                  { +19 }
-      b7, b6, b5: boolean;
-      needs_label: boolean;             { .4 (zzzzz) }
-      b3, b2, b1, b0: boolean;
-      end;
+    f: bb_flags_t;                      { +16 }
     l20: integer32;                     { +20 }
     l24: integer32;                     { +24 }
     l28: integer32;                     { +28 }
@@ -304,21 +309,35 @@ type
     next: bb_ptr_t;                     { +118 }
   end;
 
-  { A lifetime segment: chained from its live range's ltss (+36) at
-    +8; +40 a word dfa clears for each segment. }
+  { A lifetime segment: rrp (+0) its properties (xtp: an IPCCNOP's
+    result segment gets modify and loses write); +3 bit 4 (xtp: a
+    condition code segment's that needs no IPCCNOP when clear); def
+    (+4) the operand that defines it; next (+8) in its live range's
+    list; +40 a longword dfa clears; lr (+48) its live range. }
   lts_t = record
-    l0: integer32;                      { +0 }
-    l4: integer32;                      { +4 }
+    rrp: rrp$set_t;                     { +0 }
+    f2: packed record                   { +2 }
+      b2: 0..255;
+      b3_7, b3_6, b3_5: boolean;
+      b3_4: boolean;                    { .4 (xtp) }
+      b3_3_0: 0..15;
+      end;
+    def: opnd_ptr_t;                    { +4 }
     next: lts_ptr_t;                    { +8 }
     space12: array [12..39] of char;    { +12 }
     l40: integer32;                     { +40 (dfa clears it) }
+    l44: integer32;                     { +44 }
+    lr: lr_ptr_t;                       { +48 }
   end;
 
-  { A live range: chained from the routine's lrs (+52) at +12; sym (+24)
-    what it holds (an IL node: xtp reads its kind at +2 and a word of
-    flags at +24, at +32 for kind 109); ltss (+36) its segments. }
+  { A live range: rrp (+0) its properties (xtp sets read, modify and
+    intend_to_modify); chained from the routine's lrs (+52) at +12; sym
+    (+24) what it holds (an IL node: xtp reads its kind at +2 and a
+    longword of flags at +24, at +32 for kind 109); ltss (+36) its
+    segments. }
   lr_t = record
-    l0: integer32;                      { +0 }
+    rrp: rrp$set_t;                     { +0 }
+    w2: integer;                        { +2 }
     l4: integer32;                      { +4 }
     l8: integer32;                      { +8 }
     next: lr_ptr_t;                     { +12 }
@@ -347,14 +366,22 @@ type
   end;
 
   { A code cell (zzzzz): what bin, lst and asm emit, 20 bytes and 12
-    for each operand (opnds, the instruction's operands copied).  +0
-    flags (bits 7..5 zzzzz's; bits 4..0 cleared), opc (+1) the opcode
-    as a byte, next (+4), +8 and +16 the instruction's source position
-    (+28, +32), +12 a label's number. }
-  cell_t = record
-    f0: 0..255;                         { +0 }
+    for each operand (opnds, the instruction's operands copied).  The
+    first longword (h) is one packed record: +0 flags (bits 7..5
+    zzzzz's, bits 4..0 cleared), opc (+1) the opcode as a byte, +3 bit
+    5 set on a label's.  next (+4), +8 and +16 the instruction's source
+    position (+28, +32), +12 a label's symbol or number. }
+  cell_hdr_t = packed record
+    b0_7, b0_6, b0_5: boolean;          { +0 }
+    b0_4_0: 0..31;
     opc: 0..255;                        { +1 }
-    w2: integer;                        { +2 }
+    b2: 0..255;                         { +2 }
+    b3_7, b3_6: boolean;                { +3 }
+    is_label: boolean;                  { .5 }
+    b3_4_0: 0..31;
+  end;
+  cell_t = record
+    h: cell_hdr_t;                      { +0 }
     next: cell_ptr_t;                   { +4 }
     l8: integer32;                      { +8 }
     l12: integer32;                     { +12 }
@@ -686,7 +713,7 @@ procedure bv_$propagate_availability(
 { BV_$RELEASE_BIT_VECTORS - 0x225D1C, 0x5C bytes; called from dbg_life dfa
   hal life mmt oli post ra ra_utils trans xtp.  Frame 8:al. }
 procedure bv_$release_bit_vectors(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { BV_$RELEASE_AVAILABILITY_BIT_VECTORS - 0x225D78, 0x4C bytes; called from
   post ra ra_utils.  Frame 8:al. }
@@ -739,7 +766,7 @@ procedure df_utils_$begin_compilation; extern;
 { DF_UTILS_$INIT_FOR_ROUTINE - 0x22E588, 0x1A bytes; called from
   at_backend.  Frame 8:a. }
 procedure df_utils_$init_for_routine(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { DF_UTILS_$END_ROUTINE - 0x22E5A2, 0x2 bytes (no A5); called from
   at_backend.  Frame 8:a. }
@@ -753,10 +780,10 @@ procedure df_utils_$end_compilation; extern;
 { DF_UTILS_$GLOBAL_WALK - 0x22F03A, 0x36 bytes; called from com dfa
   fg_utils fga iv mmt trans xtp.  Frame 8:al; 12:l; 16:w; 18:l. }
 procedure df_utils_$global_walk(
-    p1: univ_ptr;
+    rtn: rtn_ptr_t;
     p2: integer32;
     p3: integer;
-    p4: integer32); options(val_param); extern;
+    level: integer32); options(val_param); extern;
 
 { DF_UTILS_$GLOBAL_WALK_WITH_ASYNC_PROTECTION - 0x22F070, 0x36 bytes;
   called from fga.  Frame 8:al; 12:l; 16:w; 18:l. }
@@ -864,7 +891,7 @@ procedure fg_utils_$begin_compilation; extern;
 { FG_UTILS_$INIT_FOR_ROUTINE - 0x234A46, 0x2E bytes; called from
   at_backend.  Frame 8:a. }
 procedure fg_utils_$init_for_routine(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { FG_UTILS_$END_ROUTINE - 0x234A74, 0x1E bytes; called from at_backend.
   Frame 8:a. }
@@ -891,14 +918,14 @@ procedure fg_utils_$forward_this_block(
 { FG_UTILS_$COMPUTE_DFS_LISTS - 0x2354E0, 0xA2 bytes; called from dfa fga.
   Frame 8:al; 12:l; 16:b. }
 procedure fg_utils_$compute_dfs_lists(
-    p1: univ_ptr;
-    p2: integer32;
+    rtn: rtn_ptr_t;
+    level: integer32;
     p3: boolean); options(val_param); extern;
 
 { FG_UTILS_$INTERVALS - 0x235676, 0x1AC bytes; called from dfa.  Frame
   8:al. }
 procedure fg_utils_$intervals(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { FG_UTILS_$SEPARATE_LOOP_HEADER_EDGES - 0x235822, 0x8E bytes; called from
   hal oli.  Frame 8:l; 12:l; 16:bw.  Result: A0 (callers: A04). }
@@ -910,17 +937,17 @@ function fg_utils_$separate_loop_header_edges(
 { FG_UTILS_$MAKE_LOOPS_UNCONDITIONAL - 0x235F04, 0x30 bytes; called from
   dfa.  Frame 8:a. }
 procedure fg_utils_$make_loops_unconditional(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { FG_UTILS_$FORWARD_EMPTY_BLOCKS - 0x235F34, 0x238 bytes; called from hal
   xtp.  Frame 8:al.  Result: D0 (callers: D0b1). }
 function fg_utils_$forward_empty_blocks(
-    p1: univ_ptr): boolean; options(val_param); extern;
+    rtn: rtn_ptr_t): boolean; options(val_param); extern;
 
 { FG_UTILS_$END_SENSELESS_LOOPS - 0x23619E, 0x1BC bytes; called from hal
   xtp.  Frame 8:al.  Result: D0 (callers: D0b2). }
 function fg_utils_$end_senseless_loops(
-    p1: univ_ptr): boolean; options(val_param); extern;
+    rtn: rtn_ptr_t): boolean; options(val_param); extern;
 
 { FG_UTILS_$GENERATE_JOIN_BIRTHPOINT - 0x2366F8, 0x138 bytes; called from
   iv.  Frame 8:al; 12:al.  Result: read (callers: A01). }
@@ -943,14 +970,14 @@ procedure fg_utils_$add_jbi(
 { FG_UTILS_$DOMINATORS - 0x236C4A, 0x4D6 bytes; called from dfa.  Frame
   8:al; 12:b; 14:l. }
 procedure fg_utils_$dominators(
-    p1: univ_ptr;
+    rtn: rtn_ptr_t;
     p2: boolean;
-    p3: integer32); options(val_param); extern;
+    level: integer32); options(val_param); extern;
 
 { FG_UTILS_$DROP_OLD_JOIN_BIRTHPOINTS - 0x2372C4, 0x124 bytes; called from
   xtp.  Frame 8:al. }
 procedure fg_utils_$drop_old_join_birthpoints(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { FG_UTILS_$RECOMPUTE_POSTNUM - 0x23743A, 0x48 bytes; called from oli.
   Frame 8:al. }
@@ -960,9 +987,9 @@ procedure fg_utils_$recompute_postnum(
 { FG_UTILS_$RECOMPUTE_DOMINATORS_AND_DFS_LISTS - 0x237482, 0x92 bytes;
   called from hal konst oli xtp.  Frame 8:al; 12:w; 14:l. }
 procedure fg_utils_$recompute_dominators_and_dfs_lists(
-    p1: univ_ptr;
+    rtn: rtn_ptr_t;
     p2: integer;
-    p3: integer32); options(val_param); extern;
+    level: integer32); options(val_param); extern;
 
 { FG_UTILS_$COMPUTE_LR_LIFETIME - 0x237660, 0xBC bytes; called from
   tr_utils.  Frame 8:al. }
@@ -995,7 +1022,7 @@ procedure fga_$process_routine(
 { HAL_$FIND_HAMMOCKS - 0x2387C6, 0x1C2 bytes; called from oli xtp.  Frame
   8:al. }
 procedure hal_$find_hammocks(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { HAL_$BEGIN_COMPILATION - 0x238CD6, 0x26 bytes. }
 procedure hal_$begin_compilation; extern;
@@ -1171,13 +1198,15 @@ function lir_$optimizer_new_n_opr_instr(
     p3: boolean;
     p4: univ_ptr): univ_ptr; options(val_param); extern;
 
-{ LIR_$OPTIMIZER_NEW_INSTRUCTION - 0x243E04, 0x2A bytes; called from com
-  fg_utils iv lir_utils oli tr_utils xtp.  Frame 8:al; 12:lw; 14:bw.
-  Result: read (callers: A030 D0l3). }
+{ LIR_$OPTIMIZER_NEW_INSTRUCTION - a new instruction of opcode opc, of
+  the opcode's default size (lir_$opt_new_instruction with true, nil),
+  put after anchor (after) or before it in anchor's block.  0x243E04,
+  0x2A bytes; called from com fg_utils iv lir_utils oli tr_utils xtp:
+  anchor a pointer, opc a word, after a byte; A0. }
 function lir_$optimizer_new_instruction(
-    p1: univ_ptr;
-    p2: integer32;
-    p3: integer): univ_ptr; options(val_param); extern;
+    anchor: instr_ptr_t;
+    opc: integer;
+    after: boolean): instr_ptr_t; options(val_param); extern;
 
 { LIR_$BUILD_OPERAND - 0x24409A, 0xF58 bytes; called from lir_main
   lir_utils.  Frame 8:al; 12:al; 16:bl; 17:b; 18:b. }
@@ -1422,9 +1451,9 @@ procedure lir_utils_$add_lts_to_lr(
   mmt_utils tr_utils xtp.  Frame 8:al; 12:w; 14:l.  Result: D0 (callers:
   A04). }
 function lir_utils_$add_lts_after_lts(
-    p1: univ_ptr;
+    lts: lts_ptr_t;
     p2: integer;
-    p3: integer32): univ_ptr; options(val_param); extern;
+    bb: bb_ptr_t): lts_ptr_t; options(val_param); extern;
 
 { LIR_UTILS_$TRANS_INSERT_MOVE - 0x24C312, 0x912 bytes; called from com
   sched_utils.  Frame 8:al. }
@@ -1553,7 +1582,7 @@ procedure mmt_utils_$begin_compilation; extern;
 { MMT_UTILS_$INIT_FOR_ROUTINE - 0x255212, 0x3C bytes; called from
   at_backend.  Frame 8:a. }
 procedure mmt_utils_$init_for_routine(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { MMT_UTILS_$END_ROUTINE - 0x25524E, 0x2 bytes (no A5); called from
   at_backend.  Frame 8:a. }
@@ -1648,7 +1677,7 @@ procedure ra_utils_$begin_compilation; extern;
 { RA_UTILS_$INIT_FOR_ROUTINE - 0x26DF48, 0x2 bytes (no A5); called from
   at_backend.  Frame 8:a. }
 procedure ra_utils_$init_for_routine(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { RA_UTILS_$END_ROUTINE - 0x26DF4A, 0x2 bytes (no A5); called from
   at_backend.  Frame 8:a. }
@@ -1662,8 +1691,8 @@ procedure ra_utils_$end_compilation; extern;
 { RA_UTILS_$SPILL_PASS_THROUGH_LRS - 0x26F488, 0x266 bytes; called from
   xtp.  Frame 8:al; 12:l.  Result: D0 (callers: D0b1). }
 function ra_utils_$spill_pass_through_lrs(
-    p1: univ_ptr;
-    p2: integer32): boolean; options(val_param); extern;
+    rtn: rtn_ptr_t;
+    level: integer32): boolean; options(val_param); extern;
 
 { sanity.pas (cc.a88k). }
 
@@ -1675,7 +1704,7 @@ procedure lir_utils_$repair_lts_properties(
 { LIR_UTILS_$SANITY_CHECK - 0x273C6A, 0x24 bytes; called from com dfa fga
   hal iv life mmt oli sched trans xtp.  Frame 8:al. }
 procedure lir_utils_$sanity_check(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { sched.pas (cc.a88k). }
 
@@ -1702,7 +1731,7 @@ procedure sched_utils_$begin_compilation; extern;
 { SCHED_UTILS_$INIT_FOR_ROUTINE - 0x2791B4, 0x2 bytes (no A5); called from
   at_backend.  Frame 8:a. }
 procedure sched_utils_$init_for_routine(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { SCHED_UTILS_$END_ROUTINE - 0x2791B6, 0x2 bytes (no A5); called from
   at_backend.  Frame 8:a. }
@@ -1738,7 +1767,7 @@ procedure sched_utils_$calculate_precedence(
 { SCHED_UTILS_$INSERT_SNUGGLE_MOVES - 0x27A398, 0x7E bytes; called from
   com xtp.  Frame 8:al. }
 procedure sched_utils_$insert_snuggle_moves(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { sem_utils.pas (cc.a88k). }
 
@@ -1749,7 +1778,7 @@ procedure sem_utils_$begin_compilation; extern;
 { SEM_UTILS_$INIT_FOR_ROUTINE - 0x27A41A, 0x2 bytes (no A5); called from
   at_backend.  Frame 8:a. }
 procedure sem_utils_$init_for_routine(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { SEM_UTILS_$END_ROUTINE - 0x27A41C, 0x2 bytes (no A5); called from
   at_backend.  Frame 8:a. }
@@ -1760,10 +1789,11 @@ procedure sem_utils_$end_routine(
   at_backend. }
 procedure sem_utils_$end_compilation; extern;
 
-{ SEM_UTILS_$NUMBER_OF_RELEVANT_LOW_ORDER_BITS - 0x27A47E, 0x1B8 bytes;
-  called from com konst.  Frame 8:a.  Result: D0 (callers: D0l2). }
+{ SEM_UTILS_$NUMBER_OF_RELEVANT_LOW_ORDER_BITS - how many low-order bits of
+  input operand o its instruction reads.  0x27A47E, 0x1B8 bytes; called
+  from com, konst; D0. }
 function sem_utils_$number_of_relevant_low_order_bits(
-    p1: univ_ptr): integer32; options(val_param); extern;
+    o: opnd_ptr_t): integer32; options(val_param); extern;
 
 { sym.pas (cc.a88k). }
 
@@ -1844,7 +1874,7 @@ procedure tm_utils_$begin_compilation; extern;
 { TM_UTILS_$INIT_FOR_ROUTINE - 0x27B716, 0x2 bytes (no A5); called from
   at_backend.  Frame 8:a. }
 procedure tm_utils_$init_for_routine(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { TM_UTILS_$END_ROUTINE - 0x27B718, 0x2 bytes (no A5); called from
   at_backend.  Frame 8:a. }
@@ -1922,7 +1952,7 @@ procedure tr_utils_$begin_compilation; extern;
 { TR_UTILS_$INIT_FOR_ROUTINE - 0x27C1F0, 0x2 bytes (no A5); called from
   at_backend.  Frame 8:a. }
 procedure tr_utils_$init_for_routine(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { TR_UTILS_$END_ROUTINE - 0x27C1F2, 0x1C bytes; called from at_backend.
   Frame 8:a. }

@@ -31,7 +31,7 @@ function utils_ins_$operands_instruction(
     o: opnd_ptr_t): instr_ptr_t; options(val_param); internal;
 begin
   utils_ins_$operands_instruction :=
-    instr_ptr_t(ord(o) - 32 - o^.num * 12);
+    instr_ptr_t(integer32(o) - 32 - o^.h.num * 12);
 end;
 
 { utils.pas (cc.a88k). }
