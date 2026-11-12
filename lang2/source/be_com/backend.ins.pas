@@ -1804,13 +1804,13 @@ procedure fg_utils_$drop_old_join_birthpoints(
 { FG_UTILS_$RECOMPUTE_POSTNUM - 0x23743A, 0x48 bytes; called from oli.
   Frame 8:al. }
 procedure fg_utils_$recompute_postnum(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { FG_UTILS_$RECOMPUTE_DOMINATORS_AND_DFS_LISTS - 0x237482, 0x92 bytes;
   called from hal konst oli xtp.  Frame 8:al; 12:w; 14:l. }
 procedure fg_utils_$recompute_dominators_and_dfs_lists(
     rtn: rtn_ptr_t;
-    p2: integer;
+    how: integer;
     level: integer32); options(val_param); extern;
 
 { FG_UTILS_$COMPUTE_LR_LIFETIME - 0x237660, 0xBC bytes; called from

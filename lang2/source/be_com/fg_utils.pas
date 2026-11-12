@@ -18,13 +18,10 @@
     birthpoint instructions', +24 their inputs', +48 the dominator
     buckets'), then the cells the routines below use.
 
-  TODO(pascal) fg_utils: 41 of 53 routines (with the insert's
+  TODO(pascal) fg_utils: 47 of 53 routines (with the insert's
   utils_ins_$operands_instruction; the first ones in address order,
-  through fg_utils_$dominators, 0x236C4A); not translated yet:
-  drop_jbis_on_exposed_list,
-  drop_unconsumed_exposed_segments, drop_unconsumed_final_segments,
-  fg_utils_$drop_old_join_birthpoints, fg_utils_$recompute_postnum,
-  fg_utils_$recompute_dominators_and_dfs_lists, mark_live_on_entry_blocks,
+  through fg_utils_$recompute_dominators_and_dfs_lists, 0x237482); not
+  translated yet: mark_live_on_entry_blocks,
   mark_active_on_exit_blocks, init_and_compute_exposure,
   fg_utils_$compute_lr_lifetime, compute_reach_of_definition,
   fg_utils_$recompute_ssa_form_for_lr (they stay extern through
@@ -2167,4 +2164,235 @@ begin
       lr := lr^.next;
     end;
   end;
+end;
+
+{ drop_jbis_on_exposed_list - on the exposed list from list (of the
+  block bb, or of its live range when bb is nil), each segment read
+  only by a JOIN_BP gives its place to the join's definition (operand 2's
+  segment: exposed, its first reference dropped, write and modify
+  cleared), and the JOIN_BP is excised.
+
+  0x23715A, 0xA8 bytes, no A5: list (8) in A2, bb (12) in D2; the
+  previous segment D3, the join D4. }
+
+procedure drop_jbis_on_exposed_list(
+    list: lts_ptr_t;
+    bb: bb_ptr_t); options(val_param, internal);
+var
+  prev: lts_ptr_t;
+  x: lts_ptr_t;
+  f: lts_ptr_t;
+  j: instr_ptr_t;
+begin
+  prev := nil;
+  x := list;
+  while x <> nil do begin
+    if x^.refs <> nil then
+      if x^.refs^.link = nil then begin
+        j := utils_ins_$operands_instruction(x^.refs);
+        if j^.opc = ord(opc$join_bp) then begin
+          x^.f2.exposed := false;
+          x^.refs := nil;
+          f := j^.opnds[2].lts;
+          f^.f2.exposed := true;
+          f^.refs := f^.refs^.link;
+          f^.rrp := f^.rrp - [rrp$modify, rrp$write];
+          f^.next_exposed := x^.next_exposed;
+          x^.next_exposed := nil;
+          if prev <> nil then
+            prev^.next_exposed := f
+          else if bb <> nil then
+            bb^.exposed := f
+          else
+            x^.lr^.exposed := f;
+          x := f;
+          lir_utils_$excise_inst(j);
+        end;
+      end;
+    prev := x;
+    x := x^.next_exposed;
+  end;
+end;
+
+{ drop_unconsumed_exposed_segments - the segments on the exposed list
+  from list (bb's, or the live range's when bb is nil) that nothing
+  references taken off it.
+
+  0x237204, 0x60 bytes, no A5: list (8) in A0, bb (12) in A2. }
+
+procedure drop_unconsumed_exposed_segments(
+    list: lts_ptr_t;
+    bb: bb_ptr_t); options(val_param, internal);
+var
+  prev: lts_ptr_t;
+  n: lts_ptr_t;
+begin
+  prev := nil;
+  while list <> nil do begin
+    n := list^.next_exposed;
+    if list^.refs = nil then begin
+      list^.f2.exposed := false;
+      if prev <> nil then
+        prev^.next_exposed := n
+      else if bb <> nil then
+        bb^.exposed := n
+      else
+        list^.lr^.exposed := n;
+      list^.next_exposed := nil;
+    end
+    else
+      prev := list;
+    list := n;
+  end;
+end;
+
+{ drop_unconsumed_final_segments - the same for a final list.
+
+  0x237264, 0x60 bytes, no A5. }
+
+procedure drop_unconsumed_final_segments(
+    list: lts_ptr_t;
+    bb: bb_ptr_t); options(val_param, internal);
+var
+  prev: lts_ptr_t;
+  n: lts_ptr_t;
+begin
+  prev := nil;
+  while list <> nil do begin
+    n := list^.next_final;
+    if list^.refs = nil then begin
+      list^.f2.final := false;
+      if prev <> nil then
+        prev^.next_final := n
+      else if bb <> nil then
+        bb^.finals := n
+      else
+        list^.lr^.finals := n;
+      list^.next_final := nil;
+    end
+    else
+      prev := list;
+    list := n;
+  end;
+end;
+
+{ fg_utils_$drop_old_join_birthpoints - when the SSA form is up
+  (lir_main_c8e): the JOIN_BPs dropped and the unreferenced exposed
+  and final segments taken off their lists (by live range or by block,
+  lir_main_c86), each live range's unreferenced segments freed
+  (bug_check when one is still exposed or final), the others' l28 and
+  l44 cleared; the two join heaps emptied; lir_main_c8e cleared.
+
+  0x2372C4, 0x124 bytes: rtn (8) in A2. }
+
+procedure fg_utils_$drop_old_join_birthpoints(
+    rtn: rtn_ptr_t);
+var
+  lr: lr_ptr_t;
+  b: bb_ptr_t;
+  prev: lts_ptr_t;
+  s: lts_ptr_t;
+  n: lts_ptr_t;
+begin
+  if lir_main_c8e then begin
+    if lir_main_c86 = 1 then begin
+      lr := rtn^.lrs;
+      while lr <> nil do begin
+        drop_jbis_on_exposed_list(lr^.exposed, nil);
+        drop_unconsumed_exposed_segments(lr^.exposed, nil);
+        drop_unconsumed_final_segments(lr^.finals, nil);
+        lr := lr^.next;
+      end;
+    end
+    else begin
+      b := rtn^.bbs72;
+      while b <> nil do begin
+        drop_jbis_on_exposed_list(b^.exposed, b);
+        drop_unconsumed_exposed_segments(b^.exposed, b);
+        drop_unconsumed_final_segments(b^.finals, b);
+        b := b^.next114;
+      end;
+    end;
+    lr := rtn^.lrs;
+    while lr <> nil do begin
+      prev := nil;
+      s := lr^.ltss;
+      while s <> nil do begin
+        n := s^.next;
+        if s^.refs <> nil then begin
+          s^.l28 := nil;
+          s^.l44 := nil;
+          prev := s;
+        end
+        else begin
+          if s^.f2.exposed or s^.f2.final then
+            bug_check('FG_UTILS_$DROP_OLD_BIRTHPOINTS: exposed/final segments should have been dropped%$');
+          if prev = nil then
+            lr^.ltss := s^.next
+          else
+            prev^.next := s^.next;
+          lir_$free_lifetime_segment(s);
+        end;
+        s := n;
+      end;
+      lr := lr^.next;
+    end;
+    mrh_$release_all(jbi_input_heap);
+    mrh_$release_all(jbi_heap);
+    lir_main_c8e := false;
+  end;
+end;
+
+{ fg_utils_$recompute_postnum - the blocks numbered again: order in
+  postorder (bbs72, next114), w8 in code order (bbs, next), from 1.
+
+  0x23743A, 0x48 bytes. }
+
+procedure fg_utils_$recompute_postnum(
+    rtn: rtn_ptr_t);
+var
+  n: integer32;
+  b: bb_ptr_t;
+begin
+  n := 1;
+  b := rtn^.bbs72;
+  while b <> nil do begin
+    b^.order := n & 16#FFFF;
+    n := n + 1;
+    b := b^.next114;
+  end;
+  n := 1;
+  b := rtn^.bbs;
+  while b <> nil do begin
+    b^.w8 := n;
+    n := n + 1;
+    b := b^.next;
+  end;
+end;
+
+{ fg_utils_$recompute_dominators_and_dfs_lists - the depth-first lists
+  made again (the switches' sw3 passed on), the join birthpoints
+  dropped, the global data flow walked, then (with the live ranges'
+  hints valid, lir_main_c8d set for the while) the intervals when how
+  has bit 0 and the dominators, the SSA form when how has bit 1.
+
+  0x237482, 0x92 bytes: rtn (8) in A2, how (12) a word in D3, level
+  (14); `addq.l #2,SP' after drop_old_join_birthpoints (pattern 221). }
+
+procedure fg_utils_$recompute_dominators_and_dfs_lists(
+    rtn: rtn_ptr_t;
+    how: integer;
+    level: integer32);
+var
+  save: boolean;
+begin
+  fg_utils_$compute_dfs_lists(rtn, level, at_backend_switches.sw3);
+  fg_utils_$drop_old_join_birthpoints(rtn);
+  df_utils_$global_walk(rtn, rtn^.l192, lir_main_c86, level);
+  save := lir_main_c8d;
+  lir_main_c8d := true;
+  if (how & 1) <> 0 then
+    fg_utils_$intervals(rtn);
+  fg_utils_$dominators(rtn, (how & 2) <> 0, level);
+  lir_main_c8d := save;
 end;
