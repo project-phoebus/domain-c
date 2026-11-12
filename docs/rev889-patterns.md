@@ -1205,3 +1205,27 @@ cc.m68k unless marked.
     token pass build_non_register_reference's number and properties (1
     and 16, 2 and 8) as one longword: pattern 105 for an internal
     callee.
+
+## The generated ISC (translator GA, cc.a88k)
+
+162. **A routine longer than 32 KB reaches far code through thunks in
+    its module's data.**  isc_print_il_node (isc_debug, 0x0BD1DC,
+    0x168C0 bytes) has 54 `jmp (-n,A5)' (n = 12, 20, 28, ..., 420: one
+    per far target, the one at -20 used 90 times, -380 96 times, -244
+    28 times); each 8-byte cell holds `jmp abs.l <target>' and a pad
+    word, initialized by .rwdi (isc_debug's data below A5 0x44E9A8:
+    A5-12 = `jmp 0x0D3A80', A5-20 = `jmp 0x0D3366').  The targets are
+    tails shared by many paths (cross-jumping): the first, at 0x0BD20E,
+    pushes a write's arguments and jumps to `jsr pas_$write; writeln;
+    return' at 0x0D3A80, 92 KB away.  dpc has no such form (a gap when
+    isc_debug is translated).
+163. **An empty procedure is a bare `rts'.**  45 of the ISC's pass-2
+    actions (exported routines, called through isc_pass_2_main's table)
+    are the two bytes 4E75 with no link, no A5 load and no unlk, though
+    every non-empty action of the same modules loads A5 even when it
+    does not use it (rule 2's at 0x1AA44C).  docs/iscg-design.md 1.1.
+164. **Two boolean fields set by one `or.w'.**  Rule 397's pass-1 action
+    (0x14B59C) sets bit_7_was_sign_extended and bit_15_was_sign_extended
+    (+81 bits 5 and 4) with `moveq #48,D0; or.w D0,(80,A2)': the word at
+    +80 covers the byte at +81.  Whether two assignments were merged by
+    the compiler or the generator wrote one statement is not known.
