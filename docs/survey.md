@@ -69,8 +69,9 @@ the rest of that tool chain from `$SOURCE_TOOLS`, default
   reads `/sys/ins/base.ins.pas` it is the last of the customer inserts
   (`c_expr_sem.pas`: fpp, error, pfm, base), and std.pas's DIAG_ insert
   is read without base (diag.pas: diag.ins, std.ins, base, vfmt once
-  reversed); then a timestamp record (0x03, count.l, (time.l, name offset.l)
-  pairs).  v2 (`c_data.asm`): the path then the module name, and the record
+  reversed); then a timestamp record (`03 00', count.w, then count x
+  (time.l, name offset.l from the record's start); source repository's
+  coff_compare, 4ea26bed).  v2 (`c_data.asm`): the path then the module name, and the record
   comes after the block records.
 
 ## Open items
