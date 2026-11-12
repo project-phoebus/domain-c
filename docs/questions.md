@@ -1319,3 +1319,13 @@ revisited.
    ".PC" (classic "PC"); taken from the image as they are, though
    ".n" for a register looks odd (the PRISM assembler's syntax is not
    known here).
+159. Translator PB, bin.pas: bin opens bug_check.ins.pas after
+   coff_dst.ins.pas (its .blocks list), but backend.ins.pas, opened
+   earlier, declares instr_bug_check and the phase_ routines with
+   bug_check.ins.pas's types (bug_check_$string_t, bug_check_$arg_t), so
+   dpc cannot compile the unit in that order; bin.pas opens bug_check
+   before at_base.ins.pas.  Apollo's backend.ins.pas must have declared
+   those headings without bug_check's types (or bin did not see them):
+   should backend.ins.pas's three headings use types of their own
+   (univ base types) so that the include order can be the image's?
+

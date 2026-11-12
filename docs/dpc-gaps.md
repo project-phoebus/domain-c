@@ -305,6 +305,13 @@ when this tree is merged).
        begin
          if b^[i] then n := 1;
        end;
+   Also bin.pas (translator PB, cc.a88k): a routine's statement bits
+   (`packed array [0..65535] of boolean' through a pointer) in
+   map_statement_to_src_loc_and_offset (0x223396: `btst' of 7 less
+   stmt mod 8 in the byte stmt div 8) and, with the constant index 0,
+   put_procedure_start (0x223C1C: `tst.b (A0); bpl'): dpc "an element
+   of a packed array of booleans with a constant index (no site in the
+   image, codegen-patterns 5.2) is not supported yet" for the second.
 
 14. **A non-local `goto`.**  c_lex_pp.pas: get_character (cc.m68k
    0x054DBA), get_comment (0x054DFA) and get_identifier (0x055336),
@@ -459,6 +466,9 @@ when this tree is merged).
          n := ord(b);
          n := ord(r.b);
        end;
+   Also bin.pas (translator PB, cc.a88k): add_unwind_rec's and
+   bin_$emit_compilation_pure_text's traces print booleans as 0 or 1
+   (`lsr.b #7' of the byte, 0x223874, 0x22455C).
 
 23. **`in` on a one-word constant set with a byte element.**  The
    alias descriptor's class, a byte of a packed record (0..255):

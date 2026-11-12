@@ -706,14 +706,16 @@ procedure bin_$begin_compilation; extern;
 { BIN_$END_COMPILATION - 0x222BD8, 0x2 bytes (no A5). }
 procedure bin_$end_compilation; extern;
 
-{ BIN_$UNWIND_BITS - 0x223728, 0x5E bytes; called from lst.  Frame 8:a;
-  12:a; 16:a; 20:al; 24:al. }
+{ BIN_$UNWIND_BITS - a routine's unwind facts (the return register,
+  whether its frame is pushed, its frame register above 23, an ECB).
+  0x223728, 0x5E bytes; called from lst.  Frame 8:a; 12:a; 16:a; 20:al;
+  24:al (the results by address; narrowed by translator PB). }
 procedure bin_$unwind_bits(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr;
-    p4: univ_ptr;
-    p5: univ_ptr); options(val_param); extern;
+    info: univ_ptr;
+    out frame_reg: integer32;
+    out pushed: boolean;
+    out big_reg: boolean;
+    out ecb: boolean); extern;
 
 { bv.pas (cc.a88k). }
 

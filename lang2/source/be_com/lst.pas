@@ -771,7 +771,7 @@ var
   pe: pe_info_ptr_t;
   rtn: pe_node_ptr_t;
   ecb: boolean;
-  unused_20: integer;
+  big_reg: boolean;
   stack: boolean;
   i: integer32;
   k: integer32;
@@ -782,8 +782,7 @@ begin
     vfmt_$ws(lst_140, '%/%$')
   else
     vfmt_$ws(lst_140, '%/%/%$');
-  bin_$unwind_bits(pe, addr(frame_size), addr(stack), addr(unused_20),
-                   addr(ecb));
+  bin_$unwind_bits(pe, frame_size, stack, big_reg, ecb);
   if 16 in cargs_$options.flags_286 then begin
     line.length := 0;
     if (rtn^.f294.level <= 0) or rtn^.f376.exported then begin

@@ -81,3 +81,42 @@ image.  Translator PB, 2026-11-11; extended unit by unit.
   6; ", ..." in -PRASM, " R" classic): long immediates and the like.
 - The classic listing shows, for each instruction, a cycle column (the
   cell's +2 bits 3..0), the location and the 32-bit instruction word.
+
+## The binary (bin.pas)
+
+- Every instruction is one 32-bit word, already in the code cell (+12)
+  when bin runs: bin does not encode; it writes the words in order
+  (longword-aligned, a bug check otherwise) and pads each section to 8
+  bytes.  The encoding templates are instruction_assembly's +0/+4
+  (asm.pas fills the operands in).
+- Displacements known only at output time are added into the word's
+  low bits: 18 bits for the branch-like classes (branch, call,
+  fp_branch, jump, immediate, seq, trap, svc, return: the class mask
+  0x1104366), 16 bits for the others (bin_$emit_compilation_pure_text
+  0x2248CA).  Operand forms that require alignment (0_mod_2, 0_mod_4,
+  0_mod_8, 0_mod_16 `s_immed16`) are checked against the section
+  operand_forms_mask (0x2B6DA0: 1, 3, 7, 15).
+  - A literal pool reference is a byte displacement from the
+    instruction's own address, signed 16 bits.
+  - A call to a routine is a word displacement (bytes / 4) from the
+    instruction, signed 18 bits (+-131071 words, "illegal 20 bit
+    displacement", i.e. +-512 KB); across sections the target
+    section's offset is added.
+  - Argument block and stack frame references are the symbol's
+    displacement plus the operand's value, signed 16 bits.
+- Floating instructions of the classes fp_double, immediate and
+  fp_single take two words: a cell that continues (+2 bit 6) is
+  written with a NOP word in front (asm's NOP word with bit 31
+  flipped), any other continued cell with an FNOP word after it; such
+  instructions count 8 bytes in the line table.  An fp_control
+  instruction is followed by a second word, its own with the high bits
+  replaced: (word & 0xFFF) | 0xE40000.
+- Exception stubs (the trap class): after the section's code, either
+  two words and a literal (LOADL R4 from the pool at PC+8, the literal
+  0x00120004, then SVC: asm's SVC word less bits 9..8, plus 0x380) or,
+  with -NEW_UNWIND, one SVC2 word (plus 0x2C0 and the trap number); the
+  trap instruction itself is patched with the word displacement to its
+  stub.
+- The return address register is register 22 (bin_$unwind_bits); a
+  frame register above 23 is noted in the unwind scope; a pushed frame
+  of at most 128 bytes uses an ECB.
