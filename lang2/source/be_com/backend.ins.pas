@@ -716,7 +716,12 @@ type
                                           mmt_utils) }
     lr_map: lr_map_ptr_t;               { +60: the live ranges by
                                           complex id (bv) }
-    space64: array [64..71] of char;    { +64 }
+    dfs_first: bb_ptr_t;                { +64: the blocks in depth-first
+                                          preorder, the first (chained at
+                                          their l98, back at l102; w8 the
+                                          number; fg_utils; batch A, PA5:
+                                          was space64) }
+    dfs_last: bb_ptr_t;                 { +68: the last of them }
     bbs72: bb_ptr_t;                    { +72: the blocks in the order
                                           bv's backward propagation
                                           walks (chained at +114) }
