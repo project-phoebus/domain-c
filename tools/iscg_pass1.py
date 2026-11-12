@@ -82,6 +82,31 @@ TRACE_354 = 0x481154
 TRACE_356 = 0x481156
 REWRITE_TRACE = ['*********************', 'R E W R I T E ! ! ! !', '*********************']
 
+# absolute cells the operator routines read: address -> (size, the rule
+# file's name); and the node pointers they load (address -> the root's name,
+# used like il: il_180.p188)
+GLOBAL_CELLS = {0x44E76A: (1, 'target_properties.p_be'),
+                0x44E760: (4, 'target_properties.l180')}
+GLOBAL_NODES = {0x2E9E60: 'il_180'}
+# their Pascal
+GLOBAL_PASCAL = {'target_properties.p_be': 'target_properties.p_be',
+                 'target_properties.l180': 'p1_target_view_ptr_t(addr(target_properties))^.l180'}
+
+# functions whose boolean result the operator routines test
+BOOL_FUNCS = {'lir_$use_trap_for_exception_raise', 'return_value_needs_assign_node',
+              'il_node_has_integer_value', 'is_power_of_2', 'invertible_in_sp',
+              'invertible_in_dp', 'il_node_is_literal'}
+
+# functions whose result is an inherited attribute's value
+EXPR_FUNCS = {'isc_$get_label', 'precision_from_il_node', 'arithmetic_from_il_node',
+              'il_kind_function', 'il_node_to_integer_value'}
+# those returning an enumeration (stored as its ordinal)
+ORD_FUNCS = {'arithmetic_from_il_node'}
+
+# condition codes: the relation a branch (or scc) takes, its negation
+CC_REL = {'eq': '=', 'ne': '<>', 'gt': '>', 'ge': '>=', 'lt': '<', 'le': '<='}
+REL_NOT = {'=': '<>', '<>': '=', '>': '<=', '>=': '<', '<': '>=', '<=': '>'}
+
 
 class NotLifted(Exception):
     pass
@@ -199,6 +224,8 @@ class Lifter:
         m = re.match(r'0x([0-9a-f]+)$', src)
         if m:
             a = int(m.group(1), 16)
+            if a in GLOBAL_CELLS and GLOBAL_CELLS[a][0] == size:
+                return GLOBAL_CELLS[a][1]
             if size == 1 and READONLY + 321 <= a < READONLY + 321 + 52 and (a - READONLY - 321) % 2 == 0:
                 return 'rlen_arith(%d)' % ((a - READONLY - 321) // 2)
             raise NotLifted('absolute operand %s' % src)
@@ -225,6 +252,10 @@ class Lifter:
             if n is None:
                 raise NotLifted('inh +%d size %d' % (off, size))
             return 'inh.' + n
+        if base == ('param', 34) and size == 4 and off % 4 == 0:
+            return 'children[%d]' % (off // 4 + 1)
+        if base and base[0] == 'gnode':     # a global node pointer's field
+            return '%s.%s%d' % (base[1], {4: 'l', 2: 'w', 1: 'b'}[size], off)
         if base and base[0] == 'field':     # a node's field's field
             return '%s.%s%d' % (re.sub(r'\.l(\d+)$', r'.p\1', self.render(base)),
                                 {4: 'l', 2: 'w', 1: 'b'}[size], off)
@@ -239,6 +270,8 @@ class Lifter:
             return v[1]
         if v[0] == 'newinh':
             return 'inh_%d' % v[1]
+        if v[0] == 'gnode':
+            return v[1]
         if v[0] == 'callres':
             self.low_ref[v[1]][2] = True
             return 'n%d' % v[1]
@@ -318,6 +351,16 @@ class Lifter:
             m = re.match(r'moveal #(\d+),%(a\d)$', t)
             if m:
                 regs[m.group(2)] = ('abs', int(m.group(1)))
+                k += 1
+                continue
+            m = re.match(r'movea?l 0x([0-9a-f]+),%([ad]\d)$', t)
+            if m and int(m.group(1), 16) in GLOBAL_NODES:
+                regs[m.group(2)] = ('gnode', GLOBAL_NODES[int(m.group(1), 16)])
+                k += 1
+                continue
+            m = re.match(r'clrl %(d\d)$', t)
+            if m:
+                regs[m.group(1)] = ('const', 0)
                 k += 1
                 continue
             m = re.match(r'movel #(-?\d+),%fp@\((-\d+)\)$', t)
@@ -419,6 +462,14 @@ class Lifter:
                 elif name == 'pass_1':
                     regs['a0'] = ('expr', 'pass_1(%s)' % ', '.join(args))
                     low.append(('pass_1', args))
+                elif name == 'solution_list$new' and not args:
+                    regs['a0'] = ('expr', 'newlist')
+                    low.append(('newlist',))
+                elif name == 'new_solution':
+                    regs['a0'] = ('expr', 'newsol')
+                    low.append(('newsol', args))
+                elif name == 'solution_list$append':
+                    low.append(('append', args))
                 elif name == 'solution_list$empty':
                     # the empty test of the list just stored
                     if ins[k + 2][1] != 'tstb %d0' or not re.match(r'b(mi|pl)[sw]? ', ins[k + 3][1]):
@@ -427,8 +478,12 @@ class Lifter:
                     k += 4
                     continue
                 elif name in ('isc_$precision_from_rlen_and_size', 'not_permissible_function',
-                              'il_node_has_integer_value'):
+                              'il_node_has_integer_value') or name in BOOL_FUNCS:
                     regs['d0'] = ('expr', '%s(%s)' % (name, ', '.join(args)))
+                elif name in EXPR_FUNCS:
+                    # their parameters are pointers
+                    args = [re.sub(r'\.l(\d+)$', r'.p\1', x) for x in args]
+                    regs['d0'] = regs['a0'] = ('expr', '%s(%s)' % (name, ', '.join(args)))
                 else:
                     low.append(['call', '%s(%s)' % (name, ', '.join(args)), False, len(low)])
                     regs['d0'] = regs['a0'] = ('callres', len(low) - 1)
@@ -450,6 +505,27 @@ class Lifter:
                     k += 3
                     continue
                 self.fail(k, 'a condition')
+            # booleans and-ed through a local: andb L,D0 (then moveb D0,L, or
+            # the branch on the result)
+            m = re.match(r'andb %fp@\((-\d+)\),%d0$', t)
+            if m and int(m.group(1)) in self.locals and \
+                    regs.get('d0', ('',))[0] in ('expr', 'field'):
+                v = '%s and %s' % (self.render(self.locals[int(m.group(1))]),
+                                   self.render(regs['d0']))
+                mb = re.match(r'b(pl|mi)[sw]? 0x([0-9a-f]+)$', ins[k + 1][1])
+                if mb:
+                    tgt = int(mb.group(2), 16)
+                    c = ('bool', v, mb.group(1) == 'pl')
+                    if low and low[-1][0] == 'if' and len(low[-1]) > 3 and low[-1][2] == tgt:
+                        c = cond_and(low[-1][3], c)
+                        low.pop()
+                    low.append(('if', None, tgt, c, ins[k + 2][0]))
+                    saved.setdefault(tgt, dict(regs))
+                    k += 2
+                    continue
+                regs['d0'] = ('expr', v)
+                k += 1
+                continue
             m = re.match(r'bra[sw]? 0x([0-9a-f]+)$', t)
             if m:
                 low.append(('bra', int(m.group(1), 16), ins[k][0]))
@@ -492,12 +568,73 @@ class Lifter:
                     low.append(('store', dst, src) if dst[0] == 'inh' else ('nstore', dst[1], src))
                     k += 8
                     continue
+            # a statement's index (the 16 bits at bit 8 of +42) copied to a
+            # rewritten node: movel X@(42),D; clrl D2; andil #16#FFFF00,D;
+            # orl D,D2; andil #-16776961,Y@(42); orl D2,Y@(42)
+            m = re.match(r'andil #16776960,%(d\d)$', t)
+            if m and regs.get(m.group(1), ('',))[0] == 'field' and \
+                    regs[m.group(1)][1].endswith('.l42') and k + 3 < len(ins):
+                mo = re.match(r'orl %%%s,%%(d\d)$' % m.group(1), ins[k + 1][1])
+                ma = re.match(r'andil #-16776961,%(a\d)@\(42\)$', ins[k + 2][1])
+                if mo and ma and ins[k + 3][1] == 'orl %%%s,%%%s@(42)' % (mo.group(1),
+                                                                         ma.group(1)) and \
+                        regs.get(ma.group(1), ('',))[0] == 'callres':
+                    low.append(('nstore', '%s.index' % self.render(regs[ma.group(1)]),
+                                '%s.index' % regs[m.group(1)][1][:-4]))
+                    k += 4
+                    continue
+            # bit 7 of a byte loaded: moveb X,D; andib #-128,D; orb D,D2;
+            # andib #127,Y; orb D2,Y
+            m = re.match(r'andib #-128,%(d\d)$', t)
+            if m and regs.get(m.group(1), ('',))[0] == 'field' and k + 3 < len(ins) and \
+                    re.match(r'orb %%%s,%%d\d$' % m.group(1), ins[k + 1][1]) and \
+                    re.match(r'andib #127,', ins[k + 2][1]) and ins[k + 3][1].startswith('orb %d'):
+                src = '%s.7' % regs[m.group(1)][1]
+                dst = self.bit_target(ins[k + 2][1].split(',', 1)[1], 7)
+                low.append(('store', dst, src) if dst[0] == 'inh' else ('nstore', dst[1], src))
+                k += 4
+                continue
+            m = re.match(r'or([wb]) %(d\d),%(a\d)@\((\d+)\)$', t)
+            if m and regs.get(m.group(2), ('',))[0] == 'const' and \
+                    regs.get(m.group(3), ('',))[0] == 'newinh' and \
+                    (m.group(1), int(m.group(4))) in (('w', 38), ('b', 39)):
+                v = regs[m.group(2)][1]
+                if not 0 < v < 256:
+                    self.fail(k, 'bits set')
+                for b in range(7, -1, -1):
+                    if v >> b & 1:
+                        n = INH_BY_OFF.get((39, 'b%d' % b))
+                        if n is None:
+                            self.fail(k, 'bits set')
+                        low.append(('store', ('inh', regs[m.group(3)][1], n), 'true'))
+                k += 1
+                continue
             m = re.match(r'b(set|clr) #(\d),(.*)$', t)
             if m:
                 dst = self.bit_target(m.group(3), int(m.group(2)))
-                low.append(('store', dst, 'true' if m.group(1) == 'set' else 'false'))
+                v = 'true' if m.group(1) == 'set' else 'false'
+                low.append(('store', dst, v) if dst[0] == 'inh' else ('nstore', dst[1], v))
                 k += 1
                 continue
+            # two longwords of the node copied to a rewritten node: lea X@(o),A;
+            # movel A@+,Y@(p); movel A@,Y@(p+4)
+            m = re.match(r'lea %(a\d)@\((\d+)\),%(a\d)$', t)
+            if m and regs.get(m.group(1), ('',))[0] in ('param', 'field') and \
+                    regs.get(m.group(1)) != ('param', 12) and k + 2 < len(ins):
+                a = m.group(3)
+                m1 = re.match(r'movel %%%s@\+,%%(a\d)@\((\d+)\)$' % a, ins[k + 1][1])
+                m2 = re.match(r'movel %%%s@,%%(a\d)@\((\d+)\)$' % a, ins[k + 2][1])
+                if m1 and m2 and m1.group(1) == m2.group(1) and \
+                        int(m2.group(2)) == int(m1.group(2)) + 4 and \
+                        regs.get(m1.group(1), ('',))[0] == 'callres':
+                    dst = self.render(regs[m1.group(1)])
+                    off = int(m.group(2))
+                    for j in (0, 4):
+                        src = self.field(regs[m.group(1)], off + j, 4)
+                        low.append(('nstore', '%s.p%d' % (dst, int(m1.group(2)) + j),
+                                    re.sub(r'\.l(\d+)$', r'.p\1', src)))
+                    k += 3
+                    continue
             # the whole record copied: moveq #4,R; movel a@+,b@+ (2); dbf
             m = re.match(r'movel %(a\d)@\+,%(a\d)@\+$', t)
             if m and ins[k - 1][1].startswith('moveq #4,') and ins[k + 1][1] == t and \
@@ -523,6 +660,23 @@ class Lifter:
                     low.append(('store', ('inh', dst[1], n), 'inh.' + n))
                 k += 3
                 continue
+            # rlen_bits: (moveal #READONLY,A); movew X,D; lslw #2,D;
+            # lea A@(0,D:w),A; movel A@(372),Y@(off)
+            m = re.match(r'lslw #2,%(d\d)$', t)
+            if m and regs.get(m.group(1), ('',))[0] == 'field' and k + 2 < len(ins):
+                d = m.group(1)
+                m3 = re.match(r'lea %(a\d)@\(0x0,%' + d + r':w\),%(a\d)$', ins[k + 1][1])
+                m4 = re.match(r'movel %(a\d)@\(372\),%(a\d)@\((\d+)\)$', ins[k + 2][1])
+                if m3 and m4 and regs.get(m3.group(1)) == ('abs', READONLY) and \
+                        m4.group(1) == m3.group(2) and \
+                        regs.get(m4.group(2), ('',))[0] == 'newinh':
+                    n = INH_BY_OFF.get((int(m4.group(3)), 4))
+                    if n is None:
+                        self.fail(k, 'rlen_bits target')
+                    low.append(('store', ('inh', regs[m4.group(2)][1], n),
+                                'rlen_bits(%s)' % regs[d][1]))
+                    k += 3
+                    continue
             # rlen_arith: (moveal #READONLY,A); movew X,D; addw D,D;
             # lea A@(0,D:w),A; moveb A@(321),Y@(38)
             m = re.match(r'addw %(d\d),%(d\d)$', t)
@@ -558,6 +712,8 @@ class Lifter:
                     fld = {4: 'p' if src.startswith('%a') or '@' in src else 'l',
                            2: 'w', 1: 'b'}[size]
                     v = self.val(src, size)
+                    if re.match(r'n\d+$', v):
+                        fld = 'p'
                     if fld == 'p':
                         v = re.sub(r'^il\.l(\d+)$', r'il.p\1', v)
                     low.append(('nstore', '%s.%s%d' % (self.render(base), fld, off), v))
@@ -602,12 +758,111 @@ class Lifter:
                 low.append(('no_solutions', ins[k][0], ins[k + 1][0]))
                 k += 1
                 continue
+            # a rewritten node's field cleared
+            m = re.match(r'clr([lwb]) %(a\d)@(?:\((\d+)\))?$', t)
+            if m and regs.get(m.group(2), ('',))[0] in ('callres', 'newinh'):
+                size = {'l': 4, 'w': 2, 'b': 1}[m.group(1)]
+                base, off = regs[m.group(2)], int(m.group(3) or 0)
+                if base[0] == 'newinh':
+                    n = INH_BY_OFF.get((off, size))
+                    if n is None:
+                        self.fail(k, 'inh field +%d' % off)
+                    low.append(('store', ('inh', base[1], n), '0'))
+                else:
+                    low.append(('nstore', '%s.%s%d' % (self.render(base),
+                                                       {4: 'l', 2: 'w', 1: 'b'}[size], off), '0'))
+                k += 1
+                continue
+            # a test: a condition (a branch) or a boolean (scc, then the bit
+            # inserted as the btst copies above)
+            mt = self.test_insn(t)
+            if mt is not None and k + 1 < len(ins):
+                nxt = ins[k + 1][1]
+                mb = re.match(r'b(eq|ne|gt|ge|lt|le|mi|pl)[sw]? 0x([0-9a-f]+)$', nxt)
+                if mb:
+                    tgt = int(mb.group(2), 16)
+                    taken = self.cond(mt, mb.group(1))
+                    nxt_addr = ins[k + 2][0] if k + 2 < len(ins) else None
+                    if low and low[-1][0] == 'if' and len(low[-1]) > 3 and low[-1][2] == tgt:
+                        # and: both tests leave for the else part
+                        low[-1] = ('if', None, tgt, cond_and(low[-1][3], cond_not(taken)), nxt_addr)
+                    elif low and low[-1][0] == 'if' and len(low[-1]) > 3 and \
+                            low[-1][2] == nxt_addr:
+                        # or: the test before jumps over this one to the then part
+                        c = cond_or(cond_not(low[-1][3]), cond_not(taken))
+                        low[-1] = ('if', None, tgt, c, nxt_addr)
+                        if len(low) > 1 and low[-2][0] == 'if' and len(low[-2]) > 3 and \
+                                low[-2][2] == tgt:
+                            low[-2:] = [('if', None, tgt, cond_and(low[-2][3], c), nxt_addr)]
+                    else:
+                        low.append(('if', None, tgt, cond_not(taken), nxt_addr))
+                    saved.setdefault(tgt, dict(regs))
+                    k += 2
+                    continue
+                ms = re.match(r's(eq|ne|gt|ge|lt|le|mi|pl) %(d\d)$', nxt)
+                if ms and k + 7 < len(ins):
+                    seq = [ins[k + j][1] for j in range(2, 8)]
+                    m4 = re.match(r'lslb #(\d),', seq[2])
+                    m6 = re.match(r'andib #(-?\d+),(.*)$', seq[4])
+                    if seq[0].startswith('clrl %d') and seq[1].startswith('lsrb #7') and m4 \
+                            and m6 and seq[5].startswith('orb %d'):
+                        dst = self.bit_target(m6.group(2), int(m4.group(1)))
+                        src = cond_text(self.cond(mt, ms.group(1)), False)
+                        low.append(('store', dst, src) if dst[0] == 'inh' else
+                                   ('nstore', dst[1], src))
+                        k += 8
+                        continue
             self.fail(k, 'not understood')
         if end is None:
             self.fail(k, 'no epilogue')
+        for j, x in enumerate(low):
+            if x[0] == 'if' and len(x) > 3:
+                low[j] = ('if', cond_text(x[3], True), x[2])
         self.exit_addr = ins[end][0]
         self.low = low
         self.group(low)
+
+    def test_insn(self, t):
+        """A test instruction: ('cmp', left, right) | ('tst', x) | ('bool', x)
+        | None."""
+        m = re.match(r'cmpi([bwl]) #(-?\d+),(.*)$', t)
+        if m:
+            return ('cmp', self.val(m.group(3), {'l': 4, 'w': 2, 'b': 1}[m.group(1)]), m.group(2))
+        m = re.match(r'cmp([bwl]) (.*),%(d\d)$', t)
+        if m and m.group(3) in self.regs:
+            return ('cmp', self.render(self.regs[m.group(3)]),
+                    self.val(m.group(2), {'l': 4, 'w': 2, 'b': 1}[m.group(1)]))
+        m = re.match(r'tstb %d0$', t)
+        if m and self.regs.get('d0', ('',))[0] == 'expr' and \
+                self.regs['d0'][1].split('(')[0] in BOOL_FUNCS:
+            return ('bool', self.regs['d0'][1])
+        m = re.match(r'tst([bwl]) (.*)$', t)
+        if m and m.group(2) != '%d0':
+            size = {'l': 4, 'w': 2, 'b': 1}[m.group(1)]
+            ma = re.match(r'0x([0-9a-f]+)$', m.group(2))
+            if ma and size == 1 and int(ma.group(1), 16) in GLOBAL_CELLS:
+                return ('bool', GLOBAL_CELLS[int(ma.group(1), 16)][1])
+            return ('tst', self.val(m.group(2), size))
+        m = re.match(r'btst #(\d+),(.*)$', t)
+        if m:
+            if re.match(r'%d\d$', m.group(2)):
+                return ('bool', self.bit_operand_reg(m.group(2)[1:], int(m.group(1))))
+            return ('bool', self.bit_operand(m.group(2), int(m.group(1))))
+        return None
+
+    def cond(self, mt, cc):
+        """The condition under which cc holds after the test mt:
+        ('rel', left, relation, right) | ('bool', x, true or false)."""
+        if mt[0] == 'cmp' and cc in CC_REL:
+            return ('rel', mt[1], CC_REL[cc], mt[2])
+        if mt[0] == 'tst':
+            rel = {'mi': '<', 'pl': '>='}.get(cc) or CC_REL[cc]
+            return ('rel', mt[1], rel, '0')
+        if mt[0] == 'bool' and cc in ('mi', 'ne'):
+            return ('bool', mt[1], True)
+        if mt[0] == 'bool' and cc in ('pl', 'eq'):
+            return ('bool', mt[1], False)
+        raise NotLifted('condition %s %s' % (mt, cc))
 
     def bit_operand(self, src, bit):
         m = re.match(r'%(a\d)@\((\d+)\)$', src)
@@ -620,6 +875,8 @@ class Lifter:
                 return 'inh.' + n
         if base == ('param', 8):
             return 'il.b%d.%d' % (off, bit)
+        if base and base[0] in ('field', 'gnode'):
+            return '%s.b%d.%d' % (re.sub(r'\.l(\d+)$', r'.p\1', self.render(base)), off, bit)
         raise NotLifted('bit operand %s' % src)
 
     def bit_operand_reg(self, reg, bit):
@@ -646,24 +903,37 @@ class Lifter:
         if/else: a rewrite under a condition, the operator's children
         otherwise)."""
         ifs = [k for k, x in enumerate(low) if x[0] == 'if']
-        if len(ifs) > 1 or (ifs and ifs[0] != 0):
+        if len(ifs) > 1:
             raise NotLifted('conditions')
         if ifs:
-            cond, else_at = re.sub(r'\bil\.l(\d+)\b', r'il.p\1', low[0][1]), low[0][2]
-            j = next(k for k, x in enumerate(low) if x[0] == 'bra')
-            then, rest = low[1:j], low[j + 1:]
+            i = ifs[0]
+            head = self.group_items([x for x in low[:i] if x[0] != 'bra'])
+            for x in low[:i]:
+                if x[0] == 'bra':
+                    raise NotLifted('a branch before the condition')
+        if ifs and low[i][2] == self.exit_addr:
+            cond = re.sub(r'\bil\.l(\d+)\b', r'il.p\1', low[i][1])
+            for x in low[i + 1:]:
+                if x[0] == 'bra' and x[1] != self.exit_addr:
+                    raise NotLifted('a branch in the then part')
+            body_then = self.group_items([x for x in low[i + 1:] if x[0] != 'bra'])
+            self.body = head + [('if', cond, body_then, [])]
+        elif ifs:
+            cond, else_at = re.sub(r'\bil\.l(\d+)\b', r'il.p\1', low[i][1]), low[i][2]
+            j = next(k for k, x in enumerate(low) if x[0] == 'bra' and k > i)
+            then, rest = low[i + 1:j], low[j + 1:]
             made_at = low[j][1]
             made = [x for x in rest if x[0] == 'made' and x[1] == made_at]
-            if len(made) != 1:
+            if made_at != self.exit_addr and len(made) != 1:
                 raise NotLifted('the condition\'s branch')
-            rest = [x for x in rest if x is not made[0]]
+            rest = [x for x in rest if not made or x is not made[0]]
             for x in rest:
                 if x[0] == 'bra' and x[1] not in (self.exit_addr,):
                     raise NotLifted('a branch in the else part')
             rest = [x for x in rest if x[0] != 'bra']
             body_then = self.group_items(then + made)
             body_else = self.group_items(rest)
-            self.body = [('if', cond, body_then, body_else)]
+            self.body = head + [('if', cond, body_then, body_else)]
         else:
             self.body = self.group_items(low)
         self.check_tests(low)
@@ -691,6 +961,11 @@ class Lifter:
             if s[0] == 'nstore':
                 body.append(('nstore', s[1], s[2]))
                 i += 1
+                continue
+            sol = self.solution_child(low, i)
+            if sol:
+                body.append(sol[0])
+                i = sol[1]
                 continue
             if s[0] != 'newinh':
                 raise NotLifted('statement %s' % (s,))
@@ -749,6 +1024,31 @@ class Lifter:
             body.append(('child', kpos, node, copy_all, stmts, mask))
         return body
 
+    def solution_child(self, low, i):
+        """A child whose list is one solution of a kind, made here (no
+        pass_1): [new_inherited_attributes(heap, node)] list := new; append
+        new_solution(heap, kind, 0, inh or nil, node or nil, 0).  (('solution',
+        k, node, kind), the index after it) or None."""
+        j = i
+        node = None
+        if low[j][0] == 'newinh':
+            node, n = re.sub(r'^il\.l(\d+)$', r'il.p\1', low[j][2]), low[j][1]
+            j += 1
+        if j + 3 >= len(low) + 0 or low[j][0] != 'newlist' or low[j + 1][0] != 'list' or \
+                low[j + 2][0] != 'newsol' or low[j + 3][0] != 'append':
+            return None
+        k = low[j + 1][1]
+        heap, kw, inh, nd, ilk = low[j + 2][1]
+        lst, what = low[j + 3][1]
+        nd = re.sub(r'^il\.l(\d+)$', r'il.p\1', nd)
+        if heap != 'heap' or int(kw) & 0xFFFF or ilk != '0' or lst != 'children[%d]' % k or \
+                what != 'newsol':
+            raise NotLifted('a solution child')
+        if node is None and (inh, nd) != ('0', '0') or \
+                node is not None and (inh, nd) != ('inh_%d' % n, node):
+            raise NotLifted('a solution child\'s node')
+        return ('solution', k, node or 'nil', int(kw) >> 16), j + 4
+
     def check_tests(self, low):
         # the empty tests' control flow: every test but the last leaves when
         # empty (to `no_solutions := true'), the last sets it on the way out
@@ -766,6 +1066,38 @@ class Lifter:
                 if m.group(1) == 'pl' and s is tests[-1] and s[2] == st_at:
                     continue
                 raise NotLifted('the empty tests\' branches')
+
+
+def cond_not(c):
+    if c[0] == 'rel':
+        return ('rel', c[1], REL_NOT[c[2]], c[3])
+    if c[0] == 'and':
+        return ('or', [cond_not(x) for x in c[1]])
+    if c[0] == 'or':
+        return ('and', [cond_not(x) for x in c[1]])
+    return ('bool', c[1], not c[2])
+
+
+def cond_and(a, b):
+    return ('and', (a[1] if a[0] == 'and' else [a]) + (b[1] if b[0] == 'and' else [b]))
+
+
+def cond_or(a, b):
+    return ('or', (a[1] if a[0] == 'or' else [a]) + (b[1] if b[0] == 'or' else [b]))
+
+
+def cond_text(c, paren):
+    """A condition's text; paren: a relation in parentheses (an operand of
+    and/or, the whole of an if's condition)."""
+    if c[0] == 'rel':
+        t = '%s %s %s' % (c[1], c[2], c[3])
+        return '(%s)' % t if paren else t
+    if c[0] == 'and':
+        return ' and '.join(cond_text(x, True) for x in c[1])
+    if c[0] == 'or':
+        t = ' or '.join(cond_text(x, True) for x in c[1])
+        return '(%s)' % t if paren else t
+    return c[1] if c[2] else 'not ' + c[1]
 
 
 def lift_routine(insns, names, pass1, read=None):
@@ -865,11 +1197,14 @@ def format_body(L, body, ind, unions, kinds, op_name):
             L.append('%ssolutions_made;' % ind)
         elif b[0] == 'nstore':
             L.append('%s%s <- %s;' % (ind, b[1], b[2]))
+        elif b[0] == 'solution':
+            L.append('%schild %d %s solution %s;' % (ind, b[1], b[2], kinds[b[3]]))
         elif b[0] == 'if':
             L.append('%sif %s;' % (ind, b[1]))
             format_body(L, b[2], ind + '  ', unions, kinds, op_name)
-            L.append('%selse;' % ind)
-            format_body(L, b[3], ind + '  ', unions, kinds, op_name)
+            if b[3]:
+                L.append('%selse;' % ind)
+                format_body(L, b[3], ind + '  ', unions, kinds, op_name)
             L.append('%sendif;' % ind)
         else:
             _, kpos, node, copy_all, stmts, mask = b
@@ -942,7 +1277,10 @@ def parse_operator(ts, i, fn, num):
             if ts[k] == 'copy_all':
                 child['copy_all'] = True
                 k += 1
-            if ts[k] == 'permissible':
+            if ts[k] == 'solution':
+                d['body'][-1] = ('solution', child['k'], child['node'], ts[k + 1])
+                child = None
+            elif ts[k] == 'permissible':
                 child['mask'] = ts[k + 1:j]
                 child = None
             elif ts[k + 1] == '<-':
@@ -967,7 +1305,11 @@ def join_expr(toks):
     """Tokens back to the expression's text (the rule file's spacing)."""
     out = ''
     for t in toks:
-        if t == ',':
+        if t in ('>', '=') and out.endswith((' <', ' >')):
+            out += t
+        elif t == '(' and re.search(r'(^|[^\w$])(and|or|not)$', out):
+            out += ' ('
+        elif t == ',':
             out += ', '
         elif t in ('.', '(', ')') or out.endswith(('(', '.', ', ')) or not out:
             out += t
@@ -994,7 +1336,15 @@ OPERATORS_COMMENT = [
     "  kinds the patterns test at that position; inherited: the node's own;",
     "  -np: less not_permissible_function's).  `fixed': the routine is the",
     "  generator's fixed text (tools/iscg_text.py P1_ROUTINES; its pass_1",
-    "  calls' sets listed, position: set). }",
+    "  calls' sets listed, position: set).  `child K NODE solution KIND': the",
+    "  child's list is one solution of KIND made here (NODE nil: no inherited",
+    "  attributes).  `if COND; ... [else; ...] endif;': COND an and/or of",
+    "  relations ((il.w52 = 9)), booleans (il.b30.7, a function's result) and",
+    "  the globals target_properties.p_be, target_properties.l180 and",
+    "  il_180.<field>.  A rewritten node's fields: nK.wN, nK.pN, nK.bN, nK.bN.B",
+    "  and nK.index (the statement index, 16 bits at bit 8 of +42); the",
+    "  attributes' values may be rlen_arith(X), rlen_bits(X) (isc_readonly_",
+    "  tables by rlen) and a compare (il.w36 = 59). }",
 ]
 
 TABLES = [  # (prefix, enumeration, A5 offset, entries)
@@ -1075,15 +1425,19 @@ DISPATCHERS = {
 }
 # argument casts the headings need (process_eval_node's second
 # parameter is a node in isc_routine_externs.ins.pas; the image passes inh)
-CALL_CASTS = {('process_eval_node', 1): 'isc_node_ptr_t'}
+CALL_CASTS = {('process_eval_node', 1): 'isc_node_ptr_t',
+              ('make_new_addr_con', 3): 'il_$node_ptr_t',
+              ('get_proc_addr_con', 3): 'il_$node_ptr_t'}
 # pointer arguments the image passes as a cleared longword
 CALL_NIL = {('rewrite_$routine_call', 1)}
+# boolean arguments (a pushed word, 0 false)
+CALL_BOOL = {('make_new_addr_con', 4)}
 
 
 def node_ref(path):
     """il.p40.l20 -> Pascal."""
     parts = path.split('.')
-    if parts[0] != 'il' and not re.match(r'n\d+$', parts[0]):
+    if parts[0] not in ('il', 'il_180') and not re.match(r'n\d+$', parts[0]):
         raise ValueError('not a node path: %s' % path)
     e = parts[0]
     for p in parts[1:]:
@@ -1101,7 +1455,7 @@ def node_ref(path):
         elif m.group(1) == 'w':
             e = '%s.xw[%d]' % (base, off // 2)
         else:
-            e = 'ord(p1_node_bytes_ptr_t(%s)^[%d])' % (e, off)
+            e = 'ord(p1_node_chars_ptr_t(%s)^[%d])' % (e, off)
     return e
 
 
@@ -1112,7 +1466,7 @@ def bit_ref(path, bit):
     base, kind, off = m.group(1), m.group(2), int(m.group(3))
     if kind == 'l':
         off, bit = off + 3 - bit // 8, bit % 8
-    b = base if re.match(r'(il|n\d+)$', base) else node_ref(base)
+    b = base if re.match(r'(il|il_180|n\d+)$', base) else node_ref(base)
     return 'p1_node_bytes_ptr_t(%s)^[%d].b%d' % (b, off, bit)
 
 
@@ -1120,17 +1474,22 @@ def expr(e):
     """A rule-file expression -> Pascal."""
     def rep(m):
         s = m.group(0)
-        mm = re.match(r'((?:il|n\d+)(?:\.[plwb]\d+)+)\.(\d)$', s) or \
-            re.match(r'((?:il|n\d+)(?:\.[plwb]\d+)+)\.(\d\d)$', s)
+        mm = re.match(r'((?:il_180|il|n\d+)(?:\.[plwb]\d+)+)\.(\d)$', s) or \
+            re.match(r'((?:il_180|il|n\d+)(?:\.[plwb]\d+)+)\.(\d\d)$', s)
         if mm:
             return bit_ref(mm.group(1), int(mm.group(2)))
         return node_ref(s)
-    e = re.sub(r'\b(?:il|n\d+)(?:\.[plwb]\d+)+(?:\.\d+)?', rep, e)
+    e = re.sub(r'\b(?:il_180|il|n\d+)(?:\.[plwb]\d+)+(?:\.\d+)?', rep, e)
+    for g, pas in GLOBAL_PASCAL.items():
+        e = re.sub(r'\b%s\b' % re.escape(g), pas, e)
     e = re.sub(r'\binh\.(\w+)', lambda m: inh_ref('inh', m.group(1)), e)
     e = re.sub(r'\brlen_arith\(', 'p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[', e)
-    if 'rlen_arith[' in e:
+    e = re.sub(r'\brlen_bits\(', 'isc_readonly_tables.rlen_bits[', e)
+    for tb in ('rlen_arith[', 'rlen_bits['):
+        if tb not in e:
+            continue
         # the call's closing parenthesis becomes the index's bracket
-        i = e.index('rlen_arith[') + len('rlen_arith[')
+        i = e.index(tb) + len(tb)
         depth = 0
         for j in range(i, len(e)):
             if e[j] == '(':
@@ -1162,6 +1521,8 @@ def call_text(c):
         a = expr(a)
         if (name, k) in CALL_NIL and a == '0':
             a = 'nil'
+        if (name, k) in CALL_BOOL and a in ('0', '-1', '1'):
+            a = 'false' if a == '0' else 'true'
         if (name, k) in CALL_CASTS:
             a = '%s(%s)' % (CALL_CASTS[(name, k)], a)
         out.append(a)
@@ -1211,7 +1572,10 @@ def wrap_stmt(text, ind, width=78):
         return [ind + text]
     cut = text.rfind(', ', 0, width - len(ind))
     if cut < 0:
-        return [ind + text]
+        cut = text.rfind(' and ', 0, width - len(ind))
+        if cut < 0:
+            return [ind + text]
+        return [ind + text[:cut]] + wrap_stmt(text[cut + 1:], ind + '    ', width)
     return [ind + text[:cut + 1]] + wrap_stmt(text[cut + 2:], ind + '    ', width)
 
 
@@ -1232,11 +1596,12 @@ def emit_operator(op, unions, kinds):
                                  ' (0x%06X)' % op['image'] if op['image'] else ''))
     L.append('')
     L.append('procedure %s%s;' % (name, HEADING))
-    if kids or lets:
+    if kids or lets or any(b[0] == 'solution' and b[2] != 'nil' for b in flat):
         L.append('var')
-    if kids:
-        L.append('  ' + ', '.join(sorted({'inh_%d' % (c['k'] or 1) for c in kids})) +
-                 ': inherited_attributes_ptr_t;')
+    inhs = {'inh_%d' % (c['k'] or 1) for c in kids} | \
+        {'inh_%d' % b[1] for b in flat if b[0] == 'solution' and b[2] != 'nil'}
+    if inhs:
+        L.append('  ' + ', '.join(sorted(inhs)) + ': inherited_attributes_ptr_t;')
     if lets:
         L.append('  ' + ', '.join(lets) + ': univ_ptr;')
     L.append('begin')
@@ -1261,17 +1626,38 @@ def flatten(body):
 def emit_body(L, body, ind, unions, kinds):
     kids = [b[1] for b in body if b[0] == 'child']
     opened = 0
-    for b in body:
+    for bi, b in enumerate(body):
+        if b[0] == 'solution':
+            _, k, node, kind = b
+            if node != 'nil':
+                L.extend(wrap_stmt('inh_%d := new_inherited_attributes(isc_heap, %s);' % (
+                    k, expr(node)), ind))
+            L.append('%schildren[%d] := solution_list$new;' % (ind, k))
+            L.extend(wrap_stmt('solution_list$append(children[%d], new_solution(isc_heap, '
+                               'ord(solution$%s), 0, %s, %s, 0));' % (
+                                   k, kind, 'nil' if node == 'nil' else 'inh_%d' % k,
+                                   expr(node)), ind))
+            continue
         if b[0] == 'if':
-            L.extend(wrap_stmt('if %s then begin' % call_text_expr(b[1]), ind))
+            L.extend(wrap_stmt('if %s then begin' % expr(call_text_expr(b[1])), ind))
             emit_body(L, b[2], ind + '  ', unions, kinds)
-            L.append('%send' % ind)
-            L.append('%selse begin' % ind)
-            emit_body(L, b[3], ind + '  ', unions, kinds)
+            if b[3]:
+                L.append('%send' % ind)
+                L.append('%selse begin' % ind)
+                emit_body(L, b[3], ind + '  ', unions, kinds)
             L.append('%send;' % ind)
             continue
+        if b[0] == 'nstore' and b[1].endswith('.index'):
+            n, src = b[1][:-6], b[2][:-6]
+            L.extend(wrap_stmt('%s := (isc_node_ptr_t(%s)^.st_l42 & 16#FF0000FF) ! '
+                               '(isc_node_ptr_t(%s)^.st_l42 & 16#FFFF00);' % (
+                                   node_target(b[1]), n, src), ind))
+            continue
         if b[0] == 'nstore':
-            L.extend(wrap_stmt('%s := %s;' % (node_target(b[1]), expr(b[2])), ind))
+            v = expr(b[2])
+            if re.match(r'n\d+\.b\d+$', b[1]) and not b[1].endswith('.b0'):
+                v = 'chr(%s)' % v
+            L.extend(wrap_stmt('%s := %s;' % (node_target(b[1]), v), ind))
             continue
         if b[0] == 'call':
             L.extend(wrap_stmt(call_text(b[1]) + ';', ind))
@@ -1303,6 +1689,10 @@ def emit_body(L, body, ind, unions, kinds):
         for a, val in c['stmts']:
             if a == 'parent_il_kind':
                 val = 'ord(il_%s)' % val
+            elif val.split('(')[0] in ORD_FUNCS:
+                val = 'ord(%s)' % expr(val)
+            elif a == 'conditional_target' and '(' in val:
+                val = 'integer32(%s)' % expr(val)  # the insert's l16: a longword
             else:
                 val = expr(val)
             L.extend(wrap_stmt('%s := %s;' % (inh_ref(v, a), val), ind))
@@ -1314,7 +1704,8 @@ def emit_body(L, body, ind, unions, kinds):
             k, expr(c['node']), v, mask_pascal(c['mask'], k, unions, kinds)), ind))
         L.append('%sif solution_list$empty(children[%d]) then' % (ind, k))
         L.append('%s  no_solutions := true' % ind)
-        if c is [x for x in kids if x['k']][-1]:
+        if c is [x for x in kids if x['k']][-1] and \
+                not any(x[0] in ('if', 'solution') for x in body[bi + 1:]):
             L[-1] += ';'
         else:
             L.append('%selse begin' % ind)
@@ -1330,6 +1721,12 @@ def node_target(t):
     m = re.match(r'(n\d+)\.b0$', t)
     if m:
         return 'isc_node_ptr_t(%s)^.rewritten' % m.group(1)
+    m = re.match(r'(n\d+)\.b(\d+)$', t)
+    if m:
+        return 'p1_node_chars_ptr_t(%s)^[%s]' % (m.group(1), m.group(2))
+    m = re.match(r'(n\d+)\.index$', t)
+    if m:
+        return 'isc_node_ptr_t(%s)^.st_l42' % m.group(1)
     return expr(t)
 
 

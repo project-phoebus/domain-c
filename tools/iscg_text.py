@@ -654,6 +654,29 @@ P1_TYPES = '''type
   p1_node_bytes_ptr_t = ^p1_node_bytes_t;
   p1_node_bytes_t = array [0..379] of p1_bits_t;
 
+  { A node's bytes as values (the byte fields of a rewritten node). }
+  p1_node_chars_ptr_t = ^p1_node_chars_t;
+  p1_node_chars_t = array [0..379] of char;
+
+  { isc_readonly_tables' bytes and their bits (bit 7 first). }
+  p1_readonly_bytes_ptr_t = ^p1_readonly_bytes_t;
+  p1_readonly_bytes_t = array [0..3119] of p1_bits_t;
+
+  { isc_readonly_tables as words (the word tables by rlen the views
+    above do not name). }
+  p1_readonly_words_ptr_t = ^p1_readonly_words_t;
+  p1_readonly_words_t = array [0..1559] of integer;
+
+  { target_properties at +0xB4: a longword target_properties.ins.pas
+    leaves inside p_b0 (the size above which char_string_ob,
+    namelist_constant_ob and set_con_ob go to the literal pool when
+    p_be is set). }
+  p1_target_view_ptr_t = ^p1_target_view_t;
+  p1_target_view_t = record
+    x0: array [0..179] of char;         { +0 }
+    l180: integer32;                    { +0xB4 }
+  end;
+
   { The inherited attributes' byte at +36 (parent_il_kind, an il$t). }
   p1_inh_view_ptr_t = ^p1_inh_view_t;
   p1_inh_view_t = record
@@ -693,6 +716,12 @@ function rewrite_$routine_call(
     inh: inherited_attributes_ptr_t): univ_ptr; options(val_param); extern;
 
 function rewrite_$mul_to_aop(
+    node: univ_ptr): univ_ptr; options(val_param); extern;
+
+function rewrite_$agg_aop(
+    node: univ_ptr): univ_ptr; options(val_param); extern;
+
+function rewrite_$const_mul(
     node: univ_ptr): univ_ptr; options(val_param); extern;'''
 
 P1_DATA = '''var
@@ -1041,3 +1070,1235 @@ end;'''
 # the routines of isc_pass_1_main the lifter does not understand, read off
 # the image by hand (the operator declarations mark them `fixed')
 P1_ROUTINES = {}
+
+P1_HEADING = '''(
+    il: univ_ptr;
+    inh: inherited_attributes_ptr_t;
+    depth: integer;
+    permissible: solution$set_t;
+    var il_kind: integer;
+    var number_of_children: integer32;
+    var solutions: solution_list_ptr_t;
+    var children: p1_children_t;
+    var solutions_made: boolean;
+    var no_solutions: boolean); options(val_param);'''
+
+# a child's default inherited attributes, copied from the node's (as the
+# generated routines write them: iscg_pass1.DEFAULT_COPY)
+P1_COPY = ['@^.call := inh^.call;', '@^.top := inh^.top;', '@^.precision := inh^.precision;',
+           '@^.f38.preserve := inh^.f38.preserve;', '@^.stmt := inh^.stmt;',
+           '@^.f38.arith := inh^.f38.arith;', '@^.available := inh^.available;',
+           '@^.pos := inh^.pos;']
+
+# the REWRITE trace (iscg_pass1.REWRITE_TRACE_PASCAL)
+P1_TRACE = ['if isc_user_routines_356 or isc_user_routines_354 then begin',
+            "  write('*********************');", '  writeln;',
+            "  write('R E W R I T E ! ! ! !');", '  writeln;',
+            "  write('*********************');", '  writeln;', '  writeln;', 'end;']
+
+
+def _p1(name, comment, body):
+    """A fixed operator routine: its header comment's text after the name,
+    and its body from `var' or `begin'; a line `@COPY v' is the default
+    copy into v, `@TRACE' the REWRITE trace, at the line's indentation."""
+    out = []
+    for ln in body.strip('\n').split('\n'):
+        s = ln.strip()
+        ind = ln[:len(ln) - len(ln.lstrip())]
+        if s.startswith('@COPY '):
+            out.extend(ind + x.replace('@', s.split()[1]) for x in P1_COPY)
+        elif s == '@TRACE':
+            out.extend(ind + x for x in P1_TRACE)
+        else:
+            out.append(ln)
+    return '{ %s - %s }\n\nprocedure %s%s\n%s' % (name, comment.strip('\n'), name, P1_HEADING,
+                                                 '\n'.join(out))
+
+
+P1_ROUTINES['isc_tree_node_isc_func_call_top'] = _p1('isc_tree_node_isc_func_call_top', '''the
+  proper_subtree il_isc_func_call_top, no children: pass_1_isc_call
+  finds the call's solutions (the node's result class, the byte at +10,
+  and depth 0).
+
+  0x0EAEBC, 0x50 bytes: `clr.w -(sp)' the depth.''', '''
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_isc_func_call_top);
+  number_of_children := 0;
+  pass_1_isc_call(il, ord(p1_node_chars_ptr_t(il)^[10]), inh, 0);
+end;''')
+
+P1_ROUTINES['isc_tree_node_f_math_top'] = _p1('isc_tree_node_f_math_top', '''the
+  proper_subtree il_f_math_top, 2 children, when the function (opmod1,
+  +26) is one the ISC computes in line (11 .. 15, or the boolean of
+  isc_readonly_tables +424 by opmod1): child 1 (+40) and child 2 (+44)
+  when there are two operands (+38), else a void solution, each at the
+  precision of rlen_bits by opmod2 (+28); otherwise the node rewritten
+  as a call (rewrite_$routine_call) and that call's solutions.
+
+  0x0E98E2, 0x34E bytes: D1 opmod1; the tests in the order 15, 14, 11,
+  then `seq' of 12 or-ed with the table's byte (`bmi'), then 13 (Rev
+  8.89 merging the fourth and fifth tests); A2 il, D7 inh.
+
+  Not known from the original: how the condition was written (the
+  table's name and meaning).''', '''
+var
+  inh_1, inh_2: inherited_attributes_ptr_t;
+  n: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_f_math_top);
+  number_of_children := 2;
+  if (isc_node_ptr_t(il)^.xw[13] = 15) or (isc_node_ptr_t(il)^.xw[13] = 14)
+      or (isc_node_ptr_t(il)^.xw[13] = 11) or (isc_node_ptr_t(il)^.xw[13] = 12)
+      or p1_readonly_bytes_ptr_t(addr(isc_readonly_tables))^[424 + isc_node_ptr_t(il)^.xw[13]].b7
+      or (isc_node_ptr_t(il)^.xw[13] = 13) then begin
+    inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
+    @COPY inh_1
+    inh_1^.precision := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[14]];
+    inh_1^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[14]];
+    inh_1^.available := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[14]];
+    children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
+        [solution$fp_reg, solution$fp_reg_pair, solution$fp_reg_quad]);
+    if solution_list$empty(children[1]) then
+      no_solutions := true
+    else begin
+      if (isc_node_ptr_t(il)^.xw[19] <> 2) then begin
+        children[2] := solution_list$new;
+        solution_list$append(children[2], new_solution(isc_heap,
+            ord(solution$void), 0, nil, nil, 0));
+      end
+      else begin
+        inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
+        @COPY inh_2
+        inh_2^.precision := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[14]];
+        inh_2^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[14]];
+        inh_2^.available := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[14]];
+        children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
+            [solution$fp_reg, solution$fp_reg_pair, solution$void]);
+        if solution_list$empty(children[2]) then
+          no_solutions := true;
+      end;
+    end;
+  end
+  else begin
+    @TRACE
+    n := rewrite_$routine_call(il, nil, inh);
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+    solutions_made := true;
+  end;
+end;''')
+
+P1_ROUTINES['isc_tree_node_func_call_top'] = _p1('isc_tree_node_func_call_top', '''the
+  proper_subtree il_func_call_top, one child: the node rewritten as a
+  call (rewrite_$routine_call) whose result goes to a temporary
+  (possibly_make_expression_temporary: of the node's rlen, +24, the
+  kind by the required arithmetic, 122 for integer and address, 123
+  real, 124 otherwise, and the available precision), and that call's
+  solutions.
+
+  0x0EA3F0, 0x166 bytes: the arithmetic's cases a compare chain (1, 3,
+  then 2); the temporary's kind at -42; A3 il, A2 inh.
+
+  Not known from the original: whether the cases were a case
+  statement.''', '''
+var
+  tkind: integer;
+  n: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_func_call_top);
+  number_of_children := 1;
+  case inh^.f38.arith of
+    1, 3: tkind := 122;
+    2: tkind := 123;
+    otherwise tkind := 124;
+  end;
+  @TRACE
+  n := rewrite_$routine_call(il, possibly_make_expression_temporary(isc_node_ptr_t(il)^.xw[12],
+      tkind, inh^.available), inh);
+  inh_1 := new_inherited_attributes(isc_heap, n);
+  inh_1^ := inh^;
+  inh_1^.node := n;
+  inh_1^.stmt := il;
+  solutions := pass_1(n, inh_1, depth, permissible);
+  solutions_made := true;
+end;''')
+
+P1_ROUTINES['isc_tree_node_f_div_top'] = _p1('isc_tree_node_f_div_top', '''the
+  proper_subtree il_f_div_top, 2 children: a division by a floating
+  constant that is not zero and whose reciprocal is exact in the
+  node's precision (invertible_in_sp for rlen 6, invertible_in_dp for 7)
+  is rewritten as a multiplication (op 36) by the reciprocal
+  (get_reciprocal), and that node's solutions; otherwise child 2 (+44)
+  and child 1 (+40), each at the node's precision.
+
+  0x0E91FA, 0x34A bytes: the first two conditions and-ed into -42
+  (`spl' of +30: the node's bit 7 clear), the third and-ed with it
+  (`bpl'), then `seq' of rlen 6 and-ed with invertible_in_sp (`bmi' to
+  the rewrite), invertible_in_dp and rlen 7 tested in turn; A3 il.
+
+  Not known from the original: how the condition was written.''', '''
+var
+  inh_1, inh_2: inherited_attributes_ptr_t;
+  n: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_f_div_top);
+  number_of_children := 2;
+  if il_node_has_float_value(isc_node_ptr_t(il)^.xp[11])
+      and not p1_node_bytes_ptr_t(il)^[30].b7
+      and not il_node_is_literal_sequence_of_zeroes(isc_node_ptr_t(il)^.xp[11])
+      and ((invertible_in_sp(il_$node_ptr_t(isc_node_ptr_t(il)^.xp[11]))
+            and (isc_node_ptr_t(il)^.xw[12] = 6))
+           or (invertible_in_dp(il_$node_ptr_t(isc_node_ptr_t(il)^.xp[11]))
+               and (isc_node_ptr_t(il)^.xw[12] = 7))) then begin
+    @TRACE
+    n := mrh_$alloc(isc_preserve_heap, 48);
+    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
+    isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(get_reciprocal(
+        il_$node_ptr_t(isc_node_ptr_t(il)^.xp[11])));
+    isc_node_ptr_t(n)^.xw[18] := 36;
+    isc_node_ptr_t(n)^.xl[5] := isc_node_ptr_t(il)^.xl[5];
+    isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+    solutions_made := true;
+  end
+  else begin
+    inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
+    @COPY inh_2
+    inh_2^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12],
+        isc_node_ptr_t(il)^.xl[5]);
+    inh_2^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
+        [solution$fp_reg, solution$fp_reg_pair, solution$fp_reg_quad]);
+    if solution_list$empty(children[2]) then
+      no_solutions := true
+    else begin
+      inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
+      @COPY inh_1
+      inh_1^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12],
+          isc_node_ptr_t(il)^.xl[5]);
+      inh_1^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+      children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
+          [solution$fp_reg, solution$fp_reg_pair, solution$fp_reg_quad]);
+      if solution_list$empty(children[1]) then
+        no_solutions := true;
+    end;
+  end;
+end;''')
+
+P1_ROUTINES['isc_return_node'] = _p1('isc_return_node', '''the
+  proper_subtree il_return_node, no children; a return whose value must
+  be assigned to the function's result (return_value_needs_assign_node
+  of the value, +48, and the routine's result variable, il_180's +96)
+  is rewritten as that assignment (an assign_node, kind 140: +64 the
+  result, +68 the value, +8 and +12 the return's, +76 the assignment
+  operator by rlen from isc_readonly_tables +346, +52 the rlen, +48 its
+  bytes (rlen_bits div 8), +20 the line, +43 the statement index), and
+  that node's solutions.
+
+  0x0E5850, 0x1C4 bytes: A2 il, D4 the value, D5 inh; the index copied
+  as a 16-bit field at bit 8 of +42 (`and.l #16#FFFF00', `and.l
+  #-16776961').
+
+  Not known from the original: the table's name; how the index was
+  written (a packed field).''', '''
+var
+  n: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_return_node);
+  number_of_children := 0;
+  if return_value_needs_assign_node(isc_node_ptr_t(il)^.xp[12],
+      isc_node_ptr_t(il_180)^.xp[24]) then begin
+    @TRACE
+    n := mrh_$alloc(isc_preserve_heap, 80);
+    isc_node_ptr_t(n)^.kind := 140;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[16] := isc_node_ptr_t(il_180)^.xp[24];
+    isc_node_ptr_t(n)^.xp[17] := isc_node_ptr_t(il)^.xp[12];
+    isc_node_ptr_t(n)^.xl[2] := isc_node_ptr_t(il)^.xl[2];
+    isc_node_ptr_t(n)^.xl[3] := isc_node_ptr_t(il)^.xl[3];
+    isc_node_ptr_t(n)^.xw[38] :=
+        p1_readonly_words_ptr_t(addr(isc_readonly_tables))^[173 + isc_node_ptr_t(il)^.xw[26]];
+    isc_node_ptr_t(n)^.xw[28] := 0;
+    isc_node_ptr_t(n)^.xw[26] := isc_node_ptr_t(il)^.xw[26];
+    isc_node_ptr_t(n)^.xl[12] := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[26]] div 8;
+    isc_node_ptr_t(n)^.xw[10] := inh^.pos.line;
+    isc_node_ptr_t(n)^.st_l42 := (isc_node_ptr_t(n)^.st_l42 & 16#FF0000FF)
+        ! (isc_node_ptr_t(il)^.st_l42 & 16#FFFF00);
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+    solutions_made := true;
+  end;
+end;''')
+
+P1_ROUTINES['isc_assign_node_isc_agg_aop'] = _p1('isc_assign_node_isc_agg_aop', '''the
+  proper_subtree il_isc_agg_aop, 3 children (+64 the target, +68 the
+  source, +72 the count): with a constant count the node is rewritten
+  as an agg_aop assignment (an assign_node, kind 140, op 6, rlen 11) of
+  count times the element's bytes (rlen_bits by rlen, +52, or 8 when
+  not positive, div 8), and that node's solutions; otherwise the three
+  children.
+
+  0x0DE9E4, 0x3F2 bytes: D2 whether the count is constant, D1 the
+  count, D4 the bytes (`asr.l #3' after `addq.l #7' when negative), the
+  product by m$mis$lll; the target's inherited attributes at both -56
+  and -24 (`move.l a0,-56(a6)' and `-24(a6)').
+
+  Not known from the original: the locals' names.''', '''
+var
+  constant: boolean;
+  count, size: integer32;
+  n: univ_ptr;
+  inh_1, inh_2, inh_3: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_isc_agg_aop);
+  number_of_children := 3;
+  constant := il_node_has_integer_value(isc_node_ptr_t(il)^.xp[18]);
+  if constant then
+    count := il_node_to_integer_value(isc_node_ptr_t(il)^.xp[18])
+  else
+    count := 0;
+  if isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[26]] > 0 then
+    size := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[26]]
+  else
+    size := 8;
+  size := (size div 8) * count;
+  if constant then begin
+    @TRACE
+    n := mrh_$alloc(isc_preserve_heap, 80);
+    isc_node_ptr_t(n)^.kind := 140;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[16] := isc_node_ptr_t(il)^.xp[16];
+    isc_node_ptr_t(n)^.xp[17] := isc_node_ptr_t(il)^.xp[17];
+    isc_node_ptr_t(n)^.xp[3] := isc_node_ptr_t(il)^.xp[3];
+    isc_node_ptr_t(n)^.xw[38] := 6;
+    isc_node_ptr_t(n)^.xw[28] := 0;
+    isc_node_ptr_t(n)^.xw[26] := 11;
+    isc_node_ptr_t(n)^.xl[12] := size;
+    isc_node_ptr_t(n)^.xw[10] := inh^.pos.line;
+    isc_node_ptr_t(n)^.st_l42 := (isc_node_ptr_t(n)^.st_l42 & 16#FF0000FF)
+        ! (isc_node_ptr_t(il)^.st_l42 & 16#FFFF00);
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+    solutions_made := true;
+  end
+  else begin
+    inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
+    @COPY inh_1
+    inh_1^.f38.b5 := true;
+    inh_1^.top := isc_node_ptr_t(il)^.xp[3];
+    inh_1^.precision := 32;
+    inh_1^.f38.arith := 3;
+    inh_1^.available := 32;
+    children[1] := pass_1(isc_node_ptr_t(il)^.xp[16], inh_1, depth + 1,
+        [solution$address_mode, solution$any_solution]);
+    if solution_list$empty(children[1]) then
+      no_solutions := true
+    else begin
+      inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[17]);
+      @COPY inh_2
+      inh_2^.f38.b5 := true;
+      inh_2^.top := isc_node_ptr_t(il)^.xp[3];
+      inh_2^.precision := 32;
+      inh_2^.f38.arith := 3;
+      inh_2^.available := 32;
+      children[2] := pass_1(isc_node_ptr_t(il)^.xp[17], inh_2, depth + 1,
+          [solution$address_mode, solution$any_solution]);
+      if solution_list$empty(children[2]) then
+        no_solutions := true
+      else begin
+        inh_3 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[18]);
+        @COPY inh_3
+        inh_3^.top := isc_node_ptr_t(il)^.xp[3];
+        inh_3^.precision := 32;
+        inh_3^.f38.arith := 1;
+        inh_3^.available := 32;
+        children[3] := pass_1(isc_node_ptr_t(il)^.xp[18], inh_3, depth + 1,
+            [solution$ip_reg, solution$literal_32_bits]);
+        if solution_list$empty(children[3]) then
+          no_solutions := true;
+      end;
+    end;
+  end;
+end;''')
+
+
+def _blk(name, il, addr):
+    return _p1(name, '''the
+  proper_subtree il_%s, no children: a routine's block (its
+  address) is rewritten as an address constant (a node of kind 146
+  over make_new_addr_con of the block in il_180's section: kind 2 when
+  the block's two bits at +376 (16#180 of the word) are not zero, else
+  kind 6 unless it is the current routine's own, +188 against il_180's)
+  and that node's solutions; the current routine's own block with the
+  bits clear has none.
+
+  %s, 0x228 bytes: D0 the bits (`and.w #384', `lsr.w #7'), tested
+  again after the comparison (`tst.w d0'); each branch has its own
+  trace, the make_new_addr_con call and the rest shared (Rev 8.89
+  cross-jumping); A2 il.
+
+  Not known from the original: the bits' name; how the conditions were
+  written.''' % (il, addr), '''
+var
+  bits: integer;
+  n1, n2: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_%s);
+  number_of_children := 0;
+  bits := rshft(isc_node_ptr_t(il)^.xw[188] & 384, 7);
+  if (bits <> 0) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
+    if bits <> 0 then begin
+      @TRACE
+      n1 := make_new_addr_con(2, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
+    end
+    else begin
+      @TRACE
+      n1 := make_new_addr_con(6, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
+    end;
+    n2 := mrh_$alloc(isc_preserve_heap, 32);
+    isc_node_ptr_t(n2)^.kind := 146;
+    isc_node_ptr_t(n2)^.rewritten := true;
+    isc_node_ptr_t(n2)^.xp[6] := n1;
+    p1_node_chars_ptr_t(n2)^[23] := chr(0);
+    p1_node_chars_ptr_t(n2)^[22] := chr(2);
+    inh_1 := new_inherited_attributes(isc_heap, n2);
+    inh_1^ := inh^;
+    inh_1^.node := n2;
+    inh_1^.stmt := il;
+    solutions := pass_1(n2, inh_1, depth, permissible);
+    solutions_made := true;
+  end;
+end;''' % il)
+
+
+P1_ROUTINES['isc_entry_blk'] = _blk('isc_entry_blk', 'entry_blk', '0x0E4058')
+P1_ROUTINES['isc_function_blk'] = _blk('isc_function_blk', 'function_blk', '0x0E463C')
+P1_ROUTINES['isc_procedure_blk'] = _blk('isc_procedure_blk', 'procedure_blk', '0x0E5276')
+
+P1_ROUTINES['isc_fortran_symbol'] = _p1('isc_fortran_symbol', '''the
+  proper_subtree il_fortran_symbol, no children: a symbol of kind 6
+  (the high nibble of +44: a statement label's variable) is its label's
+  solutions when the label (+48) is a ^. reference
+  (get_uparrow_dot_kind 156), else it is rewritten as the label's
+  address constant (a node of kind 146 over get_proc_addr_con 6 of the
+  label in il_180's section); a symbol of kind 1 not in a register (the
+  high nibble of +11 not 5) with no offset (+40) is rewritten as its
+  address constant (make_new_addr_con 2); any other is initialized
+  (initialize_symbol) and has no solutions.
+
+  0x0E434E, 0x2EE bytes: D2 the kind (`and.b' of #240, `lsr.w #4');
+  the three paths share the store of the solutions and the `st' of
+  solutions_made (cross-jumping); A2 il, D5 inh.
+
+  Not known from the original: the conditions' form.''', '''
+var
+  kind: integer;
+  n1, n2: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_fortran_symbol);
+  number_of_children := 0;
+  kind := isc_node_ptr_t(il)^.fs_f44.kind;
+  if kind = 6 then begin
+    if get_uparrow_dot_kind(isc_node_ptr_t(il)^.xp[12]) = 156 then
+      solutions := pass_1(isc_node_ptr_t(il)^.xp[12], inh, depth, permissible)
+    else begin
+      @TRACE
+      n1 := get_proc_addr_con(6, il_$node_ptr_t(assert_kind_is_label_node(isc_node_ptr_t(il)^.xp[12])),
+          isc_node_ptr_t(il_180)^.xl[47], il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]));
+      n2 := mrh_$alloc(isc_preserve_heap, 32);
+      isc_node_ptr_t(n2)^.kind := 146;
+      isc_node_ptr_t(n2)^.rewritten := true;
+      isc_node_ptr_t(n2)^.xp[6] := n1;
+      p1_node_chars_ptr_t(n2)^[23] := chr(0);
+      p1_node_chars_ptr_t(n2)^[22] := chr(0);
+      inh_1 := new_inherited_attributes(isc_heap, n2);
+      inh_1^ := inh^;
+      inh_1^.node := n2;
+      inh_1^.stmt := il;
+      solutions := pass_1(n2, inh_1, depth, permissible);
+    end;
+    solutions_made := true;
+  end
+  else if (isc_node_ptr_t(il)^.fs_f10.sto <> 5) and (kind = 1)
+      and (isc_node_ptr_t(il)^.xl[10] = 0) then begin
+    @TRACE
+    n1 := make_new_addr_con(2, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
+    n2 := mrh_$alloc(isc_preserve_heap, 32);
+    isc_node_ptr_t(n2)^.kind := 146;
+    isc_node_ptr_t(n2)^.rewritten := true;
+    isc_node_ptr_t(n2)^.xp[6] := n1;
+    p1_node_chars_ptr_t(n2)^[23] := chr(0);
+    p1_node_chars_ptr_t(n2)^[22] := chr(2);
+    inh_1 := new_inherited_attributes(isc_heap, n2);
+    inh_1^ := inh^;
+    inh_1^.node := n2;
+    inh_1^.stmt := il;
+    solutions := pass_1(n2, inh_1, depth, permissible);
+    solutions_made := true;
+  end
+  else
+    initialize_symbol(il);
+end;''')
+
+
+def _compare(name, addr):
+    return _p1(name, '''the
+  proper_subtree il_compare_top, 2 children: a comparison of a
+  constant with a variable is rewritten with its operands swapped (a
+  new tree node, op 12, the relation, +28, replaced by its converse
+  from the word table at isc_readonly_tables +0x30 by the relation's
+  absolute value; +26 and bit 6 of +30 copied), and that node's
+  solutions; otherwise child 1 (+40) and child 2 (+44) at the
+  comparison's precision (opmod1, +26), signed as the node's bit 6.
+
+  %s, 0x3A0 bytes: the two tests and-ed through -42 (`not.b', `and.b',
+  `bpl'); the absolute value by `bpl', `neg.w'; A3 il, D7 inh.
+
+  Not known from the original: the table's name.''' % addr, '''
+var
+  n: univ_ptr;
+  inh_1, inh_2: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_compare_top);
+  number_of_children := 2;
+  if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
+      and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
+    @TRACE
+    n := mrh_$alloc(isc_preserve_heap, 48);
+    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
+    isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
+    isc_node_ptr_t(n)^.xw[18] := 12;
+    isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+    isc_node_ptr_t(n)^.xw[14] :=
+        p1_readonly_words_ptr_t(addr(isc_readonly_tables))^[24 + abs(isc_node_ptr_t(il)^.xw[14])];
+    p1_node_bytes_ptr_t(n)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+    solutions_made := true;
+  end
+  else begin
+    inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
+    @COPY inh_1
+    inh_1^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+    inh_1^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[13]];
+    inh_1^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+    inh_1^.f38.b6 := true;
+    inh_1^.f38.b3 := p1_node_bytes_ptr_t(il)^[30].b6;
+    children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
+        [solution$ip_reg, solution$ip_reg_field]);
+    if solution_list$empty(children[1]) then
+      no_solutions := true
+    else begin
+      inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
+      @COPY inh_2
+      inh_2^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+      inh_2^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[13]];
+      inh_2^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+      inh_2^.f38.b6 := true;
+      inh_2^.f38.b3 := p1_node_bytes_ptr_t(il)^[30].b6;
+      children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
+          [solution$ip_reg, solution$ip_reg_field, solution$literal_32_bits]);
+      if solution_list$empty(children[2]) then
+        no_solutions := true;
+    end;
+  end;
+end;''')
+
+
+P1_ROUTINES['isc_tree_node_compare_top'] = _compare('isc_tree_node_compare_top', '0x0E7B80')
+P1_ROUTINES['isc_cmp_tree_node_compare_top'] = _compare('isc_cmp_tree_node_compare_top',
+                                                        '0x0E30D0')
+
+P1_ROUTINES['isc_tree_node_mul_top'] = _p1('isc_tree_node_mul_top', '''the
+  proper_subtree il_mul_top, 2 children, never its own: a constant
+  times a variable is rewritten with the operands swapped (op 3), a
+  signed multiplication (bit 7 of +30) as an isc_mul_top (op 33), any
+  other by rewrite_$const_mul; each rewritten node's solutions.  The
+  rewritten tree nodes take +24 .. +29 and bits 7 and 6 of +30 from the
+  node.
+
+  0x0ECC10, 0x3BA bytes: the first condition and-ed through -50
+  (`not.b', `and.b'); the three rewrites share the store of the
+  solutions and the `st' (cross-jumping); +26 .. +29 copied as one
+  longword; A2 il, D5 inh.
+
+  Not known from the original: how +26 .. +29 were written (one
+  longword in the image, two words here).''', '''
+var
+  n: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_mul_top);
+  number_of_children := 2;
+  if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
+      and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
+    @TRACE
+    n := mrh_$alloc(isc_preserve_heap, 48);
+    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
+    isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
+    isc_node_ptr_t(n)^.xw[18] := 3;
+    isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+    isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
+    p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
+    isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    p1_node_bytes_ptr_t(n)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+  end
+  else if p1_node_bytes_ptr_t(il)^[30].b7 then begin
+    @TRACE
+    n := mrh_$alloc(isc_preserve_heap, 48);
+    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
+    isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
+    isc_node_ptr_t(n)^.xw[18] := 33;
+    isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+    isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
+    p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
+    isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    p1_node_bytes_ptr_t(n)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+  end
+  else begin
+    @TRACE
+    n := rewrite_$const_mul(il);
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+  end;
+  solutions_made := true;
+end;''')
+
+P1_ROUTINES['isc_tree_node_isc_mul_top'] = _p1('isc_tree_node_isc_mul_top', '''the
+  proper_subtree il_isc_mul_top, 2 children: child 1 (+40) and child 2
+  (+44), each at the precision of its opmod (+26, +28) and signed as
+  the node's bit 6, when the multiplier is a power of 2 between 2 and
+  2**31, or the multiplication can be done in line (neither il_180's
+  bit 4 of +374 nor -NO_FP, cargs_$options.flags_286 element 13, nor,
+  without them, -SOME_FP, element 14); otherwise it is rewritten as a
+  call of m$mis$lll (std_lib_rtns[1]; op 16, three operands) of the
+  operands, each first extended to a longword (op 18) unless both
+  opmods are 4, and that call's solutions (+10 4, +11 0).
+
+  0x0EAF0C, 0x59C bytes: the first condition's four parts and-ed
+  through -54 (`sge', `sle' of log_2's results), `bmi' to the
+  children; the second computed with `sne' and `or.b', `not.b',
+  `and.b' (bit 0 and 1 of 0x4437F6, flags_286's elements 13 and 14),
+  `bmi' to the call; the call's op and count stored as one longword
+  (16#100003), and +24, +26 as one (16#40000) after the extensions.
+
+  Not known from the original: il_180's bit's name; how the
+  conditions were written.''', '''
+var
+  n, n1, n2: univ_ptr;
+  inh_1, inh_2: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_isc_mul_top);
+  number_of_children := 2;
+  if (il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11])
+      and is_power_of_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[11]))
+      and (log_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[11])) >= 1)
+      and (log_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[11])) <= 31))
+     or not ((p1_node_bytes_ptr_t(il_180)^[374].b4 or (13 in cargs_$options.flags_286))
+             or (not (p1_node_bytes_ptr_t(il_180)^[374].b4 or (13 in cargs_$options.flags_286))
+                 and (14 in cargs_$options.flags_286))) then begin
+    inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
+    @COPY inh_1
+    inh_1^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+    inh_1^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[13]];
+    inh_1^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+    inh_1^.f38.b6 := true;
+    inh_1^.f38.b3 := p1_node_bytes_ptr_t(il)^[30].b6;
+    children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
+        [solution$fp_reg, solution$ip_reg, solution$literal_32_bits]);
+    if solution_list$empty(children[1]) then
+      no_solutions := true
+    else begin
+      inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
+      @COPY inh_2
+      inh_2^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[14], -1);
+      inh_2^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[14]];
+      inh_2^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[14], -1);
+      inh_2^.f38.b6 := true;
+      inh_2^.f38.b3 := p1_node_bytes_ptr_t(il)^[30].b6;
+      children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
+          [solution$fp_reg, solution$ip_reg, solution$literal_32_bits]);
+      if solution_list$empty(children[2]) then
+        no_solutions := true;
+    end;
+  end
+  else begin
+    if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+      @TRACE
+      n := mrh_$alloc(isc_preserve_heap, 52);
+      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.rewritten := true;
+      isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(std_lib_rtns[1]);
+      isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
+      isc_node_ptr_t(n)^.xp[12] := isc_node_ptr_t(il)^.xp[11];
+      isc_node_ptr_t(n)^.xl[9] := 16#100003;
+      isc_node_ptr_t(n)^.xw[13] := 0;
+      isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    end
+    else begin
+      @TRACE
+      n1 := mrh_$alloc(isc_preserve_heap, 44);
+      isc_node_ptr_t(n1)^.kind := 137;
+      isc_node_ptr_t(n1)^.rewritten := true;
+      isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
+      isc_node_ptr_t(n1)^.xw[18] := 18;
+      isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+      isc_node_ptr_t(n1)^.xw[12] := 4;
+      p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
+      n2 := mrh_$alloc(isc_preserve_heap, 44);
+      isc_node_ptr_t(n2)^.kind := 137;
+      isc_node_ptr_t(n2)^.rewritten := true;
+      isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
+      isc_node_ptr_t(n2)^.xw[18] := 18;
+      isc_node_ptr_t(n2)^.xw[13] := isc_node_ptr_t(il)^.xw[14];
+      isc_node_ptr_t(n2)^.xw[12] := 4;
+      p1_node_bytes_ptr_t(n2)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
+      n := mrh_$alloc(isc_preserve_heap, 52);
+      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.rewritten := true;
+      isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(std_lib_rtns[1]);
+      isc_node_ptr_t(n)^.xp[11] := n1;
+      isc_node_ptr_t(n)^.xp[12] := n2;
+      isc_node_ptr_t(n)^.xl[9] := 16#100003;
+      isc_node_ptr_t(n)^.xl[6] := 16#40000;
+    end;
+    p1_node_chars_ptr_t(n)^[10] := chr(4);
+    p1_node_chars_ptr_t(n)^[11] := chr(0);
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+    solutions_made := true;
+  end;
+end;''')
+
+P1_ROUTINES['isc_assign_node_isc_mul_to_aop'] = _p1('isc_assign_node_isc_mul_to_aop', '''the
+  proper_subtree il_isc_mul_to_aop, 2 children: the target (+64) and the
+  multiplier (+68) at the assignment's precision (+52) when the
+  multiplication can be done in line (as isc_tree_node_isc_mul_top: -SOME_FP
+  without il_180's bit 4 of +374 or -NO_FP; a power of 2 between 2 and
+  2**31; or neither the bit nor -NO_FP); otherwise rewritten as an
+  assignment (an assign_node, kind 140, op 0) of the product (a tree
+  node, op 3, of the target and the multiplier at the assignment's
+  rlen, bits 7 and 6 of +58 as its +30's), and that node's solutions.
+
+  0x0DF1BA, 0x48E bytes: the first test `not.b', `and.b' of the flags
+  (`bmi' to the children), the power of 2 and-ed through -46 (`bmi' to
+  the children), then the bit or -NO_FP (`bmi' to the rewrite); the
+  assignment's bytes rlen_bits div 8; A3 il.
+
+  Not known from the original: how the conditions were written.''', '''
+var
+  n, n1: univ_ptr;
+  inh_1, inh_2: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_isc_mul_to_aop);
+  number_of_children := 2;
+  if (not (p1_node_bytes_ptr_t(il_180)^[374].b4 or (13 in cargs_$options.flags_286))
+      and (14 in cargs_$options.flags_286))
+     or (il_node_has_integer_value(isc_node_ptr_t(il)^.xp[17])
+         and is_power_of_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[17]))
+         and (log_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[17])) >= 1)
+         and (log_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[17])) <= 31))
+     or not (p1_node_bytes_ptr_t(il_180)^[374].b4 or (13 in cargs_$options.flags_286)) then begin
+    inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
+    @COPY inh_1
+    inh_1^.f38.b5 := true;
+    inh_1^.top := isc_node_ptr_t(il)^.xp[3];
+    inh_1^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+    inh_1^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[26]];
+    inh_1^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+    children[1] := pass_1(isc_node_ptr_t(il)^.xp[16], inh_1, depth + 1,
+        [solution$address_mode, solution$ip_reg, solution$ip_reg_field]);
+    if solution_list$empty(children[1]) then
+      no_solutions := true
+    else begin
+      inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[17]);
+      @COPY inh_2
+      inh_2^.top := isc_node_ptr_t(il)^.xp[3];
+      inh_2^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+      inh_2^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[26]];
+      inh_2^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+      children[2] := pass_1(isc_node_ptr_t(il)^.xp[17], inh_2, depth + 1,
+          [solution$fp_reg, solution$ip_reg, solution$literal_32_bits]);
+      if solution_list$empty(children[2]) then
+        no_solutions := true;
+    end;
+  end
+  else begin
+    @TRACE
+    n1 := mrh_$alloc(isc_preserve_heap, 48);
+    isc_node_ptr_t(n1)^.kind := 137;
+    isc_node_ptr_t(n1)^.rewritten := true;
+    isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[16];
+    isc_node_ptr_t(n1)^.xp[11] := isc_node_ptr_t(il)^.xp[17];
+    isc_node_ptr_t(n1)^.xw[18] := 3;
+    isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[26];
+    isc_node_ptr_t(n1)^.xw[14] := isc_node_ptr_t(il)^.xw[26];
+    p1_node_bytes_ptr_t(n1)^[30].b7 := p1_node_bytes_ptr_t(il)^[58].b7;
+    isc_node_ptr_t(n1)^.xw[12] := isc_node_ptr_t(il)^.xw[26];
+    p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[58].b6;
+    n := mrh_$alloc(isc_preserve_heap, 80);
+    isc_node_ptr_t(n)^.kind := 140;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[16] := isc_node_ptr_t(il)^.xp[16];
+    isc_node_ptr_t(n)^.xp[17] := n1;
+    isc_node_ptr_t(n)^.xp[3] := isc_node_ptr_t(il)^.xp[3];
+    isc_node_ptr_t(n)^.xw[38] := 0;
+    isc_node_ptr_t(n)^.xw[26] := isc_node_ptr_t(il)^.xw[26];
+    isc_node_ptr_t(n)^.xl[12] := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[26]] div 8;
+    isc_node_ptr_t(n)^.st_l42 := (isc_node_ptr_t(n)^.st_l42 & 16#FF0000FF)
+        ! (isc_node_ptr_t(il)^.st_l42 & 16#FFFF00);
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+    solutions_made := true;
+  end;
+end;''')
+
+P1_ROUTINES['isc_assign_node_div_by_aop'] = _p1('isc_assign_node_div_by_aop', '''the
+  proper_subtree il_div_by_aop, 2 children: the target (+64) and the
+  divisor (+68), signed, at the assignment's precision (+52) when the
+  divisor is a power of 2 between 2 and 2**31 or the division can be
+  done in line (as isc_tree_node_isc_mul_top); otherwise rewritten as
+  an assignment (an assign_node, kind 140, op 0) of the quotient (a
+  tree node, op 4, of the target and the divisor: opmods +54, +56,
+  rlen +52, bits 7 and 6 of +58 as its +30's), and that node's
+  solutions.
+
+  0x0DD4AE, 0x4C0 bytes: as isc_tree_node_isc_mul_top's conditions;
+  the target's bits 6 and 5 set by one `or.w #96' of +38; A3 il.
+
+  Not known from the original: how the conditions were written.''', '''
+var
+  n, n1: univ_ptr;
+  inh_1, inh_2: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_div_by_aop);
+  number_of_children := 2;
+  if (il_node_has_integer_value(isc_node_ptr_t(il)^.xp[17])
+      and is_power_of_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[17]))
+      and (log_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[17])) >= 1)
+      and (log_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[17])) <= 31))
+     or not ((p1_node_bytes_ptr_t(il_180)^[374].b4 or (13 in cargs_$options.flags_286))
+             or (not (p1_node_bytes_ptr_t(il_180)^[374].b4 or (13 in cargs_$options.flags_286))
+                 and (14 in cargs_$options.flags_286))) then begin
+    inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
+    @COPY inh_1
+    inh_1^.f38.b6 := true;
+    inh_1^.f38.b5 := true;
+    inh_1^.f38.b3 := p1_node_bytes_ptr_t(il)^[58].b6;
+    inh_1^.top := isc_node_ptr_t(il)^.xp[3];
+    inh_1^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+    inh_1^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[26]];
+    inh_1^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+    children[1] := pass_1(isc_node_ptr_t(il)^.xp[16], inh_1, depth + 1,
+        [solution$address_mode, solution$ip_reg, solution$ip_reg_field]);
+    if solution_list$empty(children[1]) then
+      no_solutions := true
+    else begin
+      inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[17]);
+      @COPY inh_2
+      inh_2^.f38.b6 := true;
+      inh_2^.f38.b3 := p1_node_bytes_ptr_t(il)^[58].b6;
+      inh_2^.top := isc_node_ptr_t(il)^.xp[3];
+      inh_2^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+      inh_2^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[26]];
+      inh_2^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+      children[2] := pass_1(isc_node_ptr_t(il)^.xp[17], inh_2, depth + 1,
+          [solution$fp_reg, solution$literal_32_bits]);
+      if solution_list$empty(children[2]) then
+        no_solutions := true;
+    end;
+  end
+  else begin
+    @TRACE
+    n1 := mrh_$alloc(isc_preserve_heap, 48);
+    isc_node_ptr_t(n1)^.kind := 137;
+    isc_node_ptr_t(n1)^.rewritten := true;
+    isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[16];
+    isc_node_ptr_t(n1)^.xp[11] := isc_node_ptr_t(il)^.xp[17];
+    isc_node_ptr_t(n1)^.xw[18] := 4;
+    isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[27];
+    isc_node_ptr_t(n1)^.xw[14] := isc_node_ptr_t(il)^.xw[28];
+    p1_node_bytes_ptr_t(n1)^[30].b7 := p1_node_bytes_ptr_t(il)^[58].b7;
+    isc_node_ptr_t(n1)^.xw[12] := isc_node_ptr_t(il)^.xw[26];
+    p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[58].b6;
+    n := mrh_$alloc(isc_preserve_heap, 80);
+    isc_node_ptr_t(n)^.kind := 140;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[16] := isc_node_ptr_t(il)^.xp[16];
+    isc_node_ptr_t(n)^.xp[17] := n1;
+    isc_node_ptr_t(n)^.xp[3] := isc_node_ptr_t(il)^.xp[3];
+    isc_node_ptr_t(n)^.xw[38] := 0;
+    isc_node_ptr_t(n)^.xw[26] := isc_node_ptr_t(il)^.xw[26];
+    isc_node_ptr_t(n)^.xl[12] := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[26]] div 8;
+    isc_node_ptr_t(n)^.st_l42 := (isc_node_ptr_t(n)^.st_l42 & 16#FF0000FF)
+        ! (isc_node_ptr_t(il)^.st_l42 & 16#FFFF00);
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+    solutions_made := true;
+  end;
+end;''')
+
+
+def _p1_rewrite_tail(ind, n='n'):
+    """A rewritten node's solutions (the copy of inh, pass_1 at the same
+    depth), as the generated routines write them."""
+    return '\n'.join(ind + x for x in (
+        'inh_1 := new_inherited_attributes(isc_heap, %s);' % n, 'inh_1^ := inh^;',
+        'inh_1^.node := %s;' % n, 'inh_1^.stmt := il;',
+        'solutions := pass_1(%s, inh_1, depth, permissible);' % n))
+
+
+P1_ROUTINES['isc_tree_node_div_top'] = _p1('isc_tree_node_div_top', '''the
+  proper_subtree il_div_top, 2 children, never its own: rewritten as a
+  signed_div_top (op 59) or unsigned_div_top (op 60) by the node's bit
+  6 of +30 when the divisor is a power of 2 between 2 and 2**31 or the
+  division can be done in line (as isc_tree_node_isc_mul_top);
+  otherwise as a call of m$dis$lll or m$diu$lll (std_lib_rtns[5], [7],
+  by the same bit; op 16, three operands) of the operands, each first
+  extended to a longword (op 18) unless both opmods are 4; each
+  rewritten node's solutions.
+
+  0x0E7F20, 0x63C bytes: D5 the routine, chosen first; the conditions
+  as isc_tree_node_isc_mul_top's (the power of 2 and-ed through -66);
+  +26 .. +29 copied as one longword; each rewrite has its own copy of
+  inh and pass_1, the store of the solutions and the `st' shared
+  (cross-jumping); A2 il, D4 inh.
+
+  Not known from the original: how the conditions were written; how
+  +26 .. +29 were written (two words here).''', '''
+var
+  lib: il_$node_ptr_t;
+  n, n1, n2: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_div_top);
+  number_of_children := 2;
+  if p1_node_bytes_ptr_t(il)^[30].b6 then
+    lib := std_lib_rtns[5]
+  else
+    lib := std_lib_rtns[7];
+  if (il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11])
+      and is_power_of_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[11]))
+      and (log_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[11])) >= 1)
+      and (log_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[11])) <= 31))
+     or not ((p1_node_bytes_ptr_t(il_180)^[374].b4 or (13 in cargs_$options.flags_286))
+             or (not (p1_node_bytes_ptr_t(il_180)^[374].b4 or (13 in cargs_$options.flags_286))
+                 and (14 in cargs_$options.flags_286))) then begin
+    if p1_node_bytes_ptr_t(il)^[30].b6 then begin
+      @TRACE
+      n := mrh_$alloc(isc_preserve_heap, 48);
+      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.rewritten := true;
+      isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
+      isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
+      isc_node_ptr_t(n)^.xw[18] := 59;
+      isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+      isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
+      p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
+      isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+@TAIL6
+    end
+    else begin
+      @TRACE
+      n := mrh_$alloc(isc_preserve_heap, 48);
+      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.rewritten := true;
+      isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
+      isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
+      isc_node_ptr_t(n)^.xw[18] := 60;
+      isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+      isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
+      p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
+      isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+@TAIL6
+    end;
+  end
+  else if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+    @TRACE
+    n := mrh_$alloc(isc_preserve_heap, 52);
+    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(lib);
+    isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
+    isc_node_ptr_t(n)^.xp[12] := isc_node_ptr_t(il)^.xp[11];
+    isc_node_ptr_t(n)^.xl[9] := 16#100003;
+    isc_node_ptr_t(n)^.xw[13] := 0;
+    isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    p1_node_chars_ptr_t(n)^[10] := chr(4);
+    p1_node_chars_ptr_t(n)^[11] := chr(0);
+@TAIL4
+  end
+  else begin
+    @TRACE
+    n1 := mrh_$alloc(isc_preserve_heap, 44);
+    isc_node_ptr_t(n1)^.kind := 137;
+    isc_node_ptr_t(n1)^.rewritten := true;
+    isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
+    isc_node_ptr_t(n1)^.xw[18] := 18;
+    isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+    isc_node_ptr_t(n1)^.xw[12] := 4;
+    p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
+    n2 := mrh_$alloc(isc_preserve_heap, 44);
+    isc_node_ptr_t(n2)^.kind := 137;
+    isc_node_ptr_t(n2)^.rewritten := true;
+    isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
+    isc_node_ptr_t(n2)^.xw[18] := 18;
+    isc_node_ptr_t(n2)^.xw[13] := isc_node_ptr_t(il)^.xw[14];
+    isc_node_ptr_t(n2)^.xw[12] := 4;
+    p1_node_bytes_ptr_t(n2)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
+    n := mrh_$alloc(isc_preserve_heap, 52);
+    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(lib);
+    isc_node_ptr_t(n)^.xp[11] := n1;
+    isc_node_ptr_t(n)^.xp[12] := n2;
+    isc_node_ptr_t(n)^.xl[9] := 16#100003;
+    isc_node_ptr_t(n)^.xl[6] := 16#40000;
+    p1_node_chars_ptr_t(n)^[10] := chr(4);
+    p1_node_chars_ptr_t(n)^[11] := chr(0);
+@TAIL4
+  end;
+  solutions_made := true;
+end;'''.replace('@TAIL6', _p1_rewrite_tail('      ')).replace('@TAIL4', _p1_rewrite_tail('    ')))
+
+P1_ROUTINES['isc_tree_node_mod_top'] = _p1('isc_tree_node_mod_top', '''the
+  proper_subtree il_mod_top, 2 children, never its own: rewritten as a
+  signed_mod_top (op 61) or unsigned_mod_top (op 62) by the node's bit
+  6 of +30 when the divisor is a power of 2 between 2 and 2**31 (and
+  the operation unsigned or cargs_$options.b27c_1 set) or the operation
+  can be done in line (as isc_tree_node_isc_mul_top); otherwise as
+  a - (a / b) * b over calls: the quotient by m$dis$lll or m$diu$lll
+  (std_lib_rtns[5], [7], by the same bit), the product by m$mis$lll
+  (std_lib_rtns[1]; op 16, three operands), the difference a tree node
+  of op 2; the operands are value_top_over's of the children (+40,
+  +44) at their opmods (+26, +28), first extended to longwords (op 18)
+  unless both opmods are 4; each rewritten node's solutions.
+
+  0x0EC404, 0x80C bytes: A4 the division routine, chosen first; the
+  conditions as isc_tree_node_isc_mul_top's (the power of 2 and-ed
+  through -90, then and-ed with `seq' of the bit or-ed with bit 1 of
+  0x4437EC); the call rewrite has a trace before value_top_over and
+  another in each of its branches; the second extension at -40; the
+  store of the solutions and the `st' shared (cross-jumping); A2 il,
+  D5 inh.
+
+  Not known from the original: how the conditions were written; how
+  +26 .. +29 were written (one longword in the image).''', '''
+var
+  lib: il_$node_ptr_t;
+  v1, v2: isc_node_ptr_t;
+  n, n1, n2, q, m: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_mod_top);
+  number_of_children := 2;
+  if p1_node_bytes_ptr_t(il)^[30].b6 then
+    lib := std_lib_rtns[5]
+  else
+    lib := std_lib_rtns[7];
+  if (il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11])
+      and is_power_of_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[11]))
+      and (log_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[11])) >= 1)
+      and (log_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[11])) <= 31)
+      and (not p1_node_bytes_ptr_t(il)^[30].b6 or cargs_$options.b27c_1))
+     or not ((p1_node_bytes_ptr_t(il_180)^[374].b4 or (13 in cargs_$options.flags_286))
+             or (not (p1_node_bytes_ptr_t(il_180)^[374].b4 or (13 in cargs_$options.flags_286))
+                 and (14 in cargs_$options.flags_286))) then begin
+    if p1_node_bytes_ptr_t(il)^[30].b6 then begin
+      @TRACE
+      n := mrh_$alloc(isc_preserve_heap, 48);
+      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.rewritten := true;
+      isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
+      isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
+      isc_node_ptr_t(n)^.xw[18] := 61;
+      isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+      isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
+      p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
+      isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+@TAIL6
+    end
+    else begin
+      @TRACE
+      n := mrh_$alloc(isc_preserve_heap, 48);
+      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.rewritten := true;
+      isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
+      isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
+      isc_node_ptr_t(n)^.xw[18] := 62;
+      isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+      isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
+      p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
+      isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+@TAIL6
+    end;
+  end
+  else begin
+    @TRACE
+    v1 := value_top_over(isc_node_ptr_t(il)^.xp[10], isc_node_ptr_t(il)^.xw[13],
+        isc_node_ptr_t(il)^.xw[13]);
+    v2 := value_top_over(isc_node_ptr_t(il)^.xp[11], isc_node_ptr_t(il)^.xw[14],
+        isc_node_ptr_t(il)^.xw[14]);
+    if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+      @TRACE
+      q := mrh_$alloc(isc_preserve_heap, 52);
+      isc_node_ptr_t(q)^.kind := 137;
+      isc_node_ptr_t(q)^.rewritten := true;
+      isc_node_ptr_t(q)^.xp[10] := isc_node_ptr_t(lib);
+      isc_node_ptr_t(q)^.xp[11] := v1;
+      isc_node_ptr_t(q)^.xp[12] := v2;
+      isc_node_ptr_t(q)^.xl[9] := 16#100003;
+      isc_node_ptr_t(q)^.xw[13] := 0;
+      isc_node_ptr_t(q)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+      p1_node_chars_ptr_t(q)^[10] := chr(4);
+      p1_node_chars_ptr_t(q)^[11] := chr(0);
+      m := mrh_$alloc(isc_preserve_heap, 52);
+      isc_node_ptr_t(m)^.kind := 137;
+      isc_node_ptr_t(m)^.rewritten := true;
+      isc_node_ptr_t(m)^.xp[10] := isc_node_ptr_t(std_lib_rtns[1]);
+      isc_node_ptr_t(m)^.xp[11] := q;
+      isc_node_ptr_t(m)^.xp[12] := v2;
+      isc_node_ptr_t(m)^.xl[9] := 16#100003;
+      isc_node_ptr_t(m)^.xw[13] := 0;
+      isc_node_ptr_t(m)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+      p1_node_chars_ptr_t(m)^[10] := chr(4);
+      p1_node_chars_ptr_t(m)^[11] := chr(0);
+      n := mrh_$alloc(isc_preserve_heap, 48);
+      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.rewritten := true;
+      isc_node_ptr_t(n)^.xp[10] := v1;
+      isc_node_ptr_t(n)^.xp[11] := m;
+      isc_node_ptr_t(n)^.xw[18] := 2;
+      isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+@TAIL6
+    end
+    else begin
+      @TRACE
+      n1 := mrh_$alloc(isc_preserve_heap, 44);
+      isc_node_ptr_t(n1)^.kind := 137;
+      isc_node_ptr_t(n1)^.rewritten := true;
+      isc_node_ptr_t(n1)^.xp[10] := v1;
+      isc_node_ptr_t(n1)^.xw[18] := 18;
+      isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+      isc_node_ptr_t(n1)^.xw[12] := 4;
+      p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
+      n2 := mrh_$alloc(isc_preserve_heap, 44);
+      isc_node_ptr_t(n2)^.kind := 137;
+      isc_node_ptr_t(n2)^.rewritten := true;
+      isc_node_ptr_t(n2)^.xp[10] := v2;
+      isc_node_ptr_t(n2)^.xw[18] := 18;
+      isc_node_ptr_t(n2)^.xw[13] := isc_node_ptr_t(il)^.xw[14];
+      isc_node_ptr_t(n2)^.xw[12] := 4;
+      p1_node_bytes_ptr_t(n2)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
+      q := mrh_$alloc(isc_preserve_heap, 52);
+      isc_node_ptr_t(q)^.kind := 137;
+      isc_node_ptr_t(q)^.rewritten := true;
+      isc_node_ptr_t(q)^.xp[10] := isc_node_ptr_t(lib);
+      isc_node_ptr_t(q)^.xp[11] := n1;
+      isc_node_ptr_t(q)^.xp[12] := n2;
+      isc_node_ptr_t(q)^.xl[9] := 16#100003;
+      isc_node_ptr_t(q)^.xl[6] := 16#40000;
+      p1_node_chars_ptr_t(q)^[10] := chr(4);
+      p1_node_chars_ptr_t(q)^[11] := chr(0);
+      m := mrh_$alloc(isc_preserve_heap, 52);
+      isc_node_ptr_t(m)^.kind := 137;
+      isc_node_ptr_t(m)^.rewritten := true;
+      isc_node_ptr_t(m)^.xp[10] := isc_node_ptr_t(std_lib_rtns[1]);
+      isc_node_ptr_t(m)^.xp[11] := q;
+      isc_node_ptr_t(m)^.xp[12] := n2;
+      isc_node_ptr_t(m)^.xl[9] := 16#100003;
+      isc_node_ptr_t(m)^.xl[6] := 16#40000;
+      p1_node_chars_ptr_t(m)^[10] := chr(4);
+      p1_node_chars_ptr_t(m)^[11] := chr(0);
+      n := mrh_$alloc(isc_preserve_heap, 48);
+      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.rewritten := true;
+      isc_node_ptr_t(n)^.xp[10] := n1;
+      isc_node_ptr_t(n)^.xp[11] := m;
+      isc_node_ptr_t(n)^.xw[18] := 2;
+      isc_node_ptr_t(n)^.xw[12] := 4;
+@TAIL6
+    end;
+  end;
+  solutions_made := true;
+end;'''.replace('@TAIL6', _p1_rewrite_tail('      ')))
