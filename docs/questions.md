@@ -1332,3 +1332,25 @@ revisited.
    or SUB's operand 1 the immediate (or a register), 2 the source, 3
    the result; condition codes the last operand.  backend.ins.pas
    documents none of this yet (to confirm against lir when translated).
+161. Translator PC2: **question 157 is answered: not the source's.**  The
+   three tr_utils messages are whole in the image ('TR_UTILS_$relative_
+   instr_position: instrs not in same bb%$', 'TR_UTILS_$separate_
+   partitions: LTS was active on exit%$', 'TR_UTILS_$move_add_to_new_bb:
+   prev_instr not in new_bb%$'); the missing characters were the
+   extension words objdump prints on a line of their own when it decodes
+   constant bytes as a long instruction, which the scratch helper that
+   compacted the disassembly dropped.  tr_utils.pas now has the image's
+   text; every '...%$' literal under lang2/source/be_com was checked
+   against the binary's bytes.  (Worth a check elsewhere: any translator
+   who read constants from a compacted disassembly.)
+162. Translator PC2, mmt_utils: bv_$and_to's fourth parameter (read off
+   the frame as integer32) is the bit vector the result goes to
+   (insert_mmt_seqs passes mmt's scratch vector): mmt_utils passes
+   integer32(bv) until bv's translator narrows the heading (and
+   bv_$find_next_val's result, read as a longword by 13 callers, is
+   declared a word).  Also: the memory model keeps its own numbers in
+   fields other phases use for something else (a live range's +40 and
+   +52, a segment's +36 and +40, an instruction's +16), so
+   mmt.pvt.pas reads them through unit-local views (mmt_lr_v_t,
+   mmt_lts_v_t, mmt_bb_v_t, mmt_rtn_v_t) rather than naming them in
+   backend.ins.pas; fold them in when the records settle?

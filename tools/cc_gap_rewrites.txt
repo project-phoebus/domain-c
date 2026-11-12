@@ -604,3 +604,5 @@ lang2/source/be_com/tr_utils.pas	s/^(\s*)cur, nil, true, disp, offset\) then beg
 lang2/source/be_com/tr_utils.pas	s/([a-z]+)\^\.opc in \[77, 79\.\.83\]/(($1^.opc = 77) or (($1^.opc >= 79) and ($1^.opc <= 83))) { gap 8 }/
 lang2/source/be_com/tr_utils.pas	s/and n_bit_unconsumed\(tst\) then/and (n_bit_unconsumed(tst) = true) then { gap 24 }/
 lang2/source/be_com/tr_utils.pas	s/^(\s*)find_suitable_driving_lts_for_tst := lts;/$1find_suitable_driving_lts_for_tst := last; { gap 15 }/
+# gap 12 (mmt_utils, translator PC2): a pointer function's result compared with a variable (two variables, for the check)
+lang2/source/be_com/mmt_utils.pas	s/if utils_ins_\$operands_instruction\(p\) <> i then begin/if p <> o then begin { gap 12 }/
