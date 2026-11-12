@@ -13,9 +13,10 @@ initialized data, and compares it byte for byte with the image's initial
 bytes for the same unit:
 
 - the module's own data (dpc's `.moddata.M', `.bss.moddata.M', with or
-  without a section suffix) against the unit's data block in the image
-  (coff_compare.data_base: its A5, less any extern-address cells right
-  below it);
+  without a section suffix) against the unit's data block in the image,
+  from its A5 (the extern-address cells right below it are the
+  loader's; a unit with no code, opinfo, from its .blocks data cell) to
+  the next unit's block;
 - each named section the unit defines (dpc's `.data.overlay.S': a `var
   (s)' block with an initializer) against the image's section S, from
   its start (a named section is an overlay: every unit that declares it
@@ -479,7 +480,10 @@ def check(f, binkey, img, obj, verbose=False):
             continue
         m, mo = MODDATA_RE.match(s.name), OVERLAY_RE.match(s.name)
         if m:
-            b = unit_data_base(img.coff, unit)
+            # dpc's +0 is the unit's A5: the image's extern-address
+            # cells right below it (coff_compare.data_base) are the
+            # loader's, which dpc's block does not hold
+            b = unit['a5'] if unit['a5'] is not None else unit_data_base(img.coff, unit)
             if b is None:
                 out.append(('error', '%s %s %s: %d bytes, the image unit has no data block'
                             % (f, binkey, s.name, s.size)))

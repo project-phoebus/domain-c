@@ -26,7 +26,7 @@
 
   Module data as the image uses it: +0 the line (a varying string: the
   length word, the characters from +2); +208 the prefix taken for the
-  line; +416 the prefix; +622 a byte, true when nothing has been
+  line; +416 the prefix; +622 a byte, true (initially) when nothing has been
   written to the line since it began.
 
   The global routines load A5; about_to_write_to_line, which does not,
@@ -55,7 +55,7 @@ var
   line: diag_$vstring_t;                { +0: the line being built }
   line_prefix: diag_$vstring_t;         { +208: the prefix taken for it }
   prefix: diag_$vstring_t;              { +416: the prefix }
-  line_is_fresh: boolean;               { +622: nothing written yet }
+  line_is_fresh: boolean := true;       { +622: nothing written yet }
 
 { about_to_write_to_line - take the prefix for the line when it is the
   line's first text.
