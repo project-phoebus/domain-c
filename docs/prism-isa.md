@@ -593,7 +593,9 @@ the floating operations 0x30..0x3E; the floating control 0xFC.
 ## Latencies and the scheduler's pipeline model (sched_utils.pas; new)
 
 Translator PB4 (sched_utils.pas, 0x279190..0x27A416; the SCHED phase
-itself, sched.pas, is not translated yet).
+itself, sched.pas, translated by PB7: below).  sched calls only
+fill_in_operand_delays; its pass 1 computes its own heights, in
+quarter cycles (sched_utils_$calculate_precedence is oli's).
 
 - **Operand delays come from the opcode table.**  Each operand
   description in `instruction_attributes` (+4k, four bytes) carries in
@@ -830,49 +832,122 @@ Translator PB5 (ra_utils.pas; ra.pas read in part, not translated).
   counts; lir_main_c88/c89 the routine's floating and integer peaks
   (ra_utils' pass-through spilling reads them).
 
-## The scheduler's pipeline model (sched; new)
+## The scheduler's pipeline model (sched.pas; confirmed, translator PB7)
 
-Translator PB5, from sched.pas's routines (not translated yet) with
-sched_utils (above) and asm's pass 1.
+Translator PB5 read sched's routines (before translation) with
+sched_utils and asm's pass 1; translator PB7 translated sched.pas
+(0x273C90..0x279162, 50 routines) and checked each item.  **C**
+marks what the translation confirmed, **corrected** what it changed.
 
-- **Two issue slots a cycle.**  SCHED (phase 12, before RA, block by
-  block, skipping atomic and forwarded blocks) builds each cycle from
-  an integer-side slot (sched +0x3118) and a floating slot (+0x3128).
-  instr_would_fit (0x2774F4): a floating operation (classes fp_double,
-  fp_single, immediate) joins a cycle whose integer slot is not a call
-  and whose floating slot is empty, or holds a multiply it can be
-  fused with (can_be_5opified: the five-operand multiply-and-add forms
-  adds5, subd5, ...: asm's "5op"); calls, entries, LIMITs, SVCs and
-  floating control instructions need the whole cycle; SEQ and join
-  birthpoints take no slot; two integer instructions share a cycle
-  only as two single-word loads or stores of adjacent words (the same
-  literal pool entry or variable, displacements 4 apart; debug switch
-  sw11), most likely made one double access.  With debug switch sw14
-  nothing pairs.
-- **Floating register traffic per cycle is limited.**  The section
-  sched_readonly_tables (0x2BE108, two bytes by opcode: the generated
-  fp_registers_busy.init) gives the floating registers (in singles) each
-  opcode reads and writes: ADDD, MULD, DIVD 4 and 2; ADDS, MULS 2 and 1;
-  LOADD 0 and 2; STORED 2 and 0; CMPD 4 and 0; COPYD and the double
-  traps 2 and 2; a cycle's reads and writes (with the instruction's own
-  +41) must stay within sched_3158, which lir_main sets.
-- **Latencies as a 16-cycle ring.**  The values an issued instruction
-  produces are entered in the list of the cycle they become available
-  (16 lists of up to 130 segments, sched +0 .. +0x2080, their counts at
-  +0x2080); instr_would_stall (0x276F90) refuses an instruction that
-  reads a register or memory operand still pending; when nothing can
-  issue, generate_stall_cycle advances the clock and empties the next
-  list.  The delays are sched_utils_$operand_delay's.
-- **Two passes.**  Pass 1 (0x27549C) locks what may not move (the
-  closing branch, a RETURN after the branches, the condition code
-  chains, the call protocol: a call's physical argument and result
-  registers written and read next to it, bus-locking instructions, the
-  conditional traps' drivers) and computes the precedence heights;
-  pass 2 (0x278900) issues by height cycle by cycle and can make a
-  move and an operation one read-modify-write instruction.
-  register_pressure (0x275382) scores an instruction by the registers
-  reads (+1 each) against those it writes (-1 each), at least 0 and,
-  above 4, 3 (a call, return, SVC: -1 or +1 by class).
+- **Two issue slots a cycle (C, with corrections).**  SCHED (phase 12,
+  before RA, block by block in rtn +72's order; the whole phase off
+  with debug switch sw15) builds each cycle from an integer slot (sched
+  +0x3118) and a floating slot (+0x3128), plus three side slots: the
+  second of a load/store pair (+0x3114), an IPCCNOP (+0x3110) and a SEQ
+  or join birthpoint (+0x310C).  instr_would_fit (0x2774F4):
+  - a floating operation (classes fp_double, fp_single) goes with
+    anything but a call in the integer slot, into an empty floating
+    slot or beside a multiply it fuses with (both ways round; neither
+    may set the floating condition codes); a FP-immediate class
+    instruction only into an empty floating slot (it never fuses);
+  - calls, floating control instructions and **floating preference
+    moves that set no condition codes** need the whole cycle (both
+    slots empty); ENTRY, LIMIT and SVC need it with no IPCCNOP either;
+  - **an IPCCNOP fits beside anything but an instruction of a class
+    that takes no slot** (ENTRY, SEQ, LIMIT, PMOVE, label, join
+    birthpoint), one a cycle (corrected: PB5 had it with the
+    whole-cycle group);
+  - **once a SEQ or join birthpoint is in a cycle nothing else fits**
+    (corrected: "take no slot" holds only for the ring and the stall
+    count, final_p2_instr_update);
+  - other (integer) instructions take the integer slot, or pair (next
+    item).  With debug switch sw14 a floating operation needs an empty
+    cycle and an integer one an empty floating slot (nothing shares).
+  Skipped blocks: **atomic blocks and those with +17 bit 5** (xtp's
+  b17_5) only lose their SEQs and join birthpoints
+  (drop_unneeded_instructions; corrected: not "forwarded" blocks, +17
+  bit 1).
+- **MUL+ADD fusing (C).**  can_be_5opified (0x277262), fit_instr
+  (0x277C46): MULS fuses with ADDS, SUBS, TRUNCSI; MULD with ADDD,
+  SUBD, TRUNCDI.  The multiply stays in the floating slot, the add
+  (+0x3124) takes the five-operand opcode (adds5 186, subs5 187,
+  truncsi5 188, addd5 189, subd5 190, truncdi5 191).  An add that
+  already modifies its result in place (operand 3, 6 for a double) is
+  only canonicalized (the modified input second); otherwise one of its
+  inputs (operand 2 first, then 1; a subtract only 2; a double's odd
+  halves are operands k + 3) must be non-final, non-physical, read by
+  no other instruction still to issue or meaning to modify it, and its
+  live range must be one the result's can absorb (or be absorbed by:
+  can_make_into_rmw_and_combine_lts); the input's reader is moved last
+  in its chain, the add made read-modify-write and the two live ranges
+  merged.  After the cycle's first instruction, pass 2 keeps adding
+  floating operations only while the floating slot holds no fused add
+  and an opcode with instruction_attributes +6 bit 1 (the add and
+  multiply group: truncsi, adds, subs, mins, maxs, truncdi, addd, subd,
+  mind, maxd, muls, muld and the five-operand forms).
+- **Load/store pairing (corrected).**  Two integer instructions share
+  a cycle only as two **LOADS or two STORES** (single-precision
+  floating loads and stores) with the same memory operand kind and the
+  same base segment, debug switch sw11 set: two literal-pool loads of
+  single literals (literal kind 12; no adjacency test: fit_instr makes
+  the two literals one pair literal with token_$make_real_lit_pair,
+  whose found_swapped decides the order), or two stack-frame accesses
+  to one VAR_NAME 4 bytes apart.  They become **LOADSE and LOADSO
+  (STORESE and STORESO)**, the lower word's first (fitter +40), two
+  single accesses of the even and odd word, not one double access.
+- **Floating register traffic per cycle is limited (C).**
+  fp_registers_busy (sched_readonly_tables 0x2BE108, two bytes by
+  opcode: reads, writes, in singles; values as PB5 listed, and copys,
+  movei, cvtis 1/1, muli 2/1, the five-operand forms as their adds,
+  mffp 1/0, mtfp 0/1, a call 0/0): an instruction fits when the
+  cycle's reads plus its own stay within sched_3158 and the cycle's
+  writes plus its own and its +41 too; fit_instr adds its counts (a
+  call also its +41 to the writes).  sched_3158 is lir_main's count of
+  the floating register pairs the conventions do not reserve (fp60).
+- **Latencies as a 16-cycle ring (C, refined).**  sched +0 .. +0x2080
+  (16 lists of 130 segments, no overflow test), counts at +0x2080.
+  When a cycle closes, each register result of its instructions that
+  has a reader (not memory, not of a class that takes no slot) is
+  entered in the list of cycle (delay + clock + 1) mod 16; the clock
+  advances on a used cycle or a stall cycle (generate_stall_cycle) and
+  the new cycle's list is emptied.  instr_would_stall (0x276F90)
+  refuses an instruction reading any register or memory segment on any
+  of the 16 lists (ENTRY, SEQ, LIMIT, PMOVE, labels and join
+  birthpoints never stall).  The delays are sched_utils_$operand_delay's
+  (fill_in_operand_delays with [1] and sw9 at pass 1's start).
+- **The stall counts (C).**  final_p2_instr_update writes each issued
+  instruction's +2 bits 3..0 as (clock - the clock when the previous
+  cycle closed) mod 16: the stall cycles before its cycle.  Stalls come
+  only from select_first_instruction (nothing ready can issue without
+  stalling, or a ready call, SEQ, SVC or join birthpoint would stall)
+  and from waiting for a high instruction (pass 2's third pass).
+- **Two passes (C, refined).**  Pass 1 (0x27549C) takes the block
+  apart: labels first on the new list, the closing branches and RETURN
+  aside (squash mode set to 2, .SF; the conditional branch's condition
+  code operand cut from its chain and made kind none), a final call
+  (+3 bit 3 or 5) held back so that only SEQs can be placed before it.
+  Walking back from the branches' inputs and the final segments, an
+  instruction is placed when all its readers are and test_p1_lock frees
+  it; its height is the largest (reader's height, its low bits cleared)
+  + 4 x delay over its results, + 4 x (delay + 1) for a result whose
+  segment height its readers set (p1_touch_segment), an ENTRY 30000,
+  the branch's condition codes 8, plus register_pressure's bonus.
+  Pass 2 (0x278900) issues by height: the first instruction
+  (select_first_instruction: the final call when only SEQs follow it,
+  in an entry block the ENTRY or LIMIT, else a call/SEQ/SVC/join
+  birthpoint, else the highest that can issue, a later one of the same
+  quarter preferred when its low bits are higher, the search ending 100
+  quarters below the best), then the floating operations that fit, the
+  others that fit, and an instruction at least as high that must wait
+  a few cycles while nothing else can go.  The closing branches issue
+  last, a cycle each.
+- **register_pressure (0x275382; corrected).**  From a base of 2,
+  each register operand (ip_reg .. fp_reg_pair_physical) read adds one
+  and each written takes one off, for alu, call, fp_double, immediate,
+  fp_control, fp_single and svc; a load or MFPR gives 0, a store or
+  MTPR 1, every other class 2; the result clamped below at 0 and, above
+  4, set to 3.  It is added to the placed instruction's height (the
+  quarter-cycle fraction).
 - After RA, ASM's pass 1 applies the last pipeline rules (its state
   machine, above): NOPs for a squashing call's delay slot and the
   floating unit's two-word instructions.

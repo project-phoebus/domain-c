@@ -1149,7 +1149,9 @@ end;
   0x2749A4, 0x468 bytes, internal: op by address; D0 (the frame byte
   -58, `st' first).  The registers it writes are a set of 0..95 (the
   frame's -16, three longwords; an element added through a cleared
-  temporary at -120 ored in, bounded by `cmpi 95' as a constructor);
+  temporary at -120 ored in, bounded by `cmpi 95' as a constructor:
+  rev889-patterns 281; docs/dpc-gaps.md 29 and 38 for the test and the
+  addition);
   the operands counted down from the last. }
 
 function test_p1_call_lock(
@@ -1447,7 +1449,7 @@ end;
   classes (`cmpi.w #24; bcc' to the end); the 2 is the shifts' count
   register (`moveq #2,D1; lsl.w D1,D0', where the unit's other
   products use `lsl.w #2'), so the base is a constant the compiler
-  reused (rev889-patterns 75).  A load's -1 jumps straight to the
+  reused (rev889-patterns 75, 280; docs/questions.md 340).  A load's -1 jumps straight to the
   clamp's 0. }
 
 function register_pressure(
@@ -2004,7 +2006,7 @@ end;
 
   0x276474, 0x5D8 bytes, internal: op, instr by address (frame 8:a,
   12:a); D0 (the frame byte -46).  The physical registers it reads are
-  a set of 0..95 (-16, built as test_p1_call_lock's).  The first test
+  a set of 0..95 (-16, built as test_p1_call_lock's; docs/dpc-gaps.md 29, 38).  The first test
   returns at once (`st D0; bra' to the epilogue). }
 
 function test_p2_call_lock(
@@ -3260,7 +3262,8 @@ end;
   (-160 for the cycle, -48 for a waiting candidate's test, -96 its
   copy); the candidate's queue position a walker (-112).  A stalled
   start loops back to clearing the slots without testing the queue
-  (`bra' to 0x278980).  The floating pass stops at a fused add or at a
+  (`bra' to 0x278980: rev889-patterns 283); the fitter records copied
+  whole (pattern 282).  The floating pass stops at a fused add or at a
   multiply-class instruction in the floating slot whose attributes' +6
   bit 1 is clear. }
 
@@ -3325,7 +3328,7 @@ var
     0x278606, 0x290 bytes, nested (called without a static link):
     chosen by address; D0.  The best and second-best queue positions are
     walkers in the frame (-24, -40); the test `(h & -4) = 3' can never
-    hold (`moveq #-4; and.l; cmpi.l #3'), kept. }
+    hold (`moveq #-4; and.l; cmpi.l #3'), kept (docs/questions.md 341). }
 
   function select_first_instruction(
       out chosen: sc_instr_ptr_t): boolean; options(val_param);

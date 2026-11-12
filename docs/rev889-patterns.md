@@ -1138,3 +1138,29 @@ cc.m68k unless marked.
     records' pointers (a live range's +44, a record's +8 and +12) are
     masked `andi.l #-4' before each use, and a record's +15 bit 0 (the
     low bit of its second link) marks it removed from the graph.
+
+## The scheduler (translator PB7, cc.a88k sched)
+
+280. **A constant's register used as a shift count.**  register_pressure
+    (cc.a88k 0x275382) loads its count's initial 2 with `moveq #2,D1'
+    and computes the opcode's attribute index with `lsl.w D1,D0' twice
+    (every other index in the unit is `lsl.w #2,D0'): item 75's reuse
+    of a register's known value, as a shift count.  dpc shifts by an
+    immediate and initializes the count apart.
+281. **An element added to a 96-bit set through a cleared temporary.**
+    test_p1_call_lock and test_p2_call_lock (0x2749A4, 0x276474) add a
+    register number to a `set of 0..95' as `clr.l' three times into a
+    frame temporary, `moveq #95,D0; sub.w D4,D0; bcs' (skip), `lsr.w
+    #3; bset D4,(A0,D0.w)', then `or.l (A0)+,(A1)+' three times
+    (`dbf'); the membership test is the guarded `btst' (`moveq #95;
+    sub.w; bcs; lsr.w #3; tst.w; btst; bhi').  dpc refuses both
+    (docs/dpc-gaps.md 29, 38).
+282. **A 42-byte record copied as five longword pairs and a word.**
+    pass2 (0x278900) copies its fitter records (`moveq #4,D0; move.l
+    (A0)+,(A1)+' twice, `dbf D0', `move.w (A0),(A1)'); 12-byte queue
+    cursors are three `move.l'.
+283. **A loop re-entered past its own test.**  pass2's cycle loop, when
+    select_first_instruction asks for a stall cycle, calls
+    generate_stall_cycle and branches back to the slots' clearing
+    (`bra' 0x278980), not to the loop's test of the ready queue
+    (0x278D90): a repeat ... until inside the while.
