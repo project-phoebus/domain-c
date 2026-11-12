@@ -407,3 +407,14 @@ routines of other units it calls without an insert heading (opt_loop's
 fixupchildren, opt_main's fixup_blocks and
 opt_main_$symidx_of_varn_or_fsym, kfold) are declared extern in the
 unit file, as opt_reachdef does kfold (docs/questions.md 124-126).
+Translator GG (2026-11-11), final (started, 99 of 120): final.pas
+reads the cells through codegen.ins.pas's codegen_$cell_t, which gets a
+sixth variant (+20 a pointer, `visit': scancc's chain of visited
+cells); final.ins.pas gets jmp_br_resolve's heading (finaldriver calls
+it).  final declares opinfo's tables it reads (sizes 0x2D01CE, access
+0x2CFDD8, the condition codes' classes 0x2CF5EC and effects 0x2CF4D8),
+cg_null_ads (it does not open cg.ins.pas), dfetch, banshee's
+dobansheefpx (banshee.pas is not started) and a copy of celpkg's empty
+descriptor.  peepholer_ops and its six nested try_ routines, deltest,
+opttest, optmove, opta, floatop and seven more are not written (a TODO
+in the header; peepholer_ops declared extern at module level).

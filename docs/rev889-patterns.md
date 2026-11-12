@@ -654,3 +654,21 @@ cc.m68k unless marked.
     check_tree_node right after doinsert (byte 0x4E, false to the
     callee's `tst.b; bpl'), as pattern 31 passes the empty string.
     dpc puts the constant after the routine.
+
+## Results and data (translator GG, final.pas)
+
+86. **A function's result assigned to a dead variable is not stored.**
+    plab (cc.m68k 0x10BE36) and backtrack (0x1103FA) call makejump and
+    final_$unlink_opts and go on without touching A0; the Pascal must
+    have assigned the result somewhere (a function cannot be called as a
+    procedure), so Rev 8.89 drops the store of a value never read.
+87. **A nested function's result left in D0 as its caller's.**
+    final_$contiguous_distinct_addresses (0x109A80) assigns
+    adjacent_disps's answer to its own result, which stays in D0 from
+    the call to the return (no move to a register variable).
+88. **Module data addressed by index from A5 with the table's offset as
+    the displacement.**  cc_use (0x10AE26) reads the conditions' table
+    at +0x88 as `lea (0,A5,D1.w),A1; move.w (136,A1),D0' with D1 the
+    op less 138 (or 152), and as `(-112,A1)' and `(-228,A1)' with D1 the
+    op itself (ops from 124 and 182): the lower bound folded into the
+    displacement, so a table's offset can look negative.

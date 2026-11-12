@@ -20,6 +20,10 @@ procedure peepholer(
     sect: univ_ptr;
     first: univ_ptr); options(val_param); extern;
 
+{ JMP_BR_RESOLVE - the branches of every section given their sizes
+  (jmp_br_resolve.pas 0x0BB57A: no parameters; finaldriver's). }
+procedure jmp_br_resolve; extern;
+
 { JMP_BR_SETUP - the branches of a routine's code cells (from first, in
   section sect) set up for their sizes.  jmp_br_resolve 0x0BA8A6: two
   pointers (cg_top's codegen). }
