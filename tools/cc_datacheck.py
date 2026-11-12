@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """cc_datacheck.py - compare units' initialized data with the image's.
 
-    tools/cc_datacheck.py [--binary m68k|a88k] [-j N] [--keep DIR] [-v]
-                          [FILE.pas|FILE.asm ...]
+    tools/cc_datacheck.py [--binary m68k|a88k] [-j N] [--keep DIR [--reuse]]
+                          [-q | -v] [FILE.pas|FILE.asm ...]
                           (default: every unit file the gate checks, and
                           the assembly units under lang/)
+    tools/cc_datacheck.py [-q | -v] --objects LIST
+                          (tools/cc_check.sh's last pass: the objects it
+                          compiled, FILE<TAB>m68k|a88k<TAB>OBJECT a line)
 
 tools/cc_check.sh compares code only.  This compiles each unit as the
 gate does (the dpc-gap rewrites of tools/cc_gap_rewrites.txt applied to
@@ -34,24 +37,32 @@ image (a routine's, the unit's data block's, a section's); a field whose
 target has no known image address (another unit's cell) is not compared
 and is counted as unverified.
 
-Each difference is printed as one line per run of differing bytes:
+Each difference is printed as one line per run of differing bytes (runs
+three or fewer bytes apart joined), its offset the image's in the block:
 
-    UNIT BINARY SECTION +OFFSET (SYMBOL+K): dpc XX XX .. image YY YY ..
+    UNIT BINARY SECTION +OFFSET (SYMBOL+K) [N bytes, KIND]: dpc XX .. | image YY ..
 
-and a summary line per unit and binary.  A module data block's set bytes
-that lie past dpc's block (up to the next unit's block) are differences
-too (`past dpc's data').
+KIND is `data', `past dpc's data' (set bytes of the image's block past
+the end of dpc's), `layout: ...' or `known (...)'; `set by a repeat
+record' marks bytes a .rwdi repeat record sets (the bytes the old
+cc_data.py showed unset: docs/questions.md 238).  A summary line follows
+per unit and binary.  A pointer to another unit's cell is resolved by
+that cell's place in its unit's comments (Image.cells()).
 
-dpc gap 37 (docs/dpc-gaps.md): dpc gives each byte module variable two
-bytes where the image packs byte cells one per byte, so a unit whose
-data has packed byte cells has its later cells shifted.  The module data
-is aligned by symbol where dpc names the cell (a defined variable) and
-the name ends in its image offset (`lir_main_c89', `lm_unused_da6': the
-units' convention for cells named by address): such a symbol's bytes are
-compared at the offset its name gives, and the run of bytes up to the
-next named cell follows it.  A difference whose bytes match the image's
-one or two bytes away is reported as `layout (gap 37)', not as a data
-error.
+Layout: dpc lays a module's own cells out after (or before) its defined
+ones, aligns them its own way, and gives each byte variable two bytes
+where the image packs them (dpc gap 37).  When the block as dpc lays it
+out differs from the image's, two other layouts are tried and the one
+leaving the fewest differences kept (reported as `laid out otherwise'):
+by name (a defined cell, which dpc names, placed where the unit's
+comments put it: `name (+0x300', `name; { +0x13C }', `0x2CE8D8  name',
+or a name ending in its offset, `lir_main_c89'; the ranges between
+named cells follow) and by content (difflib's alignment of the two
+blocks, gaps allowed).  A run whose bytes are the other side's one or two
+bytes away, or at another differing offset of the block, is reported as
+layout too.  A run tools/cc_datacheck_known.txt lists (checked by hand:
+layout the alignment misses, a logged dpc gap) is `known'.  Neither
+fails.
 
 Exit status 1 when a data difference (not a layout one) is found.
 """
@@ -77,6 +88,7 @@ BINS = {'m68k': os.path.join(ROOT, 'ctape/install/ri.apollo.cc.v.6.9.m/cc.m68k')
         'a88k': os.path.join(ROOT, 'ctape/install/ri.apollo.cc.v.6.9.mpx/cc.a88k')}
 SRC_ROOTS = ['lang', 'lang2', 'ivory', 'us', 'us1', 'moon_unit', 'misc_server']
 RULES = os.path.join(HERE, 'cc_gap_rewrites.txt')
+KNOWN = os.path.join(HERE, 'cc_datacheck_known.txt')
 
 MODDATA_RE = re.compile(r'^(?:\.bss|\.data)?\.moddata\.(?P<module>[^.]+)(?:\.(?P<section>.+))?$')
 OVERLAY_RE = re.compile(r'^\.data\.overlay\.(?P<section>.+)$')
@@ -447,6 +459,33 @@ def content_shift(mine, theirs, limit=40000):
     return shift
 
 
+_KNOWN = None
+
+
+def known(f, binkey, lo):
+    """The reason tools/cc_datacheck_known.txt gives for a difference of
+    unit file f at image offset lo of its data block, or None.  A line:
+    FILE<TAB>BINARY (m68k, a88k or *)<TAB>+0xLO-+0xHI (or *)<TAB>REASON."""
+    global _KNOWN
+    if _KNOWN is None:
+        _KNOWN = []
+        if os.path.exists(KNOWN):
+            for line in open(KNOWN):
+                line = line.rstrip('\n')
+                if not line or line.startswith('#'):
+                    continue
+                path, b, rng, why = line.split('\t', 3)
+                if rng == '*':
+                    a, z = 0, 1 << 32
+                else:
+                    a, z = (int(x.lstrip('+'), 16) for x in rng.split('-'))
+                _KNOWN.append((path, b, a, z, why))
+    for path, b, a, z, why in _KNOWN:
+        if path == f and b in ('*', binkey) and a <= lo < z:
+            return why
+    return None
+
+
 def unit_key(f):
     return os.path.splitext(f)[0]
 
@@ -667,15 +706,18 @@ def check(f, binkey, img, obj, verbose=False):
                                     if fi else '',
                                     'ours at the image\'s +%s' % ','.join('0x%X' % p for p in fo)
                                     if fo else '') if x)
-            if layout:
+            why = None if layout else known(f, binkey, lo)
+            if layout or why:
                 nlayout += 1
             else:
                 ndata += 1
             label = moved or ('past dpc\'s data' if past else (
                 'layout: the image\'s bytes shifted' if layout else 'data'))
+            if why:
+                label = 'known (tools/cc_datacheck_known.txt): %s; %s' % (why, label)
             if img.by_repeat(base + lo, end - lo):
                 label += '; set by a repeat record'
-            lines.append(('layout' if layout else 'data',
+            lines.append(('layout' if layout or why else 'data',
                           '%s %s %s +0x%X%s [%d bytes, %s]: dpc %s | image %s'
                           % (f, binkey, s.name, lo, sym, end - lo, label, hexs(ours),
                              hexs(list(img_b)))))
@@ -803,6 +845,38 @@ def _job(args):
             shutil.rmtree(work, ignore_errors=True)
 
 
+def report(res, quiet, verbose):
+    """Print one unit's lines; True when it has a data difference or an
+    error."""
+    bad = any(k in ('data', 'error') for k, _ in res)
+    if quiet and not bad:
+        return False
+    for kind, line in res:
+        if kind == 'summary':
+            if verbose or any(k in ('data', 'layout', 'error') for k, _ in res):
+                print(line)
+        elif not quiet or kind in ('data', 'error'):
+            print('    ' + line)
+    sys.stdout.flush()
+    return bad
+
+
+def check_objects(listfile, quiet, verbose):
+    """--objects: the objects tools/cc_check.sh kept, checked in one
+    process (the images built once)."""
+    imgs, bad = {}, False
+    for line in open(listfile):
+        f, binkey, obj = line.rstrip('\n').split('\t')
+        if not os.path.exists(obj):
+            continue
+        if binkey not in imgs:
+            imgs[binkey] = Image(BINS[binkey])
+        res = check(f, binkey, imgs[binkey], obj)
+        if res is not None:
+            bad = report(res, quiet, verbose) or bad
+    return 1 if bad else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('files', nargs='*')
@@ -810,11 +884,17 @@ def main():
     ap.add_argument('-j', type=int, default=os.cpu_count() or 4)
     ap.add_argument('--keep', help='keep each compilation in DIR/PATH_OF_UNIT.BINARY')
     ap.add_argument('--reuse', action='store_true',
-                    help='with --keep, check the objects kept there by an earlier run '
-                    '(tools/cc_check.sh with CC_KEEP=DIR keeps them too) without compiling')
+                    help='with --keep, check the objects an earlier run kept there '
+                    'without compiling them again')
+    ap.add_argument('--objects', metavar='LIST',
+                    help='check the objects LIST names (FILE<TAB>m68k|a88k<TAB>OBJECT a line, '
+                    'tools/cc_check.sh\'s) without compiling')
+    ap.add_argument('-q', action='store_true', help='print only the units with a data difference')
     ap.add_argument('-v', action='store_true', help='print every unit\'s summary, even a clean one')
     a = ap.parse_args()
     os.chdir(ROOT)
+    if a.objects:
+        sys.exit(check_objects(a.objects, a.q, a.v))
     files = [os.path.relpath(os.path.abspath(f), ROOT) for f in a.files] or all_units()
     binkeys = [a.binary] if a.binary else ['m68k', 'a88k']
     rules = read_rules()
@@ -831,15 +911,7 @@ def main():
             for f, b, res in ex.map(_job, jobs):
                 if res is None:
                     continue
-                for kind, line in res:
-                    if kind in ('data', 'error'):
-                        bad = True
-                    if kind == 'summary':
-                        if a.v or any(k in ('data', 'layout', 'error') for k, _ in res):
-                            print(line)
-                    else:
-                        print('    ' + line)
-                sys.stdout.flush()
+                bad = report(res, a.q, a.v) or bad
     finally:
         shutil.rmtree(scratch, ignore_errors=True)
     sys.exit(1 if bad else 0)
