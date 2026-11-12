@@ -69,7 +69,8 @@ GLOBAL_BITS = {0x4437F6: ('cargs_$options', 'flags_286', 13)}
 # single booleans of cargs_$options the actions test: (address, bit) -> field
 GLOBAL_FLAGS = {(0x4437EC, 1): ('cargs_$options', 'b27c_1')}
 # the run time's 32-bit arithmetic (the operator each call is)
-RUNTIME_OPS = {'m$mis$lll': '*', 'm$dis$lll': 'div', 'm$ois$lll': 'mod'}
+RUNTIME_OPS = {'m$mis$lll': '*', 'm$dis$lll': 'div', 'm$ois$lll': 'mod', 'm$ois$wlw': 'mod',
+               'm$mis$llw': '*', 'm$dis$llw': 'div'}
 PARAMS = {8: 'subject', 12: 'il', 16: 'inh', 20: 'work', 24: 'result'}
 
 
@@ -391,6 +392,49 @@ class Lifter(P2.Lifter):
                 st.regs[r] = self.mkcell(e, 'int32', False, out)
                 st.flags = ('tst', st.regs[r], SZ[sz])
                 return None
+        if mn == 'clr' and sz == 'w' and x.ops[0].startswith('%d') and \
+                self.ins[k + 1].text == 'swap ' + x.ops[0]:
+            # clr.w; swap: a longword's high word
+            r = x.ops[0][1:]
+            v = st.regs.get(r)
+            if v is None:
+                raise Unliftable('0x%X: %s not known' % (x.addr, r))
+            st.regs[r] = self.mkcell(('call', 'rshft', [self.val(v), ('num', 16)]), 'int32',
+                                     False, out)
+            st.flags = ('tst', st.regs[r], 4)
+            return self.ins[k + 2].addr
+        if mn == 'not' and sz == 'l' and x.ops[0].startswith('%d'):
+            r = x.ops[0][1:]
+            v = st.regs.get(r)
+            if v is None:
+                raise Unliftable('0x%X: %s not known' % (x.addr, r))
+            st.regs[r] = self.mkcell(('bin', '-', ('num', -1), self.val(v)), 'int32', False, out)
+            st.flags = ('tst', st.regs[r], 4)
+            return None
+        if mn in ('muls', 'mulu') and sz == 'w' and x.ops[1].startswith('%d'):
+            r = x.ops[1][1:]
+            v = st.regs.get(r)
+            if v is None:
+                raise Unliftable('0x%X: %s not known' % (x.addr, r))
+            a = self.read(parse_operand(x.ops[0]), 2, st, out, x)
+            st.regs[r] = self.mkcell(('bin', '*', self.val(v), self.val(a)), 'int32', False, out)
+            st.flags = ('tst', st.regs[r], 4)
+            return None
+        if mn == 'andi' and sz == 'w' and x.ops[1].startswith('%a') and '@(' in x.ops[1]:
+            # a word and of constant bits: booleans of two bytes cleared
+            mask = parse_operand(x.ops[0])[1] & 0xFFFF
+            loc = self.ea_addr(parse_operand(x.ops[1]), st)
+            if loc[0] != 'mem':
+                raise Unliftable('0x%X: %s' % (x.addr, x.text))
+            for byte, m in ((loc[2], mask >> 8), (loc[2] + 1, mask & 0xFF)):
+                for b in range(7, -1, -1):
+                    if not m >> b & 1:
+                        p_ = self.bitpath(loc[1], byte, b)
+                        if p_ is None:
+                            raise Unliftable('0x%X: bit %d of +%d' % (x.addr, b, byte))
+                        self.emit_set(p_, ('bool', False), out)
+            st.flags = None
+            return None
         if mn == 'lea' and x.ops[0].startswith('%pc@('):
             # constants the code holds, copied by postincrement
             st.regs[x.ops[1][1:]] = ('ptrconst', parse_operand(x.ops[0])[1])
@@ -706,15 +750,30 @@ class Lifter(P2.Lifter):
                 return out
             last = y.ops[-1].strip() if y.ops else ''
             dreg = re.match(r'%[ad][0-7]$', last) is not None
+            push = last == '%sp@-' or (last == '%sp' and y.mn in ('subq', 'addq', 'lea')) or \
+                y.mn == 'pea'
             if y.mn in self.PURE_CMP:
                 pass
             elif y.mn in ('move', 'movea', 'moveq', 'clr', 'lea', 'and', 'andi', 'or', 'ori',
-                          'not', 'add', 'addq', 'sub', 'subq', 'eor') and dreg:
-                if '%sp@' in y.text or (y.mn in ('move', 'movea') and '@+' in y.text):
+                          'not', 'add', 'addq', 'sub', 'subq', 'eor', 'lsl', 'lsr', 'asl', 'asr',
+                          'ext', 'neg', 'muls', 'mulu', 'swap') and dreg:
+                if '%sp@' in y.text or '@+' in y.text or '@-' in y.text:
                     return None
             elif y.mn in ('sne', 'seq', 'smi', 'spl', 'sgt', 'sge', 'slt', 'sle', 'shi', 'sls',
                           'scc', 'scs') and dreg:
                 pass
+            elif y.mn in ('pea', 'move', 'clr', 'subq', 'addq', 'lea') and push and \
+                    '@+' not in y.ops[0]:
+                pass
+            elif y.mn == 'jsr':
+                # a function called in the condition (its arguments pushed
+                # in the block)
+                try:
+                    h = self.heading(self.callee(y))
+                except Unliftable:
+                    return None
+                if h['ret'] is None or self.callee(y) in ('new_solution',):
+                    return None
             else:
                 return None
             out.append(k)
@@ -929,6 +988,10 @@ class Lifter(P2.Lifter):
             return v[1]
         if isinstance(v, Cell) and v.typ == 'bool':
             return ('cell', v)
+        if isinstance(v, Cell) and v.expr is not None and v.expr[0] == 'index' and \
+                v.expr[1].startswith('readonly_b'):
+            # a byte table of booleans (bit 7)
+            return ('bin', '<>', ('bin', '&', ('cell', v), ('num', 128)), ('num', 0))
         return None
 
     def condition(self, x, st):
@@ -966,7 +1029,7 @@ class Lifter(P2.Lifter):
 
     def fix(self, e, top=None):
         if isinstance(e, tuple) and e[0] == 'cost':
-            return ('cost', e[1], e[2], self.fix(e[3]))
+            return ('cost', e[1], e[2], self.fix(e[3]), ('off', e[4]))
         return super().fix(e, top)
 
     def resolve(self, stmts):
@@ -1244,22 +1307,24 @@ def lift_rule(img, r, kind):
         flags, decls, body = skeleton(stmts, r, kind)
         body = L1.macros(body, 'subject' if flags['rewrite'] else 'result')
         clause = L1.Clause(r, flags, decls, body)
-        # the tables' layout: the reverse of their order in the body
-        order = L1.cost_order(clause)
+        # the tables' layout: the reverse of their order in the clause, or
+        # (where the image's differs) each table's place written out
         offs = sorted(lf.tables)
-        if len(order) != len(offs):
-            raise Unliftable('%d tables read, %d in the body' % (len(offs), len(order)))
+        seq = L1.cost_offsets(clause)
+        if sorted(seq) != offs:
+            raise Unliftable('%d tables read, %d in the body' % (len(offs), len(seq)))
+        rank = {o: k + 1 for k, o in enumerate(offs)}
+        clause.reversed_ok = list(reversed(seq)) == offs
+        L1.set_cost_places(clause, None if clause.reversed_ok else [rank[o] for o in seq])
+        for (kind, vals), o in zip(L1.cost_order(clause), seq):
+            if lf.tables[o][0] != kind or lf.tables[o][1][1:] != list(vals) + [0] * (16 - len(vals)):
+                raise Unliftable('table +%d misread' % o)
         # the printer and the parser must agree
         text = '\n'.join(L1.fmt_clause_body(clause))
         back = L1.parse_clause_body(text, r, flags['rewrite'])
         if back.key() != clause.key():
             raise Unliftable('the printed clause does not read back')
         clause.offsets = offs
-        clause.reversed_ok = [lf.tables[o][1][1:] for o in offs] == [
-            list(v) + [0] * (16 - len(v)) for _, v in reversed(order)] and \
-            [lf.tables[o][0] for o in offs] == [k for k, _ in reversed(order)]
-        if not clause.reversed_ok:
-            raise Unliftable('the cost tables are not laid out in the reverse of the clause')
         # the generator must be able to write it
         import iscg_p1gen
         L1.check_emit(clause, kind, headings(), iscg_p1gen)

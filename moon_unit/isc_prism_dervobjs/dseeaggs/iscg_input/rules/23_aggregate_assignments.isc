@@ -330,7 +330,7 @@ transform 210  void <- isc_fill_aop ($3: [ip_reg, literal_32_bits])
 end;
 
 transform 211  void <- isc_fill_aop ($1: address_mode, $2: literal_32_bits, $3: literal_32_bits)
-  { not lifted: no heading for m$ois$wlw }
+  { not lifted: 0x1639E4: a branch on unknown flags }
   pass_1 image 16#163892 residue;
   pass_2 image 16#1CF91C begin
     temp t1: solution;
@@ -638,8 +638,26 @@ transform 212  void <- isc_fill_aop ($1: address_mode, $2: literal_32_bits, $3: 
 end;
 
 transform 213  void <- isc_fill_aop ($1: ip_reg_field, $2: literal_32_bits, $3: literal_32_bits)
-  { not lifted: 0x164850: mulsw %a0@(50),%d1 }
-  pass_1 image 16#164712 residue;
+  pass_1 image 16#164712 begin
+    temp t2: integer32;
+    condition not ($3.literal_32_bits_value = 0 or $3.literal_32_bits_value > 4 or subject.il.w52 <> 11 and (subject.il.w52 <> 5) and (subject.il.w52 <> 4 and (subject.il.w52 <> 1)) and (subject.il.w52 <> 2));
+    t2 <- make_bit_mask_1(8, 0);
+    if lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$insert, 1) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$move, 1) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- $3.literal_32_bits_value * 4 + words(4, 4)[result.c137] * $3.literal_32_bits_value + $1.code_bytes + $2.code_bytes + $3.code_bytes;
+    result.memory_references <- bytes(0, 1)[result.c137] * $3.literal_32_bits_value + $1.memory_references + $2.memory_references + $3.memory_references;
+    result.delay <- bytes(0, 1)[result.c137] * $3.literal_32_bits_value + $1.delay + $2.delay + $3.delay;
+    result.evaluation_order <- 1;
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#1D05F8 begin
     temp t1: integer32;
     temp t2: integer32;
@@ -669,8 +687,26 @@ transform 213  void <- isc_fill_aop ($1: ip_reg_field, $2: literal_32_bits, $3: 
 end;
 
 transform 214  void <- isc_fill_aop ($1: ip_reg, $2: literal_32_bits, $3: literal_32_bits)
-  { not lifted: 0x164AB8: mulsw %a0@(50),%d1 }
-  pass_1 image 16#16497A residue;
+  pass_1 image 16#16497A begin
+    temp t2: integer32;
+    condition not ($3.literal_32_bits_value = 0 or $3.literal_32_bits_value > 4 or subject.il.w52 <> 11 and (subject.il.w52 <> 5) and (subject.il.w52 <> 4 and (subject.il.w52 <> 1)) and (subject.il.w52 <> 2));
+    t2 <- make_bit_mask_1(8, 0);
+    if lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$insert, 1) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$move, 1) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    result.code_bytes <- $3.literal_32_bits_value * 4 + words(4, 4)[result.c137] * $3.literal_32_bits_value + $1.code_bytes + $2.code_bytes + $3.code_bytes;
+    result.memory_references <- bytes(0, 1)[result.c137] * $3.literal_32_bits_value + $1.memory_references + $2.memory_references + $3.memory_references;
+    result.delay <- bytes(0, 1)[result.c137] * $3.literal_32_bits_value + $1.delay + $2.delay + $3.delay;
+    result.evaluation_order <- 1;
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#1D0726 begin
     temp t1: integer32;
     temp t2: solution;
@@ -706,12 +742,13 @@ end;
 
 transform 216  void <- pack_aop ($1: [ip_reg, ip_reg_field], $2: [ip_reg, ip_reg_field])
   pass_1 image 16#164D0C begin
-    temp t2: integer32;
-    condition available_precision_function($1) >= subject.il.w56;
-    condition not (available_precision_function($2) < subject.il.w56 or $1.bit_position_of_lsb + $1.inherited_attributes.fetch_precision - subject.il.w54 - subject.il.w56 <> $2.bit_position_of_lsb);
+    temp t1: integer32;
+    temp t3: integer32;
+    t1 <- available_precision_function($1);
+    condition not (t1 < subject.il.w56 or available_precision_function($2) < subject.il.w56 or $1.bit_position_of_lsb + $1.inherited_attributes.fetch_precision - subject.il.w54 - subject.il.w56 <> $2.bit_position_of_lsb);
     result.l352 <- $1.bit_position_of_lsb + $1.inherited_attributes.fetch_precision - subject.il.w54 - subject.il.w56;
     result.l356 <- subject.il.w56;
-    t2 <- make_bit_mask_1(subject.il.w56, 0);
+    t3 <- make_bit_mask_1(subject.il.w56, 0);
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
     sum memory_references, delay of $1, $2;
     result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
@@ -766,12 +803,13 @@ end;
 
 transform 218  void <- pack_aop ($1: [ip_reg, ip_reg_field], $2: [ip_reg, ip_reg_field])
   pass_1 image 16#1651AA begin
-    temp t2: integer32;
-    condition available_precision_function($1) >= subject.il.w56;
-    condition not (available_precision_function($2) < subject.il.w56 or $2.bit_position_of_lsb <> 0);
+    temp t1: integer32;
+    temp t3: integer32;
+    t1 <- available_precision_function($1);
+    condition not (t1 < subject.il.w56 or available_precision_function($2) < subject.il.w56 or $2.bit_position_of_lsb <> 0);
     result.l352 <- $1.bit_position_of_lsb + $1.inherited_attributes.fetch_precision - subject.il.w54 - subject.il.w56;
     result.l356 <- subject.il.w56;
-    t2 <- make_bit_mask_1(subject.il.w56, 0);
+    t3 <- make_bit_mask_1(subject.il.w56, 0);
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
     sum memory_references, delay of $1, $2;
     result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
@@ -785,10 +823,11 @@ end;
 transform 219  void <- pack_aop ($1: address_mode, $2: [ip_reg, ip_reg_field])
   pass_1 image 16#1653B8 begin
     temp t1: boolean;
+    temp t2: boolean;
     condition not (subject.il.w52 <> 1 or subject.il.w54 <> 0 or subject.il.w56 <> 8);
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition not ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or $2.bit_position_of_lsb <> 0);
-    condition available_precision_function($2) >= subject.il.w56;
+    t2 <- lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1);
+    condition not ((not t2 or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or $2.bit_position_of_lsb <> 0 or available_precision_function($2) < subject.il.w56);
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
     result.memory_references <- $1.memory_references + $2.memory_references + 1;
     result.delay <- $1.delay + $2.delay;
@@ -818,8 +857,7 @@ transform 220  void <- pack_aop ($1: address_mode, $2: ip_reg_field)
     temp t3: integer32;
     temp t4: integer32;
     temp t5: integer32;
-    condition subject.il.w52 = 1 or subject.il.w52 = 2;
-    condition readonly_l372[subject.il.w52] - subject.il.w54 - subject.il.w56 = $2.bit_position_of_lsb;
+    condition (subject.il.w52 = 1 or subject.il.w52 = 2) and (readonly_l372[subject.il.w52] - subject.il.w54 - subject.il.w56 = $2.bit_position_of_lsb);
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
     condition not ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or $2.field_precision u< subject.il.w56);
     result.l352 <- readonly_l372[subject.il.w52] - subject.il.w54 - subject.il.w56;
@@ -1889,19 +1927,20 @@ end;
 transform 222  void <- pack_aop ($1: address_mode, $2: [ip_reg, ip_reg_field])
   pass_1 image 16#166F70 begin
     temp t1: boolean;
-    temp t3: integer32;
+    temp t2: boolean;
     temp t4: integer32;
     temp t5: integer32;
+    temp t6: integer32;
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $1.uses_the_displacement) and not $1.has_a_symbolic_displacement or not $1.is_physical and not $1.is_atomic) or $1.kind <> 5;
-    condition not (available_precision_function($2) < subject.il.w56 or $2.bit_position_of_lsb <> 0);
+    t2 <- lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1);
+    condition not ((not t2 or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or available_precision_function($2) < subject.il.w56 or $2.bit_position_of_lsb <> 0);
     result.l352 <- readonly_l372[subject.il.w52] - subject.il.w54 - subject.il.w56;
     result.l356 <- subject.il.w56;
     result.l360 <- nil;
-    t3 <- make_bit_mask_1(16, 0);
-    t4 <- make_bit_mask_1(result.l356, 0);
+    t4 <- make_bit_mask_1(16, 0);
+    t5 <- make_bit_mask_1(result.l356, 0);
     result.l364 <- nil;
-    t5 <- make_bit_mask_1(16, 0);
+    t6 <- make_bit_mask_1(16, 0);
     if $1.inherited_attributes.fetch_precision = 32 then
       result.c136 <- 1;
       if $1.bits_trusted & 3 = 3 and ($1.bits_known & 3 = 0) or ($1.bits_trusted & 1 = 0 or $1.bits_known & 1 <> 0) then

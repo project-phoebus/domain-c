@@ -202,8 +202,7 @@ transform 12  address_mode <- set_con_ob
     temp t2: pointer;
     temp t3: pointer;
     temp t4: solution;
-    condition subject.inherited_attributes.immediate_parent_wants_set_temporary;
-    condition is_all_zeroes(subject.il);
+    condition not (not subject.inherited_attributes.immediate_parent_wants_set_temporary or not is_all_zeroes(subject.il));
     cycle_guard already_address_mode;
     result.l360 <- rshft(subject.il.w16 + 3, 2) * 4;
     t2 <- make_expression_temporary(122, rshft(subject.il.w16 + 3, 2) * 4 * 8);

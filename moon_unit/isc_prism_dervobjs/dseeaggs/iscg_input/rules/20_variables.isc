@@ -10,13 +10,11 @@ section 20 variables  image pass_1 a5 16#468E94, pass_2 a5 16#4800A4;
 
 transform 35  ip_reg <- fortran_symbol
   pass_1 image 16#15DBEC begin
-    temp t1: integer32;
-    condition rshft(subject.il.b44 & 240, 4) = 3;
-    condition not (rshft(subject.il.b11 & 240, 4) <> 2 or subject.inherited_attributes.fetch_precision > 32 or not (subject.il.l24 & 16#20000 <> 0));
-    condition side_effect_symbol_fill_in_size(subject.il, subject.inherited_attributes.fetch_precision);
-    t1 <- sz_fsym(subject.il);
-    condition not (t1 * 8 <> subject.inherited_attributes.fetch_precision or not (subject.il.l24 & 16#4000000 <> 0));
-    condition solution_kind_of_symbol(subject.il) = 11;
+    temp t1: boolean;
+    temp t2: integer32;
+    t1 <- side_effect_symbol_fill_in_size(subject.il, subject.inherited_attributes.fetch_precision);
+    t2 <- sz_fsym(subject.il);
+    condition not (rshft(subject.il.b44 & 240, 4) <> 3 or rshft(subject.il.b11 & 240, 4) <> 2 or (subject.inherited_attributes.fetch_precision > 32 or not (subject.il.l24 & 16#20000 <> 0)) or (not t1 or t2 * 8 <> subject.inherited_attributes.fetch_precision or (not (subject.il.l24 & 16#4000000 <> 0) or solution_kind_of_symbol(subject.il) <> 11)));
     cycle_guard already_ip_reg;
     result.l352 <- isc_$get_il_live_range(subject.il);
     result.code_bytes <- 0;
@@ -51,11 +49,8 @@ transform 36  ip_reg_field <- fortran_symbol
   pass_1 image 16#15DEE8 begin
     temp t1: integer32;
     temp t3: integer32;
-    condition rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil);
-    condition (rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision <= 32);
     t1 <- sz_fsym(subject.il);
-    condition not (t1 * 8 <= subject.inherited_attributes.fetch_precision or not (subject.il.l24 & 16#4000000 <> 0));
-    condition solution_kind_of_symbol(subject.il) = 11;
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and ((rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision <= 32 and (t1 * 8 > subject.inherited_attributes.fetch_precision))) and (subject.il.l24 & 16#4000000 <> 0 and (solution_kind_of_symbol(subject.il) = 11));
     cycle_guard already_ip_reg_field;
     result.l352 <- isc_$get_il_live_range(subject.il);
     result.code_bytes <- 0;
@@ -91,11 +86,8 @@ end;
 transform 37  ip_reg <- fortran_symbol
   pass_1 image 16#15E1B8 begin
     temp t1: integer32;
-    condition rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil);
-    condition (rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision <= 32);
     t1 <- sz_fsym(subject.il);
-    condition not (t1 * 8 <> subject.inherited_attributes.fetch_precision or not (subject.il.l24 & 16#4000000 <> 0));
-    condition solution_kind_of_symbol(subject.il) = 11;
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and ((rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision <= 32 and (t1 * 8 = subject.inherited_attributes.fetch_precision))) and (subject.il.l24 & 16#4000000 <> 0 and (solution_kind_of_symbol(subject.il) = 11));
     cycle_guard already_ip_reg;
     result.l352 <- isc_$get_il_live_range(subject.il);
     result.code_bytes <- 0;
@@ -127,9 +119,7 @@ end;
 
 transform 38  fp_reg <- fortran_symbol
   pass_1 image 16#15E462 begin
-    condition rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil);
-    condition (rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision = 32 and (subject.il.l24 & 16#4000000 <> 0));
-    condition not (solution_kind_of_symbol(subject.il) <> 8 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and ((rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision = 32 and (subject.il.l24 & 16#4000000 <> 0))) and (solution_kind_of_symbol(subject.il) = 8 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)));
     cycle_guard already_fp_reg;
     result.l352 <- isc_$get_il_live_range(subject.il);
     result.code_bytes <- 0;
@@ -161,9 +151,7 @@ end;
 
 transform 39  fp_reg_pair <- fortran_symbol
   pass_1 image 16#15E70E begin
-    condition rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil);
-    condition (rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision = 64 and (subject.il.l24 & 16#4000000 <> 0));
-    condition not (solution_kind_of_symbol(subject.il) <> 9 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and ((rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision = 64 and (subject.il.l24 & 16#4000000 <> 0))) and (solution_kind_of_symbol(subject.il) = 9 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)));
     cycle_guard already_fp_reg_pair;
     result.l352 <- isc_$get_il_live_range(subject.il);
     if not isc_user_routines_358 then
@@ -204,9 +192,7 @@ end;
 
 transform 40  fp_reg_quad <- fortran_symbol
   pass_1 image 16#15E9D0 begin
-    condition rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil);
-    condition (rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision = 128 and (subject.il.l24 & 16#4000000 <> 0));
-    condition not (solution_kind_of_symbol(subject.il) <> 10 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and ((rshft(subject.il.b11 & 240, 4) = 2 or rshft(subject.il.b11 & 240, 4) = 1) and (subject.inherited_attributes.fetch_precision = 128 and (subject.il.l24 & 16#4000000 <> 0))) and (solution_kind_of_symbol(subject.il) = 10 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)));
     cycle_guard already_fp_reg_quad;
     result.l352 <- isc_$get_il_live_range(subject.il);
     if not isc_user_routines_358 then
@@ -249,8 +235,7 @@ transform 41  address_mode <- fortran_symbol
   pass_1 image 16#15EC92 begin
     temp t2: integer32;
     temp t3: integer32;
-    condition rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil);
-    condition not (rshft(subject.il.b11 & 240, 4) <> 2 or subject.il.l24 & 16#4000000 <> 0 or subject.il.l24 & 1024 <> 0);
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and (rshft(subject.il.b11 & 240, 4) = 2 and (subject.il.l24 & 16#4000000 = 0) and (subject.il.l24 & 1024 = 0));
     cycle_guard already_address_mode;
     result.code_bytes <- 0;
     result.memory_references <- 0;
@@ -286,8 +271,7 @@ transform 42  address_mode <- fortran_symbol
     temp t2: boolean;
     temp t3: integer32;
     temp t4: integer32;
-    condition rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil);
-    condition not (rshft(subject.il.b11 & 240, 4) <> 2 or subject.il.l24 & 16#4000000 <> 0 or not (subject.il.l24 & 1024 <> 0));
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and (rshft(subject.il.b11 & 240, 4) = 2 and (subject.il.l24 & 16#4000000 = 0) and (subject.il.l24 & 1024 <> 0));
     cycle_guard already_address_mode;
     t2 <- lir_$can_encode_as_immediate_operand(subject.il.l12, opc$loadl, 1);
     result.c352 <- t2;
@@ -373,11 +357,8 @@ transform 43  ip_reg_field <- fortran_symbol
   pass_1 image 16#15F1AA begin
     temp t1: integer32;
     temp t3: integer32;
-    condition rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil);
-    condition not (rshft(subject.il.b11 & 240, 4) <> 5 or not (subject.il.b44 & 2 <> 0) or subject.inherited_attributes.fetch_precision > 32);
     t1 <- sz_fsym(subject.il);
-    condition not (t1 * 8 <= subject.inherited_attributes.fetch_precision or not (subject.il.l24 & 16#4000000 <> 0));
-    condition solution_kind_of_symbol(subject.il) = 11;
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and (rshft(subject.il.b11 & 240, 4) = 5 and (subject.il.b44 & 2 <> 0) and (subject.inherited_attributes.fetch_precision <= 32 and (t1 * 8 > subject.inherited_attributes.fetch_precision))) and (subject.il.l24 & 16#4000000 <> 0 and (solution_kind_of_symbol(subject.il) = 11));
     cycle_guard already_ip_reg_field;
     result.l352 <- isc_$get_il_live_range(subject.il);
     result.code_bytes <- 0;
@@ -412,9 +393,7 @@ end;
 
 transform 44  ip_reg <- fortran_symbol
   pass_1 image 16#15F47E begin
-    condition rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil);
-    condition not (rshft(subject.il.b11 & 240, 4) <> 5 or not (subject.il.l24 & 16#4000000 <> 0));
-    condition solution_kind_of_symbol(subject.il) = 11;
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and (rshft(subject.il.b11 & 240, 4) = 5 and (subject.il.l24 & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11));
     cycle_guard already_ip_reg;
     result.l352 <- isc_$get_il_live_range(subject.il);
     result.code_bytes <- 0;
@@ -444,8 +423,7 @@ end;
 transform 45  address_mode <- fortran_symbol
   pass_1 image 16#15F6F2 begin
     temp t2: integer32;
-    condition rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil);
-    condition not (rshft(subject.il.b11 & 240, 4) <> 5 or subject.il.l24 & 16#4000000 <> 0);
+    condition (rshft(subject.il.b44 & 240, 4) = 3 or rshft(subject.il.b44 & 240, 4) = 1 and (subject.il.l40 <> nil)) and (rshft(subject.il.b11 & 240, 4) = 5 and (subject.il.l24 & 16#4000000 = 0));
     cycle_guard already_address_mode;
     result.code_bytes <- 0;
     result.memory_references <- 0;
@@ -477,8 +455,7 @@ transform 46  address_mode <- fortran_symbol
   pass_1 image 16#15F8FC begin
     temp t2: boolean;
     temp t3: integer32;
-    condition rshft(subject.il.b44 & 240, 4) = 3;
-    condition (rshft(subject.il.b11 & 240, 4) = 1 or rshft(subject.il.b11 & 240, 4) = 4) and (subject.il.l24 & 16#4000000 = 0);
+    condition not (rshft(subject.il.b44 & 240, 4) <> 3 or rshft(subject.il.b11 & 240, 4) <> 1 and (rshft(subject.il.b11 & 240, 4) <> 4) or subject.il.l24 & 16#4000000 <> 0);
     cycle_guard already_address_mode;
     t2 <- lir_$can_encode_as_immediate_operand(subject.il.l12, opc$loadl, 1);
     result.c352 <- t2;
@@ -555,9 +532,7 @@ end;
 
 transform 47  ip_reg <- fortran_symbol
   pass_1 image 16#15FBC6 begin
-    condition not (rshft(subject.il.b44 & 240, 4) <> 1 or subject.il.l40 <> nil);
-    condition not (rshft(subject.il.b11 & 240, 4) <> 5 or not (subject.il.l24 & 16#4000000 <> 0));
-    condition solution_kind_of_symbol(subject.il) = 11;
+    condition not (rshft(subject.il.b44 & 240, 4) <> 1 or subject.il.l40 <> nil or (rshft(subject.il.b11 & 240, 4) <> 5 or not (subject.il.l24 & 16#4000000 <> 0)) or solution_kind_of_symbol(subject.il) <> 11);
     cycle_guard already_ip_reg;
     result.l352 <- isc_$get_il_live_range(subject.il);
     result.code_bytes <- 0;
@@ -680,9 +655,9 @@ end;
 
 transform 50  ip_reg <- var_name
   pass_1 image 16#1601EA begin
-    condition not (subject.il.w72 <> 2 or subject.inherited_attributes.fetch_precision > 32 or not (subject.il.l32 & 16#20000 <> 0));
-    condition not (not side_effect_symbol_fill_in_size(subject.il, subject.inherited_attributes.fetch_precision) or subject.inherited_attributes.fetch_precision <> subject.il.l36 or not (subject.il.l32 & 16#4000000 <> 0));
-    condition solution_kind_of_symbol(subject.il) = 11;
+    temp t1: boolean;
+    t1 <- side_effect_symbol_fill_in_size(subject.il, subject.inherited_attributes.fetch_precision);
+    condition not (subject.il.w72 <> 2 or subject.inherited_attributes.fetch_precision > 32 or (not (subject.il.l32 & 16#20000 <> 0) or not t1) or (subject.inherited_attributes.fetch_precision <> subject.il.l36 or not (subject.il.l32 & 16#4000000 <> 0) or solution_kind_of_symbol(subject.il) <> 11));
     cycle_guard already_ip_reg;
     result.l352 <- isc_$get_il_live_range(subject.il);
     result.code_bytes <- 0;
@@ -715,8 +690,7 @@ end;
 
 transform 51  ip_reg_field <- var_name
   pass_1 image 16#160484 begin
-    condition (subject.il.w72 = 2 or subject.il.w72 = 1) and (subject.inherited_attributes.fetch_precision > 0 and (subject.inherited_attributes.fetch_precision <= 32)) and (subject.inherited_attributes.fetch_precision < subject.il.l36 and (subject.il.w42 & 1024 = 0) and (subject.il.l32 & 16#4000000 <> 0));
-    condition solution_kind_of_symbol(subject.il) = 11;
+    condition (subject.il.w72 = 2 or subject.il.w72 = 1) and (subject.inherited_attributes.fetch_precision > 0 and (subject.inherited_attributes.fetch_precision <= 32)) and (subject.inherited_attributes.fetch_precision < subject.il.l36 and (subject.il.w42 & 1024 = 0) and (subject.il.l32 & 16#4000000 <> 0 and (solution_kind_of_symbol(subject.il) = 11)));
     cycle_guard already_ip_reg_field;
     result.l352 <- isc_$get_il_live_range(subject.il);
     result.code_bytes <- 0;
@@ -750,8 +724,7 @@ end;
 
 transform 52  ip_reg <- var_name
   pass_1 image 16#160726 begin
-    condition (subject.il.w72 = 2 or subject.il.w72 = 1) and (subject.inherited_attributes.fetch_precision <= 32 and (subject.inherited_attributes.fetch_precision = subject.il.l36)) and (subject.il.w42 & 1024 = 0 and (subject.il.l32 & 16#4000000 <> 0));
-    condition solution_kind_of_symbol(subject.il) = 11;
+    condition (subject.il.w72 = 2 or subject.il.w72 = 1) and (subject.inherited_attributes.fetch_precision <= 32 and (subject.inherited_attributes.fetch_precision = subject.il.l36)) and (subject.il.w42 & 1024 = 0 and (subject.il.l32 & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11));
     cycle_guard already_ip_reg;
     result.l352 <- isc_$get_il_live_range(subject.il);
     result.code_bytes <- 0;
@@ -783,8 +756,7 @@ end;
 
 transform 53  fp_reg <- var_name
   pass_1 image 16#1609A4 begin
-    condition (subject.il.w72 = 2 or subject.il.w72 = 1) and (subject.il.w42 & 1024 = 0 and (subject.il.l32 & 16#4000000 <> 0));
-    condition not (solution_kind_of_symbol(subject.il) <> 8 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    condition (subject.il.w72 = 2 or subject.il.w72 = 1) and (subject.il.w42 & 1024 = 0 and (subject.il.l32 & 16#4000000 <> 0)) and (solution_kind_of_symbol(subject.il) = 8 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)));
     cycle_guard already_fp_reg;
     result.l352 <- isc_$get_il_live_range(subject.il);
     result.code_bytes <- 0;
@@ -816,8 +788,7 @@ end;
 
 transform 54  fp_reg_pair <- var_name
   pass_1 image 16#160C2E begin
-    condition (subject.il.w72 = 2 or subject.il.w72 = 1) and (subject.il.w42 & 1024 = 0 and (subject.il.l32 & 16#4000000 <> 0));
-    condition not (solution_kind_of_symbol(subject.il) <> 9 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    condition (subject.il.w72 = 2 or subject.il.w72 = 1) and (subject.il.w42 & 1024 = 0 and (subject.il.l32 & 16#4000000 <> 0)) and (solution_kind_of_symbol(subject.il) = 9 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)));
     cycle_guard already_fp_reg_pair;
     result.l352 <- isc_$get_il_live_range(subject.il);
     if not isc_user_routines_358 then
@@ -971,8 +942,7 @@ end;
 
 transform 57  ip_reg <- var_name
   pass_1 image 16#161392 begin
-    condition not (subject.il.w72 <> 5 or not (subject.il.l32 & 16#4000000 <> 0));
-    condition solution_kind_of_symbol(subject.il) = 11;
+    condition not (subject.il.w72 <> 5 or not (subject.il.l32 & 16#4000000 <> 0) or solution_kind_of_symbol(subject.il) <> 11);
     cycle_guard already_ip_reg;
     result.l352 <- isc_$get_il_live_range(subject.il);
     result.code_bytes <- 0;
@@ -1113,8 +1083,32 @@ transform 59  address_mode <- var_name
 end;
 
 transform 60  ip_reg <- var_name
-  { not lifted: 0x161AC8: swap %d0 }
-  pass_1 image 16#161A92 residue;
+  pass_1 image 16#161A92 begin
+    condition subject.il.w42 & 1024 <> 0;
+    condition rshft(subject.il.l56, 16) = 0;
+    cycle_guard already_ip_reg;
+    result.l352 <- lir_4090[subject.il.w58];
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CEFB4 begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -1122,8 +1116,32 @@ transform 60  ip_reg <- var_name
 end;
 
 transform 61  fp_reg <- var_name
-  { not lifted: 0x161D16: swap %d0 }
-  pass_1 image 16#161CE2 residue;
+  pass_1 image 16#161CE2 begin
+    condition subject.il.w42 & 1024 <> 0;
+    condition not (rshft(subject.il.l56, 16) <> 1 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    cycle_guard already_fp_reg;
+    result.l352 <- lir_3f90[subject.il.w58];
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CEFDA begin
     result.live_range <- result.l352;
     result.object_with_name <- self.il;
@@ -1131,8 +1149,37 @@ transform 61  fp_reg <- var_name
 end;
 
 transform 62  fp_reg_pair <- var_name
-  { not lifted: 0x161F80: swap %d0 }
-  pass_1 image 16#161F4C residue;
+  pass_1 image 16#161F4C begin
+    condition subject.il.w42 & 1024 <> 0;
+    condition not (rshft(subject.il.l56, 16) <> 2 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    cycle_guard already_fp_reg_pair;
+    result.l352 <- lir_3f90[subject.il.w58];
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.has_a_symbolic_displacement <- true;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.is_atomic <- subject.il.b35 & 2 <> 0;
+    result.is_destroyable <- false;
+    result.is_physical <- subject.il.b35 & 4 <> 0;
+    result.is_volatile <- subject.il.b35 & 1 <> 0;
+    result.literal_32_bits_value <- 0;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1CF000 begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);

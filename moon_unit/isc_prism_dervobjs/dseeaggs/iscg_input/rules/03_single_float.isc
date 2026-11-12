@@ -97,8 +97,37 @@ transform 308  ip_reg <- f_expon_top ($1: ip_reg, $2: ip_reg)
 end;
 
 transform 309  fp_reg <- f_math_top ($1: fp_reg, $2: void)
-  { not lifted: the cost tables are not laid out in the reverse of the clause }
-  pass_1 image 16#107FF2 residue;
+  pass_1 image 16#107FF2 begin
+    condition not (readonly_b424[subject.il.w26] & 128 = 0 or subject.il.w24 = 7);
+    cycle_guard already_fp_reg;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if subject.il.w24 = 6 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+      if subject.il.w24 = 5 or subject.il.b30 & 128 = 0 or subject.il.w24 = 4 then
+        result.c138 <- 2;
+      else
+        result.c138 <- 1;
+        if subject.inherited_attributes.fetch_precision = 8 then
+          result.c139 <- 1;
+        elsif subject.inherited_attributes.fetch_precision = 16 then
+          result.c139 <- 2;
+        else
+          result.c139 <- 3;
+        end;
+      end;
+    end;
+    result.code_bytes <- words@4(16)[result.c138] + words@5(4, 4)[result.c137] + words@3(4, 4)[result.c139] + $1.code_bytes + $2.code_bytes;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- bytes@2(2, 2)[result.c137] + bytes@1(1)[result.c138] + $1.delay + $2.delay;
+    result.fp_reg_max <- $1.fp_reg_max + 1;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1A07F4 begin
     temp t1: solution;
     temp t2: solution;
@@ -456,8 +485,20 @@ transform 314  fp_reg <- f_math_top ($1: fp_reg, $2: void)
 end;
 
 transform 315  fp_reg <- f_math_top ($1: fp_reg, $2: void)
-  { not lifted: 0x108E10: orb %a4@(424),%d0 }
-  pass_1 image 16#108DD8 residue;
+  pass_1 image 16#108DD8 begin
+    condition subject.il.w26 <> 12 and (readonly_b424[subject.il.w26] & 128 = 0) and (subject.il.w26 <> 13) and (subject.il.w26 <> 11);
+    cycle_guard already_fp_reg;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.fp_reg_max <- $1.fp_reg_max + 1;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1A13F8 begin
     if result.c136 = 1 then
       pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -812,8 +853,25 @@ transform 320  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
 end;
 
 transform 321  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
-  { not lifted: 0x109B06: orb %a4@(424),%d0 }
-  pass_1 image 16#109ACE residue;
+  pass_1 image 16#109ACE begin
+    condition subject.il.w26 <> 12 and (readonly_b424[subject.il.w26] & 128 = 0) and (subject.il.w26 <> 13) and (subject.il.w26 <> 11) and (subject.il.w26 <> 14) and (subject.il.w26 <> 15);
+    cycle_guard already_fp_reg_pair;
+    if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if not isc_user_routines_358 then
+      result.c137 <- 1;
+    else
+      result.c137 <- 2;
+    end;
+    result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.fp_reg_pair_max <- $1.fp_reg_pair_max + 1;
+    result.fp_reg_pair_result <- 1;
+  end;
   pass_2 image 16#1A1F0A begin
     if result.c136 = 1 then
       pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);

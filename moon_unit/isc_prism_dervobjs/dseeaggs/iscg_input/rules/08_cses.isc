@@ -56,9 +56,9 @@ end;
 
 transform 89  ip_reg <- cse_parent_ob
   pass_1 image 16#11E75C begin
-    condition subject.inherited_attributes.fetch_precision <= 32;
-    condition precision_from_il_node(subject.il.l4) = subject.inherited_attributes.fetch_precision;
-    condition solution_kind_of_cse(subject.il) = 11;
+    temp t1: integer32;
+    t1 <- precision_from_il_node(subject.il.l4);
+    condition not (subject.inherited_attributes.fetch_precision > 32 or t1 <> subject.inherited_attributes.fetch_precision or solution_kind_of_cse(subject.il) <> 11);
     cycle_guard already_ip_reg;
     result.code_bytes <- 0;
     result.memory_references <- 0;
@@ -86,16 +86,16 @@ end;
 
 transform 90  ip_reg_field <- cse_parent_ob
   pass_1 image 16#11E992 begin
-    temp t2: integer32;
-    condition not (subject.inherited_attributes.fetch_precision <= 0 or subject.inherited_attributes.fetch_precision > 32);
-    condition precision_from_il_node(subject.il.l4) > subject.inherited_attributes.fetch_precision;
-    condition solution_kind_of_cse(subject.il) = 11;
+    temp t1: integer32;
+    temp t3: integer32;
+    t1 <- precision_from_il_node(subject.il.l4);
+    condition not (subject.inherited_attributes.fetch_precision <= 0 or subject.inherited_attributes.fetch_precision > 32 or (t1 <= subject.inherited_attributes.fetch_precision or solution_kind_of_cse(subject.il) <> 11));
     cycle_guard already_ip_reg_field;
     result.code_bytes <- 0;
     result.memory_references <- 0;
     result.delay <- 0;
-    t2 <- precision_from_il_node(subject.il.l4);
-    result.bit_position_of_lsb <- t2 - subject.inherited_attributes.fetch_precision;
+    t3 <- precision_from_il_node(subject.il.l4);
+    result.bit_position_of_lsb <- t3 - subject.inherited_attributes.fetch_precision;
     result.bits_known <- pass_1_cse_parent_bits_known(subject.il);
     result.bits_trusted <- pass_1_cse_parent_bits_trusted(subject.il);
     result.code_bytes <- pass_1_cse_parent_code_bytes(subject.il);
@@ -272,9 +272,9 @@ end;
 
 transform 96  ip_reg <- cse_use_ob
   pass_1 image 16#11F612 begin
-    condition subject.inherited_attributes.fetch_precision <= 32;
-    condition precision_from_il_node(subject.il.l20) = subject.inherited_attributes.fetch_precision;
-    condition solution_kind_of_cse(subject.il) = 11;
+    temp t1: integer32;
+    t1 <- precision_from_il_node(subject.il.l20);
+    condition not (subject.inherited_attributes.fetch_precision > 32 or t1 <> subject.inherited_attributes.fetch_precision or solution_kind_of_cse(subject.il) <> 11);
     cycle_guard already_ip_reg;
     result.code_bytes <- 0;
     result.memory_references <- 0;
@@ -302,16 +302,16 @@ end;
 
 transform 97  ip_reg_field <- cse_use_ob
   pass_1 image 16#11F848 begin
-    temp t2: integer32;
-    condition not (subject.inherited_attributes.fetch_precision <= 0 or subject.inherited_attributes.fetch_precision > 32);
-    condition precision_from_il_node(subject.il.l20) > subject.inherited_attributes.fetch_precision;
-    condition solution_kind_of_cse(subject.il) = 11;
+    temp t1: integer32;
+    temp t3: integer32;
+    t1 <- precision_from_il_node(subject.il.l20);
+    condition not (subject.inherited_attributes.fetch_precision <= 0 or subject.inherited_attributes.fetch_precision > 32 or (t1 <= subject.inherited_attributes.fetch_precision or solution_kind_of_cse(subject.il) <> 11));
     cycle_guard already_ip_reg_field;
     result.code_bytes <- 0;
     result.memory_references <- 0;
     result.delay <- 0;
-    t2 <- precision_from_il_node(subject.il.l20);
-    result.bit_position_of_lsb <- t2 - subject.inherited_attributes.fetch_precision;
+    t3 <- precision_from_il_node(subject.il.l20);
+    result.bit_position_of_lsb <- t3 - subject.inherited_attributes.fetch_precision;
     result.bits_known <- pass_1_cse_use_bits_known(subject.il);
     result.bits_trusted <- pass_1_cse_use_bits_trusted(subject.il);
     result.code_bytes <- pass_1_cse_use_code_bytes(subject.il);

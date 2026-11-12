@@ -1129,8 +1129,7 @@ transform 113  flow <- compare_top | set_compare_top ($1: ip_reg, $2: literal_32
     temp t6: integer32;
     temp t7: integer;
     temp t8: integer;
-    condition $2.literal_32_bits_value <> 0;
-    condition not (-$2.literal_32_bits_value < -16#7FFF or -$2.literal_32_bits_value > 16#7FFF or subject.il.w26 <> 5 and (subject.il.w26 <> 4) and (subject.il.w26 <> 1 and (subject.il.w26 <> 2)));
+    condition not ($2.literal_32_bits_value = 0 or -$2.literal_32_bits_value < -16#7FFF or -$2.literal_32_bits_value > 16#7FFF or subject.il.w26 <> 5 and (subject.il.w26 <> 4) and (subject.il.w26 <> 1 and (subject.il.w26 <> 2)));
     t1 <- abs(subject.il.w28);
     condition t1 = 7 or t1 = 6;
     result.l352 <- readonly_l372[subject.il.w26];
@@ -1791,8 +1790,7 @@ transform 115  flow <- compare_top | set_compare_top ($1: ip_reg, $2: literal_32
     temp t5: integer32;
     temp t6: integer;
     temp t7: integer;
-    condition $2.literal_32_bits_value <> 0;
-    condition not (-$2.literal_32_bits_value < -16#7FFF or -$2.literal_32_bits_value > 16#7FFF or subject.il.w26 <> 5 and (subject.il.w26 <> 4) and (subject.il.w26 <> 1 and (subject.il.w26 <> 2)));
+    condition not ($2.literal_32_bits_value = 0 or -$2.literal_32_bits_value < -16#7FFF or -$2.literal_32_bits_value > 16#7FFF or subject.il.w26 <> 5 and (subject.il.w26 <> 4) and (subject.il.w26 <> 1 and (subject.il.w26 <> 2)));
     t1 <- abs(subject.il.w28);
     condition t1 = 7 or t1 = 6;
     result.l354 <- readonly_l372[subject.il.w26];
@@ -2197,8 +2195,7 @@ transform 116  flow <- compare_top | set_compare_top ($1: ip_reg, $2: literal_32
     temp t5: integer32;
     temp t6: integer;
     temp t7: integer;
-    condition $2.literal_32_bits_value <> 0;
-    condition not (-$2.literal_32_bits_value < -16#7FFF or -$2.literal_32_bits_value > 16#7FFF or subject.il.w26 <> 5 and (subject.il.w26 <> 4) and (subject.il.w26 <> 1 and (subject.il.w26 <> 2)));
+    condition not ($2.literal_32_bits_value = 0 or -$2.literal_32_bits_value < -16#7FFF or -$2.literal_32_bits_value > 16#7FFF or subject.il.w26 <> 5 and (subject.il.w26 <> 4) and (subject.il.w26 <> 1 and (subject.il.w26 <> 2)));
     t1 <- abs(subject.il.w28);
     condition t1 <> 7 and (t1 <> 6);
     result.l354 <- readonly_l372[subject.il.w26];
@@ -5891,8 +5888,333 @@ transform 122  flow <- agg_compare_top ($1: address_mode, $2: address_mode)
 end;
 
 transform 123  flow <- bit_field_cmp_top ($1: address_mode, $2: literal_32_bits, $3: address_mode, $4: literal_32_bits, $5: literal_32_bits)
-  { not lifted: the cost tables are not laid out in the reverse of the clause }
-  pass_1 image 16#186BC2 residue;
+  pass_1 image 16#186BC2 begin
+    temp t1: boolean;
+    temp t2: boolean;
+    temp t3: integer32;
+    temp t5: integer32;
+    temp t6: integer32;
+    temp t7: integer32;
+    temp t8: integer32;
+    temp t9: integer32;
+    temp t10: integer32;
+    temp t11: integer32;
+    temp t12: integer32;
+    temp t13: integer32;
+    temp t14: integer32;
+    temp t15: integer32;
+    temp t16: integer32;
+    temp t17: integer32;
+    temp t18: integer32;
+    temp t19: integer32;
+    temp t20: integer;
+    temp t21: integer;
+    t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
+    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $1.uses_the_displacement) and not $1.has_a_symbolic_displacement or not $1.is_physical and not $1.is_atomic) or $1.kind <> 5;
+    t2 <- lir_$can_encode_as_immediate_postincrement($3.literal_32_bits_value, opc$loadl);
+    condition lir_$can_encode_as_immediate_operand($3.literal_32_bits_value, opc$loadl, 1) and ((t2 or not $3.uses_the_displacement) and not $3.has_a_symbolic_displacement or not $3.is_physical and not $3.is_atomic) or $3.kind <> 5;
+    t3 <- abs(subject.il.w28);
+    condition t3 = 7 or t3 = 6;
+    result.l352 <- $5.literal_32_bits_value;
+    t5 <- abs(subject.il.w28);
+    if subject.inherited_attributes.conditional_sense then
+      result.w356 <- t5;
+    else
+      result.w356 <- readonly_w16[t5];
+    end;
+    result.l358 <- arshft($2.literal_32_bits_value, 3);
+    result.l362 <- (arshft($2.literal_32_bits_value + result.l352 - 1, 3) - result.l358 + 1) * 8;
+    result.l366 <- -(7 & $2.literal_32_bits_value) + (arshft($2.literal_32_bits_value + result.l352 - 1, 3) - result.l358 + 1) * 8 - result.l352;
+    result.l370 <- arshft($4.literal_32_bits_value, 3);
+    result.l374 <- (arshft($4.literal_32_bits_value + result.l352 - 1, 3) - result.l370 + 1) * 8;
+    result.l378 <- -($4.literal_32_bits_value & 7) + result.l374 - result.l352;
+    result.l382 <- nil;
+    t6 <- make_bit_mask_1(8, 0);
+    t7 <- make_bit_mask_1(16, 0);
+    t8 <- make_bit_mask_1(24, 0);
+    t9 <- make_bit_mask_1(8, 0);
+    t10 <- make_bit_mask_1(16, 0);
+    t11 <- make_bit_mask_1(8, 0);
+    t12 <- make_bit_mask_1(result.l352, 0);
+    result.l386 <- nil;
+    t13 <- make_bit_mask_1(8, 0);
+    t14 <- make_bit_mask_1(16, 0);
+    t15 <- make_bit_mask_1(24, 0);
+    t16 <- make_bit_mask_1(8, 0);
+    t17 <- make_bit_mask_1(16, 0);
+    t18 <- make_bit_mask_1(8, 0);
+    t19 <- make_bit_mask_1(result.l352, 0);
+    if subject.inherited_attributes.conditional_target <> 0 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    if result.l362 = 32 then
+      result.c137 <- 1;
+      if not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value + result.l358 + 3, opc$loadl, 1) and not $1.has_a_symbolic_displacement or $1.uses_the_index_register then
+        result.c138 <- 2;
+        if $1.uses_the_base_register then
+          result.c139 <- 1;
+          if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+            result.c140 <- 2;
+          else
+            result.c140 <- 1;
+          end;
+        else
+          result.c139 <- 2;
+          if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+            result.c141 <- 1;
+          else
+            result.c141 <- 2;
+          end;
+        end;
+      else
+        result.c138 <- 1;
+      end;
+      if result.l382 = 256 then
+        result.c142 <- 1;
+      else
+        result.c142 <- 2;
+      end;
+    elsif result.l362 = 24 then
+      result.c137 <- 2;
+      if not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value + result.l358 + 2, opc$loadl, 1) and not $1.has_a_symbolic_displacement or $1.uses_the_index_register then
+        result.c143 <- 2;
+        if $1.uses_the_base_register then
+          result.c144 <- 1;
+          if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+            result.c145 <- 2;
+          else
+            result.c145 <- 1;
+          end;
+        else
+          result.c144 <- 2;
+          if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+            result.c146 <- 1;
+          else
+            result.c146 <- 2;
+          end;
+        end;
+      else
+        result.c143 <- 1;
+      end;
+      if result.l382 = 256 then
+        result.c147 <- 1;
+      else
+        result.c147 <- 2;
+      end;
+    elsif result.l362 = 16 then
+      result.c137 <- 3;
+      if not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value + result.l358 + 1, opc$loadl, 1) and not $1.has_a_symbolic_displacement or $1.uses_the_index_register then
+        result.c148 <- 2;
+        if $1.uses_the_base_register then
+          result.c149 <- 1;
+          if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+            result.c150 <- 2;
+          else
+            result.c150 <- 1;
+          end;
+        else
+          result.c149 <- 2;
+          if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+            result.c151 <- 1;
+          else
+            result.c151 <- 2;
+          end;
+        end;
+      else
+        result.c148 <- 1;
+      end;
+      if result.l382 = 256 then
+        result.c152 <- 1;
+      else
+        result.c152 <- 2;
+      end;
+    elsif result.l362 = 8 then
+      result.c137 <- 4;
+      if result.l358 = nil or (lir_$can_encode_as_immediate_operand($1.literal_32_bits_value + result.l358, opc$loadl, 1) or $1.has_a_symbolic_displacement) and not $1.uses_the_index_register then
+        result.c153 <- 1;
+      else
+        result.c153 <- 2;
+        if $1.uses_the_base_register then
+          result.c154 <- 1;
+          if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+            result.c155 <- 2;
+          else
+            result.c155 <- 1;
+          end;
+        else
+          result.c154 <- 2;
+          if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+            result.c156 <- 1;
+          else
+            result.c156 <- 2;
+          end;
+        end;
+      end;
+      if result.l382 = 256 then
+        result.c157 <- 1;
+      else
+        result.c157 <- 2;
+      end;
+    else
+      result.c137 <- 5;
+    end;
+    if result.l374 = 32 then
+      result.c158 <- 1;
+      if not lir_$can_encode_as_immediate_operand($3.literal_32_bits_value + result.l370 + 3, opc$loadl, 1) and not $3.has_a_symbolic_displacement or $3.uses_the_index_register then
+        result.c159 <- 2;
+        if $3.uses_the_base_register then
+          result.c160 <- 1;
+          if $3.literal_32_bits_value <> 0 or $3.uses_the_index_register or $3.has_a_symbolic_displacement then
+            result.c161 <- 2;
+          else
+            result.c161 <- 1;
+          end;
+        else
+          result.c160 <- 2;
+          if lir_$can_encode_as_immediate_operand($3.literal_32_bits_value, opc$move, 1) then
+            result.c162 <- 1;
+          else
+            result.c162 <- 2;
+          end;
+        end;
+      else
+        result.c159 <- 1;
+      end;
+      if result.l386 = 256 then
+        result.c163 <- 1;
+      else
+        result.c163 <- 2;
+      end;
+    elsif result.l374 = 24 then
+      result.c158 <- 2;
+      if not lir_$can_encode_as_immediate_operand($3.literal_32_bits_value + result.l370 + 2, opc$loadl, 1) and not $3.has_a_symbolic_displacement or $3.uses_the_index_register then
+        result.c164 <- 2;
+        if $3.uses_the_base_register then
+          result.c165 <- 1;
+          if $3.literal_32_bits_value <> 0 or $3.uses_the_index_register or $3.has_a_symbolic_displacement then
+            result.c166 <- 2;
+          else
+            result.c166 <- 1;
+          end;
+        else
+          result.c165 <- 2;
+          if lir_$can_encode_as_immediate_operand($3.literal_32_bits_value, opc$move, 1) then
+            result.c167 <- 1;
+          else
+            result.c167 <- 2;
+          end;
+        end;
+      else
+        result.c164 <- 1;
+      end;
+      if result.l386 = 256 then
+        result.c168 <- 1;
+      else
+        result.c168 <- 2;
+      end;
+    elsif result.l374 = 16 then
+      result.c158 <- 3;
+      if not lir_$can_encode_as_immediate_operand($3.literal_32_bits_value + result.l370 + 1, opc$loadl, 1) and not $3.has_a_symbolic_displacement or $3.uses_the_index_register then
+        result.c169 <- 2;
+        if $3.uses_the_base_register then
+          result.c170 <- 1;
+          if $3.literal_32_bits_value <> 0 or $3.uses_the_index_register or $3.has_a_symbolic_displacement then
+            result.c171 <- 2;
+          else
+            result.c171 <- 1;
+          end;
+        else
+          result.c170 <- 2;
+          if lir_$can_encode_as_immediate_operand($3.literal_32_bits_value, opc$move, 1) then
+            result.c172 <- 1;
+          else
+            result.c172 <- 2;
+          end;
+        end;
+      else
+        result.c169 <- 1;
+      end;
+      if result.l386 = 256 then
+        result.c173 <- 1;
+      else
+        result.c173 <- 2;
+      end;
+    elsif result.l374 = 8 then
+      result.c158 <- 4;
+      if result.l370 = nil or (lir_$can_encode_as_immediate_operand($3.literal_32_bits_value + result.l370, opc$loadl, 1) or $3.has_a_symbolic_displacement) and not $3.uses_the_index_register then
+        result.c174 <- 1;
+      else
+        result.c174 <- 2;
+        if $3.uses_the_base_register then
+          result.c175 <- 1;
+          if $3.literal_32_bits_value <> 0 or $3.uses_the_index_register or $3.has_a_symbolic_displacement then
+            result.c176 <- 2;
+          else
+            result.c176 <- 1;
+          end;
+        else
+          result.c175 <- 2;
+          if lir_$can_encode_as_immediate_operand($3.literal_32_bits_value, opc$move, 1) then
+            result.c177 <- 1;
+          else
+            result.c177 <- 2;
+          end;
+        end;
+      end;
+      if result.l386 = 256 then
+        result.c178 <- 1;
+      else
+        result.c178 <- 2;
+      end;
+    else
+      result.c158 <- 5;
+    end;
+    if result.w356 = 7 then
+      result.c179 <- 1;
+    elsif result.w356 = 6 then
+      result.c179 <- 2;
+    elsif result.w356 = 5 then
+      result.c179 <- 3;
+    elsif result.w356 = 3 then
+      result.c179 <- 4;
+    elsif result.w356 = 2 then
+      result.c179 <- 5;
+    elsif result.w356 = 4 then
+      result.c179 <- 6;
+    elsif result.w356 = 13 then
+      result.c179 <- 7;
+    elsif result.w356 = 15 then
+      result.c179 <- 8;
+    elsif result.w356 = 14 then
+      result.c179 <- 9;
+    elsif result.w356 = 12 then
+      result.c179 <- 10;
+    elsif result.w356 = 0 then
+      result.c179 <- 11;
+    elsif result.w356 = 1 then
+      result.c179 <- 12;
+    else
+      result.c179 <- 13;
+    end;
+    result.code_bytes <- words@51(4)[result.c178] + words@84(12, 8, 4, 0, 1000)[result.c137] + words@83(16, 16)[result.c138] + words@82(0, 4)[result.c140] + words@81(4, 4)[result.c141] + words@80(4)[result.c142] + words@79(12, 12)[result.c143] + words@78(0, 4)[result.c145] + words@77(4, 4)[result.c146] + words@76(4)[result.c147] + words@75(8, 8)[result.c148] + words@74(0, 4)[result.c150] + words@73(4, 4)[result.c151] + words@72(4)[result.c152] + words@71(4, 4)[result.c153] + words@70(0, 4)[result.c155] + words@69(4, 4)[result.c156] + words@68(4)[result.c157] + words@67(12, 8, 4, 0, 1000)[result.c158] + words@66(16, 16)[result.c159] + words@65(0, 4)[result.c161] + words@64(4, 4)[result.c162] + words@63(4)[result.c163] + words@62(12, 12)[result.c164] + words@61(0, 4)[result.c166] + words@60(4, 4)[result.c167] + words@59(4)[result.c168] + words@58(8, 8)[result.c169] + words@57(0, 4)[result.c171] + words@56(4, 4)[result.c172] + words@55(4)[result.c173] + words@54(4, 4)[result.c174] + words@53(0, 4)[result.c176] + words@52(4, 4)[result.c177] + words@50(8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 4)[result.c179] + $1.code_bytes + $2.code_bytes + $3.code_bytes + $4.code_bytes + $5.code_bytes + 12;
+    result.memory_references <- bytes@49(4, 4)[result.c138] + bytes@48(0, 1)[result.c141] + bytes@47(1)[result.c142] + bytes@46(3, 3)[result.c143] + bytes@45(0, 1)[result.c146] + bytes@44(1)[result.c147] + bytes@43(2, 2)[result.c148] + bytes@42(0, 1)[result.c151] + bytes@41(1)[result.c152] + bytes@40(1, 1)[result.c153] + bytes@39(0, 1)[result.c156] + bytes@38(1)[result.c157] + bytes@37(4, 4)[result.c159] + bytes@36(0, 1)[result.c162] + bytes@35(1)[result.c163] + bytes@34(3, 3)[result.c164] + bytes@33(0, 1)[result.c167] + bytes@32(1)[result.c168] + bytes@31(2, 2)[result.c169] + bytes@30(0, 1)[result.c172] + bytes@29(1)[result.c173] + bytes@28(1, 1)[result.c174] + bytes@27(0, 1)[result.c177] + bytes@26(1)[result.c178] + $1.memory_references + $2.memory_references + $3.memory_references + $4.memory_references + $5.memory_references;
+    result.delay <- bytes@25(4, 4)[result.c138] + bytes@24(0, 1)[result.c141] + bytes@23(1)[result.c142] + bytes@22(3, 3)[result.c143] + bytes@21(0, 1)[result.c146] + bytes@20(1)[result.c147] + bytes@19(2, 2)[result.c148] + bytes@18(0, 1)[result.c151] + bytes@17(1)[result.c152] + bytes@16(1, 1)[result.c153] + bytes@15(0, 1)[result.c156] + bytes@14(1)[result.c157] + bytes@13(4, 4)[result.c159] + bytes@12(0, 1)[result.c162] + bytes@11(1)[result.c163] + bytes@10(3, 3)[result.c164] + bytes@9(0, 1)[result.c167] + bytes@8(1)[result.c168] + bytes@7(2, 2)[result.c169] + bytes@6(0, 1)[result.c172] + bytes@5(1)[result.c173] + bytes@4(1, 1)[result.c174] + bytes@3(0, 1)[result.c177] + bytes@2(1)[result.c178] + bytes@1(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)[result.c179] + $1.delay + $2.delay + $3.delay + $4.delay + $5.delay;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $3.ip_reg_max, legal_evaluation_orders($1, $3));
+    t20 <- $1.ip_reg_max;
+    if t20 = $3.ip_reg_max then
+      result.ip_reg_max <- t20 + 1;
+    else
+      if t20 u<= $3.ip_reg_max then
+        t21 <- $3.ip_reg_max;
+      else
+        t21 <- t20;
+      end;
+      result.ip_reg_max <- t21;
+    end;
+    result.ip_reg_result <- 0;
+  end;
   pass_2 image 16#1F9B98 begin
     temp t1: solution;
     temp t2: solution;

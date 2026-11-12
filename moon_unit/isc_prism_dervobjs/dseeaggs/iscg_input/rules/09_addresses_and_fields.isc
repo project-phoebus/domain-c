@@ -2312,29 +2312,25 @@ transform 450  void <- bit_field_assign ($1: address_mode, $2: literal_32_bits, 
       end;
     elsif result.l372 = 8 then
       result.c136 <- 4;
-      if result.l368 <> nil then
-        if not lir_$can_encode_as_immediate_operand($3.literal_32_bits_value + result.l368, opc$loadl, 1) and not $3.has_a_symbolic_displacement or $3.uses_the_index_register then
-          result.c152 <- 2;
-          if $3.uses_the_base_register then
-            result.c153 <- 1;
-            if $3.literal_32_bits_value <> 0 or $3.uses_the_index_register or $3.has_a_symbolic_displacement then
-              result.c154 <- 2;
-            else
-              result.c154 <- 1;
-            end;
+      if result.l368 = nil or (lir_$can_encode_as_immediate_operand($3.literal_32_bits_value + result.l368, opc$loadl, 1) or $3.has_a_symbolic_displacement) and not $3.uses_the_index_register then
+        result.c152 <- 1;
+      else
+        result.c152 <- 2;
+        if $3.uses_the_base_register then
+          result.c153 <- 1;
+          if $3.literal_32_bits_value <> 0 or $3.uses_the_index_register or $3.has_a_symbolic_displacement then
+            result.c154 <- 2;
           else
-            result.c153 <- 2;
-            if lir_$can_encode_as_immediate_operand($3.literal_32_bits_value, opc$move, 1) then
-              result.c155 <- 1;
-            else
-              result.c155 <- 2;
-            end;
+            result.c154 <- 1;
           end;
         else
-          result.c152 <- 1;
+          result.c153 <- 2;
+          if lir_$can_encode_as_immediate_operand($3.literal_32_bits_value, opc$move, 1) then
+            result.c155 <- 1;
+          else
+            result.c155 <- 2;
+          end;
         end;
-      else
-        result.c152 <- 1;
       end;
       if result.l380 = 256 then
         result.c156 <- 1;
@@ -2427,29 +2423,25 @@ transform 450  void <- bit_field_assign ($1: address_mode, $2: literal_32_bits, 
       end;
     elsif result.l360 = 8 then
       result.c157 <- 4;
-      if result.l356 <> nil then
-        if not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value + result.l356, opc$loadl, 1) and not $1.has_a_symbolic_displacement or $1.uses_the_index_register then
-          result.c173 <- 2;
-          if $1.uses_the_base_register then
-            result.c174 <- 1;
-            if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
-              result.c175 <- 2;
-            else
-              result.c175 <- 1;
-            end;
+      if result.l356 = nil or (lir_$can_encode_as_immediate_operand($1.literal_32_bits_value + result.l356, opc$loadl, 1) or $1.has_a_symbolic_displacement) and not $1.uses_the_index_register then
+        result.c173 <- 1;
+      else
+        result.c173 <- 2;
+        if $1.uses_the_base_register then
+          result.c174 <- 1;
+          if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+            result.c175 <- 2;
           else
-            result.c174 <- 2;
-            if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
-              result.c176 <- 1;
-            else
-              result.c176 <- 2;
-            end;
+            result.c175 <- 1;
           end;
         else
-          result.c173 <- 1;
+          result.c174 <- 2;
+          if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+            result.c176 <- 1;
+          else
+            result.c176 <- 2;
+          end;
         end;
-      else
-        result.c173 <- 1;
       end;
       if result.l384 = 256 then
         result.c177 <- 1;
@@ -2530,29 +2522,25 @@ transform 450  void <- bit_field_assign ($1: address_mode, $2: literal_32_bits, 
       result.c193 <- 2;
     elsif result.l360 = 8 then
       result.c178 <- 4;
-      if result.l356 <> nil then
-        if not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value + result.l356 + 1, opc$loadl, 1) and not $1.has_a_symbolic_displacement or $1.uses_the_index_register then
-          result.c194 <- 2;
-          if $1.uses_the_base_register then
-            result.c195 <- 1;
-            if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
-              result.c196 <- 2;
-            else
-              result.c196 <- 1;
-            end;
+      if result.l356 = nil or (lir_$can_encode_as_immediate_operand($1.literal_32_bits_value + result.l356 + 1, opc$loadl, 1) or $1.has_a_symbolic_displacement) and not $1.uses_the_index_register then
+        result.c194 <- 1;
+      else
+        result.c194 <- 2;
+        if $1.uses_the_base_register then
+          result.c195 <- 1;
+          if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+            result.c196 <- 2;
           else
-            result.c195 <- 2;
-            if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
-              result.c197 <- 1;
-            else
-              result.c197 <- 2;
-            end;
+            result.c196 <- 1;
           end;
         else
-          result.c194 <- 1;
+          result.c195 <- 2;
+          if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+            result.c197 <- 1;
+          else
+            result.c197 <- 2;
+          end;
         end;
-      else
-        result.c194 <- 1;
       end;
       result.c198 <- 2;
     else
@@ -3566,39 +3554,35 @@ transform 463  ip_reg_field <- extract_bit_field_top ($1: address_mode, $2: lite
     t10 <- make_bit_mask_1(24, 0);
     if result.l360 = 1 then
       result.c136 <- 1;
-      if result.l352 <> nil then
-        if not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value + result.l352, opc$storeb, 2) and not $1.has_a_symbolic_displacement or $1.uses_the_index_register then
-          result.c137 <- 2;
-          if $1.uses_the_base_register then
-            result.c138 <- 1;
-            if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
-              result.c139 <- 2;
-            else
-              result.c139 <- 1;
-            end;
+      if result.l352 = nil or (lir_$can_encode_as_immediate_operand($1.literal_32_bits_value + result.l352, opc$storeb, 2) or $1.has_a_symbolic_displacement) and not $1.uses_the_index_register then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+        if $1.uses_the_base_register then
+          result.c138 <- 1;
+          if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+            result.c139 <- 2;
           else
-            result.c138 <- 2;
-            if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
-              result.c140 <- 1;
-            else
-              result.c140 <- 2;
-            end;
-          end;
-          if lir_$can_encode_as_immediate_operand(result.l352, opc$storeb, 2) then
-            result.c141 <- 1;
-          else
-            result.c141 <- 2;
-            if lir_$can_encode_as_immediate_operand(result.l352, opc$move, 1) then
-              result.c142 <- 1;
-            else
-              result.c142 <- 2;
-            end;
+            result.c139 <- 1;
           end;
         else
-          result.c137 <- 1;
+          result.c138 <- 2;
+          if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+            result.c140 <- 1;
+          else
+            result.c140 <- 2;
+          end;
         end;
-      else
-        result.c137 <- 1;
+        if lir_$can_encode_as_immediate_operand(result.l352, opc$storeb, 2) then
+          result.c141 <- 1;
+        else
+          result.c141 <- 2;
+          if lir_$can_encode_as_immediate_operand(result.l352, opc$move, 1) then
+            result.c142 <- 1;
+          else
+            result.c142 <- 2;
+          end;
+        end;
       end;
     else
       result.c136 <- 2;
@@ -4214,39 +4198,35 @@ transform 468  void <- insert_bit_field ($1: address_mode, $2: literal_32_bits, 
     t10 <- make_bit_mask_1(result.l352, 0);
     if result.l368 = 1 then
       result.c136 <- 1;
-      if result.l360 <> nil then
-        if not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value + result.l360, opc$storeb, 2) and not $1.has_a_symbolic_displacement or $1.uses_the_index_register then
-          result.c137 <- 2;
-          if $1.uses_the_base_register then
-            result.c138 <- 1;
-            if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
-              result.c139 <- 2;
-            else
-              result.c139 <- 1;
-            end;
+      if result.l360 = nil or (lir_$can_encode_as_immediate_operand($1.literal_32_bits_value + result.l360, opc$storeb, 2) or $1.has_a_symbolic_displacement) and not $1.uses_the_index_register then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+        if $1.uses_the_base_register then
+          result.c138 <- 1;
+          if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+            result.c139 <- 2;
           else
-            result.c138 <- 2;
-            if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
-              result.c140 <- 1;
-            else
-              result.c140 <- 2;
-            end;
-          end;
-          if lir_$can_encode_as_immediate_operand(result.l360, opc$storeb, 2) then
-            result.c141 <- 1;
-          else
-            result.c141 <- 2;
-            if lir_$can_encode_as_immediate_operand(result.l360, opc$move, 1) then
-              result.c142 <- 1;
-            else
-              result.c142 <- 2;
-            end;
+            result.c139 <- 1;
           end;
         else
-          result.c137 <- 1;
+          result.c138 <- 2;
+          if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+            result.c140 <- 1;
+          else
+            result.c140 <- 2;
+          end;
         end;
-      else
-        result.c137 <- 1;
+        if lir_$can_encode_as_immediate_operand(result.l360, opc$storeb, 2) then
+          result.c141 <- 1;
+        else
+          result.c141 <- 2;
+          if lir_$can_encode_as_immediate_operand(result.l360, opc$move, 1) then
+            result.c142 <- 1;
+          else
+            result.c142 <- 2;
+          end;
+        end;
       end;
     else
       result.c136 <- 2;
@@ -6141,9 +6121,9 @@ transform 478  ip_reg <- range_check_top ($1: ip_reg, $2: literal_32_bits, $3: l
         result.c142 <- 2;
       end;
     end;
-    result.code_bytes <- words(0, 4)[result.c138] + words(0, 4)[result.c137] + words(4, 4, 4)[result.c140] + words(4, 4)[result.c141] + words(4, 4)[result.c142] + $1.code_bytes + $2.code_bytes + $3.code_bytes + 4;
-    result.memory_references <- bytes(0, 1)[result.c142] + $1.memory_references + $2.memory_references + $3.memory_references;
-    result.delay <- bytes(0, 2, 2)[result.c140] + bytes(0, 1)[result.c142] + $1.delay + $2.delay + $3.delay;
+    result.code_bytes <- words@7(0, 4)[result.c138] + words@8(0, 4)[result.c137] + words@6(4, 4, 4)[result.c140] + words@5(4, 4)[result.c141] + words@4(4, 4)[result.c142] + $1.code_bytes + $2.code_bytes + $3.code_bytes + 4;
+    result.memory_references <- bytes@3(0, 1)[result.c142] + $1.memory_references + $2.memory_references + $3.memory_references;
+    result.delay <- bytes@2(0, 2, 2)[result.c140] + bytes@1(0, 1)[result.c142] + $1.delay + $2.delay + $3.delay;
     copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
   end;
   pass_2 image 16#1B65A2 begin
@@ -6202,8 +6182,7 @@ end;
 transform 479  ip_reg <- range_check_top ($1: ip_reg, $2: literal_32_bits, $3: literal_32_bits)
   no_could_deadlock_child;
   pass_1 image 16#12F2A0 begin
-    condition subject.il.w24 = 4 or subject.il.w24 = 1 or subject.il.w24 = 2;
-    condition not (not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$sub, 1) or $2.literal_32_bits_value = $3.literal_32_bits_value);
+    condition (subject.il.w24 = 4 or subject.il.w24 = 1 or subject.il.w24 = 2) and (lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$sub, 1) and ($2.literal_32_bits_value <> $3.literal_32_bits_value));
     cycle_guard already_ip_reg;
     result.l352 <- readonly_l372[subject.il.w24];
     result.l356 <- find_well_known_literal_solution($3.literal_32_bits_value - $2.literal_32_bits_value);

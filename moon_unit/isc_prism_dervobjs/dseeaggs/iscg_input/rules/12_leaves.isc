@@ -12,8 +12,7 @@ transform 13  address_mode <- addr_con ($1: irrelevant)
   pass_1 image 16#13D124 begin
     temp t2: integer32;
     temp t3: integer32;
-    condition subject.il.b20 = 3;
-    condition lir_$can_encode_as_immediate_operand(subject.il.l16, opc$loadl, 1);
+    condition not (subject.il.b20 <> 3 or not lir_$can_encode_as_immediate_operand(subject.il.l16, opc$loadl, 1));
     cycle_guard already_address_mode;
     t2 <- number_of_rightmost_zeroes(subject.il.l12);
     copy code_bytes, memory_references, delay from $1;
@@ -48,8 +47,7 @@ transform 14  address_mode <- addr_con ($1: irrelevant)
     temp t4: integer32;
     temp t5: integer32;
     temp t6: integer32;
-    condition subject.il.b20 = 2;
-    condition lir_$can_encode_as_immediate_operand(subject.il.l16, opc$loadl, 1);
+    condition not (subject.il.b20 <> 2 or not lir_$can_encode_as_immediate_operand(subject.il.l16, opc$loadl, 1));
     cycle_guard already_address_mode;
     t2 <- get_uparrow_dot_kind(subject.il.l8);
     if t2 = 208 or t2 = 159 or (t2 = 167 or t2 = 107) or t2 = 108 then
@@ -88,8 +86,7 @@ transform 15  address_mode <- addr_con ($1: irrelevant)
   pass_1 image 16#13D530 begin
     temp t2: integer32;
     temp t3: integer32;
-    condition subject.il.b20 = 1;
-    condition lir_$can_encode_as_immediate_operand(subject.il.l16, opc$loadl, 1);
+    condition not (subject.il.b20 <> 1 or not lir_$can_encode_as_immediate_operand(subject.il.l16, opc$loadl, 1));
     cycle_guard already_address_mode;
     t2 <- number_of_rightmost_zeroes(subject.il.l12);
     copy code_bytes, memory_references, delay from $1;
@@ -175,8 +172,7 @@ end;
 
 transform 18  address_mode <- addr_con ($1: irrelevant)
   pass_1 image 16#13E1CC begin
-    condition subject.il.b20 <> 3 and (subject.il.b20 <> 2) and (subject.il.b20 <> 1) and (subject.il.b20 <> 0);
-    condition lir_$can_encode_as_immediate_operand(subject.il.l16, opc$loadl, 1);
+    condition not (subject.il.b20 = 3 or subject.il.b20 = 2 or subject.il.b20 = 1 or subject.il.b20 = 0 or not lir_$can_encode_as_immediate_operand(subject.il.l16, opc$loadl, 1));
     cycle_guard already_address_mode;
     copy code_bytes, memory_references, delay from $1;
     result.bits_known <- 0;

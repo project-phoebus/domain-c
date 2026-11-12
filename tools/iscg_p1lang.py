@@ -14,7 +14,7 @@ add (docs/iscg-design.md 2.5, 2.6, 10.7):
               | 'copy' ATTR {',' ATTR} 'from' path ['to' path] ';'
               | 'sum' ATTR {',' ATTR} 'of' path {',' path} ['to' path] ';'
               | 'trace' 'string' ';'
-    expr     := ... | ('bytes' | 'words') '(' NUMBER {',' NUMBER} ')' '[' expr ']'
+    expr     := ... | ('bytes' | 'words') ['@' NUMBER] '(' NUMBER {',' NUMBER} ')' '[' expr ']'
 
 - The clause is the action's body; the generator writes the skeleton
   around it: `result := nil; work := nil;', then for each `condition'
@@ -42,7 +42,9 @@ add (docs/iscg-design.md 2.5, 2.6, 10.7):
   of integer), entry k vk for k = 1..n, entries 0 and n + 1 .. 16 zero.
   The generator lays a rule's tables out in the reverse of their order
   in its clause, the rules' in rule order (the image's layout: Rev 8.89
-  begins each on 8 bytes).
+  begins each on 8 bytes); `bytes@k(...)' places a table k-th in its
+  rule's layout (written for every table of a rule whose layout is not
+  the reverse of the clause).
 """
 import re
 
@@ -79,9 +81,12 @@ def extra_headings():
     finally:
         L.EXTRA.update(saved)
 # the run time's arithmetic (the lifter writes them as operators)
-RUNTIME_HEADINGS = {n: {'params': [('a', 'value', 'i32', False), ('b', 'value', 'i32', False)],
-                        'ret': 'i32', 'val_param': True, 'variable': False}
-                    for n in ('m$mis$lll', 'm$dis$lll', 'm$ois$lll')}
+RUNTIME_HEADINGS = {n: {'params': [('a', 'value', 'i32', False),
+                                   ('b', 'value', 'i32' if n[-1] == 'l' else 'i16', False)],
+                        'ret': 'i32' if n[-3] == 'l' else 'i16', 'val_param': True,
+                        'variable': False}
+                    for n in ('m$mis$lll', 'm$dis$lll', 'm$ois$lll', 'm$ois$wlw', 'm$mis$llw',
+                              'm$dis$llw')}
 # the prelude's cells the actions read that the inserts the modules open
 # declare only through globals.ins.pas
 EXTRA_GLOBALS = {'il_180': 'node', 'cargs_$options': 'other:cargs_$options_t'}
@@ -231,8 +236,9 @@ def expand(s):
 def fmt_expr(e, prec=0):
     k = e[0]
     if k == 'cost':
-        return '%s(%s)[%s]' % ('bytes' if e[1] == 'b' else 'words',
-                               ', '.join(str(v) for v in e[2]), fmt_expr(e[3]))
+        return '%s%s(%s)[%s]' % ('bytes' if e[1] == 'b' else 'words',
+                                 '@%d' % e[4][1] if len(e) > 4 else '',
+                                 ', '.join(str(v) for v in e[2]), fmt_expr(e[3]))
     if k == 'path':
         base, sels = e[1], e[2]
         if isinstance(base, tuple):
@@ -391,8 +397,13 @@ class Parser(L.Parser):
 
     def primary(self):
         t = self.peek()
-        if t in ('bytes', 'words') and self.peek(1) == '(':
-            self.i += 2
+        if t in ('bytes', 'words') and self.peek(1) in ('(', '@'):
+            self.i += 1
+            place = None
+            if self.peek() == '@':
+                self.i += 1
+                place = int(self.next())
+            self.expect('(')
             vals = []
             while self.peek() != ')':
                 vals.append(int(self.next()))
@@ -402,6 +413,8 @@ class Parser(L.Parser):
             self.expect('[')
             ix = self.expr()
             self.expect(']')
+            if place is not None:
+                return ('cost', 'b' if t == 'bytes' else 'w', tuple(vals), ix, ('pos', place))
             return ('cost', 'b' if t == 'bytes' else 'w', tuple(vals), ix)
         return super().primary()
 
@@ -474,7 +487,7 @@ def costs_in(e, out):
         return
     k = e[0]
     if k == 'cost':
-        out.append((e[1], e[2]))
+        out.append((e[1], e[2], e[4] if len(e) > 4 else None))
         costs_in(e[3], out)
         return
     if k == 'bin':
@@ -495,11 +508,64 @@ def costs_in(e, out):
 
 def cost_order(c):
     """[(kind, values)] of the clause's tables in printing order."""
+    return [(k, v) for k, v, _ in cost_nodes(c)]
+
+
+def cost_nodes(c):
+    """[(kind, values, extra)] in printing order (extra: ('off', o) from
+    the lifter, ('pos', k) a written place, or None)."""
     out = []
     for s in clause_stmts(c):
         for e in walk_exprs_stmt(s):
             costs_in(e, out)
     return out
+
+
+def cost_offsets(c):
+    return [x[1] for _, _, x in cost_nodes(c)]
+
+
+def map_costs(e, f):
+    """e with each cost node replaced by f(node), in printing order."""
+    if isinstance(e, tuple):
+        if e and e[0] == 'cost':
+            return f(('cost', e[1], e[2], map_costs(e[3], f)) + tuple(e[4:]))
+        return tuple(map_costs(x, f) for x in e)
+    if isinstance(e, list):
+        return [map_costs(x, f) for x in e]
+    return e
+
+
+def set_cost_places(c, places):
+    """The clause's cost nodes without the lifter's offsets: with places
+    (the layout's numbers, in printing order) when given."""
+    it = iter(places or [])
+
+    def f(n):
+        base = n[:4]
+        return base + (('pos', next(it)),) if places else base
+    c.flags['chain'] = [map_costs(s, f) for s in c.flags['chain']]
+    c.body = [map_costs(s, f) for s in c.body]
+
+
+def rule_tables(c):
+    """([(name, kind)] in printing order, [(name, kind, values)] in the
+    module's order) of a clause's cost tables."""
+    nodes = cost_nodes(c)
+    n = len(nodes)
+    printed, layout = [], []
+    places = [x[1] if x and x[0] == 'pos' else None for _, _, x in nodes]
+    if any(p is not None for p in places):
+        if sorted(places) != list(range(1, n + 1)):
+            raise L.LangError('rule %d: the tables\' places are not 1..%d' % (c.rule, n))
+    else:
+        places = [n - k for k in range(n)]
+    for (kind, vals, _), p in zip(nodes, places):
+        printed.append(('cost_%d_%d' % (c.rule, p), kind))
+    for p in range(1, n + 1):
+        k = places.index(p)
+        layout.append(('cost_%d_%d' % (c.rule, p), nodes[k][0], nodes[k][1]))
+    return printed, layout
 
 
 # --------------------------------------------------------------------------
@@ -643,8 +709,7 @@ def check_emit(c, kind, headings, gen):
     """Raise LangError when the generator cannot write the clause."""
     for k, v in EXTRA_GLOBALS.items():
         L.GLOBALS.setdefault(k, v)
-    order = cost_order(c)
-    tables = [('cost_%d_%d' % (c.rule, len(order) - k), kd) for k, (kd, _) in enumerate(order)]
+    tables, _ = rule_tables(c)
     gen.routine(c.rule, {'p1_clause': c, 'kind': kind}, headings, tables)
 
 
@@ -714,6 +779,10 @@ def int_fields(stmts, headings):
 def _coerce(self, text, cls, want):
     if cls == 'nil' and want in ('i32', 'i16', 'u16', 'u8'):
         return '0'
+    if cls == 'bool' and want in ('u8', 'char'):
+        # a boolean kept in a byte of the rule's own (Rev 8.89's true is
+        # 16#FF: the tests read bit 7)
+        return ('255 * ord(%s)' if want == 'u8' else 'chr(255 * ord(%s))') % text
     return L.Emitter.coerce(self, text, cls, want)
 
 

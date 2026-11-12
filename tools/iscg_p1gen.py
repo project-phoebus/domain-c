@@ -211,16 +211,9 @@ def table_layout(rules, sec):
     T = rules.transforms
     layout, by_rule = [], {}
     for r in sec['transforms']:
-        c = T[r]['p1_clause']
-        order = L1.cost_order(c)
-        names = []
-        n = len(order)
-        for k, (kind, vals) in enumerate(order):
-            names.append(('cost_%d_%d' % (r, n - k), kind))
-        by_rule[r] = names
-        for k in range(n - 1, -1, -1):
-            kind, vals = order[k]
-            layout.append((r, names[k][0], kind, vals))
+        printed, lay = L1.rule_tables(T[r]['p1_clause'])
+        by_rule[r] = printed
+        layout.extend((r, n, kind, vals) for n, kind, vals in lay)
     return layout, by_rule
 
 

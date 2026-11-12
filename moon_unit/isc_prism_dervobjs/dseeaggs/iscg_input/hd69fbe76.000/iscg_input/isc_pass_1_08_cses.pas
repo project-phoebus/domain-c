@@ -204,54 +204,52 @@ procedure transform_89_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
+  t1: integer32;
 begin
   result := nil;
   work := nil;
-  if subject.inherited^.precision <= 32 then begin
-    if precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[1]) = subject.inherited^.precision then begin
-      if solution_kind_of_cse(isc_node_ptr_t(subject.sym)) = 11 then begin
-        if isc_user_routines_354 then begin
-          write('Pattern 89 matched the semantics.');
-          writeln;
-        end;
-        if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
-          if isc_user_routines_354 then begin
-            write('Infinite cycle prevented by NOT adding this to the work list.');
-            writeln;
-          end;
-        end
-        else begin
-          solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-          solution^.rule := 89;
-          solution^.chain := addr(subject);
-          solution^.code_bytes := 0;
-          solution^.memory_refs := 0;
-          solution^.delay := 0;
-          solution^.bits_known := pass_1_cse_parent_bits_known(isc_node_ptr_t(subject.sym));
-          solution^.bits_trusted := pass_1_cse_parent_bits_trusted(isc_node_ptr_t(subject.sym));
-          solution^.code_bytes := pass_1_cse_parent_code_bytes(isc_node_ptr_t(subject.sym));
-          solution^.delay := pass_1_cse_parent_delay(isc_node_ptr_t(subject.sym));
-          solution^.f76.embedded_sr_temp := pass_1_cse_parent_embedded_sr_temp(isc_node_ptr_t(subject.sym));
-          solution^.ip_reg_max := pass_1_cse_parent_ip_reg_max(isc_node_ptr_t(subject.sym));
-          solution^.ip_reg_result := pass_1_cse_parent_ip_reg_result(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_max := pass_1_cse_parent_fp_reg_max(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_result := pass_1_cse_parent_fp_reg_result(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_pair_max := pass_1_cse_parent_fp_reg_pair_max(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_pair_result := pass_1_cse_parent_fp_reg_pair_result(isc_node_ptr_t(subject.sym));
-          solution^.f76.b82_4 := false;
-          solution^.memory_refs := pass_1_cse_parent_memory_refs(isc_node_ptr_t(subject.sym));
-          p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-          p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-          p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-          p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-          p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-          p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-          p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-          p1_already_ptr_t(solution)^.already_ip_reg := true;
-          work := solution;
-          result := solution;
-        end;
+  t1 := precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[1]);
+  if not ((subject.inherited^.precision > 32) or (t1 <> subject.inherited^.precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.sym)) <> 11)) then begin
+    if isc_user_routines_354 then begin
+      write('Pattern 89 matched the semantics.');
+      writeln;
+    end;
+    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+      if isc_user_routines_354 then begin
+        write('Infinite cycle prevented by NOT adding this to the work list.');
+        writeln;
       end;
+    end
+    else begin
+      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution^.rule := 89;
+      solution^.chain := addr(subject);
+      solution^.code_bytes := 0;
+      solution^.memory_refs := 0;
+      solution^.delay := 0;
+      solution^.bits_known := pass_1_cse_parent_bits_known(isc_node_ptr_t(subject.sym));
+      solution^.bits_trusted := pass_1_cse_parent_bits_trusted(isc_node_ptr_t(subject.sym));
+      solution^.code_bytes := pass_1_cse_parent_code_bytes(isc_node_ptr_t(subject.sym));
+      solution^.delay := pass_1_cse_parent_delay(isc_node_ptr_t(subject.sym));
+      solution^.f76.embedded_sr_temp := pass_1_cse_parent_embedded_sr_temp(isc_node_ptr_t(subject.sym));
+      solution^.ip_reg_max := pass_1_cse_parent_ip_reg_max(isc_node_ptr_t(subject.sym));
+      solution^.ip_reg_result := pass_1_cse_parent_ip_reg_result(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_max := pass_1_cse_parent_fp_reg_max(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_result := pass_1_cse_parent_fp_reg_result(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_pair_max := pass_1_cse_parent_fp_reg_pair_max(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_pair_result := pass_1_cse_parent_fp_reg_pair_result(isc_node_ptr_t(subject.sym));
+      solution^.f76.b82_4 := false;
+      solution^.memory_refs := pass_1_cse_parent_memory_refs(isc_node_ptr_t(subject.sym));
+      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
+      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
+      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
+      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
+      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      work := solution;
+      result := solution;
     end;
   end;
 end;
@@ -263,59 +261,57 @@ procedure transform_90_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer32;
+  t1: integer32;
+  t3: integer32;
 begin
   result := nil;
   work := nil;
-  if not ((subject.inherited^.precision <= 0) or (subject.inherited^.precision > 32)) then begin
-    if precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[1]) > subject.inherited^.precision then begin
-      if solution_kind_of_cse(isc_node_ptr_t(subject.sym)) = 11 then begin
-        if isc_user_routines_354 then begin
-          write('Pattern 90 matched the semantics.');
-          writeln;
-        end;
-        if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
-          if isc_user_routines_354 then begin
-            write('Infinite cycle prevented by NOT adding this to the work list.');
-            writeln;
-          end;
-        end
-        else begin
-          solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
-          solution^.rule := 90;
-          solution^.chain := addr(subject);
-          solution^.code_bytes := 0;
-          solution^.memory_refs := 0;
-          solution^.delay := 0;
-          t2 := precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[1]);
-          solution^.f76.b76 := t2 - subject.inherited^.precision;
-          solution^.bits_known := pass_1_cse_parent_bits_known(isc_node_ptr_t(subject.sym));
-          solution^.bits_trusted := pass_1_cse_parent_bits_trusted(isc_node_ptr_t(subject.sym));
-          solution^.code_bytes := pass_1_cse_parent_code_bytes(isc_node_ptr_t(subject.sym));
-          solution^.delay := pass_1_cse_parent_delay(isc_node_ptr_t(subject.sym));
-          solution^.f76.embedded_sr_temp := pass_1_cse_parent_embedded_sr_temp(isc_node_ptr_t(subject.sym));
-          solution^.f76.b77 := subject.inherited^.precision;
-          solution^.f76.b81_0 := false;
-          solution^.ip_reg_max := pass_1_cse_parent_ip_reg_max(isc_node_ptr_t(subject.sym));
-          solution^.ip_reg_result := pass_1_cse_parent_ip_reg_result(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_max := pass_1_cse_parent_fp_reg_max(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_result := pass_1_cse_parent_fp_reg_result(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_pair_max := pass_1_cse_parent_fp_reg_pair_max(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_pair_result := pass_1_cse_parent_fp_reg_pair_result(isc_node_ptr_t(subject.sym));
-          solution^.f76.b82_4 := false;
-          solution^.memory_refs := pass_1_cse_parent_memory_refs(isc_node_ptr_t(subject.sym));
-          p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-          p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-          p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-          p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-          p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-          p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-          p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-          p1_already_ptr_t(solution)^.already_ip_reg_field := true;
-          work := solution;
-          result := solution;
-        end;
+  t1 := precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[1]);
+  if not ((subject.inherited^.precision <= 0) or (subject.inherited^.precision > 32) or (t1 <= subject.inherited^.precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.sym)) <> 11)) then begin
+    if isc_user_routines_354 then begin
+      write('Pattern 90 matched the semantics.');
+      writeln;
+    end;
+    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+      if isc_user_routines_354 then begin
+        write('Infinite cycle prevented by NOT adding this to the work list.');
+        writeln;
       end;
+    end
+    else begin
+      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution^.rule := 90;
+      solution^.chain := addr(subject);
+      solution^.code_bytes := 0;
+      solution^.memory_refs := 0;
+      solution^.delay := 0;
+      t3 := precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[1]);
+      solution^.f76.b76 := t3 - subject.inherited^.precision;
+      solution^.bits_known := pass_1_cse_parent_bits_known(isc_node_ptr_t(subject.sym));
+      solution^.bits_trusted := pass_1_cse_parent_bits_trusted(isc_node_ptr_t(subject.sym));
+      solution^.code_bytes := pass_1_cse_parent_code_bytes(isc_node_ptr_t(subject.sym));
+      solution^.delay := pass_1_cse_parent_delay(isc_node_ptr_t(subject.sym));
+      solution^.f76.embedded_sr_temp := pass_1_cse_parent_embedded_sr_temp(isc_node_ptr_t(subject.sym));
+      solution^.f76.b77 := subject.inherited^.precision;
+      solution^.f76.b81_0 := false;
+      solution^.ip_reg_max := pass_1_cse_parent_ip_reg_max(isc_node_ptr_t(subject.sym));
+      solution^.ip_reg_result := pass_1_cse_parent_ip_reg_result(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_max := pass_1_cse_parent_fp_reg_max(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_result := pass_1_cse_parent_fp_reg_result(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_pair_max := pass_1_cse_parent_fp_reg_pair_max(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_pair_result := pass_1_cse_parent_fp_reg_pair_result(isc_node_ptr_t(subject.sym));
+      solution^.f76.b82_4 := false;
+      solution^.memory_refs := pass_1_cse_parent_memory_refs(isc_node_ptr_t(subject.sym));
+      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
+      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
+      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
+      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
+      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      work := solution;
+      result := solution;
     end;
   end;
 end;
@@ -598,54 +594,52 @@ procedure transform_96_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
+  t1: integer32;
 begin
   result := nil;
   work := nil;
-  if subject.inherited^.precision <= 32 then begin
-    if precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[5]) = subject.inherited^.precision then begin
-      if solution_kind_of_cse(isc_node_ptr_t(subject.sym)) = 11 then begin
-        if isc_user_routines_354 then begin
-          write('Pattern 96 matched the semantics.');
-          writeln;
-        end;
-        if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
-          if isc_user_routines_354 then begin
-            write('Infinite cycle prevented by NOT adding this to the work list.');
-            writeln;
-          end;
-        end
-        else begin
-          solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-          solution^.rule := 96;
-          solution^.chain := addr(subject);
-          solution^.code_bytes := 0;
-          solution^.memory_refs := 0;
-          solution^.delay := 0;
-          solution^.bits_known := pass_1_cse_use_bits_known(isc_node_ptr_t(subject.sym));
-          solution^.bits_trusted := pass_1_cse_use_bits_trusted(isc_node_ptr_t(subject.sym));
-          solution^.code_bytes := pass_1_cse_use_code_bytes(isc_node_ptr_t(subject.sym));
-          solution^.delay := pass_1_cse_use_delay(isc_node_ptr_t(subject.sym));
-          solution^.f76.embedded_sr_temp := pass_1_cse_use_embedded_sr_temp(isc_node_ptr_t(subject.sym));
-          solution^.ip_reg_max := pass_1_cse_use_ip_reg_max(isc_node_ptr_t(subject.sym));
-          solution^.ip_reg_result := pass_1_cse_use_ip_reg_result(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_max := pass_1_cse_use_fp_reg_max(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_result := pass_1_cse_use_fp_reg_result(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_pair_max := pass_1_cse_use_fp_reg_pair_max(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_pair_result := pass_1_cse_use_fp_reg_pair_result(isc_node_ptr_t(subject.sym));
-          solution^.f76.b82_4 := false;
-          solution^.memory_refs := pass_1_cse_use_memory_refs(isc_node_ptr_t(subject.sym));
-          p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-          p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-          p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-          p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-          p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-          p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-          p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-          p1_already_ptr_t(solution)^.already_ip_reg := true;
-          work := solution;
-          result := solution;
-        end;
+  t1 := precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[5]);
+  if not ((subject.inherited^.precision > 32) or (t1 <> subject.inherited^.precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.sym)) <> 11)) then begin
+    if isc_user_routines_354 then begin
+      write('Pattern 96 matched the semantics.');
+      writeln;
+    end;
+    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+      if isc_user_routines_354 then begin
+        write('Infinite cycle prevented by NOT adding this to the work list.');
+        writeln;
       end;
+    end
+    else begin
+      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution^.rule := 96;
+      solution^.chain := addr(subject);
+      solution^.code_bytes := 0;
+      solution^.memory_refs := 0;
+      solution^.delay := 0;
+      solution^.bits_known := pass_1_cse_use_bits_known(isc_node_ptr_t(subject.sym));
+      solution^.bits_trusted := pass_1_cse_use_bits_trusted(isc_node_ptr_t(subject.sym));
+      solution^.code_bytes := pass_1_cse_use_code_bytes(isc_node_ptr_t(subject.sym));
+      solution^.delay := pass_1_cse_use_delay(isc_node_ptr_t(subject.sym));
+      solution^.f76.embedded_sr_temp := pass_1_cse_use_embedded_sr_temp(isc_node_ptr_t(subject.sym));
+      solution^.ip_reg_max := pass_1_cse_use_ip_reg_max(isc_node_ptr_t(subject.sym));
+      solution^.ip_reg_result := pass_1_cse_use_ip_reg_result(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_max := pass_1_cse_use_fp_reg_max(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_result := pass_1_cse_use_fp_reg_result(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_pair_max := pass_1_cse_use_fp_reg_pair_max(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_pair_result := pass_1_cse_use_fp_reg_pair_result(isc_node_ptr_t(subject.sym));
+      solution^.f76.b82_4 := false;
+      solution^.memory_refs := pass_1_cse_use_memory_refs(isc_node_ptr_t(subject.sym));
+      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
+      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
+      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
+      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
+      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      work := solution;
+      result := solution;
     end;
   end;
 end;
@@ -657,59 +651,57 @@ procedure transform_97_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer32;
+  t1: integer32;
+  t3: integer32;
 begin
   result := nil;
   work := nil;
-  if not ((subject.inherited^.precision <= 0) or (subject.inherited^.precision > 32)) then begin
-    if precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[5]) > subject.inherited^.precision then begin
-      if solution_kind_of_cse(isc_node_ptr_t(subject.sym)) = 11 then begin
-        if isc_user_routines_354 then begin
-          write('Pattern 97 matched the semantics.');
-          writeln;
-        end;
-        if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
-          if isc_user_routines_354 then begin
-            write('Infinite cycle prevented by NOT adding this to the work list.');
-            writeln;
-          end;
-        end
-        else begin
-          solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
-          solution^.rule := 97;
-          solution^.chain := addr(subject);
-          solution^.code_bytes := 0;
-          solution^.memory_refs := 0;
-          solution^.delay := 0;
-          t2 := precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[5]);
-          solution^.f76.b76 := t2 - subject.inherited^.precision;
-          solution^.bits_known := pass_1_cse_use_bits_known(isc_node_ptr_t(subject.sym));
-          solution^.bits_trusted := pass_1_cse_use_bits_trusted(isc_node_ptr_t(subject.sym));
-          solution^.code_bytes := pass_1_cse_use_code_bytes(isc_node_ptr_t(subject.sym));
-          solution^.delay := pass_1_cse_use_delay(isc_node_ptr_t(subject.sym));
-          solution^.f76.embedded_sr_temp := pass_1_cse_use_embedded_sr_temp(isc_node_ptr_t(subject.sym));
-          solution^.f76.b77 := subject.inherited^.precision;
-          solution^.f76.b81_0 := false;
-          solution^.ip_reg_max := pass_1_cse_use_ip_reg_max(isc_node_ptr_t(subject.sym));
-          solution^.ip_reg_result := pass_1_cse_use_ip_reg_result(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_max := pass_1_cse_use_fp_reg_max(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_result := pass_1_cse_use_fp_reg_result(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_pair_max := pass_1_cse_use_fp_reg_pair_max(isc_node_ptr_t(subject.sym));
-          solution^.fp_reg_pair_result := pass_1_cse_use_fp_reg_pair_result(isc_node_ptr_t(subject.sym));
-          solution^.f76.b82_4 := false;
-          solution^.memory_refs := pass_1_cse_use_memory_refs(isc_node_ptr_t(subject.sym));
-          p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-          p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-          p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-          p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-          p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-          p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-          p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-          p1_already_ptr_t(solution)^.already_ip_reg_field := true;
-          work := solution;
-          result := solution;
-        end;
+  t1 := precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[5]);
+  if not ((subject.inherited^.precision <= 0) or (subject.inherited^.precision > 32) or (t1 <= subject.inherited^.precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.sym)) <> 11)) then begin
+    if isc_user_routines_354 then begin
+      write('Pattern 97 matched the semantics.');
+      writeln;
+    end;
+    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+      if isc_user_routines_354 then begin
+        write('Infinite cycle prevented by NOT adding this to the work list.');
+        writeln;
       end;
+    end
+    else begin
+      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution^.rule := 97;
+      solution^.chain := addr(subject);
+      solution^.code_bytes := 0;
+      solution^.memory_refs := 0;
+      solution^.delay := 0;
+      t3 := precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[5]);
+      solution^.f76.b76 := t3 - subject.inherited^.precision;
+      solution^.bits_known := pass_1_cse_use_bits_known(isc_node_ptr_t(subject.sym));
+      solution^.bits_trusted := pass_1_cse_use_bits_trusted(isc_node_ptr_t(subject.sym));
+      solution^.code_bytes := pass_1_cse_use_code_bytes(isc_node_ptr_t(subject.sym));
+      solution^.delay := pass_1_cse_use_delay(isc_node_ptr_t(subject.sym));
+      solution^.f76.embedded_sr_temp := pass_1_cse_use_embedded_sr_temp(isc_node_ptr_t(subject.sym));
+      solution^.f76.b77 := subject.inherited^.precision;
+      solution^.f76.b81_0 := false;
+      solution^.ip_reg_max := pass_1_cse_use_ip_reg_max(isc_node_ptr_t(subject.sym));
+      solution^.ip_reg_result := pass_1_cse_use_ip_reg_result(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_max := pass_1_cse_use_fp_reg_max(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_result := pass_1_cse_use_fp_reg_result(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_pair_max := pass_1_cse_use_fp_reg_pair_max(isc_node_ptr_t(subject.sym));
+      solution^.fp_reg_pair_result := pass_1_cse_use_fp_reg_pair_result(isc_node_ptr_t(subject.sym));
+      solution^.f76.b82_4 := false;
+      solution^.memory_refs := pass_1_cse_use_memory_refs(isc_node_ptr_t(subject.sym));
+      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
+      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
+      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
+      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
+      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      work := solution;
+      result := solution;
     end;
   end;
 end;

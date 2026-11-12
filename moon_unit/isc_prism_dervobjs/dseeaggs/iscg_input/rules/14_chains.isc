@@ -748,8 +748,135 @@ transform 379  address_mode <- address_mode
 end;
 
 transform 380  ip_reg <- address_mode
-  { not lifted: 0x144B66: andiw #-49,%a3@(80) }
-  pass_1 image 16#14448E residue;
+  pass_1 image 16#14448E begin
+    temp t1: boolean;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    temp t6: integer32;
+    temp t7: integer32;
+    t1 <- lir_$can_encode_as_immediate_postincrement(subject.literal_32_bits_value, opc$loadl);
+    condition not ((not lir_$can_encode_as_immediate_operand(subject.literal_32_bits_value, opc$loadl, 1) or (not t1 and subject.uses_the_displacement or subject.has_a_symbolic_displacement) and (subject.is_physical or subject.is_atomic)) and (subject.kind = 5) or subject.inherited_attributes.immediate_parent_wants_lvalue or subject.inherited_attributes.fetch_precision <> 32 and (subject.inherited_attributes.fetch_precision <> 8) and (subject.inherited_attributes.fetch_precision <> 16));
+    cycle_guard already_ip_reg;
+    if subject.inherited_attributes.fetch_precision = 32 then
+      t4 <- 0;
+    else
+      t3 <- make_bit_mask_2(31, subject.inherited_attributes.fetch_precision);
+      t4 <- t3;
+    end;
+    if subject.inherited_attributes.fetch_precision = 32 then
+      t6 <- -1;
+    else
+      t5 <- make_bit_mask_2(subject.inherited_attributes.fetch_precision - 1, 0);
+      t6 <- t5;
+    end;
+    result.l352 <- nil;
+    t7 <- make_bit_mask_1(16, 0);
+    if subject.inherited_attributes.fetch_precision = 32 then
+      result.c136 <- 1;
+      if subject.bits_trusted & 3 = 3 and (subject.bits_known & 3 = 0) or (subject.bits_trusted & 1 = 0 or subject.bits_known & 1 <> 0) then
+        result.c137 <- 1;
+        result.c138 <- 1;
+        if result.l352 = 256 then
+          result.c142 <- 1;
+        else
+          result.c142 <- 2;
+        end;
+      elsif not (subject.bits_trusted & 1 <> 0) or subject.bits_known & 1 <> 0 then
+        result.c137 <- 3;
+      else
+        result.c137 <- 2;
+        if not lir_$can_encode_as_immediate_operand(subject.literal_32_bits_value + 3, opc$loadl, 1) and not subject.has_a_symbolic_displacement or subject.uses_the_index_register then
+          result.c143 <- 2;
+          if subject.uses_the_base_register then
+            result.c144 <- 1;
+            if subject.literal_32_bits_value <> 0 or subject.uses_the_index_register or subject.has_a_symbolic_displacement then
+              result.c145 <- 2;
+            else
+              result.c145 <- 1;
+            end;
+          else
+            result.c144 <- 2;
+            if lir_$can_encode_as_immediate_operand(subject.literal_32_bits_value, opc$move, 1) then
+              result.c146 <- 1;
+            else
+              result.c146 <- 2;
+            end;
+          end;
+        else
+          result.c143 <- 1;
+        end;
+        if result.l352 = 256 then
+          result.c147 <- 1;
+        else
+          result.c147 <- 2;
+        end;
+      end;
+      if subject.bits_trusted & 3 = 3 and (subject.bits_known & 3 = 0) or subject.bits_trusted & 1 <> 0 and (subject.bits_known & 1 = 0) then
+        result.c148 <- 1;
+      else
+        result.c148 <- 2;
+        if not subject.embedded_strength_reduction_temporary then
+          result.c149 <- 1;
+        else
+          result.c149 <- 2;
+        end;
+        if result.l352 = 256 then
+          result.c150 <- 1;
+        else
+          result.c150 <- 2;
+        end;
+      end;
+    elsif subject.inherited_attributes.fetch_precision = 16 then
+      result.c136 <- 2;
+      result.c151 <- 1;
+      if result.l352 = 256 then
+        result.c155 <- 1;
+      else
+        result.c155 <- 2;
+      end;
+      if not (subject.bits_trusted & 1 <> 0) or subject.bits_known & 1 <> 0 then
+        result.c156 <- 2;
+        if not subject.embedded_strength_reduction_temporary then
+          result.c157 <- 1;
+        else
+          result.c157 <- 2;
+        end;
+        if result.l352 = 256 then
+          result.c158 <- 1;
+        else
+          result.c158 <- 2;
+        end;
+      else
+        result.c156 <- 1;
+      end;
+    elsif subject.inherited_attributes.fetch_precision = 8 then
+      result.c136 <- 3;
+      result.c159 <- 1;
+      if result.l352 = 256 then
+        result.c163 <- 1;
+      else
+        result.c163 <- 2;
+      end;
+    else
+      result.c136 <- 4;
+    end;
+    result.code_bytes <- words(0, 0, 0, 1000)[result.c136] + words(0, 4)[result.c137] + words(4, 4)[result.c138] + words(0, 4)[result.c140] + words(4, 4)[result.c141] + words(4)[result.c142] + words(8, 8)[result.c143] + words(0, 4)[result.c145] + words(4, 4)[result.c146] + words(0, 1000)[result.c148] + words(4, 4)[result.c151] + words(0, 4)[result.c153] + words(4, 4)[result.c154] + words(4)[result.c155] + words(0, 1000)[result.c156] + words(4, 4)[result.c159] + words(0, 4)[result.c161] + words(4, 4)[result.c162] + words(4)[result.c163] + subject.code_bytes;
+    result.memory_references <- bytes(1, 1)[result.c138] + bytes(0, 1)[result.c141] + bytes(1)[result.c142] + bytes(2, 2)[result.c143] + bytes(0, 1)[result.c146] + bytes(1, 1)[result.c151] + bytes(0, 1)[result.c154] + bytes(1)[result.c155] + bytes(1, 1)[result.c159] + bytes(0, 1)[result.c162] + bytes(1)[result.c163] + subject.memory_references;
+    result.delay <- bytes(1, 1)[result.c138] + bytes(0, 1)[result.c141] + bytes(1)[result.c142] + bytes(2, 2)[result.c143] + bytes(0, 1)[result.c146] + bytes(1, 1)[result.c151] + bytes(0, 1)[result.c154] + bytes(1)[result.c155] + bytes(1, 1)[result.c159] + bytes(0, 1)[result.c162] + bytes(1)[result.c163] + subject.delay;
+    result.bit_7_was_sign_extended <- false;
+    result.bit_15_was_sign_extended <- false;
+    result.bit_position_of_lsb <- 0;
+    result.bits_known <- subject.bits_known_of_fetched_value & t6;
+    result.bits_trusted <- subject.bits_trusted_of_fetched_value & t6 + t4;
+    result.ip_reg_max <- subject.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+    if subject.derived_from_literal then
+      result.literal_32_bits_value <- subject.bits_known_of_fetched_value;
+    else
+      result.literal_32_bits_value <- 0;
+    end;
+  end;
   pass_2 image 16#1BE14C begin
     temp t1: integer32;
     temp t2: integer32;
