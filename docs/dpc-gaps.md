@@ -22,8 +22,8 @@ when this tree is merged).
   6aabd92 and 1240eb7.**  Their 18 rules removed.
 - **Gaps 13 (packed boolean arrays: tests up to 65536 elements,
   constant indices, values under and/or) and 21 (routine parameters):
-  fixed in 307a0fb and 78f475b.**  Still refused: a 4-byte index into
-  a packed boolean array (bin.pas) and nested or internal routines
+  fixed in 307a0fb and 78f475b.**  An integer32 variable as a packed
+  boolean index: a228d3c.  Still refused: nested or internal routines
   passed as routine parameters (reg_color_68k, debug_sym_dmp; the
   image builds an 18-byte trampoline in the parent's frame, sent to
   domain-pascal), whose rules are marked "[still needed with dpc
@@ -32,7 +32,7 @@ when this tree is merged).
   purpose (the image cannot tell it from `repeat ... until false'):
   write such loops with a label.
 - All compile best effort (a warning; `--strict' still refuses).  Their
-  rewrites are gone from tools/cc_gap_rewrites.txt (268 rules removed in all);
+  rewrites are gone from tools/cc_gap_rewrites.txt (270 rules removed in all);
   the full gate is clean without them.
 - Gaps 4 (write/writeln) and 7 (real arithmetic) are not being worked
   on in dpc for now (the domain-pascal owner's choice).
