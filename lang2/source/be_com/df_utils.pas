@@ -410,7 +410,7 @@ begin
             lts^.next_exposed := bb^.exposed;
             bb^.exposed := lts;
           end;
-          lts^.next := bb^.l134;
+          lts^.next := lts_ptr_t(bb^.l134);
           bb^.l134 := lts;
         end;
         lts := nx;
@@ -421,7 +421,7 @@ begin
       repeat
         nx := lts^.next;
         bb := lts^.bb;
-        lts^.next := bb^.l134;
+        lts^.next := lts_ptr_t(bb^.l134);
         bb^.l134 := lts;
         lts := nx;
       until lts = nil;
@@ -431,7 +431,7 @@ begin
 
   bb := rtn^.bbs;
   while bb <> nil do begin
-    lts := bb^.l134;
+    lts := lts_ptr_t(bb^.l134);
     bb^.l134 := nil;
     while lts <> nil do begin
       lr := lts^.lr;
@@ -650,7 +650,7 @@ begin
   df_utils_$canonicalize_lr_lts_lists(rtn);
   saved_c8d := lir_main_c8d;
   lir_main_c8d := true;
-  bv_$make_live_range_complex(rtn, rtn^.lr100);
+  bv_$make_live_range_complex(rtn, rtn^.ap_lr);
   bv_$make_live_range_complex(rtn, lr_ptr_t(rtn^.l112));
   first_walk := false;
   rtn^.marks := rtn^.marks + 1;

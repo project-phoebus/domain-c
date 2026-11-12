@@ -220,7 +220,10 @@ type
     read); +2 bits 5..4 a count sem_utils subtracts; +3 bits 4..0 the
     kind (operand$t).  link (+4) the operand it is tied to (the
     definition a use reads: utils_ins_$operands_instruction of it); +8
-    the immediate value, or a register operand's lifetime segment. }
+    the immediate value, or a register operand's lifetime segment.
+    batch A (fga): an immediate's, a bind-time immediate's and an XSB
+    displacement's +4 (link) points to its node (a constant or symbol);
+    a flow graph edge operand's +8 is the edge. }
   opnd_hdr_t = packed record
     num: 0..255;                        { +0 }
     spare_1: boolean;                   { +1 .7 (rrp$'s elements 7..0) }
@@ -392,10 +395,11 @@ type
     avail_out: bv_ptr_t;                { +126: (avail_in and
                                           transparent) or avail_gen }
     avail_gen: bv_ptr_t;                { +130 }
-    l134: lts_ptr_t;                    { +134: segments by block,
+    l134: univ_ptr;                     { +134: segments by block,
                                           chained at their next, while
                                           df_utils rebuilds the live
-                                          ranges' lists (batch A) }
+                                          ranges' lists; fga walks the
+                                          blocks through it (batch A) }
     space138: array [138..145] of char; { +138 }
     mark146: integer32;                 { +146: a visit mark (utils'
                                           look_for_path, tr_utils;
@@ -559,9 +563,12 @@ type
     space84: array [84..87] of char;    { +84 }
     cells: cell_ptr_t;                  { +88 }
     epilogues: cell_ptr_t;              { +92 }
-    space96: array [96..99] of char;    { +96 }
-    lr100: lr_ptr_t;                    { +100: a live range df_utils
-                                          makes complex for every walk
+    return_instr: instr_ptr_t;          { +96: its RETURN (fga's
+                                          messages; batch A) }
+    ap_lr: lr_ptr_t;                    { +100: the argument pointer's
+                                          live range, the RETURN's
+                                          operand 3 (fga); df_utils makes
+                                          it complex for every walk
                                           (batch A) }
     space104: array [104..107] of char; { +104 }
     lr108: lr_ptr_t;                    { +108: a live range df_utils
@@ -589,7 +596,18 @@ type
     l192: integer32;                    { +192: its complex live
                                           ranges, the last complex id
                                           given (bv) }
-    space196: array [196..227] of char; { +196 }
+    space196: array [196..225] of char; { +196 }
+    f226: packed record                 { +226 (batch A: fga) }
+      b226_7, b226_6, b226_5, b226_4, b226_3: boolean;
+      b226_2: boolean;                  { .2: sets b226_0 (fga) }
+      b226_1: boolean;
+      b226_0: boolean;                  { .0: the AP read may be taken
+                                          out of the RETURN (fga) }
+      b227_7: boolean;                  { +227 }
+      b227_6: boolean;                  { .6: some block may be resumed
+                                          asynchronously (fga) }
+      b227_5, b227_4, b227_3, b227_2, b227_1, b227_0: boolean;
+      end;
     f228: packed record                 { +228 }
       b228_7, b228_6, b228_5, b228_4, b228_3: boolean;
       b228_2: boolean;                  { .2 (tr_utils) }
@@ -1316,11 +1334,12 @@ procedure fg_utils_$drop_this_block(
     p2: univ_ptr); options(val_param); extern;
 
 { FG_UTILS_$FORWARD_THIS_BLOCK - 0x234C3C, 0x3C8 bytes; called from fga
-  post.  Frame 8:l; 12:al; 16:al. }
+  post.  Frame 8:l; 12:al; 16:al (batch A: from fga's call, a block
+  whose one instruction is a jump, and the jump). }
 procedure fg_utils_$forward_this_block(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    bb: bb_ptr_t;
+    jump: instr_ptr_t); options(val_param); extern;
 
 { FG_UTILS_$COMPUTE_DFS_LISTS - 0x2354E0, 0xA2 bytes; called from dfa fga.
   Frame 8:al; 12:l; 16:b. }
