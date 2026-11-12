@@ -640,7 +640,8 @@ type
     and the squash mode of a branch (lst's ".SN", ".ST", ".SF", ".SA"),
     lsq (bits 5..4) lsq$t of a load or store; width the whole byte (an
     insert's or extract's field width, a load_pair's offset as
-    signed). }
+    signed).  asm reads an instruction's first longword (instr_t's h,
+    batch A's) through it too: zzzzz copies it to the cell. }
   cell_head_ptr_t = ^cell_head_t;
   cell_head_t = packed record
     flags: 0..255;                      { +0 }
@@ -654,13 +655,21 @@ type
           b3_3_0: 0..15);
       2: (width: 0..255);
       3: (offset: -128..127);
+      4: (b3_7: boolean;                { .7: modify's (the squash
+                                          mode's) high bit; of a label
+                                          instruction, its block needs
+                                          a label (asm) }
+          b3_6: boolean;                { .6: modify's low bit }
+          b3_5_0: 0..63);
   end;
 
   { An opcode's assembly (the section instruction_assembly, 44 bytes by
     opcode, for opc$undefined..opc$adj_move; asm.pas includes its
     initializer, instr_assembly.init).  w0 and w4 the encoding, +8 bit
     5 (squash) the branch takes a squash suffix, bit 4 (no_hex) lst
-    shows no instruction word, prasm_len the length of prasm_name; +9
+    shows no instruction word (asm's traces call it "5op": asm does
+    not clear the word it builds before such an instruction's fields,
+    so it takes the previous instruction's fields as well), prasm_len the length of prasm_name; +9
     name_len the length of name, half (bits 3..1) the operands that
     name a single's half (lst's ".H"); prasm_format (+10) how lst
     lays the instruction out in -PRASM form; prasm_name (+11) its
@@ -717,14 +726,21 @@ type
           chars: array [1..256] of char);      { +12 }
   end;
 
-  { A literal pool entry (lst_$display_literal, bin): lit (+4) the
-    literal, size (+16), addr (+20) its address in the pool. }
+  { A literal pool entry (asm's add_literal_to_literal_pool, from its
+    entries heap: 24 bytes; lst_$display_literal, bin): next (+0) in its
+    pool's list of its alignment (asm: a pool's tails point at the last
+    entry's next, or at the head, so an entry's address is its next
+    field's), lit (+4) the literal, refs (+8) the first of the operands
+    that refer to it and last_ref (+12) the last (chained through their
+    link, which asm's combine_literal_pools finally points at the
+    entry), size (+16) in bytes, addr (+20) its address in the pool.
+    batch B (PB2): +0, +8, +12 were l0, l8, l12. }
   lpe_ptr_t = ^lpe_t;
   lpe_t = record
-    l0: integer32;                      { +0 }
+    next: lpe_ptr_t;                    { +0 }
     lit: lit_ptr_t;                     { +4 }
-    l8: integer32;                      { +8 }
-    l12: integer32;                     { +12 }
+    refs: opnd_ptr_t;                   { +8 }
+    last_ref: opnd_ptr_t;               { +12 }
     size: integer32;                    { +16 }
     addr: integer32;                    { +20 }
   end;
@@ -752,7 +768,13 @@ type
   instr_mnemonic_length.init in lst.pas, instr_assembly.init in asm.pas,
   of_string*.init in lir.pas, operand_string*.init in dmp.pas,
   operand_forms_mask.init and the amse_ tables in tm_utils.pas).  Each
-  unit that declares a section shares it. }
+  unit that declares a section shares it.  The .init files give the
+  data with a `define' statement after these declarations (the
+  reference's section 7.2.2, method 2; docs/questions.md 161, settled
+  by translator PB2: instr_assembly.init, instr_mnemonic*.init,
+  operand_string*.init so far).  dpc does not yet lay out an
+  initialized overlay section named as its variable (docs/dpc-gaps.md
+  32): the gate renames those sections. }
 var (instruction_attributes)
   instruction_attributes: instr_attrs_t;
 var (instruction_mnemonic)
