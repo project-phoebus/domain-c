@@ -1697,4 +1697,30 @@ revisited.
    the words past 211 zero (no .rwdi record).  Should both be indexed
    0..383 (the opcode enumeration's range)?
 
-
+290. Translator PC6, oli.pas: find_open_slot (cc.a88k 0x25A44A)'s last
+   search for a truncdi (0x25AC12 .. 0x25AC3E) tests the cycle and wraps
+   without stepping to the previous cycle (no `subq.l #1,D2' before
+   `tst.l D2'), so after a full first cycle it gives up at once; every
+   other search steps.  Kept; a statement lost from the original?
+291. Translator PC6, oli.pas: data_flow_paths (0x259156) puts the paths
+   found from a reader in front of those found so far by setting the
+   first returned cell's link to them, then walks on through the old
+   ones too when prefixing the writer's step, so earlier paths get the
+   step again and paths from the same reader after the first are
+   dropped.  Kept; a slip of the original (an append meant)?
+292. Translator PC6, oli.pas: get_dp_zero (0x258184), when a 0.0 pair
+   exists, copies it into a new pair and stores the new live range in
+   the single-precision zero's cell (+0x2DC0), not the pair's; and
+   is_5op_candidate's addd branch tests can_join twice with the same
+   operands and keeps searching after a match.  Both kept; slips?
+293. Translator PC6, oli.pas: swap_inputs (0x25A35E) exchanges an
+   instruction's operands 1 and 2 without relinking their segments'
+   operand chains (it relinks 4 and 5 for an addd).  Kept as the image
+   has it; are the chains rebuilt later (generate_ltss), or a slip?
+294. Translator PC6, oli.pas: build_bookkeeping_structures' and
+   excess_register_pressure's table sizes use the counts' low words
+   (pattern 230), and the cells +0x2DA4 .. +0x2E72 are named only where
+   their use was read (oli_2e14 .. oli_2e20 count the floating
+   instructions placed with and without a multiply partner; oli_2e24,
+   oli_2e2c, oli_2e30 and oli_2e00 are set or compared in routines not
+   translated yet).  Rename when the remaining routines are read.
