@@ -99,7 +99,7 @@ BOOL_FUNCS = {'lir_$use_trap_for_exception_raise', 'return_value_needs_assign_no
 
 # functions whose result is an inherited attribute's value
 EXPR_FUNCS = {'isc_$get_label', 'precision_from_il_node', 'arithmetic_from_il_node',
-              'il_kind_function'}
+              'il_kind_function', 'il_node_to_integer_value'}
 # those returning an enumeration (stored as its ordinal)
 ORD_FUNCS = {'arithmetic_from_il_node'}
 
@@ -505,6 +505,27 @@ class Lifter:
                     k += 3
                     continue
                 self.fail(k, 'a condition')
+            # booleans and-ed through a local: andb L,D0 (then moveb D0,L, or
+            # the branch on the result)
+            m = re.match(r'andb %fp@\((-\d+)\),%d0$', t)
+            if m and int(m.group(1)) in self.locals and \
+                    regs.get('d0', ('',))[0] in ('expr', 'field'):
+                v = '%s and %s' % (self.render(self.locals[int(m.group(1))]),
+                                   self.render(regs['d0']))
+                mb = re.match(r'b(pl|mi)[sw]? 0x([0-9a-f]+)$', ins[k + 1][1])
+                if mb:
+                    tgt = int(mb.group(2), 16)
+                    c = ('bool', v, mb.group(1) == 'pl')
+                    if low and low[-1][0] == 'if' and len(low[-1]) > 3 and low[-1][2] == tgt:
+                        c = cond_and(low[-1][3], c)
+                        low.pop()
+                    low.append(('if', None, tgt, c, ins[k + 2][0]))
+                    saved.setdefault(tgt, dict(regs))
+                    k += 2
+                    continue
+                regs['d0'] = ('expr', v)
+                k += 1
+                continue
             m = re.match(r'bra[sw]? 0x([0-9a-f]+)$', t)
             if m:
                 low.append(('bra', int(m.group(1), 16), ins[k][0]))

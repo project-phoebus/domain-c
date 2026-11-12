@@ -667,8 +667,47 @@ end;
 operator isc_ubinteger_ob il ubinteger_ob children 0 image 16#0E1A24;
 end;
 operator isc_bit_field_assign il bit_field_assign children 5 image 16#0E1A60;
-  fixed;
-  pass_1 1: derived, 2: derived, 3: derived, 4: derived, 5: derived, inherited;
+  if il_node_has_integer_value(il.p52) and il_node_has_integer_value(il.p60) and il_node_has_integer_value(il.p64) and (il_node_to_integer_value(il.p64) <= 32);
+    child 1 il.p48
+      immediate_parent_wants_lvalue <- true;
+      exception_frame <- il.p12;
+      fetch_precision <- 32;
+      required_arithmetic <- 3;
+      required_precision <- 32;
+      permissible derived;
+    child 2 il.p52
+      exception_frame <- il.p12;
+      fetch_precision <- 32;
+      required_arithmetic <- 1;
+      required_precision <- 32;
+      permissible derived;
+    child 3 il.p56
+      exception_frame <- il.p12;
+      fetch_precision <- 32;
+      required_arithmetic <- 3;
+      required_precision <- 32;
+      permissible derived;
+    child 4 il.p60
+      exception_frame <- il.p12;
+      fetch_precision <- 32;
+      required_arithmetic <- 1;
+      required_precision <- 32;
+      permissible derived;
+    child 5 il.p64
+      exception_frame <- il.p12;
+      fetch_precision <- 32;
+      required_arithmetic <- 1;
+      required_precision <- 32;
+      permissible derived;
+  else;
+    trace rewrite;
+    let n89 <- rewrite_$routine_call(il, 0, inh);
+    child solutions n89 copy_all
+      il <- n89;
+      original_il <- il;
+      permissible inherited;
+    solutions_made;
+  endif;
 end;
 operator isc_blk_end_node il blk_end_node children 0 image 16#0E1F26;
   if il.p48.b378.1 and ((il.p48.w2 = 108) or (il.p48.w2 = 107));
@@ -764,8 +803,41 @@ operator isc_cmp_tree_node_agg_compare_top il agg_compare_top children 2 image 1
     permissible derived;
 end;
 operator isc_cmp_tree_node_bit_field_cmp_top il bit_field_cmp_top children 5 image 16#0E2A6A;
-  fixed;
-  pass_1 1: derived, 2: derived, 3: derived, 4: derived, 5: derived, inherited;
+  if il_node_has_integer_value(il.p44) and il_node_has_integer_value(il.p52) and il_node_has_integer_value(il.p56) and (il_node_to_integer_value(il.p56) <= 32);
+    child 1 il.p40
+      fetch_precision <- 32;
+      required_arithmetic <- 3;
+      required_precision <- 32;
+      permissible derived;
+    child 2 il.p44
+      fetch_precision <- 32;
+      required_arithmetic <- 1;
+      required_precision <- 32;
+      permissible derived;
+    child 3 il.p48
+      fetch_precision <- 32;
+      required_arithmetic <- 3;
+      required_precision <- 32;
+      permissible derived;
+    child 4 il.p52
+      fetch_precision <- 32;
+      required_arithmetic <- 1;
+      required_precision <- 32;
+      permissible derived;
+    child 5 il.p56
+      fetch_precision <- 32;
+      required_arithmetic <- 1;
+      required_precision <- 32;
+      permissible derived;
+  else;
+    trace rewrite;
+    let n83 <- rewrite_$routine_call(il, 0, inh);
+    child solutions n83 copy_all
+      il <- n83;
+      original_il <- il;
+      permissible inherited;
+    solutions_made;
+  endif;
 end;
 operator isc_cmp_tree_node_bit_test_top il bit_test_top children 2 image 16#0E2F0C;
   child 2 il.p44
@@ -1175,8 +1247,41 @@ operator isc_tree_node_arshf_top il arshf_top children 2 image 16#0E6CE8;
     permissible derived;
 end;
 operator isc_tree_node_bit_field_cmp_top il bit_field_cmp_top children 5 image 16#0E6EEE;
-  fixed;
-  pass_1 1: derived, 2: derived, 3: derived, 4: derived, 5: derived, inherited;
+  if il_node_has_integer_value(il.p44) and il_node_has_integer_value(il.p52) and il_node_has_integer_value(il.p56) and (il_node_to_integer_value(il.p56) <= 32);
+    child 1 il.p40
+      fetch_precision <- 32;
+      required_arithmetic <- 3;
+      required_precision <- 32;
+      permissible derived;
+    child 2 il.p44
+      fetch_precision <- 32;
+      required_arithmetic <- 1;
+      required_precision <- 32;
+      permissible derived;
+    child 3 il.p48
+      fetch_precision <- 32;
+      required_arithmetic <- 3;
+      required_precision <- 32;
+      permissible derived;
+    child 4 il.p52
+      fetch_precision <- 32;
+      required_arithmetic <- 1;
+      required_precision <- 32;
+      permissible derived;
+    child 5 il.p56
+      fetch_precision <- 32;
+      required_arithmetic <- 1;
+      required_precision <- 32;
+      permissible derived;
+  else;
+    trace rewrite;
+    let n83 <- rewrite_$routine_call(il, 0, inh);
+    child solutions n83 copy_all
+      il <- n83;
+      original_il <- il;
+      permissible inherited;
+    solutions_made;
+  endif;
 end;
 operator isc_tree_node_bit_set_top il bit_set_top children 3 image 16#0E7390;
   child 1 il.p40
