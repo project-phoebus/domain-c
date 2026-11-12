@@ -59,12 +59,18 @@ type
     clean_up_canned_inherited clears l4, l12 and w34.  The address is
     what lir_$get_new_instruction_no_exceptions and the
     lir_$..._instruction routines take as their first argument. }
+  lir_inherited_ptr_t = ^lir_inherited_t;
   lir_inherited_t = record
     node: univ_ptr;                     { +0 }
     l4: integer32;                      { +4 }
     l8: integer32;                      { +8 }
     l12: integer32;                     { +12 }
-    space16: array [16..31] of char;    { +16 }
+    l16: integer32;                     { +16 }
+    l20: integer32;                     { +20: what begin_instruction
+                                          keeps in lir_41ec (batch A,
+                                          PA7) }
+    l24: integer32;                     { +24 }
+    l28: integer32;                     { +28 }
     w32: integer;                       { +32: the node's +20 word
                                           (lir_$complete_top_level_node_
                                           inherited_attrs; batch A, PA6) }

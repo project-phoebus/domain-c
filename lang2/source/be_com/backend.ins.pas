@@ -569,7 +569,9 @@ type
                                           its block (tr_utils: set on
                                           one segment of its live range
                                           in each block; batch C: b3_6) }
-      b3_5: boolean;
+      freed: boolean;                   { .5: on lir's free list
+                                          (lir_$free_lifetime_segment;
+                                          batch A, PA7: was b3_5) }
       final: boolean;                   { .4: on the block's final list
                                           (xtp, tr_utils; batch C:
                                           b3_4) }
@@ -1231,7 +1233,7 @@ var
 
   { lir.pas's data (A5 0x487180), reached by units other than
     lir_main, lir_utils and ra_utils. }
-  lir_3e60: extern array [0..31] of solution_ptr_t;    { +0x3E60: by
+  lir_3e60: extern array [0..63] of solution_ptr_t;    { +0x3E60: by
                                           integer register, the
                                           solution of its physical live
                                           range (ISC; lir_main; batch A,
@@ -1246,7 +1248,7 @@ var
   lir_3f94: extern integer32;           { +0x3F94 (com) }
   lir_3f98: extern integer32;           { +0x3F98 (com) }
   lir_3f9c: extern integer32;           { +0x3F9C (com) }
-  lir_4090: extern array [0..31] of lr_ptr_t;  { +0x4090: by integer
+  lir_4090: extern array [0..63] of lr_ptr_t;  { +0x4090: by integer
                                           register, its physical live
                                           range (batch A, PA5: was
                                           integer32) }
@@ -1961,8 +1963,8 @@ function lir_$get_new_instruction_no_exceptions(
   fg_utils fga hal lir_main oli post utils.  Frame 8:al; 12:al.  Result:
   read (callers: A013 D0l1). }
 function lir_$add_flow_graph_edge(
-    p1: univ_ptr;
-    p2: univ_ptr): univ_ptr; options(val_param); extern;
+    source_p: univ_ptr;
+    target_p: univ_ptr): univ_ptr; options(val_param); extern;
 
 { LIR_$NEW_BASIC_BLOCK - 0x2434DE, 0x7E bytes; called from asm fg_utils
   hal oli post.  Result: A0 (callers: A013). }
@@ -1975,17 +1977,17 @@ function lir_$new_label: univ_ptr; extern;
 { LIR_$LABEL - 0x2437AC, 0xF4 bytes; called from isc_to_lir lir_main.
   Frame 8:al. }
 procedure lir_$label(
-    p1: univ_ptr); options(val_param); extern;
+    label_p: univ_ptr); options(val_param); extern;
 
 { LIR_$FREE_LIFETIME_SEGMENT - 0x2438CE, 0x7E bytes; called from fg_utils
   mmt_utils utils.  Frame 8:al. }
 procedure lir_$free_lifetime_segment(
-    p1: univ_ptr); options(val_param); extern;
+    lts_p: univ_ptr); options(val_param); extern;
 
 { LIR_$NEW_LIFETIME_SEGMENT - 0x2439B8, 0x66 bytes; called from fg_utils
   oli utils.  Frame 8:al.  Result: A0 (callers: A05). }
 function lir_$new_lifetime_segment(
-    p1: univ_ptr): univ_ptr; options(val_param); extern;
+    lr_p: univ_ptr): univ_ptr; options(val_param); extern;
 
 { LIR_$NEW_LIVE_RANGE - 0x243AB0, 0x1C bytes; called from com life
   lir_main lir_utils mmt mmt_utils oli ra_utils tr_utils.  Result: read
@@ -2012,12 +2014,12 @@ function lir_$new_live_range_fp_reg_pair: univ_ptr; extern;
 { LIR_$NEW_LIVE_RANGE_FOR_KIND - 0x243B4C, 0x42 bytes; called from com iv
   oli tr_utils.  Frame 8:w.  Result: read (callers: A026 D0l1). }
 function lir_$new_live_range_for_kind(
-    p1: integer): univ_ptr; options(val_param); extern;
+    kind: integer): univ_ptr; options(val_param); extern;
 
 { LIR_$NEW_INSTRUCTION - 0x243B8E, 0x5A bytes; called from asm fg_utils
   hal oli post.  Frame 8:w.  Result: D0 (callers: A011). }
 function lir_$new_instruction(
-    p1: integer): univ_ptr; options(val_param); extern;
+    opc: integer): univ_ptr; options(val_param); extern;
 
 { LIR_$BREAK_BASIC_BLOCK - 0x243BE8, 0x26 bytes; called from isc_to_lir. }
 procedure lir_$break_basic_block; extern;
