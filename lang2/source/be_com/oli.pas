@@ -182,6 +182,53 @@ type
     instr: instr_ptr_t;                 { +4 }
   end;
 
+  { A table of longwords from the bookkeeping heap. }
+  oli_longs_ptr_t = ^oli_longs_t;
+  oli_longs_t = array [0..65535] of integer32;
+
+  { A cycle's live registers (excess_register_pressure). }
+  oli_live_t = record
+    ip: integer32;                      { +0 }
+    fp: integer32;                      { +4 }
+  end;
+  oli_live_ptr_t = ^array [0..65535] of oli_live_t;
+
+  { An integer constant in a floating register (12 bytes), on
+    oli_fp_consts by value. }
+  oli_fpconst_ptr_t = ^oli_fpconst_t;
+  oli_fpconst_t = record
+    next: oli_fpconst_ptr_t;            { +0 }
+    value: integer32;                   { +4 }
+    lr: lr_ptr_t;                       { +8 }
+  end;
+
+  { A value to materialize in an operand (operand_gets_materialized_
+    value): kind (+2) 1 a live range, 2 an operand (ptr), 3 a
+    constant. }
+  oli_mval_ptr_t = ^oli_mval_t;
+  oli_mval_t = record
+    w0: integer;                        { +0 }
+    kind: integer;                      { +2 }
+    case integer of                     { +4 }
+      1: (ptr: univ_ptr);
+      2: (value: integer32);
+  end;
+
+  { An induction variable's adjustment (get_induction_variable_
+    adjustment): its exposed segment (+8), the iteration (+16) whose
+    value lr (+20) holds, the increment (+24); on oli_ivadjs at
+    next (+4). }
+  oli_ivadj_ptr_t = ^oli_ivadj_t;
+  oli_ivadj_t = record
+    l0: integer32;                      { +0 }
+    next: oli_ivadj_ptr_t;              { +4 }
+    lts: lts_ptr_t;                     { +8 }
+    l12: integer32;                     { +12 }
+    it: integer32;                      { +16 }
+    lr: lr_ptr_t;                       { +20 }
+    mv: oli_mval_t;                     { +24 }
+  end;
+
   { A reduction (16 bytes from the bookkeeping heap): a live range
     whose segments in the loop accumulate one value; kind (+0) 5, so
     that a segment's l24 (an induction lts of iv otherwise, kinds 1..4)
@@ -196,7 +243,8 @@ type
     cls: integer;                       { +2 }
     lr: lr_ptr_t;                       { +4 }
     next: oli_red_ptr_t;                { +8 }
-    l12: integer32;                     { +12 }
+    sums: oli_longs_ptr_t;              { +12: the partial sums, by
+                                          iteration and iteration }
   end;
 
   { A step of a data flow path (16 bytes from the bookkeeping heap): an
@@ -308,7 +356,10 @@ var
 
   { +0x2DA4 .. +0x2E72: the routine's and the loop's state. }
   oli_recurrences: oli_rec_ptr_t;       { +0x2DA8 (record_recurrence) }
-  oli_2dac: univ_ptr;                   { +0x2DAC }
+  oli_ivadjs: oli_ivadj_ptr_t;          { +0x2DA4: the induction
+                                          variables' adjustments }
+  oli_fp_consts: oli_fpconst_ptr_t;     { +0x2DAC: the integer constants
+                                          in floating registers }
   oli_2db0: integer32;                  { +0x2DB0 }
   oli_red_lts: lts_ptr_t;               { +0x2DB4: the segment
                                           is_exposed_reduction examines }
@@ -322,6 +373,11 @@ var
   oli_ip_zero: lr_ptr_t;                { +0x2DC4: an integer register
                                           holding 0 }
   oli_2dc8: univ_ptr;                   { +0x2DC8 }
+  oli_2dcc: oli_longs_ptr_t;            { +0x2DCC: by instruction number
+                                          (800 bytes) }
+  oli_2dd0: oli_longs_ptr_t;            { +0x2DD0: two by iteration }
+  oli_2dd4: oli_longs_ptr_t;            { +0x2DD4: by iteration }
+  oli_2dd8: oli_longs_ptr_t;            { +0x2DD8: by iteration }
   oli_prolog_bb: bb_ptr_t;              { +0x2DE4: the block the
                                           prologue's instructions go in }
   oli_prolog_last: instr_ptr_t;         { +0x2DEC: the last instruction
@@ -333,6 +389,8 @@ var
   oli_counter: lr_ptr_t;                { +0x2DF8: the loop counter }
   oli_rtn: rtn_ptr_t;                   { +0x2DFC }
   oli_2e00: integer32;                  { +0x2E00 }
+  oli_2de8: integer32;                  { +0x2DE8: the span of the
+                                          sequence numbers }
   oli_nmuld: integer32;                 { +0x2E04: muld's (no fp_ccs) }
   oli_nmuls: integer32;                 { +0x2E08: muls's }
   oli_n5d: integer32;                   { +0x2E0C: the double
@@ -536,7 +594,7 @@ begin
   oli_sp_zero := nil;
   oli_dp_zero := nil;
   oli_2dc8 := nil;
-  oli_2dac := nil;
+  oli_fp_consts := nil;
   oli_2e00 := -1;
   oli_prolog_last := nil;
   oli_2db0 := 0;
@@ -2848,4 +2906,456 @@ begin
   reverse_iteration_numbers;
   oli_niters := oli_iters;
 99:
+end;
+
+{ excess_register_pressure - the schedule needs more registers than
+  there are: the values live in each cycle of the overlapped iterations
+  (integer and floating: registers exposed at the head, then each
+  scheduled write adds one and the last read of a segment, unless it
+  is read later in the schedule, takes one off), folded onto the
+  interval's cycles, the largest of each with the values live around
+  the loop beyond 24 integer or 64 floating.  0x25B6B0, 0x3AC bytes:
+  the table's size is a word product of the interval's and the
+  iterations' low words (pattern 129); the last loop repeats its search
+  once for each cycle (kept). }
+
+function excess_register_pressure: boolean; internal;
+label
+  99;
+var
+  tab: oli_live_ptr_t;
+  ip_in, fp_in, c, n, k, row, m, ip, fp, x: integer32;
+  i, j: instr_ptr_t;
+  s: lts_ptr_t;
+  o, r: opnd_ptr_t;
+begin
+  tab := mrh_$alloc(oli_heap, oli_ii * oli_niters * 8);
+  tab^[0].ip := 0;
+  tab^[0].fp := 0;
+  ip_in := 0;
+  fp_in := 0;
+  s := oli_bb^.exposed;
+  while s <> nil do begin
+    if s^.refs^.h.kind in [operand$ip_reg, operand$ip_reg_physical] then
+      if s^.f2.first_in_bb then
+        ip_in := ip_in + 1
+      else
+        tab^[0].ip := tab^[0].ip + 1
+    else if s^.refs^.h.kind in [operand$fp_reg, operand$fp_reg_pair,
+        operand$fp_reg_physical, operand$fp_reg_pair_physical,
+        operand$fp_reg_like, operand$fp_reg_pair_like] then
+      if s^.f2.first_in_bb then
+        fp_in := fp_in + 1
+      else
+        tab^[0].fp := tab^[0].fp + 1;
+    s := s^.next_exposed;
+  end;
+  n := 1;
+  for c := 1 to oli_ii * oli_niters - 1 do begin
+    tab^[c] := tab^[c - 1];
+    while n <= oli_nsched do begin
+      i := oli_sched_list[n];
+      if (oli_iter[i^.num] - 1) * oli_ii + oli_slot[i^.num] <> c then
+        exit;
+      for k := 1 to i^.h.nopnds do begin
+        o := addr(i^.opnds[k]);
+        if o^.h.write then begin
+          if o^.h.kind in [operand$ip_reg, operand$ip_reg_physical] then
+            tab^[c].ip := tab^[c].ip + 1
+          else if o^.h.kind in [operand$fp_reg, operand$fp_reg_pair,
+              operand$fp_reg_physical, operand$fp_reg_pair_physical,
+              operand$fp_reg_like, operand$fp_reg_pair_like] then
+            tab^[c].fp := tab^[c].fp + 1;
+        end
+        else if o^.h.kind in [operand$ip_reg..operand$well_behaved_memory]
+            then
+          if o^.h.read and not o^.h.intend_to_modify then begin
+            s := o^.lts;
+            if not s^.f2.first_in_bb then
+              if not (rrp$modify in s^.rrp) then begin
+                if s^.f2.exposed then
+                  r := s^.refs
+                else
+                  r := s^.refs^.link;
+                while r <> nil do begin
+                  j := utils_ins_$operands_instruction(r);
+                  if oli_iter[j^.num] > oli_iter[i^.num] then
+                    goto 99;
+                  if oli_iter[j^.num] = oli_iter[i^.num] then
+                    if oli_slot[j^.num] > oli_slot[i^.num] then
+                      goto 99;
+                  r := r^.link;
+                end;
+                if o^.h.kind in [operand$ip_reg, operand$ip_reg_physical]
+                    then
+                  tab^[c].ip := tab^[c].ip - 1
+                else if o^.h.kind in [operand$fp_reg, operand$fp_reg_pair,
+                    operand$fp_reg_physical, operand$fp_reg_pair_physical,
+                    operand$fp_reg_like, operand$fp_reg_pair_like] then
+                  tab^[c].fp := tab^[c].fp - 1;
+              end;
+          end;
+    99:
+      end;
+      n := n + 1;
+    end;
+  end;
+  for row := 0 to oli_ii - 1 do
+    for m := 1 to oli_niters - 1 do begin
+      tab^[row].ip := tab^[row].ip + tab^[m * oli_ii + row].ip;
+      tab^[row].fp := tab^[row].fp + tab^[m * oli_ii + row].fp;
+    end;
+  excess_register_pressure := false;
+  for row := 0 to oli_ii - 1 do begin
+    ip := 0;
+    fp := 0;
+    for x := 0 to oli_ii - 1 do begin
+      if ip < tab^[x].ip then
+        ip := tab^[x].ip;
+      if fp < tab^[x].fp then
+        fp := tab^[x].fp;
+    end;
+    fp := fp + fp_in;
+    ip := ip + ip_in;
+    if (fp > 64) or (ip > 24) then begin
+      excess_register_pressure := true;
+      exit;
+    end;
+  end;
+end;
+
+{ int_const_in_fp_reg - a floating register holding the integer v: one
+  made earlier (oli_fp_consts, by value) or a new one, an add of v to
+  the zero register and an mtfp of it at the prologue's end.  0x25BA5C,
+  0x1AC bytes. }
+
+function int_const_in_fp_reg(
+    v: integer32): lr_ptr_t; options(val_param); internal;
+label
+  99;
+var
+  p, n: oli_fpconst_ptr_t;
+  i: instr_ptr_t;
+  lr: lr_ptr_t;
+  k: integer32;
+begin
+  p := oli_fp_consts;
+  if p = nil then
+    p := nil
+  else if v < p^.value then
+    p := nil
+  else begin
+    if v = p^.value then begin
+      int_const_in_fp_reg := p^.lr;
+      goto 99;
+    end;
+    while p^.next <> nil do begin
+      if v <= p^.next^.value then
+        exit;
+      p := p^.next;
+    end;
+    if p^.next <> nil then
+      if p^.next^.value = v then begin
+        int_const_in_fp_reg := p^.next^.lr;
+        goto 99;
+      end;
+  end;
+  n := mrh_$alloc(oli_heap, 12);
+  if p = nil then begin
+    n^.next := oli_fp_consts;
+    oli_fp_consts := n;
+  end
+  else begin
+    n^.next := p^.next;
+    p^.next := n;
+  end;
+  n^.value := v;
+  i := add_instr_end_of_prolog_inits(79);       { add }
+  for k := 1 to i^.h.nopnds do
+    i^.opnds[k].h.num := k;
+  i^.opnds[1].value := v;
+  opnd_bytes_ptr_t(addr(i^.opnds[1]))^.rrp := 16;
+  i^.opnds[1].h.kind := operand$immediate;
+  i^.opnds[1].link := nil;
+  i^.opnds[1].h.bytes := 4;
+  i^.opnds[1].h.count := 0;
+  i^.opnds[2].value := lir_main_c4c;
+  opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 16;
+  i^.opnds[2].h.kind := operand$ip_reg_like;
+  lr := lir_$new_live_range_for_kind(1);
+  i^.opnds[3].ptr := lr;
+  opnd_bytes_ptr_t(addr(i^.opnds[3]))^.rrp := 8;
+  i^.opnds[3].h.kind := operand$ip_reg;
+  i := add_instr_end_of_prolog_inits(126);      { mtfp }
+  i^.opnds[1].h.num := 1;
+  i^.opnds[1].ptr := lr;
+  opnd_bytes_ptr_t(addr(i^.opnds[1]))^.rrp := 16;
+  i^.opnds[1].h.kind := operand$ip_reg;
+  i^.opnds[2].h.num := 2;
+  lr := lir_$new_live_range_for_kind(2);
+  i^.opnds[2].ptr := lr;
+  opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 8;
+  i^.opnds[2].h.kind := operand$fp_reg;
+  n^.lr := lr;
+  int_const_in_fp_reg := lr;
+99:
+end;
+
+{ operand_gets_materialized_value - operand o (cleared) made the value
+  v describes, for register file rclass: a live range (kind 1), a
+  constant (3: an immediate if encodable as operand pos of an opc
+  instruction, else a register made at the head of bb; in a floating
+  register, int_const_in_fp_reg's), or a copy of an operand (2, its
+  number kept).  0x25BC08, 0x16E bytes: pos is a longword passed on as
+  its low word. }
+
+procedure operand_gets_materialized_value(
+    o: opnd_ptr_t;
+    v: oli_mval_ptr_t;
+    rclass: integer;
+    opc: integer;
+    pos: integer32;
+    bb: bb_ptr_t); options(val_param); internal;
+var
+  e: iv_expr_ptr_t;
+  lr: lr_ptr_t;
+  value: integer32;
+  op: opnd_ptr_t;
+  kind: integer;
+  n: integer;
+begin
+  zero(o, 12);
+  case v^.kind of
+    1: begin
+      o^.ptr := v^.ptr;
+      opnd_bytes_ptr_t(o)^.rrp := 16;
+      opnd_bytes_ptr_t(o)^.b3 := (opnd_bytes_ptr_t(o)^.b3 & 16#E0) ! rclass;
+    end;
+    3:
+      if rclass = 1 then begin
+        e := iv_utils_$create_value_expression(v^.value);
+        e := iv_utils_$canonicalize_expression(e);
+        e := iv_utils_$elaborate_expression(e, rclass, opc, pos);
+        iv_utils_$live_range_from_elaborated_expression(e, bb, lr, value,
+            op, kind);
+        iv_utils_$delete_expression(e);
+        if kind = 3 then begin
+          opnd_bytes_ptr_t(o)^.rrp := 16;
+          o^.h.kind := operand$immediate;
+          o^.value := value;
+          o^.link := nil;
+          o^.h.bytes := 4;
+          o^.h.count := 0;
+        end
+        else if kind = 1 then begin
+          opnd_bytes_ptr_t(o)^.rrp := 16;
+          o^.ptr := lr;
+          opnd_bytes_ptr_t(o)^.b3 := (opnd_bytes_ptr_t(o)^.b3 & 16#E0) ! rclass;
+        end
+        else
+          bug_check('\\OLI\OPERAND_GETS_MATERIALIZED_VALUE --- Can''t handle this return kind.%$');
+      end
+      else if rclass = 2 then begin
+        opnd_bytes_ptr_t(o)^.rrp := 16;
+        o^.ptr := int_const_in_fp_reg(v^.value);
+        opnd_bytes_ptr_t(o)^.b3 := (opnd_bytes_ptr_t(o)^.b3 & 16#E0) ! rclass;
+      end;
+    2: begin
+      n := o^.h.num;
+      o^ := opnd_ptr_t(v^.ptr)^;
+      o^.h.num := n;
+    end;
+    otherwise
+  end;
+end;
+
+{ exposed_at - lr has an exposed segment in bb.  0x25BDC0, 0x42 bytes:
+  global (A5), its parameters by address; nothing calls it. }
+
+function exposed_at(
+    var bb: bb_ptr_t;
+    var lr: lr_ptr_t): boolean;
+var
+  s: lts_ptr_t;
+begin
+  exposed_at := false;
+  s := bb^.exposed;
+  while s <> nil do begin
+    if s^.lr = lr then begin
+      exposed_at := true;
+      exit;
+    end;
+    s := s^.next_exposed;
+  end;
+end;
+
+{ consumed_in_downstream_bb - lr's final segment in bb reaches an
+  exposed segment in another block.  0x25BE02, 0x66 bytes: global,
+  nothing calls it; when the final segment reaches none outside bb the
+  result is not set (D0 holds bb's address; kept). }
+
+function consumed_in_downstream_bb(
+    var lr: lr_ptr_t;
+    var bb: bb_ptr_t): boolean;
+label
+  99;
+var
+  s: lts_ptr_t;
+begin
+  s := bb^.finals;
+  while s <> nil do begin
+    if s^.lr = lr then
+      exit;
+    s := s^.next_final;
+  end;
+  if s = nil then begin
+    consumed_in_downstream_bb := false;
+    goto 99;
+  end;
+  s := s^.l28;
+  while s <> nil do begin
+    if s^.bb <> bb then begin
+      consumed_in_downstream_bb := true;
+      goto 99;
+    end;
+    s := s^.l28;
+  end;
+99:
+end;
+
+{ get_materialized_in_re_duction_lr - the live range that holds, in
+  iteration it of the prologue, the value an operand o reads from a
+  previous iteration (o's segment, or the join's input it comes from):
+  for a reduction, its live range in iteration 0, else the zero of its
+  register file (the pair's other half from new's operands); for an
+  induction variable, its record's live range for it, else a new one
+  computed by an add of the adjustment to the previous one at the
+  prologue's end.  0x25BE68, 0x258 bytes: the paths that find nothing
+  return what A0 holds (kept unset). }
+
+function get_materialized_in_re_duction_lr(
+    o: opnd_ptr_t;
+    it: integer32;
+    new: instr_ptr_t): lr_ptr_t; options(val_param); internal;
+label
+  99;
+var
+  s, e: lts_ptr_t;
+  l: oli_red_ptr_t;
+  r: oli_red_ptr_t;
+  p: oli_ivadj_ptr_t;
+  j, i: instr_ptr_t;
+  k: integer32;
+  kind, opc: integer;
+  tmp: opnd_t;
+  lr: lr_ptr_t;
+begin
+  s := o^.lts;
+  if s^.f2.exposed then
+    e := s
+  else
+    e := utils_ins_$operands_instruction(s^.refs)^.opnds[1].lts;
+  l := oli_red_ptr_t(e^.l24);
+  if l = nil then begin
+    get_materialized_in_re_duction_lr := e^.lr;
+    goto 99;
+  end;
+  if l^.h.kind = 5 then begin
+    if it = 0 then begin
+      r := oli_reductions;
+      while r <> nil do begin
+        if r^.lr = s^.lr then
+          exit;
+        r := r^.next;
+      end;
+      get_materialized_in_re_duction_lr := r^.lr;
+    end
+    else if rrp$ip_reg in e^.rrp then begin
+      if rrp$intend_to_modify in s^.rrp then
+        get_materialized_in_re_duction_lr := get_ip_zero
+      else
+        get_materialized_in_re_duction_lr := nil;
+    end
+    else if rrp$fp_reg_even_only in e^.rrp then
+      get_materialized_in_re_duction_lr := get_dp_zero
+    else if rrp$fp_reg_odd_only in e^.rrp then begin
+      j := utils_ins_$operands_instruction(o);
+      for k := 1 to o^.h.num do
+        if j^.opnds[k].lts^.lr = o^.lts^.lr^.mate then begin
+          get_materialized_in_re_duction_lr :=
+              lr_ptr_t(new^.opnds[k].ptr)^.mate;
+          goto 99;
+        end;
+    end
+    else if rrp$fp_reg in e^.rrp then
+      get_materialized_in_re_duction_lr := get_sp_zero;
+    goto 99;
+  end;
+  p := oli_ivadjs;
+  while p <> nil do begin
+    if p^.lts = e then
+      exit;
+    p := p^.next;
+  end;
+  if p = nil then
+    bug_check('oli.get_incremented_induction_lr: couldn''t find exposed induction lts.%$');
+  if p^.it = it then begin
+    get_materialized_in_re_duction_lr := p^.lr;
+    goto 99;
+  end;
+  kind := ord(e^.refs^.h.kind);
+  if kind = 1 then
+    opc := 79                           { add }
+  else
+    opc := 137;                         { addi }
+  operand_gets_materialized_value(addr(tmp), addr(p^.mv), kind, opc, 1,
+      oli_prolog_bb);
+  i := add_instr_end_of_prolog_inits(opc);
+  i^.num := 0;
+  for k := 1 to i^.h.nopnds do
+    i^.opnds[k].h.num := k;
+  i^.opnds[1] := tmp;
+  i^.opnds[1].h.num := 1;
+  i^.opnds[2].ptr := p^.lr;
+  opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 16;
+  i^.opnds[2].h.kind := e^.refs^.h.kind;
+  i^.opnds[3].h.kind := e^.refs^.h.kind;
+  lr := lir_$new_live_range_for_kind(ord(i^.opnds[3].h.kind));
+  i^.opnds[3].ptr := lr;
+  bv_$make_live_range_complex(oli_rtn, lr);
+  opnd_bytes_ptr_t(addr(i^.opnds[3]))^.rrp := 8;
+  p^.lr := lr;
+  p^.it := it;
+  get_materialized_in_re_duction_lr := lr;
+99:
+end;
+
+{ build_bookkeeping_structures - the tables the pipelined loop is built
+  with, from the bookkeeping heap: two of a longword by iteration
+  (oli_2dd8, oli_2dd4), one by instruction number (oli_2dcc, cleared),
+  each reduction's partial sums (iterations by iterations), one of two
+  longwords by iteration (oli_2dd0, cleared); oli_2de8 the
+  instructions' sequence numbers' span.  0x25C108, 0x122 bytes: the
+  sizes word products of the counts' low words (pattern 129). }
+
+procedure build_bookkeeping_structures; internal;
+var
+  k: integer32;
+  r: oli_red_ptr_t;
+begin
+  oli_2dd8 := mrh_$alloc(oli_heap, oli_niters * 4);
+  oli_2dd4 := mrh_$alloc(oli_heap, oli_niters * 4);
+  oli_2dcc := mrh_$alloc(oli_heap, 800);
+  for k := 1 to 200 do
+    oli_2dcc^[k - 1] := 0;
+  r := oli_reductions;
+  oli_2de8 := ((oli_niters - 1) * (oli_niters - 2)) div 2 + oli_iters
+      + oli_niters - 1;
+  while r <> nil do begin
+    r^.sums := mrh_$alloc(oli_heap, oli_iters * oli_niters * 4);
+    r := r^.next;
+  end;
+  oli_2dd0 := mrh_$alloc(oli_heap, oli_niters * 2 * 4);
+  for k := 0 to oli_niters * 2 - 1 do
+    oli_2dd0^[k] := 0;
 end;
