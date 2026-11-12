@@ -52,6 +52,7 @@ P1_A5 = 0x4800BC                # isc_pattern_matcher's data: the pass-1 action 
 P1_END = 0x18C588               # pass_2: the first routine after the pass-1 modules
 PAS_WRITE = 0x4930D2            # pas_$write
 PAS_WRITELN = 0x4930CC          # pas_$writeln
+LIR_4090 = 0x487180 + 0x4090    # lir_4090 (backend.ins.pas): live ranges by integer register
 ISC_HEAP = 0x48103C             # isc_heap (isc_var_externs.ins.pas)
 TRACE = 'isc_user_routines_354'
 ALREADY = ['already_address_mode', 'already_fp_reg', 'already_fp_reg_pair',
@@ -119,7 +120,7 @@ class Lifter(P2.Lifter):
         stmts = self.run(self.body, st, {self.epilogue})[0]
         return self.finish(stmts)
 
-    def read(self, op, size, st, out, x):
+    def read1(self, op, size, st, out, x):
         loc = self.ea_addr(op, st)
         if loc[0] == 'fp' and loc[1] in PARAMS:
             return ('param', PARAMS[loc[1]])
@@ -206,6 +207,30 @@ class Lifter(P2.Lifter):
         if isinstance(v, tuple) and v[0] == 'boolbyte':
             return v[1]
         return super().val(v)
+
+    def field(self, base, off, size, bit=None):
+        try:
+            return super().field(base, off, size, bit)
+        except Unliftable:
+            if bit is not None or not getattr(self, '_narrow', False):
+                raise
+            # the low byte or word of a longer field (Rev 8.89 reads only
+            # what a byte or word operation needs)
+            for big in (4, 2):
+                o = off + size - big
+                if big > size and o >= 0:
+                    try:
+                        return super().field(base, o, big)
+                    except Unliftable:
+                        pass
+            raise
+
+    def read(self, op, size, st, out, x):
+        self._narrow = True
+        try:
+            return self.read1(op, size, st, out, x)
+        finally:
+            self._narrow = False
 
     def store(self, op, size, v, st, out, x):
         loc = self.ea_addr(op, st)
@@ -353,6 +378,46 @@ class Lifter(P2.Lifter):
                 st.regs[r] = self.mkcell(e, 'int32', False, out)
                 st.flags = ('tst', st.regs[r], SZ[sz])
                 return None
+        if mn in ('move', 'movea') and x.ops[1].endswith('@+') and x.ops[1].startswith('%a'):
+            size = SZ[sz]
+            op0 = parse_operand(x.ops[0])
+            if op0[0] == 'postinc':
+                b0 = st.regs.get(op0[1])
+                if not (isinstance(b0, tuple) and b0[0] == 'ptroff'):
+                    raise Unliftable('0x%X: %s' % (x.addr, x.text))
+                v = self.read(('ind', op0[1], 0), size, st, out, x)
+                st.regs[op0[1]] = ('ptroff', b0[1], b0[2] + size)
+            else:
+                v = self.read(op0, size, st, out, x)
+            r = x.ops[1][1:3]
+            b = st.regs.get(r)
+            if not (isinstance(b, tuple) and b[0] == 'ptroff'):
+                raise Unliftable('0x%X: %s' % (x.addr, x.text))
+            self.store(('ind', r, 0), size, v, st, out, x)
+            st.regs[r] = ('ptroff', b[1], b[2] + size)
+            st.flags = None
+            return None
+        if mn == 'ext' and x.ops[0].startswith('%d'):
+            # a node's byte read as signed (ext.w), or a word widened (ext.l)
+            r = x.ops[0][1:]
+            v = st.regs.get(r)
+            e = v.expr if isinstance(v, Cell) else None
+            if sz == 'w' and e is not None and e[0] == 'sel' and re.match(r'b\d+$', e[2]):
+                try:
+                    btyp = self.base_path(e[1][1] if e[1][0] == 'cell' else e[1])[1] \
+                        if not isinstance(e[1], tuple) or e[1][0] != 'path' else None
+                except Unliftable:
+                    btyp = None
+                st.regs[r] = self.mkcell(('sel', e[1], 's' + e[2]), 'int16', False, out)
+                st.flags = ('tst', st.regs[r], 2)
+                return None
+            if sz == 'l' and v is not None:
+                pv = v.expr if isinstance(v, Cell) else None
+                if pv is not None and (pv[0] == 'sel' and re.match(r'(w|sb)\d+$', pv[2]) or
+                                       getattr(v, 'typ', None) == 'int16'):
+                    st.flags = ('tst', v, 4)
+                    return None
+            raise Unliftable('0x%X: %s' % (x.addr, x.text))
         if mn == 'st' or (mn in ('sne', 'seq', 'smi', 'spl', 'sf') and not x.ops[0].startswith('%d')):
             if mn != 'st':
                 raise Unliftable('0x%X: %s' % (x.addr, x.text))
@@ -470,11 +535,27 @@ class Lifter(P2.Lifter):
 
     def table_expr(self, loc, size, x):
         _, b, i, disp = loc
+        if isinstance(b, tuple) and b[0] == 'num' and b[1] == LIR_4090 and size == 4:
+            iv = self.val(i)
+            if iv[0] == 'cell' and iv[1].expr is not None:
+                iv = iv[1].expr
+            if not (iv[0] == 'bin' and iv[1] == '*' and iv[3] == ('num', 4)) or disp % 4:
+                raise Unliftable('0x%X: lir_4090 indexed by %r' % (x.addr, iv[0]))
+            e = iv[2] if disp == 0 else P2.Lifter.simplify(self, ('bin', '+', iv[2],
+                                                                  ('num', disp // 4)))
+            return ('index', 'lir_4090', e)
         if isinstance(b, tuple) and b[0] == 'num' and b[1] == P2.ISC_READONLY and size == 1:
             iv = self.val(i)
             if iv[0] == 'cell' and iv[1].expr is not None:
                 iv = iv[1].expr
             return ('index', 'readonly_b%d' % disp, iv)
+        if isinstance(b, tuple) and b[0] == 'num' and b[1] == P2.ISC_READONLY and size == 4:
+            iv = self.val(i)
+            if iv[0] == 'cell' and iv[1].expr is not None:
+                iv = iv[1].expr
+            if not (iv[0] == 'bin' and iv[1] == '*' and iv[3] == ('num', 4)) or disp % 4:
+                raise Unliftable('0x%X: a longword table indexed by %r' % (x.addr, iv[0]))
+            return ('index', 'readonly_l%d' % disp, iv[2])
         return super().table_expr(loc, size, x)
 
     def global_expr(self, addr, size):
@@ -938,7 +1019,7 @@ def skeleton1(stmts, rule, kind):
     already_ name) and trace (False for an action without one)."""
     decls = [s for s in stmts if s[0] == 'temp']
     body = [s for s in stmts if s[0] != 'temp']
-    flags = {'chain': [], 'guard': None, 'rewrite': False, 'trace': True}
+    flags = {'chain': [], 'guard': None, 'rewrite': False, 'trace': True, 'mark': None}
     if body[:2] != [('set', ('path', '@result', []), ('nil',)),
                     ('set', ('path', '@work', []), ('nil',))]:
         raise Skeleton('no `result := nil; work := nil\'')
@@ -1000,6 +1081,15 @@ def skeleton1(stmts, rule, kind):
     if flags['guard']:
         tail.append(('set', ('path', t, ['c%d' % (342 + ALREADY.index(flags['guard']))]),
                      ('bool', True)))
+    else:
+        # a chain rule that sets its flag without testing it
+        if len(rest) > 13:
+            m = rest[-3]
+            mm = re.match(r'c(34[2-8])$', m[1][2][0]) if (
+                m[0] == 'set' and m[1][0] == 'path' and m[1][1] == t and len(m[1][2]) == 1) else None
+            if mm and m[2] == ('bool', True) and rest[-10:-3] == tail:
+                flags['mark'] = ALREADY[int(mm.group(1)) - 342]
+                tail.append(m)
     tail += [('set', ('path', '@work', []), ('path', t, [])),
              ('set', ('path', '@result', []), ('path', t, []))]
     if rest[-len(tail):] != tail:

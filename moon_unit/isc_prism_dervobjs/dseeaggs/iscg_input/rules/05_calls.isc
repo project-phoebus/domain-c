@@ -76,8 +76,20 @@ transform 344  address_mode <- isc_func_call_hidden_temp_top
 end;
 
 transform 345  ip_reg <- isc_func_call_top
-  { not lifted: 0x1167B4: a table at ('num', 4764176) }
-  pass_1 image 16#1166E2 residue;
+  pass_1 image 16#1166E2 begin
+    condition subject.il.b10 = 0;
+    cycle_guard already_ip_reg;
+    result.l352 <- lir_4090[subject.il.b11];
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.ip_reg_result <- 1;
+    result.physical_register <- get_live_range_assigned(result.l352);
+    result.physical_register_from_function_call <- true;
+    result.physical_register_number <- get_live_range_register(result.l352);
+    result.physical_register_is_no_modify <- get_live_range_no_modify(result.l352);
+    result.physical_register_user_declared <- get_live_range_serialize(result.l352);
+  end;
   pass_2 image 16#1A785E begin
     pass_2_isc_call(subject.il, subject.il.b13 & 128 <> 0, subject.il.b12 & 128 <> 0, subject.il.b14 & 128 <> 0, subject.inherited_attributes, 0);
     result.live_range <- result.l352;

@@ -462,8 +462,30 @@ transform 364  ip_reg <- lshf_top ($1: rshf_top($1: ip_reg, $2: literal_32_bits)
 end;
 
 transform 365  ip_reg_field <- rshf_top ($1: bit_test_top($1: literal_32_bits, $2: address_mode), $2: literal_32_bits)
-  { not lifted: solution field +51 (1 bytes) }
-  pass_1 image 16#15B232 residue;
+  pass_1 image 16#15B232 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    condition not ($1.inherited_attributes.fetch_precision <> 8 or $2.literal_32_bits_value <> 7 or ($1.il.w28 <> 6 or $1.$2.inherited_attributes.fetch_precision <> 16) or ($1.$1.literal_32_bits_value < 8 or $1.$1.literal_32_bits_value > 15));
+    cycle_guard already_ip_reg_field;
+    t2 <- make_bit_mask_2(31, 8);
+    t3 <- make_bit_mask_2(7, 0);
+    result.l352 <- nil;
+    result.c136 <- 1;
+    if result.l352 = 256 then
+      result.c140 <- 1;
+    else
+      result.c140 <- 2;
+    end;
+    result.code_bytes <- $2.code_bytes + words(4, 4)[result.c136] + words(0, 4)[result.c138] + words(4, 4)[result.c139] + words(4)[result.c140] + $1.code_bytes;
+    result.memory_references <- bytes(1, 1)[result.c136] + bytes(0, 1)[result.c139] + bytes(1)[result.c140] + $1.memory_references + $2.memory_references;
+    result.delay <- bytes(1, 1)[result.c136] + bytes(0, 1)[result.c139] + bytes(1)[result.c140] + $1.delay + $2.delay;
+    result.bit_position_of_lsb <- $1.$1.literal_32_bits_value - 8;
+    result.bits_known <- $1.$2.bits_known_of_fetched_value & t3;
+    result.bits_trusted <- $1.$2.bits_trusted_of_fetched_value & t3 + t2;
+    result.field_precision <- 1;
+    result.field_requires_sign_extend <- false;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CCDAA begin
     temp t1: integer32;
     temp t2: integer32;
@@ -521,8 +543,16 @@ transform 365  ip_reg_field <- rshf_top ($1: bit_test_top($1: literal_32_bits, $
 end;
 
 transform 366  ip_reg_field <- rshf_top ($1: bit_test_top($1: literal_32_bits, $2: [ip_reg, ip_reg_field]), $2: literal_32_bits)
-  { not lifted: solution field +51 (1 bytes) }
-  pass_1 image 16#15B51A residue;
+  pass_1 image 16#15B51A begin
+    condition not ($1.inherited_attributes.fetch_precision <> 8 or $2.literal_32_bits_value <> 7 or $1.il.w28 <> 6);
+    cycle_guard already_ip_reg_field;
+    sum code_bytes, memory_references, delay of $1, $2;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1.$2;
+    result.bit_position_of_lsb <- $1.$2.bit_position_of_lsb + $1.$1.literal_32_bits_value;
+    result.field_precision <- 1;
+    result.field_requires_sign_extend <- false;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1CCFEE begin
     result.base_register <- $1.$2.base_register;
     result.index_register <- $1.$2.index_register;

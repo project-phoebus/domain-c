@@ -9,8 +9,39 @@
 section 14 chains  image pass_1 a5 16#4619DC, pass_2 a5 16#48008C;
 
 transform 378  address_mode <- address_mode
-  { not lifted: operand ('postinc', 'a1') }
-  pass_1 image 16#142E24 residue;
+  pass_1 image 16#142E24 begin
+    temp t1: boolean;
+    t1 <- lir_$can_encode_as_immediate_postincrement(subject.literal_32_bits_value, opc$loadl);
+    condition (not lir_$can_encode_as_immediate_operand(subject.literal_32_bits_value, opc$loadl, 1) or (not t1 and subject.uses_the_displacement or subject.has_a_symbolic_displacement) and (subject.is_physical or subject.is_atomic)) and (subject.kind = 5) or (not subject.uses_the_base_register or subject.uses_the_index_register or subject.uses_the_displacement) and (subject.kind = 5) and (subject.inherited_attributes.parent_il_kind = 101 or subject.inherited_attributes.parent_il_kind = 91 or (subject.inherited_attributes.parent_il_kind = 66 or subject.inherited_attributes.parent_il_kind = 67));
+    cycle_mark already_address_mode;
+    result.l352 <- create_solution_for_ip_reg();
+    if subject.uses_the_base_register then
+      result.c136 <- 1;
+      if subject.literal_32_bits_value <> 0 or subject.uses_the_index_register or subject.has_a_symbolic_displacement then
+        result.c137 <- 2;
+      else
+        result.c137 <- 1;
+      end;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand(subject.literal_32_bits_value, opc$move, 1) then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(4, 4)[result.c138] + subject.code_bytes;
+    result.memory_references <- bytes(0, 1)[result.c138] + subject.memory_references;
+    result.delay <- bytes(0, 1)[result.c138] + subject.delay;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from subject;
+    result.has_a_symbolic_displacement <- false;
+    result.ip_reg_max <- subject.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+    result.literal_32_bits_value <- 0;
+    result.uses_the_base_register <- true;
+    result.uses_the_index_register <- false;
+    result.uses_the_displacement <- false;
+  end;
   pass_2 image 16#1BCB64 begin
     temp t1: solution;
     if result.c136 = 1 then
@@ -44,8 +75,236 @@ transform 378  address_mode <- address_mode
 end;
 
 transform 379  address_mode <- address_mode
-  { not lifted: operand ('postinc', 'a1') }
-  pass_1 image 16#14339E residue;
+  pass_1 image 16#14339E begin
+    temp t1: boolean;
+    temp t3: pointer;
+    temp t4: pointer;
+    temp t5: integer32;
+    temp t6: integer32;
+    condition not (not subject.inherited_attributes.immediate_parent_wants_set_temporary or subject.is_set_temporary);
+    t1 <- lir_$can_encode_as_immediate_postincrement(subject.literal_32_bits_value, opc$loadl);
+    condition lir_$can_encode_as_immediate_operand(subject.literal_32_bits_value, opc$loadl, 1) and ((t1 or not subject.uses_the_displacement) and not subject.has_a_symbolic_displacement or not subject.is_physical and not subject.is_atomic) or subject.kind <> 5;
+    cycle_mark already_address_mode;
+    t3 <- make_expression_temporary(122, subject.inherited_attributes.fetch_precision);
+    side_effect_set_var_$address_exposed(t3);
+    t4 <- t3;
+    result.l356 <- t4;
+    result.l352 <- address_mode_for_expression_temporary(t4, subject.inherited_attributes.fetch_precision, 0, 3);
+    result.l360 <- subject.inherited_attributes.fetch_precision div 8;
+    result.l364 <- nil;
+    t5 <- make_bit_mask_1(16, 0);
+    result.l368 <- nil;
+    t6 <- make_bit_mask_1(16, 0);
+    if subject.inherited_attributes.fetch_precision <= 32 then
+      result.c136 <- 1;
+      if subject.inherited_attributes.fetch_precision = 32 then
+        result.c137 <- 1;
+        if subject.bits_trusted & 3 = 3 and (subject.bits_known & 3 = 0) or (subject.bits_trusted & 1 = 0 or subject.bits_known & 1 <> 0) then
+          result.c138 <- 1;
+          result.c139 <- 1;
+          if result.l364 = 256 then
+            result.c143 <- 1;
+          else
+            result.c143 <- 2;
+          end;
+        elsif not (subject.bits_trusted & 1 <> 0) or subject.bits_known & 1 <> 0 then
+          result.c138 <- 3;
+        else
+          result.c138 <- 2;
+          if not lir_$can_encode_as_immediate_operand(subject.literal_32_bits_value + 3, opc$loadl, 1) and not subject.has_a_symbolic_displacement or subject.uses_the_index_register then
+            result.c144 <- 2;
+            if subject.uses_the_base_register then
+              result.c145 <- 1;
+              if subject.literal_32_bits_value <> 0 or subject.uses_the_index_register or subject.has_a_symbolic_displacement then
+                result.c146 <- 2;
+              else
+                result.c146 <- 1;
+              end;
+            else
+              result.c145 <- 2;
+              if lir_$can_encode_as_immediate_operand(subject.literal_32_bits_value, opc$move, 1) then
+                result.c147 <- 1;
+              else
+                result.c147 <- 2;
+              end;
+            end;
+          else
+            result.c144 <- 1;
+          end;
+          if result.l364 = 256 then
+            result.c148 <- 1;
+          else
+            result.c148 <- 2;
+          end;
+        end;
+        if subject.bits_trusted & 3 = 3 and (subject.bits_known & 3 = 0) or subject.bits_trusted & 1 <> 0 and (subject.bits_known & 1 = 0) then
+          result.c149 <- 1;
+        else
+          result.c149 <- 2;
+          if not subject.embedded_strength_reduction_temporary then
+            result.c150 <- 1;
+          else
+            result.c150 <- 2;
+          end;
+          if result.l364 = 256 then
+            result.c151 <- 1;
+          else
+            result.c151 <- 2;
+          end;
+        end;
+      elsif subject.inherited_attributes.fetch_precision = 16 then
+        result.c137 <- 2;
+        result.c152 <- 1;
+        if result.l364 = 256 then
+          result.c156 <- 1;
+        else
+          result.c156 <- 2;
+        end;
+        if not (subject.bits_trusted & 1 <> 0) or subject.bits_known & 1 <> 0 then
+          result.c157 <- 2;
+          if not subject.embedded_strength_reduction_temporary then
+            result.c158 <- 1;
+          else
+            result.c158 <- 2;
+          end;
+          if result.l364 = 256 then
+            result.c159 <- 1;
+          else
+            result.c159 <- 2;
+          end;
+        else
+          result.c157 <- 1;
+        end;
+      elsif subject.inherited_attributes.fetch_precision = 8 then
+        result.c137 <- 3;
+        result.c160 <- 1;
+        if result.l364 = 256 then
+          result.c164 <- 1;
+        else
+          result.c164 <- 2;
+        end;
+      else
+        result.c137 <- 4;
+      end;
+      if result.l352.inherited_attributes.fetch_precision = 32 then
+        result.c165 <- 1;
+        if result.l352.bits_trusted & 3 = 3 and (result.l352.bits_known & 3 = 0) or (result.l352.bits_trusted & 1 = 0 or result.l352.bits_known & 1 <> 0) then
+          result.c166 <- 1;
+          result.c167 <- 1;
+          result.c171 <- 2;
+        elsif not (result.l352.bits_trusted & 1 <> 0) or result.l352.bits_known & 1 <> 0 then
+          result.c166 <- 3;
+        else
+          result.c166 <- 2;
+          if not lir_$can_encode_as_immediate_operand(result.l352.literal_32_bits_value + 3, opc$loadl, 1) and not result.l352.has_a_symbolic_displacement or result.l352.uses_the_index_register then
+            result.c172 <- 2;
+            if result.l352.uses_the_base_register then
+              result.c173 <- 1;
+              if result.l352.literal_32_bits_value <> 0 or result.l352.uses_the_index_register or result.l352.has_a_symbolic_displacement then
+                result.c174 <- 2;
+              else
+                result.c174 <- 1;
+              end;
+            else
+              result.c173 <- 2;
+              if lir_$can_encode_as_immediate_operand(result.l352.literal_32_bits_value, opc$move, 1) then
+                result.c175 <- 1;
+              else
+                result.c175 <- 2;
+              end;
+            end;
+          else
+            result.c172 <- 1;
+          end;
+          result.c176 <- 2;
+        end;
+        if result.l352.bits_trusted & 3 = 3 and (result.l352.bits_known & 3 = 0) or result.l352.bits_trusted & 1 <> 0 and (result.l352.bits_known & 1 = 0) then
+          result.c177 <- 1;
+        else
+          result.c177 <- 2;
+          if not result.l352.embedded_strength_reduction_temporary then
+            result.c178 <- 1;
+          else
+            result.c178 <- 2;
+          end;
+          result.c179 <- 2;
+        end;
+      elsif result.l352.inherited_attributes.fetch_precision = 16 then
+        result.c165 <- 2;
+        result.c180 <- 1;
+        result.c184 <- 2;
+        if not (result.l352.bits_trusted & 1 <> 0) or result.l352.bits_known & 1 <> 0 then
+          result.c185 <- 2;
+          if not result.l352.embedded_strength_reduction_temporary then
+            result.c186 <- 1;
+          else
+            result.c186 <- 2;
+          end;
+          result.c187 <- 2;
+        else
+          result.c185 <- 1;
+        end;
+      elsif result.l352.inherited_attributes.fetch_precision = 8 then
+        result.c165 <- 3;
+        result.c188 <- 1;
+        result.c192 <- 2;
+      else
+        result.c165 <- 4;
+      end;
+    else
+      result.c136 <- 2;
+      if subject.uses_the_base_register then
+        result.c193 <- 1;
+        if subject.literal_32_bits_value <> 0 or subject.uses_the_index_register or subject.has_a_symbolic_displacement then
+          result.c194 <- 2;
+        else
+          result.c194 <- 1;
+        end;
+      else
+        result.c193 <- 2;
+        if lir_$can_encode_as_immediate_operand(subject.literal_32_bits_value, opc$move, 1) then
+          result.c195 <- 1;
+        else
+          result.c195 <- 2;
+        end;
+      end;
+      if result.l352.uses_the_base_register then
+        result.c196 <- 1;
+        if result.l352.literal_32_bits_value <> 0 or result.l352.uses_the_index_register or result.l352.has_a_symbolic_displacement then
+          result.c197 <- 2;
+        else
+          result.c197 <- 1;
+        end;
+      else
+        result.c196 <- 2;
+        if lir_$can_encode_as_immediate_operand(result.l352.literal_32_bits_value, opc$move, 1) then
+          result.c198 <- 1;
+        else
+          result.c198 <- 2;
+        end;
+      end;
+      if lir_$can_encode_as_immediate_operand(result.l360, opc$move, 1) then
+        result.c199 <- 1;
+      else
+        result.c199 <- 2;
+      end;
+    end;
+    result.code_bytes <- words(0, 20)[result.c136] + words(0, 0, 0, 1000)[result.c137] + words(0, 4)[result.c138] + words(4, 4)[result.c139] + words(0, 4)[result.c141] + words(4, 4)[result.c142] + words(4)[result.c143] + words(8, 8)[result.c144] + words(0, 4)[result.c146] + words(4, 4)[result.c147] + words(0, 1000)[result.c149] + words(4, 4)[result.c152] + words(0, 4)[result.c154] + words(4, 4)[result.c155] + words(4)[result.c156] + words(0, 1000)[result.c157] + words(4, 4)[result.c160] + words(0, 4)[result.c162] + words(4, 4)[result.c163] + words(4)[result.c164] + words(0, 0, 0, 1000)[result.c165] + words(0, 4)[result.c166] + words(4, 4)[result.c167] + words(0, 4)[result.c169] + words(4, 4)[result.c170] + words(4)[result.c171] + words(8, 8)[result.c172] + words(0, 4)[result.c174] + words(4, 4)[result.c175] + words(0, 1000)[result.c177] + words(4, 4)[result.c180] + words(0, 4)[result.c182] + words(4, 4)[result.c183] + words(4)[result.c184] + words(0, 1000)[result.c185] + words(4, 4)[result.c188] + words(0, 4)[result.c190] + words(4, 4)[result.c191] + words(4)[result.c192] + words(0, 4)[result.c194] + words(4, 4)[result.c195] + words(0, 4)[result.c197] + words(4, 4)[result.c198] + words(4, 4)[result.c199] + subject.code_bytes;
+    result.memory_references <- bytes(0, 2)[result.c136] + bytes(1, 1)[result.c139] + bytes(0, 1)[result.c142] + bytes(1)[result.c143] + bytes(2, 2)[result.c144] + bytes(0, 1)[result.c147] + bytes(1, 1)[result.c152] + bytes(0, 1)[result.c155] + bytes(1)[result.c156] + bytes(1, 1)[result.c160] + bytes(0, 1)[result.c163] + bytes(1)[result.c164] + bytes(1, 1)[result.c167] + bytes(0, 1)[result.c170] + bytes(1)[result.c171] + bytes(2, 2)[result.c172] + bytes(0, 1)[result.c175] + bytes(1, 1)[result.c180] + bytes(0, 1)[result.c183] + bytes(1)[result.c184] + bytes(1, 1)[result.c188] + bytes(0, 1)[result.c191] + bytes(1)[result.c192] + bytes(0, 1)[result.c195] + bytes(0, 1)[result.c198] + bytes(0, 1)[result.c199] + subject.memory_references;
+    result.delay <- bytes(0, 2)[result.c136] + bytes(1, 1)[result.c139] + bytes(0, 1)[result.c142] + bytes(1)[result.c143] + bytes(2, 2)[result.c144] + bytes(0, 1)[result.c147] + bytes(1, 1)[result.c152] + bytes(0, 1)[result.c155] + bytes(1)[result.c156] + bytes(1, 1)[result.c160] + bytes(0, 1)[result.c163] + bytes(1)[result.c164] + bytes(0, 1)[result.c170] + bytes(1)[result.c171] + bytes(0, 1)[result.c175] + bytes(0, 1)[result.c183] + bytes(1)[result.c184] + bytes(0, 1)[result.c191] + bytes(1)[result.c192] + bytes(0, 1)[result.c195] + bytes(0, 1)[result.c198] + bytes(0, 1)[result.c199] + subject.delay;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from subject;
+    result.bits_known <- 0;
+    result.bits_trusted <- 3;
+    result.has_a_symbolic_displacement <- true;
+    result.literal_32_bits_value <- 0;
+    result.il <- result.l356;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.is_set_temporary <- true;
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1BCC98 begin
     temp t1: integer32;
     temp t2: integer32;
@@ -3241,24 +3500,55 @@ transform 384  fp_reg_quad <- address_mode
 end;
 
 transform 385  ip_reg <- fp_reg
-  { not lifted: operand ('postinc', 'a3') }
-  pass_1 image 16#14811A residue;
+  pass_1 image 16#14811A begin
+    condition not (subject.inherited_attributes.immediate_parent_wants_lvalue or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    cycle_guard already_ip_reg;
+    result.code_bytes <- subject.code_bytes + 8;
+    result.memory_references <- subject.memory_references;
+    result.delay <- subject.delay + 1;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register, memory_references from subject;
+    result.ip_reg_max <- 1;
+    result.ip_reg_result <- 1;
+    result.fp_reg_result <- 0;
+    result.physical_register <- false;
+  end;
   pass_2 image 16#1C308A begin
     emit simple(opc$mffp, 0, subject, solution, nil);
   end;
 end;
 
 transform 386  fp_reg <- fp_reg
-  { not lifted: operand ('postinc', 'a3') }
-  pass_1 image 16#1485A2 residue;
+  pass_1 image 16#1485A2 begin
+    condition not (subject.inherited_attributes.immediate_parent_wants_lvalue or not subject.physical_register and subject.is_destroyable or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    cycle_mark already_fp_reg;
+    result.code_bytes <- subject.code_bytes + 4;
+    result.memory_references <- subject.memory_references;
+    result.delay <- subject.delay + 2;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register, memory_references from subject;
+    result.is_destroyable <- true;
+    result.physical_register <- false;
+  end;
   pass_2 image 16#1C30C4 begin
     emit simple(opc$copys, 0, subject, solution, nil);
   end;
 end;
 
 transform 387  fp_reg_pair <- fp_reg_pair
-  { not lifted: operand ('postinc', 'a3') }
-  pass_1 image 16#1489FE residue;
+  pass_1 image 16#1489FE begin
+    condition not (subject.inherited_attributes.immediate_parent_wants_lvalue or not subject.physical_register and subject.is_destroyable or (subject.is_complex or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
+    cycle_mark already_fp_reg_pair;
+    if not isc_user_routines_358 then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- subject.code_bytes + 4;
+    result.memory_references <- subject.memory_references;
+    result.delay <- subject.delay + 2;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register, memory_references from subject;
+    result.is_destroyable <- true;
+    result.physical_register <- false;
+  end;
   pass_2 image 16#1C30FE begin
     if result.c136 = 1 then
       pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -3268,16 +3558,26 @@ transform 387  fp_reg_pair <- fp_reg_pair
 end;
 
 transform 388  fp_reg <- fp_reg_pair
-  { not lifted: operand ('postinc', 'a3') }
-  pass_1 image 16#148E7E residue;
+  pass_1 image 16#148E7E begin
+    condition not (subject.inherited_attributes.immediate_parent_wants_lvalue or subject.inherited_attributes.fetch_precision <> 32);
+    cycle_guard already_fp_reg;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from subject;
+    copy code_bytes, delay, memory_references from subject;
+    result.fp_reg_max <- subject.fp_reg_max + 1;
+    result.fp_reg_result <- 1;
+  end;
   pass_2 image 16#1C3162 begin
     result.live_range <- subject.live_range;
   end;
 end;
 
 transform 389  ip_reg <- ip_reg_field
-  { not lifted: operand ('postinc', 'a3') }
-  pass_1 image 16#1492F0 residue;
+  pass_1 image 16#1492F0 begin
+    condition subject.field_precision = 32;
+    cycle_guard already_ip_reg;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from subject;
+    copy code_bytes, delay, memory_references from subject;
+  end;
   pass_2 image 16#1C3184 begin
     result.base_register <- subject.base_register;
     result.index_register <- subject.index_register;
@@ -3290,8 +3590,13 @@ transform 389  ip_reg <- ip_reg_field
 end;
 
 transform 390  ip_reg_field <- ip_reg_field
-  { not lifted: operand ('postinc', 'a3') }
-  pass_1 image 16#149742 residue;
+  pass_1 image 16#149742 begin
+    condition not (subject.inherited_attributes.parent_il_kind = -85 or subject.inherited_attributes.immediate_parent_wants_lvalue or subject.field_precision <= subject.inherited_attributes.required_precision);
+    cycle_mark already_ip_reg_field;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from subject;
+    copy code_bytes, delay, memory_references from subject;
+    result.field_precision <- subject.inherited_attributes.required_precision;
+  end;
   pass_2 image 16#1C31E0 begin
     result.base_register <- subject.base_register;
     result.index_register <- subject.index_register;
@@ -3484,8 +3789,15 @@ transform 393  ip_reg <- ip_reg_field
 end;
 
 transform 394  ip_reg <- ip_reg_scaled
-  { not lifted: operand ('postinc', 'a3') }
-  pass_1 image 16#14A602 residue;
+  pass_1 image 16#14A602 begin
+    cycle_guard already_ip_reg;
+    result.code_bytes <- subject.code_bytes + 4;
+    copy memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from subject;
+    copy delay, memory_references from subject;
+    result.ip_reg_max <- subject.ip_reg_max + 1;
+    result.physical_register <- false;
+    result.scale <- 0;
+  end;
   pass_2 image 16#1C359A begin
     temp t1: solution;
     t1 <- find_well_known_literal_solution(subject.scale);
@@ -3495,8 +3807,63 @@ end;
 
 transform 395  fp_reg <- ip_reg
   check_permissible;
-  { not lifted: operand ('postinc', 'a1') }
-  pass_1 image 16#14AA62 residue;
+  pass_1 image 16#14AA62 begin
+    temp t2: integer32;
+    temp t3: integer32;
+    condition not (subject.inherited_attributes.immediate_parent_wants_lvalue or subject.inherited_attributes.fetch_precision <> 32 and (subject.inherited_attributes.fetch_precision <> 8) and (subject.inherited_attributes.fetch_precision <> 16) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    cycle_guard already_fp_reg;
+    t2 <- make_bit_mask_1(8, 0);
+    t3 <- make_bit_mask_1(16, 0);
+    if subject.inherited_attributes.immediate_parent_wants_signed then
+      result.c136 <- 1;
+      if subject.inherited_attributes.fetch_precision = 8 then
+        result.c137 <- 1;
+        if subject.bit_7_was_sign_extended then
+          result.c138 <- 1;
+        else
+          result.c138 <- 2;
+        end;
+      elsif subject.inherited_attributes.fetch_precision = 16 then
+        result.c137 <- 2;
+        if subject.bit_15_was_sign_extended then
+          result.c139 <- 1;
+        else
+          result.c139 <- 2;
+        end;
+      else
+        result.c137 <- 3;
+      end;
+    else
+      result.c136 <- 2;
+      if subject.inherited_attributes.fetch_precision = 8 then
+        result.c140 <- 1;
+        if verify_bits(subject.bits_known, subject.bits_trusted, 8, 24, 0) then
+          result.c141 <- 1;
+        else
+          result.c141 <- 2;
+        end;
+      elsif subject.inherited_attributes.fetch_precision = 16 then
+        result.c140 <- 2;
+        if verify_bits(subject.bits_known, subject.bits_trusted, 16, 16, 0) then
+          result.c142 <- 1;
+        else
+          result.c142 <- 2;
+        end;
+      else
+        result.c140 <- 3;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c138] + words(0, 4)[result.c139] + words(0, 4)[result.c141] + words(0, 4)[result.c142] + subject.code_bytes + 8;
+    result.memory_references <- subject.memory_references;
+    result.delay <- subject.delay + 1;
+    copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register, memory_references from subject;
+    result.dead_end <- true;
+    result.ip_reg_result <- 0;
+    result.is_destroyable <- true;
+    result.fp_reg_max <- 1;
+    result.fp_reg_result <- 1;
+    result.physical_register <- false;
+  end;
   pass_2 image 16#1C35F6 begin
     temp t1: solution;
     t1 <- create_solution_for_ip_reg();
@@ -3524,8 +3891,15 @@ transform 395  fp_reg <- ip_reg
 end;
 
 transform 396  ip_reg <- ip_reg
-  { not lifted: operand ('postinc', 'a3') }
-  pass_1 image 16#14B074 residue;
+  pass_1 image 16#14B074 begin
+    condition not (subject.inherited_attributes.immediate_parent_wants_lvalue or not subject.physical_register and subject.is_destroyable);
+    cycle_mark already_ip_reg;
+    result.code_bytes <- subject.code_bytes + 4;
+    copy memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from subject;
+    copy delay, memory_references from subject;
+    result.is_destroyable <- true;
+    result.physical_register <- false;
+  end;
   pass_2 image 16#1C3718 begin
     emit simple(opc$move, 0, subject, solution, nil);
   end;

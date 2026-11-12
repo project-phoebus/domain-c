@@ -195,6 +195,13 @@ READONLY_VIEW = '''  { isc_readonly_tables by byte and word (the actions index t
     case integer of
       1: (w: array [0..1559] of integer);
       2: (b: packed array [0..3119] of 0..255);
+      3: (l: array [0..779] of integer32);
+    end;'''
+
+SNODE_VIEW = '''  { An IL node's bytes as signed numbers (the actions sign-extend some). }
+  p1_snode_ptr_t = ^p1_snode_t;
+  p1_snode_t = record
+    sb: packed array [0..511] of -128..127;
     end;'''
 
 
@@ -291,8 +298,9 @@ def routine(r, t, headings, tables):
         for a in L1.ALREADY:
             inner.extend(em.lines(i3, 'p1_already_ptr_t(solution)^.%s := '
                                       'p1_already_ptr_t(addr(subject))^.%s;' % (a, a)))
-        if f['guard']:
-            inner.append(i3 + 'p1_already_ptr_t(solution)^.%s := true;' % f['guard'])
+        if f['guard'] or f.get('mark'):
+            inner.append(i3 + 'p1_already_ptr_t(solution)^.%s := true;' % (
+                f['guard'] or f['mark']))
         inner.append(i3 + 'work := solution;')
         inner.append(i3 + 'result := solution;')
         if f['guard']:
@@ -374,6 +382,8 @@ def gen_module(rules, sec, headings, includes, gen_note, pattern_text, wrap_word
         views.append(P2G.READONLY_VIEW)
     if 'p1_readonly_ptr_t' in text:
         views.append(READONLY_VIEW)
+    if 'p1_snode_ptr_t' in text:
+        views.append(SNODE_VIEW)
     if 'p1_int_fields_ptr_t' in text:
         views.append(INT_FIELDS_VIEW)
     if 'p2_flags_ptr_t' in text:

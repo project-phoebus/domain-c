@@ -3776,8 +3776,8 @@ begin
     if ord(result.space136[143]) = 1 then begin
       t15 := duplicate_address_mode_adding_byte_offset(subject^.children[1],
           integer32(result.fields[0]));
-      t18 := isc_solution_ptr_t(subject^.children[1]^.base_reg);
-      t19 := t15;
+      t18 := t15;
+      t19 := isc_solution_ptr_t(subject^.children[1]^.base_reg);
     end else begin
       if ord(result.space136[144]) = 1 then begin
         if ord(result.space136[145]) = 1 then begin
@@ -3807,38 +3807,38 @@ begin
             t16^.bits_known, t16^.bits_trusted);
       end;
       t17 := find_well_known_literal_solution(integer32(result.fields[0]));
-      t18 := t2;
-      t19 := t17;
+      t18 := t17;
+      t19 := t2;
     end;
-    t20 := duplicate_address_mode_adding_byte_offset(t19, 1);
+    t20 := duplicate_address_mode_adding_byte_offset(t18, 1);
     t21 := duplicate_address_mode_adding_byte_offset(t15, 2);
     t22 := duplicate_address_mode_adding_byte_offset(t15, 3);
     if ord(result.space136[147]) = 1 then begin
       debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t15,
-          t18, t1, subject^.children[1]^.sym, integer32(result.fields[0]),
+          t19, t1, subject^.children[1]^.sym, integer32(result.fields[0]),
           integer32(result.fields[1]), integer32(result.fields[3]));
     end
     else if ord(result.space136[147]) = 2 then begin
       if ord(result.space136[148]) = 1 then begin
         debug_lir_$load_instruction(result.inherited, ord(opc$loadwu), 0,
-            t15, t18, t1, subject^.children[1]^.sym,
+            t15, t19, t1, subject^.children[1]^.sym,
             integer32(result.fields[0]), integer32(result.fields[1]),
             integer32(result.fields[3]));
       end else begin
         debug_lir_$load_instruction(result.inherited, ord(opc$loadwu), 0,
-            t15, t18, t7, subject^.children[1]^.sym,
+            t15, t19, t7, subject^.children[1]^.sym,
             integer32(result.fields[0]), integer32(result.fields[1]),
             integer32(result.fields[3]));
         if ord(result.space136[149]) = 1 then begin
           debug_lir_$load_instruction(result.inherited, ord(opc$loadbu), 0,
-              t21, t18, t1, subject^.children[1]^.sym,
+              t21, t19, t1, subject^.children[1]^.sym,
               integer32(result.fields[0]) + 2,
               integer32(result.fields[1]) + 2, integer32(result.fields[3]));
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t7, find_well_known_literal_solution(8), t1);
         end else begin
           debug_lir_$load_instruction(result.inherited, ord(opc$loadwu), 0,
-              t21, t18, t1, subject^.children[1]^.sym,
+              t21, t19, t1, subject^.children[1]^.sym,
               integer32(result.fields[0]) + 2,
               integer32(result.fields[1]) + 2, integer32(result.fields[3]));
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
@@ -3847,36 +3847,36 @@ begin
       end;
     end else begin
       debug_lir_$load_instruction(result.inherited, ord(opc$loadbu), 0, t15,
-          t18, t7, subject^.children[1]^.sym, integer32(result.fields[0]),
+          t19, t7, subject^.children[1]^.sym, integer32(result.fields[0]),
           integer32(result.fields[1]), integer32(result.fields[3]));
       if ord(result.space136[150]) = 1 then begin
         debug_lir_$load_instruction(result.inherited, ord(opc$loadbu), 0,
-            t20, t18, t1, subject^.children[1]^.sym,
+            t20, t19, t1, subject^.children[1]^.sym,
             integer32(result.fields[0]) + 1, integer32(result.fields[1]) + 1,
             integer32(result.fields[3]));
         debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0, 8,
             t7, find_well_known_literal_solution(8), t1);
       end else begin
         debug_lir_$load_instruction(result.inherited, ord(opc$loadbu), 0,
-            t20, t18, t8, subject^.children[1]^.sym,
+            t20, t19, t8, subject^.children[1]^.sym,
             integer32(result.fields[0]) + 1, integer32(result.fields[1]) + 1,
             integer32(result.fields[3]));
         debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0, 8,
             t7, find_well_known_literal_solution(8), t8);
         if ord(result.space136[151]) = 1 then begin
           debug_lir_$load_instruction(result.inherited, ord(opc$loadbu), 0,
-              t21, t18, t1, subject^.children[1]^.sym,
+              t21, t19, t1, subject^.children[1]^.sym,
               integer32(result.fields[0]) + 2,
               integer32(result.fields[1]) + 2, integer32(result.fields[3]));
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t8, find_well_known_literal_solution(8), t1);
         end else begin
           debug_lir_$load_instruction(result.inherited, ord(opc$loadbu), 0,
-              t21, t18, t9, subject^.children[1]^.sym,
+              t21, t19, t9, subject^.children[1]^.sym,
               integer32(result.fields[0]) + 2,
               integer32(result.fields[1]) + 2, integer32(result.fields[3]));
           debug_lir_$load_instruction(result.inherited, ord(opc$loadbu), 0,
-              t22, t18, t1, subject^.children[1]^.sym,
+              t22, t19, t1, subject^.children[1]^.sym,
               integer32(result.fields[0]) + 3,
               integer32(result.fields[1]) + 3, integer32(result.fields[3]));
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,

@@ -253,8 +253,33 @@ end;
 
 transform 261  ip_reg <- abs_top ($1: ip_reg)
   no_could_deadlock_child;
-  { not lifted: 0x10B9D8: a table at ('num', 2870780) }
-  pass_1 image 16#10B8EE residue;
+  pass_1 image 16#10B8EE begin
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2));
+    cycle_guard already_ip_reg;
+    result.l352 <- readonly_l372[subject.il.w24];
+    if result.l352 = 8 then
+      result.c136 <- 1;
+      if $1.bit_7_was_sign_extended then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    elsif result.l352 = 16 then
+      result.c136 <- 2;
+      if $1.bit_15_was_sign_extended then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    else
+      result.c136 <- 3;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(0, 4)[result.c138] + $1.code_bytes + 20;
+    result.memory_references <- $1.memory_references;
+    result.delay <- $1.delay + 2;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1A26DC begin
     temp t1: pointer;
     temp t2: pointer;
@@ -286,8 +311,55 @@ end;
 
 transform 262  ip_reg <- abs_top ($1: ip_reg)
   no_could_deadlock_child;
-  { not lifted: 0x10BBF0: a table at ('num', 2870780) }
-  pass_1 image 16#10BB04 residue;
+  pass_1 image 16#10BB04 begin
+    condition not (subject.il.b30 & 128 = 0 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2));
+    cycle_guard already_ip_reg;
+    result.l352 <- readonly_l372[subject.il.w24];
+    if subject.il.w24 = 1 then
+      result.l356 <- find_well_known_literal_solution(128);
+    else
+      result.l356 <- nil;
+    end;
+    if result.l352 = 8 then
+      result.c136 <- 1;
+      if $1.bit_7_was_sign_extended then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    elsif result.l352 = 16 then
+      result.c136 <- 2;
+      if $1.bit_15_was_sign_extended then
+        result.c138 <- 1;
+      else
+        result.c138 <- 2;
+      end;
+    else
+      result.c136 <- 3;
+    end;
+    if subject.il.w24 = 4 then
+      result.c139 <- 1;
+    elsif subject.il.w24 = 2 then
+      result.c139 <- 2;
+    else
+      result.c139 <- 3;
+      if lir_$can_encode_as_immediate_operand(-result.l356.literal_32_bits_value, opc$add, 1) then
+        result.c140 <- 1;
+      else
+        result.c140 <- 2;
+        if lir_$can_encode_as_immediate_operand(result.l356.literal_32_bits_value, opc$move, 1) then
+          result.c141 <- 1;
+        else
+          result.c141 <- 2;
+        end;
+      end;
+    end;
+    result.code_bytes <- words(0, 4)[result.c137] + words(0, 4)[result.c138] + words(8, 16, 8)[result.c139] + words(4, 4)[result.c140] + words(4, 4)[result.c141] + $1.code_bytes + 16;
+    result.memory_references <- bytes(0, 1)[result.c141] + $1.memory_references;
+    result.delay <- bytes(0, 1)[result.c141] + $1.delay + 2;
+    result.ip_reg_max <- $1.ip_reg_max + 1;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1A283A begin
     temp t1: pointer;
     temp t2: pointer;
@@ -1259,8 +1331,125 @@ end;
 
 transform 278  ip_reg <- max_top ($1: ip_reg, $2: ip_reg)
   no_could_deadlock_child;
-  { not lifted: 0x10EB20: a table at ('num', 2870780) }
-  pass_1 image 16#10EA3C residue;
+  pass_1 image 16#10EA3C begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    temp t6: integer;
+    temp t7: integer;
+    condition subject.il.w24 = 4 or subject.il.w24 = 1 or subject.il.w24 = 2;
+    cycle_guard already_ip_reg;
+    result.l352 <- readonly_l372[subject.il.w24];
+    t2 <- make_bit_mask_1(8, 0);
+    t3 <- make_bit_mask_1(16, 0);
+    t4 <- make_bit_mask_1(8, 0);
+    t5 <- make_bit_mask_1(16, 0);
+    if subject.il.b30 & 64 <> 0 then
+      result.c136 <- 1;
+      if result.l352 = 8 then
+        result.c137 <- 1;
+        if $1.bit_7_was_sign_extended then
+          result.c138 <- 1;
+        else
+          result.c138 <- 2;
+        end;
+      elsif result.l352 = 16 then
+        result.c137 <- 2;
+        if $1.bit_15_was_sign_extended then
+          result.c139 <- 1;
+        else
+          result.c139 <- 2;
+        end;
+      else
+        result.c137 <- 3;
+      end;
+    else
+      result.c136 <- 2;
+      if result.l352 = 8 then
+        result.c140 <- 1;
+        if verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0) then
+          result.c141 <- 1;
+        else
+          result.c141 <- 2;
+        end;
+      elsif result.l352 = 16 then
+        result.c140 <- 2;
+        if verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0) then
+          result.c142 <- 1;
+        else
+          result.c142 <- 2;
+        end;
+      else
+        result.c140 <- 3;
+      end;
+    end;
+    if $2.physical_register_number <> isc_user_routines_31c.physical_register_number or not $2.physical_register or $2.kind <> 11 then
+      result.c143 <- 2;
+      if subject.il.b30 & 64 <> 0 then
+        result.c144 <- 1;
+        if result.l352 = 8 then
+          result.c145 <- 1;
+          if $2.bit_7_was_sign_extended then
+            result.c146 <- 1;
+          else
+            result.c146 <- 2;
+          end;
+        elsif result.l352 = 16 then
+          result.c145 <- 2;
+          if $2.bit_15_was_sign_extended then
+            result.c147 <- 1;
+          else
+            result.c147 <- 2;
+          end;
+        else
+          result.c145 <- 3;
+        end;
+      else
+        result.c144 <- 2;
+        if result.l352 = 8 then
+          result.c148 <- 1;
+          if verify_bits($2.bits_known, $2.bits_trusted, 8, 24, 0) then
+            result.c149 <- 1;
+          else
+            result.c149 <- 2;
+          end;
+        elsif result.l352 = 16 then
+          result.c148 <- 2;
+          if verify_bits($2.bits_known, $2.bits_trusted, 16, 16, 0) then
+            result.c150 <- 1;
+          else
+            result.c150 <- 2;
+          end;
+        else
+          result.c148 <- 3;
+        end;
+      end;
+    else
+      result.c143 <- 1;
+    end;
+    if $2.physical_register_number <> isc_user_routines_31c.physical_register_number or not $2.physical_register or $2.kind <> 11 then
+      result.c151 <- 2;
+    else
+      result.c151 <- 1;
+    end;
+    result.code_bytes <- words(0, 4)[result.c138] + words(0, 4)[result.c139] + words(0, 4)[result.c141] + words(0, 4)[result.c142] + words(0, 4)[result.c146] + words(0, 4)[result.c147] + words(0, 4)[result.c149] + words(0, 4)[result.c150] + words(4, 4)[result.c151] + $1.code_bytes + $2.code_bytes + 16;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t6 <- $1.ip_reg_max;
+    if t6 = $2.ip_reg_max then
+      result.ip_reg_max <- t6 + 1;
+    else
+      if t6 u<= $2.ip_reg_max then
+        t7 <- $2.ip_reg_max;
+      else
+        t7 <- t6;
+      end;
+      result.ip_reg_max <- t7;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1A3FFE begin
     temp t1: pointer;
     temp t2: pointer;
@@ -1330,8 +1519,125 @@ end;
 
 transform 279  ip_reg <- min_top ($1: ip_reg, $2: ip_reg)
   no_could_deadlock_child;
-  { not lifted: 0x10F062: a table at ('num', 2870780) }
-  pass_1 image 16#10EF7E residue;
+  pass_1 image 16#10EF7E begin
+    temp t2: integer32;
+    temp t3: integer32;
+    temp t4: integer32;
+    temp t5: integer32;
+    temp t6: integer;
+    temp t7: integer;
+    condition subject.il.w24 = 4 or subject.il.w24 = 1 or subject.il.w24 = 2;
+    cycle_guard already_ip_reg;
+    result.l352 <- readonly_l372[subject.il.w24];
+    t2 <- make_bit_mask_1(8, 0);
+    t3 <- make_bit_mask_1(16, 0);
+    t4 <- make_bit_mask_1(8, 0);
+    t5 <- make_bit_mask_1(16, 0);
+    if subject.il.b30 & 64 <> 0 then
+      result.c136 <- 1;
+      if result.l352 = 8 then
+        result.c137 <- 1;
+        if $1.bit_7_was_sign_extended then
+          result.c138 <- 1;
+        else
+          result.c138 <- 2;
+        end;
+      elsif result.l352 = 16 then
+        result.c137 <- 2;
+        if $1.bit_15_was_sign_extended then
+          result.c139 <- 1;
+        else
+          result.c139 <- 2;
+        end;
+      else
+        result.c137 <- 3;
+      end;
+    else
+      result.c136 <- 2;
+      if result.l352 = 8 then
+        result.c140 <- 1;
+        if verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0) then
+          result.c141 <- 1;
+        else
+          result.c141 <- 2;
+        end;
+      elsif result.l352 = 16 then
+        result.c140 <- 2;
+        if verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0) then
+          result.c142 <- 1;
+        else
+          result.c142 <- 2;
+        end;
+      else
+        result.c140 <- 3;
+      end;
+    end;
+    if $2.physical_register_number <> isc_user_routines_31c.physical_register_number or not $2.physical_register or $2.kind <> 11 then
+      result.c143 <- 2;
+      if subject.il.b30 & 64 <> 0 then
+        result.c144 <- 1;
+        if result.l352 = 8 then
+          result.c145 <- 1;
+          if $2.bit_7_was_sign_extended then
+            result.c146 <- 1;
+          else
+            result.c146 <- 2;
+          end;
+        elsif result.l352 = 16 then
+          result.c145 <- 2;
+          if $2.bit_15_was_sign_extended then
+            result.c147 <- 1;
+          else
+            result.c147 <- 2;
+          end;
+        else
+          result.c145 <- 3;
+        end;
+      else
+        result.c144 <- 2;
+        if result.l352 = 8 then
+          result.c148 <- 1;
+          if verify_bits($2.bits_known, $2.bits_trusted, 8, 24, 0) then
+            result.c149 <- 1;
+          else
+            result.c149 <- 2;
+          end;
+        elsif result.l352 = 16 then
+          result.c148 <- 2;
+          if verify_bits($2.bits_known, $2.bits_trusted, 16, 16, 0) then
+            result.c150 <- 1;
+          else
+            result.c150 <- 2;
+          end;
+        else
+          result.c148 <- 3;
+        end;
+      end;
+    else
+      result.c143 <- 1;
+    end;
+    if $2.physical_register_number <> isc_user_routines_31c.physical_register_number or not $2.physical_register or $2.kind <> 11 then
+      result.c151 <- 2;
+    else
+      result.c151 <- 1;
+    end;
+    result.code_bytes <- words(0, 4)[result.c138] + words(0, 4)[result.c139] + words(0, 4)[result.c141] + words(0, 4)[result.c142] + words(0, 4)[result.c146] + words(0, 4)[result.c147] + words(0, 4)[result.c149] + words(0, 4)[result.c150] + words(4, 4)[result.c151] + $1.code_bytes + $2.code_bytes + 16;
+    result.memory_references <- $1.memory_references + $2.memory_references;
+    result.delay <- $1.delay + $2.delay + 2;
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    t6 <- $1.ip_reg_max;
+    if t6 = $2.ip_reg_max then
+      result.ip_reg_max <- t6 + 1;
+    else
+      if t6 u<= $2.ip_reg_max then
+        t7 <- $2.ip_reg_max;
+      else
+        t7 <- t6;
+      end;
+      result.ip_reg_max <- t7;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1A4318 begin
     temp t1: pointer;
     temp t2: pointer;

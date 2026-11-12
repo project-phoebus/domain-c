@@ -6,7 +6,7 @@ statements, printer, parser and Pascal) with what the pass-1 actions
 add (docs/iscg-design.md 2.5, 2.6, 10.7):
 
     clause   := 'pass_1' 'image' ADDR ['rewrite'] ['hand'] 'begin'
-                  {temp} {{stmt} 'condition' expr ';'} ['cycle_guard' ALREADY ';']
+                  {temp} {{stmt} 'condition' expr ';'} ['cycle_guard' ALREADY ';'] ['cycle_mark' ALREADY ';']
                   {stmt}
                 'end' ';'
               | 'pass_1' 'image' ADDR 'residue' ';'
@@ -24,7 +24,8 @@ add (docs/iscg-design.md 2.5, 2.6, 10.7):
   test of the subject's already_ flag (`Infinite cycle prevented ...'),
   the new solution (new_solution with the rule's result kind, its
   which_transform and before_transform), the statements, the seven
-  already_ flags copied from the subject, the guard's flag set, and
+  already_ flags copied from the subject, the guard's flag set (a
+  `cycle_mark' sets the flag without the guard's test), and
   `work := s; result := s'.  A `rewrite' clause (the proper_subtree
   rules) makes no solution: after the trace `result := subject', and
   its statements set the subject's attributes.
@@ -90,7 +91,7 @@ class Clause:
 
     def key(self):
         f = self.flags
-        return (tuple(map(repr, f['chain'])), f['guard'], f['rewrite'], f['trace'],
+        return (tuple(map(repr, f['chain'])), f['guard'], f.get('mark'), f['rewrite'], f['trace'],
                 tuple(map(repr, self.decls)),
                 tuple(map(repr, self.body)))
 
@@ -253,6 +254,8 @@ def fmt_stmt(s, ind):
         return [ind + 'condition %s;' % fmt_expr(s[1])]
     if k == 'cycle_guard':
         return [ind + 'cycle_guard %s;' % s[1]]
+    if k == 'cycle_mark':
+        return [ind + 'cycle_mark %s;' % s[1]]
     if k == 'trace':
         return [ind + 'trace %s;' % fmt_expr(('str', s[1]))]
     if k == 'writeln':
@@ -296,6 +299,8 @@ def clause_stmts(c):
     out = list(c.decls) + list(f['chain'])
     if f['guard']:
         out.append(('cycle_guard', f['guard']))
+    if f.get('mark'):
+        out.append(('cycle_mark', f['mark']))
     return out + list(c.body)
 
 
@@ -329,13 +334,13 @@ class Parser(L.Parser):
             e = self.expr()
             self.expect(';')
             return ('condition', e)
-        if t == 'cycle_guard':
+        if t in ('cycle_guard', 'cycle_mark'):
             self.i += 1
             n = self.next()
             self.expect(';')
             if n not in ALREADY:
-                raise L.LangError('cycle_guard %s' % n)
-            return ('cycle_guard', n)
+                raise L.LangError('%s %s' % (t, n))
+            return (t, n)
         if t == 'trace':
             self.i += 1
             s = self.next()
@@ -389,7 +394,7 @@ def parse_clause_body(text, rule, rewrite=False):
 
 
 def clause_of(stmts, rule, rewrite=False):
-    flags = {'chain': [], 'guard': None, 'rewrite': rewrite, 'trace': True}
+    flags = {'chain': [], 'guard': None, 'rewrite': rewrite, 'trace': True, 'mark': None}
     decls = []
     i = 0
     while i < len(stmts) and stmts[i][0] == 'temp':
@@ -403,8 +408,11 @@ def clause_of(stmts, rule, rewrite=False):
     if rest and rest[0][0] == 'cycle_guard':
         flags['guard'] = rest[0][1]
         rest = rest[1:]
+    if rest and rest[0][0] == 'cycle_mark':
+        flags['mark'] = rest[0][1]
+        rest = rest[1:]
     for s in L.walk(rest):
-        if s[0] in ('condition', 'cycle_guard', 'temp'):
+        if s[0] in ('condition', 'cycle_guard', 'cycle_mark', 'temp'):
             raise L.LangError('rule %d: %s out of place' % (rule, s[0]))
     return Clause(rule, flags, decls, rest)
 
@@ -505,6 +513,9 @@ class Emitter(L.Emitter):
         return super().path(e)
 
     def select(self, text, cls, s):
+        if cls == 'node' and re.match(r'sb\d+$', s):
+            # a node's byte read as signed (ext.w)
+            return 'p1_snode_ptr_t(%s)^.sb[%d]' % (text, int(s[2:])), 'i16'
         m = re.match(r'l(\d+)$', s)
         if m and int(m.group(1)) in self.int_fields and cls in ('rec', 'isp', 'sp', 'up', 'lr'):
             r = self.deref(text, cls)
@@ -519,6 +530,11 @@ class Emitter(L.Emitter):
         return super().select(text, cls, s)
 
     def expr1(self, e):
+        if e[0] == 'index' and e[1] == 'lir_4090':
+            return 'lir_4090[%s]' % self.expr(e[2]), 'lr'
+        if e[0] == 'index' and re.match(r'readonly_l\d+$', e[1]):
+            return 'p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[%d + %s]' % (
+                int(e[1][10:]) // 4, self.paren(e[2], 4)), 'i32'
         if e[0] == 'index' and re.match(r'readonly_b\d+$', e[1]):
             # a byte table of isc_readonly_tables at +N: the module's view
             return 'p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[%d + %s]' % (
@@ -575,7 +591,7 @@ class Emitter(L.Emitter):
                     ind + "  write('%s');" % s[1].replace("'", "''"),
                     ind + '  writeln;',
                     ind + 'end;']
-        if k in ('condition', 'cycle_guard'):
+        if k in ('condition', 'cycle_guard', 'cycle_mark'):
             raise L.LangError('rule %d: %s in the body' % (self.rule, k))
         return super().stmt(s, ind)
 
