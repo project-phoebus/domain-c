@@ -675,7 +675,7 @@ def main():
     a = ap.parse_args()
     try:
         out = Gen(Rules(a.rules)).all()
-    except Bad as e:
+    except (Bad, iscg_p2gen.L.LangError) as e:
         sys.exit('iscg_gen: %s' % e)
     if a.check:
         bad = 0

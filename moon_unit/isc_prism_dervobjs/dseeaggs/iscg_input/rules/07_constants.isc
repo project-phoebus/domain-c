@@ -88,6 +88,48 @@ end;
 
 transform 12  address_mode <- set_con_ob
   pass_1 image 16#11E0C0;
-  { not lifted: a pointer not known: 'num' }
-  pass_2 image 16#1AA5E0 residue;
+  pass_2 image 16#1AA5E0 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    if result.c136 <> 1 then
+      t1 <- create_solution_for_ip_reg();
+      if result.c137 = 1 then
+        if result.c138 = 1 then
+          if t1.object_with_name <> nil then
+            t1.object_with_name <- t1.object_with_name;
+          else
+            t1.object_with_name <- result.l352.base_register.object_with_name;
+          end;
+          emit simple(opc$move, 0, result.l352.base_register, t1, nil);
+          emit simple(opc$adj_move, 0, nil, nil, nil);
+        else
+          emit simple(opc$add, 0, result.l352, result.l352.base_register, t1);
+        end;
+      elsif result.c139 = 1 then
+        emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t1, nil);
+      else
+        t2 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
+        emit load(opc$loadl, 0, t2, t2.base_register, t1, t2.il, 0, t2.bits_known, t2.bits_trusted);
+      end;
+      t3 <- create_solution_for_address_mode();
+      t3.uses_the_base_register <- true;
+      t3.base_register <- t1;
+      result.l352 <- t3;
+    end;
+    if result.c140 = 1 then
+      result.l352.uses_the_displacement <- true;
+      result.l352.has_a_symbolic_displacement <- false;
+      result.l352.literal_32_bits_value <- 0;
+    end;
+    result.l352 <- duplicate_address_mode(result.l352);
+    if result.l360 div 4 <> 0 then
+      for i1 := 1 to result.l360 div 4 - 1 + 1 do
+        emit store(opc$storel, 64, isc_user_routines_31c, result.l352, nil, result.l352.il, 0, result.l352.bits_known, result.l352.bits_trusted);
+      end;
+    end;
+    result.base_register <- isc_user_routines_340;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- result.l356;
+  end;
 end;

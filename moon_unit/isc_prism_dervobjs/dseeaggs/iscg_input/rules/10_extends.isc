@@ -155,12 +155,10 @@ transform 415  ip_reg <- extend_top ($1: ip_reg)
   no_could_deadlock_child;
   pass_1 image 16#135BD4;
   pass_2 image 16#1B7C1C begin
-    temp t1: solution;
     if result.c136 = 1 then
       emit simple(opc$extend7, 16#4000, $1, $1, nil);
     elsif result.c137 <> 1 then
-      t1 <- $1;
-      emit field(opc$extractu, 16#4000, 8, $1, find_well_known_literal_solution(0), t1);
+      emit field(opc$extractu, 16#4000, 8, $1, find_well_known_literal_solution(0), $1);
     end;
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -255,7 +253,6 @@ transform 418  ip_reg <- extend_top ($1: ip_reg)
     temp t3: solution;
     temp t4: solution;
     temp t5: solution;
-    temp t6: solution;
     if result.c136 = 1 then
       if result.c137 = 1 then
         let result <- $1.live_range line 34095;
@@ -277,17 +274,16 @@ transform 418  ip_reg <- extend_top ($1: ip_reg)
           end;
           if result.c141 = 1 then
             t2 <- create_solution_for_ip_reg();
-            t3 <- $1;
-            emit simple(opc$add, 2, find_well_known_literal_solution(-result.l352.literal_32_bits_value), t3, t2);
+            emit simple(opc$add, 2, find_well_known_literal_solution(-result.l352.literal_32_bits_value), $1, t2);
           else
-            t4 <- create_solution_for_ip_reg();
+            t3 <- create_solution_for_ip_reg();
             if result.c142 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t4, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t3, nil);
             else
-              t5 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
-              emit load(opc$loadl, 0, t5, t5.base_register, t4, t5.il, 0, t5.bits_known, t5.bits_trusted);
+              t4 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
+              emit load(opc$loadl, 0, t4, t4.base_register, t3, t4.il, 0, t4.bits_known, t4.bits_trusted);
             end;
-            emit simple(opc$rsub, 2, $1, t4, create_solution_for_ip_reg());
+            emit simple(opc$rsub, 2, $1, t3, create_solution_for_ip_reg());
           end;
           emit simple(opc$trap_gt, 0, t1, nil, nil);
           emit simple(opc$move, 0, $1, solution, nil);
@@ -297,8 +293,8 @@ transform 418  ip_reg <- extend_top ($1: ip_reg)
       else
         if result.c143 = 1 then
           if result.c144 = 1 then
-            t6 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t6, nil);
+            t5 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t5, nil);
           elsif result.c144 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -306,7 +302,7 @@ transform 418  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         emit simple(opc$move, 2, $1, create_solution_for_ip_reg(), nil);
-        emit simple(opc$trap_lt, 0, t6, nil, nil);
+        emit simple(opc$trap_lt, 0, t5, nil, nil);
         emit simple(opc$move, 0, $1, solution, nil);
       end;
     else
@@ -319,12 +315,10 @@ transform 419  ip_reg <- extend_top ($1: ip_reg)
   no_could_deadlock_child;
   pass_1 image 16#136D10;
   pass_2 image 16#1B83DC begin
-    temp t1: solution;
     if result.c136 = 1 then
       emit simple(opc$extend15, 16#4000, $1, $1, nil);
     elsif result.c137 <> 1 then
-      t1 <- $1;
-      emit field(opc$extractu, 16#4000, 16, $1, find_well_known_literal_solution(0), t1);
+      emit field(opc$extractu, 16#4000, 16, $1, find_well_known_literal_solution(0), $1);
     end;
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -442,13 +436,6 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
     temp t26: solution;
     temp t27: solution;
     temp t28: solution;
-    temp t29: solution;
-    temp t30: solution;
-    temp t31: solution;
-    temp t32: solution;
-    temp t33: solution;
-    temp t34: solution;
-    temp t35: solution;
     if result.c136 = 1 then
       if result.c137 = 1 then
         if result.c138 = 1 then
@@ -463,23 +450,22 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
         end;
         if result.c140 = 1 then
           t2 <- create_solution_for_ip_reg();
-          t3 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l364.literal_32_bits_value), t3, t2);
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l364.literal_32_bits_value), $1, t2);
         else
-          t4 <- create_solution_for_ip_reg();
+          t3 <- create_solution_for_ip_reg();
           if result.c141 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l364.literal_32_bits_value), t4, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l364.literal_32_bits_value), t3, nil);
           else
-            t5 <- address_mode_for_integer32_value(result.l364.literal_32_bits_value);
-            emit load(opc$loadl, 0, t5, t5.base_register, t4, t5.il, 0, t5.bits_known, t5.bits_trusted);
+            t4 <- address_mode_for_integer32_value(result.l364.literal_32_bits_value);
+            emit load(opc$loadl, 0, t4, t4.base_register, t3, t4.il, 0, t4.bits_known, t4.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t4, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t3, create_solution_for_ip_reg());
         end;
         emit simple(opc$trap_lt, 0, t1, nil, nil);
         if result.c142 = 1 then
           if result.c143 = 1 then
-            t6 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t6, nil);
+            t5 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t5, nil);
           elsif result.c143 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -487,20 +473,19 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         if result.c144 = 1 then
-          t7 <- create_solution_for_ip_reg();
-          t8 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l352.literal_32_bits_value), t8, t7);
+          t6 <- create_solution_for_ip_reg();
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l352.literal_32_bits_value), $1, t6);
         else
-          t9 <- create_solution_for_ip_reg();
+          t7 <- create_solution_for_ip_reg();
           if result.c145 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t9, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t7, nil);
           else
-            t10 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
-            emit load(opc$loadl, 0, t10, t10.base_register, t9, t10.il, 0, t10.bits_known, t10.bits_trusted);
+            t8 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
+            emit load(opc$loadl, 0, t8, t8.base_register, t7, t8.il, 0, t8.bits_known, t8.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t9, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t7, create_solution_for_ip_reg());
         end;
-        emit simple(opc$trap_gt, 0, t6, nil, nil);
+        emit simple(opc$trap_gt, 0, t5, nil, nil);
         emit simple(opc$move, 0, $1, solution, nil);
       elsif result.c137 = 2 then
         if result.c146 = 1 then
@@ -515,8 +500,8 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
       if result.c147 = 1 then
         if result.c148 = 1 then
           if result.c149 = 1 then
-            t11 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t11, nil);
+            t9 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t9, nil);
           elsif result.c149 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -524,20 +509,19 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         if result.c150 = 1 then
-          t12 <- create_solution_for_ip_reg();
-          t13 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l356.literal_32_bits_value), t13, t12);
+          t10 <- create_solution_for_ip_reg();
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l356.literal_32_bits_value), $1, t10);
         else
-          t14 <- create_solution_for_ip_reg();
+          t11 <- create_solution_for_ip_reg();
           if result.c151 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l356.literal_32_bits_value), t14, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l356.literal_32_bits_value), t11, nil);
           else
-            t15 <- address_mode_for_integer32_value(result.l356.literal_32_bits_value);
-            emit load(opc$loadl, 0, t15, t15.base_register, t14, t15.il, 0, t15.bits_known, t15.bits_trusted);
+            t12 <- address_mode_for_integer32_value(result.l356.literal_32_bits_value);
+            emit load(opc$loadl, 0, t12, t12.base_register, t11, t12.il, 0, t12.bits_known, t12.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t14, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t11, create_solution_for_ip_reg());
         end;
-        emit simple(opc$trap_gt, 0, t11, nil, nil);
+        emit simple(opc$trap_gt, 0, t9, nil, nil);
         emit simple(opc$move, 0, $1, solution, nil);
       elsif result.c147 <> 2 then
         emit simple(opc$move, 0, $1, solution, nil);
@@ -548,8 +532,8 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
       if result.c152 = 1 then
         if result.c153 = 1 then
           if result.c154 = 1 then
-            t16 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t16, nil);
+            t13 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t13, nil);
           elsif result.c154 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -557,25 +541,24 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         if result.c155 = 1 then
-          t17 <- create_solution_for_ip_reg();
-          t18 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l352.literal_32_bits_value), t18, t17);
+          t14 <- create_solution_for_ip_reg();
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l352.literal_32_bits_value), $1, t14);
         else
-          t19 <- create_solution_for_ip_reg();
+          t15 <- create_solution_for_ip_reg();
           if result.c156 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t19, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t15, nil);
           else
-            t20 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
-            emit load(opc$loadl, 0, t20, t20.base_register, t19, t20.il, 0, t20.bits_known, t20.bits_trusted);
+            t16 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
+            emit load(opc$loadl, 0, t16, t16.base_register, t15, t16.il, 0, t16.bits_known, t16.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t19, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t15, create_solution_for_ip_reg());
         end;
-        emit simple(opc$trap_gt, 0, t16, nil, nil);
+        emit simple(opc$trap_gt, 0, t13, nil, nil);
       else
         if result.c157 = 1 then
           if result.c158 = 1 then
-            t21 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t21, nil);
+            t17 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t17, nil);
           elsif result.c158 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -583,20 +566,19 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         if result.c159 = 1 then
-          t22 <- create_solution_for_ip_reg();
-          t23 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l360.literal_32_bits_value), t23, t22);
+          t18 <- create_solution_for_ip_reg();
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l360.literal_32_bits_value), $1, t18);
         else
-          t24 <- create_solution_for_ip_reg();
+          t19 <- create_solution_for_ip_reg();
           if result.c160 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l360.literal_32_bits_value), t24, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l360.literal_32_bits_value), t19, nil);
           else
-            t25 <- address_mode_for_integer32_value(result.l360.literal_32_bits_value);
-            emit load(opc$loadl, 0, t25, t25.base_register, t24, t25.il, 0, t25.bits_known, t25.bits_trusted);
+            t20 <- address_mode_for_integer32_value(result.l360.literal_32_bits_value);
+            emit load(opc$loadl, 0, t20, t20.base_register, t19, t20.il, 0, t20.bits_known, t20.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t24, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t19, create_solution_for_ip_reg());
         end;
-        emit simple(opc$trap_gt, 0, t21, nil, nil);
+        emit simple(opc$trap_gt, 0, t17, nil, nil);
       end;
       if result.c161 = 1 then
         if result.c162 = 1 then
@@ -611,8 +593,8 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
       if result.c163 = 1 then
         if result.c164 = 1 then
           if result.c165 = 1 then
-            t26 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t26, nil);
+            t21 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t21, nil);
           elsif result.c165 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -620,25 +602,24 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         if result.c166 = 1 then
-          t27 <- create_solution_for_ip_reg();
-          t28 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l356.literal_32_bits_value), t28, t27);
+          t22 <- create_solution_for_ip_reg();
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l356.literal_32_bits_value), $1, t22);
         else
-          t29 <- create_solution_for_ip_reg();
+          t23 <- create_solution_for_ip_reg();
           if result.c167 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l356.literal_32_bits_value), t29, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l356.literal_32_bits_value), t23, nil);
           else
-            t30 <- address_mode_for_integer32_value(result.l356.literal_32_bits_value);
-            emit load(opc$loadl, 0, t30, t30.base_register, t29, t30.il, 0, t30.bits_known, t30.bits_trusted);
+            t24 <- address_mode_for_integer32_value(result.l356.literal_32_bits_value);
+            emit load(opc$loadl, 0, t24, t24.base_register, t23, t24.il, 0, t24.bits_known, t24.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t29, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t23, create_solution_for_ip_reg());
         end;
-        emit simple(opc$trap_gt, 0, t26, nil, nil);
+        emit simple(opc$trap_gt, 0, t21, nil, nil);
       else
         if result.c168 = 1 then
           if result.c169 = 1 then
-            t31 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t31, nil);
+            t25 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t25, nil);
           elsif result.c169 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -646,20 +627,19 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         if result.c170 = 1 then
-          t32 <- create_solution_for_ip_reg();
-          t33 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l360.literal_32_bits_value), t33, t32);
+          t26 <- create_solution_for_ip_reg();
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l360.literal_32_bits_value), $1, t26);
         else
-          t34 <- create_solution_for_ip_reg();
+          t27 <- create_solution_for_ip_reg();
           if result.c171 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l360.literal_32_bits_value), t34, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l360.literal_32_bits_value), t27, nil);
           else
-            t35 <- address_mode_for_integer32_value(result.l360.literal_32_bits_value);
-            emit load(opc$loadl, 0, t35, t35.base_register, t34, t35.il, 0, t35.bits_known, t35.bits_trusted);
+            t28 <- address_mode_for_integer32_value(result.l360.literal_32_bits_value);
+            emit load(opc$loadl, 0, t28, t28.base_register, t27, t28.il, 0, t28.bits_known, t28.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t34, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t27, create_solution_for_ip_reg());
         end;
-        emit simple(opc$trap_gt, 0, t31, nil, nil);
+        emit simple(opc$trap_gt, 0, t25, nil, nil);
       end;
       if result.c172 = 1 then
         emit field(opc$extractu, 0, 16, $1, find_well_known_literal_solution(0), solution);
@@ -722,18 +702,6 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
     temp t46: solution;
     temp t47: solution;
     temp t48: solution;
-    temp t49: solution;
-    temp t50: solution;
-    temp t51: solution;
-    temp t52: solution;
-    temp t53: solution;
-    temp t54: solution;
-    temp t55: solution;
-    temp t56: solution;
-    temp t57: solution;
-    temp t58: solution;
-    temp t59: solution;
-    temp t60: solution;
     if result.c136 = 1 then
       if result.c137 = 1 then
         if result.c138 = 1 then
@@ -748,23 +716,22 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
         end;
         if result.c140 = 1 then
           t2 <- create_solution_for_ip_reg();
-          t3 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l352.literal_32_bits_value), t3, t2);
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l352.literal_32_bits_value), $1, t2);
         else
-          t4 <- create_solution_for_ip_reg();
+          t3 <- create_solution_for_ip_reg();
           if result.c141 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t4, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t3, nil);
           else
-            t5 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
-            emit load(opc$loadl, 0, t5, t5.base_register, t4, t5.il, 0, t5.bits_known, t5.bits_trusted);
+            t4 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
+            emit load(opc$loadl, 0, t4, t4.base_register, t3, t4.il, 0, t4.bits_known, t4.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t4, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t3, create_solution_for_ip_reg());
         end;
         emit simple(opc$trap_gt, 0, t1, nil, nil);
         if result.c142 = 1 then
           if result.c143 = 1 then
-            t6 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t6, nil);
+            t5 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t5, nil);
           elsif result.c143 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -772,25 +739,24 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         if result.c144 = 1 then
-          t7 <- create_solution_for_ip_reg();
-          t8 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l372.literal_32_bits_value), t8, t7);
+          t6 <- create_solution_for_ip_reg();
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l372.literal_32_bits_value), $1, t6);
         else
-          t9 <- create_solution_for_ip_reg();
+          t7 <- create_solution_for_ip_reg();
           if result.c145 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l372.literal_32_bits_value), t9, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l372.literal_32_bits_value), t7, nil);
           else
-            t10 <- address_mode_for_integer32_value(result.l372.literal_32_bits_value);
-            emit load(opc$loadl, 0, t10, t10.base_register, t9, t10.il, 0, t10.bits_known, t10.bits_trusted);
+            t8 <- address_mode_for_integer32_value(result.l372.literal_32_bits_value);
+            emit load(opc$loadl, 0, t8, t8.base_register, t7, t8.il, 0, t8.bits_known, t8.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t9, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t7, create_solution_for_ip_reg());
         end;
-        emit simple(opc$trap_lt, 0, t6, nil, nil);
+        emit simple(opc$trap_lt, 0, t5, nil, nil);
       elsif result.c146 = 1 then
         if result.c147 = 1 then
           if result.c148 = 1 then
-            t11 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t11, nil);
+            t9 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t9, nil);
           elsif result.c148 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -798,24 +764,23 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         if result.c149 = 1 then
-          t12 <- create_solution_for_ip_reg();
-          t13 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l356.literal_32_bits_value), t13, t12);
+          t10 <- create_solution_for_ip_reg();
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l356.literal_32_bits_value), $1, t10);
         else
-          t14 <- create_solution_for_ip_reg();
+          t11 <- create_solution_for_ip_reg();
           if result.c150 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l356.literal_32_bits_value), t14, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l356.literal_32_bits_value), t11, nil);
           else
-            t15 <- address_mode_for_integer32_value(result.l356.literal_32_bits_value);
-            emit load(opc$loadl, 0, t15, t15.base_register, t14, t15.il, 0, t15.bits_known, t15.bits_trusted);
+            t12 <- address_mode_for_integer32_value(result.l356.literal_32_bits_value);
+            emit load(opc$loadl, 0, t12, t12.base_register, t11, t12.il, 0, t12.bits_known, t12.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t14, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t11, create_solution_for_ip_reg());
         end;
-        emit simple(opc$trap_gt, 0, t11, nil, nil);
+        emit simple(opc$trap_gt, 0, t9, nil, nil);
         if result.c151 = 1 then
           if result.c152 = 1 then
-            t16 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t16, nil);
+            t13 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t13, nil);
           elsif result.c152 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -823,27 +788,26 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         if result.c153 = 1 then
-          t17 <- create_solution_for_ip_reg();
-          t18 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l376.literal_32_bits_value), t18, t17);
+          t14 <- create_solution_for_ip_reg();
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l376.literal_32_bits_value), $1, t14);
         else
-          t19 <- create_solution_for_ip_reg();
+          t15 <- create_solution_for_ip_reg();
           if result.c154 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l376.literal_32_bits_value), t19, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l376.literal_32_bits_value), t15, nil);
           else
-            t20 <- address_mode_for_integer32_value(result.l376.literal_32_bits_value);
-            emit load(opc$loadl, 0, t20, t20.base_register, t19, t20.il, 0, t20.bits_known, t20.bits_trusted);
+            t16 <- address_mode_for_integer32_value(result.l376.literal_32_bits_value);
+            emit load(opc$loadl, 0, t16, t16.base_register, t15, t16.il, 0, t16.bits_known, t16.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t19, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t15, create_solution_for_ip_reg());
         end;
-        emit simple(opc$trap_lt, 0, t16, nil, nil);
+        emit simple(opc$trap_lt, 0, t13, nil, nil);
       end;
     elsif result.c136 = 2 then
       if result.c155 = 1 then
         if result.c156 = 1 then
           if result.c157 = 1 then
-            t21 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t21, nil);
+            t17 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t17, nil);
           elsif result.c157 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -851,25 +815,24 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         if result.c158 = 1 then
-          t22 <- create_solution_for_ip_reg();
-          t23 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l360.literal_32_bits_value), t23, t22);
+          t18 <- create_solution_for_ip_reg();
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l360.literal_32_bits_value), $1, t18);
         else
-          t24 <- create_solution_for_ip_reg();
+          t19 <- create_solution_for_ip_reg();
           if result.c159 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l360.literal_32_bits_value), t24, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l360.literal_32_bits_value), t19, nil);
           else
-            t25 <- address_mode_for_integer32_value(result.l360.literal_32_bits_value);
-            emit load(opc$loadl, 0, t25, t25.base_register, t24, t25.il, 0, t25.bits_known, t25.bits_trusted);
+            t20 <- address_mode_for_integer32_value(result.l360.literal_32_bits_value);
+            emit load(opc$loadl, 0, t20, t20.base_register, t19, t20.il, 0, t20.bits_known, t20.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t24, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t19, create_solution_for_ip_reg());
         end;
-        emit simple(opc$trap_gt, 0, t21, nil, nil);
+        emit simple(opc$trap_gt, 0, t17, nil, nil);
       elsif result.c160 = 1 then
         if result.c161 = 1 then
           if result.c162 = 1 then
-            t26 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t26, nil);
+            t21 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t21, nil);
           elsif result.c162 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -877,27 +840,26 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         if result.c163 = 1 then
-          t27 <- create_solution_for_ip_reg();
-          t28 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l364.literal_32_bits_value), t28, t27);
+          t22 <- create_solution_for_ip_reg();
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l364.literal_32_bits_value), $1, t22);
         else
-          t29 <- create_solution_for_ip_reg();
+          t23 <- create_solution_for_ip_reg();
           if result.c164 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l364.literal_32_bits_value), t29, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l364.literal_32_bits_value), t23, nil);
           else
-            t30 <- address_mode_for_integer32_value(result.l364.literal_32_bits_value);
-            emit load(opc$loadl, 0, t30, t30.base_register, t29, t30.il, 0, t30.bits_known, t30.bits_trusted);
+            t24 <- address_mode_for_integer32_value(result.l364.literal_32_bits_value);
+            emit load(opc$loadl, 0, t24, t24.base_register, t23, t24.il, 0, t24.bits_known, t24.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t29, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t23, create_solution_for_ip_reg());
         end;
-        emit simple(opc$trap_gt, 0, t26, nil, nil);
+        emit simple(opc$trap_gt, 0, t21, nil, nil);
       end;
     elsif result.c136 = 3 then
       if result.c165 = 1 then
         if result.c166 = 1 then
           if result.c167 = 1 then
-            t31 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t31, nil);
+            t25 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t25, nil);
           elsif result.c167 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -905,25 +867,24 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         if result.c168 = 1 then
-          t32 <- create_solution_for_ip_reg();
-          t33 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l352.literal_32_bits_value), t33, t32);
+          t26 <- create_solution_for_ip_reg();
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l352.literal_32_bits_value), $1, t26);
         else
-          t34 <- create_solution_for_ip_reg();
+          t27 <- create_solution_for_ip_reg();
           if result.c169 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t34, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t27, nil);
           else
-            t35 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
-            emit load(opc$loadl, 0, t35, t35.base_register, t34, t35.il, 0, t35.bits_known, t35.bits_trusted);
+            t28 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
+            emit load(opc$loadl, 0, t28, t28.base_register, t27, t28.il, 0, t28.bits_known, t28.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t34, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t27, create_solution_for_ip_reg());
         end;
-        emit simple(opc$trap_gt, 0, t31, nil, nil);
+        emit simple(opc$trap_gt, 0, t25, nil, nil);
       elsif result.c170 = 1 then
         if result.c171 = 1 then
           if result.c172 = 1 then
-            t36 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t36, nil);
+            t29 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t29, nil);
           elsif result.c172 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -931,25 +892,24 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         if result.c173 = 1 then
-          t37 <- create_solution_for_ip_reg();
-          t38 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l356.literal_32_bits_value), t38, t37);
+          t30 <- create_solution_for_ip_reg();
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l356.literal_32_bits_value), $1, t30);
         else
-          t39 <- create_solution_for_ip_reg();
+          t31 <- create_solution_for_ip_reg();
           if result.c174 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l356.literal_32_bits_value), t39, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l356.literal_32_bits_value), t31, nil);
           else
-            t40 <- address_mode_for_integer32_value(result.l356.literal_32_bits_value);
-            emit load(opc$loadl, 0, t40, t40.base_register, t39, t40.il, 0, t40.bits_known, t40.bits_trusted);
+            t32 <- address_mode_for_integer32_value(result.l356.literal_32_bits_value);
+            emit load(opc$loadl, 0, t32, t32.base_register, t31, t32.il, 0, t32.bits_known, t32.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t39, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t31, create_solution_for_ip_reg());
         end;
-        emit simple(opc$trap_gt, 0, t36, nil, nil);
+        emit simple(opc$trap_gt, 0, t29, nil, nil);
       else
         if result.c175 = 1 then
           if result.c176 = 1 then
-            t41 <- create_solution_for_ip_reg();
-            emit simple(opc$move, 0, $1, t41, nil);
+            t33 <- create_solution_for_ip_reg();
+            emit simple(opc$move, 0, $1, t33, nil);
           elsif result.c176 = 2 then
             emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
           else
@@ -957,26 +917,25 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
           end;
         end;
         if result.c177 = 1 then
-          t42 <- create_solution_for_ip_reg();
-          t43 <- $1;
-          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l368.literal_32_bits_value), t43, t42);
+          t34 <- create_solution_for_ip_reg();
+          emit simple(opc$add, 2, find_well_known_literal_solution(-result.l368.literal_32_bits_value), $1, t34);
         else
-          t44 <- create_solution_for_ip_reg();
+          t35 <- create_solution_for_ip_reg();
           if result.c178 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l368.literal_32_bits_value), t44, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l368.literal_32_bits_value), t35, nil);
           else
-            t45 <- address_mode_for_integer32_value(result.l368.literal_32_bits_value);
-            emit load(opc$loadl, 0, t45, t45.base_register, t44, t45.il, 0, t45.bits_known, t45.bits_trusted);
+            t36 <- address_mode_for_integer32_value(result.l368.literal_32_bits_value);
+            emit load(opc$loadl, 0, t36, t36.base_register, t35, t36.il, 0, t36.bits_known, t36.bits_trusted);
           end;
-          emit simple(opc$rsub, 2, $1, t44, create_solution_for_ip_reg());
+          emit simple(opc$rsub, 2, $1, t35, create_solution_for_ip_reg());
         end;
-        emit simple(opc$trap_gt, 0, t41, nil, nil);
+        emit simple(opc$trap_gt, 0, t33, nil, nil);
       end;
     elsif result.c179 = 1 then
       if result.c180 = 1 then
         if result.c181 = 1 then
-          t46 <- create_solution_for_ip_reg();
-          emit simple(opc$move, 0, $1, t46, nil);
+          t37 <- create_solution_for_ip_reg();
+          emit simple(opc$move, 0, $1, t37, nil);
         elsif result.c181 = 2 then
           emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
         else
@@ -984,25 +943,24 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
         end;
       end;
       if result.c182 = 1 then
-        t47 <- create_solution_for_ip_reg();
-        t48 <- $1;
-        emit simple(opc$add, 2, find_well_known_literal_solution(-result.l360.literal_32_bits_value), t48, t47);
+        t38 <- create_solution_for_ip_reg();
+        emit simple(opc$add, 2, find_well_known_literal_solution(-result.l360.literal_32_bits_value), $1, t38);
       else
-        t49 <- create_solution_for_ip_reg();
+        t39 <- create_solution_for_ip_reg();
         if result.c183 = 1 then
-          emit simple(opc$move, 0, find_well_known_literal_solution(result.l360.literal_32_bits_value), t49, nil);
+          emit simple(opc$move, 0, find_well_known_literal_solution(result.l360.literal_32_bits_value), t39, nil);
         else
-          t50 <- address_mode_for_integer32_value(result.l360.literal_32_bits_value);
-          emit load(opc$loadl, 0, t50, t50.base_register, t49, t50.il, 0, t50.bits_known, t50.bits_trusted);
+          t40 <- address_mode_for_integer32_value(result.l360.literal_32_bits_value);
+          emit load(opc$loadl, 0, t40, t40.base_register, t39, t40.il, 0, t40.bits_known, t40.bits_trusted);
         end;
-        emit simple(opc$rsub, 2, $1, t49, create_solution_for_ip_reg());
+        emit simple(opc$rsub, 2, $1, t39, create_solution_for_ip_reg());
       end;
-      emit simple(opc$trap_gt, 0, t46, nil, nil);
+      emit simple(opc$trap_gt, 0, t37, nil, nil);
     elsif result.c184 = 1 then
       if result.c185 = 1 then
         if result.c186 = 1 then
-          t51 <- create_solution_for_ip_reg();
-          emit simple(opc$move, 0, $1, t51, nil);
+          t41 <- create_solution_for_ip_reg();
+          emit simple(opc$move, 0, $1, t41, nil);
         elsif result.c186 = 2 then
           emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
         else
@@ -1010,25 +968,24 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
         end;
       end;
       if result.c187 = 1 then
-        t52 <- create_solution_for_ip_reg();
-        t53 <- $1;
-        emit simple(opc$add, 2, find_well_known_literal_solution(-result.l364.literal_32_bits_value), t53, t52);
+        t42 <- create_solution_for_ip_reg();
+        emit simple(opc$add, 2, find_well_known_literal_solution(-result.l364.literal_32_bits_value), $1, t42);
       else
-        t54 <- create_solution_for_ip_reg();
+        t43 <- create_solution_for_ip_reg();
         if result.c188 = 1 then
-          emit simple(opc$move, 0, find_well_known_literal_solution(result.l364.literal_32_bits_value), t54, nil);
+          emit simple(opc$move, 0, find_well_known_literal_solution(result.l364.literal_32_bits_value), t43, nil);
         else
-          t55 <- address_mode_for_integer32_value(result.l364.literal_32_bits_value);
-          emit load(opc$loadl, 0, t55, t55.base_register, t54, t55.il, 0, t55.bits_known, t55.bits_trusted);
+          t44 <- address_mode_for_integer32_value(result.l364.literal_32_bits_value);
+          emit load(opc$loadl, 0, t44, t44.base_register, t43, t44.il, 0, t44.bits_known, t44.bits_trusted);
         end;
-        emit simple(opc$rsub, 2, $1, t54, create_solution_for_ip_reg());
+        emit simple(opc$rsub, 2, $1, t43, create_solution_for_ip_reg());
       end;
-      emit simple(opc$trap_gt, 0, t51, nil, nil);
+      emit simple(opc$trap_gt, 0, t41, nil, nil);
     else
       if result.c189 = 1 then
         if result.c190 = 1 then
-          t56 <- create_solution_for_ip_reg();
-          emit simple(opc$move, 0, $1, t56, nil);
+          t45 <- create_solution_for_ip_reg();
+          emit simple(opc$move, 0, $1, t45, nil);
         elsif result.c190 = 2 then
           emit simple(opc$copys, 0, $1, create_solution_for_fp_reg(), nil);
         else
@@ -1036,20 +993,19 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
         end;
       end;
       if result.c191 = 1 then
-        t57 <- create_solution_for_ip_reg();
-        t58 <- $1;
-        emit simple(opc$add, 2, find_well_known_literal_solution(-result.l368.literal_32_bits_value), t58, t57);
+        t46 <- create_solution_for_ip_reg();
+        emit simple(opc$add, 2, find_well_known_literal_solution(-result.l368.literal_32_bits_value), $1, t46);
       else
-        t59 <- create_solution_for_ip_reg();
+        t47 <- create_solution_for_ip_reg();
         if result.c192 = 1 then
-          emit simple(opc$move, 0, find_well_known_literal_solution(result.l368.literal_32_bits_value), t59, nil);
+          emit simple(opc$move, 0, find_well_known_literal_solution(result.l368.literal_32_bits_value), t47, nil);
         else
-          t60 <- address_mode_for_integer32_value(result.l368.literal_32_bits_value);
-          emit load(opc$loadl, 0, t60, t60.base_register, t59, t60.il, 0, t60.bits_known, t60.bits_trusted);
+          t48 <- address_mode_for_integer32_value(result.l368.literal_32_bits_value);
+          emit load(opc$loadl, 0, t48, t48.base_register, t47, t48.il, 0, t48.bits_known, t48.bits_trusted);
         end;
-        emit simple(opc$rsub, 2, $1, t59, create_solution_for_ip_reg());
+        emit simple(opc$rsub, 2, $1, t47, create_solution_for_ip_reg());
       end;
-      emit simple(opc$trap_gt, 0, t56, nil, nil);
+      emit simple(opc$trap_gt, 0, t45, nil, nil);
     end;
     emit simple(opc$move, 0, $1, solution, nil);
   end;
@@ -1220,22 +1176,155 @@ end;
 transform 429  fp_reg_pair <- f_extend_top ($1: ip_reg, $2: void)
   no_could_deadlock_child;
   pass_1 image 16#13A84E;
-  { not lifted: a string at 0x1BB090 }
-  pass_2 image 16#1BADD6 residue;
+  pass_2 image 16#1BADD6 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: pointer;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    t1 <- create_solution_for_ip_reg();
+    t2 <- create_solution_for_fp_reg();
+    t3 <- create_solution_for_fp_reg_pair();
+    t4 <- lir_$new_label();
+    t5 <- create_solution_for_ip_reg();
+    if result.c136 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      if result.c138 = 1 then
+        if result.c139 = 1 then
+          t6 <- $1;
+        else
+          emit simple(opc$extend7, 0, $1, t1, nil);
+        end;
+      elsif result.c138 = 2 then
+        if result.c140 <> 1 then
+          emit simple(opc$extend15, 0, $1, t1, nil);
+        end;
+      end;
+    elsif result.c141 = 1 then
+      if result.c142 <> 1 then
+        emit field(opc$extractu, 0, 8, $1, find_well_known_literal_solution(0), t1);
+      end;
+    elsif result.c141 = 2 then
+      if result.c143 <> 1 then
+        emit field(opc$extractu, 0, 16, $1, find_well_known_literal_solution(0), t1);
+      end;
+    end;
+    emit simple(opc$mtfp, 0, t6, t2, nil);
+    if result.c144 = 1 then
+      if result.c145 = 1 then
+        pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+      end;
+      emit simple(opc$cvtid, 0, t2, solution, nil);
+      emit simple(opc$mffp, 0, t2, t5, nil);
+      t7 <- address_mode_for_double_value(4294967296.0);
+      emit load(opc$loadd, 0, t7, t7.base_register, t3, t7.il, 0, t7.bits_known, t7.bits_trusted);
+      emit simple(opc$move, 2, t5, create_solution_for_ip_reg(), nil);
+      emit branch(t4, opc$bge, 0);
+      emit simple(opc$addd, 0, solution, t3, solution);
+      emit label(t4);
+    else
+      emit simple(opc$cvtid, 0, t2, solution, nil);
+    end;
+  end;
 end;
 
 transform 430  fp_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
   no_could_deadlock_child;
   pass_1 image 16#13AC5C;
-  { not lifted: a string at 0x1BB2A6 }
-  pass_2 image 16#1BB098 residue;
+  pass_2 image 16#1BB098 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: pointer;
+    temp t4: pointer;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    temp t8: solution;
+    t1 <- create_solution_for_fp_reg_pair();
+    t2 <- create_solution_for_fp_reg_pair();
+    t3 <- lir_$new_label();
+    t4 <- lir_$new_label();
+    t5 <- create_solution_for_fp_reg();
+    t6 <- create_solution_for_fp_reg();
+    if result.c136 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      emit simple(opc$truncdi, 0, $1, solution, nil);
+    else
+      if result.c138 = 1 then
+        pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+      end;
+      t7 <- address_mode_for_double_value(2147483648.0);
+      emit load(opc$loadd, 0, t7, t7.base_register, t1, t7.il, 0, t7.bits_known, t7.bits_trusted);
+      emit simple(opc$subd, 1, t1, $1, t2);
+      t8 <- address_mode_for_integer32_value(-16#80000000);
+      emit load(opc$loads, 0, t8, t8.base_register, t5, t8.il, 0, t8.bits_known, t8.bits_trusted);
+      emit branch(t4, opc$fbge, 0);
+      emit simple(opc$truncdi, 0, $1, solution, nil);
+      emit branch(t3, opc$jump, 0);
+      emit label(t4);
+      emit simple(opc$truncdi, 0, t2, t6, nil);
+      emit simple(opc$addi, 0, t5, t6, solution);
+      emit label(t3);
+    end;
+  end;
 end;
 
 transform 431  ip_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
   no_could_deadlock_child;
   pass_1 image 16#13AEE2;
-  { not lifted: a string at 0x1BB2A6 }
-  pass_2 image 16#1BB2AE residue;
+  pass_2 image 16#1BB2AE begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: pointer;
+    temp t4: pointer;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    temp t8: solution;
+    temp t9: solution;
+    temp t10: solution;
+    temp t11: solution;
+    t1 <- create_solution_for_fp_reg_pair();
+    t2 <- create_solution_for_fp_reg_pair();
+    t3 <- lir_$new_label();
+    t4 <- lir_$new_label();
+    t5 <- create_solution_for_ip_reg();
+    t6 <- create_solution_for_ip_reg();
+    t7 <- create_solution_for_fp_reg();
+    t8 <- create_solution_for_fp_reg();
+    if result.c136 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      t9 <- create_solution_for_fp_reg();
+      emit simple(opc$truncdi, 0, $1, t9, nil);
+      emit simple(opc$mffp, 0, t9, solution, nil);
+    else
+      if result.c138 = 1 then
+        pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+      end;
+      t10 <- address_mode_for_double_value(2147483648.0);
+      emit load(opc$loadd, 0, t10, t10.base_register, t1, t10.il, 0, t10.bits_known, t10.bits_trusted);
+      emit simple(opc$subd, 1, t1, $1, t2);
+      t11 <- address_mode_for_integer32_value(-16#80000000);
+      emit load(opc$loads, 0, t11, t11.base_register, t6, t11.il, 0, t11.bits_known, t11.bits_trusted);
+      emit branch(t4, opc$fbge, 0);
+      emit simple(opc$truncdi, 0, $1, t8, nil);
+      emit simple(opc$mffp, 0, t8, solution, nil);
+      emit branch(t3, opc$jump, 0);
+      emit label(t4);
+      emit simple(opc$truncdi, 0, t2, t8, nil);
+      emit simple(opc$mffp, 0, t8, t5, nil);
+      emit simple(opc$add, 0, t6, t5, solution);
+      emit label(t3);
+    end;
+  end;
 end;
 
 transform 432  fp_reg <- f_extend_top ($1: fp_reg_pair, $2: void)

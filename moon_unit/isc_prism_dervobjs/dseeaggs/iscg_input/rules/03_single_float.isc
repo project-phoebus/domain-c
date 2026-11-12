@@ -38,14 +38,54 @@ end;
 
 transform 309  fp_reg <- f_math_top ($1: fp_reg, $2: void)
   pass_1 image 16#107FF2;
-  { not lifted: a field +26 of a node }
-  pass_2 image 16#1A07F4 residue;
+  pass_2 image 16#1A07F4 begin
+    temp t1: solution;
+    temp t2: solution;
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      emit simple(readonly_w680[subject.il.w26], 0, $1, solution, nil);
+    else
+      emit simple(readonly_w1704[subject.il.w26], 0, $1, solution, nil);
+      if result.c138 = 1 then
+        t1 <- create_solution_for_ip_reg();
+        t2 <- create_solution_for_ip_reg();
+        emit simple(opc$mffp, 0, solution, t1, nil);
+        if result.c139 = 1 then
+          emit simple(opc$extend7, 0, t1, t2, nil);
+        elsif result.c139 = 2 then
+          emit simple(opc$extend15, 0, t1, t2, nil);
+        end;
+        emit simple(opc$rsub, 8, t1, t2, create_solution_for_ip_reg());
+        emit simple(opc$trap_ne, 0, solution, nil, nil);
+      end;
+    end;
+  end;
 end;
 
 transform 310  fp_reg <- f_math_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#108278;
-  { not lifted: a field +26 of a node }
-  pass_2 image 16#1A0962 residue;
+  pass_2 image 16#1A0962 begin
+    temp t1: solution;
+    temp t2: solution;
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(readonly_w2216[subject.il.w26], 0, $1, solution, nil);
+    if result.c137 = 1 then
+      t1 <- create_solution_for_ip_reg();
+      t2 <- create_solution_for_ip_reg();
+      emit simple(opc$mffp, 0, solution, t1, nil);
+      if result.c138 = 1 then
+        emit simple(opc$extend7, 0, t1, t2, nil);
+      elsif result.c138 = 2 then
+        emit simple(opc$extend15, 0, t1, t2, nil);
+      end;
+      emit simple(opc$rsub, 8, t1, t2, create_solution_for_ip_reg());
+      emit simple(opc$trap_ne, 0, solution, nil, nil);
+    end;
+  end;
 end;
 
 transform 311  fp_reg <- f_math_top ($1: fp_reg, $2: fp_reg)
@@ -221,14 +261,26 @@ end;
 
 transform 315  fp_reg <- f_math_top ($1: fp_reg, $2: void)
   pass_1 image 16#108DD8;
-  { not lifted: a field +26 of a node }
-  pass_2 image 16#1A13F8 residue;
+  pass_2 image 16#1A13F8 begin
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    pattern_match_error(8, subject.il_kind, subject.il.w26, subject.inherited_attributes.source_line_number);
+    emit simple(opc$copys, 0, lir_3d60[0], solution, nil);
+  end;
 end;
 
 transform 316  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#108F9A;
-  { not lifted: a field +26 of a node }
-  pass_2 image 16#1A147E residue;
+  pass_2 image 16#1A147E begin
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(readonly_w1192[subject.il.w26], 0, $1, solution, nil);
+  end;
 end;
 
 transform 317  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: fp_reg_pair)
@@ -282,21 +334,150 @@ end;
 transform 319  ip_reg <- f_math_top ($1: fp_reg_pair, $2: void)
   no_could_deadlock_child;
   pass_1 image 16#1095E8;
-  { not lifted: a string at 0x1A1B44 }
-  pass_2 image 16#1A176E residue;
+  pass_2 image 16#1A176E begin
+    temp t1: pointer;
+    temp t2: pointer;
+    temp t3: pointer;
+    temp t4: pointer;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    temp t8: solution;
+    temp t9: solution;
+    temp t10: solution;
+    temp t11: solution;
+    temp t12: solution;
+    t1 <- lir_$new_label();
+    t2 <- lir_$new_label();
+    t3 <- lir_$new_label();
+    t4 <- lir_$new_label();
+    t5 <- create_solution_for_fp_reg_pair();
+    t6 <- create_solution_for_fp_reg();
+    t7 <- create_solution_for_fp_reg_pair();
+    t8 <- create_solution_for_fp_reg_pair();
+    t9 <- create_solution_for_fp_reg_pair();
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(opc$tstd, 0, $1, nil, nil);
+    if result.c138 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    t10 <- address_mode_for_double_value(0.5);
+    emit load(opc$loadd, 0, t10, t10.base_register, t7, t10.il, 0, t10.bits_known, t10.bits_trusted);
+    emit branch(t2, opc$fbge, 0);
+    if result.c139 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    t11 <- address_mode_for_double_value(-4503599627370496.0);
+    emit load(opc$loadd, 0, t11, t11.base_register, t8, t11.il, 0, t11.bits_known, t11.bits_trusted);
+    emit simple(opc$cmpd, 0, t8, $1, nil);
+    emit branch(t3, opc$fble, 0);
+    emit simple(opc$subd, 0, t7, $1, t5);
+    emit simple(opc$truncdi, 0, t5, t6, nil);
+    emit branch(t1, opc$jump, 0);
+    emit label(t3);
+    emit simple(opc$truncdi, 0, $1, t6, nil);
+    emit branch(t1, opc$jump, 0);
+    emit label(t2);
+    if result.c140 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    t12 <- address_mode_for_double_value(4503599627370496.0);
+    emit load(opc$loadd, 0, t12, t12.base_register, t9, t12.il, 0, t12.bits_known, t12.bits_trusted);
+    emit simple(opc$cmpd, 0, t9, $1, nil);
+    emit branch(t4, opc$fbge, 0);
+    emit simple(opc$addd, 0, t7, $1, t5);
+    emit simple(opc$truncdi, 0, t5, t6, nil);
+    emit branch(t1, opc$jump, 0);
+    emit label(t4);
+    emit simple(opc$truncdi, 0, $1, t6, nil);
+    emit label(t1);
+    emit simple(opc$mffp, 0, t6, solution, nil);
+  end;
 end;
 
 transform 320  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
   no_could_deadlock_child;
   pass_1 image 16#10986C;
-  { not lifted: a string at 0x1A1B44 }
-  pass_2 image 16#1A1B5C residue;
+  pass_2 image 16#1A1B5C begin
+    temp t1: pointer;
+    temp t2: pointer;
+    temp t3: pointer;
+    temp t4: pointer;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    temp t8: solution;
+    temp t9: solution;
+    temp t10: solution;
+    temp t11: solution;
+    t1 <- lir_$new_label();
+    t2 <- lir_$new_label();
+    t3 <- lir_$new_label();
+    t4 <- lir_$new_label();
+    t5 <- create_solution_for_fp_reg_pair();
+    t6 <- create_solution_for_fp_reg_pair();
+    t7 <- create_solution_for_fp_reg_pair();
+    t8 <- create_solution_for_fp_reg_pair();
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(opc$tstd, 0, $1, nil, nil);
+    if result.c138 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    t9 <- address_mode_for_double_value(0.5);
+    emit load(opc$loadd, 0, t9, t9.base_register, t6, t9.il, 0, t9.bits_known, t9.bits_trusted);
+    emit branch(t2, opc$fbge, 0);
+    if result.c139 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    t10 <- address_mode_for_double_value(-4503599627370496.0);
+    emit load(opc$loadd, 0, t10, t10.base_register, t7, t10.il, 0, t10.bits_known, t10.bits_trusted);
+    emit simple(opc$cmpd, 0, t7, $1, nil);
+    emit branch(t3, opc$fble, 0);
+    emit simple(opc$subd, 0, t6, $1, t5);
+    emit simple(opc$truncd, 0, t5, solution, nil);
+    emit branch(t1, opc$jump, 0);
+    emit label(t3);
+    emit simple(opc$truncd, 0, $1, solution, nil);
+    emit branch(t1, opc$jump, 0);
+    emit label(t2);
+    if result.c140 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    t11 <- address_mode_for_double_value(4503599627370496.0);
+    emit load(opc$loadd, 0, t11, t11.base_register, t8, t11.il, 0, t11.bits_known, t11.bits_trusted);
+    emit simple(opc$cmpd, 0, t8, $1, nil);
+    emit branch(t4, opc$fbge, 0);
+    emit simple(opc$addd, 0, t6, $1, t5);
+    emit simple(opc$truncd, 0, t5, solution, nil);
+    emit branch(t1, opc$jump, 0);
+    emit label(t4);
+    emit simple(opc$truncd, 0, $1, solution, nil);
+    emit label(t1);
+  end;
 end;
 
 transform 321  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#109ACE;
-  { not lifted: a field +26 of a node }
-  pass_2 image 16#1A1F0A residue;
+  pass_2 image 16#1A1F0A begin
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    pattern_match_error(8, subject.il_kind, subject.il.w26, subject.inherited_attributes.source_line_number);
+    emit simple(opc$copyd, 0, lir_3c60[0], solution, nil);
+  end;
 end;
 
 transform 322  fp_reg <- f_neg_top ($1: fp_reg)

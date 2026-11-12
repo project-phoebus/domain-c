@@ -10,26 +10,93 @@ section 06 double_float  image pass_1 a5 16#45A80C, pass_2 a5 16#48006C;
 
 transform 489  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
   pass_1 image 16#116E58;
-  { not lifted: a field +4 of a node }
-  pass_2 image 16#1A7A64 residue;
+  pass_2 image 16#1A7A64 begin
+    temp t1: solution;
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+    t1 <- $1;
+    set_isc_is_cse_on_live_range_if_local_cse(subject.il.l4 & 16#400000 <> 0, t1.live_range);
+    result.live_range <- t1;
+  end;
 end;
 
 transform 490  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
   pass_1 image 16#1173DA;
-  { not lifted: a field +4 of a node }
-  pass_2 image 16#1A7B06 residue;
+  pass_2 image 16#1A7B06 begin
+    temp t1: solution;
+    temp t2: solution;
+    t1 <- high_half_of_fp_reg_pair(solution);
+    t2 <- low_half_of_fp_reg_pair(solution);
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if solution.object_with_name <> nil then
+      solution.object_with_name <- solution.object_with_name;
+    else
+      solution.object_with_name <- $1.object_with_name;
+    end;
+    emit simple(opc$copyd, 0, $1, solution, nil);
+    set_isc_is_cse_on_live_range_if_local_cse(subject.il.l4 & 16#400000 <> 0, t1.live_range);
+    result.live_range <- t1;
+    set_isc_is_cse_on_live_range_if_local_cse(subject.il.l4 & 16#400000 <> 0, t2.live_range);
+    result.live_range_of_imaginary_part <- t2;
+  end;
 end;
 
 transform 491  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
   pass_1 image 16#117972;
-  { not lifted: a field +4 of a node }
-  pass_2 image 16#1A7C04 residue;
+  pass_2 image 16#1A7C04 begin
+    temp t1: solution;
+    result.base_register <- $1.base_register;
+    result.index_register <- $1.index_register;
+    result.false_label <- $1.false_label;
+    result.object_with_name <- $1.object_with_name;
+    result.live_range <- $1.live_range;
+    result.live_range_of_imaginary_part <- $1.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- $1.already_through_pass_2;
+    t1 <- $1;
+    set_isc_is_cse_on_live_range_if_local_cse(subject.il.l4 & 16#400000 <> 0, t1.live_range);
+    result.live_range <- t1;
+  end;
 end;
 
 transform 492  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
   pass_1 image 16#117EB6;
-  { not lifted: a field +4 of a node }
-  pass_2 image 16#1A7CA6 residue;
+  pass_2 image 16#1A7CA6 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    t1 <- high_half_of_fp_reg_quad($1);
+    t2 <- low_half_of_fp_reg_quad($1);
+    t3 <- high_half_of_fp_reg_quad(solution);
+    t4 <- low_half_of_fp_reg_quad(solution);
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if solution.object_with_name <> nil then
+      solution.object_with_name <- solution.object_with_name;
+    else
+      solution.object_with_name <- $1.object_with_name;
+    end;
+    emit simple(opc$copyd, 0, t1, t3, nil);
+    emit simple(opc$copyd, 0, t2, t4, nil);
+    set_isc_is_cse_on_live_range_if_local_cse(subject.il.l4 & 16#400000 <> 0, t3.live_range);
+    result.live_range <- t3;
+    set_isc_is_cse_on_live_range_if_local_cse(subject.il.l4 & 16#400000 <> 0, t4.live_range);
+    result.live_range_of_imaginary_part <- t4;
+  end;
 end;
 
 transform 493  fp_reg_pair <- f_add_top ($1: fp_reg_pair, $2: fp_reg_pair)
@@ -251,14 +318,71 @@ end;
 
 transform 499  fp_reg_pair <- f_extend_top ($1: ip_reg, $2: void)
   pass_1 image 16#118F56;
-  { not lifted: global 0x48AEE0 }
-  pass_2 image 16#1A882C residue;
+  pass_2 image 16#1A882C begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    t1 <- high_half_of_fp_reg_pair(solution);
+    t2 <- low_half_of_fp_reg_pair(solution);
+    t3 <- create_solution_for_fp_reg();
+    t4 <- create_solution_for_ip_reg();
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c138 = 1 then
+      if result.c139 = 1 then
+        t5 <- $1;
+      else
+        emit simple(opc$extend7, 0, $1, t4, nil);
+      end;
+    elsif result.c138 = 2 then
+      if result.c140 <> 1 then
+        emit simple(opc$extend15, 0, $1, t4, nil);
+      end;
+    end;
+    emit simple(opc$mtfp, 0, t5, t3, nil);
+    emit simple(opc$cvtis, 0, t3, t1, nil);
+    if result.c141 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c142 = 1 then
+      emit simple(opc$copys, 0, lir_3d60[0], t2, nil);
+    else
+      t6 <- address_mode_for_integer32_value(0);
+      emit load(opc$loads, 0, t6, t6.base_register, t2, t6.il, 0, t6.bits_known, t6.bits_trusted);
+    end;
+    result.live_range <- t1.live_range;
+    result.live_range_of_imaginary_part <- t2.live_range;
+  end;
 end;
 
 transform 500  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: void)
   pass_1 image 16#119232;
-  { not lifted: global 0x48AEE0 }
-  pass_2 image 16#1A89EE residue;
+  pass_2 image 16#1A89EE begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    t1 <- high_half_of_fp_reg_pair(solution);
+    t2 <- low_half_of_fp_reg_pair(solution);
+    emit simple(opc$copys, 0, $1, t1, nil);
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      emit simple(opc$copys, 0, lir_3d60[0], t2, nil);
+    else
+      t3 <- address_mode_for_integer32_value(0);
+      emit load(opc$loads, 0, t3, t3.base_register, t2, t3.il, 0, t3.bits_known, t3.bits_trusted);
+    end;
+    result.live_range <- t1.live_range;
+    result.live_range_of_imaginary_part <- t2.live_range;
+  end;
 end;
 
 transform 501  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: fp_reg)
@@ -277,8 +401,31 @@ end;
 
 transform 502  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#1195F8;
-  { not lifted: global 0x48AEE0 }
-  pass_2 image 16#1A8B56 residue;
+  pass_2 image 16#1A8B56 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    t1 <- high_half_of_fp_reg_pair(solution);
+    t2 <- low_half_of_fp_reg_pair(solution);
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(opc$cvtds, 0, $1, t1, nil);
+    if result.c138 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c139 = 1 then
+      emit simple(opc$copys, 0, lir_3d60[0], t2, nil);
+    else
+      t3 <- address_mode_for_integer32_value(0);
+      emit load(opc$loads, 0, t3, t3.base_register, t2, t3.il, 0, t3.bits_known, t3.bits_trusted);
+    end;
+    result.live_range <- t1.live_range;
+    result.live_range_of_imaginary_part <- t2.live_range;
+  end;
 end;
 
 transform 503  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: fp_reg_pair)
@@ -303,14 +450,63 @@ end;
 
 transform 504  fp_reg_quad <- f_extend_top ($1: ip_reg, $2: void)
   pass_1 image 16#119A7E;
-  { not lifted: a string at 0x1A8EC0 }
-  pass_2 image 16#1A8D42 residue;
+  pass_2 image 16#1A8D42 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    t1 <- high_half_of_fp_reg_quad(solution);
+    t2 <- low_half_of_fp_reg_quad(solution);
+    t3 <- create_solution_for_fp_reg();
+    t4 <- create_solution_for_ip_reg();
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c138 = 1 then
+      if result.c139 = 1 then
+        t5 <- $1;
+      else
+        emit simple(opc$extend7, 0, $1, t4, nil);
+      end;
+    elsif result.c138 = 2 then
+      if result.c140 <> 1 then
+        emit simple(opc$extend15, 0, $1, t4, nil);
+      end;
+    end;
+    emit simple(opc$mtfp, 0, t5, t3, nil);
+    emit simple(opc$cvtid, 0, t3, t1, nil);
+    t6 <- address_mode_for_double_value(0.0);
+    emit load(opc$loadd, 0, t6, t6.base_register, t2, t6.il, 0, t6.bits_known, t6.bits_trusted);
+    result.live_range <- t1.live_range;
+    result.live_range_of_imaginary_part <- t2.live_range;
+  end;
 end;
 
 transform 505  fp_reg_quad <- f_extend_top ($1: fp_reg, $2: void)
   pass_1 image 16#119D02;
-  { not lifted: a string at 0x1A8EC0 }
-  pass_2 image 16#1A8EC8 residue;
+  pass_2 image 16#1A8EC8 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    t1 <- high_half_of_fp_reg_quad(solution);
+    t2 <- low_half_of_fp_reg_quad(solution);
+    if result.c136 = 1 then
+      pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    if result.c137 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    emit simple(opc$cvtsd, 0, $1, t1, nil);
+    t3 <- address_mode_for_double_value(0.0);
+    emit load(opc$loadd, 0, t3, t3.base_register, t2, t3.il, 0, t3.bits_known, t3.bits_trusted);
+    result.live_range <- t1.live_range;
+    result.live_range_of_imaginary_part <- t2.live_range;
+  end;
 end;
 
 transform 506  fp_reg_quad <- f_extend_top ($1: fp_reg, $2: fp_reg)
@@ -335,8 +531,18 @@ end;
 
 transform 507  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11A12E;
-  { not lifted: a string at 0x1A8EC0 }
-  pass_2 image 16#1A906E residue;
+  pass_2 image 16#1A906E begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    t1 <- high_half_of_fp_reg_quad(solution);
+    t2 <- low_half_of_fp_reg_quad(solution);
+    emit simple(opc$copyd, 0, $1, t1, nil);
+    t3 <- address_mode_for_double_value(0.0);
+    emit load(opc$loadd, 0, t3, t3.base_register, t2, t3.il, 0, t3.bits_known, t3.bits_trusted);
+    result.live_range <- t1.live_range;
+    result.live_range_of_imaginary_part <- t2.live_range;
+  end;
 end;
 
 transform 508  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: fp_reg_pair)
@@ -793,12 +999,12 @@ end;
 
 transform 531  fp_reg_pair <- isc_func_call_top
   pass_1 image 16#11D01E;
-  { not lifted: 0x1AA35A: bit 7 of +14 }
+  { not lifted: 0x1AA38C: lslw #2,%d0 }
   pass_2 image 16#1AA2F2 residue;
 end;
 
 transform 532  fp_reg_quad <- isc_func_call_top
   pass_1 image 16#11D224;
-  { not lifted: 0x1AA406: bit 7 of +14 }
+  { not lifted: 0x1AA438: lslw #2,%d0 }
   pass_2 image 16#1AA39E residue;
 end;

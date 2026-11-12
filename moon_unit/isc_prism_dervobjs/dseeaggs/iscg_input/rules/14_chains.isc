@@ -10,8 +10,36 @@ section 14 chains  image pass_1 a5 16#4619DC, pass_2 a5 16#48008C;
 
 transform 378  address_mode <- address_mode
   pass_1 image 16#142E24;
-  { not lifted: operand ('postinc', 'a0') }
-  pass_2 image 16#1BCB64 residue;
+  pass_2 image 16#1BCB64 begin
+    temp t1: solution;
+    if result.c136 = 1 then
+      if result.c137 = 1 then
+        if result.l352.object_with_name <> nil then
+          result.l352.object_with_name <- result.l352.object_with_name;
+        else
+          result.l352.object_with_name <- subject.base_register.object_with_name;
+        end;
+        emit simple(opc$move, 0, subject.base_register, result.l352, nil);
+        emit simple(opc$adj_move, 0, nil, nil, nil);
+      else
+        emit simple(opc$add, 0, subject, subject.base_register, result.l352);
+      end;
+    elsif result.c138 = 1 then
+      emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), result.l352, nil);
+    else
+      t1 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+      emit load(opc$loadl, 0, t1, t1.base_register, result.l352, t1.il, 0, t1.bits_known, t1.bits_trusted);
+    end;
+    result.base_register <- subject.base_register;
+    result.index_register <- subject.index_register;
+    result.false_label <- subject.false_label;
+    result.object_with_name <- subject.object_with_name;
+    result.live_range <- subject.live_range;
+    result.live_range_of_imaginary_part <- subject.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- subject.already_through_pass_2;
+    result.base_register <- result.l352;
+    result.index_register <- isc_user_routines_31c;
+  end;
 end;
 
 transform 379  address_mode <- address_mode
@@ -33,99 +61,29 @@ transform 379  address_mode <- address_mode
     temp t14: integer32;
     temp t15: integer32;
     temp t16: integer32;
-    temp t17: integer32;
-    temp t18: integer32;
-    temp t19: pointer;
+    temp t17: solution;
+    temp t18: solution;
+    temp t19: solution;
     temp t20: solution;
     temp t21: solution;
     temp t22: solution;
-    temp t23: integer32;
-    temp t24: integer32;
-    temp t25: pointer;
+    temp t23: solution;
+    temp t24: solution;
+    temp t25: solution;
     temp t26: solution;
     temp t27: solution;
-    temp t28: integer32;
-    temp t29: integer32;
-    temp t30: pointer;
+    temp t28: solution;
+    temp t29: solution;
+    temp t30: solution;
     temp t31: solution;
-    temp t32: integer32;
-    temp t33: integer32;
-    temp t34: pointer;
+    temp t32: solution;
+    temp t33: solution;
+    temp t34: solution;
     temp t35: solution;
     temp t36: solution;
     temp t37: solution;
-    temp t38: integer32;
-    temp t39: integer32;
-    temp t40: pointer;
-    temp t41: integer32;
-    temp t42: integer32;
-    temp t43: pointer;
-    temp t44: integer32;
-    temp t45: integer32;
-    temp t46: pointer;
-    temp t47: solution;
-    temp t48: solution;
-    temp t49: solution;
-    temp t50: integer32;
-    temp t51: integer32;
-    temp t52: pointer;
-    temp t53: integer32;
-    temp t54: integer32;
-    temp t55: pointer;
-    temp t56: solution;
-    temp t57: solution;
-    temp t58: solution;
-    temp t59: integer32;
-    temp t60: integer32;
-    temp t61: pointer;
-    temp t62: integer32;
-    temp t63: integer32;
-    temp t64: pointer;
-    temp t65: solution;
-    temp t66: solution;
-    temp t67: solution;
-    temp t68: integer32;
-    temp t69: integer32;
-    temp t70: pointer;
-    temp t71: solution;
-    temp t72: solution;
-    temp t73: integer32;
-    temp t74: integer32;
-    temp t75: pointer;
-    temp t76: solution;
-    temp t77: integer32;
-    temp t78: integer32;
-    temp t79: pointer;
-    temp t80: solution;
-    temp t81: solution;
-    temp t82: solution;
-    temp t83: integer32;
-    temp t84: integer32;
-    temp t85: pointer;
-    temp t86: integer32;
-    temp t87: integer32;
-    temp t88: pointer;
-    temp t89: integer32;
-    temp t90: integer32;
-    temp t91: pointer;
-    temp t92: solution;
-    temp t93: solution;
-    temp t94: solution;
-    temp t95: integer32;
-    temp t96: integer32;
-    temp t97: pointer;
-    temp t98: integer32;
-    temp t99: integer32;
-    temp t100: pointer;
-    temp t101: solution;
-    temp t102: solution;
-    temp t103: solution;
-    temp t104: integer32;
-    temp t105: integer32;
-    temp t106: pointer;
-    temp t107: solution;
-    temp t108: solution;
-    temp t109: solution;
+    temp t38: solution;
+    temp t39: solution;
     if subject.is_physical then
       t1 <- 128;
     else
@@ -187,15 +145,42 @@ transform 379  address_mode <- address_mode
       if result.c137 = 1 then
         if result.c138 = 1 then
           if result.c139 = 1 then
-            t17 <- subject.bits_trusted;
-            t18 <- subject.bits_known;
-            t19 <- subject.il;
-            t20 <- subject.base_register;
-            emit load(opc$loadl, t14 + t12 + t13 + result.l364, duplicate_address_mode_adding_byte_offset(subject, 0), t20, t11, t19, 0, t18, t17);
+            emit load(opc$loadl, t14 + t12 + t13 + result.l364, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t11, subject.il, 0, subject.bits_known, subject.bits_trusted);
           else
-            t21 <- create_solution_for_ip_reg();
+            t17 <- create_solution_for_ip_reg();
             if result.c140 = 1 then
               if result.c141 = 1 then
+                if t17.object_with_name <> nil then
+                  t17.object_with_name <- t17.object_with_name;
+                else
+                  t17.object_with_name <- subject.base_register.object_with_name;
+                end;
+                emit simple(opc$move, 0, subject.base_register, t17, nil);
+                emit simple(opc$adj_move, 0, nil, nil, nil);
+              else
+                emit simple(opc$add, 0, subject, subject.base_register, t17);
+              end;
+            elsif result.c142 = 1 then
+              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t17, nil);
+            else
+              t18 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+              emit load(opc$loadl, 0, t18, t18.base_register, t17, t18.il, 0, t18.bits_known, t18.bits_trusted);
+            end;
+            emit load(opc$loadl, t14 + t12 + t13 + result.l364, find_well_known_literal_solution(0), t17, t11, subject.il, 0, subject.bits_known, subject.bits_trusted);
+          end;
+          if result.c143 = 1 then
+            emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
+          end;
+        elsif result.c138 = 2 then
+          t19 <- create_solution_for_ip_reg();
+          t20 <- create_solution_for_ip_reg();
+          if result.c144 = 1 then
+            emit load(opc$loadwu, t14 + t12 + t13 + result.l364, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t19, subject.il, 0, subject.bits_known, subject.bits_trusted);
+            emit load(opc$loadwu, t14 + t12 + t13, duplicate_address_mode_adding_byte_offset(subject, 2), subject.base_register, t20, subject.il, 2, subject.bits_known, subject.bits_trusted);
+          else
+            t21 <- create_solution_for_ip_reg();
+            if result.c145 = 1 then
+              if result.c146 = 1 then
                 if t21.object_with_name <> nil then
                   t21.object_with_name <- t21.object_with_name;
                 else
@@ -206,68 +191,20 @@ transform 379  address_mode <- address_mode
               else
                 emit simple(opc$add, 0, subject, subject.base_register, t21);
               end;
-            elsif result.c142 = 1 then
+            elsif result.c147 = 1 then
               emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t21, nil);
             else
               t22 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
               emit load(opc$loadl, 0, t22, t22.base_register, t21, t22.il, 0, t22.bits_known, t22.bits_trusted);
             end;
-            t23 <- subject.bits_trusted;
-            t24 <- subject.bits_known;
-            t25 <- subject.il;
-            emit load(opc$loadl, t14 + t12 + t13 + result.l364, find_well_known_literal_solution(0), t21, t11, t25, 0, t24, t23);
-          end;
-          if result.c143 = 1 then
-            emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
-          end;
-        elsif result.c138 = 2 then
-          t26 <- create_solution_for_ip_reg();
-          t27 <- create_solution_for_ip_reg();
-          if result.c144 = 1 then
-            t28 <- subject.bits_trusted;
-            t29 <- subject.bits_known;
-            t30 <- subject.il;
-            t31 <- subject.base_register;
-            emit load(opc$loadwu, t14 + t12 + t13 + result.l364, duplicate_address_mode_adding_byte_offset(subject, 0), t31, t26, t30, 0, t29, t28);
-            t32 <- subject.bits_trusted;
-            t33 <- subject.bits_known;
-            t34 <- subject.il;
-            t35 <- subject.base_register;
-            emit load(opc$loadwu, t14 + t12 + t13, duplicate_address_mode_adding_byte_offset(subject, 2), t35, t27, t34, 2, t33, t32);
-          else
-            t36 <- create_solution_for_ip_reg();
-            if result.c145 = 1 then
-              if result.c146 = 1 then
-                if t36.object_with_name <> nil then
-                  t36.object_with_name <- t36.object_with_name;
-                else
-                  t36.object_with_name <- subject.base_register.object_with_name;
-                end;
-                emit simple(opc$move, 0, subject.base_register, t36, nil);
-                emit simple(opc$adj_move, 0, nil, nil, nil);
-              else
-                emit simple(opc$add, 0, subject, subject.base_register, t36);
-              end;
-            elsif result.c147 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t36, nil);
-            else
-              t37 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-              emit load(opc$loadl, 0, t37, t37.base_register, t36, t37.il, 0, t37.bits_known, t37.bits_trusted);
-            end;
-            t38 <- subject.bits_trusted;
-            t39 <- subject.bits_known;
-            t40 <- subject.il;
-            emit load(opc$loadwu, t14 + t12 + t13 + result.l364, find_well_known_literal_solution(0), t36, t26, t40, 0, t39, t38);
-            t41 <- subject.bits_trusted;
-            t42 <- subject.bits_known;
-            t43 <- subject.il;
-            emit load(opc$loadwu, t14 + t12 + t13, find_well_known_literal_solution(2), t36, t27, t43, 2, t42, t41);
+            emit load(opc$loadwu, t14 + t12 + t13 + result.l364, find_well_known_literal_solution(0), t21, t19, subject.il, 0, subject.bits_known, subject.bits_trusted);
+            emit load(opc$loadwu, t14 + t12 + t13, find_well_known_literal_solution(2), t21, t20, subject.il, 2, subject.bits_known, subject.bits_trusted);
           end;
           if result.c148 = 1 then
             warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
           end;
-          emit field(opc$insert, 0, 16, t26, find_well_known_literal_solution(16), t27);
-          emit simple(opc$move, 0, t27, t11, nil);
+          emit field(opc$insert, 0, 16, t19, find_well_known_literal_solution(16), t20);
+          emit simple(opc$move, 0, t20, t11, nil);
           emit simple(opc$adj_move, 0, nil, nil, nil);
         end;
         if result.c149 <> 1 then
@@ -281,35 +218,28 @@ transform 379  address_mode <- address_mode
         end;
       elsif result.c137 = 2 then
         if result.c152 = 1 then
-          t44 <- subject.bits_trusted;
-          t45 <- subject.bits_known;
-          t46 <- subject.il;
-          t47 <- subject.base_register;
-          emit load(opc$loadwu, t14 + t12 + t13 + result.l364, duplicate_address_mode_adding_byte_offset(subject, 0), t47, t11, t46, 0, t45, t44);
+          emit load(opc$loadwu, t14 + t12 + t13 + result.l364, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t11, subject.il, 0, subject.bits_known, subject.bits_trusted);
         else
-          t48 <- create_solution_for_ip_reg();
+          t23 <- create_solution_for_ip_reg();
           if result.c153 = 1 then
             if result.c154 = 1 then
-              if t48.object_with_name <> nil then
-                t48.object_with_name <- t48.object_with_name;
+              if t23.object_with_name <> nil then
+                t23.object_with_name <- t23.object_with_name;
               else
-                t48.object_with_name <- subject.base_register.object_with_name;
+                t23.object_with_name <- subject.base_register.object_with_name;
               end;
-              emit simple(opc$move, 0, subject.base_register, t48, nil);
+              emit simple(opc$move, 0, subject.base_register, t23, nil);
               emit simple(opc$adj_move, 0, nil, nil, nil);
             else
-              emit simple(opc$add, 0, subject, subject.base_register, t48);
+              emit simple(opc$add, 0, subject, subject.base_register, t23);
             end;
           elsif result.c155 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t48, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t23, nil);
           else
-            t49 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-            emit load(opc$loadl, 0, t49, t49.base_register, t48, t49.il, 0, t49.bits_known, t49.bits_trusted);
+            t24 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+            emit load(opc$loadl, 0, t24, t24.base_register, t23, t24.il, 0, t24.bits_known, t24.bits_trusted);
           end;
-          t50 <- subject.bits_trusted;
-          t51 <- subject.bits_known;
-          t52 <- subject.il;
-          emit load(opc$loadwu, result.l364 + (t14 + t12 + t13), find_well_known_literal_solution(0), t48, t11, t52, 0, t51, t50);
+          emit load(opc$loadwu, result.l364 + (t14 + t12 + t13), find_well_known_literal_solution(0), t23, t11, subject.il, 0, subject.bits_known, subject.bits_trusted);
         end;
         if result.c156 = 1 then
           emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -325,35 +255,28 @@ transform 379  address_mode <- address_mode
         end;
       elsif result.c137 = 3 then
         if result.c160 = 1 then
-          t53 <- subject.bits_trusted;
-          t54 <- subject.bits_known;
-          t55 <- subject.il;
-          t56 <- subject.base_register;
-          emit load(opc$loadbu, result.l364 + (t14 + t12 + t13), duplicate_address_mode_adding_byte_offset(subject, 0), t56, t11, t55, 0, t54, t53);
+          emit load(opc$loadbu, result.l364 + (t14 + t12 + t13), duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t11, subject.il, 0, subject.bits_known, subject.bits_trusted);
         else
-          t57 <- create_solution_for_ip_reg();
+          t25 <- create_solution_for_ip_reg();
           if result.c161 = 1 then
             if result.c162 = 1 then
-              if t57.object_with_name <> nil then
-                t57.object_with_name <- t57.object_with_name;
+              if t25.object_with_name <> nil then
+                t25.object_with_name <- t25.object_with_name;
               else
-                t57.object_with_name <- subject.base_register.object_with_name;
+                t25.object_with_name <- subject.base_register.object_with_name;
               end;
-              emit simple(opc$move, 0, subject.base_register, t57, nil);
+              emit simple(opc$move, 0, subject.base_register, t25, nil);
               emit simple(opc$adj_move, 0, nil, nil, nil);
             else
-              emit simple(opc$add, 0, subject, subject.base_register, t57);
+              emit simple(opc$add, 0, subject, subject.base_register, t25);
             end;
           elsif result.c163 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t57, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t25, nil);
           else
-            t58 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-            emit load(opc$loadl, 0, t58, t58.base_register, t57, t58.il, 0, t58.bits_known, t58.bits_trusted);
+            t26 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+            emit load(opc$loadl, 0, t26, t26.base_register, t25, t26.il, 0, t26.bits_known, t26.bits_trusted);
           end;
-          t59 <- subject.bits_trusted;
-          t60 <- subject.bits_known;
-          t61 <- subject.il;
-          emit load(opc$loadbu, result.l364 + (t14 + t12 + t13), find_well_known_literal_solution(0), t57, t11, t61, 0, t60, t59);
+          emit load(opc$loadbu, result.l364 + (t14 + t12 + t13), find_well_known_literal_solution(0), t25, t11, subject.il, 0, subject.bits_known, subject.bits_trusted);
         end;
         if result.c164 = 1 then
           emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -365,85 +288,64 @@ transform 379  address_mode <- address_mode
       if result.c165 = 1 then
         if result.c166 = 1 then
           if result.c167 = 1 then
-            t62 <- result.l352.bits_trusted;
-            t63 <- result.l352.bits_known;
-            t64 <- result.l352.il;
-            t65 <- result.l352.base_register;
-            emit store(opc$storel, result.l368 + (t15 + t16), t11, duplicate_address_mode_adding_byte_offset(result.l352, 0), t65, t64, 0, t63, t62);
+            emit store(opc$storel, result.l368 + (t15 + t16), t11, duplicate_address_mode_adding_byte_offset(result.l352, 0), result.l352.base_register, result.l352.il, 0, result.l352.bits_known, result.l352.bits_trusted);
           else
-            t66 <- create_solution_for_ip_reg();
+            t27 <- create_solution_for_ip_reg();
             if result.c168 = 1 then
               if result.c169 = 1 then
-                if t66.object_with_name <> nil then
-                  t66.object_with_name <- t66.object_with_name;
+                if t27.object_with_name <> nil then
+                  t27.object_with_name <- t27.object_with_name;
                 else
-                  t66.object_with_name <- result.l352.base_register.object_with_name;
+                  t27.object_with_name <- result.l352.base_register.object_with_name;
                 end;
-                emit simple(opc$move, 0, result.l352.base_register, t66, nil);
+                emit simple(opc$move, 0, result.l352.base_register, t27, nil);
                 emit simple(opc$adj_move, 0, nil, nil, nil);
               else
-                emit simple(opc$add, 0, result.l352, result.l352.base_register, t66);
+                emit simple(opc$add, 0, result.l352, result.l352.base_register, t27);
               end;
             elsif result.c170 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t66, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t27, nil);
             else
-              t67 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
-              emit load(opc$loadl, 0, t67, t67.base_register, t66, t67.il, 0, t67.bits_known, t67.bits_trusted);
+              t28 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
+              emit load(opc$loadl, 0, t28, t28.base_register, t27, t28.il, 0, t28.bits_known, t28.bits_trusted);
             end;
-            t68 <- result.l352.bits_trusted;
-            t69 <- result.l352.bits_known;
-            t70 <- result.l352.il;
-            emit store(opc$storel, result.l368 + (t15 + t16), t11, find_well_known_literal_solution(0), t66, t70, 0, t69, t68);
+            emit store(opc$storel, result.l368 + (t15 + t16), t11, find_well_known_literal_solution(0), t27, result.l352.il, 0, result.l352.bits_known, result.l352.bits_trusted);
           end;
           if result.c171 = 1 then
             emit load(opc$loadbu, 512, isc_user_routines_31c, result.l352.base_register, isc_user_routines_31c, result.l352.il, 0, result.l352.bits_known, result.l352.bits_trusted);
           end;
         elsif result.c166 = 2 then
-          t71 <- create_solution_for_ip_reg();
-          t72 <- create_solution_for_ip_reg();
-          t72.object_with_name <- t11.object_with_name;
-          emit simple(opc$move, 0, t11, t72, nil);
+          t29 <- create_solution_for_ip_reg();
+          t30 <- create_solution_for_ip_reg();
+          t30.object_with_name <- t11.object_with_name;
+          emit simple(opc$move, 0, t11, t30, nil);
           emit simple(opc$adj_move, 0, nil, nil, nil);
-          emit field(opc$extractu, 0, 16, t72, find_well_known_literal_solution(16), t71);
+          emit field(opc$extractu, 0, 16, t30, find_well_known_literal_solution(16), t29);
           if result.c172 = 1 then
-            t73 <- result.l352.bits_trusted;
-            t74 <- result.l352.bits_known;
-            t75 <- result.l352.il;
-            t76 <- result.l352.base_register;
-            emit store(opc$storew, result.l368 + (t15 + t16), t71, duplicate_address_mode_adding_byte_offset(result.l352, 0), t76, t75, 0, t74, t73);
-            t77 <- result.l352.bits_trusted;
-            t78 <- result.l352.bits_known;
-            t79 <- result.l352.il;
-            t80 <- result.l352.base_register;
-            emit store(opc$storew, t15 + t16, t72, duplicate_address_mode_adding_byte_offset(result.l352, 2), t80, t79, 2, t78, t77);
+            emit store(opc$storew, result.l368 + (t15 + t16), t29, duplicate_address_mode_adding_byte_offset(result.l352, 0), result.l352.base_register, result.l352.il, 0, result.l352.bits_known, result.l352.bits_trusted);
+            emit store(opc$storew, t15 + t16, t30, duplicate_address_mode_adding_byte_offset(result.l352, 2), result.l352.base_register, result.l352.il, 2, result.l352.bits_known, result.l352.bits_trusted);
           else
-            t81 <- create_solution_for_ip_reg();
+            t31 <- create_solution_for_ip_reg();
             if result.c173 = 1 then
               if result.c174 = 1 then
-                if t81.object_with_name <> nil then
-                  t81.object_with_name <- t81.object_with_name;
+                if t31.object_with_name <> nil then
+                  t31.object_with_name <- t31.object_with_name;
                 else
-                  t81.object_with_name <- result.l352.base_register.object_with_name;
+                  t31.object_with_name <- result.l352.base_register.object_with_name;
                 end;
-                emit simple(opc$move, 0, result.l352.base_register, t81, nil);
+                emit simple(opc$move, 0, result.l352.base_register, t31, nil);
                 emit simple(opc$adj_move, 0, nil, nil, nil);
               else
-                emit simple(opc$add, 0, result.l352, result.l352.base_register, t81);
+                emit simple(opc$add, 0, result.l352, result.l352.base_register, t31);
               end;
             elsif result.c175 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t81, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t31, nil);
             else
-              t82 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
-              emit load(opc$loadl, 0, t82, t82.base_register, t81, t82.il, 0, t82.bits_known, t82.bits_trusted);
+              t32 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
+              emit load(opc$loadl, 0, t32, t32.base_register, t31, t32.il, 0, t32.bits_known, t32.bits_trusted);
             end;
-            t83 <- result.l352.bits_trusted;
-            t84 <- result.l352.bits_known;
-            t85 <- result.l352.il;
-            emit store(opc$storew, result.l368 + (t15 + t16), t71, find_well_known_literal_solution(0), t81, t85, 0, t84, t83);
-            t86 <- result.l352.bits_trusted;
-            t87 <- result.l352.bits_known;
-            t88 <- result.l352.il;
-            emit store(opc$storew, t15 + t16, t72, find_well_known_literal_solution(2), t81, t88, 2, t87, t86);
+            emit store(opc$storew, result.l368 + (t15 + t16), t29, find_well_known_literal_solution(0), t31, result.l352.il, 0, result.l352.bits_known, result.l352.bits_trusted);
+            emit store(opc$storew, t15 + t16, t30, find_well_known_literal_solution(2), t31, result.l352.il, 2, result.l352.bits_known, result.l352.bits_trusted);
           end;
           if result.c176 = 1 then
             warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
@@ -460,35 +362,28 @@ transform 379  address_mode <- address_mode
         end;
       elsif result.c165 = 2 then
         if result.c180 = 1 then
-          t89 <- result.l352.bits_trusted;
-          t90 <- result.l352.bits_known;
-          t91 <- result.l352.il;
-          t92 <- result.l352.base_register;
-          emit store(opc$storew, result.l368 + (t15 + t16), t11, duplicate_address_mode_adding_byte_offset(result.l352, 0), t92, t91, 0, t90, t89);
+          emit store(opc$storew, result.l368 + (t15 + t16), t11, duplicate_address_mode_adding_byte_offset(result.l352, 0), result.l352.base_register, result.l352.il, 0, result.l352.bits_known, result.l352.bits_trusted);
         else
-          t93 <- create_solution_for_ip_reg();
+          t33 <- create_solution_for_ip_reg();
           if result.c181 = 1 then
             if result.c182 = 1 then
-              if t93.object_with_name <> nil then
-                t93.object_with_name <- t93.object_with_name;
+              if t33.object_with_name <> nil then
+                t33.object_with_name <- t33.object_with_name;
               else
-                t93.object_with_name <- result.l352.base_register.object_with_name;
+                t33.object_with_name <- result.l352.base_register.object_with_name;
               end;
-              emit simple(opc$move, 0, result.l352.base_register, t93, nil);
+              emit simple(opc$move, 0, result.l352.base_register, t33, nil);
               emit simple(opc$adj_move, 0, nil, nil, nil);
             else
-              emit simple(opc$add, 0, result.l352, result.l352.base_register, t93);
+              emit simple(opc$add, 0, result.l352, result.l352.base_register, t33);
             end;
           elsif result.c183 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t93, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t33, nil);
           else
-            t94 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
-            emit load(opc$loadl, 0, t94, t94.base_register, t93, t94.il, 0, t94.bits_known, t94.bits_trusted);
+            t34 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
+            emit load(opc$loadl, 0, t34, t34.base_register, t33, t34.il, 0, t34.bits_known, t34.bits_trusted);
           end;
-          t95 <- result.l352.bits_trusted;
-          t96 <- result.l352.bits_known;
-          t97 <- result.l352.il;
-          emit store(opc$storew, result.l368 + (t15 + t16), t11, find_well_known_literal_solution(0), t93, t97, 0, t96, t95);
+          emit store(opc$storew, result.l368 + (t15 + t16), t11, find_well_known_literal_solution(0), t33, result.l352.il, 0, result.l352.bits_known, result.l352.bits_trusted);
         end;
         if result.c184 = 1 then
           emit load(opc$loadbu, 512, isc_user_routines_31c, result.l352.base_register, isc_user_routines_31c, result.l352.il, 0, result.l352.bits_known, result.l352.bits_trusted);
@@ -504,35 +399,28 @@ transform 379  address_mode <- address_mode
         end;
       elsif result.c165 = 3 then
         if result.c188 = 1 then
-          t98 <- result.l352.bits_trusted;
-          t99 <- result.l352.bits_known;
-          t100 <- result.l352.il;
-          t101 <- result.l352.base_register;
-          emit store(opc$storeb, result.l368 + (t15 + t16), t11, duplicate_address_mode_adding_byte_offset(result.l352, 0), t101, t100, 0, t99, t98);
+          emit store(opc$storeb, result.l368 + (t15 + t16), t11, duplicate_address_mode_adding_byte_offset(result.l352, 0), result.l352.base_register, result.l352.il, 0, result.l352.bits_known, result.l352.bits_trusted);
         else
-          t102 <- create_solution_for_ip_reg();
+          t35 <- create_solution_for_ip_reg();
           if result.c189 = 1 then
             if result.c190 = 1 then
-              if t102.object_with_name <> nil then
-                t102.object_with_name <- t102.object_with_name;
+              if t35.object_with_name <> nil then
+                t35.object_with_name <- t35.object_with_name;
               else
-                t102.object_with_name <- result.l352.base_register.object_with_name;
+                t35.object_with_name <- result.l352.base_register.object_with_name;
               end;
-              emit simple(opc$move, 0, result.l352.base_register, t102, nil);
+              emit simple(opc$move, 0, result.l352.base_register, t35, nil);
               emit simple(opc$adj_move, 0, nil, nil, nil);
             else
-              emit simple(opc$add, 0, result.l352, result.l352.base_register, t102);
+              emit simple(opc$add, 0, result.l352, result.l352.base_register, t35);
             end;
           elsif result.c191 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t102, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t35, nil);
           else
-            t103 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
-            emit load(opc$loadl, 0, t103, t103.base_register, t102, t103.il, 0, t103.bits_known, t103.bits_trusted);
+            t36 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
+            emit load(opc$loadl, 0, t36, t36.base_register, t35, t36.il, 0, t36.bits_known, t36.bits_trusted);
           end;
-          t104 <- result.l352.bits_trusted;
-          t105 <- result.l352.bits_known;
-          t106 <- result.l352.il;
-          emit store(opc$storeb, result.l368 + (t15 + t16), t11, find_well_known_literal_solution(0), t102, t106, 0, t105, t104);
+          emit store(opc$storeb, result.l368 + (t15 + t16), t11, find_well_known_literal_solution(0), t35, result.l352.il, 0, result.l352.bits_known, result.l352.bits_trusted);
         end;
         if result.c192 = 1 then
           emit load(opc$loadbu, 512, isc_user_routines_31c, result.l352.base_register, isc_user_routines_31c, result.l352.il, 0, result.l352.bits_known, result.l352.bits_trusted);
@@ -557,8 +445,8 @@ transform 379  address_mode <- address_mode
       elsif result.c195 = 1 then
         emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t8, nil);
       else
-        t107 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-        emit load(opc$loadl, 0, t107, t107.base_register, t8, t107.il, 0, t107.bits_known, t107.bits_trusted);
+        t37 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+        emit load(opc$loadl, 0, t37, t37.base_register, t8, t37.il, 0, t37.bits_known, t37.bits_trusted);
       end;
       if result.c196 = 1 then
         if result.c197 = 1 then
@@ -575,14 +463,14 @@ transform 379  address_mode <- address_mode
       elsif result.c198 = 1 then
         emit simple(opc$move, 0, find_well_known_literal_solution(result.l352.literal_32_bits_value), t7, nil);
       else
-        t108 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
-        emit load(opc$loadl, 0, t108, t108.base_register, t7, t108.il, 0, t108.bits_known, t108.bits_trusted);
+        t38 <- address_mode_for_integer32_value(result.l352.literal_32_bits_value);
+        emit load(opc$loadl, 0, t38, t38.base_register, t7, t38.il, 0, t38.bits_known, t38.bits_trusted);
       end;
       if result.c199 = 1 then
         emit simple(opc$move, 0, find_well_known_literal_solution(result.l360), t10, nil);
       else
-        t109 <- address_mode_for_integer32_value(result.l360);
-        emit load(opc$loadl, 0, t109, t109.base_register, t10, t109.il, 0, t109.bits_known, t109.bits_trusted);
+        t39 <- address_mode_for_integer32_value(result.l360);
+        emit load(opc$loadl, 0, t39, t39.base_register, t10, t39.il, 0, t39.bits_known, t39.bits_trusted);
       end;
       emit label(t5);
       emit load(opc$loadbu, t3 + t1 + t2 + 16#1000020, isc_literal_solutions[1], t8, t9, subject.il, 0, subject.bits_known, subject.bits_trusted);
@@ -604,51 +492,16 @@ transform 380  ip_reg <- address_mode
     temp t1: integer32;
     temp t2: integer32;
     temp t3: integer32;
-    temp t4: integer32;
-    temp t5: integer32;
-    temp t6: pointer;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
     temp t7: solution;
     temp t8: solution;
     temp t9: solution;
-    temp t10: integer32;
-    temp t11: integer32;
-    temp t12: pointer;
+    temp t10: solution;
+    temp t11: solution;
+    temp t12: solution;
     temp t13: solution;
-    temp t14: solution;
-    temp t15: integer32;
-    temp t16: integer32;
-    temp t17: pointer;
-    temp t18: solution;
-    temp t19: integer32;
-    temp t20: integer32;
-    temp t21: pointer;
-    temp t22: solution;
-    temp t23: solution;
-    temp t24: solution;
-    temp t25: integer32;
-    temp t26: integer32;
-    temp t27: pointer;
-    temp t28: integer32;
-    temp t29: integer32;
-    temp t30: pointer;
-    temp t31: integer32;
-    temp t32: integer32;
-    temp t33: pointer;
-    temp t34: solution;
-    temp t35: solution;
-    temp t36: solution;
-    temp t37: integer32;
-    temp t38: integer32;
-    temp t39: pointer;
-    temp t40: integer32;
-    temp t41: integer32;
-    temp t42: pointer;
-    temp t43: solution;
-    temp t44: solution;
-    temp t45: solution;
-    temp t46: integer32;
-    temp t47: integer32;
-    temp t48: pointer;
     if subject.is_physical then
       t1 <- 128;
     else
@@ -672,15 +525,42 @@ transform 380  ip_reg <- address_mode
     if result.c136 = 1 then
       if result.c137 = 1 then
         if result.c138 = 1 then
-          t4 <- subject.bits_trusted;
-          t5 <- subject.bits_known;
-          t6 <- subject.il;
-          t7 <- subject.base_register;
-          emit load(opc$loadl, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), t7, solution, t6, 0, t5, t4);
+          emit load(opc$loadl, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, solution, subject.il, 0, subject.bits_known, subject.bits_trusted);
         else
-          t8 <- create_solution_for_ip_reg();
+          t4 <- create_solution_for_ip_reg();
           if result.c139 = 1 then
             if result.c140 = 1 then
+              if t4.object_with_name <> nil then
+                t4.object_with_name <- t4.object_with_name;
+              else
+                t4.object_with_name <- subject.base_register.object_with_name;
+              end;
+              emit simple(opc$move, 0, subject.base_register, t4, nil);
+              emit simple(opc$adj_move, 0, nil, nil, nil);
+            else
+              emit simple(opc$add, 0, subject, subject.base_register, t4);
+            end;
+          elsif result.c141 = 1 then
+            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t4, nil);
+          else
+            t5 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+            emit load(opc$loadl, 0, t5, t5.base_register, t4, t5.il, 0, t5.bits_known, t5.bits_trusted);
+          end;
+          emit load(opc$loadl, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t4, solution, subject.il, 0, subject.bits_known, subject.bits_trusted);
+        end;
+        if result.c142 = 1 then
+          emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
+        end;
+      elsif result.c137 = 2 then
+        t6 <- create_solution_for_ip_reg();
+        t7 <- create_solution_for_ip_reg();
+        if result.c143 = 1 then
+          emit load(opc$loadwu, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t6, subject.il, 0, subject.bits_known, subject.bits_trusted);
+          emit load(opc$loadwu, t3 + t1 + t2, duplicate_address_mode_adding_byte_offset(subject, 2), subject.base_register, t7, subject.il, 2, subject.bits_known, subject.bits_trusted);
+        else
+          t8 <- create_solution_for_ip_reg();
+          if result.c144 = 1 then
+            if result.c145 = 1 then
               if t8.object_with_name <> nil then
                 t8.object_with_name <- t8.object_with_name;
               else
@@ -691,68 +571,20 @@ transform 380  ip_reg <- address_mode
             else
               emit simple(opc$add, 0, subject, subject.base_register, t8);
             end;
-          elsif result.c141 = 1 then
+          elsif result.c146 = 1 then
             emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t8, nil);
           else
             t9 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
             emit load(opc$loadl, 0, t9, t9.base_register, t8, t9.il, 0, t9.bits_known, t9.bits_trusted);
           end;
-          t10 <- subject.bits_trusted;
-          t11 <- subject.bits_known;
-          t12 <- subject.il;
-          emit load(opc$loadl, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t8, solution, t12, 0, t11, t10);
-        end;
-        if result.c142 = 1 then
-          emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
-        end;
-      elsif result.c137 = 2 then
-        t13 <- create_solution_for_ip_reg();
-        t14 <- create_solution_for_ip_reg();
-        if result.c143 = 1 then
-          t15 <- subject.bits_trusted;
-          t16 <- subject.bits_known;
-          t17 <- subject.il;
-          t18 <- subject.base_register;
-          emit load(opc$loadwu, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), t18, t13, t17, 0, t16, t15);
-          t19 <- subject.bits_trusted;
-          t20 <- subject.bits_known;
-          t21 <- subject.il;
-          t22 <- subject.base_register;
-          emit load(opc$loadwu, t3 + t1 + t2, duplicate_address_mode_adding_byte_offset(subject, 2), t22, t14, t21, 2, t20, t19);
-        else
-          t23 <- create_solution_for_ip_reg();
-          if result.c144 = 1 then
-            if result.c145 = 1 then
-              if t23.object_with_name <> nil then
-                t23.object_with_name <- t23.object_with_name;
-              else
-                t23.object_with_name <- subject.base_register.object_with_name;
-              end;
-              emit simple(opc$move, 0, subject.base_register, t23, nil);
-              emit simple(opc$adj_move, 0, nil, nil, nil);
-            else
-              emit simple(opc$add, 0, subject, subject.base_register, t23);
-            end;
-          elsif result.c146 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t23, nil);
-          else
-            t24 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-            emit load(opc$loadl, 0, t24, t24.base_register, t23, t24.il, 0, t24.bits_known, t24.bits_trusted);
-          end;
-          t25 <- subject.bits_trusted;
-          t26 <- subject.bits_known;
-          t27 <- subject.il;
-          emit load(opc$loadwu, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t23, t13, t27, 0, t26, t25);
-          t28 <- subject.bits_trusted;
-          t29 <- subject.bits_known;
-          t30 <- subject.il;
-          emit load(opc$loadwu, t3 + t1 + t2, find_well_known_literal_solution(2), t23, t14, t30, 2, t29, t28);
+          emit load(opc$loadwu, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t8, t6, subject.il, 0, subject.bits_known, subject.bits_trusted);
+          emit load(opc$loadwu, t3 + t1 + t2, find_well_known_literal_solution(2), t8, t7, subject.il, 2, subject.bits_known, subject.bits_trusted);
         end;
         if result.c147 = 1 then
           warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
         end;
-        emit field(opc$insert, 0, 16, t13, find_well_known_literal_solution(16), t14);
-        emit simple(opc$move, 0, t14, solution, nil);
+        emit field(opc$insert, 0, 16, t6, find_well_known_literal_solution(16), t7);
+        emit simple(opc$move, 0, t7, solution, nil);
         emit simple(opc$adj_move, 0, nil, nil, nil);
       end;
       if result.c148 <> 1 then
@@ -766,35 +598,28 @@ transform 380  ip_reg <- address_mode
       end;
     elsif result.c136 = 2 then
       if result.c151 = 1 then
-        t31 <- subject.bits_trusted;
-        t32 <- subject.bits_known;
-        t33 <- subject.il;
-        t34 <- subject.base_register;
-        emit load(opc$loadwu, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), t34, solution, t33, 0, t32, t31);
+        emit load(opc$loadwu, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, solution, subject.il, 0, subject.bits_known, subject.bits_trusted);
       else
-        t35 <- create_solution_for_ip_reg();
+        t10 <- create_solution_for_ip_reg();
         if result.c152 = 1 then
           if result.c153 = 1 then
-            if t35.object_with_name <> nil then
-              t35.object_with_name <- t35.object_with_name;
+            if t10.object_with_name <> nil then
+              t10.object_with_name <- t10.object_with_name;
             else
-              t35.object_with_name <- subject.base_register.object_with_name;
+              t10.object_with_name <- subject.base_register.object_with_name;
             end;
-            emit simple(opc$move, 0, subject.base_register, t35, nil);
+            emit simple(opc$move, 0, subject.base_register, t10, nil);
             emit simple(opc$adj_move, 0, nil, nil, nil);
           else
-            emit simple(opc$add, 0, subject, subject.base_register, t35);
+            emit simple(opc$add, 0, subject, subject.base_register, t10);
           end;
         elsif result.c154 = 1 then
-          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t35, nil);
+          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t10, nil);
         else
-          t36 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-          emit load(opc$loadl, 0, t36, t36.base_register, t35, t36.il, 0, t36.bits_known, t36.bits_trusted);
+          t11 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+          emit load(opc$loadl, 0, t11, t11.base_register, t10, t11.il, 0, t11.bits_known, t11.bits_trusted);
         end;
-        t37 <- subject.bits_trusted;
-        t38 <- subject.bits_known;
-        t39 <- subject.il;
-        emit load(opc$loadwu, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t35, solution, t39, 0, t38, t37);
+        emit load(opc$loadwu, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t10, solution, subject.il, 0, subject.bits_known, subject.bits_trusted);
       end;
       if result.c155 = 1 then
         emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -810,35 +635,28 @@ transform 380  ip_reg <- address_mode
       end;
     elsif result.c136 = 3 then
       if result.c159 = 1 then
-        t40 <- subject.bits_trusted;
-        t41 <- subject.bits_known;
-        t42 <- subject.il;
-        t43 <- subject.base_register;
-        emit load(opc$loadbu, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), t43, solution, t42, 0, t41, t40);
+        emit load(opc$loadbu, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, solution, subject.il, 0, subject.bits_known, subject.bits_trusted);
       else
-        t44 <- create_solution_for_ip_reg();
+        t12 <- create_solution_for_ip_reg();
         if result.c160 = 1 then
           if result.c161 = 1 then
-            if t44.object_with_name <> nil then
-              t44.object_with_name <- t44.object_with_name;
+            if t12.object_with_name <> nil then
+              t12.object_with_name <- t12.object_with_name;
             else
-              t44.object_with_name <- subject.base_register.object_with_name;
+              t12.object_with_name <- subject.base_register.object_with_name;
             end;
-            emit simple(opc$move, 0, subject.base_register, t44, nil);
+            emit simple(opc$move, 0, subject.base_register, t12, nil);
             emit simple(opc$adj_move, 0, nil, nil, nil);
           else
-            emit simple(opc$add, 0, subject, subject.base_register, t44);
+            emit simple(opc$add, 0, subject, subject.base_register, t12);
           end;
         elsif result.c162 = 1 then
-          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t44, nil);
+          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t12, nil);
         else
-          t45 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-          emit load(opc$loadl, 0, t45, t45.base_register, t44, t45.il, 0, t45.bits_known, t45.bits_trusted);
+          t13 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+          emit load(opc$loadl, 0, t13, t13.base_register, t12, t13.il, 0, t13.bits_known, t13.bits_trusted);
         end;
-        t46 <- subject.bits_trusted;
-        t47 <- subject.bits_known;
-        t48 <- subject.il;
-        emit load(opc$loadbu, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t44, solution, t48, 0, t47, t46);
+        emit load(opc$loadbu, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t12, solution, subject.il, 0, subject.bits_known, subject.bits_trusted);
       end;
       if result.c163 = 1 then
         emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -860,89 +678,19 @@ transform 381  ip_reg <- address_mode
     temp t5: solution;
     temp t6: solution;
     temp t7: solution;
-    temp t8: integer32;
-    temp t9: integer32;
-    temp t10: pointer;
+    temp t8: solution;
+    temp t9: solution;
+    temp t10: solution;
     temp t11: solution;
-    temp t12: integer32;
-    temp t13: integer32;
-    temp t14: pointer;
+    temp t12: solution;
+    temp t13: solution;
+    temp t14: solution;
     temp t15: solution;
-    temp t16: integer32;
-    temp t17: integer32;
-    temp t18: pointer;
+    temp t16: solution;
+    temp t17: solution;
+    temp t18: solution;
     temp t19: solution;
-    temp t20: integer32;
-    temp t21: integer32;
-    temp t22: pointer;
-    temp t23: solution;
-    temp t24: solution;
-    temp t25: solution;
-    temp t26: integer32;
-    temp t27: integer32;
-    temp t28: pointer;
-    temp t29: integer32;
-    temp t30: integer32;
-    temp t31: pointer;
-    temp t32: integer32;
-    temp t33: integer32;
-    temp t34: pointer;
-    temp t35: integer32;
-    temp t36: integer32;
-    temp t37: pointer;
-    temp t38: solution;
-    temp t39: solution;
-    temp t40: solution;
-    temp t41: integer32;
-    temp t42: integer32;
-    temp t43: pointer;
-    temp t44: solution;
-    temp t45: integer32;
-    temp t46: integer32;
-    temp t47: pointer;
-    temp t48: solution;
-    temp t49: integer32;
-    temp t50: integer32;
-    temp t51: pointer;
-    temp t52: solution;
-    temp t53: solution;
-    temp t54: solution;
-    temp t55: integer32;
-    temp t56: integer32;
-    temp t57: pointer;
-    temp t58: integer32;
-    temp t59: integer32;
-    temp t60: pointer;
-    temp t61: integer32;
-    temp t62: integer32;
-    temp t63: pointer;
-    temp t64: solution;
-    temp t65: solution;
-    temp t66: integer32;
-    temp t67: integer32;
-    temp t68: pointer;
-    temp t69: solution;
-    temp t70: integer32;
-    temp t71: integer32;
-    temp t72: pointer;
-    temp t73: solution;
-    temp t74: solution;
-    temp t75: solution;
-    temp t76: integer32;
-    temp t77: integer32;
-    temp t78: pointer;
-    temp t79: integer32;
-    temp t80: integer32;
-    temp t81: pointer;
-    temp t82: integer32;
-    temp t83: integer32;
-    temp t84: pointer;
-    temp t85: solution;
-    temp t86: solution;
-    temp t87: solution;
-    temp t88: integer32;
-    temp t89: integer32;
-    temp t90: pointer;
+    temp t20: solution;
     if subject.is_physical then
       t1 <- 128;
     else
@@ -969,62 +717,34 @@ transform 381  ip_reg <- address_mode
       t6 <- create_solution_for_ip_reg();
       t7 <- create_solution_for_ip_reg();
       if result.c137 = 1 then
-        t8 <- subject.bits_trusted;
-        t9 <- subject.bits_known;
-        t10 <- subject.il;
-        t11 <- subject.base_register;
-        emit load(opc$loadbu, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), t11, t4, t10, 0, t9, t8);
-        t12 <- subject.bits_trusted;
-        t13 <- subject.bits_known;
-        t14 <- subject.il;
-        t15 <- subject.base_register;
-        emit load(opc$loadbu, t3 + t1 + t2, duplicate_address_mode_adding_byte_offset(subject, 1), t15, t5, t14, 1, t13, t12);
-        t16 <- subject.bits_trusted;
-        t17 <- subject.bits_known;
-        t18 <- subject.il;
-        t19 <- subject.base_register;
-        emit load(opc$loadbu, t3 + t1 + t2, duplicate_address_mode_adding_byte_offset(subject, 2), t19, t6, t18, 2, t17, t16);
-        t20 <- subject.bits_trusted;
-        t21 <- subject.bits_known;
-        t22 <- subject.il;
-        t23 <- subject.base_register;
-        emit load(opc$loadbu, t3 + t1 + t2, duplicate_address_mode_adding_byte_offset(subject, 3), t23, t7, t22, 3, t21, t20);
+        emit load(opc$loadbu, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t4, subject.il, 0, subject.bits_known, subject.bits_trusted);
+        emit load(opc$loadbu, t3 + t1 + t2, duplicate_address_mode_adding_byte_offset(subject, 1), subject.base_register, t5, subject.il, 1, subject.bits_known, subject.bits_trusted);
+        emit load(opc$loadbu, t3 + t1 + t2, duplicate_address_mode_adding_byte_offset(subject, 2), subject.base_register, t6, subject.il, 2, subject.bits_known, subject.bits_trusted);
+        emit load(opc$loadbu, t3 + t1 + t2, duplicate_address_mode_adding_byte_offset(subject, 3), subject.base_register, t7, subject.il, 3, subject.bits_known, subject.bits_trusted);
       else
-        t24 <- create_solution_for_ip_reg();
+        t8 <- create_solution_for_ip_reg();
         if result.c138 = 1 then
           if result.c139 = 1 then
-            if t24.object_with_name <> nil then
-              t24.object_with_name <- t24.object_with_name;
+            if t8.object_with_name <> nil then
+              t8.object_with_name <- t8.object_with_name;
             else
-              t24.object_with_name <- subject.base_register.object_with_name;
+              t8.object_with_name <- subject.base_register.object_with_name;
             end;
-            emit simple(opc$move, 0, subject.base_register, t24, nil);
+            emit simple(opc$move, 0, subject.base_register, t8, nil);
             emit simple(opc$adj_move, 0, nil, nil, nil);
           else
-            emit simple(opc$add, 0, subject, subject.base_register, t24);
+            emit simple(opc$add, 0, subject, subject.base_register, t8);
           end;
         elsif result.c140 = 1 then
-          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t24, nil);
+          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t8, nil);
         else
-          t25 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-          emit load(opc$loadl, 0, t25, t25.base_register, t24, t25.il, 0, t25.bits_known, t25.bits_trusted);
+          t9 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+          emit load(opc$loadl, 0, t9, t9.base_register, t8, t9.il, 0, t9.bits_known, t9.bits_trusted);
         end;
-        t26 <- subject.bits_trusted;
-        t27 <- subject.bits_known;
-        t28 <- subject.il;
-        emit load(opc$loadbu, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t24, t4, t28, 0, t27, t26);
-        t29 <- subject.bits_trusted;
-        t30 <- subject.bits_known;
-        t31 <- subject.il;
-        emit load(opc$loadbu, t3 + t1 + t2, find_well_known_literal_solution(1), t24, t5, t31, 1, t30, t29);
-        t32 <- subject.bits_trusted;
-        t33 <- subject.bits_known;
-        t34 <- subject.il;
-        emit load(opc$loadbu, t3 + t1 + t2, find_well_known_literal_solution(2), t24, t6, t34, 2, t33, t32);
-        t35 <- subject.bits_trusted;
-        t36 <- subject.bits_known;
-        t37 <- subject.il;
-        emit load(opc$loadbu, t3 + t1 + t2, find_well_known_literal_solution(3), t24, t7, t37, 3, t36, t35);
+        emit load(opc$loadbu, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t8, t4, subject.il, 0, subject.bits_known, subject.bits_trusted);
+        emit load(opc$loadbu, t3 + t1 + t2, find_well_known_literal_solution(1), t8, t5, subject.il, 1, subject.bits_known, subject.bits_trusted);
+        emit load(opc$loadbu, t3 + t1 + t2, find_well_known_literal_solution(2), t8, t6, subject.il, 2, subject.bits_known, subject.bits_trusted);
+        emit load(opc$loadbu, t3 + t1 + t2, find_well_known_literal_solution(3), t8, t7, subject.il, 3, subject.bits_known, subject.bits_trusted);
       end;
       emit field(opc$insert, 0, 8, t4, find_well_known_literal_solution(8), t5);
       emit field(opc$insert, 0, 16, t5, find_well_known_literal_solution(8), t6);
@@ -1035,145 +755,103 @@ transform 381  ip_reg <- address_mode
       emit simple(opc$move, 0, t7, solution, nil);
       emit simple(opc$adj_move, 0, nil, nil, nil);
     elsif result.c136 = 2 then
-      t38 <- create_solution_for_ip_reg();
-      t39 <- create_solution_for_ip_reg();
-      t40 <- create_solution_for_ip_reg();
+      t10 <- create_solution_for_ip_reg();
+      t11 <- create_solution_for_ip_reg();
+      t12 <- create_solution_for_ip_reg();
       if result.c142 = 1 then
-        t41 <- subject.bits_trusted;
-        t42 <- subject.bits_known;
-        t43 <- subject.il;
-        t44 <- subject.base_register;
-        emit load(opc$loadbu, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), t44, t38, t43, 0, t42, t41);
-        t45 <- subject.bits_trusted;
-        t46 <- subject.bits_known;
-        t47 <- subject.il;
-        t48 <- subject.base_register;
-        emit load(opc$loadbu, t3 + t1 + t2, duplicate_address_mode_adding_byte_offset(subject, 1), t48, t39, t47, 1, t46, t45);
-        t49 <- subject.bits_trusted;
-        t50 <- subject.bits_known;
-        t51 <- subject.il;
-        t52 <- subject.base_register;
-        emit load(opc$loadbu, t3 + t1 + t2, duplicate_address_mode_adding_byte_offset(subject, 2), t52, t40, t51, 2, t50, t49);
+        emit load(opc$loadbu, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t10, subject.il, 0, subject.bits_known, subject.bits_trusted);
+        emit load(opc$loadbu, t3 + t1 + t2, duplicate_address_mode_adding_byte_offset(subject, 1), subject.base_register, t11, subject.il, 1, subject.bits_known, subject.bits_trusted);
+        emit load(opc$loadbu, t3 + t1 + t2, duplicate_address_mode_adding_byte_offset(subject, 2), subject.base_register, t12, subject.il, 2, subject.bits_known, subject.bits_trusted);
       else
-        t53 <- create_solution_for_ip_reg();
+        t13 <- create_solution_for_ip_reg();
         if result.c143 = 1 then
           if result.c144 = 1 then
-            if t53.object_with_name <> nil then
-              t53.object_with_name <- t53.object_with_name;
+            if t13.object_with_name <> nil then
+              t13.object_with_name <- t13.object_with_name;
             else
-              t53.object_with_name <- subject.base_register.object_with_name;
+              t13.object_with_name <- subject.base_register.object_with_name;
             end;
-            emit simple(opc$move, 0, subject.base_register, t53, nil);
+            emit simple(opc$move, 0, subject.base_register, t13, nil);
             emit simple(opc$adj_move, 0, nil, nil, nil);
           else
-            emit simple(opc$add, 0, subject, subject.base_register, t53);
+            emit simple(opc$add, 0, subject, subject.base_register, t13);
           end;
         elsif result.c145 = 1 then
-          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t53, nil);
+          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t13, nil);
         else
-          t54 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-          emit load(opc$loadl, 0, t54, t54.base_register, t53, t54.il, 0, t54.bits_known, t54.bits_trusted);
+          t14 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+          emit load(opc$loadl, 0, t14, t14.base_register, t13, t14.il, 0, t14.bits_known, t14.bits_trusted);
         end;
-        t55 <- subject.bits_trusted;
-        t56 <- subject.bits_known;
-        t57 <- subject.il;
-        emit load(opc$loadbu, result.l352 + (t3 + t1 + t2), find_well_known_literal_solution(0), t53, t38, t57, 0, t56, t55);
-        t58 <- subject.bits_trusted;
-        t59 <- subject.bits_known;
-        t60 <- subject.il;
-        emit load(opc$loadbu, t3 + t1 + t2, find_well_known_literal_solution(1), t53, t39, t60, 1, t59, t58);
-        t61 <- subject.bits_trusted;
-        t62 <- subject.bits_known;
-        t63 <- subject.il;
-        emit load(opc$loadbu, t3 + t1 + t2, find_well_known_literal_solution(2), t53, t40, t63, 2, t62, t61);
+        emit load(opc$loadbu, result.l352 + (t3 + t1 + t2), find_well_known_literal_solution(0), t13, t10, subject.il, 0, subject.bits_known, subject.bits_trusted);
+        emit load(opc$loadbu, t3 + t1 + t2, find_well_known_literal_solution(1), t13, t11, subject.il, 1, subject.bits_known, subject.bits_trusted);
+        emit load(opc$loadbu, t3 + t1 + t2, find_well_known_literal_solution(2), t13, t12, subject.il, 2, subject.bits_known, subject.bits_trusted);
       end;
-      emit field(opc$insert, 0, 8, t38, find_well_known_literal_solution(8), t39);
-      emit field(opc$insert, 0, 16, t39, find_well_known_literal_solution(8), t40);
+      emit field(opc$insert, 0, 8, t10, find_well_known_literal_solution(8), t11);
+      emit field(opc$insert, 0, 16, t11, find_well_known_literal_solution(8), t12);
       if result.c146 = 1 then
         emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
       end;
-      emit simple(opc$move, 0, t40, solution, nil);
+      emit simple(opc$move, 0, t12, solution, nil);
       emit simple(opc$adj_move, 0, nil, nil, nil);
     elsif result.c136 = 3 then
-      t64 <- create_solution_for_ip_reg();
-      t65 <- create_solution_for_ip_reg();
+      t15 <- create_solution_for_ip_reg();
+      t16 <- create_solution_for_ip_reg();
       if result.c147 = 1 then
-        t66 <- subject.bits_trusted;
-        t67 <- subject.bits_known;
-        t68 <- subject.il;
-        t69 <- subject.base_register;
-        emit load(opc$loadbu, result.l352 + (t3 + t1 + t2), duplicate_address_mode_adding_byte_offset(subject, 0), t69, t64, t68, 0, t67, t66);
-        t70 <- subject.bits_trusted;
-        t71 <- subject.bits_known;
-        t72 <- subject.il;
-        t73 <- subject.base_register;
-        emit load(opc$loadbu, t3 + t1 + t2, duplicate_address_mode_adding_byte_offset(subject, 1), t73, t65, t72, 1, t71, t70);
+        emit load(opc$loadbu, result.l352 + (t3 + t1 + t2), duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t15, subject.il, 0, subject.bits_known, subject.bits_trusted);
+        emit load(opc$loadbu, t3 + t1 + t2, duplicate_address_mode_adding_byte_offset(subject, 1), subject.base_register, t16, subject.il, 1, subject.bits_known, subject.bits_trusted);
       else
-        t74 <- create_solution_for_ip_reg();
+        t17 <- create_solution_for_ip_reg();
         if result.c148 = 1 then
           if result.c149 = 1 then
-            if t74.object_with_name <> nil then
-              t74.object_with_name <- t74.object_with_name;
+            if t17.object_with_name <> nil then
+              t17.object_with_name <- t17.object_with_name;
             else
-              t74.object_with_name <- subject.base_register.object_with_name;
+              t17.object_with_name <- subject.base_register.object_with_name;
             end;
-            emit simple(opc$move, 0, subject.base_register, t74, nil);
+            emit simple(opc$move, 0, subject.base_register, t17, nil);
             emit simple(opc$adj_move, 0, nil, nil, nil);
           else
-            emit simple(opc$add, 0, subject, subject.base_register, t74);
+            emit simple(opc$add, 0, subject, subject.base_register, t17);
           end;
         elsif result.c150 = 1 then
-          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t74, nil);
+          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t17, nil);
         else
-          t75 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-          emit load(opc$loadl, 0, t75, t75.base_register, t74, t75.il, 0, t75.bits_known, t75.bits_trusted);
+          t18 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+          emit load(opc$loadl, 0, t18, t18.base_register, t17, t18.il, 0, t18.bits_known, t18.bits_trusted);
         end;
-        t76 <- subject.bits_trusted;
-        t77 <- subject.bits_known;
-        t78 <- subject.il;
-        emit load(opc$loadbu, result.l352 + (t3 + t1 + t2), find_well_known_literal_solution(0), t74, t64, t78, 0, t77, t76);
-        t79 <- subject.bits_trusted;
-        t80 <- subject.bits_known;
-        t81 <- subject.il;
-        emit load(opc$loadbu, t3 + t1 + t2, find_well_known_literal_solution(1), t74, t65, t81, 1, t80, t79);
+        emit load(opc$loadbu, result.l352 + (t3 + t1 + t2), find_well_known_literal_solution(0), t17, t15, subject.il, 0, subject.bits_known, subject.bits_trusted);
+        emit load(opc$loadbu, t3 + t1 + t2, find_well_known_literal_solution(1), t17, t16, subject.il, 1, subject.bits_known, subject.bits_trusted);
       end;
-      emit field(opc$insert, 0, 8, t64, find_well_known_literal_solution(8), t65);
+      emit field(opc$insert, 0, 8, t15, find_well_known_literal_solution(8), t16);
       if result.c151 = 1 then
         emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
       end;
-      emit simple(opc$move, 0, t65, solution, nil);
+      emit simple(opc$move, 0, t16, solution, nil);
       emit simple(opc$adj_move, 0, nil, nil, nil);
     elsif result.c136 = 4 then
       if result.c152 = 1 then
-        t82 <- subject.bits_trusted;
-        t83 <- subject.bits_known;
-        t84 <- subject.il;
-        t85 <- subject.base_register;
-        emit load(opc$loadbu, result.l352 + (t3 + t1 + t2), duplicate_address_mode_adding_byte_offset(subject, 0), t85, solution, t84, 0, t83, t82);
+        emit load(opc$loadbu, result.l352 + (t3 + t1 + t2), duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, solution, subject.il, 0, subject.bits_known, subject.bits_trusted);
       else
-        t86 <- create_solution_for_ip_reg();
+        t19 <- create_solution_for_ip_reg();
         if result.c153 = 1 then
           if result.c154 = 1 then
-            if t86.object_with_name <> nil then
-              t86.object_with_name <- t86.object_with_name;
+            if t19.object_with_name <> nil then
+              t19.object_with_name <- t19.object_with_name;
             else
-              t86.object_with_name <- subject.base_register.object_with_name;
+              t19.object_with_name <- subject.base_register.object_with_name;
             end;
-            emit simple(opc$move, 0, subject.base_register, t86, nil);
+            emit simple(opc$move, 0, subject.base_register, t19, nil);
             emit simple(opc$adj_move, 0, nil, nil, nil);
           else
-            emit simple(opc$add, 0, subject, subject.base_register, t86);
+            emit simple(opc$add, 0, subject, subject.base_register, t19);
           end;
         elsif result.c155 = 1 then
-          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t86, nil);
+          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t19, nil);
         else
-          t87 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-          emit load(opc$loadl, 0, t87, t87.base_register, t86, t87.il, 0, t87.bits_known, t87.bits_trusted);
+          t20 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+          emit load(opc$loadl, 0, t20, t20.base_register, t19, t20.il, 0, t20.bits_known, t20.bits_trusted);
         end;
-        t88 <- subject.bits_trusted;
-        t89 <- subject.bits_known;
-        t90 <- subject.il;
-        emit load(opc$loadbu, result.l352 + (t3 + t1 + t2), find_well_known_literal_solution(0), t86, solution, t90, 0, t89, t88);
+        emit load(opc$loadbu, result.l352 + (t3 + t1 + t2), find_well_known_literal_solution(0), t19, solution, subject.il, 0, subject.bits_known, subject.bits_trusted);
       end;
       if result.c156 = 1 then
         emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -1195,43 +873,15 @@ transform 382  fp_reg <- address_mode
     temp t4: integer32;
     temp t5: integer32;
     temp t6: integer32;
-    temp t7: integer32;
-    temp t8: integer32;
-    temp t9: pointer;
+    temp t7: solution;
+    temp t8: solution;
+    temp t9: solution;
     temp t10: solution;
     temp t11: solution;
     temp t12: solution;
-    temp t13: integer32;
-    temp t14: integer32;
-    temp t15: pointer;
-    temp t16: solution;
-    temp t17: integer32;
-    temp t18: integer32;
-    temp t19: pointer;
-    temp t20: solution;
-    temp t21: solution;
-    temp t22: solution;
-    temp t23: integer32;
-    temp t24: integer32;
-    temp t25: pointer;
-    temp t26: solution;
-    temp t27: solution;
-    temp t28: integer32;
-    temp t29: integer32;
-    temp t30: pointer;
-    temp t31: solution;
-    temp t32: integer32;
-    temp t33: integer32;
-    temp t34: pointer;
-    temp t35: solution;
-    temp t36: solution;
-    temp t37: solution;
-    temp t38: integer32;
-    temp t39: integer32;
-    temp t40: pointer;
-    temp t41: integer32;
-    temp t42: integer32;
-    temp t43: pointer;
+    temp t13: solution;
+    temp t14: solution;
+    temp t15: solution;
     if subject.is_physical then
       t1 <- 128;
     else
@@ -1272,35 +922,28 @@ transform 382  fp_reg <- address_mode
     end;
     if result.c137 = 1 then
       if result.c138 = 1 then
-        t7 <- subject.bits_trusted;
-        t8 <- subject.bits_known;
-        t9 <- subject.il;
-        t10 <- subject.base_register;
-        emit load(opc$loads, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), t10, solution, t9, 0, t8, t7);
+        emit load(opc$loads, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, solution, subject.il, 0, subject.bits_known, subject.bits_trusted);
       else
-        t11 <- create_solution_for_ip_reg();
+        t7 <- create_solution_for_ip_reg();
         if result.c139 = 1 then
           if result.c140 = 1 then
-            if t11.object_with_name <> nil then
-              t11.object_with_name <- t11.object_with_name;
+            if t7.object_with_name <> nil then
+              t7.object_with_name <- t7.object_with_name;
             else
-              t11.object_with_name <- subject.base_register.object_with_name;
+              t7.object_with_name <- subject.base_register.object_with_name;
             end;
-            emit simple(opc$move, 0, subject.base_register, t11, nil);
+            emit simple(opc$move, 0, subject.base_register, t7, nil);
             emit simple(opc$adj_move, 0, nil, nil, nil);
           else
-            emit simple(opc$add, 0, subject, subject.base_register, t11);
+            emit simple(opc$add, 0, subject, subject.base_register, t7);
           end;
         elsif result.c141 = 1 then
-          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t11, nil);
+          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t7, nil);
         else
-          t12 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-          emit load(opc$loadl, 0, t12, t12.base_register, t11, t12.il, 0, t12.bits_known, t12.bits_trusted);
+          t8 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+          emit load(opc$loadl, 0, t8, t8.base_register, t7, t8.il, 0, t8.bits_known, t8.bits_trusted);
         end;
-        t13 <- subject.bits_trusted;
-        t14 <- subject.bits_known;
-        t15 <- subject.il;
-        emit load(opc$loads, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t11, solution, t15, 0, t14, t13);
+        emit load(opc$loads, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t7, solution, subject.il, 0, subject.bits_known, subject.bits_trusted);
       end;
       if result.c142 = 1 then
         emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -1309,95 +952,74 @@ transform 382  fp_reg <- address_mode
       emit simple(opc$costly, 0, nil, nil, nil);
       pattern_match_error(15, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
     else
-      t16 <- create_solution_for_ip_reg();
-      if t16.object_with_name <> nil then
-        t16.object_with_name <- t16.object_with_name;
+      t9 <- create_solution_for_ip_reg();
+      if t9.object_with_name <> nil then
+        t9.object_with_name <- t9.object_with_name;
       else
-        t16.object_with_name <- subject.object_with_name;
+        t9.object_with_name <- subject.object_with_name;
       end;
       if result.c143 = 1 then
         if result.c144 = 1 then
-          t17 <- subject.bits_trusted;
-          t18 <- subject.bits_known;
-          t19 <- subject.il;
-          t20 <- subject.base_register;
-          emit load(opc$loadl, t6 + t4 + t5 + result.l356, duplicate_address_mode_adding_byte_offset(subject, 0), t20, t16, t19, 0, t18, t17);
+          emit load(opc$loadl, t6 + t4 + t5 + result.l356, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t9, subject.il, 0, subject.bits_known, subject.bits_trusted);
         else
-          t21 <- create_solution_for_ip_reg();
+          t10 <- create_solution_for_ip_reg();
           if result.c145 = 1 then
             if result.c146 = 1 then
-              if t21.object_with_name <> nil then
-                t21.object_with_name <- t21.object_with_name;
+              if t10.object_with_name <> nil then
+                t10.object_with_name <- t10.object_with_name;
               else
-                t21.object_with_name <- subject.base_register.object_with_name;
+                t10.object_with_name <- subject.base_register.object_with_name;
               end;
-              emit simple(opc$move, 0, subject.base_register, t21, nil);
+              emit simple(opc$move, 0, subject.base_register, t10, nil);
               emit simple(opc$adj_move, 0, nil, nil, nil);
             else
-              emit simple(opc$add, 0, subject, subject.base_register, t21);
+              emit simple(opc$add, 0, subject, subject.base_register, t10);
             end;
           elsif result.c147 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t21, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t10, nil);
           else
-            t22 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-            emit load(opc$loadl, 0, t22, t22.base_register, t21, t22.il, 0, t22.bits_known, t22.bits_trusted);
+            t11 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+            emit load(opc$loadl, 0, t11, t11.base_register, t10, t11.il, 0, t11.bits_known, t11.bits_trusted);
           end;
-          t23 <- subject.bits_trusted;
-          t24 <- subject.bits_known;
-          t25 <- subject.il;
-          emit load(opc$loadl, t6 + t4 + t5 + result.l356, find_well_known_literal_solution(0), t21, t16, t25, 0, t24, t23);
+          emit load(opc$loadl, t6 + t4 + t5 + result.l356, find_well_known_literal_solution(0), t10, t9, subject.il, 0, subject.bits_known, subject.bits_trusted);
         end;
         if result.c148 = 1 then
           emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
         end;
       elsif result.c143 = 2 then
-        t26 <- create_solution_for_ip_reg();
-        t27 <- create_solution_for_ip_reg();
+        t12 <- create_solution_for_ip_reg();
+        t13 <- create_solution_for_ip_reg();
         if result.c149 = 1 then
-          t28 <- subject.bits_trusted;
-          t29 <- subject.bits_known;
-          t30 <- subject.il;
-          t31 <- subject.base_register;
-          emit load(opc$loadwu, t6 + t4 + t5 + result.l356, duplicate_address_mode_adding_byte_offset(subject, 0), t31, t26, t30, 0, t29, t28);
-          t32 <- subject.bits_trusted;
-          t33 <- subject.bits_known;
-          t34 <- subject.il;
-          t35 <- subject.base_register;
-          emit load(opc$loadwu, t6 + t4 + t5, duplicate_address_mode_adding_byte_offset(subject, 2), t35, t27, t34, 2, t33, t32);
+          emit load(opc$loadwu, t6 + t4 + t5 + result.l356, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t12, subject.il, 0, subject.bits_known, subject.bits_trusted);
+          emit load(opc$loadwu, t6 + t4 + t5, duplicate_address_mode_adding_byte_offset(subject, 2), subject.base_register, t13, subject.il, 2, subject.bits_known, subject.bits_trusted);
         else
-          t36 <- create_solution_for_ip_reg();
+          t14 <- create_solution_for_ip_reg();
           if result.c150 = 1 then
             if result.c151 = 1 then
-              if t36.object_with_name <> nil then
-                t36.object_with_name <- t36.object_with_name;
+              if t14.object_with_name <> nil then
+                t14.object_with_name <- t14.object_with_name;
               else
-                t36.object_with_name <- subject.base_register.object_with_name;
+                t14.object_with_name <- subject.base_register.object_with_name;
               end;
-              emit simple(opc$move, 0, subject.base_register, t36, nil);
+              emit simple(opc$move, 0, subject.base_register, t14, nil);
               emit simple(opc$adj_move, 0, nil, nil, nil);
             else
-              emit simple(opc$add, 0, subject, subject.base_register, t36);
+              emit simple(opc$add, 0, subject, subject.base_register, t14);
             end;
           elsif result.c152 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t36, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t14, nil);
           else
-            t37 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-            emit load(opc$loadl, 0, t37, t37.base_register, t36, t37.il, 0, t37.bits_known, t37.bits_trusted);
+            t15 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+            emit load(opc$loadl, 0, t15, t15.base_register, t14, t15.il, 0, t15.bits_known, t15.bits_trusted);
           end;
-          t38 <- subject.bits_trusted;
-          t39 <- subject.bits_known;
-          t40 <- subject.il;
-          emit load(opc$loadwu, t6 + t4 + t5 + result.l356, find_well_known_literal_solution(0), t36, t26, t40, 0, t39, t38);
-          t41 <- subject.bits_trusted;
-          t42 <- subject.bits_known;
-          t43 <- subject.il;
-          emit load(opc$loadwu, t6 + t4 + t5, find_well_known_literal_solution(2), t36, t27, t43, 2, t42, t41);
+          emit load(opc$loadwu, t6 + t4 + t5 + result.l356, find_well_known_literal_solution(0), t14, t12, subject.il, 0, subject.bits_known, subject.bits_trusted);
+          emit load(opc$loadwu, t6 + t4 + t5, find_well_known_literal_solution(2), t14, t13, subject.il, 2, subject.bits_known, subject.bits_trusted);
         end;
         if result.c153 = 1 then
           warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
         end;
-        emit field(opc$insert, 0, 16, t26, find_well_known_literal_solution(16), t27);
-        emit simple(opc$move, 0, t27, t16, nil);
+        emit field(opc$insert, 0, 16, t12, find_well_known_literal_solution(16), t13);
+        emit simple(opc$move, 0, t13, t9, nil);
         emit simple(opc$adj_move, 0, nil, nil, nil);
       end;
       if result.c154 <> 1 then
@@ -1409,7 +1031,7 @@ transform 382  fp_reg <- address_mode
           warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
         end;
       end;
-      emit simple(opc$mtfp, 0, t16, solution, nil);
+      emit simple(opc$mtfp, 0, t9, solution, nil);
     end;
   end;
 end;
@@ -1432,91 +1054,28 @@ transform 383  fp_reg_pair <- address_mode
     temp t13: integer32;
     temp t14: integer32;
     temp t15: integer32;
-    temp t16: integer32;
-    temp t17: integer32;
-    temp t18: pointer;
+    temp t16: solution;
+    temp t17: solution;
+    temp t18: solution;
     temp t19: solution;
     temp t20: solution;
     temp t21: solution;
-    temp t22: integer32;
-    temp t23: integer32;
-    temp t24: pointer;
+    temp t22: solution;
+    temp t23: solution;
+    temp t24: solution;
     temp t25: solution;
     temp t26: solution;
-    temp t27: integer32;
-    temp t28: integer32;
-    temp t29: pointer;
+    temp t27: solution;
+    temp t28: solution;
+    temp t29: solution;
     temp t30: solution;
     temp t31: solution;
     temp t32: solution;
-    temp t33: integer32;
-    temp t34: integer32;
-    temp t35: pointer;
+    temp t33: solution;
+    temp t34: solution;
+    temp t35: solution;
     temp t36: solution;
-    temp t37: integer32;
-    temp t38: integer32;
-    temp t39: pointer;
-    temp t40: solution;
-    temp t41: solution;
-    temp t42: solution;
-    temp t43: integer32;
-    temp t44: integer32;
-    temp t45: pointer;
-    temp t46: solution;
-    temp t47: solution;
-    temp t48: integer32;
-    temp t49: integer32;
-    temp t50: pointer;
-    temp t51: solution;
-    temp t52: integer32;
-    temp t53: integer32;
-    temp t54: pointer;
-    temp t55: solution;
-    temp t56: solution;
-    temp t57: solution;
-    temp t58: integer32;
-    temp t59: integer32;
-    temp t60: pointer;
-    temp t61: integer32;
-    temp t62: integer32;
-    temp t63: pointer;
-    temp t64: integer32;
-    temp t65: integer32;
-    temp t66: pointer;
-    temp t67: solution;
-    temp t68: solution;
-    temp t69: solution;
-    temp t70: integer32;
-    temp t71: integer32;
-    temp t72: pointer;
-    temp t73: solution;
-    temp t74: integer32;
-    temp t75: integer32;
-    temp t76: pointer;
-    temp t77: solution;
-    temp t78: solution;
-    temp t79: solution;
-    temp t80: integer32;
-    temp t81: integer32;
-    temp t82: pointer;
-    temp t83: solution;
-    temp t84: solution;
-    temp t85: integer32;
-    temp t86: integer32;
-    temp t87: pointer;
-    temp t88: solution;
-    temp t89: integer32;
-    temp t90: integer32;
-    temp t91: pointer;
-    temp t92: solution;
-    temp t93: solution;
-    temp t94: solution;
-    temp t95: integer32;
-    temp t96: integer32;
-    temp t97: pointer;
-    temp t98: integer32;
-    temp t99: integer32;
-    temp t100: pointer;
+    temp t37: solution;
     if subject.is_physical then
       t1 <- 128;
     else
@@ -1608,35 +1167,28 @@ transform 383  fp_reg_pair <- address_mode
     end;
     if result.c139 = 1 then
       if result.c140 = 1 then
-        t16 <- subject.bits_trusted;
-        t17 <- subject.bits_known;
-        t18 <- subject.il;
-        t19 <- subject.base_register;
-        emit load(opc$loadd, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), t19, solution, t18, 0, t17, t16);
+        emit load(opc$loadd, t3 + t1 + t2 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, solution, subject.il, 0, subject.bits_known, subject.bits_trusted);
       else
-        t20 <- create_solution_for_ip_reg();
+        t16 <- create_solution_for_ip_reg();
         if result.c141 = 1 then
           if result.c142 = 1 then
-            if t20.object_with_name <> nil then
-              t20.object_with_name <- t20.object_with_name;
+            if t16.object_with_name <> nil then
+              t16.object_with_name <- t16.object_with_name;
             else
-              t20.object_with_name <- subject.base_register.object_with_name;
+              t16.object_with_name <- subject.base_register.object_with_name;
             end;
-            emit simple(opc$move, 0, subject.base_register, t20, nil);
+            emit simple(opc$move, 0, subject.base_register, t16, nil);
             emit simple(opc$adj_move, 0, nil, nil, nil);
           else
-            emit simple(opc$add, 0, subject, subject.base_register, t20);
+            emit simple(opc$add, 0, subject, subject.base_register, t16);
           end;
         elsif result.c143 = 1 then
-          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t20, nil);
+          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t16, nil);
         else
-          t21 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-          emit load(opc$loadl, 0, t21, t21.base_register, t20, t21.il, 0, t21.bits_known, t21.bits_trusted);
+          t17 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+          emit load(opc$loadl, 0, t17, t17.base_register, t16, t17.il, 0, t17.bits_known, t17.bits_trusted);
         end;
-        t22 <- subject.bits_trusted;
-        t23 <- subject.bits_known;
-        t24 <- subject.il;
-        emit load(opc$loadd, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t20, solution, t24, 0, t23, t22);
+        emit load(opc$loadd, t3 + t1 + t2 + result.l352, find_well_known_literal_solution(0), t16, solution, subject.il, 0, subject.bits_known, subject.bits_trusted);
       end;
       if result.c144 = 1 then
         emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -1645,47 +1197,40 @@ transform 383  fp_reg_pair <- address_mode
       emit simple(opc$costly, 0, nil, nil, nil);
       pattern_match_error(15, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
     else
-      t25 <- high_half_of_fp_reg_pair(solution);
-      t26 <- low_half_of_fp_reg_pair(solution);
+      t18 <- high_half_of_fp_reg_pair(solution);
+      t19 <- low_half_of_fp_reg_pair(solution);
       if result.c145 = 1 then
         pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
       end;
-      if t25.object_with_name <> nil then
-        t25.object_with_name <- t25.object_with_name;
+      if t18.object_with_name <> nil then
+        t18.object_with_name <- t18.object_with_name;
       else
-        t25.object_with_name <- subject.object_with_name;
+        t18.object_with_name <- subject.object_with_name;
       end;
       if result.c146 = 1 then
         if result.c147 = 1 then
-          t27 <- subject.bits_trusted;
-          t28 <- subject.bits_known;
-          t29 <- subject.il;
-          t30 <- subject.base_register;
-          emit load(opc$loads, t4 + t6 + t5 + result.l356, duplicate_address_mode_adding_byte_offset(subject, 0), t30, t25, t29, 0, t28, t27);
+          emit load(opc$loads, t4 + t6 + t5 + result.l356, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t18, subject.il, 0, subject.bits_known, subject.bits_trusted);
         else
-          t31 <- create_solution_for_ip_reg();
+          t20 <- create_solution_for_ip_reg();
           if result.c148 = 1 then
             if result.c149 = 1 then
-              if t31.object_with_name <> nil then
-                t31.object_with_name <- t31.object_with_name;
+              if t20.object_with_name <> nil then
+                t20.object_with_name <- t20.object_with_name;
               else
-                t31.object_with_name <- subject.base_register.object_with_name;
+                t20.object_with_name <- subject.base_register.object_with_name;
               end;
-              emit simple(opc$move, 0, subject.base_register, t31, nil);
+              emit simple(opc$move, 0, subject.base_register, t20, nil);
               emit simple(opc$adj_move, 0, nil, nil, nil);
             else
-              emit simple(opc$add, 0, subject, subject.base_register, t31);
+              emit simple(opc$add, 0, subject, subject.base_register, t20);
             end;
           elsif result.c150 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t31, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t20, nil);
           else
-            t32 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-            emit load(opc$loadl, 0, t32, t32.base_register, t31, t32.il, 0, t32.bits_known, t32.bits_trusted);
+            t21 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+            emit load(opc$loadl, 0, t21, t21.base_register, t20, t21.il, 0, t21.bits_known, t21.bits_trusted);
           end;
-          t33 <- subject.bits_trusted;
-          t34 <- subject.bits_known;
-          t35 <- subject.il;
-          emit load(opc$loads, t4 + t6 + t5 + result.l356, find_well_known_literal_solution(0), t31, t25, t35, 0, t34, t33);
+          emit load(opc$loads, t4 + t6 + t5 + result.l356, find_well_known_literal_solution(0), t20, t18, subject.il, 0, subject.bits_known, subject.bits_trusted);
         end;
         if result.c151 = 1 then
           emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -1694,95 +1239,74 @@ transform 383  fp_reg_pair <- address_mode
         emit simple(opc$costly, 0, nil, nil, nil);
         pattern_match_error(15, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
       else
-        t36 <- create_solution_for_ip_reg();
-        if t36.object_with_name <> nil then
-          t36.object_with_name <- t36.object_with_name;
+        t22 <- create_solution_for_ip_reg();
+        if t22.object_with_name <> nil then
+          t22.object_with_name <- t22.object_with_name;
         else
-          t36.object_with_name <- subject.object_with_name;
+          t22.object_with_name <- subject.object_with_name;
         end;
         if result.c152 = 1 then
           if result.c153 = 1 then
-            t37 <- subject.bits_trusted;
-            t38 <- subject.bits_known;
-            t39 <- subject.il;
-            t40 <- subject.base_register;
-            emit load(opc$loadl, t9 + t7 + t8 + result.l360, duplicate_address_mode_adding_byte_offset(subject, 0), t40, t36, t39, 0, t38, t37);
+            emit load(opc$loadl, t9 + t7 + t8 + result.l360, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t22, subject.il, 0, subject.bits_known, subject.bits_trusted);
           else
-            t41 <- create_solution_for_ip_reg();
+            t23 <- create_solution_for_ip_reg();
             if result.c154 = 1 then
               if result.c155 = 1 then
-                if t41.object_with_name <> nil then
-                  t41.object_with_name <- t41.object_with_name;
+                if t23.object_with_name <> nil then
+                  t23.object_with_name <- t23.object_with_name;
                 else
-                  t41.object_with_name <- subject.base_register.object_with_name;
+                  t23.object_with_name <- subject.base_register.object_with_name;
                 end;
-                emit simple(opc$move, 0, subject.base_register, t41, nil);
+                emit simple(opc$move, 0, subject.base_register, t23, nil);
                 emit simple(opc$adj_move, 0, nil, nil, nil);
               else
-                emit simple(opc$add, 0, subject, subject.base_register, t41);
+                emit simple(opc$add, 0, subject, subject.base_register, t23);
               end;
             elsif result.c156 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t41, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t23, nil);
             else
-              t42 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-              emit load(opc$loadl, 0, t42, t42.base_register, t41, t42.il, 0, t42.bits_known, t42.bits_trusted);
+              t24 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+              emit load(opc$loadl, 0, t24, t24.base_register, t23, t24.il, 0, t24.bits_known, t24.bits_trusted);
             end;
-            t43 <- subject.bits_trusted;
-            t44 <- subject.bits_known;
-            t45 <- subject.il;
-            emit load(opc$loadl, t9 + t7 + t8 + result.l360, find_well_known_literal_solution(0), t41, t36, t45, 0, t44, t43);
+            emit load(opc$loadl, t9 + t7 + t8 + result.l360, find_well_known_literal_solution(0), t23, t22, subject.il, 0, subject.bits_known, subject.bits_trusted);
           end;
           if result.c157 = 1 then
             emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
           end;
         elsif result.c152 = 2 then
-          t46 <- create_solution_for_ip_reg();
-          t47 <- create_solution_for_ip_reg();
+          t25 <- create_solution_for_ip_reg();
+          t26 <- create_solution_for_ip_reg();
           if result.c158 = 1 then
-            t48 <- subject.bits_trusted;
-            t49 <- subject.bits_known;
-            t50 <- subject.il;
-            t51 <- subject.base_register;
-            emit load(opc$loadwu, t9 + t7 + t8 + result.l360, duplicate_address_mode_adding_byte_offset(subject, 0), t51, t46, t50, 0, t49, t48);
-            t52 <- subject.bits_trusted;
-            t53 <- subject.bits_known;
-            t54 <- subject.il;
-            t55 <- subject.base_register;
-            emit load(opc$loadwu, t9 + t7 + t8, duplicate_address_mode_adding_byte_offset(subject, 2), t55, t47, t54, 2, t53, t52);
+            emit load(opc$loadwu, t9 + t7 + t8 + result.l360, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t25, subject.il, 0, subject.bits_known, subject.bits_trusted);
+            emit load(opc$loadwu, t9 + t7 + t8, duplicate_address_mode_adding_byte_offset(subject, 2), subject.base_register, t26, subject.il, 2, subject.bits_known, subject.bits_trusted);
           else
-            t56 <- create_solution_for_ip_reg();
+            t27 <- create_solution_for_ip_reg();
             if result.c159 = 1 then
               if result.c160 = 1 then
-                if t56.object_with_name <> nil then
-                  t56.object_with_name <- t56.object_with_name;
+                if t27.object_with_name <> nil then
+                  t27.object_with_name <- t27.object_with_name;
                 else
-                  t56.object_with_name <- subject.base_register.object_with_name;
+                  t27.object_with_name <- subject.base_register.object_with_name;
                 end;
-                emit simple(opc$move, 0, subject.base_register, t56, nil);
+                emit simple(opc$move, 0, subject.base_register, t27, nil);
                 emit simple(opc$adj_move, 0, nil, nil, nil);
               else
-                emit simple(opc$add, 0, subject, subject.base_register, t56);
+                emit simple(opc$add, 0, subject, subject.base_register, t27);
               end;
             elsif result.c161 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t56, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t27, nil);
             else
-              t57 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-              emit load(opc$loadl, 0, t57, t57.base_register, t56, t57.il, 0, t57.bits_known, t57.bits_trusted);
+              t28 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+              emit load(opc$loadl, 0, t28, t28.base_register, t27, t28.il, 0, t28.bits_known, t28.bits_trusted);
             end;
-            t58 <- subject.bits_trusted;
-            t59 <- subject.bits_known;
-            t60 <- subject.il;
-            emit load(opc$loadwu, t9 + t7 + t8 + result.l360, find_well_known_literal_solution(0), t56, t46, t60, 0, t59, t58);
-            t61 <- subject.bits_trusted;
-            t62 <- subject.bits_known;
-            t63 <- subject.il;
-            emit load(opc$loadwu, t9 + t7 + t8, find_well_known_literal_solution(2), t56, t47, t63, 2, t62, t61);
+            emit load(opc$loadwu, t9 + t7 + t8 + result.l360, find_well_known_literal_solution(0), t27, t25, subject.il, 0, subject.bits_known, subject.bits_trusted);
+            emit load(opc$loadwu, t9 + t7 + t8, find_well_known_literal_solution(2), t27, t26, subject.il, 2, subject.bits_known, subject.bits_trusted);
           end;
           if result.c162 = 1 then
             warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
           end;
-          emit field(opc$insert, 0, 16, t46, find_well_known_literal_solution(16), t47);
-          emit simple(opc$move, 0, t47, t36, nil);
+          emit field(opc$insert, 0, 16, t25, find_well_known_literal_solution(16), t26);
+          emit simple(opc$move, 0, t26, t22, nil);
           emit simple(opc$adj_move, 0, nil, nil, nil);
         end;
         if result.c163 <> 1 then
@@ -1794,47 +1318,40 @@ transform 383  fp_reg_pair <- address_mode
             warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
           end;
         end;
-        emit simple(opc$mtfp, 0, t36, t25, nil);
+        emit simple(opc$mtfp, 0, t22, t18, nil);
       end;
       if result.c166 = 1 then
         pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
       end;
-      if t26.object_with_name <> nil then
-        t26.object_with_name <- t26.object_with_name;
+      if t19.object_with_name <> nil then
+        t19.object_with_name <- t19.object_with_name;
       else
-        t26.object_with_name <- subject.object_with_name;
+        t19.object_with_name <- subject.object_with_name;
       end;
       if result.c167 = 1 then
         if result.c168 = 1 then
-          t64 <- subject.bits_trusted;
-          t65 <- subject.bits_known;
-          t66 <- subject.il;
-          t67 <- subject.base_register;
-          emit load(opc$loads, t10 + t12 + t11 + result.l364, duplicate_address_mode_adding_byte_offset(subject, 4), t67, t26, t66, 4, t65, t64);
+          emit load(opc$loads, t10 + t12 + t11 + result.l364, duplicate_address_mode_adding_byte_offset(subject, 4), subject.base_register, t19, subject.il, 4, subject.bits_known, subject.bits_trusted);
         else
-          t68 <- create_solution_for_ip_reg();
+          t29 <- create_solution_for_ip_reg();
           if result.c169 = 1 then
             if result.c170 = 1 then
-              if t68.object_with_name <> nil then
-                t68.object_with_name <- t68.object_with_name;
+              if t29.object_with_name <> nil then
+                t29.object_with_name <- t29.object_with_name;
               else
-                t68.object_with_name <- subject.base_register.object_with_name;
+                t29.object_with_name <- subject.base_register.object_with_name;
               end;
-              emit simple(opc$move, 0, subject.base_register, t68, nil);
+              emit simple(opc$move, 0, subject.base_register, t29, nil);
               emit simple(opc$adj_move, 0, nil, nil, nil);
             else
-              emit simple(opc$add, 0, subject, subject.base_register, t68);
+              emit simple(opc$add, 0, subject, subject.base_register, t29);
             end;
           elsif result.c171 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t68, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t29, nil);
           else
-            t69 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-            emit load(opc$loadl, 0, t69, t69.base_register, t68, t69.il, 0, t69.bits_known, t69.bits_trusted);
+            t30 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+            emit load(opc$loadl, 0, t30, t30.base_register, t29, t30.il, 0, t30.bits_known, t30.bits_trusted);
           end;
-          t70 <- subject.bits_trusted;
-          t71 <- subject.bits_known;
-          t72 <- subject.il;
-          emit load(opc$loads, t10 + t12 + t11 + result.l364, find_well_known_literal_solution(4), t68, t26, t72, 4, t71, t70);
+          emit load(opc$loads, t10 + t12 + t11 + result.l364, find_well_known_literal_solution(4), t29, t19, subject.il, 4, subject.bits_known, subject.bits_trusted);
         end;
         if result.c172 = 1 then
           emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -1843,95 +1360,74 @@ transform 383  fp_reg_pair <- address_mode
         emit simple(opc$costly, 0, nil, nil, nil);
         pattern_match_error(15, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
       else
-        t73 <- create_solution_for_ip_reg();
-        if t73.object_with_name <> nil then
-          t73.object_with_name <- t73.object_with_name;
+        t31 <- create_solution_for_ip_reg();
+        if t31.object_with_name <> nil then
+          t31.object_with_name <- t31.object_with_name;
         else
-          t73.object_with_name <- subject.object_with_name;
+          t31.object_with_name <- subject.object_with_name;
         end;
         if result.c173 = 1 then
           if result.c174 = 1 then
-            t74 <- subject.bits_trusted;
-            t75 <- subject.bits_known;
-            t76 <- subject.il;
-            t77 <- subject.base_register;
-            emit load(opc$loadl, t13 + t15 + t14 + result.l368, duplicate_address_mode_adding_byte_offset(subject, 4), t77, t73, t76, 4, t75, t74);
+            emit load(opc$loadl, t13 + t15 + t14 + result.l368, duplicate_address_mode_adding_byte_offset(subject, 4), subject.base_register, t31, subject.il, 4, subject.bits_known, subject.bits_trusted);
           else
-            t78 <- create_solution_for_ip_reg();
+            t32 <- create_solution_for_ip_reg();
             if result.c175 = 1 then
               if result.c176 = 1 then
-                if t78.object_with_name <> nil then
-                  t78.object_with_name <- t78.object_with_name;
+                if t32.object_with_name <> nil then
+                  t32.object_with_name <- t32.object_with_name;
                 else
-                  t78.object_with_name <- subject.base_register.object_with_name;
+                  t32.object_with_name <- subject.base_register.object_with_name;
                 end;
-                emit simple(opc$move, 0, subject.base_register, t78, nil);
+                emit simple(opc$move, 0, subject.base_register, t32, nil);
                 emit simple(opc$adj_move, 0, nil, nil, nil);
               else
-                emit simple(opc$add, 0, subject, subject.base_register, t78);
+                emit simple(opc$add, 0, subject, subject.base_register, t32);
               end;
             elsif result.c177 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t78, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t32, nil);
             else
-              t79 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-              emit load(opc$loadl, 0, t79, t79.base_register, t78, t79.il, 0, t79.bits_known, t79.bits_trusted);
+              t33 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+              emit load(opc$loadl, 0, t33, t33.base_register, t32, t33.il, 0, t33.bits_known, t33.bits_trusted);
             end;
-            t80 <- subject.bits_trusted;
-            t81 <- subject.bits_known;
-            t82 <- subject.il;
-            emit load(opc$loadl, t13 + t15 + t14 + result.l368, find_well_known_literal_solution(4), t78, t73, t82, 4, t81, t80);
+            emit load(opc$loadl, t13 + t15 + t14 + result.l368, find_well_known_literal_solution(4), t32, t31, subject.il, 4, subject.bits_known, subject.bits_trusted);
           end;
           if result.c178 = 1 then
             emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
           end;
         elsif result.c173 = 2 then
-          t83 <- create_solution_for_ip_reg();
-          t84 <- create_solution_for_ip_reg();
+          t34 <- create_solution_for_ip_reg();
+          t35 <- create_solution_for_ip_reg();
           if result.c179 = 1 then
-            t85 <- subject.bits_trusted;
-            t86 <- subject.bits_known;
-            t87 <- subject.il;
-            t88 <- subject.base_register;
-            emit load(opc$loadwu, result.l368 + (t13 + t15 + t14), duplicate_address_mode_adding_byte_offset(subject, 4), t88, t83, t87, 4, t86, t85);
-            t89 <- subject.bits_trusted;
-            t90 <- subject.bits_known;
-            t91 <- subject.il;
-            t92 <- subject.base_register;
-            emit load(opc$loadwu, t13 + t15 + t14, duplicate_address_mode_adding_byte_offset(subject, 6), t92, t84, t91, 6, t90, t89);
+            emit load(opc$loadwu, result.l368 + (t13 + t15 + t14), duplicate_address_mode_adding_byte_offset(subject, 4), subject.base_register, t34, subject.il, 4, subject.bits_known, subject.bits_trusted);
+            emit load(opc$loadwu, t13 + t15 + t14, duplicate_address_mode_adding_byte_offset(subject, 6), subject.base_register, t35, subject.il, 6, subject.bits_known, subject.bits_trusted);
           else
-            t93 <- create_solution_for_ip_reg();
+            t36 <- create_solution_for_ip_reg();
             if result.c180 = 1 then
               if result.c181 = 1 then
-                if t93.object_with_name <> nil then
-                  t93.object_with_name <- t93.object_with_name;
+                if t36.object_with_name <> nil then
+                  t36.object_with_name <- t36.object_with_name;
                 else
-                  t93.object_with_name <- subject.base_register.object_with_name;
+                  t36.object_with_name <- subject.base_register.object_with_name;
                 end;
-                emit simple(opc$move, 0, subject.base_register, t93, nil);
+                emit simple(opc$move, 0, subject.base_register, t36, nil);
                 emit simple(opc$adj_move, 0, nil, nil, nil);
               else
-                emit simple(opc$add, 0, subject, subject.base_register, t93);
+                emit simple(opc$add, 0, subject, subject.base_register, t36);
               end;
             elsif result.c182 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t93, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t36, nil);
             else
-              t94 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-              emit load(opc$loadl, 0, t94, t94.base_register, t93, t94.il, 0, t94.bits_known, t94.bits_trusted);
+              t37 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+              emit load(opc$loadl, 0, t37, t37.base_register, t36, t37.il, 0, t37.bits_known, t37.bits_trusted);
             end;
-            t95 <- subject.bits_trusted;
-            t96 <- subject.bits_known;
-            t97 <- subject.il;
-            emit load(opc$loadwu, result.l368 + (t13 + t15 + t14), find_well_known_literal_solution(4), t93, t83, t97, 4, t96, t95);
-            t98 <- subject.bits_trusted;
-            t99 <- subject.bits_known;
-            t100 <- subject.il;
-            emit load(opc$loadwu, t13 + t15 + t14, find_well_known_literal_solution(6), t93, t84, t100, 6, t99, t98);
+            emit load(opc$loadwu, result.l368 + (t13 + t15 + t14), find_well_known_literal_solution(4), t36, t34, subject.il, 4, subject.bits_known, subject.bits_trusted);
+            emit load(opc$loadwu, t13 + t15 + t14, find_well_known_literal_solution(6), t36, t35, subject.il, 6, subject.bits_known, subject.bits_trusted);
           end;
           if result.c183 = 1 then
             warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
           end;
-          emit field(opc$insert, 0, 16, t83, find_well_known_literal_solution(16), t84);
-          emit simple(opc$move, 0, t84, t73, nil);
+          emit field(opc$insert, 0, 16, t34, find_well_known_literal_solution(16), t35);
+          emit simple(opc$move, 0, t35, t31, nil);
           emit simple(opc$adj_move, 0, nil, nil, nil);
         end;
         if result.c184 <> 1 then
@@ -1943,9 +1439,9 @@ transform 383  fp_reg_pair <- address_mode
             warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
           end;
         end;
-        emit simple(opc$mtfp, 0, t73, t26, nil);
+        emit simple(opc$mtfp, 0, t31, t19, nil);
       end;
-      solution.live_range <- t25.live_range;
+      solution.live_range <- t18.live_range;
     end;
   end;
 end;
@@ -1985,176 +1481,50 @@ transform 384  fp_reg_quad <- address_mode
     temp t30: integer32;
     temp t31: integer32;
     temp t32: integer32;
-    temp t33: integer32;
-    temp t34: integer32;
-    temp t35: pointer;
+    temp t33: solution;
+    temp t34: solution;
+    temp t35: solution;
     temp t36: solution;
     temp t37: solution;
     temp t38: solution;
-    temp t39: integer32;
-    temp t40: integer32;
-    temp t41: pointer;
+    temp t39: solution;
+    temp t40: solution;
+    temp t41: solution;
     temp t42: solution;
     temp t43: solution;
-    temp t44: integer32;
-    temp t45: integer32;
-    temp t46: pointer;
+    temp t44: solution;
+    temp t45: solution;
+    temp t46: solution;
     temp t47: solution;
     temp t48: solution;
     temp t49: solution;
-    temp t50: integer32;
-    temp t51: integer32;
-    temp t52: pointer;
+    temp t50: solution;
+    temp t51: solution;
+    temp t52: solution;
     temp t53: solution;
-    temp t54: integer32;
-    temp t55: integer32;
-    temp t56: pointer;
+    temp t54: solution;
+    temp t55: solution;
+    temp t56: solution;
     temp t57: solution;
     temp t58: solution;
     temp t59: solution;
-    temp t60: integer32;
-    temp t61: integer32;
-    temp t62: pointer;
+    temp t60: solution;
+    temp t61: solution;
+    temp t62: solution;
     temp t63: solution;
     temp t64: solution;
-    temp t65: integer32;
-    temp t66: integer32;
-    temp t67: pointer;
+    temp t65: solution;
+    temp t66: solution;
+    temp t67: solution;
     temp t68: solution;
-    temp t69: integer32;
-    temp t70: integer32;
-    temp t71: pointer;
+    temp t69: solution;
+    temp t70: solution;
+    temp t71: solution;
     temp t72: solution;
     temp t73: solution;
     temp t74: solution;
-    temp t75: integer32;
-    temp t76: integer32;
-    temp t77: pointer;
-    temp t78: integer32;
-    temp t79: integer32;
-    temp t80: pointer;
-    temp t81: integer32;
-    temp t82: integer32;
-    temp t83: pointer;
-    temp t84: solution;
-    temp t85: solution;
-    temp t86: solution;
-    temp t87: integer32;
-    temp t88: integer32;
-    temp t89: pointer;
-    temp t90: solution;
-    temp t91: integer32;
-    temp t92: integer32;
-    temp t93: pointer;
-    temp t94: solution;
-    temp t95: solution;
-    temp t96: solution;
-    temp t97: integer32;
-    temp t98: integer32;
-    temp t99: pointer;
-    temp t100: solution;
-    temp t101: solution;
-    temp t102: integer32;
-    temp t103: integer32;
-    temp t104: pointer;
-    temp t105: solution;
-    temp t106: integer32;
-    temp t107: integer32;
-    temp t108: pointer;
-    temp t109: solution;
-    temp t110: solution;
-    temp t111: solution;
-    temp t112: integer32;
-    temp t113: integer32;
-    temp t114: pointer;
-    temp t115: integer32;
-    temp t116: integer32;
-    temp t117: pointer;
-    temp t118: integer32;
-    temp t119: integer32;
-    temp t120: pointer;
-    temp t121: solution;
-    temp t122: solution;
-    temp t123: solution;
-    temp t124: integer32;
-    temp t125: integer32;
-    temp t126: pointer;
-    temp t127: solution;
-    temp t128: solution;
-    temp t129: integer32;
-    temp t130: integer32;
-    temp t131: pointer;
-    temp t132: solution;
-    temp t133: solution;
-    temp t134: solution;
-    temp t135: integer32;
-    temp t136: integer32;
-    temp t137: pointer;
-    temp t138: solution;
-    temp t139: integer32;
-    temp t140: integer32;
-    temp t141: pointer;
-    temp t142: solution;
-    temp t143: solution;
-    temp t144: solution;
-    temp t145: integer32;
-    temp t146: integer32;
-    temp t147: pointer;
-    temp t148: solution;
-    temp t149: solution;
-    temp t150: integer32;
-    temp t151: integer32;
-    temp t152: pointer;
-    temp t153: solution;
-    temp t154: integer32;
-    temp t155: integer32;
-    temp t156: pointer;
-    temp t157: solution;
-    temp t158: solution;
-    temp t159: solution;
-    temp t160: integer32;
-    temp t161: integer32;
-    temp t162: pointer;
-    temp t163: integer32;
-    temp t164: integer32;
-    temp t165: pointer;
-    temp t166: integer32;
-    temp t167: integer32;
-    temp t168: pointer;
-    temp t169: solution;
-    temp t170: solution;
-    temp t171: solution;
-    temp t172: integer32;
-    temp t173: integer32;
-    temp t174: pointer;
-    temp t175: solution;
-    temp t176: integer32;
-    temp t177: integer32;
-    temp t178: pointer;
-    temp t179: solution;
-    temp t180: solution;
-    temp t181: solution;
-    temp t182: integer32;
-    temp t183: integer32;
-    temp t184: pointer;
-    temp t185: solution;
-    temp t186: solution;
-    temp t187: integer32;
-    temp t188: integer32;
-    temp t189: pointer;
-    temp t190: solution;
-    temp t191: integer32;
-    temp t192: integer32;
-    temp t193: pointer;
-    temp t194: solution;
-    temp t195: solution;
-    temp t196: solution;
-    temp t197: integer32;
-    temp t198: integer32;
-    temp t199: pointer;
-    temp t200: integer32;
-    temp t201: integer32;
-    temp t202: pointer;
+    temp t75: solution;
+    temp t76: solution;
     t1 <- create_solution_for_fp_reg_pair();
     t2 <- create_solution_for_fp_reg_pair();
     if subject.is_physical then
@@ -2334,35 +1704,28 @@ transform 384  fp_reg_quad <- address_mode
     end;
     if result.c141 = 1 then
       if result.c142 = 1 then
-        t33 <- subject.bits_trusted;
-        t34 <- subject.bits_known;
-        t35 <- subject.il;
-        t36 <- subject.base_register;
-        emit load(opc$loadd, t3 + t5 + t4 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), t36, t1, t35, 0, t34, t33);
+        emit load(opc$loadd, t3 + t5 + t4 + result.l352, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t1, subject.il, 0, subject.bits_known, subject.bits_trusted);
       else
-        t37 <- create_solution_for_ip_reg();
+        t33 <- create_solution_for_ip_reg();
         if result.c143 = 1 then
           if result.c144 = 1 then
-            if t37.object_with_name <> nil then
-              t37.object_with_name <- t37.object_with_name;
+            if t33.object_with_name <> nil then
+              t33.object_with_name <- t33.object_with_name;
             else
-              t37.object_with_name <- subject.base_register.object_with_name;
+              t33.object_with_name <- subject.base_register.object_with_name;
             end;
-            emit simple(opc$move, 0, subject.base_register, t37, nil);
+            emit simple(opc$move, 0, subject.base_register, t33, nil);
             emit simple(opc$adj_move, 0, nil, nil, nil);
           else
-            emit simple(opc$add, 0, subject, subject.base_register, t37);
+            emit simple(opc$add, 0, subject, subject.base_register, t33);
           end;
         elsif result.c145 = 1 then
-          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t37, nil);
+          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t33, nil);
         else
-          t38 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-          emit load(opc$loadl, 0, t38, t38.base_register, t37, t38.il, 0, t38.bits_known, t38.bits_trusted);
+          t34 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+          emit load(opc$loadl, 0, t34, t34.base_register, t33, t34.il, 0, t34.bits_known, t34.bits_trusted);
         end;
-        t39 <- subject.bits_trusted;
-        t40 <- subject.bits_known;
-        t41 <- subject.il;
-        emit load(opc$loadd, t3 + t5 + t4 + result.l352, find_well_known_literal_solution(0), t37, t1, t41, 0, t40, t39);
+        emit load(opc$loadd, t3 + t5 + t4 + result.l352, find_well_known_literal_solution(0), t33, t1, subject.il, 0, subject.bits_known, subject.bits_trusted);
       end;
       if result.c146 = 1 then
         emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -2371,47 +1734,40 @@ transform 384  fp_reg_quad <- address_mode
       emit simple(opc$costly, 0, nil, nil, nil);
       pattern_match_error(15, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
     else
-      t42 <- high_half_of_fp_reg_pair(t1);
-      t43 <- low_half_of_fp_reg_pair(t1);
+      t35 <- high_half_of_fp_reg_pair(t1);
+      t36 <- low_half_of_fp_reg_pair(t1);
       if result.c147 = 1 then
         pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
       end;
-      if t42.object_with_name <> nil then
-        t42.object_with_name <- t42.object_with_name;
+      if t35.object_with_name <> nil then
+        t35.object_with_name <- t35.object_with_name;
       else
-        t42.object_with_name <- subject.object_with_name;
+        t35.object_with_name <- subject.object_with_name;
       end;
       if result.c148 = 1 then
         if result.c149 = 1 then
-          t44 <- subject.bits_trusted;
-          t45 <- subject.bits_known;
-          t46 <- subject.il;
-          t47 <- subject.base_register;
-          emit load(opc$loads, t6 + t8 + t7 + result.l356, duplicate_address_mode_adding_byte_offset(subject, 0), t47, t42, t46, 0, t45, t44);
+          emit load(opc$loads, t6 + t8 + t7 + result.l356, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t35, subject.il, 0, subject.bits_known, subject.bits_trusted);
         else
-          t48 <- create_solution_for_ip_reg();
+          t37 <- create_solution_for_ip_reg();
           if result.c150 = 1 then
             if result.c151 = 1 then
-              if t48.object_with_name <> nil then
-                t48.object_with_name <- t48.object_with_name;
+              if t37.object_with_name <> nil then
+                t37.object_with_name <- t37.object_with_name;
               else
-                t48.object_with_name <- subject.base_register.object_with_name;
+                t37.object_with_name <- subject.base_register.object_with_name;
               end;
-              emit simple(opc$move, 0, subject.base_register, t48, nil);
+              emit simple(opc$move, 0, subject.base_register, t37, nil);
               emit simple(opc$adj_move, 0, nil, nil, nil);
             else
-              emit simple(opc$add, 0, subject, subject.base_register, t48);
+              emit simple(opc$add, 0, subject, subject.base_register, t37);
             end;
           elsif result.c152 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t48, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t37, nil);
           else
-            t49 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-            emit load(opc$loadl, 0, t49, t49.base_register, t48, t49.il, 0, t49.bits_known, t49.bits_trusted);
+            t38 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+            emit load(opc$loadl, 0, t38, t38.base_register, t37, t38.il, 0, t38.bits_known, t38.bits_trusted);
           end;
-          t50 <- subject.bits_trusted;
-          t51 <- subject.bits_known;
-          t52 <- subject.il;
-          emit load(opc$loads, t6 + t8 + t7 + result.l356, find_well_known_literal_solution(0), t48, t42, t52, 0, t51, t50);
+          emit load(opc$loads, t6 + t8 + t7 + result.l356, find_well_known_literal_solution(0), t37, t35, subject.il, 0, subject.bits_known, subject.bits_trusted);
         end;
         if result.c153 = 1 then
           emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -2420,95 +1776,74 @@ transform 384  fp_reg_quad <- address_mode
         emit simple(opc$costly, 0, nil, nil, nil);
         pattern_match_error(15, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
       else
-        t53 <- create_solution_for_ip_reg();
-        if t53.object_with_name <> nil then
-          t53.object_with_name <- t53.object_with_name;
+        t39 <- create_solution_for_ip_reg();
+        if t39.object_with_name <> nil then
+          t39.object_with_name <- t39.object_with_name;
         else
-          t53.object_with_name <- subject.object_with_name;
+          t39.object_with_name <- subject.object_with_name;
         end;
         if result.c154 = 1 then
           if result.c155 = 1 then
-            t54 <- subject.bits_trusted;
-            t55 <- subject.bits_known;
-            t56 <- subject.il;
-            t57 <- subject.base_register;
-            emit load(opc$loadl, t11 + t9 + t10 + result.l360, duplicate_address_mode_adding_byte_offset(subject, 0), t57, t53, t56, 0, t55, t54);
+            emit load(opc$loadl, t11 + t9 + t10 + result.l360, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t39, subject.il, 0, subject.bits_known, subject.bits_trusted);
           else
-            t58 <- create_solution_for_ip_reg();
+            t40 <- create_solution_for_ip_reg();
             if result.c156 = 1 then
               if result.c157 = 1 then
-                if t58.object_with_name <> nil then
-                  t58.object_with_name <- t58.object_with_name;
+                if t40.object_with_name <> nil then
+                  t40.object_with_name <- t40.object_with_name;
                 else
-                  t58.object_with_name <- subject.base_register.object_with_name;
+                  t40.object_with_name <- subject.base_register.object_with_name;
                 end;
-                emit simple(opc$move, 0, subject.base_register, t58, nil);
+                emit simple(opc$move, 0, subject.base_register, t40, nil);
                 emit simple(opc$adj_move, 0, nil, nil, nil);
               else
-                emit simple(opc$add, 0, subject, subject.base_register, t58);
+                emit simple(opc$add, 0, subject, subject.base_register, t40);
               end;
             elsif result.c158 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t58, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t40, nil);
             else
-              t59 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-              emit load(opc$loadl, 0, t59, t59.base_register, t58, t59.il, 0, t59.bits_known, t59.bits_trusted);
+              t41 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+              emit load(opc$loadl, 0, t41, t41.base_register, t40, t41.il, 0, t41.bits_known, t41.bits_trusted);
             end;
-            t60 <- subject.bits_trusted;
-            t61 <- subject.bits_known;
-            t62 <- subject.il;
-            emit load(opc$loadl, t11 + t9 + t10 + result.l360, find_well_known_literal_solution(0), t58, t53, t62, 0, t61, t60);
+            emit load(opc$loadl, t11 + t9 + t10 + result.l360, find_well_known_literal_solution(0), t40, t39, subject.il, 0, subject.bits_known, subject.bits_trusted);
           end;
           if result.c159 = 1 then
             emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
           end;
         elsif result.c154 = 2 then
-          t63 <- create_solution_for_ip_reg();
-          t64 <- create_solution_for_ip_reg();
+          t42 <- create_solution_for_ip_reg();
+          t43 <- create_solution_for_ip_reg();
           if result.c160 = 1 then
-            t65 <- subject.bits_trusted;
-            t66 <- subject.bits_known;
-            t67 <- subject.il;
-            t68 <- subject.base_register;
-            emit load(opc$loadwu, t11 + t9 + t10 + result.l360, duplicate_address_mode_adding_byte_offset(subject, 0), t68, t63, t67, 0, t66, t65);
-            t69 <- subject.bits_trusted;
-            t70 <- subject.bits_known;
-            t71 <- subject.il;
-            t72 <- subject.base_register;
-            emit load(opc$loadwu, t11 + t9 + t10, duplicate_address_mode_adding_byte_offset(subject, 2), t72, t64, t71, 2, t70, t69);
+            emit load(opc$loadwu, t11 + t9 + t10 + result.l360, duplicate_address_mode_adding_byte_offset(subject, 0), subject.base_register, t42, subject.il, 0, subject.bits_known, subject.bits_trusted);
+            emit load(opc$loadwu, t11 + t9 + t10, duplicate_address_mode_adding_byte_offset(subject, 2), subject.base_register, t43, subject.il, 2, subject.bits_known, subject.bits_trusted);
           else
-            t73 <- create_solution_for_ip_reg();
+            t44 <- create_solution_for_ip_reg();
             if result.c161 = 1 then
               if result.c162 = 1 then
-                if t73.object_with_name <> nil then
-                  t73.object_with_name <- t73.object_with_name;
+                if t44.object_with_name <> nil then
+                  t44.object_with_name <- t44.object_with_name;
                 else
-                  t73.object_with_name <- subject.base_register.object_with_name;
+                  t44.object_with_name <- subject.base_register.object_with_name;
                 end;
-                emit simple(opc$move, 0, subject.base_register, t73, nil);
+                emit simple(opc$move, 0, subject.base_register, t44, nil);
                 emit simple(opc$adj_move, 0, nil, nil, nil);
               else
-                emit simple(opc$add, 0, subject, subject.base_register, t73);
+                emit simple(opc$add, 0, subject, subject.base_register, t44);
               end;
             elsif result.c163 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t73, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t44, nil);
             else
-              t74 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-              emit load(opc$loadl, 0, t74, t74.base_register, t73, t74.il, 0, t74.bits_known, t74.bits_trusted);
+              t45 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+              emit load(opc$loadl, 0, t45, t45.base_register, t44, t45.il, 0, t45.bits_known, t45.bits_trusted);
             end;
-            t75 <- subject.bits_trusted;
-            t76 <- subject.bits_known;
-            t77 <- subject.il;
-            emit load(opc$loadwu, t11 + t9 + t10 + result.l360, find_well_known_literal_solution(0), t73, t63, t77, 0, t76, t75);
-            t78 <- subject.bits_trusted;
-            t79 <- subject.bits_known;
-            t80 <- subject.il;
-            emit load(opc$loadwu, t11 + t9 + t10, find_well_known_literal_solution(2), t73, t64, t80, 2, t79, t78);
+            emit load(opc$loadwu, t11 + t9 + t10 + result.l360, find_well_known_literal_solution(0), t44, t42, subject.il, 0, subject.bits_known, subject.bits_trusted);
+            emit load(opc$loadwu, t11 + t9 + t10, find_well_known_literal_solution(2), t44, t43, subject.il, 2, subject.bits_known, subject.bits_trusted);
           end;
           if result.c164 = 1 then
             warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
           end;
-          emit field(opc$insert, 0, 16, t63, find_well_known_literal_solution(16), t64);
-          emit simple(opc$move, 0, t64, t53, nil);
+          emit field(opc$insert, 0, 16, t42, find_well_known_literal_solution(16), t43);
+          emit simple(opc$move, 0, t43, t39, nil);
           emit simple(opc$adj_move, 0, nil, nil, nil);
         end;
         if result.c165 <> 1 then
@@ -2520,47 +1855,40 @@ transform 384  fp_reg_quad <- address_mode
             warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
           end;
         end;
-        emit simple(opc$mtfp, 0, t53, t42, nil);
+        emit simple(opc$mtfp, 0, t39, t35, nil);
       end;
       if result.c168 = 1 then
         pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
       end;
-      if t43.object_with_name <> nil then
-        t43.object_with_name <- t43.object_with_name;
+      if t36.object_with_name <> nil then
+        t36.object_with_name <- t36.object_with_name;
       else
-        t43.object_with_name <- subject.object_with_name;
+        t36.object_with_name <- subject.object_with_name;
       end;
       if result.c169 = 1 then
         if result.c170 = 1 then
-          t81 <- subject.bits_trusted;
-          t82 <- subject.bits_known;
-          t83 <- subject.il;
-          t84 <- subject.base_register;
-          emit load(opc$loads, t12 + t14 + t13 + result.l364, duplicate_address_mode_adding_byte_offset(subject, 4), t84, t43, t83, 4, t82, t81);
+          emit load(opc$loads, t12 + t14 + t13 + result.l364, duplicate_address_mode_adding_byte_offset(subject, 4), subject.base_register, t36, subject.il, 4, subject.bits_known, subject.bits_trusted);
         else
-          t85 <- create_solution_for_ip_reg();
+          t46 <- create_solution_for_ip_reg();
           if result.c171 = 1 then
             if result.c172 = 1 then
-              if t85.object_with_name <> nil then
-                t85.object_with_name <- t85.object_with_name;
+              if t46.object_with_name <> nil then
+                t46.object_with_name <- t46.object_with_name;
               else
-                t85.object_with_name <- subject.base_register.object_with_name;
+                t46.object_with_name <- subject.base_register.object_with_name;
               end;
-              emit simple(opc$move, 0, subject.base_register, t85, nil);
+              emit simple(opc$move, 0, subject.base_register, t46, nil);
               emit simple(opc$adj_move, 0, nil, nil, nil);
             else
-              emit simple(opc$add, 0, subject, subject.base_register, t85);
+              emit simple(opc$add, 0, subject, subject.base_register, t46);
             end;
           elsif result.c173 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t85, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t46, nil);
           else
-            t86 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-            emit load(opc$loadl, 0, t86, t86.base_register, t85, t86.il, 0, t86.bits_known, t86.bits_trusted);
+            t47 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+            emit load(opc$loadl, 0, t47, t47.base_register, t46, t47.il, 0, t47.bits_known, t47.bits_trusted);
           end;
-          t87 <- subject.bits_trusted;
-          t88 <- subject.bits_known;
-          t89 <- subject.il;
-          emit load(opc$loads, t12 + t14 + t13 + result.l364, find_well_known_literal_solution(4), t85, t43, t89, 4, t88, t87);
+          emit load(opc$loads, t12 + t14 + t13 + result.l364, find_well_known_literal_solution(4), t46, t36, subject.il, 4, subject.bits_known, subject.bits_trusted);
         end;
         if result.c174 = 1 then
           emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -2569,95 +1897,74 @@ transform 384  fp_reg_quad <- address_mode
         emit simple(opc$costly, 0, nil, nil, nil);
         pattern_match_error(15, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
       else
-        t90 <- create_solution_for_ip_reg();
-        if t90.object_with_name <> nil then
-          t90.object_with_name <- t90.object_with_name;
+        t48 <- create_solution_for_ip_reg();
+        if t48.object_with_name <> nil then
+          t48.object_with_name <- t48.object_with_name;
         else
-          t90.object_with_name <- subject.object_with_name;
+          t48.object_with_name <- subject.object_with_name;
         end;
         if result.c175 = 1 then
           if result.c176 = 1 then
-            t91 <- subject.bits_trusted;
-            t92 <- subject.bits_known;
-            t93 <- subject.il;
-            t94 <- subject.base_register;
-            emit load(opc$loadl, t17 + t15 + t16 + result.l368, duplicate_address_mode_adding_byte_offset(subject, 4), t94, t90, t93, 4, t92, t91);
+            emit load(opc$loadl, t17 + t15 + t16 + result.l368, duplicate_address_mode_adding_byte_offset(subject, 4), subject.base_register, t48, subject.il, 4, subject.bits_known, subject.bits_trusted);
           else
-            t95 <- create_solution_for_ip_reg();
+            t49 <- create_solution_for_ip_reg();
             if result.c177 = 1 then
               if result.c178 = 1 then
-                if t95.object_with_name <> nil then
-                  t95.object_with_name <- t95.object_with_name;
+                if t49.object_with_name <> nil then
+                  t49.object_with_name <- t49.object_with_name;
                 else
-                  t95.object_with_name <- subject.base_register.object_with_name;
+                  t49.object_with_name <- subject.base_register.object_with_name;
                 end;
-                emit simple(opc$move, 0, subject.base_register, t95, nil);
+                emit simple(opc$move, 0, subject.base_register, t49, nil);
                 emit simple(opc$adj_move, 0, nil, nil, nil);
               else
-                emit simple(opc$add, 0, subject, subject.base_register, t95);
+                emit simple(opc$add, 0, subject, subject.base_register, t49);
               end;
             elsif result.c179 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t95, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t49, nil);
             else
-              t96 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-              emit load(opc$loadl, 0, t96, t96.base_register, t95, t96.il, 0, t96.bits_known, t96.bits_trusted);
+              t50 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+              emit load(opc$loadl, 0, t50, t50.base_register, t49, t50.il, 0, t50.bits_known, t50.bits_trusted);
             end;
-            t97 <- subject.bits_trusted;
-            t98 <- subject.bits_known;
-            t99 <- subject.il;
-            emit load(opc$loadl, t17 + t15 + t16 + result.l368, find_well_known_literal_solution(4), t95, t90, t99, 4, t98, t97);
+            emit load(opc$loadl, t17 + t15 + t16 + result.l368, find_well_known_literal_solution(4), t49, t48, subject.il, 4, subject.bits_known, subject.bits_trusted);
           end;
           if result.c180 = 1 then
             emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
           end;
         elsif result.c175 = 2 then
-          t100 <- create_solution_for_ip_reg();
-          t101 <- create_solution_for_ip_reg();
+          t51 <- create_solution_for_ip_reg();
+          t52 <- create_solution_for_ip_reg();
           if result.c181 = 1 then
-            t102 <- subject.bits_trusted;
-            t103 <- subject.bits_known;
-            t104 <- subject.il;
-            t105 <- subject.base_register;
-            emit load(opc$loadwu, t17 + t15 + t16 + result.l368, duplicate_address_mode_adding_byte_offset(subject, 4), t105, t100, t104, 4, t103, t102);
-            t106 <- subject.bits_trusted;
-            t107 <- subject.bits_known;
-            t108 <- subject.il;
-            t109 <- subject.base_register;
-            emit load(opc$loadwu, t17 + t15 + t16, duplicate_address_mode_adding_byte_offset(subject, 6), t109, t101, t108, 6, t107, t106);
+            emit load(opc$loadwu, t17 + t15 + t16 + result.l368, duplicate_address_mode_adding_byte_offset(subject, 4), subject.base_register, t51, subject.il, 4, subject.bits_known, subject.bits_trusted);
+            emit load(opc$loadwu, t17 + t15 + t16, duplicate_address_mode_adding_byte_offset(subject, 6), subject.base_register, t52, subject.il, 6, subject.bits_known, subject.bits_trusted);
           else
-            t110 <- create_solution_for_ip_reg();
+            t53 <- create_solution_for_ip_reg();
             if result.c182 = 1 then
               if result.c183 = 1 then
-                if t110.object_with_name <> nil then
-                  t110.object_with_name <- t110.object_with_name;
+                if t53.object_with_name <> nil then
+                  t53.object_with_name <- t53.object_with_name;
                 else
-                  t110.object_with_name <- subject.base_register.object_with_name;
+                  t53.object_with_name <- subject.base_register.object_with_name;
                 end;
-                emit simple(opc$move, 0, subject.base_register, t110, nil);
+                emit simple(opc$move, 0, subject.base_register, t53, nil);
                 emit simple(opc$adj_move, 0, nil, nil, nil);
               else
-                emit simple(opc$add, 0, subject, subject.base_register, t110);
+                emit simple(opc$add, 0, subject, subject.base_register, t53);
               end;
             elsif result.c184 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t110, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t53, nil);
             else
-              t111 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-              emit load(opc$loadl, 0, t111, t111.base_register, t110, t111.il, 0, t111.bits_known, t111.bits_trusted);
+              t54 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+              emit load(opc$loadl, 0, t54, t54.base_register, t53, t54.il, 0, t54.bits_known, t54.bits_trusted);
             end;
-            t112 <- subject.bits_trusted;
-            t113 <- subject.bits_known;
-            t114 <- subject.il;
-            emit load(opc$loadwu, t17 + t15 + t16 + result.l368, find_well_known_literal_solution(4), t110, t100, t114, 4, t113, t112);
-            t115 <- subject.bits_trusted;
-            t116 <- subject.bits_known;
-            t117 <- subject.il;
-            emit load(opc$loadwu, t17 + t15 + t16, find_well_known_literal_solution(6), t110, t101, t117, 6, t116, t115);
+            emit load(opc$loadwu, t17 + t15 + t16 + result.l368, find_well_known_literal_solution(4), t53, t51, subject.il, 4, subject.bits_known, subject.bits_trusted);
+            emit load(opc$loadwu, t17 + t15 + t16, find_well_known_literal_solution(6), t53, t52, subject.il, 6, subject.bits_known, subject.bits_trusted);
           end;
           if result.c185 = 1 then
             warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
           end;
-          emit field(opc$insert, 0, 16, t100, find_well_known_literal_solution(16), t101);
-          emit simple(opc$move, 0, t101, t90, nil);
+          emit field(opc$insert, 0, 16, t51, find_well_known_literal_solution(16), t52);
+          emit simple(opc$move, 0, t52, t48, nil);
           emit simple(opc$adj_move, 0, nil, nil, nil);
         end;
         if result.c186 <> 1 then
@@ -2669,9 +1976,9 @@ transform 384  fp_reg_quad <- address_mode
             warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
           end;
         end;
-        emit simple(opc$mtfp, 0, t90, t43, nil);
+        emit simple(opc$mtfp, 0, t48, t36, nil);
       end;
-      t1.live_range <- t42.live_range;
+      t1.live_range <- t35.live_range;
     end;
     if result.c189 = 1 then
       pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
@@ -2686,35 +1993,28 @@ transform 384  fp_reg_quad <- address_mode
     end;
     if result.c191 = 1 then
       if result.c192 = 1 then
-        t118 <- subject.bits_trusted;
-        t119 <- subject.bits_known;
-        t120 <- subject.il;
-        t121 <- subject.base_register;
-        emit load(opc$loadd, t18 + t20 + t19 + result.l372, duplicate_address_mode_adding_byte_offset(subject, 8), t121, t2, t120, 8, t119, t118);
+        emit load(opc$loadd, t18 + t20 + t19 + result.l372, duplicate_address_mode_adding_byte_offset(subject, 8), subject.base_register, t2, subject.il, 8, subject.bits_known, subject.bits_trusted);
       else
-        t122 <- create_solution_for_ip_reg();
+        t55 <- create_solution_for_ip_reg();
         if result.c193 = 1 then
           if result.c194 = 1 then
-            if t122.object_with_name <> nil then
-              t122.object_with_name <- t122.object_with_name;
+            if t55.object_with_name <> nil then
+              t55.object_with_name <- t55.object_with_name;
             else
-              t122.object_with_name <- subject.base_register.object_with_name;
+              t55.object_with_name <- subject.base_register.object_with_name;
             end;
-            emit simple(opc$move, 0, subject.base_register, t122, nil);
+            emit simple(opc$move, 0, subject.base_register, t55, nil);
             emit simple(opc$adj_move, 0, nil, nil, nil);
           else
-            emit simple(opc$add, 0, subject, subject.base_register, t122);
+            emit simple(opc$add, 0, subject, subject.base_register, t55);
           end;
         elsif result.c195 = 1 then
-          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t122, nil);
+          emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t55, nil);
         else
-          t123 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-          emit load(opc$loadl, 0, t123, t123.base_register, t122, t123.il, 0, t123.bits_known, t123.bits_trusted);
+          t56 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+          emit load(opc$loadl, 0, t56, t56.base_register, t55, t56.il, 0, t56.bits_known, t56.bits_trusted);
         end;
-        t124 <- subject.bits_trusted;
-        t125 <- subject.bits_known;
-        t126 <- subject.il;
-        emit load(opc$loadd, t18 + t20 + t19 + result.l372, find_well_known_literal_solution(8), t122, t2, t126, 8, t125, t124);
+        emit load(opc$loadd, t18 + t20 + t19 + result.l372, find_well_known_literal_solution(8), t55, t2, subject.il, 8, subject.bits_known, subject.bits_trusted);
       end;
       if result.c196 = 1 then
         emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -2723,47 +2023,40 @@ transform 384  fp_reg_quad <- address_mode
       emit simple(opc$costly, 0, nil, nil, nil);
       pattern_match_error(15, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
     else
-      t127 <- high_half_of_fp_reg_pair(t2);
-      t128 <- low_half_of_fp_reg_pair(t2);
+      t57 <- high_half_of_fp_reg_pair(t2);
+      t58 <- low_half_of_fp_reg_pair(t2);
       if result.c197 = 1 then
         pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
       end;
-      if t127.object_with_name <> nil then
-        t127.object_with_name <- t127.object_with_name;
+      if t57.object_with_name <> nil then
+        t57.object_with_name <- t57.object_with_name;
       else
-        t127.object_with_name <- subject.object_with_name;
+        t57.object_with_name <- subject.object_with_name;
       end;
       if result.c198 = 1 then
         if result.c199 = 1 then
-          t129 <- subject.bits_trusted;
-          t130 <- subject.bits_known;
-          t131 <- subject.il;
-          t132 <- subject.base_register;
-          emit load(opc$loads, t21 + t23 + t22 + result.l376, duplicate_address_mode_adding_byte_offset(subject, 8), t132, t127, t131, 8, t130, t129);
+          emit load(opc$loads, t21 + t23 + t22 + result.l376, duplicate_address_mode_adding_byte_offset(subject, 8), subject.base_register, t57, subject.il, 8, subject.bits_known, subject.bits_trusted);
         else
-          t133 <- create_solution_for_ip_reg();
+          t59 <- create_solution_for_ip_reg();
           if result.c200 = 1 then
             if result.c201 = 1 then
-              if t133.object_with_name <> nil then
-                t133.object_with_name <- t133.object_with_name;
+              if t59.object_with_name <> nil then
+                t59.object_with_name <- t59.object_with_name;
               else
-                t133.object_with_name <- subject.base_register.object_with_name;
+                t59.object_with_name <- subject.base_register.object_with_name;
               end;
-              emit simple(opc$move, 0, subject.base_register, t133, nil);
+              emit simple(opc$move, 0, subject.base_register, t59, nil);
               emit simple(opc$adj_move, 0, nil, nil, nil);
             else
-              emit simple(opc$add, 0, subject, subject.base_register, t133);
+              emit simple(opc$add, 0, subject, subject.base_register, t59);
             end;
           elsif result.c202 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t133, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t59, nil);
           else
-            t134 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-            emit load(opc$loadl, 0, t134, t134.base_register, t133, t134.il, 0, t134.bits_known, t134.bits_trusted);
+            t60 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+            emit load(opc$loadl, 0, t60, t60.base_register, t59, t60.il, 0, t60.bits_known, t60.bits_trusted);
           end;
-          t135 <- subject.bits_trusted;
-          t136 <- subject.bits_known;
-          t137 <- subject.il;
-          emit load(opc$loads, result.l376 + (t21 + t23 + t22), find_well_known_literal_solution(8), t133, t127, t137, 8, t136, t135);
+          emit load(opc$loads, result.l376 + (t21 + t23 + t22), find_well_known_literal_solution(8), t59, t57, subject.il, 8, subject.bits_known, subject.bits_trusted);
         end;
         if result.c203 = 1 then
           emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -2772,95 +2065,74 @@ transform 384  fp_reg_quad <- address_mode
         emit simple(opc$costly, 0, nil, nil, nil);
         pattern_match_error(15, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
       else
-        t138 <- create_solution_for_ip_reg();
-        if t138.object_with_name <> nil then
-          t138.object_with_name <- t138.object_with_name;
+        t61 <- create_solution_for_ip_reg();
+        if t61.object_with_name <> nil then
+          t61.object_with_name <- t61.object_with_name;
         else
-          t138.object_with_name <- subject.object_with_name;
+          t61.object_with_name <- subject.object_with_name;
         end;
         if result.c204 = 1 then
           if result.c205 = 1 then
-            t139 <- subject.bits_trusted;
-            t140 <- subject.bits_known;
-            t141 <- subject.il;
-            t142 <- subject.base_register;
-            emit load(opc$loadl, result.l380 + (t24 + t26 + t25), duplicate_address_mode_adding_byte_offset(subject, 8), t142, t138, t141, 8, t140, t139);
+            emit load(opc$loadl, result.l380 + (t24 + t26 + t25), duplicate_address_mode_adding_byte_offset(subject, 8), subject.base_register, t61, subject.il, 8, subject.bits_known, subject.bits_trusted);
           else
-            t143 <- create_solution_for_ip_reg();
+            t62 <- create_solution_for_ip_reg();
             if result.c206 = 1 then
               if result.c207 = 1 then
-                if t143.object_with_name <> nil then
-                  t143.object_with_name <- t143.object_with_name;
+                if t62.object_with_name <> nil then
+                  t62.object_with_name <- t62.object_with_name;
                 else
-                  t143.object_with_name <- subject.base_register.object_with_name;
+                  t62.object_with_name <- subject.base_register.object_with_name;
                 end;
-                emit simple(opc$move, 0, subject.base_register, t143, nil);
+                emit simple(opc$move, 0, subject.base_register, t62, nil);
                 emit simple(opc$adj_move, 0, nil, nil, nil);
               else
-                emit simple(opc$add, 0, subject, subject.base_register, t143);
+                emit simple(opc$add, 0, subject, subject.base_register, t62);
               end;
             elsif result.c208 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t143, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t62, nil);
             else
-              t144 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-              emit load(opc$loadl, 0, t144, t144.base_register, t143, t144.il, 0, t144.bits_known, t144.bits_trusted);
+              t63 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+              emit load(opc$loadl, 0, t63, t63.base_register, t62, t63.il, 0, t63.bits_known, t63.bits_trusted);
             end;
-            t145 <- subject.bits_trusted;
-            t146 <- subject.bits_known;
-            t147 <- subject.il;
-            emit load(opc$loadl, result.l380 + (t24 + t26 + t25), find_well_known_literal_solution(8), t143, t138, t147, 8, t146, t145);
+            emit load(opc$loadl, result.l380 + (t24 + t26 + t25), find_well_known_literal_solution(8), t62, t61, subject.il, 8, subject.bits_known, subject.bits_trusted);
           end;
           if result.c209 = 1 then
             emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
           end;
         elsif result.c204 = 2 then
-          t148 <- create_solution_for_ip_reg();
-          t149 <- create_solution_for_ip_reg();
+          t64 <- create_solution_for_ip_reg();
+          t65 <- create_solution_for_ip_reg();
           if result.c210 = 1 then
-            t150 <- subject.bits_trusted;
-            t151 <- subject.bits_known;
-            t152 <- subject.il;
-            t153 <- subject.base_register;
-            emit load(opc$loadwu, result.l380 + (t24 + t26 + t25), duplicate_address_mode_adding_byte_offset(subject, 8), t153, t148, t152, 8, t151, t150);
-            t154 <- subject.bits_trusted;
-            t155 <- subject.bits_known;
-            t156 <- subject.il;
-            t157 <- subject.base_register;
-            emit load(opc$loadwu, t24 + t26 + t25, duplicate_address_mode_adding_byte_offset(subject, 10), t157, t149, t156, 10, t155, t154);
+            emit load(opc$loadwu, result.l380 + (t24 + t26 + t25), duplicate_address_mode_adding_byte_offset(subject, 8), subject.base_register, t64, subject.il, 8, subject.bits_known, subject.bits_trusted);
+            emit load(opc$loadwu, t24 + t26 + t25, duplicate_address_mode_adding_byte_offset(subject, 10), subject.base_register, t65, subject.il, 10, subject.bits_known, subject.bits_trusted);
           else
-            t158 <- create_solution_for_ip_reg();
+            t66 <- create_solution_for_ip_reg();
             if result.c211 = 1 then
               if result.c212 = 1 then
-                if t158.object_with_name <> nil then
-                  t158.object_with_name <- t158.object_with_name;
+                if t66.object_with_name <> nil then
+                  t66.object_with_name <- t66.object_with_name;
                 else
-                  t158.object_with_name <- subject.base_register.object_with_name;
+                  t66.object_with_name <- subject.base_register.object_with_name;
                 end;
-                emit simple(opc$move, 0, subject.base_register, t158, nil);
+                emit simple(opc$move, 0, subject.base_register, t66, nil);
                 emit simple(opc$adj_move, 0, nil, nil, nil);
               else
-                emit simple(opc$add, 0, subject, subject.base_register, t158);
+                emit simple(opc$add, 0, subject, subject.base_register, t66);
               end;
             elsif result.c213 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t158, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t66, nil);
             else
-              t159 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-              emit load(opc$loadl, 0, t159, t159.base_register, t158, t159.il, 0, t159.bits_known, t159.bits_trusted);
+              t67 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+              emit load(opc$loadl, 0, t67, t67.base_register, t66, t67.il, 0, t67.bits_known, t67.bits_trusted);
             end;
-            t160 <- subject.bits_trusted;
-            t161 <- subject.bits_known;
-            t162 <- subject.il;
-            emit load(opc$loadwu, result.l380 + (t24 + t26 + t25), find_well_known_literal_solution(8), t158, t148, t162, 8, t161, t160);
-            t163 <- subject.bits_trusted;
-            t164 <- subject.bits_known;
-            t165 <- subject.il;
-            emit load(opc$loadwu, t24 + t26 + t25, find_well_known_literal_solution(10), t158, t149, t165, 10, t164, t163);
+            emit load(opc$loadwu, result.l380 + (t24 + t26 + t25), find_well_known_literal_solution(8), t66, t64, subject.il, 8, subject.bits_known, subject.bits_trusted);
+            emit load(opc$loadwu, t24 + t26 + t25, find_well_known_literal_solution(10), t66, t65, subject.il, 10, subject.bits_known, subject.bits_trusted);
           end;
           if result.c214 = 1 then
             warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
           end;
-          emit field(opc$insert, 0, 16, t148, find_well_known_literal_solution(16), t149);
-          emit simple(opc$move, 0, t149, t138, nil);
+          emit field(opc$insert, 0, 16, t64, find_well_known_literal_solution(16), t65);
+          emit simple(opc$move, 0, t65, t61, nil);
           emit simple(opc$adj_move, 0, nil, nil, nil);
         end;
         if result.c215 <> 1 then
@@ -2872,47 +2144,40 @@ transform 384  fp_reg_quad <- address_mode
             warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
           end;
         end;
-        emit simple(opc$mtfp, 0, t138, t127, nil);
+        emit simple(opc$mtfp, 0, t61, t57, nil);
       end;
       if result.c218 = 1 then
         pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
       end;
-      if t128.object_with_name <> nil then
-        t128.object_with_name <- t128.object_with_name;
+      if t58.object_with_name <> nil then
+        t58.object_with_name <- t58.object_with_name;
       else
-        t128.object_with_name <- subject.object_with_name;
+        t58.object_with_name <- subject.object_with_name;
       end;
       if result.c219 = 1 then
         if result.c220 = 1 then
-          t166 <- subject.bits_trusted;
-          t167 <- subject.bits_known;
-          t168 <- subject.il;
-          t169 <- subject.base_register;
-          emit load(opc$loads, result.l384 + (t27 + t29 + t28), duplicate_address_mode_adding_byte_offset(subject, 12), t169, t128, t168, 12, t167, t166);
+          emit load(opc$loads, result.l384 + (t27 + t29 + t28), duplicate_address_mode_adding_byte_offset(subject, 12), subject.base_register, t58, subject.il, 12, subject.bits_known, subject.bits_trusted);
         else
-          t170 <- create_solution_for_ip_reg();
+          t68 <- create_solution_for_ip_reg();
           if result.c221 = 1 then
             if result.c222 = 1 then
-              if t170.object_with_name <> nil then
-                t170.object_with_name <- t170.object_with_name;
+              if t68.object_with_name <> nil then
+                t68.object_with_name <- t68.object_with_name;
               else
-                t170.object_with_name <- subject.base_register.object_with_name;
+                t68.object_with_name <- subject.base_register.object_with_name;
               end;
-              emit simple(opc$move, 0, subject.base_register, t170, nil);
+              emit simple(opc$move, 0, subject.base_register, t68, nil);
               emit simple(opc$adj_move, 0, nil, nil, nil);
             else
-              emit simple(opc$add, 0, subject, subject.base_register, t170);
+              emit simple(opc$add, 0, subject, subject.base_register, t68);
             end;
           elsif result.c223 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t170, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t68, nil);
           else
-            t171 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-            emit load(opc$loadl, 0, t171, t171.base_register, t170, t171.il, 0, t171.bits_known, t171.bits_trusted);
+            t69 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+            emit load(opc$loadl, 0, t69, t69.base_register, t68, t69.il, 0, t69.bits_known, t69.bits_trusted);
           end;
-          t172 <- subject.bits_trusted;
-          t173 <- subject.bits_known;
-          t174 <- subject.il;
-          emit load(opc$loads, result.l384 + (t27 + t29 + t28), find_well_known_literal_solution(12), t170, t128, t174, 12, t173, t172);
+          emit load(opc$loads, result.l384 + (t27 + t29 + t28), find_well_known_literal_solution(12), t68, t58, subject.il, 12, subject.bits_known, subject.bits_trusted);
         end;
         if result.c224 = 1 then
           emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
@@ -2921,95 +2186,74 @@ transform 384  fp_reg_quad <- address_mode
         emit simple(opc$costly, 0, nil, nil, nil);
         pattern_match_error(15, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
       else
-        t175 <- create_solution_for_ip_reg();
-        if t175.object_with_name <> nil then
-          t175.object_with_name <- t175.object_with_name;
+        t70 <- create_solution_for_ip_reg();
+        if t70.object_with_name <> nil then
+          t70.object_with_name <- t70.object_with_name;
         else
-          t175.object_with_name <- subject.object_with_name;
+          t70.object_with_name <- subject.object_with_name;
         end;
         if result.c225 = 1 then
           if result.c226 = 1 then
-            t176 <- subject.bits_trusted;
-            t177 <- subject.bits_known;
-            t178 <- subject.il;
-            t179 <- subject.base_register;
-            emit load(opc$loadl, result.l388 + (t30 + t32 + t31), duplicate_address_mode_adding_byte_offset(subject, 12), t179, t175, t178, 12, t177, t176);
+            emit load(opc$loadl, result.l388 + (t30 + t32 + t31), duplicate_address_mode_adding_byte_offset(subject, 12), subject.base_register, t70, subject.il, 12, subject.bits_known, subject.bits_trusted);
           else
-            t180 <- create_solution_for_ip_reg();
+            t71 <- create_solution_for_ip_reg();
             if result.c227 = 1 then
               if result.c228 = 1 then
-                if t180.object_with_name <> nil then
-                  t180.object_with_name <- t180.object_with_name;
+                if t71.object_with_name <> nil then
+                  t71.object_with_name <- t71.object_with_name;
                 else
-                  t180.object_with_name <- subject.base_register.object_with_name;
+                  t71.object_with_name <- subject.base_register.object_with_name;
                 end;
-                emit simple(opc$move, 0, subject.base_register, t180, nil);
+                emit simple(opc$move, 0, subject.base_register, t71, nil);
                 emit simple(opc$adj_move, 0, nil, nil, nil);
               else
-                emit simple(opc$add, 0, subject, subject.base_register, t180);
+                emit simple(opc$add, 0, subject, subject.base_register, t71);
               end;
             elsif result.c229 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t180, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t71, nil);
             else
-              t181 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-              emit load(opc$loadl, 0, t181, t181.base_register, t180, t181.il, 0, t181.bits_known, t181.bits_trusted);
+              t72 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+              emit load(opc$loadl, 0, t72, t72.base_register, t71, t72.il, 0, t72.bits_known, t72.bits_trusted);
             end;
-            t182 <- subject.bits_trusted;
-            t183 <- subject.bits_known;
-            t184 <- subject.il;
-            emit load(opc$loadl, result.l388 + (t30 + t32 + t31), find_well_known_literal_solution(12), t180, t175, t184, 12, t183, t182);
+            emit load(opc$loadl, result.l388 + (t30 + t32 + t31), find_well_known_literal_solution(12), t71, t70, subject.il, 12, subject.bits_known, subject.bits_trusted);
           end;
           if result.c230 = 1 then
             emit load(opc$loadl, 0, isc_user_routines_31c, isc_user_routines_330, isc_user_routines_31c, subject.il, 0, 0, 0);
           end;
         elsif result.c225 = 2 then
-          t185 <- create_solution_for_ip_reg();
-          t186 <- create_solution_for_ip_reg();
+          t73 <- create_solution_for_ip_reg();
+          t74 <- create_solution_for_ip_reg();
           if result.c231 = 1 then
-            t187 <- subject.bits_trusted;
-            t188 <- subject.bits_known;
-            t189 <- subject.il;
-            t190 <- subject.base_register;
-            emit load(opc$loadwu, result.l388 + (t30 + t32 + t31), duplicate_address_mode_adding_byte_offset(subject, 12), t190, t185, t189, 12, t188, t187);
-            t191 <- subject.bits_trusted;
-            t192 <- subject.bits_known;
-            t193 <- subject.il;
-            t194 <- subject.base_register;
-            emit load(opc$loadwu, t30 + t32 + t31, duplicate_address_mode_adding_byte_offset(subject, 14), t194, t186, t193, 14, t192, t191);
+            emit load(opc$loadwu, result.l388 + (t30 + t32 + t31), duplicate_address_mode_adding_byte_offset(subject, 12), subject.base_register, t73, subject.il, 12, subject.bits_known, subject.bits_trusted);
+            emit load(opc$loadwu, t30 + t32 + t31, duplicate_address_mode_adding_byte_offset(subject, 14), subject.base_register, t74, subject.il, 14, subject.bits_known, subject.bits_trusted);
           else
-            t195 <- create_solution_for_ip_reg();
+            t75 <- create_solution_for_ip_reg();
             if result.c232 = 1 then
               if result.c233 = 1 then
-                if t195.object_with_name <> nil then
-                  t195.object_with_name <- t195.object_with_name;
+                if t75.object_with_name <> nil then
+                  t75.object_with_name <- t75.object_with_name;
                 else
-                  t195.object_with_name <- subject.base_register.object_with_name;
+                  t75.object_with_name <- subject.base_register.object_with_name;
                 end;
-                emit simple(opc$move, 0, subject.base_register, t195, nil);
+                emit simple(opc$move, 0, subject.base_register, t75, nil);
                 emit simple(opc$adj_move, 0, nil, nil, nil);
               else
-                emit simple(opc$add, 0, subject, subject.base_register, t195);
+                emit simple(opc$add, 0, subject, subject.base_register, t75);
               end;
             elsif result.c234 = 1 then
-              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t195, nil);
+              emit simple(opc$move, 0, find_well_known_literal_solution(subject.literal_32_bits_value), t75, nil);
             else
-              t196 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
-              emit load(opc$loadl, 0, t196, t196.base_register, t195, t196.il, 0, t196.bits_known, t196.bits_trusted);
+              t76 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+              emit load(opc$loadl, 0, t76, t76.base_register, t75, t76.il, 0, t76.bits_known, t76.bits_trusted);
             end;
-            t197 <- subject.bits_trusted;
-            t198 <- subject.bits_known;
-            t199 <- subject.il;
-            emit load(opc$loadwu, result.l388 + (t30 + t32 + t31), find_well_known_literal_solution(12), t195, t185, t199, 12, t198, t197);
-            t200 <- subject.bits_trusted;
-            t201 <- subject.bits_known;
-            t202 <- subject.il;
-            emit load(opc$loadwu, t30 + t32 + t31, find_well_known_literal_solution(14), t195, t186, t202, 14, t201, t200);
+            emit load(opc$loadwu, result.l388 + (t30 + t32 + t31), find_well_known_literal_solution(12), t75, t73, subject.il, 12, subject.bits_known, subject.bits_trusted);
+            emit load(opc$loadwu, t30 + t32 + t31, find_well_known_literal_solution(14), t75, t74, subject.il, 14, subject.bits_known, subject.bits_trusted);
           end;
           if result.c235 = 1 then
             warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
           end;
-          emit field(opc$insert, 0, 16, t185, find_well_known_literal_solution(16), t186);
-          emit simple(opc$move, 0, t186, t175, nil);
+          emit field(opc$insert, 0, 16, t73, find_well_known_literal_solution(16), t74);
+          emit simple(opc$move, 0, t74, t70, nil);
           emit simple(opc$adj_move, 0, nil, nil, nil);
         end;
         if result.c236 <> 1 then
@@ -3021,9 +2265,9 @@ transform 384  fp_reg_quad <- address_mode
             warning_unaligned_atomic_access(subject.inherited_attributes.source_line_number);
           end;
         end;
-        emit simple(opc$mtfp, 0, t175, t128, nil);
+        emit simple(opc$mtfp, 0, t70, t58, nil);
       end;
-      t2.live_range <- t127.live_range;
+      t2.live_range <- t57.live_range;
     end;
     result.live_range <- t1.live_range;
     result.live_range_of_imaginary_part <- t2.live_range;
@@ -3063,14 +2307,28 @@ end;
 
 transform 389  ip_reg <- ip_reg_field
   pass_1 image 16#1492F0;
-  { not lifted: operand ('postinc', 'a2') }
-  pass_2 image 16#1C3184 residue;
+  pass_2 image 16#1C3184 begin
+    result.base_register <- subject.base_register;
+    result.index_register <- subject.index_register;
+    result.false_label <- subject.false_label;
+    result.object_with_name <- subject.object_with_name;
+    result.live_range <- subject.live_range;
+    result.live_range_of_imaginary_part <- subject.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- subject.already_through_pass_2;
+  end;
 end;
 
 transform 390  ip_reg_field <- ip_reg_field
   pass_1 image 16#149742;
-  { not lifted: operand ('postinc', 'a2') }
-  pass_2 image 16#1C31E0 residue;
+  pass_2 image 16#1C31E0 begin
+    result.base_register <- subject.base_register;
+    result.index_register <- subject.index_register;
+    result.false_label <- subject.false_label;
+    result.object_with_name <- subject.object_with_name;
+    result.live_range <- subject.live_range;
+    result.live_range_of_imaginary_part <- subject.live_range_of_imaginary_part;
+    result.already_through_pass_2 <- subject.already_through_pass_2;
+  end;
 end;
 
 transform 391  ip_reg_field <- ip_reg_field
@@ -3214,8 +2472,28 @@ end;
 transform 400  fp_reg <- literal_32_bits
   check_permissible;
   pass_1 image 16#14B8DA;
-  { not lifted: global 0x48AEE0 }
-  pass_2 image 16#1C3840 residue;
+  pass_2 image 16#1C3840 begin
+    temp t1: solution;
+    temp t2: solution;
+    if result.c136 = 1 then
+      if result.c137 = 1 then
+        pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+      end;
+      t1 <- address_mode_for_single_value(subject.literal_32_bits_value);
+      emit load(opc$loads, 0, t1, t1.base_register, solution, t1.il, 0, t1.bits_known, t1.bits_trusted);
+    else
+      if result.c138 = 1 then
+        pattern_match_error(5, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+      end;
+      if result.c139 = 1 then
+        emit simple(opc$copys, 0, lir_3d60[0], solution, nil);
+      else
+        t2 <- address_mode_for_integer32_value(subject.literal_32_bits_value);
+        emit load(opc$loads, 0, t2, t2.base_register, solution, t2.il, 0, t2.bits_known, t2.bits_trusted);
+      end;
+    end;
+    result.object_with_name <- subject.object_with_name;
+  end;
 end;
 
 transform 401  address_mode <- literal_32_bits

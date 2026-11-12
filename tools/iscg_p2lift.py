@@ -44,6 +44,12 @@ P2_A5 = 0x47F788
 P2_END = 0x20042C               # hard_work: the first routine after the pass-2 modules
 ISC_USER_A5 = 0x480E00          # isc_user_routines' data (isc_var_externs.ins.pas)
 AT_SWITCHES = 0x485D30          # at_backend_switches (backend.ins.pas)
+# lir.pas's tables of the physical registers' solutions (lir.pvt.pas,
+# backend.ins.pas: lir_3c60, lir_3d60 by floating register, lir_3e60 by
+# integer register)
+LIR_TABS = [('lir_3c60', 0x487180 + 0x3C60), ('lir_3d60', 0x487180 + 0x3D60),
+            ('lir_3e60', 0x487180 + 0x3E60)]
+ISC_READONLY = 0x2BCDFC         # isc_readonly_tables (isc_types.ins.pas)
 TOOL_TABLES = 0x2BC13C          # isc_tool_generated_readonly_tables (isc.pvt.pas)
 MAPS = ['opcode_rr_reversed', 'opcode_rr', 'opcode_immediate', 'opcode_double',
         'opcode_immediate_negated', 'opcode_single']
@@ -627,7 +633,9 @@ class Lifter:
             if cc in ('pl', 'mi'):
                 b = self.bitpath(f[1], f[2], 7)
                 if b is None:
-                    raise Unliftable('0x%X: bit 7 of +%d' % (x.addr, f[2]))
+                    e = self.load_expr(('mem', f[1], f[2], 1))
+                    return ('bin', '<>' if cc == 'mi' else '=', ('bin', '&', e, ('num', 128)),
+                            ('num', 0))
                 return b if cc == 'mi' else ('un', 'not', b)
             e = self.load_expr(('mem', f[1], f[2], 1))
             if cc in ('eq', 'ne'):
@@ -670,6 +678,14 @@ class Lifter:
             raise Unliftable('a value not known')
         if isinstance(v, tuple) and v[0] in ('mem',):
             return self.load_expr(v)
+        if isinstance(v, tuple) and v[0] == 'ptroff':
+            try:
+                bexpr, n, t = self.field(v[1], v[2], 4)
+                return ('addr', self.sel(bexpr, n))
+            except Unliftable:
+                # a pointer plus a constant used as a number
+                bexpr, btyp = self.base_path(v[1])
+                return ('bin', '+', bexpr, ('num', v[2]))
         if isinstance(v, tuple) and v[0] in ('frame', 'gaddr', 'ptr', 'pcrel'):
             raise Unliftable('an address used as a value: %r' % (v,))
         return v
@@ -698,12 +714,16 @@ class Lifter:
         """The language path (and its type) a pointer value b stands for:
         ('param', name) a parameter, a cell, ..."""
         if isinstance(b, Cell):
+            if b.typ in ('int32', None) and (b.volatile or getattr(b, 'phi', False)):
+                # a register the code uses as an address: a solution
+                b.typ = 'sol'
             return ('cell', b), b.typ
         if isinstance(b, tuple) and b[0] == 'param':
             return ('path', b[1], []), 'sol'
         if isinstance(b, tuple) and b[0] == 'mem':
             return self.load_expr(b), self.mem_type(b)
-        if isinstance(b, tuple) and b[0] == 'index' and b[1] == 'isc_literal_solutions':
+        if isinstance(b, tuple) and b[0] == 'index' and b[1] in (
+                'isc_literal_solutions', 'lir_3c60', 'lir_3d60', 'lir_3e60'):
             return b, 'sol'
         raise Unliftable('a pointer not known: %r' % (b[0] if isinstance(b, tuple) else b,))
 
@@ -723,6 +743,9 @@ class Lifter:
                 raise Unliftable('inherited attribute +%d' % off)
             return bexpr, n, {'up': 'ptr', 'i32': 'int32', 'i16': 'int16', 'char': 'int8',
                               'u8': 'int8', 'bool': 'bool'}[L.INH_ATTRS[n][3]]
+        if btyp == 'node' and bit is None:
+            n = {1: 'b', 2: 'w', 4: 'l'}[size] + str(off)
+            return bexpr, n, {1: 'int8', 2: 'int16', 4: 'node'}[size]
         raise Unliftable('a field +%d of a %s' % (off, btyp))
 
     def sel_type(self, n, size):
@@ -767,6 +790,13 @@ class Lifter:
         """A word of a table indexed by a register: the opcode maps of
         isc_tool_generated_readonly_tables by an il$t (index doubled)."""
         _, b, i, disp = loc
+        if isinstance(b, tuple) and b[0] == 'num' and b[1] == ISC_READONLY and size == 2:
+            iv = self.val(i)
+            if iv[0] == 'cell':
+                iv = iv[1].expr
+            if not (iv[0] == 'bin' and iv[1] == '+' and iv[2] == iv[3]) or disp % 2:
+                raise Unliftable('0x%X: a table index not doubled' % x.addr)
+            return ('index', 'readonly_w%d' % disp, iv[2])
         if not (isinstance(b, tuple) and b[0] == 'num' and b[1] == TOOL_TABLES and size == 2):
             raise Unliftable('0x%X: a table at %r' % (x.addr, b))
         off = disp - 1126
@@ -780,6 +810,9 @@ class Lifter:
         return ('index', MAPS[off // 356], iv[2])
 
     def global_expr(self, addr, size):
+        for name, base in LIR_TABS:
+            if base <= addr < base + 256 and addr % 4 == 0 and size == 4:
+                return ('index', name, ('num', (addr - base) // 4))
         off = addr - ISC_USER_A5
         if 0x258 - 4 <= off < 0x258 + 4 * 33 and off % 4 == 0 and size == 4:
             return ('index', 'isc_literal_solutions', ('num', (off - 0x258) // 4))
@@ -789,6 +822,8 @@ class Lifter:
         raise Unliftable('global 0x%X' % addr)
 
     def global_type(self, addr):
+        if LIR_TABS[0][1] <= addr < LIR_TABS[-1][1] + 256:
+            return 'sol'
         off = addr - ISC_USER_A5
         if 0x258 - 4 <= off < 0x258 + 4 * 33:
             return 'sol'
@@ -831,7 +866,7 @@ class Lifter:
                 raise Unliftable('register %s not known' % r)
             if isinstance(b, tuple) and b[0] == 'gaddr':
                 return ('absmem', b[1] + op[2])
-            if isinstance(b, tuple) and b[0] == 'num' and b[1] == TOOL_TABLES:
+            if isinstance(b, tuple) and b[0] == 'num' and b[1] in (TOOL_TABLES, ISC_READONLY):
                 return ('absmem', b[1] + op[2])
             if isinstance(b, tuple) and b[0] == 'ptroff':
                 return ('mem', b[1], b[2] + op[2])
@@ -840,6 +875,12 @@ class Lifter:
             return ('mem', b, op[2])
         if k == 'predec' and op[1] == 'a7':
             return ('push',)
+        if k == 'idx' and op[4] in 'wl' and op[5] == 1:
+            b = st.regs.get(op[1])
+            i = st.regs.get(op[3])
+            if b is None or i is None:
+                raise Unliftable('operand %r' % (op,))
+            return ('tabmem', b, i, op[2])
         raise Unliftable('operand %r' % (op,))
 
     def read(self, op, size, st, out, x):
@@ -847,6 +888,11 @@ class Lifter:
         k = loc[0]
         if k == 'reg':
             v = st.regs.get(loc[1])
+            if v is None and loc[1] == 'a0' and getattr(st, 'kept_a0', None) is not None:
+                # A0 read after a procedure's call: its value before the
+                # call (docs/rev889-patterns.md 331)
+                v = st.kept_a0
+                self.kept_a0 = True
             if v is None:
                 raise Unliftable('0x%X: %s not known' % (x.addr, loc[1]))
             return v
@@ -946,7 +992,7 @@ class Lifter:
         if k == 'abs':
             return ('num', op[1] if op[1] < 0x80000000 else op[1] - (1 << 32))
         if k == 'pcrel':
-            return ('str', self.string_at(op[1]))
+            return ('pcrel', op[1])
         if k == 'ind':
             r = op[1]
             if r == 'a6':
@@ -954,6 +1000,9 @@ class Lifter:
                     return ('frameaddr', op[2])
                 raise Unliftable('0x%X: the address of a parameter' % x.addr)
             b = st.regs.get(r)
+            if b is None and r == 'a0' and st.kept_a0 is not None:
+                b = st.kept_a0
+                self.kept_a0 = True
             if b is None:
                 raise Unliftable('0x%X: %s not known' % (x.addr, r))
             if isinstance(b, tuple) and b[0] == 'ptroff':
@@ -980,6 +1029,23 @@ class Lifter:
         mn, sz = x.mn, x.sz
         ops = [parse_operand(o) for o in x.ops] if mn not in ('movem', 'jsr') else None
         if mn == 'nop':
+            return None
+        if mn == 'movea' and ops[0][0] == 'imm' and \
+                ISC_USER_A5 <= ops[0][1] < ISC_USER_A5 + 0x400:
+            st.regs[ops[1][1]] = ('gaddr', ops[0][1])
+            return None
+        if mn in ('move', 'movea') and ops[0][0] == 'postinc':
+            # through a register that steps over a solution's fields
+            r = ops[0][1]
+            b = st.regs.get(r)
+            if not (isinstance(b, tuple) and b[0] == 'ptroff'):
+                raise Unliftable('0x%X: %s' % (x.addr, x.text))
+            size = SZ[sz]
+            v = self.read(('ind', r, 0), size, st, out, x)
+            st.regs[r] = ('ptroff', b[1], b[2] + size)
+            if mn == 'move' and ops[1][0] != 'areg':
+                st.flags = ('tst', v, size)
+            self.store(ops[1], size, v, st, out, x)
             return None
         if mn in ('move', 'movea'):
             size = SZ[sz]
@@ -1021,7 +1087,7 @@ class Lifter:
                 else:
                     st.regs[dst[1]] = ('ptroff', b, src[2])
                 return None
-            if src[0] == 'idx' and src[4] == 'w' and src[5] == 1:
+            if src[0] == 'idx' and src[4] in 'wl' and src[5] == 1:
                 b = st.regs.get(src[1])
                 i = st.regs.get(src[3])
                 if b is None or i is None:
@@ -1060,6 +1126,13 @@ class Lifter:
             if bit[0] != 'imm':
                 raise Unliftable('0x%X: btst by register' % x.addr)
             loc = self.ea_addr(ops[1], st)
+            if loc[0] == 'reg':
+                v = st.regs.get(loc[1])
+                if v is None:
+                    raise Unliftable('0x%X: %s not known' % (x.addr, loc[1]))
+                st.flags = ('bit', ('bin', '<>', ('bin', '&', self.val(v), ('num', 1 << bit[1])),
+                                    ('num', 0)))
+                return None
             st.flags = ('bit', self.bit_expr(loc, bit[1], x))
             return None
         if mn in ('bset', 'bclr'):
@@ -1071,10 +1144,30 @@ class Lifter:
                 raise Unliftable('0x%X: bit %d of +%d' % (x.addr, ops[0][1], loc[2]))
             self.emit_set(p, ('bool', mn == 'bset'), out)
             return None
+        if mn in ('and', 'andi', 'or', 'ori') and ops[1][0] == 'dreg' and sz == 'l':
+            v = st.regs.get(ops[1][1])
+            a = self.read(ops[0], 4, st, out, x)
+            if v is None:
+                raise Unliftable('0x%X: %s' % (x.addr, x.text))
+            op = '&' if mn.startswith('and') else '!'
+            st.regs[ops[1][1]] = self.mkcell(('bin', op, self.val(a), self.val(v)), 'int32',
+                                             False, out)
+            st.flags = ('tst', st.regs[ops[1][1]], 4)
+            return None
         if mn in ('ori', 'or', 'andi', 'and') and ops[1][0] in ('ind',):
             return self.bitops(x, ops, st, out)
         if mn in ('ori', 'or', 'andi', 'and') and ops[1][0] == 'dreg':
             return self.regbits(x, ops, st, out)
+        if mn in ('lsr', 'lsl', 'asr') and ops[1][0] == 'dreg' and ops[0][0] == 'dreg' and sz == 'l':
+            n = st.regs.get(ops[0][1])
+            v = st.regs.get(ops[1][1])
+            if n is None or v is None:
+                raise Unliftable('0x%X: %s' % (x.addr, x.text))
+            f = {'lsl': 'lshft', 'lsr': 'rshft', 'asr': 'arshft'}[mn]
+            st.regs[ops[1][1]] = self.mkcell(('call', f, [self.val(v), self.val(n)]), 'int32',
+                                             False, out)
+            st.flags = ('tst', st.regs[ops[1][1]], 4)
+            return None
         if mn in ('lsr', 'lsl') and ops[1][0] == 'dreg':
             if ops[0][0] != 'imm':
                 raise Unliftable('0x%X: a shift by a register' % x.addr)
@@ -1096,6 +1189,9 @@ class Lifter:
             c = self.condition(Insn(x.addr, 2, 'b' + mn[1:] + 's 0x0'), st)
             st.regs[ops[0][1]] = ('boolbyte', c)
             return None
+        if mn in ('sub', 'suba') and ops[0] == ops[1] and ops[1][0] in ('dreg', 'areg'):
+            st.regs[ops[1][1]] = ('num', 0)
+            return None
         if mn in ('add', 'addi', 'sub', 'subi', 'addq', 'subq', 'suba', 'adda') and \
                 ops[1][0] in ('dreg', 'areg'):
             r = ops[1][1]
@@ -1104,6 +1200,15 @@ class Lifter:
             if v is None:
                 raise Unliftable('0x%X: %s not known' % (x.addr, r))
             op = '+' if mn.startswith('add') else '-'
+            # a field's address: a solution pointer plus a constant
+            if op == '+' and sz == 'l':
+                for p, q in ((v, a), (a, v)):
+                    if isinstance(q, tuple) and q[0] == 'num' and \
+                            (isinstance(p, tuple) and p[0] == 'param' or
+                             isinstance(p, Cell) and p.typ == 'sol'):
+                        st.regs[r] = ('ptroff', p, q[1])
+                        st.flags = None
+                        return None
             e = self.simplify(('bin', op, self.val(v), self.val(a)))
             st.regs[r] = self.mkcell(e, 'int32', False, out) if e[0] != 'num' else e
             st.flags = ('tst', st.regs[r], SZ[sz])
@@ -1233,8 +1338,12 @@ class Lifter:
             if byref:
                 if isinstance(v, tuple) and v[0] == 'addr':
                     args.append(v[1])
-                elif isinstance(v, tuple) and v[0] == 'str':
-                    args.append(v)
+                elif isinstance(v, tuple) and v[0] == 'pcrel':
+                    if cls == 'other:double':
+                        import struct
+                        args.append(('real', struct.unpack('>d', self.im.read(v[1], 8))[0]))
+                    else:
+                        args.append(('str', self.string_at(v[1])))
                 elif isinstance(v, tuple) and v[0] == 'frameaddr':
                     fv = st.frame.get(v[1])
                     if fv is None:
@@ -1250,6 +1359,8 @@ class Lifter:
                     args.append(('addr', ('path', v[1], [])))
                 elif isinstance(v, tuple) and v[0] == 'param':
                     args.append(('path', v[1], []))
+                elif isinstance(v, tuple) and v[0] == 'boolbyte' and cls == 'bool':
+                    args.append(v[1])
                 else:
                     e = self.val(v)
                     if pname == 'opc' and e[0] == 'num':
@@ -1257,6 +1368,7 @@ class Lifter:
                     if e == ('num', 0) and cls in L.POINTERS:
                         e = ('nil',)
                     args.append(e)
+        st.kept_a0 = st.regs.get('a0') if h['ret'] is None else None
         for r in ('d0', 'd1', 'a0', 'a1'):
             st.regs.pop(r, None)
         st.flags = None
@@ -1273,12 +1385,12 @@ class Lifter:
             r = 'a0' if h['ret'] in L.POINTERS else 'd0'
             typ = {'isp': 'sol', 'sp': 'sol', 'up': 'ptr', 'lr': 'lr', 'inh': 'inh',
                    'i32': 'int32', 'i16': 'int16', 'bool': 'bool'}.get(h['ret'], 'int32')
+            # a function's call: the ISC's functions make solutions and
+            # labels, they change no field the action has read (an
+            # argument loaded before it is not made a temp)
             c = self.mkcell(('call', name, args), typ, True, out)
             st.regs[r] = c
             self.bound += 1
-            for c2 in self.cells:
-                if c2 is not c and not c2.volatile and c2.expr is not None and has_sel(c2.expr):
-                    c2.dirty = True
             c.at = self.bound
         return None
 
@@ -1381,7 +1493,7 @@ class Lifter:
                 return ('un', e[1], self.fix(e[2]))
             if k == 'addr':
                 return ('addr', self.fix(e[1]))
-            if k in ('path', 'num', 'nil', 'bool', 'str', 'opc'):
+            if k in ('path', 'num', 'nil', 'bool', 'str', 'opc', 'real'):
                 return e
             raise Unliftable('a value %r' % (k,))
         raise Unliftable('a value %r' % (e,))
@@ -1437,6 +1549,7 @@ class State:
         self.flags = None
         self.pending_clear = {}
         self.clear_next = None
+        self.kept_a0 = None
 
     def copy(self):
         s = State()
@@ -1445,6 +1558,7 @@ class State:
         s.frame = dict(self.frame)
         s.flags = self.flags
         s.clear_next = self.clear_next
+        s.kept_a0 = self.kept_a0
         return s
 
 

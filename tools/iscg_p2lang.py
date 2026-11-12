@@ -105,8 +105,8 @@ VIEW_BITS = {(81, b) for b in range(2, 8)} | {(83, b) for b in range(4, 8)}
 # names: docs/questions.md 271): name -> (offset, size or bit, insert
 # path, class)
 INH_ATTRS = {
-    'il': (0, 4, 'node', 'up'), 'exception_frame': (4, 4, 'top', 'up'),
-    'original_il': (12, 4, 'stmt', 'up'), 'conditional_target': (16, 4, 'l16', 'i32'),
+    'il': (0, 4, 'node', 'node'), 'exception_frame': (4, 4, 'top', 'node'),
+    'original_il': (12, 4, 'stmt', 'node'), 'conditional_target': (16, 4, 'l16', 'i32'),
     'call_instruction_ptr': (20, 4, 'call', 'up'), 'fetch_precision': (24, 4, 'precision', 'i32'),
     'required_precision': (28, 4, 'available', 'i32'),
     'source_line_number': (32, 2, 'pos.line', 'i16'), 'stmt_number': (34, 2, 'pos.stmt', 'i16'),
@@ -123,10 +123,10 @@ for _n, (_o, _s, _p, _c) in INH_ATTRS.items():
     INH_BY_OFF[(_o, _s if isinstance(_s, int) else int(_s[1:]) + 100)] = _n
 
 PASCAL_TYPE = {'isp': 'isc_solution_ptr_t', 'sp': 'solution_ptr_t', 'lr': 'lr_ptr_t',
-               'up': 'univ_ptr', 'inh': 'inherited_attributes_ptr_t', 'i16': 'integer',
+               'up': 'univ_ptr', 'node': 'univ_ptr', 'inh': 'inherited_attributes_ptr_t', 'i16': 'integer',
                'u16': 'integer', 'i32': 'integer32', 'u8': 'integer', 'bool': 'boolean',
                'char': 'char'}
-POINTERS = ('isp', 'sp', 'lr', 'up', 'inh')
+POINTERS = ('isp', 'sp', 'lr', 'up', 'inh', 'node')
 TEMP_TYPES = {'solution': 'isp', 'pointer': 'up', 'integer': 'i16', 'integer32': 'i32',
               'boolean': 'bool', 'live_range': 'lr'}
 TEMP_TYPE_NAMES = {v: k for k, v in TEMP_TYPES.items()}
@@ -262,7 +262,9 @@ def read_headings(include_text):
 #   ('for', name, lo, hi, [stmts]) ('temp', name, type)
 
 PREC = {'or': 1, 'and': 2, '=': 3, '<>': 3, '<': 3, '<=': 3, '>': 3, '>=': 3,
-        'u<': 3, 'u<=': 3, 'u>': 3, 'u>=': 3, '+': 4, '-': 4, '*': 5, 'div': 5, 'mod': 5}
+        'u<': 3, 'u<=': 3, 'u>': 3, 'u>=': 3, '+': 4, '-': 4, '!': 4, '*': 5, 'div': 5,
+        'mod': 5, '&': 5}
+BUILTINS = {'lshft': 'i32', 'rshft': 'i32', 'arshft': 'i32'}
 
 
 def fmt_expr(e, prec=0):
@@ -277,6 +279,8 @@ def fmt_expr(e, prec=0):
         return 'true' if e[1] else 'false'
     if k == 'str':
         return "'" + e[1].replace("'", "''") + "'"
+    if k == 'real':
+        return repr(float(e[1]))
     if k == 'opc':
         return e[1]
     if k == 'path':
@@ -353,6 +357,7 @@ def fmt_body(stmts, ind='    '):
 # parsing
 
 TOK = re.compile(r"\s*(16#[0-9A-Fa-f]+|'(?:[^']|'')*'|\$\d+|<-|:=|<>|<=|>=|u<=|u>=|u<|u>|"
+                 r"\d+\.\d+(?:[eE][-+]?\d+)?|"
                  r"[A-Za-z_][A-Za-z0-9_$]*|\d+|\S)")
 
 
@@ -501,8 +506,8 @@ class Parser:
         if self.peek() == '-':
             self.i += 1
             e = self.unary()
-            if e[0] == 'num':
-                return ('num', -e[1])
+            if e[0] in ('num', 'real'):
+                return (e[0], -e[1])
             return ('un', '-', e)
         return self.primary()
 
@@ -516,6 +521,8 @@ class Parser:
             return ('num', int(t[3:], 16))
         if t.isdigit():
             return ('num', int(t))
+        if re.match(r'\d+\.\d', t):
+            return ('real', float(t))
         if t.startswith("'"):
             return ('str', t[1:-1].replace("''", "'"))
         if t == 'nil':
@@ -608,6 +615,19 @@ class Emitter:
     def select(self, text, cls, s):
         if cls == 'other:at_switches_t':
             return '%s.%s' % (text, s), 'bool'
+        if cls == 'node':
+            # an IL node's field by offset (no names: the node's kind is
+            # not known here): the module's view p2_node_t
+            m = re.match(r'([bwl])(\d+)$', s)
+            if not m:
+                raise LangError('rule %d: node field %s' % (self.rule, s))
+            off = int(m.group(2))
+            v = 'p2_node_ptr_t(%s)^.' % text
+            if m.group(1) == 'b':
+                return v + 'b[%d]' % off, 'u8'
+            if m.group(1) == 'w':
+                return v + 'w[%d]' % (off // 2), 'i16'
+            return v + 'p[%d]' % (off // 4), 'node'
         if cls == 'inh':
             if s not in INH_ATTRS:
                 raise LangError('rule %d: no inherited attribute %s' % (self.rule, s))
@@ -626,10 +646,15 @@ class Emitter:
             if kind == 's' and (off, 4) in SOL_FIELDS:
                 p, c = SOL_FIELDS[(off, 4)]
                 return '%s.%s' % (r, p), c
-            if kind in 'wl' and 136 <= off < 352:
+            if 136 <= off < 432 and kind in 'cwl':
                 v = 'p2_locals_ptr_t(addr(%s))^.' % r
-                return v + ('w[%d]' % (off // 2) if kind == 'w' else 'l[%d]' % (off // 4)), \
-                    'i16' if kind == 'w' else 'i32'
+                if kind == 'c':
+                    return v + 'c[%d]' % off, 'u8'
+                if kind == 'w':
+                    return v + 'w[%d]' % (off // 2), 'i16'
+                if off % 4 == 0:
+                    return v + 'p[%d]' % (off // 4), 'isp'
+                return v + 'p2[%d]' % ((off - 2) // 4), 'isp'
             raise LangError('rule %d: field %s' % (self.rule, s))
         if s not in ATTRS:
             raise LangError('rule %d: no attribute %s' % (self.rule, s))
@@ -643,6 +668,8 @@ class Emitter:
         if s == 'il_kind':
             return '%s.w98' % r, 'i16'
         p, c = SOL_FIELDS[(off, size)]
+        if s in ('il', 'object_with_name'):
+            c = 'node'
         if s == 'false_label':
             c = 'i32'
         return '%s.%s' % (r, p), c
@@ -656,6 +683,8 @@ class Emitter:
         if want is None or cls == want:
             return text
         if cls == 'rec':
+            return text
+        if cls == 'node' and want == 'up' or want == 'node' and cls == 'up':
             return text
         if want in POINTERS:
             if cls == 'num' and text == '0':
@@ -681,6 +710,8 @@ class Emitter:
         k = e[0]
         if k == 'num':
             v = e[1]
+            if v == -0x80000000:
+                return '(-16#7FFFFFFF - 1)', 'num'
             if v >= 4096:
                 return '16#%X' % v, 'num'
             if v <= -4096:
@@ -692,6 +723,8 @@ class Emitter:
             return ('true' if e[1] else 'false'), 'bool'
         if k == 'str':
             return "'" + e[1].replace("'", "''") + "'", 'str'
+        if k == 'real':
+            return repr(float(e[1])), 'real'
         if k == 'opc':
             return 'ord(%s)' % e[1], 'num'
         if k == 'path':
@@ -701,12 +734,20 @@ class Emitter:
             t, c = self.path(e[1])
             return 'addr(%s)' % t, 'up'
         if k == 'index':
-            if e[1] == 'isc_literal_solutions':
-                return 'isc_literal_solutions[%s]' % self.expr(e[2]), 'sp'
+            if e[1] in ('isc_literal_solutions', 'lir_3c60', 'lir_3d60', 'lir_3e60'):
+                return '%s[%s]' % (e[1], self.expr(e[2])), 'sp'
+            m = re.match(r'readonly_w(\d+)$', e[1])
+            if m:
+                # a word table of isc_readonly_tables at +N (isc_types.ins.pas
+                # names none there): the module's view by word
+                return 'p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[%d + %s]' % (
+                    int(m.group(1)) // 2, self.paren(e[2], 4)), 'i16'
             if e[1].startswith('opcode_'):
                 return 'isc_tool_generated_readonly_tables.%s[il$t(%s)]' % (
                     e[1], self.expr(e[2])), 'i16'
             raise LangError('rule %d: no table %s' % (self.rule, e[1]))
+        if k == 'call' and e[1] in BUILTINS:
+            return '%s(%s)' % (e[1], ', '.join(self.expr(a, 'i32') for a in e[2])), BUILTINS[e[1]]
         if k == 'call':
             h = self.h.get(e[1])
             if not h or h['ret'] is None:

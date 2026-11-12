@@ -31,8 +31,11 @@ end;
 
 transform 327  ip_reg_field <- and_top | eor_top | or_top ($1: ip_reg_field, $2: literal_32_bits)
   pass_1 image 16#14027E;
-  { not lifted: 0x1BC346: a shift by a register }
-  pass_2 image 16#1BC312 residue;
+  pass_2 image 16#1BC312 begin
+    temp t1: integer32;
+    t1 <- validate_shift_count($1.bit_position_of_lsb);
+    emit simple(opcode_rr[subject.il_kind], 0, find_well_known_literal_solution(lshft($2.literal_32_bits_value, t1)), $1, solution);
+  end;
 end;
 
 transform 328  ip_reg_field <- and_top | eor_top | or_top ($1: ip_reg_field, $2: ip_reg_field)
@@ -208,7 +211,6 @@ transform 339  ip_reg_field <- or_top ($1: [ip_reg, ip_reg_field], $2: literal_3
     temp t2: solution;
     temp t3: solution;
     temp t4: solution;
-    temp t5: solution;
     if result.c136 = 1 then
       t1 <- find_well_known_literal_solution(-1);
     else
@@ -220,9 +222,8 @@ transform 339  ip_reg_field <- or_top ($1: [ip_reg, ip_reg_field], $2: literal_3
         emit load(opc$loadl, 0, t3, t3.base_register, t2, t3.il, 0, t3.bits_known, t3.bits_trusted);
       end;
     end;
-    t4 <- $1;
-    t5 <- find_well_known_literal_solution(number_of_rightmost_zeroes(result.l352));
-    emit field(opc$insert, 0, length_of_sequence_of_ones(result.l352), t1, t5, t4);
+    t4 <- find_well_known_literal_solution(number_of_rightmost_zeroes(result.l352));
+    emit field(opc$insert, 0, length_of_sequence_of_ones(result.l352), t1, t4, $1);
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
     result.false_label <- $1.false_label;

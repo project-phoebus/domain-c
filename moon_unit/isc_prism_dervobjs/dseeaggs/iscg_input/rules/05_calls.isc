@@ -20,8 +20,9 @@ end;
 
 transform 342  ip_reg <- isc_call_top
   pass_1 image 16#115F12;
-  { not lifted: 0x1A7762: bit 7 of +14 }
-  pass_2 image 16#1A7740 residue;
+  pass_2 image 16#1A7740 begin
+    pass_2_isc_call(subject.il, subject.il.b13 & 128 <> 0, subject.il.b12 & 128 <> 0, subject.il.b14 & 128 <> 0, subject.inherited_attributes, 0);
+  end;
 end;
 
 transform 343  ip_reg <- isc_fio_init ($1: ip_reg)
@@ -39,26 +40,38 @@ end;
 
 transform 344  address_mode <- isc_func_call_hidden_temp_top
   pass_1 image 16#116566;
-  { not lifted: 0x1A782A: bit 7 of +14 }
-  pass_2 image 16#1A7806 residue;
+  pass_2 image 16#1A7806 begin
+    pass_2_isc_call(subject.il, subject.il.b13 & 128 <> 0, subject.il.b12 & 128 <> 0, subject.il.b14 & 128 <> 0, subject.inherited_attributes, 0);
+    result.base_register <- result.l352;
+    result.index_register <- isc_user_routines_31c;
+  end;
 end;
 
 transform 345  ip_reg <- isc_func_call_top
   pass_1 image 16#1166E2;
-  { not lifted: 0x1A7882: bit 7 of +14 }
-  pass_2 image 16#1A785E residue;
+  pass_2 image 16#1A785E begin
+    pass_2_isc_call(subject.il, subject.il.b13 & 128 <> 0, subject.il.b12 & 128 <> 0, subject.il.b14 & 128 <> 0, subject.inherited_attributes, 0);
+    result.live_range <- result.l352;
+  end;
 end;
 
 transform 346  fp_reg <- isc_func_call_top
   pass_1 image 16#1168A4;
-  { not lifted: 0x1A78D2: bit 7 of +14 }
-  pass_2 image 16#1A78AE residue;
+  pass_2 image 16#1A78AE begin
+    pass_2_isc_call(subject.il, subject.il.b13 & 128 <> 0, subject.il.b12 & 128 <> 0, subject.il.b14 & 128 <> 0, subject.inherited_attributes, 0);
+    result.live_range <- result.l352;
+  end;
 end;
 
 transform 347  fp_reg_pair <- isc_func_call_top
   pass_1 image 16#116A7E;
-  { not lifted: 0x1A7944: bit 7 of +14 }
-  pass_2 image 16#1A78FE residue;
+  pass_2 image 16#1A78FE begin
+    if result.c136 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    pass_2_isc_call(subject.il, subject.il.b13 & 128 <> 0, subject.il.b12 & 128 <> 0, subject.il.b14 & 128 <> 0, subject.inherited_attributes, 0);
+    result.live_range <- result.l352;
+  end;
 end;
 
 transform 348  ip_reg <- pf_call ($1: address_mode)

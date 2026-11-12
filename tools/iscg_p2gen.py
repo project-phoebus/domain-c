@@ -207,15 +207,45 @@ FLAGS_VIEW = '''  { The booleans isc_solution_fields.ins.pas lumps into one fiel
     b83_3_0: 0..15;
     end;'''
 
-LOCALS_VIEW = '''  { A rule's own words and longwords below +352 (the insert has bytes
-    there, space136): a view of the whole solution by offset / 2 and
-    offset / 4. }
+LOCALS_VIEW = '''  { A rule's own fields where the insert has none of their size: words
+    and longwords below +352 (the insert has bytes there, space136),
+    bytes and longwords at an offset 4k + 2 from +352 (the insert has
+    pointers at 4k): a view of the whole solution by offset / 2, offset
+    / 4 (and (offset - 2) / 4) and offset. }
   p2_locals_ptr_t = ^p2_locals_t;
   p2_locals_t = record
     case integer of
       1: (w: array [0..215] of integer);
-      2: (l: array [0..107] of integer32);
+      2: (p: array [0..107] of isc_solution_ptr_t);
+      3: (c: array [0..431] of 0..255);
+      4: (w0: integer;
+          p2: array [0..106] of isc_solution_ptr_t);
     end;'''
+
+
+NODE_VIEW = '''  { An IL node's bytes, words and longwords by offset (the actions read
+    a node's fields by offset whatever its kind: p2_node_t names none). }
+  p2_node_ptr_t = ^p2_node_t;
+  p2_node_t = record
+    case integer of
+      1: (b: array [0..511] of 0..255);
+      2: (w: array [0..255] of integer);
+      3: (p: array [0..127] of univ_ptr);
+    end;'''
+
+
+READONLY_VIEW = '''  { isc_readonly_tables by word (the actions index word tables in it that
+    isc_types.ins.pas's view leaves unnamed). }
+  p2_readonly_ptr_t = ^p2_readonly_t;
+  p2_readonly_t = record
+    w: array [0..1559] of integer;
+    end;'''
+
+LIR_TABS = '''var
+  { lir.pas's physical registers' solutions by floating register (lir +0x3C60,
+    +0x3D60): lir.pvt.pas declares them, which the ISC does not open. }
+  lir_3c60: extern array [0..63] of solution_ptr_t;
+  lir_3d60: extern array [0..63] of solution_ptr_t;'''
 
 
 def gen_module(rules, sec, headings, includes, gen_note, pattern_text):
@@ -258,22 +288,39 @@ def gen_module(rules, sec, headings, includes, gen_note, pattern_text):
     out.append(includes.rstrip('\n'))
     out.append('')
     bodies = {}
-    need_flags = need_locals = False
+    need_flags = need_locals = need_node = need_ro = need_lir = False
+    errors = []
     for r in rs:
         if T[r]['p2_empty']:
             continue
         em = L.Emitter(r, headings)
-        decl, body = em.routine(T[r]['p2_body'])
+        try:
+            decl, body = em.routine(T[r]['p2_body'])
+        except L.LangError as e:
+            errors.append(str(e))
+            continue
         text = '\n'.join(decl + body)
         need_flags |= 'p2_flags_ptr_t' in text
         need_locals |= 'p2_locals_ptr_t' in text
+        need_node |= 'p2_node_ptr_t' in text
+        need_ro |= 'p2_readonly_ptr_t' in text
+        need_lir |= 'lir_3c60' in text or 'lir_3d60' in text
         bodies[r] = (decl, body)
-    if need_flags or need_locals:
+    if errors:
+        raise L.LangError('; '.join(errors))
+    if need_flags or need_locals or need_node or need_ro:
         out.append('type')
+        if need_node:
+            out.append(NODE_VIEW)
+        if need_ro:
+            out.append(READONLY_VIEW)
         if need_flags:
             out.append(FLAGS_VIEW)
         if need_locals:
             out.append(LOCALS_VIEW)
+        out.append('')
+    if need_lir:
+        out.append(LIR_TABS)
         out.append('')
     for r in rs:
         t = T[r]
@@ -316,11 +363,17 @@ def modules(gen, includes, gen_note):
     """{file name: text} of the complete sections' modules."""
     headings = L.read_headings(includes)
     out = {}
+    errors = []
     for sec in gen.r.sections:
         if not complete(gen.r, sec):
             continue
-        out[module_file(sec)] = gen_module(gen.r, sec, headings, includes, gen_note,
-                                           pattern_text)
+        try:
+            out[module_file(sec)] = gen_module(gen.r, sec, headings, includes, gen_note,
+                                               pattern_text)
+        except L.LangError as e:
+            errors.append(str(e))
+    if errors:
+        raise L.LangError('\n'.join(errors))
     return out
 
 
