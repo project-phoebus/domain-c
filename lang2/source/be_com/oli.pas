@@ -185,6 +185,10 @@ type
   { A table of longwords from the bookkeeping heap. }
   oli_longs_ptr_t = ^oli_longs_t;
   oli_longs_t = array [0..65535] of integer32;
+  oli_instrs_ptr_t = ^array [0..65535] of instr_ptr_t;
+  oli_bbs_ptr_t = ^array [0..65535] of bb_ptr_t;
+  oli_heap_ptr_t = ^mrh_$heap_t;
+  integer32_ptr_t = ^integer32;
 
   { A cycle's live registers (excess_register_pressure). }
   oli_live_t = record
@@ -290,6 +294,9 @@ type
     height: 0..65535;                   { +28 }
     enable: integer;                    { +30: the count of what must be
                                           scheduled before it }
+    space32: array [32..41] of char;
+    unum: 0..65535;                     { +42: its number, unsigned (the
+                                          sequence numbers reach 16#8000) }
   end;
 
   { A segment's +34 word as the scheduler uses it (batch A's lts_t
@@ -372,12 +379,16 @@ var
                                           copy goes here too) }
   oli_ip_zero: lr_ptr_t;                { +0x2DC4: an integer register
                                           holding 0 }
-  oli_2dc8: univ_ptr;                   { +0x2DC8 }
-  oli_2dcc: oli_longs_ptr_t;            { +0x2DCC: by instruction number
-                                          (800 bytes) }
+  oli_mem_lr: lr_ptr_t;                 { +0x2DC8: the memory live range
+                                          the prologue's fan in writes }
+  oli_copies: oli_instrs_ptr_t;         { +0x2DCC: the latest copy of
+                                          each loop instruction, by its
+                                          number less one (800 bytes) }
   oli_2dd0: oli_longs_ptr_t;            { +0x2DD0: two by iteration }
   oli_2dd4: oli_longs_ptr_t;            { +0x2DD4: by iteration }
-  oli_2dd8: oli_longs_ptr_t;            { +0x2DD8: by iteration }
+  oli_tails: oli_bbs_ptr_t;             { +0x2DD8: the tail blocks, by
+                                          iteration less one }
+  oli_body: bb_ptr_t;                   { +0x2DE0: the pipelined body }
   oli_prolog_bb: bb_ptr_t;              { +0x2DE4: the block the
                                           prologue's instructions go in }
   oli_prolog_last: instr_ptr_t;         { +0x2DEC: the last instruction
@@ -593,7 +604,7 @@ begin
   oli_ip_zero := nil;
   oli_sp_zero := nil;
   oli_dp_zero := nil;
-  oli_2dc8 := nil;
+  oli_mem_lr := nil;
   oli_fp_consts := nil;
   oli_2e00 := -1;
   oli_prolog_last := nil;
@@ -3332,7 +3343,7 @@ end;
 
 { build_bookkeeping_structures - the tables the pipelined loop is built
   with, from the bookkeeping heap: two of a longword by iteration
-  (oli_2dd8, oli_2dd4), one by instruction number (oli_2dcc, cleared),
+  (oli_tails, oli_2dd4), one by instruction number (oli_copies, cleared),
   each reduction's partial sums (iterations by iterations), one of two
   longwords by iteration (oli_2dd0, cleared); oli_2de8 the
   instructions' sequence numbers' span.  0x25C108, 0x122 bytes: the
@@ -3343,11 +3354,11 @@ var
   k: integer32;
   r: oli_red_ptr_t;
 begin
-  oli_2dd8 := mrh_$alloc(oli_heap, oli_niters * 4);
+  oli_tails := mrh_$alloc(oli_heap, oli_niters * 4);
   oli_2dd4 := mrh_$alloc(oli_heap, oli_niters * 4);
-  oli_2dcc := mrh_$alloc(oli_heap, 800);
+  oli_copies := mrh_$alloc(oli_heap, 800);
   for k := 1 to 200 do
-    oli_2dcc^[k - 1] := 0;
+    oli_copies^[k - 1] := nil;
   r := oli_reductions;
   oli_2de8 := ((oli_niters - 1) * (oli_niters - 2)) div 2 + oli_iters
       + oli_niters - 1;
@@ -3358,4 +3369,293 @@ begin
   oli_2dd0 := mrh_$alloc(oli_heap, oli_niters * 2 * 4);
   for k := 0 to oli_niters * 2 - 1 do
     oli_2dd0^[k] := 0;
+end;
+
+{ build_fan_in_seq_instr - with more than one memory live range exposed
+  at the loop's head (not first in the block), an mmt_seq as the
+  prologue block's only instruction that reads them all and writes a
+  new memory live range (oli_mem_lr); it becomes the prologue's last
+  initialization when there is none.  0x25C22A, 0x1C8 bytes: global
+  (A5) though only build_pipelined_loop calls it; the instruction from
+  lir_main_heap (44 + 12n bytes), its flags from the opcode's
+  attributes as lir does. }
+
+procedure build_fan_in_seq_instr;
+var
+  n, k: integer32;
+  s: lts_ptr_t;
+  i: instr_ptr_t;
+begin
+  n := 1;
+  s := oli_bb^.exposed;
+  while s <> nil do begin
+    if not s^.f2.first_in_bb then
+      if s^.refs^.h.kind in [operand$argument_block_memory..
+          operand$well_behaved_memory] then
+        n := n + 1;
+    s := s^.next_exposed;
+  end;
+  if n <= 1 then
+    return;
+  i := mrh_$alloc(oli_heap_ptr_t(lir_main_heap)^, n * 12 + 44);
+  i^.opc := 202;                        { mmt_seq }
+  integer32_ptr_t(i)^ := 16#4000;
+  i^.h.nopnds := n;
+  i^.h.preference := instruction_attributes[202].b6_0;
+  i^.h.may_generate_an_exception := instruction_attributes[202].b11_7;
+  i^.h.b0_1 := oli_bb^.first^.h.b0_1;
+  i^.l32 := oli_bb^.first^.l32;
+  i^.bb := oli_prolog_bb;
+  k := 1;
+  s := oli_bb^.exposed;
+  while s <> nil do begin
+    if not s^.f2.first_in_bb then
+      if s^.refs^.h.kind in [operand$argument_block_memory..
+          operand$well_behaved_memory] then begin
+        i^.opnds[k].ptr := s^.lr;
+        opnd_bytes_ptr_t(addr(i^.opnds[k]))^.rrp := 16;
+        i^.opnds[k].h.kind := operand$inscrutable_memory;
+        i^.opnds[k].h.num := k;
+        k := k + 1;
+      end;
+    s := s^.next_exposed;
+  end;
+  oli_mem_lr := lir_$new_live_range;
+  bv_$make_live_range_complex(oli_rtn, oli_mem_lr);
+  i^.opnds[k].ptr := oli_mem_lr;
+  opnd_bytes_ptr_t(addr(i^.opnds[k]))^.rrp := 8;
+  i^.opnds[k].h.kind := operand$inscrutable_memory;
+  i^.opnds[k].h.num := k;
+  oli_mem_lr^.rrp := oli_mem_lr^.rrp + [rrp$write];
+  oli_prolog_bb^.first := i;
+  oli_prolog_bb^.last := i;
+  i^.next := nil;
+  i^.prev := nil;
+  if oli_prolog_last = nil then
+    oli_prolog_last := i;
+end;
+
+{ build_fan_out_seq_instrs - with oli_mem_lr and more than one memory
+  live range final in the loop (not exposed), an mmt_seq as each tail
+  block's only instruction (numbered -32768), reading oli_mem_lr and
+  writing them all.  0x25C3F2, 0x1DC bytes: global, as the fan in. }
+
+procedure build_fan_out_seq_instrs;
+var
+  n, k, m, size: integer32;
+  s: lts_ptr_t;
+  i: instr_ptr_t;
+begin
+  if oli_mem_lr = nil then
+    return;
+  n := 1;
+  s := oli_bb^.finals;
+  while s <> nil do begin
+    if not s^.f2.exposed then
+      if s^.refs^.h.kind in [operand$argument_block_memory..
+          operand$well_behaved_memory] then
+        n := n + 1;
+    s := s^.next_final;
+  end;
+  if n <= 1 then
+    return;
+  size := n * 12 + 44;
+  for k := 1 to oli_niters do begin
+    i := mrh_$alloc(oli_heap_ptr_t(lir_main_heap)^, size);
+    utils_$set_instruction_opcode(i, 202);      { mmt_seq }
+    i^.num := -32768;
+    integer32_ptr_t(i)^ := 16#4000;
+    i^.h.nopnds := n;
+    i^.h.preference := instruction_attributes[202].b6_0;
+    i^.h.may_generate_an_exception := instruction_attributes[202].b11_7;
+    i^.h.b0_1 := oli_bb^.last^.h.b0_1;
+    i^.l32 := oli_bb^.last^.l32;
+    i^.bb := oli_tails^[k - 1];
+    i^.opnds[1].ptr := oli_mem_lr;
+    opnd_bytes_ptr_t(addr(i^.opnds[1]))^.rrp := 16;
+    i^.opnds[1].h.kind := operand$inscrutable_memory;
+    i^.opnds[1].h.num := 1;
+    m := 2;
+    s := oli_bb^.finals;
+    while s <> nil do begin
+      if not s^.f2.exposed then
+        if s^.refs^.h.kind in [operand$argument_block_memory..
+            operand$well_behaved_memory] then begin
+          i^.opnds[m].ptr := s^.lr;
+          opnd_bytes_ptr_t(addr(i^.opnds[m]))^.rrp := 8;
+          i^.opnds[m].h.kind := operand$inscrutable_memory;
+          i^.opnds[m].h.num := m;
+          m := m + 1;
+        end;
+      s := s^.next_final;
+    end;
+    oli_tails^[k - 1]^.first := i;
+    oli_tails^[k - 1]^.last := i;
+    i^.next := nil;
+    i^.prev := nil;
+  end;
+end;
+
+{ enlist_sorted - i put in bb's list by its number (unsigned), from
+  after (bb's first when nil): before the first with a higher number,
+  else before bb's last instruction and the control transfers before
+  it.  0x25C5CE, 0xEC bytes. }
+
+procedure enlist_sorted(
+    i: instr_ptr_t;
+    after: instr_ptr_t;
+    bb: bb_ptr_t); options(val_param); internal;
+var
+  p: instr_ptr_t;
+begin
+  if after = nil then begin
+    if bb^.first = nil then begin
+      bb^.first := i;
+      bb^.last := i;
+      i^.next := nil;
+      i^.prev := nil;
+      return;
+    end;
+    after := bb^.first;
+  end;
+  p := after;
+  while p <> nil do begin
+    if oli_instr_v_ptr_t(p)^.unum > oli_instr_v_ptr_t(i)^.unum then begin
+      i^.next := p;
+      i^.prev := p^.prev;
+      if i^.prev <> nil then
+        i^.prev^.next := i
+      else
+        bb^.first := i;
+      p^.prev := i;
+      return;
+    end;
+    p := p^.next;
+  end;
+  p := bb^.last;
+  while p^.prev <> nil do begin
+    if not (instruction_attributes[p^.prev^.opc].class in
+        [class$branch, class$fp_branch, class$jump]) then
+      exit;
+    p := p^.prev;
+  end;
+  if p^.prev = nil then begin
+    p^.prev := i;
+    i^.next := p;
+    bb^.first := i;
+    i^.prev := nil;
+  end
+  else begin
+    p^.prev^.next := i;
+    i^.next := p;
+    i^.prev := p^.prev;
+    p^.prev := i;
+  end;
+end;
+
+{ add_instruction_in_sequence - a copy of the loop's instruction t for
+  iteration it, put in bb by its new sequence number (after the copy of
+  the instruction scheduled before it, the n-1st, when that is in bb);
+  oli_copies keeps it by t's number.  0x25C6BA, 0xE2 bytes: the copy
+  is unlinked from bb's end, where utils put it. }
+
+function add_instruction_in_sequence(
+    it: integer32;
+    t: instr_ptr_t;
+    n: integer32;
+    bb: bb_ptr_t): instr_ptr_t; options(val_param); internal;
+var
+  c, after: instr_ptr_t;
+begin
+  c := utils_$copy_instr_template_to_bb_end(t, bb);
+  oli_copies^[oli_instr_v_ptr_t(t)^.unum - 1] := c;
+  if c^.prev <> nil then
+    c^.prev^.next := c^.next
+  else
+    bb^.first := c^.next;
+  if c^.next <> nil then
+    c^.next^.prev := c^.prev
+  else
+    bb^.last := c^.prev;
+  c^.num := new_seq_num(it, oli_instr_v_ptr_t(t)^.unum, t^.opc);
+  if n > 1 then
+    if oli_copies^[oli_instr_v_ptr_t(oli_sched_list[n - 1])^.unum - 1]^.bb
+        = bb then
+      after := oli_copies^[oli_instr_v_ptr_t(oli_sched_list[n - 1])^.unum - 1]
+    else
+      after := nil
+  else
+    after := nil;
+  enlist_sorted(c, after, bb);
+  add_instruction_in_sequence := c;
+end;
+
+{ five_oppify - floating add, subtract and truncate i made a
+  five-operand instruction when in the pipelined body (adds5 .. truncdi5),
+  an add's inputs exchanged unless operand 2 is the one its result
+  shares (oli_5op_k, by num), its shared input marked intend to modify
+  and the result's write turned into a modify.  0x25C79C, 0x182 bytes. }
+
+procedure five_oppify(
+    i: instr_ptr_t;
+    num: integer32); options(val_param); internal;
+begin
+  case i^.opc of
+    155, 154: begin                     { subs, adds }
+      if i^.opc = 154 then begin
+        if i^.bb = oli_body then
+          utils_$set_instruction_opcode(i, 186);    { adds5 }
+        if oli_5op_k[num] <> 2 then
+          swap_inputs(i);
+      end
+      else if i^.bb = oli_body then
+        utils_$set_instruction_opcode(i, 187);      { subs5 }
+      i^.opnds[2].h.intend_to_modify := true;
+      if i^.opnds[3].h.write then
+        opnd_bytes_ptr_t(addr(i^.opnds[3]))^.rrp :=
+            (opnd_bytes_ptr_t(addr(i^.opnds[3]))^.rrp & 16#F7) ! 4;
+    end;
+    152:                                { truncsi }
+      if i^.bb = oli_body then
+        utils_$set_instruction_opcode(i, 188);      { truncsi5 }
+    172, 171: begin                     { subd, addd }
+      if i^.opc = 171 then begin
+        if i^.bb = oli_body then
+          utils_$set_instruction_opcode(i, 189);    { addd5 }
+        if oli_5op_k[num] <> 2 then
+          swap_inputs(i);
+      end
+      else if i^.bb = oli_body then
+        utils_$set_instruction_opcode(i, 190);      { subd5 }
+      i^.opnds[2].h.intend_to_modify := true;
+      i^.opnds[5].h.intend_to_modify := true;
+      if i^.opnds[3].h.write then begin
+        opnd_bytes_ptr_t(addr(i^.opnds[3]))^.rrp :=
+            (opnd_bytes_ptr_t(addr(i^.opnds[3]))^.rrp & 16#F7) ! 4;
+        opnd_bytes_ptr_t(addr(i^.opnds[6]))^.rrp :=
+            (opnd_bytes_ptr_t(addr(i^.opnds[6]))^.rrp & 16#F7) ! 4;
+      end;
+    end;
+    169:                                { truncdi }
+      if i^.bb = oli_body then
+        utils_$set_instruction_opcode(i, 191);      { truncdi5 }
+    otherwise
+  end;
+end;
+
+{ un_five_oppify - a five-operand instruction back to its opcode.
+  0x25C91E, 0x76 bytes: a jump table. }
+
+procedure un_five_oppify(
+    i: instr_ptr_t); options(val_param); internal;
+begin
+  case i^.opc of
+    186: utils_$set_instruction_opcode(i, 154);
+    187: utils_$set_instruction_opcode(i, 155);
+    188: utils_$set_instruction_opcode(i, 152);
+    189: utils_$set_instruction_opcode(i, 171);
+    190: utils_$set_instruction_opcode(i, 172);
+    191: utils_$set_instruction_opcode(i, 169);
+    otherwise
+  end;
 end;
