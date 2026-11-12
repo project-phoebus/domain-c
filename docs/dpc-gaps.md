@@ -1126,3 +1126,20 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
        begin
          name.length := 0;
        end;
+
+44. **A short string constant in an initializer padded with NULs.**
+   cargs.pas's opt_names (30 names of 1024 characters, `'SETHI_U.',
+   ...'): the image's .rwdi bytes pad each with blanks, as the
+   reference has a string constant shorter than its array padded; dpc
+   pads with NULs.  The code is not affected (the gate does not see
+   it); tools/cc_datacheck.py reports the padding (translator QA).
+   Reproducer (dpc's data: `41 42 00 00 ...', the reference's `41 42 20
+   20 ...'):
+
+       module g44;
+       type n8 = packed array [1..8] of char;
+       var t: array [0..1] of n8 := ['AB', 'CDE'];
+       procedure p;
+       begin
+         t[1] := t[0];
+       end;

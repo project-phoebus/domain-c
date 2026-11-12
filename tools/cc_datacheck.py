@@ -705,7 +705,7 @@ def check(f, binkey, img, obj, verbose=False):
                             f, binkey, s.name, s.size, img.block_end(base, None) - base)))
         res = compare(s, base, mine, care, [0] * s.size, lst)
         how = None
-        if res[1] and what[s.index] == 'moddata':
+        if (res[1] or res[2]) and what[s.index] == 'moddata':
             # other layouts, kept when they leave fewer differences: by
             # name (the hints), and by content (our block aligned with
             # the image's, gaps allowed: dpc's alignment and order of
@@ -730,7 +730,7 @@ def check(f, binkey, img, obj, verbose=False):
                                   [sn[j] + sc[j + sn[j]] for j in range(s.size)]))
             for why, sh in cands:
                 alt = compare(s, base, mine, care, sh, lst)
-                if alt[1] < res[1]:
+                if (alt[1], alt[1] + alt[2]) < (res[1], res[1] + res[2]):
                     res, how = alt, (why, sh)
         if how:
             why, sh = how
