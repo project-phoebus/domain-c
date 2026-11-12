@@ -1256,7 +1256,7 @@ begin
   ru_remat := nil;
   bb := rtn^.bbs;
   while bb <> nil do begin
-    ra_$clean_bb_and_init_bit_vectors(bb, 14, false);
+    ra_$clean_bb_and_init_bit_vectors(bb, [1..3], false);
     bb := bb^.next;
   end;
   ru_bytes := rshft(ru_rtn^.l192 + 32, 5) * 4;
@@ -1277,7 +1277,7 @@ begin
     bb := bb^.next114;
   end;
   bv_$release_availability_bit_vectors(rtn);
-  ra_$build_conflict_graph(rtn, 14, true);
+  ra_$build_conflict_graph(rtn, [1..3], true);
   lr := rtn^.lrs;
   while lr <> nil do begin
     lr^.rrp := lr^.rrp - [rrp$ra_marked];

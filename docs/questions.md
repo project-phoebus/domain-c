@@ -1859,3 +1859,71 @@ revisited.
    range).  oli_$compare_memory_references reads its parameters by
    value (it is called through mmt_compare_t) but was declared without
    options(val_param): added.  Confirm.
+229. Translator PB6, ra: ra's +0x65C and ra_utils' +0x204 hold the same
+   three initialized characters 'ISD', and only these two units open
+   ra.pvt.pas: an initialized variable of that insert (the register
+   classes' letters, which ra_$process_routine's failure message reads
+   as A5 + 0x65B + class).  Both units declare it (ra_letters, ru_204);
+   should ra.pvt.pas declare it instead (dpc gap 32's way, or a
+   `define' in one unit)?
+230. Translator PB6, ra (slips kept as the image has them?):
+   ra_$remove_lr_from_graph's `if active > 1 then dec else if active >
+   1 then ...' (the second arm, which would move a live range whose
+   active aversions reach 0, is dead: pattern 150); the conflict heaps'
+   names are in the reverse of their use (heap 0, "ra cc conflict
+   heap", holds the simple x simple records; the A/P heaps' names
+   match); the *UCAND* trace passes the address of the word +58 for a
+   %4LD; ra_$spill_zero_cost_lrs returns false before its body
+   (pattern 151); ra_$open_another_fp_register's pair search returns
+   the odd register of the pair whose even half it opened.
+231. Translator PB6, ra (for batch A): fields ra reads through views
+   during RA, which batch A's records name otherwise: instr_t +2 bits
+   3..0 the stall cycles SCHED left (instr_hdr_t names bit 3
+   do_not_delete), +24 the next move on ra's preference lists, +28..+31
+   the live counts (floating after, floating peak, integer after,
+   integer peak); lr_t +3 bit 3 on the live list, bit 0 spill victim,
+   +10 bit 6 protected (the pipe), bit 5 a collapse candidate, +28 the
+   spill cost and +44 the reload cost (singles; +44 later the conflict
+   list, its pointers tagged), +40 the block of a simple live range's
+   index (+58: the complex serial number, or the simple index, or the
+   active aversion count during the collapse), +48/+52 the live list's
+   or pipe slot's links (+52 first the segment last seen), +56 the
+   conflict count, +60 the aversion/preference list, +64 the clock its
+   protection ends or it went live (then the preferred registers'
+   32..63), +68 its weighted live time (then preferred 0..31), +72 its
+   first definition (chained at the segments' +36), +76 its dead
+   segments (chained at their +40), +80/+84 the conflicting registers
+   (32..63, 0..31); lts_t +32 the number of the instruction last
+   referring to it (a word), +34 that of its definition's, +36 the next
+   definition, +40 its last reference (an operand), then the next dead
+   segment; bb_t +0..+7 the live counts, +122/+126/+130 the registers
+   written (integer, floating 32..63, 0..31); rtn_t +116 the stack
+   frame's live range, +120 another frame register live range (the
+   conventions' b30); the routine node's +240 a common member, +374
+   bit 19 needs_db, +378 bit 4 (forces a frame) and bit 2 (has one).
+   rtn_t's conv and frame_size (PA5) agree with ra's view.
+232. Translator PB6, konst (for batch A): fields KONST uses through views:
+   lts_t +28 the exposed segments a definition reaches (chained at
+   their +28: lts_t.l28), +32 the next on konst's queue (-1 the last),
+   +40 the definition descriptor, +44 a definition's join inputs (the
+   ut_jbi_t records chained at +0); a flow graph edge's next_pred low
+   bit (+15 bit 0) the mark that konst followed it (masked `andi.l
+   #-2' while set); ut_jbi_t's instr low bit (+15 bit 0) an input
+   reached along an executable path; bb_t +130 a join input, +146 the
+   walk number, +150 konst's block queue (-1 the last); instr_t +28 a
+   word, marked for evaluation; a join birthpoint's operand 3's link
+   (+72) its inputs (chained at +4).  And: KONST runs only when its
+   debug level (at_backend_switches.level) is nonzero; the reached-
+   block queue (+92/+80) is emptied but nothing fills it, and +96/+84
+   are set and never read.  Is the level test the original's (KONST
+   off by default)?
+233. Translator PB6, at_backend: the phase table's +3 byte is 255 exactly
+   where +2 (turned off at low optimization) is 0, and nothing reads
+   it (kept as b3); get_calling_conventions looks an entry's record up
+   at its block's +124 but stores a new one at the entry node's own
+   +124 (kept); build_source_statement_map sizes its tables by
+   runbackend_16 (the statements opt_main counted) and lir_$end_routine
+   is called with no argument (pattern 132; the translation passes the
+   routine).  at_backend_$begin_compilation passes its word p to
+   exs_$initialise as `p in [5]' twice (both arguments the same: a
+   slip, or two flags that coincide for C?).

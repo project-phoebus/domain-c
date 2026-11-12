@@ -257,3 +257,27 @@ lang2/source/be_com/ra_utils.pas	s/^(          \{ The later readers linked to th
 lang2/source/be_com/ra_utils.pas	s/^(          \{ A TST made of the writing move reads no register\. \})$/%endif { gap 28 }\n$1/
 # gap 7 (oli): the real constant 0.0 passed (an integer constant node instead, for the check)
 lang2/source/be_com/oli.pas	s/(dp|rl)contk\(0\.0\)/smcontk(81, 0) { gap 7 }/
+# gap 38 (ra, translator PB6): a set constructor with a run-time range (the range's two bounds subtracted as members, for the check)
+lang2/source/be_com/ra.pas	s/^  ([fg])\.s := \[0\.\.63\] - \[target_properties\.p_14\[10\] \.\.$/  $1.s := [0..63]; ra_pipe_len := { gap 38 }/
+lang2/source/be_com/ra.pas	s/^      (target_properties\.p_14\[10\] \+ target_properties\.p_14\[12\] - 1)\];/      $1;/
+lang2/source/be_com/ra.pas	s/ - \[target_properties\.p_14\[(\d+)\] \.\.$/ - [target_properties.p_14[$1]] - { gap 38 } [/
+# gap 39 (ra, translator PB6): odd of a byte field (its low bit masked, for the check)
+lang2/source/be_com/ra.pas	s/odd\((\w+\^\.f2\.reg)\)/(($1 & 1) <> 0) { gap 39 }/g
+# gap 7 (ra, translator PB6): the spill costs' real arithmetic (single reals: each assignment stores 0, each comparison compares the bits, for the check)
+lang2/source/be_com/ra.pas	s/^(\s*)([\w^.\[\]]+)\.r := [^;{]*(;?)(\s*\{.*\})?$/$1$2.i := 0$3 { gap 7 }/
+lang2/source/be_com/ra.pas	s/(\w[\w^.\[\]]*)\.r (<|>|<=|>=|=|<>) (\w[\w^.\[\]]*)\.r\b/$1.i $2 $3.i/g
+lang2/source/be_com/ra.pas	s/(\w[\w^.\[\]]*)\.r (<|>|<=|>=|=|<>) 1\.0\b/$1.i $2 16#3F800000 { gap 7 }/g
+# gap 28 (ra, translator PB6): ra_$build_conflict_graph's values outlive dpc's registers: a write's conflicts, its going live and a call's clobbers left out of the check (a conditional variable not set)
+lang2/source/be_com/ra.pas	s/^(          \{ The write's conflicts\. \})$/%var gap28w;\n%if gap28w %then { gap 28 }\n$1/
+lang2/source/be_com/ra.pas	s/^(          \{ Its live range goes live\. \})$/%endif { gap 28 }\n$1/
+lang2/source/be_com/ra.pas	s/^(          \{ \(out of the pipe first\) \})$/%if gap28w %then { gap 28 }\n$1/
+lang2/source/be_com/ra.pas	s/^(          \{ It may die at once\. \})$/%endif { gap 28 }\n$1/
+lang2/source/be_com/ra.pas	s/^(        \{ The clobbers of a call or SVC\. \})$/%if gap28w %then { gap 28 }\n$1/
+lang2/source/be_com/ra.pas	s/^(        \{ Ready for the next instruction\. \})$/%endif { gap 28 }\n$1/
+# gap 40 (ra, translator PB6): a frame beyond link.w (ra_$collapse_conflict_graph's 256K table of aversions: the table shrunk to two entries, for the check)
+lang2/source/be_com/ra.pas	s/^  ra_ap_table_t = array \[0\.\.65535\] of ra_ap_ptr_t;$/  ra_ap_table_t = array [0..1] of ra_ap_ptr_t; { gap 40 }/
+lang2/source/be_com/ra.pas	s/\.r < 1\.0e-4/.i < 16#38D1B717 { gap 7 }/
+# gap 4 (konst, translator PB6): writeln (dropped, for the check)
+lang2/source/be_com/konst.pas	s/^(\s*)writeln\(.*\);\s*$/${1}; { gap 4 }/
+# gap 7 (konst, translator PB6): a double literal converted to a single (left unset, for the check)
+lang2/source/be_com/konst.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/

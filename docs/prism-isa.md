@@ -706,11 +706,40 @@ Translator PB5 (ra_utils.pas; ra.pas read in part, not translated).
 
 - **Live ranges, not variables, are spilled.**  A live range's spill
   cost is a single real (lr +28) that ra_$initialize_basic_block adds
-  to for each reference, weighted by the block's loop depth (a power
-  through the FPP: 16 to the depth, the depth capped at 24, most
-  likely; FPP words 0x00C4, 0x00A0 4.0, 0x007C, 0x0078 2.0, 0x0148), a
-  read and a write counting differently (lr +44 the reload cost).  A
-  rematerializable live range costs nothing to spill.
+  to for each reference, weighted by the block's loop depth: **16 to
+  the depth, the depth capped at 24 (confirmed, translator PB6:
+  `2.0 ** (depth * 4.0)'; FPP words 0x00C4 the depth, 0x00A0 4.0 the
+  multiply, 0x007C the product stored to a temporary, 0x0078 2.0
+  loaded, 0x0148 the power by the temporary; rev889-patterns 149)**.
+  A read or write adds the weight, a modify twice it; a write not read
+  subtracts twice the weight from the reload cost (lr +44); a read a
+  reload absorbs (TSTB, TSTW, EXTEND7/15 setting the condition codes
+  with an unconsumed or zero result, EXTRACTU of the low byte or
+  halfword: the forms ra_utils narrows to byte and halfword loads)
+  adds it to the reload cost; a floating control instruction's read
+  moves it from the cost to twice the reload cost (FPP 0x000C is
+  subtract, 0x0018 reverse subtract: corrected from "counting
+  differently").  A register move that sets no condition codes, and a
+  TST, cost nothing.  A rematerializable live range's reload cost is
+  added to its cost (ra_$initialize_routine); not "costs nothing" in
+  ra (ra_utils' pass-through spilling sets 0.0 for its own choice).
+- **Cost over live time (confirmed, PB6).**  After the conflict graph
+  each live range's cost is divided by its weighted live time (the
+  instructions it was live, each block's weight 8 to the depth capped
+  at 32, `2.0 ** (depth * 3.0)'; FPP 0x0030 divide) when that exceeds
+  1.0 (ra_$build_conflict_graph's end).
+- **Spill choice (confirmed, PB6): Chaitin's cost per conflict.**
+  ra_$collapse_conflict_graph removes live ranges whose conflicts are
+  below the registers (the costliest first among those without active
+  aversions or preferences); when none is left it picks the live range
+  of least cost / conflicts (FPP 0x003C) that may be spilled (not
+  life_mark), marking it rrp spare_1 ("spill candidate"), and goes on;
+  ra_$assign_registers then gives registers in the reverse order and
+  spills (lr +3 bit 0) a live range left without one, or, if that one
+  may not be spilled, the conflict ra_$pick_spill_lr prefers (an
+  assigned spill candidate, then the cheaper).  A failed pass undoes
+  the assignment and calls ra_utils_$add_spill_code (mode 0 up to the
+  fifth pass, 1 to the seventh, 2 after; at most 15 passes).
 - **Never spilled:** the routine's argument pointer, DB register, +112
   and +120 live ranges (rrp life_mark), physical registers; a user
   declared register (lr +3 bit 5, "spill victim is user declared
@@ -762,6 +791,44 @@ Translator PB5 (ra_utils.pas; ra.pas read in part, not translated).
   rematerializable ones first (no store), then those with one
   definition, then the rest; adjacent hammocks' reloads and stores are
   coalesced and stores a dominator already made are dropped.
+
+## Register allocation as ra does it (ra.pas; confirmed, translator PB6)
+
+- **Classes in order pairs, singles, integers** (ra_class 3, 2, 1; the
+  integer pass last, when the frame is laid out); each class passes
+  until an assignment succeeds.
+- **Registers opened from the conventions.**  The allowed set starts
+  from the registers already written and not reserved by the
+  conventions (fp60 / ip76) or never allocated; registers are added
+  ("opened") as the chromatic number needs: clobbered ones first (no
+  save), then preserved ones (4 bytes of save each, 8 a pair; a pair
+  whose other half is open first); more than 24 bytes of saves and
+  frame make the routine need a frame.  The floating class keeps three
+  eighths of the clobbered registers' openings (at least min(n, 6)) out
+  of the pair class's reach, which also never uses odd registers
+  (0xAAAAAAAA).  The return address register (w14) goes to the +112
+  live range, or the zero register (save_rpc) when the routine calls,
+  has no return block, writes the register, or needs fewer colours
+  than registers.
+- **Aversions and the protection pipe.**  While the conflict graph is
+  built a clock ticks per instruction (or group), with extra ticks for
+  SCHED's stalls (+2 bits 3..0); a live range just read for the last
+  time stays "protected" for 4 ticks after a floating operation, 2
+  after a store's operand 1, and its predecessors' final reads (3
+  ticks, 1 in the integer pass) at a block's entry: a live range
+  written while another is protected gets an aversion to sharing its
+  register (in-block, or between complex live ranges by loop depth),
+  weighed against preferences (a move's delay plus one) when
+  registers are chosen.  So the allocator keeps a value's register
+  free until the pipeline has read it.
+- **Preferences** (moves, by the move's delay plus one; complex moves
+  after all blocks): a register given to a live range is preferred by
+  everything its preferences reach (the closure through unassigned,
+  non-conflicting live ranges).
+- Instructions' +28..+31: floating live after, floating peak, integer
+  after, integer peak (dmp's four counts); a block's +0..+7 its
+  counts; lir_main_c88/c89 the routine's floating and integer peaks
+  (ra_utils' pass-through spilling reads them).
 
 ## The scheduler's pipeline model (sched; new)
 
