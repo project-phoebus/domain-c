@@ -1385,3 +1385,39 @@ revisited.
    IL type nodes' layouts.  It remains, with lir_utils and the rest of
    batch A.
 
+168. Translator PC2: **question 157 is answered: not the source's.**  The
+   three tr_utils messages are whole in the image ('TR_UTILS_$relative_
+   instr_position: instrs not in same bb%$', 'TR_UTILS_$separate_
+   partitions: LTS was active on exit%$', 'TR_UTILS_$move_add_to_new_bb:
+   prev_instr not in new_bb%$'); the missing characters were the
+   extension words objdump prints on a line of their own when it decodes
+   constant bytes as a long instruction, which the scratch helper that
+   compacted the disassembly dropped.  tr_utils.pas now has the image's
+   text; every '...%$' literal under lang2/source/be_com was checked
+   against the binary's bytes.  (Worth a check elsewhere: any translator
+   who read constants from a compacted disassembly.)
+169. Translator PC2, mmt_utils and mmt: the memory model keeps its
+   own data in fields other phases use for something else or batch A
+   has not named: a live range's +8 (a byte: kind 28 made 27), +44 (the
+   memory operands referring to it), +52 (its token, or the segment
+   being filled in); a segment's +40 (its last reader, lts_t.l40); the
+   routine's +140, +144 (the memory live ranges) and +227 bits 6, 0; an
+   instruction's +16 (its descriptor, instr_t.l16).  mmt.pvt.pas reads
+   them through unit-local views (mmt_lr_v_t, mmt_rtn_v_t) rather than
+   naming them in backend.ins.pas: for batch A to name.
+170. Translator PC2, mmt: dump_related_vectors prints an alias class's
+   name from alias.pas's table (its data +0, A5 0x2E8DFC: `class_names',
+   a module variable alias.pas declares without `define'); dmp reads it
+   too.  mmt.pas declares `class_names: extern' locally.  For a link
+   alias.pas would need `define class_names' (or the table moved to
+   alias.ins.pas as an extern with a name of its own): which?  mmt's
+   data also holds 'touched  '/'untouched' (+456, 2 x 9 characters)
+   that no instruction reads (as add_node's +0x28, pattern 66), kept as
+   an initialized module array.
+171. Translator PC2, mmt: a call instruction carries a pointer after its
+   operand slots (+56 + 12 nopnds) to the call's properties, whose bytes
+   +31, +33..+40 the memory model tests (asynchronous, no reads, no
+   writes, class 16, only what is passed, class 1, static, dynamic
+   classes); mmt.pas reads them through a view (mmt_call_info_t) until
+   call_conv.ins.pas declares the record.
+

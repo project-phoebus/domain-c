@@ -348,3 +348,6 @@ lang2/source/be_com/bin.pas	s/if stmt_bits\^\[stmt\] then/if stmt_bits <> nil th
 lang2/source/be_com/bin.pas	s/if stmt_bits\^\[0\] and \(map\^\[0\] <> 0\) then begin/if (stmt_bits <> nil) and (map^[0] <> 0) then begin { gap 13 }/
 # gap 22 (bin): ord of a boolean (an if statement, for the check)
 lang2/source/be_com/bin.pas	s/^(\s*)(\w+) := ord\(([^()]*(?:\([^()]*\))?[^()]*)\) & 1;/${1}if $3 then $2 := 1 else $2 := 0; { gap 22 }/
+# gap 23 (mmt, translator PC2): in on a one-word constant set with a byte element (the comparisons)
+lang2/source/be_com/mmt.pas	s/\(nt\^\.desc\.class in \[1, 13\.\.15\]\)/((nt^.desc.class = 1) or ((nt^.desc.class >= 13) and (nt^.desc.class <= 15))) { gap 23 }/
+lang2/source/be_com/mmt.pas	s/\(d\^\.class in \[1\.\.15\]\)/((d^.class >= 1) and (d^.class <= 15)) { gap 23 }/

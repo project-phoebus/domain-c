@@ -820,3 +820,20 @@ cc.m68k unless marked.
     (bv_$copy 0x224E84 ...: `clr.w D1', `addq.w #1,D1', `clr.l D0;
     move.w D1,D0; cmp.l D2,D0; bls') run once even when the limit
     ((n + 31) div 32 - 1, unsigned) would be -1; written as for loops.
+## The memory model (translator PC2, cc.a88k mmt, mmt_utils)
+
+110. **A nil test made with a register holding an unrelated constant.**
+    mmt_$points_for_good_behavior (cc.a88k 0x254E7C) tests its first
+    descriptor pointer A3 for nil with `cmpa.w D1,A3', D1 holding the
+    class set 16#210000 (load, store) it tested just before: `cmpa.w'
+    sign-extends D1's low word, 0.  Item 75's reuse of a register's
+    constant, for a pointer compared with nil.  dpc tests A3 itself.
+111. **A pointer test after a store of another pointer's link.**
+    mmt_utils' free_mmt_seqs_and_ltss (0x256CE4) and
+    mmt_utils_$analyze_one_bb (0x257942) unlink an instruction or live
+    range with `move.l A3,(4,A0)' (or `(12,A1)') and branch on the
+    flags of that move (`bne') for the following `if next = nil': the
+    store of the value tested sets the condition codes, so no `tst' is
+    emitted (fill_in_ltss's like unlinking, 0x257342, does `tst.l').
+    dpc tests again.
+
