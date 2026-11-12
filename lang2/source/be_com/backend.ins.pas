@@ -301,21 +301,28 @@ type
     instruction it is put next to); class (+40, the opcode's); num
     (+42) its serial number (lir +0x4214).  zzzzz makes a label's
     instruction its own code cell (cell_t's layout over it). }
+  { batch A (PA4): the flags named as dmp prints them (dmp_ihdr_t,
+    translator PB3: the original names); sets_cc and grouped kept (dmp's
+    ip_ccs and continued). }
   instr_hdr_t = packed record
-    b0_7: boolean;                      { +0 }
-    b0_6: boolean;
-    b0_5: boolean;
-    sets_cc: boolean;                   { .4 }
-    b0_3: boolean;
-    grouped: boolean;                   { .2 }
+    atomic_update: boolean;             { +0 .7 (was b0_7) }
+    preference: boolean;                { .6: a preference move (was
+                                          b0_6) }
+    quad_aligned: boolean;              { .5 (was b0_5) }
+    sets_cc: boolean;                   { .4: dmp's ip_ccs }
+    fp_ccs: boolean;                    { .3 (was b0_3) }
+    grouped: boolean;                   { .2: dmp's continued }
     b0_1: boolean;
     b0_0: boolean;
     nopnds: 0..255;                     { +1 }
-    b2_7, b2_6, b2_5, b2_4, b2_3, b2_2, b2_1, b2_0: boolean;   { +2
-                                          (b2_6: df_utils marks an
+    b2_7, b2_6: boolean;                { +2 (b2_6: df_utils marks an
                                           instruction the global walk
                                           reached, fga and hal one that
                                           must stay) }
+    may_generate_an_exception: boolean; { .5 (was b2_5) }
+    volatile_location: boolean;         { .4 (was b2_4) }
+    do_not_delete: boolean;             { .3 (was b2_3) }
+    b2_2, b2_1, b2_0: boolean;
     case integer of                     { +3 }
       1: (width: 0..255);               { the whole byte }
       2: (modify: 0..3;                 { .7..6: a load's or store's
@@ -358,20 +365,36 @@ type
     instruction's num as nnn:nnn); +16..+19 one packed record: +17 bit
     5 (xtp), +19 bit 4 (needs_label: zzzzz); first and last
     instructions (+34, +38); next in code order (+118). }
+  { batch A (PA4): named as dmp_$basic_block_header prints them (PB3's
+    reading; were b16, b17_7 .. b19_0 by position). }
   bb_flags_t = packed record
-    b16: 0..255;                        { +16 }
-    b17_7, b17_6: boolean;              { +17 }
+    depth: 0..255;                      { +16: the loop depth (was b16) }
+    entry: boolean;                     { +17 .7 }
+    atomic: boolean;                    { .6 }
     b17_5: boolean;                     { .5 (xtp) }
-    b17_4, b17_3, b17_2, b17_1, b17_0: boolean;
-    b18_7: boolean;                     { +18 }
-    b18_6: boolean;                     { .6 (tr_utils: the head of its
+    asynchronous_return: boolean;       { .4 }
+    pfm_cleanup: boolean;               { .3 }
+    asynchronous_path: boolean;         { .2 }
+    forwarded: boolean;                 { .1 }
+    sequential_flow_out: boolean;       { .0 }
+    hidden_successor_edges: boolean;    { +18 .7 }
+    distinguished_entry: boolean;       { .6: a loop's distinguished entry
+                                          (tr_utils, com: the head of its
                                           interval) }
-    b18_5: boolean;                     { .5 (tr_utils: of an interval
-                                          head) }
-    b18_4, b18_3, b18_2, b18_1, b18_0: boolean;
-    b19_7, b19_6, b19_5: boolean;       { +19 }
+    irreducible: boolean;               { .5: to an irreducible loop }
+    multi_level_exits: boolean;         { .4: the loop has multi-level
+                                          exits }
+    additional_entry: boolean;          { .3 }
+    conditional_entry: boolean;         { .2: the entry is conditional }
+    loop_exit: boolean;                 { .1 (com: has exits) }
+    multi_level_exit: boolean;          { .0 }
+    hammock_entry: boolean;             { +19 .7 }
+    hammock_exit: boolean;              { .6 }
+    hammock_with_loops: boolean;        { .5 }
     needs_label: boolean;               { .4 (zzzzz) }
-    b19_3, b19_2, b19_1, b19_0: boolean;
+    b19_3, b19_2, b19_1: boolean;       { (.1 utils: a block
+                                          find_definition saw) }
+    executable: boolean;                { .0 (KONST on) }
   end;
   bb_t = record
     l0: integer32;                      { +0 }
@@ -386,9 +409,11 @@ type
                                           (PA): was w12, batch C (PC):
                                           w12) }
     f14: packed record                  { +14 }
-      b14: 0..255;                      { (tr_utils: compared with 1 and
-                                          2) }
-      b15: 0..255;
+      kind: 0..255;                     { block$t (dmp's kind; tr_utils
+                                          compares with 1 and 2; batch
+                                          A, PA4: was b14) }
+      path_to: 0..255;                  { +15: block$t, dmp's path_to
+                                          (was b15) }
       end;
     f: bb_flags_t;                      { +16 (utils: +19 bit 1 marks a
                                           block find_definition saw) }
@@ -410,7 +435,10 @@ type
     w32: integer;                       { +32 }
     first: instr_ptr_t;                 { +34 }
     last: instr_ptr_t;                  { +38 }
-    space42: array [42..45] of char;    { +42 }
+    l42: integer32;                     { +42: the exception frame
+                                          (dmp_exc_t, dmp); equal across
+                                          a loop's entry blocks (trans,
+                                          com) }
     l46: bb_ptr_t;                      { +46: its first child in the
                                           dominator tree (hal; batch A) }
     l50: bb_ptr_t;                      { +50: its next sibling there
@@ -484,7 +512,10 @@ type
                                           df_utils rebuilds the live
                                           ranges' lists; fga walks the
                                           blocks through it (batch A) }
-    space138: array [138..145] of char; { +138 }
+    space138: array [138..141] of char; { +138 }
+    next142: bb_ptr_t;                  { +142: the link of com's block
+                                          lists (loop contents, entries,
+                                          exits; PC4's reading) }
     mark146: integer32;                 { +146: a visit mark (utils'
                                           look_for_path, tr_utils;
                                           batch C: l146) }
@@ -577,7 +608,9 @@ type
                                           tr_utils: its uses depend on
                                           every instruction; batch A
                                           (PA3): was b3_7) }
-      b3_6, b3_5: boolean;
+      no_modify: boolean;               { .6: dmp's NO_MODIFY (batch A,
+                                          PA4: was b3_6) }
+      serialize: boolean;               { .5: dmp's SERIALIZE (was b3_5) }
       b3_4: boolean;                    { .4 (set by make_entering_lts:
                                           translator PC3) }
       b3_3: boolean;
@@ -672,9 +705,11 @@ type
                                           it complex for every walk
                                           (batch A) }
     space104: array [104..107] of char; { +104 }
-    lr108: lr_ptr_t;                    { +108: a live range df_utils
-                                          always makes complex and never
-                                          drops (batch A) }
+    db_lr: lr_ptr_t;                    { +108: the DB register's live
+                                          range (PC4's reading; df_utils
+                                          always makes it complex and
+                                          never drops it; batch A, PA4:
+                                          was lr108) }
     l112: lts_ptr_t;                    { +112: zzzzz compares a
                                           returning jump's operand 1
                                           segment with it, but df_utils
@@ -713,17 +748,24 @@ type
                                           (batch A) }
     space204: array [204..225] of char; { +204 }
     f226: packed record                 { +226 (batch A: fga) }
-      b226_7, b226_6, b226_5, b226_4, b226_3: boolean;
-      b226_2: boolean;                  { .2: sets b226_0 (fga) }
+      save_sl: boolean;                 { .7 (dmp's names, batch A, PA4:
+                                          were b226_7 .. b226_2, b226_0,
+                                          b227_7 .. b227_5) }
+      save_rpc: boolean;                { .6 }
+      db_never_referenced: boolean;     { .5 }
+      internal_db: boolean;             { .4 }
+      quad_aligned: boolean;            { .3 }
+      contains_call: boolean;           { .2: sets needs_frame (fga) }
       needs_db: boolean;                { .1: dmp's "needs_db" (call_conv's
                                           needs_db; batch A, PA3: was
                                           b226_1) }
-      b226_0: boolean;                  { .0: the AP read may be taken
-                                          out of the RETURN (fga) }
-      b227_7: boolean;                  { +227 }
-      b227_6: boolean;                  { .6: some block may be resumed
+      needs_frame: boolean;             { .0: (fga: the AP read may not
+                                          be taken out of the RETURN) }
+      no_return_block: boolean;         { +227 .7 }
+      asynchronous_return: boolean;     { .6: some block may be resumed
                                           asynchronously (fga) }
-      b227_5: boolean;
+      shares_frame: boolean;            { .5: shares its frame with its
+                                          lexical parent }
       no_memory_read: boolean;          { .4: the memory model's
                                           properties of the routine (mmt
                                           sets them), which call_conv

@@ -389,7 +389,7 @@ begin
         else begin
           k := operand_reg_like_kind(o^.h.kind);
           mv^.opnds[1].h.kind := k;
-          mv^.h.b0_6 := false;
+          mv^.h.preference := false;
         end;
         opnd_bytes_ptr_t(addr(mv^.opnds[2]))^.rrp :=
             opnd_bytes_ptr_t(addr(mv^.opnds[2]))^.rrp ! eo;
@@ -578,7 +578,7 @@ begin
         and ((opnd_bytes_ptr_t(p)^.rrp & 16#30) = 16#10) then begin
       ip := utils_ins_$operands_instruction(p);
       iq := utils_ins_$operands_instruction(q);
-      if ((ip = iq) or not pair) and ip^.h.b0_6 and (p^.h.num = 1) then begin
+      if ((ip = iq) or not pair) and ip^.h.preference and (p^.h.num = 1) then begin
         r := nil;
         ok := false;
         case ip^.opc of
@@ -672,7 +672,7 @@ begin
   if not o^.lts^.lr^.f2.physical or (o^.link^.link <> nil) then
     bug_check('COM_$find_calls_snuggle_move:  physical operand looks funny.%$');
   i := utils_ins_$operands_instruction(o^.link);
-  if i^.h.b0_6 then begin
+  if i^.h.preference then begin
     if not (o^.h.kind in [operand$fp_reg_pair, operand$fp_reg_pair_physical,
                           operand$fp_reg_pair_like]) then begin
       find_calls_snuggle_move := i;
@@ -685,7 +685,7 @@ begin
   end;
   lir_utils_$trans_insert_move(o^.link);
   i := utils_ins_$operands_instruction(o^.link);
-  if not i^.h.b0_6 then
+  if not i^.h.preference then
     bug_check('COM_$find_calls_snuggle_move:  failed to find snuggle move.%$');
   find_calls_snuggle_move := i;
 end;
@@ -784,7 +784,7 @@ begin
     while p <> nil do begin
       p^.h.kind := new^.h.kind;
       p^.ptr := new^.ptr;
-      utils_ins_$operands_instruction(p)^.h.b0_6 := false;
+      utils_ins_$operands_instruction(p)^.h.preference := false;
       p := p^.link;
     end;
     old^.link := nil;
@@ -1070,7 +1070,7 @@ begin
           c^.opnds[k].h.kind := operand$none;
           c^.opnds[k].lts := nil;
           c^.h.sets_cc := false;
-          c^.h.b0_3 := false;
+          c^.h.fp_ccs := false;
         end;
       utils_$complete_copied_instr(c);
     end;
@@ -1242,9 +1242,9 @@ begin
           mv^.opnds[mv^.h.nopnds] := i^.opnds[i^.h.nopnds];
           mv^.opnds[mv^.h.nopnds].h.num := mv^.h.nopnds;
           mv^.opnds[mv^.h.nopnds].lts^.refs := addr(mv^.opnds[mv^.h.nopnds]);
-          mv^.h.b0_6 := false;
+          mv^.h.preference := false;
           mv^.h.sets_cc := i^.h.sets_cc;
-          mv^.h.b0_3 := i^.h.b0_3;
+          mv^.h.fp_ccs := i^.h.fp_ccs;
         end;
       end
       else begin
@@ -1260,7 +1260,7 @@ begin
         if mv^.opnds[1].h.kind in [operand$ip_reg_like, operand$fp_reg_like,
                                    operand$fp_reg_pair_like,
                                    operand$case_jump_base] then
-          mv^.h.b0_6 := false;
+          mv^.h.preference := false;
         if nlr^.mate <> nil then begin
           mv^.opnds[4].lts := lts_ptr_t(nlr^.mate);
           m2 := utils_$find_mate_operand(addr(i^.opnds[1]));
@@ -1614,15 +1614,15 @@ var
   r: boolean;
 begin
   loop_invariant_addr := false;
-  if i^.h.b2_5 then begin
+  if i^.h.may_generate_an_exception then begin
     if not i^.bb^.f20.b20_2 then
       return;
     if com_bb_v_ptr_t(i^.bb)^.l42 <> l42 then
       return;
   end;
-  if i^.h.b2_4 then
+  if i^.h.volatile_location then
     return;
-  if i^.h.b2_3 then
+  if i^.h.do_not_delete then
     return;
   if instruction_attributes[i^.opc].class = class$load then begin
     a := addr(i^.opnds[1]);
@@ -2152,8 +2152,8 @@ begin
         ji := j^.instr;
         if ji^.bb^.mark146 = mark then begin
           if d^.bb^.f20.b20_2 then
-            if ji^.bb^.f.b18_6 then
-              if not ji^.bb^.f.b18_5 then begin
+            if ji^.bb^.f.distinguished_entry then
+              if not ji^.bb^.f.irreducible then begin
                 q := com_jbi_ptr_t(ji^.opnds[3].link);
                 found := false;
                 while q <> nil do begin
@@ -2228,7 +2228,7 @@ begin
             [class$branch, class$fp_branch, class$jump, class$label,
              class$return, class$join_bp] then
           goto 8;
-        if i^.h.b2_5 then
+        if i^.h.may_generate_an_exception then
           if com_bb_v_ptr_t(b)^.l42 <> com_bb_v_ptr_t(exits)^.l42 then
             goto 8;
         found := false;
@@ -2372,7 +2372,7 @@ begin
     t := e^.target;
     if (t^.mark146 <> mark - 1) and (t^.mark146 <> mark) then begin
       ok := true;
-      while t^.f.b16 >= head^.f.b16 do begin
+      while t^.f.depth >= head^.f.depth do begin
         if t = head then begin
           ok := false;
           exit;
@@ -2447,11 +2447,11 @@ begin
       com_bb_v_ptr_t(c)^.next142 := com_bb_v_ptr_t(p)^.next142;
       com_bb_v_ptr_t(p)^.next142 := c;
     end;
-    if c^.f.b18_6 then
+    if c^.f.distinguished_entry then
       if not collect_loop_contents(c, head, mark, contents, last, entries,
                                    exits) then
         return;
-    if c^.f.b18_1 then
+    if c^.f.loop_exit then
       if not collect_exit_blocks(c, head, mark, exits) then
         return;
     c := c^.l78;
@@ -2495,7 +2495,7 @@ begin
     b := entries;
     repeat
       i := b^.last;
-      if (i^.opc <> ord(opc$jump)) or (b^.f14.b14 = 1) or (i = nil) then begin
+      if (i^.opc <> ord(opc$jump)) or (b^.f14.kind = 1) or (i = nil) then begin
         ok := false;
         exit;
       end;
@@ -2522,7 +2522,7 @@ begin
   exit_blocks_safe := false;
   x := exits;
   while x <> nil do begin
-    if x^.f14.b14 = 2 then
+    if x^.f14.kind = 2 then
       return;
     e := x^.preds;
     while e <> nil do begin
@@ -2592,8 +2592,8 @@ begin
   end;
   b := com_rtn^.bbs72;
   while b <> nil do begin
-    if b^.f.b18_6 then
-      if not b^.f.b18_5 then begin
+    if b^.f.distinguished_entry then
+      if not b^.f.irreducible then begin
         com_rtn^.marks := com_rtn^.marks + 3;
         mark := com_rtn^.marks;
         contents := nil;
@@ -2712,7 +2712,7 @@ var
   w: integer32;
 begin
   if instruction_attributes[ld^.opc].b14_0
-      and (ld^.h.sets_cc or ld^.h.b0_3) then begin
+      and (ld^.h.sets_cc or ld^.h.fp_ccs) then begin
     if ld^.h.sets_cc then
       op := ord(opc$tst)
     else if ld^.opc = ord(opc$loads) then
@@ -2724,7 +2724,7 @@ begin
     t := lir_$optimizer_new_instruction(ld, op, true);
     t^.num := ld^.num;
     t^.h.sets_cc := ld^.h.sets_cc;
-    t^.h.b0_3 := ld^.h.b0_3;
+    t^.h.fp_ccs := ld^.h.fp_ccs;
     if not (ld^.opnds[3].h.kind in [operand$ip_reg..operand$fp_reg_pair_physical,
                                     operand$ip_reg_like..operand$fp_reg_pair_like,
                                     operand$case_jump_base]) then
@@ -2822,7 +2822,7 @@ begin
       goto 9;
     if phys then
       goto 9;
-    if st^.bb^.f.b17_6 then
+    if st^.bb^.f.atomic then
       goto 9;
     if (ld^.opc = ord(opc$loadd)) and (st^.opc <> ord(opc$stored)) then
       goto 9;
@@ -2987,9 +2987,9 @@ begin
     goto 9;
   if cell_head_ptr_t(ia)^.modify <> 0 then
     goto 9;
-  if ib^.h.b2_4 then
+  if ib^.h.volatile_location then
     goto 9;
-  if ia^.h.b2_4 then
+  if ia^.h.volatile_location then
     goto 9;
   if ia^.opc <> ib^.opc then
     goto 9;
@@ -3030,7 +3030,7 @@ begin
   end;
   if ltss_on_stores_to_same_addr(s, b) then begin
     i := utils_ins_$operands_instruction(s^.refs);
-    if not i^.h.b2_3 then
+    if not i^.h.do_not_delete then
       if not (rrp$read in a^.rrp) then
         if utils_$apply_func_to_all_uses(com_rtn,
                addr(ltss_on_stores_to_same_addr), a) then begin
@@ -3128,7 +3128,7 @@ begin
                                         operand$well_behaved_memory]) then
           return;
   st^.opc := ord(opc$seq);
-  st^.h.b2_3 := false;
+  st^.h.do_not_delete := false;
   if st^.opnds[2].h.kind in [operand$ip_reg..operand$well_behaved_memory] then
     utils_$remove_reader_from_lts(addr(st^.opnds[2]), true);
   st^.opnds[2].h.kind := operand$none;
@@ -3178,18 +3178,18 @@ begin
     i := utils_ins_$operands_instruction(mo^.lts^.refs);
     if mo^.lts^.f2.exposed or (i^.opc = ord(opc$join_bp)) then begin
       com_306 := false;
-      dnd := st^.h.b2_3;
-      st^.h.b2_3 := true;
+      dnd := st^.h.do_not_delete;
+      st^.h.do_not_delete := true;
       discard(utils_$apply_func_to_all_defs(com_rtn, addr(store_is_redundant),
                                             mo^.lts));
-      st^.h.b2_3 := dnd;
+      st^.h.do_not_delete := dnd;
       if not com_306 then
         goto 1;
     end
     else begin
       if instruction_attributes[i^.opc].class <> class$store then
         goto 1;
-      if i^.h.b2_3 then
+      if i^.h.do_not_delete then
         goto 1;
       if mo^.lts^.refs^.link <> mo then
         goto 1;
@@ -3202,10 +3202,10 @@ begin
     end;
   end;
 1:
-  if st^.h.b2_4 then
+  if st^.h.volatile_location then
     goto 9;
   if respect_dnd then
-    if st^.h.b2_3 then
+    if st^.h.do_not_delete then
       goto 9;
   utils_$get_canonical_birthpoint(st^.opnds[1].lts, 0, bp);
   if bp.lts = nil then
@@ -3237,7 +3237,7 @@ begin
     goto 9;
   if not utils_$compare_birthpoints(bpa, bpb) then
     goto 9;
-  if st^.h.b2_3 then
+  if st^.h.do_not_delete then
     if not safe_to_ignore_do_not_delete(st, ld) then begin
       r := convert_store_to_seq(st);
       goto 9;
@@ -3262,8 +3262,8 @@ begin
     i := b^.first;
     while i <> nil do begin
       nx := i^.next;
-      if i^.h.b2_3 then
-        if not i^.h.b2_4 then
+      if i^.h.do_not_delete then
+        if not i^.h.volatile_location then
           if instruction_attributes[i^.opc].class = class$store then
             discard(attempt_store_elimination(i, false));
       i := nx;
@@ -3306,7 +3306,7 @@ begin
         if o^.h.num = 1 then begin
           i := utils_ins_$operands_instruction(o);
           if i^.opc = ord(opc$move) then begin
-            i^.h.b0_6 := false;
+            i^.h.preference := false;
             move_is_zero(i);
           end;
         end;
@@ -3508,11 +3508,11 @@ begin
   tgt := bb;
   if last <> tgt then
     while dom <> nil do begin
-      if dom^.f.b16 < tgt^.f.b16 then
+      if dom^.f.depth < tgt^.f.depth then
         if bb_postdominates(bb, dom)
-            or (not anywrite and not i^.h.b2_5) then begin
+            or (not anywrite and not i^.h.may_generate_an_exception) then begin
           tgt := dom;
-          if tgt^.f.b16 = 0 then
+          if tgt^.f.depth = 0 then
             goto 1;
         end;
       if dom = last then
@@ -3522,9 +3522,9 @@ begin
 1:
   if tgt = nil then
     return;
-  if tgt^.f.b16 >= bb^.f.b16 then
+  if tgt^.f.depth >= bb^.f.depth then
     return;
-  if tgt^.f14.b14 = 1 then
+  if tgt^.f14.kind = 1 then
     return;
   if bb^.first = i then
     bb^.first := i^.next
@@ -3724,7 +3724,7 @@ begin
     end;
     if r1^.link <> nil then begin
       xi := utils_ins_$operands_instruction(r1^.link);
-      if xi^.h.b0_6 then
+      if xi^.h.preference then
         r1 := addr(xi^.opnds[r1^.link^.h.num + 1]);
     end;
     connect_physical(r1, addr(b^.opnds[4]));
@@ -3776,7 +3776,7 @@ begin
         if d^.opc = ord(opc$loadl) then
           if p^.link^.link = nil then
             if p^.lts^.lr^.id = 0 then
-              if d^.opnds[2].lts^.lr = com_rtn^.lr108 then begin
+              if d^.opnds[2].lts^.lr = com_rtn^.db_lr then begin
                 d^.opnds[1].value := ac^.l16;
                 d^.opnds[1].link := opnd_ptr_t(ac);
                 goto 8;
@@ -3786,7 +3786,7 @@ begin
     bug_check('COM_$call_cossin: unable to find birth_lts for addr_con load.%$');
   d := utils_ins_$operands_instruction(bp.lts^.refs);
   if (d^.opc <> ord(opc$loadl))
-      or (d^.opnds[2].lts^.lr^.node20 <> com_rtn^.lr108^.node20) then
+      or (d^.opnds[2].lts^.lr^.node20 <> com_rtn^.db_lr^.node20) then
     bug_check('COM_$call_cossin: addr_con birthpoint isn''t a DB relative LOADL.%$');
   db := d^.opnds[2].lts;
   if d^.bb <> a^.bb then
@@ -4094,12 +4094,12 @@ begin
       return;
     end;
   end;
-  if i^.h.b0_7 or i^.h.b2_4 then begin
+  if i^.h.atomic_update or i^.h.volatile_location then begin
     if com_level >= 4 then
       vfmt_$write('Fail: atomic or volatile.%.');
     return;
   end;
-  if i^.h.b2_3 then begin
+  if i^.h.do_not_delete then begin
     com_saw_do_not_delete := true;
     if com_level >= 4 then
       vfmt_$write('Fail: do_not_delete.%.');
@@ -4337,7 +4337,7 @@ begin
     return;
 30:
   t := tab;
-  if i^.bb^.f.b16 <> 0 then
+  if i^.bb^.f.depth <> 0 then
     if maybe_hoist_instr_from_loop(i) then begin
       com_hoisted := true;
       t := tab;
@@ -4377,7 +4377,7 @@ begin
   tab.bb := bb;
   for k := 0 to 63 do
     tab.buckets[k] := nil;
-  if not bb^.f.b17_6 then begin
+  if not bb^.f.atomic then begin
     i := bb^.first;
     while i <> nil do begin
       nx := i^.next;

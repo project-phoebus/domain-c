@@ -1210,7 +1210,7 @@ begin
         cur := src^.lts;
         next;
       end;
-    if i^.h.b0_6 then begin
+    if i^.h.preference then begin
       cur := i^.opnds[d^.h.num - 1].lts;
       next;
     end;
@@ -2577,11 +2577,11 @@ begin
                operand$flow_graph_edge..operand$immediate,
                operand$exception_information])
      and (rrp$safe_base_address in base^.lr^.rrp) then
-    instr^.h.b2_5 := false
+    instr^.h.may_generate_an_exception := false
   else if instr^.h.b2_7 then
     if not alias_$ref_may_generate_exception(
              alias_$desc_ptr_t(integer32(instr) - 24)^) then
-      instr^.h.b2_5 := false;
+      instr^.h.may_generate_an_exception := false;
 end;
 
 { utils_$find_unused_operand_slot - 0x2879EE, 0x80 bytes: the message's

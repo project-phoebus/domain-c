@@ -602,7 +602,7 @@ begin
     bv_$initialize_bit_vectors(mmt_rtn, mmt_bits, 4, false);
     bb := mmt_rtn^.bbs72;
     while bb <> nil do begin
-      if bb^.f.b17_2 then begin
+      if bb^.f.asynchronous_path then begin
         i := bb^.first;
         while i <> nil do begin
           if i^.opc <> ord(opc$mmt_seq) then
@@ -1393,7 +1393,7 @@ begin
           lir_utils_$excise_inst(i);
         end
         else
-          i^.h.b2_5 := false;
+          i^.h.may_generate_an_exception := false;
       i := inxt;
     end;
     bb := bb^.next;
@@ -1926,7 +1926,7 @@ begin
   while bb <> nil do begin
     i := bb^.first;
     while i <> nil do begin
-      if (i^.opc = ord(opc$mmt_seq)) and i^.h.b2_5 then
+      if (i^.opc = ord(opc$mmt_seq)) and i^.h.may_generate_an_exception then
         i := build_real_mmt_seq(i);
       for j := 1 to i^.h.nopnds do begin
         o := addr(i^.opnds[j]);
@@ -1953,7 +1953,7 @@ begin
             t := mmt_lr_v_ptr_t(o^.ptr)^.token;
             if t^.f.async then
               if instruction_attributes[i^.opc].class = class$store then
-                i^.h.b2_3 := true;
+                i^.h.do_not_delete := true;
             l := get_new_lts(o^.ptr, bb);
             l^.refs := o;
           end;
@@ -2006,7 +2006,7 @@ begin
           if i^.opc <> ord(opc$mmt_seq) then begin
             if not (instruction_attributes[i^.opc].class in
                     [class$load, class$store])
-                or not i^.h.b2_7 or i^.h.b2_4
+                or not i^.h.b2_7 or i^.h.volatile_location
                 or ((i^.h.width & 16#C0) <> 0) then
               good := false
             else begin

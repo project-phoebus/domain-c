@@ -742,25 +742,25 @@ begin
   vfmt_$write('%/%/BLOCK BB#%3ZWD%$', bb^.num);
   if at_backend_phase <> 0 then
     vfmt_$write(',  PRE#%3ZWD,  POST#%3ZWD,  depth= %LD%$', bb^.w8,
-                bb^.order, integer32(bb^.f.b16));
+                bb^.order, integer32(bb^.f.depth));
   vfmt_$write(',  kind= %A,  path_to= %A%$',
-              block_string[block$t(integer(bb^.f14.b14))],
-              block_string_length[block$t(integer(bb^.f14.b14))],
-              block_string[block$t(integer(bb^.f14.b15))],
-              block_string_length[block$t(integer(bb^.f14.b15))]);
-  if (at_backend_phase >= phase$konst) and not bb^.f.b19_0 then
+              block_string[block$t(integer(bb^.f14.kind))],
+              block_string_length[block$t(integer(bb^.f14.kind))],
+              block_string[block$t(integer(bb^.f14.path_to))],
+              block_string_length[block$t(integer(bb^.f14.path_to))]);
+  if (at_backend_phase >= phase$konst) and not bb^.f.executable then
     vfmt_$write(', ** NOT EXECUTABLE **%$');
-  if bb^.f.b17_7 then
+  if bb^.f.entry then
     vfmt_$write(', entry%$');
-  if bb^.f.b18_7 then
+  if bb^.f.hidden_successor_edges then
     vfmt_$write(', hidden_successor_edges%$');
-  if bb^.f.b17_4 then
+  if bb^.f.asynchronous_return then
     vfmt_$write(', asynchronous_return%$');
-  if bb^.f.b17_3 then
+  if bb^.f.pfm_cleanup then
     vfmt_$write(', pfm_cleanup%$');
-  if bb^.f.b17_2 then
+  if bb^.f.asynchronous_path then
     vfmt_$write(', asynchronous_path%$');
-  if bb^.f.b17_6 then
+  if bb^.f.atomic then
     vfmt_$write(', atomic%$');
   if at_backend_phase < phase$dfa then begin
     vfmt_$write('%.');
@@ -778,20 +778,20 @@ begin
       vfmt_$write('    in interval:         -NONE-%.')
     else
       vfmt_$write('    in interval:         BB#%3ZWD%.', bb^.l70^.num);
-    if bb^.f.b18_3 then begin
+    if bb^.f.additional_entry then begin
       vfmt_$write('    additional entry %$');
-      if bb^.f.b18_2 then
+      if bb^.f.conditional_entry then
         vfmt_$write('(CONDITIONAL) %$');
       if bb^.l70 = nil then
         vfmt_$write('to IRREDUCIBLE loop ****** (outermost?)%.')
       else
         vfmt_$write('to IRREDUCIBLE loop BB#%3ZWD%.', bb^.l70^.num);
     end
-    else if bb^.f.b18_6 then begin
+    else if bb^.f.distinguished_entry then begin
       vfmt_$write('    distinguished entry %$');
-      if bb^.f.b18_2 then
+      if bb^.f.conditional_entry then
         vfmt_$write('(CONDITIONAL) %$');
-      if bb^.f.b18_5 then
+      if bb^.f.irreducible then
         vfmt_$write('to IRREDUCIBLE%$')
       else
         vfmt_$write('to%$');
@@ -807,22 +807,22 @@ begin
         n := n + 1;
       end;
       vfmt_$write('%.');
-      if bb^.f.b18_4 then
+      if bb^.f.multi_level_exits then
         vfmt_$write('    loop contains multi level exit(s)%.');
     end;
-    if bb^.f.b18_1 then begin
+    if bb^.f.loop_exit then begin
       vfmt_$write('    loop exit: BB has successor outside immediately containing loop%$');
       if bb^.l70 <> nil then
         vfmt_$write(' BB#%3ZWD%.', bb^.l70^.num)
       else
         vfmt_$write('.%.');
     end;
-    if bb^.f.b18_0 then
+    if bb^.f.multi_level_exit then
       vfmt_$write('    loop exit is mult-level%.');
     if at_backend_phase < phase$post then begin
-      if bb^.f.b19_6 then begin
+      if bb^.f.hammock_exit then begin
         b := bb^.preds^.source;
-        if not b^.f.b19_7 then
+        if not b^.f.hammock_entry then
           b := b^.l82;
         vfmt_$write('    hammock exit from hammock headed by BB#%3ZWD%.', b^.num);
       end;
@@ -830,7 +830,7 @@ begin
         vfmt_$write('    in hammock:          -NONE-%.')
       else
         vfmt_$write('    in hammock:          BB#%3ZWD%.', bb^.l82^.num);
-      if bb^.f.b19_7 then begin
+      if bb^.f.hammock_entry then begin
         vfmt_$write('    entry to hammock with exit BB#%3ZWD%/                        %$',
                     dmp_ham_ptr_t(bb^.l98)^.exit^.num);
         b := bb^.l102;
@@ -844,7 +844,7 @@ begin
           n := n + 1;
         end;
         vfmt_$write('%.');
-        if bb^.f.b19_5 then
+        if bb^.f.hammock_with_loops then
           vfmt_$write('    hammock contains loop(s)%.');
         h := dmp_ham_ptr_t(bb^.l98);
         if (h^.parent <> nil) and then (h^.parent^.head = bb) then begin
@@ -876,9 +876,9 @@ begin
         end;
       end;
     end;
-    if bb^.f.b17_0 then
+    if bb^.f.sequential_flow_out then
       vfmt_$write('    sequential_flow_out%.');
-    if bb^.f.b17_1 then
+    if bb^.f.forwarded then
       vfmt_$write('    **** FORWARDED ****%.');
     if dmp_bb_ptr_t(bb)^.exc <> nil then
       vfmt_$write('    exception frame:     %LD%.', dmp_bb_ptr_t(bb)^.exc^.frame);
@@ -965,9 +965,9 @@ begin
       else
         vfmt_$write('F%ld%$', integer32(lr^.f2.reg));
     end;
-    if lr^.f2.b3_6 then
+    if lr^.f2.no_modify then
       vfmt_$write(', NO_MODIFY%$');
-    if lr^.f2.b3_5 then
+    if lr^.f2.serialize then
       vfmt_$write(', SERIALIZE%$');
   end
   else if lr^.rrp * [rrp$fp_reg, rrp$ip_reg] = [] then
@@ -1350,7 +1350,7 @@ begin
     mark := ' '
   else if instr^.h.grouped then
     mark := 'v'
-  else if instr^.h.b2_5 then
+  else if instr^.h.may_generate_an_exception then
     mark := '!'
   else if (instruction_attributes[instr^.opc].class = class$label)
           and dmp_ihdr_ptr_t(instr)^.required_label then
@@ -1404,7 +1404,7 @@ begin
     end;
   end
   else if instruction_attributes[instr^.opc].b14_0 then begin
-    if instr^.h.sets_cc or instr^.h.b0_3 then
+    if instr^.h.sets_cc or instr^.h.fp_ccs then
       case dmp_ihdr_ptr_t(instr)^.lsq of
         0: begin
           vfmt_$write('.cc%$');
@@ -2003,23 +2003,23 @@ begin
     at_backend_phase := at_backend_phase - 1;
   vfmt_$write('CONTENTS OF ROUTINE:%.');
   vfmt_$write('    frame size: %LD, SF = R%WD%$', r^.frame_size, r^.sf_reg);
-  if rtn^.f226.b226_2 then
+  if rtn^.f226.contains_call then
     vfmt_$write(', contains call%$');
-  if rtn^.f226.b226_0 then
+  if rtn^.f226.needs_frame then
     vfmt_$write(', needs frame%$');
-  if rtn^.f226.b226_6 then
+  if rtn^.f226.save_rpc then
     vfmt_$write(', save rpc%$');
-  if rtn^.f226.b226_7 then
+  if rtn^.f226.save_sl then
     vfmt_$write(', save sl%$');
-  if rtn^.f226.b226_3 then
+  if rtn^.f226.quad_aligned then
     vfmt_$write(', quad aligned%$');
-  if rtn^.f226.b226_5 then
+  if rtn^.f226.db_never_referenced then
     vfmt_$write(', db never referenced%$');
-  if rtn^.f226.b226_4 then
+  if rtn^.f226.internal_db then
     vfmt_$write(', internal db%$');
-  if rtn^.f226.b227_7 then
+  if rtn^.f226.no_return_block then
     vfmt_$write(', no return block%$');
-  if rtn^.f226.b227_6 then
+  if rtn^.f226.asynchronous_return then
     vfmt_$write(', asynchronous return%$');
   vfmt_$write('%/   %$');
   if rtn^.f226.needs_db then
@@ -2044,13 +2044,13 @@ begin
     vfmt_$write(' no_fp_cc_write%$');
   if rtn^.f228.no_ip_cc_write then
     vfmt_$write(' no_ip_cc_write%$');
-  if rtn^.f226.b226_0 then begin
+  if rtn^.f226.needs_frame then begin
     if (r^.save_reg_4 <> 31) and (r^.save_reg_4 <> -1) then
       vfmt_$write(',%/    save R%WD at [04,SF]%$', r^.save_reg_4);
     if (r^.save_reg_12 <> 31) and (r^.save_reg_12 <> -1) then
       vfmt_$write(',%/    save R%WD at [12,SF]%$', r^.save_reg_12);
   end
-  else if rtn^.f226.b227_5 then
+  else if rtn^.f226.shares_frame then
     vfmt_$write('%/    shares frame with lexical parent%$');
   vfmt_$write('%/    supplied arg block end offset = %LD%$', r^.arg_end);
   if r^.saved_from <> 0 then
@@ -2122,9 +2122,9 @@ begin
       if lr^.f2.physical then begin
         vfmt_$write(', LR#%3ZWD = %2ZLD%$', lr^.num, integer32(lr^.f2.reg));
         if lr^.f2.physical then begin
-          if lr^.f2.b3_6 then
+          if lr^.f2.no_modify then
             vfmt_$write(', NO_MODIFY%$');
-          if lr^.f2.b3_5 then
+          if lr^.f2.serialize then
             vfmt_$write(', SERIALIZE%$');
         end;
       end

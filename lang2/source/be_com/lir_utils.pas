@@ -100,11 +100,11 @@ var
 begin
   instr := lir_$optimizer_new_instruction(anchor, move_opcode[kind], after);
   if kind in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
-    instr^.h.b0_6 := true;
+    instr^.h.preference := true;
     kind2 := kind;
   end
   else begin
-    instr^.h.b0_6 := false;
+    instr^.h.preference := false;
     kind2 := kind;
     case kind of
       operand$ip_reg_like: kind2 := operand$ip_reg;
@@ -768,23 +768,23 @@ begin
     edge := rtn^.bbs^.succs;
     if edge = nil then
       goto 20;
-    if edge^.source^.f14.b14 <> 1 then
+    if edge^.source^.f14.kind <> 1 then
       bug_check('LIR_UTILS_$GET_NEXT_ASYNC_EXPOSED_LR:  can''t find start block%$');
     goto 10;
   end;
   repeat
     b := edge^.target;
-    if b^.f.b17_4 then begin
-      if not b^.f.b17_2 then begin
+    if b^.f.asynchronous_return then begin
+      if not b^.f.asynchronous_path then begin
         e := b^.succs;
         t := e^.target;
-        if t^.f.b17_2 then begin
-          if not e^.next_succ^.target^.f.b17_2 then
+        if t^.f.asynchronous_path then begin
+          if not e^.next_succ^.target^.f.asynchronous_path then
             b := t;
         end
         else begin
           b := b^.succs^.next_succ^.target;
-          if not b^.f.b17_2 then
+          if not b^.f.asynchronous_path then
             bug_check('LIR_UTILS_$GET_NEXT_ASYNC_EXPOSED_LR:  not asynchronous path%$');
         end;
       end;

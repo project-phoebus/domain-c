@@ -633,7 +633,7 @@ begin
       exit;
     if rrp$life_mark in lr^.rrp then
       lr^.rrp := lr^.rrp - [rrp$life_mark]
-    else if not lr^.f2.physical and (lr <> rtn^.lr108)
+    else if not lr^.f2.physical and (lr <> rtn^.db_lr)
             and (lr <> lr_ptr_t(rtn^.l112)) and (lr <> rtn^.memory_lr) then begin
       m := lr^.mate;
       if m <> nil then begin
@@ -689,7 +689,7 @@ begin
   end;
   bv_$make_live_range_complex(rtn, rtn^.memory_lr);
   bv_$make_live_range_complex(rtn, rtn^.ap_lr);
-  bv_$make_live_range_complex(rtn, rtn^.lr108);
+  bv_$make_live_range_complex(rtn, rtn^.db_lr);
   bv_$make_live_range_complex(rtn, lr_ptr_t(rtn^.l112));
   create_intend_modifies(rtn);
   lir_main_c86 := 0;
