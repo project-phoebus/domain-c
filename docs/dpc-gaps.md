@@ -16,8 +16,15 @@ when this tree is merged).
 - **Gap 3 (short-form `new'/`dispose') and gap 15 (a parameter assigned
   to a pointer result): fixed in fad3e37.**  The long form of `new'
   with tag constants is still refused.
+- **Gaps 9 (nested `forward'), 11 (`nil' as a pointer function's
+  result) and 23 (`in' on a one-word constant set with a char, byte or
+  4-byte element; a boolean element is still refused): fixed in
+  6aabd92 and 1240eb7.**  Their 18 rules removed.
+- Gap 32 is queued in domain-pascal; `while true do' is refused on
+  purpose (the image cannot tell it from `repeat ... until false'):
+  write such loops with a label.
 - All compile best effort (a warning; `--strict' still refuses).  Their
-  rewrites are gone from tools/cc_gap_rewrites.txt (242 rules removed);
+  rewrites are gone from tools/cc_gap_rewrites.txt (260 rules removed in all);
   the full gate is clean without them.
 - Gaps 4 (write/writeln) and 7 (real arithmetic) are not being worked
   on in dpc for now (the domain-pascal owner's choice).
