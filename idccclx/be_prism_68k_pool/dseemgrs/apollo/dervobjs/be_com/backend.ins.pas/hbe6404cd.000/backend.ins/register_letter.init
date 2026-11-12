@@ -1,0 +1,24 @@
+{ register_letter.init - a DSEE derived object of be_com/backend.ins.pas
+  (cc.a88k only): the letter lst writes before a register operand's
+  number in the classic listing, by the operand's kind (operand$t): R
+  for the integer registers, S for a single, D for a double (a pair).
+  Included by lst.pas after its other inserts.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k: lst's data +0x190 (16 bytes, set by .rwdi), read by
+  lst_$add_register_name (`lea (0,A5,D0.w),A0; move.b (400,A0)' with
+  the kind).
+
+  Not known from the original: the declaration's form (its name is the
+  file's); the generator covered operand$none..operand$forward_label_
+  reference, the kinds below the first that is not a register. }
+
+var
+  register_letter: array [operand$none..operand$forward_label_reference]
+    of char := [
+    chr(0), 'R', 'S', 'D',              { none, ip_reg, fp_reg,
+                                          fp_reg_pair }
+    'R', 'S', 'D',                      { the physical registers }
+    chr(0), chr(0), chr(0), chr(0), chr(0),
+    'R', 'S', 'D',                      { the _like kinds }
+    chr(0)];                            { forward_label_reference }

@@ -1,0 +1,16 @@
+{ lsq_suffix.init - a DSEE derived object of be_com/backend.ins.pas
+  (cc.a88k only): the suffix the classic listing puts after a load's or
+  store's mnemonic for its qualifier (lsq$t).  Included by lst.pas
+  after register_letter.init.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k: lst's data +0x1B8 (8 bytes, set by .rwdi: "  .L.U.P"), read
+  by lst_$display_code_cell (`lea (0,A5,D3.w),A1; pea (440,A1)' with
+  twice the qualifier, add_string of 2).
+
+  Not known from the original: the declaration's form (its name is the
+  file's). }
+
+var
+  lsq_suffix: array [lsq$t] of packed array [1..2] of char := [
+    '  ', '.L', '.U', '.P'];

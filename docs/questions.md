@@ -1332,3 +1332,33 @@ revisited.
    or SUB's operand 1 the immediate (or a register), 2 the source, 3
    the result; condition codes the last operand.  backend.ins.pas
    documents none of this yet (to confirm against lir when translated).
+161. Translator PB, lst.pas: the named sections' initializers.  lst
+   includes the generated instr_mnemonic.init and
+   instr_mnemonic_length.init (and asm instr_assembly.init, lir
+   instr_attributes.init), but backend.ins.pas declares the sections'
+   variables (`var (instruction_mnemonic) instruction_mnemonic: ...')
+   for every unit, and dpc refuses a second declaration with the
+   initializer.  The .init files hold a TODO; the data are recoverable
+   (the opcode enumeration's identifiers, the sections' bytes).  How
+   should the sections be shared: (a) the .init files declare the
+   initialized variables and backend.ins.pas's declarations move behind
+   an `%if' the including units set, (b) backend.ins.pas declares them
+   `extern' and the including units `define' them with the
+   initializers (if dpc accepts an initializer on a defined variable),
+   or (c) leave them uninitialized in the translation?
+162. Translator PB, lst.pas: the -PRASM listing writes the integer
+   registers as ".n" (`move.w #0x2E00' before the number), the singles
+   ".FSn", the doubles ".FDn", and register 30 of kind ip_reg_like as
+   ".PC" (classic "PC"); taken from the image as they are, though
+   ".n" for a register looks odd (the PRISM assembler's syntax is not
+   known here).
+163. Translator PB, bin.pas: bin opens bug_check.ins.pas after
+   coff_dst.ins.pas (its .blocks list), but backend.ins.pas, opened
+   earlier, declares instr_bug_check and the phase_ routines with
+   bug_check.ins.pas's types (bug_check_$string_t, bug_check_$arg_t), so
+   dpc cannot compile the unit in that order; bin.pas opens bug_check
+   before at_base.ins.pas.  Apollo's backend.ins.pas must have declared
+   those headings without bug_check's types (or bin did not see them):
+   should backend.ins.pas's three headings use types of their own
+   (univ base types) so that the include order can be the image's?
+

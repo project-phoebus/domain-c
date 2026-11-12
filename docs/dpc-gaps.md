@@ -161,6 +161,10 @@ when this tree is merged).
    <> v.d' (0x00C4 0x00B4), and the copy of a double into a variant
    record, `v.d := n^.real_value' (dpc: "a 8-byte value is not
    supported yet"); the check compares and copies the longwords.
+   Also lst.pas lst_$display_literal (translator PB, cc.a88k
+   0x251878): a single literal held as a double converted for
+   lib_$cv_sfp_out (FPP 0x0074 0x00D4 0xFF3E); the check leaves it
+   unset.
 
 8. **`in` on a constant set with a word element.**  `t^.kind in [77..87,
    101, 200]` (token.pas set_is_nil 0x09930E: `move.w #207,D0; sub.w
@@ -175,6 +179,10 @@ when this tree is merged).
        begin
          b := k in [77..87, 101, 200];
        end;
+   Also lst.pas lst_$display_code_cell (translator PB, cc.a88k
+   0x251172, 0x2511CE, 0x251684): an operand's symbol's kind against a
+   26-byte constant of IL kinds ([45..58, 60, 61, 69, 156, 176, 198,
+   200]); one rule rewrites the three into comparisons.
 
 9. **A nested routine declared `forward`.**  il_utils.pas: search_point
    (0x07E206) and search_walk (0x07E252), nested in
@@ -297,6 +305,13 @@ when this tree is merged).
        begin
          if b^[i] then n := 1;
        end;
+   Also bin.pas (translator PB, cc.a88k): a routine's statement bits
+   (`packed array [0..65535] of boolean' through a pointer) in
+   map_statement_to_src_loc_and_offset (0x223396: `btst' of 7 less
+   stmt mod 8 in the byte stmt div 8) and, with the constant index 0,
+   put_procedure_start (0x223C1C: `tst.b (A0); bpl'): dpc "an element
+   of a packed array of booleans with a constant index (no site in the
+   image, codegen-patterns 5.2) is not supported yet" for the second.
 
 14. **A non-local `goto`.**  c_lex_pp.pas: get_character (cc.m68k
    0x054DBA), get_comment (0x054DFA) and get_identifier (0x055336),
@@ -451,6 +466,9 @@ when this tree is merged).
          n := ord(b);
          n := ord(r.b);
        end;
+   Also bin.pas (translator PB, cc.a88k): add_unwind_rec's and
+   bin_$emit_compilation_pure_text's traces print booleans as 0 or 1
+   (`lsr.b #7' of the byte, 0x223874, 0x22455C).
 
 23. **`in` on a one-word constant set with a byte element.**  The
    alias descriptor's class, a byte of a packed record (0..255):
@@ -666,6 +684,9 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
    and its constant folding are left out of the check (two conditional
    regions); the gap 8 rule for add_node rewrites every `in' on a
    constant set into comparisons with one perl substitution (`/e').
+   Also lst.pas lst_$display_code_cell (translator PB, cc.a88k
+   0x250A0A, 0xD28 bytes): the classic form's registers' column (a
+   loop of three) is left out of the check.
 
 29. **`in` on a 32-byte set variable with an element beyond 0..255.**
    list_tree.pas print_top_node (cc.m68k 0x08356A): `i in
