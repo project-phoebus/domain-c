@@ -164,6 +164,18 @@ type
   fn_chars_t = array [1..61] of char;
   fn_chars_ptr_t = ^fn_chars_t;
 
+  { A section (il_10c's list) as far as final reads it: its head cell
+    (+20). }
+  fn_sect_ptr_t = ^fn_sect_t;
+  fn_sect_t = record
+    unused: array [0..4] of integer32;  { +0 }
+    head: codegen_$cell_ptr_t;          { +20 }
+  end;
+
+  { An address descriptor's three longwords, as sameaddr compares two
+    (`cmpm.l', `dbne' 2). }
+  fn_ads_words_t = array [1..3] of integer32;
+
 var
   { opinfo.pas's data (the unit without code; cc.m68k 0x2D01CE,
     absolute): each instruction's two operands' sizes ('B', 'W', 'L',
@@ -173,12 +185,18 @@ var
   { The module's data (A5 0x3566F8). }
   fn_0: array [0..3] of integer32;      { +0 }
   fn_ads: codegen_$ads_t;               { +16 }
-  fn_head: codegen_$cell_ptr_t;         { +28 }
+  fn_sect: fn_sect_ptr_t;               { +28: the section peepholer
+                                          works on }
   fn_32: codegen_$cell_ptr_t;           { +32 }
   fn_36: codegen_$cell_ptr_t;           { +36 }
   fn_40: integer;                       { +40 }
   fn_42: char;                          { +42 }
   fn_changed: boolean;                  { +44: a cell was detached }
+  fn_regmask: array [0..23] of 0..65535 := [
+    1, 2, 4, 8, 16, 32, 64, 128,
+    256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
+    1, 2, 4, 8, 16, 32, 64, 128];       { +0x30: each register's bit in
+                                          a movem's mask }
 
 
 { assert_is_lea - c is a lea (kind 4, op 12).
@@ -739,4 +757,386 @@ begin
             final_$is_int(c^.ads1, v) then
       r := true;
   final_$is_int_load := r;
+end;
+
+{ sameaddr - descriptors a and b address the same place: equal
+  descriptors, or the same mode and attributes (f5) and, by the mode,
+  the same register (1, 8, 9, 13), register and displacement (2),
+  constant (3: the same node, or a node 184 and a node 157 whose +8 is
+  it), register, index register, displacement and f4 (4, 6),
+  displacement (5, 11), label (7: the reference cells' owners), node
+  (12), register and index register (14), node and displacement (15);
+  modes 0 and 10 always.
+
+  0x109304, 0x1E0 bytes, A5 loaded: the descriptors compared as three
+  longwords (`cmpm.l', `dbne'); a `case' of the mode through a table of
+  16 (`bcc' over 16). }
+
+function sameaddr;
+var
+  r: boolean;
+  wa: ^fn_ads_words_t;
+  wb: ^fn_ads_words_t;
+  na: il_$node_ptr_t;
+  nb: il_$node_ptr_t;
+begin
+  r := false;
+  wa := addr(a);
+  wb := addr(b);
+  if (wa^[1] = wb^[1]) and (wa^[2] = wb^[2]) and (wa^[3] = wb^[3]) then
+    r := true
+  else if (a.f1 = b.f1) and (a.f5 = b.f5) and (a.f1 < 16) then
+    case a.f1 of
+      0, 10:
+        r := true;
+      1, 8, 9, 13:
+        r := a.f2 = b.f2;
+      2:
+        r := (a.f2 = b.f2) and (a.y = b.y);
+      3: begin
+        na := il_$node_ptr_t(a.x);
+        if na = il_$node_ptr_t(b.x) then
+          r := true
+        else if na^.kind = 184 then begin
+          nb := il_$node_ptr_t(b.x);
+          if nb^.kind = 157 then
+            r := nb^.xp[2] = na;
+        end
+        else if na^.kind = 157 then begin
+          nb := il_$node_ptr_t(b.x);
+          if nb^.kind = 184 then
+            r := na^.xp[2] = nb;
+        end;
+      end;
+      4, 6:
+        r := (a.f2 = b.f2) and (a.f3 = b.f3) and (a.y = b.y) and
+             (a.f4 = b.f4);
+      5, 11:
+        r := a.y = b.y;
+      7:
+        if (a.y <> 0) and (b.y <> 0) then
+          r := codegen_$cell_ptr_t(a.y)^.owner =
+               codegen_$cell_ptr_t(b.y)^.owner;
+      12:
+        r := a.x = b.x;
+      14:
+        r := (a.f2 = b.f2) and (a.f3 = b.f3);
+      15:
+        r := (a.y = b.y) and (a.x = b.x);
+    end;
+  sameaddr := r;
+end;
+
+{ final_$reg_is_simple_deferred - a is register reg indirect (mode 2).
+
+  0x1094E4, 0x2A bytes, no frame: a by address, reg a word. }
+
+function final_$reg_is_simple_deferred(
+    in a: codegen_$ads_t;
+    reg: integer): boolean; options(val_param); internal;
+begin
+  if a.f1 = 2 then
+    final_$reg_is_simple_deferred := a.f2 = reg
+  else
+    final_$reg_is_simple_deferred := false;
+end;
+
+{ final_$reg_is_index - a is indexed (modes 4, 6, 14: `btst' in
+  #0x4050) by register reg (f3).
+
+  0x10950E, 0x3A bytes, no A5 load. }
+
+function final_$reg_is_index(
+    in a: codegen_$ads_t;
+    reg: integer): boolean; options(val_param); internal;
+begin
+  if a.f1 in [4, 6, 14] then
+    final_$reg_is_index := a.f3 = reg
+  else
+    final_$reg_is_index := false;
+end;
+
+{ involves - a uses register reg: a mode with a register (not 0, 3, 5,
+  7, 11, 12, 15: `btst' in #0x98A9) whose register or index register
+  is reg.
+
+  0x109548, 0x56 bytes, A5 loaded. }
+
+function involves;
+var
+  r: boolean;
+begin
+  r := false;
+  if not (a.f1 in [0, 3, 5, 7, 11, 12, 15]) then
+    if a.f2 = reg then
+      r := true
+    else if final_$reg_is_index(a, reg) then
+      r := true;
+  involves := r;
+end;
+
+{ assert_is_direct_use_of_address_reg - a is an address register
+  (mode 1, registers 8..15: `btst' in #0xFF00).
+
+  0x10959E, 0x2A bytes, no frame. }
+
+function assert_is_direct_use_of_address_reg(
+    in a: codegen_$ads_t): boolean; internal;
+begin
+  if a.f1 = 1 then
+    assert_is_direct_use_of_address_reg := a.f2 in [8..15]
+  else
+    assert_is_direct_use_of_address_reg := false;
+end;
+
+{ final_$reg_is_killed - c destroys register reg: its source a
+  postincrement or predecrement of it (`btst' in #0x300), its
+  destination involving it in modes 1, 8, 9, 14 (`btst' in #0x4302;
+  not an instruction of kind 6, ops 102..104, on the register itself),
+  a movem from memory (kind 26, ops 207, 206) of an immediate integer
+  mask (node 81) with the register's bit (fn_regmask, +0x30), a bsr, a
+  jsr (kind 16, op 119).
+
+  0x1095C8, 0x112 bytes, no A5 load: the mask tested by `m$dis$lll'
+  and bit 0 (odd); reg in 0..15 tested in #0xFFFF. }
+
+function final_$reg_is_killed(
+    c: codegen_$cell_ptr_t;
+    reg: integer): boolean; options(val_param); internal;
+var
+  r: boolean;
+  n: il_$node_ptr_t;
+begin
+  if involves(c^.ads1, reg) and (c^.ads1.f1 in [8, 9]) then
+    r := true
+  else if involves(c^.ads2, reg) and (c^.ads2.f1 in [1, 8, 9, 14]) and
+          ((c^.ads2.f1 <> 1) or (c^.kind <> src2_sz_instyp) or
+           not (c^.op in [102..104])) then
+    r := true
+  else begin
+    n := il_$node_ptr_t(c^.ads2.x);
+    if (c^.kind = moverm_instyp) and ((c^.op = 207) or (c^.op = 206)) and
+       (c^.ads2.f1 = 3) and (n^.kind = 81) and (reg in [0..15]) and
+       odd(n^.int_value div fn_regmask[reg]) then
+      r := true
+    else if c^.kind = bsr_instyp then
+      r := true
+    else if (c^.kind = dest1_instyp) and (c^.op = 119) then
+      r := true
+    else
+      r := false;
+  end;
+  final_$reg_is_killed := r;
+end;
+
+{ final_$fp_reg_is_killed - c destroys floating register reg (16..23,
+  `btst' in #0xFF0000): its destination the register (mode 13, `btst'
+  in #0x2000), a floating movem (kind 51, or ops 358..363, a set of
+  0..367) of an immediate integer mask with the register's bit, a bsr,
+  a jsr.
+
+  0x1096DA, 0xD2 bytes, no A5 load. }
+
+function final_$fp_reg_is_killed(
+    c: codegen_$cell_ptr_t;
+    reg: integer): boolean; options(val_param); internal;
+var
+  r: boolean;
+  n: il_$node_ptr_t;
+begin
+  if not (reg in [16..23]) then
+    r := false
+  else begin
+    n := il_$node_ptr_t(c^.ads2.x);
+    if involves(c^.ads2, reg) and (c^.ads2.f1 = 13) then
+      r := true
+    else if ((c^.kind = m881_moverm_instyp) or (c^.op in [358..363])) and
+            (c^.ads2.f1 = 3) and (n^.kind = 81) and
+            odd(n^.int_value div fn_regmask[reg]) then
+      r := true
+    else if c^.kind = bsr_instyp then
+      r := true
+    else if (c^.kind = dest1_instyp) and (c^.op = 119) then
+      r := true
+    else
+      r := false;
+  end;
+  final_$fp_reg_is_killed := r;
+end;
+
+{ final_$reg_is_used - how c uses register reg: 1 its source, 2 its
+  destination, 3 both; a use the register of modes 1, 2, 4, 6, 8, 9, 14
+  (`btst' in #0x4356) or the index register of modes 4, 6, 14.
+
+  0x1097DA, 0x9A bytes, no A5 load: a word in D0. }
+
+function final_$reg_is_used(
+    c: codegen_$cell_ptr_t;
+    reg: integer): integer; options(val_param); internal;
+var
+  r: integer;
+begin
+  r := 0;
+  if (c^.ads1.f1 in [1, 2, 4, 6, 8, 9, 14]) and (c^.ads1.f2 = reg) then
+    r := 1
+  else if (c^.ads1.f1 in [4, 6, 14]) and (c^.ads1.f3 = reg) then
+    r := 1;
+  if (c^.ads2.f1 in [1, 2, 4, 6, 8, 9, 14]) and (c^.ads2.f2 = reg) then
+    r := r + 2
+  else if (c^.ads2.f1 in [4, 6, 14]) and (c^.ads2.f3 = reg) then
+    r := r + 2;
+  final_$reg_is_used := r;
+end;
+
+{ final_$reg_implicitly_used_by_inst - c, an instruction (not a label,
+  line or block mark), names register reg as its destination
+  (final_$reg_is_used 2 or 3, `btst' in #12) and also reads it: its op
+  not one that only writes (a set of 0..463; an op beyond it counts as
+  reading, `sle').
+
+  0x109874, 0x64 bytes, no A5 load: final_$reg_is_used called before
+  c is tested for nil. }
+
+function final_$reg_implicitly_used_by_inst(
+    c: codegen_$cell_ptr_t;
+    reg: integer): boolean; options(val_param); internal;
+var
+  u: integer;
+begin
+  u := final_$reg_is_used(c, reg);
+  if (c <> nil) and not (c^.kind in [0, 24, 32..33]) and (u in [2, 3]) then
+    final_$reg_implicitly_used_by_inst :=
+        not (c^.op in [0..5, 9..11, 124..139, 206..207, 224..230, 448..453])
+  else
+    final_$reg_implicitly_used_by_inst := false;
+end;
+
+{ final_$reg_is_dead_henceforth - register reg's value is not needed
+  after c: the cells from c on, until the section's head (fn_sect, +28)
+  or an answer, lines and block marks passed (the answer false if the
+  head is reached after them); a label or a branch (17, 18, 23, 29, 39:
+  a set of 0..47) false; a call true for D0, D1, A0, A1 (`btst' in
+  #0x303) unless it is an FP040 library call; ops 210..212 true but for
+  D0 and A0 (#0x101); a use of the register false when it is read (its
+  source not a postincrement or predecrement, or implicitly), else
+  whether the instruction kills it.
+
+  0x109912, 0x12A bytes, no A5 load: the iteration's done flag in D2
+  (set at the loop's top), the answer in D4. }
+
+function final_$reg_is_dead_henceforth(
+    c: codegen_$cell_ptr_t;
+    reg: integer): boolean; options(val_param); internal;
+var
+  p: codegen_$cell_ptr_t;
+  k: integer;
+  done: boolean;
+  r: boolean;
+begin
+  p := c;
+  repeat
+    k := p^.kind;
+    done := true;
+    if (k = line_no_instyp) or (k = block_end_instyp) or
+       (k = block_start_instyp) then begin
+      r := false;
+      p := p^.next;
+      done := false;
+    end
+    else if k = def_lbl_instyp then
+      r := false
+    else if k in [17..18, 23, 29, 39] then
+      r := false
+    else if final_$is_call(p) then begin
+      if final_$is_fp040_libcall(p) then
+        r := false
+      else if reg in [0, 1, 8, 9] then
+        r := true
+      else
+        r := false;
+    end
+    else if (p^.op = 210) or (p^.op = 212) or (p^.op = 211) then
+      r := not (reg in [0, 8])
+    else if final_$reg_is_used(p, reg) <> 0 then begin
+      if (final_$reg_is_used(p, reg) in [1, 3]) and
+         not (p^.ads1.f1 in [8, 9]) then
+        r := false
+      else if final_$reg_implicitly_used_by_inst(p, reg) then
+        r := false
+      else
+        r := final_$reg_is_killed(p, reg);
+    end
+    else begin
+      p := p^.next;
+      done := false;
+    end;
+  until done or (p = fn_sect^.head);
+  final_$reg_is_dead_henceforth := r;
+end;
+
+{ final_$contiguous_distinct_addresses - descriptors a (la bytes) and
+  b (lb bytes) address adjacent storage: the same mode and, by the
+  mode, the same register (2), node (15) or nothing more (5), with
+  displacements (y) that meet (adjacent_disps); the same register
+  postincremented or predecremented (8, 9).  lo the lower of the two
+  (a, or b when its displacement is the lower).
+
+  0x109A80, 0x136 bytes, no A5 load: a `case' of the mode through a
+  table of 14 from 2; adjacent_disps's result left in D0 as the
+  routine's. }
+
+function final_$contiguous_distinct_addresses(
+    in a: codegen_$ads_t;
+    la: integer;
+    in b: codegen_$ads_t;
+    lb: integer;
+    out lo: codegen_$ads_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+
+  { adjacent_disps - a block of la bytes at da and one of lb at db meet.
+
+    0x109A42, 0x3E bytes, no A5 load. }
+
+  function adjacent_disps(
+      da: integer32;
+      la: integer32;
+      db: integer32;
+      lb: integer32): boolean; options(val_param);
+  begin
+    if da + la = db then
+      adjacent_disps := true
+    else
+      adjacent_disps := db + lb = da;
+  end;
+
+begin
+  r := false;
+  if a.f1 = b.f1 then begin
+    lo := a;
+    case a.f1 of
+      8, 9:
+        r := a.f2 = b.f2;
+      2: begin
+        if a.f2 = b.f2 then
+          r := adjacent_disps(a.y, la, b.y, lb);
+        if a.y > b.y then
+          lo := b;
+      end;
+      15: begin
+        if a.x = b.x then
+          r := adjacent_disps(a.y, la, b.y, lb);
+        if a.y > b.y then
+          lo := b;
+      end;
+      5: begin
+        r := adjacent_disps(a.y, la, b.y, lb);
+        if a.y > b.y then
+          lo := b;
+      end;
+      otherwise
+        ;
+    end;
+  end;
+  final_$contiguous_distinct_addresses := r;
 end;
