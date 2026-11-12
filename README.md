@@ -129,14 +129,12 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/alias.pas` | 19 | translated (best effort; nodes by offset; tables initialized; dpc gaps 8, 23, 24) |
 | `lang/lang/source/debug_sym_dmp.pas` | 56 | translated (best effort; nodes by offset; spos routine parameters, dpc gaps 3, 8, 12, 21) |
 | `lang/c_compiler/source/c_def_sem.pas` | 59 | translated (best effort; IL nodes through c_objtype views and il.ins.pas's; dpc gap 8) |
-| `lang/c_compiler/source/c_syntax.pas` | 59 | started: 12 of 59 (error, check, type_qualifiers, cc_walk_it, call_kfold, ...; dpc gap 8) |
 | `lang/c_compiler/source/c_expr_sem.pas` | 43 | translated (best effort; tables initialized; dpc gaps 6, 7, 8, 14, 25) |
 | `lang/lang/source/kfold.pas` | 14 | translated (best effort; nodes through kf_tree_t and il views; dpc gaps 7, 8, 19, 25) |
 | `lang/lang/source/outbin.pas` | 70 | translated (cc.m68k only; best effort; nodes by offset, cells through codegen's variants; dpc gaps 3, 4, 8, 9, 19, 24, 26, 25) |
 | `lang/c_compiler/source/c_syntax.pas` | 59 | translated (best effort; IL nodes through c_objtype views; dpc gaps 7, 8, 20, 21, 27) |
 | `lang/lang/source/cg_fp.pas` | 9 | translated (cc.m68k only; best effort; nodes by offset and cg.ins.pas's tree view; dpc gap 8) |
 | `lang/lang/source/cg_call.pas` | 10 | translated (cc.m68k only; best effort; nodes by offset and cg.ins.pas's views; dpc gaps 8, 22, 28) |
-| `lang/lang/source/cg_misc.pas` | 24 | started: 13 of 24 (show_state .. genmask in address order, cbuiltin_strcpy, cg_misc_$strcmp_can_use_longs; shift, agg_opr, fill and the other string builtins not written; cc.m68k only; dpc gap 8) |
 | `lang/lang/source/add_node.pas` | 23 | translated (best effort; nodes through an_node_t, the kinds' names from the image; dpc gaps 4, 7, 8, 11, 15, 25) |
 | `lang/lang/source/delay.pas` | 15 | translated (best effort; nodes through dl_node_t, tables initialized; dpc gaps 2, 8, 15) |
 | `lang/lang/source/cg_misc.pas` | 24 | translated (cc.m68k only; best effort; nodes by offset and cg.ins.pas's tree view; dpc gaps 7, 8) |
