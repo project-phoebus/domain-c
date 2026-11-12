@@ -554,7 +554,7 @@ begin
   while e <> nil do begin
     if at_backend_switches.sw10 then
       vfmt_$write('obj emit_literal:  object=%8lh   next=%8lh   size=%4lh   location=%8lh   value=%8lh%.',
-                  e^.lit, e^.l0, e^.size, e^.addr, e^.lit^.value);
+                  e^.lit, e^.next, e^.size, e^.addr, e^.lit^.value);
     if emitting then begin
       bin_$advance_to_location(e^.addr);
       lit := e^.lit;
@@ -596,7 +596,7 @@ begin
     end;
     if listing then
       lst_$display_literal(e);
-    e := univ_ptr(e^.l0);
+    e := e^.next;
   end;
 end;
 
