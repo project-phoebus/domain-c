@@ -129,7 +129,8 @@ type
     callee: il_$node_ptr_t;             { +0: the block called }
     ref: il_$node_ptr_t;                { +4 }
     caller: il_$node_ptr_t;             { +8 }
-    ref_stmt: il_$node_ptr_t;           { +12 }
+    scope: il_$node_ptr_t;              { +12: the block the call is
+                                          in (runbackend's ref_stmt) }
     call: il_$node_ptr_t;               { +16: the call (or reference) }
     stmt: il_$node_ptr_t;               { +20: the call's statement }
     sites: oi_site_list_ptr_t;          { +24: kind 16 calls' slots }
@@ -181,6 +182,20 @@ type
   oi_level_t = packed record
     pad: packed array [0..293] of char;
     level: -128..127;                   { +294 }
+  end;
+
+  { A name's characters (assign_name), the pattern of the names made. }
+  oi_chars_ptr_t = ^oi_chars_t;
+  oi_chars_t = array [1..4096] of char;
+  oi_pattern_t = array [1..11] of char;
+
+  { A language 2 callee's parameters (its +12): 12 bytes each from
+    [1], the parameter's symbol first. }
+  oi_ftab_ptr_t = ^oi_ftab_t;
+  oi_ftab_t = array [0..255] of record
+    sym: il_$node_ptr_t;                { +0 }
+    unused_4: integer32;                { +4 }
+    unused_8: integer32;                { +8 }
   end;
 
   { A descriptor cleared bytewise (extend). }
@@ -1700,5 +1715,419 @@ begin
     end;
     otherwise
       ;
+  end;
+end;
+
+{ inliner_actual - actual t, without the conversion (137 op 63) the
+  front end wraps around it.
+
+  0x090848, 0x1A bytes, no frame. }
+
+function inliner_actual(
+    t: il_$node_ptr_t): il_$node_ptr_t; options(val_param); internal;
+var
+  r: il_$node_ptr_t;
+begin
+  r := t;
+  if r^.kind = 137 then
+    if r^.xw[18] = 63 then
+      r := r^.xp[10];
+  inliner_actual := r;
+end;
+
+{ process_parameters - the callee's parameters bound for edge e (x the
+  callee's display, its +4 the result variable): for each parameter
+  (the callee's +293 of them; a language 2 callee's from the table at
+  its +12, 12 bytes each, others the variables named by its parameter
+  list, +12 through +4) the actual's binding by pass_method: 0 a copy
+  of the parameter assigned the actual, 3 a pointer variable
+  (ptr_variable) assigned its address (and, in language 2, a copy of
+  the parameter based on it), 2 the actual's own variable (copied in
+  its place: storage and flags), 1 the actual itself; the parameter
+  then maps (put_hash_info) to what stands for it, with flags 1
+  (substituted, or by address) or 2 (a by-reference parameter, mode
+  0, passed through its address), 4 for a pointer of class 5, the
+  address taken or the reference made as the binding needs, the
+  actual's captured indirection in the display (+20).  The result
+  variable is copied, allocated and mapped likewise.
+
+  0x090BBA, 0x6F0 bytes, link #-384: the parameters counted down in
+  a frame word and `bcc'; pass_method's answers by a jump table of 4;
+  add_pn's two words pushed as one longword (#0x20000, pattern 54);
+  the copies' +10 flags cleared `andi.w #-16387'. }
+
+procedure process_parameters(
+    e: oi_edge_ptr_t;
+    x: il_$node_ptr_t); options(val_param); internal;
+
+  { assign - a new assignment (140) of rhs to lhs, its descriptor
+    lhs's (get_size_rlen), rhs converted (coerce) to it from the k-th
+    parameter's class of a routine type in languages 3 and 4 (the
+    called routine's +18 + 4k) or from a tree's class; +76 the
+    assignment's kind (11 a real, 6 a block, else 0); e's caller's
+    count (+272) raised.
+
+    0x090862, 0x106 bytes, link #-44: k a word; the result in A0. }
+
+  function assign(
+      e: oi_edge_ptr_t;
+      lhs: il_$node_ptr_t;
+      rhs: il_$node_ptr_t;
+      k: integer): il_$node_ptr_t; options(val_param);
+  var
+    s: il_$node_ptr_t;
+    d: add_node_$desc_t;
+    w: integer;
+    done: boolean;
+  begin
+    e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+    s := gspace(80);
+    s^.kind := 140;
+    s^.xp[17] := rhs;
+    s^.xp[16] := lhs;
+    get_size_rlen(lhs, d);
+    s^.xl[12] := d.size;
+    s^.xw[26] := d.rlen;
+    if k > 0 then begin
+      done := false;
+      if language in [3, 4] then begin
+        w := e^.call^.xp[10]^.xw[9 + 2 * k];
+        if w <> d.rlen then begin
+          coerce(e, s^.xp[17], w, d.rlen, true);
+          done := true;
+        end;
+      end;
+      if not done then
+        if (rhs^.kind = 143) or (rhs^.kind = 137) then
+          if rhs^.xw[12] <> d.rlen then
+            coerce(e, s^.xp[17], rhs^.xw[12], d.rlen,
+                   (ord(rhs^.xc[30]) & 64) <> 0);
+    end;
+    if (s^.xw[26] = 6) or (s^.xw[26] = 7) or (s^.xw[26] = 12) or
+       (s^.xw[26] = 8) then
+      s^.xw[38] := 11
+    else if s^.xw[26] = 11 then
+      s^.xw[38] := 6
+    else
+      s^.xw[38] := 0;
+    assign := s;
+  end;
+
+  { ptr_variable - a new pointer variable for parameter f: in a
+    language 2 callee a temporary (110, 92 bytes under -MAP else 83;
+    +10 bit 5 and class 3, +44 class 3 and bit 0, +68 -1, +26 bit 6),
+    else a variable (109) of a new pointer type (130, 4 bytes, its
+    name a type name 118 of f's attributes), named after f
+    (assign_name), allocated and put on e's block (+12).
+
+    0x090A10, 0x1AA bytes, link #-32: the gspace size in a frame word;
+    the pointer type's +20, +22 stored as one longword 0x20002. }
+
+  function ptr_variable(
+      e: oi_edge_ptr_t;
+      f: il_$node_ptr_t): il_$node_ptr_t; options(val_param);
+
+    { assign_name - dst (its length dlen) the name '<OI$nnnnn$' with
+      the names' serial in its digits, then len characters of src,
+      then '>'; the serial raised.
+
+      0x090968, 0x98 bytes, link #-24: src and dst by value, dlen by
+      address; the pattern copied from after the routine; the
+      serial's low word (+0x5EF6) taken; the digits by `divs.w #10'. }
+
+    procedure assign_name(
+        src: univ_ptr;
+        len: integer;
+        dst: oi_chars_ptr_t;
+        var dlen: integer); options(val_param);
+    var
+      i: integer;
+      n: integer;
+      pat: oi_pattern_t;
+    begin
+      pat := '<OI$00000$>';
+      lib_$data_move(addr(pat), dst, 11);
+      i := 9;
+      n := name_serial;
+      repeat
+        dst^[i] := chr(n mod 10 + 48);
+        i := i - 1;
+        n := n div 10;
+      until n = 0;
+      lib_$data_move(src, addr(dst^[11]), len);
+      len := len + 11;
+      dlen := len;
+      dst^[len] := '>';
+      name_serial := name_serial + 1;
+    end;
+
+  var
+    v: il_$node_ptr_t;
+    n: il_$node_ptr_t;
+    t: il_$node_ptr_t;
+    size: integer;
+  begin
+    if language = 2 then begin
+      if cargs_$options.map then
+        size := 92
+      else
+        size := 83;
+      v := gspace(size);
+      v^.kind := 110;
+      v^.xc[10] := chr(ord(v^.xc[10]) ! 32);
+      v^.xc[10] := chr((ord(v^.xc[10]) & 16#F0) ! 3);
+      v^.xc[44] := chr((ord(v^.xc[44]) & 15) ! 16#30);
+      v^.xc[44] := chr(ord(v^.xc[44]) ! 1);
+      v^.xw[34] := -1;
+      assign_name(addr(f^.xc[72]), f^.xw[35],
+                  oi_chars_ptr_t(addr(v^.xc[72])), v^.xw[35]);
+      allocate_local_var(e, v);
+      v^.xc[26] := chr(ord(v^.xc[26]) ! 64);
+      put_on_bct(e, e^.scope, v);
+    end
+    else begin
+      v := gspace(84);
+      v^.kind := 109;
+      v^.xp[1] := gspace(29);
+      v^.xp[1]^.kind := 76;
+      n := v^.xp[1];
+      assign_name(addr(f^.xp[1]^.xc[18]), f^.xp[1]^.xw[8],
+                  oi_chars_ptr_t(addr(n^.xc[18])), n^.xw[8]);
+      t := gspace(36);
+      v^.xp[7] := t;
+      v^.xl[9] := 32;
+      t^.kind := 130;
+      t^.xl[3] := 32;
+      t^.xw[10] := 2;
+      t^.xw[11] := 2;
+      t^.xw[12] := -1;
+      t^.xp[1] := gspace(60);
+      n := t^.xp[1];
+      n^.kind := 118;
+      n^.xp[1] := v^.xp[1];
+      n^.xp[5] := e^.caller;
+      n^.xp[7] := f^.xp[7]^.xp[4];
+      n^.xl[11] := f^.xl[9];
+      n^.xw[25] := f^.xw[22];
+      n^.xw[24] := f^.xw[23];
+      n^.xw[26] := f^.xw[24];
+      n^.xl[10] := f^.xl[10];
+      allocate_local_var(e, v);
+      put_on_bct(e, e^.scope, v);
+    end;
+    ptr_variable := v;
+  end;
+
+var
+  d: oi_desc_t;
+  d3: add_node_$desc_t;
+  p: il_$node_ptr_t;
+  f: il_$node_ptr_t;
+  a: il_$node_ptr_t;
+  v: il_$node_ptr_t;
+  pv: il_$node_ptr_t;
+  c: il_$node_ptr_t;
+  adr: il_$node_ptr_t;
+  val: il_$node_ptr_t;
+  ind: il_$node_ptr_t;
+  ops1: il_$node_ptr_t;
+  ops2: il_$node_ptr_t;
+  ops3: il_$node_ptr_t;
+  info: oi_info_t;
+  i: integer;
+  k: integer;
+  m: integer;
+  sub: integer;
+  cls: integer;
+  fl: oi_flags_t;
+begin
+  for i := 1 to 16 do
+    d.b[i] := chr(0);
+  p := nil;
+  if language <> 2 then
+    p := e^.callee^.xp[3];
+  for k := 1 to ord(e^.callee^.xc[293]) do begin
+    if language = 2 then
+      f := oi_ftab_ptr_t(e^.callee^.xp[3])^[k].sym
+    else
+      f := find_varn(e^.callee, p);
+    a := inliner_actual(e^.call^.xp[10 + k]);
+    sub := 0;
+    ind := nil;
+    m := pass_method(e, k, a, f, p);
+    case m of
+      0: begin
+        if language = 2 then begin
+          v := copy_var(e, f);
+          put_on_bct(e, caller_blk, v);
+          v^.xw[5] := v^.xw[5] & 16#BFFD;
+          v^.xc[44] := chr((ord(v^.xc[44]) & 15) ! 16#30);
+        end
+        else begin
+          v := copy_var(e, f);
+          put_on_bct(e, caller_blk, v);
+          v^.xc[34] := chr(ord(v^.xc[34]) & 16#FB);
+        end;
+        allocate_local_var(e, v);
+        val := v;
+        put_on_il_stream(assign(e, v, a, k));
+        if a^.kind = 137 then
+          if a^.xw[18] = 26 then
+            set_address_exposed(a);
+      end;
+      3: begin
+        if language = 2 then begin
+          if (a^.kind = 146) and (a^.xp[6]^.kind = 110) then
+            adr := a^.xp[6]
+          else begin
+            d.d.size := 4;
+            d.d.rlen := 4;
+            ops1 := a;
+            adr := buildtreenode(26, d.d, ops1, 1);
+          end;
+          pv := ptr_variable(e, f);
+          pv^.xp[8] := f^.xp[8];
+          put_on_il_stream(assign(e, pv, adr, 0));
+          c := copy_var(e, f);
+          put_on_bct(e, caller_blk, c);
+          c^.xw[5] := c^.xw[5] & 16#BFFD;
+          if rshft(ord(c^.xc[44]) & 16#F0, 4) = 0 then
+            c^.xc[44] := chr((ord(c^.xc[44]) & 15) ! 16#30);
+          c^.xc[11] := chr((ord(c^.xc[11]) & 15) ! 16#90);
+          c^.xp2[14] := pv;
+        end
+        else begin
+          if (a^.kind = 146) and (a^.xp[6]^.kind = 109) then
+            adr := a^.xp[6]
+          else if (a^.kind = 195) or (a^.kind = 163) then
+            adr := a
+          else begin
+            if (language = 1) and (a^.kind = 81) then begin
+              get_size_rlen(f, d3);
+              if d3.rlen = 1 then
+                a := smcontk(200, a^.xl[2])
+              else if d3.rlen = 2 then
+                a := smcontk(80, a^.xl[2]);
+            end;
+            ops2 := a;
+            d.d.size := 4;
+            d.d.rlen := 5;
+            adr := buildtreenode(26, d.d, ops2, 1);
+          end;
+          pv := ptr_variable(e, f);
+          put_on_il_stream(assign(e, pv, adr, 0));
+          c := pv;
+        end;
+        if adr^.kind = 137 then
+          if adr^.xw[18] = 26 then
+            set_address_exposed(adr);
+        sub := 1;
+        val := pv;
+        ind := alias_$ind_for_captured_lvalue(a);
+      end;
+      2: begin
+        val := a;
+        if language = 2 then begin
+          a := actual_actual(a, ind);
+          if a^.kind = 110 then begin
+            v := copy_var(e, f);
+            put_on_bct(e, caller_blk, v);
+            v^.xc[11] := chr((ord(v^.xc[11]) & 16#FD) ! (ord(a^.xc[11]) & 2));
+            v^.xc[10] := chr((ord(v^.xc[10]) & 16#BF) ! (ord(a^.xc[10]) & 64));
+            v^.xc[11] := chr((ord(v^.xc[11]) & 15) ! (ord(a^.xc[11]) & 16#F0));
+            v^.xl[3] := a^.xl[3];
+            if (ord(v^.xc[11]) & 2) = 0 then
+              v^.xc[44] := chr((ord(v^.xc[44]) & 15) ! 16#30);
+            v^.xl[6] := (f^.xl[6] & 16#803FFFFF) ! a^.xl[6];
+            v^.xl[8] := a^.xl[8];
+          end;
+        end
+        else begin
+          a := actual_actual(a, ind);
+          if (a^.kind = 195) or (a^.kind = 163) then
+            a := find_varn(e^.scope, a);
+          if a^.kind = 109 then begin
+            v := copy_var(e, f);
+            put_on_bct(e, caller_blk, v);
+            v^.xw[36] := a^.xw[36];
+            if v^.xw[36] = 10 then
+              v^.xw[36] := 2;
+            v^.xl[14] := a^.xl[14];
+            v^.xl[8] := (f^.xl[8] & 16#803FFFFF) ! a^.xl[8];
+          end;
+        end;
+      end;
+      1:
+        val := a;
+      otherwise
+        ;
+    end;
+    if f^.kind = 110 then
+      cls := rshft(ord(f^.xc[11]) & 16#F0, 4)
+    else
+      cls := f^.xw[36];
+    if (p <> nil) and (p^.xw[22] = 0) then begin
+      if m = 1 then
+        fl := [1]
+      else
+        fl := [0];
+    end
+    else if cls = 5 then
+      fl := [2]
+    else
+      fl := [0];
+    if (fl * [1, 2]) <> [] then
+      sub := sub - 1;
+    if sub = -1 then begin
+      if val^.kind = 146 then
+        val := val^.xp[6]
+      else begin
+        d.d.size := 4;
+        if language = 2 then
+          d.d.rlen := 4
+        else
+          d.d.rlen := 5;
+        val := buildtreenode(26, d.d, val, 1);
+      end;
+    end
+    else if sub = 1 then begin
+      if (val^.kind = 137) and (val^.xw[18] = 26) then
+        val := val^.xp[10]
+      else begin
+        val := add_pn(val, c, 2, 0);
+        val^.xw[8] := 1;
+      end;
+    end;
+    nil_out_dispinfo(info);
+    info.i20 := ind;
+    put_hash_info(e, f, val, fl, info);
+    if language <> 2 then
+      p := p^.xp[1];
+  end;
+  f := x^.xp[1];
+  if f <> nil then begin
+    v := copy_var(e, f);
+    put_on_bct(e, e^.scope, v);
+    if v^.kind = 110 then
+      v^.xc[44] := chr((ord(v^.xc[44]) & 15) ! 16#30);
+    allocate_local_var(e, v);
+    if f^.kind = 110 then
+      cls := rshft(ord(f^.xc[11]) & 16#F0, 4)
+    else
+      cls := f^.xw[36];
+    if cls = 5 then
+      fl := [2]
+    else
+      fl := [0];
+    if fl = [2] then begin
+      d.d.size := 4;
+      if language = 2 then
+        d.d.rlen := 4
+      else
+        d.d.rlen := 5;
+      ops3 := v;
+      v := buildtreenode(26, d.d, ops3, 1);
+    end;
+    put_hash_info(e, f, v, fl, empty_info);
   end;
 end;
