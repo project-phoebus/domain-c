@@ -718,6 +718,12 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
    EXTRACTU, floating control) are left out of the check; gap 28
    follows once they are.
 
+   Also rewrite.pas rewrite_$routine_call (translator PD, cc.a88k
+   0x21B770, 0x1296 bytes): the arguments' value selection (from the
+   widening for op 86 to the copy into a home) and the FORTRAN I/O
+   marking are left out of the check; with less left out dpc reports
+   gap 28's "more values live at once than there are registers".
+
 26. **`substr`** (reference 4-189, an extension).  outbin.pas
    assert_is_an_fpx_command_instr (cc.m68k 0x0BBE28): `substr(chars, 1,
    len) = 'CommandCIR'' of a string constant's characters (pas_$ctov of
@@ -1069,3 +1075,25 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
        begin
          q('AP  ', -1);
        end;
+42. **A positional initializer for a variant record.**  rewrite.pas's
+   multiplication tables (translator PD) are arrays of an 8-byte packed
+   record that the image reads both by step fields (op, a, b) and by
+   whole 10-bit steps (`and.l #16#3FF000' of the first longword):
+   overlapping variants.  dpc: "a positional initial value for a
+   variant's field is not supported yet".  No rewrite: the translation
+   declares the record without variants and reads the whole steps
+   through a second record type (rw_steps_t, by a pointer cast).
+   Reproducer:
+
+       module g42;
+       type t = packed record
+         case integer of
+           1: (a: 0..15; b: 0..15);
+           2: (w: 0..255);
+         end;
+       var v: array [0..1] of t := [[1, 2], [3, 4]];
+       procedure p;
+       begin
+         v[0].w := 0;
+       end;
+

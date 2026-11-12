@@ -1960,3 +1960,42 @@ revisited.
    names, messages, blocks and instructions: debugging bodies compiled
    out (an `%if' in the source), most likely.  Written as empty
    procedures with the parameters the calls pass.
+
+238. Translator PD, tools/cc_data.py: **it ignored the .rwdi repeat
+   records** (kind 1: the previous record's bytes count-1 more times),
+   printing the bytes they set as unset (`..').  rewrite's word tables
+   (a value and a repeat count) showed it; cc_data.py now applies them.
+   Initial data reconstructed with the old tool (the .init files, the
+   defined tables of lir_main, iv, oli, asm, ...) may have zeros where
+   the image repeats a value: worth re-running against the new tool.
+239. Translator PD, at_lib_dsc.ins.pas: the section at_lib_dsc_ptr
+   (cc.a88k 0x513D40, 60 pointers, cc.m68k 0x353398) is declared there
+   as an extern array of il_$node_ptr_t (rewrite reads it); the m68k
+   side's users, if any, read it otherwise.  Keep it there?
+240. Translator PD, rewrite.pas: the image's two bug check messages
+   'REWRITE: Wrong number of bit_field_assign arguments.' and
+   'REWRITE_$CONST_MUL: Unexpected multiplier ' have no `%.'/`%$'
+   terminator (the first runs into the next message in the image); the
+   translation writes the literals as the bytes give them.  Slips of
+   the original?
+241. Translator PD, rewrite.pas: rewrite_$routine_call stores the hidden
+   temporary in the call node's first operand (`move.l D2,(40,A3)': the
+   routine operand, already copied to the new call tree) and
+   rewrite_$agg_aop returns the source's assignment without linking it
+   (node's next becomes the ISC_AGG; the caller must link the returned
+   node).  Both kept as the image has them.
+242. Translator PD, isc_solution_fields.ins.pas: backend.ins.pas's
+   solution_t (batch A) and the ISC's isc_solution_t describe the same
+   432-byte record; the ISC units cast between them.  Should the record
+   move to isc_solution_fields.ins.pas (which lir, lir_main, lir_utils,
+   ra_utils open) with the CSE accessors' field names (base_reg,
+   index_reg, live_range, bits_known, ..., memory_refs), and
+   backend.ins.pas keep only the pointer type?  (sym opens no ISC insert:
+   it would need solution_ptr_t only.)
+243. Translator PD, backend.ins.pas: the bug check reporters'
+   headings (instr_bug_check, phase_bug_check, phase_instr_bug_check)
+   now take backend_$bug_string_t and backend_$bug_arg_t (the same
+   shapes as bug_check.ins.pas's): rewrite opens backend.ins.pas before
+   bug_check.ins.pas.  Did the original declare them in at_base.ins.pas
+   or elsewhere?
+

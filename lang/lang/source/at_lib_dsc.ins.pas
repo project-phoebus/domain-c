@@ -15,3 +15,10 @@
 
 var
   at_lib_dsc: extern array [0..16#159B] of char;
+
+  { The section at_lib_dsc_ptr (cc.a88k 0x513D40, 240 bytes, initialized
+    by the loader): 60 pointers to library descriptors (cc.a88k's
+    rewrite_$routine_call takes the run-time routine of an operator from
+    it: [34..41] by result class, [46..59] single routines; translator
+    PD).  Not known from the original: the declaration. }
+  at_lib_dsc_ptr: extern array [0..59] of il_$node_ptr_t;
