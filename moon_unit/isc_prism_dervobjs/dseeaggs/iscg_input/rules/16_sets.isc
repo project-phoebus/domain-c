@@ -340,6 +340,7 @@ transform 536  ip_reg <- set_bit_in_set_top ($1: ip_reg, $2: ip_reg)
     temp t5: solution;
     temp t6: solution;
     temp t7: solution;
+    temp t8: solution;
     t1 <- lir_$new_label();
     t2 <- lir_$new_label();
     t3 <- create_solution_for_ip_reg();
@@ -357,6 +358,7 @@ transform 536  ip_reg <- set_bit_in_set_top ($1: ip_reg, $2: ip_reg)
     emit branch(t2, opc$blo, 0);
     if result.c138 = 1 then
       t5 <- find_well_known_literal_solution(1);
+      t8 <- t5;
     else
       t6 <- create_solution_for_ip_reg();
       if result.c139 = 1 then
@@ -365,8 +367,9 @@ transform 536  ip_reg <- set_bit_in_set_top ($1: ip_reg, $2: ip_reg)
         t7 <- address_mode_for_integer32_value(1);
         emit load(opc$loadl, 0, t7, t7.base_register, t6, t7.il, 0, t7.bits_known, t7.bits_trusted);
       end;
+      t8 <- t6;
     end;
-    emit field(opc$insert, 0, 1, t5, $2, $1);
+    emit field(opc$insert, 0, 1, t8, $2, $1);
     emit label(t2);
     emit label(t1);
     result.base_register <- $1.base_register;
@@ -459,6 +462,7 @@ transform 537  address_mode <- set_bit_in_set_top ($1: address_mode, $2: ip_reg)
     temp t13: solution;
     temp t14: solution;
     temp t15: solution;
+    temp t16: solution;
     t1 <- lir_$new_label();
     t2 <- lir_$new_label();
     if $1.is_physical then
@@ -516,6 +520,7 @@ transform 537  address_mode <- set_bit_in_set_top ($1: address_mode, $2: ip_reg)
     emit load(opc$loadbu, t3 + t4 + t5 + 16#1000000, t7, t8, t10, $1.il, 0, $1.bits_known, $1.bits_trusted);
     if result.c141 = 1 then
       t13 <- find_well_known_literal_solution(1);
+      t16 <- t13;
     else
       t14 <- create_solution_for_ip_reg();
       if result.c142 = 1 then
@@ -524,8 +529,9 @@ transform 537  address_mode <- set_bit_in_set_top ($1: address_mode, $2: ip_reg)
         t15 <- address_mode_for_integer32_value(1);
         emit load(opc$loadl, 0, t15, t15.base_register, t14, t15.il, 0, t15.bits_known, t15.bits_trusted);
       end;
+      t16 <- t14;
     end;
-    emit field(opc$insert, 0, 1, t13, t9, t10);
+    emit field(opc$insert, 0, 1, t16, t9, t10);
     emit store(opc$storeb, t3 + t4 + t5 + 16#1000000, t10, t7, t8, $1.il, 0, $1.bits_known, $1.bits_trusted);
     emit label(t2);
     emit label(t1);

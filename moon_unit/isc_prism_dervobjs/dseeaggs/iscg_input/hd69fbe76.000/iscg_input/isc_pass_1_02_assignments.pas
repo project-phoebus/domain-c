@@ -48,7 +48,8 @@
     transform_172_pass_1  0x107286
   Code 0x0F7198..0x107A18.  A5 0x44F360: the module's data, pas_$output at
   A5-4 (the traces' file; the writes are dpc gap 4, so dpc allocates
-  none) and from A5 the 1212 cost tables (38170 bytes).
+  none) and from A5 the 1212 cost tables (38166 bytes): 1064 near, the
+  last 148 past 32 KB after them (Rev 8.89's allocation: pattern 200).
   Every action loads A5 in the image (pattern 1).
 
   Not known from the original: the module's, the routines', the
@@ -88,6 +89,10 @@ type
   p1_word_costs_t = array [0..19] of integer;
   p1_last_byte_costs_t = packed array [0..16] of 0..255;
   p1_last_word_costs_t = array [0..16] of integer;
+  { The last table below 32 KB in a module that passes it: rounded to 4
+    bytes (the tables past 32 KB begin there; pattern 200). }
+  p1_near_last_byte_costs_t = packed array [0..19] of 0..255;
+  p1_near_last_word_costs_t = array [0..17] of integer;
   { An IL node's bytes, words and longwords by offset (the actions read
     a node's fields by offset whatever its kind: p2_node_t names none). }
   p2_node_ptr_t = ^p2_node_t;
@@ -155,7 +160,7 @@ type
 
 var
   { The cost tables, rule by rule (each rule's in the reverse of their order
-    in its clause). }
+    in its clause): the near ones, then those Rev 8.89 put past 32 KB. }
   cost_142_1: p1_byte_costs_t := [0, 0, 1, 14 of 0];
   cost_142_2: p1_byte_costs_t := [0, 0, 1, 14 of 0];
   cost_142_3: p1_word_costs_t := [0, 4, 4, 14 of 0];
@@ -1218,6 +1223,8 @@ var
   cost_170_189: p1_word_costs_t := [0, 4, 15 of 0];
   cost_170_190: p1_word_costs_t := [0, 4, 4, 14 of 0];
   cost_170_191: p1_word_costs_t := [0, 0, 4, 14 of 0];
+  cost_171_1: p1_byte_costs_t := [0, 1, 15 of 0];
+  cost_171_2: p1_near_last_byte_costs_t := [0, 0, 1, 14 of 0];
   cost_170_192: p1_word_costs_t := [0, 4, 4, 14 of 0];
   cost_170_193: p1_word_costs_t := [0, 0, 1000, 8, 13 of 0];
   cost_170_194: p1_word_costs_t := [0, 0, 1000, 14 of 0];
@@ -1305,8 +1312,6 @@ var
   cost_170_276: p1_word_costs_t := [0, 0, 4, 14 of 0];
   cost_170_277: p1_word_costs_t := [0, 4, 4, 14 of 0];
   cost_170_278: p1_word_costs_t := [0, 0, 1000, 14 of 0];
-  cost_171_1: p1_byte_costs_t := [0, 1, 15 of 0];
-  cost_171_2: p1_byte_costs_t := [0, 0, 1, 14 of 0];
   cost_171_3: p1_byte_costs_t := [0, 1, 15 of 0];
   cost_171_4: p1_byte_costs_t := [0, 0, 1, 14 of 0];
   cost_171_5: p1_byte_costs_t := [0, 2, 2, 14 of 0];

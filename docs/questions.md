@@ -2553,3 +2553,45 @@ revisited.
    (btst Dn,(81,A0)).  They keep sections 07, 12, 23, 24 from being
    generated.  A real-valued node field in the language (and a gap-7
    rewrite) for 9 and 10, a name for target_properties +0x9C?
+301. Translator GF, the pass-1 actions (docs/iscg-design.md 10.8):
+   **Rev 8.89's near/far allocation of module data.**  Question 297's
+   layout is reproduced, table for table, in both modules that pass
+   32 KB (02 and 24, 2990 tables) by: lay the tables out in order,
+   each on 8 bytes; a table stays near while its start plus three times
+   its 8-rounded size (24, 40) is within 32 KB; the rest follow, in
+   order, from the near tables' end rounded to 4, each on 8 bytes from
+   there.  tools/iscg_p1gen.py's place_tables does this (module 02's
+   cc_datacheck_known.txt entry is gone).  The data do not tell this
+   form from `start + 4 x the unrounded size' (17, 34); each reaches the
+   limit exactly once in module 02 (rule 171's second byte table at
+   +0x7FB8, rule 170's word table at +0x7F78), and factors 2 or 5 fail.  Is the compiler's real rule known (a reserve
+   for later small variables?), and does it apply to other big modules
+   (spos.pas, pattern 20)?
+302. Translator GF: **rules 9 and 10 by hand.**  They test or convert
+   the node's double through the FPP emulation (0x0074 0xFF34 then
+   `seq', read as a comparison with zero; 0x0074 0x00D4 0xFF3E, the
+   double stored as a single and its bits read).  The rule file writes
+   `result.literal_64_bits_value_is_zero <- subject.il.real_value =
+   0.0' and `temp f: single; f.value <- subject.il.real_value; ...
+   f.bits'; the selector real_value (il.ins.pas's) and the temp type
+   `single' (a view p1_single_t) are ours.  (0xFF34 is `= 0.0' as in
+   final.pas floatop, 0x00D4 0xFF3E the conversion as in lst.pas:
+   docs/dpc-gaps.md 7.)  Should the language name a real constant's
+   value otherwise (question 287), or the statement language have real
+   expressions so the lifter could follow fpp_$?
+303. Translator GF: **target_properties +0x9C.**  Named p_9c in
+   target_properties.ins.pas (split from p_94): rule 20 adds it to an
+   argument block location's offset; the four entries hold -1, 16, 16,
+   16 (read at 0x2B6800 + 328k + 0x9C).  Nothing else reads it.  A
+   better name (the argument block's displacement bias)?
+304. Translator GF: **pure functions written at each use, and called
+   before the first test.**  The lifter writes a function's value where
+   it is used, so `if number_of_rightmost_zeroes(x) > 3 then t <- 3
+   else t <- number_of_rightmost_zeroes(x)' calls it twice where the
+   image calls once (rule 20 and nine earlier clauses); and a call
+   whose value a condition's later conjunct uses becomes a temp set
+   before the `condition' (rules 177, 211: lir_$can_encode_as_
+   immediate_postincrement, called by the image only after the il.w52
+   tests pass).  Both are harmless for pure functions.  Should the
+   lifter keep the image's call count and order (a temp, a second
+   `condition')?

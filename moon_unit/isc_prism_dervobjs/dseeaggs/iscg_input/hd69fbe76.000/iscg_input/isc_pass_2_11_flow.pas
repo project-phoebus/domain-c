@@ -255,6 +255,7 @@ begin
     end else begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$extend7), 0,
           subject^.children[2], t1, nil);
+      t4 := t1;
     end;
     if ord(result.space136[138]) = 1 then begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t4,
@@ -274,6 +275,7 @@ begin
     end else begin
       debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0, 8,
           subject^.children[2], find_well_known_literal_solution(0), t2);
+      t5 := t2;
     end;
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 8, t5,
         create_solution_for_ip_reg, nil);
@@ -285,6 +287,7 @@ begin
     end else begin
       debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0, 8,
           subject^.children[2], find_well_known_literal_solution(0), t3);
+      t6 := t3;
     end;
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 8, t6,
         create_solution_for_ip_reg, nil);

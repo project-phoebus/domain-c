@@ -156,16 +156,43 @@ transform 8  literal_32_bits <- dpreal_ob
 end;
 
 transform 9  literal_64_bits <- dpreal_ob
-  { not lifted: no heading for fpp_$ }
-  pass_1 image 16#11DD08 residue;
+  pass_1 image 16#11DD08 hand begin
+    { written by hand: the image tests the node's double against zero
+      through the FPP emulation (`pea (12,A1); jsr fpp_$', the operation
+      words 0x0074 0xFF34, then `seq': docs/rev889-patterns.md 19), which
+      the lifter does not follow; a real comparison is dpc gap 7 (the
+      gate's rewrite compares the high longword) }
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- 0;
+    result.bits_trusted <- 0;
+    result.literal_64_bits_value_is_zero <- subject.il.real_value = 0.0;
+    result.literal_derived_from_floating_constant <- true;
+  end;
   pass_2 image 16#1AA570 begin
     result.object_with_name <- self.il;
   end;
 end;
 
 transform 10  literal_32_bits <- real_ob
-  { not lifted: no heading for fpp_$ }
-  pass_1 image 16#11DE24 residue;
+  pass_1 image 16#11DE24 hand begin
+    { written by hand: the image converts the node's double to a single
+      through the FPP emulation (the double copied to a local, `jsr
+      fpp_$', 0x0074 0x00D4 0xFF3E: the single stored to a temporary,
+      copied to a four-byte local and read as a longword), which the
+      lifter does not follow; real := double is dpc gap 7 (the gate's
+      rewrite drops the conversion) }
+    temp f: single;
+    f.value <- subject.il.real_value;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.bits_known <- f.bits;
+    result.bits_trusted <- -1;
+    result.literal_32_bits_value <- f.bits;
+    result.literal_derived_from_floating_constant <- true;
+  end;
   pass_2 image 16#1AA590 begin
     result.object_with_name <- self.il;
   end;

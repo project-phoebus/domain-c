@@ -171,29 +171,39 @@ transform 328  ip_reg_field <- and_top | eor_top | or_top ($1: ip_reg_field, $2:
     result.ip_reg_result <- 1;
   end;
   pass_2 image 16#1BC392 begin
-    temp t1: solution;
-    temp t2: integer32;
+    temp t1: integer32;
+    temp t2: solution;
     temp t3: solution;
     temp t4: solution;
     temp t5: solution;
-    t1 <- $1;
-    if t1.bit_position_of_lsb - $2.bit_position_of_lsb < 0 then
-      t2 <- -(t1.bit_position_of_lsb - $2.bit_position_of_lsb);
+    temp t6: solution;
+    temp t7: solution;
+    if $1.bit_position_of_lsb - $2.bit_position_of_lsb < 0 then
+      t1 <- -($1.bit_position_of_lsb - $2.bit_position_of_lsb);
     else
-      t2 <- t1.bit_position_of_lsb - $2.bit_position_of_lsb;
+      t1 <- $1.bit_position_of_lsb - $2.bit_position_of_lsb;
     end;
-    if result.c136 <> 1 then
+    if result.c136 = 1 then
+      t7 <- $1;
+    else
       if result.c136 = 2 then
-        t3 <- ip_reg_to_ip_reg_scaled(t1, $2.bit_position_of_lsb - t1.bit_position_of_lsb);
-      elsif result.c136 = 3 then
-        t4 <- create_solution_for_ip_reg();
-        emit simple(opc$lsr, 0, $1, find_well_known_literal_solution(t2), t4);
+        t2 <- ip_reg_to_ip_reg_scaled($1, $2.bit_position_of_lsb - $1.bit_position_of_lsb);
+        t6 <- t2;
       else
-        t5 <- create_solution_for_ip_reg();
-        emit simple(opc$lsl, 0, $1, find_well_known_literal_solution(t2), t5);
+        if result.c136 = 3 then
+          t3 <- create_solution_for_ip_reg();
+          emit simple(opc$lsr, 0, $1, find_well_known_literal_solution(t1), t3);
+          t5 <- t3;
+        else
+          t4 <- create_solution_for_ip_reg();
+          emit simple(opc$lsl, 0, $1, find_well_known_literal_solution(t1), t4);
+          t5 <- t4;
+        end;
+        t6 <- t5;
       end;
+      t7 <- t6;
     end;
-    emit simple(opcode_rr_reversed[subject.il_kind], 0, t1, $2, solution);
+    emit simple(opcode_rr_reversed[subject.il_kind], 0, t7, $2, solution);
   end;
 end;
 
@@ -240,6 +250,9 @@ transform 329  ip_reg_field <- and_top | eor_top | or_top ($1: ip_reg_field, $2:
     temp t2: solution;
     temp t3: solution;
     temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
     if $1.bit_position_of_lsb - $2.bit_position_of_lsb < 0 then
       t1 <- -($1.bit_position_of_lsb - $2.bit_position_of_lsb);
     else
@@ -248,15 +261,24 @@ transform 329  ip_reg_field <- and_top | eor_top | or_top ($1: ip_reg_field, $2:
     if result.c136 <> 1 then
       if result.c136 = 2 then
         t2 <- ip_reg_to_ip_reg_scaled($2, $1.bit_position_of_lsb - $2.bit_position_of_lsb);
-      elsif result.c136 = 3 then
-        t3 <- create_solution_for_ip_reg();
-        emit simple(opc$lsr, 0, $2, find_well_known_literal_solution(t1), t3);
+        t6 <- t2;
       else
-        t4 <- create_solution_for_ip_reg();
-        emit simple(opc$lsl, 0, $2, find_well_known_literal_solution(t1), t4);
+        if result.c136 = 3 then
+          t3 <- create_solution_for_ip_reg();
+          emit simple(opc$lsr, 0, $2, find_well_known_literal_solution(t1), t3);
+          t5 <- t3;
+        else
+          t4 <- create_solution_for_ip_reg();
+          emit simple(opc$lsl, 0, $2, find_well_known_literal_solution(t1), t4);
+          t5 <- t4;
+        end;
+        t6 <- t5;
       end;
+      t7 <- t6;
+    else
+      t7 <- 0;
     end;
-    emit simple(opcode_rr[subject.il_kind], 0, t2, $1, solution);
+    emit simple(opcode_rr[subject.il_kind], 0, t7, $1, solution);
   end;
 end;
 
@@ -420,8 +442,10 @@ transform 333  ip_reg <- and_top ($1: ip_reg, $2: literal_32_bits)
     temp t1: solution;
     temp t2: solution;
     temp t3: solution;
+    temp t4: solution;
     if result.c136 = 1 then
       t1 <- find_well_known_literal_solution(0);
+      t4 <- t1;
     else
       t2 <- create_solution_for_ip_reg();
       if result.c137 = 1 then
@@ -430,8 +454,9 @@ transform 333  ip_reg <- and_top ($1: ip_reg, $2: literal_32_bits)
         t3 <- address_mode_for_integer32_value(0);
         emit load(opc$loadl, 0, t3, t3.base_register, t2, t3.il, 0, t3.bits_known, t3.bits_trusted);
       end;
+      t4 <- t2;
     end;
-    emit field(opc$insert, 0, result.l356, t1, find_well_known_literal_solution(result.l352), $1);
+    emit field(opc$insert, 0, result.l356, t4, find_well_known_literal_solution(result.l352), $1);
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
     result.false_label <- $1.false_label;
@@ -647,8 +672,10 @@ transform 339  ip_reg_field <- or_top ($1: [ip_reg, ip_reg_field], $2: literal_3
     temp t2: solution;
     temp t3: solution;
     temp t4: solution;
+    temp t5: solution;
     if result.c136 = 1 then
       t1 <- find_well_known_literal_solution(-1);
+      t4 <- t1;
     else
       t2 <- create_solution_for_ip_reg();
       if result.c137 = 1 then
@@ -657,9 +684,10 @@ transform 339  ip_reg_field <- or_top ($1: [ip_reg, ip_reg_field], $2: literal_3
         t3 <- address_mode_for_integer32_value(-1);
         emit load(opc$loadl, 0, t3, t3.base_register, t2, t3.il, 0, t3.bits_known, t3.bits_trusted);
       end;
+      t4 <- t2;
     end;
-    t4 <- find_well_known_literal_solution(number_of_rightmost_zeroes(result.l352));
-    emit field(opc$insert, 0, length_of_sequence_of_ones(result.l352), t1, t4, $1);
+    t5 <- find_well_known_literal_solution(number_of_rightmost_zeroes(result.l352));
+    emit field(opc$insert, 0, length_of_sequence_of_ones(result.l352), t4, t5, $1);
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
     result.false_label <- $1.false_label;

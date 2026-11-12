@@ -68,7 +68,12 @@ type
     p_88: integer32;                    { +0x88 }
     p_8c: integer32;                    { +0x8C }
     p_90: integer32;                    { +0x90 }
-    p_94: array [0..23] of char;        { +0x94 }
+    p_94: array [0..7] of char;         { +0x94 }
+    p_9c: integer32;                    { +0x9C: added to an argument
+                                          block location's offset (the
+                                          ISC's rule 20: -1, 16, 16, 16
+                                          in the four entries) }
+    p_a0: array [0..11] of char;        { +0xA0 }
     p_ac: univ_ptr;                     { +0xAC: into at_lib_dsc }
     p_b0: array [0..13] of char;        { +0xB0 }
     p_be: boolean;                      { +0xBE: a boolean (tst.b, bpl:

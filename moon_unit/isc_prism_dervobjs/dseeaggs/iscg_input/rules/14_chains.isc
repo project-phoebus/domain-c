@@ -3842,15 +3842,20 @@ transform 392  ip_reg <- ip_reg_field
     temp t2: solution;
     temp t3: solution;
     temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
     if result.c136 = 1 then
       if result.c137 = 1 then
         emit simple(opc$asr, 0, subject, find_well_known_literal_solution(31), solution);
       else
-        if result.c138 <> 1 then
+        if result.c138 = 1 then
+          t2 <- subject;
+        else
           t1 <- create_solution_for_ip_reg();
           emit field(opc$extractu, 0, result.l356, subject, find_well_known_literal_solution(result.l352), t1);
+          t2 <- t1;
         end;
-        emit simple(opc$extend0, 0, subject, solution, nil);
+        emit simple(opc$extend0, 0, t2, solution, nil);
       end;
     elsif result.c136 = 2 then
       if result.c139 = 1 then
@@ -3862,9 +3867,9 @@ transform 392  ip_reg <- ip_reg_field
           emit simple(opc$extend7, 0, subject, solution, nil);
         end;
       else
-        t2 <- create_solution_for_ip_reg();
-        emit field(opc$extractu, 0, result.l356, subject, find_well_known_literal_solution(result.l352), t2);
-        emit simple(opc$extend7, 0, t2, solution, nil);
+        t3 <- create_solution_for_ip_reg();
+        emit field(opc$extractu, 0, result.l356, subject, find_well_known_literal_solution(result.l352), t3);
+        emit simple(opc$extend7, 0, t3, solution, nil);
       end;
     elsif result.c136 = 3 then
       if result.c142 = 1 then
@@ -3876,16 +3881,19 @@ transform 392  ip_reg <- ip_reg_field
           emit simple(opc$extend15, 0, subject, solution, nil);
         end;
       else
-        t3 <- create_solution_for_ip_reg();
-        emit field(opc$extractu, 0, result.l356, subject, find_well_known_literal_solution(result.l352), t3);
-        emit simple(opc$extend15, 0, t3, solution, nil);
+        t4 <- create_solution_for_ip_reg();
+        emit field(opc$extractu, 0, result.l356, subject, find_well_known_literal_solution(result.l352), t4);
+        emit simple(opc$extend15, 0, t4, solution, nil);
       end;
     else
-      if result.c145 <> 1 then
-        t4 <- create_solution_for_ip_reg();
-        emit simple(opc$lsl, 0, subject, find_well_known_literal_solution(result.l360), t4);
+      if result.c145 = 1 then
+        t6 <- subject;
+      else
+        t5 <- create_solution_for_ip_reg();
+        emit simple(opc$lsl, 0, subject, find_well_known_literal_solution(result.l360), t5);
+        t6 <- t5;
       end;
-      emit simple(opc$asr, 0, subject, find_well_known_literal_solution(result.l364), solution);
+      emit simple(opc$asr, 0, t6, find_well_known_literal_solution(result.l364), solution);
     end;
   end;
 end;
@@ -4010,27 +4018,66 @@ transform 395  fp_reg <- ip_reg
   end;
   pass_2 image 16#1C35F6 begin
     temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    temp t4: solution;
+    temp t5: solution;
+    temp t6: solution;
+    temp t7: solution;
+    temp t8: solution;
+    temp t9: solution;
+    temp t10: solution;
     t1 <- create_solution_for_ip_reg();
     if result.c136 = 1 then
       if result.c137 = 1 then
-        if result.c138 <> 1 then
+        if result.c138 = 1 then
+          t2 <- subject;
+        else
           emit simple(opc$extend7, 0, subject, t1, nil);
+          t2 <- t1;
         end;
-      elsif result.c137 = 2 then
-        if result.c139 <> 1 then
-          emit simple(opc$extend15, 0, subject, t1, nil);
+        t5 <- t2;
+      else
+        if result.c137 = 2 then
+          if result.c139 = 1 then
+            t3 <- subject;
+          else
+            emit simple(opc$extend15, 0, subject, t1, nil);
+            t3 <- t1;
+          end;
+          t4 <- t3;
+        else
+          t4 <- subject;
         end;
+        t5 <- t4;
       end;
-    elsif result.c140 = 1 then
-      if result.c141 <> 1 then
-        emit field(opc$extractu, 0, 8, subject, find_well_known_literal_solution(0), t1);
+      t10 <- t5;
+    else
+      if result.c140 = 1 then
+        if result.c141 = 1 then
+          t6 <- subject;
+        else
+          emit field(opc$extractu, 0, 8, subject, find_well_known_literal_solution(0), t1);
+          t6 <- t1;
+        end;
+        t9 <- t6;
+      else
+        if result.c140 = 2 then
+          if result.c142 = 1 then
+            t7 <- subject;
+          else
+            emit field(opc$extractu, 0, 16, subject, find_well_known_literal_solution(0), t1);
+            t7 <- t1;
+          end;
+          t8 <- t7;
+        else
+          t8 <- subject;
+        end;
+        t9 <- t8;
       end;
-    elsif result.c140 = 2 then
-      if result.c142 <> 1 then
-        emit field(opc$extractu, 0, 16, subject, find_well_known_literal_solution(0), t1);
-      end;
+      t10 <- t9;
     end;
-    emit simple(opc$mtfp, 0, subject, solution, nil);
+    emit simple(opc$mtfp, 0, t10, solution, nil);
   end;
 end;
 

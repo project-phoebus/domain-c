@@ -445,6 +445,10 @@ var
   t3: isc_solution_ptr_t;
   t4: isc_solution_ptr_t;
   t5: isc_solution_ptr_t;
+  t6: isc_solution_ptr_t;
+  t7: isc_solution_ptr_t;
+  t8: isc_solution_ptr_t;
+  t9: isc_solution_ptr_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     if ord(result.space136[137]) = 1 then begin
@@ -462,41 +466,48 @@ begin
       if ord(result.space136[138]) = 1 then begin
         if ord(result.space136[139]) = 1 then begin
           if ord(result.space136[140]) = 1 then begin
-            t1 := create_solution_for_ip_reg;
             debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-                subject^.children[1], t1, nil);
-          end
-          else if ord(result.space136[140]) = 2 then begin
-            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
-                0, subject^.children[1], create_solution_for_fp_reg, nil);
+                subject^.children[1], create_solution_for_ip_reg, nil);
+            t2 := create_solution_for_ip_reg;
           end else begin
-            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
-                0, subject^.children[1], create_solution_for_fp_reg_pair,
-                nil);
+            if ord(result.space136[140]) = 2 then begin
+              debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                  0, subject^.children[1], create_solution_for_fp_reg, nil);
+              t1 := create_solution_for_fp_reg;
+            end else begin
+              debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                  0, subject^.children[1], create_solution_for_fp_reg_pair,
+                  nil);
+              t1 := create_solution_for_fp_reg_pair;
+            end;
+            t2 := t1;
           end;
+          t3 := t2;
+        end else begin
+          t3 := subject^.children[1];
         end;
         if ord(result.space136[141]) = 1 then begin
-          t2 := create_solution_for_ip_reg;
+          t4 := create_solution_for_ip_reg;
           debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
               find_well_known_literal_solution(-result.fields[0]^.disp),
-              subject^.children[1], t2);
+              subject^.children[1], t4);
         end else begin
-          t3 := create_solution_for_ip_reg;
+          t5 := create_solution_for_ip_reg;
           if ord(result.space136[142]) = 1 then begin
             debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-                find_well_known_literal_solution(result.fields[0]^.disp), t3,
+                find_well_known_literal_solution(result.fields[0]^.disp), t5,
                 nil);
           end else begin
-            t4 := address_mode_for_integer32_value(result.fields[0]^.disp);
+            t6 := address_mode_for_integer32_value(result.fields[0]^.disp);
             debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-                t4, isc_solution_ptr_t(t4^.base_reg), t3, t4^.sym, 0,
-                t4^.bits_known, t4^.bits_trusted);
+                t6, isc_solution_ptr_t(t6^.base_reg), t5, t6^.sym, 0,
+                t6^.bits_known, t6^.bits_trusted);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-              subject^.children[1], t3, create_solution_for_ip_reg);
+              subject^.children[1], t5, create_solution_for_ip_reg);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
-            t1, nil, nil);
+            t3, nil, nil);
         debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
             subject^.children[1], solution, nil);
       end else begin
@@ -507,22 +518,30 @@ begin
     end else begin
       if ord(result.space136[143]) = 1 then begin
         if ord(result.space136[144]) = 1 then begin
-          t5 := create_solution_for_ip_reg;
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t5, nil);
-        end
-        else if ord(result.space136[144]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t8 := create_solution_for_ip_reg;
         end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          if ord(result.space136[144]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t7 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t7 := create_solution_for_fp_reg_pair;
+          end;
+          t8 := t7;
         end;
+        t9 := t8;
+      end else begin
+        t9 := subject^.children[1];
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2,
           subject^.children[1], create_solution_for_ip_reg, nil);
       debug_lir_$simple_instruction(result.inherited, ord(opc$trap_lt), 0,
-          t5, nil, nil);
+          t9, nil, nil);
       debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
           subject^.children[1], solution, nil);
     end;
@@ -722,81 +741,111 @@ var
   t26: isc_solution_ptr_t;
   t27: isc_solution_ptr_t;
   t28: isc_solution_ptr_t;
+  t29: isc_solution_ptr_t;
+  t30: isc_solution_ptr_t;
+  t31: isc_solution_ptr_t;
+  t32: isc_solution_ptr_t;
+  t33: isc_solution_ptr_t;
+  t34: isc_solution_ptr_t;
+  t35: isc_solution_ptr_t;
+  t36: isc_solution_ptr_t;
+  t37: isc_solution_ptr_t;
+  t38: isc_solution_ptr_t;
+  t39: isc_solution_ptr_t;
+  t40: isc_solution_ptr_t;
+  t41: isc_solution_ptr_t;
+  t42: isc_solution_ptr_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     if ord(result.space136[137]) = 1 then begin
       if ord(result.space136[138]) = 1 then begin
         if ord(result.space136[139]) = 1 then begin
-          t1 := create_solution_for_ip_reg;
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t1, nil);
-        end
-        else if ord(result.space136[139]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t2 := create_solution_for_ip_reg;
         end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          if ord(result.space136[139]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t1 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t1 := create_solution_for_fp_reg_pair;
+          end;
+          t2 := t1;
         end;
+        t3 := t2;
+      end else begin
+        t3 := subject^.children[1];
       end;
       if ord(result.space136[140]) = 1 then begin
-        t2 := create_solution_for_ip_reg;
+        t4 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
             find_well_known_literal_solution(-result.fields[3]^.disp),
-            subject^.children[1], t2);
+            subject^.children[1], t4);
       end else begin
-        t3 := create_solution_for_ip_reg;
+        t5 := create_solution_for_ip_reg;
         if ord(result.space136[141]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[3]^.disp), t3,
+              find_well_known_literal_solution(result.fields[3]^.disp), t5,
               nil);
         end else begin
-          t4 := address_mode_for_integer32_value(result.fields[3]^.disp);
+          t6 := address_mode_for_integer32_value(result.fields[3]^.disp);
           debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t4, isc_solution_ptr_t(t4^.base_reg), t3, t4^.sym, 0,
-              t4^.bits_known, t4^.bits_trusted);
+              t6, isc_solution_ptr_t(t6^.base_reg), t5, t6^.sym, 0,
+              t6^.bits_known, t6^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-            subject^.children[1], t3, create_solution_for_ip_reg);
+            subject^.children[1], t5, create_solution_for_ip_reg);
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$trap_lt), 0,
-          t1, nil, nil);
+          t3, nil, nil);
       if ord(result.space136[142]) = 1 then begin
         if ord(result.space136[143]) = 1 then begin
-          t5 := create_solution_for_ip_reg;
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t5, nil);
-        end
-        else if ord(result.space136[143]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t8 := create_solution_for_ip_reg;
         end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          if ord(result.space136[143]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t7 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t7 := create_solution_for_fp_reg_pair;
+          end;
+          t8 := t7;
         end;
+        t9 := t8;
+      end else begin
+        t9 := subject^.children[1];
       end;
       if ord(result.space136[144]) = 1 then begin
-        t6 := create_solution_for_ip_reg;
+        t10 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
             find_well_known_literal_solution(-result.fields[0]^.disp),
-            subject^.children[1], t6);
+            subject^.children[1], t10);
       end else begin
-        t7 := create_solution_for_ip_reg;
+        t11 := create_solution_for_ip_reg;
         if ord(result.space136[145]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[0]^.disp), t7,
+              find_well_known_literal_solution(result.fields[0]^.disp), t11,
               nil);
         end else begin
-          t8 := address_mode_for_integer32_value(result.fields[0]^.disp);
+          t12 := address_mode_for_integer32_value(result.fields[0]^.disp);
           debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t8, isc_solution_ptr_t(t8^.base_reg), t7, t8^.sym, 0,
-              t8^.bits_known, t8^.bits_trusted);
+              t12, isc_solution_ptr_t(t12^.base_reg), t11, t12^.sym, 0,
+              t12^.bits_known, t12^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-            subject^.children[1], t7, create_solution_for_ip_reg);
+            subject^.children[1], t11, create_solution_for_ip_reg);
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
-          t5, nil, nil);
+          t9, nil, nil);
       debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
           subject^.children[1], solution, nil);
     end
@@ -819,40 +868,48 @@ begin
     if ord(result.space136[147]) = 1 then begin
       if ord(result.space136[148]) = 1 then begin
         if ord(result.space136[149]) = 1 then begin
-          t9 := create_solution_for_ip_reg;
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t9, nil);
-        end
-        else if ord(result.space136[149]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t14 := create_solution_for_ip_reg;
         end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          if ord(result.space136[149]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t13 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t13 := create_solution_for_fp_reg_pair;
+          end;
+          t14 := t13;
         end;
+        t15 := t14;
+      end else begin
+        t15 := subject^.children[1];
       end;
       if ord(result.space136[150]) = 1 then begin
-        t10 := create_solution_for_ip_reg;
+        t16 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
             find_well_known_literal_solution(-result.fields[1]^.disp),
-            subject^.children[1], t10);
+            subject^.children[1], t16);
       end else begin
-        t11 := create_solution_for_ip_reg;
+        t17 := create_solution_for_ip_reg;
         if ord(result.space136[151]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[1]^.disp), t11,
+              find_well_known_literal_solution(result.fields[1]^.disp), t17,
               nil);
         end else begin
-          t12 := address_mode_for_integer32_value(result.fields[1]^.disp);
+          t18 := address_mode_for_integer32_value(result.fields[1]^.disp);
           debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t12, isc_solution_ptr_t(t12^.base_reg), t11, t12^.sym, 0,
-              t12^.bits_known, t12^.bits_trusted);
+              t18, isc_solution_ptr_t(t18^.base_reg), t17, t18^.sym, 0,
+              t18^.bits_known, t18^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-            subject^.children[1], t11, create_solution_for_ip_reg);
+            subject^.children[1], t17, create_solution_for_ip_reg);
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
-          t9, nil, nil);
+          t15, nil, nil);
       debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
           subject^.children[1], solution, nil);
     end
@@ -869,77 +926,93 @@ begin
     if ord(result.space136[152]) = 1 then begin
       if ord(result.space136[153]) = 1 then begin
         if ord(result.space136[154]) = 1 then begin
-          t13 := create_solution_for_ip_reg;
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t13, nil);
-        end
-        else if ord(result.space136[154]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t20 := create_solution_for_ip_reg;
         end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          if ord(result.space136[154]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t19 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t19 := create_solution_for_fp_reg_pair;
+          end;
+          t20 := t19;
         end;
+        t21 := t20;
+      end else begin
+        t21 := subject^.children[1];
       end;
       if ord(result.space136[155]) = 1 then begin
-        t14 := create_solution_for_ip_reg;
+        t22 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
             find_well_known_literal_solution(-result.fields[0]^.disp),
-            subject^.children[1], t14);
+            subject^.children[1], t22);
       end else begin
-        t15 := create_solution_for_ip_reg;
+        t23 := create_solution_for_ip_reg;
         if ord(result.space136[156]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[0]^.disp), t15,
+              find_well_known_literal_solution(result.fields[0]^.disp), t23,
               nil);
         end else begin
-          t16 := address_mode_for_integer32_value(result.fields[0]^.disp);
+          t24 := address_mode_for_integer32_value(result.fields[0]^.disp);
           debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t16, isc_solution_ptr_t(t16^.base_reg), t15, t16^.sym, 0,
-              t16^.bits_known, t16^.bits_trusted);
+              t24, isc_solution_ptr_t(t24^.base_reg), t23, t24^.sym, 0,
+              t24^.bits_known, t24^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-            subject^.children[1], t15, create_solution_for_ip_reg);
+            subject^.children[1], t23, create_solution_for_ip_reg);
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
-          t13, nil, nil);
+          t21, nil, nil);
     end else begin
       if ord(result.space136[157]) = 1 then begin
         if ord(result.space136[158]) = 1 then begin
-          t17 := create_solution_for_ip_reg;
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t17, nil);
-        end
-        else if ord(result.space136[158]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t26 := create_solution_for_ip_reg;
         end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          if ord(result.space136[158]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t25 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t25 := create_solution_for_fp_reg_pair;
+          end;
+          t26 := t25;
         end;
+        t27 := t26;
+      end else begin
+        t27 := subject^.children[1];
       end;
       if ord(result.space136[159]) = 1 then begin
-        t18 := create_solution_for_ip_reg;
+        t28 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
             find_well_known_literal_solution(-result.fields[2]^.disp),
-            subject^.children[1], t18);
+            subject^.children[1], t28);
       end else begin
-        t19 := create_solution_for_ip_reg;
+        t29 := create_solution_for_ip_reg;
         if ord(result.space136[160]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[2]^.disp), t19,
+              find_well_known_literal_solution(result.fields[2]^.disp), t29,
               nil);
         end else begin
-          t20 := address_mode_for_integer32_value(result.fields[2]^.disp);
+          t30 := address_mode_for_integer32_value(result.fields[2]^.disp);
           debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t20, isc_solution_ptr_t(t20^.base_reg), t19, t20^.sym, 0,
-              t20^.bits_known, t20^.bits_trusted);
+              t30, isc_solution_ptr_t(t30^.base_reg), t29, t30^.sym, 0,
+              t30^.bits_known, t30^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-            subject^.children[1], t19, create_solution_for_ip_reg);
+            subject^.children[1], t29, create_solution_for_ip_reg);
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
-          t17, nil, nil);
+          t27, nil, nil);
     end;
     if ord(result.space136[161]) = 1 then begin
       if ord(result.space136[162]) = 1 then begin
@@ -959,77 +1032,93 @@ begin
     if ord(result.space136[163]) = 1 then begin
       if ord(result.space136[164]) = 1 then begin
         if ord(result.space136[165]) = 1 then begin
-          t21 := create_solution_for_ip_reg;
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t21, nil);
-        end
-        else if ord(result.space136[165]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t32 := create_solution_for_ip_reg;
         end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          if ord(result.space136[165]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t31 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t31 := create_solution_for_fp_reg_pair;
+          end;
+          t32 := t31;
         end;
+        t33 := t32;
+      end else begin
+        t33 := subject^.children[1];
       end;
       if ord(result.space136[166]) = 1 then begin
-        t22 := create_solution_for_ip_reg;
+        t34 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
             find_well_known_literal_solution(-result.fields[1]^.disp),
-            subject^.children[1], t22);
+            subject^.children[1], t34);
       end else begin
-        t23 := create_solution_for_ip_reg;
+        t35 := create_solution_for_ip_reg;
         if ord(result.space136[167]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[1]^.disp), t23,
+              find_well_known_literal_solution(result.fields[1]^.disp), t35,
               nil);
         end else begin
-          t24 := address_mode_for_integer32_value(result.fields[1]^.disp);
+          t36 := address_mode_for_integer32_value(result.fields[1]^.disp);
           debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t24, isc_solution_ptr_t(t24^.base_reg), t23, t24^.sym, 0,
-              t24^.bits_known, t24^.bits_trusted);
+              t36, isc_solution_ptr_t(t36^.base_reg), t35, t36^.sym, 0,
+              t36^.bits_known, t36^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-            subject^.children[1], t23, create_solution_for_ip_reg);
+            subject^.children[1], t35, create_solution_for_ip_reg);
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
-          t21, nil, nil);
+          t33, nil, nil);
     end else begin
       if ord(result.space136[168]) = 1 then begin
         if ord(result.space136[169]) = 1 then begin
-          t25 := create_solution_for_ip_reg;
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t25, nil);
-        end
-        else if ord(result.space136[169]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t38 := create_solution_for_ip_reg;
         end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          if ord(result.space136[169]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t37 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t37 := create_solution_for_fp_reg_pair;
+          end;
+          t38 := t37;
         end;
+        t39 := t38;
+      end else begin
+        t39 := subject^.children[1];
       end;
       if ord(result.space136[170]) = 1 then begin
-        t26 := create_solution_for_ip_reg;
+        t40 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
             find_well_known_literal_solution(-result.fields[2]^.disp),
-            subject^.children[1], t26);
+            subject^.children[1], t40);
       end else begin
-        t27 := create_solution_for_ip_reg;
+        t41 := create_solution_for_ip_reg;
         if ord(result.space136[171]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[2]^.disp), t27,
+              find_well_known_literal_solution(result.fields[2]^.disp), t41,
               nil);
         end else begin
-          t28 := address_mode_for_integer32_value(result.fields[2]^.disp);
+          t42 := address_mode_for_integer32_value(result.fields[2]^.disp);
           debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t28, isc_solution_ptr_t(t28^.base_reg), t27, t28^.sym, 0,
-              t28^.bits_known, t28^.bits_trusted);
+              t42, isc_solution_ptr_t(t42^.base_reg), t41, t42^.sym, 0,
+              t42^.bits_known, t42^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-            subject^.children[1], t27, create_solution_for_ip_reg);
+            subject^.children[1], t41, create_solution_for_ip_reg);
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
-          t25, nil, nil);
+          t39, nil, nil);
     end;
     if ord(result.space136[172]) = 1 then begin
       debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
@@ -1096,110 +1185,112 @@ var
   t46: isc_solution_ptr_t;
   t47: isc_solution_ptr_t;
   t48: isc_solution_ptr_t;
+  t49: isc_solution_ptr_t;
+  t50: isc_solution_ptr_t;
+  t51: isc_solution_ptr_t;
+  t52: isc_solution_ptr_t;
+  t53: isc_solution_ptr_t;
+  t54: isc_solution_ptr_t;
+  t55: isc_solution_ptr_t;
+  t56: isc_solution_ptr_t;
+  t57: isc_solution_ptr_t;
+  t58: isc_solution_ptr_t;
+  t59: isc_solution_ptr_t;
+  t60: isc_solution_ptr_t;
+  t61: isc_solution_ptr_t;
+  t62: isc_solution_ptr_t;
+  t63: isc_solution_ptr_t;
+  t64: isc_solution_ptr_t;
+  t65: isc_solution_ptr_t;
+  t66: isc_solution_ptr_t;
+  t67: isc_solution_ptr_t;
+  t68: isc_solution_ptr_t;
+  t69: isc_solution_ptr_t;
+  t70: isc_solution_ptr_t;
+  t71: isc_solution_ptr_t;
+  t72: isc_solution_ptr_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     if ord(result.space136[137]) = 1 then begin
       if ord(result.space136[138]) = 1 then begin
         if ord(result.space136[139]) = 1 then begin
-          t1 := create_solution_for_ip_reg;
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t1, nil);
-        end
-        else if ord(result.space136[139]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t2 := create_solution_for_ip_reg;
         end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          if ord(result.space136[139]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t1 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t1 := create_solution_for_fp_reg_pair;
+          end;
+          t2 := t1;
         end;
+        t3 := t2;
+      end else begin
+        t3 := subject^.children[1];
       end;
       if ord(result.space136[140]) = 1 then begin
-        t2 := create_solution_for_ip_reg;
+        t4 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
             find_well_known_literal_solution(-result.fields[0]^.disp),
-            subject^.children[1], t2);
+            subject^.children[1], t4);
       end else begin
-        t3 := create_solution_for_ip_reg;
+        t5 := create_solution_for_ip_reg;
         if ord(result.space136[141]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[0]^.disp), t3,
+              find_well_known_literal_solution(result.fields[0]^.disp), t5,
               nil);
         end else begin
-          t4 := address_mode_for_integer32_value(result.fields[0]^.disp);
+          t6 := address_mode_for_integer32_value(result.fields[0]^.disp);
           debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t4, isc_solution_ptr_t(t4^.base_reg), t3, t4^.sym, 0,
-              t4^.bits_known, t4^.bits_trusted);
+              t6, isc_solution_ptr_t(t6^.base_reg), t5, t6^.sym, 0,
+              t6^.bits_known, t6^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-            subject^.children[1], t3, create_solution_for_ip_reg);
+            subject^.children[1], t5, create_solution_for_ip_reg);
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
-          t1, nil, nil);
+          t3, nil, nil);
       if ord(result.space136[142]) = 1 then begin
         if ord(result.space136[143]) = 1 then begin
-          t5 := create_solution_for_ip_reg;
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t5, nil);
-        end
-        else if ord(result.space136[143]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t8 := create_solution_for_ip_reg;
         end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          if ord(result.space136[143]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t7 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t7 := create_solution_for_fp_reg_pair;
+          end;
+          t8 := t7;
         end;
+        t9 := t8;
+      end else begin
+        t9 := subject^.children[1];
       end;
       if ord(result.space136[144]) = 1 then begin
-        t6 := create_solution_for_ip_reg;
-        debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
-            find_well_known_literal_solution(-result.fields[5]^.disp),
-            subject^.children[1], t6);
-      end else begin
-        t7 := create_solution_for_ip_reg;
-        if ord(result.space136[145]) = 1 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[5]^.disp), t7,
-              nil);
-        end else begin
-          t8 := address_mode_for_integer32_value(result.fields[5]^.disp);
-          debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t8, isc_solution_ptr_t(t8^.base_reg), t7, t8^.sym, 0,
-              t8^.bits_known, t8^.bits_trusted);
-        end;
-        debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-            subject^.children[1], t7, create_solution_for_ip_reg);
-      end;
-      debug_lir_$simple_instruction(result.inherited, ord(opc$trap_lt), 0,
-          t5, nil, nil);
-    end
-    else if ord(result.space136[146]) = 1 then begin
-      if ord(result.space136[147]) = 1 then begin
-        if ord(result.space136[148]) = 1 then begin
-          t9 := create_solution_for_ip_reg;
-          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t9, nil);
-        end
-        else if ord(result.space136[148]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
-        end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
-        end;
-      end;
-      if ord(result.space136[149]) = 1 then begin
         t10 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
-            find_well_known_literal_solution(-result.fields[1]^.disp),
+            find_well_known_literal_solution(-result.fields[5]^.disp),
             subject^.children[1], t10);
       end else begin
         t11 := create_solution_for_ip_reg;
-        if ord(result.space136[150]) = 1 then begin
+        if ord(result.space136[145]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[1]^.disp), t11,
+              find_well_known_literal_solution(result.fields[5]^.disp), t11,
               nil);
         end else begin
-          t12 := address_mode_for_integer32_value(result.fields[1]^.disp);
+          t12 := address_mode_for_integer32_value(result.fields[5]^.disp);
           debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
               t12, isc_solution_ptr_t(t12^.base_reg), t11, t12^.sym, 0,
               t12^.bits_known, t12^.bits_trusted);
@@ -1207,113 +1298,89 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
             subject^.children[1], t11, create_solution_for_ip_reg);
       end;
-      debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
+      debug_lir_$simple_instruction(result.inherited, ord(opc$trap_lt), 0,
           t9, nil, nil);
+    end
+    else if ord(result.space136[146]) = 1 then begin
+      if ord(result.space136[147]) = 1 then begin
+        if ord(result.space136[148]) = 1 then begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t14 := create_solution_for_ip_reg;
+        end else begin
+          if ord(result.space136[148]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t13 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t13 := create_solution_for_fp_reg_pair;
+          end;
+          t14 := t13;
+        end;
+        t15 := t14;
+      end else begin
+        t15 := subject^.children[1];
+      end;
+      if ord(result.space136[149]) = 1 then begin
+        t16 := create_solution_for_ip_reg;
+        debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
+            find_well_known_literal_solution(-result.fields[1]^.disp),
+            subject^.children[1], t16);
+      end else begin
+        t17 := create_solution_for_ip_reg;
+        if ord(result.space136[150]) = 1 then begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
+              find_well_known_literal_solution(result.fields[1]^.disp), t17,
+              nil);
+        end else begin
+          t18 := address_mode_for_integer32_value(result.fields[1]^.disp);
+          debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
+              t18, isc_solution_ptr_t(t18^.base_reg), t17, t18^.sym, 0,
+              t18^.bits_known, t18^.bits_trusted);
+        end;
+        debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
+            subject^.children[1], t17, create_solution_for_ip_reg);
+      end;
+      debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
+          t15, nil, nil);
       if ord(result.space136[151]) = 1 then begin
         if ord(result.space136[152]) = 1 then begin
-          t13 := create_solution_for_ip_reg;
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t13, nil);
-        end
-        else if ord(result.space136[152]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t20 := create_solution_for_ip_reg;
         end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          if ord(result.space136[152]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t19 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t19 := create_solution_for_fp_reg_pair;
+          end;
+          t20 := t19;
         end;
+        t21 := t20;
+      end else begin
+        t21 := subject^.children[1];
       end;
       if ord(result.space136[153]) = 1 then begin
-        t14 := create_solution_for_ip_reg;
-        debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
-            find_well_known_literal_solution(-result.fields[6]^.disp),
-            subject^.children[1], t14);
-      end else begin
-        t15 := create_solution_for_ip_reg;
-        if ord(result.space136[154]) = 1 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[6]^.disp), t15,
-              nil);
-        end else begin
-          t16 := address_mode_for_integer32_value(result.fields[6]^.disp);
-          debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t16, isc_solution_ptr_t(t16^.base_reg), t15, t16^.sym, 0,
-              t16^.bits_known, t16^.bits_trusted);
-        end;
-        debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-            subject^.children[1], t15, create_solution_for_ip_reg);
-      end;
-      debug_lir_$simple_instruction(result.inherited, ord(opc$trap_lt), 0,
-          t13, nil, nil);
-    end;
-  end
-  else if ord(result.space136[136]) = 2 then begin
-    if ord(result.space136[155]) = 1 then begin
-      if ord(result.space136[156]) = 1 then begin
-        if ord(result.space136[157]) = 1 then begin
-          t17 := create_solution_for_ip_reg;
-          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t17, nil);
-        end
-        else if ord(result.space136[157]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
-        end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
-        end;
-      end;
-      if ord(result.space136[158]) = 1 then begin
-        t18 := create_solution_for_ip_reg;
-        debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
-            find_well_known_literal_solution(-result.fields[2]^.disp),
-            subject^.children[1], t18);
-      end else begin
-        t19 := create_solution_for_ip_reg;
-        if ord(result.space136[159]) = 1 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[2]^.disp), t19,
-              nil);
-        end else begin
-          t20 := address_mode_for_integer32_value(result.fields[2]^.disp);
-          debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t20, isc_solution_ptr_t(t20^.base_reg), t19, t20^.sym, 0,
-              t20^.bits_known, t20^.bits_trusted);
-        end;
-        debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-            subject^.children[1], t19, create_solution_for_ip_reg);
-      end;
-      debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
-          t17, nil, nil);
-    end
-    else if ord(result.space136[160]) = 1 then begin
-      if ord(result.space136[161]) = 1 then begin
-        if ord(result.space136[162]) = 1 then begin
-          t21 := create_solution_for_ip_reg;
-          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t21, nil);
-        end
-        else if ord(result.space136[162]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
-        end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
-        end;
-      end;
-      if ord(result.space136[163]) = 1 then begin
         t22 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
-            find_well_known_literal_solution(-result.fields[3]^.disp),
+            find_well_known_literal_solution(-result.fields[6]^.disp),
             subject^.children[1], t22);
       end else begin
         t23 := create_solution_for_ip_reg;
-        if ord(result.space136[164]) = 1 then begin
+        if ord(result.space136[154]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[3]^.disp), t23,
+              find_well_known_literal_solution(result.fields[6]^.disp), t23,
               nil);
         end else begin
-          t24 := address_mode_for_integer32_value(result.fields[3]^.disp);
+          t24 := address_mode_for_integer32_value(result.fields[6]^.disp);
           debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
               t24, isc_solution_ptr_t(t24^.base_reg), t23, t24^.sym, 0,
               t24^.bits_known, t24^.bits_trusted);
@@ -1321,114 +1388,93 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
             subject^.children[1], t23, create_solution_for_ip_reg);
       end;
-      debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
+      debug_lir_$simple_instruction(result.inherited, ord(opc$trap_lt), 0,
           t21, nil, nil);
     end;
   end
-  else if ord(result.space136[136]) = 3 then begin
-    if ord(result.space136[165]) = 1 then begin
-      if ord(result.space136[166]) = 1 then begin
-        if ord(result.space136[167]) = 1 then begin
-          t25 := create_solution_for_ip_reg;
+  else if ord(result.space136[136]) = 2 then begin
+    if ord(result.space136[155]) = 1 then begin
+      if ord(result.space136[156]) = 1 then begin
+        if ord(result.space136[157]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t25, nil);
-        end
-        else if ord(result.space136[167]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t26 := create_solution_for_ip_reg;
         end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          if ord(result.space136[157]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t25 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t25 := create_solution_for_fp_reg_pair;
+          end;
+          t26 := t25;
         end;
-      end;
-      if ord(result.space136[168]) = 1 then begin
-        t26 := create_solution_for_ip_reg;
-        debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
-            find_well_known_literal_solution(-result.fields[0]^.disp),
-            subject^.children[1], t26);
+        t27 := t26;
       end else begin
-        t27 := create_solution_for_ip_reg;
-        if ord(result.space136[169]) = 1 then begin
+        t27 := subject^.children[1];
+      end;
+      if ord(result.space136[158]) = 1 then begin
+        t28 := create_solution_for_ip_reg;
+        debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
+            find_well_known_literal_solution(-result.fields[2]^.disp),
+            subject^.children[1], t28);
+      end else begin
+        t29 := create_solution_for_ip_reg;
+        if ord(result.space136[159]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[0]^.disp), t27,
+              find_well_known_literal_solution(result.fields[2]^.disp), t29,
               nil);
         end else begin
-          t28 := address_mode_for_integer32_value(result.fields[0]^.disp);
+          t30 := address_mode_for_integer32_value(result.fields[2]^.disp);
           debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t28, isc_solution_ptr_t(t28^.base_reg), t27, t28^.sym, 0,
-              t28^.bits_known, t28^.bits_trusted);
+              t30, isc_solution_ptr_t(t30^.base_reg), t29, t30^.sym, 0,
+              t30^.bits_known, t30^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-            subject^.children[1], t27, create_solution_for_ip_reg);
+            subject^.children[1], t29, create_solution_for_ip_reg);
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
-          t25, nil, nil);
+          t27, nil, nil);
     end
-    else if ord(result.space136[170]) = 1 then begin
-      if ord(result.space136[171]) = 1 then begin
-        if ord(result.space136[172]) = 1 then begin
-          t29 := create_solution_for_ip_reg;
+    else if ord(result.space136[160]) = 1 then begin
+      if ord(result.space136[161]) = 1 then begin
+        if ord(result.space136[162]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t29, nil);
-        end
-        else if ord(result.space136[172]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t32 := create_solution_for_ip_reg;
         end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          if ord(result.space136[162]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t31 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t31 := create_solution_for_fp_reg_pair;
+          end;
+          t32 := t31;
         end;
-      end;
-      if ord(result.space136[173]) = 1 then begin
-        t30 := create_solution_for_ip_reg;
-        debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
-            find_well_known_literal_solution(-result.fields[1]^.disp),
-            subject^.children[1], t30);
+        t33 := t32;
       end else begin
-        t31 := create_solution_for_ip_reg;
-        if ord(result.space136[174]) = 1 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[1]^.disp), t31,
-              nil);
-        end else begin
-          t32 := address_mode_for_integer32_value(result.fields[1]^.disp);
-          debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t32, isc_solution_ptr_t(t32^.base_reg), t31, t32^.sym, 0,
-              t32^.bits_known, t32^.bits_trusted);
-        end;
-        debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-            subject^.children[1], t31, create_solution_for_ip_reg);
+        t33 := subject^.children[1];
       end;
-      debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
-          t29, nil, nil);
-    end else begin
-      if ord(result.space136[175]) = 1 then begin
-        if ord(result.space136[176]) = 1 then begin
-          t33 := create_solution_for_ip_reg;
-          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              subject^.children[1], t33, nil);
-        end
-        else if ord(result.space136[176]) = 2 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-              subject^.children[1], create_solution_for_fp_reg, nil);
-        end else begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-              subject^.children[1], create_solution_for_fp_reg_pair, nil);
-        end;
-      end;
-      if ord(result.space136[177]) = 1 then begin
+      if ord(result.space136[163]) = 1 then begin
         t34 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
-            find_well_known_literal_solution(-result.fields[4]^.disp),
+            find_well_known_literal_solution(-result.fields[3]^.disp),
             subject^.children[1], t34);
       end else begin
         t35 := create_solution_for_ip_reg;
-        if ord(result.space136[178]) = 1 then begin
+        if ord(result.space136[164]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(result.fields[4]^.disp), t35,
+              find_well_known_literal_solution(result.fields[3]^.disp), t35,
               nil);
         end else begin
-          t36 := address_mode_for_integer32_value(result.fields[4]^.disp);
+          t36 := address_mode_for_integer32_value(result.fields[3]^.disp);
           debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
               t36, isc_solution_ptr_t(t36^.base_reg), t35, t36^.sym, 0,
               t36^.bits_known, t36^.bits_trusted);
@@ -1440,117 +1486,277 @@ begin
           t33, nil, nil);
     end;
   end
+  else if ord(result.space136[136]) = 3 then begin
+    if ord(result.space136[165]) = 1 then begin
+      if ord(result.space136[166]) = 1 then begin
+        if ord(result.space136[167]) = 1 then begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t38 := create_solution_for_ip_reg;
+        end else begin
+          if ord(result.space136[167]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t37 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t37 := create_solution_for_fp_reg_pair;
+          end;
+          t38 := t37;
+        end;
+        t39 := t38;
+      end else begin
+        t39 := subject^.children[1];
+      end;
+      if ord(result.space136[168]) = 1 then begin
+        t40 := create_solution_for_ip_reg;
+        debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
+            find_well_known_literal_solution(-result.fields[0]^.disp),
+            subject^.children[1], t40);
+      end else begin
+        t41 := create_solution_for_ip_reg;
+        if ord(result.space136[169]) = 1 then begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
+              find_well_known_literal_solution(result.fields[0]^.disp), t41,
+              nil);
+        end else begin
+          t42 := address_mode_for_integer32_value(result.fields[0]^.disp);
+          debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
+              t42, isc_solution_ptr_t(t42^.base_reg), t41, t42^.sym, 0,
+              t42^.bits_known, t42^.bits_trusted);
+        end;
+        debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
+            subject^.children[1], t41, create_solution_for_ip_reg);
+      end;
+      debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
+          t39, nil, nil);
+    end
+    else if ord(result.space136[170]) = 1 then begin
+      if ord(result.space136[171]) = 1 then begin
+        if ord(result.space136[172]) = 1 then begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t44 := create_solution_for_ip_reg;
+        end else begin
+          if ord(result.space136[172]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t43 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t43 := create_solution_for_fp_reg_pair;
+          end;
+          t44 := t43;
+        end;
+        t45 := t44;
+      end else begin
+        t45 := subject^.children[1];
+      end;
+      if ord(result.space136[173]) = 1 then begin
+        t46 := create_solution_for_ip_reg;
+        debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
+            find_well_known_literal_solution(-result.fields[1]^.disp),
+            subject^.children[1], t46);
+      end else begin
+        t47 := create_solution_for_ip_reg;
+        if ord(result.space136[174]) = 1 then begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
+              find_well_known_literal_solution(result.fields[1]^.disp), t47,
+              nil);
+        end else begin
+          t48 := address_mode_for_integer32_value(result.fields[1]^.disp);
+          debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
+              t48, isc_solution_ptr_t(t48^.base_reg), t47, t48^.sym, 0,
+              t48^.bits_known, t48^.bits_trusted);
+        end;
+        debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
+            subject^.children[1], t47, create_solution_for_ip_reg);
+      end;
+      debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
+          t45, nil, nil);
+    end else begin
+      if ord(result.space136[175]) = 1 then begin
+        if ord(result.space136[176]) = 1 then begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
+              subject^.children[1], create_solution_for_ip_reg, nil);
+          t50 := create_solution_for_ip_reg;
+        end else begin
+          if ord(result.space136[176]) = 2 then begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copys),
+                0, subject^.children[1], create_solution_for_fp_reg, nil);
+            t49 := create_solution_for_fp_reg;
+          end else begin
+            debug_lir_$simple_instruction(result.inherited, ord(opc$copyd),
+                0, subject^.children[1], create_solution_for_fp_reg_pair,
+                nil);
+            t49 := create_solution_for_fp_reg_pair;
+          end;
+          t50 := t49;
+        end;
+        t51 := t50;
+      end else begin
+        t51 := subject^.children[1];
+      end;
+      if ord(result.space136[177]) = 1 then begin
+        t52 := create_solution_for_ip_reg;
+        debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
+            find_well_known_literal_solution(-result.fields[4]^.disp),
+            subject^.children[1], t52);
+      end else begin
+        t53 := create_solution_for_ip_reg;
+        if ord(result.space136[178]) = 1 then begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
+              find_well_known_literal_solution(result.fields[4]^.disp), t53,
+              nil);
+        end else begin
+          t54 := address_mode_for_integer32_value(result.fields[4]^.disp);
+          debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
+              t54, isc_solution_ptr_t(t54^.base_reg), t53, t54^.sym, 0,
+              t54^.bits_known, t54^.bits_trusted);
+        end;
+        debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
+            subject^.children[1], t53, create_solution_for_ip_reg);
+      end;
+      debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0,
+          t51, nil, nil);
+    end;
+  end
   else if ord(result.space136[179]) = 1 then begin
     if ord(result.space136[180]) = 1 then begin
       if ord(result.space136[181]) = 1 then begin
-        t37 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-            subject^.children[1], t37, nil);
-      end
-      else if ord(result.space136[181]) = 2 then begin
-        debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-            subject^.children[1], create_solution_for_fp_reg, nil);
+            subject^.children[1], create_solution_for_ip_reg, nil);
+        t56 := create_solution_for_ip_reg;
       end else begin
-        debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-            subject^.children[1], create_solution_for_fp_reg_pair, nil);
+        if ord(result.space136[181]) = 2 then begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
+              subject^.children[1], create_solution_for_fp_reg, nil);
+          t55 := create_solution_for_fp_reg;
+        end else begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
+              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          t55 := create_solution_for_fp_reg_pair;
+        end;
+        t56 := t55;
       end;
+      t57 := t56;
+    end else begin
+      t57 := subject^.children[1];
     end;
     if ord(result.space136[182]) = 1 then begin
-      t38 := create_solution_for_ip_reg;
+      t58 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
           find_well_known_literal_solution(-result.fields[2]^.disp),
-          subject^.children[1], t38);
+          subject^.children[1], t58);
     end else begin
-      t39 := create_solution_for_ip_reg;
+      t59 := create_solution_for_ip_reg;
       if ord(result.space136[183]) = 1 then begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-            find_well_known_literal_solution(result.fields[2]^.disp), t39,
+            find_well_known_literal_solution(result.fields[2]^.disp), t59,
             nil);
       end else begin
-        t40 := address_mode_for_integer32_value(result.fields[2]^.disp);
-        debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t40,
-            isc_solution_ptr_t(t40^.base_reg), t39, t40^.sym, 0,
-            t40^.bits_known, t40^.bits_trusted);
+        t60 := address_mode_for_integer32_value(result.fields[2]^.disp);
+        debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t60,
+            isc_solution_ptr_t(t60^.base_reg), t59, t60^.sym, 0,
+            t60^.bits_known, t60^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-          subject^.children[1], t39, create_solution_for_ip_reg);
+          subject^.children[1], t59, create_solution_for_ip_reg);
     end;
-    debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0, t37,
+    debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0, t57,
         nil, nil);
   end
   else if ord(result.space136[184]) = 1 then begin
     if ord(result.space136[185]) = 1 then begin
       if ord(result.space136[186]) = 1 then begin
-        t41 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-            subject^.children[1], t41, nil);
-      end
-      else if ord(result.space136[186]) = 2 then begin
-        debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-            subject^.children[1], create_solution_for_fp_reg, nil);
+            subject^.children[1], create_solution_for_ip_reg, nil);
+        t62 := create_solution_for_ip_reg;
       end else begin
-        debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-            subject^.children[1], create_solution_for_fp_reg_pair, nil);
+        if ord(result.space136[186]) = 2 then begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
+              subject^.children[1], create_solution_for_fp_reg, nil);
+          t61 := create_solution_for_fp_reg;
+        end else begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
+              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          t61 := create_solution_for_fp_reg_pair;
+        end;
+        t62 := t61;
       end;
+      t63 := t62;
+    end else begin
+      t63 := subject^.children[1];
     end;
     if ord(result.space136[187]) = 1 then begin
-      t42 := create_solution_for_ip_reg;
+      t64 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
           find_well_known_literal_solution(-result.fields[3]^.disp),
-          subject^.children[1], t42);
+          subject^.children[1], t64);
     end else begin
-      t43 := create_solution_for_ip_reg;
+      t65 := create_solution_for_ip_reg;
       if ord(result.space136[188]) = 1 then begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-            find_well_known_literal_solution(result.fields[3]^.disp), t43,
+            find_well_known_literal_solution(result.fields[3]^.disp), t65,
             nil);
       end else begin
-        t44 := address_mode_for_integer32_value(result.fields[3]^.disp);
-        debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t44,
-            isc_solution_ptr_t(t44^.base_reg), t43, t44^.sym, 0,
-            t44^.bits_known, t44^.bits_trusted);
+        t66 := address_mode_for_integer32_value(result.fields[3]^.disp);
+        debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t66,
+            isc_solution_ptr_t(t66^.base_reg), t65, t66^.sym, 0,
+            t66^.bits_known, t66^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-          subject^.children[1], t43, create_solution_for_ip_reg);
+          subject^.children[1], t65, create_solution_for_ip_reg);
     end;
-    debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0, t41,
+    debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0, t63,
         nil, nil);
   end else begin
     if ord(result.space136[189]) = 1 then begin
       if ord(result.space136[190]) = 1 then begin
-        t45 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-            subject^.children[1], t45, nil);
-      end
-      else if ord(result.space136[190]) = 2 then begin
-        debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-            subject^.children[1], create_solution_for_fp_reg, nil);
+            subject^.children[1], create_solution_for_ip_reg, nil);
+        t68 := create_solution_for_ip_reg;
       end else begin
-        debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-            subject^.children[1], create_solution_for_fp_reg_pair, nil);
+        if ord(result.space136[190]) = 2 then begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
+              subject^.children[1], create_solution_for_fp_reg, nil);
+          t67 := create_solution_for_fp_reg;
+        end else begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
+              subject^.children[1], create_solution_for_fp_reg_pair, nil);
+          t67 := create_solution_for_fp_reg_pair;
+        end;
+        t68 := t67;
       end;
+      t69 := t68;
+    end else begin
+      t69 := subject^.children[1];
     end;
     if ord(result.space136[191]) = 1 then begin
-      t46 := create_solution_for_ip_reg;
+      t70 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited, ord(opc$add), 2,
           find_well_known_literal_solution(-result.fields[4]^.disp),
-          subject^.children[1], t46);
+          subject^.children[1], t70);
     end else begin
-      t47 := create_solution_for_ip_reg;
+      t71 := create_solution_for_ip_reg;
       if ord(result.space136[192]) = 1 then begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-            find_well_known_literal_solution(result.fields[4]^.disp), t47,
+            find_well_known_literal_solution(result.fields[4]^.disp), t71,
             nil);
       end else begin
-        t48 := address_mode_for_integer32_value(result.fields[4]^.disp);
-        debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t48,
-            isc_solution_ptr_t(t48^.base_reg), t47, t48^.sym, 0,
-            t48^.bits_known, t48^.bits_trusted);
+        t72 := address_mode_for_integer32_value(result.fields[4]^.disp);
+        debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t72,
+            isc_solution_ptr_t(t72^.base_reg), t71, t72^.sym, 0,
+            t72^.bits_known, t72^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 2,
-          subject^.children[1], t47, create_solution_for_ip_reg);
+          subject^.children[1], t71, create_solution_for_ip_reg);
     end;
-    debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0, t45,
+    debug_lir_$simple_instruction(result.inherited, ord(opc$trap_gt), 0, t69,
         nil, nil);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
@@ -1571,6 +1777,14 @@ var
   t5: isc_solution_ptr_t;
   t6: isc_solution_ptr_t;
   t7: isc_solution_ptr_t;
+  t8: isc_solution_ptr_t;
+  t9: isc_solution_ptr_t;
+  t10: isc_solution_ptr_t;
+  t11: isc_solution_ptr_t;
+  t12: isc_solution_ptr_t;
+  t13: isc_solution_ptr_t;
+  t14: isc_solution_ptr_t;
+  t15: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
   t2 := create_solution_for_fp_reg;
@@ -1584,28 +1798,55 @@ begin
       end else begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$extend7), 0,
             subject^.children[1], t1, nil);
+        t6 := t1;
       end;
-    end
-    else if ord(result.space136[137]) = 2 then begin
-      if ord(result.space136[139]) <> 1 then begin
-        debug_lir_$simple_instruction(result.inherited, ord(opc$extend15), 0,
-            subject^.children[1], t1, nil);
+      t9 := t6;
+    end else begin
+      if ord(result.space136[137]) = 2 then begin
+        if ord(result.space136[139]) = 1 then begin
+          t7 := subject^.children[1];
+        end else begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$extend15),
+              0, subject^.children[1], t1, nil);
+          t7 := t1;
+        end;
+        t8 := t7;
+      end else begin
+        t8 := subject^.children[1];
       end;
+      t9 := t8;
     end;
-  end
-  else if ord(result.space136[140]) = 1 then begin
-    if ord(result.space136[141]) <> 1 then begin
-      debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0, 8,
-          subject^.children[1], find_well_known_literal_solution(0), t1);
+    t14 := t9;
+  end else begin
+    if ord(result.space136[140]) = 1 then begin
+      if ord(result.space136[141]) = 1 then begin
+        t10 := subject^.children[1];
+      end else begin
+        debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
+            8, subject^.children[1], find_well_known_literal_solution(0),
+            t1);
+        t10 := t1;
+      end;
+      t13 := t10;
+    end else begin
+      if ord(result.space136[140]) = 2 then begin
+        if ord(result.space136[142]) = 1 then begin
+          t11 := subject^.children[1];
+        end else begin
+          debug_lir_$field_instruction(result.inherited, ord(opc$extractu),
+              0, 16, subject^.children[1],
+              find_well_known_literal_solution(0), t1);
+          t11 := t1;
+        end;
+        t12 := t11;
+      end else begin
+        t12 := subject^.children[1];
+      end;
+      t13 := t12;
     end;
-  end
-  else if ord(result.space136[140]) = 2 then begin
-    if ord(result.space136[142]) <> 1 then begin
-      debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
-          16, subject^.children[1], find_well_known_literal_solution(0), t1);
-    end;
+    t14 := t13;
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0, t6, t2,
+  debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0, t14, t2,
       nil);
   if ord(result.space136[143]) = 1 then begin
     if ord(result.space136[144]) = 1 then begin
@@ -1616,10 +1857,10 @@ begin
         solution, nil);
     debug_lir_$simple_instruction(result.inherited, ord(opc$mffp), 0, t2, t5,
         nil);
-    t7 := address_mode_for_single_value(real(16#4F800000));
-    debug_lir_$load_instruction(result.inherited, ord(opc$loads), 0, t7,
-        isc_solution_ptr_t(t7^.base_reg), t3, t7^.sym, 0, t7^.bits_known,
-        t7^.bits_trusted);
+    t15 := address_mode_for_single_value(real(16#4F800000));
+    debug_lir_$load_instruction(result.inherited, ord(opc$loads), 0, t15,
+        isc_solution_ptr_t(t15^.base_reg), t3, t15^.sym, 0, t15^.bits_known,
+        t15^.bits_trusted);
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t5,
         create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited, t4, ord(opc$bge), 0);
@@ -1790,6 +2031,14 @@ var
   t5: isc_solution_ptr_t;
   t6: isc_solution_ptr_t;
   t7: isc_solution_ptr_t;
+  t8: isc_solution_ptr_t;
+  t9: isc_solution_ptr_t;
+  t10: isc_solution_ptr_t;
+  t11: isc_solution_ptr_t;
+  t12: isc_solution_ptr_t;
+  t13: isc_solution_ptr_t;
+  t14: isc_solution_ptr_t;
+  t15: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
   t2 := create_solution_for_fp_reg;
@@ -1807,28 +2056,55 @@ begin
       end else begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$extend7), 0,
             subject^.children[1], t1, nil);
+        t6 := t1;
       end;
-    end
-    else if ord(result.space136[138]) = 2 then begin
-      if ord(result.space136[140]) <> 1 then begin
-        debug_lir_$simple_instruction(result.inherited, ord(opc$extend15), 0,
-            subject^.children[1], t1, nil);
+      t9 := t6;
+    end else begin
+      if ord(result.space136[138]) = 2 then begin
+        if ord(result.space136[140]) = 1 then begin
+          t7 := subject^.children[1];
+        end else begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$extend15),
+              0, subject^.children[1], t1, nil);
+          t7 := t1;
+        end;
+        t8 := t7;
+      end else begin
+        t8 := subject^.children[1];
       end;
+      t9 := t8;
     end;
-  end
-  else if ord(result.space136[141]) = 1 then begin
-    if ord(result.space136[142]) <> 1 then begin
-      debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0, 8,
-          subject^.children[1], find_well_known_literal_solution(0), t1);
+    t14 := t9;
+  end else begin
+    if ord(result.space136[141]) = 1 then begin
+      if ord(result.space136[142]) = 1 then begin
+        t10 := subject^.children[1];
+      end else begin
+        debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
+            8, subject^.children[1], find_well_known_literal_solution(0),
+            t1);
+        t10 := t1;
+      end;
+      t13 := t10;
+    end else begin
+      if ord(result.space136[141]) = 2 then begin
+        if ord(result.space136[143]) = 1 then begin
+          t11 := subject^.children[1];
+        end else begin
+          debug_lir_$field_instruction(result.inherited, ord(opc$extractu),
+              0, 16, subject^.children[1],
+              find_well_known_literal_solution(0), t1);
+          t11 := t1;
+        end;
+        t12 := t11;
+      end else begin
+        t12 := subject^.children[1];
+      end;
+      t13 := t12;
     end;
-  end
-  else if ord(result.space136[141]) = 2 then begin
-    if ord(result.space136[143]) <> 1 then begin
-      debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
-          16, subject^.children[1], find_well_known_literal_solution(0), t1);
-    end;
+    t14 := t13;
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0, t6, t2,
+  debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0, t14, t2,
       nil);
   if ord(result.space136[144]) = 1 then begin
     if ord(result.space136[145]) = 1 then begin
@@ -1839,10 +2115,10 @@ begin
         solution, nil);
     debug_lir_$simple_instruction(result.inherited, ord(opc$mffp), 0, t2, t5,
         nil);
-    t7 := address_mode_for_double_value(4294967296.0);
-    debug_lir_$load_instruction(result.inherited, ord(opc$loadd), 0, t7,
-        isc_solution_ptr_t(t7^.base_reg), t3, t7^.sym, 0, t7^.bits_known,
-        t7^.bits_trusted);
+    t15 := address_mode_for_double_value(4294967296.0);
+    debug_lir_$load_instruction(result.inherited, ord(opc$loadd), 0, t15,
+        isc_solution_ptr_t(t15^.base_reg), t3, t15^.sym, 0, t15^.bits_known,
+        t15^.bits_trusted);
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t5,
         create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited, t4, ord(opc$bge), 0);

@@ -3434,21 +3434,26 @@ var
   t2: isc_solution_ptr_t;
   t3: isc_solution_ptr_t;
   t4: isc_solution_ptr_t;
+  t5: isc_solution_ptr_t;
+  t6: isc_solution_ptr_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     if ord(result.space136[137]) = 1 then begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$asr), 0,
           subject, find_well_known_literal_solution(31), solution);
     end else begin
-      if ord(result.space136[138]) <> 1 then begin
+      if ord(result.space136[138]) = 1 then begin
+        t2 := subject;
+      end else begin
         t1 := create_solution_for_ip_reg;
         debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
             integer32(result.fields[1]), subject,
             find_well_known_literal_solution(integer32(result.fields[0])),
             t1);
+        t2 := t1;
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$extend0), 0,
-          subject, solution, nil);
+          t2, solution, nil);
     end;
   end
   else if ord(result.space136[136]) = 2 then begin
@@ -3467,12 +3472,12 @@ begin
             subject, solution, nil);
       end;
     end else begin
-      t2 := create_solution_for_ip_reg;
+      t3 := create_solution_for_ip_reg;
       debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
           integer32(result.fields[1]), subject,
-          find_well_known_literal_solution(integer32(result.fields[0])), t2);
+          find_well_known_literal_solution(integer32(result.fields[0])), t3);
       debug_lir_$simple_instruction(result.inherited, ord(opc$extend7), 0,
-          t2, solution, nil);
+          t3, solution, nil);
     end;
   end
   else if ord(result.space136[136]) = 3 then begin
@@ -3491,21 +3496,24 @@ begin
             subject, solution, nil);
       end;
     end else begin
-      t3 := create_solution_for_ip_reg;
+      t4 := create_solution_for_ip_reg;
       debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
           integer32(result.fields[1]), subject,
-          find_well_known_literal_solution(integer32(result.fields[0])), t3);
+          find_well_known_literal_solution(integer32(result.fields[0])), t4);
       debug_lir_$simple_instruction(result.inherited, ord(opc$extend15), 0,
-          t3, solution, nil);
+          t4, solution, nil);
     end;
   end else begin
-    if ord(result.space136[145]) <> 1 then begin
-      t4 := create_solution_for_ip_reg;
+    if ord(result.space136[145]) = 1 then begin
+      t6 := subject;
+    end else begin
+      t5 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited, ord(opc$lsl), 0,
           subject,
-          find_well_known_literal_solution(integer32(result.fields[2])), t4);
+          find_well_known_literal_solution(integer32(result.fields[2])), t5);
+      t6 := t5;
     end;
-    debug_lir_$simple_instruction(result.inherited, ord(opc$asr), 0, subject,
+    debug_lir_$simple_instruction(result.inherited, ord(opc$asr), 0, t6,
         find_well_known_literal_solution(integer32(result.fields[3])),
         solution);
   end;
@@ -3543,35 +3551,71 @@ procedure transform_395_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 var
   t1: isc_solution_ptr_t;
+  t2: isc_solution_ptr_t;
+  t3: isc_solution_ptr_t;
+  t4: isc_solution_ptr_t;
+  t5: isc_solution_ptr_t;
+  t6: isc_solution_ptr_t;
+  t7: isc_solution_ptr_t;
+  t8: isc_solution_ptr_t;
+  t9: isc_solution_ptr_t;
+  t10: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
     if ord(result.space136[137]) = 1 then begin
-      if ord(result.space136[138]) <> 1 then begin
+      if ord(result.space136[138]) = 1 then begin
+        t2 := subject;
+      end else begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$extend7), 0,
             subject, t1, nil);
+        t2 := t1;
       end;
-    end
-    else if ord(result.space136[137]) = 2 then begin
-      if ord(result.space136[139]) <> 1 then begin
-        debug_lir_$simple_instruction(result.inherited, ord(opc$extend15), 0,
-            subject, t1, nil);
+      t5 := t2;
+    end else begin
+      if ord(result.space136[137]) = 2 then begin
+        if ord(result.space136[139]) = 1 then begin
+          t3 := subject;
+        end else begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$extend15),
+              0, subject, t1, nil);
+          t3 := t1;
+        end;
+        t4 := t3;
+      end else begin
+        t4 := subject;
       end;
+      t5 := t4;
     end;
-  end
-  else if ord(result.space136[140]) = 1 then begin
-    if ord(result.space136[141]) <> 1 then begin
-      debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0, 8,
-          subject, find_well_known_literal_solution(0), t1);
+    t10 := t5;
+  end else begin
+    if ord(result.space136[140]) = 1 then begin
+      if ord(result.space136[141]) = 1 then begin
+        t6 := subject;
+      end else begin
+        debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
+            8, subject, find_well_known_literal_solution(0), t1);
+        t6 := t1;
+      end;
+      t9 := t6;
+    end else begin
+      if ord(result.space136[140]) = 2 then begin
+        if ord(result.space136[142]) = 1 then begin
+          t7 := subject;
+        end else begin
+          debug_lir_$field_instruction(result.inherited, ord(opc$extractu),
+              0, 16, subject, find_well_known_literal_solution(0), t1);
+          t7 := t1;
+        end;
+        t8 := t7;
+      end else begin
+        t8 := subject;
+      end;
+      t9 := t8;
     end;
-  end
-  else if ord(result.space136[140]) = 2 then begin
-    if ord(result.space136[142]) <> 1 then begin
-      debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
-          16, subject, find_well_known_literal_solution(0), t1);
-    end;
+    t10 := t9;
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0, subject,
+  debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0, t10,
       solution, nil);
 end;
 

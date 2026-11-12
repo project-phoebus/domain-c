@@ -119,36 +119,45 @@ procedure transform_328_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 var
-  t1: isc_solution_ptr_t;
-  t2: integer32;
+  t1: integer32;
+  t2: isc_solution_ptr_t;
   t3: isc_solution_ptr_t;
   t4: isc_solution_ptr_t;
   t5: isc_solution_ptr_t;
+  t6: isc_solution_ptr_t;
+  t7: isc_solution_ptr_t;
 begin
-  t1 := subject^.children[1];
-  if t1^.f76.b76 - subject^.children[2]^.f76.b76 < 0 then begin
-    t2 := -(t1^.f76.b76 - subject^.children[2]^.f76.b76);
+  if subject^.children[1]^.f76.b76 - subject^.children[2]^.f76.b76 < 0 then begin
+    t1 := -(subject^.children[1]^.f76.b76 - subject^.children[2]^.f76.b76);
   end else begin
-    t2 := t1^.f76.b76 - subject^.children[2]^.f76.b76;
+    t1 := subject^.children[1]^.f76.b76 - subject^.children[2]^.f76.b76;
   end;
-  if ord(result.space136[136]) <> 1 then begin
+  if ord(result.space136[136]) = 1 then begin
+    t7 := subject^.children[1];
+  end else begin
     if ord(result.space136[136]) = 2 then begin
-      t3 := ip_reg_to_ip_reg_scaled(t1,
-          subject^.children[2]^.f76.b76 - t1^.f76.b76);
-    end
-    else if ord(result.space136[136]) = 3 then begin
-      t4 := create_solution_for_ip_reg;
-      debug_lir_$simple_instruction(result.inherited, ord(opc$lsr), 0,
-          subject^.children[1], find_well_known_literal_solution(t2), t4);
+      t2 := ip_reg_to_ip_reg_scaled(subject^.children[1],
+          subject^.children[2]^.f76.b76 - subject^.children[1]^.f76.b76);
+      t6 := t2;
     end else begin
-      t5 := create_solution_for_ip_reg;
-      debug_lir_$simple_instruction(result.inherited, ord(opc$lsl), 0,
-          subject^.children[1], find_well_known_literal_solution(t2), t5);
+      if ord(result.space136[136]) = 3 then begin
+        t3 := create_solution_for_ip_reg;
+        debug_lir_$simple_instruction(result.inherited, ord(opc$lsr), 0,
+            subject^.children[1], find_well_known_literal_solution(t1), t3);
+        t5 := t3;
+      end else begin
+        t4 := create_solution_for_ip_reg;
+        debug_lir_$simple_instruction(result.inherited, ord(opc$lsl), 0,
+            subject^.children[1], find_well_known_literal_solution(t1), t4);
+        t5 := t4;
+      end;
+      t6 := t5;
     end;
+    t7 := t6;
   end;
   debug_lir_$simple_instruction(result.inherited,
       isc_tool_generated_readonly_tables.opcode_rr_reversed[il$t(subject^.w98)],
-      0, t1, subject^.children[2], solution);
+      0, t7, subject^.children[2], solution);
 end;
 
 { transform_329_pass_2 - rule 329: ip_reg_field <- and_top | eor_top |
@@ -162,6 +171,9 @@ var
   t2: isc_solution_ptr_t;
   t3: isc_solution_ptr_t;
   t4: isc_solution_ptr_t;
+  t5: isc_solution_ptr_t;
+  t6: isc_solution_ptr_t;
+  t7: isc_solution_ptr_t;
 begin
   if subject^.children[1]^.f76.b76 - subject^.children[2]^.f76.b76 < 0 then begin
     t1 := -(subject^.children[1]^.f76.b76 - subject^.children[2]^.f76.b76);
@@ -172,20 +184,28 @@ begin
     if ord(result.space136[136]) = 2 then begin
       t2 := ip_reg_to_ip_reg_scaled(subject^.children[2],
           subject^.children[1]^.f76.b76 - subject^.children[2]^.f76.b76);
-    end
-    else if ord(result.space136[136]) = 3 then begin
-      t3 := create_solution_for_ip_reg;
-      debug_lir_$simple_instruction(result.inherited, ord(opc$lsr), 0,
-          subject^.children[2], find_well_known_literal_solution(t1), t3);
+      t6 := t2;
     end else begin
-      t4 := create_solution_for_ip_reg;
-      debug_lir_$simple_instruction(result.inherited, ord(opc$lsl), 0,
-          subject^.children[2], find_well_known_literal_solution(t1), t4);
+      if ord(result.space136[136]) = 3 then begin
+        t3 := create_solution_for_ip_reg;
+        debug_lir_$simple_instruction(result.inherited, ord(opc$lsr), 0,
+            subject^.children[2], find_well_known_literal_solution(t1), t3);
+        t5 := t3;
+      end else begin
+        t4 := create_solution_for_ip_reg;
+        debug_lir_$simple_instruction(result.inherited, ord(opc$lsl), 0,
+            subject^.children[2], find_well_known_literal_solution(t1), t4);
+        t5 := t4;
+      end;
+      t6 := t5;
     end;
+    t7 := t6;
+  end else begin
+    t7 := nil;
   end;
   debug_lir_$simple_instruction(result.inherited,
       isc_tool_generated_readonly_tables.opcode_rr[il$t(subject^.w98)], 0,
-      t2, subject^.children[1], solution);
+      t7, subject^.children[1], solution);
 end;
 
 { transform_330_pass_2 - rule 330: fp_reg <- and_top | eor_top | or_top ($1:
@@ -238,9 +258,11 @@ var
   t1: isc_solution_ptr_t;
   t2: isc_solution_ptr_t;
   t3: isc_solution_ptr_t;
+  t4: isc_solution_ptr_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     t1 := find_well_known_literal_solution(0);
+    t4 := t1;
   end else begin
     t2 := create_solution_for_ip_reg;
     if ord(result.space136[137]) = 1 then begin
@@ -252,9 +274,10 @@ begin
           isc_solution_ptr_t(t3^.base_reg), t2, t3^.sym, 0, t3^.bits_known,
           t3^.bits_trusted);
     end;
+    t4 := t2;
   end;
   debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
-      integer32(result.fields[1]), t1,
+      integer32(result.fields[1]), t4,
       find_well_known_literal_solution(integer32(result.fields[0])),
       subject^.children[1]);
   result.base_reg := subject^.children[1]^.base_reg;
@@ -368,9 +391,11 @@ var
   t2: isc_solution_ptr_t;
   t3: isc_solution_ptr_t;
   t4: isc_solution_ptr_t;
+  t5: isc_solution_ptr_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     t1 := find_well_known_literal_solution(-1);
+    t4 := t1;
   end else begin
     t2 := create_solution_for_ip_reg;
     if ord(result.space136[137]) = 1 then begin
@@ -382,10 +407,11 @@ begin
           isc_solution_ptr_t(t3^.base_reg), t2, t3^.sym, 0, t3^.bits_known,
           t3^.bits_trusted);
     end;
+    t4 := t2;
   end;
-  t4 := find_well_known_literal_solution(number_of_rightmost_zeroes(integer32(result.fields[0])));
+  t5 := find_well_known_literal_solution(number_of_rightmost_zeroes(integer32(result.fields[0])));
   debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
-      length_of_sequence_of_ones(integer32(result.fields[0])), t1, t4,
+      length_of_sequence_of_ones(integer32(result.fields[0])), t4, t5,
       subject^.children[1]);
   result.base_reg := subject^.children[1]^.base_reg;
   result.index_reg := subject^.children[1]^.index_reg;

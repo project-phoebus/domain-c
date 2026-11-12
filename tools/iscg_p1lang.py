@@ -15,6 +15,9 @@ add (docs/iscg-design.md 2.5, 2.6, 10.7):
               | 'sum' ATTR {',' ATTR} 'of' path {',' path} ['to' path] ';'
               | 'trace' 'string' ';'
     expr     := ... | ('bytes' | 'words') ['@' NUMBER] '(' NUMBER {',' NUMBER} ')' '[' expr ']'
+              | REAL                                  a real constant (0.0)
+    sel      := ... | 'real_value'                    a real constant node's double
+    TYPE     := ... | 'single'                        a single real: T.value, T.bits
 
 - The clause is the action's body; the generator writes the skeleton
   around it: `result := nil; work := nil;', then for each `condition'
@@ -37,6 +40,12 @@ add (docs/iscg-design.md 2.5, 2.6, 10.7):
   S.f ...); `sum f, g of P, Q' is `result.f <- P.f + Q.f; result.g <-
   P.g + Q.g;'.  `trace 'text'' is `if isc_user_routines_354 then
   writeln(text)'.
+- `il.real_value' (a node's selector) is a real constant node's double
+  (il.ins.pas's real_value, +12); `temp f: single;' a single real whose
+  value (f.value) and bits (f.bits, integer32) are the same four bytes.
+  Rules 9 and 10 use them (written by hand: the FPP emulation's
+  comparison and conversion are dpc gap 7; the gate's rewrite lines
+  compare the high longword and drop the conversion).
 - `bytes(v1, ..., vn)[e]' and `words(...)[e]' are a cost table's entry
   e: a module variable (packed array [0..16] of 0..255, array [0..16]
   of integer), entry k vk for k = 1..n, entries 0 and n + 1 .. 16 zero.
@@ -62,6 +71,10 @@ ALREADY = ['already_address_mode', 'already_fp_reg', 'already_fp_reg_pair',
 TRACE = 'isc_user_routines_354'
 L.PREC.setdefault('in', 3)          # `k in set' (a set's element)
 L.BUILTINS.setdefault('abs', 'i32')
+# `temp f: single;': a single real and its bits (f.value, f.bits), the
+# module's view p1_single_t (rule 10 converts a node's double)
+L.TEMP_TYPES.setdefault('single', 'single')
+L.PASCAL_TYPE.setdefault('single', 'p1_single_t')
 # inserts globals.ins.pas opens whose routines the actions call
 EXTRA_INSERTS = ['lang/lang/source/debug_sym_dmp.ins.pas',
                  'lang/lang/source/globals_from_frontend.ins.pas']
@@ -89,7 +102,10 @@ RUNTIME_HEADINGS = {n: {'params': [('a', 'value', 'i32', False),
                               'm$dis$llw')}
 # the prelude's cells the actions read that the inserts the modules open
 # declare only through globals.ins.pas
-EXTRA_GLOBALS = {'il_180': 'node', 'cargs_$options': 'other:cargs_$options_t'}
+EXTRA_GLOBALS = {'il_180': 'node', 'cargs_$options': 'other:cargs_$options_t',
+                 'target_properties': 'other:target_properties_$t'}
+# the fields of those records the actions read: (class, field) -> class
+EXTRA_FIELDS = {('other:target_properties_$t', 'p_9c'): 'i32'}
 
 
 def negate(c):
@@ -603,6 +619,11 @@ class Emitter(L.Emitter):
         return super().path(e)
 
     def select(self, text, cls, s):
+        if cls == 'node' and s == 'real_value':
+            # a real constant's value (il.ins.pas: the double at +12)
+            return 'il_$node_ptr_t(%s)^.real_value' % text, 'double'
+        if cls == 'single' and s in ('value', 'bits'):
+            return '%s.%s' % (text, s), ('real' if s == 'value' else 'i32')
         if cls == 'node' and re.match(r'sb\d+$', s):
             # a node's byte read as signed (ext.w)
             return 'p1_snode_ptr_t(%s)^.sb[%d]' % (text, int(s[2:])), 'i16'
@@ -613,6 +634,8 @@ class Emitter(L.Emitter):
             return 'p1_int_fields_ptr_t(addr(%s))^.i[%d]' % (r, (off - 352) // 4), 'i32'
         if cls == 'other:cargs_$options_t':
             return '%s.%s' % (text, s), ('set' if s.startswith('flags') else 'bool')
+        if (cls, s) in EXTRA_FIELDS:
+            return '%s.%s' % (text, s), EXTRA_FIELDS[(cls, s)]
         m = re.match(r'c(34[2-8])$', s)
         if m and cls in ('rec', 'isp', 'sp', 'up', 'lr'):
             r = self.deref(text, cls)

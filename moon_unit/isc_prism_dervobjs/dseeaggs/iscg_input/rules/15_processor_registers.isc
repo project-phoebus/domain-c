@@ -287,6 +287,7 @@ transform 247  void <- pack_aop ($1: processor_reg, $2: [ip_reg, ip_reg_field, l
     temp t5: solution;
     temp t6: solution;
     temp t7: solution;
+    temp t8: solution;
     if $1.is_volatile then
       t1 <- 2048;
     else
@@ -298,30 +299,33 @@ transform 247  void <- pack_aop ($1: processor_reg, $2: [ip_reg, ip_reg_field, l
       t2 <- 0;
     end;
     if result.c136 = 1 then
-      t3 <- $2;
+      t8 <- $2;
     else
-      t4 <- create_solution_for_ip_reg();
-      emit mfpr(opc$mfpr, t1 + t2, $1, $1.base_register, t4, $1.object_with_name);
+      t3 <- create_solution_for_ip_reg();
+      emit mfpr(opc$mfpr, t1 + t2, $1, $1.base_register, t3, $1.object_with_name);
       if result.c137 = 1 then
-        emit field(opc$transfer, 0, result.l352, $2, find_well_known_literal_solution(result.l356), t4);
+        emit field(opc$transfer, 0, result.l352, $2, find_well_known_literal_solution(result.l356), t3);
       elsif result.c138 = 1 then
         if result.c139 = 1 then
-          t5 <- find_well_known_literal_solution($2.literal_32_bits_value);
+          t4 <- find_well_known_literal_solution($2.literal_32_bits_value);
+          t7 <- t4;
         else
-          t6 <- create_solution_for_ip_reg();
+          t5 <- create_solution_for_ip_reg();
           if result.c140 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution($2.literal_32_bits_value), t6, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution($2.literal_32_bits_value), t5, nil);
           else
-            t7 <- address_mode_for_integer32_value($2.literal_32_bits_value);
-            emit load(opc$loadl, 0, t7, t7.base_register, t6, t7.il, 0, t7.bits_known, t7.bits_trusted);
+            t6 <- address_mode_for_integer32_value($2.literal_32_bits_value);
+            emit load(opc$loadl, 0, t6, t6.base_register, t5, t6.il, 0, t6.bits_known, t6.bits_trusted);
           end;
+          t7 <- t5;
         end;
-        emit field(opc$insert, 0, result.l352, t5, find_well_known_literal_solution(result.l356), t4);
+        emit field(opc$insert, 0, result.l352, t7, find_well_known_literal_solution(result.l356), t3);
       else
-        emit field(opc$insert, 0, result.l352, $2, find_well_known_literal_solution(result.l356), t4);
+        emit field(opc$insert, 0, result.l352, $2, find_well_known_literal_solution(result.l356), t3);
       end;
+      t8 <- t3;
     end;
-    emit mtpr(opc$mtpr, t1 + t2, t3, $1, $1.base_register, $1.object_with_name);
+    emit mtpr(opc$mtpr, t1 + t2, t8, $1, $1.base_register, $1.object_with_name);
   end;
 end;
 
@@ -375,6 +379,7 @@ transform 248  void <- scalar_aop ($1: processor_reg, $2: [ip_reg, ip_reg_field,
     temp t5: solution;
     temp t6: solution;
     temp t7: solution;
+    temp t8: solution;
     if $1.is_volatile then
       t1 <- 2048;
     else
@@ -386,30 +391,33 @@ transform 248  void <- scalar_aop ($1: processor_reg, $2: [ip_reg, ip_reg_field,
       t2 <- 0;
     end;
     if result.c136 = 1 then
-      t3 <- $2;
+      t8 <- $2;
     else
-      t4 <- create_solution_for_ip_reg();
-      emit mfpr(opc$mfpr, t1 + t2, $1, $1.base_register, t4, $1.object_with_name);
+      t3 <- create_solution_for_ip_reg();
+      emit mfpr(opc$mfpr, t1 + t2, $1, $1.base_register, t3, $1.object_with_name);
       if result.c137 = 1 then
-        emit field(opc$transfer, 0, result.l352, $2, find_well_known_literal_solution(result.l356), t4);
+        emit field(opc$transfer, 0, result.l352, $2, find_well_known_literal_solution(result.l356), t3);
       elsif result.c138 = 1 then
         if result.c139 = 1 then
-          t5 <- find_well_known_literal_solution($2.literal_32_bits_value);
+          t4 <- find_well_known_literal_solution($2.literal_32_bits_value);
+          t7 <- t4;
         else
-          t6 <- create_solution_for_ip_reg();
+          t5 <- create_solution_for_ip_reg();
           if result.c140 = 1 then
-            emit simple(opc$move, 0, find_well_known_literal_solution($2.literal_32_bits_value), t6, nil);
+            emit simple(opc$move, 0, find_well_known_literal_solution($2.literal_32_bits_value), t5, nil);
           else
-            t7 <- address_mode_for_integer32_value($2.literal_32_bits_value);
-            emit load(opc$loadl, 0, t7, t7.base_register, t6, t7.il, 0, t7.bits_known, t7.bits_trusted);
+            t6 <- address_mode_for_integer32_value($2.literal_32_bits_value);
+            emit load(opc$loadl, 0, t6, t6.base_register, t5, t6.il, 0, t6.bits_known, t6.bits_trusted);
           end;
+          t7 <- t5;
         end;
-        emit field(opc$insert, 0, result.l352, t5, find_well_known_literal_solution(result.l356), t4);
+        emit field(opc$insert, 0, result.l352, t7, find_well_known_literal_solution(result.l356), t3);
       else
-        emit field(opc$insert, 0, result.l352, $2, find_well_known_literal_solution(result.l356), t4);
+        emit field(opc$insert, 0, result.l352, $2, find_well_known_literal_solution(result.l356), t3);
       end;
+      t8 <- t3;
     end;
-    emit mtpr(opc$mtpr, t1 + t2, t3, $1, $1.base_register, $1.object_with_name);
+    emit mtpr(opc$mtpr, t1 + t2, t8, $1, $1.base_register, $1.object_with_name);
   end;
 end;
 

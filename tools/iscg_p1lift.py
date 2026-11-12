@@ -62,6 +62,9 @@ MATCHED = 'Pattern %d matched the semantics.'
 CYCLE = 'Infinite cycle prevented by NOT adding this to the work list.'
 # the prelude's cells the actions read: address -> (name, class)
 GLOBAL_CELLS = {0x2E9E60: ('il_180', 'node')}      # il.ins.pas: the routine's block node
+# fields of the prelude's records the actions read: address -> (variable,
+# field, class) (target_properties.ins.pas: +0x9C, rule 20)
+GLOBAL_FIELDS = {0x44E748: ('target_properties', 'p_9c', 'int32')}
 # bytes of a set the actions test bits of: address -> (variable, field,
 # the element of the byte's bit 0) (cargs.ins.pas: flags_286 runs from
 # element 20 at +0x286 bit 7 down)
@@ -80,6 +83,7 @@ class Lifter(P2.Lifter):
     def __init__(self, im, rule, start, end, headings, names, a5_lo, a5_hi):
         self.a5_lo, self.a5_hi = a5_lo, a5_hi      # the module's data block
         self.tables = {}                           # offset -> ('b'|'w', values)
+        self.flag_store = {}                       # id(flags) -> (flags, base, off, size)
         self.writes = {}
         super().__init__(im, rule, start, end, headings, names)
         self.find_writes()
@@ -239,6 +243,15 @@ class Lifter(P2.Lifter):
 
     def store(self, op, size, v, st, out, x):
         loc = self.ea_addr(op, st)
+        f = st.flags
+        if x is not None and x.mn == 'move' and loc[0] == 'mem' and f is not None and \
+                f[0] == 'tst' and f[2] == size:
+            # the flags are the stored value's: a join of arms that each
+            # end in such a store to the same field tests the field
+            self.flag_store[id(f)] = (f, loc[1], loc[2], size)
+        return self.store1(op, size, v, st, out, x, loc)
+
+    def store1(self, op, size, v, st, out, x, loc):
         if loc[0] == 'mem' and isinstance(loc[1], tuple) and loc[1][0] == 'param' and \
                 loc[1][1] in ('work', 'result') and loc[2] == 0 and size == 4:
             ve = self.val(v) if not (isinstance(v, tuple) and v[0] == 'param') else (
@@ -691,6 +704,21 @@ class Lifter(P2.Lifter):
             if b is not None:
                 st.flags = ('boolflags', ('boolbyte', b))
                 return None
+        if mn == 'btst' and re.match(r'%d[0-7]$', x.ops[0]):
+            # the bit number in a data register that holds a constant (Rev
+            # 8.89 reuses a register loaded for another use: pattern 148):
+            # on memory the number modulo 8, on a register modulo 32
+            v = st.regs.get(x.ops[0][1:])
+            if not (isinstance(v, tuple) and v[0] == 'num'):
+                raise Unliftable('0x%X: btst by a register not known' % x.addr)
+            op1 = parse_operand(x.ops[1])
+            n = v[1] % (32 if op1[0] == 'dreg' else 8)
+            x2 = P2.Insn(x.addr, x.size, 'btst #%d,%s' % (n, x.ops[1]))
+            self.ins[k] = x2
+            try:
+                return super().step(k, st, out)
+            finally:
+                self.ins[k] = x
         return super().step(k, st, out)
 
     def table_expr(self, loc, size, x):
@@ -721,11 +749,15 @@ class Lifter(P2.Lifter):
     def global_expr(self, addr, size):
         if addr in GLOBAL_CELLS and size == 4:
             return ('path', GLOBAL_CELLS[addr][0], [])
+        if addr in GLOBAL_FIELDS and size == 4:
+            return ('path', GLOBAL_FIELDS[addr][0], [GLOBAL_FIELDS[addr][1]])
         return super().global_expr(addr, size)
 
     def global_type(self, addr):
         if addr in GLOBAL_CELLS:
             return GLOBAL_CELLS[addr][1]
+        if addr in GLOBAL_FIELDS:
+            return GLOBAL_FIELDS[addr][2]
         return super().global_type(addr)
 
     def bit_expr(self, loc, bit, x):
@@ -975,29 +1007,6 @@ class Lifter(P2.Lifter):
         c, t, f, _ = nodes[first]
         return c, t, f
 
-    def frame_live(self, a, off):
-        """Whether the frame temporary at off is read at or after a before
-        it is set."""
-        seen, work = set(), [a]
-        pat = '%%fp@(%d)' % off
-        while work:
-            a = work.pop()
-            while a in self.at and a not in seen and a < self.epilogue:
-                seen.add(a)
-                x = self.ins[self.at[a]]
-                if pat in x.text:
-                    if x.ops and x.ops[-1].strip() == pat and x.mn in ('move', 'clr') and \
-                            x.text.count(pat) == 1:
-                        break
-                    return True
-                if x.mn == 'bra':
-                    a = x.target
-                    continue
-                if x.target is not None:
-                    work.append(x.target)
-                a = self.ins[self.at[a] + 1].addr
-        return False
-
     def arms(self, x, cond, t, f, st, out, stops, st_t=None, st_f=None):
         """`if cond then <t> else <f>' to the merge point (p2's branch)."""
         self.use(cond)
@@ -1026,9 +1035,12 @@ class Lifter(P2.Lifter):
                 arms_ = ((b_then, v1), (b_else, v2))
                 if (t1_ == 'bool') != (t2_ == 'bool'):
                     # a boolean on one way, a register's stale value on the
-                    # other (dead there): the boolean's way sets it
+                    # other (dead there): the boolean's way sets it; a
+                    # cleared byte (clr.b) is false
                     typ = 'bool'
-                    arms_ = [(b, v) for b, v in arms_ if self.typ_of(v) == 'bool']
+                    arms_ = [(b, v) if self.typ_of(v) == 'bool' else (b, ('bool', False))
+                             for b, v in arms_
+                             if self.typ_of(v) == 'bool' or v == ('num', 0)]
                 c = Cell(None, typ, False, self.bound)
                 c.need = True
                 self.cells.append(c)
@@ -1041,23 +1053,7 @@ class Lifter(P2.Lifter):
             else:
                 newst.regs.pop(r, None)
         # frame temporaries likewise (a value set on both arms)
-        frame = dict(s_then.frame)
-        for off in sorted(set(s_then.frame) | set(s_else.frame)):
-            v1, v2 = s_then.frame.get(off), s_else.frame.get(off)
-            if v1 is v2 or (v1 is not None and v2 is not None and self.same(v1, v2)):
-                continue
-            if v1 is None or v2 is None or not self.frame_live(e1, off):
-                frame.pop(off, None)
-                continue
-            c = Cell(None, v1.typ if isinstance(v1, Cell) else 'int32', False, self.bound)
-            c.need = True
-            self.cells.append(c)
-            c.phi = True
-            c.mark = ['mark', c]
-            out.append(c.mark)
-            for body, v in ((b_then, v1), (b_else, v2)):
-                body.append(['phi', c, v])
-            frame[off] = c
+        frame = self.join_frame(s_then, s_else, e1, b_then, b_else, out)
         if P2.pending(s_then.stack) != P2.pending(s_else.stack):
             raise Unliftable('0x%X: the arms leave different stacks' % x.addr)
         out.append(('if', [(cond, b_then)], b_else))
@@ -1068,6 +1064,13 @@ class Lifter(P2.Lifter):
                 if s_then.regs.get(r) is f1[1] or s_then.regs.get(r) == f1[1] and \
                         (s_else.regs.get(r) is f2[1] or s_else.regs.get(r) == f2[1]):
                     flags = ('tst', newst.regs[r], f1[2])
+            g1, g2 = self.flag_store.get(id(f1)), self.flag_store.get(id(f2))
+            if flags is None and g1 and g2 and g1[0] is f1 and g2[0] is f2 and \
+                    g1[2:] == g2[2:] and (g1[1] is g2[1] or self.same(g1[1], g2[1])):
+                # both arms end in a store to one field (the flags its value's):
+                # the field tested after the join
+                flags = ('tst', ('mem', g1[1], g1[2], g1[3]), g1[3])
+                self.flag_store[id(flags)] = (flags,) + g1[1:]
         st.regs, st.stack, st.frame, st.flags = newst.regs, newst.stack, frame, flags
         return e1
 

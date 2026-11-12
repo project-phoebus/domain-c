@@ -139,6 +139,8 @@ procedure transform_309_pass_2(var self: isc_solution_t;
 var
   t1: isc_solution_ptr_t;
   t2: isc_solution_ptr_t;
+  t3: isc_solution_ptr_t;
+  t4: isc_solution_ptr_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
@@ -160,13 +162,19 @@ begin
       if ord(result.space136[139]) = 1 then begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$extend7), 0,
             t1, t2, nil);
-      end
-      else if ord(result.space136[139]) = 2 then begin
-        debug_lir_$simple_instruction(result.inherited, ord(opc$extend15), 0,
-            t1, t2, nil);
+        t4 := t2;
+      end else begin
+        if ord(result.space136[139]) = 2 then begin
+          debug_lir_$simple_instruction(result.inherited, ord(opc$extend15),
+              0, t1, t2, nil);
+          t3 := t2;
+        end else begin
+          t3 := t1;
+        end;
+        t4 := t3;
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 8, t1,
-          t2, create_solution_for_ip_reg);
+          t4, create_solution_for_ip_reg);
       debug_lir_$simple_instruction(result.inherited, ord(opc$trap_ne), 0,
           solution, nil, nil);
     end;
@@ -182,6 +190,8 @@ procedure transform_310_pass_2(var self: isc_solution_t;
 var
   t1: isc_solution_ptr_t;
   t2: isc_solution_ptr_t;
+  t3: isc_solution_ptr_t;
+  t4: isc_solution_ptr_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
@@ -198,12 +208,18 @@ begin
     if ord(result.space136[138]) = 1 then begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$extend7), 0,
           t1, t2, nil);
-    end
-    else if ord(result.space136[138]) = 2 then begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$extend15), 0,
-          t1, t2, nil);
+      t4 := t2;
+    end else begin
+      if ord(result.space136[138]) = 2 then begin
+        debug_lir_$simple_instruction(result.inherited, ord(opc$extend15), 0,
+            t1, t2, nil);
+        t3 := t2;
+      end else begin
+        t3 := t1;
+      end;
+      t4 := t3;
     end;
-    debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 8, t1, t2,
+    debug_lir_$simple_instruction(result.inherited, ord(opc$rsub), 8, t1, t4,
         create_solution_for_ip_reg);
     debug_lir_$simple_instruction(result.inherited, ord(opc$trap_ne), 0,
         solution, nil, nil);

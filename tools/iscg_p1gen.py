@@ -11,8 +11,9 @@ clauses).  A transform's pass-1 action is one of
                          iscg_p1lang.py), lifted from the image by tools/
                          iscg_p1lift.py; the generator writes the skeleton
     pass_1 image 16#ADDR [rewrite] hand [dropped] begin ... end;
-                         written by hand (the extractor keeps it); a
-                         `dropped' clause is an action whose arm Rev 8.89
+                         written by hand (the extractor keeps it: rules 9
+                         and 10, the FPP emulation's real comparison and
+                         conversion, and 399, 402); a `dropped' clause is an action whose arm Rev 8.89
                          removed (its conditions' first tests survive, no
                          trace, no solution: rules 399 and 402)
     pass_1 image 16#ADDR residue;
@@ -171,6 +172,11 @@ TYPES = '''  { A rule's cost table: by the number of the alternative an instruct
   p1_last_byte_costs_t = packed array [0..16] of 0..255;
   p1_last_word_costs_t = array [0..16] of integer;'''
 
+NEAR_TYPES = '''  { The last table below 32 KB in a module that passes it: rounded to 4
+    bytes (the tables past 32 KB begin there; pattern 200). }
+  p1_near_last_byte_costs_t = packed array [0..19] of 0..255;
+  p1_near_last_word_costs_t = array [0..17] of integer;'''
+
 ALREADY_VIEW = '''  { The chain rules' cycle guard: a solution's seven already_ flags
     (+342 .. +348, bytes isc_solution_fields.ins.pas leaves in space136),
     under the image's names. }
@@ -204,6 +210,14 @@ READONLY_VIEW = '''  { isc_readonly_tables by byte and word (the actions index t
       3: (l: array [0..779] of integer32);
     end;'''
 
+SINGLE_VIEW = '''  { A single real and its bits (`temp f: single'; rule 10 takes a real
+    constant's bits as a single). }
+  p1_single_t = record
+    case integer of
+      1: (value: real);
+      2: (bits: integer32);
+    end;'''
+
 SNODE_VIEW = '''  { An IL node's bytes as signed numbers (the actions sign-extend some). }
   p1_snode_ptr_t = ^p1_snode_t;
   p1_snode_t = record
@@ -221,6 +235,41 @@ def table_layout(rules, sec):
         by_rule[r] = printed
         layout.extend((r, n, kind, vals) for n, kind, vals in lay)
     return layout, by_rule
+
+
+NEAR_LIMIT = 0x8000     # A5-relative (16-bit) displacements reach 32 KB
+
+
+def place_tables(layout):
+    """Rev 8.89's offsets of the module's cost tables (layout: the
+    module's order) and the order they are declared in: [(k, offset)] by
+    offset.  Each table begins on 8 bytes from its region's base and takes
+    17 bytes (byte tables) or 34 (word tables).  A table stays near (from
+    A5 + 0, in order) while its start plus three times its 8-rounded size
+    (24, 40) is within 32 KB; the rest go far, in order, after the near
+    tables' end rounded to 4 (reached through an absolute base in the
+    image: pattern 189).  Rules 170/171 (module 02) and 186..188 (module
+    24) are the only ones that pass 32 KB; the rule reproduces every
+    table's offset in both (2990 tables; docs/rev889-patterns.md 200,
+    docs/questions.md 301)."""
+    near, far = [], []
+    off = None
+    for k, (r, n, kind, vals) in enumerate(layout):
+        size, padded = (17, 24) if kind == 'b' else (34, 40)
+        start = 0 if off is None else (off + 7) // 8 * 8
+        if start + 3 * padded <= NEAR_LIMIT:
+            near.append((k, start))
+            off = start + size
+        else:
+            far.append(k)
+    out = list(near)
+    base = cur = (off + 3) // 4 * 4 if off is not None else 0
+    for k in far:
+        size = 17 if layout[k][2] == 'b' else 34
+        start = base + (cur - base + 7) // 8 * 8
+        out.append((k, start))
+        cur = start + size
+    return out, len(near)
 
 
 def chain_text(em, chain, inner, ind):
@@ -325,10 +374,11 @@ def gen_module(rules, sec, headings, includes, gen_note, pattern_text, wrap_word
     a5 = sec['p1_a5']
     layout, by_rule = table_layout(rules, sec)
     nhand = sum(1 for r in rs if T[r]['p1_clause'].hand)
+    placed, nnear = place_tables(layout)
     nbytes = 0
-    for k, (r, n, kind, vals) in enumerate(layout):
-        size = 17 if kind == 'b' else 34
-        nbytes = (nbytes + 7) // 8 * 8 + size if k else size
+    if placed:
+        k, o = placed[-1]
+        nbytes = o + (17 if layout[k][2] == 'b' else 34)
     head = ['{ %s - the pass-1 actions of the ISC\'s section %d (%s), rules' % (
         name, sec['number'], sec['topic'].replace('_', ' ')),
         '  %d..%d (a DSEE derived object of the iscg_input description; cc.a88k' % (rs[0], rs[-1]),
@@ -345,7 +395,12 @@ def gen_module(rules, sec, headings, includes, gen_note, pattern_text, wrap_word
     head.append('  Code 0x%06X..0x%06X.  A5 0x%06X: the module\'s data, pas_$output at' % (
         lo, hi, a5))
     head.append('  A5-4 (the traces\' file; the writes are dpc gap 4, so dpc allocates')
-    if layout:
+    if layout and nnear < len(layout):
+        head.append('  none) and from A5 the %d cost tables (%d bytes): %d near, the' % (
+            len(layout), nbytes, nnear))
+        head.append('  last %d past 32 KB after them (Rev 8.89\'s allocation: pattern 200).' % (
+            len(layout) - nnear))
+    elif layout:
         head.append('  none) and from A5 the %d cost tables (%d bytes).' % (len(layout), nbytes))
     else:
         head.append('  none); no cost tables.')
@@ -378,6 +433,8 @@ def gen_module(rules, sec, headings, includes, gen_note, pattern_text, wrap_word
     text = '\n'.join(texts)
     import iscg_p2gen as P2G
     views = []
+    if layout and nnear < len(layout):
+        views.append(NEAR_TYPES)
     if 'p2_node_ptr_t' in text:
         views.append(P2G.NODE_VIEW)
     if 'p2_readonly_ptr_t' in text:
@@ -386,6 +443,8 @@ def gen_module(rules, sec, headings, includes, gen_note, pattern_text, wrap_word
         views.append(READONLY_VIEW)
     if 'p1_snode_ptr_t' in text:
         views.append(SNODE_VIEW)
+    if 'p1_single_t' in text:
+        views.append(SINGLE_VIEW)
     if 'p1_int_fields_ptr_t' in text:
         views.append(INT_FIELDS_VIEW)
     if 'p2_flags_ptr_t' in text:
@@ -404,11 +463,19 @@ def gen_module(rules, sec, headings, includes, gen_note, pattern_text, wrap_word
     if layout:
         out.append('var')
         out.append('  { The cost tables, rule by rule (each rule\'s in the reverse of their order')
-        out.append('    in its clause). }')
-        for k, (r, n, kind, vals) in enumerate(layout):
-            last = k == len(layout) - 1
-            typ = ('p1_last_' if last else 'p1_') + ('byte' if kind == 'b' else 'word') + \
-                '_costs_t'
+        if nnear < len(layout):
+            out.append('    in its clause): the near ones, then those Rev 8.89 put past 32 KB. }')
+        else:
+            out.append('    in its clause). }')
+        for j, (k, o) in enumerate(placed):
+            r, n, kind, vals = layout[k]
+            last = j == len(placed) - 1
+            if j == nnear - 1 and nnear < len(placed):
+                # the last near table: the far ones begin on 4 bytes after it
+                typ = 'p1_near_last_' + ('byte' if kind == 'b' else 'word') + '_costs_t'
+            else:
+                typ = ('p1_last_' if last else 'p1_') + ('byte' if kind == 'b' else 'word') + \
+                    '_costs_t'
             full = [0] + list(vals) + [0] * (16 - len(vals))
             items = runs(full, str)
             line = '  %s: %s := [%s];' % (n, typ, ', '.join(items))
