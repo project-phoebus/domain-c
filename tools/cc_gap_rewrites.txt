@@ -257,3 +257,5 @@ lang2/source/be_com/ra_utils.pas	s/^(          \{ The later readers linked to th
 lang2/source/be_com/ra_utils.pas	s/^(          \{ A TST made of the writing move reads no register\. \})$/%endif { gap 28 }\n$1/
 # gap 7 (oli): the real constant 0.0 passed (an integer constant node instead, for the check)
 lang2/source/be_com/oli.pas	s/(dp|rl)contk\(0\.0\)/smcontk(81, 0) { gap 7 }/
+# gap 4 (isc_call_handling): write and writeln (dropped, for the check)
+lang2/source/isc/isc_call_handling.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
