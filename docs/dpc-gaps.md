@@ -60,6 +60,12 @@ when this tree is merged).
   array of char): fixed in d6d6a24 and 608fb88**; the last gap 5 case
   (a loop's array stepped by a pointer whose displacement exceeds 16
   bits, c_macro_utl) in d6cccc1.  All their rules removed.
+- **The 96-bit set variants of gaps 29 and 38 (sched: a longword `in'
+  a `set of 0..95', and `regs := regs + [n]'): fixed in 2a75806.**
+  Their rules removed.  Gap 42 (a positional initializer for a variant
+  record) is with the domain-pascal owner: the reference shows a
+  variant's fields initialized only by name (3.10.4); rewrite.pas's
+  second view type stays.
 - Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
   spiller finds values to spill but runs out of virtual register
   numbers (240 per class) adding the reloads, and the colouring's
@@ -69,7 +75,7 @@ when this tree is merged).
   purpose (the image cannot tell it from `repeat ... until false'):
   write such loops with a label.
 - All compile best effort (a warning; `--strict' still refuses).  Their
-  rewrites are gone from tools/cc_gap_rewrites.txt (293 rules removed in all);
+  rewrites are gone from tools/cc_gap_rewrites.txt (295 rules removed in all);
   the full gate is clean without them.
 - Gaps 4 (write/writeln) and 7 (real arithmetic) are not being worked
   on in dpc for now (the domain-pascal owner's choice).
