@@ -71,18 +71,25 @@ type
     (ivr_$mark_lifetime_segments_as_induction_variables), 3 (made by
     create_induction_lts of a kind 2 for a variable with a parent), 4 an
     induction expression's instantiation; known (+1 bit 6) incr is
-    known; first_in_bb (+1 bit 2) the first of its variable's list in
-    its block; ivar (+12) its variable, on whose list (+16) a kind 1..3
-    is chained at next (+16, also the free list's link); incr (+20) the
-    increment from the variable's start, step (+24) the increment the
-    instruction defining it adds (kinds 1..3); a kind 4's induction
-    expression at +20. }
+    known; used_known and used_unknown (bits 5, 4) a primary's segment
+    is cur of an instantiation or address mode whose segment's increment
+    is known, not known (ixt_); first_in_bb (+1 bit 2) the first of its
+    variable's list in its block; a kind 4's cur (+8) its variable's
+    segment current where it was found, stale (bit 7) when that does
+    not reach it; ivar (+12) its variable, on whose list (+16) a kind
+    1..3 is chained at next (+16, also the free list's link); incr (+20)
+    the increment from the variable's start, step (+24) the increment
+    the instruction defining it adds, sec (+28) the secondary's
+    segment, repl (+32) the instantiation that replaces it (kinds 1..3,
+    ixt_); a kind 4's induction expression at +20. }
   iv_lts_t = record
     h: packed record                    { +0 }
       kind: 0..255;
       stale: boolean;                   { +1 .7 }
       known: boolean;                   { .6 }
-      b1_5, b1_4, b1_3: boolean;
+      used_known: boolean;              { .5 }
+      used_unknown: boolean;            { .4 }
+      b1_3: boolean;
       first_in_bb: boolean;             { .2 }
       b1_1, b1_0: boolean;
       w2: 0..65535;                     { +2 }
@@ -94,8 +101,8 @@ type
     case integer of                     { +20 }
       1: (incr: iv_expr_ptr_t;
           step: iv_expr_ptr_t;          { +24 }
-          l28: integer32;               { +28 }
-          l32: integer32);              { +32 }
+          sec: iv_lts_ptr_t;             { +28: its secondary's }
+          repl: iv_lts_ptr_t);           { +32: what replaces it }
       2: (iexpr: iv_iexpr_ptr_t);
   end;
 

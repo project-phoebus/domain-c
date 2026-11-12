@@ -218,6 +218,18 @@ var
                                           being worked on }
   iv_rtn: rtn_ptr_t;                    { +0x7AC: the routine }
 
+  { +0x7DA: six characters no instruction reads (as mmt's 'touched',
+    docs/questions.md 170). }
+  iv_signs: array [1..6] of char := '+-+-+-';
+
+  { +0x7E0, +0x7F0: the opcode that adds an increment of each sign (-1
+    sub, 0 move, 1 add) in each register file (ixt_$create_increment_
+    instruction; ixt_$instantiate_induction_expr the second, the same). }
+  iv_incr_opc: array [-1..1, 1..2] of integer := [
+    [81, 138], [75, 144], [79, 137]];
+  iv_incr_opc2: array [-1..1, 1..2] of integer := [
+    [81, 138], [75, 144], [79, 137]];
+
   { +0x7C0: how elaborate_expression picks the register file of an
     expression's children by its kind: 1 its own (none), 2 the segment's
     definition's kind, 3 integer, 4 floating. }
@@ -4121,5 +4133,566 @@ begin
       ixr_$create_induction_addr_from_induction_instantiation(inst, o, base);
       iv_utils_$delete_expression(inst.expr);
     end;
+  end;
+end;
+
+{ ixr_$scan_basic_block_for_induction_expressions - bb's instructions
+  renumbered to increase, then each computing an induction expression of
+  the loop recognized: an add, sub or rsub of two induction registers or
+  of one and an invariant (unless its result already has an induction
+  lts), a move's, mffp's or mtfp's copy, a muli by an invariant, a neg,
+  an lsl by a constant; a load's or store's address.  0x23E2B6, 0x430
+  bytes (loads A5): the opcodes compared one by one; constant word and
+  boolean arguments pushed merged as longwords (pattern 105); the
+  numbers zero-extended. }
+
+procedure ixr_$scan_basic_block_for_induction_expressions(
+    var bb: bb_ptr_t);
+var
+  i: instr_ptr_t;
+  n, k: integer32;
+  o1, o2: opnd_ptr_t;
+begin
+  i := bb^.first;
+  n := i^.num;
+  i := i^.next;
+  while i <> nil do begin
+    k := i^.num;
+    if k <= n then begin
+      n := n + 1;
+      i^.num := n;
+    end
+    else
+      n := k;
+    i := i^.next;
+  end;
+  i := bb^.first;
+  while i <> nil do begin
+    case i^.opc of
+      137, 79:                          { addi, add }
+        if not operand_is_any_induction_expression(addr(i^.opnds[3])) then begin
+          o1 := addr(i^.opnds[1]);
+          if operand_is_current_induction_expression(o1) then begin
+            o2 := addr(i^.opnds[2]);
+            if operand_is_current_induction_expression(o2) then
+              ixr_$induction_expr_plus_induction_expr(i, 1, false, 2, false, 3)
+            else if operand_is_loop_invariant(o2, iv_head) then
+              ixr_$induction_expr_plus_loop_invariant(i, 1, false, 2, false, 3);
+          end
+          else if operand_is_current_induction_expression(addr(i^.opnds[2])) then
+            if operand_is_loop_invariant(o1, iv_head) then
+              ixr_$induction_expr_plus_loop_invariant(i, 2, false, 1, false, 3);
+        end;
+      138, 81:                          { subi, sub }
+        if not operand_is_any_induction_expression(addr(i^.opnds[3])) then begin
+          o1 := addr(i^.opnds[1]);
+          if operand_is_current_induction_expression(o1) then begin
+            o2 := addr(i^.opnds[2]);
+            if operand_is_current_induction_expression(o2) then
+              ixr_$induction_expr_plus_induction_expr(i, 1, true, 2, false, 3)
+            else if operand_is_loop_invariant(o2, iv_head) then
+              ixr_$induction_expr_plus_loop_invariant(i, 1, true, 2, false, 3);
+          end
+          else if operand_is_current_induction_expression(addr(i^.opnds[2])) then
+            if operand_is_loop_invariant(o1, iv_head) then
+              ixr_$induction_expr_plus_loop_invariant(i, 2, false, 1, true, 3);
+        end;
+      83:                               { rsub }
+        if not operand_is_any_induction_expression(addr(i^.opnds[3])) then begin
+          o2 := addr(i^.opnds[2]);
+          if operand_is_current_induction_expression(o2) then begin
+            o1 := addr(i^.opnds[1]);
+            if operand_is_current_induction_expression(o1) then
+              ixr_$induction_expr_plus_induction_expr(i, 1, false, 2, true, 3)
+            else if operand_is_loop_invariant(o1, iv_head) then
+              ixr_$induction_expr_plus_loop_invariant(i, 2, true, 1, false, 3);
+          end
+          else if operand_is_current_induction_expression(addr(i^.opnds[1])) then
+            if operand_is_loop_invariant(o2, iv_head) then
+              ixr_$induction_expr_plus_loop_invariant(i, 1, false, 2, true, 3);
+        end;
+      75:                               { move }
+        if not operand_is_any_induction_expression(addr(i^.opnds[2])) then
+          if operand_is_current_induction_expression(addr(i^.opnds[1])) then
+            ixr_$induction_expression(i, 1, false, 2);
+      116, 126:                         { mffp, mtfp }
+        if operand_is_current_induction_expression(addr(i^.opnds[1])) then
+          ixr_$induction_expression(i, 1, false, 2);
+      178: begin                        { muli }
+        o1 := addr(i^.opnds[1]);
+        if operand_is_current_induction_expression(o1) then begin
+          if operand_is_loop_invariant(addr(i^.opnds[2]), iv_head) then
+            ixr_$induction_expr_times_loop_invariant(i, 1, 2, 3);
+        end
+        else if operand_is_current_induction_expression(addr(i^.opnds[2])) then
+          if operand_is_loop_invariant(o1, iv_head) then
+            ixr_$induction_expr_times_loop_invariant(i, 2, 1, 3);
+      end;
+      135, 77:                          { negi, neg }
+        if operand_is_current_induction_expression(addr(i^.opnds[1])) then
+          ixr_$induction_expression(i, 1, true, 2);
+      92:                               { lsl }
+        if operand_is_current_induction_expression(addr(i^.opnds[1])) then
+          if operand_is_loop_invariant(addr(i^.opnds[2]), iv_head) then
+            ixr_$induction_expr_shifted_loop_invariant(i, 1, 2, 3);
+      203:                              { join_bp }
+        ;
+      221, 109, 106, 105, 104, 218, 103, 217:   { the loads }
+        ixr_$scan_addressing_mode(addr(i^.opnds[2]), addr(i^.opnds[1]));
+      228, 124, 121, 120, 119, 118:     { the stores }
+        ixr_$scan_addressing_mode(addr(i^.opnds[3]), addr(i^.opnds[2]));
+      otherwise
+        ;
+    end;
+    i := i^.next;
+  end;
+end;
+
+{ ixt_$multiply_cost - cost c of multiplying by v's multiplier: for an
+  integer variable none when it is a power of 2 up to 8 (a scale), c
+  for a larger one, 4c otherwise; for others c when it is 1, else 2c.
+  0x23E6E6, 0x6E bytes, no A5. }
+
+function ixt_$multiply_cost(
+    v: iv_var_ptr_t;
+    c: integer32): integer32; options(val_param); internal;
+var
+  m: iv_expr_ptr_t;
+begin
+  m := v^.mult;
+  if v^.f48.kind <> 1 then begin
+    if not ((m^.kind = iv_value) and (m^.value = 1)) then
+      c := c + c;
+  end
+  else if (m^.kind = iv_value) and ((~(m^.value - 1) & m^.value) = m^.value) then begin
+    if m^.value <= 8 then
+      c := 0;
+  end
+  else
+    c := lshft(c, 2);
+  ixt_$multiply_cost := c;
+end;
+
+{ get_secondary_segment - the segment of s's secondary.  0x23E754, 0x12
+  bytes, no frame. }
+
+function get_secondary_segment(
+    s: lts_ptr_t): lts_ptr_t; options(val_param); internal;
+begin
+  get_secondary_segment := iv_lts_ptr_t(s^.l24)^.sec^.lts;
+end;
+
+{ ixt_$induction_segment_exists - l's segment still points to it and,
+  when it is defined, has readers or an instruction that must stay
+  (+2 bit 6).  0x23E766, 0x58 bytes, no A5. }
+
+function ixt_$induction_segment_exists(
+    l: iv_lts_ptr_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+  s: lts_ptr_t;
+  d: opnd_ptr_t;
+begin
+  r := true;
+  s := l^.lts;
+  if iv_lts_ptr_t(s^.l24) <> l then
+    r := false
+  else begin
+    d := s^.refs;
+    if d <> nil then
+      if (opnd_bytes_ptr_t(d)^.rrp & 12) <> 0 then
+        if d^.link = nil then
+          if not utils_ins_$operands_instruction(d)^.h.b2_6 then
+            r := false;
+  end;
+  ixt_$induction_segment_exists := r;
+end;
+
+{ ixt_$clear_primary_used_fields - v's segments' used flags cleared.
+  0x23E7BE, 0x1A bytes, no frame: `andi.w #-49' of the first word. }
+
+procedure ixt_$clear_primary_used_fields(
+    v: iv_var_ptr_t); options(val_param); internal;
+var
+  l: iv_lts_ptr_t;
+begin
+  l := v^.ltss;
+  while l <> nil do begin
+    l^.h.used_known := false;
+    l^.h.used_unknown := false;
+    l := l^.next;
+  end;
+end;
+
+{ ixt_$mark_primary_used_fields - x's instantiations whose segment is
+  gone deleted; the others' and the address modes' current segments
+  marked used (known or not, by the instantiation's segment's
+  increment).  0x23E7D8, 0x96 bytes, no A5. }
+
+procedure ixt_$mark_primary_used_fields(
+    x: iv_iexpr_ptr_t); options(val_param); internal;
+var
+  l, ln, t: iv_lts_ptr_t;
+  a, an: iv_addr_ptr_t;
+begin
+  l := x^.ltss;
+  while l <> nil do begin
+    ln := l^.next;
+    if not ixt_$induction_segment_exists(l) then begin
+      t := l;
+      iv_utils_$delete_induction_lts(t);
+    end
+    else if l^.h.known then
+      l^.cur^.h.used_known := true
+    else
+      l^.cur^.h.used_unknown := true;
+    l := ln;
+  end;
+  a := x^.addrs;
+  while a <> nil do begin
+    an := a^.next;
+    if a^.ilts^.h.known then
+      a^.ilts^.h.used_known := true
+    else
+      a^.ilts^.h.used_unknown := true;
+    a := an;
+  end;
+end;
+
+{ ixt_$count_primary_used_fields - v's segments used with a known
+  increment and (otherwise) with an unknown one.  0x23E86E, 0x48 bytes,
+  no A5. }
+
+procedure ixt_$count_primary_used_fields(
+    v: iv_var_ptr_t;
+    out n_known: integer32;
+    out n_unknown: integer32); options(val_param); internal;
+var
+  l: iv_lts_ptr_t;
+  a, b: integer32;
+begin
+  a := 0;
+  b := a;
+  l := v^.ltss;
+  while l <> nil do begin
+    if l^.h.used_known then
+      a := a + 1
+    else if l^.h.used_unknown then
+      b := b + 1;
+    l := l^.next;
+  end;
+  n_known := a;
+  n_unknown := b;
+end;
+
+{ ixt_$replace_segment_references - the readers of s (not writers or
+  modifiers) at which s's variable's current segment is s's own made
+  readers of t, through an exposed segment of t's live range (made
+  complex, t made final, a birthpoint added) when s is in another block;
+  each put after t's definition.  0x23E8B6, 0x148 bytes, no A5. }
+
+procedure ixt_$replace_segment_references(
+    s: lts_ptr_t;
+    t: lts_ptr_t); options(val_param); internal;
+var
+  l: iv_lts_ptr_t;
+  bb: bb_ptr_t;
+  o, nxt, x: opnd_ptr_t;
+  p, q: ^opnd_ptr_t;
+  u: lts_ptr_t;
+  created: boolean;
+begin
+  l := iv_lts_ptr_t(s^.l24);
+  bb := s^.bb;
+  if l = nil then
+    if s^.f2.exposed then
+      if s^.l44 <> nil then
+        l := iv_lts_ptr_t(lts_ptr_t(s^.l44)^.l24);
+  if l <> nil then
+    if l^.h.kind in [3, 4] then
+      l := l^.cur;
+  o := s^.refs;
+  p := addr(s^.refs);
+  while o <> nil do begin
+    nxt := o^.link;
+    if ((opnd_bytes_ptr_t(o)^.rrp & 16#2C) <> 0) or (l = nil) then
+      p := addr(o^.link)
+    else if ixr_$find_current_lts_for_iv(l^.ivar, o) <> l then
+      p := addr(o^.link)
+    else begin
+      p^ := o^.link;
+      if t^.bb = bb then
+        u := t
+      else begin
+        if t^.lr^.id = 0 then begin
+          bv_$make_live_range_complex(iv_rtn, t^.lr);
+          utils_$put_lts_on_final_list(t);
+        end;
+        u := utils_$get_exposed_lts(t^.lr, bb, created);
+        if created then
+          utils_$add_birthpoint(t, bb, true);
+      end;
+      q := addr(u^.refs);
+      x := u^.refs;
+      if x <> nil then
+        if (opnd_bytes_ptr_t(x)^.rrp & 12) <> 0 then begin
+          q := addr(x^.link);
+          x := x^.link;
+        end;
+      o^.lts := u;
+      o^.link := x;
+      q^ := o;
+    end;
+    o := nxt;
+  end;
+end;
+
+{ ixt_$create_increment_instruction - an instruction adding e (sub of
+  its negation, a move for 0) to src giving dst, in register file
+  rclass, put before at (past the joins and labels there) or after it
+  (past those after it); an operand that is not a register made in
+  code_bb.  0x23E9FE, 0x178 bytes, no A5: the opcode from iv_incr_opc
+  by sign and file; frame 8:a 12:w 14:l 18:w 20:l 24:w 26:a 30:b 32:l
+  36:l (32, the source's block, not read). }
+
+procedure ixt_$create_increment_instruction(
+    e: iv_expr_ptr_t;
+    rclass: integer;
+    src: lts_ptr_t;
+    src_rrp: integer;
+    dst: lts_ptr_t;
+    dst_rrp: integer;
+    at: instr_ptr_t;
+    after: boolean;
+    src_bb: bb_ptr_t;
+    code_bb: bb_ptr_t); options(val_param); internal;
+var
+  sign, n, k: integer32;
+  x, tmp: iv_expr_ptr_t;
+  i: instr_ptr_t;
+begin
+  if e^.kind = iv_neg then begin
+    sign := -1;
+    x := iv_utils_$duplicate_expression(e^.left);
+  end
+  else if (e^.kind = iv_value) and (e^.value < 0) then begin
+    sign := -1;
+    x := iv_utils_$create_value_expression(-e^.value);
+  end
+  else if iv_utils_$expression_is_zero(e) then begin
+    sign := 0;
+    x := iv_utils_$create_value_expression(sign);
+  end
+  else begin
+    sign := 1;
+    x := iv_utils_$duplicate_expression(e);
+  end;
+  if not after then begin
+    while at <> nil do begin
+      if not ((at^.opc = 203) or (at^.opc = 199)) then  { join_bp, label }
+        exit;
+      at := at^.next;
+    end;
+  end
+  else
+    while at^.next <> nil do begin
+      if not ((at^.next^.opc = 203) or (at^.next^.opc = 199)) then
+        exit;
+      at := at^.next;
+    end;
+  i := lir_$optimizer_new_instruction(at, iv_incr_opc[sign, rclass], after);
+  for k := 1 to i^.h.nopnds do
+    i^.opnds[k].h.num := k;
+  n := 1;
+  if (i^.opc = 79) or (i^.opc = 81) or (i^.opc = 138) or (i^.opc = 137) then begin
+    iv_utils_$create_operand_from_expression(addr(i^.opnds[1]), nil, code_bb,
+                                             x, rclass);
+    n := 2;
+  end;
+  add_operand_to_segment(addr(i^.opnds[n]), src, src_rrp, rclass);
+  add_operand_to_segment(addr(i^.opnds[n + 1]), dst, dst_rrp, rclass);
+  tmp := x;
+  iv_utils_$delete_expression(tmp);
+end;
+
+{ remove_segment_from_operand - register operand o taken off its
+  segment's references; a segment left unread (not exposed with a
+  successor list, l28, or a final reaching it) excised, or its defining
+  instruction when its definition has no readers left.  0x23EB76, 0x9C
+  bytes, no A5. }
+
+procedure remove_segment_from_operand(
+    o: opnd_ptr_t); options(val_param); internal;
+var
+  s: lts_ptr_t;
+  p: ^opnd_ptr_t;
+  x, d: opnd_ptr_t;
+begin
+  if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
+    s := o^.lts;
+    x := s^.refs;
+    p := addr(s^.refs);
+    while x <> o do begin
+      p := addr(x^.link);
+      x := x^.link;
+    end;
+    p^ := x^.link;
+    if not s^.f2.exposed then begin
+      if s^.l28 <> nil then
+        return;
+      if s^.l44 <> nil then
+        return;
+    end;
+    if s^.refs = nil then
+      utils_$excise_lts_cleanly(s, true)
+    else begin
+      d := s^.refs;
+      if d^.link = nil then
+        if (opnd_bytes_ptr_t(d)^.rrp & 12) <> 0 then
+          discard(utils_$excise_instruction_if_unconsumed(
+                      utils_ins_$operands_instruction(d), true));
+    end;
+  end;
+end;
+
+{ ixt_$replace_induction_expr - induction expression x's uses replaced
+  by e, a function of the primary variable: for an expression class,
+  its instantiations whose segment is gone dropped, a new segment made
+  next to each primary segment used (an increment instruction from the
+  primary's secondary, its instantiation recorded in repl; with e 0 the
+  secondary's own), and each live instantiation's readers moved to its
+  current segment's replacement (and the exposed segments it reaches in
+  the loop); for an address class, each mode's operand made a reader of
+  the replacement (through an exposed segment in its block) and its
+  base the value of e.  0x23EC12, 0x348 bytes, no A5. }
+
+procedure ixt_$replace_induction_expr(
+    x: iv_iexpr_ptr_t;
+    e: iv_expr_ptr_t); options(val_param); internal;
+var
+  v, pv: iv_var_ptr_t;
+  p: ^iv_lts_ptr_t;
+  l, pl, q, nl, ln: iv_lts_ptr_t;
+  zero, after, created: boolean;
+  s, t, u, y: lts_ptr_t;
+  d: opnd_ptr_t;
+  at: instr_ptr_t;
+  ix: iv_iexpr_ptr_t;
+  a, an: iv_addr_ptr_t;
+  bb: bb_ptr_t;
+begin
+  v := x^.class^.ivar;
+  pv := v;
+  if v^.parent <> nil then
+    pv := v^.parent;
+  case x^.class^.w16 of
+    1: begin
+      p := addr(x^.ltss);
+      l := x^.ltss;
+      while l <> nil do begin
+        if not ixt_$induction_segment_exists(l) then
+          p^ := l^.next
+        else
+          p := addr(l^.next);
+        l := l^.next;
+      end;
+      if x^.ltss = nil then
+        return;
+      zero := iv_utils_$expression_is_zero(e);
+      if not zero then begin
+        ixt_$clear_primary_used_fields(pv);
+        ixt_$mark_primary_used_fields(x);
+      end;
+      pl := pv^.ltss;
+      while pl <> nil do begin
+        if zero then
+          pl^.repl := pl^.sec
+        else if pl^.h.used_known or pl^.h.used_unknown then begin
+          q := pl^.sec;
+          s := q^.lts;
+          d := s^.refs;
+          if (opnd_bytes_ptr_t(d)^.rrp & 12) <> 0 then begin
+            at := utils_ins_$operands_instruction(d);
+            after := true;
+          end
+          else begin
+            at := s^.bb^.first;
+            while at <> nil do begin
+              if not ((at^.opc = 199) or (at^.opc = 203)) then  { label, join_bp }
+                exit;
+              at := at^.next;
+            end;
+            after := false;
+          end;
+          lir_utils_$add_lts_to_lr(8, lir_$new_live_range_for_kind(v^.f48.kind),
+                                   s^.bb, t);
+          ixt_$create_increment_instruction(e, v^.f48.kind, s, 16, t, 8, at,
+                                            after, s^.bb, v^.head^.l54);
+          ix := ixr_$find_induction_expr(pv, e, 1);
+          nl := create_induction_lts(4, t, v);
+          nl^.iexpr := ix;
+          nl^.next := ix^.ltss;
+          ix^.ltss := nl;
+          pl^.repl := nl;
+        end;
+        pl := pl^.next;
+      end;
+      l := x^.ltss;
+      while l <> nil do begin
+        ln := l^.next;
+        s := l^.lts;
+        if ixt_$induction_segment_exists(l) then
+          if not l^.h.stale then begin
+            t := l^.cur^.repl^.lts;
+            ixt_$replace_segment_references(s, t);
+            if not s^.f2.exposed then
+              if s^.l28 <> nil then begin
+                y := s^.l28;
+                while y <> nil do begin
+                  if interval_contains_bb(y^.bb, v^.head) then
+                    ixt_$replace_segment_references(y, t);
+                  y := y^.l28;
+                end;
+              end;
+          end;
+        l := ln;
+      end;
+    end;
+    2: begin
+      if x^.addrs = nil then
+        return;
+      l := pv^.ltss;
+      while l <> nil do begin
+        l^.repl := l^.sec;
+        l := l^.next;
+      end;
+      a := x^.addrs;
+      while a <> nil do begin
+        an := a^.next;
+        if not a^.stale then begin
+          t := a^.ilts^.repl^.lts;
+          bb := a^.instr^.bb;
+          remove_segment_from_operand(a^.opnd);
+          remove_segment_from_operand(a^.base);
+          if t^.bb = bb then
+            u := t
+          else begin
+            u := utils_$get_exposed_lts(t^.lr, bb, created);
+            if created then begin
+              utils_$add_birthpoint(t, bb, true);
+              if u^.f2.first_in_bb then
+                utils_$put_lts_on_final_list(u);
+            end;
+          end;
+          add_operand_to_segment(a^.opnd, u, 16, v^.f48.kind);
+          iv_utils_$create_operand_from_expression(a^.base, nil, iv_head^.l54,
+                                                   e, 1);
+          iv_utils_$delete_induction_addr(a);
+        end;
+        a := an;
+      end;
+    end;
+    otherwise
+      ;
   end;
 end;
