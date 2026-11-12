@@ -164,6 +164,7 @@ type
   lts_ptr_t = ^lts_t;
   rtn_ptr_t = ^rtn_t;
   cell_ptr_t = ^cell_t;
+  bb_edge_ptr_t = ^bb_edge_t;           { batch C }
 
   { An opcode's attributes (the section instruction_attributes, 20
     bytes by opcode, for opc$undefined..opc$adj_move).  Fields by
@@ -290,7 +291,12 @@ type
     b17_7, b17_6: boolean;              { +17 }
     b17_5: boolean;                     { .5 (xtp) }
     b17_4, b17_3, b17_2, b17_1, b17_0: boolean;
-    b18: 0..255;                        { +18 }
+    b18_7: boolean;                     { +18 }
+    b18_6: boolean;                     { .6 (tr_utils: the head of its
+                                          interval) }
+    b18_5: boolean;                     { .5 (tr_utils: of an interval
+                                          head) }
+    b18_4, b18_3, b18_2, b18_1, b18_0: boolean;
     b19_7, b19_6, b19_5: boolean;       { +19 }
     needs_label: boolean;               { .4 (zzzzz) }
     b19_3, b19_2, b19_1, b19_0: boolean;
@@ -303,14 +309,52 @@ type
     w12: integer;                       { +12 }
     w14: integer;                       { +14 }
     f: bb_flags_t;                      { +16 }
-    l20: integer32;                     { +20 }
-    l24: integer32;                     { +24 }
-    l28: integer32;                     { +28 }
+    f20: packed record                  { +20 }
+      b20_7: boolean;
+      b20_6: boolean;                   { .6 (tr_utils) }
+      b20_5, b20_4: boolean;
+      b20_3: boolean;                   { .3 (tr_utils) }
+      b20_2, b20_1, b20_0: boolean;
+      b21: 0..255;                      { +21 }
+      end;
+    l22: bb_edge_ptr_t;                 { +22: the edges out (their +4
+                                          the target, chained at +8:
+                                          tr_utils) }
+    l26: bb_edge_ptr_t;                 { +26: the edges in (their +0
+                                          the source, chained at +12:
+                                          tr_utils) }
+    w30: integer;                       { +30 }
     w32: integer;                       { +32 }
     first: instr_ptr_t;                 { +34 }
     last: instr_ptr_t;                  { +38 }
-    space42: array [42..117] of char;   { +42 }
+    space42: array [42..69] of char;    { +42 }
+    l70: bb_ptr_t;                      { +70: the head of its interval
+                                          (tr_utils' bb_interval) }
+    space74: array [74..85] of char;    { +74 }
+    l86: univ_ptr;                      { +86: a bit vector of live
+                                          ranges (tr_utils: of those
+                                          final in the block) }
+    l90: univ_ptr;                      { +90: a bit vector (tr_utils:
+                                          exposed) }
+    l94: univ_ptr;                      { +94: a bit vector (tr_utils:
+                                          exposed) }
+    space98: array [98..109] of char;   { +98 }
+    l110: univ_ptr;                     { +110: a bit vector (tr_utils:
+                                          written) }
+    space114: array [114..117] of char; { +114 }
     next: bb_ptr_t;                     { +118 }
+    space122: array [122..145] of char; { +122 }
+    l146: integer32;                    { +146: a visit mark
+                                          (tr_utils) }
+  end;
+
+  { batch C: a flow graph edge, on its source's list of edges out (+22)
+    and its target's of edges in (+26). }
+  bb_edge_t = record
+    source: bb_ptr_t;                   { +0 }
+    target: bb_ptr_t;                   { +4 (zzzzz) }
+    next_out: bb_edge_ptr_t;            { +8 }
+    next_in: bb_edge_ptr_t;             { +12 }
   end;
 
   { A lifetime segment: rrp (+0) its properties (xtp: an IPCCNOP's
@@ -321,16 +365,28 @@ type
   lts_t = record
     rrp: rrp$set_t;                     { +0 }
     f2: packed record                   { +2 }
-      b2: 0..255;
-      b3_7, b3_6, b3_5: boolean;
-      b3_4: boolean;                    { .4 (xtp) }
-      b3_3_0: 0..15;
+      b2: 0..255;                       { (tr_utils: its number in its
+                                          live range) }
+      b3_7: boolean;                    { .7 (tr_utils: on the block's
+                                          exposed list) }
+      b3_6: boolean;                    { .6 (tr_utils: set on one
+                                          segment of its live range in
+                                          each block) }
+      b3_5: boolean;
+      b3_4: boolean;                    { .4 (xtp; tr_utils: on the
+                                          block's final list) }
+      b3_3, b3_2, b3_1, b3_0: boolean;  { .2 (tr_utils: marked) }
       end;
     def: opnd_ptr_t;                    { +4 }
     next: lts_ptr_t;                    { +8 }
-    space12: array [12..39] of char;    { +12 }
+    bb: bb_ptr_t;                       { +12: its block }
+    space16: array [16..27] of char;    { +16 }
+    l28: lts_ptr_t;                     { +28 (tr_utils: chained from
+                                          l44's) }
+    space32: array [32..39] of char;    { +32 }
     l40: integer32;                     { +40 (dfa clears it) }
-    l44: integer32;                     { +44 }
+    l44: lts_ptr_t;                     { +44 (tr_utils: the final
+                                          segment it was merged after) }
     lr: lr_ptr_t;                       { +48 }
   end;
 
@@ -341,16 +397,41 @@ type
     segments. }
   lr_t = record
     rrp: rrp$set_t;                     { +0 }
-    w2: integer;                        { +2 }
-    l4: integer32;                      { +4 }
+    f2: packed record                   { +2 }
+      b2: 0..255;
+      b3_7: boolean;                    { .7 (tr_utils: its uses depend
+                                          on every instruction) }
+      b3_6, b3_5, b3_4, b3_3: boolean;
+      b3_2: boolean;                    { .2 (tr_utils: marked) }
+      b3_1, b3_0: boolean;
+      end;
+    w4: integer;                        { +4: its number (its bit in
+                                          the blocks' bit vectors; 0 for
+                                          none) }
+    w6: integer;                        { +6 }
     l8: integer32;                      { +8 }
     next: lr_ptr_t;                     { +12 }
-    l16: integer32;                     { +16 }
+    l16: lr_ptr_t;                      { +16: its mate (tr_utils_$merge_lrs
+                                          merges the mates too) }
     l20: integer32;                     { +20 }
     sym: univ_ptr;                      { +24 }
     l28: integer32;                     { +28 }
     l32: integer32;                     { +32 }
     ltss: lts_ptr_t;                    { +36 }
+    l40: integer32;                     { +40 (tr_utils: a serial
+                                          number) }
+    l44: integer32;                     { +44 }
+    l48: integer32;                     { +48 }
+    l52: lr_ptr_t;                      { +52 (tr_utils: the marked
+                                          live ranges' chain) }
+    w56: integer;                       { +56: its segments' count }
+    w58: integer;                       { +58 }
+    l60: integer32;                     { +60 }
+    l64: integer32;                     { +64 }
+    l68: integer32;                     { +68 }
+    l72: integer32;                     { +72 (tr_utils_$merge_lrs
+                                          clears it) }
+    l76: integer32;                     { +76 (likewise) }
   end;
 
   { A routine being compiled: what at_backend's phases are passed.
@@ -371,8 +452,18 @@ type
     epilogues: cell_ptr_t;              { +92 }
     space96: array [96..111] of char;   { +96 }
     l112: lts_ptr_t;                    { +112 }
-    space116: array [116..191] of char; { +116 }
+    space116: array [116..179] of char; { +116 }
+    l180: integer32;                    { +180: a serial number
+                                          (tr_utils_$mark_dependents
+                                          counts it up) }
+    space184: array [184..191] of char; { +184 }
     l192: integer32;                    { +192 }
+    space196: array [196..227] of char; { +196 }
+    f228: packed record                 { +228 }
+      b228_7, b228_6, b228_5, b228_4, b228_3: boolean;
+      b228_2: boolean;                  { .2 (tr_utils) }
+      b228_1, b228_0: boolean;
+      end;
   end;
 
   { A code cell (zzzzz): what bin, lst and asm emit, 20 bytes and 12
@@ -419,6 +510,20 @@ type
     sw3: boolean;                       { .3 (dfa) }
     level: 0..7;                        { .2..0 }
   end;
+
+{ batch C (tr_utils, mmt, mmt_utils, trans, com, iv, oli): }
+type
+  { An operand's first longword as four bytes: rrp (+1) is the low byte
+    of its rrp$set_t (opnd_hdr_t's booleans), stored and masked whole
+    by the optimizer (tr_utils: 8 write, 16 read, 12 write or modify). }
+  opnd_bytes_ptr_t = ^opnd_bytes_t;
+  opnd_bytes_t = packed record
+    num: 0..255;                        { +0 }
+    rrp: 0..255;                        { +1 }
+    b2: 0..255;                         { +2 }
+    b3: 0..255;                         { +3 }
+  end;
+{ end batch C }
 
 { The named sections of the opcode and operand tables (DSEE
   initializers: instr_attributes.init in lir.pas, instr_mnemonic.init and
@@ -1179,11 +1284,11 @@ function lir_$new_lifetime_segment(
 function lir_$new_live_range: univ_ptr; extern;
 
 { LIR_$NEW_LIVE_RANGE_IP_REG - 0x243ACC, 0x20 bytes; called from com
-  isc_user_routines life lir_utils oli ra_utils tr_utils.  Frame 8:l;
-  12:a.  Result: read (callers: A015). }
-function lir_$new_live_range_ip_reg(
-    p1: integer32;
-    p2: univ_ptr): univ_ptr; options(val_param); extern;
+  isc_user_routines life lir_utils oli ra_utils tr_utils.  No
+  parameters (the body reads none: lir_$alloc_live_range, rrp 16#8000;
+  the frame read off a caller was another call's arguments,
+  docs/rev889-patterns.md 63).  Result: read (callers: A015). }
+function lir_$new_live_range_ip_reg: univ_ptr; extern;
 
 { LIR_$NEW_LIVE_RANGE_FP_REG - 0x243AEC, 0x20 bytes; called from com
   isc_cse_handling isc_to_lir isc_user_routines life lir_utils oli
@@ -1459,12 +1564,16 @@ function lir_utils_$create_preference_move(
     p3: integer): univ_ptr; options(val_param); extern;
 
 { LIR_UTILS_$ADD_LTS_TO_LR - 0x24C24A, 0x5E bytes; called from com iv mmt
-  mmt_utils ra_utils tr_utils.  Frame 8:w; 10:al; 14:l; 18:a. }
+  mmt_utils ra_utils tr_utils.  Frame 8:w; 10:al; 14:l; 18:a: a new
+  segment of lr (mrh_$alloc_fixed from lir_utils' heap), first on its
+  list (+36), lr's count (+56) up; its rrp the given bits and lr's
+  (16#C003), +2 lr's +57, +12 bb, +48 lr; lr's rrp gets the bits; the
+  segment stored through lts (tr_utils' reading). }
 procedure lir_utils_$add_lts_to_lr(
-    p1: integer;
-    p2: univ_ptr;
-    p3: integer32;
-    p4: univ_ptr); options(val_param); extern;
+    rrp: integer;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t;
+    out lts: lts_ptr_t); options(val_param); extern;
 
 { LIR_UTILS_$ADD_LTS_AFTER_LTS - 0x24C2A8, 0x6A bytes; called from iv
   mmt_utils tr_utils xtp.  Frame 8:al; 12:w; 14:l.  Result: D0 (callers:
@@ -1985,23 +2094,23 @@ procedure tr_utils_$end_compilation; extern;
 { TR_UTILS_$RELATIVE_INSTR_POSITION - 0x27C51E, 0xBC bytes; called from
   life.  Frame 8:al; 12:al.  Result: D0 (callers: D0l8). }
 function tr_utils_$relative_instr_position(
-    p1: univ_ptr;
-    p2: univ_ptr): integer32; options(val_param); extern;
+    a: instr_ptr_t;
+    b: instr_ptr_t): integer32; options(val_param); extern;
 
 { TR_UTILS_$MERGE_LRS - 0x27CC5E, 0x23A bytes; called from trans.  Frame
   8:al; 12:al; 16:l; 20:b; 22:b. }
 procedure tr_utils_$merge_lrs(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: integer32;
-    p4: boolean;
-    p5: boolean); options(val_param); extern;
+    lr: lr_ptr_t;
+    src: lr_ptr_t;
+    bb: bb_ptr_t;
+    with_mates: boolean;
+    set_bits: boolean); options(val_param); extern;
 
 { TR_UTILS_$ATTEMPT_COPY_ELIMINATION - 0x27D5EE, 0xD0 bytes; called from
   com iv trans.  Frame 8:l; 12:al. }
 procedure tr_utils_$attempt_copy_elimination(
-    p1: integer32;
-    p2: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    instr: instr_ptr_t); options(val_param); extern;
 
 { TR_UTILS_$TRY_TWIDDLING_DISP - 0x27E4F0, 0x42C bytes; called from trans.
   Frame 8:al; 12:l; 16:bl; 18:b.  Result: D0 (callers: D0b2). }

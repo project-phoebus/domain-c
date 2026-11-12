@@ -48,7 +48,7 @@ procedure utils_$end_compilation; extern;
   read (callers: D01). }
 function utils_$excise_instruction_cleanly(
     p1: univ_ptr;
-    p2: integer): integer32; options(val_param); extern;
+    p2: boolean): integer32; options(val_param); extern;
 
 { UTILS_$EXCISE_INSTRUCTION_IF_UNCONSUMED - 0x284B90, 0x7E bytes; called
   from iv.  Frame 8:a; 12:b.  Result: D0 (callers: D0b1). }
@@ -76,7 +76,7 @@ procedure utils_$remove_lts_from_final_list(
   fg_utils iv sanity tr_utils trans.  Frame 8:al; 12:bw. }
 procedure utils_$excise_lts_cleanly(
     p1: univ_ptr;
-    p2: integer); options(val_param); extern;
+    p2: boolean); options(val_param); extern;
 
 { UTILS_$MAYBE_MERGE_SOURCE_STATEMENTS - 0x285110, 0x10E bytes; called
   from tr_utils trans.  Frame 8:al; 12:al. }
@@ -125,11 +125,12 @@ procedure utils_$put_lts_on_final_list(
 
 { UTILS_$FIND_LAST_LTS_IN_BB - 0x285714, 0xAA bytes; called from com
   fg_utils iv tr_utils trans.  Frame 8:al; 12:al; 16:a.  Result: A0
-  (callers: A010). }
+  (callers: A010).  lr's last segment in bb; the one before it through
+  prev (tr_utils' reading of its calls). }
 function utils_$find_last_lts_in_bb(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr): univ_ptr; options(val_param); extern;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t;
+    out prev: lts_ptr_t): lts_ptr_t; options(val_param); extern;
 
 { UTILS_$GET_NEW_LTS - 0x2857BE, 0xDA bytes; called from com ra_utils
   tr_utils trans.  Frame 8:al; 12:al; 16:bw.  Result: A0 (callers: A09). }

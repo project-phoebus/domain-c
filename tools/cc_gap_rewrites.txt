@@ -588,3 +588,9 @@ lang/lang/source/opt_inline.pas	s/x\^\.kind in \[109, 110, 111, 163, 195\]/((x^.
 lang/lang/source/opt_inline.pas	s/ed\^\.callee\^\.kind in \[105\.\.108, 172, 209\]/(((ed^.callee^.kind >= 105) and (ed^.callee^.kind <= 108)) or (ed^.callee^.kind = 172) or (ed^.callee^.kind = 209)) { gap 8 }/
 # gap 2 (zzzzz): a case of 5 labels over a range of 15 (the empty labels added, for the check)
 lang2/source/be_com/zzzzz.pas	s/^(\s*)75:(\s*)\{ move \}$/${1}76, 77, 78, 80, 82, 83, 84, 85, 86, 87: ; { gap 2 }\n${1}75:${2}{ move }/
+# gap 11 (tr_utils, translator PC): nil as a pointer function's last result (another operand, for the check)
+lang2/source/be_com/tr_utils.pas	s/^(\s*)(index|base)_operand := nil;/$1$2_operand := addr(instr^.opnds[4]); { gap 11 }/
+# gap 15 (tr_utils): a pointer result assigned from a parameter (the other arm's, for the check)
+lang2/source/be_com/tr_utils.pas	s/^(\s*)bb_interval := bb$/$1bb_interval := bb^.l70 { gap 15 }/
+# gap 12 (tr_utils): a pointer function's result compared with a variable (two variables, for the check)
+lang2/source/be_com/tr_utils.pas	s/if bb_interval\(bb\) <> tr_24 then/if tr_28 <> tr_24 then { gap 12 }/
