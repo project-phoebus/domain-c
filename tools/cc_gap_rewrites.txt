@@ -304,3 +304,5 @@ lang2/source/isc/isc_types.ins.pas	s/^var \((isc_readonly_tables)\)/var (${1}_s)
 # gap 25 (isc_pattern_matcher, translator GB): pattern_matcher (0x7944 bytes, 683 tries) exhausts dpc's virtual registers; the check leaves out the IL operators' arms from and_to_aop on (more values live at once than dpc has registers, docs/dpc-gaps.md 25) (a conditional variable that is not set)
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pattern_matcher.pas	s/^(        il_and_to_aop: begin)$/%var gap25pm;\n%if gap25pm %then { gap 25 }\n$1/
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pattern_matcher.pas	s/^(        otherwise)$/%endif { gap 25 }\n$1/
+# gap 4 (isc_pass_1_main): write and writeln (dropped, for the check)
+moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_main.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/

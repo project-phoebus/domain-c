@@ -20,3 +20,4 @@ lang2/source/be_com/ra.pas	a88k	+0x590-+0x5A0	ra_masks: dpc lays them after the 
 lang2/source/be_com/ra_utils.pas	a88k	+0x0-+0x10	the spill classes' kinds: dpc lays them after the defined cells (all present)
 lang/lang/source/cg_tree.pas	m68k	+0x1A0-+0x1B4	cg_null_ads: a defined cell, laid out after the own ones by dpc (all present)
 lang2/source/be_com/lir.pas	a88k	+0x170-+0x1DC	build_message: pointers to the message strings, which the image places before A5 and dpc after the cells (the strings all present; rev889-patterns 159)
+moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_main.pas	a88k	+0x720-+0x30BA0	the 25 pass-1 action modules' data (A5 0x44F308 .. 0x479960: their cost tables), between this unit's block and isc_pass_2_main's; no .blocks unit (docs/iscg-design.md 1.2)

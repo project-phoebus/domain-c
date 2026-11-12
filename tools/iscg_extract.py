@@ -48,6 +48,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import cc_isc_inventory as inv  # noqa: E402
+import iscg_pass1  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 RULES_DIR = os.path.join(ROOT, 'moon_unit', 'isc_prism_dervobjs', 'dseeaggs', 'iscg_input',
@@ -414,7 +415,36 @@ def operators(im):
         list(pool.map(lambda r: inv.analyze(im, r, r.start + r.length), rs))
     if not any(r.name == 'pass_1' for r in rs):
         rs.append(named_routine(im, 'pass_1'))
-    return inv.decode_il_routines(im, rs)
+    ops = inv.decode_il_routines(im, rs)
+    pass1_operators(im, rs, ops)
+    return ops
+
+
+def pass1_operators(im, rs, ops):
+    """isc_pass_1_main's operator routines lifted to the rule file's
+    statements (tools/iscg_pass1.py), each pass_1 call's child position,
+    and the dispatch tables isc_pass_1_begin_compilation fills, checked
+    against the routines' names."""
+    by = {r.name: r for r in rs}
+    pass1 = by['pass_1'].start
+    for d in ops:
+        r = by[d['name']]
+        d['lifted'], d['why'] = iscg_pass1.lift_routine(r.insns, im.names, pass1)
+        d['positions'] = iscg_pass1.call_positions(r.insns, pass1)
+        if d['lifted'] and (d['lifted']['w98'] != d['w98'] or
+                            d['lifted']['nchildren'] != d['nchildren']):
+            raise Fail('%s: lifted il$t/children differ' % d['name'])
+    # the dispatch tables: A5 offset -> routine, from the stores
+    names = {r.start: r.name for r in rs}
+    have = {}
+    for a, n, t, h in by['isc_pass_1_begin_compilation'].insns:
+        m = re.match(r'movel #(\d+),%a5@(?:\((\d+)\))?$', t)
+        if m:
+            have[int(m.group(2) or 0)] = names.get(int(m.group(1)))
+    want = iscg_pass1.dispatch_entries([d['name'] for d in ops])
+    if want != have:
+        bad = sorted(set(want.items()) ^ set(have.items()))[:6]
+        raise Fail('isc_pass_1_begin_compilation\'s tables are not the names\' (%s)' % bad)
 
 
 def attribute_type(off, acc):
@@ -531,27 +561,11 @@ def write_rules(x, out):
             for path, f, op, val in guard:
                 if len(path) == 1 and f == 108:
                     unions[v][path[0]] |= (1 << val) if op == '=' else val
-    lines.append('{ The operators: isc_pass_1_main\'s routine for each, the il$t it')
-    lines.append('  gives the proper_subtree, the number of children and the permissible')
-    lines.append('  set of each pass_1 call in order (derived: the union of the kinds')
-    lines.append('  the patterns test at that position; inherited: the routine\'s own;')
-    lines.append('  -np: less not_permissible_function\'s). }')
-    for d in [d for d in x['operators'] if d['w98'] is not None]:
-        w98 = d['w98']
-        il = op_name(ils, w98) if w98 is not None and w98 in ils else None
-        calls = []
-        for pos, (mask, np) in enumerate(d['pass_1_calls'], 1):
-            if mask == 'inherited':
-                s = 'inherited'
-            elif il is not None and unions.get(w98, {}).get(pos) == mask:
-                s = 'derived'
-            else:
-                s = '[' + ', '.join(kinds_of_mask(mask)) + ']'
-            calls.append(s + (' -np' if np else ''))
-        lines.append('operator %s%s%s%s;' % (
-            d['name'], ' il %s' % il if il else '',
-            ' children %d' % d['nchildren'] if d['nchildren'] is not None else '',
-            ('\n  pass_1 ' + ', '.join(calls)) if calls else ''))
+    lines.extend(iscg_pass1.OPERATORS_COMMENT)
+    for d in [d for d in x['operators'] if d['name'] != 'isc_pass_1_begin_compilation']:
+        lines.append(iscg_pass1.format_operator(
+            d, d.get('lifted'), d.get('positions', []), unions.get(d['w98'], {}),
+            ils, KINDS, lambda v: op_name(ils, v)))
     lines.append('')
     lines.append('{ The opcode maps: by il$t, the opcode of the operation (isc_tool_')
     lines.append('  generated_readonly_tables after the result kinds, 178 words each). }')

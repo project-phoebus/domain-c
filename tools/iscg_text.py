@@ -577,3 +577,459 @@ VARS_HEAD = '''{ isc_vars - the ISC's read-only tables (a DSEE derived object of
   Not known from the original: the tables' structure inside
   isc_readonly_tables (written as words), the opcode maps' names. }
 module isc_vars;'''
+
+
+# --------------------------------------------------------------------------
+# isc_pass_1_main (translator GD; tools/iscg_pass1.py generates the rest)
+
+P1_HEAD = '''{ isc_pass_1_main - the ISC's pass 1 (a DSEE derived object of the
+  iscg_input description; cc.a88k only): pass_1 finds the solutions of
+  an IL node under its inherited attributes: the node's routine
+  (isc_<kind>[_<operator>], by the tables isc_pass_1_begin_compilation
+  fills) runs pass_1 on each child with inherited attributes and a
+  permissible set of its own and gives the il$t of the node's
+  proper_subtree; pass_1 makes a proper_subtree for each combination
+  of the children's solutions and cross_product_to_solutions_of_parent
+  runs pattern_matcher on each (the work list) until none is left.  A
+  reference node (a CSE) keeps its chosen solution, preserved, at +12.
+
+''' + GEN_NOTE + '''
+
+  Image addresses (DOMAIN C 6.9; cc.a88k only):
+    cc.m68k   cc.a88k
+@ADDRESSES@
+  A5 0x44EBE8: the module's data, the four dispatch tables (+0 by tree
+  operator, +360 by comparison, +720 by assignment operator, +872 by IL
+  node kind); (-4,A5) is the run time's output.  The span after
+  isc_unrecognized_il_node (0x0DB778 .. 0x0DC990) is its strings and
+  the name tables of the three enumerations it writes.
+
+  Every operator routine has the frame of the type p1_operator_t
+  (node 8, inh 12, depth 16 a word, permissible 18, then the six var
+  results' addresses at 22 .. 42) and clears solutions_made and
+  no_solutions, then sets il_kind and number_of_children, in that order.
+  A child's block: new_inherited_attributes for the child's node, the
+  default attributes copied from the node's (alphabetical:
+  call_instruction_ptr, exception_frame, fetch_precision, inside_a_cse,
+  original_il, required_arithmetic, required_precision and, as one
+  longword with it, source_line_number and stmt_number), the operator's
+  statements, the permissible set (a constant in a local, or less
+  not_permissible_function's), pass_1 with depth + 1 and the test of
+  its list (a child without solutions: no_solutions, and the rest is
+  skipped; Rev 8.89 shares the one `st' of no_solutions).
+
+  The writes are dpc gap 4 (docs/dpc-gaps.md 4).
+@TODO@
+  Not known from the original: the parameters' and locals' names, the
+  module data's names. }
+module isc_pass_1_main;'''
+
+P1_TYPES = '''type
+  { The results an operator routine gives pass_1: the list of each
+    child's solutions. }
+  p1_children_t = array [1..5] of solution_list_ptr_t;
+
+  { An operator routine (the dispatch tables' entries): the node il
+    under inh at depth, its kinds permissible; il_kind the il$t of its
+    proper_subtree, number_of_children and children its children's
+    solutions; solutions_made when the routine made the node's solutions
+    itself (solutions), no_solutions when a child has none. }
+  p1_operator_t = ^procedure(
+      il: univ_ptr;
+      inh: inherited_attributes_ptr_t;
+      depth: integer;
+      permissible: solution$set_t;
+      var il_kind: integer;
+      var number_of_children: integer32;
+      var solutions: solution_list_ptr_t;
+      var children: p1_children_t;
+      var solutions_made: boolean;
+      var no_solutions: boolean); options(val_param);
+
+  { A node's bytes and their bits (bit 7 first), for the flags the
+    operators read. }
+  p1_bits_t = packed record
+    b7, b6, b5, b4, b3, b2, b1, b0: boolean;
+  end;
+  p1_node_bytes_ptr_t = ^p1_node_bytes_t;
+  p1_node_bytes_t = array [0..379] of p1_bits_t;
+
+  { The inherited attributes' byte at +36 (parent_il_kind, an il$t). }
+  p1_inh_view_ptr_t = ^p1_inh_view_t;
+  p1_inh_view_t = record
+    x0: array [0..35] of char;          { +0 }
+    parent_il_kind: 0..255;             { +36 }
+  end;
+
+  { isc_readonly_tables at +0x140: by rlen, its arith$t (a word each). }
+  p1_readonly_view_ptr_t = ^p1_readonly_view_t;
+  p1_readonly_view_t = record
+    x0: array [0..319] of char;         { +0 }
+    rlen_arith: array [0..25] of integer;   { +0x140 }
+  end;
+
+  { The IL node kinds, tree and assignment operators, as the image
+    names them (isc_unrecognized_il_node writes them: the name tables
+    at 0x0DB7E6, 0x0DC290, 0x0DC7B0; isc_user_routines' an_kind_t,
+    ur_top_t and ur_aop_t). }
+@ENUMS@
+
+{ Routines of other units the operator routines call that no insert
+  declares. }
+procedure pattern_matcher(
+    solution: isc_solution_ptr_t;
+    work_list: solution_list_ptr_t;
+    solutions_of_parent: solution_list_ptr_t;
+    il: univ_ptr;
+    inh: inherited_attributes_ptr_t;
+    permissible: solution$set_t); options(val_param); extern;
+
+procedure rewrite_$check_for_case_statement(
+    stmt: univ_ptr); options(val_param); extern;'''
+
+P1_DATA = '''var
+  { The dispatch tables (isc_pass_1_begin_compilation fills them; any
+    entry no routine handles is isc_unrecognized_il_node). }
+  p1_tree_op: array [0..89] of p1_operator_t;      { +0: by tree operator }
+  p1_cmp_op: array [0..89] of p1_operator_t;       { +360: by comparison }
+  p1_assign_op: array [0..37] of p1_operator_t;    { +720: by assignment
+                                                     operator }
+  p1_kind: array [0..236] of p1_operator_t;        { +872: by IL node kind }'''
+
+CROSS_PRODUCT = '''{ cross_product_to_solutions_of_parent - the solutions of the node il
+  (whose proper_subtrees are on work_list): pattern_matcher on each
+  solution of the work list, taken from its head, until it is empty
+  (pattern_matcher appends the chain rules' solutions to it), the
+  results collected in a new list.
+
+  0x0DB4B4, 0x68 bytes: il 8, inh 12, permissible 16, il_kind 20 and
+  number_of_children 22 (words; not read), work_list 24; A3 work_list,
+  A2 the result; the head's solution at -4.
+
+  Not known from the original: the locals' names. }
+
+function cross_product_to_solutions_of_parent(
+    il: univ_ptr;
+    inh: inherited_attributes_ptr_t;
+    permissible: solution$set_t;
+    il_kind: integer;
+    number_of_children: integer;
+    work_list: solution_list_ptr_t): solution_list_ptr_t; options(val_param);
+var
+  solutions_of_parent: solution_list_ptr_t;
+  solution: isc_solution_ptr_t;
+begin
+  solutions_of_parent := solution_list$new;
+  while not solution_list$empty(work_list) do begin
+    solution := work_list^.first^.sol;
+    work_list^.first := work_list^.first^.next;
+    pattern_matcher(solution, work_list, solutions_of_parent, il, inh, permissible);
+  end;
+  cross_product_to_solutions_of_parent := solutions_of_parent;
+end;'''
+
+UNRECOGNIZED_IL_NODE = '''{ isc_unrecognized_il_node - the routine of every IL node kind and
+  operator pass 1 does not handle: the node's kind (an assignment's,
+  comparison's or tree's operator) written between rows of stars; a
+  message under the traces, else bug_check.
+
+  0x0DB51C, 0x25C bytes: an operator routine (p1_operator_t); A3 il, A2
+  inh.  The kinds tested in the order 140, 143, 137 (assign_node,
+  cmp_tree_node, tree_node; a comparison's operator is written with the
+  tree operators' names).
+
+  Not known from the original: the parameters' names. }
+
+procedure isc_unrecognized_il_node(
+    il: univ_ptr;
+    inh: inherited_attributes_ptr_t;
+    depth: integer;
+    permissible: solution$set_t;
+    var il_kind: integer;
+    var number_of_children: integer32;
+    var solutions: solution_list_ptr_t;
+    var children: p1_children_t;
+    var solutions_made: boolean;
+    var no_solutions: boolean); options(val_param);
+begin
+  write('*******************************************************');
+  writeln;
+  case isc_node_ptr_t(il)^.kind of
+    140:
+      write('ISC: The unsupported IL node kind is: ', p1_aop_t(isc_node_ptr_t(il)^.as_op), '.');
+    143:
+      write('ISC: The unsupported IL node kind is: ', p1_top_t(isc_node_ptr_t(il)^.tr_op), '.');
+    137:
+      write('ISC: The unsupported IL node kind is: ', p1_top_t(isc_node_ptr_t(il)^.tr_op), '.');
+    otherwise
+      write('ISC: The unsupported IL node kind is: ', an_kind_t(isc_node_ptr_t(il)^.kind), '.');
+  end;
+  writeln;
+  write('*******************************************************');
+  writeln;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('ISC: source line ', inh^.pos.line:1, ': pass_1: This IL node kind is currently unsupported.');
+    writeln;
+  end
+  else
+    bug_check('ISC: source line %wd: pass_1: This IL node kind is currently unsupported.%$',
+              inh^.pos.line);
+end;'''
+
+# isc_tree_node, isc_cmp_tree_node, isc_assign_node: the dispatch on the
+# operator (@NAME@, @TABLE@, @FIELD@, @ADDR@, @LEN@, @OFF@)
+DISPATCH = '''{ @NAME@ - the routine of a@WHAT@ node: its operator's
+  (@FIELD@, +@OFF@) from @TABLE@, with the same arguments.
+
+  @ADDR@, @LEN@ bytes: an operator routine (p1_operator_t); every
+  argument passed on as it came.
+
+  Not known from the original: the parameters' names. }
+
+procedure @NAME@(
+    il: univ_ptr;
+    inh: inherited_attributes_ptr_t;
+    depth: integer;
+    permissible: solution$set_t;
+    var il_kind: integer;
+    var number_of_children: integer32;
+    var solutions: solution_list_ptr_t;
+    var children: p1_children_t;
+    var solutions_made: boolean;
+    var no_solutions: boolean); options(val_param);
+begin
+  @TABLE@[isc_node_ptr_t(il)^.@FIELD@]^(il, inh, depth, permissible, il_kind,
+      number_of_children, solutions, children, solutions_made, no_solutions);
+end;'''
+
+BEGIN_COMPILATION_HEAD = '''{ isc_pass_1_begin_compilation - the dispatch tables filled (heading in
+  isc.pvt.pas): every entry isc_unrecognized_il_node, then each
+  operator's routine; generated from the operator declarations, in
+  their order, each table's defaults just before its first routine.
+
+  0x0EFE96, 0x626 bytes: the loops with D1 the index, A0
+  isc_unrecognized_il_node's address.
+
+  Not known from the original: the locals' names. }
+
+procedure isc_pass_1_begin_compilation;
+var
+  i: integer;
+begin'''
+
+PASS_1 = '''{ pass_1 - the solutions of node under inh whose kinds are among
+  permissible (heading in isc.pvt.pas): for a reference node (a CSE:
+  isc_user_routines_9c by kind, bit 22 of +4) that has its solution
+  (+12) a list of that one; otherwise the node's routine (p1_kind by its
+  kind) and, unless it made the list itself or a child has no solutions
+  (then an empty list), a proper_subtree (kind 22) for each combination
+  of the children's solutions, given to cross_product_to_solutions_of_
+  parent; no solutions at all is a bug (the tree written under the
+  traces or sw14); a reference node without its solution gets the one
+  choose_one_cse_solution picks (builtin_is_local_cse set), preserved,
+  and the list of that one.  A nil node is a bug.
+
+  0x0F04BC, 0x646 bytes: node 8 (D4), inh 12 (D3), depth 16, permissible
+  18; the routine's results at -66 il_kind, -56 number_of_children (D2
+  after the call), -52 solutions, -24 children, -72 solutions_made, -74
+  no_solutions; -60 the proper_subtrees' list; -48 .. -32 the
+  combination's cells (child 1 .. 5); -64 a new solution.  new_solution's
+  kind and number of children are pushed as one longword
+  (`move.l #16#160002,-(sp)').  The cases of number_of_children are a
+  compare chain 0 .. 4, the fifth the rest; the loops' tests are at
+  their ends (Rev 8.89).  The nil node's and the empty list's bug_check
+  share the call and the empty list at the end (cross-jumping).
+
+  Not known from the original: the locals' names. }
+
+function pass_1;
+var
+  il_kind: integer;
+  number_of_children: integer32;
+  solutions: solution_list_ptr_t;
+  children: p1_children_t;
+  solutions_made: boolean;
+  no_solutions: boolean;
+  subtrees: solution_list_ptr_t;
+  s: isc_solution_ptr_t;
+  c1, c2, c3, c4, c5: solution_cell_ptr_t;
+  list: solution_list_ptr_t;
+begin
+  isc_user_routines_300 := isc_user_routines_300 + 1;
+  if isc_user_routines_356 then begin
+    write('Entering pass_1:');
+    writeln;
+    write('Permissible solution kinds = ');
+    print_permissible_solution_kinds(permissible);
+    write('.');
+    writeln;
+    isc_print_il_node(node, inh, 0);
+    writeln;
+  end;
+  if node = nil then begin
+    bug_check('ISC: source line %wd: pass_1: NIL seen where IL node was expected.%$',
+              inh^.pos.line);
+    pass_1 := solution_list$new;
+    return;
+  end;
+  if isc_user_routines_9c[isc_node_ptr_t(node)^.kind] and
+     ((isc_node_ptr_t(node)^.xl[1] & 16#400000) <> 0) and
+     (isc_node_ptr_t(node)^.xp[3] <> nil) then begin
+    s := isc_solution_ptr_t(isc_node_ptr_t(node)^.xp[3]);
+    list := solution_list$new;
+    solution_list$append(list, s);
+  end
+  else begin
+    p1_kind[isc_node_ptr_t(node)^.kind]^(node, inh, depth, permissible, il_kind,
+        number_of_children, solutions, children, solutions_made, no_solutions);
+    if solutions_made then
+      list := solutions
+    else if no_solutions then begin
+      pass_1 := solution_list$new;
+      return;
+    end
+    else begin
+      subtrees := solution_list$new;
+      case number_of_children of
+        0: begin
+          s := new_solution(isc_heap, ord(solution$proper_subtree), 0, inh, node, il_kind);
+          solution_list$append(subtrees, s);
+          end;
+        1: begin
+          c1 := children[1]^.first;
+          while c1 <> nil do begin
+            s := new_solution(isc_heap, ord(solution$proper_subtree), 1, inh, node, il_kind);
+            s^.children[1] := c1^.sol;
+            solution_list$append(subtrees, s);
+            c1 := c1^.next;
+          end;
+          end;
+        2: begin
+          c1 := children[1]^.first;
+          while c1 <> nil do begin
+            c2 := children[2]^.first;
+            while c2 <> nil do begin
+              s := new_solution(isc_heap, ord(solution$proper_subtree), 2, inh, node, il_kind);
+              s^.children[1] := c1^.sol;
+              s^.children[2] := c2^.sol;
+              solution_list$append(subtrees, s);
+              c2 := c2^.next;
+            end;
+            c1 := c1^.next;
+          end;
+          end;
+        3: begin
+          c1 := children[1]^.first;
+          while c1 <> nil do begin
+            c2 := children[2]^.first;
+            while c2 <> nil do begin
+              c3 := children[3]^.first;
+              while c3 <> nil do begin
+                s := new_solution(isc_heap, ord(solution$proper_subtree), 3, inh, node,
+                                  il_kind);
+                s^.children[1] := c1^.sol;
+                s^.children[2] := c2^.sol;
+                s^.children[3] := c3^.sol;
+                solution_list$append(subtrees, s);
+                c3 := c3^.next;
+              end;
+              c2 := c2^.next;
+            end;
+            c1 := c1^.next;
+          end;
+          end;
+        4: begin
+          c1 := children[1]^.first;
+          while c1 <> nil do begin
+            c2 := children[2]^.first;
+            while c2 <> nil do begin
+              c3 := children[3]^.first;
+              while c3 <> nil do begin
+                c4 := children[4]^.first;
+                while c4 <> nil do begin
+                  s := new_solution(isc_heap, ord(solution$proper_subtree), 4, inh, node,
+                                    il_kind);
+                  s^.children[1] := c1^.sol;
+                  s^.children[2] := c2^.sol;
+                  s^.children[3] := c3^.sol;
+                  s^.children[4] := c4^.sol;
+                  solution_list$append(subtrees, s);
+                  c4 := c4^.next;
+                end;
+                c3 := c3^.next;
+              end;
+              c2 := c2^.next;
+            end;
+            c1 := c1^.next;
+          end;
+          end;
+        otherwise begin
+          c1 := children[1]^.first;
+          while c1 <> nil do begin
+            c2 := children[2]^.first;
+            while c2 <> nil do begin
+              c3 := children[3]^.first;
+              while c3 <> nil do begin
+                c4 := children[4]^.first;
+                while c4 <> nil do begin
+                  c5 := children[5]^.first;
+                  while c5 <> nil do begin
+                    s := new_solution(isc_heap, ord(solution$proper_subtree), 5, inh, node,
+                                      il_kind);
+                    s^.children[1] := c1^.sol;
+                    s^.children[2] := c2^.sol;
+                    s^.children[3] := c3^.sol;
+                    s^.children[4] := c4^.sol;
+                    s^.children[5] := c5^.sol;
+                    solution_list$append(subtrees, s);
+                    c5 := c5^.next;
+                  end;
+                  c4 := c4^.next;
+                end;
+                c3 := c3^.next;
+              end;
+              c2 := c2^.next;
+            end;
+            c1 := c1^.next;
+          end;
+          end;
+      end;
+      list := cross_product_to_solutions_of_parent(node, inh, permissible, il_kind,
+                                                   number_of_children, subtrees);
+    end;
+  end;
+  if solution_list$empty(list) then begin
+    if isc_user_routines_354 or isc_user_routines_356 or at_backend_switches.sw14 then begin
+      write('*******************************************************************');
+      writeln;
+      write('ISC: This is the tree which has no solutions:');
+      writeln;
+      write('*******************************************************************');
+      writeln;
+      writeln;
+      isc_print_il_node(node, inh, 0);
+      writeln;
+    end;
+    bug_check('ISC: source line %wd: pass_1: no solutions were generated for this IL tree.%$',
+              inh^.pos.line);
+    pass_1 := solution_list$new;
+  end
+  else begin
+    if isc_user_routines_9c[isc_node_ptr_t(node)^.kind] and
+       ((isc_node_ptr_t(node)^.xl[1] & 16#400000) <> 0) and
+       (isc_node_ptr_t(node)^.xp[3] = nil) then begin
+      s := choose_one_cse_solution(list);
+      s^.f114.b5 := true;
+      s := preserve_solution(s);
+      isc_node_ptr_t(node)^.xp[3] := isc_node_ptr_t(s);
+      list := solution_list$new;
+      solution_list$append(list, s);
+    end;
+    pass_1 := list;
+  end;
+end;'''
+
+
+# the routines of isc_pass_1_main the lifter does not understand, read off
+# the image by hand (the operator declarations mark them `fixed')
+P1_ROUTINES = {}

@@ -91,331 +91,1273 @@ attribute live_range +20 pointer;
 attribute live_range_of_imaginary_part +24 pointer;
 attribute already_through_pass_2 +115.3 boolean;
 
-{ The operators: isc_pass_1_main's routine for each, the il$t it
-  gives the proper_subtree, the number of children and the permissible
-  set of each pass_1 call in order (derived: the union of the kinds
-  the patterns test at that position; inherited: the routine's own;
-  -np: less not_permissible_function's). }
-operator isc_addr_con il addr_con children 1
-  pass_1 derived;
-operator isc_ap_register il ap_register children 0;
-operator isc_argument_block_location_ob il argument_block_location_ob children 0;
-operator isc_assign_node_add_to_aop il add_to_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_agg_aop il agg_aop children 2
-  pass_1 inherited, [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, any_solution], [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, literal_32_bits, any_solution];
-operator isc_assign_node_agg_len_aop il agg_len_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_and_to_aop il and_to_aop children 2
-  pass_1 derived, [ip_reg, ip_reg_scaled, literal_32_bits];
-operator isc_assign_node_div_by_aop il div_by_aop children 2
-  pass_1 derived, derived, inherited;
-operator isc_assign_node_eor_to_aop il eor_to_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_f_add_to_aop il f_add_to_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_f_div_by_aop il f_div_by_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_f_mul_to_aop il f_mul_to_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_f_range_check_to_aop il f_range_check_to_aop children 3
-  pass_1 derived, derived, derived;
-operator isc_assign_node_f_sub_from_aop il f_sub_from_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_fp_aop il fp_aop children 2
-  pass_1 inherited, [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, any_solution], [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, literal_32_bits, any_solution];
-operator isc_assign_node_isc_agg_aop il isc_agg_aop children 3
+{ The operators: isc_pass_1_main's routine for each IL node kind, tree,
+  comparison and assignment operator (pass_1 dispatches on the node's
+  kind, isc_tree_node and isc_cmp_tree_node on +36, isc_assign_node on
+  +76, through the tables isc_pass_1_begin_compilation fills from the
+  routines' names), the il$t its proper_subtree gets and its number of
+  children; then, per child, the node (il.pN: the pointer at +N), the
+  statements that set the child's inherited attributes after the
+  default ones are copied from the node's (copy_all: the whole record
+  copied instead), and its permissible set (derived: the union of the
+  kinds the patterns test at that position; inherited: the node's own;
+  -np: less not_permissible_function's).  `fixed': the routine is the
+  generator's fixed text (tools/iscg_text.py P1_ROUTINES; its pass_1
+  calls' sets listed, position: set). }
+operator isc_unrecognized_il_node image 16#0DB51C;
+  fixed;
+end;
+operator isc_addr_con il addr_con children 1 image 16#0DC990;
+  fixed;
+  pass_1 1: derived;
+end;
+operator isc_ap_register il ap_register children 0 image 16#0DCAC8;
+end;
+operator isc_argument_block_location_ob il argument_block_location_ob children 0 image 16#0DCB04;
+end;
+operator isc_assign_node_add_to_aop il add_to_aop children 2 image 16#0DCB40;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+end;
+operator isc_assign_node_agg_aop il agg_aop children 2 image 16#0DCD58;
+  fixed;
+  pass_1 inherited, 1: [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, any_solution], 2: [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, literal_32_bits, any_solution];
+end;
+operator isc_assign_node_agg_len_aop il agg_len_aop children 2 image 16#0DD086;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, il.l48);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, il.l48);
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, il.l48);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, il.l48);
+    permissible derived;
+end;
+operator isc_assign_node_and_to_aop il and_to_aop children 2 image 16#0DD296;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible [ip_reg, ip_reg_scaled, literal_32_bits];
+end;
+operator isc_assign_node_div_by_aop il div_by_aop children 2 image 16#0DD4AE;
+  fixed;
+  pass_1 1: derived, 2: derived, inherited;
+end;
+operator isc_assign_node_eor_to_aop il eor_to_aop children 2 image 16#0DD96E;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+end;
+operator isc_assign_node_f_add_to_aop il f_add_to_aop children 2 image 16#0DDB86;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+end;
+operator isc_assign_node_f_div_by_aop il f_div_by_aop children 2 image 16#0DDD9E;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+end;
+operator isc_assign_node_f_mul_to_aop il f_mul_to_aop children 2 image 16#0DDFB6;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+end;
+operator isc_assign_node_f_range_check_to_aop il f_range_check_to_aop children 3 image 16#0DE1CE;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+  child 3 il.p72
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+end;
+operator isc_assign_node_f_sub_from_aop il f_sub_from_aop children 2 image 16#0DE4CA;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+end;
+operator isc_assign_node_fp_aop il fp_aop children 2 image 16#0DE6E2;
+  fixed;
+  pass_1 inherited, 1: [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, any_solution], 2: [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, literal_32_bits, any_solution];
+end;
+operator isc_assign_node_isc_agg_aop il isc_agg_aop children 3 image 16#0DE9E4;
+  fixed;
   pass_1 inherited, [address_mode, any_solution], [address_mode, any_solution], [ip_reg, literal_32_bits];
-operator isc_assign_node_isc_agg_zero_aop il isc_agg_zero_aop children 2
+end;
+operator isc_assign_node_isc_agg_zero_aop il isc_agg_zero_aop children 2 image 16#0DEDD6;
+  fixed;
   pass_1 inherited;
-operator isc_assign_node_isc_fill_aop il isc_fill_aop children 3
-  pass_1 [address_mode, ip_reg, ip_reg_field, any_solution], [literal_32_bits, any_solution], derived;
-operator isc_assign_node_isc_mul_to_aop il isc_mul_to_aop children 2
-  pass_1 derived, derived, inherited;
-operator isc_assign_node_isc_slice_aop il isc_slice_aop children 3
+end;
+operator isc_assign_node_isc_fill_aop il isc_fill_aop children 3 image 16#0DEF70;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    permissible [address_mode, ip_reg, ip_reg_field, any_solution];
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 1;
+    required_precision <- 32;
+    permissible [literal_32_bits, any_solution];
+  child 3 il.p72
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 1;
+    required_precision <- 32;
+    permissible derived;
+end;
+operator isc_assign_node_isc_mul_to_aop il isc_mul_to_aop children 2 image 16#0DF1BA;
+  fixed;
+  pass_1 1: derived, 2: derived, inherited;
+end;
+operator isc_assign_node_isc_slice_aop il isc_slice_aop children 3 image 16#0DF648;
+  fixed;
   pass_1 inherited;
-operator isc_assign_node_lshft_to_aop il lshft_to_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_mul_to_aop il mul_to_aop children 2
+end;
+operator isc_assign_node_lshft_to_aop il lshft_to_aop children 2 image 16#0DF76C;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w54, -1);
+    required_arithmetic <- rlen_arith(il.w54);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w54, -1);
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w56, -1);
+    required_arithmetic <- rlen_arith(il.w56);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w56, -1);
+    permissible derived;
+end;
+operator isc_assign_node_mul_to_aop il mul_to_aop children 2 image 16#0DF984;
+  fixed;
   pass_1 inherited;
-operator isc_assign_node_neg_to_aop il neg_to_aop children 1
-  pass_1 derived;
-operator isc_assign_node_not_to_aop il not_to_aop children 1
-  pass_1 derived;
-operator isc_assign_node_or_to_aop il or_to_aop children 2
-  pass_1 derived, [ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits];
-operator isc_assign_node_pack_aop il pack_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_range_check_to_aop il range_check_to_aop children 3
-  pass_1 derived, derived, derived;
-operator isc_assign_node_rshft_to_aop il rshft_to_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_scalar_aop il scalar_aop children 2
-  pass_1 inherited, [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, processor_reg, any_solution], [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, literal_32_bits, any_solution];
-operator isc_assign_node_set_and_to_aop il set_and_to_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_set_diff_from_aop il set_diff_from_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_set_or_to_aop il set_or_to_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_strcat_aop il strcat_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_strcpy_aop il strcpy_aop children 2
-  pass_1 derived, derived;
-operator isc_assign_node_strncat_aop il strncat_aop children 3
-  pass_1 derived, derived, derived;
-operator isc_assign_node_strncpy_aop il strncpy_aop children 3
-  pass_1 derived, derived, derived;
-operator isc_assign_node_sub_from_aop il sub_from_aop children 2
-  pass_1 derived, derived;
-operator isc_at_lib_dsc il at_lib_dsc children 0
+end;
+operator isc_assign_node_neg_to_aop il neg_to_aop children 1 image 16#0DFAA2;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+end;
+operator isc_assign_node_not_to_aop il not_to_aop children 1 image 16#0DFBD6;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+end;
+operator isc_assign_node_or_to_aop il or_to_aop children 2 image 16#0DFD0A;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible [ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits];
+end;
+operator isc_assign_node_pack_aop il pack_aop children 2 image 16#0DFF22;
+  fixed;
+  pass_1 1: derived, 2: derived;
+end;
+operator isc_assign_node_range_check_to_aop il range_check_to_aop children 3 image 16#0E011E;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+  child 3 il.p72
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+end;
+operator isc_assign_node_rshft_to_aop il rshft_to_aop children 2 image 16#0E041A;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w54, -1);
+    required_arithmetic <- rlen_arith(il.w54);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w54, -1);
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w56, -1);
+    required_arithmetic <- rlen_arith(il.w56);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w56, -1);
+    permissible derived;
+end;
+operator isc_assign_node_scalar_aop il scalar_aop children 2 image 16#0E0632;
+  fixed;
+  pass_1 inherited, 1: [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, processor_reg, any_solution], 2: [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, literal_32_bits, any_solution];
+end;
+operator isc_assign_node_set_and_to_aop il set_and_to_aop children 2 image 16#0E0934;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- il.l48 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l48 * 8;
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- il.l48 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l48 * 8;
+    permissible derived;
+end;
+operator isc_assign_node_set_diff_from_aop il set_diff_from_aop children 2 image 16#0E0AEA;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- il.l48 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l48 * 8;
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- il.l48 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l48 * 8;
+    permissible derived;
+end;
+operator isc_assign_node_set_or_to_aop il set_or_to_aop children 2 image 16#0E0CA0;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- il.l48 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l48 * 8;
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- il.l48 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l48 * 8;
+    permissible derived;
+end;
+operator isc_assign_node_strcat_aop il strcat_aop children 2 image 16#0E0E56;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    permissible derived;
+  child 2 il.p68
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    permissible derived;
+end;
+operator isc_assign_node_strcpy_aop il strcpy_aop children 2 image 16#0E0FF2;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    permissible derived;
+  child 2 il.p68
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    permissible derived;
+end;
+operator isc_assign_node_strncat_aop il strncat_aop children 3 image 16#0E118E;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    permissible derived;
+  child 2 il.p68
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    permissible derived;
+  child 3 il.p72
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 1;
+    required_precision <- 32;
+    permissible derived;
+end;
+operator isc_assign_node_strncpy_aop il strncpy_aop children 3 image 16#0E13D2;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    permissible derived;
+  child 2 il.p68
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    permissible derived;
+  child 3 il.p72
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 1;
+    required_precision <- 32;
+    permissible derived;
+end;
+operator isc_assign_node_sub_from_aop il sub_from_aop children 2 image 16#0E1616;
+  child 1 il.p64
+    immediate_parent_wants_lvalue <- true;
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+  child 2 il.p68
+    exception_frame <- il.p12;
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    required_arithmetic <- rlen_arith(il.w52);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w52, -1);
+    permissible derived;
+end;
+operator isc_assign_node image 16#0E182E;
+  fixed;
+end;
+operator isc_at_lib_dsc il at_lib_dsc children 0 image 16#0E188E;
+  fixed;
   pass_1 inherited;
-operator isc_binteger_ob il binteger_ob children 0;
-operator isc_ubinteger_ob il ubinteger_ob children 0;
-operator isc_bit_field_assign il bit_field_assign children 5
-  pass_1 derived, derived, derived, derived, derived, inherited;
-operator isc_blk_end_node il blk_end_node children 0
+end;
+operator isc_binteger_ob il binteger_ob children 0 image 16#0E19E8;
+end;
+operator isc_ubinteger_ob il ubinteger_ob children 0 image 16#0E1A24;
+end;
+operator isc_bit_field_assign il bit_field_assign children 5 image 16#0E1A60;
+  fixed;
+  pass_1 1: derived, 2: derived, 3: derived, 4: derived, 5: derived, inherited;
+end;
+operator isc_blk_end_node il blk_end_node children 0 image 16#0E1F26;
+  fixed;
   pass_1 inherited;
-operator isc_block_entry_node il block_entry_node children 0;
-operator isc_blogical_ob il blogical_ob children 0;
-operator isc_branch_node il branch_node;
-operator isc_case_node_range_check il case_node_range_check children 4
-  pass_1 [ip_reg], [flow], [ip_reg];
-operator isc_case_node_no_range_check il case_node_no_range_check children 1
-  pass_1 derived;
-operator isc_cbranch_node il cbranch_node children 2
-  pass_1 [flow, ip_reg, ip_reg_field, literal_32_bits];
-operator isc_cc_call il cc_call children 0;
-operator isc_char_ob il char_ob children 0;
-operator isc_char_string_ob il char_string_ob children 0
+end;
+operator isc_block_entry_node il block_entry_node children 0 image 16#0E2068;
+end;
+operator isc_blogical_ob il blogical_ob children 0 image 16#0E20A4;
+end;
+operator isc_branch_node il branch_node image 16#0E20E0;
+  fixed;
+end;
+operator isc_case_node_range_check il case_node_range_check children 4 image 16#0E216C;
+  fixed;
+  pass_1 2: derived, 3: derived, 4: derived;
+end;
+operator isc_case_node_no_range_check il case_node_no_range_check children 1 image 16#0E2448;
+  child 1 il.p48
+    exception_frame <- il.p12;
+    fetch_precision <- 32;
+    required_arithmetic <- 1;
+    required_precision <- 32;
+    permissible derived;
+end;
+operator isc_cbranch_node il cbranch_node children 2 image 16#0E253C;
+  fixed;
+  pass_1 2: derived;
+end;
+operator isc_cc_call il cc_call children 0 image 16#0E26D4;
+end;
+operator isc_char_ob il char_ob children 0 image 16#0E2710;
+end;
+operator isc_char_string_ob il char_string_ob children 0 image 16#0E274C;
+  fixed;
   pass_1 inherited;
-operator isc_cmp_tree_node_agg_compare_top il agg_compare_top children 2
-  pass_1 derived, derived;
-operator isc_cmp_tree_node_bit_field_cmp_top il bit_field_cmp_top children 5
-  pass_1 derived, derived, derived, derived, derived, inherited;
-operator isc_cmp_tree_node_bit_test_top il bit_test_top children 2
-  pass_1 [address_mode, ip_reg, ip_reg_field], [ip_reg, literal_32_bits];
-operator isc_cmp_tree_node_compare_top il compare_top children 2
-  pass_1 inherited, [ip_reg, ip_reg_field], [ip_reg, ip_reg_field, literal_32_bits];
-operator isc_cmp_tree_node_f_compare_top il f_compare_top children 2
-  pass_1 derived, derived;
-operator isc_cmp_tree_node_set_compare_top il set_compare_top children 2
-  pass_1 derived, derived;
-operator isc_complex_ob il complex_ob children 0;
-operator isc_cs_node il cs_node children 2
-  pass_1 derived, derived;
-operator isc_cs_temp il cs_temp children 0
+end;
+operator isc_cmp_tree_node_agg_compare_top il agg_compare_top children 2 image 16#0E28C6;
+  child 1 il.p40
+    fetch_precision <- il.l20 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l20 * 8;
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- il.l20 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l20 * 8;
+    permissible derived;
+end;
+operator isc_cmp_tree_node_bit_field_cmp_top il bit_field_cmp_top children 5 image 16#0E2A6A;
+  fixed;
+  pass_1 1: derived, 2: derived, 3: derived, 4: derived, 5: derived, inherited;
+end;
+operator isc_cmp_tree_node_bit_test_top il bit_test_top children 2 image 16#0E2F0C;
+  child 2 il.p44
+    fetch_precision <- il.l20 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l20 * 8;
+    permissible derived;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    required_arithmetic <- 1;
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    permissible derived;
+end;
+operator isc_cmp_tree_node_compare_top il compare_top children 2 image 16#0E30D0;
+  fixed;
+  pass_1 inherited, 1: derived, 2: derived;
+end;
+operator isc_cmp_tree_node_f_compare_top il f_compare_top children 2 image 16#0E3470;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    required_arithmetic <- rlen_arith(il.w26);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    immediate_parent_has_signed <- true;
+    immediate_parent_wants_signed <- il.b30.6;
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    required_arithmetic <- rlen_arith(il.w26);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    immediate_parent_has_signed <- true;
+    immediate_parent_wants_signed <- il.b30.6;
+    permissible derived;
+end;
+operator isc_cmp_tree_node_set_compare_top il set_compare_top children 2 image 16#0E36B6;
+  child 1 il.p40
+    fetch_precision <- il.l20 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l20 * 8;
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- il.l20 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l20 * 8;
+    permissible derived;
+end;
+operator isc_cmp_tree_node image 16#0E385A;
+  fixed;
+end;
+operator isc_complex_ob il complex_ob children 0 image 16#0E38BA;
+end;
+operator isc_cs_node il cs_node children 2 image 16#0E38F6;
+  child 1 il.p20
+    permissible derived;
+  child 2 il.p24
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w28, -1);
+    required_arithmetic <- rlen_arith(il.w28);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w28, -1);
+    permissible derived;
+end;
+operator isc_cs_temp il cs_temp children 0 image 16#0E3AB0;
+  fixed;
   pass_1 inherited;
-operator isc_cse_parent_ob il cse_parent_ob children 0;
-operator isc_cse_use_ob il cse_use_ob children 0;
-operator isc_db_register il db_register children 0;
-operator isc_dindex_node il dindex_node children 2
-  pass_1 derived, derived;
-operator isc_disp_node il disp_node children 1
-  pass_1 [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, processor_reg];
-operator isc_display_register il display_register children 0;
-operator isc_dpcomplex_ob il dpcomplex_ob children 0;
-operator isc_dpreal_ob il dpreal_ob children 0;
-operator isc_entry_blk il entry_blk children 0
+end;
+operator isc_cse_parent_ob il cse_parent_ob children 0 image 16#0E3BCC;
+  call pass_1_cse_parent_ob(il, il.p4, inh);
+end;
+operator isc_cse_use_ob il cse_use_ob children 0 image 16#0E3C16;
+  call pass_1_cse_use_ob(il, il.p20, inh);
+end;
+operator isc_db_register il db_register children 0 image 16#0E3C60;
+end;
+operator isc_dindex_node il dindex_node children 2 image 16#0E3C9C;
+  fixed;
+  pass_1 1: derived, 2: derived;
+end;
+operator isc_disp_node il disp_node children 1 image 16#0E3EBA;
+  child 1 il.p24
+    immediate_parent_wants_lvalue <- true;
+    parent_il_kind <- disp_node;
+    permissible [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, processor_reg];
+end;
+operator isc_display_register il display_register children 0 image 16#0E3FA4;
+end;
+operator isc_dpcomplex_ob il dpcomplex_ob children 0 image 16#0E3FE0;
+end;
+operator isc_dpreal_ob il dpreal_ob children 0 image 16#0E401C;
+end;
+operator isc_entry_blk il entry_blk children 0 image 16#0E4058;
+  fixed;
   pass_1 inherited;
-operator isc_eval_node il eval_node children 0;
-operator isc_exception_handler_entry il exception_handler_entry children 0;
-operator isc_exception_register il exception_register children 0;
-operator isc_fortran_symbol il fortran_symbol children 0
+end;
+operator isc_eval_node il eval_node children 0 image 16#0E4280;
+  call rewrite_$check_for_case_statement(il);
+  call process_eval_node(il, inh);
+end;
+operator isc_exception_handler_entry il exception_handler_entry children 0 image 16#0E42D6;
+end;
+operator isc_exception_register il exception_register children 0 image 16#0E4312;
+end;
+operator isc_fortran_symbol il fortran_symbol children 0 image 16#0E434E;
+  fixed;
   pass_1 inherited, inherited, inherited;
-operator isc_function_blk il function_blk children 0
+end;
+operator isc_function_blk il function_blk children 0 image 16#0E463C;
+  fixed;
   pass_1 inherited;
-operator isc_insert_bit_field il insert_bit_field children 3
-  pass_1 derived, derived, derived;
-operator isc_integer_ob il integer_ob children 0;
-operator isc_uinteger_ob il uinteger_ob children 0;
-operator isc_label_node il label_node children 0;
-operator isc_lb_register il lb_register children 0;
-operator isc_lib_dsc il lib_dsc children 0
+end;
+operator isc_insert_bit_field il insert_bit_field children 3 image 16#0E4864;
+  fixed;
+  pass_1 1: derived, 2: derived, 3: derived;
+end;
+operator isc_integer_ob il integer_ob children 0 image 16#0E4ACA;
+end;
+operator isc_uinteger_ob il uinteger_ob children 0 image 16#0E4B06;
+end;
+operator isc_label_node il label_node children 0 image 16#0E4B42;
+end;
+operator isc_lb_register il lb_register children 0 image 16#0E4B7E;
+end;
+operator isc_lib_dsc il lib_dsc children 0 image 16#0E4BE6;
+  fixed;
   pass_1 inherited;
-operator isc_linteger_ob il linteger_ob children 0;
-operator isc_ulinteger_ob il ulinteger_ob children 0;
-operator isc_llogical_ob il llogical_ob children 0;
-operator isc_namelist_constant_ob il namelist_constant_ob children 0
+end;
+operator isc_linteger_ob il linteger_ob children 0 image 16#0E4D40;
+end;
+operator isc_ulinteger_ob il ulinteger_ob children 0 image 16#0E4D7C;
+end;
+operator isc_llogical_ob il llogical_ob children 0 image 16#0E4DB8;
+end;
+operator isc_namelist_constant_ob il namelist_constant_ob children 0 image 16#0E4DF4;
+  fixed;
   pass_1 inherited;
-operator isc_nlbranch_node il nlbranch_node children 1
-  pass_1 inherited, [ip_reg];
-operator isc_pf_call il pf_call children 1
-  pass_1 derived;
-operator isc_physical_register_ob il physical_register_ob children 0;
-operator isc_procedure_blk il procedure_blk children 0
+end;
+operator isc_nlbranch_node il nlbranch_node children 1 image 16#0E4F6E;
+  fixed;
+  pass_1 inherited, 1: derived;
+end;
+operator isc_pf_call il pf_call children 1 image 16#0E5160;
+  child 1 il.p16
+    permissible derived;
+end;
+operator isc_physical_register_ob il physical_register_ob children 0 image 16#0E523A;
+end;
+operator isc_procedure_blk il procedure_blk children 0 image 16#0E5276;
+  fixed;
   pass_1 inherited;
-operator isc_ptr_node il ptr_node children 1
-  pass_1 [ip_reg];
-operator isc_raise_exception il raise_exception children 0
+end;
+operator isc_ptr_node il ptr_node children 1 image 16#0E549E;
+  child 1 il.p24
+    fetch_precision <- isc_$precision_from_rlen_and_size(4, -1);
+    parent_il_kind <- ptr_node;
+    required_arithmetic <- rlen_arith(4);
+    required_precision <- isc_$precision_from_rlen_and_size(4, -1);
+    permissible [ip_reg];
+end;
+operator isc_raise_exception il raise_exception children 0 image 16#0E55BA;
+  fixed;
   pass_1 inherited;
-operator isc_real_ob il real_ob children 0;
-operator isc_release_dynamic_space il release_dynamic_space children 1
+end;
+operator isc_real_ob il real_ob children 0 image 16#0E56F0;
+end;
+operator isc_release_dynamic_space il release_dynamic_space children 1 image 16#0E572C;
+  fixed;
   pass_1 inherited;
-operator isc_return_node il return_node children 0
+end;
+operator isc_return_node il return_node children 0 image 16#0E5850;
+  fixed;
   pass_1 inherited;
-operator isc_sb_register il sb_register children 0;
-operator isc_set_con_ob il set_con_ob children 0
+end;
+operator isc_sb_register il sb_register children 0 image 16#0E5A14;
+end;
+operator isc_set_con_ob il set_con_ob children 0 image 16#0E5A50;
+  fixed;
   pass_1 inherited;
-operator isc_slogical_ob il slogical_ob children 0;
-operator isc_sinteger_ob il sinteger_ob children 0;
-operator isc_usinteger_ob il usinteger_ob children 0;
-operator isc_sym_disp_node il sym_disp_node children 1
-  pass_1 derived;
-operator isc_tree_node_abs_top il abs_top children 1
-  pass_1 derived;
-operator isc_tree_node_ada_expon_top il ada_expon_top children 2
+end;
+operator isc_slogical_ob il slogical_ob children 0 image 16#0E5BCA;
+end;
+operator isc_sinteger_ob il sinteger_ob children 0 image 16#0E5C06;
+end;
+operator isc_usinteger_ob il usinteger_ob children 0 image 16#0E5C42;
+end;
+operator isc_sym_disp_node il sym_disp_node children 1 image 16#0E5C7E;
+  child 1 il.p24
+    immediate_parent_wants_lvalue <- true;
+    parent_il_kind <- sym_disp_node;
+    permissible derived;
+end;
+operator isc_tree_node_abs_top il abs_top children 1 image 16#0E5D64;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived;
+end;
+operator isc_tree_node_ada_expon_top il ada_expon_top children 2 image 16#0E5E74;
+  fixed;
   pass_1 inherited;
-operator isc_tree_node_add_top il add_top children 2
-  pass_1 inherited, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled] -np, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits] -np;
-operator isc_tree_node_addr_top il addr_top children 1
-  pass_1 derived;
-operator isc_tree_node_agg_compare_top il agg_compare_top children 2
-  pass_1 derived, derived;
-operator isc_tree_node_align_top il align_top children 1
-  pass_1 derived;
-operator isc_tree_node_allocate_dynamic_space_top il allocate_dynamic_space_top children 1
+end;
+operator isc_tree_node_add_top il add_top children 2 image 16#0E5F98;
+  fixed;
+  pass_1 inherited, 1: derived -np, 2: derived -np;
+end;
+operator isc_tree_node_addr_top il addr_top children 1 image 16#0E62EE;
+  fixed;
+  pass_1 1: derived;
+end;
+operator isc_tree_node_agg_compare_top il agg_compare_top children 2 image 16#0E6406;
+  child 1 il.p40
+    fetch_precision <- il.l20 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l20 * 8;
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- il.l20 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l20 * 8;
+    permissible derived;
+end;
+operator isc_tree_node_align_top il align_top children 1 image 16#0E65AA;
+  child 1 il.p40
+    immediate_parent_wants_lvalue <- true;
+    permissible derived;
+end;
+operator isc_tree_node_allocate_dynamic_space_top il allocate_dynamic_space_top children 1 image 16#0E668E;
+  fixed;
   pass_1 inherited;
-operator isc_tree_node_alshf_top il alshf_top children 2
-  pass_1 derived, derived;
-operator isc_tree_node_and_top il and_top children 2
-  pass_1 inherited, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled] -np, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits] -np;
-operator isc_tree_node_arshf_top il arshf_top children 2
-  pass_1 [ip_reg, literal_32_bits], derived;
-operator isc_tree_node_bit_field_cmp_top il bit_field_cmp_top children 5
-  pass_1 derived, derived, derived, derived, derived, inherited;
-operator isc_tree_node_bit_set_top il bit_set_top children 3
-  pass_1 derived, derived, derived;
-operator isc_tree_node_bit_test_top il bit_test_top children 2
-  pass_1 [address_mode, ip_reg, ip_reg_field], [ip_reg, literal_32_bits];
-operator isc_tree_node_cache_top il cache_top children 0;
-operator isc_tree_node_call_top il call_top children 1
+end;
+operator isc_tree_node_alshf_top il alshf_top children 2 image 16#0E67B2;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    required_arithmetic <- rlen_arith(il.w26);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w28, -1);
+    required_arithmetic <- rlen_arith(il.w28);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w28, -1);
+    permissible derived;
+end;
+operator isc_tree_node_and_top il and_top children 2 image 16#0E69B8;
+  fixed;
+  pass_1 inherited, 1: [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled] -np, 2: [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits] -np;
+end;
+operator isc_tree_node_arshf_top il arshf_top children 2 image 16#0E6CE8;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    required_arithmetic <- rlen_arith(il.w26);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    permissible [ip_reg, literal_32_bits];
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w28, -1);
+    required_arithmetic <- rlen_arith(il.w28);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w28, -1);
+    permissible derived;
+end;
+operator isc_tree_node_bit_field_cmp_top il bit_field_cmp_top children 5 image 16#0E6EEE;
+  fixed;
+  pass_1 1: derived, 2: derived, 3: derived, 4: derived, 5: derived, inherited;
+end;
+operator isc_tree_node_bit_set_top il bit_set_top children 3 image 16#0E7390;
+  fixed;
+  pass_1 1: derived, 2: derived, 3: derived;
+end;
+operator isc_tree_node_bit_test_top il bit_test_top children 2 image 16#0E7686;
+  child 2 il.p44
+    fetch_precision <- il.l20 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l20 * 8;
+    permissible derived;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    required_arithmetic <- 1;
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    permissible derived;
+end;
+operator isc_tree_node_cache_top il cache_top children 0 image 16#0E784A;
+end;
+operator isc_tree_node_call_top il call_top children 1 image 16#0E7886;
+  fixed;
   pass_1 inherited;
-operator isc_tree_node_chk_top il chk_top children 2
-  pass_1 derived, derived;
-operator isc_tree_node_compare_top il compare_top children 2
-  pass_1 inherited, [ip_reg, ip_reg_field], [ip_reg, ip_reg_field, literal_32_bits];
-operator isc_tree_node_div_top il div_top children 2
+end;
+operator isc_tree_node_chk_top il chk_top children 2 image 16#0E79AA;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived;
+end;
+operator isc_tree_node_compare_top il compare_top children 2 image 16#0E7B80;
+  fixed;
+  pass_1 inherited, 1: derived, 2: derived;
+end;
+operator isc_tree_node_div_top il div_top children 2 image 16#0E7F20;
+  fixed;
   pass_1 inherited, inherited, inherited, inherited;
-operator isc_tree_node_eor_top il eor_top children 2
-  pass_1 inherited, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled] -np, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits] -np;
-operator isc_tree_node_expon_top il expon_top children 2
+end;
+operator isc_tree_node_eor_top il eor_top children 2 image 16#0E855C;
+  fixed;
+  pass_1 inherited, 1: derived -np, 2: derived -np;
+end;
+operator isc_tree_node_expon_top il expon_top children 2 image 16#0E8886;
+  fixed;
   pass_1 inherited;
-operator isc_tree_node_extend_top il extend_top children 1
-  pass_1 [flow, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits];
-operator isc_tree_node_extract_bit_field_top il extract_bit_field_top children 2
-  pass_1 derived, derived;
-operator isc_tree_node_f_ada_expon_top il f_ada_expon_top children 2
+end;
+operator isc_tree_node_extend_top il extend_top children 1 image 16#0E89A8;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    required_arithmetic <- rlen_arith(il.w26);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    immediate_parent_has_signed <- true;
+    immediate_parent_wants_signed <- il.b30.6;
+    permissible [flow, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits];
+end;
+operator isc_tree_node_extract_bit_field_top il extract_bit_field_top children 2 image 16#0E8AEE;
+  child 1 il.p40
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    immediate_parent_has_signed <- true;
+    immediate_parent_wants_signed <- il.b30.6;
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- 32;
+    required_arithmetic <- 1;
+    required_precision <- 32;
+    permissible derived;
+end;
+operator isc_tree_node_f_ada_expon_top il f_ada_expon_top children 2 image 16#0E8C94;
+  fixed;
   pass_1 inherited;
-operator isc_tree_node_f_add_top il f_add_top children 2
-  pass_1 derived -np, derived -np;
-operator isc_tree_node_f_compare_top il f_compare_top children 2
-  pass_1 derived, derived;
-operator isc_tree_node_f_div_top il f_div_top children 2
-  pass_1 inherited, derived, [fp_reg, fp_reg_pair, fp_reg_quad];
-operator isc_tree_node_f_expon_top il f_expon_top children 2
+end;
+operator isc_tree_node_f_add_top il f_add_top children 2 image 16#0E8DB6;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+end;
+operator isc_tree_node_f_compare_top il f_compare_top children 2 image 16#0E8FB8;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    required_arithmetic <- rlen_arith(il.w26);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    immediate_parent_has_signed <- true;
+    immediate_parent_wants_signed <- il.b30.6;
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    required_arithmetic <- rlen_arith(il.w26);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    immediate_parent_has_signed <- true;
+    immediate_parent_wants_signed <- il.b30.6;
+    permissible derived;
+end;
+operator isc_tree_node_f_div_top il f_div_top children 2 image 16#0E91FA;
+  fixed;
+  pass_1 inherited, 2: derived, 1: derived;
+end;
+operator isc_tree_node_f_expon_top il f_expon_top children 2 image 16#0E9546;
+  fixed;
   pass_1 inherited;
-operator isc_tree_node_f_extend_top il f_extend_top children 2
-  pass_1 [fp_reg, fp_reg_pair, fp_reg_quad, ip_reg], derived;
-operator isc_tree_node_f_math_top il f_math_top children 2
-  pass_1 derived, derived, inherited;
-operator isc_tree_node_f_mul_top il f_mul_top children 2
-  pass_1 derived -np, derived -np;
-operator isc_tree_node_f_neg_top il f_neg_top children 1
-  pass_1 derived -np;
-operator isc_tree_node_f_range_check_top il f_range_check_top children 3
-  pass_1 derived, derived, derived;
-operator isc_tree_node_f_sub_top il f_sub_top children 2
-  pass_1 derived -np, derived -np;
-operator isc_tree_node_func_call_top il func_call_top
+end;
+operator isc_tree_node_f_extend_top il f_extend_top children 2 image 16#0E9668;
+  fixed;
+  pass_1 1: [fp_reg, fp_reg_pair, fp_reg_quad, ip_reg], 2: derived;
+end;
+operator isc_tree_node_f_math_top il f_math_top children 2 image 16#0E98E2;
+  fixed;
+  pass_1 1: derived, 2: derived, inherited;
+end;
+operator isc_tree_node_f_mul_top il f_mul_top children 2 image 16#0E9C30;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+end;
+operator isc_tree_node_f_neg_top il f_neg_top children 1 image 16#0E9E32;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+end;
+operator isc_tree_node_f_range_check_top il f_range_check_top children 3 image 16#0E9F58;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived;
+  child 3 il.p48
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived;
+end;
+operator isc_tree_node_f_sub_top il f_sub_top children 2 image 16#0EA1EE;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+end;
+operator isc_tree_node_func_call_top il func_call_top image 16#0EA3F0;
+  fixed;
   pass_1 inherited;
-operator isc_tree_node_index_top il index_top children 2
-  pass_1 derived, derived;
-operator isc_tree_node_isc_addr_top il isc_addr_top children 1
-  pass_1 derived;
-operator isc_tree_node_isc_agg_cmp_top il isc_agg_cmp_top children 3
-  pass_1 derived, derived, derived;
-operator isc_tree_node_isc_agg_lex_cmp_top il isc_agg_lex_cmp_top children 4
-  pass_1 derived, derived, derived, derived;
-operator isc_tree_node_isc_call_top il isc_call_top children 0;
-operator isc_tree_node_isc_fio_init il isc_fio_init children 1
-  pass_1 derived;
-operator isc_tree_node_isc_func_call_hidden_temp_top il isc_func_call_hidden_temp_top children 0;
-operator isc_tree_node_isc_func_call_top il isc_func_call_top children 0;
-operator isc_tree_node_isc_mul_top il isc_mul_top children 2
-  pass_1 derived, derived, inherited;
-operator isc_tree_node_isc_signed_mod_top il isc_signed_mod_top children 2
-  pass_1 derived, derived;
-operator isc_tree_node_isc_signed_rem_top il isc_signed_rem_top children 2
-  pass_1 derived, derived;
-operator isc_tree_node_isc_unsigned_mod_top il isc_unsigned_mod_top children 2
+end;
+operator isc_tree_node_index_top il index_top children 2 image 16#0EA556;
+  child 1 il.p40
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    required_arithmetic <- 1;
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    permissible derived;
+end;
+operator isc_tree_node_isc_addr_top il isc_addr_top children 1 image 16#0EA708;
+  fixed;
+  pass_1 1: derived;
+end;
+operator isc_tree_node_isc_agg_cmp_top il isc_agg_cmp_top children 3 image 16#0EA83C;
+  child 1 il.p40
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    immediate_parent_wants_lvalue <- true;
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    immediate_parent_wants_lvalue <- true;
+    permissible derived;
+  child 3 il.p48
+    fetch_precision <- 32;
+    required_arithmetic <- 1;
+    required_precision <- 32;
+    permissible derived;
+end;
+operator isc_tree_node_isc_agg_lex_cmp_top il isc_agg_lex_cmp_top children 4 image 16#0EAA68;
+  child 1 il.p40
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    immediate_parent_wants_lvalue <- true;
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- 32;
+    required_arithmetic <- 3;
+    required_precision <- 32;
+    immediate_parent_wants_lvalue <- true;
+    permissible derived;
+  child 3 il.p48
+    fetch_precision <- 32;
+    required_arithmetic <- 1;
+    required_precision <- 32;
+    permissible derived;
+  child 4 il.p52
+    fetch_precision <- 32;
+    required_arithmetic <- 1;
+    required_precision <- 32;
+    permissible derived;
+end;
+operator isc_tree_node_isc_call_top il isc_call_top children 0 image 16#0EAD34;
+  call pass_1_isc_call(il, 4, inh, 0);
+end;
+operator isc_tree_node_isc_fio_init il isc_fio_init children 1 image 16#0EAD84;
+  call debug_lir_$begin_fortran_io_sequence(il);
+  child 1 il.p40
+    permissible derived;
+end;
+operator isc_tree_node_isc_func_call_hidden_temp_top il isc_func_call_hidden_temp_top children 0 image 16#0EAE6C;
+  call pass_1_isc_call(il, 4, inh, 0);
+end;
+operator isc_tree_node_isc_func_call_top il isc_func_call_top children 0 image 16#0EAEBC;
+  fixed;
+end;
+operator isc_tree_node_isc_mul_top il isc_mul_top children 2 image 16#0EAF0C;
+  fixed;
+  pass_1 1: derived, 2: derived, inherited;
+end;
+operator isc_tree_node_isc_signed_mod_top il isc_signed_mod_top children 2 image 16#0EB4A8;
+  fixed;
+  pass_1 1: derived, 2: derived;
+end;
+operator isc_tree_node_isc_signed_rem_top il isc_signed_rem_top children 2 image 16#0EB624;
+  fixed;
+  pass_1 1: derived, 2: derived;
+end;
+operator isc_tree_node_isc_unsigned_mod_top il isc_unsigned_mod_top children 2 image 16#0EB7A0;
+  fixed;
   pass_1 inherited;
-operator isc_tree_node_isc_unsigned_rem_top il isc_unsigned_rem_top children 2
+end;
+operator isc_tree_node_isc_unsigned_rem_top il isc_unsigned_rem_top children 2 image 16#0EB912;
+  fixed;
   pass_1 inherited;
-operator isc_tree_node_lshf_top il lshf_top children 2
-  pass_1 [ip_reg, literal_32_bits], derived;
-operator isc_tree_node_mark_dynamic_space_top il mark_dynamic_space_top children 0
+end;
+operator isc_tree_node_lshf_top il lshf_top children 2 image 16#0EBA72;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    required_arithmetic <- rlen_arith(il.w26);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    permissible [ip_reg, literal_32_bits];
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w28, -1);
+    required_arithmetic <- rlen_arith(il.w28);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w28, -1);
+    permissible derived;
+end;
+operator isc_tree_node_mark_dynamic_space_top il mark_dynamic_space_top children 0 image 16#0EBC74;
+  fixed;
   pass_1 inherited;
-operator isc_tree_node_max_top il max_top children 2
-  pass_1 inherited, derived, [ip_reg];
-operator isc_tree_node_min_top il min_top children 2
-  pass_1 inherited, derived, [ip_reg];
-operator isc_tree_node_mod_top il mod_top children 2
+end;
+operator isc_tree_node_max_top il max_top children 2 image 16#0EBD94;
+  fixed;
+  pass_1 inherited, 1: derived, 2: derived;
+end;
+operator isc_tree_node_min_top il min_top children 2 image 16#0EC0B6;
+  fixed;
+  pass_1 inherited, 1: derived, 2: derived;
+end;
+operator isc_tree_node_mod_top il mod_top children 2 image 16#0EC404;
+  fixed;
   pass_1 inherited, inherited, inherited, inherited;
-operator isc_tree_node_mul_top il mul_top children 2
+end;
+operator isc_tree_node_mul_top il mul_top children 2 image 16#0ECC10;
+  fixed;
   pass_1 inherited, inherited, inherited;
-operator isc_tree_node_neg_top il neg_top children 1
-  pass_1 [flow, fp_reg, ip_reg, ip_reg_field] -np;
-operator isc_tree_node_nop_top il nop_top children 1
-  pass_1 derived -np;
-operator isc_tree_node_not_top il not_top children 1
-  pass_1 [fp_reg, ip_reg, ip_reg_field] -np;
-operator isc_tree_node_or_top il or_top children 2
-  pass_1 inherited, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled] -np, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits] -np;
-operator isc_tree_node_physical_top il physical_top children 1
-  pass_1 derived;
-operator isc_tree_node_range_check_top il range_check_top children 3
-  pass_1 derived, derived, derived;
-operator isc_tree_node_rshf_top il rshf_top children 2
-  pass_1 [flow, ip_reg, literal_32_bits], derived;
-operator isc_tree_node_set_and_top il set_and_top children 2
-  pass_1 derived -np, derived -np;
-operator isc_tree_node_set_bit_in_set_top il set_bit_in_set_top children 2
-  pass_1 derived, derived;
-operator isc_tree_node_set_compare_top il set_compare_top children 2
-  pass_1 derived, derived;
-operator isc_tree_node_set_diff_top il set_diff_top children 2
-  pass_1 derived -np, derived -np;
-operator isc_tree_node_set_extend_top il set_extend_top children 1
-  pass_1 derived;
-operator isc_tree_node_set_or_top il set_or_top children 2
-  pass_1 derived -np, derived -np;
-operator isc_tree_node_set_range_in_set_top il set_range_in_set_top children 3
-  pass_1 derived, derived, derived;
-operator isc_tree_node_signed_div_top il signed_div_top children 2
-  pass_1 [fp_reg, ip_reg, literal_32_bits], [fp_reg, ip_reg];
-operator isc_tree_node_signed_mod_top il signed_mod_top children 2
-  pass_1 [fp_reg, ip_reg, literal_32_bits], [fp_reg, ip_reg, ip_reg_field];
-operator isc_tree_node_sr_top il sr_top children 2
-  pass_1 derived, derived;
-operator isc_tree_node_strcmp_top il strcmp_top children 2
-  pass_1 derived, derived;
-operator isc_tree_node_strlen_top il strlen_top children 1
-  pass_1 derived;
-operator isc_tree_node_strncmp_top il strncmp_top children 3
-  pass_1 derived, derived, derived;
-operator isc_tree_node_sub_top il sub_top children 2
-  pass_1 derived -np, derived -np;
-operator isc_tree_node_unpack_top il unpack_top children 2
-  pass_1 derived, derived;
-operator isc_tree_node_unsigned_div_top il unsigned_div_top children 2
-  pass_1 [fp_reg, ip_reg, literal_32_bits], [fp_reg, ip_reg, ip_reg_field];
-operator isc_tree_node_unsigned_mod_top il unsigned_mod_top children 2
-  pass_1 [fp_reg, ip_reg, literal_32_bits], [fp_reg, ip_reg, ip_reg_field];
-operator isc_tree_node_value_top il value_top children 1
-  pass_1 derived -np;
-operator isc_use_def_ob il use_def_ob children 0;
-operator isc_var_name il var_name children 0;
+end;
+operator isc_tree_node_neg_top il neg_top children 1 image 16#0ECFCA;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible [flow, fp_reg, ip_reg, ip_reg_field] -np;
+end;
+operator isc_tree_node_nop_top il nop_top children 1 image 16#0ED0F0;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+end;
+operator isc_tree_node_not_top il not_top children 1 image 16#0ED216;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible [fp_reg, ip_reg, ip_reg_field] -np;
+end;
+operator isc_tree_node_or_top il or_top children 2 image 16#0ED33C;
+  fixed;
+  pass_1 inherited, 1: derived -np, 2: derived -np;
+end;
+operator isc_tree_node_physical_top il physical_top children 1 image 16#0ED666;
+  child 1 il.p40
+    fetch_precision <- 32;
+    required_arithmetic <- 1;
+    required_precision <- 32;
+    permissible derived;
+end;
+operator isc_tree_node_range_check_top il range_check_top children 3 image 16#0ED752;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived;
+  child 3 il.p48
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived;
+end;
+operator isc_tree_node_rshf_top il rshf_top children 2 image 16#0ED9E8;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    required_arithmetic <- rlen_arith(il.w26);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
+    permissible [flow, ip_reg, literal_32_bits];
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w28, -1);
+    required_arithmetic <- rlen_arith(il.w28);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w28, -1);
+    permissible derived;
+end;
+operator isc_tree_node_set_and_top il set_and_top children 2 image 16#0EDBEA;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+end;
+operator isc_tree_node_set_bit_in_set_top il set_bit_in_set_top children 2 image 16#0EDDEC;
+  child 1 il.p40
+    fetch_precision <- il.l20 * 8;
+    immediate_parent_wants_set_temporary <- true;
+    required_arithmetic <- 3;
+    required_precision <- il.l20 * 8;
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    required_arithmetic <- rlen_arith(il.w26);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    permissible derived;
+end;
+operator isc_tree_node_set_compare_top il set_compare_top children 2 image 16#0EDFC2;
+  child 1 il.p40
+    fetch_precision <- il.l20 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l20 * 8;
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- il.l20 * 8;
+    required_arithmetic <- 3;
+    required_precision <- il.l20 * 8;
+    permissible derived;
+end;
+operator isc_tree_node_set_diff_top il set_diff_top children 2 image 16#0EE162;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+end;
+operator isc_tree_node_set_extend_top il set_extend_top children 1 image 16#0EE364;
+  fixed;
+  pass_1 1: derived;
+end;
+operator isc_tree_node_set_or_top il set_or_top children 2 image 16#0EE484;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+end;
+operator isc_tree_node_set_range_in_set_top il set_range_in_set_top children 3 image 16#0EE686;
+  child 1 il.p40
+    fetch_precision <- il.l20 * 8;
+    immediate_parent_wants_set_temporary <- true;
+    required_arithmetic <- 3;
+    required_precision <- il.l20 * 8;
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    required_arithmetic <- rlen_arith(il.w26);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    permissible derived;
+  child 3 il.p48
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    required_arithmetic <- rlen_arith(il.w26);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    permissible derived;
+end;
+operator isc_tree_node_signed_div_top il signed_div_top children 2 image 16#0EE938;
+  fixed;
+  pass_1 2: derived, 1: derived;
+end;
+operator isc_tree_node_signed_mod_top il signed_mod_top children 2 image 16#0EEB7A;
+  fixed;
+  pass_1 2: derived, 1: derived;
+end;
+operator isc_tree_node_sr_top il sr_top children 2 image 16#0EEDBC;
+  fixed;
+  pass_1 1: derived, 2: derived;
+end;
+operator isc_tree_node_strcmp_top il strcmp_top children 2 image 16#0EEFD2;
+  child 1 il.p40
+    permissible derived;
+  child 2 il.p44
+    permissible derived;
+end;
+operator isc_tree_node_strlen_top il strlen_top children 1 image 16#0EF136;
+  child 1 il.p40
+    permissible derived;
+end;
+operator isc_tree_node_strncmp_top il strncmp_top children 3 image 16#0EF20E;
+  child 1 il.p40
+    permissible derived;
+  child 2 il.p44
+    permissible derived;
+  child 3 il.p48
+    fetch_precision <- 32;
+    required_arithmetic <- 1;
+    required_precision <- 32;
+    stmt_number <- inh.stmt_number;
+    permissible derived;
+end;
+operator isc_tree_node_sub_top il sub_top children 2 image 16#0EF418;
+  child 2 il.p44
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, -1);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+end;
+operator isc_tree_node_unpack_top il unpack_top children 2 image 16#0EF61A;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    required_arithmetic <- rlen_arith(il.w26);
+    required_precision <- isc_$precision_from_rlen_and_size(il.w26, il.l20);
+    parent_il_kind <- unpack_top;
+    immediate_parent_has_signed <- true;
+    immediate_parent_wants_signed <- il.b30.6;
+    permissible derived;
+  child 2 il.p44
+    fetch_precision <- 8;
+    required_arithmetic <- rlen_arith(1);
+    required_precision <- 8;
+    permissible derived;
+end;
+operator isc_tree_node_unsigned_div_top il unsigned_div_top children 2 image 16#0EF80C;
+  fixed;
+  pass_1 2: derived, 1: derived;
+end;
+operator isc_tree_node_unsigned_mod_top il unsigned_mod_top children 2 image 16#0EFA4E;
+  fixed;
+  pass_1 2: derived, 1: derived;
+end;
+operator isc_tree_node_value_top il value_top children 1 image 16#0EFC90;
+  child 1 il.p40
+    fetch_precision <- isc_$precision_from_rlen_and_size(il.w24, il.l20);
+    required_arithmetic <- rlen_arith(il.w24);
+    permissible derived -np;
+end;
+operator isc_tree_node image 16#0EFDB6;
+  fixed;
+end;
+operator isc_use_def_ob il use_def_ob children 0 image 16#0EFE14;
+end;
+operator isc_var_name il var_name children 0 image 16#0EFE50;
+  call initialize_symbol(il);
+end;
 
 { The opcode maps: by il$t, the opcode of the operation (isc_tool_
   generated_readonly_tables after the result kinds, 178 words each). }
