@@ -2553,3 +2553,44 @@ revisited.
    (btst Dn,(81,A0)).  They keep sections 07, 12, 23, 24 from being
    generated.  A real-valued node field in the language (and a gap-7
    rewrite) for 9 and 10, a name for target_properties +0x9C?
+480. Translator PX: **R23 survives calls.**  call_conv's ordinary
+   preset counts R23 among the registers a call clobbers (0x00C003FF),
+   but in the SR10.4 binaries R23 is the stack pointer, popped back by
+   every return's slot (LOAD_PAIR [R23],R23,R10) and read right after
+   6,101 calls without a write (docs/prism-isa.md, "Validated against
+   SR10.4 binaries").  Does "clobbered" there mean "used by the call
+   sequence" (the callee pushes and pops it), or is the set misread?
+481. Translator PX: **.unwind's fourth word, bits 16..0.**  Bits
+   31..27, 26..22, 21..17 are the registers at the frame's +4, +12 and
+   the return address's (agreeing with all 2,483 prologues), the third
+   word's bits 29..20 the saved R21..R12; the low bits (FreeTOC, a
+   56-byte frame: 0x8490; ReadTOC, 2,408 bytes: 0x0708; CheckStatus,
+   48: 0x8390; reverse, 40: 0x8290; my_itoa, no frame: 0x8100) are not
+   decoded.  Which unit of cc.a88k writes .unwind (bin_$unwind_bits?),
+   and is the frame size there?
+482. Translator PX: **the condition codes are read one instruction
+   late.**  16,506 of 19,255 conditional branches have their setter two
+   words before them and none just before; CMP a; CMP b; Bcc; Bcc tests
+   a then b.  The opcodes BNL2V, BL2V, BNL2, BL2, BNZ3, BZ3 (templates
+   0x27xx/0x2Fxx) never occur in the binaries: do the 2 and 3 name a
+   different distance (the condition codes two or three instructions
+   back), so that sched's and xtp's rules could be read against them?
+483. Translator PX: **1FFF0000 and 1FFF0001.**  19 executed words,
+   CMP #0/#-1,R31 (= MOVE.CC #0/#1,R31 = ADD.CC #0/#1,R31,R31), stand
+   between a condition-code setter and the branch that tests it
+   (install 0x983E4: EXTRACTU.CC; 1FFF0001; BNE.SF).  The SR10.4
+   compilers' form of an IPCCNOP (asm 6.9 encodes it as NOP), or
+   something else?
+484. Translator PX: **.blocks version 3.**  Several a88k binaries
+   (ld, ksh, net_*, the crt0 objects) have units `01 00 01 03', which
+   coff_compare.py's reader refuses; prism_dis.py takes their routines
+   from .unwind instead.  Worth teaching the reader version 3 (names of
+   static routines would come with it)?
+485. Translator PX: **squash comments.**  The delay-slot modes name when
+   the slot runs (.SN never, .ST taken, .SF falling through, .SA
+   always; +3 bit 7 runs it on the fall-through, bit 6 on the
+   transfer), the reverse of "squashes"; asm.pas's and lst.pas's code
+   only copy the mode, but comments in asm.pas (pass 1's "squashing on
+   bit 6"), dbg_life.pas ("its delay slot squashed on sequential
+   flow"), dmp.pas and backend.ins.pas use the squash reading.  Should
+   their owners reword them (no code change)?
