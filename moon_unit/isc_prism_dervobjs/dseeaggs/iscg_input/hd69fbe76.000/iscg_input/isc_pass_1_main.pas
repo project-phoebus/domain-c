@@ -227,10 +227,9 @@
 
   Not generated yet (declared extern below; the operator
   declarations mark them `fixed'; their text is to be read off the
-  image into tools/iscg_text.py P1_ROUTINES): 6 routines,
+  image into tools/iscg_text.py P1_ROUTINES): 5 routines,
     isc_assign_node_div_by_aop, isc_assign_node_isc_mul_to_aop,
-    isc_tree_node_div_top, isc_tree_node_isc_mul_top, isc_tree_node_mod_top,
-    isc_tree_node_mul_top
+    isc_tree_node_div_top, isc_tree_node_isc_mul_top, isc_tree_node_mod_top
 
   Not known from the original: the parameters' and locals' names, the
   module data's names. }
@@ -428,6 +427,9 @@ function rewrite_$mul_to_aop(
     node: univ_ptr): univ_ptr; options(val_param); extern;
 
 function rewrite_$agg_aop(
+    node: univ_ptr): univ_ptr; options(val_param); extern;
+
+function rewrite_$const_mul(
     node: univ_ptr): univ_ptr; options(val_param); extern;
 
 var
@@ -8213,7 +8215,21 @@ procedure isc_tree_node_mod_top(
     var solutions_made: boolean;
     var no_solutions: boolean); options(val_param); extern;
 
-{ isc_tree_node_mul_top (0x0ECC10): not generated yet (the unit's header). }
+{ isc_tree_node_mul_top - the
+  proper_subtree il_mul_top, 2 children, never its own: a constant
+  times a variable is rewritten with the operands swapped (op 3), a
+  signed multiplication (bit 7 of +30) as an isc_mul_top (op 33), any
+  other by rewrite_$const_mul; each rewritten node's solutions.  The
+  rewritten tree nodes take +24 .. +29 and bits 7 and 6 of +30 from the
+  node.
+
+  0x0ECC10, 0x3BA bytes: the first condition and-ed through -50
+  (`not.b', `and.b'); the three rewrites share the store of the
+  solutions and the `st' (cross-jumping); +26 .. +29 copied as one
+  longword; A2 il, D5 inh.
+
+  Not known from the original: how +26 .. +29 were written (one
+  longword in the image, two words here). }
 
 procedure isc_tree_node_mul_top(
     il: univ_ptr;
@@ -8225,7 +8241,89 @@ procedure isc_tree_node_mul_top(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  n: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_mul_top);
+  number_of_children := 2;
+  if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
+      and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
+    if isc_user_routines_356 or isc_user_routines_354 then begin
+      write('*********************');
+      writeln;
+      write('R E W R I T E ! ! ! !');
+      writeln;
+      write('*********************');
+      writeln;
+      writeln;
+    end;
+    n := mrh_$alloc(isc_preserve_heap, 48);
+    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
+    isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
+    isc_node_ptr_t(n)^.xw[18] := 3;
+    isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+    isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
+    p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
+    isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    p1_node_bytes_ptr_t(n)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+  end
+  else if p1_node_bytes_ptr_t(il)^[30].b7 then begin
+    if isc_user_routines_356 or isc_user_routines_354 then begin
+      write('*********************');
+      writeln;
+      write('R E W R I T E ! ! ! !');
+      writeln;
+      write('*********************');
+      writeln;
+      writeln;
+    end;
+    n := mrh_$alloc(isc_preserve_heap, 48);
+    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
+    isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
+    isc_node_ptr_t(n)^.xw[18] := 33;
+    isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+    isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
+    p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
+    isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    p1_node_bytes_ptr_t(n)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+  end
+  else begin
+    if isc_user_routines_356 or isc_user_routines_354 then begin
+      write('*********************');
+      writeln;
+      write('R E W R I T E ! ! ! !');
+      writeln;
+      write('*********************');
+      writeln;
+      writeln;
+    end;
+    n := rewrite_$const_mul(il);
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+  end;
+  solutions_made := true;
+end;
 
 { isc_tree_node_neg_top - the proper_subtree il_neg_top, 1 child (0x0ECFCA). }
 

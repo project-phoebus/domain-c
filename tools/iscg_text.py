@@ -719,6 +719,9 @@ function rewrite_$mul_to_aop(
     node: univ_ptr): univ_ptr; options(val_param); extern;
 
 function rewrite_$agg_aop(
+    node: univ_ptr): univ_ptr; options(val_param); extern;
+
+function rewrite_$const_mul(
     node: univ_ptr): univ_ptr; options(val_param); extern;'''
 
 P1_DATA = '''var
@@ -1647,3 +1650,77 @@ end;''')
 P1_ROUTINES['isc_tree_node_compare_top'] = _compare('isc_tree_node_compare_top', '0x0E7B80')
 P1_ROUTINES['isc_cmp_tree_node_compare_top'] = _compare('isc_cmp_tree_node_compare_top',
                                                         '0x0E30D0')
+
+P1_ROUTINES['isc_tree_node_mul_top'] = _p1('isc_tree_node_mul_top', '''the
+  proper_subtree il_mul_top, 2 children, never its own: a constant
+  times a variable is rewritten with the operands swapped (op 3), a
+  signed multiplication (bit 7 of +30) as an isc_mul_top (op 33), any
+  other by rewrite_$const_mul; each rewritten node's solutions.  The
+  rewritten tree nodes take +24 .. +29 and bits 7 and 6 of +30 from the
+  node.
+
+  0x0ECC10, 0x3BA bytes: the first condition and-ed through -50
+  (`not.b', `and.b'); the three rewrites share the store of the
+  solutions and the `st' (cross-jumping); +26 .. +29 copied as one
+  longword; A2 il, D5 inh.
+
+  Not known from the original: how +26 .. +29 were written (one
+  longword in the image, two words here).''', '''
+var
+  n: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_mul_top);
+  number_of_children := 2;
+  if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
+      and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
+    @TRACE
+    n := mrh_$alloc(isc_preserve_heap, 48);
+    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
+    isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
+    isc_node_ptr_t(n)^.xw[18] := 3;
+    isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+    isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
+    p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
+    isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    p1_node_bytes_ptr_t(n)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+  end
+  else if p1_node_bytes_ptr_t(il)^[30].b7 then begin
+    @TRACE
+    n := mrh_$alloc(isc_preserve_heap, 48);
+    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
+    isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
+    isc_node_ptr_t(n)^.xw[18] := 33;
+    isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
+    isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
+    p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
+    isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    p1_node_bytes_ptr_t(n)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+  end
+  else begin
+    @TRACE
+    n := rewrite_$const_mul(il);
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+  end;
+  solutions_made := true;
+end;''')
