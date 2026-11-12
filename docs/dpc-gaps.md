@@ -759,6 +759,11 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
            n := 1;
        end;
 
+   Also dbg_life.pas dbg_life_$find_symbols (cc.a88k 0x22DC08, translator
+   PB4): `clobbered := (reg in set32) or (reg + 1 in set32)' with set32
+   a local set of 0..31 (the image keeps it in D5: `btst D0,D5' and
+   `btst D6,D5'); same message.  The rewrite tests the record's set.
+
 31. **A set expression of more than a longword compared with `[]'.**
    final.pas floatop (cc.m68k 0x10FDF0): a double's low 29 bits tested
    as `v.s * [0..28] = []' with v.s a `set of 0..63' view of the real

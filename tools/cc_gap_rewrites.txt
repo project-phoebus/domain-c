@@ -239,3 +239,5 @@ lang2/source/be_com/backend.ins.pas	s/^(\s*)dmp_\$lr_name_t = packed array \[1\.
 lang2/source/be_com/dmp.pas	s/^(\s*)(\d+): name := '[^']*';/${1}${2}: name[1] := 'x'; { gap 34 }/
 lang2/source/be_com/dmp.pas	s/^(\s*)(\d+): lname := '[^']*';/${1}${2}: lname[2] := 'x'; { gap 34 }/
 lang2/source/be_com/dmp.pas	s/^(\s*)tag := '....'(;?)$/${1}tag[1] := 'x'${2} { gap 34 }/
+# gap 30 (dbg_life): `in' on a local set held in a register as an operand of `or' (the record's set tested instead, for the check)
+lang2/source/be_com/dbg_life.pas	s/clobbered := \(reg in set32\) or \(reg \+ 1 in set32\);/clobbered := (reg in c^.fp_hi) or (reg + 1 in c^.fp_hi); { gap 30 }/
