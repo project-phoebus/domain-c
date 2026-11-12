@@ -217,8 +217,31 @@ transform 19  ip_reg <- ap_register
 end;
 
 transform 20  address_mode <- argument_block_location_ob
-  { not lifted: global 0x44E748 }
-  pass_1 image 16#13E550 residue;
+  pass_1 image 16#13E550 begin
+    temp t2: integer32;
+    condition lir_$can_encode_as_immediate_operand(target_properties.p_9c + subject.il.l4, opc$loadl, 1);
+    cycle_guard already_address_mode;
+    result.code_bytes <- 0;
+    result.memory_references <- 0;
+    result.delay <- 0;
+    result.arg_block_location <- true;
+    result.bits_known <- 0;
+    if number_of_rightmost_zeroes(subject.il.l4) > 3 then
+      t2 <- 3;
+    else
+      t2 <- number_of_rightmost_zeroes(subject.il.l4);
+    end;
+    result.bits_trusted <- readonly_l2728[t2];
+    result.bits_known_of_fetched_value <- 0;
+    result.bits_trusted_of_fetched_value <- 0;
+    result.has_a_symbolic_displacement <- false;
+    result.literal_32_bits_value <- target_properties.p_9c + subject.il.l4;
+    result.ip_reg_max <- 0;
+    result.ip_reg_result <- 0;
+    result.uses_the_base_register <- true;
+    result.uses_the_displacement <- true;
+    result.uses_the_index_register <- false;
+  end;
   pass_2 image 16#1BBFBA begin
     result.base_register <- isc_user_routines_340;
     result.index_register <- isc_user_routines_31c;

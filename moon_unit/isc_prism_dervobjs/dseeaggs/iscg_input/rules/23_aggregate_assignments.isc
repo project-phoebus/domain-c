@@ -332,8 +332,208 @@ transform 210  void <- isc_fill_aop ($3: [ip_reg, literal_32_bits])
 end;
 
 transform 211  void <- isc_fill_aop ($1: address_mode, $2: literal_32_bits, $3: literal_32_bits)
-  { not lifted: 0x163B24: a branch on unknown flags }
-  pass_1 image 16#163892 residue;
+  pass_1 image 16#163892 begin
+    temp t1: boolean;
+    temp t3: integer;
+    temp t4: integer32;
+    temp t5: integer32;
+    t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
+    condition not ($3.literal_32_bits_value = 0 or subject.il.w52 <> 11 and (subject.il.w52 <> 5) and (subject.il.w52 <> 4 and (subject.il.w52 <> 1)) and (subject.il.w52 <> 2) or (not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5));
+    if readonly_l372[subject.il.w52] > 0 then
+      t3 <- readonly_l372[subject.il.w52];
+    else
+      t3 <- 8;
+    end;
+    if $1.is_volatile then
+      t4 <- 2048;
+    else
+      t4 <- 0;
+    end;
+    if $1.is_volatile then
+      t5 <- 16#400000;
+    else
+      t5 <- 0;
+    end;
+    result.l352 <- t5 + t4;
+    if $1.bits_trusted & 3 = 3 and ($1.bits_known & 3 = 0) then
+      result.l360 <- t3 div 8 * $3.literal_32_bits_value div 4;
+    else
+      result.l360 <- nil;
+    end;
+    if $1.bits_trusted & 1 <> 0 and ($1.bits_known & 1 = 0) then
+      result.l364 <- (t3 div 8 * $3.literal_32_bits_value - result.l360 * 4) div 2;
+    else
+      result.l364 <- nil;
+    end;
+    result.l368 <- t3 div 8 * $3.literal_32_bits_value - result.l360 * 4 - (result.l364 + result.l364);
+    if result.l360 > 0 then
+      if subject.il.w52 = 1 then
+        result.l356 <- $2.literal_32_bits_value ! ($2.literal_32_bits_value * 256 ! (lshft($2.literal_32_bits_value, 16) ! lshft($2.literal_32_bits_value, 16) * 256));
+      elsif subject.il.w52 = 2 then
+        result.l356 <- $2.literal_32_bits_value ! $2.literal_32_bits_value * 256;
+      else
+        result.l356 <- $2.literal_32_bits_value;
+      end;
+    elsif result.l364 > 0 then
+      if subject.il.w52 = 1 then
+        result.l356 <- $2.literal_32_bits_value ! $2.literal_32_bits_value * 256;
+      else
+        result.l356 <- $2.literal_32_bits_value;
+      end;
+    else
+      result.l356 <- $2.literal_32_bits_value;
+    end;
+    if result.l356 = nil then
+      result.c136 <- 1;
+    else
+      result.c136 <- 2;
+      if lir_$can_encode_as_immediate_operand(result.l356, opc$move, 1) then
+        result.c137 <- 1;
+      else
+        result.c137 <- 2;
+      end;
+    end;
+    if result.l360 <= 4 and (result.l364 <= 4) and (t3 div 8 * $3.literal_32_bits_value - result.l360 * 4 - (result.l364 + result.l364) <= 4) then
+      result.c138 <- 1;
+      if not lir_$can_encode_as_immediate_operand(t3 div 8 * $3.literal_32_bits_value + $1.literal_32_bits_value - 1, opc$loadl, 1) and not $1.has_a_symbolic_displacement or $1.uses_the_index_register then
+        result.c139 <- 2;
+        if $1.uses_the_base_register then
+          result.c140 <- 1;
+          if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+            result.c141 <- 2;
+          else
+            result.c141 <- 1;
+          end;
+        else
+          result.c140 <- 2;
+          if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+            result.c142 <- 1;
+          else
+            result.c142 <- 2;
+          end;
+        end;
+      else
+        result.c139 <- 1;
+      end;
+      if not $1.uses_the_displacement then
+        result.c143 <- 1;
+      else
+        result.c143 <- 2;
+      end;
+    else
+      result.c138 <- 2;
+      if $1.uses_the_base_register then
+        result.c144 <- 1;
+        if $1.literal_32_bits_value <> 0 or $1.uses_the_index_register or $1.has_a_symbolic_displacement then
+          result.c145 <- 2;
+        else
+          result.c145 <- 1;
+        end;
+      else
+        result.c144 <- 2;
+        if lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$move, 1) then
+          result.c146 <- 1;
+        else
+          result.c146 <- 2;
+        end;
+      end;
+      if result.l360 > 0 then
+        result.c147 <- 1;
+        if result.l360 >= 4 then
+          result.c148 <- 1;
+          if lir_$can_encode_as_immediate_operand(result.l360 div 2, opc$move, 1) then
+            result.c149 <- 1;
+          else
+            result.c149 <- 2;
+          end;
+        else
+          result.c148 <- 2;
+        end;
+        if result.l360 >= 2 then
+          result.c150 <- 1;
+        else
+          result.c150 <- 2;
+        end;
+        if result.l360 >= 4 then
+          result.c151 <- 1;
+        else
+          result.c151 <- 2;
+        end;
+        if result.l360 = 3 or result.l360 >= 4 and (result.l360 mod 2 = 1) then
+          result.c152 <- 1;
+        else
+          result.c152 <- 2;
+        end;
+      else
+        result.c147 <- 2;
+      end;
+      if result.l364 > 0 then
+        result.c153 <- 1;
+        if result.l364 >= 4 then
+          result.c154 <- 1;
+          if lir_$can_encode_as_immediate_operand(result.l364 div 2, opc$move, 1) then
+            result.c155 <- 1;
+          else
+            result.c155 <- 2;
+          end;
+        else
+          result.c154 <- 2;
+        end;
+        if result.l364 >= 2 then
+          result.c156 <- 1;
+        else
+          result.c156 <- 2;
+        end;
+        if result.l364 >= 4 then
+          result.c157 <- 1;
+        else
+          result.c157 <- 2;
+        end;
+        if result.l364 = 3 or result.l364 >= 4 and (result.l364 mod 2 = 1) then
+          result.c158 <- 1;
+        else
+          result.c158 <- 2;
+        end;
+      else
+        result.c153 <- 2;
+      end;
+      if result.l368 > 0 then
+        result.c159 <- 1;
+        if result.l368 >= 4 then
+          result.c160 <- 1;
+          if lir_$can_encode_as_immediate_operand(result.l368 div 2, opc$move, 1) then
+            result.c161 <- 1;
+          else
+            result.c161 <- 2;
+          end;
+        else
+          result.c160 <- 2;
+        end;
+        if result.l368 >= 2 then
+          result.c162 <- 1;
+        else
+          result.c162 <- 2;
+        end;
+        if result.l368 >= 4 then
+          result.c163 <- 1;
+        else
+          result.c163 <- 2;
+        end;
+        if result.l368 = 3 or result.l368 >= 4 and (result.l368 mod 2 = 1) then
+          result.c164 <- 1;
+        else
+          result.c164 <- 2;
+        end;
+      else
+        result.c159 <- 2;
+      end;
+    end;
+    result.code_bytes <- words@45(12)[result.c138] * result.w370 + words@46(4, 4)[result.c137] + words@44(0, 4)[result.c141] + words@43(4, 4)[result.c142] + words@42(0, 4)[result.c145] + words@41(4, 4)[result.c146] + words@40(4)[result.c147] + words@39(4, 4)[result.c149] + words@38(4)[result.c150] + words@37(12)[result.c151] + words@36(4)[result.c152] + words@35(4)[result.c153] + words@34(4, 4)[result.c155] + words@33(4)[result.c156] + words@32(12)[result.c157] + words@31(4)[result.c158] + words@30(4)[result.c159] + words@29(4, 4)[result.c161] + words@28(4)[result.c162] + words@27(12)[result.c163] + words@26(4)[result.c164] + $1.code_bytes + $2.code_bytes + $3.code_bytes;
+    result.memory_references <- bytes@25(0, 1)[result.c137] + bytes@24(3)[result.c138] * result.w370 + bytes@23(0, 1)[result.c142] + bytes@22(0, 1)[result.c146] + bytes@21(1)[result.c147] + bytes@20(0, 1)[result.c149] + bytes@19(1)[result.c150] + bytes@18(1)[result.c152] + bytes@17(1)[result.c153] + bytes@16(0, 1)[result.c155] + bytes@15(1)[result.c156] + bytes@14(1)[result.c158] + bytes@13(1)[result.c159] + bytes@12(0, 1)[result.c161] + bytes@11(1)[result.c162] + bytes@10(1)[result.c164] + $1.memory_references + $2.memory_references + $3.memory_references;
+    result.delay <- bytes@9(0, 1)[result.c137] + bytes@8(0, 1)[result.c142] + bytes@7(0, 1)[result.c146] + bytes@6(0, 1)[result.c149] + bytes@5(1)[result.c151] + bytes@4(0, 1)[result.c155] + bytes@3(1)[result.c157] + bytes@2(0, 1)[result.c161] + bytes@1(1)[result.c163] + $1.delay + $2.delay + $3.delay;
+    result.evaluation_order <- 1;
+    sum ip_reg_max, fp_reg_max, fp_reg_pair_max of $1, $2;
+  end;
   pass_2 image 16#1CF91C begin
     temp t1: solution;
     temp t2: pointer;
