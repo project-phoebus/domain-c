@@ -227,13 +227,12 @@
 
   Not generated yet (declared extern below; the operator
   declarations mark them `fixed'; their text is to be read off the
-  image into tools/iscg_text.py P1_ROUTINES): 12 routines,
+  image into tools/iscg_text.py P1_ROUTINES): 11 routines,
     isc_assign_node_div_by_aop, isc_assign_node_isc_mul_to_aop,
     isc_bit_field_assign, isc_cmp_tree_node_bit_field_cmp_top,
-    isc_cmp_tree_node_compare_top, isc_fortran_symbol,
-    isc_tree_node_bit_field_cmp_top, isc_tree_node_compare_top,
-    isc_tree_node_div_top, isc_tree_node_isc_mul_top, isc_tree_node_mod_top,
-    isc_tree_node_mul_top
+    isc_cmp_tree_node_compare_top, isc_tree_node_bit_field_cmp_top,
+    isc_tree_node_compare_top, isc_tree_node_div_top,
+    isc_tree_node_isc_mul_top, isc_tree_node_mod_top, isc_tree_node_mul_top
 
   Not known from the original: the parameters' and locals' names, the
   module data's names. }
@@ -3940,7 +3939,22 @@ begin
   number_of_children := 0;
 end;
 
-{ isc_fortran_symbol (0x0E434E): not generated yet (the unit's header). }
+{ isc_fortran_symbol - the
+  proper_subtree il_fortran_symbol, no children: a symbol of kind 6
+  (the high nibble of +44: a statement label's variable) is its label's
+  solutions when the label (+48) is a ^. reference
+  (get_uparrow_dot_kind 156), else it is rewritten as the label's
+  address constant (a node of kind 146 over get_proc_addr_con 6 of the
+  label in il_180's section); a symbol of kind 1 not in a register (the
+  high nibble of +11 not 5) with no offset (+40) is rewritten as its
+  address constant (make_new_addr_con 2); any other is initialized
+  (initialize_symbol) and has no solutions.
+
+  0x0E434E, 0x2EE bytes: D2 the kind (`and.b' of #240, `lsr.w #4');
+  the three paths share the store of the solutions and the `st' of
+  solutions_made (cross-jumping); A2 il, D5 inh.
+
+  Not known from the original: the conditions' form. }
 
 procedure isc_fortran_symbol(
     il: univ_ptr;
@@ -3952,7 +3966,74 @@ procedure isc_fortran_symbol(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  kind: integer;
+  n1, n2: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_fortran_symbol);
+  number_of_children := 0;
+  kind := isc_node_ptr_t(il)^.fs_f44.kind;
+  if kind = 6 then begin
+    if get_uparrow_dot_kind(isc_node_ptr_t(il)^.xp[12]) = 156 then
+      solutions := pass_1(isc_node_ptr_t(il)^.xp[12], inh, depth, permissible)
+    else begin
+      if isc_user_routines_356 or isc_user_routines_354 then begin
+        write('*********************');
+        writeln;
+        write('R E W R I T E ! ! ! !');
+        writeln;
+        write('*********************');
+        writeln;
+        writeln;
+      end;
+      n1 := get_proc_addr_con(6, il_$node_ptr_t(assert_kind_is_label_node(isc_node_ptr_t(il)^.xp[12])),
+          isc_node_ptr_t(il_180)^.xl[47], il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]));
+      n2 := mrh_$alloc(isc_preserve_heap, 32);
+      isc_node_ptr_t(n2)^.kind := 146;
+      isc_node_ptr_t(n2)^.rewritten := true;
+      isc_node_ptr_t(n2)^.xp[6] := n1;
+      p1_node_chars_ptr_t(n2)^[23] := chr(0);
+      p1_node_chars_ptr_t(n2)^[22] := chr(0);
+      inh_1 := new_inherited_attributes(isc_heap, n2);
+      inh_1^ := inh^;
+      inh_1^.node := n2;
+      inh_1^.stmt := il;
+      solutions := pass_1(n2, inh_1, depth, permissible);
+    end;
+    solutions_made := true;
+  end
+  else if (isc_node_ptr_t(il)^.fs_f10.sto <> 5) and (kind = 1)
+      and (isc_node_ptr_t(il)^.xl[10] = 0) then begin
+    if isc_user_routines_356 or isc_user_routines_354 then begin
+      write('*********************');
+      writeln;
+      write('R E W R I T E ! ! ! !');
+      writeln;
+      write('*********************');
+      writeln;
+      writeln;
+    end;
+    n1 := make_new_addr_con(2, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
+    n2 := mrh_$alloc(isc_preserve_heap, 32);
+    isc_node_ptr_t(n2)^.kind := 146;
+    isc_node_ptr_t(n2)^.rewritten := true;
+    isc_node_ptr_t(n2)^.xp[6] := n1;
+    p1_node_chars_ptr_t(n2)^[23] := chr(0);
+    p1_node_chars_ptr_t(n2)^[22] := chr(2);
+    inh_1 := new_inherited_attributes(isc_heap, n2);
+    inh_1^ := inh^;
+    inh_1^.node := n2;
+    inh_1^.stmt := il;
+    solutions := pass_1(n2, inh_1, depth, permissible);
+    solutions_made := true;
+  end
+  else
+    initialize_symbol(il);
+end;
 
 { isc_function_blk - the
   proper_subtree il_function_blk, no children: a routine's block (its
