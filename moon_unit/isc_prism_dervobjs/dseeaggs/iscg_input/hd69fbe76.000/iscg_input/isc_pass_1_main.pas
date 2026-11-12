@@ -227,7 +227,7 @@
 
   Not generated yet (declared extern below; the operator
   declarations mark them `fixed'; their text is to be read off the
-  image into tools/iscg_text.py P1_ROUTINES): 25 routines,
+  image into tools/iscg_text.py P1_ROUTINES): 23 routines,
     isc_assign_node_div_by_aop, isc_assign_node_isc_agg_aop,
     isc_assign_node_isc_agg_zero_aop, isc_assign_node_isc_mul_to_aop,
     isc_bit_field_assign, isc_cmp_tree_node_bit_field_cmp_top,
@@ -237,9 +237,7 @@
     isc_tree_node_compare_top, isc_tree_node_div_top,
     isc_tree_node_f_div_top, isc_tree_node_f_math_top,
     isc_tree_node_func_call_top, isc_tree_node_isc_func_call_top,
-    isc_tree_node_isc_mul_top, isc_tree_node_isc_unsigned_mod_top,
-    isc_tree_node_isc_unsigned_rem_top, isc_tree_node_mod_top,
-    isc_tree_node_mul_top
+    isc_tree_node_isc_mul_top, isc_tree_node_mod_top, isc_tree_node_mul_top
 
   Not known from the original: the parameters' and locals' names, the
   module data's names. }
@@ -6501,7 +6499,7 @@ begin
   end;
 end;
 
-{ isc_tree_node_isc_unsigned_mod_top (0x0EB7A0): not generated yet (the unit's header). }
+{ isc_tree_node_isc_unsigned_mod_top - the proper_subtree il_isc_unsigned_mod_top, 2 children (0x0EB7A0). }
 
 procedure isc_tree_node_isc_unsigned_mod_top(
     il: univ_ptr;
@@ -6513,9 +6511,44 @@ procedure isc_tree_node_isc_unsigned_mod_top(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1: inherited_attributes_ptr_t;
+  n1: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_isc_unsigned_mod_top);
+  number_of_children := 2;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('*********************');
+    writeln;
+    write('R E W R I T E ! ! ! !');
+    writeln;
+    write('*********************');
+    writeln;
+    writeln;
+  end;
+  n1 := mrh_$alloc(isc_preserve_heap, 48);
+  isc_node_ptr_t(n1)^.kind := 137;
+  isc_node_ptr_t(n1)^.rewritten := true;
+  isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
+  isc_node_ptr_t(n1)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
+  isc_node_ptr_t(n1)^.xw[18] := 6;
+  isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[12];
+  isc_node_ptr_t(n1)^.xw[14] := isc_node_ptr_t(il)^.xw[12];
+  p1_node_bytes_ptr_t(n1)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
+  isc_node_ptr_t(n1)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+  p1_node_bytes_ptr_t(n1)^[30].b6 := false;
+  inh_1 := new_inherited_attributes(isc_heap, n1);
+  inh_1^ := inh^;
+  inh_1^.node := n1;
+  inh_1^.stmt := il;
+  solutions := pass_1(n1, inh_1, depth, permissible);
+  solutions_made := true;
+end;
 
-{ isc_tree_node_isc_unsigned_rem_top (0x0EB912): not generated yet (the unit's header). }
+{ isc_tree_node_isc_unsigned_rem_top - the proper_subtree il_isc_unsigned_rem_top, 2 children (0x0EB912). }
 
 procedure isc_tree_node_isc_unsigned_rem_top(
     il: univ_ptr;
@@ -6527,7 +6560,39 @@ procedure isc_tree_node_isc_unsigned_rem_top(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1: inherited_attributes_ptr_t;
+  n1: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_isc_unsigned_rem_top);
+  number_of_children := 2;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('*********************');
+    writeln;
+    write('R E W R I T E ! ! ! !');
+    writeln;
+    write('*********************');
+    writeln;
+    writeln;
+  end;
+  n1 := mrh_$alloc(isc_preserve_heap, 48);
+  isc_node_ptr_t(n1)^.kind := 137;
+  isc_node_ptr_t(n1)^.rewritten := true;
+  isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
+  isc_node_ptr_t(n1)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
+  isc_node_ptr_t(n1)^.xw[18] := 74;
+  isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[12];
+  p1_node_bytes_ptr_t(n1)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
+  inh_1 := new_inherited_attributes(isc_heap, n1);
+  inh_1^ := inh^;
+  inh_1^.node := n1;
+  inh_1^.stmt := il;
+  solutions := pass_1(n1, inh_1, depth, permissible);
+  solutions_made := true;
+end;
 
 { isc_tree_node_lshf_top - the proper_subtree il_lshf_top, 2 children (0x0EBA72). }
 

@@ -576,9 +576,29 @@ class Lifter:
             m = re.match(r'b(set|clr) #(\d),(.*)$', t)
             if m:
                 dst = self.bit_target(m.group(3), int(m.group(2)))
-                low.append(('store', dst, 'true' if m.group(1) == 'set' else 'false'))
+                v = 'true' if m.group(1) == 'set' else 'false'
+                low.append(('store', dst, v) if dst[0] == 'inh' else ('nstore', dst[1], v))
                 k += 1
                 continue
+            # two longwords of the node copied to a rewritten node: lea X@(o),A;
+            # movel A@+,Y@(p); movel A@,Y@(p+4)
+            m = re.match(r'lea %(a\d)@\((\d+)\),%(a\d)$', t)
+            if m and regs.get(m.group(1), ('',))[0] in ('param', 'field') and \
+                    regs.get(m.group(1)) != ('param', 12) and k + 2 < len(ins):
+                a = m.group(3)
+                m1 = re.match(r'movel %%%s@\+,%%(a\d)@\((\d+)\)$' % a, ins[k + 1][1])
+                m2 = re.match(r'movel %%%s@,%%(a\d)@\((\d+)\)$' % a, ins[k + 2][1])
+                if m1 and m2 and m1.group(1) == m2.group(1) and \
+                        int(m2.group(2)) == int(m1.group(2)) + 4 and \
+                        regs.get(m1.group(1), ('',))[0] == 'callres':
+                    dst = self.render(regs[m1.group(1)])
+                    off = int(m.group(2))
+                    for j in (0, 4):
+                        src = self.field(regs[m.group(1)], off + j, 4)
+                        low.append(('nstore', '%s.p%d' % (dst, int(m1.group(2)) + j),
+                                    re.sub(r'\.l(\d+)$', r'.p\1', src)))
+                    k += 3
+                    continue
             # the whole record copied: moveq #4,R; movel a@+,b@+ (2); dbf
             m = re.match(r'movel %(a\d)@\+,%(a\d)@\+$', t)
             if m and ins[k - 1][1].startswith('moveq #4,') and ins[k + 1][1] == t and \

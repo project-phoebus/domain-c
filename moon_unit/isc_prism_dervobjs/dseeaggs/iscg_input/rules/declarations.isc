@@ -1479,12 +1479,39 @@ operator isc_tree_node_isc_signed_rem_top il isc_signed_rem_top children 2 image
     permissible derived;
 end;
 operator isc_tree_node_isc_unsigned_mod_top il isc_unsigned_mod_top children 2 image 16#0EB7A0;
-  fixed;
-  pass_1 inherited;
+  trace rewrite;
+  let n1 <- mrh_$alloc(isc_preserve_heap, 48);
+  n1.w2 <- 137;
+  n1.b0 <- true;
+  n1.p40 <- il.p40;
+  n1.p44 <- il.p44;
+  n1.w36 <- 6;
+  n1.w26 <- il.w24;
+  n1.w28 <- il.w24;
+  n1.b30.7 <- il.b30.7;
+  n1.w24 <- il.w24;
+  n1.b30.6 <- false;
+  child solutions n1 copy_all
+    il <- n1;
+    original_il <- il;
+    permissible inherited;
+  solutions_made;
 end;
 operator isc_tree_node_isc_unsigned_rem_top il isc_unsigned_rem_top children 2 image 16#0EB912;
-  fixed;
-  pass_1 inherited;
+  trace rewrite;
+  let n1 <- mrh_$alloc(isc_preserve_heap, 48);
+  n1.w2 <- 137;
+  n1.b0 <- true;
+  n1.p40 <- il.p40;
+  n1.p44 <- il.p44;
+  n1.w36 <- 74;
+  n1.w26 <- il.w24;
+  n1.b30.7 <- il.b30.7;
+  child solutions n1 copy_all
+    il <- n1;
+    original_il <- il;
+    permissible inherited;
+  solutions_made;
 end;
 operator isc_tree_node_lshf_top il lshf_top children 2 image 16#0EBA72;
   child 1 il.p40
