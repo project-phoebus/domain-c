@@ -102,38 +102,16 @@
   (il.ins.pas's views), a block's nesting level through oi_level_t.
 
   dpc gaps (docs/dpc-gaps.md): 8 (`in' on node kind sets), 24
-  (function_return's call as a right operand of `and').  find_block,
-  get_referenced_symbol and inliner_actual set their pointer results
-  from a local (gap 15).
+  (function_return's call as a right operand of `and', process_operand's
+  `and not inline_$is_fortran_asf').  find_block,
+  get_referenced_symbol, inliner_actual and substitutee_sym_ind set
+  their pointer results from a local (gap 15).
 
   Not known from the original: every name but the routines'; the
   display record's (oi_info_t) and the context's (oi_ctx_t) fields
   are named by use.
 }
 
-{ TODO(pascal) opt_inline: 54 of 62 routines written
-
-  Not written: process_operand (0x092228, cc.a88k 0x093C08, 0xBD8
-  bytes) and the seven routines nested in it: process_opr_ind
-  (0x091CAE / 0x09368E), process_index_opr (0x091A1E / 0x0933FE),
-  apply_disp (0x09196A / 0x09334A), disp_offset (0x091956 /
-  0x093336), adjust_disp (0x09192E / 0x09330E), get_sym_ind_info
-  (0x0918BA / 0x09329A) and substitutee_sym_ind (0x091822 / 0x093202,
-  nested in get_sym_ind_info).  process_operand is declared extern
-  below (before process_statements, which calls it).  What was read
-  of them: substitutee_sym_ind(e, n, var ctx) maps n through the hash
-  table (ctx.subst set for flags 0..2; flag 1 keeps n; else the value,
-  its address operand, a 195's +12, a 147's or 146's +28);
-  get_sym_ind_info(e, var blk, var ctx, out raw, out sub: oi_symind_t)
-  takes ctx.c16 and ctx.c20 (an identifier 76 looked up by find_varn)
-  and their substitutes; adjust_disp(disp, sym, node, var r) fills
-  r's node, disp and dsym; disp_offset(n) is n's +32 (0 for nil);
-  apply_disp(e, x, ctx, var info, var t) makes t a symbolic (add_sdn)
-  or plain (add_dn) displacement from info (or moves ctx.dnode's +32),
-  then maps x to t; process_index_opr(e, x, var t, ctx, var r, a, b)
-  rebases an indexing between two variables' storage (class 1 or 7
-  through il_e0, 2 or 6 through il_e4, -CPU element 6) and calls
-  process_operand. }
 module opt_inline;
 
 %include '/sys/ins/base.ins.pas';
@@ -168,15 +146,19 @@ type
   end;
 
   { What a node of the callee becomes in the copy (24 bytes, kept by
-    put_hash_info; the empty one at +0x5EB0, nil_out_dispinfo). }
+    put_hash_info; the empty one at +0x5EB0, nil_out_dispinfo): the
+    displacement still to be applied to the reference whose base node
+    is node (adjust_disp, apply_disp: add_dn of disp_sym and disp,
+    add_sdn of sdn_sym and sdn_var) and the actual's captured
+    indirection (process_parameters). }
   oi_info_ptr_t = ^oi_info_t;
   oi_info_t = record
     node: il_$node_ptr_t;               { +0 }
-    i4: il_$node_ptr_t;                 { +4 }
-    i8: il_$node_ptr_t;                 { +8 }
-    i12: il_$node_ptr_t;                { +12 }
-    i16: il_$node_ptr_t;                { +16 }
-    i20: il_$node_ptr_t;                { +20 }
+    disp: integer32;                    { +4 }
+    disp_sym: il_$node_ptr_t;           { +8 }
+    sdn_var: il_$node_ptr_t;            { +12 }
+    sdn_sym: il_$node_ptr_t;            { +16 }
+    ind: il_$node_ptr_t;                { +20 }
   end;
 
   { An entry of the hash table (24 bytes; the chains' heads are the
@@ -228,10 +210,11 @@ type
   end;
 
   { What dfs_walk keeps of a call being expanded (its frame at -16):
-    the callee's result variable (call_status) and the call's line
-    (current_ln). }
+    the block the statement being copied is in (process_operand, at
+    each 148 and 149; never set before the first), the callee's result
+    variable (call_status) and the call's line (current_ln). }
   oi_call_t = record
-    unused_0: integer32;                { +0 }
+    blk: il_$node_ptr_t;                { +0 }
     result: il_$node_ptr_t;             { +4 }
     line: integer;                      { +8 }
   end;
@@ -243,17 +226,19 @@ type
   end;
 
   { process_operand's context (30 bytes, by value): the reference
-    being rebuilt (+0 its base, +8 a displacement node, +12 another,
-    +16 and +20 the symbol and variable of a symbolic displacement,
-    +24 the reference's kind), +26 the use count for the nodes made,
-    +28 set when a substitution was made (substitutee_sym_ind). }
+    being rebuilt (+0 the reference whose base is rebased, +4 the call
+    whose routine operand is being copied, +8 its displacement node
+    (147), +12 its symbolic displacement node (205), +16 and +20 the
+    symbol and variable it is reached by (process_opr_ind), +24 the
+    kind that set them), +26 the use count for the nodes made, +28 set
+    when a substitution was made (substitutee_sym_ind). }
   oi_ctx_t = record
     base: il_$node_ptr_t;               { +0 }
-    c4: il_$node_ptr_t;                 { +4 }
+    call: il_$node_ptr_t;               { +4 }
     dnode: il_$node_ptr_t;              { +8 }
-    c12: il_$node_ptr_t;                { +12 }
-    c16: il_$node_ptr_t;                { +16 }
-    c20: il_$node_ptr_t;                { +20 }
+    sdn: il_$node_ptr_t;                { +12 }
+    sym: il_$node_ptr_t;                { +16 }
+    v: il_$node_ptr_t;                  { +20 }
     kind: integer;                      { +24 }
     uses: integer;                      { +26 }
     subst: boolean;                     { +28 }
@@ -375,11 +360,11 @@ procedure nil_out_dispinfo(
     out d: oi_info_t); internal;
 begin
   d.node := nil;
-  d.i4 := nil;
-  d.i8 := nil;
-  d.i12 := nil;
-  d.i16 := nil;
-  d.i20 := nil;
+  d.disp := 0;
+  d.disp_sym := nil;
+  d.sdn_var := nil;
+  d.sdn_sym := nil;
+  d.ind := nil;
 end;
 
 { next_contained_block - the block after b (in the IL's order, +4)
@@ -1067,7 +1052,7 @@ begin
     p^.ctx := e^.caller;
     p^.val := val;
     p^.flags := flags;
-    if (info.node = n) or (info.i20 <> nil) then begin
+    if (info.node = n) or (info.ind <> nil) then begin
       p^.info := mrh_$alloc(heap, 24);
       p^.info^ := info;
     end
@@ -2161,7 +2146,7 @@ begin
       end;
     end;
     nil_out_dispinfo(info);
-    info.i20 := ind;
+    info.ind := ind;
     put_hash_info(e, f, val, fl, info);
     if language <> 2 then
       p := p^.xp[1];
@@ -2434,26 +2419,837 @@ begin
   until (s^.kind = 149) and (s^.xp[12] = e^.callee);
 end;
 
-{ TODO(pascal) process_operand and its nested routines
+{ process_operand - statement or tree t of the callee, for edge e,
+  copied into the caller (the copy left in t; nil for a statement that
+  is dropped), its nodes mapped through the hash table; x is the call
+  being expanded (x.blk the block the statement is in, followed at
+  each 148 and 149), ctx the reference being rebuilt (by value: each
+  operand gets the context of its tree), r the displacement still to
+  be applied to the reference it names (r.node).
 
-  process_operand (0x092228, 0xBD8 bytes) with substitutee_sym_ind
-  (0x091822, in get_sym_ind_info), get_sym_ind_info (0x0918BA),
-  adjust_disp (0x09192E), disp_offset (0x091956), apply_disp
-  (0x09196A), process_index_opr (0x091A1E) and process_opr_ind
-  (0x091CAE) are not written yet.  process_operand copies statement
-  or tree t of the callee for edge e into the stream (the copy left
-  in t; nil for a statement not copied), mapping its nodes through
-  the hash table; ctx is the reference being rebuilt, r the display
-  record of the reference.  It loads A5 (recursive through its nested
-  routines) and is declared here so that process_statements can call
-  it. }
+  Nothing for nil, nor for a routine block (108, 107) while a call's
+  routine operand is copied (ctx.call).  Unless a substitution has
+  been made, the use count is taken from the reference or tree (+16).
+  A node the table maps (get_hash_info) becomes its value, with the
+  displacement of its display record applied (apply_disp) when the
+  record is the node's own; unless the value is a substitute (flags
+  0..2) that is all.  Then by kind:
+    148, 149  a block's begin and end: copied (52 bytes), its block
+              (+48) mapped; x.blk entered (a 172's +76 keeping the
+              block left, else cleared) or left (to that, else to
+              the enclosing block, +8);
+    140       an assignment: dropped when it assigns a parameter
+              temporary (110 with +24 bit 23), or, but in a Fortran
+              statement function, assigns the result of a 155 (its
+              target mapped to il_node_153); else copied (80 bytes)
+              with its three operands (+64, +68, +72);
+    144       a label: the label's copy;
+    139       an evaluation: copied (52 bytes and 4 an operand, but 92
+              allocated for none) with its operands, last first;
+    141, 142  copied (56, 64 bytes; 142 with its operand +56), the
+              label (+48) mapped when the table has it;
+    150       copied (52 bytes) with its operand (+48);
+    151       dropped;
+    137, 143  a tree: copied (40 bytes and 4 an operand), the use
+              count put back when substituted; a call (op 15, 16) its
+              routine operand under ctx.call, the other operands, and
+              its reference parameters marked
+              (inline_$mark_reference_params); an indexing (op 13) its
+              array operand rebased (get_sym_ind_info,
+              process_index_opr) and the indices; else each operand;
+    145       an indexed reference (44 bytes): its index (+36) and its
+              base (process_opr_ind), ctx.base set to it;
+    146       a pointer reference (32 bytes): its base, `*&v' made v;
+    147       a displacement (36 bytes): a chain of displacements merged
+              into the callee's node first, ctx.dnode the copy, the
+              displacement left in r applied after;
+    205       a symbolic displacement (36 bytes): ctx.sdn the copy, its
+              variable (+32) processed (a 146's base or a 137 op 26's
+              operand taken), the node replaced by its base when the
+              variable goes;
+    175       copied (24 bytes) with its operands (+16, +20);
+    171       copied (20 bytes and 4 for each of the call's operands
+              but one) with its operand (+16);
+    164       copied (32 bytes) with its operands (+20, +24);
+    165       a temporary (28 bytes): given storage in the caller's
+              frame (allocate_space, by its size +22, aligned to 2)
+              and the caller its block (+8);
+  other kinds are left as they are.  The trees and references are
+  mapped to their copies (put_hash_info, flags none) or have r applied
+  (when r is theirs); an entry of flag 4 is entered again for the copy
+  without it.
+
+  0x092228 (cc.a88k 0x093C08), 0xBD8 bytes, link #-108, loads A5:
+  ctx (30 bytes) copied from its address (seven `move.l' and a
+  `move.w'); the first `case' a compare chain whose arms are the same
+  store (143 and 137 one arm); the kinds by a jump table of 69 from
+  137 (the arms in the order 148, 149, 140, 144, 139, 141, 142, 150,
+  151, 137/143, 146, 145, 147, 205, 175, 171, 164, 165); the copies'
+  lengths longword constants after the routine, each passed with the
+  callee's node and the new node's local by address (lib_$data_move);
+  139's allocation a frame word, its length recomputed for the move
+  (an expression passed to an in parameter: `ext.l' into a frame
+  longword) and 137's computed once; the operand loops `dbf' with the
+  index in another register; the flags of the first get_hash_info kept
+  in D2 to the end (`btst #4', `andi.w #-17'); 147's process_opr_ind
+  and 164's second process_operand pop 2 bytes short (pattern 51);
+  140's `and not' of a call is docs/dpc-gaps.md 24.
+
+  Not known from the original: the arms' order in the source (taken
+  from the code's); the local names. }
 
 procedure process_operand(
     e: oi_edge_ptr_t;
     var x: oi_call_t;
     var t: il_$node_ptr_t;
     ctx: oi_ctx_t;
-    var r: oi_info_t); options(val_param); extern;
+    var r: oi_info_t); options(val_param);
+var
+  orig: il_$node_ptr_t;
+  val: il_$node_ptr_t;
+  flags: oi_flags_t;
+  info: oi_info_t;
+  val2: il_$node_ptr_t;
+  flags2: oi_flags_t;
+  n: il_$node_ptr_t;
+  size: integer;
+  i: integer;
+  raw: oi_symind_t;
+  sub: oi_symind_t;
+
+  { get_sym_ind_info - the variable and symbol a reference is reached
+    by (ctx.v, ctx.sym), as raw (an identifier, 76, looked up in x's
+    block: find_varn, kept when not found) and as their substitutes
+    for edge e (sub, substitutee_sym_ind; only when there is a
+    variable).
+
+    0x0918BA (cc.a88k 0x09329A), 0x74 bytes, link #-8: x, ctx, raw
+    and sub by address; the symbol stored first; the test of the
+    variable the `move.l' storing it. }
+
+  procedure get_sym_ind_info(
+      e: oi_edge_ptr_t;
+      var x: oi_call_t;
+      var ctx: oi_ctx_t;
+      out raw: oi_symind_t;
+      out sub: oi_symind_t); options(val_param);
+  var
+    v: il_$node_ptr_t;
+
+    { substitutee_sym_ind - what n stands for in the copy for edge e:
+      n itself when its entry has flag 1 or there is none, else its
+      value, through an address (137 op 26: +40), a 195 (+12) and a
+      displacement's or pointer reference's base (147, 146: +28);
+      ctx.subst set when the entry has flags 0..2.
+
+      0x091822 (cc.a88k 0x093202), 0x98 bytes, link #-48: ctx by
+      address; flags 0..2 as `andi.w #7'; the result in A0. }
+
+    function substitutee_sym_ind(
+        e: oi_edge_ptr_t;
+        n: il_$node_ptr_t;
+        var ctx: oi_ctx_t): il_$node_ptr_t; options(val_param);
+    var
+      val: il_$node_ptr_t;
+      flags: oi_flags_t;
+      info: oi_info_t;
+      s: il_$node_ptr_t;
+    begin
+      get_hash_info(e, n, val, flags, info);
+      if (flags * [0, 1, 2]) <> [] then
+        ctx.subst := true;
+      if 1 in flags then
+        s := n
+      else begin
+        s := n;
+        if val <> nil then begin
+          s := val;
+          if (s^.kind = 137) and (s^.xw[18] = 26) then
+            s := s^.xp[10];
+          if s^.kind = 195 then
+            s := s^.xp[3];
+          if s^.kind = 147 then
+            s := s^.xp[7]
+          else if s^.kind = 146 then
+            s := s^.xp[7];
+        end;
+      end;
+      substitutee_sym_ind := s;
+    end;
+
+  begin
+    raw.sym := ctx.sym;
+    raw.v := ctx.v;
+    if raw.v <> nil then begin
+      if raw.v^.kind = 76 then begin
+        v := find_varn(x.blk, raw.v);
+        if v <> nil then
+          raw.v := v;
+      end;
+      sub.sym := substitutee_sym_ind(e, raw.sym, ctx);
+      sub.v := substitutee_sym_ind(e, raw.v, ctx);
+    end;
+  end;
+
+  { adjust_disp - r made the displacement disp from symbol sym to be
+    applied to the reference node.
+
+    0x09192E (cc.a88k 0x09330E), 0x28 bytes, link #-4: r by address;
+    the fields stored from the last. }
+
+  procedure adjust_disp(
+      disp: integer32;
+      sym: il_$node_ptr_t;
+      node: il_$node_ptr_t;
+      var r: oi_info_t); options(val_param);
+  begin
+    r.disp_sym := sym;
+    r.disp := disp;
+    r.node := node;
+  end;
+
+  { disp_offset - the displacement of displacement node n (+32), 0
+    for none.
+
+    0x091956 (cc.a88k 0x093336), 0x14 bytes, no frame: n at (4,SP),
+    the result in D0. }
+
+  function disp_offset(
+      n: il_$node_ptr_t): integer32; options(val_param);
+  begin
+    if n = nil then
+      disp_offset := 0
+    else
+      disp_offset := n^.xl[8];
+  end;
+
+  { apply_disp - the displacement in info applied to t for edge e: a
+    symbolic displacement node (add_sdn) over t, then the plain
+    displacement put into ctx's displacement node when there is one,
+    else a displacement node (add_dn) over t; the new nodes get ctx's
+    use count and e's caller's count of nodes (+272) is raised for
+    each.  When n is given it is mapped to t with info, and info is
+    emptied.
+
+    0x09196A (cc.a88k 0x09334A), 0xB4 bytes, link #-4: ctx, info and
+    t by address. }
+
+  procedure apply_disp(
+      e: oi_edge_ptr_t;
+      n: il_$node_ptr_t;
+      var ctx: oi_ctx_t;
+      var info: oi_info_t;
+      var t: il_$node_ptr_t); options(val_param);
+  begin
+    if info.sdn_sym <> nil then begin
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      t := add_sdn(t, info.sdn_sym, info.sdn_var);
+      t^.xw[8] := ctx.uses;
+    end;
+    if info.disp_sym <> nil then begin
+      if ctx.dnode <> nil then
+        ctx.dnode^.xl[8] := info.disp
+      else begin
+        e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+        t := add_dn(t, info.disp_sym, info.disp);
+        t^.xw[8] := ctx.uses;
+      end;
+    end;
+    if n <> nil then begin
+      put_hash_info(e, n, t, [], info);
+      nil_out_dispinfo(info);
+    end;
+  end;
+
+  { process_index_opr - array operand t of an indexing for edge e,
+    rebased when the array is reached by a variable a that stands for
+    variable b in the copy (both variables, 109 or 110): when t is a
+    153 or 211, a parameter temporary (110, +24 bit 23) of a callee
+    nested deeper than the caller, a parameter variable (109, +32 bit
+    23) named by the caller (+296), or the address (137 op 26) of a
+    110 or 109, the displacement (of ctx.dnode, less a's offset when
+    there is no symbolic displacement and t is not an address) plus
+    b's offset goes into r for ctx.base and t becomes the base of b's
+    storage: il_node_154 for classes 1 and 7 (ctx.sdn's variable
+    dropped), il_node_153 for 2 and 6 (under -CPU 6 b's offset left
+    out and, without ctx.sdn, b's variable and symbol made r's
+    symbolic displacement; else for ctx.sdn, without b's offset, when
+    there is one).  t is then processed.
+
+    0x091A1E (cc.a88k 0x0933FE), 0x290 bytes, link #-72: ctx, a and b
+    copied from their addresses (pattern 64); `kind is 110 or 109'
+    evaluated whole (`seq', `or.b'); the offsets +12 (110) and +56
+    (109), the classes +11 bits 7..4 (110) and +72 (109); the classes
+    as `btst' of #130 and #68; -CPU 6 `btst #0' of cargs' +0x284; the
+    paths that leave a's offset out branch past its subtraction. }
+
+  procedure process_index_opr(
+      e: oi_edge_ptr_t;
+      var x: oi_call_t;
+      var t: il_$node_ptr_t;
+      ctx: oi_ctx_t;
+      var r: oi_info_t;
+      a: oi_symind_t;
+      b: oi_symind_t); options(val_param);
+  var
+    n: il_$node_ptr_t;
+    aoff: integer32;
+    boff: integer32;
+    d: integer32;
+    cls: integer;
+    found: boolean;
+    rebase: boolean;
+  begin
+    if (a.v <> nil) and (b.v <> nil) and
+       ((a.v^.kind = 110) or (a.v^.kind = 109)) and
+       ((b.v^.kind = 110) or (b.v^.kind = 109)) then begin
+      n := t;
+      found := true;
+      rebase := true;
+      if (n^.kind = 153) or (n^.kind = 211) then begin
+        if a.v^.kind = 110 then
+          aoff := a.v^.xl[3]
+        else
+          aoff := a.v^.xl[14];
+        if b.v^.kind = 110 then begin
+          cls := rshft(ord(b.v^.xc[11]) & 16#F0, 4);
+          boff := b.v^.xl[3];
+        end
+        else begin
+          cls := b.v^.xw[36];
+          boff := b.v^.xl[14];
+        end;
+      end
+      else if (n^.kind = 110) and ((n^.xl[6] & 16#800000) <> 0) and
+              (oi_level_ptr_t(e^.caller)^.level <
+               oi_level_ptr_t(e^.callee)^.level) then begin
+        boff := b.v^.xl[3];
+        cls := rshft(ord(b.v^.xc[11]) & 16#F0, 4);
+        aoff := a.v^.xl[3];
+      end
+      else if (n^.kind = 109) and ((n^.xl[8] & 16#800000) <> 0) and
+              (n^.xp[1] = e^.caller^.xp[74]) then begin
+        aoff := a.v^.xl[14];
+        boff := b.v^.xl[14];
+        cls := b.v^.xw[36];
+      end
+      else if (n^.kind = 137) and (n^.xw[18] = 26) and
+              (n^.xp[10]^.kind = 110) then begin
+        cls := rshft(ord(b.v^.xc[11]) & 16#F0, 4);
+        boff := b.v^.xl[3];
+        rebase := false;
+      end
+      else if (n^.kind = 137) and (n^.xw[18] = 26) and
+              (n^.xp[10]^.kind = 109) then begin
+        boff := b.v^.xl[14];
+        cls := b.v^.xw[36];
+        rebase := false;
+      end
+      else
+        found := false;
+      if found then begin
+        if rebase and (ctx.sdn = nil) then
+          d := disp_offset(ctx.dnode) - aoff
+        else
+          d := disp_offset(ctx.dnode);
+        if cls in [1, 7] then begin
+          adjust_disp(d + boff, b.sym, ctx.base, r);
+          t := il_node_154;
+          if ctx.sdn <> nil then
+            ctx.sdn^.xp[8] := nil;
+        end
+        else if cls in [2, 6] then begin
+          t := il_node_153;
+          if 6 in cargs_$options.cpu then begin
+            if ctx.sdn = nil then begin
+              r.sdn_var := b.v;
+              r.sdn_sym := b.sym;
+              r.node := ctx.base;
+            end;
+            adjust_disp(d, b.sym, ctx.base, r);
+          end
+          else if ctx.sdn = nil then
+            adjust_disp(d + boff, b.sym, ctx.base, r)
+          else
+            adjust_disp(d, b.sym, ctx.sdn, r);
+        end;
+      end;
+    end;
+    process_operand(e, x, t, ctx, r);
+  end;
+
+  { process_opr_ind - the base (+24) and symbol (+28) of reference t
+    (205, 147, 146, 145; orig the callee's) processed for edge e.  The
+    symbol becomes its display record's captured indirection when it
+    has one.  The reference sets ctx's symbol and variable (a 205's
+    +28 and +32; a 147's, a 146's (but under a 205) or a 145's (but
+    under a 205 or 146) +28 when that is not a type, 122) and kind.
+    Without both variables of get_sym_ind_info (109 or 110) the base
+    and the symbol are processed as they are.  Else, for a pointer
+    reference (146) whose base is a parameter temporary (110, +24 bit
+    23, of a callee nested deeper than the caller) or a parameter
+    variable (109, +32 bit 23, named by the caller), t becomes the
+    variable reached (its displacement less the variable's offset
+    into r for orig) or, with a symbolic displacement, that node's
+    variable (+32, taken from it); likewise for a 146 over such a 146
+    when the symbolic displacement's variable is a 110 or 109 of class
+    2 or 5 at a positive offset; a 146 over an indexing (137 op 13) of
+    a 153 by a variable of class 1 or 7 becomes an indexed reference
+    (145, 44 bytes: the 146's first 32, the 153 its base, the index
+    +36, the symbol +28, the tree's +26 at +42).  Each such t is
+    processed again.  Otherwise the base is processed (an indexed
+    reference's rebased, process_index_opr) and the symbol becomes the
+    substitute's symbol (for a variable), the name (+4) of the
+    variable an identifier stands for, or is processed.
+
+    0x091CAE (cc.a88k 0x09368E), 0x576 bytes, link #-92: t, base, sym,
+    ctx and r by address, orig by value; the kinds a compare chain;
+    `kind is 205 or 146' and `kind is 110 or 109' evaluated whole;
+    the new 145's first 32 bytes moved through two frame locals
+    (lib_$data_move, the length a longword after process_operand);
+    the displacement stored to a frame longword not read again; the
+    five rebasings' process_operand one call (a shared tail, a `st'
+    of the flag after it). }
+
+  procedure process_opr_ind(
+      e: oi_edge_ptr_t;
+      var x: oi_call_t;
+      var t: il_$node_ptr_t;
+      var base: il_$node_ptr_t;
+      var sym: il_$node_ptr_t;
+      var ctx: oi_ctx_t;
+      var r: oi_info_t;
+      orig: il_$node_ptr_t); options(val_param);
+  var
+    val: il_$node_ptr_t;
+    flags: oi_flags_t;
+    info: oi_info_t;
+    raw: oi_symind_t;
+    sub: oi_symind_t;
+    sym0: il_$node_ptr_t;
+    off: integer32;
+    cls: integer;
+    d: integer32;
+    done: boolean;
+    w: il_$node_ptr_t;
+    p: il_$node_ptr_t;
+    n: il_$node_ptr_t;
+  begin
+    get_hash_info(e, sym, val, flags, info);
+    if info.ind <> nil then
+      sym := info.ind;
+    case t^.kind of
+      205: begin
+        ctx.sym := t^.xp[7];
+        ctx.v := t^.xp[8];
+        ctx.kind := 205;
+      end;
+      147:
+        if t^.xp[7]^.kind <> 122 then begin
+          ctx.sym := t^.xp[7];
+          ctx.v := t^.xp[7];
+          ctx.kind := 147;
+        end;
+      146:
+        if ctx.kind <> 205 then
+          if t^.xp[7]^.kind <> 122 then begin
+            ctx.sym := t^.xp[7];
+            ctx.v := t^.xp[7];
+            ctx.kind := 146;
+          end;
+      145:
+        if not ((ctx.kind = 205) or (ctx.kind = 146)) then
+          if t^.xp[7]^.kind <> 122 then begin
+            ctx.sym := t^.xp[7];
+            ctx.v := t^.xp[7];
+            ctx.kind := 145;
+          end;
+      otherwise
+        ;
+    end;
+    sym0 := sym;
+    get_sym_ind_info(e, x, ctx, raw, sub);
+    if (raw.v <> nil) and (sub.v <> nil) and
+       ((raw.v^.kind = 110) or (raw.v^.kind = 109)) and
+       ((sub.v^.kind = 110) or (sub.v^.kind = 109)) then begin
+      if raw.v^.kind = 110 then
+        off := raw.v^.xl[3]
+      else
+        off := raw.v^.xl[14];
+      if sub.v^.kind = 110 then
+        cls := rshft(ord(sub.v^.xc[11]) & 16#F0, 4)
+      else
+        cls := sub.v^.xw[36];
+      get_hash_info(e, base, val, flags, info);
+      if (flags * [0, 1, 2]) <> [] then
+        ctx.subst := true;
+      done := false;
+      if (t^.kind = 146) and (base^.kind = 110) and
+         ((base^.xl[6] & 16#800000) <> 0) and
+         (oi_level_ptr_t(e^.caller)^.level <
+          oi_level_ptr_t(e^.callee)^.level) then begin
+        if ctx.sdn = nil then begin
+          d := disp_offset(ctx.dnode) - off;
+          adjust_disp(d, sub.sym, orig, r);
+          t := raw.v;
+        end
+        else begin
+          t := ctx.sdn^.xp[8];
+          ctx.sdn^.xp[8] := nil;
+        end;
+        process_operand(e, x, t, ctx, r);
+        done := true;
+      end
+      else if (t^.kind = 146) and (base^.kind = 109) and
+              ((base^.xl[8] & 16#800000) <> 0) and
+              (base^.xp[1] = e^.caller^.xp[74]) then begin
+        if ctx.sdn = nil then begin
+          d := disp_offset(ctx.dnode) - off;
+          adjust_disp(d, sub.sym, orig, r);
+          t := raw.v;
+        end
+        else begin
+          t := ctx.sdn^.xp[8];
+          ctx.sdn^.xp[8] := nil;
+        end;
+        process_operand(e, x, t, ctx, r);
+        done := true;
+      end
+      else if (t^.kind = 146) and (base^.kind = 146) and
+              (base^.xp[6]^.kind = 110) and
+              ((base^.xp[6]^.xl[6] & 16#800000) <> 0) and
+              (ctx.sdn <> nil) and (ctx.sdn^.xp[8]^.kind = 110) and
+              (integer(rshft(ord(ctx.sdn^.xp[8]^.xc[11]) & 16#F0, 4)) in [2, 5]) and
+              (ctx.sdn^.xp[8]^.xl[3] > 0) and
+              (oi_level_ptr_t(e^.caller)^.level <
+               oi_level_ptr_t(e^.callee)^.level) then begin
+        t := ctx.sdn^.xp[8];
+        ctx.sdn^.xp[8] := nil;
+        process_operand(e, x, t, ctx, r);
+        done := true;
+      end
+      else if (t^.kind = 146) and (base^.kind = 146) and
+              (base^.xp[6]^.kind = 109) and
+              ((base^.xp[6]^.xl[8] & 16#800000) <> 0) and
+              (ctx.sdn <> nil) and (ctx.sdn^.xp[8]^.kind = 109) and
+              (ctx.sdn^.xp[8]^.xw[36] in [2, 5]) and
+              (ctx.sdn^.xp[8]^.xl[14] > 0) and
+              (base^.xp[6]^.xp[1] = e^.caller^.xp[74]) then begin
+        t := ctx.sdn^.xp[8];
+        ctx.sdn^.xp[8] := nil;
+        process_operand(e, x, t, ctx, r);
+        done := true;
+      end
+      else if (t^.kind = 146) and (t^.xp[6]^.kind = 137) and
+              (t^.xp[6]^.xw[18] = 13) and
+              (t^.xp[6]^.xp[10]^.kind = 153) and (cls in [1, 7]) then begin
+        p := t;
+        w := p^.xp[6];
+        n := gspace(44);
+        lib_$data_move(p, n, 32);
+        n^.kind := 145;
+        n^.xp[6] := w^.xp[10];
+        n^.xp[9] := w^.xp[11];
+        n^.xp[7] := sym0;
+        n^.xw[21] := w^.xw[13];
+        t := n;
+        process_operand(e, x, t, ctx, r);
+        done := true;
+      end
+      else if t^.kind = 145 then
+        process_index_opr(e, x, base, ctx, r, raw, sub)
+      else
+        process_operand(e, x, base, ctx, r);
+      if not done then
+        if (sym0^.kind = 110) or (sym0^.kind = 109) then
+          sym := sub.sym
+        else if (sym0^.kind = 76) and (sub.sym <> nil) and
+                (sub.sym^.kind = 109) then
+          sym := sub.sym^.xp[1]
+        else begin
+          sym := sym0;
+          process_operand(e, x, sym, ctx, r);
+        end;
+    end
+    else begin
+      process_operand(e, x, base, ctx, r);
+      process_operand(e, x, sym, ctx, r);
+    end;
+  end;
+
+begin
+  if t = nil then
+    return;
+  if ctx.call <> nil then
+    if (t^.kind = 108) or (t^.kind = 107) then
+      return;
+  if not ctx.subst then
+    case t^.kind of
+      143, 137:
+        ctx.uses := t^.xw[8];
+      146:
+        ctx.uses := t^.xw[8];
+      147:
+        ctx.uses := t^.xw[8];
+      205:
+        ctx.uses := t^.xw[8];
+      145:
+        ctx.uses := t^.xw[8];
+      164:
+        ctx.uses := t^.xw[8];
+      otherwise
+        ;
+    end;
+  get_hash_info(e, t, val, flags, info);
+  if (flags * [0, 1, 2]) <> [] then
+    ctx.subst := true;
+  orig := t;
+  if val <> nil then begin
+    t := val;
+    if info.node = orig then
+      apply_disp(e, nil, ctx, info, t);
+    if not ctx.subst then
+      return;
+    orig := t;
+  end;
+  case t^.kind of
+    148: begin
+      if orig^.xp[12]^.kind = 172 then
+        orig^.xp[12]^.xp[19] := x.blk
+      else
+        orig^.xp[12]^.xp[19] := nil;
+      x.blk := orig^.xp[12];
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      n := gspace(52);
+      lib_$data_move(orig, n, 52);
+      t := n;
+      get_hash_info(e, orig^.xp[12], n^.xp[12], flags2, info);
+    end;
+    149: begin
+      if x.blk^.xp[19] <> nil then
+        x.blk := x.blk^.xp[19]
+      else
+        x.blk := x.blk^.xp[2];
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      n := gspace(52);
+      lib_$data_move(orig, n, 52);
+      t := n;
+      get_hash_info(e, orig^.xp[12], n^.xp[12], flags2, info);
+    end;
+    140:
+      if (orig^.xp[16]^.kind = 110) and
+         ((orig^.xp[16]^.xl[6] & 16#800000) <> 0) then
+        t := nil
+      else if (t^.xp[17]^.kind = 155) and
+              not inline_$is_fortran_asf(e^.caller) then begin
+        put_hash_info(e, t^.xp[16], il_node_153, [], empty_info);
+        t := nil;
+      end
+      else begin
+        e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+        n := gspace(80);
+        lib_$data_move(t, n, 80);
+        t := n;
+        cur_stmt := n;
+        process_operand(e, x, t^.xp[16], ctx, r);
+        process_operand(e, x, t^.xp[17], ctx, r);
+        process_operand(e, x, t^.xp[18], ctx, r);
+      end;
+    144:
+      get_hash_info(e, orig, t, flags2, info);
+    139: begin
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      if t^.xw[25] = 0 then
+        size := 92
+      else
+        size := t^.xw[25] * 4 + 52;
+      n := gspace(size);
+      lib_$data_move(t, n, t^.xw[25] * 4 + 52);
+      t := n;
+      cur_stmt := n;
+      for i := t^.xw[25] downto 1 do
+        process_operand(e, x, t^.xp[12 + i], ctx, r);
+    end;
+    141: begin
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      n := gspace(56);
+      lib_$data_move(orig, n, 56);
+      t := n;
+      cur_stmt := n;
+      get_hash_info(e, orig^.xp[12], val2, flags2, info);
+      if val2 <> nil then
+        t^.xp[12] := val2;
+    end;
+    142: begin
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      n := gspace(64);
+      lib_$data_move(t, n, 64);
+      t := n;
+      cur_stmt := n;
+      process_operand(e, x, t^.xp[14], ctx, r);
+      get_hash_info(e, orig^.xp[12], val2, flags2, info);
+      if val2 <> nil then
+        t^.xp[12] := val2;
+    end;
+    150: begin
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      n := gspace(52);
+      lib_$data_move(t, n, 52);
+      t := n;
+      cur_stmt := n;
+      process_operand(e, x, t^.xp[12], ctx, r);
+    end;
+    151: begin
+      t := nil;
+      return;
+    end;
+    137, 143: begin
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      size := orig^.xw[19] * 4 + 40;
+      n := gspace(size);
+      lib_$data_move(t, n, size);
+      t := n;
+      if ctx.subst then
+        t^.xw[8] := ctx.uses;
+      if (t^.xw[18] = 16) or (t^.xw[18] = 15) then begin
+        ctx.call := t;
+        process_operand(e, x, t^.xp[10], ctx, r);
+        ctx.call := nil;
+        for i := 2 to t^.xw[19] do
+          process_operand(e, x, t^.xp[9 + i], ctx, r);
+        inline_$mark_reference_params(t, cur_stmt);
+      end
+      else if t^.xw[18] = 13 then begin
+        if ctx.base = nil then
+          ctx.base := orig;
+        get_sym_ind_info(e, x, ctx, raw, sub);
+        process_index_opr(e, x, t^.xp[10], ctx, r, raw, sub);
+        for i := 2 to t^.xw[19] do
+          process_operand(e, x, t^.xp[9 + i], ctx, r);
+      end
+      else
+        for i := 1 to t^.xw[19] do
+          process_operand(e, x, t^.xp[9 + i], ctx, r);
+      if r.node = orig then
+        apply_disp(e, orig, ctx, r, t)
+      else
+        put_hash_info(e, orig, t, [], empty_info);
+      if ctx.base = orig then
+        ctx.base := nil;
+    end;
+    146: begin
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      n := gspace(32);
+      lib_$data_move(t, n, 32);
+      t := n;
+      if ctx.subst then
+        t^.xw[8] := ctx.uses;
+      process_opr_ind(e, x, t, t^.xp[6], t^.xp[7], ctx, r, orig);
+      if (t^.kind = 146) and (t^.xp[6]^.kind = 137) and
+         (t^.xp[6]^.xw[18] = 26) then
+        t := t^.xp[6]^.xp[10];
+      if r.node = orig then
+        apply_disp(e, orig, ctx, r, t)
+      else
+        put_hash_info(e, orig, t, [], empty_info);
+    end;
+    145: begin
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      n := gspace(44);
+      lib_$data_move(t, n, 44);
+      t := n;
+      if ctx.subst then
+        t^.xw[8] := ctx.uses;
+      if ctx.base = nil then
+        ctx.base := orig;
+      process_operand(e, x, t^.xp[9], ctx, r);
+      process_opr_ind(e, x, t, t^.xp[6], t^.xp[7], ctx, r, orig);
+      if r.node = orig then
+        apply_disp(e, orig, ctx, r, t)
+      else
+        put_hash_info(e, orig, t, [], empty_info);
+      if ctx.base = orig then
+        ctx.base := nil;
+    end;
+    147: begin
+      while t^.xp[6]^.kind = 147 do begin
+        t^.xl[8] := t^.xl[8] + t^.xp[6]^.xl[8];
+        t^.xp[6] := t^.xp[6]^.xp[6];
+      end;
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      n := gspace(36);
+      lib_$data_move(t, n, 36);
+      t := n;
+      if ctx.subst then
+        t^.xw[8] := ctx.uses;
+      ctx.dnode := t;
+      process_opr_ind(e, x, t, t^.xp[6], t^.xp[7], ctx, r, orig);
+      put_hash_info(e, orig, t, [], empty_info);
+      if r.disp <> 0 then begin
+        apply_disp(e, nil, ctx, r, t);
+        nil_out_dispinfo(r);
+      end;
+    end;
+    205: begin
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      n := gspace(36);
+      lib_$data_move(t, n, 36);
+      t := n;
+      ctx.sdn := t;
+      if ctx.subst then
+        t^.xw[8] := ctx.uses;
+      process_operand(e, x, t^.xp[8], ctx, r);
+      if t^.xp[8]^.kind = 146 then
+        t^.xp[8] := t^.xp[8]^.xp[6]
+      else if (t^.xp[8]^.kind = 137) and (t^.xp[8]^.xw[18] = 26) then
+        t^.xp[8] := t^.xp[8]^.xp[10];
+      process_opr_ind(e, x, t, t^.xp[6], t^.xp[7], ctx, r, orig);
+      if t^.xp[8] = nil then
+        t := t^.xp[6];
+      put_hash_info(e, orig, t, [], empty_info);
+    end;
+    175: begin
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      n := gspace(24);
+      lib_$data_move(t, n, 24);
+      t := n;
+      process_operand(e, x, t^.xp[4], ctx, r);
+      process_operand(e, x, t^.xp[5], ctx, r);
+    end;
+    171: begin
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      size := (ctx.call^.xw[19] - 1) * 4 + 20;
+      n := gspace(size);
+      lib_$data_move(t, n, size);
+      t := n;
+      process_operand(e, x, t^.xp[4], ctx, r);
+    end;
+    164: begin
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      n := gspace(32);
+      lib_$data_move(t, n, 32);
+      t := n;
+      if ctx.subst then
+        t^.xw[8] := ctx.uses;
+      process_operand(e, x, t^.xp[5], ctx, r);
+      process_operand(e, x, t^.xp[6], ctx, r);
+      put_hash_info(e, orig, t, [], empty_info);
+    end;
+    165: begin
+      e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
+      n := gspace(28);
+      lib_$data_move(t, n, 28);
+      t := n;
+      t^.xp[2] := e^.caller;
+      allocate_space(e, t^.xw[11], 1, false, t^.xw[10], t^.xl[4]);
+      put_hash_info(e, orig, t, [], empty_info);
+    end;
+    otherwise
+      ;
+  end;
+  if 4 in flags then
+    put_hash_info(e, orig, t, flags - [4], info);
+end;
 
 { process_statements - the callee's statements, from its first (+100)
   to its end (149 of the callee, +48), copied (process_operand, the
@@ -2476,11 +3272,11 @@ begin
   if x.line <> 0 then
     cgerr(37, x.line, e^.callee^.xp[74]);
   ctx.base := nil;
-  ctx.c4 := nil;
+  ctx.call := nil;
   ctx.dnode := nil;
-  ctx.c12 := nil;
-  ctx.c16 := nil;
-  ctx.c20 := nil;
+  ctx.sdn := nil;
+  ctx.sym := nil;
+  ctx.v := nil;
   ctx.kind := 0;
   ctx.uses := 1;
   ctx.subst := false;

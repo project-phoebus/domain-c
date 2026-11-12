@@ -719,3 +719,17 @@ cc.m68k unless marked.
     fn_ccset (`move.w (40,A5),-(SP)') for cc_change, which reads the
     module cell itself (item 44's unread parameter, at its only call).
 
+
+## Inliner (translator NN, opt_inline.pas)
+
+96. **A local held in a register also stored to its frame slot.**
+    process_opr_ind (cc.m68k 0x091EDC, 0x091F6A) computes a
+    displacement in D3 (`neg.l D3; add.l D0,D3'), stores it to a frame
+    longword (-56) that nothing reads and pushes D3 for adjust_disp;
+    unlike item 86, the dead store is kept (a local, not a function's
+    result).
+97. **Paths that set a flag branch past its test.**  process_index_opr
+    (0x091A1E): the arms that need a's offset subtracted test ctx.sdn
+    and branch to the subtraction or past it, while the two arms of an
+    address (137 op 26) branch straight past it (0x091BC0, 0x091BEA);
+    written with a flag (rebase) tested once, which dpc tests.

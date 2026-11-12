@@ -1111,3 +1111,18 @@ revisited.
    4, 4, 4, 8, 8, 0, 0, 0, 16) like delay.pas's class_size; and the
    names' serial at +0x5EF4 is a longword whose low word assign_name
    reads (+0x5EF6, an integer32 assigned to an integer).
+143. Translator NN: opt_inline.pas process_operand and its nested
+   routines, oddities of the image kept: (a) the call record's +0
+   (oi_call_t.blk, dfs_walk's frame -16) is never set before
+   process_statements; process_operand sets it at a 148 and reads it
+   at a 149 and in get_sym_ind_info (find_varn), so it relies on the
+   callee's first statement being a 148; (b) an evaluation (139) of
+   no operands is allocated 92 bytes but 52 are moved (0x0925CA);
+   (c) a displacement (147) merges a chain of displacements into the
+   callee's own node before copying it (0x092A94), changing the
+   callee; (d) process_opr_ind tests the class of the symbolic
+   displacement's variable against 2 and 5 (`btst' of #36, 0x092004,
+   0x092096), where allocate_space's classes are 1, 2, 6 and 7 and
+   process_index_opr tests 1/7 and 2/6: is 5 a slip for 6?  (e)
+   process_opr_ind stores its displacement to a frame longword it
+   never reads (0x091EDC, 0x091F6A).
