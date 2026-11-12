@@ -1821,3 +1821,28 @@ revisited.
    defines the live range gets a join for its live-in value).  Kept as
    the image has it.
 
+310. Translator PC7, oli.pas: add_reduction_partial_sums (cc.a88k
+   0x2603CE), with an odd number of iterations, carries the last
+   partial sum as `sums[j * niters + n]' (`addl d4,d0', n the count of
+   sums made so far) where every other read of the sums is `sums[j *
+   niters + c]' (c the tail's column, d6).  Kept as the image has it;
+   a slip of the original?
+311. Translator PC7, oli.pas: increase_recurrence_precedence raises a
+   violated recurrence's later instruction (+8, upto), but
+   restore_precedence lowers its first one (+4, from) by the same count
+   (`move.l (4,A2),-(SP)' at 0x261036), so the heights are not put back
+   as they were.  Kept; a slip of the original?
+312. Translator PC7, oli.pas: find_new_intend_to_modify_operand copies
+   the alias descriptor in front of an instruction (+2 bit 7) as five
+   longwords (20 bytes) into a 24-byte gap (`movel (a3)+,(a4)+' four
+   times and `movel (a3),(a4)', then `lea (24,a2),a2'), and
+   get_induction_variable_adjustment returns its result unset when the
+   adjustment record has neither an add nor modified operands.  Both
+   kept; slips?
+313. Translator PC7, oli.pas: get_new_lr_pair's only caller (get_write_lr)
+   passes an operand, and the routine tests +1 bit 1 of what it is
+   given (an operand's fp_reg_odd_only, the same bit as a live range's
+   rrp$fp_reg_odd_only): narrowed to `o: opnd_ptr_t' (PC6 had a live
+   range).  oli_$compare_memory_references reads its parameters by
+   value (it is called through mmt_compare_t) but was declared without
+   options(val_param): added.  Confirm.

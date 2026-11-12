@@ -1086,3 +1086,21 @@ cc.m68k unless marked.
     +0xDA8, +0xDAA, +0xDB4 followed by unaddressed bytes): Rev 8.89
     gives a boolean module variable one byte.  dpc gives each two
     (docs/dpc-gaps.md 37).
+
+## The loop optimizer, continued (translator PC7, cc.a88k oli)
+
+250. **A run of a record's middle fields stored from a code constant.**
+    adjust_induction_vars (cc.a88k 0x25F6EC) sets an adjustment record's
+    final.kind (+34, a word 3), final.value (+36, 0) and mods (+40,
+    nil) with `lea (0x25FAF6,PC),A1; lea (34,A0),A3; move.l (A1)+,
+    (A3)+' twice and `move.w (A1),(A3)': ten bytes 00 03 00 00 00 00 00
+    00 00 00 after the routine, three consecutive constant assignments
+    merged and copied (pattern 117's form, not at the record's head).
+    dpc stores each field.
+251. **A record function result written straight to the caller's space
+    on one path.**  get_exposed_operand (0x25D50C) builds its result in
+    a local and copies it to (8,A6)'s address at its end (pattern 133),
+    but its first path (no induction or reduction record) stores the
+    kind and live range through (8,A6) directly and branches to the
+    epilogue past the copy (`movea.l (8,A6),A0; move.w #1,(2,A0)';
+    0x25D65A).  Written with the local on every path.
