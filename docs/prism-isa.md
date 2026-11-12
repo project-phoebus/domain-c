@@ -43,9 +43,13 @@ branch of the -CPU parser):
   bits 3..0 the -PRASM operator's length), +9 (bits 7..4 the
   mnemonic's length, bits 3..1 which operands name half of a double),
   +10 the -PRASM layout (0..26), +11 the -PRASM operator (8
-  characters: "BGT", "-", "|", ...), +19 the classic mnemonic (16
+  characters: "BGT", "-", "|", ...), +19 the assembler name (16
   characters: "BNEVER", "ADD", "LOAD", "STORE", "EXTEND", "COPY.FS";
-  move is listed as "ADD", a compare with an immediate too), +36 a
+  move is listed as "ADD", a compare with an immediate too; **corrected
+  (translator PX):** it is the -PRASM listing that prints this name in
+  its opcode column, after the assignment form; the classic listing
+  prints instruction_mnemonic, below: lst_$display_code_cell's
+  `if 16 in cargs_$options.flags_286'), +36 a
   word per operand (bits 2..1 the display format: 0 decimal, 2
   hexadecimal).
 - `instruction_mnemonic` (0x2B7A3C, 12 characters) and
@@ -89,9 +93,13 @@ branch of the -CPU parser):
 ## Branches
 
 - Branches have a squash (annul) mode for their delay slot (+3 bits
-  7..6 of a branch's cell): .SN (never), .ST (if taken), .SF (if it
-  falls through), .SA (always); "BNEVER.SA" opens the enable/disable
-  layout.
+  7..6 of a branch's cell).  **Corrected (translator PX, from the
+  SR10.4 binaries; "Validated against SR10.4 binaries" below):** the
+  suffix names when the slot instruction is *executed*, not when it is
+  squashed: .SN never, .ST only when the branch is taken, .SF only when
+  it falls through, .SA always (bit 7 of the mode: the slot runs on
+  the fall-through, bit 6: it runs on the transfer).  "BNEVER.SA"
+  opens the enable/disable layout.
 - Branch targets are labels, a register ("[Rn]") or numbered local
   labels ("n$").
 - An instruction can continue on the next code cell (the cell's +2 bit
@@ -133,7 +141,9 @@ branch of the -CPU parser):
   0x00120004, then SVC: asm's SVC word less bits 9..8, plus 0x380) or,
   with -NEW_UNWIND, one SVC2 word (plus 0x2C0 and the trap number); the
   trap instruction itself is patched with the word displacement to its
-  stub.
+  stub.  (The SR10.4 binaries, built by a later compiler, place the
+  stub inside the routine after an unconditional jump, its literal
+  0x00120003 in the routine's own pool: below.)
 - The return address register is register 22 (bin_$unwind_bits); a
   frame register above 23 is noted in the unwind scope; a pushed frame
   of at most 128 bytes uses an ECB.
@@ -183,7 +193,7 @@ read before the translation and the translation agrees with;
   | 2 | integer register in bits 25..21 |
   | 3 | a register pair (its number halved) in bits 25..21 |
   | 4, 5 | an integer register (kinds ip_reg, ip_reg_physical, ip_reg_like, case_jump_base) in bits 4..0; otherwise the immediate form, the value by the operand's form (below) |
-  | 6 | a single (number times 4) or a 13-bit unsigned value (MFPR/MTPR's special register) in bits 12..0 |
+  | 6 | a single (number times 4) or a 13-bit unsigned value (MFPR/MTPR's special register) in bits 12..0; MFFP's and MTFP's templates carry bit 8 (0x100) inside the field, or-ed with the single's number times 4: 0x100 + 4n (validated: MTFP R10,S10 is FD5F0128) |
   | 7 | a register in bits 20..16, or a 5-bit immediate there with bit 8 set |
   | 8 | a register in bits 25..21, or a 5-bit immediate there with bit 8 set |
   | 9 | a 4-bit immediate in bits 9..6 (SVC's) |
@@ -252,6 +262,9 @@ read before the translation and the translation agrees with;
 - After the operands (one of, in this order):
   - **Confirmed.** A branch's squash mode (+3 bits 7..6) goes into
     bits 19..18 as (57 >> 2 * mode) & 3: .SN 1, .ST 2, .SF 3, .SA 0.
+    (Validated: field 0 runs the delay slot always, 1 never, 2 when
+    the branch is taken, 3 when it falls through; the suffix names
+    when the slot runs: "Branches", corrected.)
   - **Confirmed.** An insert's or extract's width less one, bits 13..9
     (opcodes with instruction_attributes +14 bit 1).
   - **Confirmed.** A load's or store's addressing mode (am$t) in bits
@@ -263,12 +276,19 @@ read before the translation and the translation agrees with;
 - **Confirmed.** Setting the floating condition codes (the
   instruction's +0 bit 3) is bit 24; setting the integer ones (+0 bit
   4) bit 26 for an immediate compare-form operand 1 (forms 3 and 10)
-  in the immediate form, else bit 14.
+  in the immediate form, else bit 14.  (Validated.  In the floating
+  classes bit 14 lies in the register field 17..12: their condition
+  codes are the floating ones, bit 24, seen on ADDD, SUBD, MOVED (the
+  TSTD of asm) and CVTID.)
 - **Confirmed.** Bit 31 marks an instruction that continues into the
   next word: the instruction's +2 bit 7 (pass 1 sets it when a
   floating instruction, or in an atomic block a load, is grouped after
   it: "companion"), or +2 bit 6 (a NOP word before it) outside the
-  two-word floating classes.
+  two-word floating classes.  (Validated: an integer word with bit 31
+  is issued with the next word, which is always a floating-unit word
+  in the binaries: a floating operation, an FNOP, or a floating control
+  transfer's second word; the templates with bit 31 set, MFFP, MTFP,
+  MFFPCC, FPQUIESCE, are such pairs' first words.)
 - **New.** Case tables (asm_$build_dispatch_table, 0x21F362): the
   table's entries become displacements from the dispatch; when the
   dispatch is an ADD and they fit 0..32767, the LOADL x4 that read the
@@ -359,8 +379,11 @@ Translator PB3 (dmp.pas, the phases' dumps, 0x22F188..0x2348D0).
   an instruction with a floating companion and bit 6 one paired with
   a companion NOP.
 - Branches and calls (opcodes with instruction_assembly +8 bit 5): +3
-  bit 7 squashes the delay slot on sequential flow (s_seq) and bit 6
-  on transfer (s_xfer): dmp's ".sn", ".st", ".ss", ".sa" are lst's
+  bit 7 (s_seq) and bit 6 (s_xfer): **corrected (translator PX):** bit
+  7 lets the delay slot run on sequential flow (the fall-through) and
+  bit 6 on the transfer; a slot with neither is squashed both ways
+  (the SR10.4 binaries: "Validated against SR10.4 binaries").  dmp's
+  ".sn", ".st", ".ss" (slot on sequential flow), ".sa" are lst's
   .SN, .ST, .SF, .SA; +3 bit 5 possible_nonlocal_return, bit 4
   no_return, bit 3 final_call, bits 1..0 a function key (1 cos, 2 sin,
   3 cos and sin together: "cssn").  Opcodes with instruction_attributes
@@ -378,15 +401,21 @@ Translator PB3 (dmp.pas, the phases' dumps, 0x22F188..0x2348D0).
 ## The opcodes' encodings (instruction_assembly; new)
 
 From the section's data (asm.pas includes it as instr_assembly.init;
-docs/questions.md 161): for each PRISM opcode, the classic mnemonic,
-the -PRASM operator, the register form's (+0) and the immediate form's
+docs/questions.md 161): for each PRISM opcode, the +19 name (the
+column says "classic"; it is the name the -PRASM listing prints in its
+opcode column, the classic listing printing the first column's
+instruction_mnemonic: corrected, translator PX), the -PRASM operator
+(+11), the register form's (+0) and the immediate form's
 (+4) templates, and the field kind and operand form of each operand
 the listing shows (instruction_attributes +11).  Opcodes 0 and
 212..383 have no entry.  Some readings: the integer ALU's register
 form is 0x1000xxxx with the operation in bits 14..11 (ADD 0x2000, SUB
 0x2800, AND 0x0800, OR 0x0000, XOR 0x1000) and its immediate forms
-0x14000000/0x18000000; MOVE is ADD with R31 (`101F2000'), CMP and TST
-SUB into R31, NOP `OR R31,R31,R31' (0x13FF001F); the conditional
+0x14000000/0x18000000; MOVE is ADD with R31 (`101F2000'), CMP SUB
+into R31 with the condition codes (0x6800: bit 14 and SUB's 0x2800),
+TST R31 := R31 + Rn with them (0x6000: bit 14 and ADD's 0x2000;
+corrected, translator PX: its +19 name says SUB, its template is
+ADD's), NOP `OR R31,R31,R31' (0x13FF001F); the conditional
 branches 0x24..0x27 (register) / 0x2C..0x2F (displacement) with the
 condition in bits 25..20 (the conditional traps share them), the floating branches and CALL 0x20/0x28; loads 0x34 (register
 index) and 0x40 .. 0x74 (displacement), stores 0x30 and 0x48 .. 0x78;
@@ -708,7 +737,10 @@ target_properties_read_only, cc.a88k 0x2B6800 + 3 x 328; its +0x10 is
     is read by every call (w20, the preset's reg40); the conventions
     also name R21 (w18), R2 or R21 (w16: R21 for a nested callee whose
     block needs its static link) and R3 (w12): the static link and
-    frame registers, most likely.
+    frame registers, most likely.  (The SR10.4 binaries, below: R23 is
+    the stack pointer, R2 the unit's data base as a routine descriptor
+    sets it, R21 a callee's copy of it kept across calls, R0 the
+    integer result, R1 the caller's stack pointer at entry.)
   - The C conventions under cargs flags_286 element 15 (preset_0): only
     R0..R9, R22, R26 (0x044003FF) and F0..F3 clobbered; R23..R25 and
     R27..R31 reserved (0xFB800000); F4..F63 in the preset's third set
@@ -967,3 +999,337 @@ marks what the translation confirmed, **corrected** what it changed.
 - After RA, ASM's pass 1 applies the last pipeline rules (its state
   machine, above): NOPs for a squashing call's delay slot and the
   floating unit's two-word instructions.
+
+## Validated against SR10.4 binaries (tools/prism_dis.py; translator PX)
+
+`tools/prism_dis.py` disassembles the text of an Apollo a88k COFF file
+(magic 0x194; the reader is coff_compare.py's, .data's initial bytes
+through cc_data.py's .rwdi rules) with a decoder generated from the
+image's own tables: instruction_assembly, instruction_attributes,
+instruction_mnemonic and of_string, read from cc.a88k's sections.  It
+inverts asm.pas's pass 2: each opcode's register form (+0), immediate
+form (+4) and, for loads and stores, the modified form (+0 with bit 27),
+with the operand fields of the table above and the opcode's own fields
+(squash, width, mode and qualifier, load_pair's offset, the condition
+code bits) free.  Opcodes with one encoding are folded (move/pmove,
+copys/movei/pcopys, mfnextcc/mfippsw, jump/return, svc/svc2; the
+conditional traps are their branches, as asm encodes them).  `--stats`
+walks each routine from its entry (routines from .blocks, or from
+.unwind where .blocks does not describe them) and checks the result;
+`--prasm` lists in lst's -PRASM form.  Run
+`tools/prism_dis.py FILE --stats -v`, `tools/prism_dis.py FILE --routine
+NAME`, `tools/prism_dis.py --table`.
+
+The corpus: every a88k COFF text of
+`domainos-archeology/sr10.4-install/install` (`file` finds 54 files;
+48 distinct texts, the crt0/gcrt0/mcrt0 copies counted once): the
+tools (install, config, rgy_create, cfgsa, xar, ctnode, uctnode, inprot,
+distaa, minst, mrgcfg, mrgri, acl, rbak_sr10), install_utils (chn, cpf,
+ld, crty, crd, edacl, sh, cpboot, crpty, bin/date, bin/sh, bin/ksh), the
+network managers (sys/mgrs/net_*), the debugger target
+tgt_apollo_prism.dbgk, the hardcopy trait examples and the crt0 objects.
+They are C, Pascal and assembly built by the SR10.4 compilers, not by
+DOMAIN C 6.9 itself: what they show is the machine's encoding and the
+later compilers' habits, against which the 6.9 tables are checked.
+
+### Decode statistics
+
+"Executed" words are those some path from a routine's entry reaches
+(the delay slots by their squash mode, a pair's floating word with its
+integer one, case dispatches through their tables).  "Specialized": a
+word several table entries match, one of which fixes every bit the
+others fix (MOVE over ADD, TST over ADD, CMP over SUB, NEG over SUB,
+TSTB over EXTEND7, COM over XOR, NOP over OR, SVC within CALL's
+space...): taken as that most specific opcode.  "Equivalent": special
+cases that overlap without nesting but share a general entry (19 words,
+1FFF0000 and 1FFF0001: CMP #0/#-1,R31 is MOVE.CC #0/#1,R31 is ADD.CC
+#0/#1,R31,R31).  "Ambiguous" (two unrelated entries): none.  "None":
+no entry matches.  Calls on a start: displacement calls landing on a
+routine's first word; branches inside: displacement branches and jumps
+landing inside their own routine; pool refs on data: loads and stores
+off PC (R30) landing on text words no path executes; returns
+restoring: B [R22] reloading exactly the callee-saved registers its
+prologue stored; .unwind masks: routines whose .unwind record's saved
+register mask is the prologue's.
+
+| binary | words | routines | executed | unique | specialized | equivalent | ambiguous | none (executed) | calls on a start | branches inside | pool refs on data | returns restoring | .unwind masks |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| tools/install | 35360 | 217 (blocks) | 34715 | 27594 | 7643 | 3 | 0 | 120 (0) | 476/476 | 3609/3609 | 61/61 | 221/221 | 217/217 |
+| tools/config | 29822 | 157 (blocks) | 27025 | 24018 | 5783 | 0 | 0 | 21 (0) | 358/358 | 4348/4348 | 26/26 | 157/157 | 157/157 |
+| tools/rgy_create | 15450 | 281 (blocks) | 15125 | 11574 | 3867 | 2 | 0 | 7 (0) | 297/297 | 1327/1327 | 130/130 | 285/285 | 281/281 |
+| tools/cfgsa | 13740 | 52 (blocks) | 13641 | 10542 | 3178 | 0 | 0 | 20 (0) | 172/172 | 1166/1166 | 37/37 | 52/52 | 52/52 |
+| tools/xar | 3338 | 37 (blocks) | 3281 | 2596 | 736 | 0 | 0 | 6 (0) | 44/44 | 339/339 | 26/26 | 44/44 | 37/37 |
+| tools/ctnode | 5594 | 45 (blocks+unwind) | 4602 | 4545 | 808 | 0 | 0 | 241 (0) | 74/74 | 464/464 | 52/52 | 45/45 | 45/45 |
+| tools/uctnode | 2284 | 34 (blocks+unwind) | 2010 | 1813 | 422 | 0 | 0 | 49 (0) | 22/22 | 141/141 | 32/32 | 34/34 | 34/34 |
+| tools/inprot | 6948 | 33 (blocks) | 5709 | 5016 | 1584 | 0 | 0 | 348 (0) | 125/125 | 832/832 | 11/11 | 33/33 | 33/33 |
+| tools/distaa | 15740 | 167 (unwind) | 15436 | 11719 | 4002 | 5 | 0 | 14 (0) | 288/288 | 1537/1537 | 32/32 | 167/167 | 167/167 |
+| tools/minst | 21530 | 179 (blocks) | 19669 | 17281 | 4232 | 0 | 0 | 17 (0) | 587/587 | 3197/3197 | 37/37 | 179/179 | 179/179 |
+| tools/mrgcfg | 2432 | 30 (blocks) | 2302 | 1851 | 581 | 0 | 0 | 0 (0) | 60/60 | 289/289 | 1/1 | 30/30 | 30/30 |
+| tools/mrgri | 19818 | 96 (blocks) | 18703 | 16067 | 3746 | 0 | 0 | 5 (0) | 169/169 | 2591/2591 | 28/28 | 96/96 | 96/96 |
+| tools/acl | 2742 | 8 (blocks) | 2154 | 2189 | 323 | 0 | 0 | 230 (0) | 34/34 | 229/229 | 40/40 | 8/8 | 8/8 |
+| tools/rbak_sr10 | 20618 | 115 (unwind) | 16323 | 16809 | 2745 | 0 | 0 | 1064 (0) | 573/573 | 1896/1896 | 202/202 | 126/126 | 115/115 |
+| install_utils/chn | 908 | 4 (blocks) | 770 | 734 | 133 | 0 | 0 | 41 (0) | 10/10 | 69/69 | 6/6 | 6/6 | 4/4 |
+| install_utils/cpf | 644 | 2 (blocks) | 495 | 518 | 90 | 0 | 0 | 36 (0) | 7/7 | 52/52 | 5/5 | 2/2 | 2/2 |
+| install_utils/ld | 6244 | 40 (unwind) | 5334 | 5242 | 737 | 0 | 0 | 265 (0) | 168/168 | 712/712 | 26/26 | 48/48 | 40/40 |
+| install_utils/crty | 980 | 4 (blocks+unwind) | 771 | 796 | 117 | 0 | 0 | 67 (0) | 1/1 | 69/69 | 3/3 | 4/4 | 4/4 |
+| install_utils/crd | 286 | 2 (blocks) | 209 | 243 | 29 | 0 | 0 | 14 (0) | 4/4 | 16/16 | 1/1 | 2/2 | 2/2 |
+| install_utils/edacl | 4466 | 23 (unwind) | 3847 | 3476 | 824 | 0 | 0 | 166 (0) | 120/120 | 369/369 | 22/22 | 23/23 | 23/23 |
+| install_utils/sh | 10 | 1 (blocks) | 9 | 9 | 1 | 0 | 0 | 0 (0) | 0/0 | 0/0 | 0/0 | 1/1 | 1/1 |
+| install_utils/cpboot | 1226 | 7 (blocks) | 1035 | 1001 | 183 | 0 | 0 | 42 (0) | 19/19 | 120/120 | 6/6 | 6/6 | 7/7 |
+| install_utils/crpty | 470 | 1 (unwind) | 374 | 389 | 58 | 0 | 0 | 23 (0) | 0/0 | 20/20 | 1/1 | 1/1 | 1/1 |
+| install_utils/bin/date | 568 | 7 (unwind) | 550 | 431 | 137 | 0 | 0 | 0 (0) | 2/2 | 52/52 | 4/4 | 7/7 | 7/7 |
+| install_utils/bin/sh | 14812 | 202 (blocks) | 14532 | 10383 | 4426 | 0 | 0 | 3 (0) | 335/335 | 1740/1740 | 41/41 | 196/196 | 202/202 |
+| install_utils/bin/ksh | 37956 | 392 (unwind) | 36836 | 28195 | 9697 | 9 | 0 | 55 (0) | 639/639 | 4969/4969 | 84/84 | 395/396 | 392/392 |
+| sys/mgrs/net_nil | 72 | 8 (unwind) | 62 | 65 | 5 | 0 | 0 | 2 (0) | 0/0 | 3/3 | 5/5 | 8/8 | 8/8 |
+| sys/mgrs/net_chat | 396 | 9 (unwind) | 370 | 347 | 46 | 0 | 0 | 3 (0) | 2/2 | 23/23 | 2/2 | 20/20 | 9/9 |
+| sys/mgrs/net_iic | 340 | 9 (unwind) | 311 | 294 | 41 | 0 | 0 | 5 (0) | 2/2 | 23/23 | 7/7 | 23/23 | 9/9 |
+| sys/mgrs/net_user | 312 | 9 (unwind) | 273 | 265 | 42 | 0 | 0 | 5 (0) | 3/3 | 28/28 | 8/8 | 14/14 | 9/9 |
+| sys/mgrs/net_ether_vme | 416 | 9 (unwind) | 385 | 371 | 41 | 0 | 0 | 4 (0) | 2/2 | 23/23 | 7/7 | 21/21 | 9/9 |
+| sys/mgrs/net_dio_ethernet | 418 | 9 (unwind) | 387 | 367 | 46 | 0 | 0 | 5 (0) | 2/2 | 24/24 | 8/8 | 21/21 | 9/9 |
+| sys/mgrs/net_ethernet | 416 | 9 (unwind) | 387 | 366 | 46 | 0 | 0 | 4 (0) | 2/2 | 24/24 | 8/8 | 21/21 | 9/9 |
+| sys/mgrs/net_unknown | 72 | 8 (unwind) | 61 | 65 | 5 | 0 | 0 | 2 (0) | 0/0 | 3/3 | 5/5 | 8/8 | 8/8 |
+| sys/mgrs/net_domain_ring | 414 | 9 (unwind) | 383 | 368 | 41 | 0 | 0 | 5 (0) | 2/2 | 23/23 | 7/7 | 29/29 | 9/9 |
+| sys/mgrs/net_ring_8025 | 574 | 9 (unwind) | 537 | 513 | 47 | 0 | 0 | 14 (0) | 2/2 | 25/25 | 2/2 | 32/32 | 9/9 |
+| hardcopy/driver/prsvr_driver_trait.a88k | 6 | 1 (blocks) | 4 | 4 | 1 | 0 | 0 | 1 (0) | 0/0 | 0/0 | 1/1 | 1/1 | 1/1 |
+| hardcopy/filter/prsvr_filter_trait.a88k | 10 | 2 (blocks) | 8 | 7 | 2 | 0 | 0 | 1 (0) | 0/0 | 0/0 | 2/2 | 2/2 | 2/2 |
+| sys5.3/usr/lib/isp_a88k/gcrt0.o | 652 | 10 (unwind) | 597 | 482 | 169 | 0 | 0 | 1 (0) | 4/4 | 42/42 | 11/11 | 10/10 | 10/10 |
+| sys5.3/usr/lib/isp_a88k/mcrt0.o | 396 | 9 (unwind) | 358 | 281 | 114 | 0 | 0 | 1 (0) | 3/3 | 18/18 | 5/5 | 9/9 | 9/9 |
+| sys5.3/usr/lib/isp_a88k/crt0.o | 110 | 3 (unwind) | 100 | 85 | 25 | 0 | 0 | 0 (0) | 0/0 | 2/2 | 1/1 | 3/3 | 3/3 |
+| sys/debug/tgt/tgt_apollo_prism.dbgk | 13636 | 190 (unwind) | 13377 | 10751 | 2875 | 0 | 0 | 10 (0) | 105/105 | 1139/1139 | 71/71 | 194/194 | 190/190 |
+| usr/apollo/lib/isp_a88k/gcrt0.o | 654 | 10 (unwind) | 600 | 482 | 171 | 0 | 0 | 1 (0) | 4/4 | 42/42 | 11/11 | 10/10 | 10/10 |
+| usr/apollo/lib/isp_a88k/mcrt0.o | 398 | 9 (unwind) | 361 | 281 | 116 | 0 | 0 | 1 (0) | 3/3 | 18/18 | 5/5 | 9/9 | 9/9 |
+| usr/apollo/lib/isp_a88k/crt0.o | 112 | 3 (unwind) | 103 | 85 | 27 | 0 | 0 | 0 (0) | 0/0 | 2/2 | 1/1 | 3/3 | 3/3 |
+| usr/apollo/lib/svid/isp_a88k/gcrt0.o | 654 | 10 (unwind) | 600 | 483 | 170 | 0 | 0 | 1 (0) | 4/4 | 42/42 | 11/11 | 10/10 | 10/10 |
+| usr/apollo/lib/svid/isp_a88k/mcrt0.o | 398 | 9 (unwind) | 361 | 282 | 115 | 0 | 0 | 1 (0) | 3/3 | 18/18 | 5/5 | 9/9 | 9/9 |
+| usr/apollo/lib/svid/isp_a88k/crt0.o | 112 | 3 (unwind) | 103 | 86 | 26 | 0 | 0 | 0 (0) | 0/0 | 2/2 | 1/1 | 3/3 | 3/3 |
+| **all 48 texts** | 284554 | 2483 | 265185 | 221361 | 60253 | 19 | 0 | 2921 (0) | 4727/4727 | 31677/31677 | 1098/1098 | 2628/2629 | 2483/2483 |
+
+(The ksh return that does not restore exactly reloads R22 and R11
+before a jump, where the check's backward walk stops.)  The counts
+below marked "54 files" include the six duplicate crt0 texts; the
+others are over the 48 distinct texts.
+
+**Every executed word matches the table.**  The 2,921 words that match
+nothing are all off the executed paths, and all are data (counted over
+the 54 files): 2,360 text (Pascal string constants placed in the text
+after the routines, reached by ADD Rx := PC + d), 234 literal pool
+entries (PC-relative loads land on them), 211 case table entries (the
+dispatches below), 95 between routines (zero padding to 8 bytes, data
+after a unit's last routine) and 23 inside routines on case arms whose
+dispatch the walk does not resolve (54 files).
+
+### Confirmed
+
+- **The templates and the field kinds** (the table above; "The
+  encoding"): every executed word decodes, and the decoded operands
+  make sense (stack and data offsets, string addresses, registers used
+  by the conventions).  Integer registers 5-bit fields (kinds 0, 1, 2),
+  pairs halved (kind 3: LOADD [..],D2 is 6C3E1E7C, r21 = 1), singles in
+  doubles (kind 10, LOADS/STORES and the odd LOADSO/STORESO: 108 and 21
+  executed), floating registers 6-bit (kinds 14..17).
+- **Branch and call displacements**: 18-bit signed word displacements
+  from the instruction's own address (bits 17..0): all 31,677
+  displacement branches and jumps land inside their routine, all 4,727
+  displacement calls on a routine's first word (none on a start + 8:
+  the descriptors alone use that entry).
+- **Literal pool references**: loads and stores off R30, the PC: a
+  signed 16-bit byte displacement from the instruction's own address.
+  All 1,098 land on text words no path executes, typically in the pool
+  after the routine's code (e.g. 0x41F00000, 0x41E00000: 2^32, 2^31 as
+  doubles; 0x040B000F, status codes).  ADD Rx := PC + d (3,292, Pascal's
+  string constants) likewise all off the code.  R30 *is* the PC (the
+  "like" register lst prints as PC).
+- **ip_compare_a_operand negated**: CMP #256,R0 is 1FE0FF00.
+- **The s_immed8 forms**: bits 6..0 and the sign in bit 15 (COM is XOR
+  #-1: 1400907F).
+- **The modified loads and stores**: +0's template with bit 27, an
+  8-bit displacement (6..0, sign 15), the mode in 10..9 (1 post, 2 pre)
+  and the qualifier in 8..7: STOREL R1,[56,--R23] is 38379448, LOADBU
+  [R11++] 3D4B0201 (the displacement 1, the access size, implied in the
+  listing).  The register form takes the mode too, with a scaled index:
+  STOREL R1,[R0*8,++R23] (30371460), the large frames' push.  No
+  qualifier (.LOCK/.UNLOCK/.PHYS) was seen.
+- **The scale** in bits 6..5: LOADL [R21*4,R19],R4 (34931055), LOADWU
+  [R22*2,R14] (35CE0836), LOADL [R11*8,R10] (35AA506B).
+- **The field width** less one in bits 13..9 and the 5-bit immediates
+  of kinds 7/8 with bit 8: EXTRACTU.CC R21,#4,#1,R31 (13E4C115), LSL
+  R10,#5,R11 (10ABBFCA).
+- **load_pair's offset**, in bytes, bits 5..0 in 10..5, bit 6 in 14,
+  sign in 15: LOAD_PAIR [8,R23],R22,R11 (36D7190B), [40,R23],R12,R13
+  (35971D0D): the frame's +8/+12 and +40/+44 where the prologue stored
+  R22, R11, R12, R13.
+- **The condition-code bits**: bit 14 (register forms and the s_immed8
+  immediate forms: MOVE.CC, INSERT.CC, EXTRACTU.CC), bit 26 for the
+  immediate forms of compare-form operands (LOADL.CC [16,R10],R5 is
+  64AA0010, ADD.CC #-256,R0,R13 1DA0FF00; loads set the condition codes
+  from the value loaded: 5,472 executed), bit 24 for the floating ones.
+- **asm's TSTS/TSTD as MOVES/MOVED with the operand copied**: MOVED.CC
+  D8,D8 (336C8208).  No CMPS/CMPD/TSTS template was executed: floating
+  compares are SUBD.CC/ADDD.CC (bit 24) and the FBxx branches.
+- **The pairing** (bit 31): 1,567 executed integer words carry bit 31;
+  every following word decodes as a floating-unit word and none as an
+  integer one: NOP with bit 31 (93FF001F) before a lone floating
+  instruction, FNOP (04C40000, 268) after a continued integer one, the
+  floating control's second word (word & 0xFFF) | 0xE40000 (421) after
+  each MFFP (236) and MTFP (185), a floating operation after the rest.
+  A branch can be paired too (BHS.SF with bit 31 and an FNOP): its
+  delay slot is then the next pair.
+- **The registers and the frame**: R22 the return address (every
+  return is B [R22], every .unwind record names R22); R23 the stack
+  pointer; R31 zero; R30 the PC; callee-saved R10..R21 (the only
+  integer registers stored to the frame on entry besides R22 and
+  argument homes); F4..F7/F52..F63 (the only floating ones saved: F4,
+  F54, F55); arguments in R4..R9 (read before written on entry, 54
+  files: R4 1,801, R5 1,077, R6 561, R7 402, R8 252, R9 160 times;
+  others only R3 and R0, 4 and 2 times) and F8..F19 (F8..F17; F0, F3,
+  F4, F20 in 11 routines).
+- **The exception stub's SVC**: asm's SVC word less bits 9..8 plus
+  0x380 (23E0239F, SVC #14), after LOADL R4 of the literal 0x00120003
+  (16 stubs).
+- **Case tables**: asm_$build_dispatch_table's displacements from the
+  dispatch ADD, as bytes (TABLEB) or halfwords (TABLEW): CMP #n,Ri; BHI
+  out; LOADBU [Ri,Rt],Rj or LOADWU [Ri*2,Rt],Rj; ADD Rj,PC,Rk; JUMP.SN
+  [Rk] (or the same through R22, a RETURN-shaped word).  60 dispatches,
+  their 760 cases all inside their routines.
+
+### Corrected
+
+- **The squash suffix names when the delay slot runs, not when it is
+  squashed** ("Branches", dmp's s_seq/s_xfer above).  Hardware field 0
+  runs the slot always, 1 never, 2 when the branch is taken, 3 when it
+  falls through; with asm's (57 >> 2 * mode) & 3 that makes .SN never,
+  .ST taken, .SF falling through, .SA always, and the cell's +3 bit 7
+  "run on the fall-through", bit 6 "run on the transfer".  The
+  evidence: the returns are B.SA [R22] whose slot pops the frame (54
+  files: of 2,651, LOAD_PAIR [R23],R23,R10 1,845 times, LOADL [R23],R23
+  399); CALL.SA (12,666 executed) has its last argument set in the
+  slot (CALL.SA [R2],R22; MOVE R10,R4); the descriptors' B.SA [R0] pushes the frame
+  in its slot and enters the routine past its own push; BEQ.SF puts in
+  its slot the compare the next branch on the fall-through tests;
+  BLT.ST at a loop's bottom puts the loop head's first load in its slot
+  and jumps past it; JUMP.SN closing a loop has the loop exit's first
+  instruction in its slot, reached by the exit branch (install's
+  FreeTOC 0x80960).  Every CALL.SN (7,253) is followed by a NOP that
+  never runs (asm's NOP for "a squashing call").  asm.pas and lst.pas only
+  copy the mode, so their code is unaffected; the comments that read
+  the bits as squashing are inverted (asm.pas's pass 1 summary,
+  "squashing on bit 6"; dbg_life.pas's "its delay slot squashed on
+  sequential flow", which its code uses the right way: a call with bit
+  7 takes effect after the slot instruction).
+- **+19 is the -PRASM listing's opcode name** ("The opcode tables",
+  the table's "classic" column): lst_$display_code_cell prints
+  instruction_assembly +19 under -PRASM and instruction_mnemonic in the
+  classic listing.
+- **TST is ADD into R31** with the condition codes (0x6000 = bit 14
+  and ADD's 0x2000), not SUB as its +19 name says (CMP is SUB, 0x6800).
+- **Kind 6's single** (MFFP, MTFP): the template's bit 8 lies inside
+  the field, so the field is 0x100 + 4n (FD5F0128 is MTFP R10,S10, its
+  second word 00E40128).
+- **The floating condition codes** are bit 24 in the floating classes;
+  bit 14 there is a register field's (17..12), never the integer
+  condition codes.
+- **The exception stub** of these later compilers sits inside the
+  routine after an unconditional jump, its literal in the routine's
+  pool (not at PC+8), 0x00120003 (not 0x00120004).  This is a
+  difference of the SR10.4 compilers, not a misreading of bin.pas.
+
+### New: seen in the binaries, absent from the compiler's table or this document
+
+- **No opcode outside the table.**  No executed word fails to decode
+  (the non-decoding words are data: above);
+  no privileged or OS instruction is executed anywhere (ENABLE,
+  DISABLE, MTPR, MFPR, the SYNCHs, FPQUIESCE and MFFPCC never appear; the
+  only SVC is the stub's).  Table entries never executed, so
+  unconfirmed: BNEVER, BNL2V, BL2V, BNL2, BL2, BNZ3, BZ3, BNV, BV,
+  FBGT, FBLE, SUBC, the SYNCHs, MFFPCC, MFPR, FPQUIESCE, MTPR, ENABLE,
+  DISABLE, the single-precision floating operations (COPYS, MOVES,
+  NEGS, ABSS, ROUNDS..., ADDS, SUBS, MINS, MAXS, CMPS, CLASSS, TSTS,
+  SQRTS), the FP-immediate NEGI, COMI, ANDI, ORI, XORI, DIVI, and NEGD,
+  ABSD, CVTSD, CVTDS, ROUNDDI, ROUNDD, TRUNCD, CMPD, CLASSD, TSTD,
+  MIND, MAXD, SQRTD, MULD and the five-operand forms.  Executed (with
+  counts in the decoder's histogram, scratch): the integer ALU and
+  shifts, every load and store size in all three forms, LOAD_PAIR, the
+  conditional branches (also by register), FBEQ, FBNE, FBGE, FBLT,
+  JUMP, CALL, SVC, MFNEXTCC (120: the next condition codes into a
+  register), MFFP, MTFP, FNOP, COPYD, MOVED, ADDD, SUBD, DIVD, CVTID,
+  CVTIS, TRUNCDI, TRUNCSI, MULS, DIVS, ADDI, SUBI, MULI.
+- **Routine descriptors** (in .data, made at link time or by the
+  compiler's complete_entry_sequence; asm.pas names the latter):
+  six words, `601E0014` LOADL R0,[PC,0x14]; `185Exxxx` ADD R2 := PC +
+  d, the unit's data base (cc.a88k's A5 of the unit, .blocks' a5);
+  `103F2017` MOVE R23,R1; `24300000` B.SA [R0]; in the slot the
+  routine's push (STOREL R1,[n,--R23]) or R0 := -frame/8; the code
+  address, the routine's start + 8 when the routine has its own push
+  (it is also called directly) and its start when not.  A call by
+  register is a call of a descriptor: LOADL [d,R2],Rx; CALL.SA [Rx],R22
+  (15,192 such calls, 1,079 of them through R22 itself; the
+  displacement calls are the unit's own).
+- **The prologue** (54 files, 2,505 routines): MOVE R23,R1; STOREL R1,[n,--R23]
+  (1,040); MOVE R23,R1; MOVE #-k,R0; STOREL R1,[R0*8,++R23] for a frame
+  over 128 bytes (327); entered from a descriptor that pushes in its
+  slot (635) or sets R0 := -k for the routine's STOREL R1,[R0*8,++R23]
+  (225); no frame (278).  The frame: +0 the caller's R23, +4 R10 (or
+  R21 when R21 is the only one), +8 R22, +12 R11, +40.. R12..R21 in
+  order; the epilogue LOAD_PAIRs them back and pops +0/+4 in the
+  return's slot.  A routine that needs the data base after calls saves
+  R21 and copies R2 into it (MOVE R2,R21); R21 is read after calls
+  5,048 times (54 files), R0 (the integer result) 6,498, R23 6,101: R23
+  survives calls, though the conventions' clobbered set (0x00C003FF)
+  names it.
+- **.unwind**: groups of 16-byte records (a header: start, length << 7
+  | 4, the group's bytes, 0; then one record per routine: start, length
+  << 7, and two words: the third's bits 29..20 the saved R21..R12, the
+  fourth's 31..27 the register at +4, 26..22 the one at +12, 21..17 the
+  return address's, R22).  All 2,483 records agree with the
+  prologues (the saved mask, and the registers at +4 and +12 with the
+  stores before the first transfer).
+- **The condition codes are read one instruction late**: of 19,255
+  conditional branches, 16,506 have a setter two words before and none
+  in the word just before (9,969 of them CMP; NOP; Bcc), 1,231 both
+  (CMP a; CMP b; Bcc; Bcc, each branch testing the compare two before
+  it, the second in the first's .SF slot), 160 only in the word before
+  (a branch target between), 1,358 neither (set earlier).  So a branch
+  tests the condition codes as they were two instructions before it
+  (sched's extra cycle for a read of the condition codes; xtp's
+  IPCCNOP).  The 19 "equivalent" words (1FFF0000, 1FFF0001: MOVE.CC
+  #0/#1,R31) sit between a setter and its branch (install 0x983E4:
+  EXTRACTU.CC; 1FFF0001; BNE.SF): docs/questions.md 308.
+- **Transfers in a delay slot that runs on the fall-through** (54
+  files): a second branch (4,581, many of them unoptimized code's JUMP.SN
+  to the next word), and calls (1,047), 341 of which return to the
+  branch's target (`if (p) f(p)` in two words: BEQ.SF over; CALL.SN
+  f).  Conditional returns: Bcc [R22] (234).
+- **Calls that do not return** end a routine without a return (3
+  routines run off their end into the next after such a call;
+  pfm_$error_trap, exit).
+
+### Sample: install's reverse (load_toc.c, the K&R string reversal)
+
+```
+reverse:
+08ED68: 103F2017   MOVE       R23,R1
+08ED6C: 38379458   STOREL     R1,[40,--R23]        push a 40-byte frame
+08ED70: 69570004   STOREL     R10,[4,R23]
+08ED74: 6AD70008   STOREL     R22,[8,R23]
+08ED78: 6977000C   STOREL     R11,[12,R23]
+08ED7C: 115F2004   MOVE       R4,R10               s
+08ED80: 6042FDF8   LOADL      [-520,R2],R2         strlen's descriptor
+08ED84: 22C00002   CALL.SA    [R2],R22
+08ED88: 109F200A   MOVE       R10,R4               (slot) the argument
+08ED8C: 14202801   SUB        #1,R0,R1             j = strlen(s) - 1
+08ED90: 2C300008   JUMP.SA    h'8EDB0
+08ED94: 181F0000   MOVE       #0,R0                (slot) i = 0
+08ED98: 36C1000A   LOADBU     [R10,R1],R22         s[j]
+08ED9C: 11608F6B   EXTEND7    R11,R11              c (a signed char)
+08EDA0: 32C0000A   STOREB     R22,[R10,R0]         s[i] = s[j]
+08EDA4: 3161000A   STOREB     R11,[R10,R1]         s[j] = c
+08EDA8: 14212801   SUB        #1,R1,R1
+08EDAC: 18000001   ADD        #1,R0,R0
+08EDB0: 13E06801   CMP.CC     R1,R0
+08EDB4: 13FF001F   NOP
+08EDB8: 2CBBFFF8   BLT.ST     h'8ED98              i < j
+08EDBC: 3560000A   LOADBU     [R10,R0],R11         (slot, when taken) c = s[i]
+08EDC0: 36D7190B   LOAD_PAIR  [8,R23],R22,R11
+08EDC4: 24300016   RETURN.SA  [R22]
+08EDC8: 36F7180A   LOAD_PAIR  [R23],R23,R10        (slot) pop the frame
+```
