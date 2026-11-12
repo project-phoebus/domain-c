@@ -1063,3 +1063,22 @@ revisited.
    [0..15] with zeros for 10..15.  Was the original a 10-element array
    with 12 bytes of something unreferenced after it?
 
+
+136. Translator LL, loc_build.c: the C unit's six headers (loc.h,
+   loc_private.h, the derived loc_codes.h and loc_sets.h, loc_build.h,
+   loc_pack.h) are not in the tree; loc_private.h (the holder and the
+   30-byte node, as one union) and loc_build.h (the prototypes) are
+   written from the code, the other four are stubs with a TODO, and the
+   location codes appear in loc_build.c as numbers.  The families are
+   written as unsigned char arrays of the bytes .rwdi records, because
+   the one at A5+80 has room for at most 4 bytes; was there a family
+   structure (and the +80 object something else)?
+137. Translator LL, loc_build.c: kept slips of the image: close_pool
+   scraps each range's successor rather than the range (and reads the
+   scrapped node's link; cc never calls close_pool); stmt_range with
+   line1 > line2 makes the range (start, start) where an exchange
+   seems meant; dump_pool's total adds the piece's count after the
+   write loop has brought it to 0 (it always returns 0 on success);
+   loc_holder_alloc allocates one byte short for the NUL of a 13- or
+   37-byte holder, and loc_holder_dispose files a 14-byte holder on
+   the small list.  Were these in the original source?

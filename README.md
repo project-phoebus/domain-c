@@ -169,4 +169,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/fpa.pas` | 20 | translated (cc.m68k only; best effort; descriptors through codegen_$uads_t, trees through cg_tree_t, the module's data initialized; dpc gaps 7, 8) |
 | `lang/lang/source/banshee.pas` | 1 | translated (cc.m68k only; best effort; cells through codegen.ins.pas, the module's descriptors initialized; dpc gap 8) |
 | `lang/lang/source/final.pas` | 120 | started: 99 of 120 (all but peepholer_ops and its 6 try_ routines, deltest with backov, opttest, optmove, opta, floatop, try_pre_dec, try_post_incr, merge_add_sub, transform_ptr_in_d_use, cmp_branch_becomes_eor, redundant_lea, collapsed_index_calc, try_reducing_literal; cc.m68k only; cells through codegen_$cell_t; dpc gaps 2, 8, 12, 15, 24, 26) |
+| `us1/us1/lib/dblib/loc/src/loc_build.c` | 33 | reconstructed (C; not checked by the gate: read against the disassembly, syntax-checked with a host C compiler; headers loc_private.h and loc_build.h, the others stubs) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
