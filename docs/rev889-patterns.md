@@ -938,3 +938,17 @@ cc.m68k unless marked.
     #2; add.l; add.l; add.l' (26k) and the record allocated as 26(n - 1)
     + 108 bytes; copies move 6 longwords and a word.  dpc lays the
     record out at 26 bytes too (checked with sizeof).
+## The common subexpression phase (translator PC4, cc.a88k com)
+
+127. **A small local set kept in a data register.**  com's
+    process_instruction (cc.a88k 0x22B46C) keeps a `set of 0..31' of
+    the operand numbers whose canonical birthpoints it has cached in
+    D6: tested `cmpi.l #31,D5; bgt; moveq #31,D0; cmp.w D5,D0; bcs;
+    btst D5,D6; bls' (the range check's carry and btst's Z together),
+    an element added by clearing a frame longword, `bset D5,(A0,D0.w)'
+    into it and `or.l (-752,A6),D6'.  dpc refuses `in' on a set it
+    holds in a register (docs/dpc-gaps.md 30).
+128. **A nested routine that uses nothing of its parent called without
+    a static link.**  ltss_on_stores_to_same_addr's nested
+    get_the_right_instr (0x229968) is called `pea (A0); bsr' with its
+    one argument only, and reads no frame of its parent.

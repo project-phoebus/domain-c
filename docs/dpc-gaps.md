@@ -33,6 +33,11 @@ when this tree is merged).
   returning a 4-byte array) and 34 (string constants to short char
   arrays): fixed in 3e7b09c and ca0dd28.**  Their rules removed, but
   for cg_call's gap 22 rule: without it the routine meets gap 28.
+- Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
+  spiller finds values to spill but runs out of virtual register
+  numbers (240 per class) adding the reloads, and the colouring's
+  message is reported.  Widening the numbering, with the
+  domain-pascal owner as part of 25, would cover both.
 - Gap 32 is queued in domain-pascal; `while true do' is refused on
   purpose (the image cannot tell it from `repeat ... until false'):
   write such loops with a label.
@@ -762,6 +767,25 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
        begin
          if (b in s) and (b in [27..29]) then
            n := 1;
+       end;
+
+   Also com.pas process_instruction (translator PC4, cc.a88k 0x22B46C):
+   a local `seen: set of 0..31' (the operand numbers whose birthpoints
+   are cached) that the image keeps in D6 (`btst D5,D6' after `cmpi.l
+   #31,D5; bgt'; an element added by `bset' into a cleared frame
+   longword and `or.l' into D6): `if (k <= 31) and (k in seen) then'
+   draws the same message.  The rewrite makes the test `k <= 0' (never
+   cached) in the scratch copy.  Reproducer:
+
+       module g30b;
+       var n: integer32;
+       procedure p(k: integer32); options(val_param);
+       var s: set of 0..31;
+       begin
+         s := [];
+         if (k <= 31) and (k in s) then
+           n := 1;
+         s := s + [k];
        end;
 
 31. **A set expression of more than a longword compared with `[]'.**

@@ -1329,11 +1329,12 @@ procedure bv_$release_lr_map(
 
 { com.pas (cc.a88k). }
 
-{ COM_$COMPUTE_CSES - 0x22BFD2, 0x58 bytes; called from iv.  Frame 8:al;
-  12:l. }
+{ COM_$COMPUTE_CSES - one pass of common subexpression elimination over
+  rtn at the debug level.  0x22BFD2, 0x58 bytes; called from iv.  Frame
+  8:al; 12:l.  (batch C: narrowed from com.pas.) }
 procedure com_$compute_cses(
-    p1: univ_ptr;
-    p2: integer32); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    level: integer32); options(val_param); extern;
 
 { COM_$BEGIN_COMPILATION - 0x22C02A, 0x26 bytes. }
 procedure com_$begin_compilation; extern;
