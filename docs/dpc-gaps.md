@@ -724,6 +724,20 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
    arms (34 .. 42) are left out of the check (a conditional variable
    that is not set); tools/cc_typecheck.sh type-checks them.
 
+   Also the generated isc_pattern_matcher.pas pattern_matcher (cc.a88k
+   0x200D6E, 0x7944 bytes, 683 tries of nested `if's each ending in a
+   call; translator GB): written with flat `and's it ends in "a routine
+   needing this many registers is not supported yet" after some 140
+   tries; with one `if' per test, "more values live at once than there
+   are registers not supported yet" (reported at the routine's heading)
+   as soon as the il$t case holds its first seven arms.  The check
+   leaves out the il$t arms from and_to_aop to the otherwise (a
+   conditional variable that is not set); dpc --check-only accepts the
+   whole routine.  No small reproducer found: a routine of one such try
+   (eight nested tests through children's children, a set test, a call
+   with six parameters) compiles.  Reproducer: the unit with its
+   gap-25 rewrite lines removed from tools/cc_gap_rewrites.txt.
+
    Also cg_assign.pas assign_proc (cc.m68k 0x0F469E, 0x2224 bytes):
    three conditional regions are left out of the check (the memory
    path's constant masks, unary operators and shifts; the register

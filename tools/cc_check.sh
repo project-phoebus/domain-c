@@ -75,6 +75,11 @@ for f in "$@"; do
   done
 done
 python3 tools/cc_addrcheck.py "$@" || fail=1
+# the generated ISC (docs/iscg-design.md): the committed units must be
+# what tools/iscg_gen.py generates from the rule file
+case " $* " in
+  *iscg_input/*) python3 tools/iscg_gen.py --check || fail=1 ;;
+esac
 if [ -z "${CC_NODATA:-}" ] && [ -s "$scratch/objs.txt" ]; then
   python3 tools/cc_datacheck.py -q --objects "$scratch/objs.txt" || fail=1
 fi

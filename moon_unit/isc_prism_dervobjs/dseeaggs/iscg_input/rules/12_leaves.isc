@@ -1,0 +1,119 @@
+{ 12_leaves.isc - the ISC generator's input (docs/iscg-design.md), section 12, rules 13..34.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 12 leaves  image pass_1 a5 16#461838, pass_2 a5 16#480084;
+
+transform 13  address_mode <- addr_con ($1: irrelevant)
+  pass_1 image 16#13D124;
+  pass_2 image 16#1BBDD8;
+end;
+
+transform 14  address_mode <- addr_con ($1: irrelevant)
+  pass_1 image 16#13D330;
+  pass_2 image 16#1BBE08;
+end;
+
+transform 15  address_mode <- addr_con ($1: irrelevant)
+  pass_1 image 16#13D530;
+  pass_2 image 16#1BBE38;
+end;
+
+transform 16  address_mode <- addr_con ($1: address_mode)
+  pass_1 image 16#13D6F2;
+  pass_2 image 16#1BBE68;
+end;
+
+transform 17  ip_reg <- addr_con ($1: ip_reg)
+  pass_1 image 16#13DC64;
+  pass_2 image 16#1BBEE0;
+end;
+
+transform 18  address_mode <- addr_con ($1: irrelevant)
+  pass_1 image 16#13E1CC;
+  pass_2 image 16#1BBF58;
+end;
+
+transform 19  ip_reg <- ap_register
+  pass_1 image 16#13E390;
+  pass_2 image 16#1BBF88;
+end;
+
+transform 20  address_mode <- argument_block_location_ob
+  pass_1 image 16#13E550;
+  pass_2 image 16#1BBFBA;
+end;
+
+transform 21  address_mode <- at_lib_dsc
+  pass_1 image 16#13E70C;
+  pass_2 image 16#1BBFEA empty;
+end;
+
+transform 22  literal_32_bits <- cache_top
+  pass_1 image 16#13E830;
+  pass_2 image 16#1BBFEC;
+end;
+
+transform 23  local_routine <- cc_call
+  pass_1 image 16#13E92C;
+  pass_2 image 16#1BC022;
+end;
+
+transform 24  address_mode <- cs_temp
+  pass_1 image 16#13EA16;
+  pass_2 image 16#1BC058 empty;
+end;
+
+transform 25  ip_reg <- db_register
+  pass_1 image 16#13EB3A;
+  pass_2 image 16#1BC05A;
+end;
+
+transform 26  ip_reg <- display_register
+  pass_1 image 16#13ECFA;
+  pass_2 image 16#1BC08C;
+end;
+
+transform 27  ip_reg <- exception_register
+  pass_1 image 16#13EEBA;
+  pass_2 image 16#1BC0BE;
+end;
+
+transform 28  local_routine <- entry_blk | function_blk | procedure_blk
+  pass_1 image 16#13F076;
+  pass_2 image 16#1BC0F0;
+end;
+
+transform 29  ip_reg <- lb_register
+  pass_1 image 16#13F186;
+  pass_2 image 16#1BC110;
+end;
+
+transform 30  address_mode <- lib_dsc
+  pass_1 image 16#13F346;
+  pass_2 image 16#1BC142 empty;
+end;
+
+transform 31  ip_reg <- physical_register_ob
+  pass_1 image 16#13F46A;
+  pass_2 image 16#1BC144;
+end;
+
+transform 32  fp_reg <- physical_register_ob
+  pass_1 image 16#13F624;
+  pass_2 image 16#1BC16A;
+end;
+
+transform 33  fp_reg_pair <- physical_register_ob
+  pass_1 image 16#13F7E0;
+  pass_2 image 16#1BC190;
+end;
+
+transform 34  ip_reg <- sb_register
+  pass_1 image 16#13F9B2;
+  pass_2 image 16#1BC1DE;
+end;

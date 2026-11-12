@@ -1,0 +1,174 @@
+{ 02_assignments.isc - the ISC generator's input (docs/iscg-design.md), section 2, rules 140..172.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 02 assignments  image pass_1 a5 16#44F360, pass_2 a5 16#48005C;
+
+transform 140  void <- agg_aop | fp_aop | scalar_aop
+  pass_1 image 16#0F7198;
+  pass_2 image 16#18D020 empty;
+end;
+
+transform 141  void <- agg_aop | fp_aop | scalar_aop ($1: ip_reg_field, $2: [ip_reg, ip_reg_field])
+  pass_1 image 16#0F72D0;
+  pass_2 image 16#18D022;
+end;
+
+transform 142  void <- agg_aop | fp_aop | scalar_aop ($1: ip_reg_field, $2: literal_32_bits)
+  pass_1 image 16#0F74A2;
+  pass_2 image 16#18D076;
+end;
+
+transform 143  void <- agg_aop | fp_aop | scalar_aop ($1: ip_reg_field, $2: ip_reg)
+  pass_1 image 16#0F76CA;
+  pass_2 image 16#18D166;
+end;
+
+transform 144  void <- agg_aop | fp_aop | scalar_aop ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#0F7872;
+  pass_2 image 16#18D1BA;
+end;
+
+transform 145  void <- agg_aop | fp_aop | scalar_aop ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#0F7A02;
+  pass_2 image 16#18D1FE;
+end;
+
+transform 146  void <- agg_aop | fp_aop | scalar_aop ($1: fp_reg, $2: ip_reg)
+  pass_1 image 16#0F7B70;
+  pass_2 image 16#18D246;
+end;
+
+transform 147  void <- agg_aop | fp_aop | scalar_aop ($1: fp_reg, $2: fp_reg)
+  pass_1 image 16#0F7D74;
+  pass_2 image 16#18D2E6;
+end;
+
+transform 148  void <- agg_aop | fp_aop | scalar_aop ($1: fp_reg_pair, $2: fp_reg_pair)
+  pass_1 image 16#0F7F02;
+  pass_2 image 16#18D32E;
+end;
+
+transform 149  void <- agg_aop | fp_aop | scalar_aop ($1: fp_reg_quad, $2: fp_reg_quad)
+  pass_1 image 16#0F80AA;
+  pass_2 image 16#18D398;
+end;
+
+transform 150  void <- agg_aop | fp_aop | scalar_aop ($1: ip_reg, $2: address_mode)
+  pass_1 image 16#0F8266;
+  pass_2 image 16#18D45C;
+end;
+
+transform 151  void <- agg_aop | fp_aop | scalar_aop ($1: fp_reg, $2: address_mode)
+  pass_1 image 16#0F8FEE;
+  pass_2 image 16#18E85C;
+end;
+
+transform 152  void <- agg_aop | fp_aop | scalar_aop ($1: fp_reg_pair, $2: address_mode)
+  pass_1 image 16#0F9676;
+  pass_2 image 16#18F022;
+end;
+
+transform 153  void <- agg_aop | fp_aop | scalar_aop ($1: fp_reg_quad, $2: address_mode)
+  pass_1 image 16#0FA40A;
+  pass_2 image 16#19028A;
+end;
+
+transform 154  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: [ip_reg, ip_reg_field])
+  pass_1 image 16#0FBF3C;
+  pass_2 image 16#1925E6;
+end;
+
+transform 155  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: fp_reg)
+  pass_1 image 16#0FCCAA;
+  pass_2 image 16#193A46;
+end;
+
+transform 156  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: fp_reg_pair)
+  pass_1 image 16#0FD348;
+  pass_2 image 16#194150;
+end;
+
+transform 157  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: fp_reg_quad)
+  pass_1 image 16#0FE11C;
+  pass_2 image 16#1951B2;
+end;
+
+transform 158  void <- agg_aop ($1: address_mode, $2: address_mode)
+  pass_1 image 16#0FFCE2;
+  pass_2 image 16#1972E2;
+end;
+
+transform 159  void <- agg_aop ($1: ip_reg_field, $2: ip_reg_field)
+  pass_1 image 16#100D66;
+  pass_2 image 16#198622;
+end;
+
+transform 160  void <- agg_aop ($1: ip_reg_field, $2: ip_reg)
+  pass_1 image 16#100F02;
+  pass_2 image 16#1986E6;
+end;
+
+transform 161  void <- agg_aop ($1: ip_reg_field, $2: address_mode)
+  pass_1 image 16#10109E;
+  pass_2 image 16#19879E;
+end;
+
+transform 162  void <- agg_aop ($1: ip_reg, $2: ip_reg_field)
+  pass_1 image 16#101350;
+  pass_2 image 16#19898E;
+end;
+
+transform 163  void <- agg_aop ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#1014EC;
+  pass_2 image 16#198A46;
+end;
+
+transform 164  void <- agg_aop ($1: ip_reg, $2: address_mode)
+  pass_1 image 16#101688;
+  pass_2 image 16#198AF6;
+end;
+
+transform 165  void <- agg_aop ($1: address_mode, $2: ip_reg_field)
+  pass_1 image 16#10193A;
+  pass_2 image 16#198CDA;
+end;
+
+transform 166  void <- agg_aop ($1: address_mode, $2: ip_reg)
+  pass_1 image 16#101BE8;
+  pass_2 image 16#198EB6;
+end;
+
+transform 167  void <- fp_aop ($1: fp_reg, $2: ip_reg)
+  pass_1 image 16#101E96;
+  pass_2 image 16#199086;
+end;
+
+transform 168  void <- fp_aop ($1: ip_reg, $2: fp_reg)
+  pass_1 image 16#102014;
+  pass_2 image 16#1990CA;
+end;
+
+transform 169  void <- fp_aop ($1: address_mode, $2: address_mode)
+  pass_1 image 16#102192;
+  pass_2 image 16#19910E;
+end;
+
+transform 170  void <- fp_aop ($1: address_mode, $2: address_mode)
+  pass_1 image 16#10395E;
+  pass_2 image 16#19B346;
+end;
+
+transform 171  void <- scalar_aop ($1: address_mode, $2: [address_mode, literal_32_bits])
+  pass_1 image 16#106B0A;
+  pass_2 image 16#19F868;
+end;
+
+transform 172  void <- scalar_aop ($1: address_mode, $2: literal_32_bits)
+  pass_1 image 16#107286;
+  pass_2 image 16#19FE02;
+end;

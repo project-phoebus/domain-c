@@ -89,6 +89,8 @@ BINS = {'m68k': os.path.join(ROOT, 'ctape/install/ri.apollo.cc.v.6.9.m/cc.m68k')
 SRC_ROOTS = ['lang', 'lang2', 'ivory', 'us', 'us1', 'moon_unit', 'misc_server']
 RULES = os.path.join(HERE, 'cc_gap_rewrites.txt')
 KNOWN = os.path.join(HERE, 'cc_datacheck_known.txt')
+ISCG_NAMES = os.path.join(ROOT, 'moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/'
+                          'iscg_input/iscg_names.txt')
 
 MODDATA_RE = re.compile(r'^(?:\.bss|\.data)?\.moddata\.(?P<module>[^.]+)(?:\.(?P<section>.+))?$')
 OVERLAY_RE = re.compile(r'^\.data\.overlay\.(?P<section>.+)$')
@@ -181,6 +183,13 @@ class Image:
         self.origin = [None] * (hi - self.lo)
         self.rw = cc_data.initial(self.coff, self.lo, hi - self.lo, self.origin)
         self.mapaddr, _ = cc.names(self.coff)
+        # the generated ISC's anonymous routines (the action tables'
+        # targets), named by tools/iscg_gen.py's manifest
+        if os.path.basename(path) == 'cc.a88k' and os.path.exists(ISCG_NAMES):
+            for line in open(ISCG_NAMES):
+                f = line.split()
+                if len(f) == 2 and not line.startswith('#'):
+                    self.mapaddr.setdefault(f[0].upper(), int(f[1], 16))
         self.bases = sorted({b for b in (unit_data_base(self.coff, u) for u in self.units)
                              if b is not None})
 

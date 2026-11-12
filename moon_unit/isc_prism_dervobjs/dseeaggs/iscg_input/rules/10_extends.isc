@@ -1,0 +1,175 @@
+{ 10_extends.isc - the ISC generator's input (docs/iscg-design.md), section 10, rules 404..434.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 10 extends  image pass_1 a5 16#45FD38, pass_2 a5 16#48007C;
+
+transform 404  literal_32_bits <- extend_top ($1: literal_32_bits)
+  pass_1 image 16#13190C;
+  pass_2 image 16#1B7670;
+end;
+
+transform 405  literal_32_bits <- extend_top ($1: literal_32_bits)
+  pass_1 image 16#131E0C;
+  pass_2 image 16#1B76E8;
+end;
+
+transform 406  ip_reg_field <- extend_top ($1: ip_reg_field)
+  pass_1 image 16#132316;
+  pass_2 image 16#1B7760;
+end;
+
+transform 407  ip_reg <- extend_top ($1: ip_reg)
+  pass_1 image 16#1328A0;
+  pass_2 image 16#1B77D8;
+end;
+
+transform 408  ip_reg <- extend_top ($1: ip_reg)
+  pass_1 image 16#132ECA;
+  pass_2 image 16#1B7850;
+end;
+
+transform 409  ip_reg <- extend_top ($1: ip_reg)
+  pass_1 image 16#133CFE;
+  pass_2 image 16#1B78C8;
+end;
+
+transform 410  ip_reg_scaled <- extend_top ($1: ip_reg_scaled)
+  pass_1 image 16#1345AC;
+  pass_2 image 16#1B790A;
+end;
+
+transform 411  literal_32_bits <- extend_top ($1: literal_32_bits)
+  pass_1 image 16#134B20;
+  pass_2 image 16#1B7982;
+end;
+
+transform 412  ip_reg <- extend_top ($1: lshf_top($1: ip_reg, $2: literal_32_bits))
+  pass_1 image 16#134C58;
+  pass_2 image 16#1B79AA;
+end;
+
+transform 413  ip_reg <- extend_top ($1: ip_reg_field)
+  pass_1 image 16#134E88;
+  pass_2 image 16#1B7A02;
+end;
+
+transform 414  ip_reg <- extend_top ($1: ip_reg_field)
+  pass_1 image 16#135480;
+  pass_2 image 16#1B7A52;
+end;
+
+transform 415  ip_reg <- extend_top ($1: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#135BD4;
+  pass_2 image 16#1B7C1C;
+end;
+
+transform 416  ip_reg <- extend_top ($1: ip_reg_field)
+  pass_1 image 16#136216;
+  pass_2 image 16#1B7CF4;
+end;
+
+transform 417  ip_reg <- extend_top ($1: ip_reg)
+  pass_1 image 16#136572;
+  pass_2 image 16#1B7EBE;
+end;
+
+transform 418  ip_reg <- extend_top ($1: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#1368B8;
+  pass_2 image 16#1B8088;
+end;
+
+transform 419  ip_reg <- extend_top ($1: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#136D10;
+  pass_2 image 16#1B83DC;
+end;
+
+transform 420  ip_reg <- extend_top ($1: ip_reg_field)
+  pass_1 image 16#137350;
+  pass_2 image 16#1B84B4;
+end;
+
+transform 421  ip_reg <- extend_top ($1: ip_reg)
+  pass_1 image 16#1376AC;
+  pass_2 image 16#1B867E;
+end;
+
+transform 422  ip_reg <- extend_top ($1: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#1379F2;
+  pass_2 image 16#1B8848;
+end;
+
+transform 423  ip_reg <- extend_top ($1: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#138600;
+  pass_2 image 16#1B945E;
+end;
+
+transform 424  fp_reg <- f_extend_top ($1: ip_reg, $2: void)
+  no_could_deadlock_child;
+  pass_1 image 16#139B5A;
+  pass_2 image 16#1BA63C;
+end;
+
+transform 425  fp_reg <- f_extend_top ($1: fp_reg, $2: void)
+  no_could_deadlock_child;
+  pass_1 image 16#139F90;
+  pass_2 image 16#1BA8D6;
+end;
+
+transform 426  ip_reg <- f_extend_top ($1: fp_reg, $2: void)
+  no_could_deadlock_child;
+  pass_1 image 16#13A1F2;
+  pass_2 image 16#1BAAC4;
+end;
+
+transform 427  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: void)
+  pass_1 image 16#13A456;
+  pass_2 image 16#1BAD28;
+end;
+
+transform 428  fp_reg <- f_extend_top ($1: f_extend_top($1: fp_reg, $2: void), $2: void)
+  pass_1 image 16#13A63E;
+  pass_2 image 16#1BAD8E;
+end;
+
+transform 429  fp_reg_pair <- f_extend_top ($1: ip_reg, $2: void)
+  no_could_deadlock_child;
+  pass_1 image 16#13A84E;
+  pass_2 image 16#1BADD6;
+end;
+
+transform 430  fp_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
+  no_could_deadlock_child;
+  pass_1 image 16#13AC5C;
+  pass_2 image 16#1BB098;
+end;
+
+transform 431  ip_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
+  no_could_deadlock_child;
+  pass_1 image 16#13AEE2;
+  pass_2 image 16#1BB2AE;
+end;
+
+transform 432  fp_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
+  pass_1 image 16#13B16A;
+  pass_2 image 16#1BB52E;
+end;
+
+transform 433  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
+  pass_1 image 16#13B352;
+  pass_2 image 16#1BB594;
+end;
+
+transform 434  fp_reg_pair <- f_extend_top ($1: f_extend_top($1: fp_reg_pair, $2: void), $2: void)
+  pass_1 image 16#13B8B6;
+  pass_2 image 16#1BB60C;
+end;

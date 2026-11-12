@@ -1,0 +1,69 @@
+{ 15_processor_registers.isc - the ISC generator's input (docs/iscg-design.md), section 15, rules 241..252.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 15 processor_registers  image pass_1 a5 16#465164, pass_2 a5 16#480090;
+
+transform 241  processor_reg <- dindex_node ($1: processor_reg, $2: ip_reg)
+  pass_1 image 16#14BE50;
+  pass_2 image 16#1C3998;
+end;
+
+transform 242  processor_reg <- dindex_node ($1: processor_reg, $2: [ip_reg, ip_reg_scaled])
+  pass_1 image 16#14C4D4;
+  pass_2 image 16#1C3A16;
+end;
+
+transform 243  processor_reg <- dindex_node ($1: processor_reg, $2: ip_reg)
+  pass_1 image 16#14CB12;
+  pass_2 image 16#1C3AB8;
+end;
+
+transform 244  processor_reg <- dindex_node ($1: processor_reg, $2: ip_reg)
+  pass_1 image 16#14D162;
+  pass_2 image 16#1C3B68;
+end;
+
+transform 245  processor_reg <- disp_node ($1: processor_reg)
+  pass_1 image 16#14D7AC;
+  pass_2 image 16#1C3C1E;
+end;
+
+transform 246  processor_reg <- disp_node ($1: processor_reg)
+  pass_1 image 16#14DD76;
+  pass_2 image 16#1C3C96;
+end;
+
+transform 247  void <- pack_aop ($1: processor_reg, $2: [ip_reg, ip_reg_field, literal_32_bits])
+  pass_1 image 16#14E3F6;
+  pass_2 image 16#1C3DE0;
+end;
+
+transform 248  void <- scalar_aop ($1: processor_reg, $2: [ip_reg, ip_reg_field, literal_32_bits])
+  pass_1 image 16#14E7BE;
+  pass_2 image 16#1C3FB6;
+end;
+
+transform 249  processor_reg <- var_name
+  pass_1 image 16#14EB52;
+  pass_2 image 16#1C418C;
+end;
+
+transform 250  ip_reg_field <- processor_reg
+  pass_1 image 16#14EE10;
+  pass_2 image 16#1C424C;
+end;
+
+transform 251  processor_reg <- processor_reg
+  pass_1 image 16#14F2CE;
+  pass_2 image 16#1C42B8;
+end;
+
+transform 252  processor_reg <- processor_reg
+  pass_1 image 16#14F710;
+  pass_2 image 16#1C4314;
+end;

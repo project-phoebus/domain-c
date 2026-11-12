@@ -1,0 +1,105 @@
+{ 16_sets.isc - the ISC generator's input (docs/iscg-design.md), section 16, rules 533..550.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 16 sets  image pass_1 a5 16#465434, pass_2 a5 16#480094;
+
+transform 533  ip_reg <- set_and_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#14FB70;
+  pass_2 image 16#1C43A0;
+end;
+
+transform 534  address_mode <- set_and_top ($1: address_mode, $2: address_mode)
+  pass_1 image 16#14FDF0;
+  pass_2 image 16#1C43E6;
+end;
+
+transform 535  ip_reg <- set_bit_in_set_top ($1: literal_32_bits, $2: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#150224;
+  pass_2 image 16#1C48D2;
+end;
+
+transform 536  ip_reg <- set_bit_in_set_top ($1: ip_reg, $2: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#15046A;
+  pass_2 image 16#1C4A6E;
+end;
+
+transform 537  address_mode <- set_bit_in_set_top ($1: address_mode, $2: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#150B66;
+  pass_2 image 16#1C4CA2;
+end;
+
+transform 538  ip_reg <- set_diff_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#15134E;
+  pass_2 image 16#1C50E6;
+end;
+
+transform 539  address_mode <- set_diff_top ($1: address_mode, $2: address_mode)
+  pass_1 image 16#1515BC;
+  pass_2 image 16#1C5174;
+end;
+
+transform 540  ip_reg <- set_extend_top ($1: ip_reg)
+  pass_1 image 16#151A54;
+  pass_2 image 16#1C56AC;
+end;
+
+transform 541  ip_reg <- set_extend_top ($1: ip_reg)
+  pass_1 image 16#151FC8;
+  pass_2 image 16#1C5724;
+end;
+
+transform 542  address_mode <- set_extend_top ($1: ip_reg)
+  pass_1 image 16#1521B6;
+  pass_2 image 16#1C5776;
+end;
+
+transform 543  address_mode <- set_extend_top ($1: address_mode)
+  pass_1 image 16#1529C4;
+  pass_2 image 16#1C648A;
+end;
+
+transform 544  ip_reg <- set_extend_top ($1: ip_reg)
+  pass_1 image 16#152D4A;
+  pass_2 image 16#1C6918;
+end;
+
+transform 545  address_mode <- set_extend_top ($1: address_mode)
+  pass_1 image 16#153298;
+  pass_2 image 16#1C6990;
+end;
+
+transform 546  ip_reg <- set_or_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#1535A8;
+  pass_2 image 16#1C6D16;
+end;
+
+transform 547  address_mode <- set_or_top ($1: address_mode, $2: address_mode)
+  pass_1 image 16#1537EA;
+  pass_2 image 16#1C6D5C;
+end;
+
+transform 548  ip_reg <- set_range_in_set_top ($1: literal_32_bits, $2: ip_reg, $3: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#153C26;
+  pass_2 image 16#1C7248;
+end;
+
+transform 549  ip_reg <- set_range_in_set_top ($1: ip_reg, $2: ip_reg, $3: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#153ECE;
+  pass_2 image 16#1C7594;
+end;
+
+transform 550  address_mode <- set_range_in_set_top ($1: address_mode, $2: ip_reg, $3: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#15416A;
+  pass_2 image 16#1C790A;
+end;

@@ -1,0 +1,74 @@
+{ 21_proper_subtrees.isc - the ISC generator's input (docs/iscg-design.md), section 21, rules 551..563.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 21 proper_subtrees  image pass_1 a5 16#46904C, pass_2 a5 none;
+
+transform 551  proper_subtree <- dpreal_ob
+  pass_1 image 16#1621CC;
+  pass_2 image 16#1CF050 empty;
+end;
+
+transform 552  proper_subtree <- addr_top ($1: address_mode)
+  pass_1 image 16#162256;
+  pass_2 image 16#1CF052 empty;
+end;
+
+transform 553  proper_subtree <- bit_set_top ($1: literal_32_bits, $2: ip_reg, $3: void)
+  pass_1 image 16#1622F2;
+  pass_2 image 16#1CF054 empty;
+end;
+
+transform 554  proper_subtree <- not_top ($1: bit_set_top($1: literal_32_bits, $2: ip_reg, $3: void))
+  pass_1 image 16#1623C2;
+  pass_2 image 16#1CF056 empty;
+end;
+
+transform 555  proper_subtree <- compare_top ($1: [ip_reg, ip_reg_field], $2: literal_32_bits)
+  pass_1 image 16#16245E;
+  pass_2 image 16#1CF058 empty;
+end;
+
+transform 556  proper_subtree <- not_top ($1: ip_reg)
+  pass_1 image 16#16251E;
+  pass_2 image 16#1CF05A empty;
+end;
+
+transform 557  proper_subtree <- lshf_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#1625BA;
+  pass_2 image 16#1CF05C empty;
+end;
+
+transform 558  proper_subtree <- rshf_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#16267A;
+  pass_2 image 16#1CF05E empty;
+end;
+
+transform 559  proper_subtree <- bit_test_top ($1: literal_32_bits, $2: address_mode)
+  pass_1 image 16#16273A;
+  pass_2 image 16#1CF060 empty;
+end;
+
+transform 560  proper_subtree <- bit_test_top ($1: literal_32_bits, $2: [ip_reg, ip_reg_field])
+  pass_1 image 16#1627FA;
+  pass_2 image 16#1CF062 empty;
+end;
+
+transform 561  proper_subtree <- bit_test_top ($1: [ip_reg, literal_32_bits], $2: [ip_reg, ip_reg_field])
+  pass_1 image 16#1628BA;
+  pass_2 image 16#1CF064 empty;
+end;
+
+transform 562  proper_subtree <- f_extend_top ($1: fp_reg, $2: void)
+  pass_1 image 16#16297A;
+  pass_2 image 16#1CF066 empty;
+end;
+
+transform 563  proper_subtree <- f_extend_top ($1: fp_reg_pair, $2: void)
+  pass_1 image 16#162A3A;
+  pass_2 image 16#1CF068 empty;
+end;

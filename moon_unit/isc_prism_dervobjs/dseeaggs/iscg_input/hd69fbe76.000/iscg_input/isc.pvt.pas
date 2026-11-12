@@ -62,3 +62,29 @@ procedure print_permissible_solution_kinds(
   the compilation.  0x0EFE96, 0x626 bytes; no parameters (called from
   isc_main's isc_$begin_compilation; translator PD2). }
 procedure isc_pass_1_begin_compilation; extern;
+
+{ The section isc_tool_generated_readonly_tables (cc.a88k 0x2BC13C, 3264
+  bytes; defined by isc_vars, generated from the rule file by
+  tools/iscg_gen.py; translator GB): result_kind, by rule 1..563, the
+  kind of the solution the rule makes (hard_work's check_permissible
+  test: `movea.l #0x2BC13C,A0; move.w (-2,A0,D0.l),D1'), then six maps
+  by il$t of the opcode an operator is done with, which the pass-1
+  actions read by the subject's il$t: reg-reg with the operands
+  reversed (sub_top -> opc$rsub), reg-reg, immediate, double float,
+  immediate negated, single float.  Not known from the original: the
+  names. }
+type
+  isc_opcode_map_t = array [il$t] of integer;
+  isc_tool_tables_t = record
+    result_kind: array [1..563] of integer;     { +0 }
+    opcode_rr_reversed: isc_opcode_map_t;       { +1126 }
+    opcode_rr: isc_opcode_map_t;                { +1482 }
+    opcode_immediate: isc_opcode_map_t;         { +1838 }
+    opcode_double: isc_opcode_map_t;            { +2194 }
+    opcode_immediate_negated: isc_opcode_map_t; { +2550 }
+    opcode_single: isc_opcode_map_t;            { +2906 }
+    pad: integer;                               { +3262: zero }
+  end;
+
+var (isc_tool_generated_readonly_tables)
+  isc_tool_generated_readonly_tables: isc_tool_tables_t;

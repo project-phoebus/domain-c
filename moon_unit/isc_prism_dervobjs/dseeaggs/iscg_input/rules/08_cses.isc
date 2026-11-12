@@ -1,0 +1,79 @@
+{ 08_cses.isc - the ISC generator's input (docs/iscg-design.md), section 8, rules 87..100.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 08 cses  image pass_1 a5 16#45AA34, pass_2 a5 16#480074;
+
+transform 87  literal_32_bits <- cse_parent_ob
+  pass_1 image 16#11E3A8;
+  pass_2 image 16#1AA794;
+end;
+
+transform 88  address_mode <- cse_parent_ob
+  pass_1 image 16#11E4DA;
+  pass_2 image 16#1AA7C8;
+end;
+
+transform 89  ip_reg <- cse_parent_ob
+  pass_1 image 16#11E75C;
+  pass_2 image 16#1AA82E;
+end;
+
+transform 90  ip_reg_field <- cse_parent_ob
+  pass_1 image 16#11E992;
+  pass_2 image 16#1AA884;
+end;
+
+transform 91  fp_reg <- cse_parent_ob
+  pass_1 image 16#11EBFA;
+  pass_2 image 16#1AA8DA;
+end;
+
+transform 92  fp_reg_pair <- cse_parent_ob
+  pass_1 image 16#11EE0C;
+  pass_2 image 16#1AA930;
+end;
+
+transform 93  fp_reg_quad <- cse_parent_ob
+  pass_1 image 16#11F034;
+  pass_2 image 16#1AA9B8;
+end;
+
+transform 94  literal_32_bits <- cse_use_ob
+  pass_1 image 16#11F27C;
+  pass_2 image 16#1AAA40;
+end;
+
+transform 95  address_mode <- cse_use_ob
+  pass_1 image 16#11F3AE;
+  pass_2 image 16#1AAA74;
+end;
+
+transform 96  ip_reg <- cse_use_ob
+  pass_1 image 16#11F612;
+  pass_2 image 16#1AAADA;
+end;
+
+transform 97  ip_reg_field <- cse_use_ob
+  pass_1 image 16#11F848;
+  pass_2 image 16#1AAB30;
+end;
+
+transform 98  fp_reg <- cse_use_ob
+  pass_1 image 16#11FAB0;
+  pass_2 image 16#1AAB86;
+end;
+
+transform 99  fp_reg_pair <- cse_use_ob
+  pass_1 image 16#11FCC2;
+  pass_2 image 16#1AABDC;
+end;
+
+transform 100  fp_reg_quad <- cse_use_ob
+  pass_1 image 16#11FEEA;
+  pass_2 image 16#1AAC64;
+end;

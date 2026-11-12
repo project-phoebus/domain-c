@@ -2146,6 +2146,15 @@ revisited.
    initial value).  Was it an insert's `var (isc_readonly_tables)' with
    initial values, overlaid in each ISC unit?  If so the insert should
    carry the image's 3120 bytes (like lir_main_readonly_tables).
+   **Settled by translator GB (2026-11-12):** isc_vars defines it (its
+   .blocks record names the section, and isc_tool_generated_readonly_
+   tables); isc_types.ins.pas now declares the section's variable (`var
+   (isc_readonly_tables)', its view extended to the section's 3120
+   bytes) and the generated isc_vars gives the image's bytes with
+   `define' (the scheme of question 161; dpc gap 32 renames it for the
+   gate).  isc_vars opens isc_var_defines.ins.pas first: perhaps a
+   switch that made the inserts define what they otherwise declare; its
+   contents are not in the image (a stub).  docs/iscg-design.md 9.3.
 262. Translator PD2, isc_solution_fields.ins.pas: isc_solution_t's
    base_reg (+4) and index_reg (+8) are typed lr_ptr_t (the CSE
    accessors' types), but every writer stores a solution there
@@ -2272,3 +2281,31 @@ revisited.
    (and could emit isc_types.ins.pas's isc_node_t variants from the same
    description), or should these regions stay hand-maintained text that
    the generator copies?  Not decided here.
+273. Translator GB, the generated pattern_matcher (docs/iscg-design.md
+   9.3): a try is written as one `if' per test, nested (`if $1 is ip_reg
+   then if $2 is address_mode then hard_work(..., 150)'), because dpc
+   evaluates `and' whole and a nested pattern's tests read children of
+   children that exist only when the tests before them hold.  The image
+   leaves at the first failing test either way; Apollo's generator
+   probably wrote one `if' with `and's (Rev 8.89 short-circuits them).
+   Keep the nested form, or emit `and' (or `and then', if Rev 8.89 had
+   it) and log the evaluation as a dpc gap?
+274. Translator GB, the rule file's names that are ours: the flags
+   `check_permissible' and `no_could_deadlock_child' (the launch brief
+   said "at_most_no_could_deadlock_child": set, the rule allows no
+   could-deadlock child; clear, at most one), the opcode maps
+   (opcode_rr_reversed, opcode_rr, opcode_immediate, opcode_double,
+   opcode_immediate_negated, opcode_single), the section topics, and
+   the module data (pm_pass_1_action, pm_check_permissible,
+   pm_no_could_deadlock_child, pm_proper_subtree_seen,
+   p2_pass_2_action).  Other names?
+275. Translator GB, isc_pattern_matcher's data: four bytes at +0x8CC,
+   between the pass-1 action table (+0x000, 563 longwords) and the
+   check_permissible flags (+0x8D0), that nothing sets or reads (kept
+   as pm_unused_8cc).  A 564th table entry (the tables sized by the
+   rules' count plus one) or an unused variable?
+276. Translator GB, slips kept as the image has them: pass_2 clears
+   already_through_pass_2 (+115 bit 3) just before the pass-2 action and
+   sets it after (`bclr #3' at 0x18C75C, `bset #3' at 0x18C790); hard_work
+   reads `appended' and `wanted' (D4, D3) uninitialized when the pass-1
+   action gives a work solution but no result (0x200966).

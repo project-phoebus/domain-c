@@ -1,0 +1,135 @@
+{ 01_address_modes.isc - the ISC generator's input (docs/iscg-design.md), section 1, rules 63..86.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 01 address_modes  image pass_1 a5 16#44F308, pass_2 a5 16#480058;
+
+transform 63  address_mode <- dindex_node ($1: ip_reg, $2: [ip_reg, literal_32_bits])
+  no_could_deadlock_child;
+  pass_1 image 16#0F0C34;
+  pass_2 image 16#18C7C4;
+end;
+
+transform 64  address_mode <- dindex_node ($1: ip_reg, $2: literal_32_bits)
+  no_could_deadlock_child;
+  pass_1 image 16#0F0F46;
+  pass_2 image 16#18C7F0;
+end;
+
+transform 65  address_mode <- dindex_node ($1: ip_reg, $2: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#0F128E;
+  pass_2 image 16#18C81C;
+end;
+
+transform 66  address_mode <- dindex_node ($1: ip_reg, $2: ip_reg_scaled)
+  no_could_deadlock_child;
+  pass_1 image 16#0F15B6;
+  pass_2 image 16#18C846;
+end;
+
+transform 67  address_mode <- dindex_node ($1: ip_reg, $2: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#0F18DA;
+  pass_2 image 16#18C870;
+end;
+
+transform 68  address_mode <- dindex_node ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#0F1C0A;
+  pass_2 image 16#18C8B8;
+end;
+
+transform 69  address_mode <- disp_node ($1: address_mode)
+  pass_1 image 16#0F1F5A;
+  pass_2 image 16#18C91E;
+end;
+
+transform 70  address_mode <- disp_node ($1: address_mode)
+  pass_1 image 16#0F254C;
+  pass_2 image 16#18C996;
+end;
+
+transform 71  address_mode <- disp_node ($1: address_mode)
+  pass_1 image 16#0F2B6C;
+  pass_2 image 16#18C9D0;
+end;
+
+transform 72  ip_reg_field <- disp_node ($1: ip_reg_field)
+  pass_1 image 16#0F31E6;
+  pass_2 image 16#18CA7E;
+end;
+
+transform 73  ip_reg <- disp_node ($1: ip_reg)
+  pass_1 image 16#0F3734;
+  pass_2 image 16#18CAF6;
+end;
+
+transform 74  ip_reg_field <- disp_node ($1: ip_reg)
+  pass_1 image 16#0F3C70;
+  pass_2 image 16#18CB6E;
+end;
+
+transform 75  fp_reg <- disp_node ($1: fp_reg)
+  pass_1 image 16#0F41F8;
+  pass_2 image 16#18CBE6;
+end;
+
+transform 76  fp_reg_pair <- disp_node ($1: fp_reg_pair)
+  pass_1 image 16#0F4740;
+  pass_2 image 16#18CC5E;
+end;
+
+transform 77  fp_reg_quad <- disp_node ($1: fp_reg_quad)
+  pass_1 image 16#0F4C88;
+  pass_2 image 16#18CCD6;
+end;
+
+transform 78  ip_reg_field <- disp_node ($1: fp_reg)
+  pass_1 image 16#0F51D0;
+  pass_2 image 16#18CD4E;
+end;
+
+transform 79  ip_reg_field <- disp_node ($1: fp_reg_pair)
+  pass_1 image 16#0F533A;
+  pass_2 image 16#18CDA0;
+end;
+
+transform 80  fp_reg <- disp_node ($1: fp_reg_pair)
+  pass_1 image 16#0F54C6;
+  pass_2 image 16#18CE02;
+end;
+
+transform 81  fp_reg <- disp_node ($1: fp_reg_pair)
+  pass_1 image 16#0F5A28;
+  pass_2 image 16#18CE3A;
+end;
+
+transform 82  literal_32_bits <- disp_node ($1: dpreal_ob())
+  pass_1 image 16#0F5F8E;
+  pass_2 image 16#18CE72;
+end;
+
+transform 83  address_mode <- ptr_node ($1: addr_top($1: address_mode))
+  pass_1 image 16#0F60C6;
+  pass_2 image 16#18CE9C;
+end;
+
+transform 84  address_mode <- ptr_node ($1: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#0F66BA;
+  pass_2 image 16#18CF36;
+end;
+
+transform 85  address_mode <- sym_disp_node ($1: address_mode)
+  pass_1 image 16#0F6920;
+  pass_2 image 16#18CF62;
+end;
+
+transform 86  address_mode <- sym_disp_node ($1: address_mode)
+  pass_1 image 16#0F6F28;
+  pass_2 image 16#18CFE2;
+end;

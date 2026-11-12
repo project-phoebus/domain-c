@@ -1,0 +1,145 @@
+{ 24_operator_assignments.isc - the ISC generator's input (docs/iscg-design.md), section 24, rules 173..199.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 24 operator_assignments  image pass_1 a5 16#46BBD4, pass_2 a5 16#4800B4;
+
+transform 173  void <- add_to_aop | eor_to_aop | or_to_aop | sub_from_aop ($1: ip_reg_field, $2: ip_reg_field)
+  pass_1 image 16#168B5C;
+  pass_2 image 16#1D50A0;
+end;
+
+transform 174  void <- add_to_aop | eor_to_aop | or_to_aop | sub_from_aop ($1: ip_reg_field, $2: [ip_reg, literal_32_bits])
+  pass_1 image 16#168E7C;
+  pass_2 image 16#1D5200;
+end;
+
+transform 175  void <- add_to_aop | and_to_aop | eor_to_aop | or_to_aop ($1: [address_mode, ip_reg, ip_reg_field], $2: ip_reg_scaled)
+  pass_1 image 16#1690E8;
+  pass_2 image 16#1D52F2;
+end;
+
+transform 176  void <- add_to_aop | and_to_aop | eor_to_aop | or_to_aop | sub_from_aop ($1: [address_mode, ip_reg, ip_reg_field], $2: [ip_reg, literal_32_bits])
+  pass_1 image 16#169E3A;
+  pass_2 image 16#1D6500;
+end;
+
+transform 177  void <- range_check_to_aop ($1: [address_mode, ip_reg, ip_reg_field], $2: [ip_reg, literal_32_bits], $3: [ip_reg, literal_32_bits])
+  pass_1 image 16#16ABCE;
+  pass_2 image 16#1D770E;
+end;
+
+transform 178  void <- f_add_to_aop | f_div_by_aop | f_mul_to_aop | f_sub_from_aop ($1: [address_mode, fp_reg], $2: fp_reg)
+  pass_1 image 16#16C154;
+  pass_2 image 16#1D92D4;
+end;
+
+transform 179  void <- f_range_check_to_aop ($1: [address_mode, fp_reg], $2: fp_reg, $3: fp_reg)
+  pass_1 image 16#16CCBC;
+  pass_2 image 16#1DA16E;
+end;
+
+transform 180  void <- f_add_to_aop | f_div_by_aop | f_mul_to_aop | f_sub_from_aop ($1: [address_mode, fp_reg_pair], $2: fp_reg_pair)
+  pass_1 image 16#16D85A;
+  pass_2 image 16#1DB194;
+end;
+
+transform 181  void <- f_range_check_to_aop ($1: [address_mode, fp_reg_pair], $2: fp_reg_pair, $3: fp_reg_pair)
+  pass_1 image 16#16F21C;
+  pass_2 image 16#1DD598;
+end;
+
+transform 182  ip_reg <- and_to_aop ($1: [address_mode, ip_reg, ip_reg_field], $2: not_top($1: bit_set_top($1: literal_32_bits, $2: ip_reg, $3: void)))
+  pass_1 image 16#170AEA;
+  pass_2 image 16#1DF8DC;
+end;
+
+transform 183  void <- and_to_aop ($1: ip_reg_field, $2: literal_32_bits)
+  pass_1 image 16#171934;
+  pass_2 image 16#1E0AF2;
+end;
+
+transform 184  void <- and_to_aop ($1: [address_mode, ip_reg], $2: literal_32_bits)
+  pass_1 image 16#171CAC;
+  pass_2 image 16#1E0CAA;
+end;
+
+transform 185  void <- div_by_aop ($1: [address_mode, ip_reg, ip_reg_field], $2: literal_32_bits)
+  pass_1 image 16#172B32;
+  pass_2 image 16#1E1F8A;
+end;
+
+transform 186  void <- div_by_aop ($1: [address_mode, ip_reg, ip_reg_field], $2: fp_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#173934;
+  pass_2 image 16#1E31C6;
+end;
+
+transform 187  void <- eor_to_aop ($1: ip_reg_field, $2: [ip_reg, ip_reg_field])
+  pass_1 image 16#174C4C;
+  pass_2 image 16#1E509E;
+end;
+
+transform 188  void <- isc_mul_to_aop ($1: [address_mode, ip_reg, ip_reg_field], $2: literal_32_bits)
+  pass_1 image 16#174E40;
+  pass_2 image 16#1E517C;
+end;
+
+transform 189  void <- isc_mul_to_aop ($1: [address_mode, ip_reg, ip_reg_field], $2: [fp_reg, ip_reg])
+  pass_1 image 16#175BE2;
+  pass_2 image 16#1E6394;
+end;
+
+transform 190  void <- lshft_to_aop ($1: [address_mode, ip_reg, ip_reg_field], $2: [ip_reg, literal_32_bits])
+  pass_1 image 16#1767EE;
+  pass_2 image 16#1E7332;
+end;
+
+transform 191  void <- mul_to_aop ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#177572;
+  pass_2 image 16#1E854C empty;
+end;
+
+transform 192  void <- neg_to_aop ($1: [address_mode, ip_reg, ip_reg_field])
+  pass_1 image 16#17768C;
+  pass_2 image 16#1E854E;
+end;
+
+transform 193  void <- not_to_aop ($1: [address_mode, ip_reg, ip_reg_field])
+  pass_1 image 16#178382;
+  pass_2 image 16#1E974A;
+end;
+
+transform 194  void <- or_to_aop ($1: ip_reg_field, $2: [ip_reg, ip_reg_field])
+  pass_1 image 16#1790B0;
+  pass_2 image 16#1EA962;
+end;
+
+transform 195  void <- or_to_aop ($1: [address_mode, ip_reg, ip_reg_field], $2: bit_set_top($1: literal_32_bits, $2: ip_reg, $3: void))
+  pass_1 image 16#1792A4;
+  pass_2 image 16#1EAA40;
+end;
+
+transform 196  void <- or_to_aop ($1: ip_reg_field, $2: literal_32_bits)
+  pass_1 image 16#17A07C;
+  pass_2 image 16#1EBC54;
+end;
+
+transform 197  void <- or_to_aop ($1: [address_mode, ip_reg], $2: literal_32_bits)
+  pass_1 image 16#17A3B0;
+  pass_2 image 16#1EBE0E;
+end;
+
+transform 198  void <- rshft_to_aop ($1: [address_mode, ip_reg, ip_reg_field], $2: [ip_reg, literal_32_bits])
+  pass_1 image 16#17B206;
+  pass_2 image 16#1ED0F6;
+end;
+
+transform 199  void <- rshft_to_aop ($1: [address_mode, ip_reg, ip_reg_field], $2: [ip_reg, literal_32_bits])
+  pass_1 image 16#17BF9A;
+  pass_2 image 16#1EE318;
+end;

@@ -1,0 +1,139 @@
+{ 18_shifts.isc - the ISC generator's input (docs/iscg-design.md), section 18, rules 349..374.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 18 shifts  image pass_1 a5 16#468804, pass_2 a5 16#48009C;
+
+transform 349  literal_32_bits <- alshf_top | arshf_top | lshf_top | rshf_top ($1: [ip_reg, literal_32_bits], $2: [ip_reg, literal_32_bits])
+  pass_1 image 16#157E94;
+  pass_2 image 16#1CC6C4 empty;
+end;
+
+transform 350  ip_reg <- alshf_top | arshf_top | lshf_top | rshf_top ($1: ip_reg, $2: [ip_reg, literal_32_bits])
+  pass_1 image 16#157FF2;
+  pass_2 image 16#1CC6C6;
+end;
+
+transform 351  ip_reg <- alshf_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#1585B2;
+  pass_2 image 16#1CC73E;
+end;
+
+transform 352  ip_reg <- alshf_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#1587CE;
+  pass_2 image 16#1CC78E;
+end;
+
+transform 353  ip_reg <- arshf_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#15898C;
+  pass_2 image 16#1CC7D4;
+end;
+
+transform 354  ip_reg <- arshf_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#158EE6;
+  pass_2 image 16#1CC84C;
+end;
+
+transform 355  ip_reg <- arshf_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#159182;
+  pass_2 image 16#1CC910;
+end;
+
+transform 356  ip_reg <- arshf_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#1593CA;
+  pass_2 image 16#1CC9CA;
+end;
+
+transform 357  ip_reg <- arshf_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#1595E8;
+  pass_2 image 16#1CCA1A;
+end;
+
+transform 358  ip_reg <- arshf_top ($1: lshf_top($1: ip_reg, $2: literal_32_bits), $2: literal_32_bits)
+  pass_1 image 16#1597B2;
+  pass_2 image 16#1CCA60;
+end;
+
+transform 359  literal_32_bits <- lshf_top ($1: literal_32_bits, $2: literal_32_bits)
+  pass_1 image 16#1599DE;
+  pass_2 image 16#1CCB64 empty;
+end;
+
+transform 360  ip_reg <- lshf_top ($1: rshf_top($1: ip_reg, $2: literal_32_bits), $2: literal_32_bits)
+  pass_1 image 16#159B28;
+  pass_2 image 16#1CCB66;
+end;
+
+transform 361  ip_reg_scaled <- lshf_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#15A1D0;
+  pass_2 image 16#1CCC00;
+end;
+
+transform 362  ip_reg <- lshf_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#15A788;
+  pass_2 image 16#1CCC78;
+end;
+
+transform 363  ip_reg <- lshf_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#15A9A4;
+  pass_2 image 16#1CCCC8;
+end;
+
+transform 364  ip_reg <- lshf_top ($1: rshf_top($1: ip_reg, $2: literal_32_bits), $2: literal_32_bits)
+  pass_1 image 16#15AB62;
+  pass_2 image 16#1CCD0E;
+end;
+
+transform 365  ip_reg_field <- rshf_top ($1: bit_test_top($1: literal_32_bits, $2: address_mode), $2: literal_32_bits)
+  pass_1 image 16#15B232;
+  pass_2 image 16#1CCDAA;
+end;
+
+transform 366  ip_reg_field <- rshf_top ($1: bit_test_top($1: literal_32_bits, $2: [ip_reg, ip_reg_field]), $2: literal_32_bits)
+  pass_1 image 16#15B51A;
+  pass_2 image 16#1CCFEE;
+end;
+
+transform 367  ip_reg <- rshf_top ($1: bit_test_top($1: [ip_reg, literal_32_bits], $2: [ip_reg, ip_reg_field]), $2: literal_32_bits)
+  pass_1 image 16#15BB80;
+  pass_2 image 16#1CD088;
+end;
+
+transform 368  ip_reg <- rshf_top ($1: compare_top($1: [ip_reg, ip_reg_field], $2: literal_32_bits), $2: literal_32_bits)
+  pass_1 image 16#15BD98;
+  pass_2 image 16#1CD1FA;
+end;
+
+transform 369  ip_reg_field <- rshf_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#15C030;
+  pass_2 image 16#1CD2B6;
+end;
+
+transform 370  literal_32_bits <- rshf_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#15C5C2;
+  pass_2 image 16#1CD32E empty;
+end;
+
+transform 371  ip_reg <- rshf_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#15C716;
+  pass_2 image 16#1CD330;
+end;
+
+transform 372  ip_reg <- rshf_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#15C95A;
+  pass_2 image 16#1CD38A;
+end;
+
+transform 373  ip_reg <- rshf_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#15CB88;
+  pass_2 image 16#1CD416;
+end;
+
+transform 374  ip_reg <- rshf_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#15CDA6;
+  pass_2 image 16#1CD466;
+end;

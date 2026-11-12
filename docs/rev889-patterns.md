@@ -1283,3 +1283,16 @@ cc.m68k unless marked.
     enumerated, 16#1877 double with a width, 16#0112 char (also a
     printer function's char result, stored to a byte temporary),
     16#0033 and 16#0023 character arrays.
+171. **A constant compared twice in a try loaded once.**  pattern_matcher
+    tests both children's kinds against the same kind with one `moveq
+    #8,D0' and two `cmp.w (108,An),D0' (0x2058B4, rule 306's try under
+    f_div_top); a single test is `cmpi.w #k,(108,A0)'.
+172. **Case arms cross-jumped into one another.**  pattern_matcher's 683
+    tries (in 184 arms) are 650 calls of hard_work in the code: an arm
+    whose tail is the same as another's jumps into it, and each arm's
+    last try is `pea rule; bra 0x2083AC' into the one call at the end
+    of the last arm (followed by `bra' to the case's end).  A failing
+    test of a try branches to the next try or to its copy in another
+    arm.  docs/iscg-design.md 9.1; tools/iscg_extract.py follows the
+    jumps.
+

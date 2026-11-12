@@ -1,0 +1,116 @@
+{ 23_aggregate_assignments.isc - the ISC generator's input (docs/iscg-design.md), section 23, rules 206..226.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 23 aggregate_assignments  image pass_1 a5 16#469054, pass_2 a5 16#4800B0;
+
+transform 206  void <- agg_len_aop ($1: address_mode, $2: address_mode)
+  pass_1 image 16#162BE4;
+  pass_2 image 16#1CF070;
+end;
+
+transform 207  void <- isc_agg_aop ($3: [ip_reg, literal_32_bits])
+  pass_1 image 16#162FA4;
+  pass_2 image 16#1CF476 empty;
+end;
+
+transform 208  void <- isc_agg_aop ($1: address_mode, $2: address_mode, $3: ip_reg)
+  pass_1 image 16#16314E;
+  pass_2 image 16#1CF478;
+end;
+
+transform 209  void <- isc_agg_zero_aop ($1: address_mode, $2: ip_reg)
+  pass_1 image 16#1635CE;
+  pass_2 image 16#1CF918 empty;
+end;
+
+transform 210  void <- isc_fill_aop ($3: [ip_reg, literal_32_bits])
+  pass_1 image 16#1636E8;
+  pass_2 image 16#1CF91A empty;
+end;
+
+transform 211  void <- isc_fill_aop ($1: address_mode, $2: literal_32_bits, $3: literal_32_bits)
+  pass_1 image 16#163892;
+  pass_2 image 16#1CF91C;
+end;
+
+transform 212  void <- isc_fill_aop ($1: address_mode, $2: literal_32_bits, $3: ip_reg)
+  pass_1 image 16#164320;
+  pass_2 image 16#1D02B6;
+end;
+
+transform 213  void <- isc_fill_aop ($1: ip_reg_field, $2: literal_32_bits, $3: literal_32_bits)
+  pass_1 image 16#164712;
+  pass_2 image 16#1D05F8;
+end;
+
+transform 214  void <- isc_fill_aop ($1: ip_reg, $2: literal_32_bits, $3: literal_32_bits)
+  pass_1 image 16#16497A;
+  pass_2 image 16#1D0726;
+end;
+
+transform 215  void <- isc_slice_aop ($1: address_mode, $2: address_mode, $3: ip_reg)
+  pass_1 image 16#164BE2;
+  pass_2 image 16#1D0842 empty;
+end;
+
+transform 216  void <- pack_aop ($1: [ip_reg, ip_reg_field], $2: [ip_reg, ip_reg_field])
+  pass_1 image 16#164D0C;
+  pass_2 image 16#1D0844;
+end;
+
+transform 217  void <- pack_aop ($1: [ip_reg, ip_reg_field], $2: literal_32_bits)
+  pass_1 image 16#164F3A;
+  pass_2 image 16#1D0898;
+end;
+
+transform 218  void <- pack_aop ($1: [ip_reg, ip_reg_field], $2: [ip_reg, ip_reg_field])
+  pass_1 image 16#1651AA;
+  pass_2 image 16#1D0988;
+end;
+
+transform 219  void <- pack_aop ($1: address_mode, $2: [ip_reg, ip_reg_field])
+  pass_1 image 16#1653B8;
+  pass_2 image 16#1D09DC;
+end;
+
+transform 220  void <- pack_aop ($1: address_mode, $2: ip_reg_field)
+  pass_1 image 16#1655FC;
+  pass_2 image 16#1D0A58;
+end;
+
+transform 221  void <- pack_aop ($1: address_mode, $2: literal_32_bits)
+  pass_1 image 16#16629C;
+  pass_2 image 16#1D1B78;
+end;
+
+transform 222  void <- pack_aop ($1: address_mode, $2: [ip_reg, ip_reg_field])
+  pass_1 image 16#166F70;
+  pass_2 image 16#1D2D48;
+end;
+
+transform 223  void <- strcat_aop ($1: address_mode, $2: address_mode)
+  pass_1 image 16#167BDC;
+  pass_2 image 16#1D3E60;
+end;
+
+transform 224  void <- strcpy_aop ($1: address_mode, $2: address_mode)
+  pass_1 image 16#167FB0;
+  pass_2 image 16#1D42A0;
+end;
+
+transform 225  void <- strncat_aop ($1: address_mode, $2: address_mode, $3: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#168384;
+  pass_2 image 16#1D463C;
+end;
+
+transform 226  void <- strncpy_aop ($1: address_mode, $2: address_mode, $3: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#168770;
+  pass_2 image 16#1D4B60;
+end;
