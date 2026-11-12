@@ -624,7 +624,11 @@ type
     l192: integer32;                    { +192: its complex live
                                           ranges, the last complex id
                                           given (bv) }
-    space196: array [196..225] of char; { +196 }
+    space196: array [196..199] of char; { +196 }
+    l200: integer32;                    { +200: the number of the last
+                                          live range life splits
+                                          (batch A) }
+    space204: array [204..225] of char; { +204 }
     f226: packed record                 { +226 (batch A: fga) }
       b226_7, b226_6, b226_5, b226_4, b226_3: boolean;
       b226_2: boolean;                  { .2: sets b226_0 (fga) }

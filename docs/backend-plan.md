@@ -98,6 +98,7 @@ Batch A continued (translator PA2, 2026-11-11):
 | `lang2/source/be_com/df_utils.pas` | 17 | done: the global data flow walk; df_utils_$global_walk(_with_async_protection) named (rtn, nlrs, how, level); rtn_t bb80, lr100, lr108, lr140, memory_lr and bb_t l134 named (rtn +112 is a live range here, kept l112: lts_ptr_t for zzzzz) |
 | `lang2/source/be_com/fga.pas` | 11 | done: the FGA phase; rtn_t return_instr (+96), ap_lr (+100, was lr100), f226 (+226, +227 bits) named; bb_t l134 univ_ptr (fga walks blocks through it); fg_utils_$forward_this_block named (rtn, bb, jump); opnd_t's +4 of an immediate or XSB displacement is its node |
 | `lang2/source/be_com/hal.pas` | 19 | done: the HAL phase; bb_t l46, l50 (dominator tree), l58 (candidate hammock ends), l74, l78, l150 named, l54/next114/l98/avail_out uses documented; fg_utils_$separate_loop_header_edges named (bb, head, p3: boolean): fg_edge_ptr_t |
+| `lang2/source/be_com/life.pas` | 14 | done: the LIFE phase; rtn_t l200 named; lts_t's lr/mark and lr_t's l52 serve life's union-find (cast there, documented in life.pas) |
 
 ## Order: leaves first by the call graph
 
