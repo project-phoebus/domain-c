@@ -1623,3 +1623,14 @@ revisited.
    is, and its count bumped; a slip, or the lists were emptied just
    before (step 2 clears every live range's list, so a found segment is
    one this walk added)?  Kept.
+254. Translator PA4, sym: sym_$allocate_static_variable places a variable
+   at (next free + mask - 1) and not mask (`add.l (20,A2),D4; subq.l
+   #1,D4; and.l' with the complement), so a 4-byte variable after an odd
+   free byte overlaps its predecessor's last byte unless the routine
+   block's +20 is "last used" rather than "next free"; kept.  And
+   sym_$displacement's "unknown object type" message ends in '%.' (the
+   bytes), unlike the others' '%$'.
+255. Translator PA4: isc_$get_il_live_range's heading is in backend.ins.pas
+   (sym calls it and opens no ISC insert; the original must have
+   declared it in an insert sym opens, or in sym itself).  Whoever fills
+   isc_lir.ins.pas must not declare it a second time.

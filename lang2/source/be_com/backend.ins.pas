@@ -684,7 +684,17 @@ type
                                           this insert opens the prelude
                                           first, so it could be narrowed:
                                           docs/questions.md 174) }
-    space4: array [4..51] of char;      { +4 }
+    l4: univ_ptr;                       { +4: labels (sym's) of the
+                                          routine's symbols of +45 bit 6,
+                                          chained at their +0 (batch A,
+                                          PA4) }
+    l8: univ_ptr;                       { +8: the other required labels
+                                          (sym) }
+    l12: univ_ptr;                      { +12: the variables and common
+                                          members referenced uplevel,
+                                          chained at their +76 or +66
+                                          (sym) }
+    space16: array [16..51] of char;    { +16 }
     lrs: lr_ptr_t;                      { +52 }
     lrs_last: lr_ptr_t;                 { +56: the last live range
                                           (lir_$alloc_live_range,
@@ -2535,56 +2545,62 @@ procedure sem_utils_$end_compilation; extern;
 function sem_utils_$number_of_relevant_low_order_bits(
     o: opnd_ptr_t): integer32; options(val_param); extern;
 
-{ sym.pas (cc.a88k). }
+{ sym.pas (cc.a88k).  batch A (PA4): the headings named from sym.pas's
+  bodies (IL nodes univ_ptr: callers pass operands' links and nodes). }
 
 { SYM_$INITIALIZE_LOCAL_SYMBOLS - 0x27AACA, 0x70 bytes; called from
   lir_main.  Frame 8:al. }
 procedure sym_$initialize_local_symbols(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
-{ SYM_$BACKEND_LABEL_FOR_CASE_JUMP - 0x27AB3A, 0x28 bytes; called from
-  rewrite.  Frame 8:l.  Result: read (callers: A01). }
+{ SYM_$BACKEND_LABEL_FOR_CASE_JUMP - a case jump's label node's label.
+  0x27AB3A, 0x28 bytes; called from rewrite.  Frame 8:l.  Result: A0. }
 function sym_$backend_label_for_case_jump(
-    p1: integer32): univ_ptr; options(val_param); extern;
+    nd: univ_ptr): univ_ptr; options(val_param); extern;
 
-{ SYM_$FULLY_QUALIFIED_ROUTINE_NAME - 0x27AB62, 0x94 bytes; called from
-  at_backend bin com.  Frame 8:al; 12:al; 16:bw.  Result: D0 (callers:
-  D0l1). }
-function sym_$fully_qualified_routine_name(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: integer): integer32; options(val_param); extern;
+{ SYM_$FULLY_QUALIFIED_ROUTINE_NAME - node's routine name after its
+  parents', joined by '', to the end of buf (a prtsub_$line_t; cleared
+  first when top).  0x27AB62, 0x94 bytes; called from at_backend bin
+  com.  Frame 8:l; 12:a; 16:b.  No result (was a function with a word
+  third parameter; bin and com follow). }
+procedure sym_$fully_qualified_routine_name(
+    buf: univ_ptr;
+    nd: univ_ptr;
+    top: boolean); options(val_param); extern;
 
-{ SYM_$APPEND_SYMBOL_PRINT_NAME - 0x27AC22, 0x13C bytes; called from dmp
-  lst.  Frame 8:a; 12:al.  Result: D0 (callers: D0b10). }
+{ SYM_$APPEND_SYMBOL_PRINT_NAME - nd's print name to the end of buf (a
+  prtsub_$line_t); whether it has one.  0x27AC22, 0x13C bytes; called
+  from dmp lst.  Frame 8:a; 12:al.  Result: D0. }
 function sym_$append_symbol_print_name(
-    p1: univ_ptr;
-    p2: univ_ptr): boolean; options(val_param); extern;
+    buf: univ_ptr;
+    nd: univ_ptr): boolean; options(val_param); extern;
 
-{ SYM_$DISPLAY_SYMBOL_PRINT_NAME - 0x27AD88, 0x66 bytes; called from
-  dbg_life dmp.  Frame 8:al.  Result: D0 (callers: D0b2). }
+{ SYM_$DISPLAY_SYMBOL_PRINT_NAME - nd's print name written; whether it
+  has one.  0x27AD88, 0x66 bytes; called from dbg_life dmp.  Frame
+  8:al.  Result: D0. }
 function sym_$display_symbol_print_name(
-    p1: univ_ptr): boolean; options(val_param); extern;
+    nd: univ_ptr): boolean; options(val_param); extern;
 
-{ SYM_$OBJECT_WITH_IMMEDIATE_DISP - 0x27AE70, 0x58 bytes; called from lir.
-  Frame 8:a.  Result: A0 (callers: A01). }
+{ SYM_$OBJECT_WITH_IMMEDIATE_DISP - nd when an immediate displacement
+  names it, else nil.  0x27AE70, 0x58 bytes; called from lir.  Frame
+  8:a.  Result: A0. }
 function sym_$object_with_immediate_disp(
-    p1: univ_ptr): univ_ptr; options(val_param); extern;
+    nd: univ_ptr): univ_ptr; options(val_param); extern;
 
-{ SYM_$IS_STATIC_VAT - 0x27AEC8, 0x44 bytes; called from lir_utils.  Frame
-  8:al.  Result: D0 (callers: D0b1). }
+{ SYM_$IS_STATIC_VAT - 0x27AEC8, 0x44 bytes; called from lir_utils.
+  Frame 8:al.  Result: D0. }
 function sym_$is_static_vat(
-    p1: univ_ptr): boolean; options(val_param); extern;
+    nd: univ_ptr): boolean; options(val_param); extern;
 
-{ SYM_$HAS_DISPLACEMENT - 0x27AF0C, 0x32 bytes; called from lst.  Frame
-  8:a.  Result: D0 (callers: D0b1). }
+{ SYM_$HAS_DISPLACEMENT - a variable or a common member.  0x27AF0C, 0x32
+  bytes; called from lst.  Frame 8:a.  Result: D0. }
 function sym_$has_displacement(
-    p1: univ_ptr): boolean; options(val_param); extern;
+    nd: univ_ptr): boolean; options(val_param); extern;
 
 { SYM_$ALLOCATION_SIZE_IN_BYTES - 0x27B1A0, 0xF0 bytes; called from
-  lir_utils utils.  Frame 8:a.  Result: D0 (callers: D0l1). }
+  lir_utils utils.  Frame 8:a.  Result: D0. }
 function sym_$allocation_size_in_bytes(
-    p1: univ_ptr): integer32; options(val_param); extern;
+    nd: univ_ptr): integer32; options(val_param); extern;
 
 { SYM_$ALLOCATE_STATIC_VARIABLE - 0x27B2C6, 0xE4 bytes; called from
   lir_utils rewrite.  Frame 8:a; 12:al. }
@@ -2592,18 +2608,29 @@ procedure sym_$allocate_static_variable(
     sym: univ_ptr;
     size: integer32); options(val_param); extern;
 
-{ SYM_$REFORMAT_LITERAL - 0x27B47A, 0x1F2 bytes; called from asm.  Frame
-  8:al.  Result: A0 (callers: A02). }
+{ SYM_$REFORMAT_LITERAL - a lit_t for a constant node (nil for other
+  nodes).  0x27B47A, 0x1F2 bytes; called from asm.  Frame 8:al.  Result:
+  A0. }
 function sym_$reformat_literal(
-    p1: univ_ptr): univ_ptr; options(val_param); extern;
+    nd: univ_ptr): univ_ptr; options(val_param); extern;
 
-{ SYM_$REFORMAT_LITERAL_OPERAND - 0x27B66C, 0x54 bytes; called from iv lir
-  oli.  Frame 8:al; 12:l; 16:l; 20:a.  Result: D0 (callers: D0b1 D0l4). }
+{ SYM_$REFORMAT_LITERAL_OPERAND - op made a literal pool displacement of
+  node's literal; whether node is a literal.  0x27B66C, 0x54 bytes;
+  called from iv lir oli.  Frame 8:al; 12:l; 16:l; 20:a.  Result: D0. }
 function sym_$reformat_literal_operand(
-    p1: univ_ptr;
-    p2: integer32;
-    p3: integer32;
-    p4: univ_ptr): boolean; options(val_param); extern;
+    node: univ_ptr;
+    bytes: integer32;
+    value: integer32;
+    op: opnd_ptr_t): boolean; options(val_param); extern;
+
+{ isc_user_routines.pas (cc.a88k): the routine sym calls without opening
+  an ISC insert (batch A, PA4). }
+
+{ ISC_$GET_IL_LIVE_RANGE - the live range the ISC gave node (a common
+  member), or nil.  isc_user_routines 0x213EB6, 0x1B2 bytes; called
+  from sym.  Frame 8:a.  Result: A0. }
+function isc_$get_il_live_range(
+    node: univ_ptr): lr_ptr_t; options(val_param); extern;
 
 { tm_utils.pas (cc.a88k). }
 

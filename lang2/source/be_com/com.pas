@@ -4458,7 +4458,7 @@ var
   pass: integer32;
 begin
   com_rtn := rtn;
-  discard(sym_$fully_qualified_routine_name(addr(com_name), com_rtn^.node, -1));
+  sym_$fully_qualified_routine_name(addr(com_name), com_rtn^.node, true);
   com_level := at_backend_switches.level;
   lir_utils_$sanity_check(com_rtn);
   com_284 := 100;
