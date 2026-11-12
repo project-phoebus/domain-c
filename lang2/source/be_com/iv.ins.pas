@@ -80,7 +80,7 @@ type
   iv_lts_t = record
     h: packed record                    { +0 }
       kind: 0..255;
-      b1_7: boolean;                    { +1 }
+      stale: boolean;                   { +1 .7 }
       known: boolean;                   { .6 }
       b1_5, b1_4, b1_3: boolean;
       first_in_bb: boolean;             { .2 }
@@ -88,7 +88,7 @@ type
       w2: 0..65535;                     { +2 }
       end;
     lts: lts_ptr_t;                     { +4 }
-    l8: integer32;                      { +8 }
+    cur: iv_lts_ptr_t;                  { +8 }
     ivar: iv_var_ptr_t;                 { +12 }
     next: iv_lts_ptr_t;                 { +16 }
     case integer of                     { +20 }
@@ -99,17 +99,22 @@ type
       2: (iexpr: iv_iexpr_ptr_t);
   end;
 
-  { An induction address mode (28 bytes): an operand (+20) of an
-    instruction (+12) addressed by an induction expression (+0), on whose
-    list (+16) it is chained (and on the free list). }
+  { An induction address mode (28 bytes): an operand (+20; its base
+    register operand +24) of an instruction (+12) addressed by an
+    induction expression (+0), on whose list (+16) it is chained (and
+    on the free list); ilts (+4) the variable's segment current where
+    the instantiation was found, stale (+8) when the operand is not
+    reached by it (ixr_$find_current_lts_for_iv). }
   iv_addr_t = record
     iexpr: iv_iexpr_ptr_t;              { +0 }
-    l4: integer32;                      { +4 }
-    l8: integer32;                      { +8 }
+    ilts: iv_lts_ptr_t;                 { +4 }
+    stale: boolean;                     { +8 }
+    b9: char;                           { +9 }
+    w10: integer;                       { +10 }
     instr: instr_ptr_t;                 { +12 }
     next: iv_addr_ptr_t;                { +16 }
     opnd: opnd_ptr_t;                   { +20 }
-    l24: integer32;                     { +24 }
+    base: opnd_ptr_t;                   { +24 }
   end;
 
   { An induction expression (22 bytes): an expression (+4) of its class's
@@ -274,8 +279,10 @@ procedure iv_utils_$live_range_from_elaborated_expression(
     out op: opnd_ptr_t;
     out kind: integer); extern;
 
-{ IV_UTILS_$COMPARE_ADDRESS_EXPRESSIONS - 0x23D5A0, 0x6C bytes; called
-  from oli.  Frame 8:al; 12:al.  Result: D0 (callers: D0b2). }
+{ IV_UTILS_$COMPARE_ADDRESS_EXPRESSIONS - a and b are the same address
+  (both constants, or the same less a constant added or subtracted).
+  0x23D5A0, 0x6C bytes; called from oli.  Frame 8:al; 12:al.  Result:
+  D0 (callers: D0b2). }
 function iv_utils_$compare_address_expressions(
-    p1: univ_ptr;
-    p2: univ_ptr): boolean; options(val_param); extern;
+    a: iv_expr_ptr_t;
+    b: iv_expr_ptr_t): boolean; options(val_param); extern;

@@ -122,6 +122,16 @@ type
     value: integer32;                   { +8 }
   end;
 
+  { An instantiation of an induction variable (12 bytes, passed by
+    address and returned through the caller's space): the variable, the
+    expression added to it, and the variable's segment current at the
+    operand (ixr_$get_induction_instantiation_from_operand). }
+  iv_inst_t = record
+    ivar: iv_var_ptr_t;                 { +0 }
+    expr: iv_expr_ptr_t;                { +4 }
+    ilts: iv_lts_ptr_t;                 { +8 }
+  end;
+
   { What apply_to_creating_induction_segments and
     iv_$walk_basic_blocks_in_order call (`jsr (A1)', addresses passed
     by `move.l #addr': pattern 104): given a segment's or a block's
@@ -368,22 +378,22 @@ begin
 end;
 
 { create_induction_addr - an address mode of operand o (of its
-  instruction) by induction expression x, put first on x's list; l4
-  and l24 as given.  0x2390B0, 0x4C bytes, no A5. }
+  instruction) by induction expression x, put first on x's list; the
+  variable's current segment ilts and o's base register operand.  0x2390B0, 0x4C bytes, no A5. }
 
 function create_induction_addr(
     x: iv_iexpr_ptr_t;
-    l4: integer32;
+    ilts: iv_lts_ptr_t;
     o: opnd_ptr_t;
-    l24: integer32): iv_addr_ptr_t; options(val_param); internal;
+    base: opnd_ptr_t): iv_addr_ptr_t; options(val_param); internal;
 var
   a: iv_addr_ptr_t;
 begin
   a := alloc_induction_addr;
   a^.iexpr := x;
-  a^.l4 := l4;
+  a^.ilts := ilts;
   a^.opnd := o;
-  a^.l24 := l24;
+  a^.base := base;
   a^.instr := utils_ins_$operands_instruction(o);
   a^.next := x^.addrs;
   x^.addrs := a;
@@ -3453,4 +3463,663 @@ begin
     end;
   end;
   operand_is_any_induction_expression := r;
+end;
+
+{ ixr_$find_current_lts_for_iv - variable v's confirmed segment (its
+  induction lts) current at operand o: when o's block has an exposed
+  segment of v, the first on v's list in the block whose definition
+  comes before o (by instruction number, then operand number), else the
+  block's last examined; otherwise the one reaching the block from the
+  blocks up its l54 chain (of a block's finals of v, the one the
+  others' list run in the block leads to), through its final segment.
+  0x23D39A, 0x186 bytes, no A5: the numbers compared unsigned. }
+
+function ixr_$find_current_lts_for_iv(
+    v: iv_var_ptr_t;
+    o: opnd_ptr_t): iv_lts_ptr_t; options(val_param); internal;
+label
+  9;
+var
+  i, j: instr_ptr_t;
+  bb, c: bb_ptr_t;
+  s: lts_ptr_t;
+  l, x, r, y: iv_lts_ptr_t;
+begin
+  i := utils_ins_$operands_instruction(o);
+  bb := i^.bb;
+  s := bb^.exposed;
+  while s <> nil do begin
+    l := iv_lts_ptr_t(s^.l24);
+    if l <> nil then
+      if l^.ivar = v then
+        if l^.h.kind = 2 then
+          exit;
+    s := s^.next_exposed;
+  end;
+  if s <> nil then begin
+    x := v^.ltss;
+    while x^.lts^.bb <> bb do
+      x := x^.next;
+    while x <> nil do begin
+      if x^.lts^.bb <> bb then
+        goto 9;
+      r := x;
+      j := utils_ins_$operands_instruction(x^.lts^.refs);
+      if j^.num < i^.num then
+        goto 9;
+      if j^.num = i^.num then
+        if x^.lts^.refs^.h.num <= o^.h.num then
+          goto 9;
+      x := x^.next;
+    end;
+  end
+  else begin
+    c := bb^.l54;
+    r := nil;
+    while (c <> nil) and (r = nil) do begin
+      s := c^.finals;
+      while s <> nil do begin
+        l := iv_lts_ptr_t(s^.l24);
+        if l <> nil then
+          if l^.ivar = v then
+            if l^.h.kind = 2 then
+              if r = nil then
+                r := l
+              else begin
+                y := l;
+                while y <> nil do begin
+                  if y^.lts^.bb <> c then
+                    exit;
+                  if y = r then begin
+                    r := l;
+                    exit;
+                  end;
+                  y := y^.next;
+                end;
+              end;
+        s := s^.next_final;
+      end;
+      c := c^.l54;
+    end;
+    if r = nil then
+      bug_check('IV_$FIND_CURRENT_LTS_FOR_IV: No Creation Segment was Found%.');
+    s := r^.lts;
+    if s^.f2.exposed then
+      if s^.l44 <> nil then
+        s := s^.l44;
+    if (s = nil) or (s^.l24 = 0) then
+      bug_check('IV_$FIND_CURRENT_LTS_FOR_IV: No Creation Segment was Found%.');
+    r := iv_lts_ptr_t(s^.l24);
+  end;
+9:
+  if r^.h.kind <> 2 then
+    bug_check('IV_$FIND_CURRENT_LTS_FOR_IV: LTS is not Primary Induction Variable%.');
+  ixr_$find_current_lts_for_iv := r;
+end;
+
+{ iv_utils_$compare_address_expressions - two address expressions are
+  the same: both constants, or the same once a constant added to or
+  subtracted from each is dropped.  0x23D5A0, 0x6C bytes (`moveq #1'
+  reused for the kind tests: pattern 75; `moveq #96; btst' for add and
+  sub). }
+
+function iv_utils_$compare_address_expressions;
+begin
+  if (a^.kind = iv_value) and (b^.kind = iv_value) then
+    iv_utils_$compare_address_expressions := true
+  else begin
+    if a^.kind in [iv_add, iv_sub] then
+      if a^.right^.kind = iv_value then
+        a := a^.left;
+    if b^.kind in [iv_add, iv_sub] then
+      if b^.right^.kind = iv_value then
+        b := b^.left;
+    iv_utils_$compare_address_expressions :=
+        iv_utils_$compare_expressions(a, b);
+  end;
+end;
+
+{ ixr_$find_induction_class - v's class of kind w (1 expressions, 2
+  addresses) whose first induction expression's expression e matches
+  (compare_expressions, compare_address_expressions), made when none
+  does.  0x23D60C, 0x86 bytes, no A5. }
+
+function ixr_$find_induction_class(
+    v: iv_var_ptr_t;
+    e: iv_expr_ptr_t;
+    w: integer): iv_class_ptr_t; options(val_param); internal;
+var
+  c: iv_class_ptr_t;
+  r: boolean;
+begin
+  c := v^.classes;
+  while c <> nil do begin
+    if c^.w16 = w then begin
+      r := false;
+      case c^.w16 of
+        1: r := iv_utils_$compare_expressions(e, c^.iexprs^.expr);
+        2: r := iv_utils_$compare_address_expressions(e, c^.iexprs^.expr);
+        otherwise
+          ;
+      end;
+      if r then
+        exit;
+    end;
+    c := c^.next;
+  end;
+  if c = nil then
+    c := create_induction_class(w, v);
+  ixr_$find_induction_class := c;
+end;
+
+{ ixr_$find_induction_expr - the induction expression of e in v's class
+  of kind w (an expression class's first; an address class's that is
+  the same), made with a copy of e when none is.  0x23D692, 0x86 bytes,
+  no A5. }
+
+function ixr_$find_induction_expr(
+    v: iv_var_ptr_t;
+    e: iv_expr_ptr_t;
+    w: integer): iv_iexpr_ptr_t; options(val_param); internal;
+var
+  c: iv_class_ptr_t;
+  x: iv_iexpr_ptr_t;
+begin
+  c := ixr_$find_induction_class(v, e, w);
+  case c^.w16 of
+    1:
+      x := c^.iexprs;
+    2: begin
+      x := c^.iexprs;
+      while x <> nil do begin
+        if iv_utils_$compare_expressions(e, x^.expr) then
+          exit;
+        x := x^.next;
+      end;
+    end;
+    otherwise
+      x := nil;
+  end;
+  if x = nil then
+    x := create_induction_expr(c, iv_utils_$duplicate_expression(e));
+  ixr_$find_induction_expr := x;
+end;
+
+{ ixr_$find_induction_variable - the variable of kind that is m times v:
+  v itself for m = 1 of v's kind, else the primary's child of kind with
+  the multiplier m times v's (and its parents'), made with v's
+  increment and initial value times m when none is (the copy of the
+  increment otherwise deleted; the multiplier's is kept).  0x23D718,
+  0x13A bytes, no A5. }
+
+function ixr_$find_induction_variable(
+    v: iv_var_ptr_t;
+    m: iv_expr_ptr_t;
+    kind: integer): iv_var_ptr_t; options(val_param); internal;
+var
+  w: iv_var_ptr_t;
+  mm, inc, t: iv_expr_ptr_t;
+begin
+  if (v^.f48.kind = kind) and (m^.kind = iv_value) and (m^.value = 1) then
+    w := v
+  else begin
+    mm := iv_utils_$duplicate_expression(m);
+    if v^.f48.known then
+      inc := iv_utils_$canonicalize_expression(
+                 iv_utils_$create_mul_expression(
+                     iv_utils_$duplicate_expression(v^.incr),
+                     iv_utils_$duplicate_expression(m)))
+    else
+      inc := nil;
+    while v^.parent <> nil do begin
+      mm := iv_utils_$canonicalize_expression(
+                iv_utils_$create_mul_expression(
+                    iv_utils_$duplicate_expression(v^.mult), mm));
+      v := v^.parent;
+    end;
+    w := v^.l54;
+    while w <> nil do begin
+      if w^.f48.kind = kind then
+        if iv_utils_$compare_expressions(w^.mult, mm) then
+          exit;
+      w := w^.next;
+    end;
+    if w = nil then begin
+      w := create_induction_variable(nil, v, kind);
+      w^.head := v^.head;
+      w^.incr := inc;
+      w^.mult := mm;
+      if v^.init <> nil then
+        w^.init := iv_utils_$canonicalize_expression(
+                       iv_utils_$create_mul_expression(
+                           iv_utils_$duplicate_expression(v^.init),
+                           iv_utils_$duplicate_expression(mm)));
+    end
+    else begin
+      t := inc;
+      iv_utils_$delete_expression(t);
+    end;
+  end;
+  ixr_$find_induction_variable := w;
+end;
+
+{ ixr_$create_induction_lts_from_induction_instantiation - o's segment
+  given a kind 4 induction lts of the instantiation's expression (an
+  expression class's induction expression), on that expression's list;
+  cur the variable's segment current there, stale when it does not
+  reach o.  Nothing for a physical register.  0x23D852, 0xAC bytes, no
+  A5: inst by address, copied. }
+
+procedure ixr_$create_induction_lts_from_induction_instantiation(
+    inst: iv_inst_t;
+    o: opnd_ptr_t); options(val_param); internal;
+var
+  x: iv_iexpr_ptr_t;
+  l: iv_lts_ptr_t;
+begin
+  if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then
+    if o^.lts^.lr^.f2.physical then
+      return;
+  x := ixr_$find_induction_expr(inst.ivar, inst.expr, 1);
+  l := create_induction_lts(4, o^.lts, inst.ivar);
+  l^.cur := inst.ilts;
+  l^.iexpr := x;
+  l^.next := x^.ltss;
+  x^.ltss := l;
+  if ixr_$find_current_lts_for_iv(inst.ilts^.ivar, o) <> l^.cur then
+    l^.h.stale := true;
+end;
+
+{ ixr_$create_induction_addr_from_induction_instantiation - an address
+  mode of operand o (base its base register) by the instantiation's
+  expression (an address class's induction expression), stale when the
+  variable's current segment does not reach o.  Nothing when either is
+  a physical register.  0x23D8FE, 0xA2 bytes, no A5. }
+
+procedure ixr_$create_induction_addr_from_induction_instantiation(
+    inst: iv_inst_t;
+    o: opnd_ptr_t;
+    base: opnd_ptr_t); options(val_param); internal;
+var
+  a: iv_addr_ptr_t;
+begin
+  if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then
+    if o^.lts^.lr^.f2.physical then
+      return;
+  if base^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then
+    if base^.lts^.lr^.f2.physical then
+      return;
+  a := create_induction_addr(ixr_$find_induction_expr(inst.ivar, inst.expr, 2),
+                             inst.ilts, o, base);
+  if ixr_$find_current_lts_for_iv(a^.ilts^.ivar, o) <> a^.ilts then
+    a^.stale := true;
+end;
+
+{ ixr_$get_induction_instantiation_from_operand - what operand o (times
+  2**scale, negated when neg) is of an induction variable of kind: the
+  variable (of kind, times that factor), the expression added (a kind 4
+  segment's induction expression times the factor, else 0), the
+  variable's segment current at o (moved to the current one, the
+  expression adjusted by the increments' difference times the
+  multiplier, when it is not; no variable when its increment is not
+  known, a candidate's link from o's segment then dropped).  o's
+  segment without an induction lts of its own gets an instantiation
+  of the one reaching it.  0x23D9A0, 0x216 bytes, no A5: the record
+  returned through the caller's address at (8). }
+
+function ixr_$get_induction_instantiation_from_operand(
+    o: opnd_ptr_t;
+    neg: boolean;
+    kind: integer): iv_inst_t; options(val_param); internal;
+var
+  m: integer32;
+  s, t: lts_ptr_t;
+  l0, il, cur, c: iv_lts_ptr_t;
+  tmp, r: iv_inst_t;
+  v: iv_var_ptr_t;
+  x, e, d: iv_expr_ptr_t;
+begin
+  m := lshft(1, o^.h.count);
+  if neg then
+    m := -m;
+  s := o^.lts;
+  l0 := iv_lts_ptr_t(s^.l24);
+  if l0 <> nil then
+    il := l0
+  else begin
+    t := s;
+    if t^.f2.exposed then
+      if t^.l44 <> nil then
+        t := t^.l44;
+    il := iv_lts_ptr_t(t^.l24);
+    if il = nil then
+      bug_check('IV_$get_induction_instantiation_from_operand: No Creation Induction LTS was Found%.');
+  end;
+  if il^.h.kind in [3, 4] then
+    cur := il^.cur
+  else
+    cur := il;
+  if l0 = nil then begin
+    tmp.ivar := il^.ivar;
+    tmp.ilts := cur;
+    if il^.h.kind = 4 then
+      tmp.expr := iv_utils_$duplicate_expression(il^.iexpr^.expr)
+    else
+      tmp.expr := iv_utils_$create_value_expression(0);
+    ixr_$create_induction_lts_from_induction_instantiation(tmp, o);
+  end;
+  v := il^.ivar;
+  if (m = 1) and (v^.f48.kind = kind) then
+    r.ivar := v
+  else begin
+    x := iv_utils_$create_value_expression(m);
+    r.ivar := ixr_$find_induction_variable(v, x, kind);
+    iv_utils_$delete_expression(x);
+  end;
+  if il^.h.kind = 4 then begin
+    e := iv_utils_$duplicate_expression(il^.iexpr^.expr);
+    if m <> 1 then
+      e := iv_utils_$canonicalize_expression(
+               iv_utils_$create_mul_expression(e,
+                   iv_utils_$create_value_expression(m)));
+  end
+  else
+    e := iv_utils_$create_value_expression(0);
+  r.expr := e;
+  r.ilts := cur;
+  c := ixr_$find_current_lts_for_iv(r.ilts^.ivar, o);
+  if c <> r.ilts then
+    if r.ivar^.f48.known then begin
+      d := iv_utils_$canonicalize_expression(
+               iv_utils_$create_mul_expression(
+                   iv_utils_$create_sub_expression(
+                       iv_utils_$duplicate_expression(r.ilts^.incr),
+                       iv_utils_$duplicate_expression(c^.incr)),
+                   iv_utils_$duplicate_expression(r.ivar^.mult)));
+      r.expr := iv_utils_$canonicalize_expression(
+                    iv_utils_$create_add_expression(r.expr, d));
+      r.ilts := c;
+    end
+    else begin
+      if l0 <> nil then
+        if l0^.h.kind <> 2 then
+          s^.l24 := 0;
+      r.ivar := nil;
+      r.ilts := nil;
+      iv_utils_$delete_expression(r.expr);
+    end;
+  ixr_$get_induction_instantiation_from_operand := r;
+end;
+
+{ operand_is_current_induction_expression - o is a register whose
+  segment (or, exposed without one, the final segment reaching it) has
+  an induction lts of a variable of the loop being worked on.
+  0x23DC0A, 0x64 bytes, no A5. }
+
+function operand_is_current_induction_expression(
+    o: opnd_ptr_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+  s: lts_ptr_t;
+  l: iv_lts_ptr_t;
+begin
+  r := false;
+  if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
+    s := o^.lts;
+    l := iv_lts_ptr_t(s^.l24);
+    if s^.l44 <> nil then
+      if l = nil then
+        if s^.f2.exposed then
+          l := iv_lts_ptr_t(lts_ptr_t(s^.l44)^.l24);
+    if l <> nil then
+      if l^.ivar^.head = iv_head then
+        r := true;
+  end;
+  operand_is_current_induction_expression := r;
+end;
+
+{ ixr_$induction_expr_plus_loop_invariant - instruction i's operand r
+  (numbers) is an instantiation of what operand a is plus the loop
+  invariant operand b (each negated when asked).  0x23DC6E, 0xFC bytes,
+  no A5: frame 8:a 12:w 14:b 16:w 18:b 20:w.  The invariant's
+  expression is not deleted when a is no instantiation. }
+
+procedure ixr_$induction_expr_plus_loop_invariant(
+    i: instr_ptr_t;
+    a: integer;
+    neg_a: boolean;
+    b: integer;
+    neg_b: boolean;
+    r: integer); options(val_param); internal;
+var
+  pa, pb, pr: opnd_ptr_t;
+  x: iv_expr_ptr_t;
+  inst: iv_inst_t;
+begin
+  pa := addr(i^.opnds[a]);
+  pb := addr(i^.opnds[b]);
+  pr := addr(i^.opnds[r]);
+  x := iv_utils_$create_expression_from_operand(pb, iv_head);
+  if neg_b then
+    x := iv_utils_$create_neg_expression(x);
+  x := iv_utils_$canonicalize_expression(x);
+  inst := ixr_$get_induction_instantiation_from_operand(pa, neg_a,
+                                                        ord(pr^.h.kind));
+  if inst.ivar <> nil then begin
+    inst.expr := iv_utils_$canonicalize_expression(
+                     iv_utils_$create_add_expression(inst.expr,
+                         iv_utils_$duplicate_expression(x)));
+    ixr_$create_induction_lts_from_induction_instantiation(inst, pr);
+    iv_utils_$delete_expression(inst.expr);
+    iv_utils_$delete_expression(x);
+  end;
+end;
+
+{ ixr_$induction_expr_plus_induction_expr - operand r is an
+  instantiation of the sum of two operands' instantiations at the same
+  segment of variables that are one's parent or siblings: of the
+  variable of the summed multipliers (none when it is 0), the summed
+  expressions.  0x23DD6A, 0x1D2 bytes, no A5. }
+
+procedure ixr_$induction_expr_plus_induction_expr(
+    i: instr_ptr_t;
+    a: integer;
+    neg_a: boolean;
+    b: integer;
+    neg_b: boolean;
+    r: integer); options(val_param); internal;
+label
+  9;
+var
+  pa, pb, pr: opnd_ptr_t;
+  v, va, vb, p: iv_var_ptr_t;
+  ia, ib, t: iv_inst_t;
+  m, e, tmp: iv_expr_ptr_t;
+begin
+  pa := addr(i^.opnds[a]);
+  pb := addr(i^.opnds[b]);
+  pr := addr(i^.opnds[r]);
+  v := nil;
+  ia := ixr_$get_induction_instantiation_from_operand(pa, neg_a,
+                                                      ord(pr^.h.kind));
+  if ia.ivar = nil then
+    return;
+  ib := ixr_$get_induction_instantiation_from_operand(pb, neg_b,
+                                                      ord(pr^.h.kind));
+  if ib.ivar = nil then
+    goto 9;
+  va := ia.ivar;
+  vb := ib.ivar;
+  if ia.ilts = ib.ilts then begin
+    p := va^.parent;
+    if p <> nil then begin
+      if p = vb^.parent then
+        v := p
+      else if p = vb then
+        v := vb;
+    end
+    else begin
+      p := vb^.parent;
+      if p <> nil then begin
+        if p = va then
+          v := va;
+      end
+      else if vb = va then
+        v := va;
+    end;
+  end;
+  if v <> nil then begin
+    m := iv_utils_$canonicalize_expression(
+             iv_utils_$create_add_expression(
+                 iv_utils_$duplicate_expression(va^.mult),
+                 iv_utils_$duplicate_expression(vb^.mult)));
+    e := iv_utils_$canonicalize_expression(
+             iv_utils_$create_add_expression(
+                 iv_utils_$duplicate_expression(ia.expr),
+                 iv_utils_$duplicate_expression(ib.expr)));
+    if not iv_utils_$expression_is_zero(m) then begin
+      t.expr := e;
+      t.ivar := ixr_$find_induction_variable(v, m, ord(pr^.h.kind));
+      t.ilts := ia.ilts;
+      ixr_$create_induction_lts_from_induction_instantiation(t, pr);
+    end;
+    iv_utils_$delete_expression(m);
+    tmp := e;
+    iv_utils_$delete_expression(tmp);
+  end;
+  iv_utils_$delete_expression(ib.expr);
+9:
+  iv_utils_$delete_expression(ia.expr);
+end;
+
+{ ixr_$induction_expr_times_loop_invariant - operand r is an
+  instantiation of operand a's times the loop invariant operand b (not
+  0): of the variable times b, the expression times b.  0x23DF3C, 0x106
+  bytes, no A5. }
+
+procedure ixr_$induction_expr_times_loop_invariant(
+    i: instr_ptr_t;
+    a: integer;
+    b: integer;
+    r: integer); options(val_param); internal;
+var
+  pa, pb, pr: opnd_ptr_t;
+  x: iv_expr_ptr_t;
+  inst: iv_inst_t;
+begin
+  pa := addr(i^.opnds[a]);
+  pb := addr(i^.opnds[b]);
+  pr := addr(i^.opnds[r]);
+  x := iv_utils_$create_expression_from_operand(pb, iv_head);
+  if not iv_utils_$expression_is_zero(x) then begin
+    inst := ixr_$get_induction_instantiation_from_operand(pa, false,
+                                                          ord(pr^.h.kind));
+    if inst.ivar <> nil then begin
+      inst.ivar := ixr_$find_induction_variable(inst.ivar, x,
+                                                ord(pr^.h.kind));
+      inst.expr := iv_utils_$canonicalize_expression(
+                       iv_utils_$create_mul_expression(inst.expr,
+                           iv_utils_$duplicate_expression(x)));
+      ixr_$create_induction_lts_from_induction_instantiation(inst, pr);
+      iv_utils_$delete_expression(inst.expr);
+    end;
+  end;
+  iv_utils_$delete_expression(x);
+end;
+
+{ ixr_$induction_expr_shifted_loop_invariant - operand r is an
+  instantiation of operand a's shifted by the constant operand b (made
+  its power of 2).  0x23E042, 0x10A bytes, no A5: the constant's
+  expression is not deleted when a is no instantiation. }
+
+procedure ixr_$induction_expr_shifted_loop_invariant(
+    i: instr_ptr_t;
+    a: integer;
+    b: integer;
+    r: integer); options(val_param); internal;
+var
+  pa, pb, pr: opnd_ptr_t;
+  x, tmp: iv_expr_ptr_t;
+  inst: iv_inst_t;
+begin
+  pa := addr(i^.opnds[a]);
+  pb := addr(i^.opnds[b]);
+  pr := addr(i^.opnds[r]);
+  x := iv_utils_$create_expression_from_operand(pb, iv_head);
+  if x^.kind = iv_value then begin
+    inst := ixr_$get_induction_instantiation_from_operand(pa, false,
+                                                          ord(pr^.h.kind));
+    if inst.ivar = nil then
+      return;
+    x^.value := lshft(1, x^.value);
+    inst.ivar := ixr_$find_induction_variable(inst.ivar, x, ord(pr^.h.kind));
+    inst.expr := iv_utils_$canonicalize_expression(
+                     iv_utils_$create_mul_expression(inst.expr,
+                         iv_utils_$duplicate_expression(x)));
+    ixr_$create_induction_lts_from_induction_instantiation(inst, pr);
+    iv_utils_$delete_expression(inst.expr);
+  end;
+  tmp := x;
+  iv_utils_$delete_expression(tmp);
+end;
+
+{ ixr_$induction_expression - operand r is an instantiation of operand
+  a's (negated when asked).  0x23E14C, 0x84 bytes, no A5. }
+
+procedure ixr_$induction_expression(
+    i: instr_ptr_t;
+    a: integer;
+    neg: boolean;
+    r: integer); options(val_param); internal;
+var
+  pa, pr: opnd_ptr_t;
+  inst: iv_inst_t;
+begin
+  pa := addr(i^.opnds[a]);
+  pr := addr(i^.opnds[r]);
+  inst := ixr_$get_induction_instantiation_from_operand(pa, neg,
+                                                        ord(pr^.h.kind));
+  if inst.ivar <> nil then begin
+    ixr_$create_induction_lts_from_induction_instantiation(inst, pr);
+    iv_utils_$delete_expression(inst.expr);
+  end;
+end;
+
+{ ixr_$scan_addressing_mode - a memory access through o and base, one an
+  induction register of the loop and the other invariant (o not
+  modified by it), made an address mode of the instantiation plus the
+  invariant's expression.  0x23E1D0, 0xE6 bytes, no A5. }
+
+procedure ixr_$scan_addressing_mode(
+    o: opnd_ptr_t;
+    base: opnd_ptr_t); options(val_param); internal;
+var
+  ind, other: opnd_ptr_t;
+  inst: iv_inst_t;
+begin
+  ind := nil;
+  other := ind;
+  if not o^.h.intend_to_modify then
+    if operand_is_current_induction_expression(o)
+        and operand_is_loop_invariant(base, iv_head) then begin
+      ind := o;
+      other := base;
+    end
+    else if operand_is_current_induction_expression(base)
+        and operand_is_loop_invariant(o, iv_head) then begin
+      ind := base;
+      other := o;
+    end;
+  if ind <> nil then begin
+    inst := ixr_$get_induction_instantiation_from_operand(ind, false,
+                                                          ord(ind^.h.kind));
+    if inst.ivar <> nil then begin
+      inst.expr := iv_utils_$canonicalize_expression(
+                       iv_utils_$create_add_expression(inst.expr,
+                           iv_utils_$create_expression_from_operand(other,
+                                                                    iv_head)));
+      ixr_$create_induction_addr_from_induction_instantiation(inst, o, base);
+      iv_utils_$delete_expression(inst.expr);
+    end;
+  end;
 end;
