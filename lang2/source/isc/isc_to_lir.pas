@@ -366,47 +366,47 @@ begin
         n := 0;
         s := isc_solution_ptr_t(p^.linkage_reg);
         if s <> nil then
-          if s^.f114.b6 then
+          if s^.f114.builtin_could_deadlock_sched then
             n := n + 1;
         s := p^.op1;
         if s <> nil then
-          if s^.f114.b6 then
+          if s^.f114.builtin_could_deadlock_sched then
             n := n + 1;
         s := p^.op2;
         if s <> nil then
-          if s^.f114.b6 then
+          if s^.f114.builtin_could_deadlock_sched then
             n := n + 1;
         s := p^.op3;
         if s <> nil then
-          if s^.f114.b6 then
+          if s^.f114.builtin_could_deadlock_sched then
             n := n + 1;
         s := p^.op4;
         if s <> nil then
-          if s^.f114.b6 then
+          if s^.f114.builtin_could_deadlock_sched then
             n := n + 1;
         s := p^.index;
         if s <> nil then
-          if s^.f114.b6 then
+          if s^.f114.builtin_could_deadlock_sched then
             n := n + 1;
         s := p^.base;
         if s <> nil then
-          if s^.f114.b6 then
+          if s^.f114.builtin_could_deadlock_sched then
             n := n + 1;
         s := p^.result;
         if s <> nil then
-          if s^.f114.b6 then
+          if s^.f114.builtin_could_deadlock_sched then
             n := n + 1;
         s := isc_solution_ptr_t(p^.l92);
         if s <> nil then
-          if s^.f114.b6 then
+          if s^.f114.builtin_could_deadlock_sched then
             n := n + 1;
         s := p^.source;
         if s <> nil then
-          if s^.f114.b6 then
+          if s^.f114.builtin_could_deadlock_sched then
             n := n + 1;
-        if dst^.f114.b6 then
+        if dst^.f114.builtin_could_deadlock_sched then
           n := n + 1;
-        if q^.op2^.f114.b6 then
+        if q^.op2^.f114.builtin_could_deadlock_sched then
           n := n + 1;
         if n <= 1 then begin
           case p^.kind of
@@ -917,7 +917,7 @@ begin
     write(solution_to_string(index));
     write(' ]');
     write(' == ');
-    write(il_node_to_string(index^.obj_w_name));
+    write(il_node_to_string(index^.object_with_name));
     write(', bits_known = ');
     write(bits_known:1);
     write(', bits_trusted = ');
@@ -1041,7 +1041,7 @@ begin
     write(solution_to_string(index));
     write(' ]');
     write(' == ');
-    write(il_node_to_string(index^.obj_w_name));
+    write(il_node_to_string(index^.object_with_name));
     write(', bits_known = ');
     write(bits_known:1);
     write(', bits_trusted = ');
@@ -1104,7 +1104,7 @@ begin
     write(solution_to_string(index));
     write(' ]');
     write(' == ');
-    write(il_node_to_string(index^.obj_w_name));
+    write(il_node_to_string(index^.object_with_name));
     write(', var_name: ');
     write(il_node_to_string(var_name));
     write(', result: ');
@@ -1161,7 +1161,7 @@ begin
     write(solution_to_string(index));
     write(' ]');
     write(' == ');
-    write(il_node_to_string(index^.obj_w_name));
+    write(il_node_to_string(index^.object_with_name));
     write(', var_name: ');
     write(il_node_to_string(var_name));
     write(', ');

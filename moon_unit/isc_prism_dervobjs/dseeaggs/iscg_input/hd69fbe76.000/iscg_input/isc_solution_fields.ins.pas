@@ -15,12 +15,12 @@
   identifiers (tools/cc_enumnames.py: the table at cc.a88k 0x24526E,
   25 names, written by lir_$build_operand, and its copies in
   guarantee_has_live_range, local_initialize_symbol and dump_solution).
-  The field names marked "(cse)" are the image's: isc_cse_handling's
-  accessors are named pass_1_cse_parent_<field> and
-  pass_2_cse_parent_<field> after the field they return.
+  The fields' names are the image's: dump_solution (isc_debug) prints
+  each attribute after its name (docs/questions.md 267).
 
   Not known from the original: the record's and the unnamed fields'
-  names (by offset), the kind set's name. }
+  names (by offset; f76 and f114 group the packed bytes), the kind
+  set's name. }
 
 type
   { The kinds of solution (+108). }
@@ -56,93 +56,118 @@ type
     kinds prints one). }
   solution$set_t = set of solution$t;
 
-  { A solution as the ISC reads it (432 bytes; see above).  The names
-    batch A gave in solution_t are kept where they agree. }
+  { A solution as the ISC reads it (432 bytes; see above).  The
+    fields carry the image's names (dump_solution prints each attribute
+    after its name, docs/questions.md 267; the generator's attribute
+    declarations, rules/declarations.isc, use the same names); those
+    named by offset are fields dump_solution does not print. }
   isc_solution_ptr_t = ^isc_solution_t;
   isc_solution_t = record
-    obj_w_name: univ_ptr;               { +0 (cse): the object (node) }
-    base_reg: lr_ptr_t;                 { +4 (cse): new_solution sets
-                                          it and index_reg to
-                                          isc_user_routines_31c }
-    index_reg: lr_ptr_t;                { +8 (cse) }
+    object_with_name: univ_ptr;         { +0: the object (node) }
+    base_register: lr_ptr_t;            { +4: new_solution sets it and
+                                          index_register to
+                                          isc_user_routines_31c (a
+                                          solution: docs/questions.md
+                                          262) }
+    index_register: lr_ptr_t;           { +8 }
     l12: integer32;                     { +12 }
-    l16: integer32;                     { +16 }
-    live_range: lr_ptr_t;               { +20 (cse; solution_t's lr) }
-    lr2: lr_ptr_t;                      { +24 }
-    l28: integer32;                     { +28 }
-    bits_known: integer32;              { +32 (cse) }
-    bits_trusted: integer32;            { +36 (cse) }
-    l40: integer32;                     { +40 }
-    l44: integer32;                     { +44 }
-    disp: integer32;                    { +48 (cse: disp and lit_value) }
-    l52: integer32;                     { +52 }
-    w56: integer;                       { +56 }
-    fp_reg_max: integer;                { +58 (cse) }
-    fp_reg_result: integer;             { +60 (cse) }
-    fp_reg_pair_max: integer;           { +62 (cse) }
-    fp_reg_pair_result: integer;        { +64 (cse) }
-    fp_reg_quad_max: integer;           { +66 (cse) }
-    fp_reg_quad_result: integer;        { +68 (cse) }
-    ip_reg_max: integer;                { +70 (cse) }
-    ip_reg_result: integer;             { +72 (cse) }
-    w74: integer;                       { +74 }
+    false_label: integer32;             { +16 }
+    live_range: lr_ptr_t;               { +20 }
+    live_range_of_imaginary_part: lr_ptr_t;     { +24 }
+    advancing_displacement: integer32;  { +28 }
+    bits_known: integer32;              { +32 }
+    bits_trusted: integer32;            { +36 }
+    bits_known_of_fetched_value: integer32;     { +40 }
+    bits_trusted_of_fetched_value: integer32;   { +44 }
+    literal_32_bits_value: integer32;   { +48: a displacement or a
+                                          literal's value (the CSE
+                                          accessors _disp and
+                                          _lit_value) }
+    pass_1_size: integer32;             { +52 }
+    bytes: integer;                     { +56 }
+    fp_reg_max: integer;                { +58 }
+    fp_reg_result: integer;             { +60 }
+    fp_reg_pair_max: integer;           { +62 }
+    fp_reg_pair_result: integer;        { +64 }
+    fp_reg_quad_max: integer;           { +66 }
+    fp_reg_quad_result: integer;        { +68 }
+    ip_reg_max: integer;                { +70 }
+    ip_reg_result: integer;             { +72 }
+    n_bytes_to_back_up: integer;        { +74 }
     f76: packed record                  { +76 }
-      b76: 0..255;                      { +76 }
-      b77: 0..255;                      { +77: 32 when made }
-      reg: 0..255;                      { +78 }
-      shift: 0..255;                    { +79 }
-      b80: 0..255;                      { +80 }
-      b81_7_2: 0..63;                   { +81 }
-      embedded_sr_temp: boolean;        { .1 (cse) }
-      b81_0: boolean;
-      has_sym_disp: boolean;            { +82 .7 (cse) }
-      b82_6, b82_5: boolean;
-      b82_4: boolean;                   { .4: set when made }
-      b82_3: boolean;
-      b82_2: boolean;                   { .2: set when made }
-      b82_1, b82_0: boolean;
-      b83_7_4: 0..15;                   { +83 }
-      physical: boolean;                { .3 }
-      b83_2: boolean;
-      no_modify: boolean;               { .1 }
-      serialize: boolean;               { .0 }
-      b84_7: boolean;                   { +84 }
-      uses_disp: boolean;               { .6 (cse) }
-      uses_index_reg: boolean;          { .5 (cse) }
+      bit_position_of_lsb: 0..255;      { +76 }
+      field_precision: 0..255;          { +77: 32 when made }
+      physical_register_number: 0..255; { +78 }
+      scale: 0..255;                    { +79 }
+      slevel_attribute: 0..255;         { +80 }
+      all_zeroes_or_all_ones: boolean;  { +81 .7 }
+      arg_block_location: boolean;      { .6 }
+      bit_7_was_sign_extended: boolean; { .5 }
+      bit_15_was_sign_extended: boolean;    { .4 }
+      dead_end: boolean;                { .3 }
+      derived_from_literal: boolean;    { .2 }
+      embedded_strength_reduction_temporary: boolean;   { .1 }
+      field_requires_sign_extend: boolean;  { .0 }
+      has_a_symbolic_displacement: boolean; { +82 .7 }
+      is_atomic: boolean;               { .6 }
+      is_complex: boolean;              { .5 }
+      is_destroyable: boolean;          { .4: set when made }
+      is_dynm_vat: boolean;             { .3 }
+      is_entire_object: boolean;        { .2: set when made }
+      is_physical: boolean;             { .1 }
+      is_set_temporary: boolean;        { .0 }
+      is_volatile: boolean;             { +83 .7 }
+      literal_64_bits_value_is_zero: boolean;   { .6 }
+      literal_derived_from_floating_constant: boolean;  { .5 }
+      materialize_true_as_1: boolean;   { .4 }
+      physical_register: boolean;       { .3 }
+      physical_register_from_function_call: boolean;    { .2 }
+      physical_register_is_no_modify: boolean;  { .1 }
+      physical_register_user_declared: boolean; { .0 }
+      uses_the_base_register: boolean;  { +84 .7 }
+      uses_the_displacement: boolean;   { .6 }
+      uses_the_index_register: boolean; { .5 }
       b84_4_0: 0..31;
       b85: 0..255;                      { +85 }
       b86: 0..255;                      { +86 }
       b87: 0..255;                      { +87 }
       end;
-    chain: isc_solution_ptr_t;          { +88: the solution this one
-                                          passes pass 2 on to (pass_2) }
-    code_bytes: 0..65535;               { +92 (cse; unsigned:
+    before_transform: isc_solution_ptr_t;   { +88: the solution this
+                                          one was made from, which
+                                          pass_2 passes on to }
+    code_bytes: 0..65535;               { +92 (unsigned:
                                           choose_one_cse_solution) }
-    delay: 0..65535;                    { +94 (cse) }
-    eval_order: integer;                { +96 (cse): 1 the children
-                                          left to right, 2 right to left
+    delay: 0..65535;                    { +94 }
+    evaluation_order: integer;          { +96: 1 the children left to
+                                          right, 2 right to left
                                           (pass_2); 1 when made }
-    w98: integer;                       { +98: new_solution's last
-                                          argument }
-    sym: univ_ptr;                      { +100 }
-    inherited: inherited_attributes_ptr_t;  { +104 }
+    il_kind: integer;                   { +98: il$t's ordinal
+                                          (new_solution's last
+                                          argument) }
+    il: univ_ptr;                       { +100 }
+    inherited_attributes: inherited_attributes_ptr_t;   { +104 }
     kind: integer;                      { +108: solution$t's ordinal }
-    memory_refs: 0..65535;              { +110 (cse; compared `bcc') }
-    rule: integer;                      { +112: the pattern's number
+    memory_references: 0..65535;        { +110 (compared `bcc') }
+    which_transform: integer;           { +112: the pattern's number
                                           (pass_2 calls the pass-2
                                           action of this number) }
     f114: packed record                 { +114 }
-      nchildren: 0..255;                { +114: at most 5 }
-      copied: boolean;                  { +115 .7: preserve_solution's
+      number_of_children: 0..255;       { +114: at most 5 }
+      already_preserved: boolean;       { +115 .7: preserve_solution's
                                           copy }
-      b6: boolean;                      { .6 }
-      b5: boolean;                      { .5 }
-      preserved: boolean;               { .4 }
-      pass_2_done: boolean;             { .3 }
+      builtin_could_deadlock_sched: boolean;    { .6 }
+      builtin_is_local_cse: boolean;    { .5 }
+      builtin_local_cse_has_been_preserved: boolean;    { .4 }
+      already_through_pass_2: boolean;  { .3 }
       b2, b1, b0: boolean;
       end;
     children: array [1..5] of isc_solution_ptr_t;  { +116 }
-    space136: array [136..351] of char; { +136 }
+    space136: array [136..351] of char; { +136: the rules' own byte
+                                          locals (case_value +136,
+                                          already_address_mode ..
+                                          already_processor_reg +342
+                                          .. +348: isc_debug's
+                                          ds_solution_t) }
     fields: array [0..19] of isc_solution_ptr_t;   { +352: the
                                           rule's own fields, laid out
                                           per rule (preserve_solution

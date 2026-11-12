@@ -2058,14 +2058,14 @@ procedure pass_2;
 begin
   isc_user_routines_2fc := isc_user_routines_2fc + 1;
   if sol <> nil then
-    if not sol^.f114.pass_2_done then begin
-      if sol^.chain <> nil then begin
-        if sol^.chain^.kind = ord(solution$proper_subtree) then
-          sol^.chain^.eval_order := sol^.eval_order;
-        pass_2(sol^.chain, depth + 1);
+    if not sol^.f114.already_through_pass_2 then begin
+      if sol^.before_transform <> nil then begin
+        if sol^.before_transform^.kind = ord(solution$proper_subtree) then
+          sol^.before_transform^.evaluation_order := sol^.evaluation_order;
+        pass_2(sol^.before_transform, depth + 1);
       end
-      else if sol^.f114.nchildren <> 0 then begin
-        if sol^.eval_order = 1 then begin
+      else if sol^.f114.number_of_children <> 0 then begin
+        if sol^.evaluation_order = 1 then begin
           if sol^.children[1] <> nil then
             pass_2(sol^.children[1], depth + 1);
           if sol^.children[2] <> nil then
@@ -2077,7 +2077,7 @@ begin
           if sol^.children[5] <> nil then
             pass_2(sol^.children[5], depth + 1);
         end
-        else if sol^.eval_order = 2 then begin
+        else if sol^.evaluation_order = 2 then begin
           if sol^.children[5] <> nil then
             pass_2(sol^.children[5], depth + 1);
           if sol^.children[4] <> nil then
@@ -2091,20 +2091,20 @@ begin
         end
         else begin
           write('ERROR: unknown evaluation order (');
-          write(sol^.eval_order);
+          write(sol^.evaluation_order);
           write(').');
           writeln;
         end;
       end;
-      sol^.base_reg := lr_ptr_t(isc_user_routines_31c);
-      sol^.index_reg := lr_ptr_t(isc_user_routines_31c);
-      sol^.l16 := 0;
-      sol^.obj_w_name := nil;
+      sol^.base_register := lr_ptr_t(isc_user_routines_31c);
+      sol^.index_register := lr_ptr_t(isc_user_routines_31c);
+      sol^.false_label := 0;
+      sol^.object_with_name := nil;
       sol^.live_range := nil;
-      sol^.lr2 := nil;
-      sol^.f114.pass_2_done := false;
-      if sol^.chain <> nil then
-        p2_pass_2_action[sol^.rule]^(sol^, sol^.chain, sol^, sol);
-      sol^.f114.pass_2_done := true;
+      sol^.live_range_of_imaginary_part := nil;
+      sol^.f114.already_through_pass_2 := false;
+      if sol^.before_transform <> nil then
+        p2_pass_2_action[sol^.which_transform]^(sol^, sol^.before_transform, sol^, sol);
+      sol^.f114.already_through_pass_2 := true;
     end;
 end;

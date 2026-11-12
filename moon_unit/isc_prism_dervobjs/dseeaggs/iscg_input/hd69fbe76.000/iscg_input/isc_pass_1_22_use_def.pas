@@ -77,10 +77,10 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 1;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 1;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;
-  solution^.memory_refs := 0;
+  solution^.memory_references := 0;
   solution^.delay := 0;
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;

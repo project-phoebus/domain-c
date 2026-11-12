@@ -186,27 +186,6 @@ HEADING = '''procedure transform_%d_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);'''
 
-FLAGS_VIEW = '''  { The booleans isc_solution_fields.ins.pas lumps into one field
-    (f76.b81_7_2, f76.b83_7_4), under the image's names: a view of a
-    solution's f76 (+76..+87). }
-  p2_flags_ptr_t = ^p2_flags_t;
-  p2_flags_t = packed record
-    b76, b77, b78, b79, b80: 0..255;    { +76 }
-    all_zeroes_or_all_ones: boolean;    { +81 .7 }
-    arg_block_location: boolean;        { .6 }
-    bit_7_was_sign_extended: boolean;   { .5 }
-    bit_15_was_sign_extended: boolean;  { .4 }
-    dead_end: boolean;                  { .3 }
-    derived_from_literal: boolean;      { .2 }
-    b81_1_0: 0..3;
-    b82: 0..255;                        { +82 }
-    is_volatile: boolean;               { +83 .7 }
-    literal_64_bits_value_is_zero: boolean;  { .6 }
-    literal_derived_from_floating_constant: boolean;  { .5 }
-    materialize_true_as_1: boolean;     { .4 }
-    b83_3_0: 0..15;
-    end;'''
-
 LOCALS_VIEW = '''  { A rule's own fields where the insert has none of their size: words
     and longwords below +352 (the insert has bytes there, space136),
     bytes and longwords at an offset 4k + 2 from +352 (the insert has
@@ -288,7 +267,7 @@ def gen_module(rules, sec, headings, includes, gen_note, pattern_text):
     out.append(includes.rstrip('\n'))
     out.append('')
     bodies = {}
-    need_flags = need_locals = need_node = need_ro = need_lir = False
+    need_locals = need_node = need_ro = need_lir = False
     errors = []
     for r in rs:
         if T[r]['p2_empty']:
@@ -300,7 +279,6 @@ def gen_module(rules, sec, headings, includes, gen_note, pattern_text):
             errors.append(str(e))
             continue
         text = '\n'.join(decl + body)
-        need_flags |= 'p2_flags_ptr_t' in text
         need_locals |= 'p2_locals_ptr_t' in text
         need_node |= 'p2_node_ptr_t' in text
         need_ro |= 'p2_readonly_ptr_t' in text
@@ -308,14 +286,12 @@ def gen_module(rules, sec, headings, includes, gen_note, pattern_text):
         bodies[r] = (decl, body)
     if errors:
         raise L.LangError('; '.join(errors))
-    if need_flags or need_locals or need_node or need_ro:
+    if need_locals or need_node or need_ro:
         out.append('type')
         if need_node:
             out.append(NODE_VIEW)
         if need_ro:
             out.append(READONLY_VIEW)
-        if need_flags:
-            out.append(FLAGS_VIEW)
         if need_locals:
             out.append(LOCALS_VIEW)
         out.append('')

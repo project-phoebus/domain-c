@@ -10907,7 +10907,7 @@ begin
        ((isc_node_ptr_t(node)^.xl[1] & 16#400000) <> 0) and
        (isc_node_ptr_t(node)^.xp[3] = nil) then begin
       s := choose_one_cse_solution(list);
-      s^.f114.b5 := true;
+      s^.f114.builtin_is_local_cse := true;
       s := preserve_solution(s);
       isc_node_ptr_t(node)^.xp[3] := isc_node_ptr_t(s);
       list := solution_list$new;

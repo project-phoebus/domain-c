@@ -27,9 +27,9 @@ function pass_1(
     permissible: solution$set_t): solution_list_ptr_t; options(val_param); extern;
 
 { PASS_2 - pass 2 over the solution sol and its children (in its
-  eval_order, through its chain) and then the pass-2 action of its rule
-  (isc_pass_2_main's table of action routines, by rule); marks it
-  pass_2_done.  0x18C588, 0x218 bytes: sol 8, depth a word at 12. }
+  evaluation_order, through its before_transform) and then the pass-2
+  action of its which_transform (isc_pass_2_main's table of action
+  routines, by rule); marks it already_through_pass_2.  0x18C588, 0x218 bytes: sol 8, depth a word at 12. }
 procedure pass_2(
     sol: isc_solution_ptr_t;
     depth: integer); options(val_param); extern;

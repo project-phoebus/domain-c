@@ -57,24 +57,7 @@ PM_TYPES = '''type
       il: univ_ptr;
       inh: inherited_attributes_ptr_t;
       var work: isc_solution_ptr_t;
-      var result: isc_solution_ptr_t); options(val_param);
-
-  { A solution's flags at +81 (dump_solution's names) for dead_end, which
-    isc_solution_t does not name. }
-  pm_sol_flags_ptr_t = ^pm_sol_flags_t;
-  pm_sol_flags_t = record
-    x0: array [0..80] of char;          { +0 }
-    f81: packed record                  { +81 }
-      all_zeroes_or_all_ones: boolean;  { .7 }
-      arg_block_location: boolean;
-      bit_7_was_sign_extended: boolean;
-      bit_15_was_sign_extended: boolean;
-      dead_end: boolean;                { .3 }
-      derived_from_literal: boolean;
-      embedded_strength_reduction_temporary: boolean;
-      field_requires_sign_extend: boolean;
-      end;
-  end;'''
+      var result: isc_solution_ptr_t); options(val_param);'''
 
 HARD_WORK = '''{ hard_work - rule which_transform applied to solution (the node il under
   inh): unless its result kind must be permissible and is not, or its
@@ -145,28 +128,28 @@ begin
   end
   else begin
     n := 0;
-    if solution^.f114.nchildren = 0 then begin
-      if solution^.f114.b6 then
+    if solution^.f114.number_of_children = 0 then begin
+      if solution^.f114.builtin_could_deadlock_sched then
         n := 1;
     end;
-    if solution^.f114.nchildren >= 1 then begin
-      if solution^.children[1]^.f114.b6 then
+    if solution^.f114.number_of_children >= 1 then begin
+      if solution^.children[1]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
-    if solution^.f114.nchildren >= 2 then begin
-      if solution^.children[2]^.f114.b6 then
+    if solution^.f114.number_of_children >= 2 then begin
+      if solution^.children[2]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
-    if solution^.f114.nchildren >= 3 then begin
-      if solution^.children[3]^.f114.b6 then
+    if solution^.f114.number_of_children >= 3 then begin
+      if solution^.children[3]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
-    if solution^.f114.nchildren >= 4 then begin
-      if solution^.children[4]^.f114.b6 then
+    if solution^.f114.number_of_children >= 4 then begin
+      if solution^.children[4]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
-    if solution^.f114.nchildren >= 5 then begin
-      if solution^.children[5]^.f114.b6 then
+    if solution^.f114.number_of_children >= 5 then begin
+      if solution^.children[5]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
     if pm_no_could_deadlock_child[which_transform] then
@@ -177,18 +160,18 @@ begin
       pm_pass_1_action[which_transform]^(solution^, il, inh, add_this_to_work_list,
                                          add_this_to_parent);
       if add_this_to_parent <> nil then begin
-        if add_this_to_parent^.eval_order <> 0 then begin
-          if add_this_to_parent^.f76.physical and
-             not add_this_to_parent^.f76.no_modify and
-             not add_this_to_parent^.f76.serialize then begin
+        if add_this_to_parent^.evaluation_order <> 0 then begin
+          if add_this_to_parent^.f76.physical_register and
+             not add_this_to_parent^.f76.physical_register_is_no_modify and
+             not add_this_to_parent^.f76.physical_register_user_declared then begin
             if (solution$t(add_this_to_parent^.kind) in
                 [solution$fp_reg_pair_high, solution$fp_reg_pair_low, solution$fp_reg,
                  solution$fp_reg_pair, solution$fp_reg_quad]) or
-               ((add_this_to_parent^.f76.reg <>
-                 isc_solution_ptr_t(isc_user_routines_330)^.f76.reg) and
-                (add_this_to_parent^.f76.reg <>
-                 isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg)) then
-              add_this_to_parent^.f114.b6 := true;
+               ((add_this_to_parent^.f76.physical_register_number <>
+                 isc_solution_ptr_t(isc_user_routines_330)^.f76.physical_register_number) and
+                (add_this_to_parent^.f76.physical_register_number <>
+                 isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number)) then
+              add_this_to_parent^.f114.builtin_could_deadlock_sched := true;
           end;
         end
         else begin
@@ -293,7 +276,7 @@ done:
   if add_this_to_work_list <> nil then begin
     if appended or
        (not (solution$t(add_this_to_parent^.kind) in permissible_solution_kinds) and wanted and
-        not pm_sol_flags_ptr_t(add_this_to_parent)^.f81.dead_end) then begin
+        not add_this_to_parent^.f76.dead_end) then begin
       if isc_user_routines_354 then begin
         write('Adding the following solution to the work list:');
         writeln;
@@ -314,7 +297,7 @@ PATTERN_MATCHER = '''{ pattern_matcher - every rule whose pattern solution match
   lists after: `case solution^.kind of' (a chain rule's subject kind,
   every kind 1..23 a label; any other kind an error, a message under
   the traces, else bug_check) and, for a proper_subtree, `case
-  il$t(solution^.w98) of' (an operator no pattern names an error); in
+  il$t(solution^.il_kind) of' (an operator no pattern names an error); in
   each arm the rules tried under it, in rule order, each when its
   pattern's tests hold (children's kinds, nested proper_subtrees'
   operators, in pattern order).  The case statements are the
@@ -503,14 +486,14 @@ procedure pass_2;
 begin
   isc_user_routines_2fc := isc_user_routines_2fc + 1;
   if sol <> nil then
-    if not sol^.f114.pass_2_done then begin
-      if sol^.chain <> nil then begin
-        if sol^.chain^.kind = ord(solution$proper_subtree) then
-          sol^.chain^.eval_order := sol^.eval_order;
-        pass_2(sol^.chain, depth + 1);
+    if not sol^.f114.already_through_pass_2 then begin
+      if sol^.before_transform <> nil then begin
+        if sol^.before_transform^.kind = ord(solution$proper_subtree) then
+          sol^.before_transform^.evaluation_order := sol^.evaluation_order;
+        pass_2(sol^.before_transform, depth + 1);
       end
-      else if sol^.f114.nchildren <> 0 then begin
-        if sol^.eval_order = 1 then begin
+      else if sol^.f114.number_of_children <> 0 then begin
+        if sol^.evaluation_order = 1 then begin
           if sol^.children[1] <> nil then
             pass_2(sol^.children[1], depth + 1);
           if sol^.children[2] <> nil then
@@ -522,7 +505,7 @@ begin
           if sol^.children[5] <> nil then
             pass_2(sol^.children[5], depth + 1);
         end
-        else if sol^.eval_order = 2 then begin
+        else if sol^.evaluation_order = 2 then begin
           if sol^.children[5] <> nil then
             pass_2(sol^.children[5], depth + 1);
           if sol^.children[4] <> nil then
@@ -536,21 +519,21 @@ begin
         end
         else begin
           write('ERROR: unknown evaluation order (');
-          write(sol^.eval_order);
+          write(sol^.evaluation_order);
           write(').');
           writeln;
         end;
       end;
-      sol^.base_reg := lr_ptr_t(isc_user_routines_31c);
-      sol^.index_reg := lr_ptr_t(isc_user_routines_31c);
-      sol^.l16 := 0;
-      sol^.obj_w_name := nil;
+      sol^.base_register := lr_ptr_t(isc_user_routines_31c);
+      sol^.index_register := lr_ptr_t(isc_user_routines_31c);
+      sol^.false_label := 0;
+      sol^.object_with_name := nil;
       sol^.live_range := nil;
-      sol^.lr2 := nil;
-      sol^.f114.pass_2_done := false;
-      if sol^.chain <> nil then
-        p2_pass_2_action[sol^.rule]^(sol^, sol^.chain, sol^, sol);
-      sol^.f114.pass_2_done := true;
+      sol^.live_range_of_imaginary_part := nil;
+      sol^.f114.already_through_pass_2 := false;
+      if sol^.before_transform <> nil then
+        p2_pass_2_action[sol^.which_transform]^(sol^, sol^.before_transform, sol^, sol);
+      sol^.f114.already_through_pass_2 := true;
     end;
 end;'''
 
@@ -1056,7 +1039,7 @@ begin
        ((isc_node_ptr_t(node)^.xl[1] & 16#400000) <> 0) and
        (isc_node_ptr_t(node)^.xp[3] = nil) then begin
       s := choose_one_cse_solution(list);
-      s^.f114.b5 := true;
+      s^.f114.builtin_is_local_cse := true;
       s := preserve_solution(s);
       isc_node_ptr_t(node)^.xp[3] := isc_node_ptr_t(s);
       list := solution_list$new;

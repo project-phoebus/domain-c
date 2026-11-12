@@ -114,14 +114,14 @@ procedure transform_489_pass_2(var self: isc_solution_t;
 var
   t1: lr_ptr_t;
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
-  set_isc_is_cse_on_live_range_if_local_cse(integer32(p2_node_ptr_t(subject^.sym)^.p[1]) & 16#400000 <> 0,
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
+  set_isc_is_cse_on_live_range_if_local_cse(integer32(p2_node_ptr_t(subject^.il)^.p[1]) & 16#400000 <> 0,
       isc_lr_ptr_t(subject^.children[1]^.live_range));
   t1 := subject^.children[1]^.live_range;
   result.live_range := t1;
@@ -142,28 +142,28 @@ begin
   t1 := high_half_of_fp_reg_pair(solution);
   t2 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  if solution^.obj_w_name <> nil then begin
-    solution^.obj_w_name := solution^.obj_w_name;
+  if solution^.object_with_name <> nil then begin
+    solution^.object_with_name := solution^.object_with_name;
   end else begin
-    solution^.obj_w_name := subject^.children[1]^.obj_w_name;
+    solution^.object_with_name := subject^.children[1]^.object_with_name;
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-      subject^.children[1], solution, nil);
-  set_isc_is_cse_on_live_range_if_local_cse(integer32(p2_node_ptr_t(subject^.sym)^.p[1]) & 16#400000 <> 0,
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, subject^.children[1], solution, nil);
+  set_isc_is_cse_on_live_range_if_local_cse(integer32(p2_node_ptr_t(subject^.il)^.p[1]) & 16#400000 <> 0,
       isc_lr_ptr_t(t1^.live_range));
   t3 := t1^.live_range;
   result.live_range := t3;
-  set_isc_is_cse_on_live_range_if_local_cse(integer32(p2_node_ptr_t(subject^.sym)^.p[1]) & 16#400000 <> 0,
+  set_isc_is_cse_on_live_range_if_local_cse(integer32(p2_node_ptr_t(subject^.il)^.p[1]) & 16#400000 <> 0,
       isc_lr_ptr_t(t2^.live_range));
   t4 := t2^.live_range;
-  result.lr2 := t4;
+  result.live_range_of_imaginary_part := t4;
 end;
 
 { transform_491_pass_2 - rule 491: fp_reg_quad <- nop_top | value_top ($1:
@@ -175,14 +175,14 @@ procedure transform_491_pass_2(var self: isc_solution_t;
 var
   t1: lr_ptr_t;
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
-  set_isc_is_cse_on_live_range_if_local_cse(integer32(p2_node_ptr_t(subject^.sym)^.p[1]) & 16#400000 <> 0,
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
+  set_isc_is_cse_on_live_range_if_local_cse(integer32(p2_node_ptr_t(subject^.il)^.p[1]) & 16#400000 <> 0,
       isc_lr_ptr_t(subject^.children[1]^.live_range));
   t1 := subject^.children[1]^.live_range;
   result.live_range := t1;
@@ -207,30 +207,30 @@ begin
   t3 := high_half_of_fp_reg_quad(solution);
   t4 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  if solution^.obj_w_name <> nil then begin
-    solution^.obj_w_name := solution^.obj_w_name;
+  if solution^.object_with_name <> nil then begin
+    solution^.object_with_name := solution^.object_with_name;
   end else begin
-    solution^.obj_w_name := subject^.children[1]^.obj_w_name;
+    solution^.object_with_name := subject^.children[1]^.object_with_name;
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0, t1, t3,
-      nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0, t2, t4,
-      nil);
-  set_isc_is_cse_on_live_range_if_local_cse(integer32(p2_node_ptr_t(subject^.sym)^.p[1]) & 16#400000 <> 0,
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, t1, t3, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, t2, t4, nil);
+  set_isc_is_cse_on_live_range_if_local_cse(integer32(p2_node_ptr_t(subject^.il)^.p[1]) & 16#400000 <> 0,
       isc_lr_ptr_t(t3^.live_range));
   t5 := t3^.live_range;
   result.live_range := t5;
-  set_isc_is_cse_on_live_range_if_local_cse(integer32(p2_node_ptr_t(subject^.sym)^.p[1]) & 16#400000 <> 0,
+  set_isc_is_cse_on_live_range_if_local_cse(integer32(p2_node_ptr_t(subject^.il)^.p[1]) & 16#400000 <> 0,
       isc_lr_ptr_t(t4^.live_range));
   t6 := t4^.live_range;
-  result.lr2 := t6;
+  result.live_range_of_imaginary_part := t6;
 end;
 
 { transform_493_pass_2 - rule 493: fp_reg_pair <- f_add_top ($1:
@@ -253,12 +253,12 @@ begin
   t4 := low_half_of_fp_reg_pair(subject^.children[2]);
   t5 := high_half_of_fp_reg_pair(solution);
   t6 := low_half_of_fp_reg_pair(solution);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$adds), 0, t1, t3,
-      t5);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$adds), 0, t2, t4,
-      t6);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$adds),
+      0, t1, t3, t5);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$adds),
+      0, t2, t4, t6);
   result.live_range := t5^.live_range;
-  result.lr2 := t6^.live_range;
+  result.live_range_of_imaginary_part := t6^.live_range;
 end;
 
 { transform_494_pass_2 - rule 494: fp_reg_quad <- f_add_top ($1:
@@ -281,12 +281,12 @@ begin
   t4 := low_half_of_fp_reg_quad(subject^.children[2]);
   t5 := high_half_of_fp_reg_quad(solution);
   t6 := low_half_of_fp_reg_quad(solution);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$addd), 0, t1, t3,
-      t5);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$addd), 0, t2, t4,
-      t6);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$addd),
+      0, t1, t3, t5);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$addd),
+      0, t2, t4, t6);
   result.live_range := t5^.live_range;
-  result.lr2 := t6^.live_range;
+  result.live_range_of_imaginary_part := t6^.live_range;
 end;
 
 { transform_495_pass_2 - rule 495: fp_reg_pair <- f_div_top ($1:
@@ -317,30 +317,30 @@ begin
   t8 := create_solution_for_fp_reg;
   t9 := create_solution_for_fp_reg;
   t10 := create_solution_for_fp_reg;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t3, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t4, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$adds), 0, t7, t8,
-      t9);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t1, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t2, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$adds), 0, t7, t8,
-      t10);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$divs), 0, t9, t10,
-      t5);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t2, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t1, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$subs), 0, t8, t7,
-      t10);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$divs), 0, t9, t10,
-      t6);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t3, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t4, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$adds),
+      0, t7, t8, t9);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t1, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t2, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$adds),
+      0, t7, t8, t10);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$divs),
+      0, t9, t10, t5);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t2, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t1, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$subs),
+      0, t8, t7, t10);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$divs),
+      0, t9, t10, t6);
   result.live_range := t5^.live_range;
-  result.lr2 := t6^.live_range;
+  result.live_range_of_imaginary_part := t6^.live_range;
 end;
 
 { transform_496_pass_2 - rule 496: fp_reg_pair <- f_div_top ($1:
@@ -377,32 +377,32 @@ begin
   t11 := create_solution_for_fp_reg_pair;
   t12 := high_half_of_fp_reg_pair(t11);
   t13 := low_half_of_fp_reg_pair(t11);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t3, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t4, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$adds), 0, t7, t8,
-      t9);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t1, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t2, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$adds), 0, t7, t8,
-      t10);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$divs), 0, t9, t10,
-      t12);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t2, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t1, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$subs), 0, t8, t7,
-      t10);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$divs), 0, t9, t10,
-      t13);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0, t11,
-      solution, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t3, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t4, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$adds),
+      0, t7, t8, t9);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t1, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t2, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$adds),
+      0, t7, t8, t10);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$divs),
+      0, t9, t10, t12);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t2, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t1, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$subs),
+      0, t8, t7, t10);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$divs),
+      0, t9, t10, t13);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, t11, solution, nil);
   result.live_range := t5^.live_range;
-  result.lr2 := t6^.live_range;
+  result.live_range_of_imaginary_part := t6^.live_range;
 end;
 
 { transform_497_pass_2 - rule 497: fp_reg_quad <- f_div_top ($1:
@@ -433,30 +433,30 @@ begin
   t8 := create_solution_for_fp_reg_pair;
   t9 := create_solution_for_fp_reg_pair;
   t10 := create_solution_for_fp_reg_pair;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t3, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t4, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$addd), 0, t7, t8,
-      t9);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t1, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t2, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$addd), 0, t7, t8,
-      t10);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$divd), 0, t9, t10,
-      t5);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t2, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t1, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$subd), 0, t8, t7,
-      t10);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$divd), 0, t9, t10,
-      t6);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t3, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t4, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$addd),
+      0, t7, t8, t9);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t1, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t2, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$addd),
+      0, t7, t8, t10);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$divd),
+      0, t9, t10, t5);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t2, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t1, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$subd),
+      0, t8, t7, t10);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$divd),
+      0, t9, t10, t6);
   result.live_range := t5^.live_range;
-  result.lr2 := t6^.live_range;
+  result.live_range_of_imaginary_part := t6^.live_range;
 end;
 
 { transform_498_pass_2 - rule 498: fp_reg_quad <- f_div_top ($1:
@@ -491,34 +491,34 @@ begin
   t10 := create_solution_for_fp_reg_pair;
   t11 := create_solution_for_fp_reg_pair;
   t12 := create_solution_for_fp_reg_pair;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t3, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t4, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$addd), 0, t7, t8,
-      t9);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t1, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t2, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$addd), 0, t7, t8,
-      t10);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$divd), 0, t9, t10,
-      t11);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t2, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t1, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$subd), 0, t8, t7,
-      t10);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$divd), 0, t9, t10,
-      t12);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0, t11, t5,
-      nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0, t12, t6,
-      nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t3, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t4, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$addd),
+      0, t7, t8, t9);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t1, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t2, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$addd),
+      0, t7, t8, t10);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$divd),
+      0, t9, t10, t11);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t2, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t1, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$subd),
+      0, t8, t7, t10);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$divd),
+      0, t9, t10, t12);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, t11, t5, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, t12, t6, nil);
   result.live_range := t5^.live_range;
-  result.lr2 := t6^.live_range;
+  result.live_range_of_imaginary_part := t6^.live_range;
 end;
 
 { transform_499_pass_2 - rule 499: fp_reg_pair <- f_extend_top ($1: ip_reg,
@@ -543,19 +543,19 @@ begin
   t3 := create_solution_for_fp_reg;
   t4 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[138]) = 1 then begin
     if ord(result.space136[139]) = 1 then begin
       t5 := subject^.children[1];
     end else begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$extend7), 0,
-          subject^.children[1], t4, nil);
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$extend7), 0, subject^.children[1], t4, nil);
       t5 := t4;
     end;
     t8 := t5;
@@ -564,8 +564,8 @@ begin
       if ord(result.space136[140]) = 1 then begin
         t6 := subject^.children[1];
       end else begin
-        debug_lir_$simple_instruction(result.inherited, ord(opc$extend15), 0,
-            subject^.children[1], t4, nil);
+        debug_lir_$simple_instruction(result.inherited_attributes,
+            ord(opc$extend15), 0, subject^.children[1], t4, nil);
         t6 := t4;
       end;
       t7 := t6;
@@ -574,25 +574,25 @@ begin
     end;
     t8 := t7;
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0, t8, t3,
-      nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$cvtis), 0, t3, t1,
-      nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$mtfp),
+      0, t8, t3, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtis),
+      0, t3, t1, nil);
   if ord(result.space136[141]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[142]) = 1 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-        isc_solution_ptr_t(lir_3d60[0]), t2, nil);
+    debug_lir_$simple_instruction(result.inherited_attributes,
+        ord(opc$copys), 0, isc_solution_ptr_t(lir_3d60[0]), t2, nil);
   end else begin
     t9 := address_mode_for_integer32_value(0);
-    debug_lir_$load_instruction(result.inherited, ord(opc$loads), 0, t9,
-        isc_solution_ptr_t(t9^.base_reg), t2, t9^.sym, 0, t9^.bits_known,
-        t9^.bits_trusted);
+    debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loads),
+        0, t9, isc_solution_ptr_t(t9^.base_register), t2, t9^.il, 0,
+        t9^.bits_known, t9^.bits_trusted);
   end;
   result.live_range := t1^.live_range;
-  result.lr2 := t2^.live_range;
+  result.live_range_of_imaginary_part := t2^.live_range;
 end;
 
 { transform_500_pass_2 - rule 500: fp_reg_pair <- f_extend_top ($1: fp_reg,
@@ -608,23 +608,23 @@ var
 begin
   t1 := high_half_of_fp_reg_pair(solution);
   t2 := low_half_of_fp_reg_pair(solution);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-      subject^.children[1], t1, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copys),
+      0, subject^.children[1], t1, nil);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-        isc_solution_ptr_t(lir_3d60[0]), t2, nil);
+    debug_lir_$simple_instruction(result.inherited_attributes,
+        ord(opc$copys), 0, isc_solution_ptr_t(lir_3d60[0]), t2, nil);
   end else begin
     t3 := address_mode_for_integer32_value(0);
-    debug_lir_$load_instruction(result.inherited, ord(opc$loads), 0, t3,
-        isc_solution_ptr_t(t3^.base_reg), t2, t3^.sym, 0, t3^.bits_known,
-        t3^.bits_trusted);
+    debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loads),
+        0, t3, isc_solution_ptr_t(t3^.base_register), t2, t3^.il, 0,
+        t3^.bits_known, t3^.bits_trusted);
   end;
   result.live_range := t1^.live_range;
-  result.lr2 := t2^.live_range;
+  result.live_range_of_imaginary_part := t2^.live_range;
 end;
 
 { transform_501_pass_2 - rule 501: fp_reg_pair <- f_extend_top ($1: fp_reg,
@@ -639,12 +639,12 @@ var
 begin
   t1 := high_half_of_fp_reg_pair(solution);
   t2 := low_half_of_fp_reg_pair(solution);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-      subject^.children[1], t1, nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-      subject^.children[2], t2, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copys),
+      0, subject^.children[1], t1, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copys),
+      0, subject^.children[2], t2, nil);
   result.live_range := t1^.live_range;
-  result.lr2 := t2^.live_range;
+  result.live_range_of_imaginary_part := t2^.live_range;
 end;
 
 { transform_502_pass_2 - rule 502: fp_reg_pair <- f_extend_top ($1:
@@ -661,30 +661,30 @@ begin
   t1 := high_half_of_fp_reg_pair(solution);
   t2 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$cvtds), 0,
-      subject^.children[1], t1, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtds),
+      0, subject^.children[1], t1, nil);
   if ord(result.space136[138]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[139]) = 1 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-        isc_solution_ptr_t(lir_3d60[0]), t2, nil);
+    debug_lir_$simple_instruction(result.inherited_attributes,
+        ord(opc$copys), 0, isc_solution_ptr_t(lir_3d60[0]), t2, nil);
   end else begin
     t3 := address_mode_for_integer32_value(0);
-    debug_lir_$load_instruction(result.inherited, ord(opc$loads), 0, t3,
-        isc_solution_ptr_t(t3^.base_reg), t2, t3^.sym, 0, t3^.bits_known,
-        t3^.bits_trusted);
+    debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loads),
+        0, t3, isc_solution_ptr_t(t3^.base_register), t2, t3^.il, 0,
+        t3^.bits_known, t3^.bits_trusted);
   end;
   result.live_range := t1^.live_range;
-  result.lr2 := t2^.live_range;
+  result.live_range_of_imaginary_part := t2^.live_range;
 end;
 
 { transform_503_pass_2 - rule 503: fp_reg_pair <- f_extend_top ($1:
@@ -700,19 +700,19 @@ begin
   t1 := high_half_of_fp_reg_pair(solution);
   t2 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$cvtds), 0,
-      subject^.children[1], t1, nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$cvtds), 0,
-      subject^.children[2], t2, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtds),
+      0, subject^.children[1], t1, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtds),
+      0, subject^.children[2], t2, nil);
   result.live_range := t1^.live_range;
-  result.lr2 := t2^.live_range;
+  result.live_range_of_imaginary_part := t2^.live_range;
 end;
 
 { transform_504_pass_2 - rule 504: fp_reg_quad <- f_extend_top ($1: ip_reg,
@@ -737,19 +737,19 @@ begin
   t3 := create_solution_for_fp_reg;
   t4 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[138]) = 1 then begin
     if ord(result.space136[139]) = 1 then begin
       t5 := subject^.children[1];
     end else begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$extend7), 0,
-          subject^.children[1], t4, nil);
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$extend7), 0, subject^.children[1], t4, nil);
       t5 := t4;
     end;
     t8 := t5;
@@ -758,8 +758,8 @@ begin
       if ord(result.space136[140]) = 1 then begin
         t6 := subject^.children[1];
       end else begin
-        debug_lir_$simple_instruction(result.inherited, ord(opc$extend15), 0,
-            subject^.children[1], t4, nil);
+        debug_lir_$simple_instruction(result.inherited_attributes,
+            ord(opc$extend15), 0, subject^.children[1], t4, nil);
         t6 := t4;
       end;
       t7 := t6;
@@ -768,16 +768,16 @@ begin
     end;
     t8 := t7;
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0, t8, t3,
-      nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$cvtid), 0, t3, t1,
-      nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$mtfp),
+      0, t8, t3, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtid),
+      0, t3, t1, nil);
   t9 := address_mode_for_double_value(0.0);
-  debug_lir_$load_instruction(result.inherited, ord(opc$loadd), 0, t9,
-      isc_solution_ptr_t(t9^.base_reg), t2, t9^.sym, 0, t9^.bits_known,
-      t9^.bits_trusted);
+  debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadd), 0,
+      t9, isc_solution_ptr_t(t9^.base_register), t2, t9^.il, 0,
+      t9^.bits_known, t9^.bits_trusted);
   result.live_range := t1^.live_range;
-  result.lr2 := t2^.live_range;
+  result.live_range_of_imaginary_part := t2^.live_range;
 end;
 
 { transform_505_pass_2 - rule 505: fp_reg_quad <- f_extend_top ($1: fp_reg,
@@ -794,21 +794,21 @@ begin
   t1 := high_half_of_fp_reg_quad(solution);
   t2 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$cvtsd), 0,
-      subject^.children[1], t1, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtsd),
+      0, subject^.children[1], t1, nil);
   t3 := address_mode_for_double_value(0.0);
-  debug_lir_$load_instruction(result.inherited, ord(opc$loadd), 0, t3,
-      isc_solution_ptr_t(t3^.base_reg), t2, t3^.sym, 0, t3^.bits_known,
-      t3^.bits_trusted);
+  debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadd), 0,
+      t3, isc_solution_ptr_t(t3^.base_register), t2, t3^.il, 0,
+      t3^.bits_known, t3^.bits_trusted);
   result.live_range := t1^.live_range;
-  result.lr2 := t2^.live_range;
+  result.live_range_of_imaginary_part := t2^.live_range;
 end;
 
 { transform_506_pass_2 - rule 506: fp_reg_quad <- f_extend_top ($1: fp_reg,
@@ -824,19 +824,19 @@ begin
   t1 := high_half_of_fp_reg_quad(solution);
   t2 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$cvtsd), 0,
-      subject^.children[1], t1, nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$cvtsd), 0,
-      subject^.children[2], t2, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtsd),
+      0, subject^.children[1], t1, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtsd),
+      0, subject^.children[2], t2, nil);
   result.live_range := t1^.live_range;
-  result.lr2 := t2^.live_range;
+  result.live_range_of_imaginary_part := t2^.live_range;
 end;
 
 { transform_507_pass_2 - rule 507: fp_reg_quad <- f_extend_top ($1:
@@ -852,14 +852,14 @@ var
 begin
   t1 := high_half_of_fp_reg_quad(solution);
   t2 := low_half_of_fp_reg_quad(solution);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-      subject^.children[1], t1, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, subject^.children[1], t1, nil);
   t3 := address_mode_for_double_value(0.0);
-  debug_lir_$load_instruction(result.inherited, ord(opc$loadd), 0, t3,
-      isc_solution_ptr_t(t3^.base_reg), t2, t3^.sym, 0, t3^.bits_known,
-      t3^.bits_trusted);
+  debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadd), 0,
+      t3, isc_solution_ptr_t(t3^.base_register), t2, t3^.il, 0,
+      t3^.bits_known, t3^.bits_trusted);
   result.live_range := t1^.live_range;
-  result.lr2 := t2^.live_range;
+  result.live_range_of_imaginary_part := t2^.live_range;
 end;
 
 { transform_508_pass_2 - rule 508: fp_reg_quad <- f_extend_top ($1:
@@ -874,12 +874,12 @@ var
 begin
   t1 := high_half_of_fp_reg_quad(solution);
   t2 := low_half_of_fp_reg_quad(solution);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-      subject^.children[1], t1, nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-      subject^.children[2], t2, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, subject^.children[1], t1, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, subject^.children[2], t2, nil);
   result.live_range := t1^.live_range;
-  result.lr2 := t2^.live_range;
+  result.live_range_of_imaginary_part := t2^.live_range;
 end;
 
 { transform_509_pass_2 - rule 509: fp_reg_quad <- f_extend_top ($1:
@@ -899,19 +899,19 @@ begin
   t3 := high_half_of_fp_reg_quad(solution);
   t4 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$cvtsd), 0, t1, t3,
-      nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$cvtsd), 0, t2, t4,
-      nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtsd),
+      0, t1, t3, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtsd),
+      0, t2, t4, nil);
   result.live_range := t3^.live_range;
-  result.lr2 := t4^.live_range;
+  result.live_range_of_imaginary_part := t4^.live_range;
 end;
 
 { transform_510_pass_2 - rule 510: ip_reg <- f_extend_top ($1: fp_reg_pair,
@@ -927,17 +927,17 @@ begin
   t1 := high_half_of_fp_reg_pair(subject^.children[1]);
   t2 := create_solution_for_fp_reg;
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$truncsi), 0, t1,
-      t2, nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$mffp), 0, t2,
-      solution, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes,
+      ord(opc$truncsi), 0, t1, t2, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$mffp),
+      0, t2, solution, nil);
 end;
 
 { transform_511_pass_2 - rule 511: fp_reg <- f_extend_top ($1: fp_reg_pair,
@@ -947,8 +947,8 @@ procedure transform_511_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-      high_half_of_fp_reg_pair(subject^.children[1]), solution, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copys),
+      0, high_half_of_fp_reg_pair(subject^.children[1]), solution, nil);
 end;
 
 { transform_512_pass_2 - rule 512: fp_reg_pair <- f_extend_top ($1:
@@ -962,15 +962,15 @@ var
 begin
   t1 := high_half_of_fp_reg_pair(subject^.children[1]);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$cvtsd), 0, t1,
-      solution, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtsd),
+      0, t1, solution, nil);
 end;
 
 { transform_513_pass_2 - rule 513: ip_reg <- f_extend_top ($1: fp_reg_quad,
@@ -986,17 +986,17 @@ begin
   t1 := high_half_of_fp_reg_quad(subject^.children[1]);
   t2 := create_solution_for_fp_reg;
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$truncdi), 0, t1,
-      t2, nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$mffp), 0, t2,
-      solution, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes,
+      ord(opc$truncdi), 0, t1, t2, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$mffp),
+      0, t2, solution, nil);
 end;
 
 { transform_514_pass_2 - rule 514: fp_reg <- f_extend_top ($1: fp_reg_quad,
@@ -1010,15 +1010,15 @@ var
 begin
   t1 := high_half_of_fp_reg_quad(subject^.children[1]);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$cvtds), 0, t1,
-      solution, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtds),
+      0, t1, solution, nil);
 end;
 
 { transform_515_pass_2 - rule 515: fp_reg_pair <- f_extend_top ($1:
@@ -1028,8 +1028,8 @@ procedure transform_515_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-      high_half_of_fp_reg_quad(subject^.children[1]), solution, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, high_half_of_fp_reg_quad(subject^.children[1]), solution, nil);
 end;
 
 { transform_516_pass_2 - rule 516: fp_reg_pair <- f_extend_top ($1:
@@ -1049,19 +1049,19 @@ begin
   t3 := high_half_of_fp_reg_pair(solution);
   t4 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$cvtds), 0, t1, t3,
-      nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$cvtds), 0, t2, t4,
-      nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtds),
+      0, t1, t3, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtds),
+      0, t2, t4, nil);
   result.live_range := t3^.live_range;
-  result.lr2 := t4^.live_range;
+  result.live_range_of_imaginary_part := t4^.live_range;
 end;
 
 { transform_517_pass_2 - rule 517: fp_reg <- f_math_top ($1: fp_reg_pair,
@@ -1071,8 +1071,8 @@ procedure transform_517_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
-      low_half_of_fp_reg_pair(subject^.children[1]), solution, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copys),
+      0, low_half_of_fp_reg_pair(subject^.children[1]), solution, nil);
 end;
 
 { transform_518_pass_2 - rule 518: fp_reg_pair <- f_math_top ($1:
@@ -1091,12 +1091,12 @@ begin
   t2 := low_half_of_fp_reg_pair(subject^.children[1]);
   t3 := high_half_of_fp_reg_pair(solution);
   t4 := low_half_of_fp_reg_pair(solution);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0, t1, t3,
-      nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$negs), 0, t2, t4,
-      nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copys),
+      0, t1, t3, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$negs),
+      0, t2, t4, nil);
   result.live_range := t3^.live_range;
-  result.lr2 := t4^.live_range;
+  result.live_range_of_imaginary_part := t4^.live_range;
 end;
 
 { transform_519_pass_2 - rule 519: fp_reg_pair <- f_math_top ($1:
@@ -1106,8 +1106,8 @@ procedure transform_519_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
-      low_half_of_fp_reg_quad(subject^.children[1]), solution, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, low_half_of_fp_reg_quad(subject^.children[1]), solution, nil);
 end;
 
 { transform_520_pass_2 - rule 520: fp_reg_quad <- f_math_top ($1:
@@ -1126,12 +1126,12 @@ begin
   t2 := low_half_of_fp_reg_quad(subject^.children[1]);
   t3 := high_half_of_fp_reg_quad(solution);
   t4 := low_half_of_fp_reg_quad(solution);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0, t1, t3,
-      nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$negd), 0, t2, t4,
-      nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, t1, t3, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$negd),
+      0, t2, t4, nil);
   result.live_range := t3^.live_range;
-  result.lr2 := t4^.live_range;
+  result.live_range_of_imaginary_part := t4^.live_range;
 end;
 
 { transform_521_pass_2 - rule 521: fp_reg_pair <- f_mul_top ($1:
@@ -1158,20 +1158,20 @@ begin
   t6 := low_half_of_fp_reg_pair(solution);
   t7 := create_solution_for_fp_reg;
   t8 := create_solution_for_fp_reg;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t1, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t2, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$subs), 0, t8, t7,
-      t5);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t1, t4,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t2, t3,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$adds), 0, t7, t8,
-      t6);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t1, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t2, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$subs),
+      0, t8, t7, t5);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t1, t4, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t2, t3, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$adds),
+      0, t7, t8, t6);
   result.live_range := t5^.live_range;
-  result.lr2 := t6^.live_range;
+  result.live_range_of_imaginary_part := t6^.live_range;
 end;
 
 { transform_522_pass_2 - rule 522: fp_reg_pair <- f_mul_top ($1:
@@ -1204,22 +1204,22 @@ begin
   t9 := create_solution_for_fp_reg_pair;
   t10 := high_half_of_fp_reg_pair(t9);
   t11 := low_half_of_fp_reg_pair(t9);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t1, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t2, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$subs), 0, t8, t7,
-      t10);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t1, t4,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muls), 0, t2, t3,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$adds), 0, t7, t8,
-      t11);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0, t9,
-      solution, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t1, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t2, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$subs),
+      0, t8, t7, t10);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t1, t4, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muls),
+      0, t2, t3, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$adds),
+      0, t7, t8, t11);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, t9, solution, nil);
   result.live_range := t5^.live_range;
-  result.lr2 := t6^.live_range;
+  result.live_range_of_imaginary_part := t6^.live_range;
 end;
 
 { transform_523_pass_2 - rule 523: fp_reg_quad <- f_mul_top ($1:
@@ -1246,20 +1246,20 @@ begin
   t6 := low_half_of_fp_reg_quad(solution);
   t7 := create_solution_for_fp_reg_pair;
   t8 := create_solution_for_fp_reg_pair;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t1, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t2, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$subd), 0, t8, t7,
-      t5);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t1, t4,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t2, t3,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$addd), 0, t7, t8,
-      t6);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t1, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t2, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$subd),
+      0, t8, t7, t5);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t1, t4, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t2, t3, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$addd),
+      0, t7, t8, t6);
   result.live_range := t5^.live_range;
-  result.lr2 := t6^.live_range;
+  result.live_range_of_imaginary_part := t6^.live_range;
 end;
 
 { transform_524_pass_2 - rule 524: fp_reg_quad <- f_mul_top ($1:
@@ -1290,24 +1290,24 @@ begin
   t8 := create_solution_for_fp_reg_pair;
   t9 := create_solution_for_fp_reg_pair;
   t10 := create_solution_for_fp_reg_pair;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t1, t3,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t2, t4,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$subd), 0, t8, t7,
-      t9);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t1, t4,
-      t7);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$muld), 0, t2, t3,
-      t8);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$addd), 0, t7, t8,
-      t10);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0, t9, t5,
-      nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0, t10, t6,
-      nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t1, t3, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t2, t4, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$subd),
+      0, t8, t7, t9);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t1, t4, t7);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$muld),
+      0, t2, t3, t8);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$addd),
+      0, t7, t8, t10);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, t9, t5, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, t10, t6, nil);
   result.live_range := t5^.live_range;
-  result.lr2 := t6^.live_range;
+  result.live_range_of_imaginary_part := t6^.live_range;
 end;
 
 { transform_525_pass_2 - rule 525: fp_reg_pair <- f_neg_top ($1:
@@ -1326,12 +1326,12 @@ begin
   t2 := low_half_of_fp_reg_pair(subject^.children[1]);
   t3 := high_half_of_fp_reg_pair(solution);
   t4 := low_half_of_fp_reg_pair(solution);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$negs), 0, t1, t3,
-      nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$negs), 0, t2, t4,
-      nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$negs),
+      0, t1, t3, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$negs),
+      0, t2, t4, nil);
   result.live_range := t3^.live_range;
-  result.lr2 := t4^.live_range;
+  result.live_range_of_imaginary_part := t4^.live_range;
 end;
 
 { transform_526_pass_2 - rule 526: fp_reg_quad <- f_neg_top ($1:
@@ -1350,12 +1350,12 @@ begin
   t2 := low_half_of_fp_reg_quad(subject^.children[1]);
   t3 := high_half_of_fp_reg_quad(solution);
   t4 := low_half_of_fp_reg_quad(solution);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$negd), 0, t1, t3,
-      nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$negd), 0, t2, t4,
-      nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$negd),
+      0, t1, t3, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$negd),
+      0, t2, t4, nil);
   result.live_range := t3^.live_range;
-  result.lr2 := t4^.live_range;
+  result.live_range_of_imaginary_part := t4^.live_range;
 end;
 
 { transform_527_pass_2 - rule 527: fp_reg_pair <- f_sub_top ($1:
@@ -1378,12 +1378,12 @@ begin
   t4 := low_half_of_fp_reg_pair(subject^.children[2]);
   t5 := high_half_of_fp_reg_pair(solution);
   t6 := low_half_of_fp_reg_pair(solution);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$subs), 0, t3, t1,
-      t5);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$subs), 0, t4, t2,
-      t6);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$subs),
+      0, t3, t1, t5);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$subs),
+      0, t4, t2, t6);
   result.live_range := t5^.live_range;
-  result.lr2 := t6^.live_range;
+  result.live_range_of_imaginary_part := t6^.live_range;
 end;
 
 { transform_528_pass_2 - rule 528: fp_reg_quad <- f_sub_top ($1:
@@ -1406,12 +1406,12 @@ begin
   t4 := low_half_of_fp_reg_quad(subject^.children[2]);
   t5 := high_half_of_fp_reg_quad(solution);
   t6 := low_half_of_fp_reg_quad(solution);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$subd), 0, t3, t1,
-      t5);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$subd), 0, t4, t2,
-      t6);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$subd),
+      0, t3, t1, t5);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$subd),
+      0, t4, t2, t6);
   result.live_range := t5^.live_range;
-  result.lr2 := t6^.live_range;
+  result.live_range_of_imaginary_part := t6^.live_range;
 end;
 
 { transform_529_pass_2 - rule 529: fp_reg_pair <- fp_reg_pair.
@@ -1426,17 +1426,17 @@ begin
   t1 := high_half_of_fp_reg_pair(solution);
   t2 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0, subject,
-      solution, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, subject, solution, nil);
   result.live_range := t1^.live_range;
-  result.lr2 := t2^.live_range;
+  result.live_range_of_imaginary_part := t2^.live_range;
 end;
 
 { transform_530_pass_2 - rule 530: fp_reg_quad <- fp_reg_quad.
@@ -1455,19 +1455,19 @@ begin
   t3 := high_half_of_fp_reg_quad(solution);
   t4 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0, t1, t3,
-      nil);
-  debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0, t2, t4,
-      nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, t1, t3, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
+      0, t2, t4, nil);
   result.live_range := t3^.live_range;
-  result.lr2 := t4^.live_range;
+  result.live_range_of_imaginary_part := t4^.live_range;
 end;
 
 { transform_531_pass_2 - rule 531: fp_reg_pair <- isc_func_call_top.
@@ -1477,19 +1477,20 @@ procedure transform_531_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  pass_2_isc_call(isc_node_ptr_t(subject^.sym),
-      p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,
-      p2_node_ptr_t(subject^.sym)^.b[12] & 128 <> 0,
-      p2_node_ptr_t(subject^.sym)^.b[14] & 128 <> 0, subject^.inherited, 0);
+  pass_2_isc_call(isc_node_ptr_t(subject^.il),
+      p2_node_ptr_t(subject^.il)^.b[13] & 128 <> 0,
+      p2_node_ptr_t(subject^.il)^.b[12] & 128 <> 0,
+      p2_node_ptr_t(subject^.il)^.b[14] & 128 <> 0,
+      subject^.inherited_attributes, 0);
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.lr2 := lir_3f90[p2_node_ptr_t(subject^.sym)^.b[11] + 1];
+  result.live_range_of_imaginary_part := lir_3f90[p2_node_ptr_t(subject^.il)^.b[11] + 1];
 end;
 
 { transform_532_pass_2 - rule 532: fp_reg_quad <- isc_func_call_top.
@@ -1499,17 +1500,18 @@ procedure transform_532_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(5, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  pass_2_isc_call(isc_node_ptr_t(subject^.sym),
-      p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,
-      p2_node_ptr_t(subject^.sym)^.b[12] & 128 <> 0,
-      p2_node_ptr_t(subject^.sym)^.b[14] & 128 <> 0, subject^.inherited, 0);
+  pass_2_isc_call(isc_node_ptr_t(subject^.il),
+      p2_node_ptr_t(subject^.il)^.b[13] & 128 <> 0,
+      p2_node_ptr_t(subject^.il)^.b[12] & 128 <> 0,
+      p2_node_ptr_t(subject^.il)^.b[14] & 128 <> 0,
+      subject^.inherited_attributes, 0);
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.lr2 := lir_3f90[p2_node_ptr_t(subject^.sym)^.b[11] + 2];
+  result.live_range_of_imaginary_part := lir_3f90[p2_node_ptr_t(subject^.il)^.b[11] + 2];
 end;

@@ -106,12 +106,12 @@ module isc_cse_handling;
 { choose_one_cse_solution - the solution of list a CSE is given: the
   32-bit literal, else the address mode, else the register solution
   that is not physical, of least code_bytes plus delay (the first of
-  the least), of least memory_refs among those of equal cost.
+  the least), of least memory_references among those of equal cost.
 
   0x0BA574, 0xF6 bytes: list 8 (bug_check when nil); the three
   candidates in D6, D7 and (-20,A6), their costs in D3, D5, D4; the
   cost from zero-extended words (`clr.l; move.w'); a candidate taken
-  when none yet, `blt' on the cost, or equal cost and memory_refs
+  when none yet, `blt' on the cost, or equal cost and memory_references
   lower (`bcc' to skip: unsigned); the kinds compared with 14 and 5;
   physical `btst #3,(83,A2)'. }
 
@@ -135,21 +135,21 @@ begin
     cost := s^.code_bytes + s^.delay;
     if s^.kind = ord(solution$literal_32_bits) then begin
       if (lit = nil) or (cost < lit_cost)
-         or ((cost = lit_cost) and (s^.memory_refs < lit^.memory_refs)) then begin
+         or ((cost = lit_cost) and (s^.memory_references < lit^.memory_references)) then begin
         lit := s;
         lit_cost := cost;
       end;
     end
     else if s^.kind = ord(solution$address_mode) then begin
       if (am = nil) or (cost < am_cost)
-         or ((cost = am_cost) and (s^.memory_refs < am^.memory_refs)) then begin
+         or ((cost = am_cost) and (s^.memory_references < am^.memory_references)) then begin
         am := s;
         am_cost := cost;
       end;
     end
-    else if is_a_register_solution(s) and not s^.f76.physical then begin
+    else if is_a_register_solution(s) and not s^.f76.physical_register then begin
       if (reg = nil) or (cost < reg_cost)
-         or ((cost = reg_cost) and (s^.memory_refs < reg^.memory_refs)) then begin
+         or ((cost = reg_cost) and (s^.memory_references < reg^.memory_references)) then begin
         reg := s;
         reg_cost := cost;
       end;
@@ -341,7 +341,7 @@ begin
     pass_1_cse_parent_disp := 0;
   end
   else
-    pass_1_cse_parent_disp := s^.disp;
+    pass_1_cse_parent_disp := s^.literal_32_bits_value;
 end;
 
 { pass_1_cse_parent_embedded_sr_temp - the embedded_sr_temp of the
@@ -360,7 +360,7 @@ begin
     pass_1_cse_parent_embedded_sr_temp := false;
   end
   else
-    pass_1_cse_parent_embedded_sr_temp := s^.f76.embedded_sr_temp;
+    pass_1_cse_parent_embedded_sr_temp := s^.f76.embedded_strength_reduction_temporary;
 end;
 
 { pass_1_cse_parent_eval_order - the eval_order of the solution chosen for
@@ -378,7 +378,7 @@ begin
     pass_1_cse_parent_eval_order := 0;
   end
   else
-    pass_1_cse_parent_eval_order := s^.eval_order;
+    pass_1_cse_parent_eval_order := s^.evaluation_order;
 end;
 
 { pass_1_cse_parent_lit_value - the lit_value of the solution chosen for
@@ -397,7 +397,7 @@ begin
     pass_1_cse_parent_lit_value := 0;
   end
   else
-    pass_1_cse_parent_lit_value := s^.disp;
+    pass_1_cse_parent_lit_value := s^.literal_32_bits_value;
 end;
 
 { pass_1_cse_parent_ip_reg_max - the ip_reg_max of the solution chosen for
@@ -559,7 +559,7 @@ begin
     pass_1_cse_parent_memory_refs := 0;
   end
   else
-    pass_1_cse_parent_memory_refs := s^.memory_refs;
+    pass_1_cse_parent_memory_refs := s^.memory_references;
 end;
 
 { pass_1_cse_parent_has_sym_disp - the has_sym_disp of the solution chosen
@@ -577,7 +577,7 @@ begin
     pass_1_cse_parent_has_sym_disp := false;
   end
   else
-    pass_1_cse_parent_has_sym_disp := s^.f76.has_sym_disp;
+    pass_1_cse_parent_has_sym_disp := s^.f76.has_a_symbolic_displacement;
 end;
 
 { pass_1_cse_parent_uses_disp - the uses_disp of the solution chosen for
@@ -595,7 +595,7 @@ begin
     pass_1_cse_parent_uses_disp := false;
   end
   else
-    pass_1_cse_parent_uses_disp := s^.f76.uses_disp;
+    pass_1_cse_parent_uses_disp := s^.f76.uses_the_displacement;
 end;
 
 { pass_1_cse_parent_uses_index_reg - the uses_index_reg of the solution
@@ -613,7 +613,7 @@ begin
     pass_1_cse_parent_uses_index_reg := false;
   end
   else
-    pass_1_cse_parent_uses_index_reg := s^.f76.uses_index_reg;
+    pass_1_cse_parent_uses_index_reg := s^.f76.uses_the_index_register;
 end;
 
 { pass_1_cse_use_ob - pass 1 of a CSE's tree reached through the use
@@ -761,7 +761,7 @@ begin
     pass_1_cse_use_disp := 0;
   end
   else
-    pass_1_cse_use_disp := s^.disp;
+    pass_1_cse_use_disp := s^.literal_32_bits_value;
 end;
 
 { pass_1_cse_use_embedded_sr_temp - the embedded_sr_temp of the solution
@@ -782,7 +782,7 @@ begin
     pass_1_cse_use_embedded_sr_temp := false;
   end
   else
-    pass_1_cse_use_embedded_sr_temp := s^.f76.embedded_sr_temp;
+    pass_1_cse_use_embedded_sr_temp := s^.f76.embedded_strength_reduction_temporary;
 end;
 
 { pass_1_cse_use_eval_order - the eval_order of the solution chosen for
@@ -803,7 +803,7 @@ begin
     pass_1_cse_use_eval_order := 0;
   end
   else
-    pass_1_cse_use_eval_order := s^.eval_order;
+    pass_1_cse_use_eval_order := s^.evaluation_order;
 end;
 
 { pass_1_cse_use_lit_value - the lit_value of the solution chosen for the
@@ -824,7 +824,7 @@ begin
     pass_1_cse_use_lit_value := 0;
   end
   else
-    pass_1_cse_use_lit_value := s^.disp;
+    pass_1_cse_use_lit_value := s^.literal_32_bits_value;
 end;
 
 { pass_1_cse_use_ip_reg_max - the ip_reg_max of the solution chosen for
@@ -1013,7 +1013,7 @@ begin
     pass_1_cse_use_memory_refs := 0;
   end
   else
-    pass_1_cse_use_memory_refs := s^.memory_refs;
+    pass_1_cse_use_memory_refs := s^.memory_references;
 end;
 
 { pass_1_cse_use_has_sym_disp - the has_sym_disp of the solution chosen
@@ -1034,7 +1034,7 @@ begin
     pass_1_cse_use_has_sym_disp := false;
   end
   else
-    pass_1_cse_use_has_sym_disp := s^.f76.has_sym_disp;
+    pass_1_cse_use_has_sym_disp := s^.f76.has_a_symbolic_displacement;
 end;
 
 { pass_1_cse_use_uses_disp - the uses_disp of the solution chosen for the
@@ -1055,7 +1055,7 @@ begin
     pass_1_cse_use_uses_disp := false;
   end
   else
-    pass_1_cse_use_uses_disp := s^.f76.uses_disp;
+    pass_1_cse_use_uses_disp := s^.f76.uses_the_displacement;
 end;
 
 { pass_1_cse_use_uses_index_reg - the uses_index_reg of the solution
@@ -1076,7 +1076,7 @@ begin
     pass_1_cse_use_uses_index_reg := false;
   end
   else
-    pass_1_cse_use_uses_index_reg := s^.f76.uses_index_reg;
+    pass_1_cse_use_uses_index_reg := s^.f76.uses_the_index_register;
 end;
 
 { pass_2_cse_parent_base_reg - the base_reg of the solution chosen for the
@@ -1094,7 +1094,7 @@ begin
     pass_2_cse_parent_base_reg := nil;
   end
   else
-    pass_2_cse_parent_base_reg := s^.base_reg;
+    pass_2_cse_parent_base_reg := s^.base_register;
 end;
 
 { pass_2_cse_parent_index_reg - the index_reg of the solution chosen for
@@ -1112,7 +1112,7 @@ begin
     pass_2_cse_parent_index_reg := nil;
   end
   else
-    pass_2_cse_parent_index_reg := s^.index_reg;
+    pass_2_cse_parent_index_reg := s^.index_register;
 end;
 
 { pass_2_cse_parent_obj_w_name - the obj_w_name of the solution chosen for
@@ -1130,7 +1130,7 @@ begin
     pass_2_cse_parent_obj_w_name := nil;
   end
   else
-    pass_2_cse_parent_obj_w_name := s^.obj_w_name;
+    pass_2_cse_parent_obj_w_name := s^.object_with_name;
 end;
 
 { pass_2_cse_parent_home_solution - the home_solution of the solution
@@ -1182,7 +1182,7 @@ end;
   mode).
 
   0x0BC6AC, 0x344 bytes: parent 8, stmt a word at 12; the tree's statement index
-  `and.l #16#FFFF00; lsr.l #8' against stmt (`cmp.w'); pass_2_done
+  `and.l #16#FFFF00; lsr.l #8' against stmt (`cmp.w'); already_through_pass_2
   `btst #3,(115)'; the old live range in a register; isc_is_cse
   `bset #7,(10)'; the copy in A4; the opcode in a frame word (the case
   `sub.w #5' and a table of 7); debug_lir_$simple_instruction(home's
@@ -1202,7 +1202,7 @@ var
 begin
   home := parent^.cp_chosen_solution;
   if rshft(parent^.cp_tree^.tr_top^.st_l42 & 16#FFFF00, 8) = stmt then begin
-    if not home^.f114.pass_2_done then begin
+    if not home^.f114.already_through_pass_2 then begin
       old := home^.live_range;
       if old <> nil then begin
         pass_2(home, 0);
@@ -1234,7 +1234,7 @@ begin
           otherwise
             bug_check('ISC: pass_2_cse_parent_ob: unknown home_solution^.kind.%$');
         end;
-        debug_lir_$simple_instruction(home^.inherited, opc, 0, home, copy, nil);
+        debug_lir_$simple_instruction(home^.inherited_attributes, opc, 0, home, copy, nil);
       end
       else begin
         pass_2(home, 0);
@@ -1280,7 +1280,7 @@ begin
     pass_2_cse_use_base_reg := nil;
   end
   else
-    pass_2_cse_use_base_reg := s^.base_reg;
+    pass_2_cse_use_base_reg := s^.base_register;
 end;
 
 { pass_2_cse_use_index_reg - the index_reg of the solution chosen for the
@@ -1301,7 +1301,7 @@ begin
     pass_2_cse_use_index_reg := nil;
   end
   else
-    pass_2_cse_use_index_reg := s^.index_reg;
+    pass_2_cse_use_index_reg := s^.index_register;
 end;
 
 { pass_2_cse_use_obj_w_name - the obj_w_name of the solution chosen for
@@ -1322,7 +1322,7 @@ begin
     pass_2_cse_use_obj_w_name := nil;
   end
   else
-    pass_2_cse_use_obj_w_name := s^.obj_w_name;
+    pass_2_cse_use_obj_w_name := s^.object_with_name;
 end;
 
 { pass_2_cse_use_home_solution - the home_solution of the solution chosen
@@ -1379,7 +1379,7 @@ end;
   mode).
 
   0x0BCE46, 0x34E bytes: use 8, stmt a word at 12; the tree's statement index
-  `and.l #16#FFFF00; lsr.l #8' against stmt (`cmp.w'); pass_2_done
+  `and.l #16#FFFF00; lsr.l #8' against stmt (`cmp.w'); already_through_pass_2
   `btst #3,(115)'; the old live range in a register; isc_is_cse
   `bset #7,(10)'; the copy in A4; the opcode in a frame word (the case
   `sub.w #5' and a table of 7); debug_lir_$simple_instruction(home's
@@ -1399,7 +1399,7 @@ var
 begin
   home := map_cse_use_ob_to_cse_parent_ob(use)^.cp_chosen_solution;
   if rshft(use^.cu_tree^.tr_top^.st_l42 & 16#FFFF00, 8) = stmt then begin
-    if not home^.f114.pass_2_done then begin
+    if not home^.f114.already_through_pass_2 then begin
       old := home^.live_range;
       if old <> nil then begin
         pass_2(home, 0);
@@ -1431,7 +1431,7 @@ begin
           otherwise
             bug_check('ISC: pass_2_cse_use_ob: unknown home_solution^.kind.%$');
         end;
-        debug_lir_$simple_instruction(home^.inherited, opc, 0, home, copy, nil);
+        debug_lir_$simple_instruction(home^.inherited_attributes, opc, 0, home, copy, nil);
       end
       else begin
         pass_2(home, 0);

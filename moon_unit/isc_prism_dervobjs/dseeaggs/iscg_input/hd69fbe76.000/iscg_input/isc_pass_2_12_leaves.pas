@@ -72,9 +72,9 @@ procedure transform_13_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(isc_user_routines_338);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := self.sym;
+  result.base_register := lr_ptr_t(isc_user_routines_338);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := self.il;
 end;
 
 { transform_14_pass_2 - rule 14: address_mode <- addr_con ($1: irrelevant).
@@ -83,9 +83,9 @@ procedure transform_14_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(isc_user_routines_338);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := self.sym;
+  result.base_register := lr_ptr_t(isc_user_routines_338);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := self.il;
 end;
 
 { transform_15_pass_2 - rule 15: address_mode <- addr_con ($1: irrelevant).
@@ -94,9 +94,9 @@ procedure transform_15_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(isc_user_routines_338);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := self.sym;
+  result.base_register := lr_ptr_t(isc_user_routines_338);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := self.il;
 end;
 
 { transform_16_pass_2 - rule 16: address_mode <- addr_con ($1:
@@ -106,13 +106,13 @@ procedure transform_16_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
 end;
 
 { transform_17_pass_2 - rule 17: ip_reg <- addr_con ($1: ip_reg).
@@ -121,13 +121,13 @@ procedure transform_17_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
 end;
 
 { transform_18_pass_2 - rule 18: address_mode <- addr_con ($1: irrelevant).
@@ -136,9 +136,9 @@ procedure transform_18_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(isc_user_routines_338);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := self.sym;
+  result.base_register := lr_ptr_t(isc_user_routines_338);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := self.il;
 end;
 
 { transform_19_pass_2 - rule 19: ip_reg <- ap_register.
@@ -148,7 +148,7 @@ procedure transform_19_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := isc_solution_ptr_t(isc_user_routines_33c)^.live_range;
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_20_pass_2 - rule 20: address_mode <- argument_block_location_ob.
@@ -157,9 +157,9 @@ procedure transform_20_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(isc_user_routines_340);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := self.sym;
+  result.base_register := lr_ptr_t(isc_user_routines_340);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := self.il;
 end;
 
 { transform_21_pass_2 - rule 21: address_mode <- at_lib_dsc.
@@ -176,8 +176,8 @@ procedure transform_22_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  debug_lir_$simple_instruction(result.inherited, ord(opc$synch), 0, nil,
-      nil, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$synch),
+      0, nil, nil, nil);
 end;
 
 { transform_23_pass_2 - rule 23: local_routine <- cc_call.
@@ -186,8 +186,8 @@ procedure transform_23_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pattern_match_error(9, il$t(subject^.w98), 0,
-      subject^.inherited^.pos.source_line_number);
+  pattern_match_error(9, il$t(subject^.il_kind), 0,
+      subject^.inherited_attributes^.pos.source_line_number);
 end;
 
 { transform_24_pass_2 - rule 24: address_mode <- cs_temp.
@@ -205,7 +205,7 @@ procedure transform_25_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := isc_solution_ptr_t(isc_user_routines_338)^.live_range;
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_26_pass_2 - rule 26: ip_reg <- display_register.
@@ -215,7 +215,7 @@ procedure transform_26_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := isc_solution_ptr_t(isc_user_routines_32c)^.live_range;
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_27_pass_2 - rule 27: ip_reg <- exception_register.
@@ -225,7 +225,7 @@ procedure transform_27_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := isc_solution_ptr_t(isc_user_routines_328)^.live_range;
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_28_pass_2 - rule 28: local_routine <- entry_blk | function_blk |
@@ -235,7 +235,7 @@ procedure transform_28_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_29_pass_2 - rule 29: ip_reg <- lb_register.
@@ -245,7 +245,7 @@ procedure transform_29_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := isc_solution_ptr_t(isc_user_routines_334)^.live_range;
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_30_pass_2 - rule 30: address_mode <- lib_dsc.
@@ -263,7 +263,7 @@ procedure transform_31_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_32_pass_2 - rule 32: fp_reg <- physical_register_ob.
@@ -273,7 +273,7 @@ procedure transform_32_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_33_pass_2 - rule 33: fp_reg_pair <- physical_register_ob.
@@ -283,11 +283,11 @@ procedure transform_33_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_34_pass_2 - rule 34: ip_reg <- sb_register.
@@ -297,5 +297,5 @@ procedure transform_34_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := isc_solution_ptr_t(isc_user_routines_340)^.live_range;
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;

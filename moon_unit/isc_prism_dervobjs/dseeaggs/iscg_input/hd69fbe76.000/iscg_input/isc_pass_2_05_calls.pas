@@ -86,10 +86,11 @@ procedure transform_342_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_isc_call(isc_node_ptr_t(subject^.sym),
-      p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,
-      p2_node_ptr_t(subject^.sym)^.b[12] & 128 <> 0,
-      p2_node_ptr_t(subject^.sym)^.b[14] & 128 <> 0, subject^.inherited, 0);
+  pass_2_isc_call(isc_node_ptr_t(subject^.il),
+      p2_node_ptr_t(subject^.il)^.b[13] & 128 <> 0,
+      p2_node_ptr_t(subject^.il)^.b[12] & 128 <> 0,
+      p2_node_ptr_t(subject^.il)^.b[14] & 128 <> 0,
+      subject^.inherited_attributes, 0);
 end;
 
 { transform_343_pass_2 - rule 343: ip_reg <- isc_fio_init ($1: ip_reg).
@@ -98,13 +99,13 @@ procedure transform_343_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
 end;
 
 { transform_344_pass_2 - rule 344: address_mode <-
@@ -114,12 +115,13 @@ procedure transform_344_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_isc_call(isc_node_ptr_t(subject^.sym),
-      p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,
-      p2_node_ptr_t(subject^.sym)^.b[12] & 128 <> 0,
-      p2_node_ptr_t(subject^.sym)^.b[14] & 128 <> 0, subject^.inherited, 0);
-  result.base_reg := lr_ptr_t(result.fields[0]);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
+  pass_2_isc_call(isc_node_ptr_t(subject^.il),
+      p2_node_ptr_t(subject^.il)^.b[13] & 128 <> 0,
+      p2_node_ptr_t(subject^.il)^.b[12] & 128 <> 0,
+      p2_node_ptr_t(subject^.il)^.b[14] & 128 <> 0,
+      subject^.inherited_attributes, 0);
+  result.base_register := lr_ptr_t(result.fields[0]);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
 end;
 
 { transform_345_pass_2 - rule 345: ip_reg <- isc_func_call_top.
@@ -128,10 +130,11 @@ procedure transform_345_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_isc_call(isc_node_ptr_t(subject^.sym),
-      p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,
-      p2_node_ptr_t(subject^.sym)^.b[12] & 128 <> 0,
-      p2_node_ptr_t(subject^.sym)^.b[14] & 128 <> 0, subject^.inherited, 0);
+  pass_2_isc_call(isc_node_ptr_t(subject^.il),
+      p2_node_ptr_t(subject^.il)^.b[13] & 128 <> 0,
+      p2_node_ptr_t(subject^.il)^.b[12] & 128 <> 0,
+      p2_node_ptr_t(subject^.il)^.b[14] & 128 <> 0,
+      subject^.inherited_attributes, 0);
   result.live_range := lr_ptr_t(result.fields[0]);
 end;
 
@@ -141,10 +144,11 @@ procedure transform_346_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_isc_call(isc_node_ptr_t(subject^.sym),
-      p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,
-      p2_node_ptr_t(subject^.sym)^.b[12] & 128 <> 0,
-      p2_node_ptr_t(subject^.sym)^.b[14] & 128 <> 0, subject^.inherited, 0);
+  pass_2_isc_call(isc_node_ptr_t(subject^.il),
+      p2_node_ptr_t(subject^.il)^.b[13] & 128 <> 0,
+      p2_node_ptr_t(subject^.il)^.b[12] & 128 <> 0,
+      p2_node_ptr_t(subject^.il)^.b[14] & 128 <> 0,
+      subject^.inherited_attributes, 0);
   result.live_range := lr_ptr_t(result.fields[0]);
 end;
 
@@ -155,13 +159,14 @@ procedure transform_347_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  pass_2_isc_call(isc_node_ptr_t(subject^.sym),
-      p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,
-      p2_node_ptr_t(subject^.sym)^.b[12] & 128 <> 0,
-      p2_node_ptr_t(subject^.sym)^.b[14] & 128 <> 0, subject^.inherited, 0);
+  pass_2_isc_call(isc_node_ptr_t(subject^.il),
+      p2_node_ptr_t(subject^.il)^.b[13] & 128 <> 0,
+      p2_node_ptr_t(subject^.il)^.b[12] & 128 <> 0,
+      p2_node_ptr_t(subject^.il)^.b[14] & 128 <> 0,
+      subject^.inherited_attributes, 0);
   result.live_range := lr_ptr_t(result.fields[0]);
 end;
 
@@ -175,29 +180,32 @@ var
 begin
   if ord(result.space136[136]) = 1 then begin
     if ord(result.space136[137]) = 1 then begin
-      if solution^.obj_w_name <> nil then begin
-        solution^.obj_w_name := solution^.obj_w_name;
+      if solution^.object_with_name <> nil then begin
+        solution^.object_with_name := solution^.object_with_name;
       end else begin
-        solution^.obj_w_name := isc_solution_ptr_t(subject^.children[1]^.base_reg)^.obj_w_name;
+        solution^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
       end;
-      debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[1]^.base_reg), solution, nil);
-      debug_lir_$simple_instruction(result.inherited, ord(opc$adj_move), 0,
-          nil, nil, nil);
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$move), 0,
+          isc_solution_ptr_t(subject^.children[1]^.base_register), solution,
+          nil);
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$add), 0,
-          subject^.children[1],
-          isc_solution_ptr_t(subject^.children[1]^.base_reg), solution);
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$add), 0, subject^.children[1],
+          isc_solution_ptr_t(subject^.children[1]^.base_register), solution);
     end;
   end
   else if ord(result.space136[138]) = 1 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-        find_well_known_literal_solution(subject^.children[1]^.disp),
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
+        0,
+        find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
         solution, nil);
   end else begin
-    t1 := address_mode_for_integer32_value(subject^.children[1]^.disp);
-    debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t1,
-        isc_solution_ptr_t(t1^.base_reg), solution, t1^.sym, 0,
+    t1 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
+    debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
+        0, t1, isc_solution_ptr_t(t1^.base_register), solution, t1^.il, 0,
         t1^.bits_known, t1^.bits_trusted);
   end;
 end;

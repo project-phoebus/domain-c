@@ -64,7 +64,7 @@ procedure transform_87_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.obj_w_name := pass_2_cse_parent_obj_w_name(isc_node_ptr_t(self.sym));
+  result.object_with_name := pass_2_cse_parent_obj_w_name(isc_node_ptr_t(self.il));
 end;
 
 { transform_88_pass_2 - rule 88: address_mode <- cse_parent_ob.
@@ -73,11 +73,11 @@ procedure transform_88_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_cse_parent_ob(isc_node_ptr_t(self.sym),
-      subject^.inherited^.pos.stmt_number);
-  result.base_reg := pass_2_cse_parent_base_reg(isc_node_ptr_t(self.sym));
-  result.index_reg := pass_2_cse_parent_index_reg(isc_node_ptr_t(self.sym));
-  result.obj_w_name := pass_2_cse_parent_obj_w_name(isc_node_ptr_t(self.sym));
+  pass_2_cse_parent_ob(isc_node_ptr_t(self.il),
+      subject^.inherited_attributes^.pos.stmt_number);
+  result.base_register := pass_2_cse_parent_base_reg(isc_node_ptr_t(self.il));
+  result.index_register := pass_2_cse_parent_index_reg(isc_node_ptr_t(self.il));
+  result.object_with_name := pass_2_cse_parent_obj_w_name(isc_node_ptr_t(self.il));
 end;
 
 { transform_89_pass_2 - rule 89: ip_reg <- cse_parent_ob.
@@ -86,10 +86,10 @@ procedure transform_89_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_cse_parent_ob(isc_node_ptr_t(self.sym),
-      subject^.inherited^.pos.stmt_number);
-  result.live_range := isc_$get_il_live_range(self.sym);
-  result.obj_w_name := pass_2_cse_parent_obj_w_name(isc_node_ptr_t(self.sym));
+  pass_2_cse_parent_ob(isc_node_ptr_t(self.il),
+      subject^.inherited_attributes^.pos.stmt_number);
+  result.live_range := isc_$get_il_live_range(self.il);
+  result.object_with_name := pass_2_cse_parent_obj_w_name(isc_node_ptr_t(self.il));
 end;
 
 { transform_90_pass_2 - rule 90: ip_reg_field <- cse_parent_ob.
@@ -98,10 +98,10 @@ procedure transform_90_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_cse_parent_ob(isc_node_ptr_t(self.sym),
-      subject^.inherited^.pos.stmt_number);
-  result.live_range := isc_$get_il_live_range(self.sym);
-  result.obj_w_name := pass_2_cse_parent_obj_w_name(isc_node_ptr_t(self.sym));
+  pass_2_cse_parent_ob(isc_node_ptr_t(self.il),
+      subject^.inherited_attributes^.pos.stmt_number);
+  result.live_range := isc_$get_il_live_range(self.il);
+  result.object_with_name := pass_2_cse_parent_obj_w_name(isc_node_ptr_t(self.il));
 end;
 
 { transform_91_pass_2 - rule 91: fp_reg <- cse_parent_ob.
@@ -110,10 +110,10 @@ procedure transform_91_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_cse_parent_ob(isc_node_ptr_t(self.sym),
-      subject^.inherited^.pos.stmt_number);
-  result.live_range := isc_$get_il_live_range(self.sym);
-  result.obj_w_name := pass_2_cse_parent_obj_w_name(isc_node_ptr_t(self.sym));
+  pass_2_cse_parent_ob(isc_node_ptr_t(self.il),
+      subject^.inherited_attributes^.pos.stmt_number);
+  result.live_range := isc_$get_il_live_range(self.il);
+  result.object_with_name := pass_2_cse_parent_obj_w_name(isc_node_ptr_t(self.il));
 end;
 
 { transform_92_pass_2 - rule 92: fp_reg_pair <- cse_parent_ob.
@@ -123,14 +123,14 @@ procedure transform_92_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  pass_2_cse_parent_ob(isc_node_ptr_t(self.sym),
-      subject^.inherited^.pos.stmt_number);
-  result.live_range := isc_$get_il_live_range(self.sym);
-  result.lr2 := get_live_range_of_imaginary_part(isc_node_ptr_t(self.sym));
-  result.obj_w_name := pass_2_cse_parent_obj_w_name(isc_node_ptr_t(self.sym));
+  pass_2_cse_parent_ob(isc_node_ptr_t(self.il),
+      subject^.inherited_attributes^.pos.stmt_number);
+  result.live_range := isc_$get_il_live_range(self.il);
+  result.live_range_of_imaginary_part := get_live_range_of_imaginary_part(isc_node_ptr_t(self.il));
+  result.object_with_name := pass_2_cse_parent_obj_w_name(isc_node_ptr_t(self.il));
 end;
 
 { transform_93_pass_2 - rule 93: fp_reg_quad <- cse_parent_ob.
@@ -140,14 +140,14 @@ procedure transform_93_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  pass_2_cse_parent_ob(isc_node_ptr_t(self.sym),
-      subject^.inherited^.pos.stmt_number);
-  result.live_range := isc_$get_il_live_range(self.sym);
-  result.lr2 := get_live_range_of_imaginary_part(isc_node_ptr_t(self.sym));
-  result.obj_w_name := pass_2_cse_parent_obj_w_name(isc_node_ptr_t(self.sym));
+  pass_2_cse_parent_ob(isc_node_ptr_t(self.il),
+      subject^.inherited_attributes^.pos.stmt_number);
+  result.live_range := isc_$get_il_live_range(self.il);
+  result.live_range_of_imaginary_part := get_live_range_of_imaginary_part(isc_node_ptr_t(self.il));
+  result.object_with_name := pass_2_cse_parent_obj_w_name(isc_node_ptr_t(self.il));
 end;
 
 { transform_94_pass_2 - rule 94: literal_32_bits <- cse_use_ob.
@@ -156,7 +156,7 @@ procedure transform_94_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.obj_w_name := pass_2_cse_use_obj_w_name(isc_node_ptr_t(self.sym));
+  result.object_with_name := pass_2_cse_use_obj_w_name(isc_node_ptr_t(self.il));
 end;
 
 { transform_95_pass_2 - rule 95: address_mode <- cse_use_ob.
@@ -165,11 +165,11 @@ procedure transform_95_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_cse_use_ob(isc_node_ptr_t(self.sym),
-      subject^.inherited^.pos.stmt_number);
-  result.base_reg := pass_2_cse_use_base_reg(isc_node_ptr_t(self.sym));
-  result.index_reg := pass_2_cse_use_index_reg(isc_node_ptr_t(self.sym));
-  result.obj_w_name := pass_2_cse_use_obj_w_name(isc_node_ptr_t(self.sym));
+  pass_2_cse_use_ob(isc_node_ptr_t(self.il),
+      subject^.inherited_attributes^.pos.stmt_number);
+  result.base_register := pass_2_cse_use_base_reg(isc_node_ptr_t(self.il));
+  result.index_register := pass_2_cse_use_index_reg(isc_node_ptr_t(self.il));
+  result.object_with_name := pass_2_cse_use_obj_w_name(isc_node_ptr_t(self.il));
 end;
 
 { transform_96_pass_2 - rule 96: ip_reg <- cse_use_ob.
@@ -178,10 +178,10 @@ procedure transform_96_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_cse_use_ob(isc_node_ptr_t(self.sym),
-      subject^.inherited^.pos.stmt_number);
-  result.live_range := isc_$get_il_live_range(self.sym);
-  result.obj_w_name := pass_2_cse_use_obj_w_name(isc_node_ptr_t(self.sym));
+  pass_2_cse_use_ob(isc_node_ptr_t(self.il),
+      subject^.inherited_attributes^.pos.stmt_number);
+  result.live_range := isc_$get_il_live_range(self.il);
+  result.object_with_name := pass_2_cse_use_obj_w_name(isc_node_ptr_t(self.il));
 end;
 
 { transform_97_pass_2 - rule 97: ip_reg_field <- cse_use_ob.
@@ -190,10 +190,10 @@ procedure transform_97_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_cse_use_ob(isc_node_ptr_t(self.sym),
-      subject^.inherited^.pos.stmt_number);
-  result.live_range := isc_$get_il_live_range(self.sym);
-  result.obj_w_name := pass_2_cse_use_obj_w_name(isc_node_ptr_t(self.sym));
+  pass_2_cse_use_ob(isc_node_ptr_t(self.il),
+      subject^.inherited_attributes^.pos.stmt_number);
+  result.live_range := isc_$get_il_live_range(self.il);
+  result.object_with_name := pass_2_cse_use_obj_w_name(isc_node_ptr_t(self.il));
 end;
 
 { transform_98_pass_2 - rule 98: fp_reg <- cse_use_ob.
@@ -202,10 +202,10 @@ procedure transform_98_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pass_2_cse_use_ob(isc_node_ptr_t(self.sym),
-      subject^.inherited^.pos.stmt_number);
-  result.live_range := isc_$get_il_live_range(self.sym);
-  result.obj_w_name := pass_2_cse_use_obj_w_name(isc_node_ptr_t(self.sym));
+  pass_2_cse_use_ob(isc_node_ptr_t(self.il),
+      subject^.inherited_attributes^.pos.stmt_number);
+  result.live_range := isc_$get_il_live_range(self.il);
+  result.object_with_name := pass_2_cse_use_obj_w_name(isc_node_ptr_t(self.il));
 end;
 
 { transform_99_pass_2 - rule 99: fp_reg_pair <- cse_use_ob.
@@ -215,14 +215,14 @@ procedure transform_99_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  pass_2_cse_use_ob(isc_node_ptr_t(self.sym),
-      subject^.inherited^.pos.stmt_number);
-  result.live_range := isc_$get_il_live_range(self.sym);
-  result.lr2 := get_live_range_of_imaginary_part(isc_node_ptr_t(self.sym));
-  result.obj_w_name := pass_2_cse_use_obj_w_name(isc_node_ptr_t(self.sym));
+  pass_2_cse_use_ob(isc_node_ptr_t(self.il),
+      subject^.inherited_attributes^.pos.stmt_number);
+  result.live_range := isc_$get_il_live_range(self.il);
+  result.live_range_of_imaginary_part := get_live_range_of_imaginary_part(isc_node_ptr_t(self.il));
+  result.object_with_name := pass_2_cse_use_obj_w_name(isc_node_ptr_t(self.il));
 end;
 
 { transform_100_pass_2 - rule 100: fp_reg_quad <- cse_use_ob.
@@ -232,12 +232,12 @@ procedure transform_100_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.source_line_number);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
-  pass_2_cse_use_ob(isc_node_ptr_t(self.sym),
-      subject^.inherited^.pos.stmt_number);
-  result.live_range := isc_$get_il_live_range(self.sym);
-  result.lr2 := get_live_range_of_imaginary_part(isc_node_ptr_t(self.sym));
-  result.obj_w_name := pass_2_cse_use_obj_w_name(isc_node_ptr_t(self.sym));
+  pass_2_cse_use_ob(isc_node_ptr_t(self.il),
+      subject^.inherited_attributes^.pos.stmt_number);
+  result.live_range := isc_$get_il_live_range(self.il);
+  result.live_range_of_imaginary_part := get_live_range_of_imaginary_part(isc_node_ptr_t(self.il));
+  result.object_with_name := pass_2_cse_use_obj_w_name(isc_node_ptr_t(self.il));
 end;

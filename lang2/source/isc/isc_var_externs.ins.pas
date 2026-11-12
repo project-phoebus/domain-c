@@ -31,7 +31,8 @@ var
   isc_user_routines_31c: extern solution_ptr_t;    { +0x31C: set to +0x320
                                           by lir_$begin_compilation (batch
                                           A, PA6); what a solution's
-                                          base_reg and index_reg hold when
+                                          base_register and
+                                          index_register hold when
                                           it has none (ISC: new_solution,
                                           pass_2) }
   isc_user_routines_320: extern solution_ptr_t;    { +0x320: register 31's

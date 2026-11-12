@@ -1018,15 +1018,18 @@ type
 
   { iscg: begin dump_solution view }
   { A solution as dump_solution prints it: the generator's attribute
-    declarations (docs/iscg-design.md 2.4; isc_solution_fields.ins.pas's
-    isc_solution_t is the hand-written units' view of the same record,
-    with other names: docs/questions.md 267). }
+    declarations (docs/iscg-design.md 2.4).  The names are
+    isc_solution_fields.ins.pas's isc_solution_t's (docs/questions.md
+    267); this view differs in the types it prints by (kind a
+    solution$t, il_kind an il$t, the solutions' pointers) and names the
+    rules' locals (case_value, the already_ flags) that isc_solution_t
+    leaves in space136. }
   ds_solution_ptr_t = ^ds_solution_t;
   ds_solution_t = record
     object_with_name: univ_ptr;     { +0 }
     base_register: isc_solution_ptr_t;  { +4 }
     index_register: isc_solution_ptr_t; { +8 }
-    x12: integer32;                 { +12 }
+    l12: integer32;                 { +12 }
     false_label: univ_ptr;          { +16 }
     live_range: lr_ptr_t;           { +20 }
     live_range_of_imaginary_part: lr_ptr_t;     { +24 }
@@ -1080,10 +1083,10 @@ type
       uses_the_base_register: boolean;          { +84 .7 }
       uses_the_displacement: boolean;           { .6 }
       uses_the_index_register: boolean;         { .5 }
-      x84_4: 0..31;
-      x85: 0..255;                  { +85 }
+      b84_4_0: 0..31;
+      b85: 0..255;                  { +85 }
       end;
-    x86: integer;                   { +86 }
+    x86: integer;                   { +86: isc_solution_t's f76.b86, b87 }
     before_transform: ds_solution_ptr_t;        { +88 }
     code_bytes: 0..65535;           { +92 }
     delay: 0..65535;                { +94 }
@@ -1101,7 +1104,7 @@ type
       builtin_is_local_cse: boolean;            { .5 }
       builtin_local_cse_has_been_preserved: boolean;    { .4 }
       already_through_pass_2: boolean;          { .3 }
-      x115_2: 0..7;
+      b2, b1, b0: boolean;
       end;
     children: array [1..5] of ds_solution_ptr_t;        { +116 }
     case_value: isc_case_index_array_t;         { +136: the rules' own

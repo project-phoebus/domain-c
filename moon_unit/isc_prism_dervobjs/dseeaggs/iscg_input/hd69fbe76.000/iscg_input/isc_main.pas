@@ -145,15 +145,17 @@ begin
   new_inherited_attributes := a;
 end;
 
-{ new_solution - 432 bytes from heap: kind, nchildren (bug_check above
-  5, with inh's source line), inh, sym, w98; +77 32, +82 bits 4 and 2,
-  eval_order 1 (+96 and +98 as one longword 16#10000; w98 after),
-  base_reg and index_reg isc_user_routines_31c; counted (+0x2EC) when
-  from the ISC heap.
+{ new_solution - 432 bytes from heap: kind, number_of_children
+  (nchildren: bug_check above 5, with inh's source line),
+  inherited_attributes (inh), il (sym), il_kind; field_precision 32,
+  is_destroyable and is_entire_object set, evaluation_order 1 (+96
+  and +98 as one longword 16#10000; il_kind after), base_register and
+  index_register isc_user_routines_31c; counted (+0x2EC) when from the
+  ISC heap.
 
   0x0D9318, 0xAA bytes: heap 8, kind a word at 12, nchildren a word at
-  14, inh 16, sym 20, w98 a word at 24; +108 cleared before the kind
-  is stored; A0. }
+  14, inh 16, sym 20, il_kind a word at 24; +108 cleared before the
+  kind is stored; A0. }
 
 function new_solution;
 var
@@ -164,19 +166,19 @@ begin
   s := mrh_$alloc(heap, 432);
   if same_heap(heap) then
     isc_user_routines_2ec := isc_user_routines_2ec + 1;
-  s^.f76.b77 := 32;
-  s^.f76.b82_4 := true;
-  s^.f76.b82_2 := true;
-  s^.eval_order := 1;
-  s^.w98 := 0;
+  s^.f76.field_precision := 32;
+  s^.f76.is_destroyable := true;
+  s^.f76.is_entire_object := true;
+  s^.evaluation_order := 1;
+  s^.il_kind := 0;
   s^.kind := 0;
-  s^.base_reg := lr_ptr_t(isc_user_routines_31c);
-  s^.index_reg := lr_ptr_t(isc_user_routines_31c);
+  s^.base_register := lr_ptr_t(isc_user_routines_31c);
+  s^.index_register := lr_ptr_t(isc_user_routines_31c);
   s^.kind := kind;
-  s^.inherited := inh;
-  s^.sym := sym;
-  s^.w98 := w98;
-  s^.f114.nchildren := nchildren;
+  s^.inherited_attributes := inh;
+  s^.il := sym;
+  s^.il_kind := il_kind;
+  s^.f114.number_of_children := nchildren;
   new_solution := s;
 end;
 
@@ -239,18 +241,18 @@ var
 begin
   if sol = nil then
     p := nil
-  else if sol^.f114.b5 and sol^.f114.preserved then
-    p := isc_solution_ptr_t(isc_node_ptr_t(sol^.sym)^.xp[3])
-  else if sol^.f114.copied then
+  else if sol^.f114.builtin_is_local_cse and sol^.f114.builtin_local_cse_has_been_preserved then
+    p := isc_solution_ptr_t(isc_node_ptr_t(sol^.il)^.xp[3])
+  else if sol^.f114.already_preserved then
     p := sol
   else begin
     p := duplicate_solution(isc_preserve_heap, sol);
-    p^.f114.copied := true;
-    p^.inherited := duplicate_inherited_attributes(isc_preserve_heap, sol^.inherited);
-    if sol^.chain <> nil then begin
-      p^.chain := preserve_solution(sol^.chain);
-      if im_rule_has_fields[p^.rule] then
-        case sol^.rule of
+    p^.f114.already_preserved := true;
+    p^.inherited_attributes := duplicate_inherited_attributes(isc_preserve_heap, sol^.inherited_attributes);
+    if sol^.before_transform <> nil then begin
+      p^.before_transform := preserve_solution(sol^.before_transform);
+      if im_rule_has_fields[p^.which_transform] then
+        case sol^.which_transform of
           12, 179, 181, 274, 275, 290, 292, 301, 304, 344, 375, 377, 378,
           379, 418, 445, 448, 474, 542, 548, 549:
             p^.fields[0] := preserve_solution(sol^.fields[0]);
@@ -285,20 +287,20 @@ begin
         end;
     end
     else begin
-      if sol^.f114.nchildren > 0 then
+      if sol^.f114.number_of_children > 0 then
         p^.children[1] := preserve_solution(sol^.children[1]);
-      if sol^.f114.nchildren >= 2 then
+      if sol^.f114.number_of_children >= 2 then
         p^.children[2] := preserve_solution(sol^.children[2]);
-      if sol^.f114.nchildren >= 3 then
+      if sol^.f114.number_of_children >= 3 then
         p^.children[3] := preserve_solution(sol^.children[3]);
-      if sol^.f114.nchildren >= 4 then
+      if sol^.f114.number_of_children >= 4 then
         p^.children[4] := preserve_solution(sol^.children[4]);
-      if sol^.f114.nchildren >= 5 then
+      if sol^.f114.number_of_children >= 5 then
         p^.children[5] := preserve_solution(sol^.children[5]);
     end;
-    if sol^.f114.b5 then begin
-      isc_node_ptr_t(sol^.sym)^.xp[3] := isc_node_ptr_t(p);
-      p^.f114.preserved := true;
+    if sol^.f114.builtin_is_local_cse then begin
+      isc_node_ptr_t(sol^.il)^.xp[3] := isc_node_ptr_t(p);
+      p^.f114.builtin_local_cse_has_been_preserved := true;
     end;
   end;
   preserve_solution := p;

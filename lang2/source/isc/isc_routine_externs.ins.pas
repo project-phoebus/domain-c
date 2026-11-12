@@ -30,16 +30,16 @@ function new_inherited_attributes(
     node: univ_ptr): inherited_attributes_ptr_t; options(val_param); extern;
 
 { NEW_SOLUTION - a new solution from heap of kind kind with nchildren
-  children (bug_check above 5), made under inh, for sym.  0x0D9318,
-  0xAA bytes: heap 8, kind a word at 12, nchildren a word at 14, inh
-  16, sym 20, w98 a word at 24; A0. }
+  children (bug_check above 5), made under inh, for sym (its il) of
+  il_kind.  0x0D9318, 0xAA bytes: heap 8, kind a word at 12, nchildren
+  a word at 14, inh 16, sym 20, il_kind a word at 24; A0. }
 function new_solution(
     in out heap: mrh_$heap_t;
     kind: integer;
     nchildren: integer;
     inh: inherited_attributes_ptr_t;
     sym: univ_ptr;
-    w98: integer): isc_solution_ptr_t; options(val_param); extern;
+    il_kind: integer): isc_solution_ptr_t; options(val_param); extern;
 
 { DUPLICATE_SOLUTION - a copy of sol from heap (nil for nil).
   0x0D93FC, 0x62 bytes: heap 8, sol 12; A0. }
@@ -458,12 +458,12 @@ function pass_1_cse_parent_delay(
 function pass_1_cse_parent_disp(
     node: isc_node_ptr_t): integer32; options(val_param); extern;
 
-{ PASS_1_CSE_PARENT_EMBEDDED_SR_TEMP - 0x0BABF6: the embedded_sr_temp of
+{ PASS_1_CSE_PARENT_EMBEDDED_SR_TEMP - 0x0BABF6: the embedded_strength_reduction_temporary of
   the solution chosen for the CSE whose parent is node. }
 function pass_1_cse_parent_embedded_sr_temp(
     node: isc_node_ptr_t): boolean; options(val_param); extern;
 
-{ PASS_1_CSE_PARENT_EVAL_ORDER - 0x0BAC94: the eval_order of the solution
+{ PASS_1_CSE_PARENT_EVAL_ORDER - 0x0BAC94: the evaluation_order of the solution
   chosen for the CSE whose parent is node. }
 function pass_1_cse_parent_eval_order(
     node: isc_node_ptr_t): integer; options(val_param); extern;
@@ -513,22 +513,22 @@ function pass_1_cse_parent_fp_reg_quad_max(
 function pass_1_cse_parent_fp_reg_quad_result(
     node: isc_node_ptr_t): integer; options(val_param); extern;
 
-{ PASS_1_CSE_PARENT_MEMORY_REFS - 0x0BB284: the memory_refs of the
+{ PASS_1_CSE_PARENT_MEMORY_REFS - 0x0BB284: the memory_references of the
   solution chosen for the CSE whose parent is node. }
 function pass_1_cse_parent_memory_refs(
     node: isc_node_ptr_t): integer; options(val_param); extern;
 
-{ PASS_1_CSE_PARENT_HAS_SYM_DISP - 0x0BB31A: the has_sym_disp of the
+{ PASS_1_CSE_PARENT_HAS_SYM_DISP - 0x0BB31A: the has_a_symbolic_displacement of the
   solution chosen for the CSE whose parent is node. }
 function pass_1_cse_parent_has_sym_disp(
     node: isc_node_ptr_t): boolean; options(val_param); extern;
 
-{ PASS_1_CSE_PARENT_USES_DISP - 0x0BB3B2: the uses_disp of the solution
+{ PASS_1_CSE_PARENT_USES_DISP - 0x0BB3B2: the uses_the_displacement of the solution
   chosen for the CSE whose parent is node. }
 function pass_1_cse_parent_uses_disp(
     node: isc_node_ptr_t): boolean; options(val_param); extern;
 
-{ PASS_1_CSE_PARENT_USES_INDEX_REG - 0x0BB44C: the uses_index_reg of the
+{ PASS_1_CSE_PARENT_USES_INDEX_REG - 0x0BB44C: the uses_the_index_register of the
   solution chosen for the CSE whose parent is node. }
 function pass_1_cse_parent_uses_index_reg(
     node: isc_node_ptr_t): boolean; options(val_param); extern;
@@ -558,12 +558,12 @@ function pass_1_cse_use_delay(
 function pass_1_cse_use_disp(
     node: isc_node_ptr_t): integer32; options(val_param); extern;
 
-{ PASS_1_CSE_USE_EMBEDDED_SR_TEMP - 0x0BB99C: the embedded_sr_temp of the
+{ PASS_1_CSE_USE_EMBEDDED_SR_TEMP - 0x0BB99C: the embedded_strength_reduction_temporary of the
   solution chosen for the CSE of node (a use, or its parent). }
 function pass_1_cse_use_embedded_sr_temp(
     node: isc_node_ptr_t): boolean; options(val_param); extern;
 
-{ PASS_1_CSE_USE_EVAL_ORDER - 0x0BBA50: the eval_order of the solution
+{ PASS_1_CSE_USE_EVAL_ORDER - 0x0BBA50: the evaluation_order of the solution
   chosen for the CSE of node (a use, or its parent). }
 function pass_1_cse_use_eval_order(
     node: isc_node_ptr_t): integer; options(val_param); extern;
@@ -613,37 +613,37 @@ function pass_1_cse_use_fp_reg_quad_max(
 function pass_1_cse_use_fp_reg_quad_result(
     node: isc_node_ptr_t): integer; options(val_param); extern;
 
-{ PASS_1_CSE_USE_MEMORY_REFS - 0x0BC114: the memory_refs of the solution
+{ PASS_1_CSE_USE_MEMORY_REFS - 0x0BC114: the memory_references of the solution
   chosen for the CSE of node (a use, or its parent). }
 function pass_1_cse_use_memory_refs(
     node: isc_node_ptr_t): integer; options(val_param); extern;
 
-{ PASS_1_CSE_USE_HAS_SYM_DISP - 0x0BC1BE: the has_sym_disp of the solution
+{ PASS_1_CSE_USE_HAS_SYM_DISP - 0x0BC1BE: the has_a_symbolic_displacement of the solution
   chosen for the CSE of node (a use, or its parent). }
 function pass_1_cse_use_has_sym_disp(
     node: isc_node_ptr_t): boolean; options(val_param); extern;
 
-{ PASS_1_CSE_USE_USES_DISP - 0x0BC26C: the uses_disp of the solution
+{ PASS_1_CSE_USE_USES_DISP - 0x0BC26C: the uses_the_displacement of the solution
   chosen for the CSE of node (a use, or its parent). }
 function pass_1_cse_use_uses_disp(
     node: isc_node_ptr_t): boolean; options(val_param); extern;
 
-{ PASS_1_CSE_USE_USES_INDEX_REG - 0x0BC318: the uses_index_reg of the
+{ PASS_1_CSE_USE_USES_INDEX_REG - 0x0BC318: the uses_the_index_register of the
   solution chosen for the CSE of node (a use, or its parent). }
 function pass_1_cse_use_uses_index_reg(
     node: isc_node_ptr_t): boolean; options(val_param); extern;
 
-{ PASS_2_CSE_PARENT_BASE_REG - 0x0BC3CA: the base_reg of the solution
+{ PASS_2_CSE_PARENT_BASE_REG - 0x0BC3CA: the base_register of the solution
   chosen for the CSE whose parent is node. }
 function pass_2_cse_parent_base_reg(
     node: isc_node_ptr_t): lr_ptr_t; options(val_param); extern;
 
-{ PASS_2_CSE_PARENT_INDEX_REG - 0x0BC45C: the index_reg of the solution
+{ PASS_2_CSE_PARENT_INDEX_REG - 0x0BC45C: the index_register of the solution
   chosen for the CSE whose parent is node. }
 function pass_2_cse_parent_index_reg(
     node: isc_node_ptr_t): lr_ptr_t; options(val_param); extern;
 
-{ PASS_2_CSE_PARENT_OBJ_W_NAME - 0x0BC4F0: the obj_w_name of the solution
+{ PASS_2_CSE_PARENT_OBJ_W_NAME - 0x0BC4F0: the object_with_name of the solution
   chosen for the CSE whose parent is node. }
 function pass_2_cse_parent_obj_w_name(
     node: isc_node_ptr_t): univ_ptr; options(val_param); extern;
@@ -658,17 +658,17 @@ function pass_2_cse_parent_home_solution(
 function pass_2_cse_parent_live_range(
     node: isc_node_ptr_t): lr_ptr_t; options(val_param); extern;
 
-{ PASS_2_CSE_USE_BASE_REG - 0x0BCAFE: the base_reg of the solution chosen
+{ PASS_2_CSE_USE_BASE_REG - 0x0BCAFE: the base_register of the solution chosen
   for the CSE of node (a use, or its parent). }
 function pass_2_cse_use_base_reg(
     node: isc_node_ptr_t): lr_ptr_t; options(val_param); extern;
 
-{ PASS_2_CSE_USE_INDEX_REG - 0x0BCBA6: the index_reg of the solution
+{ PASS_2_CSE_USE_INDEX_REG - 0x0BCBA6: the index_register of the solution
   chosen for the CSE of node (a use, or its parent). }
 function pass_2_cse_use_index_reg(
     node: isc_node_ptr_t): lr_ptr_t; options(val_param); extern;
 
-{ PASS_2_CSE_USE_OBJ_W_NAME - 0x0BCC4E: the obj_w_name of the solution
+{ PASS_2_CSE_USE_OBJ_W_NAME - 0x0BCC4E: the object_with_name of the solution
   chosen for the CSE of node (a use, or its parent). }
 function pass_2_cse_use_obj_w_name(
     node: isc_node_ptr_t): univ_ptr; options(val_param); extern;

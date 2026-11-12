@@ -90,26 +90,6 @@ type
     x: array [0..175] of integer;               { +0 }
     i: array [0..19] of integer32;              { +352 }
     end;
-  { The booleans isc_solution_fields.ins.pas lumps into one field
-    (f76.b81_7_2, f76.b83_7_4), under the image's names: a view of a
-    solution's f76 (+76..+87). }
-  p2_flags_ptr_t = ^p2_flags_t;
-  p2_flags_t = packed record
-    b76, b77, b78, b79, b80: 0..255;    { +76 }
-    all_zeroes_or_all_ones: boolean;    { +81 .7 }
-    arg_block_location: boolean;        { .6 }
-    bit_7_was_sign_extended: boolean;   { .5 }
-    bit_15_was_sign_extended: boolean;  { .4 }
-    dead_end: boolean;                  { .3 }
-    derived_from_literal: boolean;      { .2 }
-    b81_1_0: 0..3;
-    b82: 0..255;                        { +82 }
-    is_volatile: boolean;               { +83 .7 }
-    literal_64_bits_value_is_zero: boolean;  { .6 }
-    literal_derived_from_floating_constant: boolean;  { .5 }
-    materialize_true_as_1: boolean;     { .4 }
-    b83_3_0: 0..15;
-    end;
   { The chain rules' cycle guard: a solution's seven already_ flags
     (+342 .. +348, bytes isc_solution_fields.ins.pas leaves in space136),
     under the image's names. }
@@ -150,14 +130,14 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
-  solution^.rule := 2;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 2;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;
-  solution^.memory_refs := 0;
+  solution^.memory_references := 0;
   solution^.delay := 0;
-  solution^.bits_known := integer32(p2_node_ptr_t(subject.sym)^.p[2]);
+  solution^.bits_known := integer32(p2_node_ptr_t(subject.il)^.p[2]);
   solution^.bits_trusted := (-1);
-  solution^.disp := integer32(p2_node_ptr_t(subject.sym)^.p[2]);
+  solution^.literal_32_bits_value := integer32(p2_node_ptr_t(subject.il)^.p[2]);
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
   p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -184,14 +164,14 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
-  solution^.rule := 3;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 3;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;
-  solution^.memory_refs := 0;
+  solution^.memory_references := 0;
   solution^.delay := 0;
-  solution^.bits_known := integer32(p2_node_ptr_t(subject.sym)^.p[2]);
+  solution^.bits_known := integer32(p2_node_ptr_t(subject.il)^.p[2]);
   solution^.bits_trusted := (-1);
-  solution^.disp := integer32(p2_node_ptr_t(subject.sym)^.p[2]);
+  solution^.literal_32_bits_value := integer32(p2_node_ptr_t(subject.il)^.p[2]);
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
   p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -214,21 +194,21 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.sym)^.w[8] = 4) and (subject.inherited^.fetch_precision = 32) or (p2_node_ptr_t(subject.sym)^.w[8] = 1) and (subject.inherited^.fetch_precision = 8) or (p2_node_ptr_t(subject.sym)^.w[8] = 2) and (subject.inherited^.fetch_precision = 16)) and not subject.inherited^.f38.immediate_parent_wants_lvalue then begin
+  if ((p2_node_ptr_t(subject.il)^.w[8] = 4) and (subject.inherited_attributes^.fetch_precision = 32) or (p2_node_ptr_t(subject.il)^.w[8] = 1) and (subject.inherited_attributes^.fetch_precision = 8) or (p2_node_ptr_t(subject.il)^.w[8] = 2) and (subject.inherited_attributes^.fetch_precision = 16)) and not subject.inherited_attributes^.f38.immediate_parent_wants_lvalue then begin
     if isc_user_routines_354 then begin
       write('Pattern 4 matched the semantics.');
       writeln;
     end;
     solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
-    solution^.rule := 4;
-    solution^.chain := addr(subject);
-    t2 := integer32_from_char_string_ob(subject.sym);
+    solution^.which_transform := 4;
+    solution^.before_transform := addr(subject);
+    t2 := integer32_from_char_string_ob(subject.il);
     solution^.code_bytes := 0;
-    solution^.memory_refs := 0;
+    solution^.memory_references := 0;
     solution^.delay := 0;
     solution^.bits_known := t2;
     solution^.bits_trusted := (-1);
-    solution^.disp := t2;
+    solution^.literal_32_bits_value := t2;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
     p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -264,28 +244,28 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-    solution^.rule := 5;
-    solution^.chain := addr(subject);
-    if p2_node_ptr_t(subject.sym)^.w[8] >= 4 then begin
-      t2 := p2_node_ptr_t(subject.sym)^.w[8];
+    solution^.which_transform := 5;
+    solution^.before_transform := addr(subject);
+    if p2_node_ptr_t(subject.il)^.w[8] >= 4 then begin
+      t2 := p2_node_ptr_t(subject.il)^.w[8];
     end else begin
       t2 := 4;
     end;
     solution^.code_bytes := 0;
-    solution^.memory_refs := 0;
+    solution^.memory_references := 0;
     solution^.delay := 0;
     solution^.bits_known := 0;
     solution^.bits_trusted := pc_relative_literal_size_to_bits_trusted(t2);
-    solution^.l40 := 0;
-    solution^.l44 := 0;
-    solution^.w56 := t2;
-    solution^.f76.has_sym_disp := true;
-    solution^.disp := 0;
+    solution^.bits_known_of_fetched_value := 0;
+    solution^.bits_trusted_of_fetched_value := 0;
+    solution^.bytes := t2;
+    solution^.f76.has_a_symbolic_displacement := true;
+    solution^.literal_32_bits_value := 0;
     solution^.ip_reg_max := 0;
     solution^.ip_reg_result := 0;
-    solution^.f76.b84_7 := true;
-    solution^.f76.uses_disp := true;
-    solution^.f76.uses_index_reg := false;
+    solution^.f76.uses_the_base_register := true;
+    solution^.f76.uses_the_displacement := true;
+    solution^.f76.uses_the_index_register := false;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
     p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -321,24 +301,24 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-    solution^.rule := 6;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 6;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
-    solution^.memory_refs := 0;
+    solution^.memory_references := 0;
     solution^.delay := 0;
     solution^.bits_known := 0;
     solution^.bits_trusted := pc_relative_literal_size_to_bits_trusted(8);
-    solution^.l40 := 0;
-    solution^.l44 := 0;
-    solution^.w56 := 8;
-    solution^.f76.has_sym_disp := true;
+    solution^.bits_known_of_fetched_value := 0;
+    solution^.bits_trusted_of_fetched_value := 0;
+    solution^.bytes := 8;
+    solution^.f76.has_a_symbolic_displacement := true;
     solution^.ip_reg_max := 0;
     solution^.ip_reg_result := 0;
-    solution^.f76.b82_5 := true;
-    solution^.disp := 0;
-    solution^.f76.b84_7 := true;
-    solution^.f76.uses_disp := true;
-    solution^.f76.uses_index_reg := false;
+    solution^.f76.is_complex := true;
+    solution^.literal_32_bits_value := 0;
+    solution^.f76.uses_the_base_register := true;
+    solution^.f76.uses_the_displacement := true;
+    solution^.f76.uses_the_index_register := false;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
     p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -374,24 +354,24 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-    solution^.rule := 7;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 7;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
-    solution^.memory_refs := 0;
+    solution^.memory_references := 0;
     solution^.delay := 0;
     solution^.bits_known := 0;
     solution^.bits_trusted := pc_relative_literal_size_to_bits_trusted(16);
-    solution^.l40 := 0;
-    solution^.l44 := 0;
-    solution^.w56 := 16;
-    solution^.f76.has_sym_disp := true;
+    solution^.bits_known_of_fetched_value := 0;
+    solution^.bits_trusted_of_fetched_value := 0;
+    solution^.bytes := 16;
+    solution^.f76.has_a_symbolic_displacement := true;
     solution^.ip_reg_max := 0;
     solution^.ip_reg_result := 0;
-    solution^.f76.b82_5 := true;
-    solution^.disp := 0;
-    solution^.f76.b84_7 := true;
-    solution^.f76.uses_disp := true;
-    solution^.f76.uses_index_reg := false;
+    solution^.f76.is_complex := true;
+    solution^.literal_32_bits_value := 0;
+    solution^.f76.uses_the_base_register := true;
+    solution^.f76.uses_the_displacement := true;
+    solution^.f76.uses_the_index_register := false;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
     p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -415,21 +395,21 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.inherited^.fetch_precision = 32 then begin
+  if subject.inherited_attributes^.fetch_precision = 32 then begin
     if isc_user_routines_354 then begin
       write('Pattern 8 matched the semantics.');
       writeln;
     end;
     solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
-    solution^.rule := 8;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 8;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
-    solution^.memory_refs := 0;
+    solution^.memory_references := 0;
     solution^.delay := 0;
-    solution^.bits_known := integer32(p2_node_ptr_t(subject.sym)^.p[3]);
+    solution^.bits_known := integer32(p2_node_ptr_t(subject.il)^.p[3]);
     solution^.bits_trusted := (-1);
-    solution^.disp := integer32(p2_node_ptr_t(subject.sym)^.p[3]);
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := true;
+    solution^.literal_32_bits_value := integer32(p2_node_ptr_t(subject.il)^.p[3]);
+    solution^.f76.literal_derived_from_floating_constant := true;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
     p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -457,15 +437,15 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$literal_64_bits), 0, inh, il, 0);
-  solution^.rule := 9;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 9;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;
-  solution^.memory_refs := 0;
+  solution^.memory_references := 0;
   solution^.delay := 0;
   solution^.bits_known := 0;
   solution^.bits_trusted := 0;
-  p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := il_$node_ptr_t(subject.sym)^.real_value = 0.0;
-  p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := true;
+  solution^.f76.literal_64_bits_value_is_zero := il_$node_ptr_t(subject.il)^.real_value = 0.0;
+  solution^.f76.literal_derived_from_floating_constant := true;
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
   p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -493,16 +473,16 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
-  solution^.rule := 10;
-  solution^.chain := addr(subject);
-  f.value := il_$node_ptr_t(subject.sym)^.real_value;
+  solution^.which_transform := 10;
+  solution^.before_transform := addr(subject);
+  f.value := il_$node_ptr_t(subject.il)^.real_value;
   solution^.code_bytes := 0;
-  solution^.memory_refs := 0;
+  solution^.memory_references := 0;
   solution^.delay := 0;
   solution^.bits_known := f.bits;
   solution^.bits_trusted := (-1);
-  solution^.disp := f.bits;
-  p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := true;
+  solution^.literal_32_bits_value := f.bits;
+  solution^.f76.literal_derived_from_floating_constant := true;
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
   p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -537,23 +517,23 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-    solution^.rule := 11;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 11;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
-    solution^.memory_refs := 0;
+    solution^.memory_references := 0;
     solution^.delay := 0;
     solution^.bits_known := 0;
-    solution^.bits_trusted := pc_relative_literal_size_to_bits_trusted(p2_node_ptr_t(subject.sym)^.w[8]);
-    solution^.l40 := 0;
-    solution^.l44 := 0;
-    solution^.f76.has_sym_disp := true;
+    solution^.bits_trusted := pc_relative_literal_size_to_bits_trusted(p2_node_ptr_t(subject.il)^.w[8]);
+    solution^.bits_known_of_fetched_value := 0;
+    solution^.bits_trusted_of_fetched_value := 0;
+    solution^.f76.has_a_symbolic_displacement := true;
     solution^.ip_reg_max := 0;
     solution^.ip_reg_result := 0;
-    solution^.f76.b82_0 := false;
-    solution^.disp := 0;
-    solution^.f76.b84_7 := true;
-    solution^.f76.uses_disp := true;
-    solution^.f76.uses_index_reg := false;
+    solution^.f76.is_set_temporary := false;
+    solution^.literal_32_bits_value := 0;
+    solution^.f76.uses_the_base_register := true;
+    solution^.f76.uses_the_displacement := true;
+    solution^.f76.uses_the_index_register := false;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
     p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -580,7 +560,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (not subject.inherited^.f38.immediate_parent_wants_set_temporary or not is_all_zeroes(subject.sym)) then begin
+  if not (not subject.inherited_attributes^.f38.immediate_parent_wants_set_temporary or not is_all_zeroes(subject.il)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 12 matched the semantics.');
       writeln;
@@ -593,30 +573,30 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-      solution^.rule := 12;
-      solution^.chain := addr(subject);
-      p1_int_fields_ptr_t(addr(solution^))^.i[2] := rshft(p2_node_ptr_t(subject.sym)^.w[8] + 3,
+      solution^.which_transform := 12;
+      solution^.before_transform := addr(subject);
+      p1_int_fields_ptr_t(addr(solution^))^.i[2] := rshft(p2_node_ptr_t(subject.il)^.w[8] + 3,
           2) * 4;
       t2 := make_expression_temporary(122,
-          rshft(p2_node_ptr_t(subject.sym)^.w[8] + 3, 2) * 4 * 8);
+          rshft(p2_node_ptr_t(subject.il)^.w[8] + 3, 2) * 4 * 8);
       side_effect_set_var_$address_exposed(isc_node_ptr_t(t2));
       t3 := t2;
       solution^.fields[1] := t3;
       t4 := address_mode_for_expression_temporary(t3,
           p1_int_fields_ptr_t(addr(solution^))^.i[2] * 8, 0, 3);
       solution^.fields[0] := t4;
-      if not lir_$can_encode_as_immediate_operand(t4^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[2] - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+      if not lir_$can_encode_as_immediate_operand(t4^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[2] - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
         solution^.space136[136] := chr(2);
-        if solution^.fields[0]^.f76.b84_7 then begin
+        if solution^.fields[0]^.f76.uses_the_base_register then begin
           solution^.space136[137] := chr(1);
-          if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+          if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[138] := chr(2);
           end else begin
             solution^.space136[138] := chr(1);
           end;
         end else begin
           solution^.space136[137] := chr(2);
-          if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[139] := chr(1);
           end else begin
             solution^.space136[139] := chr(2);
@@ -625,25 +605,25 @@ begin
       end else begin
         solution^.space136[136] := chr(1);
       end;
-      if not solution^.fields[0]^.f76.uses_disp then begin
+      if not solution^.fields[0]^.f76.uses_the_displacement then begin
         solution^.space136[140] := chr(1);
       end else begin
         solution^.space136[140] := chr(2);
       end;
       solution^.code_bytes := p1_int_fields_ptr_t(addr(solution^))^.i[2] div 4 * 4 + cost_12_4[ord(solution^.space136[138])] + cost_12_3[ord(solution^.space136[139])];
-      solution^.memory_refs := p1_int_fields_ptr_t(addr(solution^))^.i[2] div 4 + cost_12_2[ord(solution^.space136[139])];
+      solution^.memory_references := p1_int_fields_ptr_t(addr(solution^))^.i[2] div 4 + cost_12_2[ord(solution^.space136[139])];
       solution^.delay := cost_12_1[ord(solution^.space136[139])];
       solution^.bits_known := 0;
       solution^.bits_trusted := 3;
-      solution^.f76.has_sym_disp := true;
-      solution^.disp := 0;
-      solution^.sym := univ_ptr(solution^.fields[1]);
+      solution^.f76.has_a_symbolic_displacement := true;
+      solution^.literal_32_bits_value := 0;
+      solution^.il := univ_ptr(solution^.fields[1]);
       solution^.ip_reg_max := 0;
       solution^.ip_reg_result := 0;
-      solution^.f76.b82_0 := true;
-      solution^.f76.b84_7 := true;
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_set_temporary := true;
+      solution^.f76.uses_the_base_register := true;
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;

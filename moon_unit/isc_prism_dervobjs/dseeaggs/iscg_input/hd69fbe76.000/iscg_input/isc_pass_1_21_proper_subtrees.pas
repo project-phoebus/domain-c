@@ -88,7 +88,7 @@ begin
   end;
   result := addr(subject);
   subject.code_bytes := 0;
-  subject.memory_refs := 0;
+  subject.memory_references := 0;
   subject.delay := 0;
 end;
 
@@ -107,7 +107,7 @@ begin
   end;
   result := addr(subject);
   subject.code_bytes := subject.children[1]^.code_bytes;
-  subject.memory_refs := subject.children[1]^.memory_refs;
+  subject.memory_references := subject.children[1]^.memory_references;
   subject.delay := subject.children[1]^.delay;
 end;
 
@@ -126,7 +126,7 @@ begin
   end;
   result := addr(subject);
   subject.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes;
-  subject.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs;
+  subject.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
   subject.delay := subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
 end;
 
@@ -145,7 +145,7 @@ begin
   end;
   result := addr(subject);
   subject.code_bytes := subject.children[1]^.code_bytes;
-  subject.memory_refs := subject.children[1]^.memory_refs;
+  subject.memory_references := subject.children[1]^.memory_references;
   subject.delay := subject.children[1]^.delay;
 end;
 
@@ -164,7 +164,7 @@ begin
   end;
   result := addr(subject);
   subject.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-  subject.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+  subject.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
   subject.delay := subject.children[1]^.delay + subject.children[2]^.delay;
 end;
 
@@ -182,7 +182,7 @@ begin
   end;
   result := addr(subject);
   subject.code_bytes := subject.children[1]^.code_bytes;
-  subject.memory_refs := subject.children[1]^.memory_refs;
+  subject.memory_references := subject.children[1]^.memory_references;
   subject.delay := subject.children[1]^.delay;
 end;
 
@@ -201,7 +201,7 @@ begin
   end;
   result := addr(subject);
   subject.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-  subject.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+  subject.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
   subject.delay := subject.children[1]^.delay + subject.children[2]^.delay;
 end;
 
@@ -220,7 +220,7 @@ begin
   end;
   result := addr(subject);
   subject.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-  subject.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+  subject.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
   subject.delay := subject.children[1]^.delay + subject.children[2]^.delay;
 end;
 
@@ -239,7 +239,7 @@ begin
   end;
   result := addr(subject);
   subject.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-  subject.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+  subject.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
   subject.delay := subject.children[1]^.delay + subject.children[2]^.delay;
 end;
 
@@ -258,7 +258,7 @@ begin
   end;
   result := addr(subject);
   subject.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-  subject.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+  subject.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
   subject.delay := subject.children[1]^.delay + subject.children[2]^.delay;
 end;
 
@@ -277,7 +277,7 @@ begin
   end;
   result := addr(subject);
   subject.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-  subject.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+  subject.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
   subject.delay := subject.children[1]^.delay + subject.children[2]^.delay;
 end;
 
@@ -296,7 +296,7 @@ begin
   end;
   result := addr(subject);
   subject.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-  subject.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+  subject.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
   subject.delay := subject.children[1]^.delay + subject.children[2]^.delay;
 end;
 
@@ -315,6 +315,6 @@ begin
   end;
   result := addr(subject);
   subject.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-  subject.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+  subject.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
   subject.delay := subject.children[1]^.delay + subject.children[2]^.delay;
 end;

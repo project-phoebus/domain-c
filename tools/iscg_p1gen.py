@@ -343,8 +343,8 @@ def routine(r, t, headings, tables):
             i3 = i2 + '  '
         inner.append(i3 + 'solution := new_solution(isc_heap, ord(solution$%s), 0, inh, il, 0);'
                      % t['kind'])
-        inner.append(i3 + 'solution^.rule := %d;' % r)
-        inner.append(i3 + 'solution^.chain := addr(subject);')
+        inner.append(i3 + 'solution^.which_transform := %d;' % r)
+        inner.append(i3 + 'solution^.before_transform := addr(subject);')
         inner.extend(em.stmts(c.body, i3))
         for a in L1.ALREADY:
             inner.extend(em.lines(i3, 'p1_already_ptr_t(solution)^.%s := '
@@ -447,8 +447,6 @@ def gen_module(rules, sec, headings, includes, gen_note, pattern_text, wrap_word
         views.append(SINGLE_VIEW)
     if 'p1_int_fields_ptr_t' in text:
         views.append(INT_FIELDS_VIEW)
-    if 'p2_flags_ptr_t' in text:
-        views.append(P2G.FLAGS_VIEW)
     if 'p2_locals_ptr_t' in text:
         views.append(P2G.LOCALS_VIEW)
     views.append(ALREADY_VIEW)
