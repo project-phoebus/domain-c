@@ -50,12 +50,6 @@
   emit_jsr's operations).
 }
 
-{ TODO(pascal) fpa.pas is unfinished: four routines not written
-
-  push_fpa_opr (0x0B9472, 0x4FC bytes), emit_clr_fp1 (0x0B996E, 0x96),
-  fpa_fop_proc (0x0B9A0C, 0x1B0) and fpa_temp (0x0B9BBC, 0x94) are not
-  translated yet (fpa.ins.pas declares them). }
-
 module fpa;
 
 %include 'us/us/ins/ubase.ins.pas';
@@ -1055,5 +1049,271 @@ begin
       s.y := s.y + 8;
     d.y := ra_fpreg(d.f2) + fpa_ops[493];
     emit_load_store(493, d, s, 7);
+  end;
+end;
+
+{ push_fpa_opr - see fpa.ins.pas: node n's value of class size given
+  to FPA register x, or (k 63) the FPA's register x stored to n.  A
+  single or double (or narrower) into register x: from another FPA
+  register by 500 or 501, an integer or address of up to a long by a
+  move, else by 493; the register then holds n (setresult).  A store:
+  497 to n's operand, its object invalidated and recorded as the
+  register's second object (a cse's: 190 through +4, 189 through +20)
+  with the size and the stamp (cg_addr_2ba).  The extended forms (8,
+  12) and x 31: into registers 16 and 17 by halves (8: two singles, a
+  constant's longwords +12 and +16, or y and y + 4; 12: load_c16_part's
+  two parts), or pushed on the stack (x 31: the A7 operand made -(SP)
+  and the longwords pushed by emit 0 of a long, last first: a
+  constant's +12, +16 (8) or +16, +12, +24, +20 (12), or y + 4, y (8)
+  or y + 4, y, y + 12, y + 8 (12)).
+
+  0x0B9472, 0x4FC bytes, link #-104: the size compared unsigned
+  (`bhi'); the frame's descriptors at -96 and -72 change roles between
+  the paths (u: the register, or the value pushed; v: the value, or the
+  A7 operand), the constant's copy at -24 (f6 2, y 0), the second
+  register at -48; the extended forms' size (6 for 8, else 7) at -98;
+  invalidate's size zero-extended; cg_addr_regs' entry by `lsl.w #4';
+  the A7 emits' operation and size one longword (0, 4) and their pops
+  leaving 2 bytes for the next call's pad (`lea (14,SP)',
+  docs/rev889-patterns.md 51). }
+
+procedure push_fpa_opr;
+var
+  c: codegen_$uads_t;
+  r2: codegen_$uads_t;
+  v: codegen_$uads_t;
+  u: codegen_$uads_t;
+  sz: integer;
+begin
+  if (size <= 7) and (x <> 31) then begin
+    address_reg(x, u);
+    if k = 1 then begin
+      address(n, size, v);
+      if (v.f1 = 13) and (size = 6) then
+        emit_reg_reg(500, size, u, v, 0, 0, false)
+      else if (v.f1 = 13) and (size = 7) then
+        emit_reg_reg(501, size, u, v, 0, 0, false)
+      else if size <= 4 then
+        emit(0, size, u, v, 0)
+      else
+        emit_load_store(493, u, v, size);
+      release(v);
+      setresult(x, n, size);
+    end
+    else begin
+      address(n, 0, v);
+      emit_load_store(497, u, v, size);
+      invalidate(v, size);
+      release(v);
+      if n = nil then
+        cg_addr_regs[x].obj2 := n
+      else if n^.kind = 190 then
+        cg_addr_regs[x].obj2 := n^.xp[1]
+      else if n^.kind = 189 then
+        cg_addr_regs[x].obj2 := n^.xp[5]
+      else
+        cg_addr_regs[x].obj2 := n;
+      cg_addr_regs[x].size := size;
+      cg_addr_regs[x].w8 := cg_addr_2ba;
+    end;
+    return;
+  end;
+  if size = 8 then
+    sz := 6
+  else
+    sz := 7;
+  if x <> 31 then begin
+    address_reg(16, u);
+    address(n, size, v);
+    if size = 8 then
+      if v.f1 = 3 then begin
+        c := v;
+        c.f6 := 2;
+        c.y := 0;
+        c.x := integer32(smcontk(81, il_$node_ptr_t(v.x)^.xl[3]));
+        emit_assign(sz, u, c);
+      end
+      else
+        emit_assign(sz, u, v)
+    else
+      load_c16_part(u, v, 0);
+    address_reg(17, r2);
+    if size = 8 then
+      if v.f1 = 3 then begin
+        c.x := integer32(smcontk(81, il_$node_ptr_t(v.x)^.xl[4]));
+        emit_assign(sz, r2, c);
+      end
+      else begin
+        v.y := v.y + 4;
+        emit_assign(sz, r2, v);
+      end
+    else
+      load_c16_part(r2, v, 1);
+    release(v);
+    setresult(x, n, size);
+  end
+  else begin
+    address_reg(15, v);
+    v.f1 := 9;
+    address(n, size, u);
+    if size = 8 then begin
+      if u.f1 = 3 then begin
+        c := u;
+        c.f6 := 2;
+        c.y := 0;
+        c.x := integer32(smcontk(81, il_$node_ptr_t(u.x)^.xl[3]));
+        emit(0, 4, v, c, 0);
+        c.x := integer32(smcontk(81, il_$node_ptr_t(u.x)^.xl[4]));
+        emit(0, 4, v, c, 0);
+      end
+      else begin
+        emit(0, 4, v, u, 0);
+        u.y := u.y + 4;
+        emit(0, 4, v, u, 0);
+      end;
+    end
+    else if u.f1 = 3 then begin
+      c := u;
+      c.f6 := 2;
+      c.y := 0;
+      c.x := integer32(smcontk(81, il_$node_ptr_t(u.x)^.xl[4]));
+      emit(0, 4, v, c, 0);
+      c.x := integer32(smcontk(81, il_$node_ptr_t(u.x)^.xl[3]));
+      emit(0, 4, v, c, 0);
+      c.x := integer32(smcontk(81, il_$node_ptr_t(u.x)^.xl[6]));
+      emit(0, 4, v, c, 0);
+      c.x := integer32(smcontk(81, il_$node_ptr_t(u.x)^.xl[5]));
+      emit(0, 4, v, c, 0);
+    end
+    else begin
+      u.y := u.y + 4;
+      emit(0, 4, v, u, 0);
+      u.y := u.y - 4;
+      emit(0, 4, v, u, 0);
+      u.y := u.y + 12;
+      emit(0, 4, v, u, 0);
+      u.y := u.y - 4;
+      emit(0, 4, v, u, 0);
+    end;
+    release(u);
+  end;
+end;
+
+{ emit_clr_fp1 - see fpa.ins.pas: FPA register 17 loaded (493) with the
+  constant 0 of a single (sizes 6, 4, 2) or a double.
+
+  0x0B996E, 0x96 bytes, link #-52: the sizes compared in turn; 0.0 the
+  double after the routine (0x0B9A04) through rlcontk or dpcontk. }
+
+procedure emit_clr_fp1;
+var
+  r: codegen_$uads_t;
+  k: codegen_$uads_t;
+  sz: integer;
+begin
+  if (size = 6) or (size = 4) or (size = 2) then
+    sz := 6
+  else
+    sz := 7;
+  address_reg(17, r);
+  if sz = 6 then
+    address(rlcontk(0.0), 0, k)
+  else
+    address(dpcontk(0.0), 0, k);
+  emit_load_store(493, r, k, sz);
+end;
+
+{ fpa_fop_proc - see fpa.ins.pas: the operands of floating tree n
+  given to the FPA (push_fpa_opr: a single's or double's into
+  registers 16 and 17; else the first, or the second when it is in
+  register 16 already and op2 is not 104 (op2 then the call's
+  operation), into 16 by the conversion's (41 w8, 39 w6) or the tree's
+  class, the other operand into 31), then the library call (emit_jsr)
+  of op1 or op2; a conversion (41) of an aggregate (w6 11) to a long
+  or narrower has its result converted (emit_extend in register 16)
+  and moved to D0; the result kept (fpa_temp).
+
+  0x0B9A0C, 0x1B0 bytes, link #-56: the class (D3) w6 for 40, else
+  rlen; the operation chosen at -54; peek(opnd[2], 7) compared with 16;
+  the operand's index 3 - k for the second; emit_jsr's pop `addq.l #6'
+  leaving the next call's pad (docs/rev889-patterns.md 51). }
+
+procedure fpa_fop_proc;
+var
+  r: codegen_$uads_t;
+  d: codegen_$uads_t;
+  o: integer;
+  t: cg_tree_ptr_t;
+  sz: integer;
+  k: integer;
+begin
+  t := cg_tree_ptr_t(n);
+  if t^.op = 40 then
+    sz := t^.desc.w6
+  else
+    sz := t^.desc.rlen;
+  k := 1;
+  o := op1;
+  if (sz = 7) or (sz = 6) then begin
+    push_fpa_opr(t^.opnd[1], k, sz, 16);
+    if k < t^.count then
+      push_fpa_opr(t^.opnd[2], k, sz, 17);
+  end
+  else begin
+    if (k < t^.count) and (op2 <> 104) then
+      if peek(t^.opnd[2], 7) = 16 then begin
+        o := op2;
+        k := 2;
+      end;
+    if t^.op = 41 then
+      push_fpa_opr(t^.opnd[k], 1, t^.desc.w8, 16)
+    else if t^.op = 39 then
+      push_fpa_opr(t^.opnd[k], 1, t^.desc.w6, 16)
+    else
+      push_fpa_opr(t^.opnd[k], 1, t^.desc.rlen, 16);
+    if t^.count > 1 then
+      if t^.op = 41 then
+        push_fpa_opr(t^.opnd[3 - k], 1, t^.desc.w8, 31)
+      else
+        push_fpa_opr(t^.opnd[3 - k], 1, t^.desc.rlen, 31);
+  end;
+  if (t^.op = 41) and (t^.desc.w6 = 11) and (t^.desc.rlen <= 4) then begin
+    emit_jsr(o, t^.desc.w8, 0);
+    address_reg(16, r);
+    emit_extend(t^.desc.rlen, r, r, t^.desc.w8);
+    address_reg(0, d);
+    emit_assign(t^.desc.rlen, d, r);
+  end
+  else
+    emit_jsr(o, sz, 0);
+  fpa_temp(n, t^.opnd[1]);
+end;
+
+{ fpa_temp - see fpa.ins.pas: when the pass emits and n's value (a
+  cse's object: 190 through +4, 189 through +20) is used again (w18
+  negative), the node made a value (138) and the FPA's result (register
+  16) stored to its temporary: t itself when t is one (152), else n's
+  own (get_temp, not stored), by push_fpa_opr's store (63).
+
+  0x0B9BBC, 0x94 bytes, link #0: the kinds compared in turn; w18
+  tested `tst.w; bpl'. }
+
+procedure fpa_temp;
+var
+  m: il_$node_ptr_t;
+begin
+  m := n;
+  if m^.kind = 190 then
+    m := m^.xp[1]
+  else if m^.kind = 189 then
+    m := m^.xp[5];
+  if (cg_tree_ptr_t(m)^.w18 < 0) and at_backend_506 then begin
+    m^.kind := 138;
+    if t^.kind = 152 then
+      push_fpa_opr(t, 63, cg_tree_ptr_t(m)^.desc.rlen, 16)
+    else begin
+      get_temp(m, false);
+      push_fpa_opr(cg_tree_ptr_t(m)^.opnd[1], 63, cg_tree_ptr_t(m)^.desc.rlen, 16);
+    end;
   end;
 end;

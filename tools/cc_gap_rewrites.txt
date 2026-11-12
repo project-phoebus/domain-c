@@ -513,7 +513,7 @@ lang/lang/source/emit.pas	s/ok := chk_op_restr\(dst, e\^\[i\]\.dst\) and chk_op_
 lang/lang/source/emit.pas	s/^(\s*)chk_sz_restr\(size, e\^\[i\]\.sz\);$/$1(chk_sz_restr(size, e^[i].sz) = true); { gap 24 }/
 # gap 8 (emit, translator HH): in on constant sets with word elements over the whole file (the comparisons, as cg_top's rule)
 lang/lang/source/emit.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge
-# gap 7 (fpa, translator HH): the real constant -1.0 passed to rlcontk and dpcontk (an integer constant node instead, for the check)
-lang/lang/source/fpa.pas	s/address\((rl|dp)contk\(-1\.0\), 0, k\)/address(smcontk(81, -1), 0, k) { gap 7 }/
+# gap 7 (fpa, translator HH): the real constants -1.0 and 0.0 passed to rlcontk and dpcontk (an integer constant node instead, for the check)
+lang/lang/source/fpa.pas	s/address\((rl|dp)contk\((-1|0)\.0\), 0, k\)/address(smcontk(81, $2), 0, k) { gap 7 }/
 # gap 8 (fpa, translator HH): in on a constant set with word elements (emit_jsr's operations; the comparisons, as cg_top's rule)
 lang/lang/source/fpa.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge

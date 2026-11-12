@@ -413,8 +413,9 @@ Translator HH, emit (finished, 11 of 11): emit.pas defines emit_108
 declares opinfo's instruction lists (opinfo_insts, 0x2CE8D8) and
 delay's class_size.  Core change: emit_assign's heading moved from
 cg.ins.pas to fpa.ins.pas with `in' descriptors (question 105).
-Translator HH, fpa (started, 16 of 20): the module's data defined
+Translator HH, fpa (finished, 20 of 20): the module's data defined
 (fpa_ops, the three descriptors); fpa.ins.pas's descriptors `in' (the
-bodies only read or copy them); cg_top.pas defines cg_top_fp_long,
-which fpa sets absolutely.  push_fpa_opr, emit_clr_fp1, fpa_fop_proc
-and fpa_temp are not written (a TODO in the unit's header).
+bodies only read or copy them) and its headings checked against the
+bodies (emit_jsr's x a word, push_fpa_opr's k 1 a load and 63 a store,
+x the FPA register or 31 the stack); cg_top.pas defines
+cg_top_fp_long, which fpa sets absolutely.

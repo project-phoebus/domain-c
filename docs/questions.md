@@ -960,3 +960,15 @@ revisited.
    the original?  Likewise chk_op_restr (a code above 24), adrlen (an
    immediate form 6 or 7) and sz_case (a size of 3, 5 or above 7)
    leave their results unset (D0 holds the selector).
+
+125. Translator HH: fpa.pas, probable slips of the original kept:
+   load_c16_part (cc.m68k 0x0B9314) takes a 16-byte constant's second
+   and fourth longwords from the node smcontk made for the first (its
+   +16, +24: `movea.l (-36,A6),A0' after s.x was replaced), not from the
+   constant; emit_fmath_top (0x0B8652) reuses its operation variable
+   for 76's move from another FPA register (500, 501), so the
+   operation then emitted is the move, not 466/465; emit_jsr leaves the
+   routine unset for a comparison (86) with a condition 8..11.  The
+   three descriptors of fpa's data lie 24 bytes apart (20 used), as
+   cg_assign's and cg_tree's (questions 106, 107): perhaps the
+   descriptor type is 24 bytes.

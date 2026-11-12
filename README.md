@@ -165,5 +165,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang/lang/source/reg_life.pas` | 17 | translated (cc.m68k only; best effort; statements, blocks and cses through g_opt.ins.pas, variables by offset) |
 | `lang/lang/source/reg_save.pas` | 23 | translated (cc.m68k only; best effort; trees through cg.ins.pas's cg_tree_t, statements through g_opt.ins.pas's g_opt_stmt_t, other nodes by offset; dpc gaps 8, 24, 30) |
 | `lang/lang/source/emit.pas` | 11 | translated (cc.m68k only; best effort; opinfo's instruction lists through em_entry_t, cells through codegen.ins.pas, nodes by offset; dpc gaps 7, 8, 24) |
-| `lang/lang/source/fpa.pas` | 20 | started: 16 of 20 (ra_fpreg .. load_c16_part in address order; push_fpa_opr, emit_clr_fp1, fpa_fop_proc, fpa_temp not written; cc.m68k only; dpc gaps 7, 8) |
+| `lang/lang/source/fpa.pas` | 20 | translated (cc.m68k only; best effort; descriptors through codegen_$uads_t, trees through cg_tree_t, the module's data initialized; dpc gaps 7, 8) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
