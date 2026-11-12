@@ -5,9 +5,8 @@
 
 The source repository's tools/prism_dis.py (the a88k disassembler,
 domain_os/tools/prism_dis.py) builds its decoder from DOMAIN C 6.9's own
-opcode tables.  Its self-contained form, tools/prism_dis_selfcontained.py
-here, carries them as literals rather than reading them from the image;
-this reads them from the image (cc.a88k, by default this checkout's
+opcode tables, which it carries as literals (source commit 9695aa26)
+rather than reading them from the image; this reads them from the image (cc.a88k, by default this checkout's
 ctape/install/ri.apollo.cc.v.6.9.mpx/cc.a88k) and prints that block, from
 its `# ----' line to the end of OF_STRING, so it can be regenerated:
 
@@ -33,7 +32,7 @@ To check the embedded block:
 
     tools/prism_tables_gen.py > /tmp/t.py
     sed -n '/^# ---- the decode tables/,/^]  # end of OF_STRING/p' \\
-        tools/prism_dis_selfcontained.py | diff - /tmp/t.py
+        ~/src/domainos-archeology/source/domain_os/tools/prism_dis.py | diff - /tmp/t.py
 """
 import hashlib
 import os
