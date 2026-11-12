@@ -1,4 +1,178 @@
-{ opt_main - HEADER TODO }
+{ opt_main - the global optimizer's driver: g_opt runs the phases over
+  a compilation's IL (opt_general's constant folding, the merging of
+  assignments and Fortran's complex stores, the distribution of
+  products over sums and the expansion of small powers, the removal of
+  unreachable code), numbers the top-level statements (opt_4009c), cuts
+  them into basic blocks (il_11c, their successors and predecessors,
+  the blocks a call that may return abnormally reaches), puts the
+  nodes in postorder (il_120), adds the use and definition statements
+  (188) of calls' arguments and of a routine's statics and parameters,
+  numbers each routine's variables, then per routine: the depth-first
+  order, the dominators and their matrix (opt_dom), the loops, reaching
+  definitions, strength reduction, the indexed references remade,
+  common subexpressions, live variables, loop optimization and the
+  register allocator.  opt_main_$initialize opens its memory pools.
+
+  Image addresses (DOMAIN C 6.9; the unit is the same in both binaries
+  but for absolute addresses):
+    cc.m68k   cc.a88k
+    0x0DAC88  0x2A7E78  assert_optimizer_is_enabled
+    0x0DACC0  0x2A7EB0  assert_common_subexpression_phase_is_enabled
+    0x0DACD8  0x2A7EC8  assert_language_on_il_spine_is_ada
+    0x0DAD1E  0x2A7F0E  limit_of_cse_backwards_reach
+    0x0DAD42  0x2A7F32  estimate_register_consumption_of_all_statements
+    0x0DAD8E  0x2A7F7E  zero_longwords
+    0x0DADA2  0x2A7F92  zero_bytes
+    0x0DADF8  0x2A7FE8  alloc_block_list
+    0x0DAE1E  0x2A800E  alloc_hoist
+    0x0DAE3A  0x2A802A  dispose_hoist
+    0x0DAE54  0x2A8044  alloc_postorder_node_list
+    0x0DAE7A  0x2A806A  dispose_postorder_node_list
+    0x0DAE8C  0x2A807C  assert_is_defined_spos
+    0x0DAE9C  0x2A808C  assert_is_top_level_statement
+    0x0DAEE0  0x2A80D0  assert_is_conditional_branch
+    0x0DAEF8  0x2A80E8  assert_is_unconditional_branch
+    0x0DAF1A  0x2A810A  assert_is_branch
+    0x0DAF38  0x2A8128  assert_is_label
+    0x0DAF50  0x2A8140  assert_is_childless_eval
+    0x0DAF68  0x2A8158  assert_is_artificial_label
+    0x0DAF9A  0x2A818A  assert_is_unconditional_branch_to_artificial_label
+    0x0DAFDA  0x2A81CA  assert_is_conditional_branch_to_artificial_label
+    0x0DB01C  0x2A820C  assert_is_branch_to_artificial_label
+    0x0DB03C  0x2A822C  assert_is_artificial_statement
+    0x0DB07C  0x2A826C  realloc_postorder_node_list
+    0x0DB1A4  0x2A8394  new_postorder_node_list_entry
+    0x0DB1E0  0x2A83D0  assert_statement_is_interesting_in_postorder_node_list
+    0x0DB218  0x2A8408  assert_is_a_variable
+    0x0DB23A  0x2A842A  assert_is_var_name
+    0x0DB252  0x2A8442  assert_is_fortran_symbol
+    0x0DB26A  0x2A845A  assert_is_fortran_temp
+    0x0DB294  0x2A8484  assert_is_call_tree
+    0x0DB2C6  0x2A84B6  opt_main_$ensure_var_set
+    0x0DB2F8  0x2A84E8  opt_main_$complex_decomposition
+    0x0DB4A4  0x2A8694  opt_main_$complex_intrinsic_decomposition
+    0x0DB558  0x2A8748  opt_main_$collapse_fortran_complex_assigns
+    0x0DB68C  0x2A887C  assert_is_predecessor
+    0x0DB712  0x2A8902  assert_is_entry_block
+    0x0DB72A  0x2A891A  assert_is_entry_block_entry
+    0x0DB754  0x2A8944  assert_is_entry_label
+    0x0DB78A  0x2A897A  assert_is_abnormal_label
+    0x0DB7B0  0x2A89A0  assert_is_assigned_goto_label
+    0x0DB7F2  0x2A89E2  assert_is_unsafe_abnormal_label
+    0x0DB818  0x2A8A08  assert_reached_by_linear_flow_from_previous_basic_block
+    0x0DB872  0x2A8A62  mark_if_begins_basic_block
+    0x0DB918  0x2A8B08  mark_begins_basic_block
+    0x0DB98E  0x2A8B7E  new_basic_block
+    0x0DBA62  0x2A8C52  new_successor_list
+    0x0DBB2A  0x2A8D1A  add_predecessor
+    0x0DBB78  0x2A8D68  add_successor
+    0x0DBC2A  0x2A8E1A  assert_is_nonlocal_branch
+    0x0DBC42  0x2A8E32  assert_is_fortran_assigned_goto
+    0x0DBC7C  0x2A8E6C  assert_is_lexically_earlier_statement
+    0x0DBCCC  0x2A8EBC  compute_label_backward_refs_due_to_assigned_goto
+    0x0DBD58  0x2A8F48  compute_variable_type_descriptors
+    0x0DBE74  0x2A9064  check_dominators
+    0x0DBFA2  0x2A9192  initialize_stmt_nodes
+    0x0DC054  0x2A9244  recompute_stmt_nodes
+    0x0DC0C2  0x2A92B2  killvisited
+    0x0DC146  0x2A9336  resolve_nlbranch_targets
+    0x0DC212  0x2A9402  compute_successors
+    0x0DC354  0x2A9544  assert_cleanup_body
+    0x0DC3A6  0x2A9596  assert_is_pointer_deref_of_volatile_object
+    0x0DC3C6  0x2A95B6  assert_is_call_to_abnormal_routine
+    0x0DC47C  0x2A966C  compute_abnormality_due_to_proc_calls
+    0x0DC708  0x2A98F8  compute_basic_block_relationships
+    0x0DC7F6  0x2A99E6  compute_depth_first_order_of_basic_blocks
+    0x0DC8C6  0x2A9AB6  compute_dominator_matrix
+    0x0DC994  0x2A9B84  compute_preds_and_succs_for_dominance
+    0x0DCAD2  0x2A9CC2  compute_basic_block_dominance_relationships
+    0x0DCB9C  0x2A9D8C  recompute_usedef_for_strength_reduction
+    0x0DCCC4  0x2A9EB4  recompute_usedef_for_uplevel_addressing
+    0x0DCEA2  0x2AA092  eliminate_dead_code_and_count_basic_blocks
+    0x0DD070  0x2AA260  coalesce_adjacent_and_eliminate_dead_assignments
+    0x0DD118  0x2AA308  makedindex
+    0x0DD230  0x2AA420  recover
+    0x0DD5BA  0x2AA7AA  recover_scaled
+    0x0DD6CE  0x2AA8BE  no_enforce_parens_and_ucs_eq_1 (in distrib_mul)
+    0x0DD75A  0x2AA94A  convert_lshf_to_mul (in distrib_mul)
+    0x0DD7B0  0x2AA9A0  possible_rlens_of_operand (in distrib_mul)
+    0x0DD868  0x2AAA58  crush_disp_2 (in distrib_mul)
+    0x0DD8F2  0x2AAAE2  fixup_rlen_of_mul (in distrib_mul)
+    0x0DDA32  0x2AAC22  distrib_mul
+    0x0DDFB2  0x2AB1A2  convert_exponentiation
+    0x0DE1C0  0x2AB3B0  dwalk
+    0x0DE32E  0x2AB51E  distribute
+    0x0DE402  0x2AB5F2  reviseuses
+    0x0DE598  0x2AB788  opt_main_$strip_all_use_def_obs
+    0x0DE630  0x2AB820  opt_main_$symidx_of_varn_or_fsym
+    0x0DE6D4  0x2AB8C4  create_use_def_ob
+    0x0DE848  0x2ABA38  add_use_defs_for_call_site
+    0x0DE9DA  0x2ABBCA  opt_main_$var_is_param_of_routine
+    0x0DEA34  0x2ABC24  assert_defined_on_entry
+    0x0DEB72  0x2ABD62  add_use_defs_for_statics_and_params
+    0x0DED0C  0x2ABEFC  add_def_for_params_at_routine_entry
+    0x0DED62  0x2ABF52  use_def_proc
+    0x0DEEE6  0x2AC0D6  opt_main_$is_fortran_asf
+    0x0DEF32  0x2AC122  init_opt_info_for_vars
+    0x0DF2B6  0x2AC4A6  fixup_blocks
+    0x0DF458  0x2AC648  find_eval (in g_opt)
+    0x0DF48E  0x2AC67E  crush_undesired_extend (in count_interior_nodes_for_postorder_node_list)
+    0x0DF4E4  0x2AC6D4  count_interior_nodes_for_postorder_node_list (in g_opt)
+    0x0DFCE6  0x2ACED6  count_for_postorder_node_list (in g_opt)
+    0x0DFF7C  0x2AD16C  note_variable_use (in g_opt)
+    0x0DFFE2  0x2AD1D2  add_interior_node_to_postorder_node_list (in g_opt)
+    0x0E04B0  0x2AD6A0  make_new_postorder_node_list (in g_opt)
+    0x0E0CD0  0x2ADEC0  recompute_node_lists (in g_opt)
+    0x0E0D46  0x2ADF36  g_opt
+    0x0E1740  0x2AE930  opt_main_$initialize
+    A5 0x2D2EF0 (cc.m68k), 0x49389C (cc.a88k): the module's data,
+    0x8009C bytes, defined in the image's layout (g_opt.ins.pas's cells
+    and this unit's om_ cells): +0x0..+0x24 ten memory pools, +0x28
+    om_complex_size (.rwdi: 8, 12), +0x2C..+0x3C the block tables as
+    allocated, +0x40..+0x54 those tables moved, opt_var_types, +0x58..
+    +0x6C words (the statement at hand, the counts, opt_region, the
+    first and last blocks) and opt_track_lines, +0x70 om_class_bytes
+    and +0x90 om_param_conflicts (.rwdi), +0x9A om_block_num, +0x9C
+    opt_dom, +0x4009C opt_4009c (reached absolutely: `movea.l
+    #0x30D90C' and (22144,A0), docs/rev889-patterns.md 20).
+
+  The routines that load A5 are global: g_opt and opt_main_$initialize
+  (globals_from_backend.ins.pas), opt_main_$ensure_var_set,
+  fixup_blocks and opt_main_$symidx_of_varn_or_fsym (g_opt.ins.pas),
+  check_dominators, reviseuses, opt_main_$var_is_param_of_routine and
+  opt_main_$is_fortran_asf (only this unit calls them).  The others do
+  not and are internal (they run on g_opt's A5; the assertions without
+  a frame are leaf routines, docs/rev889-patterns.md 16).  The nested
+  routines of g_opt reach its frame through A1 (the static link).
+
+  Statements are read through g_opt.ins.pas's g_opt_stmt_t, trees
+  through g_opt_tree_t, blocks through g_opt_block_t, other nodes by
+  offset (il.ins.pas).  delay.pas's class_size and reg_save's
+  reg_save_$registers_preserved_by_statement are declared here.
+  opt_livevar's +0, which assert_is_call_to_abnormal_routine compares
+  with, is g_opt.ins.pas's opt_abnormal_routine (docs/questions.md
+  122).
+
+  dpc gaps (docs/dpc-gaps.md): 2 (recover_scaled's case), 4
+  (realloc_postorder_node_list's writeln), 7 (its trunc of a real
+  product; convert_exponentiation's real exponent), 8 (`in' on the
+  kind sets), 29 (guarded tests of a word in a variable set).
+
+  Not known from the original: the names of the module's own cells
+  (om_), of the parameters and the locals.
+}
+
+{ TODO(pascal) g_opt and its nested routines are not written
+
+  g_opt (0x0E0D46, cc.a88k 0x2ADF36) and the routines nested in it,
+  which read its frame through A1: find_eval 0x0DF458,
+  count_interior_nodes_for_postorder_node_list 0x0DF4E4 (with
+  crush_undesired_extend 0x0DF48E nested in it),
+  count_for_postorder_node_list 0x0DFCE6, note_variable_use 0x0DFF7C,
+  add_interior_node_to_postorder_node_list 0x0DFFE2,
+  make_new_postorder_node_list 0x0E04B0 and recompute_node_lists
+  0x0E0CD0.  g_opt is declared by globals_from_backend.ins.pas and not
+  defined here until then. }
 module opt_main;
 
 %include 'lang/lang/source/globals.ins.pas';
@@ -49,19 +223,47 @@ type
   om_classes_t = set of 0..15;
 
 var
-  { The module's data (A5 0x2D2EF0 in cc.m68k, 0x49389C in cc.a88k),
-    the cells g_opt.ins.pas does not declare, defined below in the
-    image's order. }
-  om_succ_pool: extern mem_$pool_t;     { +0x0: blk_succ }
-  om_blocks_pool: extern mem_$pool_t;   { +0x4: bindxp }
-  om_hoist_pool: extern mem_$pool_t;    { +0xC: hoist }
-  om_nodes_pool: extern mem_$pool_t;    { +0x10: nindxp }
-  om_varset_pool: extern mem_$pool_t;   { +0x1C: variable_use_set }
-  om_complex_size: extern array [6..7] of integer;  { +0x28 }
-  om_class_bytes: extern array [0..9] of integer;   { +0x70 }
-  om_stmt_num: extern integer;          { +0x58 }
-  om_nvars: extern integer;             { +0x64 }
-  om_param_conflicts: extern array [0..4] of om_classes_t;  { +0x90 }
+  { The module's data (A5 0x2D2EF0 in cc.m68k, 0x49389C in cc.a88k,
+    0x8009C bytes): the cells g_opt.ins.pas does not declare; all are
+    defined below in the image's order (dpc lays the defined cells out
+    in the order of the define list). }
+  om_succ_pool: extern mem_$pool_t;     { +0x0: `blk_succ', the blocks'
+                                          successor lists }
+  om_blocks_pool: extern mem_$pool_t;   { +0x4: `bindxp', il_11c }
+  om_hoist_pool: extern mem_$pool_t;    { +0xC: `hoist', opt_loop_hoist }
+  om_nodes_pool: extern mem_$pool_t;    { +0x10: `nindxp', il_120 }
+  om_varset_pool: extern mem_$pool_t;   { +0x1C: `variable_use_set', the
+                                          statements' variable sets }
+  om_complex_size: extern array [6..7] of integer;  { +0x28: the bytes of
+                                          a complex part's register class
+                                          (6, 7) }
+  { +0x2C .. +0x3C: the tables by block number from 1 as allocated
+    (g_opt's PAS_$NEW), before adjust_ptr moves them to opt_live_out,
+    opt_not_killed, opt_used, opt_dfs_number and opt_dfs_block. }
+  om_live_out_tab: extern g_opt_varsets_ptr_t;     { +0x2C }
+  om_not_killed_tab: extern g_opt_varsets_ptr_t;   { +0x30 }
+  om_used_tab: extern g_opt_varsets_ptr_t;         { +0x34 }
+  om_dfs_number_tab: extern g_opt_nums_ptr_t;      { +0x38 }
+  om_dfs_block_tab: extern g_opt_nums_ptr_t;       { +0x3C }
+  om_stmt_num: extern integer;          { +0x58: the number of the
+                                          statement at hand }
+  om_5c: extern g_opt_num_t;            { +0x5C: set from g_opt's
+                                          (-36,A6) with opt_nblocks }
+  om_nvars: extern integer;             { +0x64: the routine's variables
+                                          (il_utl_$count_vars) }
+  om_nstmts: extern g_opt_num_t;        { +0x66: the top-level statements
+                                          + 1 (initialize_stmt_nodes) }
+  om_unused_6e: extern integer;         { +0x6E: not addressed }
+  om_class_bytes: extern array [0..15] of integer;  { +0x70: the bytes of
+                                          a data class (a Fortran
+                                          symbol's +10 low nibble); 10..15
+                                          not initialized }
+  om_param_conflicts: extern array [0..4] of om_classes_t;  { +0x90: by
+                                          argument class, the classes a
+                                          later argument passing the same
+                                          variable may not have }
+  om_block_num: extern g_opt_num_t;     { +0x9A: the blocks numbered by
+                                          make_new_postorder_node_list }
 
 var
   { delay.pas's +888 (cc.m68k 0x169968, cc.a88k 0x2E99D8): the bytes of
@@ -82,15 +284,22 @@ function opt_main_$is_fortran_asf(
     s: g_opt_stmt_ptr_t): boolean; options(val_param); extern;
 
 define
-  om_succ_pool, om_blocks_pool, om_hoist_pool, om_nodes_pool,
-  om_varset_pool;
+  om_succ_pool, om_blocks_pool, opt_main_8, om_hoist_pool,
+  om_nodes_pool, opt_main_14, opt_main_18, om_varset_pool, opt_main_20,
+  opt_main_24;
   om_complex_size := [8, 12];
-  om_class_bytes := [0, 2, 4, 4, 8, 8, 1, 4, 4, 0];
-  om_stmt_num, om_nvars;
+  om_live_out_tab, om_not_killed_tab, om_used_tab, om_dfs_number_tab,
+  om_dfs_block_tab, opt_live_out, opt_not_killed, opt_used,
+  opt_var_types, opt_dfs_number, opt_dfs_block, om_stmt_num,
+  opt_nblocks, om_5c, opt_region, opt_max_stmts, opt_max_vars,
+  om_nvars, om_nstmts, opt_last_block, opt_first_block,
+  opt_track_lines, om_unused_6e;
+  om_class_bytes := [0, 2, 4, 4, 8, 8, 1, 4, 4, 0, 0, 0, 0, 0, 0, 0];
   om_param_conflicts := [[0, 2], [1, 4], [0, 2], [3], [1, 4]];
+  om_block_num, opt_dom, opt_4009c;
   opt_main_$ensure_var_set, check_dominators, reviseuses,
   opt_main_$symidx_of_varn_or_fsym, opt_main_$var_is_param_of_routine,
-  opt_main_$is_fortran_asf, fixup_blocks;
+  opt_main_$is_fortran_asf, fixup_blocks, opt_main_$initialize;
 
 { assert_optimizer_is_enabled - the optimizer runs: target_properties'
   +0x7F, else not -DBA (cargs db 3) and -OPT's level above 2.
@@ -3431,4 +3640,25 @@ begin
              (s^.next^.x48^.kind <> 172) then
             return;
   end;
+end;
+
+{ opt_main_$initialize - the optimizer's ten memory pools opened (MRH
+  heaps), once per compilation (runbackend).
+
+  0x0E1740, 0xD8 bytes: A5 loaded; each name's address `pea (pc)', the
+  pool's `pea (n,A5)', use_rws false (`clr.w -(SP)'); the names
+  pooled after the routine. }
+
+procedure opt_main_$initialize;
+begin
+  mem_$open_pool(om_succ_pool, 'opt_main blk_succ%.', false);
+  mem_$open_pool(om_blocks_pool, 'opt_main bindxp%.', false);
+  mem_$open_pool(opt_main_8, 'opt_main dom_matrix%.', false);
+  mem_$open_pool(om_hoist_pool, 'opt_main hoist%.', false);
+  mem_$open_pool(om_nodes_pool, 'opt_main nindxp%.', false);
+  mem_$open_pool(opt_main_14, 'opt_reachdef various%.', false);
+  mem_$open_pool(opt_main_18, 'opt_main var_chain%.', false);
+  mem_$open_pool(om_varset_pool, 'opt_main variable_use_set%.', false);
+  mem_$open_pool(opt_main_20, 'reg_alloc graphs%.', false);
+  mem_$open_pool(opt_main_24, 'reg_alloc pools%.', false);
 end;
