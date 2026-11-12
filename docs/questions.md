@@ -2221,6 +2221,15 @@ answered by this policy and needs no reply.
    attribute names; the generator maps them to the insert's current
    field names, so PD's and PD2's units are untouched.  A rename can
    follow the owner's answer as one mechanical change.
+   **Done (translator RN3, 2026-11-12; the owner approved the image's
+   names):** isc_solution_t's fields carry dump_solution's names
+   (offsets, sizes and packing unchanged; b81_7_2 and b83_7_4 split into
+   their six and four booleans).  Batch A's solution_t stays a separate
+   view (backend.ins.pas is opened by units that open no ISC insert, and
+   its packed groups f78/f84 differ from f76), with the image's names on
+   the fields it names (question 242's merge not done).  The generator
+   reads every attribute through the field of its name (FIELD_MAP gone);
+   the ISC units, lir, lir_main and lir_utils follow.
 268. Translator GA: **the gate for units without a .blocks record.**
    coff_compare picks a unit by its .blocks source path, so the 50
    action modules cannot be compared as they are.  Proposed for phase 2:
@@ -2289,6 +2298,13 @@ answered by this policy and needs no reply.
    mechanical change over the ISC units and lir's lir_3b80 view), or
    keep?  Not decided here: isc_debug uses the insert's names, with the
    image's in its comment.
+   **Done (translator RN3, 2026-11-12):** inherited_attributes_t's
+   fields carry isc_print_il_node's names (pos keeps its record, its
+   fields source_line_number and stmt_number: the two words are copied
+   as one longword and bug_check prints the record), and lir.pvt.pas's
+   lir_inherited_t (lir_3b80) takes the same names for the fields it
+   names.  parent_il_kind keeps the type char (question 284's 0..255 not
+   done: the generated pass 1 still writes it through p1_inh_view_t).
 272. Translator PE, isc_debug: **the IL description in the generator's
    input.**  isc_print_il_node is generated (docs/iscg-design.md 9): one
    arm per IL node kind of il$t writing that kind's static attributes
@@ -2646,3 +2662,27 @@ answered by this policy and needs no reply.
    **Lead (2026-11-12):** done: the comments in asm.pas, dbg_life.pas,
    dmp.pas and backend.ins.pas now say when the delay slot runs (no code
    change).
+311. Translator RN3: **lr_t's register fields.**  lir_$build_operand's
+   dump (lir.pas, gap 4) compares a solution's physical_register,
+   physical_register_is_no_modify, physical_register_user_declared and
+   physical_register_number with its live range's under the heading
+   `sol^.live_range^.' and the same names (question 250): lr_t's f2.reg
+   (+2), f2.physical, f2.no_modify and f2.serialize (+3 bits 7, 6, 5)
+   are the original's physical_register_number, physical_register,
+   physical_register_is_no_modify and physical_register_user_declared.
+   lr_t is batch A's and read by most of the back end; rename it too?
+312. Translator RN3: **isc_solution_t's types.**  The rename kept the
+   types: base_register and index_register lr_ptr_t (they hold
+   solutions: question 262), false_label integer32 (isc_debug prints it
+   with label_to_string: a label pointer), il_kind and kind integer
+   (il$t's and solution$t's ordinals: question 250).  Retype them
+   (isc_debug's ds_solution_t would then be the same record but for the
+   rules' locals, and could go)?
+313. Translator RN3: **the rules' locals in isc_solution_t.**
+   dump_solution prints case_value (+136) and already_address_mode ..
+   already_processor_reg (+342..+348) as attributes;
+   isc_solution_t leaves them in space136 (the generated pass 1 reads
+   the already_ flags through its view p1_already_t, case_value through
+   space136), ds_solution_t names them.  Declare them in the insert
+   (case_value's type, isc_case_index_array_t, is in
+   isc_routine_externs.ins.pas, which is opened after it)?

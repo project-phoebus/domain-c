@@ -71,23 +71,6 @@ type
       var work: isc_solution_ptr_t;
       var result: isc_solution_ptr_t); options(val_param);
 
-  { A solution's flags at +81 (dump_solution's names) for dead_end, which
-    isc_solution_t does not name. }
-  pm_sol_flags_ptr_t = ^pm_sol_flags_t;
-  pm_sol_flags_t = record
-    x0: array [0..80] of char;          { +0 }
-    f81: packed record                  { +81 }
-      all_zeroes_or_all_ones: boolean;  { .7 }
-      arg_block_location: boolean;
-      bit_7_was_sign_extended: boolean;
-      bit_15_was_sign_extended: boolean;
-      dead_end: boolean;                { .3 }
-      derived_from_literal: boolean;
-      embedded_strength_reduction_temporary: boolean;
-      field_requires_sign_extend: boolean;
-      end;
-  end;
-
 { The pass-1 actions (the 25 pass-1 modules: transform_<r>_pass_1, r the
   rule; not generated yet). }
 procedure transform_1_pass_1(var subject: isc_solution_t; il: univ_ptr;
@@ -2156,28 +2139,28 @@ begin
   end
   else begin
     n := 0;
-    if solution^.f114.nchildren = 0 then begin
-      if solution^.f114.b6 then
+    if solution^.f114.number_of_children = 0 then begin
+      if solution^.f114.builtin_could_deadlock_sched then
         n := 1;
     end;
-    if solution^.f114.nchildren >= 1 then begin
-      if solution^.children[1]^.f114.b6 then
+    if solution^.f114.number_of_children >= 1 then begin
+      if solution^.children[1]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
-    if solution^.f114.nchildren >= 2 then begin
-      if solution^.children[2]^.f114.b6 then
+    if solution^.f114.number_of_children >= 2 then begin
+      if solution^.children[2]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
-    if solution^.f114.nchildren >= 3 then begin
-      if solution^.children[3]^.f114.b6 then
+    if solution^.f114.number_of_children >= 3 then begin
+      if solution^.children[3]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
-    if solution^.f114.nchildren >= 4 then begin
-      if solution^.children[4]^.f114.b6 then
+    if solution^.f114.number_of_children >= 4 then begin
+      if solution^.children[4]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
-    if solution^.f114.nchildren >= 5 then begin
-      if solution^.children[5]^.f114.b6 then
+    if solution^.f114.number_of_children >= 5 then begin
+      if solution^.children[5]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
     if pm_no_could_deadlock_child[which_transform] then
@@ -2188,18 +2171,18 @@ begin
       pm_pass_1_action[which_transform]^(solution^, il, inh, add_this_to_work_list,
                                          add_this_to_parent);
       if add_this_to_parent <> nil then begin
-        if add_this_to_parent^.eval_order <> 0 then begin
-          if add_this_to_parent^.f76.physical and
-             not add_this_to_parent^.f76.no_modify and
-             not add_this_to_parent^.f76.serialize then begin
+        if add_this_to_parent^.evaluation_order <> 0 then begin
+          if add_this_to_parent^.f76.physical_register and
+             not add_this_to_parent^.f76.physical_register_is_no_modify and
+             not add_this_to_parent^.f76.physical_register_user_declared then begin
             if (solution$t(add_this_to_parent^.kind) in
                 [solution$fp_reg_pair_high, solution$fp_reg_pair_low, solution$fp_reg,
                  solution$fp_reg_pair, solution$fp_reg_quad]) or
-               ((add_this_to_parent^.f76.reg <>
-                 isc_solution_ptr_t(isc_user_routines_330)^.f76.reg) and
-                (add_this_to_parent^.f76.reg <>
-                 isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg)) then
-              add_this_to_parent^.f114.b6 := true;
+               ((add_this_to_parent^.f76.physical_register_number <>
+                 isc_solution_ptr_t(isc_user_routines_330)^.f76.physical_register_number) and
+                (add_this_to_parent^.f76.physical_register_number <>
+                 isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number)) then
+              add_this_to_parent^.f114.builtin_could_deadlock_sched := true;
           end;
         end
         else begin
@@ -2304,7 +2287,7 @@ done:
   if add_this_to_work_list <> nil then begin
     if appended or
        (not (solution$t(add_this_to_parent^.kind) in permissible_solution_kinds) and wanted and
-        not pm_sol_flags_ptr_t(add_this_to_parent)^.f81.dead_end) then begin
+        not add_this_to_parent^.f76.dead_end) then begin
       if isc_user_routines_354 then begin
         write('Adding the following solution to the work list:');
         writeln;
@@ -2325,7 +2308,7 @@ end;
   lists after: `case solution^.kind of' (a chain rule's subject kind,
   every kind 1..23 a label; any other kind an error, a message under
   the traces, else bug_check) and, for a proper_subtree, `case
-  il$t(solution^.w98) of' (an operator no pattern names an error); in
+  il$t(solution^.il_kind) of' (an operator no pattern names an error); in
   each arm the rules tried under it, in rule order, each when its
   pattern's tests hold (children's kinds, nested proper_subtrees'
   operators, in pattern order).  The case statements are the
@@ -2461,7 +2444,7 @@ begin
       hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 252);
       end;
     solution$proper_subtree:
-      case il$t(solution^.w98) of
+      case il$t(solution^.il_kind) of
         il_addr_con: begin
           if solution^.children[1]^.kind = ord(solution$irrelevant) then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 13);
@@ -2606,9 +2589,9 @@ begin
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
             if solution^.children[2]^.kind = ord(solution$proper_subtree) then
-              if solution^.children[2]^.w98 = ord(il_not_top) then
+              if solution^.children[2]^.il_kind = ord(il_not_top) then
                 if solution^.children[2]^.children[1]^.kind = ord(solution$proper_subtree) then
-                  if solution^.children[2]^.children[1]^.w98 = ord(il_bit_set_top) then
+                  if solution^.children[2]^.children[1]^.il_kind = ord(il_bit_set_top) then
                     if solution^.children[2]^.children[1]^.children[1]^.kind = ord(solution$literal_32_bits) then
                       if solution^.children[2]^.children[1]^.children[2]^.kind = ord(solution$ip_reg) then
                         if solution^.children[2]^.children[1]^.children[3]^.kind = ord(solution$void) then
@@ -2883,7 +2866,7 @@ begin
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
             if solution^.children[2]^.kind = ord(solution$proper_subtree) then
-              if solution^.children[2]^.w98 = ord(il_bit_set_top) then
+              if solution^.children[2]^.il_kind = ord(il_bit_set_top) then
                 if solution^.children[2]^.children[1]^.kind = ord(solution$literal_32_bits) then
                   if solution^.children[2]^.children[2]^.kind = ord(solution$ip_reg) then
                     if solution^.children[2]^.children[3]^.kind = ord(solution$void) then
@@ -3419,7 +3402,7 @@ begin
           if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 81);
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_dpreal_ob) then
+            if solution^.children[1]^.il_kind = ord(il_dpreal_ob) then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 82);
           if solution^.children[1]^.kind = ord(solution$processor_reg) then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 245);
@@ -3523,7 +3506,7 @@ begin
           end;
         il_ptr_node: begin
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_addr_top) then
+            if solution^.children[1]^.il_kind = ord(il_addr_top) then
               if solution^.children[1]^.children[1]^.kind = ord(solution$address_mode) then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 83);
           if solution^.children[1]^.kind = ord(solution$ip_reg) then
@@ -3680,11 +3663,11 @@ begin
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 333);
           if solution^.children[1]^.kind = ord(solution$ip_reg) then
             if solution^.children[2]^.kind = ord(solution$proper_subtree) then
-              if solution^.children[2]^.w98 = ord(il_not_top) then
+              if solution^.children[2]^.il_kind = ord(il_not_top) then
                 if solution^.children[2]^.children[1]^.kind = ord(solution$ip_reg) then
                   hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 334);
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_not_top) then
+            if solution^.children[1]^.il_kind = ord(il_not_top) then
               if solution^.children[1]^.children[1]^.kind = ord(solution$ip_reg) then
                 if solution^.children[2]^.kind = ord(solution$ip_reg) then
                   hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 335);
@@ -3715,7 +3698,7 @@ begin
             if solution^.children[2]^.kind = ord(solution$ip_reg) then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 357);
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_lshf_top) then
+            if solution^.children[1]^.il_kind = ord(il_lshf_top) then
               if solution^.children[1]^.children[1]^.kind = ord(solution$ip_reg) then
                 if solution^.children[1]^.children[2]^.kind = ord(solution$literal_32_bits) then
                   if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
@@ -3820,7 +3803,7 @@ begin
           if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 411);
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_lshf_top) then
+            if solution^.children[1]^.il_kind = ord(il_lshf_top) then
               if solution^.children[1]^.children[1]^.kind = ord(solution$ip_reg) then
                 if solution^.children[1]^.children[2]^.kind = ord(solution$literal_32_bits) then
                   hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 412);
@@ -3913,7 +3896,7 @@ begin
             if solution^.children[2]^.kind = ord(solution$void) then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 427);
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_f_extend_top) then
+            if solution^.children[1]^.il_kind = ord(il_f_extend_top) then
               if solution^.children[1]^.children[1]^.kind = ord(solution$fp_reg) then
                 if solution^.children[1]^.children[2]^.kind = ord(solution$void) then
                   if solution^.children[2]^.kind = ord(solution$void) then
@@ -3934,7 +3917,7 @@ begin
             if solution^.children[2]^.kind = ord(solution$void) then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 433);
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_f_extend_top) then
+            if solution^.children[1]^.il_kind = ord(il_f_extend_top) then
               if solution^.children[1]^.children[1]^.kind = ord(solution$fp_reg_pair) then
                 if solution^.children[1]^.children[2]^.kind = ord(solution$void) then
                   if solution^.children[2]^.kind = ord(solution$void) then
@@ -4219,7 +4202,7 @@ begin
             if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 359);
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_rshf_top) then
+            if solution^.children[1]^.il_kind = ord(il_rshf_top) then
               if solution^.children[1]^.children[1]^.kind = ord(solution$ip_reg) then
                 if solution^.children[1]^.children[2]^.kind = ord(solution$literal_32_bits) then
                   if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
@@ -4234,7 +4217,7 @@ begin
             if solution^.children[2]^.kind = ord(solution$ip_reg) then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 363);
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_rshf_top) then
+            if solution^.children[1]^.il_kind = ord(il_rshf_top) then
               if solution^.children[1]^.children[1]^.kind = ord(solution$ip_reg) then
                 if solution^.children[1]^.children[2]^.kind = ord(solution$literal_32_bits) then
                   if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
@@ -4280,7 +4263,7 @@ begin
           if solution^.children[1]^.kind = ord(solution$fp_reg) then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 286);
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_compare_top) then
+            if solution^.children[1]^.il_kind = ord(il_compare_top) then
               if solution$t(solution^.children[1]^.children[1]^.kind) in
                   [solution$ip_reg, solution$ip_reg_field] then
                 if solution^.children[1]^.children[2]^.kind = ord(solution$literal_32_bits) then
@@ -4318,7 +4301,7 @@ begin
           if solution^.children[1]^.kind = ord(solution$fp_reg) then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 338);
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_bit_set_top) then
+            if solution^.children[1]^.il_kind = ord(il_bit_set_top) then
               if solution^.children[1]^.children[1]^.kind = ord(solution$literal_32_bits) then
                 if solution^.children[1]^.children[2]^.kind = ord(solution$ip_reg) then
                   if solution^.children[1]^.children[3]^.kind = ord(solution$void) then
@@ -4388,20 +4371,20 @@ begin
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 350);
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_bit_test_top) then
+            if solution^.children[1]^.il_kind = ord(il_bit_test_top) then
               if solution^.children[1]^.children[1]^.kind = ord(solution$literal_32_bits) then
                 if solution^.children[1]^.children[2]^.kind = ord(solution$address_mode) then
                   if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 365);
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_bit_test_top) then
+            if solution^.children[1]^.il_kind = ord(il_bit_test_top) then
               if solution^.children[1]^.children[1]^.kind = ord(solution$literal_32_bits) then
                 if solution$t(solution^.children[1]^.children[2]^.kind) in
                     [solution$ip_reg, solution$ip_reg_field] then
                   if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 366);
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_bit_test_top) then
+            if solution^.children[1]^.il_kind = ord(il_bit_test_top) then
               if solution$t(solution^.children[1]^.children[1]^.kind) in
                   [solution$ip_reg, solution$literal_32_bits] then
                 if solution$t(solution^.children[1]^.children[2]^.kind) in
@@ -4409,7 +4392,7 @@ begin
                   if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 367);
           if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.w98 = ord(il_compare_top) then
+            if solution^.children[1]^.il_kind = ord(il_compare_top) then
               if solution$t(solution^.children[1]^.children[1]^.kind) in
                   [solution$ip_reg, solution$ip_reg_field] then
                 if solution^.children[1]^.children[2]^.kind = ord(solution$literal_32_bits) then
@@ -4700,13 +4683,13 @@ begin
         otherwise
           if isc_user_routines_356 or isc_user_routines_354 then begin
             write('ISC: source line ');
-            write(inh^.pos.line:1);
+            write(inh^.pos.source_line_number:1);
             write(': pattern_matcher: Unrecognized solution^.il_kind.');
             writeln;
             end
           else
             bug_check('ISC: source line %wd: pattern_matcher: Unrecognized solution^.il_kind.%$',
-                      inh^.pos.line);
+                      inh^.pos.source_line_number);
         end;
     solution$case_jump_base, solution$fp_reg_pair_high,
     solution$fp_reg_pair_low, solution$local_routine, solution$ctl_reg,
@@ -4716,13 +4699,13 @@ begin
     otherwise
       if isc_user_routines_356 or isc_user_routines_354 then begin
         write('ISC: source line ');
-        write(inh^.pos.line:1);
+        write(inh^.pos.source_line_number:1);
         write(': pattern_matcher: Unrecognized solution^.kind.');
         writeln;
         end
       else
         bug_check('ISC: source line %wd: pattern_matcher: Unrecognized solution^.kind.%$',
-                  inh^.pos.line);
+                  inh^.pos.source_line_number);
     end;
   if isc_user_routines_354 then begin
     write('*************************');

@@ -557,7 +557,7 @@ begin
         sol := local_create_soln_for_fp_reg_quad(isc_preserve_heap)
       else
         bug_check('ISC: local_initialize_symbol: Unrecognized register candidate size.%$');
-      sol^.obj_w_name := sym;
+      sol^.object_with_name := sym;
       case sol^.kind of
         11: lr := lir_$new_live_range_ip_reg;
         9: if cls = 6 then
@@ -581,7 +581,7 @@ begin
         lr2^.node20 := sym;
         if (attr & 16#800) <> 0 then
           lr2^.rrp := lr2^.rrp + [rrp$unique_value];
-        sol^.lr2 := lr2;
+        sol^.live_range_of_imaginary_part := lr2;
         if cls = 6 then begin
           lr^.mate := lr2;
           lr2^.mate := lr;
@@ -1072,9 +1072,9 @@ end;
 function available_precision_function;
 begin
   if sol^.kind = 12 then
-    available_precision_function := sol^.f76.b77
+    available_precision_function := sol^.f76.field_precision
   else
-    available_precision_function := sol^.inherited^.precision;
+    available_precision_function := sol^.inherited_attributes^.fetch_precision;
 end;
 
 { is_all_zeroes - whether node is a set constant (156) whose words are
@@ -1500,9 +1500,9 @@ var
   r: integer;
 begin
   r := 3;
-  if s1^.f76.physical and s1^.f76.b83_2 then
+  if s1^.f76.physical_register and s1^.f76.physical_register_from_function_call then
     r := 2;
-  if s2^.f76.physical and s2^.f76.b83_2 then
+  if s2^.f76.physical_register and s2^.f76.physical_register_from_function_call then
     r := r - 2;
   legal_evaluation_orders := r;
 end;
@@ -1549,10 +1549,11 @@ end;
 
 { similar_solutions - whether a and b cost the same and leave the same:
   the registers they need and leave (+58..+72), code bytes, memory
-  references, delay, +82 bit 4, physical, uses_disp, uses_index_reg
-  and bits_trusted; for a register field (12) also +81 bit 0, +76 and
-  +77; for kind 16 also the low two bits of bits_trusted and
-  bits_known.
+  references, delay, is_destroyable, physical_register,
+  uses_the_displacement, uses_the_index_register and bits_trusted; for
+  a register field (12) also field_requires_sign_extend,
+  bit_position_of_lsb and field_precision; for kind 16 also the low
+  two bits of bits_trusted and bits_known.
 
   0x21255A, 0x148 bytes: a 8, b 12; the flags compared as `sne' bytes. }
 
@@ -1568,17 +1569,17 @@ begin
      and (a^.fp_reg_pair_max = b^.fp_reg_pair_max)
      and (a^.fp_reg_pair_result = b^.fp_reg_pair_result)
      and (a^.code_bytes = b^.code_bytes)
-     and (a^.memory_refs = b^.memory_refs)
+     and (a^.memory_references = b^.memory_references)
      and (a^.delay = b^.delay)
-     and (a^.f76.b82_4 = b^.f76.b82_4)
-     and (a^.f76.physical = b^.f76.physical)
-     and (a^.f76.uses_disp = b^.f76.uses_disp)
-     and (a^.f76.uses_index_reg = b^.f76.uses_index_reg)
+     and (a^.f76.is_destroyable = b^.f76.is_destroyable)
+     and (a^.f76.physical_register = b^.f76.physical_register)
+     and (a^.f76.uses_the_displacement = b^.f76.uses_the_displacement)
+     and (a^.f76.uses_the_index_register = b^.f76.uses_the_index_register)
      and (a^.bits_trusted = b^.bits_trusted) then
     r := true;
   if (a^.kind = 12) and r then
-    if (a^.f76.b81_0 <> b^.f76.b81_0) or (a^.f76.b76 <> b^.f76.b76)
-       or (a^.f76.b77 <> b^.f76.b77) then
+    if (a^.f76.field_requires_sign_extend <> b^.f76.field_requires_sign_extend) or (a^.f76.bit_position_of_lsb <> b^.f76.bit_position_of_lsb)
+       or (a^.f76.field_precision <> b^.f76.field_precision) then
       r := false;
   if (a^.kind = 16) and r then
     if ((a^.bits_trusted & 3) <> (b^.bits_trusted & 3))
@@ -1590,8 +1591,9 @@ end;
 { clearly_dominates - whether a costs no more than b in every respect
   (delay, memory references, code bytes, the registers +58..+72,
   compared unsigned) and is otherwise interchangeable with it: not
-  with +82 bit 4 clear where b's is set; the same bits_trusted,
-  uses_index_reg, physical and uses_disp; the kind 12 and 16 tests of
+  with is_destroyable clear where b's is set; the same bits_trusted,
+  uses_the_index_register, physical_register and
+  uses_the_displacement; the kind 12 and 16 tests of
   similar_solutions.
 
   0x2126A2, 0x146 bytes: a 8, b 12 (`bhi'). }
@@ -1602,7 +1604,7 @@ var
 begin
   r := false;
   if (a^.delay <= b^.delay)
-     and (a^.memory_refs <= b^.memory_refs)
+     and (a^.memory_references <= b^.memory_references)
      and (a^.code_bytes <= b^.code_bytes)
      and (a^.fp_reg_pair_result <= b^.fp_reg_pair_result)
      and (a^.fp_reg_pair_max <= b^.fp_reg_pair_max)
@@ -1611,18 +1613,18 @@ begin
      and (a^.ip_reg_max <= b^.ip_reg_max)
      and (a^.ip_reg_result <= b^.ip_reg_result) then
     r := true;
-  if not a^.f76.b82_4 and r then
-    if b^.f76.b82_4 then
+  if not a^.f76.is_destroyable and r then
+    if b^.f76.is_destroyable then
       r := false;
   if r then
     if (a^.bits_trusted <> b^.bits_trusted)
-       or (a^.f76.uses_index_reg <> b^.f76.uses_index_reg)
-       or (a^.f76.physical <> b^.f76.physical)
-       or (a^.f76.uses_disp <> b^.f76.uses_disp) then
+       or (a^.f76.uses_the_index_register <> b^.f76.uses_the_index_register)
+       or (a^.f76.physical_register <> b^.f76.physical_register)
+       or (a^.f76.uses_the_displacement <> b^.f76.uses_the_displacement) then
       r := false;
   if (a^.kind = 12) and r then
-    if (a^.f76.b81_0 <> b^.f76.b81_0) or (a^.f76.b76 <> b^.f76.b76)
-       or (a^.f76.b77 <> b^.f76.b77) then
+    if (a^.f76.field_requires_sign_extend <> b^.f76.field_requires_sign_extend) or (a^.f76.bit_position_of_lsb <> b^.f76.bit_position_of_lsb)
+       or (a^.f76.field_precision <> b^.f76.field_precision) then
       r := false;
   if (a^.kind = 16) and r then
     if ((a^.bits_trusted & 3) <> (b^.bits_trusted & 3))
@@ -1656,7 +1658,7 @@ begin
     if (s^.kind <> 7) and (s^.kind <> 22) then begin
       cost := s^.code_bytes + s^.delay;
       if (best = nil) or (cost < best_cost)
-         or ((cost = best_cost) and (s^.memory_refs < best^.memory_refs)) then begin
+         or ((cost = best_cost) and (s^.memory_references < best^.memory_references)) then begin
         best := s;
         best_cost := cost;
       end;
@@ -2121,8 +2123,9 @@ begin
 end;
 
 { well_known_literal - a literal solution of v (kind 14, from the
-  compilation's heap: symbol the integer constant smcontk(81, v), w98
-  78; every bit known and trusted, disp v), for the table
+  compilation's heap: symbol the integer constant smcontk(81, v),
+  il_kind 78; every bit known and trusted, literal_32_bits_value v),
+  for the table
   find_well_known_literal_solution reads.
 
   0x213042, 0x5C bytes: v 8; A0. }
@@ -2136,7 +2139,7 @@ begin
   s := new_solution(isc_user_routines_20c, 14, 0, nil, c, 78);
   s^.bits_known := v;
   s^.bits_trusted := -1;
-  s^.disp := v;
+  s^.literal_32_bits_value := v;
   well_known_literal := s;
 end;
 
@@ -2269,7 +2272,7 @@ var
 begin
   d := duplicate_solution(isc_heap, sol);
   d^.kind := 13;
-  d^.f76.shift := shift;
+  d^.f76.scale := shift;
   ip_reg_to_ip_reg_scaled := d;
 end;
 
@@ -2284,7 +2287,7 @@ var
 begin
   d := duplicate_solution(isc_heap, sol);
   d^.kind := 11;
-  d^.f76.shift := 0;
+  d^.f76.scale := 0;
   ip_reg_scaled_to_ip_reg := d;
 end;
 
@@ -2328,10 +2331,10 @@ begin
     d := duplicate_solution(isc_heap, sol);
     d^.kind := 3;
     d^.live_range := sol^.live_range^.mate;
-    d^.f76.physical := d^.live_range^.f2.physical;
-    d^.f76.no_modify := d^.live_range^.f2.no_modify;
-    d^.f76.serialize := d^.live_range^.f2.serialize;
-    d^.f76.reg := d^.live_range^.f2.reg;
+    d^.f76.physical_register := d^.live_range^.f2.physical;
+    d^.f76.physical_register_is_no_modify := d^.live_range^.f2.no_modify;
+    d^.f76.physical_register_user_declared := d^.live_range^.f2.serialize;
+    d^.f76.physical_register_number := d^.live_range^.f2.reg;
   end;
   low_half_of_fp_reg_pair := d;
 end;
@@ -2373,13 +2376,13 @@ begin
     d := duplicate_solution(isc_user_routines_20c, sol);
     d^.kind := 9;
   end;
-  if sol^.lr2 = nil then
-    sol^.lr2 := lir_$new_live_range_fp_reg_pair;
-  d^.live_range := sol^.lr2;
-  d^.f76.physical := d^.live_range^.f2.physical;
-  d^.f76.no_modify := d^.live_range^.f2.no_modify;
-  d^.f76.serialize := d^.live_range^.f2.serialize;
-  d^.f76.reg := d^.live_range^.f2.reg;
+  if sol^.live_range_of_imaginary_part = nil then
+    sol^.live_range_of_imaginary_part := lir_$new_live_range_fp_reg_pair;
+  d^.live_range := sol^.live_range_of_imaginary_part;
+  d^.f76.physical_register := d^.live_range^.f2.physical;
+  d^.f76.physical_register_is_no_modify := d^.live_range^.f2.no_modify;
+  d^.f76.physical_register_user_declared := d^.live_range^.f2.serialize;
+  d^.f76.physical_register_number := d^.live_range^.f2.reg;
   low_half_of_fp_reg_quad := d;
 end;
 
@@ -2388,8 +2391,9 @@ end;
   0 from the symbol), under new attributes of precision bits, with the
   known and trusted bits given.
 
-  0x21368E, 0x8A bytes: sym 8, precision 12, known 16, trusted 20; w98
-  176; +84 bits 7 and 6 set (`ori.b #-64'), bit 5 cleared; A0. }
+  0x21368E, 0x8A bytes: sym 8, precision 12, known 16, trusted 20;
+  il_kind 176; uses_the_base_register and uses_the_displacement set
+  (`ori.b #-64'), uses_the_index_register cleared; A0. }
 
 function address_mode_for_expression_temporary;
 var
@@ -2397,18 +2401,18 @@ var
   s: isc_solution_ptr_t;
 begin
   inh := new_inherited_attributes(isc_heap, sym);
-  inh^.precision := precision;
+  inh^.fetch_precision := precision;
   s := new_solution(isc_heap, 5, 0, inh, sym, 176);
   s^.bits_known := known;
   s^.bits_trusted := trusted;
-  s^.f76.has_sym_disp := true;
-  s^.disp := 0;
-  s^.f76.b84_7 := true;
-  s^.f76.uses_disp := true;
-  s^.f76.uses_index_reg := false;
-  s^.base_reg := lr_ptr_t(isc_user_routines_340);
-  s^.index_reg := lr_ptr_t(isc_user_routines_31c);
-  s^.obj_w_name := sym;
+  s^.f76.has_a_symbolic_displacement := true;
+  s^.literal_32_bits_value := 0;
+  s^.f76.uses_the_base_register := true;
+  s^.f76.uses_the_displacement := true;
+  s^.f76.uses_the_index_register := false;
+  s^.base_register := lr_ptr_t(isc_user_routines_340);
+  s^.index_register := lr_ptr_t(isc_user_routines_31c);
+  s^.object_with_name := sym;
   address_mode_for_expression_temporary := s;
 end;
 
@@ -2418,7 +2422,7 @@ end;
 
   0x213718, 0xB4 bytes: v 8 (a single, by value); the widening
   `fpp_$eslv' into (-32,A6), copied to (-8,A6) and passed by address;
-  w98 93; A0. }
+  il_kind 93; A0. }
 
 function address_mode_for_single_value;
 var
@@ -2430,23 +2434,23 @@ begin
   d := v;                              { fpp_$eslv: dpc gap 6 }
   c := rlcontk(d);
   inh := new_inherited_attributes(isc_heap, c);
-  inh^.precision := 32;
+  inh^.fetch_precision := 32;
   s := new_solution(isc_heap, 5, 0, inh, c, 93);
   s^.bits_known := 0;
   s^.bits_trusted := 3;
-  s^.f76.has_sym_disp := true;
-  s^.disp := 0;
-  s^.f76.b84_7 := true;
-  s^.f76.uses_disp := true;
-  s^.f76.uses_index_reg := false;
-  s^.base_reg := lr_ptr_t(literal_base_register);
-  s^.index_reg := lr_ptr_t(isc_user_routines_31c);
-  s^.obj_w_name := c;
+  s^.f76.has_a_symbolic_displacement := true;
+  s^.literal_32_bits_value := 0;
+  s^.f76.uses_the_base_register := true;
+  s^.f76.uses_the_displacement := true;
+  s^.f76.uses_the_index_register := false;
+  s^.base_register := lr_ptr_t(literal_base_register);
+  s^.index_register := lr_ptr_t(isc_user_routines_31c);
+  s^.object_with_name := c;
   address_mode_for_single_value := s;
 end;
 
 { address_mode_for_double_value - likewise for the double d (dpcontk;
-  precision 64, low three bits trusted zero; w98 70).
+  precision 64, low three bits trusted zero; il_kind 70).
 
   0x2137CC, 0xAC bytes: d 8 (by address, copied to (-8,A6) first). }
 
@@ -2460,24 +2464,24 @@ begin
   t := d;                              { a double copied: dpc gap 7 }
   c := dpcontk(t);
   inh := new_inherited_attributes(isc_heap, c);
-  inh^.precision := 64;
+  inh^.fetch_precision := 64;
   s := new_solution(isc_heap, 5, 0, inh, c, 70);
   s^.bits_known := 0;
   s^.bits_trusted := 7;
-  s^.f76.has_sym_disp := true;
-  s^.disp := 0;
-  s^.f76.b84_7 := true;
-  s^.f76.uses_disp := true;
-  s^.f76.uses_index_reg := false;
-  s^.base_reg := lr_ptr_t(literal_base_register);
-  s^.index_reg := lr_ptr_t(isc_user_routines_31c);
-  s^.obj_w_name := c;
+  s^.f76.has_a_symbolic_displacement := true;
+  s^.literal_32_bits_value := 0;
+  s^.f76.uses_the_base_register := true;
+  s^.f76.uses_the_displacement := true;
+  s^.f76.uses_the_index_register := false;
+  s^.base_register := lr_ptr_t(literal_base_register);
+  s^.index_register := lr_ptr_t(isc_user_routines_31c);
+  s^.object_with_name := c;
   address_mode_for_double_value := s;
 end;
 
 { address_mode_for_integer32_value - likewise for the integer v
-  (smcontk(81, v); precision left at 32; +40 v, +44 -1, +56 4; w98
-  78).
+  (smcontk(81, v); precision left at 32; bits_known_of_fetched_value
+  v, bits_trusted_of_fetched_value -1, bytes 4; il_kind 78).
 
   0x213878, 0xAA bytes: v 8; A0. }
 
@@ -2492,17 +2496,17 @@ begin
   s := new_solution(isc_heap, 5, 0, inh, c, 78);
   s^.bits_known := 0;
   s^.bits_trusted := 3;
-  s^.l40 := v;
-  s^.l44 := -1;
-  s^.w56 := 4;
-  s^.f76.has_sym_disp := true;
-  s^.disp := 0;
-  s^.f76.b84_7 := true;
-  s^.f76.uses_disp := true;
-  s^.f76.uses_index_reg := false;
-  s^.base_reg := lr_ptr_t(literal_base_register);
-  s^.index_reg := lr_ptr_t(isc_user_routines_31c);
-  s^.obj_w_name := c;
+  s^.bits_known_of_fetched_value := v;
+  s^.bits_trusted_of_fetched_value := -1;
+  s^.bytes := 4;
+  s^.f76.has_a_symbolic_displacement := true;
+  s^.literal_32_bits_value := 0;
+  s^.f76.uses_the_base_register := true;
+  s^.f76.uses_the_displacement := true;
+  s^.f76.uses_the_index_register := false;
+  s^.base_register := lr_ptr_t(literal_base_register);
+  s^.index_register := lr_ptr_t(isc_user_routines_31c);
+  s^.object_with_name := c;
   address_mode_for_integer32_value := s;
 end;
 
@@ -2577,7 +2581,7 @@ var
   s: isc_solution_ptr_t;
 begin
   s := new_solution(isc_heap, 13, 0, nil, nil, 0);
-  s^.f76.shift := 0;
+  s^.f76.scale := 0;
   create_solution_for_ip_reg_scaled := s;
 end;
 
@@ -2598,10 +2602,10 @@ var
 begin
   s := new_solution(isc_heap, 8, 0, nil, nil, 0);
   s^.live_range := lir_3f90[r];
-  s^.f76.physical := s^.live_range^.f2.physical;
-  s^.f76.no_modify := s^.live_range^.f2.no_modify;
-  s^.f76.serialize := s^.live_range^.f2.serialize;
-  s^.f76.reg := s^.live_range^.f2.reg;
+  s^.f76.physical_register := s^.live_range^.f2.physical;
+  s^.f76.physical_register_is_no_modify := s^.live_range^.f2.no_modify;
+  s^.f76.physical_register_user_declared := s^.live_range^.f2.serialize;
+  s^.f76.physical_register_number := s^.live_range^.f2.reg;
   create_solution_for_fp_reg_physical := s;
 end;
 
@@ -2621,10 +2625,10 @@ var
 begin
   s := new_solution(isc_heap, 9, 0, nil, nil, 0);
   s^.live_range := lir_3f90[r];
-  s^.f76.physical := s^.live_range^.f2.physical;
-  s^.f76.no_modify := s^.live_range^.f2.no_modify;
-  s^.f76.serialize := s^.live_range^.f2.serialize;
-  s^.f76.reg := s^.live_range^.f2.reg;
+  s^.f76.physical_register := s^.live_range^.f2.physical;
+  s^.f76.physical_register_is_no_modify := s^.live_range^.f2.no_modify;
+  s^.f76.physical_register_user_declared := s^.live_range^.f2.serialize;
+  s^.f76.physical_register_number := s^.live_range^.f2.reg;
   create_solution_for_fp_reg_pair_physical := s;
 end;
 
@@ -2643,7 +2647,7 @@ var
   s: isc_solution_ptr_t;
 begin
   s := new_solution(isc_heap, 14, 0, nil, nil, 0);
-  s^.disp := v;
+  s^.literal_32_bits_value := v;
   create_solution_for_literal_32_bits := s;
 end;
 
@@ -2663,8 +2667,9 @@ begin
 end;
 
 { duplicate_address_mode_adding_byte_offset - sol itself for offset 0,
-  else a copy displaced by offset (bits_known and disp; uses_disp set
-  when the displacement is not zero).
+  else a copy displaced by offset (bits_known and
+  literal_32_bits_value; uses_the_displacement set when the
+  displacement is not zero).
 
   0x213CDE, 0x44 bytes: sol 8, offset 12; A0. }
 
@@ -2677,9 +2682,9 @@ begin
   else begin
     d := duplicate_address_mode(sol);
     d^.bits_known := d^.bits_known + offset;
-    d^.disp := d^.disp + offset;
-    if d^.disp <> 0 then
-      d^.f76.uses_disp := true;
+    d^.literal_32_bits_value := d^.literal_32_bits_value + offset;
+    if d^.literal_32_bits_value <> 0 then
+      d^.f76.uses_the_displacement := true;
   end;
   duplicate_address_mode_adding_byte_offset := d;
 end;
@@ -2884,7 +2889,7 @@ var
 begin
   if (node^.kind = 110) or (node^.kind = 189) or (node^.kind = 190) then begin
     h := isc_solution_ptr_t(isc_$get_home_solution(node));
-    lr := h^.lr2;
+    lr := h^.live_range_of_imaginary_part;
     if lr = nil then begin
       case h^.kind of
         11: lr := lir_$new_live_range_ip_reg;
@@ -2896,7 +2901,7 @@ begin
       if lr = nil then
         bug_check('ISC: get_live_range_of_imaginary_part: result = nil.%$');
       lr^.node20 := node;
-      h^.lr2 := lr;
+      h^.live_range_of_imaginary_part := lr;
     end;
   end
   else
@@ -2944,8 +2949,8 @@ begin
   initialize_well_known_symbol(v, true);
   h := v^.vn_home;
   if k >= 0 then begin
-    h^.f76.physical := true;
-    h^.f76.reg := k;
+    h^.f76.physical_register := true;
+    h^.f76.physical_register_number := k;
   end;
   isc_$init_well_known_ip_reg := solution_ptr_t(h);
 end;
@@ -2983,8 +2988,8 @@ begin
   initialize_well_known_symbol(v, true);
   h := v^.vn_home;
   if k >= 0 then begin
-    h^.f76.physical := true;
-    h^.f76.reg := k;
+    h^.f76.physical_register := true;
+    h^.f76.physical_register_number := k;
   end;
   isc_$init_well_known_fp_reg := solution_ptr_t(h);
 end;
@@ -3022,8 +3027,8 @@ begin
   initialize_well_known_symbol(v, true);
   h := v^.vn_home;
   if k >= 0 then begin
-    h^.f76.physical := true;
-    h^.f76.reg := k;
+    h^.f76.physical_register := true;
+    h^.f76.physical_register_number := k;
   end;
   isc_$init_well_known_fp_reg_pair := solution_ptr_t(h);
 end;
@@ -3910,13 +3915,13 @@ begin
                 or (a = arith_address)) then
           p := 32;
       inh := new_inherited_attributes(isc_heap, c);
-      inh^.top := eval^.xp[3];
-      inh^.precision := p;
-      inh^.stmt := parent^.xp[3];
-      inh^.f38.arith := ord(arithmetic_from_il_node(c));
-      inh^.available := p;
-      inh^.pos.line := eval^.xw[10];
-      inh^.pos.stmt := rshft(eval^.st_l42 & 16#FFFF00, 8);
+      inh^.exception_frame := eval^.xp[3];
+      inh^.fetch_precision := p;
+      inh^.original_il := parent^.xp[3];
+      inh^.f38.required_arithmetic := ord(arithmetic_from_il_node(c));
+      inh^.required_precision := p;
+      inh^.pos.source_line_number := eval^.xw[10];
+      inh^.pos.stmt_number := rshft(eval^.st_l42 & 16#FFFF00, 8);
       isc_$process_statement(c, inh);
     end
     else if isc_user_routines_356 or isc_user_routines_354 then begin
@@ -4507,26 +4512,26 @@ begin
     write('LB');
   end
   else if (solution_ptr_t(sol) = isc_user_routines_340)
-          or ((sol^.f76.reg = isc_solution_ptr_t(isc_user_routines_340)^.f76.reg)
-              and (sol^.kind = 11) and sol^.f76.physical) then begin
+          or ((sol^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_340)^.f76.physical_register_number)
+              and (sol^.kind = 11) and sol^.f76.physical_register) then begin
     write('SF');
   end
   else
     case sol^.kind of
       5: begin
         write('<address_mode: ');
-        if sol^.f76.uses_index_reg then begin
+        if sol^.f76.uses_the_index_register then begin
           write('index_reg = ');
-          write(solution_to_string(isc_solution_ptr_t(sol^.index_reg)));
+          write(solution_to_string(isc_solution_ptr_t(sol^.index_register)));
         end
-        else if sol^.f76.uses_disp then begin
+        else if sol^.f76.uses_the_displacement then begin
           write('literal_32_bits_value = ');
-          if sol^.f76.has_sym_disp then begin
+          if sol^.f76.has_a_symbolic_displacement then begin
             write('sym_disp(');
-            write(il_node_to_string(sol^.obj_w_name));
+            write(il_node_to_string(sol^.object_with_name));
             write(') + ');
           end;
-          write(sol^.disp:1);
+          write(sol^.literal_32_bits_value:1);
         end;
         write('>');
       end;
@@ -4534,26 +4539,26 @@ begin
       8: begin
         r := -1;
         for i := 0 to 63 do
-          if sol^.f76.physical and (sol^.f76.reg = i) then
+          if sol^.f76.physical_register and (sol^.f76.physical_register_number = i) then
             r := i;
         if r <> -1 then begin
           write('S');
           write(r:1);
-          if sol^.obj_w_name <> nil then begin
+          if sol^.object_with_name <> nil then begin
             write(' == ');
-            write(il_node_to_string(sol^.obj_w_name));
+            write(il_node_to_string(sol^.object_with_name));
           end;
         end
         else begin
           write('<fp_reg: ');
           write(live_range_to_string(sol^.live_range));
-          if sol^.obj_w_name <> nil then begin
+          if sol^.object_with_name <> nil then begin
             write(' == ');
-            write(il_node_to_string(sol^.obj_w_name));
+            write(il_node_to_string(sol^.object_with_name));
           end;
-          if sol^.f76.physical then begin
+          if sol^.f76.physical_register then begin
             write(', physical #');
-            write(sol^.f76.reg:1);
+            write(sol^.f76.physical_register_number:1);
           end;
           write('>');
         end;
@@ -4561,14 +4566,14 @@ begin
       2, 3, 9: begin
         r := -1;
         for i := 0 to 63 do
-          if sol^.f76.physical and (sol^.f76.reg = i) then
+          if sol^.f76.physical_register and (sol^.f76.physical_register_number = i) then
             r := i;
         if r <> -1 then begin
           write('D');
           write(r:1);
-          if sol^.obj_w_name <> nil then begin
+          if sol^.object_with_name <> nil then begin
             write(' == ');
-            write(il_node_to_string(sol^.obj_w_name));
+            write(il_node_to_string(sol^.object_with_name));
           end;
           if sol^.kind = 2 then begin
             write(' HIGH');
@@ -4580,13 +4585,13 @@ begin
         else begin
           write('<fp_reg_pair: ');
           write(live_range_to_string(sol^.live_range));
-          if sol^.obj_w_name <> nil then begin
+          if sol^.object_with_name <> nil then begin
             write(' == ');
-            write(il_node_to_string(sol^.obj_w_name));
+            write(il_node_to_string(sol^.object_with_name));
           end;
-          if sol^.f76.physical then begin
+          if sol^.f76.physical_register then begin
             write(', physical #');
-            write(sol^.f76.reg:1);
+            write(sol^.f76.physical_register_number:1);
           end;
           if sol^.kind = 2 then begin
             write(' HIGH');
@@ -4600,18 +4605,18 @@ begin
       11, 12, 13: begin
         r := -1;
         for i := 0 to 31 do
-          if sol^.f76.physical and (sol^.f76.reg = i) then
+          if sol^.f76.physical_register and (sol^.f76.physical_register_number = i) then
             r := i;
         if r <> -1 then begin
           write('R');
           write(r:1);
           if sol^.kind = 12 then begin
             write(', bit_posn_of_lsb = ');
-            write(sol^.f76.b76:1);
+            write(sol^.f76.bit_position_of_lsb:1);
           end;
           if sol^.kind = 13 then begin
             write(' << ');
-            write(sol^.f76.shift:1);
+            write(sol^.f76.scale:1);
           end;
           if (isc_user_routines_352 = 1) and (r = 30) then begin
             write(' == PC');
@@ -4629,47 +4634,47 @@ begin
             write('ip_reg_scaled: ');
           end;
           write(live_range_to_string(sol^.live_range));
-          if sol^.obj_w_name <> nil then begin
+          if sol^.object_with_name <> nil then begin
             write(' == ');
-            write(il_node_to_string(sol^.obj_w_name));
+            write(il_node_to_string(sol^.object_with_name));
           end;
           if sol^.kind = 12 then begin
             write(', ');
-            write(sol^.f76.b77:1);
+            write(sol^.f76.field_precision:1);
             write('@');
-            write(sol^.f76.b76:1);
+            write(sol^.f76.bit_position_of_lsb:1);
           end;
           if sol^.kind = 13 then begin
             write(' << ');
-            write(sol^.f76.shift:1);
+            write(sol^.f76.scale:1);
           end;
-          if sol^.f76.physical then begin
+          if sol^.f76.physical_register then begin
             write(', physical #');
-            write(sol^.f76.reg:1);
+            write(sol^.f76.physical_register_number:1);
           end;
           write('>');
         end;
       end;
       14: begin
         write('# ');
-        write(sol^.disp:1);
+        write(sol^.literal_32_bits_value:1);
         write(' / ');
-        write(sol^.disp:1);
+        write(sol^.literal_32_bits_value:1);
       end;
       4: begin
         write('<local_routine');
-        if sol^.obj_w_name <> nil then begin
+        if sol^.object_with_name <> nil then begin
           write(' == ');
-          write(il_node_to_string(sol^.obj_w_name));
+          write(il_node_to_string(sol^.object_with_name));
         end;
         write('>');
       end;
       16: begin
         write('<processor_reg: ');
         write('literal_32_bits_value = ');
-        write(sol^.disp:1);
+        write(sol^.literal_32_bits_value:1);
         write(', index = ');
-        write(solution_to_string(isc_solution_ptr_t(sol^.index_reg)));
+        write(solution_to_string(isc_solution_ptr_t(sol^.index_register)));
         write('>');
       end;
       20: write('<solution$any_solution>');

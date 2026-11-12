@@ -78,26 +78,6 @@ type
       2: (w: array [0..255] of integer);
       3: (p: array [0..127] of univ_ptr);
     end;
-  { The booleans isc_solution_fields.ins.pas lumps into one field
-    (f76.b81_7_2, f76.b83_7_4), under the image's names: a view of a
-    solution's f76 (+76..+87). }
-  p2_flags_ptr_t = ^p2_flags_t;
-  p2_flags_t = packed record
-    b76, b77, b78, b79, b80: 0..255;    { +76 }
-    all_zeroes_or_all_ones: boolean;    { +81 .7 }
-    arg_block_location: boolean;        { .6 }
-    bit_7_was_sign_extended: boolean;   { .5 }
-    bit_15_was_sign_extended: boolean;  { .4 }
-    dead_end: boolean;                  { .3 }
-    derived_from_literal: boolean;      { .2 }
-    b81_1_0: 0..3;
-    b82: 0..255;                        { +82 }
-    is_volatile: boolean;               { +83 .7 }
-    literal_64_bits_value_is_zero: boolean;  { .6 }
-    literal_derived_from_floating_constant: boolean;  { .5 }
-    materialize_true_as_1: boolean;     { .4 }
-    b83_3_0: 0..15;
-    end;
   { A rule's own fields where the insert has none of their size: words
     and longwords below +352 (the insert has bytes there, space136),
     bytes and longwords at an offset 4k + 2 from +352 (the insert has
@@ -159,10 +139,10 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 227;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 227;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;
-  solution^.memory_refs := 0;
+  solution^.memory_references := 0;
   solution^.delay := 0;
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -190,10 +170,10 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 228;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 228;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;
-  solution^.memory_refs := 0;
+  solution^.memory_references := 0;
   solution^.delay := 0;
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -221,10 +201,10 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 229;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 229;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := subject.children[1]^.code_bytes + 4;
-  solution^.memory_refs := subject.children[1]^.memory_refs;
+  solution^.memory_references := subject.children[1]^.memory_references;
   solution^.delay := subject.children[1]^.delay + 1;
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -253,12 +233,12 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 230;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 230;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + subject.children[4]^.code_bytes + 8;
-  solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs + subject.children[4]^.memory_refs;
+  solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references + subject.children[4]^.memory_references;
   solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay + subject.children[4]^.delay + 1;
-  solution^.eval_order := 1;
+  solution^.evaluation_order := 1;
   solution^.ip_reg_max := 0;
   solution^.fp_reg_max := 0;
   solution^.fp_reg_pair_max := 0;
@@ -289,12 +269,12 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 231;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 231;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := subject.children[1]^.code_bytes + 8;
-  solution^.memory_refs := subject.children[1]^.memory_refs;
+  solution^.memory_references := subject.children[1]^.memory_references;
   solution^.delay := subject.children[1]^.delay + 1;
-  solution^.eval_order := 1;
+  solution^.evaluation_order := 1;
   solution^.ip_reg_max := 0;
   solution^.fp_reg_max := 0;
   solution^.fp_reg_pair_max := 0;
@@ -325,10 +305,10 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 232;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 232;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-  solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+  solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
   solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
   solution^.ip_reg_max := subject.children[2]^.ip_reg_max;
   solution^.fp_reg_max := subject.children[2]^.fp_reg_max;
@@ -355,31 +335,31 @@ var
 begin
   result := nil;
   work := nil;
-  if (subject.children[2]^.kind = 14) or (subject.children[2]^.f76.reg = isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg) and subject.children[2]^.f76.physical and (subject.children[2]^.kind = 11) then begin
+  if (subject.children[2]^.kind = 14) or (subject.children[2]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) and subject.children[2]^.f76.physical_register and (subject.children[2]^.kind = 11) then begin
     if isc_user_routines_354 then begin
       write('Pattern 233 matched the semantics.');
       writeln;
     end;
     solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-    solution^.rule := 233;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 233;
+    solution^.before_transform := addr(subject);
     if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 0, 32, 0) then begin
       solution^.space136[136] := chr(1);
-      if p2_node_ptr_t(subject.sym)^.b[60] = (-1) then begin
+      if p2_node_ptr_t(subject.il)^.b[60] = (-1) then begin
         solution^.space136[137] := chr(1);
       end else begin
         solution^.space136[137] := chr(2);
       end;
     end else begin
       solution^.space136[136] := chr(2);
-      if p2_node_ptr_t(subject.sym)^.b[60] = (-1) then begin
+      if p2_node_ptr_t(subject.il)^.b[60] = (-1) then begin
         solution^.space136[138] := chr(1);
       end else begin
         solution^.space136[138] := chr(2);
       end;
     end;
     solution^.code_bytes := cost_233_4[ord(solution^.space136[137])] + cost_233_3[ord(solution^.space136[138])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := cost_233_2[ord(solution^.space136[137])] + cost_233_1[ord(solution^.space136[138])] + subject.children[1]^.delay + subject.children[2]^.delay;
     solution^.ip_reg_max := subject.children[2]^.ip_reg_max;
     solution^.fp_reg_max := subject.children[2]^.fp_reg_max;
@@ -413,14 +393,14 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 234;
-  solution^.chain := addr(subject);
-  if p2_node_ptr_t(subject.sym)^.b[60] & 128 <> 0 then begin
+  solution^.which_transform := 234;
+  solution^.before_transform := addr(subject);
+  if p2_node_ptr_t(subject.il)^.b[60] & 128 <> 0 then begin
     p2_locals_ptr_t(addr(solution^))^.w[176] := 6;
   end else begin
     p2_locals_ptr_t(addr(solution^))^.w[176] := 7;
   end;
-  t2 := make_bit_mask_1(subject.children[2]^.f76.b77, 0);
+  t2 := make_bit_mask_1(subject.children[2]^.f76.field_precision, 0);
   if p2_locals_ptr_t(addr(solution^))^.w[176] = 7 then begin
     solution^.space136[136] := chr(1);
   end
@@ -460,7 +440,7 @@ begin
     solution^.space136[136] := chr(13);
   end;
   solution^.code_bytes := cost_234_2[ord(solution^.space136[136])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-  solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+  solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
   solution^.delay := cost_234_1[ord(solution^.space136[136])] + subject.children[1]^.delay + subject.children[2]^.delay;
   solution^.ip_reg_max := subject.children[2]^.ip_reg_max;
   solution^.fp_reg_max := subject.children[2]^.fp_reg_max;
@@ -489,31 +469,31 @@ var
 begin
   result := nil;
   work := nil;
-  if not subject.children[2]^.f76.physical or (subject.children[2]^.kind <> 11) or (subject.children[2]^.f76.reg <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg) then begin
+  if not subject.children[2]^.f76.physical_register or (subject.children[2]^.kind <> 11) or (subject.children[2]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) then begin
     if isc_user_routines_354 then begin
       write('Pattern 235 matched the semantics.');
       writeln;
     end;
     solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-    solution^.rule := 235;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 235;
+    solution^.before_transform := addr(subject);
     t2 := make_bit_mask_1(8, 0);
     t3 := make_bit_mask_1(8, 0);
     if rshft(p2_node_ptr_t(il_180)^.b[377] & 112, 4) = 2 then begin
       solution^.space136[136] := chr(1);
-      if p2_flags_ptr_t(addr(subject.children[2]^.f76))^.bit_7_was_sign_extended then begin
+      if subject.children[2]^.f76.bit_7_was_sign_extended then begin
         solution^.space136[137] := chr(1);
       end else begin
         solution^.space136[137] := chr(2);
       end;
-      if p2_node_ptr_t(subject.sym)^.b[60] = (-1) then begin
+      if p2_node_ptr_t(subject.il)^.b[60] = (-1) then begin
         solution^.space136[138] := chr(1);
       end else begin
         solution^.space136[138] := chr(2);
       end;
     end else begin
       solution^.space136[136] := chr(2);
-      if p2_node_ptr_t(subject.sym)^.b[60] = (-1) then begin
+      if p2_node_ptr_t(subject.il)^.b[60] = (-1) then begin
         solution^.space136[139] := chr(1);
         if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 8, 24, 0) then begin
           solution^.space136[140] := chr(1);
@@ -530,7 +510,7 @@ begin
       end;
     end;
     solution^.code_bytes := cost_235_7[ord(solution^.space136[137])] + cost_235_6[ord(solution^.space136[138])] + cost_235_5[ord(solution^.space136[139])] + cost_235_4[ord(solution^.space136[140])] + cost_235_3[ord(solution^.space136[141])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := cost_235_2[ord(solution^.space136[138])] + cost_235_1[ord(solution^.space136[139])] + subject.children[1]^.delay + subject.children[2]^.delay;
     solution^.ip_reg_max := subject.children[2]^.ip_reg_max;
     solution^.fp_reg_max := subject.children[2]^.fp_reg_max;
@@ -562,10 +542,10 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 236;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 236;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;
-  solution^.memory_refs := 0;
+  solution^.memory_references := 0;
   solution^.delay := 0;
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -593,10 +573,10 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 237;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 237;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;
-  solution^.memory_refs := 0;
+  solution^.memory_references := 0;
   solution^.delay := 0;
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -624,60 +604,60 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 238;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 238;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := subject.children[1]^.code_bytes + 4;
-  solution^.memory_refs := subject.children[1]^.memory_refs;
+  solution^.memory_references := subject.children[1]^.memory_references;
   solution^.delay := subject.children[1]^.delay + 1;
-  solution^.l28 := subject.children[1]^.l28;
-  p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-  p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-  p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-  p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-  solution^.f76.b76 := subject.children[1]^.f76.b76;
+  solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+  solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+  solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+  solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+  solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+  solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
   solution^.bits_known := subject.children[1]^.bits_known;
   solution^.bits_trusted := subject.children[1]^.bits_trusted;
-  solution^.l40 := subject.children[1]^.l40;
-  solution^.l44 := subject.children[1]^.l44;
-  solution^.w56 := subject.children[1]^.w56;
-  p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-  p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-  solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-  solution^.f76.b77 := subject.children[1]^.f76.b77;
-  solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+  solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+  solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+  solution^.bytes := subject.children[1]^.bytes;
+  solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+  solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+  solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+  solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+  solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
   solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
   solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
   solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
   solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
   solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
   solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-  solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+  solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
   solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
   solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-  solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-  solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-  solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-  solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-  solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-  solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-  solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-  p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-  solution^.disp := subject.children[1]^.disp;
-  p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-  p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-  p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-  solution^.w74 := subject.children[1]^.w74;
-  solution^.l52 := subject.children[1]^.l52;
-  solution^.f76.physical := subject.children[1]^.f76.physical;
-  solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-  solution^.f76.reg := subject.children[1]^.f76.reg;
-  solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-  solution^.f76.serialize := subject.children[1]^.f76.serialize;
-  solution^.f76.shift := subject.children[1]^.f76.shift;
-  solution^.f76.b80 := subject.children[1]^.f76.b80;
-  solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-  solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-  solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+  solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+  solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+  solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+  solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+  solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+  solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+  solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+  solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+  solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+  solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+  solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+  solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+  solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+  solution^.pass_1_size := subject.children[1]^.pass_1_size;
+  solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+  solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+  solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+  solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+  solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+  solution^.f76.scale := subject.children[1]^.f76.scale;
+  solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+  solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+  solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+  solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
   p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -704,10 +684,10 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 239;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 239;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := 4;
-  solution^.memory_refs := 0;
+  solution^.memory_references := 0;
   solution^.delay := 0;
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -735,10 +715,10 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 240;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 240;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;
-  solution^.memory_refs := 0;
+  solution^.memory_references := 0;
   solution^.delay := 0;
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;

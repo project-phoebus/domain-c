@@ -86,9 +86,9 @@ procedure transform_63_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(subject^.children[1]);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := nil;
+  result.base_register := lr_ptr_t(subject^.children[1]);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := nil;
 end;
 
 { transform_64_pass_2 - rule 64: address_mode <- dindex_node ($1: ip_reg,
@@ -98,9 +98,9 @@ procedure transform_64_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(subject^.children[1]);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := nil;
+  result.base_register := lr_ptr_t(subject^.children[1]);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := nil;
 end;
 
 { transform_65_pass_2 - rule 65: address_mode <- dindex_node ($1: ip_reg,
@@ -110,9 +110,9 @@ procedure transform_65_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(subject^.children[1]);
-  result.index_reg := lr_ptr_t(subject^.children[2]);
-  result.obj_w_name := nil;
+  result.base_register := lr_ptr_t(subject^.children[1]);
+  result.index_register := lr_ptr_t(subject^.children[2]);
+  result.object_with_name := nil;
 end;
 
 { transform_66_pass_2 - rule 66: address_mode <- dindex_node ($1: ip_reg,
@@ -122,9 +122,9 @@ procedure transform_66_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(subject^.children[1]);
-  result.index_reg := lr_ptr_t(subject^.children[2]);
-  result.obj_w_name := nil;
+  result.base_register := lr_ptr_t(subject^.children[1]);
+  result.index_register := lr_ptr_t(subject^.children[2]);
+  result.object_with_name := nil;
 end;
 
 { transform_67_pass_2 - rule 67: address_mode <- dindex_node ($1: ip_reg,
@@ -134,10 +134,10 @@ procedure transform_67_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(subject^.children[1]);
-  result.index_reg := lr_ptr_t(ip_reg_to_ip_reg_scaled(subject^.children[2],
-      p2_node_ptr_t(subject^.sym)^.w[20]));
-  result.obj_w_name := nil;
+  result.base_register := lr_ptr_t(subject^.children[1]);
+  result.index_register := lr_ptr_t(ip_reg_to_ip_reg_scaled(subject^.children[2],
+      p2_node_ptr_t(subject^.il)^.w[20]));
+  result.object_with_name := nil;
 end;
 
 { transform_68_pass_2 - rule 68: address_mode <- dindex_node ($1: ip_reg,
@@ -150,13 +150,13 @@ var
   t1: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$lsl), 0,
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$lsl), 0,
       subject^.children[2],
-      find_well_known_literal_solution(p2_node_ptr_t(subject^.sym)^.w[20]),
+      find_well_known_literal_solution(p2_node_ptr_t(subject^.il)^.w[20]),
       t1);
-  result.base_reg := lr_ptr_t(subject^.children[1]);
-  result.index_reg := lr_ptr_t(t1);
-  result.obj_w_name := nil;
+  result.base_register := lr_ptr_t(subject^.children[1]);
+  result.index_register := lr_ptr_t(t1);
+  result.object_with_name := nil;
 end;
 
 { transform_69_pass_2 - rule 69: address_mode <- disp_node ($1:
@@ -166,13 +166,13 @@ procedure transform_69_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
 end;
 
 { transform_70_pass_2 - rule 70: address_mode <- disp_node ($1:
@@ -182,9 +182,9 @@ procedure transform_70_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := subject^.children[1]^.object_with_name;
 end;
 
 { transform_71_pass_2 - rule 71: address_mode <- disp_node ($1:
@@ -199,18 +199,19 @@ var
 begin
   t1 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-        find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.sym)^.p[8])),
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
+        0,
+        find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[8])),
         t1, nil);
   end else begin
-    t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.sym)^.p[8]));
-    debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t2,
-        isc_solution_ptr_t(t2^.base_reg), t1, t2^.sym, 0, t2^.bits_known,
-        t2^.bits_trusted);
+    t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.il)^.p[8]));
+    debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
+        0, t2, isc_solution_ptr_t(t2^.base_register), t1, t2^.il, 0,
+        t2^.bits_known, t2^.bits_trusted);
   end;
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := lr_ptr_t(t1);
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := lr_ptr_t(t1);
+  result.object_with_name := subject^.children[1]^.object_with_name;
 end;
 
 { transform_72_pass_2 - rule 72: ip_reg_field <- disp_node ($1:
@@ -220,13 +221,13 @@ procedure transform_72_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
 end;
 
 { transform_73_pass_2 - rule 73: ip_reg <- disp_node ($1: ip_reg).
@@ -235,13 +236,13 @@ procedure transform_73_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
 end;
 
 { transform_74_pass_2 - rule 74: ip_reg_field <- disp_node ($1: ip_reg).
@@ -250,13 +251,13 @@ procedure transform_74_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
 end;
 
 { transform_75_pass_2 - rule 75: fp_reg <- disp_node ($1: fp_reg).
@@ -265,13 +266,13 @@ procedure transform_75_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
 end;
 
 { transform_76_pass_2 - rule 76: fp_reg_pair <- disp_node ($1: fp_reg_pair).
@@ -280,13 +281,13 @@ procedure transform_76_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
 end;
 
 { transform_77_pass_2 - rule 77: fp_reg_quad <- disp_node ($1: fp_reg_quad).
@@ -295,13 +296,13 @@ procedure transform_77_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
 end;
 
 { transform_78_pass_2 - rule 78: ip_reg_field <- disp_node ($1: fp_reg).
@@ -313,10 +314,10 @@ var
   t1: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$mffp), 0,
-      subject^.children[1], t1, nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$mffp),
+      0, subject^.children[1], t1, nil);
   result.live_range := t1^.live_range;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.object_with_name := subject^.children[1]^.object_with_name;
 end;
 
 { transform_79_pass_2 - rule 79: ip_reg_field <- disp_node ($1:
@@ -331,10 +332,10 @@ var
 begin
   t1 := high_half_of_fp_reg_pair(subject^.children[1]);
   t2 := create_solution_for_ip_reg;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$mffp), 0, t1, t2,
-      nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$mffp),
+      0, t1, t2, nil);
   result.live_range := t2^.live_range;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.object_with_name := subject^.children[1]^.object_with_name;
 end;
 
 { transform_80_pass_2 - rule 80: fp_reg <- disp_node ($1: fp_reg_pair).
@@ -347,7 +348,7 @@ var
 begin
   t1 := high_half_of_fp_reg_pair(subject^.children[1]);
   result.live_range := t1^.live_range;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.object_with_name := subject^.children[1]^.object_with_name;
 end;
 
 { transform_81_pass_2 - rule 81: fp_reg <- disp_node ($1: fp_reg_pair).
@@ -360,7 +361,7 @@ var
 begin
   t1 := low_half_of_fp_reg_pair(subject^.children[1]);
   result.live_range := t1^.live_range;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.object_with_name := subject^.children[1]^.object_with_name;
 end;
 
 { transform_82_pass_2 - rule 82: literal_32_bits <- disp_node ($1:
@@ -370,7 +371,7 @@ procedure transform_82_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.obj_w_name := subject^.children[1]^.sym;
+  result.object_with_name := subject^.children[1]^.il;
 end;
 
 { transform_83_pass_2 - rule 83: address_mode <- ptr_node ($1: addr_top($1:
@@ -380,13 +381,13 @@ procedure transform_83_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.children[1]^.f114.pass_2_done;
+  result.live_range_of_imaginary_part := subject^.children[1]^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.children[1]^.f114.already_through_pass_2;
 end;
 
 { transform_84_pass_2 - rule 84: address_mode <- ptr_node ($1: ip_reg).
@@ -395,9 +396,9 @@ procedure transform_84_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(subject^.children[1]);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := nil;
+  result.base_register := lr_ptr_t(subject^.children[1]);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := nil;
 end;
 
 { transform_85_pass_2 - rule 85: address_mode <- sym_disp_node ($1:
@@ -407,14 +408,14 @@ procedure transform_85_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
-  result.obj_w_name := p2_node_ptr_t(subject^.sym)^.p[8];
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
+  result.object_with_name := p2_node_ptr_t(subject^.il)^.p[8];
 end;
 
 { transform_86_pass_2 - rule 86: address_mode <- sym_disp_node ($1:
@@ -424,7 +425,7 @@ procedure transform_86_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := p2_node_ptr_t(subject^.sym)^.p[8];
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := p2_node_ptr_t(subject^.il)^.p[8];
 end;

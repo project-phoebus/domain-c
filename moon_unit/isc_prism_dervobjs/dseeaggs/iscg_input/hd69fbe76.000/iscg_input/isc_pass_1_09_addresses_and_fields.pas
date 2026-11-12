@@ -134,26 +134,6 @@ type
     x: array [0..175] of integer;               { +0 }
     i: array [0..19] of integer32;              { +352 }
     end;
-  { The booleans isc_solution_fields.ins.pas lumps into one field
-    (f76.b81_7_2, f76.b83_7_4), under the image's names: a view of a
-    solution's f76 (+76..+87). }
-  p2_flags_ptr_t = ^p2_flags_t;
-  p2_flags_t = packed record
-    b76, b77, b78, b79, b80: 0..255;    { +76 }
-    all_zeroes_or_all_ones: boolean;    { +81 .7 }
-    arg_block_location: boolean;        { .6 }
-    bit_7_was_sign_extended: boolean;   { .5 }
-    bit_15_was_sign_extended: boolean;  { .4 }
-    dead_end: boolean;                  { .3 }
-    derived_from_literal: boolean;      { .2 }
-    b81_1_0: 0..3;
-    b82: 0..255;                        { +82 }
-    is_volatile: boolean;               { +83 .7 }
-    literal_64_bits_value_is_zero: boolean;  { .6 }
-    literal_derived_from_floating_constant: boolean;  { .5 }
-    materialize_true_as_1: boolean;     { .4 }
-    b83_3_0: 0..15;
-    end;
   { The chain rules' cycle guard: a solution's seven already_ flags
     (+342 .. +348, bytes isc_solution_fields.ins.pas leaves in space136),
     under the image's names. }
@@ -852,7 +832,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (not subject.children[1]^.f76.b82_4 or (p2_node_ptr_t(subject.sym)^.w[12] <> 5) and (p2_node_ptr_t(subject.sym)^.w[12] <> 4) and (p2_node_ptr_t(subject.sym)^.w[12] <> 1) and (p2_node_ptr_t(subject.sym)^.w[12] <> 2)) then begin
+  if not (not subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> 5) and (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 435 matched the semantics.');
       writeln;
@@ -865,60 +845,60 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 435;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 435;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes;
-      solution^.memory_refs := subject.children[1]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references;
       solution^.delay := subject.children[1]^.delay;
-      solution^.l28 := subject.children[1]^.l28;
-      p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-      p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-      solution^.f76.b76 := subject.children[1]^.f76.b76;
+      solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+      solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+      solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+      solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+      solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+      solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
       solution^.bits_known := subject.children[1]^.bits_known;
       solution^.bits_trusted := subject.children[1]^.bits_trusted;
-      solution^.l40 := subject.children[1]^.l40;
-      solution^.l44 := subject.children[1]^.l44;
-      solution^.w56 := subject.children[1]^.w56;
-      p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-      p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-      solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-      solution^.f76.b77 := subject.children[1]^.f76.b77;
-      solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+      solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+      solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+      solution^.bytes := subject.children[1]^.bytes;
+      solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+      solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+      solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+      solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+      solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
       solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
       solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
       solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
       solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-      solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+      solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
       solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-      solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-      solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-      solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-      solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-      solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-      solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-      solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-      solution^.disp := subject.children[1]^.disp;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-      p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-      solution^.w74 := subject.children[1]^.w74;
-      solution^.l52 := subject.children[1]^.l52;
-      solution^.f76.physical := subject.children[1]^.f76.physical;
-      solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-      solution^.f76.reg := subject.children[1]^.f76.reg;
-      solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-      solution^.f76.serialize := subject.children[1]^.f76.serialize;
-      solution^.f76.shift := subject.children[1]^.f76.shift;
-      solution^.f76.b80 := subject.children[1]^.f76.b80;
-      solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-      solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-      solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+      solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+      solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+      solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+      solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+      solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+      solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+      solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+      solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+      solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+      solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+      solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+      solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+      solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+      solution^.pass_1_size := subject.children[1]^.pass_1_size;
+      solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+      solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+      solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+      solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+      solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+      solution^.f76.scale := subject.children[1]^.f76.scale;
+      solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+      solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+      solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+      solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -944,7 +924,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.children[1]^.f76.b82_4 or (p2_node_ptr_t(subject.sym)^.w[12] <> 5) and (p2_node_ptr_t(subject.sym)^.w[12] <> 4) and (p2_node_ptr_t(subject.sym)^.w[12] <> 1) and (p2_node_ptr_t(subject.sym)^.w[12] <> 2)) then begin
+  if not (subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> 5) and (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 436 matched the semantics.');
       writeln;
@@ -957,62 +937,62 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 436;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 436;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + 4;
-      solution^.memory_refs := subject.children[1]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references;
       solution^.delay := subject.children[1]^.delay;
-      solution^.l28 := subject.children[1]^.l28;
-      p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-      p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-      solution^.f76.b76 := subject.children[1]^.f76.b76;
+      solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+      solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+      solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+      solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+      solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+      solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
       solution^.bits_known := subject.children[1]^.bits_known;
       solution^.bits_trusted := subject.children[1]^.bits_trusted;
-      solution^.l40 := subject.children[1]^.l40;
-      solution^.l44 := subject.children[1]^.l44;
-      solution^.w56 := subject.children[1]^.w56;
-      p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-      p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-      solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-      solution^.f76.b77 := subject.children[1]^.f76.b77;
-      solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+      solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+      solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+      solution^.bytes := subject.children[1]^.bytes;
+      solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+      solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+      solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+      solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+      solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
       solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
       solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
       solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
       solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-      solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+      solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
       solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-      solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-      solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-      solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-      solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-      solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-      solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-      solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-      solution^.disp := subject.children[1]^.disp;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-      p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-      solution^.w74 := subject.children[1]^.w74;
-      solution^.l52 := subject.children[1]^.l52;
-      solution^.f76.physical := subject.children[1]^.f76.physical;
-      solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-      solution^.f76.reg := subject.children[1]^.f76.reg;
-      solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-      solution^.f76.serialize := subject.children[1]^.f76.serialize;
-      solution^.f76.shift := subject.children[1]^.f76.shift;
-      solution^.f76.b80 := subject.children[1]^.f76.b80;
-      solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-      solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-      solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
-      solution^.f76.b82_4 := true;
-      solution^.f76.physical := false;
+      solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+      solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+      solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+      solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+      solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+      solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+      solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+      solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+      solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+      solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+      solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+      solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+      solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+      solution^.pass_1_size := subject.children[1]^.pass_1_size;
+      solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+      solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+      solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+      solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+      solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+      solution^.f76.scale := subject.children[1]^.f76.scale;
+      solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+      solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+      solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+      solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
+      solution^.f76.is_destroyable := true;
+      solution^.f76.physical_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1038,7 +1018,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (not subject.children[1]^.f76.b82_4 or (p2_node_ptr_t(subject.sym)^.w[12] <> 6)) then begin
+  if not (not subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> 6)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 437 matched the semantics.');
       writeln;
@@ -1051,60 +1031,60 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-      solution^.rule := 437;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 437;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes;
-      solution^.memory_refs := subject.children[1]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references;
       solution^.delay := subject.children[1]^.delay;
-      solution^.l28 := subject.children[1]^.l28;
-      p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-      p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-      solution^.f76.b76 := subject.children[1]^.f76.b76;
+      solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+      solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+      solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+      solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+      solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+      solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
       solution^.bits_known := subject.children[1]^.bits_known;
       solution^.bits_trusted := subject.children[1]^.bits_trusted;
-      solution^.l40 := subject.children[1]^.l40;
-      solution^.l44 := subject.children[1]^.l44;
-      solution^.w56 := subject.children[1]^.w56;
-      p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-      p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-      solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-      solution^.f76.b77 := subject.children[1]^.f76.b77;
-      solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+      solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+      solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+      solution^.bytes := subject.children[1]^.bytes;
+      solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+      solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+      solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+      solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+      solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
       solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
       solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
       solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
       solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-      solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+      solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
       solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-      solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-      solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-      solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-      solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-      solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-      solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-      solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-      solution^.disp := subject.children[1]^.disp;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-      p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-      solution^.w74 := subject.children[1]^.w74;
-      solution^.l52 := subject.children[1]^.l52;
-      solution^.f76.physical := subject.children[1]^.f76.physical;
-      solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-      solution^.f76.reg := subject.children[1]^.f76.reg;
-      solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-      solution^.f76.serialize := subject.children[1]^.f76.serialize;
-      solution^.f76.shift := subject.children[1]^.f76.shift;
-      solution^.f76.b80 := subject.children[1]^.f76.b80;
-      solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-      solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-      solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+      solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+      solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+      solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+      solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+      solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+      solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+      solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+      solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+      solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+      solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+      solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+      solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+      solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+      solution^.pass_1_size := subject.children[1]^.pass_1_size;
+      solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+      solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+      solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+      solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+      solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+      solution^.f76.scale := subject.children[1]^.f76.scale;
+      solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+      solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+      solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+      solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1130,7 +1110,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.children[1]^.f76.b82_4 or (p2_node_ptr_t(subject.sym)^.w[12] <> 6) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not (subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> 6) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 438 matched the semantics.');
       writeln;
@@ -1143,62 +1123,62 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-      solution^.rule := 438;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 438;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + 4;
-      solution^.memory_refs := subject.children[1]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references;
       solution^.delay := subject.children[1]^.delay + 2;
-      solution^.l28 := subject.children[1]^.l28;
-      p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-      p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-      solution^.f76.b76 := subject.children[1]^.f76.b76;
+      solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+      solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+      solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+      solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+      solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+      solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
       solution^.bits_known := subject.children[1]^.bits_known;
       solution^.bits_trusted := subject.children[1]^.bits_trusted;
-      solution^.l40 := subject.children[1]^.l40;
-      solution^.l44 := subject.children[1]^.l44;
-      solution^.w56 := subject.children[1]^.w56;
-      p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-      p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-      solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-      solution^.f76.b77 := subject.children[1]^.f76.b77;
-      solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+      solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+      solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+      solution^.bytes := subject.children[1]^.bytes;
+      solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+      solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+      solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+      solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+      solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
       solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
       solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
       solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
       solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-      solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+      solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
       solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-      solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-      solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-      solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-      solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-      solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-      solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-      solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-      solution^.disp := subject.children[1]^.disp;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-      p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-      solution^.w74 := subject.children[1]^.w74;
-      solution^.l52 := subject.children[1]^.l52;
-      solution^.f76.physical := subject.children[1]^.f76.physical;
-      solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-      solution^.f76.reg := subject.children[1]^.f76.reg;
-      solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-      solution^.f76.serialize := subject.children[1]^.f76.serialize;
-      solution^.f76.shift := subject.children[1]^.f76.shift;
-      solution^.f76.b80 := subject.children[1]^.f76.b80;
-      solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-      solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-      solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
-      solution^.f76.b82_4 := true;
-      solution^.f76.physical := false;
+      solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+      solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+      solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+      solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+      solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+      solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+      solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+      solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+      solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+      solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+      solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+      solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+      solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+      solution^.pass_1_size := subject.children[1]^.pass_1_size;
+      solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+      solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+      solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+      solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+      solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+      solution^.f76.scale := subject.children[1]^.f76.scale;
+      solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+      solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+      solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+      solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
+      solution^.f76.is_destroyable := true;
+      solution^.f76.physical_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1224,7 +1204,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (not subject.children[1]^.f76.b82_4 or (p2_node_ptr_t(subject.sym)^.w[12] <> 7)) then begin
+  if not (not subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> 7)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 439 matched the semantics.');
       writeln;
@@ -1237,60 +1217,60 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
-      solution^.rule := 439;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 439;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes;
-      solution^.memory_refs := subject.children[1]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references;
       solution^.delay := subject.children[1]^.delay;
-      solution^.l28 := subject.children[1]^.l28;
-      p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-      p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-      solution^.f76.b76 := subject.children[1]^.f76.b76;
+      solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+      solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+      solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+      solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+      solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+      solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
       solution^.bits_known := subject.children[1]^.bits_known;
       solution^.bits_trusted := subject.children[1]^.bits_trusted;
-      solution^.l40 := subject.children[1]^.l40;
-      solution^.l44 := subject.children[1]^.l44;
-      solution^.w56 := subject.children[1]^.w56;
-      p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-      p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-      solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-      solution^.f76.b77 := subject.children[1]^.f76.b77;
-      solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+      solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+      solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+      solution^.bytes := subject.children[1]^.bytes;
+      solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+      solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+      solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+      solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+      solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
       solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
       solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
       solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
       solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-      solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+      solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
       solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-      solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-      solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-      solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-      solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-      solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-      solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-      solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-      solution^.disp := subject.children[1]^.disp;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-      p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-      solution^.w74 := subject.children[1]^.w74;
-      solution^.l52 := subject.children[1]^.l52;
-      solution^.f76.physical := subject.children[1]^.f76.physical;
-      solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-      solution^.f76.reg := subject.children[1]^.f76.reg;
-      solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-      solution^.f76.serialize := subject.children[1]^.f76.serialize;
-      solution^.f76.shift := subject.children[1]^.f76.shift;
-      solution^.f76.b80 := subject.children[1]^.f76.b80;
-      solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-      solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-      solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+      solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+      solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+      solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+      solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+      solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+      solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+      solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+      solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+      solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+      solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+      solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+      solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+      solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+      solution^.pass_1_size := subject.children[1]^.pass_1_size;
+      solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+      solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+      solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+      solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+      solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+      solution^.f76.scale := subject.children[1]^.f76.scale;
+      solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+      solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+      solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+      solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1316,7 +1296,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.children[1]^.f76.b82_4 or (p2_node_ptr_t(subject.sym)^.w[12] <> 7) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not (subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> 7) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 440 matched the semantics.');
       writeln;
@@ -1329,67 +1309,67 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
-      solution^.rule := 440;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 440;
+      solution^.before_transform := addr(subject);
       if not isc_user_routines_358 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + 4;
-      solution^.memory_refs := subject.children[1]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references;
       solution^.delay := subject.children[1]^.delay + 2;
-      solution^.l28 := subject.children[1]^.l28;
-      p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-      p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-      solution^.f76.b76 := subject.children[1]^.f76.b76;
+      solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+      solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+      solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+      solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+      solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+      solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
       solution^.bits_known := subject.children[1]^.bits_known;
       solution^.bits_trusted := subject.children[1]^.bits_trusted;
-      solution^.l40 := subject.children[1]^.l40;
-      solution^.l44 := subject.children[1]^.l44;
-      solution^.w56 := subject.children[1]^.w56;
-      p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-      p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-      solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-      solution^.f76.b77 := subject.children[1]^.f76.b77;
-      solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+      solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+      solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+      solution^.bytes := subject.children[1]^.bytes;
+      solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+      solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+      solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+      solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+      solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
       solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
       solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
       solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
       solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-      solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+      solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
       solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-      solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-      solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-      solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-      solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-      solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-      solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-      solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-      solution^.disp := subject.children[1]^.disp;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-      p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-      solution^.w74 := subject.children[1]^.w74;
-      solution^.l52 := subject.children[1]^.l52;
-      solution^.f76.physical := subject.children[1]^.f76.physical;
-      solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-      solution^.f76.reg := subject.children[1]^.f76.reg;
-      solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-      solution^.f76.serialize := subject.children[1]^.f76.serialize;
-      solution^.f76.shift := subject.children[1]^.f76.shift;
-      solution^.f76.b80 := subject.children[1]^.f76.b80;
-      solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-      solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-      solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
-      solution^.f76.b82_4 := true;
-      solution^.f76.physical := false;
+      solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+      solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+      solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+      solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+      solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+      solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+      solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+      solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+      solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+      solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+      solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+      solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+      solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+      solution^.pass_1_size := subject.children[1]^.pass_1_size;
+      solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+      solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+      solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+      solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+      solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+      solution^.f76.scale := subject.children[1]^.f76.scale;
+      solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+      solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+      solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+      solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
+      solution^.f76.is_destroyable := true;
+      solution^.f76.physical_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1426,25 +1406,25 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 441;
-    solution^.chain := addr(subject);
-    if subject.children[1]^.f76.b84_7 then begin
+    solution^.which_transform := 441;
+    solution^.before_transform := addr(subject);
+    if subject.children[1]^.f76.uses_the_base_register then begin
       solution^.space136[136] := chr(1);
-      if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+      if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
         solution^.space136[137] := chr(2);
       end else begin
         solution^.space136[137] := chr(1);
       end;
     end else begin
       solution^.space136[136] := chr(2);
-      if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+      if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
         solution^.space136[138] := chr(1);
       end else begin
         solution^.space136[138] := chr(2);
       end;
     end;
     solution^.code_bytes := cost_441_4[ord(solution^.space136[137])] + cost_441_3[ord(solution^.space136[138])] + subject.children[1]^.code_bytes;
-    solution^.memory_refs := cost_441_2[ord(solution^.space136[138])] + subject.children[1]^.memory_refs;
+    solution^.memory_references := cost_441_2[ord(solution^.space136[138])] + subject.children[1]^.memory_references;
     solution^.delay := cost_441_1[ord(solution^.space136[138])] + subject.children[1]^.delay;
     solution^.bits_known := subject.children[1]^.bits_known;
     solution^.bits_trusted := subject.children[1]^.bits_trusted;
@@ -1473,7 +1453,7 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.children[1]^.inherited^.precision <= 32 then begin
+  if subject.children[1]^.inherited_attributes^.fetch_precision <= 32 then begin
     if isc_user_routines_354 then begin
       write('Pattern 442 matched the semantics.');
       writeln;
@@ -1486,10 +1466,10 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 442;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 442;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + 8;
-      solution^.memory_refs := subject.children[1]^.memory_refs + 1;
+      solution^.memory_references := subject.children[1]^.memory_references + 1;
       solution^.delay := subject.children[1]^.delay;
       solution^.bits_known := 0;
       solution^.bits_trusted := 3;
@@ -1519,7 +1499,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 32) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((subject.children[1]^.inherited_attributes^.fetch_precision <> 32) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 443 matched the semantics.');
       writeln;
@@ -1532,10 +1512,10 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 443;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 443;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + 8;
-      solution^.memory_refs := subject.children[1]^.memory_refs + 1;
+      solution^.memory_references := subject.children[1]^.memory_references + 1;
       solution^.delay := subject.children[1]^.delay;
       solution^.bits_known := 0;
       solution^.bits_trusted := 3;
@@ -1565,7 +1545,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 64) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((subject.children[1]^.inherited_attributes^.fetch_precision <> 64) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 444 matched the semantics.');
       writeln;
@@ -1578,15 +1558,15 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 444;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 444;
+      solution^.before_transform := addr(subject);
       if not isc_user_routines_358 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + 8;
-      solution^.memory_refs := subject.children[1]^.memory_refs + 1;
+      solution^.memory_references := subject.children[1]^.memory_references + 1;
       solution^.delay := subject.children[1]^.delay;
       solution^.bits_known := 0;
       solution^.bits_trusted := 7;
@@ -1622,7 +1602,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 128) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((subject.children[1]^.inherited_attributes^.fetch_precision <> 128) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 445 matched the semantics.');
       writeln;
@@ -1635,14 +1615,14 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 445;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 445;
+      solution^.before_transform := addr(subject);
       t2 := make_expression_temporary(123,
-          subject.children[1]^.inherited^.precision);
+          subject.children[1]^.inherited_attributes^.fetch_precision);
       side_effect_set_var_$address_exposed(isc_node_ptr_t(t2));
       t3 := t2;
       solution^.fields[0] := address_mode_for_expression_temporary(t3,
-          subject.children[1]^.inherited^.precision, 0, 7);
+          subject.children[1]^.inherited_attributes^.fetch_precision, 0, 7);
       solution^.fields[1] := nil;
       solution^.fields[2] := nil;
       solution^.fields[3] := nil;
@@ -1700,18 +1680,18 @@ begin
             solution^.space136[154] := chr(3);
           end else begin
             solution^.space136[154] := chr(2);
-            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[160] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[161] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[162] := chr(2);
                 end else begin
                   solution^.space136[162] := chr(1);
                 end;
               end else begin
                 solution^.space136[161] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[163] := chr(1);
                 end else begin
                   solution^.space136[163] := chr(2);
@@ -1726,7 +1706,7 @@ begin
             solution^.space136[165] := chr(1);
           end else begin
             solution^.space136[165] := chr(2);
-            if not solution^.fields[0]^.f76.embedded_sr_temp then begin
+            if not solution^.fields[0]^.f76.embedded_strength_reduction_temporary then begin
               solution^.space136[166] := chr(1);
             end else begin
               solution^.space136[166] := chr(2);
@@ -1747,18 +1727,18 @@ begin
           solution^.space136[169] := chr(3);
           if (solution^.fields[0]^.bits_trusted & 3 = 3) and (solution^.fields[0]^.bits_known & 3 = 0) or (solution^.fields[0]^.bits_trusted & 1 = 0) or (solution^.fields[0]^.bits_known & 1 <> 0) then begin
             solution^.space136[175] := chr(1);
-            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp + 7, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value + 7, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[176] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[177] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[178] := chr(2);
                 end else begin
                   solution^.space136[178] := chr(1);
                 end;
               end else begin
                 solution^.space136[177] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[179] := chr(1);
                 end else begin
                   solution^.space136[179] := chr(2);
@@ -1773,18 +1753,18 @@ begin
             solution^.space136[175] := chr(3);
           end else begin
             solution^.space136[175] := chr(2);
-            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[181] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[182] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[183] := chr(2);
                 end else begin
                   solution^.space136[183] := chr(1);
                 end;
               end else begin
                 solution^.space136[182] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[184] := chr(1);
                 end else begin
                   solution^.space136[184] := chr(2);
@@ -1799,7 +1779,7 @@ begin
             solution^.space136[186] := chr(1);
           end else begin
             solution^.space136[186] := chr(2);
-            if not solution^.fields[0]^.f76.embedded_sr_temp then begin
+            if not solution^.fields[0]^.f76.embedded_strength_reduction_temporary then begin
               solution^.space136[187] := chr(1);
             end else begin
               solution^.space136[187] := chr(2);
@@ -1808,18 +1788,18 @@ begin
           end;
         end else begin
           solution^.space136[169] := chr(1);
-          if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp + 7, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+          if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value + 7, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
             solution^.space136[170] := chr(2);
-            if solution^.fields[0]^.f76.b84_7 then begin
+            if solution^.fields[0]^.f76.uses_the_base_register then begin
               solution^.space136[171] := chr(1);
-              if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+              if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                 solution^.space136[172] := chr(2);
               end else begin
                 solution^.space136[172] := chr(1);
               end;
             end else begin
               solution^.space136[171] := chr(2);
-              if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+              if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                 solution^.space136[173] := chr(1);
               end else begin
                 solution^.space136[173] := chr(2);
@@ -1856,18 +1836,18 @@ begin
           solution^.space136[198] := chr(3);
           if (solution^.fields[0]^.bits_trusted & 3 = 3) and (solution^.fields[0]^.bits_known & 3 = 0) or (solution^.fields[0]^.bits_trusted & 1 = 0) or (solution^.fields[0]^.bits_known & 1 <> 0) then begin
             solution^.space136[204] := chr(1);
-            if not lir_$can_encode_as_immediate_operand(12 + solution^.fields[0]^.disp - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(12 + solution^.fields[0]^.literal_32_bits_value - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[205] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[206] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[207] := chr(2);
                 end else begin
                   solution^.space136[207] := chr(1);
                 end;
               end else begin
                 solution^.space136[206] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[208] := chr(1);
                 end else begin
                   solution^.space136[208] := chr(2);
@@ -1882,18 +1862,18 @@ begin
             solution^.space136[204] := chr(3);
           end else begin
             solution^.space136[204] := chr(2);
-            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[210] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[211] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[212] := chr(2);
                 end else begin
                   solution^.space136[212] := chr(1);
                 end;
               end else begin
                 solution^.space136[211] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[213] := chr(1);
                 end else begin
                   solution^.space136[213] := chr(2);
@@ -1908,7 +1888,7 @@ begin
             solution^.space136[215] := chr(1);
           end else begin
             solution^.space136[215] := chr(2);
-            if not solution^.fields[0]^.f76.embedded_sr_temp then begin
+            if not solution^.fields[0]^.f76.embedded_strength_reduction_temporary then begin
               solution^.space136[216] := chr(1);
             end else begin
               solution^.space136[216] := chr(2);
@@ -1917,18 +1897,18 @@ begin
           end;
         end else begin
           solution^.space136[198] := chr(1);
-          if not lir_$can_encode_as_immediate_operand(12 + solution^.fields[0]^.disp - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+          if not lir_$can_encode_as_immediate_operand(12 + solution^.fields[0]^.literal_32_bits_value - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
             solution^.space136[199] := chr(2);
-            if solution^.fields[0]^.f76.b84_7 then begin
+            if solution^.fields[0]^.f76.uses_the_base_register then begin
               solution^.space136[200] := chr(1);
-              if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+              if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                 solution^.space136[201] := chr(2);
               end else begin
                 solution^.space136[201] := chr(1);
               end;
             end else begin
               solution^.space136[200] := chr(2);
-              if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+              if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                 solution^.space136[202] := chr(1);
               end else begin
                 solution^.space136[202] := chr(2);
@@ -1948,18 +1928,18 @@ begin
           solution^.space136[219] := chr(3);
           if (solution^.fields[0]^.bits_trusted & 3 = 3) and (solution^.fields[0]^.bits_known & 3 = 0) or (solution^.fields[0]^.bits_trusted & 1 = 0) or (solution^.fields[0]^.bits_known & 1 <> 0) then begin
             solution^.space136[225] := chr(1);
-            if not lir_$can_encode_as_immediate_operand(16 + solution^.fields[0]^.disp - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(16 + solution^.fields[0]^.literal_32_bits_value - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[226] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[227] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[228] := chr(2);
                 end else begin
                   solution^.space136[228] := chr(1);
                 end;
               end else begin
                 solution^.space136[227] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[229] := chr(1);
                 end else begin
                   solution^.space136[229] := chr(2);
@@ -1974,18 +1954,18 @@ begin
             solution^.space136[225] := chr(3);
           end else begin
             solution^.space136[225] := chr(2);
-            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[231] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[232] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[233] := chr(2);
                 end else begin
                   solution^.space136[233] := chr(1);
                 end;
               end else begin
                 solution^.space136[232] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[234] := chr(1);
                 end else begin
                   solution^.space136[234] := chr(2);
@@ -2000,7 +1980,7 @@ begin
             solution^.space136[236] := chr(1);
           end else begin
             solution^.space136[236] := chr(2);
-            if not solution^.fields[0]^.f76.embedded_sr_temp then begin
+            if not solution^.fields[0]^.f76.embedded_strength_reduction_temporary then begin
               solution^.space136[237] := chr(1);
             end else begin
               solution^.space136[237] := chr(2);
@@ -2009,18 +1989,18 @@ begin
           end;
         end else begin
           solution^.space136[219] := chr(1);
-          if not lir_$can_encode_as_immediate_operand(16 + solution^.fields[0]^.disp - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+          if not lir_$can_encode_as_immediate_operand(16 + solution^.fields[0]^.literal_32_bits_value - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
             solution^.space136[220] := chr(2);
-            if solution^.fields[0]^.f76.b84_7 then begin
+            if solution^.fields[0]^.f76.uses_the_base_register then begin
               solution^.space136[221] := chr(1);
-              if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+              if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                 solution^.space136[222] := chr(2);
               end else begin
                 solution^.space136[222] := chr(1);
               end;
             end else begin
               solution^.space136[221] := chr(2);
-              if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+              if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                 solution^.space136[223] := chr(1);
               end else begin
                 solution^.space136[223] := chr(2);
@@ -2033,18 +2013,18 @@ begin
         end;
       end else begin
         solution^.space136[191] := chr(1);
-        if not lir_$can_encode_as_immediate_operand(16 + solution^.fields[0]^.disp - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+        if not lir_$can_encode_as_immediate_operand(16 + solution^.fields[0]^.literal_32_bits_value - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
           solution^.space136[192] := chr(2);
-          if solution^.fields[0]^.f76.b84_7 then begin
+          if solution^.fields[0]^.f76.uses_the_base_register then begin
             solution^.space136[193] := chr(1);
-            if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+            if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
               solution^.space136[194] := chr(2);
             end else begin
               solution^.space136[194] := chr(1);
             end;
           end else begin
             solution^.space136[193] := chr(2);
-            if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+            if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
               solution^.space136[195] := chr(1);
             end else begin
               solution^.space136[195] := chr(2);
@@ -2055,23 +2035,23 @@ begin
         end;
         solution^.space136[196] := chr(2);
       end;
-      if solution^.fields[0]^.f76.b84_7 then begin
+      if solution^.fields[0]^.f76.uses_the_base_register then begin
         solution^.space136[239] := chr(1);
-        if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+        if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
           solution^.space136[240] := chr(2);
         end else begin
           solution^.space136[240] := chr(1);
         end;
       end else begin
         solution^.space136[239] := chr(2);
-        if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+        if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
           solution^.space136[241] := chr(1);
         end else begin
           solution^.space136[241] := chr(2);
         end;
       end;
       solution^.code_bytes := cost_445_136[ord(solution^.space136[141])] + cost_445_135[ord(solution^.space136[142])] + cost_445_134[ord(solution^.space136[144])] + cost_445_133[ord(solution^.space136[145])] + cost_445_132[ord(solution^.space136[146])] + cost_445_131[ord(solution^.space136[148])] + cost_445_130[ord(solution^.space136[149])] + cost_445_129[ord(solution^.space136[151])] + cost_445_128[ord(solution^.space136[152])] + cost_445_127[ord(solution^.space136[153])] + cost_445_126[ord(solution^.space136[154])] + cost_445_125[ord(solution^.space136[155])] + cost_445_124[ord(solution^.space136[157])] + cost_445_123[ord(solution^.space136[158])] + cost_445_122[ord(solution^.space136[159])] + cost_445_121[ord(solution^.space136[160])] + cost_445_120[ord(solution^.space136[162])] + cost_445_119[ord(solution^.space136[163])] + cost_445_118[ord(solution^.space136[165])] + cost_445_117[ord(solution^.space136[169])] + cost_445_116[ord(solution^.space136[170])] + cost_445_115[ord(solution^.space136[172])] + cost_445_114[ord(solution^.space136[173])] + cost_445_113[ord(solution^.space136[174])] + cost_445_112[ord(solution^.space136[175])] + cost_445_111[ord(solution^.space136[176])] + cost_445_110[ord(solution^.space136[178])] + cost_445_109[ord(solution^.space136[179])] + cost_445_108[ord(solution^.space136[180])] + cost_445_107[ord(solution^.space136[181])] + cost_445_106[ord(solution^.space136[183])] + cost_445_105[ord(solution^.space136[184])] + cost_445_104[ord(solution^.space136[186])] + cost_445_103[ord(solution^.space136[191])] + cost_445_102[ord(solution^.space136[192])] + cost_445_101[ord(solution^.space136[194])] + cost_445_100[ord(solution^.space136[195])] + cost_445_99[ord(solution^.space136[196])] + cost_445_98[ord(solution^.space136[198])] + cost_445_97[ord(solution^.space136[199])] + cost_445_96[ord(solution^.space136[201])] + cost_445_95[ord(solution^.space136[202])] + cost_445_94[ord(solution^.space136[203])] + cost_445_93[ord(solution^.space136[204])] + cost_445_92[ord(solution^.space136[205])] + cost_445_91[ord(solution^.space136[207])] + cost_445_90[ord(solution^.space136[208])] + cost_445_89[ord(solution^.space136[209])] + cost_445_88[ord(solution^.space136[210])] + cost_445_87[ord(solution^.space136[212])] + cost_445_86[ord(solution^.space136[213])] + cost_445_85[ord(solution^.space136[215])] + cost_445_84[ord(solution^.space136[219])] + cost_445_83[ord(solution^.space136[220])] + cost_445_82[ord(solution^.space136[222])] + cost_445_81[ord(solution^.space136[223])] + cost_445_80[ord(solution^.space136[224])] + cost_445_79[ord(solution^.space136[225])] + cost_445_78[ord(solution^.space136[226])] + cost_445_77[ord(solution^.space136[228])] + cost_445_76[ord(solution^.space136[229])] + cost_445_75[ord(solution^.space136[230])] + cost_445_74[ord(solution^.space136[231])] + cost_445_73[ord(solution^.space136[233])] + cost_445_72[ord(solution^.space136[234])] + cost_445_71[ord(solution^.space136[236])] + cost_445_70[ord(solution^.space136[240])] + cost_445_69[ord(solution^.space136[241])] + subject.children[1]^.code_bytes;
-      solution^.memory_refs := cost_445_68[ord(solution^.space136[142])] + cost_445_67[ord(solution^.space136[145])] + cost_445_66[ord(solution^.space136[146])] + cost_445_65[ord(solution^.space136[149])] + cost_445_64[ord(solution^.space136[152])] + cost_445_63[ord(solution^.space136[153])] + cost_445_62[ord(solution^.space136[155])] + cost_445_61[ord(solution^.space136[158])] + cost_445_60[ord(solution^.space136[159])] + cost_445_59[ord(solution^.space136[160])] + cost_445_58[ord(solution^.space136[163])] + cost_445_57[ord(solution^.space136[170])] + cost_445_56[ord(solution^.space136[173])] + cost_445_55[ord(solution^.space136[174])] + cost_445_54[ord(solution^.space136[176])] + cost_445_53[ord(solution^.space136[179])] + cost_445_52[ord(solution^.space136[180])] + cost_445_51[ord(solution^.space136[181])] + cost_445_50[ord(solution^.space136[184])] + cost_445_49[ord(solution^.space136[192])] + cost_445_48[ord(solution^.space136[195])] + cost_445_47[ord(solution^.space136[196])] + cost_445_46[ord(solution^.space136[199])] + cost_445_45[ord(solution^.space136[202])] + cost_445_44[ord(solution^.space136[203])] + cost_445_43[ord(solution^.space136[205])] + cost_445_42[ord(solution^.space136[208])] + cost_445_41[ord(solution^.space136[209])] + cost_445_40[ord(solution^.space136[210])] + cost_445_39[ord(solution^.space136[213])] + cost_445_38[ord(solution^.space136[220])] + cost_445_37[ord(solution^.space136[223])] + cost_445_36[ord(solution^.space136[224])] + cost_445_35[ord(solution^.space136[226])] + cost_445_34[ord(solution^.space136[229])] + cost_445_33[ord(solution^.space136[230])] + cost_445_32[ord(solution^.space136[231])] + cost_445_31[ord(solution^.space136[234])] + cost_445_30[ord(solution^.space136[241])] + subject.children[1]^.memory_refs;
+      solution^.memory_references := cost_445_68[ord(solution^.space136[142])] + cost_445_67[ord(solution^.space136[145])] + cost_445_66[ord(solution^.space136[146])] + cost_445_65[ord(solution^.space136[149])] + cost_445_64[ord(solution^.space136[152])] + cost_445_63[ord(solution^.space136[153])] + cost_445_62[ord(solution^.space136[155])] + cost_445_61[ord(solution^.space136[158])] + cost_445_60[ord(solution^.space136[159])] + cost_445_59[ord(solution^.space136[160])] + cost_445_58[ord(solution^.space136[163])] + cost_445_57[ord(solution^.space136[170])] + cost_445_56[ord(solution^.space136[173])] + cost_445_55[ord(solution^.space136[174])] + cost_445_54[ord(solution^.space136[176])] + cost_445_53[ord(solution^.space136[179])] + cost_445_52[ord(solution^.space136[180])] + cost_445_51[ord(solution^.space136[181])] + cost_445_50[ord(solution^.space136[184])] + cost_445_49[ord(solution^.space136[192])] + cost_445_48[ord(solution^.space136[195])] + cost_445_47[ord(solution^.space136[196])] + cost_445_46[ord(solution^.space136[199])] + cost_445_45[ord(solution^.space136[202])] + cost_445_44[ord(solution^.space136[203])] + cost_445_43[ord(solution^.space136[205])] + cost_445_42[ord(solution^.space136[208])] + cost_445_41[ord(solution^.space136[209])] + cost_445_40[ord(solution^.space136[210])] + cost_445_39[ord(solution^.space136[213])] + cost_445_38[ord(solution^.space136[220])] + cost_445_37[ord(solution^.space136[223])] + cost_445_36[ord(solution^.space136[224])] + cost_445_35[ord(solution^.space136[226])] + cost_445_34[ord(solution^.space136[229])] + cost_445_33[ord(solution^.space136[230])] + cost_445_32[ord(solution^.space136[231])] + cost_445_31[ord(solution^.space136[234])] + cost_445_30[ord(solution^.space136[241])] + subject.children[1]^.memory_references;
       solution^.delay := cost_445_29[ord(solution^.space136[145])] + cost_445_28[ord(solution^.space136[146])] + cost_445_27[ord(solution^.space136[148])] + cost_445_26[ord(solution^.space136[152])] + cost_445_25[ord(solution^.space136[153])] + cost_445_24[ord(solution^.space136[158])] + cost_445_23[ord(solution^.space136[159])] + cost_445_22[ord(solution^.space136[163])] + cost_445_21[ord(solution^.space136[169])] + cost_445_20[ord(solution^.space136[173])] + cost_445_19[ord(solution^.space136[174])] + cost_445_18[ord(solution^.space136[179])] + cost_445_17[ord(solution^.space136[180])] + cost_445_16[ord(solution^.space136[184])] + cost_445_15[ord(solution^.space136[195])] + cost_445_14[ord(solution^.space136[196])] + cost_445_13[ord(solution^.space136[198])] + cost_445_12[ord(solution^.space136[202])] + cost_445_11[ord(solution^.space136[203])] + cost_445_10[ord(solution^.space136[208])] + cost_445_9[ord(solution^.space136[209])] + cost_445_8[ord(solution^.space136[213])] + cost_445_7[ord(solution^.space136[219])] + cost_445_6[ord(solution^.space136[223])] + cost_445_5[ord(solution^.space136[224])] + cost_445_4[ord(solution^.space136[229])] + cost_445_3[ord(solution^.space136[230])] + cost_445_2[ord(solution^.space136[234])] + cost_445_1[ord(solution^.space136[241])] + subject.children[1]^.delay;
       solution^.bits_known := 0;
       solution^.bits_trusted := 7;
@@ -2113,60 +2093,60 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 446;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 446;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes;
-    solution^.memory_refs := subject.children[1]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references;
     solution^.delay := subject.children[1]^.delay;
-    solution^.l28 := subject.children[1]^.l28;
-    p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-    p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-    solution^.f76.b76 := subject.children[1]^.f76.b76;
+    solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+    solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+    solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+    solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+    solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+    solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
     solution^.bits_known := subject.children[1]^.bits_known;
     solution^.bits_trusted := subject.children[1]^.bits_trusted;
-    solution^.l40 := subject.children[1]^.l40;
-    solution^.l44 := subject.children[1]^.l44;
-    solution^.w56 := subject.children[1]^.w56;
-    p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-    p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-    solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-    solution^.f76.b77 := subject.children[1]^.f76.b77;
-    solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+    solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+    solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+    solution^.bytes := subject.children[1]^.bytes;
+    solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+    solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+    solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+    solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+    solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
     solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
     solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
     solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
     solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-    solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+    solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
     solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-    solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-    solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-    solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-    solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-    solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-    solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-    solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-    p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-    solution^.disp := subject.children[1]^.disp;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-    p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-    solution^.w74 := subject.children[1]^.w74;
-    solution^.l52 := subject.children[1]^.l52;
-    solution^.f76.physical := subject.children[1]^.f76.physical;
-    solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-    solution^.f76.reg := subject.children[1]^.f76.reg;
-    solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-    solution^.f76.serialize := subject.children[1]^.f76.serialize;
-    solution^.f76.shift := subject.children[1]^.f76.shift;
-    solution^.f76.b80 := subject.children[1]^.f76.b80;
-    solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-    solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-    solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+    solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+    solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+    solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+    solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+    solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+    solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+    solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+    solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+    solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+    solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+    solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+    solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+    solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+    solution^.pass_1_size := subject.children[1]^.pass_1_size;
+    solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+    solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+    solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+    solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+    solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+    solution^.f76.scale := subject.children[1]^.f76.scale;
+    solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+    solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+    solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+    solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
     p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -2191,7 +2171,7 @@ var
 begin
   result := nil;
   work := nil;
-  if bits_to_alignment(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted) >= p2_node_ptr_t(subject.sym)^.w[13] then begin
+  if bits_to_alignment(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted) >= p2_node_ptr_t(subject.il)^.w[13] then begin
     if isc_user_routines_354 then begin
       write('Pattern 447 matched the semantics.');
       writeln;
@@ -2204,60 +2184,60 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-      solution^.rule := 447;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 447;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes;
-      solution^.memory_refs := subject.children[1]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references;
       solution^.delay := subject.children[1]^.delay;
-      solution^.l28 := subject.children[1]^.l28;
-      p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-      p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-      solution^.f76.b76 := subject.children[1]^.f76.b76;
+      solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+      solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+      solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+      solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+      solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+      solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
       solution^.bits_known := subject.children[1]^.bits_known;
       solution^.bits_trusted := subject.children[1]^.bits_trusted;
-      solution^.l40 := subject.children[1]^.l40;
-      solution^.l44 := subject.children[1]^.l44;
-      solution^.w56 := subject.children[1]^.w56;
-      p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-      p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-      solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-      solution^.f76.b77 := subject.children[1]^.f76.b77;
-      solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+      solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+      solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+      solution^.bytes := subject.children[1]^.bytes;
+      solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+      solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+      solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+      solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+      solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
       solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
       solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
       solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
       solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-      solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+      solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
       solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-      solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-      solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-      solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-      solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-      solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-      solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-      solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-      solution^.disp := subject.children[1]^.disp;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-      p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-      solution^.w74 := subject.children[1]^.w74;
-      solution^.l52 := subject.children[1]^.l52;
-      solution^.f76.physical := subject.children[1]^.f76.physical;
-      solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-      solution^.f76.reg := subject.children[1]^.f76.reg;
-      solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-      solution^.f76.serialize := subject.children[1]^.f76.serialize;
-      solution^.f76.shift := subject.children[1]^.f76.shift;
-      solution^.f76.b80 := subject.children[1]^.f76.b80;
-      solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-      solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-      solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+      solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+      solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+      solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+      solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+      solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+      solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+      solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+      solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+      solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+      solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+      solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+      solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+      solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+      solution^.pass_1_size := subject.children[1]^.pass_1_size;
+      solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+      solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+      solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+      solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+      solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+      solution^.f76.scale := subject.children[1]^.f76.scale;
+      solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+      solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+      solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+      solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -2291,9 +2271,9 @@ begin
   work := nil;
   t1 := bits_to_alignment(subject.children[1]^.bits_known,
       subject.children[1]^.bits_trusted);
-  t2 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
+  t2 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((t1 >= p2_node_ptr_t(subject.sym)^.w[13]) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) or (not t2 and subject.children[1]^.f76.uses_disp or subject.children[1]^.f76.has_sym_disp) and (subject.children[1]^.f76.b82_1 or subject.children[1]^.f76.b82_6)) and (subject.children[1]^.kind = 5)) then begin
+  if not ((t1 >= p2_node_ptr_t(subject.il)^.w[13]) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t2 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 448 matched the semantics.');
       writeln;
@@ -2306,24 +2286,24 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-      solution^.rule := 448;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 448;
+      solution^.before_transform := addr(subject);
       t4 := make_expression_temporary(122,
-          subject.children[1]^.inherited^.precision);
+          subject.children[1]^.inherited_attributes^.fetch_precision);
       side_effect_set_var_$address_exposed(isc_node_ptr_t(t4));
       t5 := t4;
       solution^.fields[1] := t5;
       solution^.fields[0] := address_mode_for_expression_temporary(t5,
-          subject.children[1]^.inherited^.precision, 0,
-          p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + p2_node_ptr_t(subject.sym)^.w[13]]);
-      p1_int_fields_ptr_t(addr(solution^))^.i[2] := subject.children[1]^.inherited^.precision div 8;
+          subject.children[1]^.inherited_attributes^.fetch_precision, 0,
+          p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + p2_node_ptr_t(subject.il)^.w[13]]);
+      p1_int_fields_ptr_t(addr(solution^))^.i[2] := subject.children[1]^.inherited_attributes^.fetch_precision div 8;
       p1_int_fields_ptr_t(addr(solution^))^.i[3] := 0;
       t6 := make_bit_mask_1(16, 0);
       solution^.fields[4] := nil;
       t7 := make_bit_mask_1(16, 0);
-      if subject.children[1]^.inherited^.precision <= 32 then begin
+      if subject.children[1]^.inherited_attributes^.fetch_precision <= 32 then begin
         solution^.space136[136] := chr(1);
-        if subject.children[1]^.inherited^.precision = 32 then begin
+        if subject.children[1]^.inherited_attributes^.fetch_precision = 32 then begin
           solution^.space136[137] := chr(1);
           if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
             solution^.space136[138] := chr(1);
@@ -2338,18 +2318,18 @@ begin
             solution^.space136[138] := chr(3);
           end else begin
             solution^.space136[138] := chr(2);
-            if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + 3, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
               solution^.space136[144] := chr(2);
-              if subject.children[1]^.f76.b84_7 then begin
+              if subject.children[1]^.f76.uses_the_base_register then begin
                 solution^.space136[145] := chr(1);
-                if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+                if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[146] := chr(2);
                 end else begin
                   solution^.space136[146] := chr(1);
                 end;
               end else begin
                 solution^.space136[145] := chr(2);
-                if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[147] := chr(1);
                 end else begin
                   solution^.space136[147] := chr(2);
@@ -2368,7 +2348,7 @@ begin
             solution^.space136[149] := chr(1);
           end else begin
             solution^.space136[149] := chr(2);
-            if not subject.children[1]^.f76.embedded_sr_temp then begin
+            if not subject.children[1]^.f76.embedded_strength_reduction_temporary then begin
               solution^.space136[150] := chr(1);
             end else begin
               solution^.space136[150] := chr(2);
@@ -2380,7 +2360,7 @@ begin
             end;
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
           solution^.space136[137] := chr(2);
           solution^.space136[152] := chr(1);
           if p1_int_fields_ptr_t(addr(solution^))^.i[3] = 256 then begin
@@ -2390,7 +2370,7 @@ begin
           end;
           if not (subject.children[1]^.bits_trusted & 1 <> 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
             solution^.space136[157] := chr(2);
-            if not subject.children[1]^.f76.embedded_sr_temp then begin
+            if not subject.children[1]^.f76.embedded_strength_reduction_temporary then begin
               solution^.space136[158] := chr(1);
             end else begin
               solution^.space136[158] := chr(2);
@@ -2404,7 +2384,7 @@ begin
             solution^.space136[157] := chr(1);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 8 then begin
+        else if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
           solution^.space136[137] := chr(3);
           solution^.space136[160] := chr(1);
           if p1_int_fields_ptr_t(addr(solution^))^.i[3] = 256 then begin
@@ -2415,7 +2395,7 @@ begin
         end else begin
           solution^.space136[137] := chr(4);
         end;
-        if solution^.fields[0]^.inherited^.precision = 32 then begin
+        if solution^.fields[0]^.inherited_attributes^.fetch_precision = 32 then begin
           solution^.space136[165] := chr(1);
           if (solution^.fields[0]^.bits_trusted & 3 = 3) and (solution^.fields[0]^.bits_known & 3 = 0) or (solution^.fields[0]^.bits_trusted & 1 = 0) or (solution^.fields[0]^.bits_known & 1 <> 0) then begin
             solution^.space136[166] := chr(1);
@@ -2426,18 +2406,18 @@ begin
             solution^.space136[166] := chr(3);
           end else begin
             solution^.space136[166] := chr(2);
-            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[172] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[173] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[174] := chr(2);
                 end else begin
                   solution^.space136[174] := chr(1);
                 end;
               end else begin
                 solution^.space136[173] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[175] := chr(1);
                 end else begin
                   solution^.space136[175] := chr(2);
@@ -2452,7 +2432,7 @@ begin
             solution^.space136[177] := chr(1);
           end else begin
             solution^.space136[177] := chr(2);
-            if not solution^.fields[0]^.f76.embedded_sr_temp then begin
+            if not solution^.fields[0]^.f76.embedded_strength_reduction_temporary then begin
               solution^.space136[178] := chr(1);
             end else begin
               solution^.space136[178] := chr(2);
@@ -2460,13 +2440,13 @@ begin
             solution^.space136[179] := chr(2);
           end;
         end
-        else if solution^.fields[0]^.inherited^.precision = 16 then begin
+        else if solution^.fields[0]^.inherited_attributes^.fetch_precision = 16 then begin
           solution^.space136[165] := chr(2);
           solution^.space136[180] := chr(1);
           solution^.space136[184] := chr(2);
           if not (solution^.fields[0]^.bits_trusted & 1 <> 0) or (solution^.fields[0]^.bits_known & 1 <> 0) then begin
             solution^.space136[185] := chr(2);
-            if not solution^.fields[0]^.f76.embedded_sr_temp then begin
+            if not solution^.fields[0]^.f76.embedded_strength_reduction_temporary then begin
               solution^.space136[186] := chr(1);
             end else begin
               solution^.space136[186] := chr(2);
@@ -2476,7 +2456,7 @@ begin
             solution^.space136[185] := chr(1);
           end;
         end
-        else if solution^.fields[0]^.inherited^.precision = 8 then begin
+        else if solution^.fields[0]^.inherited_attributes^.fetch_precision = 8 then begin
           solution^.space136[165] := chr(3);
           solution^.space136[188] := chr(1);
           solution^.space136[192] := chr(2);
@@ -2485,31 +2465,31 @@ begin
         end;
       end else begin
         solution^.space136[136] := chr(2);
-        if subject.children[1]^.f76.b84_7 then begin
+        if subject.children[1]^.f76.uses_the_base_register then begin
           solution^.space136[193] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[194] := chr(2);
           end else begin
             solution^.space136[194] := chr(1);
           end;
         end else begin
           solution^.space136[193] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[195] := chr(1);
           end else begin
             solution^.space136[195] := chr(2);
           end;
         end;
-        if solution^.fields[0]^.f76.b84_7 then begin
+        if solution^.fields[0]^.f76.uses_the_base_register then begin
           solution^.space136[196] := chr(1);
-          if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+          if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[197] := chr(2);
           end else begin
             solution^.space136[197] := chr(1);
           end;
         end else begin
           solution^.space136[196] := chr(2);
-          if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[198] := chr(1);
           end else begin
             solution^.space136[198] := chr(2);
@@ -2522,19 +2502,19 @@ begin
         end;
       end;
       solution^.code_bytes := cost_448_92[ord(solution^.space136[136])] + cost_448_91[ord(solution^.space136[137])] + cost_448_90[ord(solution^.space136[138])] + cost_448_89[ord(solution^.space136[139])] + cost_448_88[ord(solution^.space136[141])] + cost_448_87[ord(solution^.space136[142])] + cost_448_86[ord(solution^.space136[143])] + cost_448_85[ord(solution^.space136[144])] + cost_448_84[ord(solution^.space136[146])] + cost_448_83[ord(solution^.space136[147])] + cost_448_82[ord(solution^.space136[149])] + cost_448_81[ord(solution^.space136[152])] + cost_448_80[ord(solution^.space136[154])] + cost_448_79[ord(solution^.space136[155])] + cost_448_78[ord(solution^.space136[156])] + cost_448_77[ord(solution^.space136[157])] + cost_448_76[ord(solution^.space136[160])] + cost_448_75[ord(solution^.space136[162])] + cost_448_74[ord(solution^.space136[163])] + cost_448_73[ord(solution^.space136[164])] + cost_448_72[ord(solution^.space136[165])] + cost_448_71[ord(solution^.space136[166])] + cost_448_70[ord(solution^.space136[167])] + cost_448_69[ord(solution^.space136[169])] + cost_448_68[ord(solution^.space136[170])] + cost_448_67[ord(solution^.space136[171])] + cost_448_66[ord(solution^.space136[172])] + cost_448_65[ord(solution^.space136[174])] + cost_448_64[ord(solution^.space136[175])] + cost_448_63[ord(solution^.space136[177])] + cost_448_62[ord(solution^.space136[180])] + cost_448_61[ord(solution^.space136[182])] + cost_448_60[ord(solution^.space136[183])] + cost_448_59[ord(solution^.space136[184])] + cost_448_58[ord(solution^.space136[185])] + cost_448_57[ord(solution^.space136[188])] + cost_448_56[ord(solution^.space136[190])] + cost_448_55[ord(solution^.space136[191])] + cost_448_54[ord(solution^.space136[192])] + cost_448_53[ord(solution^.space136[194])] + cost_448_52[ord(solution^.space136[195])] + cost_448_51[ord(solution^.space136[197])] + cost_448_50[ord(solution^.space136[198])] + cost_448_49[ord(solution^.space136[199])] + subject.children[1]^.code_bytes;
-      solution^.memory_refs := cost_448_48[ord(solution^.space136[136])] + cost_448_47[ord(solution^.space136[139])] + cost_448_46[ord(solution^.space136[142])] + cost_448_45[ord(solution^.space136[143])] + cost_448_44[ord(solution^.space136[144])] + cost_448_43[ord(solution^.space136[147])] + cost_448_42[ord(solution^.space136[152])] + cost_448_41[ord(solution^.space136[155])] + cost_448_40[ord(solution^.space136[156])] + cost_448_39[ord(solution^.space136[160])] + cost_448_38[ord(solution^.space136[163])] + cost_448_37[ord(solution^.space136[164])] + cost_448_36[ord(solution^.space136[167])] + cost_448_35[ord(solution^.space136[170])] + cost_448_34[ord(solution^.space136[171])] + cost_448_33[ord(solution^.space136[172])] + cost_448_32[ord(solution^.space136[175])] + cost_448_31[ord(solution^.space136[180])] + cost_448_30[ord(solution^.space136[183])] + cost_448_29[ord(solution^.space136[184])] + cost_448_28[ord(solution^.space136[188])] + cost_448_27[ord(solution^.space136[191])] + cost_448_26[ord(solution^.space136[192])] + cost_448_25[ord(solution^.space136[195])] + cost_448_24[ord(solution^.space136[198])] + cost_448_23[ord(solution^.space136[199])] + subject.children[1]^.memory_refs;
+      solution^.memory_references := cost_448_48[ord(solution^.space136[136])] + cost_448_47[ord(solution^.space136[139])] + cost_448_46[ord(solution^.space136[142])] + cost_448_45[ord(solution^.space136[143])] + cost_448_44[ord(solution^.space136[144])] + cost_448_43[ord(solution^.space136[147])] + cost_448_42[ord(solution^.space136[152])] + cost_448_41[ord(solution^.space136[155])] + cost_448_40[ord(solution^.space136[156])] + cost_448_39[ord(solution^.space136[160])] + cost_448_38[ord(solution^.space136[163])] + cost_448_37[ord(solution^.space136[164])] + cost_448_36[ord(solution^.space136[167])] + cost_448_35[ord(solution^.space136[170])] + cost_448_34[ord(solution^.space136[171])] + cost_448_33[ord(solution^.space136[172])] + cost_448_32[ord(solution^.space136[175])] + cost_448_31[ord(solution^.space136[180])] + cost_448_30[ord(solution^.space136[183])] + cost_448_29[ord(solution^.space136[184])] + cost_448_28[ord(solution^.space136[188])] + cost_448_27[ord(solution^.space136[191])] + cost_448_26[ord(solution^.space136[192])] + cost_448_25[ord(solution^.space136[195])] + cost_448_24[ord(solution^.space136[198])] + cost_448_23[ord(solution^.space136[199])] + subject.children[1]^.memory_references;
       solution^.delay := cost_448_22[ord(solution^.space136[136])] + cost_448_21[ord(solution^.space136[139])] + cost_448_20[ord(solution^.space136[142])] + cost_448_19[ord(solution^.space136[143])] + cost_448_18[ord(solution^.space136[144])] + cost_448_17[ord(solution^.space136[147])] + cost_448_16[ord(solution^.space136[152])] + cost_448_15[ord(solution^.space136[155])] + cost_448_14[ord(solution^.space136[156])] + cost_448_13[ord(solution^.space136[160])] + cost_448_12[ord(solution^.space136[163])] + cost_448_11[ord(solution^.space136[164])] + cost_448_10[ord(solution^.space136[170])] + cost_448_9[ord(solution^.space136[171])] + cost_448_8[ord(solution^.space136[175])] + cost_448_7[ord(solution^.space136[183])] + cost_448_6[ord(solution^.space136[184])] + cost_448_5[ord(solution^.space136[191])] + cost_448_4[ord(solution^.space136[192])] + cost_448_3[ord(solution^.space136[195])] + cost_448_2[ord(solution^.space136[198])] + cost_448_1[ord(solution^.space136[199])] + subject.children[1]^.delay;
       solution^.bits_known := 0;
-      solution^.bits_trusted := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + p2_node_ptr_t(subject.sym)^.w[13]];
-      solution^.l40 := subject.children[1]^.l40;
-      solution^.l44 := subject.children[1]^.l44;
-      solution^.f76.has_sym_disp := true;
-      solution^.disp := 0;
+      solution^.bits_trusted := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + p2_node_ptr_t(subject.il)^.w[13]];
+      solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+      solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+      solution^.f76.has_a_symbolic_displacement := true;
+      solution^.literal_32_bits_value := 0;
       solution^.ip_reg_max := 0;
       solution^.ip_reg_result := 0;
-      solution^.f76.b84_7 := true;
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.uses_the_base_register := true;
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -2572,10 +2552,10 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 449;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 449;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes;
-    solution^.memory_refs := subject.children[1]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references;
     solution^.delay := subject.children[1]^.delay;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -2625,32 +2605,32 @@ var
 begin
   result := nil;
   work := nil;
-  t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
+  t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  t2 := lir_$can_encode_as_immediate_operand(subject.children[1]^.disp,
+  t2 := lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl), 1);
-  t3 := lir_$can_encode_as_immediate_postincrement(subject.children[3]^.disp,
+  t3 := lir_$can_encode_as_immediate_postincrement(subject.children[3]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_disp or subject.children[1]^.f76.has_sym_disp) and (subject.children[1]^.f76.b82_1 or subject.children[1]^.f76.b82_6)) and (subject.children[1]^.kind = 5) or (not lir_$can_encode_as_immediate_operand(subject.children[3]^.disp, ord(opc$loadl), 1) or (not t3 and subject.children[3]^.f76.uses_disp or subject.children[3]^.f76.has_sym_disp) and (subject.children[3]^.f76.b82_1 or subject.children[3]^.f76.b82_6)) and (subject.children[3]^.kind = 5)) then begin
+  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5) or (not lir_$can_encode_as_immediate_operand(subject.children[3]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[3]^.f76.uses_the_displacement or subject.children[3]^.f76.has_a_symbolic_displacement) and (subject.children[3]^.f76.is_physical or subject.children[3]^.f76.is_atomic)) and (subject.children[3]^.kind = 5)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 450 matched the semantics.');
       writeln;
     end;
     solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-    solution^.rule := 450;
-    solution^.chain := addr(subject);
-    p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[5]^.disp;
-    p1_int_fields_ptr_t(addr(solution^))^.i[1] := arshft(subject.children[2]^.disp,
+    solution^.which_transform := 450;
+    solution^.before_transform := addr(subject);
+    p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[5]^.literal_32_bits_value;
+    p1_int_fields_ptr_t(addr(solution^))^.i[1] := arshft(subject.children[2]^.literal_32_bits_value,
         3);
-    p1_int_fields_ptr_t(addr(solution^))^.i[2] := (arshft(subject.children[2]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[0] - 1,
+    p1_int_fields_ptr_t(addr(solution^))^.i[2] := (arshft(subject.children[2]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[0] - 1,
         3) - p1_int_fields_ptr_t(addr(solution^))^.i[1] + 1) * 8;
-    p1_int_fields_ptr_t(addr(solution^))^.i[3] := -(7 & subject.children[2]^.disp) + (arshft(subject.children[2]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[0] - 1,
+    p1_int_fields_ptr_t(addr(solution^))^.i[3] := -(7 & subject.children[2]^.literal_32_bits_value) + (arshft(subject.children[2]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[0] - 1,
         3) - p1_int_fields_ptr_t(addr(solution^))^.i[1] + 1) * 8 - p1_int_fields_ptr_t(addr(solution^))^.i[0];
-    p1_int_fields_ptr_t(addr(solution^))^.i[4] := arshft(subject.children[4]^.disp,
+    p1_int_fields_ptr_t(addr(solution^))^.i[4] := arshft(subject.children[4]^.literal_32_bits_value,
         3);
-    p1_int_fields_ptr_t(addr(solution^))^.i[5] := (arshft(subject.children[4]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[0] - 1,
+    p1_int_fields_ptr_t(addr(solution^))^.i[5] := (arshft(subject.children[4]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[0] - 1,
         3) - p1_int_fields_ptr_t(addr(solution^))^.i[4] + 1) * 8;
-    p1_int_fields_ptr_t(addr(solution^))^.i[6] := -(subject.children[4]^.disp & 7) + p1_int_fields_ptr_t(addr(solution^))^.i[5] - p1_int_fields_ptr_t(addr(solution^))^.i[0];
+    p1_int_fields_ptr_t(addr(solution^))^.i[6] := -(subject.children[4]^.literal_32_bits_value & 7) + p1_int_fields_ptr_t(addr(solution^))^.i[5] - p1_int_fields_ptr_t(addr(solution^))^.i[0];
     p1_int_fields_ptr_t(addr(solution^))^.i[7] := 0;
     t5 := make_bit_mask_1(8, 0);
     t6 := make_bit_mask_1(16, 0);
@@ -2676,18 +2656,18 @@ begin
     t24 := make_bit_mask_1(8, 0);
     if p1_int_fields_ptr_t(addr(solution^))^.i[5] = 32 then begin
       solution^.space136[136] := chr(1);
-      if not lir_$can_encode_as_immediate_operand(subject.children[3]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[4] + 3, ord(opc$loadl), 1) and not subject.children[3]^.f76.has_sym_disp or subject.children[3]^.f76.uses_index_reg then begin
+      if not lir_$can_encode_as_immediate_operand(subject.children[3]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[4] + 3, ord(opc$loadl), 1) and not subject.children[3]^.f76.has_a_symbolic_displacement or subject.children[3]^.f76.uses_the_index_register then begin
         solution^.space136[137] := chr(2);
-        if subject.children[3]^.f76.b84_7 then begin
+        if subject.children[3]^.f76.uses_the_base_register then begin
           solution^.space136[138] := chr(1);
-          if (subject.children[3]^.disp <> 0) or subject.children[3]^.f76.uses_index_reg or subject.children[3]^.f76.has_sym_disp then begin
+          if (subject.children[3]^.literal_32_bits_value <> 0) or subject.children[3]^.f76.uses_the_index_register or subject.children[3]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[139] := chr(2);
           end else begin
             solution^.space136[139] := chr(1);
           end;
         end else begin
           solution^.space136[138] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[3]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[3]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[140] := chr(1);
           end else begin
             solution^.space136[140] := chr(2);
@@ -2704,18 +2684,18 @@ begin
     end
     else if p1_int_fields_ptr_t(addr(solution^))^.i[5] = 24 then begin
       solution^.space136[136] := chr(2);
-      if not lir_$can_encode_as_immediate_operand(subject.children[3]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[4] + 2, ord(opc$loadl), 1) and not subject.children[3]^.f76.has_sym_disp or subject.children[3]^.f76.uses_index_reg then begin
+      if not lir_$can_encode_as_immediate_operand(subject.children[3]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[4] + 2, ord(opc$loadl), 1) and not subject.children[3]^.f76.has_a_symbolic_displacement or subject.children[3]^.f76.uses_the_index_register then begin
         solution^.space136[142] := chr(2);
-        if subject.children[3]^.f76.b84_7 then begin
+        if subject.children[3]^.f76.uses_the_base_register then begin
           solution^.space136[143] := chr(1);
-          if (subject.children[3]^.disp <> 0) or subject.children[3]^.f76.uses_index_reg or subject.children[3]^.f76.has_sym_disp then begin
+          if (subject.children[3]^.literal_32_bits_value <> 0) or subject.children[3]^.f76.uses_the_index_register or subject.children[3]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[144] := chr(2);
           end else begin
             solution^.space136[144] := chr(1);
           end;
         end else begin
           solution^.space136[143] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[3]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[3]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[145] := chr(1);
           end else begin
             solution^.space136[145] := chr(2);
@@ -2732,18 +2712,18 @@ begin
     end
     else if p1_int_fields_ptr_t(addr(solution^))^.i[5] = 16 then begin
       solution^.space136[136] := chr(3);
-      if not lir_$can_encode_as_immediate_operand(subject.children[3]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[4] + 1, ord(opc$loadl), 1) and not subject.children[3]^.f76.has_sym_disp or subject.children[3]^.f76.uses_index_reg then begin
+      if not lir_$can_encode_as_immediate_operand(subject.children[3]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[4] + 1, ord(opc$loadl), 1) and not subject.children[3]^.f76.has_a_symbolic_displacement or subject.children[3]^.f76.uses_the_index_register then begin
         solution^.space136[147] := chr(2);
-        if subject.children[3]^.f76.b84_7 then begin
+        if subject.children[3]^.f76.uses_the_base_register then begin
           solution^.space136[148] := chr(1);
-          if (subject.children[3]^.disp <> 0) or subject.children[3]^.f76.uses_index_reg or subject.children[3]^.f76.has_sym_disp then begin
+          if (subject.children[3]^.literal_32_bits_value <> 0) or subject.children[3]^.f76.uses_the_index_register or subject.children[3]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[149] := chr(2);
           end else begin
             solution^.space136[149] := chr(1);
           end;
         end else begin
           solution^.space136[148] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[3]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[3]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[150] := chr(1);
           end else begin
             solution^.space136[150] := chr(2);
@@ -2760,20 +2740,20 @@ begin
     end
     else if p1_int_fields_ptr_t(addr(solution^))^.i[5] = 8 then begin
       solution^.space136[136] := chr(4);
-      if (p1_int_fields_ptr_t(addr(solution^))^.i[4] = 0) or (lir_$can_encode_as_immediate_operand(subject.children[3]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[4], ord(opc$loadl), 1) or subject.children[3]^.f76.has_sym_disp) and not subject.children[3]^.f76.uses_index_reg then begin
+      if (p1_int_fields_ptr_t(addr(solution^))^.i[4] = 0) or (lir_$can_encode_as_immediate_operand(subject.children[3]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[4], ord(opc$loadl), 1) or subject.children[3]^.f76.has_a_symbolic_displacement) and not subject.children[3]^.f76.uses_the_index_register then begin
         solution^.space136[152] := chr(1);
       end else begin
         solution^.space136[152] := chr(2);
-        if subject.children[3]^.f76.b84_7 then begin
+        if subject.children[3]^.f76.uses_the_base_register then begin
           solution^.space136[153] := chr(1);
-          if (subject.children[3]^.disp <> 0) or subject.children[3]^.f76.uses_index_reg or subject.children[3]^.f76.has_sym_disp then begin
+          if (subject.children[3]^.literal_32_bits_value <> 0) or subject.children[3]^.f76.uses_the_index_register or subject.children[3]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[154] := chr(2);
           end else begin
             solution^.space136[154] := chr(1);
           end;
         end else begin
           solution^.space136[153] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[3]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[3]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[155] := chr(1);
           end else begin
             solution^.space136[155] := chr(2);
@@ -2790,18 +2770,18 @@ begin
     end;
     if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 32 then begin
       solution^.space136[157] := chr(1);
-      if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[1] + 3, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
+      if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[1] + 3, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
         solution^.space136[158] := chr(2);
-        if subject.children[1]^.f76.b84_7 then begin
+        if subject.children[1]^.f76.uses_the_base_register then begin
           solution^.space136[159] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[160] := chr(2);
           end else begin
             solution^.space136[160] := chr(1);
           end;
         end else begin
           solution^.space136[159] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[161] := chr(1);
           end else begin
             solution^.space136[161] := chr(2);
@@ -2818,18 +2798,18 @@ begin
     end
     else if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 24 then begin
       solution^.space136[157] := chr(2);
-      if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[1] + 2, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
+      if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[1] + 2, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
         solution^.space136[163] := chr(2);
-        if subject.children[1]^.f76.b84_7 then begin
+        if subject.children[1]^.f76.uses_the_base_register then begin
           solution^.space136[164] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[165] := chr(2);
           end else begin
             solution^.space136[165] := chr(1);
           end;
         end else begin
           solution^.space136[164] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[166] := chr(1);
           end else begin
             solution^.space136[166] := chr(2);
@@ -2846,18 +2826,18 @@ begin
     end
     else if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 16 then begin
       solution^.space136[157] := chr(3);
-      if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[1] + 1, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
+      if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[1] + 1, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
         solution^.space136[168] := chr(2);
-        if subject.children[1]^.f76.b84_7 then begin
+        if subject.children[1]^.f76.uses_the_base_register then begin
           solution^.space136[169] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[170] := chr(2);
           end else begin
             solution^.space136[170] := chr(1);
           end;
         end else begin
           solution^.space136[169] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[171] := chr(1);
           end else begin
             solution^.space136[171] := chr(2);
@@ -2874,20 +2854,20 @@ begin
     end
     else if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 8 then begin
       solution^.space136[157] := chr(4);
-      if (p1_int_fields_ptr_t(addr(solution^))^.i[1] = 0) or (lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[1], ord(opc$loadl), 1) or subject.children[1]^.f76.has_sym_disp) and not subject.children[1]^.f76.uses_index_reg then begin
+      if (p1_int_fields_ptr_t(addr(solution^))^.i[1] = 0) or (lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[1], ord(opc$loadl), 1) or subject.children[1]^.f76.has_a_symbolic_displacement) and not subject.children[1]^.f76.uses_the_index_register then begin
         solution^.space136[173] := chr(1);
       end else begin
         solution^.space136[173] := chr(2);
-        if subject.children[1]^.f76.b84_7 then begin
+        if subject.children[1]^.f76.uses_the_base_register then begin
           solution^.space136[174] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[175] := chr(2);
           end else begin
             solution^.space136[175] := chr(1);
           end;
         end else begin
           solution^.space136[174] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[176] := chr(1);
           end else begin
             solution^.space136[176] := chr(2);
@@ -2904,18 +2884,18 @@ begin
     end;
     if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 32 then begin
       solution^.space136[178] := chr(1);
-      if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[1] + 3, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
+      if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[1] + 3, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
         solution^.space136[179] := chr(2);
-        if subject.children[1]^.f76.b84_7 then begin
+        if subject.children[1]^.f76.uses_the_base_register then begin
           solution^.space136[180] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[181] := chr(2);
           end else begin
             solution^.space136[181] := chr(1);
           end;
         end else begin
           solution^.space136[180] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[182] := chr(1);
           end else begin
             solution^.space136[182] := chr(2);
@@ -2928,18 +2908,18 @@ begin
     end
     else if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 24 then begin
       solution^.space136[178] := chr(2);
-      if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[1] + 2, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
+      if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[1] + 2, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
         solution^.space136[184] := chr(2);
-        if subject.children[1]^.f76.b84_7 then begin
+        if subject.children[1]^.f76.uses_the_base_register then begin
           solution^.space136[185] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[186] := chr(2);
           end else begin
             solution^.space136[186] := chr(1);
           end;
         end else begin
           solution^.space136[185] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[187] := chr(1);
           end else begin
             solution^.space136[187] := chr(2);
@@ -2952,18 +2932,18 @@ begin
     end
     else if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 16 then begin
       solution^.space136[178] := chr(3);
-      if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[1] + 1, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
+      if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[1] + 1, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
         solution^.space136[189] := chr(2);
-        if subject.children[1]^.f76.b84_7 then begin
+        if subject.children[1]^.f76.uses_the_base_register then begin
           solution^.space136[190] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[191] := chr(2);
           end else begin
             solution^.space136[191] := chr(1);
           end;
         end else begin
           solution^.space136[190] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[192] := chr(1);
           end else begin
             solution^.space136[192] := chr(2);
@@ -2976,20 +2956,20 @@ begin
     end
     else if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 8 then begin
       solution^.space136[178] := chr(4);
-      if (p1_int_fields_ptr_t(addr(solution^))^.i[1] = 0) or (lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[1] + 1, ord(opc$loadl), 1) or subject.children[1]^.f76.has_sym_disp) and not subject.children[1]^.f76.uses_index_reg then begin
+      if (p1_int_fields_ptr_t(addr(solution^))^.i[1] = 0) or (lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[1] + 1, ord(opc$loadl), 1) or subject.children[1]^.f76.has_a_symbolic_displacement) and not subject.children[1]^.f76.uses_the_index_register then begin
         solution^.space136[194] := chr(1);
       end else begin
         solution^.space136[194] := chr(2);
-        if subject.children[1]^.f76.b84_7 then begin
+        if subject.children[1]^.f76.uses_the_base_register then begin
           solution^.space136[195] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[196] := chr(2);
           end else begin
             solution^.space136[196] := chr(1);
           end;
         end else begin
           solution^.space136[195] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[197] := chr(1);
           end else begin
             solution^.space136[197] := chr(2);
@@ -3001,9 +2981,9 @@ begin
       solution^.space136[178] := chr(5);
     end;
     solution^.code_bytes := cost_450_119[ord(solution^.space136[136])] + cost_450_118[ord(solution^.space136[137])] + cost_450_117[ord(solution^.space136[139])] + cost_450_116[ord(solution^.space136[140])] + cost_450_115[ord(solution^.space136[141])] + cost_450_114[ord(solution^.space136[142])] + cost_450_113[ord(solution^.space136[144])] + cost_450_112[ord(solution^.space136[145])] + cost_450_111[ord(solution^.space136[146])] + cost_450_110[ord(solution^.space136[147])] + cost_450_109[ord(solution^.space136[149])] + cost_450_108[ord(solution^.space136[150])] + cost_450_107[ord(solution^.space136[151])] + cost_450_106[ord(solution^.space136[152])] + cost_450_105[ord(solution^.space136[154])] + cost_450_104[ord(solution^.space136[155])] + cost_450_103[ord(solution^.space136[156])] + cost_450_102[ord(solution^.space136[157])] + cost_450_101[ord(solution^.space136[158])] + cost_450_100[ord(solution^.space136[160])] + cost_450_99[ord(solution^.space136[161])] + cost_450_98[ord(solution^.space136[162])] + cost_450_97[ord(solution^.space136[163])] + cost_450_96[ord(solution^.space136[165])] + cost_450_95[ord(solution^.space136[166])] + cost_450_94[ord(solution^.space136[167])] + cost_450_93[ord(solution^.space136[168])] + cost_450_92[ord(solution^.space136[170])] + cost_450_91[ord(solution^.space136[171])] + cost_450_90[ord(solution^.space136[172])] + cost_450_89[ord(solution^.space136[173])] + cost_450_88[ord(solution^.space136[175])] + cost_450_87[ord(solution^.space136[176])] + cost_450_86[ord(solution^.space136[177])] + cost_450_85[ord(solution^.space136[178])] + cost_450_84[ord(solution^.space136[179])] + cost_450_83[ord(solution^.space136[181])] + cost_450_82[ord(solution^.space136[182])] + cost_450_81[ord(solution^.space136[183])] + cost_450_80[ord(solution^.space136[184])] + cost_450_79[ord(solution^.space136[186])] + cost_450_78[ord(solution^.space136[187])] + cost_450_77[ord(solution^.space136[188])] + cost_450_76[ord(solution^.space136[189])] + cost_450_75[ord(solution^.space136[191])] + cost_450_74[ord(solution^.space136[192])] + cost_450_73[ord(solution^.space136[193])] + cost_450_72[ord(solution^.space136[194])] + cost_450_71[ord(solution^.space136[196])] + cost_450_70[ord(solution^.space136[197])] + cost_450_69[ord(solution^.space136[198])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + subject.children[4]^.code_bytes + subject.children[5]^.code_bytes + 8;
-    solution^.memory_refs := cost_450_68[ord(solution^.space136[137])] + cost_450_67[ord(solution^.space136[140])] + cost_450_66[ord(solution^.space136[141])] + cost_450_65[ord(solution^.space136[142])] + cost_450_64[ord(solution^.space136[145])] + cost_450_63[ord(solution^.space136[146])] + cost_450_62[ord(solution^.space136[147])] + cost_450_61[ord(solution^.space136[150])] + cost_450_60[ord(solution^.space136[151])] + cost_450_59[ord(solution^.space136[152])] + cost_450_58[ord(solution^.space136[155])] + cost_450_57[ord(solution^.space136[156])] + cost_450_56[ord(solution^.space136[158])] + cost_450_55[ord(solution^.space136[161])] + cost_450_54[ord(solution^.space136[162])] + cost_450_53[ord(solution^.space136[163])] + cost_450_52[ord(solution^.space136[166])] + cost_450_51[ord(solution^.space136[167])] + cost_450_50[ord(solution^.space136[168])] + cost_450_49[ord(solution^.space136[171])] + cost_450_48[ord(solution^.space136[172])] + cost_450_47[ord(solution^.space136[173])] + cost_450_46[ord(solution^.space136[176])] + cost_450_45[ord(solution^.space136[177])] + cost_450_44[ord(solution^.space136[179])] + cost_450_43[ord(solution^.space136[182])] + cost_450_42[ord(solution^.space136[183])] + cost_450_41[ord(solution^.space136[184])] + cost_450_40[ord(solution^.space136[187])] + cost_450_39[ord(solution^.space136[188])] + cost_450_38[ord(solution^.space136[189])] + cost_450_37[ord(solution^.space136[192])] + cost_450_36[ord(solution^.space136[193])] + cost_450_35[ord(solution^.space136[194])] + cost_450_34[ord(solution^.space136[197])] + cost_450_33[ord(solution^.space136[198])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs + subject.children[4]^.memory_refs + subject.children[5]^.memory_refs;
+    solution^.memory_references := cost_450_68[ord(solution^.space136[137])] + cost_450_67[ord(solution^.space136[140])] + cost_450_66[ord(solution^.space136[141])] + cost_450_65[ord(solution^.space136[142])] + cost_450_64[ord(solution^.space136[145])] + cost_450_63[ord(solution^.space136[146])] + cost_450_62[ord(solution^.space136[147])] + cost_450_61[ord(solution^.space136[150])] + cost_450_60[ord(solution^.space136[151])] + cost_450_59[ord(solution^.space136[152])] + cost_450_58[ord(solution^.space136[155])] + cost_450_57[ord(solution^.space136[156])] + cost_450_56[ord(solution^.space136[158])] + cost_450_55[ord(solution^.space136[161])] + cost_450_54[ord(solution^.space136[162])] + cost_450_53[ord(solution^.space136[163])] + cost_450_52[ord(solution^.space136[166])] + cost_450_51[ord(solution^.space136[167])] + cost_450_50[ord(solution^.space136[168])] + cost_450_49[ord(solution^.space136[171])] + cost_450_48[ord(solution^.space136[172])] + cost_450_47[ord(solution^.space136[173])] + cost_450_46[ord(solution^.space136[176])] + cost_450_45[ord(solution^.space136[177])] + cost_450_44[ord(solution^.space136[179])] + cost_450_43[ord(solution^.space136[182])] + cost_450_42[ord(solution^.space136[183])] + cost_450_41[ord(solution^.space136[184])] + cost_450_40[ord(solution^.space136[187])] + cost_450_39[ord(solution^.space136[188])] + cost_450_38[ord(solution^.space136[189])] + cost_450_37[ord(solution^.space136[192])] + cost_450_36[ord(solution^.space136[193])] + cost_450_35[ord(solution^.space136[194])] + cost_450_34[ord(solution^.space136[197])] + cost_450_33[ord(solution^.space136[198])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references + subject.children[4]^.memory_references + subject.children[5]^.memory_references;
     solution^.delay := cost_450_32[ord(solution^.space136[137])] + cost_450_31[ord(solution^.space136[140])] + cost_450_30[ord(solution^.space136[141])] + cost_450_29[ord(solution^.space136[142])] + cost_450_28[ord(solution^.space136[145])] + cost_450_27[ord(solution^.space136[146])] + cost_450_26[ord(solution^.space136[147])] + cost_450_25[ord(solution^.space136[150])] + cost_450_24[ord(solution^.space136[151])] + cost_450_23[ord(solution^.space136[152])] + cost_450_22[ord(solution^.space136[155])] + cost_450_21[ord(solution^.space136[156])] + cost_450_20[ord(solution^.space136[158])] + cost_450_19[ord(solution^.space136[161])] + cost_450_18[ord(solution^.space136[162])] + cost_450_17[ord(solution^.space136[163])] + cost_450_16[ord(solution^.space136[166])] + cost_450_15[ord(solution^.space136[167])] + cost_450_14[ord(solution^.space136[168])] + cost_450_13[ord(solution^.space136[171])] + cost_450_12[ord(solution^.space136[172])] + cost_450_11[ord(solution^.space136[173])] + cost_450_10[ord(solution^.space136[176])] + cost_450_9[ord(solution^.space136[177])] + cost_450_8[ord(solution^.space136[182])] + cost_450_7[ord(solution^.space136[183])] + cost_450_6[ord(solution^.space136[187])] + cost_450_5[ord(solution^.space136[188])] + cost_450_4[ord(solution^.space136[192])] + cost_450_3[ord(solution^.space136[193])] + cost_450_2[ord(solution^.space136[197])] + cost_450_1[ord(solution^.space136[198])] + subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay + subject.children[4]^.delay + subject.children[5]^.delay;
-    solution^.eval_order := 1;
+    solution^.evaluation_order := 1;
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max + subject.children[3]^.ip_reg_max;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max + subject.children[3]^.fp_reg_max;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + subject.children[3]^.fp_reg_pair_max;
@@ -3032,7 +3012,7 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.children[1]^.disp = 0 then begin
+  if subject.children[1]^.literal_32_bits_value = 0 then begin
     if isc_user_routines_354 then begin
       write('Pattern 451 matched the semantics.');
       writeln;
@@ -3045,12 +3025,12 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 451;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 451;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 24;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-      solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
           subject.children[2]^.ip_reg_max, subject.children[3]^.ip_reg_max,
           legal_evaluation_orders(subject.children[2], subject.children[3]));
       t2 := subject.children[1]^.ip_reg_max;
@@ -3104,12 +3084,12 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 452;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 452;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 28;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-    solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
         subject.children[2]^.ip_reg_max, subject.children[3]^.ip_reg_max,
         legal_evaluation_orders(subject.children[2], subject.children[3]));
     t2 := subject.children[1]^.ip_reg_max;
@@ -3162,12 +3142,12 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 453;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 453;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 28;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-    solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
         subject.children[2]^.ip_reg_max, subject.children[3]^.ip_reg_max,
         legal_evaluation_orders(subject.children[2], subject.children[3]));
     t2 := subject.children[1]^.ip_reg_max;
@@ -3208,7 +3188,7 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.children[1]^.disp = 0 then begin
+  if subject.children[1]^.literal_32_bits_value = 0 then begin
     if isc_user_routines_354 then begin
       write('Pattern 454 matched the semantics.');
       writeln;
@@ -3221,12 +3201,12 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 454;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 454;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 8;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-      solution^.eval_order := 1;
+      solution^.evaluation_order := 1;
       t2 := subject.children[1]^.ip_reg_max;
       if t2 = subject.children[2]^.ip_reg_max then begin
         solution^.ip_reg_max := t2 + 1;
@@ -3278,12 +3258,12 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 455;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 455;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 12;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-    solution^.eval_order := 1;
+    solution^.evaluation_order := 1;
     t2 := subject.children[1]^.ip_reg_max;
     if t2 = subject.children[2]^.ip_reg_max then begin
       solution^.ip_reg_max := t2 + 1;
@@ -3334,12 +3314,12 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 456;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 456;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 12;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-    solution^.eval_order := 1;
+    solution^.evaluation_order := 1;
     t2 := subject.children[1]^.ip_reg_max;
     if t2 = subject.children[2]^.ip_reg_max then begin
       solution^.ip_reg_max := t2 + 1;
@@ -3376,66 +3356,66 @@ var
 begin
   result := nil;
   work := nil;
-  if in_interval_at_compile_time(p2_node_ptr_t(subject.sym)^.w[12], subject.children[1], subject.children[2]) then begin
+  if in_interval_at_compile_time(p2_node_ptr_t(subject.il)^.w[12], subject.children[1], subject.children[2]) then begin
     if isc_user_routines_354 then begin
       write('Pattern 457 matched the semantics.');
       writeln;
     end;
     solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
-    solution^.rule := 457;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 457;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.l28 := subject.children[1]^.l28;
-    p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-    p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-    solution^.f76.b76 := subject.children[1]^.f76.b76;
+    solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+    solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+    solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+    solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+    solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+    solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
     solution^.bits_known := subject.children[1]^.bits_known;
     solution^.bits_trusted := subject.children[1]^.bits_trusted;
-    solution^.l40 := subject.children[1]^.l40;
-    solution^.l44 := subject.children[1]^.l44;
-    solution^.w56 := subject.children[1]^.w56;
-    p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-    p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-    solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-    solution^.f76.b77 := subject.children[1]^.f76.b77;
-    solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+    solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+    solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+    solution^.bytes := subject.children[1]^.bytes;
+    solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+    solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+    solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+    solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+    solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
     solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
     solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
     solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
     solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-    solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+    solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
     solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-    solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-    solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-    solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-    solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-    solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-    solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-    solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-    p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-    solution^.disp := subject.children[1]^.disp;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-    p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-    solution^.w74 := subject.children[1]^.w74;
-    solution^.l52 := subject.children[1]^.l52;
-    solution^.f76.physical := subject.children[1]^.f76.physical;
-    solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-    solution^.f76.reg := subject.children[1]^.f76.reg;
-    solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-    solution^.f76.serialize := subject.children[1]^.f76.serialize;
-    solution^.f76.shift := subject.children[1]^.f76.shift;
-    solution^.f76.b80 := subject.children[1]^.f76.b80;
-    solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-    solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-    solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+    solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+    solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+    solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+    solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+    solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+    solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+    solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+    solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+    solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+    solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+    solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+    solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+    solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+    solution^.pass_1_size := subject.children[1]^.pass_1_size;
+    solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+    solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+    solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+    solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+    solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+    solution^.f76.scale := subject.children[1]^.f76.scale;
+    solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+    solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+    solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+    solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
     p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -3459,7 +3439,7 @@ var
 begin
   result := nil;
   work := nil;
-  if (p2_node_ptr_t(subject.sym)^.w[12] = 4) or (p2_node_ptr_t(subject.sym)^.w[12] = 1) or (p2_node_ptr_t(subject.sym)^.w[12] = 2) then begin
+  if (p2_node_ptr_t(subject.il)^.w[12] = 4) or (p2_node_ptr_t(subject.il)^.w[12] = 1) or (p2_node_ptr_t(subject.il)^.w[12] = 2) then begin
     if isc_user_routines_354 then begin
       write('Pattern 458 matched the semantics.');
       writeln;
@@ -3472,12 +3452,12 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 458;
-      solution^.chain := addr(subject);
-      p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.sym)^.w[12]];
+      solution^.which_transform := 458;
+      solution^.before_transform := addr(subject);
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[12]];
       if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
         solution^.space136[136] := chr(1);
-        if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
+        if subject.children[1]^.f76.bit_7_was_sign_extended then begin
           solution^.space136[137] := chr(1);
         end else begin
           solution^.space136[137] := chr(2);
@@ -3485,7 +3465,7 @@ begin
       end
       else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
         solution^.space136[136] := chr(2);
-        if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
+        if subject.children[1]^.f76.bit_15_was_sign_extended then begin
           solution^.space136[138] := chr(1);
         end else begin
           solution^.space136[138] := chr(2);
@@ -3495,7 +3475,7 @@ begin
       end;
       if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
         solution^.space136[139] := chr(1);
-        if p2_flags_ptr_t(addr(subject.children[2]^.f76))^.bit_7_was_sign_extended then begin
+        if subject.children[2]^.f76.bit_7_was_sign_extended then begin
           solution^.space136[140] := chr(1);
         end else begin
           solution^.space136[140] := chr(2);
@@ -3503,7 +3483,7 @@ begin
       end
       else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
         solution^.space136[139] := chr(2);
-        if p2_flags_ptr_t(addr(subject.children[2]^.f76))^.bit_15_was_sign_extended then begin
+        if subject.children[2]^.f76.bit_15_was_sign_extended then begin
           solution^.space136[141] := chr(1);
         end else begin
           solution^.space136[141] := chr(2);
@@ -3517,57 +3497,57 @@ begin
         solution^.space136[142] := chr(2);
       end;
       solution^.code_bytes := cost_458_7[ord(solution^.space136[137])] + cost_458_6[ord(solution^.space136[138])] + cost_458_5[ord(solution^.space136[140])] + cost_458_4[ord(solution^.space136[141])] + cost_458_3[ord(solution^.space136[142])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 12;
-      solution^.memory_refs := cost_458_2[ord(solution^.space136[142])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := cost_458_2[ord(solution^.space136[142])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := cost_458_1[ord(solution^.space136[142])] + subject.children[1]^.delay + subject.children[2]^.delay + 1;
-      solution^.l28 := subject.children[1]^.l28;
-      p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-      p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-      solution^.f76.b76 := subject.children[1]^.f76.b76;
+      solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+      solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+      solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+      solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+      solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+      solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
       solution^.bits_known := subject.children[1]^.bits_known;
       solution^.bits_trusted := subject.children[1]^.bits_trusted;
-      solution^.l40 := subject.children[1]^.l40;
-      solution^.l44 := subject.children[1]^.l44;
-      solution^.w56 := subject.children[1]^.w56;
-      p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-      p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-      solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-      solution^.f76.b77 := subject.children[1]^.f76.b77;
-      solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+      solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+      solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+      solution^.bytes := subject.children[1]^.bytes;
+      solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+      solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+      solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+      solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+      solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
       solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
       solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
       solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
       solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-      solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+      solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
       solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-      solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-      solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-      solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-      solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-      solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-      solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-      solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-      solution^.disp := subject.children[1]^.disp;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-      p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-      solution^.w74 := subject.children[1]^.w74;
-      solution^.l52 := subject.children[1]^.l52;
-      solution^.f76.physical := subject.children[1]^.f76.physical;
-      solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-      solution^.f76.reg := subject.children[1]^.f76.reg;
-      solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-      solution^.f76.serialize := subject.children[1]^.f76.serialize;
-      solution^.f76.shift := subject.children[1]^.f76.shift;
-      solution^.f76.b80 := subject.children[1]^.f76.b80;
-      solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-      solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-      solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+      solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+      solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+      solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+      solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+      solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+      solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+      solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+      solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+      solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+      solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+      solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+      solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+      solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+      solution^.pass_1_size := subject.children[1]^.pass_1_size;
+      solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+      solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+      solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+      solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+      solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+      solution^.f76.scale := subject.children[1]^.f76.scale;
+      solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+      solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+      solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+      solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -3605,60 +3585,60 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
-    solution^.rule := 459;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 459;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.l28 := subject.children[1]^.l28;
-    p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-    p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-    solution^.f76.b76 := subject.children[1]^.f76.b76;
+    solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+    solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+    solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+    solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+    solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+    solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
     solution^.bits_known := subject.children[1]^.bits_known;
     solution^.bits_trusted := subject.children[1]^.bits_trusted;
-    solution^.l40 := subject.children[1]^.l40;
-    solution^.l44 := subject.children[1]^.l44;
-    solution^.w56 := subject.children[1]^.w56;
-    p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-    p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-    solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-    solution^.f76.b77 := subject.children[1]^.f76.b77;
-    solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+    solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+    solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+    solution^.bytes := subject.children[1]^.bytes;
+    solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+    solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+    solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+    solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+    solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
     solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
     solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
     solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
     solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-    solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+    solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
     solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-    solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-    solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-    solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-    solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-    solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-    solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-    solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-    p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-    solution^.disp := subject.children[1]^.disp;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-    p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-    solution^.w74 := subject.children[1]^.w74;
-    solution^.l52 := subject.children[1]^.l52;
-    solution^.f76.physical := subject.children[1]^.f76.physical;
-    solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-    solution^.f76.reg := subject.children[1]^.f76.reg;
-    solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-    solution^.f76.serialize := subject.children[1]^.f76.serialize;
-    solution^.f76.shift := subject.children[1]^.f76.shift;
-    solution^.f76.b80 := subject.children[1]^.f76.b80;
-    solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-    solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-    solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+    solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+    solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+    solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+    solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+    solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+    solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+    solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+    solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+    solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+    solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+    solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+    solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+    solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+    solution^.pass_1_size := subject.children[1]^.pass_1_size;
+    solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+    solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+    solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+    solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+    solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+    solution^.f76.scale := subject.children[1]^.f76.scale;
+    solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+    solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+    solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+    solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
     p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -3695,60 +3675,60 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 460;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 460;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[2]^.code_bytes + subject.children[1]^.code_bytes;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.l28 := subject.children[1]^.l28;
-    p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-    p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-    solution^.f76.b76 := subject.children[1]^.f76.b76;
+    solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+    solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+    solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+    solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+    solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+    solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
     solution^.bits_known := subject.children[1]^.bits_known;
     solution^.bits_trusted := subject.children[1]^.bits_trusted;
-    solution^.l40 := subject.children[1]^.l40;
-    solution^.l44 := subject.children[1]^.l44;
-    solution^.w56 := subject.children[1]^.w56;
-    p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-    p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-    solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-    solution^.f76.b77 := subject.children[1]^.f76.b77;
-    solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+    solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+    solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+    solution^.bytes := subject.children[1]^.bytes;
+    solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+    solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+    solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+    solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+    solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
     solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
     solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
     solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
     solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-    solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+    solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
     solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-    solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-    solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-    solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-    solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-    solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-    solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-    solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-    p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-    solution^.disp := subject.children[1]^.disp;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-    p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-    solution^.w74 := subject.children[1]^.w74;
-    solution^.l52 := subject.children[1]^.l52;
-    solution^.f76.physical := subject.children[1]^.f76.physical;
-    solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-    solution^.f76.reg := subject.children[1]^.f76.reg;
-    solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-    solution^.f76.serialize := subject.children[1]^.f76.serialize;
-    solution^.f76.shift := subject.children[1]^.f76.shift;
-    solution^.f76.b80 := subject.children[1]^.f76.b80;
-    solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-    solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-    solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+    solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+    solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+    solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+    solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+    solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+    solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+    solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+    solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+    solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+    solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+    solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+    solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+    solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+    solution^.pass_1_size := subject.children[1]^.pass_1_size;
+    solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+    solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+    solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+    solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+    solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+    solution^.f76.scale := subject.children[1]^.f76.scale;
+    solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+    solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+    solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+    solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
     p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -3785,60 +3765,60 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-    solution^.rule := 461;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 461;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.l28 := subject.children[1]^.l28;
-    p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-    p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-    solution^.f76.b76 := subject.children[1]^.f76.b76;
+    solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+    solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+    solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+    solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+    solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+    solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
     solution^.bits_known := subject.children[1]^.bits_known;
     solution^.bits_trusted := subject.children[1]^.bits_trusted;
-    solution^.l40 := subject.children[1]^.l40;
-    solution^.l44 := subject.children[1]^.l44;
-    solution^.w56 := subject.children[1]^.w56;
-    p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-    p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-    solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-    solution^.f76.b77 := subject.children[1]^.f76.b77;
-    solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+    solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+    solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+    solution^.bytes := subject.children[1]^.bytes;
+    solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+    solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+    solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+    solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+    solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
     solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
     solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
     solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
     solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-    solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+    solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
     solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-    solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-    solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-    solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-    solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-    solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-    solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-    solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-    p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-    solution^.disp := subject.children[1]^.disp;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-    p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-    solution^.w74 := subject.children[1]^.w74;
-    solution^.l52 := subject.children[1]^.l52;
-    solution^.f76.physical := subject.children[1]^.f76.physical;
-    solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-    solution^.f76.reg := subject.children[1]^.f76.reg;
-    solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-    solution^.f76.serialize := subject.children[1]^.f76.serialize;
-    solution^.f76.shift := subject.children[1]^.f76.shift;
-    solution^.f76.b80 := subject.children[1]^.f76.b80;
-    solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-    solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-    solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+    solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+    solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+    solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+    solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+    solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+    solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+    solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+    solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+    solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+    solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+    solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+    solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+    solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+    solution^.pass_1_size := subject.children[1]^.pass_1_size;
+    solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+    solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+    solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+    solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+    solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+    solution^.f76.scale := subject.children[1]^.f76.scale;
+    solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+    solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+    solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+    solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
     p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -3867,10 +3847,10 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 462;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 462;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;
-  solution^.memory_refs := 0;
+  solution^.memory_references := 0;
   solution^.delay := 0;
   solution^.ip_reg_max := 0;
   solution^.fp_reg_max := 0;
@@ -3909,9 +3889,9 @@ var
 begin
   result := nil;
   work := nil;
-  t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
+  t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_disp) and not subject.children[1]^.f76.has_sym_disp or not subject.children[1]^.f76.b82_1 and not subject.children[1]^.f76.b82_6) or (subject.children[1]^.kind <> 5) then begin
+  if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_the_displacement) and not subject.children[1]^.f76.has_a_symbolic_displacement or not subject.children[1]^.f76.is_physical and not subject.children[1]^.f76.is_atomic) or (subject.children[1]^.kind <> 5) then begin
     if isc_user_routines_354 then begin
       write('Pattern 463 matched the semantics.');
       writeln;
@@ -3924,20 +3904,20 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
-      solution^.rule := 463;
-      solution^.chain := addr(subject);
-      p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[2]^.disp div 8;
-      p1_int_fields_ptr_t(addr(solution^))^.i[1] := subject.children[2]^.disp div 8 + subject.children[1]^.bits_known;
-      if p2_node_ptr_t(subject.sym)^.w[13] = 1 then begin
+      solution^.which_transform := 463;
+      solution^.before_transform := addr(subject);
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[2]^.literal_32_bits_value div 8;
+      p1_int_fields_ptr_t(addr(solution^))^.i[1] := subject.children[2]^.literal_32_bits_value div 8 + subject.children[1]^.bits_known;
+      if p2_node_ptr_t(subject.il)^.w[13] = 1 then begin
         p1_int_fields_ptr_t(addr(solution^))^.i[2] := 1;
       end
-      else if p2_node_ptr_t(subject.sym)^.w[13] + subject.children[2]^.disp & 7 <= 8 then begin
+      else if p2_node_ptr_t(subject.il)^.w[13] + subject.children[2]^.literal_32_bits_value & 7 <= 8 then begin
         p1_int_fields_ptr_t(addr(solution^))^.i[2] := 1;
       end
-      else if p2_node_ptr_t(subject.sym)^.w[13] + subject.children[2]^.disp & 7 <= 16 then begin
+      else if p2_node_ptr_t(subject.il)^.w[13] + subject.children[2]^.literal_32_bits_value & 7 <= 16 then begin
         p1_int_fields_ptr_t(addr(solution^))^.i[2] := 2;
       end
-      else if p2_node_ptr_t(subject.sym)^.w[13] + subject.children[2]^.disp & 7 <= 24 then begin
+      else if p2_node_ptr_t(subject.il)^.w[13] + subject.children[2]^.literal_32_bits_value & 7 <= 24 then begin
         p1_int_fields_ptr_t(addr(solution^))^.i[2] := 3;
       end else begin
         p1_int_fields_ptr_t(addr(solution^))^.i[2] := 4;
@@ -3957,20 +3937,20 @@ begin
       t10 := make_bit_mask_1(24, 0);
       if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 1 then begin
         solution^.space136[136] := chr(1);
-        if (p1_int_fields_ptr_t(addr(solution^))^.i[0] = 0) or (lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$storeb), 2) or subject.children[1]^.f76.has_sym_disp) and not subject.children[1]^.f76.uses_index_reg then begin
+        if (p1_int_fields_ptr_t(addr(solution^))^.i[0] = 0) or (lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$storeb), 2) or subject.children[1]^.f76.has_a_symbolic_displacement) and not subject.children[1]^.f76.uses_the_index_register then begin
           solution^.space136[137] := chr(1);
         end else begin
           solution^.space136[137] := chr(2);
-          if subject.children[1]^.f76.b84_7 then begin
+          if subject.children[1]^.f76.uses_the_base_register then begin
             solution^.space136[138] := chr(1);
-            if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+            if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
               solution^.space136[139] := chr(2);
             end else begin
               solution^.space136[139] := chr(1);
             end;
           end else begin
             solution^.space136[138] := chr(2);
-            if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+            if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
               solution^.space136[140] := chr(1);
             end else begin
               solution^.space136[140] := chr(2);
@@ -3989,20 +3969,20 @@ begin
         end;
       end else begin
         solution^.space136[136] := chr(2);
-        t11 := lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[0],
+        t11 := lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[0],
             ord(opc$storeb), 2);
-        if (not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[0] + p1_int_fields_ptr_t(addr(solution^))^.i[2] - 1, ord(opc$storeb), 2) or not t11) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
+        if (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[0] + p1_int_fields_ptr_t(addr(solution^))^.i[2] - 1, ord(opc$storeb), 2) or not t11) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
           solution^.space136[143] := chr(2);
-          if subject.children[1]^.f76.b84_7 then begin
+          if subject.children[1]^.f76.uses_the_base_register then begin
             solution^.space136[144] := chr(1);
-            if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+            if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
               solution^.space136[145] := chr(2);
             end else begin
               solution^.space136[145] := chr(1);
             end;
           end else begin
             solution^.space136[144] := chr(2);
-            if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+            if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
               solution^.space136[146] := chr(1);
             end else begin
               solution^.space136[146] := chr(2);
@@ -4042,12 +4022,12 @@ begin
         end;
       end;
       solution^.code_bytes := cost_463_29[ord(solution^.space136[136])] + cost_463_28[ord(solution^.space136[139])] + cost_463_27[ord(solution^.space136[140])] + cost_463_26[ord(solution^.space136[142])] + cost_463_25[ord(solution^.space136[145])] + cost_463_24[ord(solution^.space136[146])] + cost_463_23[ord(solution^.space136[147])] + cost_463_22[ord(solution^.space136[148])] + cost_463_21[ord(solution^.space136[149])] + cost_463_20[ord(solution^.space136[150])] + cost_463_19[ord(solution^.space136[151])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-      solution^.memory_refs := cost_463_18[ord(solution^.space136[136])] + cost_463_17[ord(solution^.space136[140])] + cost_463_16[ord(solution^.space136[142])] + cost_463_15[ord(solution^.space136[146])] + cost_463_14[ord(solution^.space136[147])] + cost_463_13[ord(solution^.space136[148])] + cost_463_12[ord(solution^.space136[149])] + cost_463_11[ord(solution^.space136[150])] + cost_463_10[ord(solution^.space136[151])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := cost_463_18[ord(solution^.space136[136])] + cost_463_17[ord(solution^.space136[140])] + cost_463_16[ord(solution^.space136[142])] + cost_463_15[ord(solution^.space136[146])] + cost_463_14[ord(solution^.space136[147])] + cost_463_13[ord(solution^.space136[148])] + cost_463_12[ord(solution^.space136[149])] + cost_463_11[ord(solution^.space136[150])] + cost_463_10[ord(solution^.space136[151])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := cost_463_9[ord(solution^.space136[136])] + cost_463_8[ord(solution^.space136[140])] + cost_463_7[ord(solution^.space136[142])] + cost_463_6[ord(solution^.space136[146])] + cost_463_5[ord(solution^.space136[147])] + cost_463_4[ord(solution^.space136[148])] + cost_463_3[ord(solution^.space136[149])] + cost_463_2[ord(solution^.space136[150])] + cost_463_1[ord(solution^.space136[151])] + subject.children[1]^.delay + subject.children[2]^.delay;
-      solution^.f76.b76 := t3 - p2_node_ptr_t(subject.sym)^.w[13] - subject.children[2]^.disp & 7;
-      solution^.f76.b77 := p2_node_ptr_t(subject.sym)^.w[13];
-      solution^.f76.b81_0 := p2_node_ptr_t(subject.sym)^.b[30] & 64 <> 0;
-      solution^.eval_order := 1;
+      solution^.f76.bit_position_of_lsb := t3 - p2_node_ptr_t(subject.il)^.w[13] - subject.children[2]^.literal_32_bits_value & 7;
+      solution^.f76.field_precision := p2_node_ptr_t(subject.il)^.w[13];
+      solution^.f76.field_requires_sign_extend := p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0;
+      solution^.evaluation_order := 1;
       t12 := subject.children[1]^.ip_reg_max;
       if t12 = subject.children[2]^.ip_reg_max then begin
         solution^.ip_reg_max := t12 + 1;
@@ -4102,10 +4082,10 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 464;
-    solution^.chain := addr(subject);
-    p1_int_fields_ptr_t(addr(solution^))^.i[0] := p2_node_ptr_t(subject.sym)^.w[13];
-    p1_int_fields_ptr_t(addr(solution^))^.i[1] := compute_number_loaded_bytes(p2_node_ptr_t(subject.sym)^.w[13],
+    solution^.which_transform := 464;
+    solution^.before_transform := addr(subject);
+    p1_int_fields_ptr_t(addr(solution^))^.i[0] := p2_node_ptr_t(subject.il)^.w[13];
+    p1_int_fields_ptr_t(addr(solution^))^.i[1] := compute_number_loaded_bytes(p2_node_ptr_t(subject.il)^.w[13],
         subject.children[1]^.bits_known, subject.children[1]^.bits_trusted);
     t2 := make_bit_mask_1(8, 0);
     t3 := make_bit_mask_1(8, 0);
@@ -4114,16 +4094,16 @@ begin
     t6 := make_bit_mask_1(24, 0);
     if p1_int_fields_ptr_t(addr(solution^))^.i[1] = 1 then begin
       solution^.space136[136] := chr(1);
-      if subject.children[1]^.f76.b84_7 then begin
+      if subject.children[1]^.f76.uses_the_base_register then begin
         solution^.space136[137] := chr(1);
-        if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+        if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
           solution^.space136[138] := chr(2);
         end else begin
           solution^.space136[138] := chr(1);
         end;
       end else begin
         solution^.space136[137] := chr(2);
-        if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+        if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
           solution^.space136[139] := chr(1);
         end else begin
           solution^.space136[139] := chr(2);
@@ -4131,18 +4111,18 @@ begin
       end;
     end else begin
       solution^.space136[136] := chr(2);
-      if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[1] - 1, ord(opc$storeb), 2) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
+      if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[1] - 1, ord(opc$storeb), 2) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
         solution^.space136[140] := chr(2);
-        if subject.children[1]^.f76.b84_7 then begin
+        if subject.children[1]^.f76.uses_the_base_register then begin
           solution^.space136[141] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[142] := chr(2);
           end else begin
             solution^.space136[142] := chr(1);
           end;
         end else begin
           solution^.space136[141] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[143] := chr(1);
           end else begin
             solution^.space136[143] := chr(2);
@@ -4162,15 +4142,15 @@ begin
         end;
       end;
     end;
-    if p2_node_ptr_t(subject.sym)^.b[30] & 64 <> 0 then begin
+    if p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0 then begin
       solution^.space136[146] := chr(1);
     end else begin
       solution^.space136[146] := chr(2);
     end;
     solution^.code_bytes := cost_464_19[ord(solution^.space136[136])] + cost_464_18[ord(solution^.space136[138])] + cost_464_17[ord(solution^.space136[139])] + cost_464_16[ord(solution^.space136[140])] + cost_464_15[ord(solution^.space136[142])] + cost_464_14[ord(solution^.space136[143])] + cost_464_13[ord(solution^.space136[144])] + cost_464_12[ord(solution^.space136[145])] + cost_464_11[ord(solution^.space136[146])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 12;
-    solution^.memory_refs := cost_464_10[ord(solution^.space136[136])] + cost_464_9[ord(solution^.space136[139])] + cost_464_8[ord(solution^.space136[143])] + cost_464_7[ord(solution^.space136[144])] + cost_464_6[ord(solution^.space136[145])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+    solution^.memory_references := cost_464_10[ord(solution^.space136[136])] + cost_464_9[ord(solution^.space136[139])] + cost_464_8[ord(solution^.space136[143])] + cost_464_7[ord(solution^.space136[144])] + cost_464_6[ord(solution^.space136[145])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := cost_464_5[ord(solution^.space136[136])] + cost_464_4[ord(solution^.space136[139])] + cost_464_3[ord(solution^.space136[143])] + cost_464_2[ord(solution^.space136[144])] + cost_464_1[ord(solution^.space136[145])] + subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.eval_order := 1;
+    solution^.evaluation_order := 1;
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max + subject.children[2]^.ip_reg_max;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max + subject.children[2]^.fp_reg_max;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + subject.children[2]^.fp_reg_pair_max;
@@ -4210,9 +4190,9 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-    solution^.rule := 465;
-    solution^.chain := addr(subject);
-    if (subject.children[1]^.f76.reg <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg) or not subject.children[1]^.f76.physical or (subject.children[1]^.kind <> 11) then begin
+    solution^.which_transform := 465;
+    solution^.before_transform := addr(subject);
+    if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
       solution^.space136[136] := chr(2);
     end else begin
       solution^.space136[136] := chr(1);
@@ -4225,7 +4205,7 @@ begin
         solution^.space136[137] := chr(3);
       end;
     end;
-    if (subject.children[1]^.f76.reg <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg) or not subject.children[1]^.f76.physical or (subject.children[1]^.kind <> 11) then begin
+    if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
       solution^.space136[138] := chr(2);
     end else begin
       solution^.space136[138] := chr(1);
@@ -4239,57 +4219,57 @@ begin
       end;
     end;
     solution^.code_bytes := cost_465_4[ord(solution^.space136[137])] + cost_465_3[ord(solution^.space136[139])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 16;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
     solution^.delay := cost_465_2[ord(solution^.space136[137])] + cost_465_1[ord(solution^.space136[139])] + subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-    solution^.l28 := subject.children[1]^.l28;
-    p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-    p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-    solution^.f76.b76 := subject.children[1]^.f76.b76;
+    solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+    solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+    solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+    solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+    solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+    solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
     solution^.bits_known := subject.children[1]^.bits_known;
     solution^.bits_trusted := subject.children[1]^.bits_trusted;
-    solution^.l40 := subject.children[1]^.l40;
-    solution^.l44 := subject.children[1]^.l44;
-    solution^.w56 := subject.children[1]^.w56;
-    p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-    p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-    solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-    solution^.f76.b77 := subject.children[1]^.f76.b77;
-    solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+    solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+    solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+    solution^.bytes := subject.children[1]^.bytes;
+    solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+    solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+    solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+    solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+    solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
     solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
     solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
     solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
     solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-    solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+    solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
     solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-    solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-    solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-    solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-    solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-    solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-    solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-    solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-    p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-    solution^.disp := subject.children[1]^.disp;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-    p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-    solution^.w74 := subject.children[1]^.w74;
-    solution^.l52 := subject.children[1]^.l52;
-    solution^.f76.physical := subject.children[1]^.f76.physical;
-    solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-    solution^.f76.reg := subject.children[1]^.f76.reg;
-    solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-    solution^.f76.serialize := subject.children[1]^.f76.serialize;
-    solution^.f76.shift := subject.children[1]^.f76.shift;
-    solution^.f76.b80 := subject.children[1]^.f76.b80;
-    solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-    solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-    solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+    solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+    solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+    solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+    solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+    solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+    solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+    solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+    solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+    solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+    solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+    solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+    solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+    solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+    solution^.pass_1_size := subject.children[1]^.pass_1_size;
+    solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+    solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+    solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+    solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+    solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+    solution^.f76.scale := subject.children[1]^.f76.scale;
+    solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+    solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+    solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+    solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
     p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -4326,9 +4306,9 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
-    solution^.rule := 466;
-    solution^.chain := addr(subject);
-    if (subject.children[1]^.f76.reg <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg) or not subject.children[1]^.f76.physical or (subject.children[1]^.kind <> 11) then begin
+    solution^.which_transform := 466;
+    solution^.before_transform := addr(subject);
+    if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
       solution^.space136[136] := chr(2);
     end else begin
       solution^.space136[136] := chr(1);
@@ -4341,7 +4321,7 @@ begin
         solution^.space136[137] := chr(3);
       end;
     end;
-    if (subject.children[1]^.f76.reg <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg) or not subject.children[1]^.f76.physical or (subject.children[1]^.kind <> 11) then begin
+    if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
       solution^.space136[138] := chr(2);
     end else begin
       solution^.space136[138] := chr(1);
@@ -4355,57 +4335,57 @@ begin
       end;
     end;
     solution^.code_bytes := cost_466_4[ord(solution^.space136[137])] + cost_466_3[ord(solution^.space136[139])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 16;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
     solution^.delay := cost_466_2[ord(solution^.space136[137])] + cost_466_1[ord(solution^.space136[139])] + subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-    solution^.l28 := subject.children[1]^.l28;
-    p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-    p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-    solution^.f76.b76 := subject.children[1]^.f76.b76;
+    solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+    solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+    solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+    solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+    solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+    solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
     solution^.bits_known := subject.children[1]^.bits_known;
     solution^.bits_trusted := subject.children[1]^.bits_trusted;
-    solution^.l40 := subject.children[1]^.l40;
-    solution^.l44 := subject.children[1]^.l44;
-    solution^.w56 := subject.children[1]^.w56;
-    p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-    p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-    solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-    solution^.f76.b77 := subject.children[1]^.f76.b77;
-    solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+    solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+    solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+    solution^.bytes := subject.children[1]^.bytes;
+    solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+    solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+    solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+    solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+    solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
     solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
     solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
     solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
     solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-    solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+    solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
     solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-    solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-    solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-    solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-    solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-    solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-    solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-    solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-    p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-    solution^.disp := subject.children[1]^.disp;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-    p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-    solution^.w74 := subject.children[1]^.w74;
-    solution^.l52 := subject.children[1]^.l52;
-    solution^.f76.physical := subject.children[1]^.f76.physical;
-    solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-    solution^.f76.reg := subject.children[1]^.f76.reg;
-    solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-    solution^.f76.serialize := subject.children[1]^.f76.serialize;
-    solution^.f76.shift := subject.children[1]^.f76.shift;
-    solution^.f76.b80 := subject.children[1]^.f76.b80;
-    solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-    solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-    solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+    solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+    solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+    solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+    solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+    solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+    solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+    solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+    solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+    solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+    solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+    solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+    solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+    solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+    solution^.pass_1_size := subject.children[1]^.pass_1_size;
+    solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+    solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+    solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+    solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+    solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+    solution^.f76.scale := subject.children[1]^.f76.scale;
+    solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+    solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+    solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+    solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
     p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -4444,18 +4424,18 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 467;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 467;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.bits_known := bits_known_function(il$t(subject.w98),
+    solution^.bits_known := bits_known_function(il$t(subject.il_kind),
         subject.children[1]^.bits_known, subject.children[2]^.bits_known);
-    solution^.bits_trusted := bits_trusted_function(il$t(subject.w98),
+    solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
         subject.children[1]^.bits_trusted,
         subject.children[2]^.bits_trusted);
-    solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp or subject.children[2]^.f76.embedded_sr_temp;
-    solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+    solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
+    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     t2 := subject.children[1]^.ip_reg_max;
@@ -4504,20 +4484,20 @@ var
 begin
   result := nil;
   work := nil;
-  t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
+  t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_disp) and not subject.children[1]^.f76.has_sym_disp or not subject.children[1]^.f76.b82_1 and not subject.children[1]^.f76.b82_6) or (subject.children[1]^.kind <> 5) then begin
+  if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_the_displacement) and not subject.children[1]^.f76.has_a_symbolic_displacement or not subject.children[1]^.f76.is_physical and not subject.children[1]^.f76.is_atomic) or (subject.children[1]^.kind <> 5) then begin
     if isc_user_routines_354 then begin
       write('Pattern 468 matched the semantics.');
       writeln;
     end;
     solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-    solution^.rule := 468;
-    solution^.chain := addr(subject);
-    p1_int_fields_ptr_t(addr(solution^))^.i[0] := integer32(p2_node_ptr_t(subject.sym)^.p[19]);
-    p1_int_fields_ptr_t(addr(solution^))^.i[1] := subject.children[2]^.disp & 7;
-    p1_int_fields_ptr_t(addr(solution^))^.i[2] := subject.children[2]^.disp div 8;
-    p1_int_fields_ptr_t(addr(solution^))^.i[3] := subject.children[2]^.disp div 8 + subject.children[1]^.bits_known;
+    solution^.which_transform := 468;
+    solution^.before_transform := addr(subject);
+    p1_int_fields_ptr_t(addr(solution^))^.i[0] := integer32(p2_node_ptr_t(subject.il)^.p[19]);
+    p1_int_fields_ptr_t(addr(solution^))^.i[1] := subject.children[2]^.literal_32_bits_value & 7;
+    p1_int_fields_ptr_t(addr(solution^))^.i[2] := subject.children[2]^.literal_32_bits_value div 8;
+    p1_int_fields_ptr_t(addr(solution^))^.i[3] := subject.children[2]^.literal_32_bits_value div 8 + subject.children[1]^.bits_known;
     if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 1 then begin
       p1_int_fields_ptr_t(addr(solution^))^.i[4] := 1;
     end
@@ -4543,20 +4523,20 @@ begin
     t10 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[0], 0);
     if p1_int_fields_ptr_t(addr(solution^))^.i[4] = 1 then begin
       solution^.space136[136] := chr(1);
-      if (p1_int_fields_ptr_t(addr(solution^))^.i[2] = 0) or (lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[2], ord(opc$storeb), 2) or subject.children[1]^.f76.has_sym_disp) and not subject.children[1]^.f76.uses_index_reg then begin
+      if (p1_int_fields_ptr_t(addr(solution^))^.i[2] = 0) or (lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[2], ord(opc$storeb), 2) or subject.children[1]^.f76.has_a_symbolic_displacement) and not subject.children[1]^.f76.uses_the_index_register then begin
         solution^.space136[137] := chr(1);
       end else begin
         solution^.space136[137] := chr(2);
-        if subject.children[1]^.f76.b84_7 then begin
+        if subject.children[1]^.f76.uses_the_base_register then begin
           solution^.space136[138] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[139] := chr(2);
           end else begin
             solution^.space136[139] := chr(1);
           end;
         end else begin
           solution^.space136[138] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[140] := chr(1);
           end else begin
             solution^.space136[140] := chr(2);
@@ -4575,20 +4555,20 @@ begin
       end;
     end else begin
       solution^.space136[136] := chr(2);
-      t11 := lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[2],
+      t11 := lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[2],
           ord(opc$storeb), 2);
-      if (not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[2] + p1_int_fields_ptr_t(addr(solution^))^.i[4] - 1, ord(opc$storeb), 2) or not t11) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
+      if (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[2] + p1_int_fields_ptr_t(addr(solution^))^.i[4] - 1, ord(opc$storeb), 2) or not t11) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
         solution^.space136[143] := chr(2);
-        if subject.children[1]^.f76.b84_7 then begin
+        if subject.children[1]^.f76.uses_the_base_register then begin
           solution^.space136[144] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
             solution^.space136[145] := chr(2);
           end else begin
             solution^.space136[145] := chr(1);
           end;
         end else begin
           solution^.space136[144] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[146] := chr(1);
           end else begin
             solution^.space136[146] := chr(2);
@@ -4668,9 +4648,9 @@ begin
       solution^.space136[152] := chr(2);
     end;
     solution^.code_bytes := cost_468_39[ord(solution^.space136[136])] + cost_468_38[ord(solution^.space136[139])] + cost_468_37[ord(solution^.space136[140])] + cost_468_36[ord(solution^.space136[142])] + cost_468_35[ord(solution^.space136[145])] + cost_468_34[ord(solution^.space136[146])] + cost_468_33[ord(solution^.space136[147])] + cost_468_32[ord(solution^.space136[148])] + cost_468_31[ord(solution^.space136[149])] + cost_468_30[ord(solution^.space136[150])] + cost_468_29[ord(solution^.space136[151])] + cost_468_28[ord(solution^.space136[152])] + cost_468_27[ord(solution^.space136[153])] + cost_468_26[ord(solution^.space136[154])] + cost_468_25[ord(solution^.space136[155])] + cost_468_24[ord(solution^.space136[156])] + cost_468_23[ord(solution^.space136[157])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 4;
-    solution^.memory_refs := cost_468_22[ord(solution^.space136[136])] + cost_468_21[ord(solution^.space136[140])] + cost_468_20[ord(solution^.space136[142])] + cost_468_19[ord(solution^.space136[146])] + cost_468_18[ord(solution^.space136[147])] + cost_468_17[ord(solution^.space136[148])] + cost_468_16[ord(solution^.space136[149])] + cost_468_15[ord(solution^.space136[150])] + cost_468_14[ord(solution^.space136[151])] + cost_468_13[ord(solution^.space136[152])] + cost_468_12[ord(solution^.space136[153])] + cost_468_11[ord(solution^.space136[154])] + cost_468_10[ord(solution^.space136[157])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs;
+    solution^.memory_references := cost_468_22[ord(solution^.space136[136])] + cost_468_21[ord(solution^.space136[140])] + cost_468_20[ord(solution^.space136[142])] + cost_468_19[ord(solution^.space136[146])] + cost_468_18[ord(solution^.space136[147])] + cost_468_17[ord(solution^.space136[148])] + cost_468_16[ord(solution^.space136[149])] + cost_468_15[ord(solution^.space136[150])] + cost_468_14[ord(solution^.space136[151])] + cost_468_13[ord(solution^.space136[152])] + cost_468_12[ord(solution^.space136[153])] + cost_468_11[ord(solution^.space136[154])] + cost_468_10[ord(solution^.space136[157])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
     solution^.delay := cost_468_9[ord(solution^.space136[136])] + cost_468_8[ord(solution^.space136[140])] + cost_468_7[ord(solution^.space136[142])] + cost_468_6[ord(solution^.space136[146])] + cost_468_5[ord(solution^.space136[147])] + cost_468_4[ord(solution^.space136[148])] + cost_468_3[ord(solution^.space136[149])] + cost_468_2[ord(solution^.space136[150])] + cost_468_1[ord(solution^.space136[151])] + subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-    solution^.eval_order := 1;
+    solution^.evaluation_order := 1;
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max + subject.children[3]^.ip_reg_max;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max + subject.children[3]^.fp_reg_max;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + subject.children[3]^.fp_reg_pair_max;
@@ -4708,9 +4688,9 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 469;
-  solution^.chain := addr(subject);
-  solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.sym)^.p[19]);
+  solution^.which_transform := 469;
+  solution^.before_transform := addr(subject);
+  solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.il)^.p[19]);
   p1_int_fields_ptr_t(addr(solution^))^.i[1] := compute_number_loaded_bytes(integer32(solution^.fields[0]),
       subject.children[2]^.bits_known, subject.children[2]^.bits_trusted);
   t2 := make_bit_mask_1(8, 0);
@@ -4721,16 +4701,16 @@ begin
   t7 := make_bit_mask_1(integer32(solution^.fields[0]), 0);
   if p1_int_fields_ptr_t(addr(solution^))^.i[1] = 1 then begin
     solution^.space136[136] := chr(1);
-    if subject.children[1]^.f76.b84_7 then begin
+    if subject.children[1]^.f76.uses_the_base_register then begin
       solution^.space136[137] := chr(1);
-      if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+      if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
         solution^.space136[138] := chr(2);
       end else begin
         solution^.space136[138] := chr(1);
       end;
     end else begin
       solution^.space136[137] := chr(2);
-      if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+      if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
         solution^.space136[139] := chr(1);
       end else begin
         solution^.space136[139] := chr(2);
@@ -4738,18 +4718,18 @@ begin
     end;
   end else begin
     solution^.space136[136] := chr(2);
-    if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + p1_int_fields_ptr_t(addr(solution^))^.i[1] - 1, ord(opc$storeb), 2) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
+    if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + p1_int_fields_ptr_t(addr(solution^))^.i[1] - 1, ord(opc$storeb), 2) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
       solution^.space136[140] := chr(2);
-      if subject.children[1]^.f76.b84_7 then begin
+      if subject.children[1]^.f76.uses_the_base_register then begin
         solution^.space136[141] := chr(1);
-        if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+        if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
           solution^.space136[142] := chr(2);
         end else begin
           solution^.space136[142] := chr(1);
         end;
       end else begin
         solution^.space136[141] := chr(2);
-        if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+        if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
           solution^.space136[143] := chr(1);
         end else begin
           solution^.space136[143] := chr(2);
@@ -4793,9 +4773,9 @@ begin
     end;
   end;
   solution^.code_bytes := cost_469_24[ord(solution^.space136[136])] + cost_469_23[ord(solution^.space136[138])] + cost_469_22[ord(solution^.space136[139])] + cost_469_21[ord(solution^.space136[140])] + cost_469_20[ord(solution^.space136[142])] + cost_469_19[ord(solution^.space136[143])] + cost_469_18[ord(solution^.space136[144])] + cost_469_17[ord(solution^.space136[145])] + cost_469_16[ord(solution^.space136[146])] + cost_469_15[ord(solution^.space136[147])] + cost_469_14[ord(solution^.space136[148])] + cost_469_13[ord(solution^.space136[149])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 16;
-  solution^.memory_refs := cost_469_12[ord(solution^.space136[136])] + cost_469_11[ord(solution^.space136[139])] + cost_469_10[ord(solution^.space136[143])] + cost_469_9[ord(solution^.space136[144])] + cost_469_8[ord(solution^.space136[145])] + cost_469_7[ord(solution^.space136[146])] + cost_469_6[ord(solution^.space136[149])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs;
+  solution^.memory_references := cost_469_12[ord(solution^.space136[136])] + cost_469_11[ord(solution^.space136[139])] + cost_469_10[ord(solution^.space136[143])] + cost_469_9[ord(solution^.space136[144])] + cost_469_8[ord(solution^.space136[145])] + cost_469_7[ord(solution^.space136[146])] + cost_469_6[ord(solution^.space136[149])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
   solution^.delay := cost_469_5[ord(solution^.space136[136])] + cost_469_4[ord(solution^.space136[139])] + cost_469_3[ord(solution^.space136[143])] + cost_469_2[ord(solution^.space136[144])] + cost_469_1[ord(solution^.space136[145])] + subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-  solution^.eval_order := 1;
+  solution^.evaluation_order := 1;
   solution^.ip_reg_max := subject.children[1]^.ip_reg_max + subject.children[3]^.ip_reg_max;
   solution^.fp_reg_max := subject.children[1]^.fp_reg_max + subject.children[3]^.fp_reg_max;
   solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + subject.children[3]^.fp_reg_pair_max;
@@ -4833,25 +4813,25 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 470;
-    solution^.chain := addr(subject);
-    if subject.children[1]^.f76.b84_7 then begin
+    solution^.which_transform := 470;
+    solution^.before_transform := addr(subject);
+    if subject.children[1]^.f76.uses_the_base_register then begin
       solution^.space136[136] := chr(1);
-      if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+      if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
         solution^.space136[137] := chr(2);
       end else begin
         solution^.space136[137] := chr(1);
       end;
     end else begin
       solution^.space136[136] := chr(2);
-      if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+      if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
         solution^.space136[138] := chr(1);
       end else begin
         solution^.space136[138] := chr(2);
       end;
     end;
     solution^.code_bytes := cost_470_4[ord(solution^.space136[137])] + cost_470_3[ord(solution^.space136[138])] + subject.children[1]^.code_bytes;
-    solution^.memory_refs := cost_470_2[ord(solution^.space136[138])] + subject.children[1]^.memory_refs;
+    solution^.memory_references := cost_470_2[ord(solution^.space136[138])] + subject.children[1]^.memory_references;
     solution^.delay := cost_470_1[ord(solution^.space136[138])] + subject.children[1]^.delay;
     solution^.bits_known := subject.children[1]^.bits_known;
     solution^.bits_trusted := subject.children[1]^.bits_trusted;
@@ -4880,7 +4860,7 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.children[1]^.inherited^.precision <= 32 then begin
+  if subject.children[1]^.inherited_attributes^.fetch_precision <= 32 then begin
     if isc_user_routines_354 then begin
       write('Pattern 471 matched the semantics.');
       writeln;
@@ -4893,10 +4873,10 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 471;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 471;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + 8;
-      solution^.memory_refs := subject.children[1]^.memory_refs + 1;
+      solution^.memory_references := subject.children[1]^.memory_references + 1;
       solution^.delay := subject.children[1]^.delay;
       solution^.bits_known := 0;
       solution^.bits_trusted := 3;
@@ -4926,7 +4906,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 32) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((subject.children[1]^.inherited_attributes^.fetch_precision <> 32) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 472 matched the semantics.');
       writeln;
@@ -4939,10 +4919,10 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 472;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 472;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + 8;
-      solution^.memory_refs := subject.children[1]^.memory_refs + 1;
+      solution^.memory_references := subject.children[1]^.memory_references + 1;
       solution^.delay := subject.children[1]^.delay;
       solution^.bits_known := 0;
       solution^.bits_trusted := 3;
@@ -4972,7 +4952,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 64) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((subject.children[1]^.inherited_attributes^.fetch_precision <> 64) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 473 matched the semantics.');
       writeln;
@@ -4985,15 +4965,15 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 473;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 473;
+      solution^.before_transform := addr(subject);
       if not isc_user_routines_358 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + 8;
-      solution^.memory_refs := subject.children[1]^.memory_refs + 1;
+      solution^.memory_references := subject.children[1]^.memory_references + 1;
       solution^.delay := subject.children[1]^.delay;
       solution^.bits_known := 0;
       solution^.bits_trusted := 7;
@@ -5029,7 +5009,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 128) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((subject.children[1]^.inherited_attributes^.fetch_precision <> 128) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 474 matched the semantics.');
       writeln;
@@ -5042,14 +5022,14 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 474;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 474;
+      solution^.before_transform := addr(subject);
       t2 := make_expression_temporary(123,
-          subject.children[1]^.inherited^.precision);
+          subject.children[1]^.inherited_attributes^.fetch_precision);
       side_effect_set_var_$address_exposed(isc_node_ptr_t(t2));
       t3 := t2;
       solution^.fields[0] := address_mode_for_expression_temporary(t3,
-          subject.children[1]^.inherited^.precision, 0, 7);
+          subject.children[1]^.inherited_attributes^.fetch_precision, 0, 7);
       solution^.fields[1] := nil;
       solution^.fields[2] := nil;
       solution^.fields[3] := nil;
@@ -5107,18 +5087,18 @@ begin
             solution^.space136[154] := chr(3);
           end else begin
             solution^.space136[154] := chr(2);
-            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[160] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[161] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[162] := chr(2);
                 end else begin
                   solution^.space136[162] := chr(1);
                 end;
               end else begin
                 solution^.space136[161] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[163] := chr(1);
                 end else begin
                   solution^.space136[163] := chr(2);
@@ -5133,7 +5113,7 @@ begin
             solution^.space136[165] := chr(1);
           end else begin
             solution^.space136[165] := chr(2);
-            if not solution^.fields[0]^.f76.embedded_sr_temp then begin
+            if not solution^.fields[0]^.f76.embedded_strength_reduction_temporary then begin
               solution^.space136[166] := chr(1);
             end else begin
               solution^.space136[166] := chr(2);
@@ -5154,18 +5134,18 @@ begin
           solution^.space136[169] := chr(3);
           if (solution^.fields[0]^.bits_trusted & 3 = 3) and (solution^.fields[0]^.bits_known & 3 = 0) or (solution^.fields[0]^.bits_trusted & 1 = 0) or (solution^.fields[0]^.bits_known & 1 <> 0) then begin
             solution^.space136[175] := chr(1);
-            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp + 7, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value + 7, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[176] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[177] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[178] := chr(2);
                 end else begin
                   solution^.space136[178] := chr(1);
                 end;
               end else begin
                 solution^.space136[177] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[179] := chr(1);
                 end else begin
                   solution^.space136[179] := chr(2);
@@ -5180,18 +5160,18 @@ begin
             solution^.space136[175] := chr(3);
           end else begin
             solution^.space136[175] := chr(2);
-            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[181] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[182] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[183] := chr(2);
                 end else begin
                   solution^.space136[183] := chr(1);
                 end;
               end else begin
                 solution^.space136[182] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[184] := chr(1);
                 end else begin
                   solution^.space136[184] := chr(2);
@@ -5206,7 +5186,7 @@ begin
             solution^.space136[186] := chr(1);
           end else begin
             solution^.space136[186] := chr(2);
-            if not solution^.fields[0]^.f76.embedded_sr_temp then begin
+            if not solution^.fields[0]^.f76.embedded_strength_reduction_temporary then begin
               solution^.space136[187] := chr(1);
             end else begin
               solution^.space136[187] := chr(2);
@@ -5215,18 +5195,18 @@ begin
           end;
         end else begin
           solution^.space136[169] := chr(1);
-          if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp + 7, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+          if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value + 7, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
             solution^.space136[170] := chr(2);
-            if solution^.fields[0]^.f76.b84_7 then begin
+            if solution^.fields[0]^.f76.uses_the_base_register then begin
               solution^.space136[171] := chr(1);
-              if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+              if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                 solution^.space136[172] := chr(2);
               end else begin
                 solution^.space136[172] := chr(1);
               end;
             end else begin
               solution^.space136[171] := chr(2);
-              if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+              if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                 solution^.space136[173] := chr(1);
               end else begin
                 solution^.space136[173] := chr(2);
@@ -5263,18 +5243,18 @@ begin
           solution^.space136[198] := chr(3);
           if (solution^.fields[0]^.bits_trusted & 3 = 3) and (solution^.fields[0]^.bits_known & 3 = 0) or (solution^.fields[0]^.bits_trusted & 1 = 0) or (solution^.fields[0]^.bits_known & 1 <> 0) then begin
             solution^.space136[204] := chr(1);
-            if not lir_$can_encode_as_immediate_operand(12 + solution^.fields[0]^.disp - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(12 + solution^.fields[0]^.literal_32_bits_value - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[205] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[206] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[207] := chr(2);
                 end else begin
                   solution^.space136[207] := chr(1);
                 end;
               end else begin
                 solution^.space136[206] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[208] := chr(1);
                 end else begin
                   solution^.space136[208] := chr(2);
@@ -5289,18 +5269,18 @@ begin
             solution^.space136[204] := chr(3);
           end else begin
             solution^.space136[204] := chr(2);
-            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[210] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[211] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[212] := chr(2);
                 end else begin
                   solution^.space136[212] := chr(1);
                 end;
               end else begin
                 solution^.space136[211] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[213] := chr(1);
                 end else begin
                   solution^.space136[213] := chr(2);
@@ -5315,7 +5295,7 @@ begin
             solution^.space136[215] := chr(1);
           end else begin
             solution^.space136[215] := chr(2);
-            if not solution^.fields[0]^.f76.embedded_sr_temp then begin
+            if not solution^.fields[0]^.f76.embedded_strength_reduction_temporary then begin
               solution^.space136[216] := chr(1);
             end else begin
               solution^.space136[216] := chr(2);
@@ -5324,18 +5304,18 @@ begin
           end;
         end else begin
           solution^.space136[198] := chr(1);
-          if not lir_$can_encode_as_immediate_operand(12 + solution^.fields[0]^.disp - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+          if not lir_$can_encode_as_immediate_operand(12 + solution^.fields[0]^.literal_32_bits_value - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
             solution^.space136[199] := chr(2);
-            if solution^.fields[0]^.f76.b84_7 then begin
+            if solution^.fields[0]^.f76.uses_the_base_register then begin
               solution^.space136[200] := chr(1);
-              if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+              if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                 solution^.space136[201] := chr(2);
               end else begin
                 solution^.space136[201] := chr(1);
               end;
             end else begin
               solution^.space136[200] := chr(2);
-              if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+              if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                 solution^.space136[202] := chr(1);
               end else begin
                 solution^.space136[202] := chr(2);
@@ -5355,18 +5335,18 @@ begin
           solution^.space136[219] := chr(3);
           if (solution^.fields[0]^.bits_trusted & 3 = 3) and (solution^.fields[0]^.bits_known & 3 = 0) or (solution^.fields[0]^.bits_trusted & 1 = 0) or (solution^.fields[0]^.bits_known & 1 <> 0) then begin
             solution^.space136[225] := chr(1);
-            if not lir_$can_encode_as_immediate_operand(16 + solution^.fields[0]^.disp - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(16 + solution^.fields[0]^.literal_32_bits_value - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[226] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[227] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[228] := chr(2);
                 end else begin
                   solution^.space136[228] := chr(1);
                 end;
               end else begin
                 solution^.space136[227] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[229] := chr(1);
                 end else begin
                   solution^.space136[229] := chr(2);
@@ -5381,18 +5361,18 @@ begin
             solution^.space136[225] := chr(3);
           end else begin
             solution^.space136[225] := chr(2);
-            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+            if not lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
               solution^.space136[231] := chr(2);
-              if solution^.fields[0]^.f76.b84_7 then begin
+              if solution^.fields[0]^.f76.uses_the_base_register then begin
                 solution^.space136[232] := chr(1);
-                if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+                if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                   solution^.space136[233] := chr(2);
                 end else begin
                   solution^.space136[233] := chr(1);
                 end;
               end else begin
                 solution^.space136[232] := chr(2);
-                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+                if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                   solution^.space136[234] := chr(1);
                 end else begin
                   solution^.space136[234] := chr(2);
@@ -5407,7 +5387,7 @@ begin
             solution^.space136[236] := chr(1);
           end else begin
             solution^.space136[236] := chr(2);
-            if not solution^.fields[0]^.f76.embedded_sr_temp then begin
+            if not solution^.fields[0]^.f76.embedded_strength_reduction_temporary then begin
               solution^.space136[237] := chr(1);
             end else begin
               solution^.space136[237] := chr(2);
@@ -5416,18 +5396,18 @@ begin
           end;
         end else begin
           solution^.space136[219] := chr(1);
-          if not lir_$can_encode_as_immediate_operand(16 + solution^.fields[0]^.disp - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+          if not lir_$can_encode_as_immediate_operand(16 + solution^.fields[0]^.literal_32_bits_value - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
             solution^.space136[220] := chr(2);
-            if solution^.fields[0]^.f76.b84_7 then begin
+            if solution^.fields[0]^.f76.uses_the_base_register then begin
               solution^.space136[221] := chr(1);
-              if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+              if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
                 solution^.space136[222] := chr(2);
               end else begin
                 solution^.space136[222] := chr(1);
               end;
             end else begin
               solution^.space136[221] := chr(2);
-              if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+              if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
                 solution^.space136[223] := chr(1);
               end else begin
                 solution^.space136[223] := chr(2);
@@ -5440,18 +5420,18 @@ begin
         end;
       end else begin
         solution^.space136[191] := chr(1);
-        if not lir_$can_encode_as_immediate_operand(16 + solution^.fields[0]^.disp - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_sym_disp or solution^.fields[0]^.f76.uses_index_reg then begin
+        if not lir_$can_encode_as_immediate_operand(16 + solution^.fields[0]^.literal_32_bits_value - 1, ord(opc$loadl), 1) and not solution^.fields[0]^.f76.has_a_symbolic_displacement or solution^.fields[0]^.f76.uses_the_index_register then begin
           solution^.space136[192] := chr(2);
-          if solution^.fields[0]^.f76.b84_7 then begin
+          if solution^.fields[0]^.f76.uses_the_base_register then begin
             solution^.space136[193] := chr(1);
-            if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+            if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
               solution^.space136[194] := chr(2);
             end else begin
               solution^.space136[194] := chr(1);
             end;
           end else begin
             solution^.space136[193] := chr(2);
-            if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+            if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
               solution^.space136[195] := chr(1);
             end else begin
               solution^.space136[195] := chr(2);
@@ -5462,23 +5442,23 @@ begin
         end;
         solution^.space136[196] := chr(2);
       end;
-      if solution^.fields[0]^.f76.b84_7 then begin
+      if solution^.fields[0]^.f76.uses_the_base_register then begin
         solution^.space136[239] := chr(1);
-        if (solution^.fields[0]^.disp <> 0) or solution^.fields[0]^.f76.uses_index_reg or solution^.fields[0]^.f76.has_sym_disp then begin
+        if (solution^.fields[0]^.literal_32_bits_value <> 0) or solution^.fields[0]^.f76.uses_the_index_register or solution^.fields[0]^.f76.has_a_symbolic_displacement then begin
           solution^.space136[240] := chr(2);
         end else begin
           solution^.space136[240] := chr(1);
         end;
       end else begin
         solution^.space136[239] := chr(2);
-        if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.disp, ord(opc$move), 1) then begin
+        if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
           solution^.space136[241] := chr(1);
         end else begin
           solution^.space136[241] := chr(2);
         end;
       end;
       solution^.code_bytes := cost_474_136[ord(solution^.space136[141])] + cost_474_135[ord(solution^.space136[142])] + cost_474_134[ord(solution^.space136[144])] + cost_474_133[ord(solution^.space136[145])] + cost_474_132[ord(solution^.space136[146])] + cost_474_131[ord(solution^.space136[148])] + cost_474_130[ord(solution^.space136[149])] + cost_474_129[ord(solution^.space136[151])] + cost_474_128[ord(solution^.space136[152])] + cost_474_127[ord(solution^.space136[153])] + cost_474_126[ord(solution^.space136[154])] + cost_474_125[ord(solution^.space136[155])] + cost_474_124[ord(solution^.space136[157])] + cost_474_123[ord(solution^.space136[158])] + cost_474_122[ord(solution^.space136[159])] + cost_474_121[ord(solution^.space136[160])] + cost_474_120[ord(solution^.space136[162])] + cost_474_119[ord(solution^.space136[163])] + cost_474_118[ord(solution^.space136[165])] + cost_474_117[ord(solution^.space136[169])] + cost_474_116[ord(solution^.space136[170])] + cost_474_115[ord(solution^.space136[172])] + cost_474_114[ord(solution^.space136[173])] + cost_474_113[ord(solution^.space136[174])] + cost_474_112[ord(solution^.space136[175])] + cost_474_111[ord(solution^.space136[176])] + cost_474_110[ord(solution^.space136[178])] + cost_474_109[ord(solution^.space136[179])] + cost_474_108[ord(solution^.space136[180])] + cost_474_107[ord(solution^.space136[181])] + cost_474_106[ord(solution^.space136[183])] + cost_474_105[ord(solution^.space136[184])] + cost_474_104[ord(solution^.space136[186])] + cost_474_103[ord(solution^.space136[191])] + cost_474_102[ord(solution^.space136[192])] + cost_474_101[ord(solution^.space136[194])] + cost_474_100[ord(solution^.space136[195])] + cost_474_99[ord(solution^.space136[196])] + cost_474_98[ord(solution^.space136[198])] + cost_474_97[ord(solution^.space136[199])] + cost_474_96[ord(solution^.space136[201])] + cost_474_95[ord(solution^.space136[202])] + cost_474_94[ord(solution^.space136[203])] + cost_474_93[ord(solution^.space136[204])] + cost_474_92[ord(solution^.space136[205])] + cost_474_91[ord(solution^.space136[207])] + cost_474_90[ord(solution^.space136[208])] + cost_474_89[ord(solution^.space136[209])] + cost_474_88[ord(solution^.space136[210])] + cost_474_87[ord(solution^.space136[212])] + cost_474_86[ord(solution^.space136[213])] + cost_474_85[ord(solution^.space136[215])] + cost_474_84[ord(solution^.space136[219])] + cost_474_83[ord(solution^.space136[220])] + cost_474_82[ord(solution^.space136[222])] + cost_474_81[ord(solution^.space136[223])] + cost_474_80[ord(solution^.space136[224])] + cost_474_79[ord(solution^.space136[225])] + cost_474_78[ord(solution^.space136[226])] + cost_474_77[ord(solution^.space136[228])] + cost_474_76[ord(solution^.space136[229])] + cost_474_75[ord(solution^.space136[230])] + cost_474_74[ord(solution^.space136[231])] + cost_474_73[ord(solution^.space136[233])] + cost_474_72[ord(solution^.space136[234])] + cost_474_71[ord(solution^.space136[236])] + cost_474_70[ord(solution^.space136[240])] + cost_474_69[ord(solution^.space136[241])] + subject.children[1]^.code_bytes;
-      solution^.memory_refs := cost_474_68[ord(solution^.space136[142])] + cost_474_67[ord(solution^.space136[145])] + cost_474_66[ord(solution^.space136[146])] + cost_474_65[ord(solution^.space136[149])] + cost_474_64[ord(solution^.space136[152])] + cost_474_63[ord(solution^.space136[153])] + cost_474_62[ord(solution^.space136[155])] + cost_474_61[ord(solution^.space136[158])] + cost_474_60[ord(solution^.space136[159])] + cost_474_59[ord(solution^.space136[160])] + cost_474_58[ord(solution^.space136[163])] + cost_474_57[ord(solution^.space136[170])] + cost_474_56[ord(solution^.space136[173])] + cost_474_55[ord(solution^.space136[174])] + cost_474_54[ord(solution^.space136[176])] + cost_474_53[ord(solution^.space136[179])] + cost_474_52[ord(solution^.space136[180])] + cost_474_51[ord(solution^.space136[181])] + cost_474_50[ord(solution^.space136[184])] + cost_474_49[ord(solution^.space136[192])] + cost_474_48[ord(solution^.space136[195])] + cost_474_47[ord(solution^.space136[196])] + cost_474_46[ord(solution^.space136[199])] + cost_474_45[ord(solution^.space136[202])] + cost_474_44[ord(solution^.space136[203])] + cost_474_43[ord(solution^.space136[205])] + cost_474_42[ord(solution^.space136[208])] + cost_474_41[ord(solution^.space136[209])] + cost_474_40[ord(solution^.space136[210])] + cost_474_39[ord(solution^.space136[213])] + cost_474_38[ord(solution^.space136[220])] + cost_474_37[ord(solution^.space136[223])] + cost_474_36[ord(solution^.space136[224])] + cost_474_35[ord(solution^.space136[226])] + cost_474_34[ord(solution^.space136[229])] + cost_474_33[ord(solution^.space136[230])] + cost_474_32[ord(solution^.space136[231])] + cost_474_31[ord(solution^.space136[234])] + cost_474_30[ord(solution^.space136[241])] + subject.children[1]^.memory_refs;
+      solution^.memory_references := cost_474_68[ord(solution^.space136[142])] + cost_474_67[ord(solution^.space136[145])] + cost_474_66[ord(solution^.space136[146])] + cost_474_65[ord(solution^.space136[149])] + cost_474_64[ord(solution^.space136[152])] + cost_474_63[ord(solution^.space136[153])] + cost_474_62[ord(solution^.space136[155])] + cost_474_61[ord(solution^.space136[158])] + cost_474_60[ord(solution^.space136[159])] + cost_474_59[ord(solution^.space136[160])] + cost_474_58[ord(solution^.space136[163])] + cost_474_57[ord(solution^.space136[170])] + cost_474_56[ord(solution^.space136[173])] + cost_474_55[ord(solution^.space136[174])] + cost_474_54[ord(solution^.space136[176])] + cost_474_53[ord(solution^.space136[179])] + cost_474_52[ord(solution^.space136[180])] + cost_474_51[ord(solution^.space136[181])] + cost_474_50[ord(solution^.space136[184])] + cost_474_49[ord(solution^.space136[192])] + cost_474_48[ord(solution^.space136[195])] + cost_474_47[ord(solution^.space136[196])] + cost_474_46[ord(solution^.space136[199])] + cost_474_45[ord(solution^.space136[202])] + cost_474_44[ord(solution^.space136[203])] + cost_474_43[ord(solution^.space136[205])] + cost_474_42[ord(solution^.space136[208])] + cost_474_41[ord(solution^.space136[209])] + cost_474_40[ord(solution^.space136[210])] + cost_474_39[ord(solution^.space136[213])] + cost_474_38[ord(solution^.space136[220])] + cost_474_37[ord(solution^.space136[223])] + cost_474_36[ord(solution^.space136[224])] + cost_474_35[ord(solution^.space136[226])] + cost_474_34[ord(solution^.space136[229])] + cost_474_33[ord(solution^.space136[230])] + cost_474_32[ord(solution^.space136[231])] + cost_474_31[ord(solution^.space136[234])] + cost_474_30[ord(solution^.space136[241])] + subject.children[1]^.memory_references;
       solution^.delay := cost_474_29[ord(solution^.space136[145])] + cost_474_28[ord(solution^.space136[146])] + cost_474_27[ord(solution^.space136[148])] + cost_474_26[ord(solution^.space136[152])] + cost_474_25[ord(solution^.space136[153])] + cost_474_24[ord(solution^.space136[158])] + cost_474_23[ord(solution^.space136[159])] + cost_474_22[ord(solution^.space136[163])] + cost_474_21[ord(solution^.space136[169])] + cost_474_20[ord(solution^.space136[173])] + cost_474_19[ord(solution^.space136[174])] + cost_474_18[ord(solution^.space136[179])] + cost_474_17[ord(solution^.space136[180])] + cost_474_16[ord(solution^.space136[184])] + cost_474_15[ord(solution^.space136[195])] + cost_474_14[ord(solution^.space136[196])] + cost_474_13[ord(solution^.space136[198])] + cost_474_12[ord(solution^.space136[202])] + cost_474_11[ord(solution^.space136[203])] + cost_474_10[ord(solution^.space136[208])] + cost_474_9[ord(solution^.space136[209])] + cost_474_8[ord(solution^.space136[213])] + cost_474_7[ord(solution^.space136[219])] + cost_474_6[ord(solution^.space136[223])] + cost_474_5[ord(solution^.space136[224])] + cost_474_4[ord(solution^.space136[229])] + cost_474_3[ord(solution^.space136[230])] + cost_474_2[ord(solution^.space136[234])] + cost_474_1[ord(solution^.space136[241])] + subject.children[1]^.delay;
       solution^.bits_known := 0;
       solution^.bits_trusted := 7;
@@ -5520,10 +5500,10 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 475;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 475;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
-    solution^.memory_refs := 0;
+    solution^.memory_references := 0;
     solution^.delay := 0;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -5561,60 +5541,60 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-    solution^.rule := 476;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 476;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes;
-    solution^.memory_refs := subject.children[1]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references;
     solution^.delay := subject.children[1]^.delay;
-    solution^.l28 := subject.children[1]^.l28;
-    p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-    p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-    solution^.f76.b76 := subject.children[1]^.f76.b76;
+    solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+    solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+    solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+    solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+    solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+    solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
     solution^.bits_known := subject.children[1]^.bits_known;
     solution^.bits_trusted := subject.children[1]^.bits_trusted;
-    solution^.l40 := subject.children[1]^.l40;
-    solution^.l44 := subject.children[1]^.l44;
-    solution^.w56 := subject.children[1]^.w56;
-    p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-    p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-    solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-    solution^.f76.b77 := subject.children[1]^.f76.b77;
-    solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+    solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+    solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+    solution^.bytes := subject.children[1]^.bytes;
+    solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+    solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+    solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+    solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+    solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
     solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
     solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
     solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
     solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-    solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+    solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
     solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-    solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-    solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-    solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-    solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-    solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-    solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-    solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-    p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-    solution^.disp := subject.children[1]^.disp;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-    p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-    solution^.w74 := subject.children[1]^.w74;
-    solution^.l52 := subject.children[1]^.l52;
-    solution^.f76.physical := subject.children[1]^.f76.physical;
-    solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-    solution^.f76.reg := subject.children[1]^.f76.reg;
-    solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-    solution^.f76.serialize := subject.children[1]^.f76.serialize;
-    solution^.f76.shift := subject.children[1]^.f76.shift;
-    solution^.f76.b80 := subject.children[1]^.f76.b80;
-    solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-    solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-    solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+    solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+    solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+    solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+    solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+    solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+    solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+    solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+    solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+    solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+    solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+    solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+    solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+    solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+    solution^.pass_1_size := subject.children[1]^.pass_1_size;
+    solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+    solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+    solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+    solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+    solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+    solution^.f76.scale := subject.children[1]^.f76.scale;
+    solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+    solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+    solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+    solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
     p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -5650,10 +5630,10 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 477;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 477;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + 4;
-    solution^.memory_refs := subject.children[1]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references;
     solution^.delay := subject.children[1]^.delay;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -5679,7 +5659,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.sym)^.w[12] = 4) or (p2_node_ptr_t(subject.sym)^.w[12] = 1) or (p2_node_ptr_t(subject.sym)^.w[12] = 2)) and (subject.children[2]^.disp = subject.children[3]^.disp) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[12] = 4) or (p2_node_ptr_t(subject.il)^.w[12] = 1) or (p2_node_ptr_t(subject.il)^.w[12] = 2)) and (subject.children[2]^.literal_32_bits_value = subject.children[3]^.literal_32_bits_value) then begin
     if isc_user_routines_354 then begin
       write('Pattern 478 matched the semantics.');
       writeln;
@@ -5692,12 +5672,12 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 478;
-      solution^.chain := addr(subject);
-      p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.sym)^.w[12]];
+      solution^.which_transform := 478;
+      solution^.before_transform := addr(subject);
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[12]];
       if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
         solution^.space136[136] := chr(1);
-        if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
+        if subject.children[1]^.f76.bit_7_was_sign_extended then begin
           solution^.space136[137] := chr(1);
         end else begin
           solution^.space136[137] := chr(2);
@@ -5705,7 +5685,7 @@ begin
       end
       else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
         solution^.space136[136] := chr(2);
-        if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
+        if subject.children[1]^.f76.bit_15_was_sign_extended then begin
           solution^.space136[138] := chr(1);
         end else begin
           solution^.space136[138] := chr(2);
@@ -5713,7 +5693,7 @@ begin
       end else begin
         solution^.space136[136] := chr(3);
       end;
-      if (subject.children[1]^.f76.reg <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg) or not subject.children[1]^.f76.physical or (subject.children[1]^.kind <> 11) then begin
+      if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
         solution^.space136[139] := chr(2);
       end else begin
         solution^.space136[139] := chr(1);
@@ -5726,68 +5706,68 @@ begin
           solution^.space136[140] := chr(3);
         end;
       end;
-      if lir_$can_encode_as_immediate_operand(-subject.children[2]^.disp, ord(opc$add), 1) then begin
+      if lir_$can_encode_as_immediate_operand(-subject.children[2]^.literal_32_bits_value, ord(opc$add), 1) then begin
         solution^.space136[141] := chr(1);
       end else begin
         solution^.space136[141] := chr(2);
-        if lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$move), 1) then begin
+        if lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$move), 1) then begin
           solution^.space136[142] := chr(1);
         end else begin
           solution^.space136[142] := chr(2);
         end;
       end;
       solution^.code_bytes := cost_478_7[ord(solution^.space136[138])] + cost_478_8[ord(solution^.space136[137])] + cost_478_6[ord(solution^.space136[140])] + cost_478_5[ord(solution^.space136[141])] + cost_478_4[ord(solution^.space136[142])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 4;
-      solution^.memory_refs := cost_478_3[ord(solution^.space136[142])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs;
+      solution^.memory_references := cost_478_3[ord(solution^.space136[142])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
       solution^.delay := cost_478_2[ord(solution^.space136[140])] + cost_478_1[ord(solution^.space136[142])] + subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-      solution^.l28 := subject.children[1]^.l28;
-      p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-      p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-      solution^.f76.b76 := subject.children[1]^.f76.b76;
+      solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+      solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+      solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+      solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+      solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+      solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
       solution^.bits_known := subject.children[1]^.bits_known;
       solution^.bits_trusted := subject.children[1]^.bits_trusted;
-      solution^.l40 := subject.children[1]^.l40;
-      solution^.l44 := subject.children[1]^.l44;
-      solution^.w56 := subject.children[1]^.w56;
-      p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-      p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-      solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-      solution^.f76.b77 := subject.children[1]^.f76.b77;
-      solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+      solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+      solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+      solution^.bytes := subject.children[1]^.bytes;
+      solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+      solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+      solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+      solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+      solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
       solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
       solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
       solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
       solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-      solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+      solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
       solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-      solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-      solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-      solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-      solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-      solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-      solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-      solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-      solution^.disp := subject.children[1]^.disp;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-      p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-      solution^.w74 := subject.children[1]^.w74;
-      solution^.l52 := subject.children[1]^.l52;
-      solution^.f76.physical := subject.children[1]^.f76.physical;
-      solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-      solution^.f76.reg := subject.children[1]^.f76.reg;
-      solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-      solution^.f76.serialize := subject.children[1]^.f76.serialize;
-      solution^.f76.shift := subject.children[1]^.f76.shift;
-      solution^.f76.b80 := subject.children[1]^.f76.b80;
-      solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-      solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-      solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+      solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+      solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+      solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+      solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+      solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+      solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+      solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+      solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+      solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+      solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+      solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+      solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+      solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+      solution^.pass_1_size := subject.children[1]^.pass_1_size;
+      solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+      solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+      solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+      solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+      solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+      solution^.f76.scale := subject.children[1]^.f76.scale;
+      solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+      solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+      solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+      solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -5813,7 +5793,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.sym)^.w[12] = 4) or (p2_node_ptr_t(subject.sym)^.w[12] = 1) or (p2_node_ptr_t(subject.sym)^.w[12] = 2)) and lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$sub), 1) and (subject.children[2]^.disp <> subject.children[3]^.disp) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[12] = 4) or (p2_node_ptr_t(subject.il)^.w[12] = 1) or (p2_node_ptr_t(subject.il)^.w[12] = 2)) and lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$sub), 1) and (subject.children[2]^.literal_32_bits_value <> subject.children[3]^.literal_32_bits_value) then begin
     if isc_user_routines_354 then begin
       write('Pattern 479 matched the semantics.');
       writeln;
@@ -5826,13 +5806,13 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 479;
-      solution^.chain := addr(subject);
-      p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.sym)^.w[12]];
-      solution^.fields[1] := find_well_known_literal_solution(subject.children[3]^.disp - subject.children[2]^.disp);
+      solution^.which_transform := 479;
+      solution^.before_transform := addr(subject);
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[12]];
+      solution^.fields[1] := find_well_known_literal_solution(subject.children[3]^.literal_32_bits_value - subject.children[2]^.literal_32_bits_value);
       if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
         solution^.space136[136] := chr(1);
-        if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
+        if subject.children[1]^.f76.bit_7_was_sign_extended then begin
           solution^.space136[137] := chr(1);
         end else begin
           solution^.space136[137] := chr(2);
@@ -5840,7 +5820,7 @@ begin
       end
       else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
         solution^.space136[136] := chr(2);
-        if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
+        if subject.children[1]^.f76.bit_15_was_sign_extended then begin
           solution^.space136[138] := chr(1);
         end else begin
           solution^.space136[138] := chr(2);
@@ -5848,11 +5828,11 @@ begin
       end else begin
         solution^.space136[136] := chr(3);
       end;
-      if subject.children[3]^.disp < subject.children[2]^.disp then begin
+      if subject.children[3]^.literal_32_bits_value < subject.children[2]^.literal_32_bits_value then begin
         solution^.space136[139] := chr(1);
       end else begin
         solution^.space136[139] := chr(2);
-        if (subject.children[1]^.f76.reg <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg) or not subject.children[1]^.f76.physical or (subject.children[1]^.kind <> 11) then begin
+        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
           solution^.space136[140] := chr(2);
         end else begin
           solution^.space136[140] := chr(1);
@@ -5865,11 +5845,11 @@ begin
             solution^.space136[141] := chr(3);
           end;
         end;
-        if lir_$can_encode_as_immediate_operand(-solution^.fields[1]^.disp, ord(opc$add), 1) then begin
+        if lir_$can_encode_as_immediate_operand(-solution^.fields[1]^.literal_32_bits_value, ord(opc$add), 1) then begin
           solution^.space136[142] := chr(1);
         end else begin
           solution^.space136[142] := chr(2);
-          if lir_$can_encode_as_immediate_operand(solution^.fields[1]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(solution^.fields[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[143] := chr(1);
           end else begin
             solution^.space136[143] := chr(2);
@@ -5877,57 +5857,57 @@ begin
         end;
       end;
       solution^.code_bytes := cost_479_9[ord(solution^.space136[137])] + cost_479_8[ord(solution^.space136[138])] + cost_479_7[ord(solution^.space136[139])] + cost_479_6[ord(solution^.space136[141])] + cost_479_5[ord(solution^.space136[142])] + cost_479_4[ord(solution^.space136[143])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes;
-      solution^.memory_refs := cost_479_3[ord(solution^.space136[143])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs;
+      solution^.memory_references := cost_479_3[ord(solution^.space136[143])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
       solution^.delay := cost_479_2[ord(solution^.space136[141])] + cost_479_1[ord(solution^.space136[143])] + subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-      solution^.l28 := subject.children[1]^.l28;
-      p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-      p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-      solution^.f76.b76 := subject.children[1]^.f76.b76;
+      solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+      solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+      solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+      solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+      solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+      solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
       solution^.bits_known := subject.children[1]^.bits_known;
       solution^.bits_trusted := subject.children[1]^.bits_trusted;
-      solution^.l40 := subject.children[1]^.l40;
-      solution^.l44 := subject.children[1]^.l44;
-      solution^.w56 := subject.children[1]^.w56;
-      p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-      p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-      solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-      solution^.f76.b77 := subject.children[1]^.f76.b77;
-      solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+      solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+      solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+      solution^.bytes := subject.children[1]^.bytes;
+      solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+      solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+      solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+      solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+      solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
       solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
       solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
       solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
       solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-      solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+      solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
       solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-      solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-      solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-      solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-      solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-      solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-      solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-      solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-      solution^.disp := subject.children[1]^.disp;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-      p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-      solution^.w74 := subject.children[1]^.w74;
-      solution^.l52 := subject.children[1]^.l52;
-      solution^.f76.physical := subject.children[1]^.f76.physical;
-      solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-      solution^.f76.reg := subject.children[1]^.f76.reg;
-      solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-      solution^.f76.serialize := subject.children[1]^.f76.serialize;
-      solution^.f76.shift := subject.children[1]^.f76.shift;
-      solution^.f76.b80 := subject.children[1]^.f76.b80;
-      solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-      solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-      solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+      solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+      solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+      solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+      solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+      solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+      solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+      solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+      solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+      solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+      solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+      solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+      solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+      solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+      solution^.pass_1_size := subject.children[1]^.pass_1_size;
+      solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+      solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+      solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+      solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+      solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+      solution^.f76.scale := subject.children[1]^.f76.scale;
+      solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+      solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+      solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+      solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -5953,7 +5933,7 @@ var
 begin
   result := nil;
   work := nil;
-  if (p2_node_ptr_t(subject.sym)^.w[12] = 4) or (p2_node_ptr_t(subject.sym)^.w[12] = 1) or (p2_node_ptr_t(subject.sym)^.w[12] = 2) then begin
+  if (p2_node_ptr_t(subject.il)^.w[12] = 4) or (p2_node_ptr_t(subject.il)^.w[12] = 1) or (p2_node_ptr_t(subject.il)^.w[12] = 2) then begin
     if isc_user_routines_354 then begin
       write('Pattern 480 matched the semantics.');
       writeln;
@@ -5966,12 +5946,12 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 480;
-      solution^.chain := addr(subject);
-      p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.sym)^.w[12]];
+      solution^.which_transform := 480;
+      solution^.before_transform := addr(subject);
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[12]];
       if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
         solution^.space136[136] := chr(1);
-        if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
+        if subject.children[1]^.f76.bit_7_was_sign_extended then begin
           solution^.space136[137] := chr(1);
         end else begin
           solution^.space136[137] := chr(2);
@@ -5979,7 +5959,7 @@ begin
       end
       else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
         solution^.space136[136] := chr(2);
-        if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
+        if subject.children[1]^.f76.bit_15_was_sign_extended then begin
           solution^.space136[138] := chr(1);
         end else begin
           solution^.space136[138] := chr(2);
@@ -5989,7 +5969,7 @@ begin
       end;
       if subject.children[2]^.kind = 14 then begin
         solution^.space136[139] := chr(1);
-        if (subject.children[1]^.f76.reg <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg) or not subject.children[1]^.f76.physical or (subject.children[1]^.kind <> 11) then begin
+        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
           solution^.space136[140] := chr(2);
         end else begin
           solution^.space136[140] := chr(1);
@@ -6002,11 +5982,11 @@ begin
             solution^.space136[141] := chr(3);
           end;
         end;
-        if lir_$can_encode_as_immediate_operand(-subject.children[2]^.disp, ord(opc$add), 1) then begin
+        if lir_$can_encode_as_immediate_operand(-subject.children[2]^.literal_32_bits_value, ord(opc$add), 1) then begin
           solution^.space136[142] := chr(1);
         end else begin
           solution^.space136[142] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[143] := chr(1);
           end else begin
             solution^.space136[143] := chr(2);
@@ -6016,7 +5996,7 @@ begin
         solution^.space136[139] := chr(2);
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
           solution^.space136[144] := chr(1);
-          if p2_flags_ptr_t(addr(subject.children[2]^.f76))^.bit_7_was_sign_extended then begin
+          if subject.children[2]^.f76.bit_7_was_sign_extended then begin
             solution^.space136[145] := chr(1);
           end else begin
             solution^.space136[145] := chr(2);
@@ -6024,7 +6004,7 @@ begin
         end
         else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
           solution^.space136[144] := chr(2);
-          if p2_flags_ptr_t(addr(subject.children[2]^.f76))^.bit_15_was_sign_extended then begin
+          if subject.children[2]^.f76.bit_15_was_sign_extended then begin
             solution^.space136[146] := chr(1);
           end else begin
             solution^.space136[146] := chr(2);
@@ -6032,7 +6012,7 @@ begin
         end else begin
           solution^.space136[144] := chr(3);
         end;
-        if (subject.children[1]^.f76.reg <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg) or not subject.children[1]^.f76.physical or (subject.children[1]^.kind <> 11) then begin
+        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
           solution^.space136[147] := chr(2);
         end else begin
           solution^.space136[147] := chr(1);
@@ -6048,7 +6028,7 @@ begin
       end;
       if subject.children[3]^.kind = 14 then begin
         solution^.space136[149] := chr(1);
-        if (subject.children[1]^.f76.reg <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg) or not subject.children[1]^.f76.physical or (subject.children[1]^.kind <> 11) then begin
+        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
           solution^.space136[150] := chr(2);
         end else begin
           solution^.space136[150] := chr(1);
@@ -6061,11 +6041,11 @@ begin
             solution^.space136[151] := chr(3);
           end;
         end;
-        if lir_$can_encode_as_immediate_operand(-subject.children[3]^.disp, ord(opc$add), 1) then begin
+        if lir_$can_encode_as_immediate_operand(-subject.children[3]^.literal_32_bits_value, ord(opc$add), 1) then begin
           solution^.space136[152] := chr(1);
         end else begin
           solution^.space136[152] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[3]^.disp, ord(opc$move), 1) then begin
+          if lir_$can_encode_as_immediate_operand(subject.children[3]^.literal_32_bits_value, ord(opc$move), 1) then begin
             solution^.space136[153] := chr(1);
           end else begin
             solution^.space136[153] := chr(2);
@@ -6075,7 +6055,7 @@ begin
         solution^.space136[149] := chr(2);
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
           solution^.space136[154] := chr(1);
-          if p2_flags_ptr_t(addr(subject.children[3]^.f76))^.bit_7_was_sign_extended then begin
+          if subject.children[3]^.f76.bit_7_was_sign_extended then begin
             solution^.space136[155] := chr(1);
           end else begin
             solution^.space136[155] := chr(2);
@@ -6083,7 +6063,7 @@ begin
         end
         else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
           solution^.space136[154] := chr(2);
-          if p2_flags_ptr_t(addr(subject.children[3]^.f76))^.bit_15_was_sign_extended then begin
+          if subject.children[3]^.f76.bit_15_was_sign_extended then begin
             solution^.space136[156] := chr(1);
           end else begin
             solution^.space136[156] := chr(2);
@@ -6091,7 +6071,7 @@ begin
         end else begin
           solution^.space136[154] := chr(3);
         end;
-        if (subject.children[1]^.f76.reg <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg) or not subject.children[1]^.f76.physical or (subject.children[1]^.kind <> 11) then begin
+        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
           solution^.space136[157] := chr(2);
         end else begin
           solution^.space136[157] := chr(1);
@@ -6106,57 +6086,57 @@ begin
         end;
       end;
       solution^.code_bytes := cost_480_24[ord(solution^.space136[137])] + cost_480_23[ord(solution^.space136[138])] + cost_480_22[ord(solution^.space136[139])] + cost_480_21[ord(solution^.space136[141])] + cost_480_20[ord(solution^.space136[142])] + cost_480_19[ord(solution^.space136[143])] + cost_480_18[ord(solution^.space136[145])] + cost_480_17[ord(solution^.space136[146])] + cost_480_16[ord(solution^.space136[148])] + cost_480_15[ord(solution^.space136[149])] + cost_480_14[ord(solution^.space136[151])] + cost_480_13[ord(solution^.space136[152])] + cost_480_12[ord(solution^.space136[153])] + cost_480_11[ord(solution^.space136[155])] + cost_480_10[ord(solution^.space136[156])] + cost_480_9[ord(solution^.space136[158])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes;
-      solution^.memory_refs := cost_480_8[ord(solution^.space136[143])] + cost_480_7[ord(solution^.space136[153])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs;
+      solution^.memory_references := cost_480_8[ord(solution^.space136[143])] + cost_480_7[ord(solution^.space136[153])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
       solution^.delay := cost_480_6[ord(solution^.space136[141])] + cost_480_5[ord(solution^.space136[143])] + cost_480_4[ord(solution^.space136[148])] + cost_480_3[ord(solution^.space136[151])] + cost_480_2[ord(solution^.space136[153])] + cost_480_1[ord(solution^.space136[158])] + subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-      solution^.l28 := subject.children[1]^.l28;
-      p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-      p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-      p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-      solution^.f76.b76 := subject.children[1]^.f76.b76;
+      solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+      solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+      solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+      solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+      solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+      solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
       solution^.bits_known := subject.children[1]^.bits_known;
       solution^.bits_trusted := subject.children[1]^.bits_trusted;
-      solution^.l40 := subject.children[1]^.l40;
-      solution^.l44 := subject.children[1]^.l44;
-      solution^.w56 := subject.children[1]^.w56;
-      p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-      p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-      solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-      solution^.f76.b77 := subject.children[1]^.f76.b77;
-      solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+      solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+      solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+      solution^.bytes := subject.children[1]^.bytes;
+      solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+      solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+      solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+      solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+      solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
       solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
       solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
       solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
       solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-      solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+      solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
       solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-      solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-      solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-      solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-      solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-      solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-      solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-      solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-      solution^.disp := subject.children[1]^.disp;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-      p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-      p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-      solution^.w74 := subject.children[1]^.w74;
-      solution^.l52 := subject.children[1]^.l52;
-      solution^.f76.physical := subject.children[1]^.f76.physical;
-      solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-      solution^.f76.reg := subject.children[1]^.f76.reg;
-      solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-      solution^.f76.serialize := subject.children[1]^.f76.serialize;
-      solution^.f76.shift := subject.children[1]^.f76.shift;
-      solution^.f76.b80 := subject.children[1]^.f76.b80;
-      solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-      solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-      solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+      solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+      solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+      solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+      solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+      solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+      solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+      solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+      solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+      solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+      solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+      solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+      solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+      solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+      solution^.pass_1_size := subject.children[1]^.pass_1_size;
+      solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+      solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+      solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+      solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+      solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+      solution^.f76.scale := subject.children[1]^.f76.scale;
+      solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+      solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+      solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+      solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -6187,10 +6167,10 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 481;
-  solution^.chain := addr(subject);
+  solution^.which_transform := 481;
+  solution^.before_transform := addr(subject);
   solution^.code_bytes := subject.children[1]^.code_bytes;
-  solution^.memory_refs := subject.children[1]^.memory_refs;
+  solution^.memory_references := subject.children[1]^.memory_references;
   solution^.delay := subject.children[1]^.delay;
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -6219,15 +6199,15 @@ begin
     writeln;
   end;
   solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
-  solution^.rule := 482;
-  solution^.chain := addr(subject);
-  if subject.children[1]^.disp < 0 then begin
+  solution^.which_transform := 482;
+  solution^.before_transform := addr(subject);
+  if subject.children[1]^.literal_32_bits_value < 0 then begin
     solution^.space136[136] := chr(1);
   end else begin
     solution^.space136[136] := chr(2);
   end;
   solution^.code_bytes := cost_482_1[ord(solution^.space136[136])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-  solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+  solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
   solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -6263,10 +6243,10 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 483;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 483;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -6306,66 +6286,66 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
-    solution^.rule := 484;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 484;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.l28 := subject.children[1]^.l28;
-    p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-    p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-    p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-    solution^.f76.b76 := subject.children[1]^.f76.b76;
+    solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
+    solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
+    solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
+    solution^.f76.bit_7_was_sign_extended := subject.children[1]^.f76.bit_7_was_sign_extended;
+    solution^.f76.bit_15_was_sign_extended := subject.children[1]^.f76.bit_15_was_sign_extended;
+    solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
     solution^.bits_known := subject.children[1]^.bits_known;
     solution^.bits_trusted := subject.children[1]^.bits_trusted;
-    solution^.l40 := subject.children[1]^.l40;
-    solution^.l44 := subject.children[1]^.l44;
-    solution^.w56 := subject.children[1]^.w56;
-    p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-    p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-    solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-    solution^.f76.b77 := subject.children[1]^.f76.b77;
-    solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+    solution^.bits_known_of_fetched_value := subject.children[1]^.bits_known_of_fetched_value;
+    solution^.bits_trusted_of_fetched_value := subject.children[1]^.bits_trusted_of_fetched_value;
+    solution^.bytes := subject.children[1]^.bytes;
+    solution^.f76.dead_end := subject.children[1]^.f76.dead_end;
+    solution^.f76.derived_from_literal := subject.children[1]^.f76.derived_from_literal;
+    solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary;
+    solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
+    solution^.f76.field_requires_sign_extend := subject.children[1]^.f76.field_requires_sign_extend;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
     solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
     solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
     solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
     solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-    solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+    solution^.f76.has_a_symbolic_displacement := subject.children[1]^.f76.has_a_symbolic_displacement;
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
     solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-    solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-    solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-    solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-    solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-    solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-    solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-    solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-    p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-    solution^.disp := subject.children[1]^.disp;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-    p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-    p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-    solution^.w74 := subject.children[1]^.w74;
-    solution^.l52 := subject.children[1]^.l52;
-    solution^.f76.physical := subject.children[1]^.f76.physical;
-    solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-    solution^.f76.reg := subject.children[1]^.f76.reg;
-    solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-    solution^.f76.serialize := subject.children[1]^.f76.serialize;
-    solution^.f76.shift := subject.children[1]^.f76.shift;
-    solution^.f76.b80 := subject.children[1]^.f76.b80;
-    solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-    solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-    solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
-    solution^.f76.b76 := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.precision - subject.children[2]^.disp - p2_node_ptr_t(subject.sym)^.b[29];
-    solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+    solution^.f76.is_atomic := subject.children[1]^.f76.is_atomic;
+    solution^.f76.is_complex := subject.children[1]^.f76.is_complex;
+    solution^.f76.is_destroyable := subject.children[1]^.f76.is_destroyable;
+    solution^.f76.is_dynm_vat := subject.children[1]^.f76.is_dynm_vat;
+    solution^.f76.is_entire_object := subject.children[1]^.f76.is_entire_object;
+    solution^.f76.is_physical := subject.children[1]^.f76.is_physical;
+    solution^.f76.is_set_temporary := subject.children[1]^.f76.is_set_temporary;
+    solution^.f76.is_volatile := subject.children[1]^.f76.is_volatile;
+    solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value;
+    solution^.f76.literal_64_bits_value_is_zero := subject.children[1]^.f76.literal_64_bits_value_is_zero;
+    solution^.f76.literal_derived_from_floating_constant := subject.children[1]^.f76.literal_derived_from_floating_constant;
+    solution^.f76.materialize_true_as_1 := subject.children[1]^.f76.materialize_true_as_1;
+    solution^.n_bytes_to_back_up := subject.children[1]^.n_bytes_to_back_up;
+    solution^.pass_1_size := subject.children[1]^.pass_1_size;
+    solution^.f76.physical_register := subject.children[1]^.f76.physical_register;
+    solution^.f76.physical_register_from_function_call := subject.children[1]^.f76.physical_register_from_function_call;
+    solution^.f76.physical_register_number := subject.children[1]^.f76.physical_register_number;
+    solution^.f76.physical_register_is_no_modify := subject.children[1]^.f76.physical_register_is_no_modify;
+    solution^.f76.physical_register_user_declared := subject.children[1]^.f76.physical_register_user_declared;
+    solution^.f76.scale := subject.children[1]^.f76.scale;
+    solution^.f76.slevel_attribute := subject.children[1]^.f76.slevel_attribute;
+    solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
+    solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
+    solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
+    solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb + subject.children[1]^.inherited_attributes^.fetch_precision - subject.children[2]^.literal_32_bits_value - p2_node_ptr_t(subject.il)^.b[29];
+    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
-    solution^.f76.b77 := p2_node_ptr_t(subject.sym)^.b[29];
-    solution^.f76.b81_0 := p2_node_ptr_t(subject.sym)^.b[30] & 64 <> 0;
+    solution^.f76.field_precision := p2_node_ptr_t(subject.il)^.b[29];
+    solution^.f76.field_requires_sign_extend := p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0;
     t2 := subject.children[1]^.ip_reg_max;
     if t2 = subject.children[2]^.ip_reg_max then begin
       solution^.ip_reg_max := t2 + 1;
@@ -6406,7 +6386,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.b[30] & 64 <> 0 then begin
+  if p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0 then begin
     if isc_user_routines_354 then begin
       write('Pattern 485 matched the semantics.');
       writeln;
@@ -6419,29 +6399,29 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 485;
-      solution^.chain := addr(subject);
-      if (p2_node_ptr_t(subject.sym)^.w[14] = 0) or (p2_node_ptr_t(subject.sym)^.w[14] > 31) then begin
+      solution^.which_transform := 485;
+      solution^.before_transform := addr(subject);
+      if (p2_node_ptr_t(subject.il)^.w[14] = 0) or (p2_node_ptr_t(subject.il)^.w[14] > 31) then begin
         t2 := 1;
       end else begin
-        t2 := p2_node_ptr_t(subject.sym)^.w[14];
+        t2 := p2_node_ptr_t(subject.il)^.w[14];
       end;
       t3 := make_bit_mask_2(t2 - 1, 0);
-      p1_int_fields_ptr_t(addr(solution^))^.i[0] := -(subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.precision - subject.children[2]^.disp - 1) + 31;
-      p1_int_fields_ptr_t(addr(solution^))^.i[1] := 31 - p2_node_ptr_t(subject.sym)^.w[14] + 1;
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := -(subject.children[1]^.f76.bit_position_of_lsb + subject.children[1]^.inherited_attributes^.fetch_precision - subject.children[2]^.literal_32_bits_value - 1) + 31;
+      p1_int_fields_ptr_t(addr(solution^))^.i[1] := 31 - p2_node_ptr_t(subject.il)^.w[14] + 1;
       if p1_int_fields_ptr_t(addr(solution^))^.i[0] > 0 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
       solution^.code_bytes := cost_485_1[ord(solution^.space136[136])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.bits_known := t3 & rshft(subject.children[1]^.bits_known,
-          subject.children[1]^.f76.b76);
+          subject.children[1]^.f76.bit_position_of_lsb);
       solution^.bits_trusted := rshft(subject.children[1]^.bits_trusted,
-          subject.children[1]^.f76.b76) & t3;
-      solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+          subject.children[1]^.f76.bit_position_of_lsb) & t3;
+      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t4 := subject.children[1]^.ip_reg_max;
@@ -6488,7 +6468,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.b[30] & 64 = 0 then begin
+  if p2_node_ptr_t(subject.il)^.b[30] & 64 = 0 then begin
     if isc_user_routines_354 then begin
       write('Pattern 486 matched the semantics.');
       writeln;
@@ -6501,28 +6481,28 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 486;
-      solution^.chain := addr(subject);
-      p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.precision - subject.children[2]^.disp - p2_node_ptr_t(subject.sym)^.w[14];
-      if (p2_node_ptr_t(subject.sym)^.w[14] = 0) or (p2_node_ptr_t(subject.sym)^.w[14] > 31) then begin
+      solution^.which_transform := 486;
+      solution^.before_transform := addr(subject);
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.bit_position_of_lsb + subject.children[1]^.inherited_attributes^.fetch_precision - subject.children[2]^.literal_32_bits_value - p2_node_ptr_t(subject.il)^.w[14];
+      if (p2_node_ptr_t(subject.il)^.w[14] = 0) or (p2_node_ptr_t(subject.il)^.w[14] > 31) then begin
         p1_int_fields_ptr_t(addr(solution^))^.i[1] := 1;
       end else begin
-        p1_int_fields_ptr_t(addr(solution^))^.i[1] := p2_node_ptr_t(subject.sym)^.w[14];
+        p1_int_fields_ptr_t(addr(solution^))^.i[1] := p2_node_ptr_t(subject.il)^.w[14];
       end;
       t2 := make_bit_mask_2(31, p1_int_fields_ptr_t(addr(solution^))^.i[1]);
       t3 := make_bit_mask_2(p1_int_fields_ptr_t(addr(solution^))^.i[1] - 1,
           0);
       t4 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[1], 0);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-      solution^.f76.b76 := 0;
+      solution^.f76.bit_position_of_lsb := 0;
       t5 := validate_shift_count(p1_int_fields_ptr_t(addr(solution^))^.i[0]);
       solution^.bits_known := t3 & rshft(subject.children[1]^.bits_known, t5);
       t6 := validate_shift_count(p1_int_fields_ptr_t(addr(solution^))^.i[0]);
       solution^.bits_trusted := rshft(subject.children[1]^.bits_trusted,
           t6) & t3 + t2;
-      solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t7 := subject.children[1]^.ip_reg_max;
@@ -6564,7 +6544,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.b[30] & 64 <> 0 then begin
+  if p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0 then begin
     if isc_user_routines_354 then begin
       write('Pattern 487 matched the semantics.');
       writeln;
@@ -6577,13 +6557,13 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 487;
-      solution^.chain := addr(subject);
-      p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.precision - p2_node_ptr_t(subject.sym)^.w[14];
-      if (p2_node_ptr_t(subject.sym)^.w[14] = 0) or (p2_node_ptr_t(subject.sym)^.w[14] > 31) then begin
+      solution^.which_transform := 487;
+      solution^.before_transform := addr(subject);
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.bit_position_of_lsb + subject.children[1]^.inherited_attributes^.fetch_precision - p2_node_ptr_t(subject.il)^.w[14];
+      if (p2_node_ptr_t(subject.il)^.w[14] = 0) or (p2_node_ptr_t(subject.il)^.w[14] > 31) then begin
         p1_int_fields_ptr_t(addr(solution^))^.i[1] := 1;
       end else begin
-        p1_int_fields_ptr_t(addr(solution^))^.i[1] := p2_node_ptr_t(subject.sym)^.w[14];
+        p1_int_fields_ptr_t(addr(solution^))^.i[1] := p2_node_ptr_t(subject.il)^.w[14];
       end;
       p1_int_fields_ptr_t(addr(solution^))^.i[2] := 32 - p1_int_fields_ptr_t(addr(solution^))^.i[1];
       if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$move), 1) then begin
@@ -6591,15 +6571,15 @@ begin
       end else begin
         solution^.space136[136] := chr(2);
       end;
-      if p2_node_ptr_t(subject.sym)^.b[30] & 64 <> 0 then begin
+      if p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0 then begin
         solution^.space136[137] := chr(1);
       end else begin
         solution^.space136[137] := chr(2);
       end;
       solution^.code_bytes := cost_487_4[ord(solution^.space136[136])] + cost_487_3[ord(solution^.space136[137])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 12;
-      solution^.memory_refs := cost_487_2[ord(solution^.space136[136])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := cost_487_2[ord(solution^.space136[136])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := cost_487_1[ord(solution^.space136[136])] + subject.children[1]^.delay + subject.children[2]^.delay;
-      solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t2 := subject.children[1]^.ip_reg_max;
@@ -6642,7 +6622,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.b[30] & 64 = 0 then begin
+  if p2_node_ptr_t(subject.il)^.b[30] & 64 = 0 then begin
     if isc_user_routines_354 then begin
       write('Pattern 488 matched the semantics.');
       writeln;
@@ -6655,13 +6635,13 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 488;
-      solution^.chain := addr(subject);
-      p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.precision - p2_node_ptr_t(subject.sym)^.w[14];
-      if (p2_node_ptr_t(subject.sym)^.w[14] = 0) or (p2_node_ptr_t(subject.sym)^.w[14] > 31) then begin
+      solution^.which_transform := 488;
+      solution^.before_transform := addr(subject);
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.bit_position_of_lsb + subject.children[1]^.inherited_attributes^.fetch_precision - p2_node_ptr_t(subject.il)^.w[14];
+      if (p2_node_ptr_t(subject.il)^.w[14] = 0) or (p2_node_ptr_t(subject.il)^.w[14] > 31) then begin
         p1_int_fields_ptr_t(addr(solution^))^.i[1] := 1;
       end else begin
-        p1_int_fields_ptr_t(addr(solution^))^.i[1] := p2_node_ptr_t(subject.sym)^.w[14];
+        p1_int_fields_ptr_t(addr(solution^))^.i[1] := p2_node_ptr_t(subject.il)^.w[14];
       end;
       t2 := make_bit_mask_2(31, p1_int_fields_ptr_t(addr(solution^))^.i[1]);
       if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$move), 1) then begin
@@ -6669,17 +6649,17 @@ begin
       end else begin
         solution^.space136[136] := chr(2);
       end;
-      if p2_node_ptr_t(subject.sym)^.b[30] & 64 <> 0 then begin
+      if p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0 then begin
         solution^.space136[137] := chr(1);
       end else begin
         solution^.space136[137] := chr(2);
       end;
       solution^.code_bytes := cost_488_4[ord(solution^.space136[136])] + cost_488_3[ord(solution^.space136[137])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-      solution^.memory_refs := cost_488_2[ord(solution^.space136[136])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := cost_488_2[ord(solution^.space136[136])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := cost_488_1[ord(solution^.space136[136])] + subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.bits_known := 0;
       solution^.bits_trusted := t2;
-      solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t3 := subject.children[1]^.ip_reg_max;

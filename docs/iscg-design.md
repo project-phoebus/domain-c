@@ -254,9 +254,11 @@ attribute names (`cc_isc_inventory.py fields`).  They are:
 Two readings of docs/isc-notes.md change: +88 is before_transform (the
 subject a rule's solution was made from, not a chain that replaces the
 children), and +112 is which_transform.  isc_solution_fields.ins.pas
-uses abbreviations taken from the CSE accessors' names (memory_refs,
-eval_order, obj_w_name, has_sym_disp, uses_disp, embedded_sr_temp):
-the generated insert would carry dump_solution's names (question 267).
+used abbreviations taken from the CSE accessors' names (memory_refs,
+eval_order, obj_w_name, has_sym_disp, uses_disp, embedded_sr_temp);
+since translator RN3 (question 267, the owner's decision) its fields
+carry dump_solution's names, as isc_attribute_records.ins.pas's carry
+isc_print_il_node's (question 271).
 
 ### 2.5 The actions: whole bodies are not templates
 
@@ -631,7 +633,7 @@ unit compiles and compares.
 | region (in order) | where | generated from |
 |---|---|---|
 | `print_il_node views` | type section: `pin_<kind>_t` / `pin_<kind>_ptr_t`, 54 records | the IL description: each node kind's static attributes, named as printed, at the offsets the code reads (fillers unnamed; aliases at one offset, e.g. var_name's address/disp/processor_register_address at +56, as variants) |
-| `dump_solution view` | type section: `ds_solution_t` | the attribute declarations (2.4): the solution record under the image's names (isc_solution_fields.ins.pas's isc_solution_t keeps the hand-written units' names, question 267) |
+| `dump_solution view` | type section: `ds_solution_t` | the attribute declarations (2.4): the solution record under the image's names, which isc_solution_fields.ins.pas's isc_solution_t shares (question 267); the view differs in its types (solution$t, il$t) and names the rules' locals |
 | `static attributes by IL node kind` | isc_print_il_node: the arms of `case kind of` | one arm per node kind of il$t (the 64 node kinds, exactly il$t's non-operator elements; 10 have no static attributes and share an empty arm), in il$t's order; assign_node, tree_node and cmp_tree_node have a nested `case op of` in alphabetical order: assign_node one arm per il$t aop (34), cmp_tree_node one per il$t comparison (6), tree_node 76 (il$t's tree operators but mark_dynamic_space_top and physical_top, and the six comparisons too); each arm writes its attributes in alphabetical order |
 | `inherited attributes` | isc_print_il_node, after the case | the inherited attribute declarations (17, alphabetical but il last), written for every node |
 | `dump_solution fields` | dump_solution, under at_backend_switches.level = 7 | the attribute declarations: the declared pass-1 attributes (alphabetical), then the generator's fields (before_transform .. already_through_pass_2) |
@@ -741,7 +743,7 @@ modules, isc_pass_1_main's operator routines.
 - pattern_matcher is `case solution$t(solution^.kind) of` with every
   kind 1..23 a label (the kinds without chain rules share one empty
   arm: the image's in-range kinds without tries go to the case's end,
-  only 0 and 24 to the error) and `case il$t(solution^.w98) of` with a
+  only 0 and 24 to the error) and `case il$t(solution^.il_kind) of` with a
   label per operator some pattern names (unlabelled ones go to the
   otherwise, as in the image).  A try is one `if` per test, nested, in
   pattern order: the image leaves at the first failing test, a child is
@@ -767,12 +769,15 @@ modules, isc_pass_1_main's operator routines.
   isc_tool_generated_readonly_tables likewise, declared in isc.pvt.pas.
   isc_vars opens lang2/source/isc/isc_var_defines.ins.pas first (a
   stub: its contents are not in the image).
-- Field names: the generator writes isc_solution_fields' current names
-  (kind, w98 for il_kind, children, f114.b6 for
-  builtin_could_deadlock_sched, f76.physical/no_modify/serialize/reg);
-  dead_end (+81.3), which the insert does not name, is read through a
-  unit-local view.  The mapping lives in iscg_text.py's fixed text and
-  iscg_gen.py's FIELD_MAP (question 267).
+- Field names: isc_solution_fields.ins.pas and
+  isc_attribute_records.ins.pas name their fields after the image's
+  attributes (questions 267, 271; translator RN3), so the generator
+  reads an attribute through the field of its name, inside the packed
+  groups f76 (+76..+87) and f114 (+114, +115) of a solution, pos (+32,
+  +34) and f38 (+38, +39) of the inherited attributes
+  (iscg_p2lang.sol_path, iscg_pass1.inh_path).  iscg_gen.py's FIELD_MAP
+  and the views of the flags the insert did not name (pm_sol_flags_t,
+  p2_flags_t) are gone.
 
 ### 10.4 What remains
 
@@ -849,8 +854,8 @@ call it).
   `if COND; ... else; ... endif;'.  The default inherited attributes
   are copied in alphabetical order before a child's statements (the
   generator writes the copy); the statements' names are
-  isc_print_il_node's (question 271), mapped to the insert's fields
-  by iscg_pass1.INH_ATTRS.
+  isc_print_il_node's (question 271), the insert's fields of the same
+  names (iscg_pass1.INH_ATTRS, inh_path).
 - **Derived masks by position** (GB's open point): a pass_1 call's
   position is the children[k] it is stored in (call_positions), so a
   routine whose first call is a rewrite (add_top's swap: `inherited')
@@ -963,7 +968,7 @@ errors=0 under the gate.
   routine lines).
 - `tools/iscg_p2lang.py`: the statement language (its docstring is the
   grammar): abstract syntax, printer, parser, and the translation to
-  Pascal with the insert's field names (no rename, question 267) and the
+  Pascal with the insert's field names (the image's, question 267) and the
   casts the types need.  `tools/iscg_p2lift.py [RULE ...] | --stats`: the
   decompiler (below).  `tools/iscg_p2gen.py`: the rule file's pass_2
   clauses (`pass_2 image 16#A empty;`, `... begin ... end;`, `... hand
@@ -1014,8 +1019,7 @@ not named: 44 actions read IL node fields by offset, 8 isc_readonly_tables
 word tables.
 
 **The modules.**  Each opens GB's INCLUDES, declares only the views it
-needs (p2_flags_t: the booleans the insert lumps in b81_7_2 and
-b83_7_4; p2_locals_t: the rule's words and misaligned longwords; p2_node_t;
+needs (p2_locals_t: the rule's words and misaligned longwords; p2_node_t;
 p2_readonly_t; lir_3c60/3d60, which lir.pvt.pas declares and the ISC
 does not open), and one routine per rule (`transform_<r>_pass_2`, the
 heading of p2_pass_2_action_t; an empty action `begin end`, a bare `rts`

@@ -104,7 +104,7 @@ procedure transform_35_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_36_pass_2 - rule 36: ip_reg_field <- fortran_symbol.
@@ -114,7 +114,7 @@ procedure transform_36_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_37_pass_2 - rule 37: ip_reg <- fortran_symbol.
@@ -124,7 +124,7 @@ procedure transform_37_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_38_pass_2 - rule 38: fp_reg <- fortran_symbol.
@@ -134,7 +134,7 @@ procedure transform_38_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_39_pass_2 - rule 39: fp_reg_pair <- fortran_symbol.
@@ -144,12 +144,12 @@ procedure transform_39_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.lr2 := get_live_range_of_imaginary_part(isc_node_ptr_t(self.sym));
-  result.obj_w_name := self.sym;
+  result.live_range_of_imaginary_part := get_live_range_of_imaginary_part(isc_node_ptr_t(self.il));
+  result.object_with_name := self.il;
 end;
 
 { transform_40_pass_2 - rule 40: fp_reg_quad <- fortran_symbol.
@@ -159,12 +159,12 @@ procedure transform_40_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.lr2 := get_live_range_of_imaginary_part(isc_node_ptr_t(self.sym));
-  result.obj_w_name := self.sym;
+  result.live_range_of_imaginary_part := get_live_range_of_imaginary_part(isc_node_ptr_t(self.il));
+  result.object_with_name := self.il;
 end;
 
 { transform_41_pass_2 - rule 41: address_mode <- fortran_symbol.
@@ -173,9 +173,9 @@ procedure transform_41_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(isc_user_routines_340);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := self.sym;
+  result.base_register := lr_ptr_t(isc_user_routines_340);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := self.il;
 end;
 
 { transform_42_pass_2 - rule 42: address_mode <- fortran_symbol.
@@ -191,30 +191,31 @@ begin
   if ord(result.space136[136]) <> 1 then begin
     t1 := create_solution_for_ip_reg;
     if ord(result.space136[137]) = 1 then begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-          find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.sym)^.p[3])),
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$move), 0,
+          find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[3])),
           t1, nil);
     end else begin
-      t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.sym)^.p[3]));
-      debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t2,
-          isc_solution_ptr_t(t2^.base_reg), t1, t2^.sym, 0, t2^.bits_known,
-          t2^.bits_trusted);
+      t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.il)^.p[3]));
+      debug_lir_$load_instruction(result.inherited_attributes,
+          ord(opc$loadl), 0, t2, isc_solution_ptr_t(t2^.base_register), t1,
+          t2^.il, 0, t2^.bits_known, t2^.bits_trusted);
     end;
     t3 := t1;
   end else begin
     t3 := nil;
   end;
-  if integer32(p2_node_ptr_t(subject^.sym)^.p[6]) & 16#40000000 <> 0 then begin
-    result.base_reg := lr_ptr_t(isc_user_routines_340);
+  if integer32(p2_node_ptr_t(subject^.il)^.p[6]) & 16#40000000 <> 0 then begin
+    result.base_register := lr_ptr_t(isc_user_routines_340);
   end else begin
-    result.base_reg := lr_ptr_t(isc_user_routines_33c);
+    result.base_register := lr_ptr_t(isc_user_routines_33c);
   end;
   if p2_locals_ptr_t(addr(result))^.c[352] & 128 <> 0 then begin
-    result.index_reg := lr_ptr_t(isc_user_routines_31c);
+    result.index_register := lr_ptr_t(isc_user_routines_31c);
   end else begin
-    result.index_reg := lr_ptr_t(t3);
+    result.index_register := lr_ptr_t(t3);
   end;
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_43_pass_2 - rule 43: ip_reg_field <- fortran_symbol.
@@ -224,7 +225,7 @@ procedure transform_43_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_44_pass_2 - rule 44: ip_reg <- fortran_symbol.
@@ -234,7 +235,7 @@ procedure transform_44_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_45_pass_2 - rule 45: address_mode <- fortran_symbol.
@@ -243,9 +244,9 @@ procedure transform_45_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(isc_user_routines_33c);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := self.sym;
+  result.base_register := lr_ptr_t(isc_user_routines_33c);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := self.il;
 end;
 
 { transform_46_pass_2 - rule 46: address_mode <- fortran_symbol.
@@ -261,26 +262,27 @@ begin
   if ord(result.space136[136]) <> 1 then begin
     t1 := create_solution_for_ip_reg;
     if ord(result.space136[137]) = 1 then begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-          find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.sym)^.p[3])),
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$move), 0,
+          find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[3])),
           t1, nil);
     end else begin
-      t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.sym)^.p[3]));
-      debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t2,
-          isc_solution_ptr_t(t2^.base_reg), t1, t2^.sym, 0, t2^.bits_known,
-          t2^.bits_trusted);
+      t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.il)^.p[3]));
+      debug_lir_$load_instruction(result.inherited_attributes,
+          ord(opc$loadl), 0, t2, isc_solution_ptr_t(t2^.base_register), t1,
+          t2^.il, 0, t2^.bits_known, t2^.bits_trusted);
     end;
     t3 := t1;
   end else begin
     t3 := nil;
   end;
-  result.base_reg := lr_ptr_t(isc_user_routines_338);
+  result.base_register := lr_ptr_t(isc_user_routines_338);
   if p2_locals_ptr_t(addr(result))^.c[352] & 128 <> 0 then begin
-    result.index_reg := lr_ptr_t(isc_user_routines_31c);
+    result.index_register := lr_ptr_t(isc_user_routines_31c);
   end else begin
-    result.index_reg := lr_ptr_t(t3);
+    result.index_register := lr_ptr_t(t3);
   end;
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_47_pass_2 - rule 47: ip_reg <- fortran_symbol.
@@ -290,7 +292,7 @@ procedure transform_47_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_48_pass_2 - rule 48: address_mode <- fortran_symbol.
@@ -299,9 +301,9 @@ procedure transform_48_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(isc_user_routines_330);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := p2_node_ptr_t(subject^.sym)^.p[12];
+  result.base_register := lr_ptr_t(isc_user_routines_330);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := p2_node_ptr_t(subject^.il)^.p[12];
 end;
 
 { transform_49_pass_2 - rule 49: address_mode <- var_name.
@@ -317,26 +319,27 @@ begin
   if ord(result.space136[136]) <> 1 then begin
     t1 := create_solution_for_ip_reg;
     if ord(result.space136[137]) = 1 then begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-          find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.sym)^.p[14])),
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$move), 0,
+          find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[14])),
           t1, nil);
     end else begin
-      t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.sym)^.p[14]));
-      debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t2,
-          isc_solution_ptr_t(t2^.base_reg), t1, t2^.sym, 0, t2^.bits_known,
-          t2^.bits_trusted);
+      t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.il)^.p[14]));
+      debug_lir_$load_instruction(result.inherited_attributes,
+          ord(opc$loadl), 0, t2, isc_solution_ptr_t(t2^.base_register), t1,
+          t2^.il, 0, t2^.bits_known, t2^.bits_trusted);
     end;
     t3 := t1;
   end else begin
     t3 := nil;
   end;
   if p2_locals_ptr_t(addr(result))^.c[352] & 128 <> 0 then begin
-    result.base_reg := lr_ptr_t(isc_user_routines_31c);
+    result.base_register := lr_ptr_t(isc_user_routines_31c);
   end else begin
-    result.base_reg := lr_ptr_t(t3);
+    result.base_register := lr_ptr_t(t3);
   end;
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := self.sym;
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := self.il;
 end;
 
 { transform_50_pass_2 - rule 50: ip_reg <- var_name.
@@ -346,7 +349,7 @@ procedure transform_50_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_51_pass_2 - rule 51: ip_reg_field <- var_name.
@@ -356,7 +359,7 @@ procedure transform_51_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_52_pass_2 - rule 52: ip_reg <- var_name.
@@ -366,7 +369,7 @@ procedure transform_52_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_53_pass_2 - rule 53: fp_reg <- var_name.
@@ -376,7 +379,7 @@ procedure transform_53_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_54_pass_2 - rule 54: fp_reg_pair <- var_name.
@@ -386,11 +389,11 @@ procedure transform_54_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_55_pass_2 - rule 55: address_mode <- var_name.
@@ -399,9 +402,9 @@ procedure transform_55_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(isc_user_routines_340);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := self.sym;
+  result.base_register := lr_ptr_t(isc_user_routines_340);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := self.il;
 end;
 
 { transform_56_pass_2 - rule 56: address_mode <- var_name.
@@ -417,26 +420,27 @@ begin
   if ord(result.space136[136]) <> 1 then begin
     t1 := create_solution_for_ip_reg;
     if ord(result.space136[137]) = 1 then begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-          find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.sym)^.p[14])),
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$move), 0,
+          find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[14])),
           t1, nil);
     end else begin
-      t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.sym)^.p[14]));
-      debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t2,
-          isc_solution_ptr_t(t2^.base_reg), t1, t2^.sym, 0, t2^.bits_known,
-          t2^.bits_trusted);
+      t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.il)^.p[14]));
+      debug_lir_$load_instruction(result.inherited_attributes,
+          ord(opc$loadl), 0, t2, isc_solution_ptr_t(t2^.base_register), t1,
+          t2^.il, 0, t2^.bits_known, t2^.bits_trusted);
     end;
     t3 := t1;
   end else begin
     t3 := nil;
   end;
-  result.base_reg := lr_ptr_t(isc_user_routines_33c);
+  result.base_register := lr_ptr_t(isc_user_routines_33c);
   if p2_locals_ptr_t(addr(result))^.c[352] & 128 <> 0 then begin
-    result.index_reg := lr_ptr_t(isc_user_routines_31c);
+    result.index_register := lr_ptr_t(isc_user_routines_31c);
   end else begin
-    result.index_reg := lr_ptr_t(t3);
+    result.index_register := lr_ptr_t(t3);
   end;
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_57_pass_2 - rule 57: ip_reg <- var_name.
@@ -446,7 +450,7 @@ procedure transform_57_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_58_pass_2 - rule 58: address_mode <- var_name.
@@ -455,9 +459,9 @@ procedure transform_58_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(isc_user_routines_33c);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := self.sym;
+  result.base_register := lr_ptr_t(isc_user_routines_33c);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := self.il;
 end;
 
 { transform_59_pass_2 - rule 59: address_mode <- var_name.
@@ -473,26 +477,27 @@ begin
   if ord(result.space136[136]) <> 1 then begin
     t1 := create_solution_for_ip_reg;
     if ord(result.space136[137]) = 1 then begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-          find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.sym)^.p[14])),
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$move), 0,
+          find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[14])),
           t1, nil);
     end else begin
-      t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.sym)^.p[14]));
-      debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t2,
-          isc_solution_ptr_t(t2^.base_reg), t1, t2^.sym, 0, t2^.bits_known,
-          t2^.bits_trusted);
+      t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.il)^.p[14]));
+      debug_lir_$load_instruction(result.inherited_attributes,
+          ord(opc$loadl), 0, t2, isc_solution_ptr_t(t2^.base_register), t1,
+          t2^.il, 0, t2^.bits_known, t2^.bits_trusted);
     end;
     t3 := t1;
   end else begin
     t3 := nil;
   end;
-  result.base_reg := lr_ptr_t(isc_user_routines_338);
+  result.base_register := lr_ptr_t(isc_user_routines_338);
   if p2_locals_ptr_t(addr(result))^.c[352] & 128 <> 0 then begin
-    result.index_reg := lr_ptr_t(isc_user_routines_31c);
+    result.index_register := lr_ptr_t(isc_user_routines_31c);
   end else begin
-    result.index_reg := lr_ptr_t(t3);
+    result.index_register := lr_ptr_t(t3);
   end;
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_60_pass_2 - rule 60: ip_reg <- var_name.
@@ -502,7 +507,7 @@ procedure transform_60_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_61_pass_2 - rule 61: fp_reg <- var_name.
@@ -512,7 +517,7 @@ procedure transform_61_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_62_pass_2 - rule 62: fp_reg_pair <- var_name.
@@ -522,9 +527,9 @@ procedure transform_62_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+    pattern_match_error(4, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
   result.live_range := lr_ptr_t(result.fields[0]);
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;

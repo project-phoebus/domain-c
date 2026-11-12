@@ -57,24 +57,7 @@ PM_TYPES = '''type
       il: univ_ptr;
       inh: inherited_attributes_ptr_t;
       var work: isc_solution_ptr_t;
-      var result: isc_solution_ptr_t); options(val_param);
-
-  { A solution's flags at +81 (dump_solution's names) for dead_end, which
-    isc_solution_t does not name. }
-  pm_sol_flags_ptr_t = ^pm_sol_flags_t;
-  pm_sol_flags_t = record
-    x0: array [0..80] of char;          { +0 }
-    f81: packed record                  { +81 }
-      all_zeroes_or_all_ones: boolean;  { .7 }
-      arg_block_location: boolean;
-      bit_7_was_sign_extended: boolean;
-      bit_15_was_sign_extended: boolean;
-      dead_end: boolean;                { .3 }
-      derived_from_literal: boolean;
-      embedded_strength_reduction_temporary: boolean;
-      field_requires_sign_extend: boolean;
-      end;
-  end;'''
+      var result: isc_solution_ptr_t); options(val_param);'''
 
 HARD_WORK = '''{ hard_work - rule which_transform applied to solution (the node il under
   inh): unless its result kind must be permissible and is not, or its
@@ -145,28 +128,28 @@ begin
   end
   else begin
     n := 0;
-    if solution^.f114.nchildren = 0 then begin
-      if solution^.f114.b6 then
+    if solution^.f114.number_of_children = 0 then begin
+      if solution^.f114.builtin_could_deadlock_sched then
         n := 1;
     end;
-    if solution^.f114.nchildren >= 1 then begin
-      if solution^.children[1]^.f114.b6 then
+    if solution^.f114.number_of_children >= 1 then begin
+      if solution^.children[1]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
-    if solution^.f114.nchildren >= 2 then begin
-      if solution^.children[2]^.f114.b6 then
+    if solution^.f114.number_of_children >= 2 then begin
+      if solution^.children[2]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
-    if solution^.f114.nchildren >= 3 then begin
-      if solution^.children[3]^.f114.b6 then
+    if solution^.f114.number_of_children >= 3 then begin
+      if solution^.children[3]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
-    if solution^.f114.nchildren >= 4 then begin
-      if solution^.children[4]^.f114.b6 then
+    if solution^.f114.number_of_children >= 4 then begin
+      if solution^.children[4]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
-    if solution^.f114.nchildren >= 5 then begin
-      if solution^.children[5]^.f114.b6 then
+    if solution^.f114.number_of_children >= 5 then begin
+      if solution^.children[5]^.f114.builtin_could_deadlock_sched then
         n := n + 1;
     end;
     if pm_no_could_deadlock_child[which_transform] then
@@ -177,18 +160,18 @@ begin
       pm_pass_1_action[which_transform]^(solution^, il, inh, add_this_to_work_list,
                                          add_this_to_parent);
       if add_this_to_parent <> nil then begin
-        if add_this_to_parent^.eval_order <> 0 then begin
-          if add_this_to_parent^.f76.physical and
-             not add_this_to_parent^.f76.no_modify and
-             not add_this_to_parent^.f76.serialize then begin
+        if add_this_to_parent^.evaluation_order <> 0 then begin
+          if add_this_to_parent^.f76.physical_register and
+             not add_this_to_parent^.f76.physical_register_is_no_modify and
+             not add_this_to_parent^.f76.physical_register_user_declared then begin
             if (solution$t(add_this_to_parent^.kind) in
                 [solution$fp_reg_pair_high, solution$fp_reg_pair_low, solution$fp_reg,
                  solution$fp_reg_pair, solution$fp_reg_quad]) or
-               ((add_this_to_parent^.f76.reg <>
-                 isc_solution_ptr_t(isc_user_routines_330)^.f76.reg) and
-                (add_this_to_parent^.f76.reg <>
-                 isc_solution_ptr_t(isc_user_routines_31c)^.f76.reg)) then
-              add_this_to_parent^.f114.b6 := true;
+               ((add_this_to_parent^.f76.physical_register_number <>
+                 isc_solution_ptr_t(isc_user_routines_330)^.f76.physical_register_number) and
+                (add_this_to_parent^.f76.physical_register_number <>
+                 isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number)) then
+              add_this_to_parent^.f114.builtin_could_deadlock_sched := true;
           end;
         end
         else begin
@@ -293,7 +276,7 @@ done:
   if add_this_to_work_list <> nil then begin
     if appended or
        (not (solution$t(add_this_to_parent^.kind) in permissible_solution_kinds) and wanted and
-        not pm_sol_flags_ptr_t(add_this_to_parent)^.f81.dead_end) then begin
+        not add_this_to_parent^.f76.dead_end) then begin
       if isc_user_routines_354 then begin
         write('Adding the following solution to the work list:');
         writeln;
@@ -314,7 +297,7 @@ PATTERN_MATCHER = '''{ pattern_matcher - every rule whose pattern solution match
   lists after: `case solution^.kind of' (a chain rule's subject kind,
   every kind 1..23 a label; any other kind an error, a message under
   the traces, else bug_check) and, for a proper_subtree, `case
-  il$t(solution^.w98) of' (an operator no pattern names an error); in
+  il$t(solution^.il_kind) of' (an operator no pattern names an error); in
   each arm the rules tried under it, in rule order, each when its
   pattern's tests hold (children's kinds, nested proper_subtrees'
   operators, in pattern order).  The case statements are the
@@ -439,13 +422,13 @@ end;'''
 # the two `otherwise' arms of pattern_matcher's case statements
 UNRECOGNIZED = '''if isc_user_routines_356 or isc_user_routines_354 then begin
   write('ISC: source line ');
-  write(inh^.pos.line:1);
+  write(inh^.pos.source_line_number:1);
   write(': pattern_matcher: Unrecognized solution^.%s.');
   writeln;
   end
 else
   bug_check('ISC: source line %%wd: pattern_matcher: Unrecognized solution^.%s.%%$',
-            inh^.pos.line);'''
+            inh^.pos.source_line_number);'''
 
 P2_HEAD = '''{ isc_pass_2_main - the ISC's pass 2 (a DSEE derived object of the
   iscg_input description; cc.a88k only): pass_2 walks a chosen solution
@@ -503,14 +486,14 @@ procedure pass_2;
 begin
   isc_user_routines_2fc := isc_user_routines_2fc + 1;
   if sol <> nil then
-    if not sol^.f114.pass_2_done then begin
-      if sol^.chain <> nil then begin
-        if sol^.chain^.kind = ord(solution$proper_subtree) then
-          sol^.chain^.eval_order := sol^.eval_order;
-        pass_2(sol^.chain, depth + 1);
+    if not sol^.f114.already_through_pass_2 then begin
+      if sol^.before_transform <> nil then begin
+        if sol^.before_transform^.kind = ord(solution$proper_subtree) then
+          sol^.before_transform^.evaluation_order := sol^.evaluation_order;
+        pass_2(sol^.before_transform, depth + 1);
       end
-      else if sol^.f114.nchildren <> 0 then begin
-        if sol^.eval_order = 1 then begin
+      else if sol^.f114.number_of_children <> 0 then begin
+        if sol^.evaluation_order = 1 then begin
           if sol^.children[1] <> nil then
             pass_2(sol^.children[1], depth + 1);
           if sol^.children[2] <> nil then
@@ -522,7 +505,7 @@ begin
           if sol^.children[5] <> nil then
             pass_2(sol^.children[5], depth + 1);
         end
-        else if sol^.eval_order = 2 then begin
+        else if sol^.evaluation_order = 2 then begin
           if sol^.children[5] <> nil then
             pass_2(sol^.children[5], depth + 1);
           if sol^.children[4] <> nil then
@@ -536,21 +519,21 @@ begin
         end
         else begin
           write('ERROR: unknown evaluation order (');
-          write(sol^.eval_order);
+          write(sol^.evaluation_order);
           write(').');
           writeln;
         end;
       end;
-      sol^.base_reg := lr_ptr_t(isc_user_routines_31c);
-      sol^.index_reg := lr_ptr_t(isc_user_routines_31c);
-      sol^.l16 := 0;
-      sol^.obj_w_name := nil;
+      sol^.base_register := lr_ptr_t(isc_user_routines_31c);
+      sol^.index_register := lr_ptr_t(isc_user_routines_31c);
+      sol^.false_label := 0;
+      sol^.object_with_name := nil;
       sol^.live_range := nil;
-      sol^.lr2 := nil;
-      sol^.f114.pass_2_done := false;
-      if sol^.chain <> nil then
-        p2_pass_2_action[sol^.rule]^(sol^, sol^.chain, sol^, sol);
-      sol^.f114.pass_2_done := true;
+      sol^.live_range_of_imaginary_part := nil;
+      sol^.f114.already_through_pass_2 := false;
+      if sol^.before_transform <> nil then
+        p2_pass_2_action[sol^.which_transform]^(sol^, sol^.before_transform, sol^, sol);
+      sol^.f114.already_through_pass_2 := true;
     end;
 end;'''
 
@@ -805,12 +788,12 @@ begin
   write('*******************************************************');
   writeln;
   if isc_user_routines_356 or isc_user_routines_354 then begin
-    write('ISC: source line ', inh^.pos.line:1, ': pass_1: This IL node kind is currently unsupported.');
+    write('ISC: source line ', inh^.pos.source_line_number:1, ': pass_1: This IL node kind is currently unsupported.');
     writeln;
   end
   else
     bug_check('ISC: source line %wd: pass_1: This IL node kind is currently unsupported.%$',
-              inh^.pos.line);
+              inh^.pos.source_line_number);
 end;'''
 
 # isc_tree_node, isc_cmp_tree_node, isc_assign_node: the dispatch on the
@@ -905,7 +888,7 @@ begin
   end;
   if node = nil then begin
     bug_check('ISC: source line %wd: pass_1: NIL seen where IL node was expected.%$',
-              inh^.pos.line);
+              inh^.pos.source_line_number);
     pass_1 := solution_list$new;
     return;
   end;
@@ -1048,7 +1031,7 @@ begin
       writeln;
     end;
     bug_check('ISC: source line %wd: pass_1: no solutions were generated for this IL tree.%$',
-              inh^.pos.line);
+              inh^.pos.source_line_number);
     pass_1 := solution_list$new;
   end
   else begin
@@ -1056,7 +1039,7 @@ begin
        ((isc_node_ptr_t(node)^.xl[1] & 16#400000) <> 0) and
        (isc_node_ptr_t(node)^.xp[3] = nil) then begin
       s := choose_one_cse_solution(list);
-      s^.f114.b5 := true;
+      s^.f114.builtin_is_local_cse := true;
       s := preserve_solution(s);
       isc_node_ptr_t(node)^.xp[3] := isc_node_ptr_t(s);
       list := solution_list$new;
@@ -1085,9 +1068,9 @@ P1_HEADING = '''(
 
 # a child's default inherited attributes, copied from the node's (as the
 # generated routines write them: iscg_pass1.DEFAULT_COPY)
-P1_COPY = ['@^.call := inh^.call;', '@^.top := inh^.top;', '@^.precision := inh^.precision;',
-           '@^.f38.preserve := inh^.f38.preserve;', '@^.stmt := inh^.stmt;',
-           '@^.f38.arith := inh^.f38.arith;', '@^.available := inh^.available;',
+P1_COPY = ['@^.call_instruction_ptr := inh^.call_instruction_ptr;', '@^.exception_frame := inh^.exception_frame;', '@^.fetch_precision := inh^.fetch_precision;',
+           '@^.f38.inside_a_cse := inh^.f38.inside_a_cse;', '@^.original_il := inh^.original_il;',
+           '@^.f38.required_arithmetic := inh^.f38.required_arithmetic;', '@^.required_precision := inh^.required_precision;',
            '@^.pos := inh^.pos;']
 
 # the REWRITE trace (iscg_pass1.REWRITE_TRACE_PASCAL)
@@ -1157,9 +1140,9 @@ begin
       or (isc_node_ptr_t(il)^.xw[13] = 13) then begin
     inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
     @COPY inh_1
-    inh_1^.precision := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[14]];
-    inh_1^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[14]];
-    inh_1^.available := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[14]];
+    inh_1^.fetch_precision := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[14]];
+    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[14]];
+    inh_1^.required_precision := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[14]];
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
         [solution$fp_reg, solution$fp_reg_pair, solution$fp_reg_quad]);
     if solution_list$empty(children[1]) then
@@ -1173,9 +1156,9 @@ begin
       else begin
         inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
         @COPY inh_2
-        inh_2^.precision := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[14]];
-        inh_2^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[14]];
-        inh_2^.available := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[14]];
+        inh_2^.fetch_precision := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[14]];
+        inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[14]];
+        inh_2^.required_precision := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[14]];
         children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
             [solution$fp_reg, solution$fp_reg_pair, solution$void]);
         if solution_list$empty(children[2]) then
@@ -1188,8 +1171,8 @@ begin
     n := rewrite_$routine_call(il, nil, inh);
     inh_1 := new_inherited_attributes(isc_heap, n);
     inh_1^ := inh^;
-    inh_1^.node := n;
-    inh_1^.stmt := il;
+    inh_1^.il := n;
+    inh_1^.original_il := il;
     solutions := pass_1(n, inh_1, depth, permissible);
     solutions_made := true;
   end;
@@ -1217,18 +1200,18 @@ begin
   no_solutions := false;
   il_kind := ord(il_func_call_top);
   number_of_children := 1;
-  case inh^.f38.arith of
+  case inh^.f38.required_arithmetic of
     1, 3: tkind := 122;
     2: tkind := 123;
     otherwise tkind := 124;
   end;
   @TRACE
   n := rewrite_$routine_call(il, possibly_make_expression_temporary(isc_node_ptr_t(il)^.xw[12],
-      tkind, inh^.available), inh);
+      tkind, inh^.required_precision), inh);
   inh_1 := new_inherited_attributes(isc_heap, n);
   inh_1^ := inh^;
-  inh_1^.node := n;
-  inh_1^.stmt := il;
+  inh_1^.il := n;
+  inh_1^.original_il := il;
   solutions := pass_1(n, inh_1, depth, permissible);
   solutions_made := true;
 end;''')
@@ -1274,17 +1257,17 @@ begin
     isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
     inh_1 := new_inherited_attributes(isc_heap, n);
     inh_1^ := inh^;
-    inh_1^.node := n;
-    inh_1^.stmt := il;
+    inh_1^.il := n;
+    inh_1^.original_il := il;
     solutions := pass_1(n, inh_1, depth, permissible);
     solutions_made := true;
   end
   else begin
     inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
     @COPY inh_2
-    inh_2^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12],
+    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12],
         isc_node_ptr_t(il)^.xl[5]);
-    inh_2^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
     children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
         [solution$fp_reg, solution$fp_reg_pair, solution$fp_reg_quad]);
     if solution_list$empty(children[2]) then
@@ -1292,9 +1275,9 @@ begin
     else begin
       inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
       @COPY inh_1
-      inh_1^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12],
+      inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12],
           isc_node_ptr_t(il)^.xl[5]);
-      inh_1^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+      inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
       children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
           [solution$fp_reg, solution$fp_reg_pair, solution$fp_reg_quad]);
       if solution_list$empty(children[1]) then
@@ -1342,13 +1325,13 @@ begin
     isc_node_ptr_t(n)^.xw[28] := 0;
     isc_node_ptr_t(n)^.xw[26] := isc_node_ptr_t(il)^.xw[26];
     isc_node_ptr_t(n)^.xl[12] := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[26]] div 8;
-    isc_node_ptr_t(n)^.xw[10] := inh^.pos.line;
+    isc_node_ptr_t(n)^.xw[10] := inh^.pos.source_line_number;
     isc_node_ptr_t(n)^.st_l42 := (isc_node_ptr_t(n)^.st_l42 & 16#FF0000FF)
         ! (isc_node_ptr_t(il)^.st_l42 & 16#FFFF00);
     inh_1 := new_inherited_attributes(isc_heap, n);
     inh_1^ := inh^;
-    inh_1^.node := n;
-    inh_1^.stmt := il;
+    inh_1^.il := n;
+    inh_1^.original_il := il;
     solutions := pass_1(n, inh_1, depth, permissible);
     solutions_made := true;
   end;
@@ -1400,24 +1383,24 @@ begin
     isc_node_ptr_t(n)^.xw[28] := 0;
     isc_node_ptr_t(n)^.xw[26] := 11;
     isc_node_ptr_t(n)^.xl[12] := size;
-    isc_node_ptr_t(n)^.xw[10] := inh^.pos.line;
+    isc_node_ptr_t(n)^.xw[10] := inh^.pos.source_line_number;
     isc_node_ptr_t(n)^.st_l42 := (isc_node_ptr_t(n)^.st_l42 & 16#FF0000FF)
         ! (isc_node_ptr_t(il)^.st_l42 & 16#FFFF00);
     inh_1 := new_inherited_attributes(isc_heap, n);
     inh_1^ := inh^;
-    inh_1^.node := n;
-    inh_1^.stmt := il;
+    inh_1^.il := n;
+    inh_1^.original_il := il;
     solutions := pass_1(n, inh_1, depth, permissible);
     solutions_made := true;
   end
   else begin
     inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
     @COPY inh_1
-    inh_1^.f38.b5 := true;
-    inh_1^.top := isc_node_ptr_t(il)^.xp[3];
-    inh_1^.precision := 32;
-    inh_1^.f38.arith := 3;
-    inh_1^.available := 32;
+    inh_1^.f38.immediate_parent_wants_lvalue := true;
+    inh_1^.exception_frame := isc_node_ptr_t(il)^.xp[3];
+    inh_1^.fetch_precision := 32;
+    inh_1^.f38.required_arithmetic := 3;
+    inh_1^.required_precision := 32;
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[16], inh_1, depth + 1,
         [solution$address_mode, solution$any_solution]);
     if solution_list$empty(children[1]) then
@@ -1425,11 +1408,11 @@ begin
     else begin
       inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[17]);
       @COPY inh_2
-      inh_2^.f38.b5 := true;
-      inh_2^.top := isc_node_ptr_t(il)^.xp[3];
-      inh_2^.precision := 32;
-      inh_2^.f38.arith := 3;
-      inh_2^.available := 32;
+      inh_2^.f38.immediate_parent_wants_lvalue := true;
+      inh_2^.exception_frame := isc_node_ptr_t(il)^.xp[3];
+      inh_2^.fetch_precision := 32;
+      inh_2^.f38.required_arithmetic := 3;
+      inh_2^.required_precision := 32;
       children[2] := pass_1(isc_node_ptr_t(il)^.xp[17], inh_2, depth + 1,
           [solution$address_mode, solution$any_solution]);
       if solution_list$empty(children[2]) then
@@ -1437,10 +1420,10 @@ begin
       else begin
         inh_3 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[18]);
         @COPY inh_3
-        inh_3^.top := isc_node_ptr_t(il)^.xp[3];
-        inh_3^.precision := 32;
-        inh_3^.f38.arith := 1;
-        inh_3^.available := 32;
+        inh_3^.exception_frame := isc_node_ptr_t(il)^.xp[3];
+        inh_3^.fetch_precision := 32;
+        inh_3^.f38.required_arithmetic := 1;
+        inh_3^.required_precision := 32;
         children[3] := pass_1(isc_node_ptr_t(il)^.xp[18], inh_3, depth + 1,
             [solution$ip_reg, solution$literal_32_bits]);
         if solution_list$empty(children[3]) then
@@ -1495,8 +1478,8 @@ begin
     p1_node_chars_ptr_t(n2)^[22] := chr(2);
     inh_1 := new_inherited_attributes(isc_heap, n2);
     inh_1^ := inh^;
-    inh_1^.node := n2;
-    inh_1^.stmt := il;
+    inh_1^.il := n2;
+    inh_1^.original_il := il;
     solutions := pass_1(n2, inh_1, depth, permissible);
     solutions_made := true;
   end;
@@ -1548,8 +1531,8 @@ begin
       p1_node_chars_ptr_t(n2)^[22] := chr(0);
       inh_1 := new_inherited_attributes(isc_heap, n2);
       inh_1^ := inh^;
-      inh_1^.node := n2;
-      inh_1^.stmt := il;
+      inh_1^.il := n2;
+      inh_1^.original_il := il;
       solutions := pass_1(n2, inh_1, depth, permissible);
     end;
     solutions_made := true;
@@ -1566,8 +1549,8 @@ begin
     p1_node_chars_ptr_t(n2)^[22] := chr(2);
     inh_1 := new_inherited_attributes(isc_heap, n2);
     inh_1^ := inh^;
-    inh_1^.node := n2;
-    inh_1^.stmt := il;
+    inh_1^.il := n2;
+    inh_1^.original_il := il;
     solutions := pass_1(n2, inh_1, depth, permissible);
     solutions_made := true;
   end
@@ -1613,19 +1596,19 @@ begin
     p1_node_bytes_ptr_t(n)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
     inh_1 := new_inherited_attributes(isc_heap, n);
     inh_1^ := inh^;
-    inh_1^.node := n;
-    inh_1^.stmt := il;
+    inh_1^.il := n;
+    inh_1^.original_il := il;
     solutions := pass_1(n, inh_1, depth, permissible);
     solutions_made := true;
   end
   else begin
     inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
     @COPY inh_1
-    inh_1^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
-    inh_1^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[13]];
-    inh_1^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
-    inh_1^.f38.b6 := true;
-    inh_1^.f38.b3 := p1_node_bytes_ptr_t(il)^[30].b6;
+    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[13]];
+    inh_1^.required_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+    inh_1^.f38.immediate_parent_has_signed := true;
+    inh_1^.f38.immediate_parent_wants_signed := p1_node_bytes_ptr_t(il)^[30].b6;
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
         [solution$ip_reg, solution$ip_reg_field]);
     if solution_list$empty(children[1]) then
@@ -1633,11 +1616,11 @@ begin
     else begin
       inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
       @COPY inh_2
-      inh_2^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
-      inh_2^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[13]];
-      inh_2^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
-      inh_2^.f38.b6 := true;
-      inh_2^.f38.b3 := p1_node_bytes_ptr_t(il)^[30].b6;
+      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[13]];
+      inh_2^.required_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+      inh_2^.f38.immediate_parent_has_signed := true;
+      inh_2^.f38.immediate_parent_wants_signed := p1_node_bytes_ptr_t(il)^[30].b6;
       children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
           [solution$ip_reg, solution$ip_reg_field, solution$literal_32_bits]);
       if solution_list$empty(children[2]) then
@@ -1690,8 +1673,8 @@ begin
     p1_node_bytes_ptr_t(n)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
     inh_1 := new_inherited_attributes(isc_heap, n);
     inh_1^ := inh^;
-    inh_1^.node := n;
-    inh_1^.stmt := il;
+    inh_1^.il := n;
+    inh_1^.original_il := il;
     solutions := pass_1(n, inh_1, depth, permissible);
   end
   else if p1_node_bytes_ptr_t(il)^[30].b7 then begin
@@ -1709,8 +1692,8 @@ begin
     p1_node_bytes_ptr_t(n)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
     inh_1 := new_inherited_attributes(isc_heap, n);
     inh_1^ := inh^;
-    inh_1^.node := n;
-    inh_1^.stmt := il;
+    inh_1^.il := n;
+    inh_1^.original_il := il;
     solutions := pass_1(n, inh_1, depth, permissible);
   end
   else begin
@@ -1718,8 +1701,8 @@ begin
     n := rewrite_$const_mul(il);
     inh_1 := new_inherited_attributes(isc_heap, n);
     inh_1^ := inh^;
-    inh_1^.node := n;
-    inh_1^.stmt := il;
+    inh_1^.il := n;
+    inh_1^.original_il := il;
     solutions := pass_1(n, inh_1, depth, permissible);
   end;
   solutions_made := true;
@@ -1762,11 +1745,11 @@ begin
                  and (14 in cargs_$options.flags_286))) then begin
     inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
     @COPY inh_1
-    inh_1^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
-    inh_1^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[13]];
-    inh_1^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
-    inh_1^.f38.b6 := true;
-    inh_1^.f38.b3 := p1_node_bytes_ptr_t(il)^[30].b6;
+    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[13]];
+    inh_1^.required_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[13], -1);
+    inh_1^.f38.immediate_parent_has_signed := true;
+    inh_1^.f38.immediate_parent_wants_signed := p1_node_bytes_ptr_t(il)^[30].b6;
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
         [solution$fp_reg, solution$ip_reg, solution$literal_32_bits]);
     if solution_list$empty(children[1]) then
@@ -1774,11 +1757,11 @@ begin
     else begin
       inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
       @COPY inh_2
-      inh_2^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[14], -1);
-      inh_2^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[14]];
-      inh_2^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[14], -1);
-      inh_2^.f38.b6 := true;
-      inh_2^.f38.b3 := p1_node_bytes_ptr_t(il)^[30].b6;
+      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[14], -1);
+      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[14]];
+      inh_2^.required_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[14], -1);
+      inh_2^.f38.immediate_parent_has_signed := true;
+      inh_2^.f38.immediate_parent_wants_signed := p1_node_bytes_ptr_t(il)^[30].b6;
       children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
           [solution$fp_reg, solution$ip_reg, solution$literal_32_bits]);
       if solution_list$empty(children[2]) then
@@ -1829,8 +1812,8 @@ begin
     p1_node_chars_ptr_t(n)^[11] := chr(0);
     inh_1 := new_inherited_attributes(isc_heap, n);
     inh_1^ := inh^;
-    inh_1^.node := n;
-    inh_1^.stmt := il;
+    inh_1^.il := n;
+    inh_1^.original_il := il;
     solutions := pass_1(n, inh_1, depth, permissible);
     solutions_made := true;
   end;
@@ -1869,11 +1852,11 @@ begin
      or not (p1_node_bytes_ptr_t(il_180)^[374].b4 or (13 in cargs_$options.flags_286)) then begin
     inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
     @COPY inh_1
-    inh_1^.f38.b5 := true;
-    inh_1^.top := isc_node_ptr_t(il)^.xp[3];
-    inh_1^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
-    inh_1^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[26]];
-    inh_1^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+    inh_1^.f38.immediate_parent_wants_lvalue := true;
+    inh_1^.exception_frame := isc_node_ptr_t(il)^.xp[3];
+    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[26]];
+    inh_1^.required_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[16], inh_1, depth + 1,
         [solution$address_mode, solution$ip_reg, solution$ip_reg_field]);
     if solution_list$empty(children[1]) then
@@ -1881,10 +1864,10 @@ begin
     else begin
       inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[17]);
       @COPY inh_2
-      inh_2^.top := isc_node_ptr_t(il)^.xp[3];
-      inh_2^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
-      inh_2^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[26]];
-      inh_2^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+      inh_2^.exception_frame := isc_node_ptr_t(il)^.xp[3];
+      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[26]];
+      inh_2^.required_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
       children[2] := pass_1(isc_node_ptr_t(il)^.xp[17], inh_2, depth + 1,
           [solution$fp_reg, solution$ip_reg, solution$literal_32_bits]);
       if solution_list$empty(children[2]) then
@@ -1917,8 +1900,8 @@ begin
         ! (isc_node_ptr_t(il)^.st_l42 & 16#FFFF00);
     inh_1 := new_inherited_attributes(isc_heap, n);
     inh_1^ := inh^;
-    inh_1^.node := n;
-    inh_1^.stmt := il;
+    inh_1^.il := n;
+    inh_1^.original_il := il;
     solutions := pass_1(n, inh_1, depth, permissible);
     solutions_made := true;
   end;
@@ -1955,13 +1938,13 @@ begin
                  and (14 in cargs_$options.flags_286))) then begin
     inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
     @COPY inh_1
-    inh_1^.f38.b6 := true;
-    inh_1^.f38.b5 := true;
-    inh_1^.f38.b3 := p1_node_bytes_ptr_t(il)^[58].b6;
-    inh_1^.top := isc_node_ptr_t(il)^.xp[3];
-    inh_1^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
-    inh_1^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[26]];
-    inh_1^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+    inh_1^.f38.immediate_parent_has_signed := true;
+    inh_1^.f38.immediate_parent_wants_lvalue := true;
+    inh_1^.f38.immediate_parent_wants_signed := p1_node_bytes_ptr_t(il)^[58].b6;
+    inh_1^.exception_frame := isc_node_ptr_t(il)^.xp[3];
+    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[26]];
+    inh_1^.required_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[16], inh_1, depth + 1,
         [solution$address_mode, solution$ip_reg, solution$ip_reg_field]);
     if solution_list$empty(children[1]) then
@@ -1969,12 +1952,12 @@ begin
     else begin
       inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[17]);
       @COPY inh_2
-      inh_2^.f38.b6 := true;
-      inh_2^.f38.b3 := p1_node_bytes_ptr_t(il)^[58].b6;
-      inh_2^.top := isc_node_ptr_t(il)^.xp[3];
-      inh_2^.precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
-      inh_2^.f38.arith := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[26]];
-      inh_2^.available := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+      inh_2^.f38.immediate_parent_has_signed := true;
+      inh_2^.f38.immediate_parent_wants_signed := p1_node_bytes_ptr_t(il)^[58].b6;
+      inh_2^.exception_frame := isc_node_ptr_t(il)^.xp[3];
+      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
+      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[26]];
+      inh_2^.required_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[26], -1);
       children[2] := pass_1(isc_node_ptr_t(il)^.xp[17], inh_2, depth + 1,
           [solution$fp_reg, solution$literal_32_bits]);
       if solution_list$empty(children[2]) then
@@ -2007,8 +1990,8 @@ begin
         ! (isc_node_ptr_t(il)^.st_l42 & 16#FFFF00);
     inh_1 := new_inherited_attributes(isc_heap, n);
     inh_1^ := inh^;
-    inh_1^.node := n;
-    inh_1^.stmt := il;
+    inh_1^.il := n;
+    inh_1^.original_il := il;
     solutions := pass_1(n, inh_1, depth, permissible);
     solutions_made := true;
   end;
@@ -2020,7 +2003,7 @@ def _p1_rewrite_tail(ind, n='n'):
     depth), as the generated routines write them."""
     return '\n'.join(ind + x for x in (
         'inh_1 := new_inherited_attributes(isc_heap, %s);' % n, 'inh_1^ := inh^;',
-        'inh_1^.node := %s;' % n, 'inh_1^.stmt := il;',
+        'inh_1^.il := %s;' % n, 'inh_1^.original_il := il;',
         'solutions := pass_1(%s, inh_1, depth, permissible);' % n))
 
 

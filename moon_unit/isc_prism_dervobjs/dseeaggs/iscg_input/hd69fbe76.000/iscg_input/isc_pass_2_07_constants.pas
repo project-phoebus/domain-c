@@ -63,7 +63,7 @@ procedure transform_2_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_3_pass_2 - rule 3: literal_32_bits <- char_ob.
@@ -72,7 +72,7 @@ procedure transform_3_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_4_pass_2 - rule 4: literal_32_bits <- char_string_ob.
@@ -81,7 +81,7 @@ procedure transform_4_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_5_pass_2 - rule 5: address_mode <- char_string_ob.
@@ -90,9 +90,9 @@ procedure transform_5_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(isc_user_routines_330);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := widen_char_string_ob(self.sym);
+  result.base_register := lr_ptr_t(isc_user_routines_330);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := widen_char_string_ob(self.il);
 end;
 
 { transform_6_pass_2 - rule 6: address_mode <- complex_ob.
@@ -101,9 +101,9 @@ procedure transform_6_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(isc_user_routines_330);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := self.sym;
+  result.base_register := lr_ptr_t(isc_user_routines_330);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := self.il;
 end;
 
 { transform_7_pass_2 - rule 7: address_mode <- dpcomplex_ob.
@@ -112,9 +112,9 @@ procedure transform_7_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(isc_user_routines_330);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := self.sym;
+  result.base_register := lr_ptr_t(isc_user_routines_330);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := self.il;
 end;
 
 { transform_8_pass_2 - rule 8: literal_32_bits <- dpreal_ob.
@@ -123,7 +123,7 @@ procedure transform_8_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_9_pass_2 - rule 9: literal_64_bits <- dpreal_ob.
@@ -132,7 +132,7 @@ procedure transform_9_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_10_pass_2 - rule 10: literal_32_bits <- real_ob.
@@ -141,7 +141,7 @@ procedure transform_10_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.obj_w_name := self.sym;
+  result.object_with_name := self.il;
 end;
 
 { transform_11_pass_2 - rule 11: address_mode <- namelist_constant_ob |
@@ -151,9 +151,9 @@ procedure transform_11_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := lr_ptr_t(isc_user_routines_330);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := self.sym;
+  result.base_register := lr_ptr_t(isc_user_routines_330);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := self.il;
 end;
 
 { transform_12_pass_2 - rule 12: address_mode <- set_con_ob.
@@ -171,50 +171,53 @@ begin
     t1 := create_solution_for_ip_reg;
     if ord(result.space136[137]) = 1 then begin
       if ord(result.space136[138]) = 1 then begin
-        if t1^.obj_w_name <> nil then begin
-          t1^.obj_w_name := t1^.obj_w_name;
+        if t1^.object_with_name <> nil then begin
+          t1^.object_with_name := t1^.object_with_name;
         end else begin
-          t1^.obj_w_name := isc_solution_ptr_t(result.fields[0]^.base_reg)^.obj_w_name;
+          t1^.object_with_name := isc_solution_ptr_t(result.fields[0]^.base_register)^.object_with_name;
         end;
-        debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-            isc_solution_ptr_t(result.fields[0]^.base_reg), t1, nil);
-        debug_lir_$simple_instruction(result.inherited, ord(opc$adj_move), 0,
-            nil, nil, nil);
+        debug_lir_$simple_instruction(result.inherited_attributes,
+            ord(opc$move), 0,
+            isc_solution_ptr_t(result.fields[0]^.base_register), t1, nil);
+        debug_lir_$simple_instruction(result.inherited_attributes,
+            ord(opc$adj_move), 0, nil, nil, nil);
       end else begin
-        debug_lir_$simple_instruction(result.inherited, ord(opc$add), 0,
-            result.fields[0], isc_solution_ptr_t(result.fields[0]^.base_reg),
-            t1);
+        debug_lir_$simple_instruction(result.inherited_attributes,
+            ord(opc$add), 0, result.fields[0],
+            isc_solution_ptr_t(result.fields[0]^.base_register), t1);
       end;
     end
     else if ord(result.space136[139]) = 1 then begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-          find_well_known_literal_solution(result.fields[0]^.disp), t1, nil);
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$move), 0,
+          find_well_known_literal_solution(result.fields[0]^.literal_32_bits_value),
+          t1, nil);
     end else begin
-      t2 := address_mode_for_integer32_value(result.fields[0]^.disp);
-      debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t2,
-          isc_solution_ptr_t(t2^.base_reg), t1, t2^.sym, 0, t2^.bits_known,
-          t2^.bits_trusted);
+      t2 := address_mode_for_integer32_value(result.fields[0]^.literal_32_bits_value);
+      debug_lir_$load_instruction(result.inherited_attributes,
+          ord(opc$loadl), 0, t2, isc_solution_ptr_t(t2^.base_register), t1,
+          t2^.il, 0, t2^.bits_known, t2^.bits_trusted);
     end;
     t3 := create_solution_for_address_mode;
-    t3^.f76.b84_7 := true;
-    t3^.base_reg := lr_ptr_t(t1);
+    t3^.f76.uses_the_base_register := true;
+    t3^.base_register := lr_ptr_t(t1);
     result.fields[0] := t3;
   end;
   if ord(result.space136[140]) = 1 then begin
-    result.fields[0]^.f76.uses_disp := true;
-    result.fields[0]^.f76.has_sym_disp := false;
-    result.fields[0]^.disp := 0;
+    result.fields[0]^.f76.uses_the_displacement := true;
+    result.fields[0]^.f76.has_a_symbolic_displacement := false;
+    result.fields[0]^.literal_32_bits_value := 0;
   end;
   result.fields[0] := duplicate_address_mode(result.fields[0]);
   if integer32(result.fields[2]) div 4 <> 0 then begin
     for i1 := 1 to integer32(result.fields[2]) div 4 do begin
-      debug_lir_$store_instruction(result.inherited, ord(opc$storel), 64,
-          isc_solution_ptr_t(isc_user_routines_31c), result.fields[0], nil,
-          result.fields[0]^.sym, 0, result.fields[0]^.bits_known,
-          result.fields[0]^.bits_trusted);
+      debug_lir_$store_instruction(result.inherited_attributes,
+          ord(opc$storel), 64, isc_solution_ptr_t(isc_user_routines_31c),
+          result.fields[0], nil, result.fields[0]^.il, 0,
+          result.fields[0]^.bits_known, result.fields[0]^.bits_trusted);
     end;
   end;
-  result.base_reg := lr_ptr_t(isc_user_routines_340);
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := univ_ptr(result.fields[1]);
+  result.base_register := lr_ptr_t(isc_user_routines_340);
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := univ_ptr(result.fields[1]);
 end;

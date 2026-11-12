@@ -131,7 +131,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.w[12] = 6 then begin
+  if p2_node_ptr_t(subject.il)^.w[12] = 6 then begin
     if isc_user_routines_354 then begin
       write('Pattern 306 matched the semantics.');
       writeln;
@@ -144,17 +144,17 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-      solution^.rule := 306;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 306;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 2;
-      solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
           subject.children[1]^.fp_reg_max, subject.children[2]^.fp_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t2 := subject.children[1]^.fp_reg_max;
@@ -196,7 +196,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.w[12] = 7 then begin
+  if p2_node_ptr_t(subject.il)^.w[12] = 7 then begin
     if isc_user_routines_354 then begin
       write('Pattern 307 matched the semantics.');
       writeln;
@@ -209,8 +209,8 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
-      solution^.rule := 307;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 307;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
@@ -222,9 +222,9 @@ begin
         solution^.space136[137] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 2;
-      solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
           subject.children[1]^.fp_reg_pair_max,
           subject.children[2]^.fp_reg_pair_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -277,10 +277,10 @@ begin
   end
   else begin
     solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-    solution^.rule := 308;
-    solution^.chain := addr(subject);
+    solution^.which_transform := 308;
+    solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-    solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+    solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -306,7 +306,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.sym)^.w[13]] & 128 = 0) or (p2_node_ptr_t(subject.sym)^.w[12] = 7)) then begin
+  if not ((p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.il)^.w[13]] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] = 7)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 309 matched the semantics.');
       writeln;
@@ -319,25 +319,25 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-      solution^.rule := 309;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 309;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
-      if p2_node_ptr_t(subject.sym)^.w[12] = 6 then begin
+      if p2_node_ptr_t(subject.il)^.w[12] = 6 then begin
         solution^.space136[137] := chr(1);
       end else begin
         solution^.space136[137] := chr(2);
-        if (p2_node_ptr_t(subject.sym)^.w[12] = 5) or (p2_node_ptr_t(subject.sym)^.b[30] & 128 = 0) or (p2_node_ptr_t(subject.sym)^.w[12] = 4) then begin
+        if (p2_node_ptr_t(subject.il)^.w[12] = 5) or (p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] = 4) then begin
           solution^.space136[138] := chr(2);
         end else begin
           solution^.space136[138] := chr(1);
-          if subject.inherited^.precision = 8 then begin
+          if subject.inherited_attributes^.fetch_precision = 8 then begin
             solution^.space136[139] := chr(1);
           end
-          else if subject.inherited^.precision = 16 then begin
+          else if subject.inherited_attributes^.fetch_precision = 16 then begin
             solution^.space136[139] := chr(2);
           end else begin
             solution^.space136[139] := chr(3);
@@ -345,7 +345,7 @@ begin
         end;
       end;
       solution^.code_bytes := cost_309_4[ord(solution^.space136[138])] + cost_309_5[ord(solution^.space136[137])] + cost_309_3[ord(solution^.space136[139])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := cost_309_2[ord(solution^.space136[137])] + cost_309_1[ord(solution^.space136[138])] + subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max + 1;
       solution^.fp_reg_result := 1;
@@ -374,7 +374,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.sym)^.w[13]] & 128 = 0) or (p2_node_ptr_t(subject.sym)^.w[12] <> 5) and (p2_node_ptr_t(subject.sym)^.w[12] <> 4) and (p2_node_ptr_t(subject.sym)^.w[12] <> 1) and (p2_node_ptr_t(subject.sym)^.w[12] <> 2)) then begin
+  if not ((p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.il)^.w[13]] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] <> 5) and (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 310 matched the semantics.');
       writeln;
@@ -387,28 +387,28 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-      solution^.rule := 310;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 310;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
-      if (p2_node_ptr_t(subject.sym)^.w[12] = 5) or (p2_node_ptr_t(subject.sym)^.b[30] & 128 = 0) or (p2_node_ptr_t(subject.sym)^.w[12] = 4) then begin
+      if (p2_node_ptr_t(subject.il)^.w[12] = 5) or (p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] = 4) then begin
         solution^.space136[137] := chr(2);
       end else begin
         solution^.space136[137] := chr(1);
-        if subject.inherited^.precision = 8 then begin
+        if subject.inherited_attributes^.fetch_precision = 8 then begin
           solution^.space136[138] := chr(1);
         end
-        else if subject.inherited^.precision = 16 then begin
+        else if subject.inherited_attributes^.fetch_precision = 16 then begin
           solution^.space136[138] := chr(2);
         end else begin
           solution^.space136[138] := chr(3);
         end;
       end;
       solution^.code_bytes := cost_310_3[ord(solution^.space136[137])] + cost_310_2[ord(solution^.space136[138])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := cost_310_1[ord(solution^.space136[137])] + subject.children[1]^.delay + subject.children[2]^.delay + 2;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max + 1;
       solution^.fp_reg_result := 1;
@@ -439,7 +439,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.w[13] = 12 then begin
+  if p2_node_ptr_t(subject.il)^.w[13] = 12 then begin
     if isc_user_routines_354 then begin
       write('Pattern 311 matched the semantics.');
       writeln;
@@ -452,17 +452,17 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-      solution^.rule := 311;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 311;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 20;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 6;
-      solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
           subject.children[1]^.fp_reg_max, subject.children[2]^.fp_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t2 := subject.children[1]^.fp_reg_max;
@@ -504,7 +504,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.w[13] = 13 then begin
+  if p2_node_ptr_t(subject.il)^.w[13] = 13 then begin
     if isc_user_routines_354 then begin
       write('Pattern 312 matched the semantics.');
       writeln;
@@ -517,17 +517,17 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-      solution^.rule := 312;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 312;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 20;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 6;
-      solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
           subject.children[1]^.fp_reg_max, subject.children[2]^.fp_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t2 := subject.children[1]^.fp_reg_max;
@@ -567,7 +567,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.sym)^.w[13] <> 11) or (p2_node_ptr_t(subject.sym)^.w[12] <> 5) and (p2_node_ptr_t(subject.sym)^.w[12] <> 4) and (p2_node_ptr_t(subject.sym)^.w[12] <> 1) and (p2_node_ptr_t(subject.sym)^.w[12] <> 2)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 11) or (p2_node_ptr_t(subject.il)^.w[12] <> 5) and (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 313 matched the semantics.');
       writeln;
@@ -580,8 +580,8 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 313;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 313;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
@@ -603,7 +603,7 @@ begin
         solution^.space136[139] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 80;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + 3;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + 3;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 22;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max + 1;
       solution^.ip_reg_result := 1;
@@ -634,7 +634,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.sym)^.w[13] <> 11) or (p2_node_ptr_t(subject.sym)^.w[12] <> 6)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 11) or (p2_node_ptr_t(subject.il)^.w[12] <> 6)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 314 matched the semantics.');
       writeln;
@@ -647,8 +647,8 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-      solution^.rule := 314;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 314;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
@@ -670,7 +670,7 @@ begin
         solution^.space136[139] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 72;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + 3;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + 3;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 21;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max + 1;
       solution^.fp_reg_result := 1;
@@ -699,7 +699,7 @@ var
 begin
   result := nil;
   work := nil;
-  if (p2_node_ptr_t(subject.sym)^.w[13] <> 12) and (p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.sym)^.w[13]] & 128 = 0) and (p2_node_ptr_t(subject.sym)^.w[13] <> 13) and (p2_node_ptr_t(subject.sym)^.w[13] <> 11) then begin
+  if (p2_node_ptr_t(subject.il)^.w[13] <> 12) and (p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.il)^.w[13]] & 128 = 0) and (p2_node_ptr_t(subject.il)^.w[13] <> 13) and (p2_node_ptr_t(subject.il)^.w[13] <> 11) then begin
     if isc_user_routines_354 then begin
       write('Pattern 315 matched the semantics.');
       writeln;
@@ -712,15 +712,15 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-      solution^.rule := 315;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 315;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 2;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max + 1;
       solution^.fp_reg_result := 1;
@@ -749,7 +749,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.sym)^.w[13]] & 128 = 0) or (p2_node_ptr_t(subject.sym)^.w[12] <> 7)) then begin
+  if not ((p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.il)^.w[13]] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] <> 7)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 316 matched the semantics.');
       writeln;
@@ -762,8 +762,8 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
-      solution^.rule := 316;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 316;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
@@ -775,7 +775,7 @@ begin
         solution^.space136[137] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 2;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + 1;
       solution^.fp_reg_pair_result := 1;
@@ -806,7 +806,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.w[13] = 12 then begin
+  if p2_node_ptr_t(subject.il)^.w[13] = 12 then begin
     if isc_user_routines_354 then begin
       write('Pattern 317 matched the semantics.');
       writeln;
@@ -819,8 +819,8 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
-      solution^.rule := 317;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 317;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
@@ -832,9 +832,9 @@ begin
         solution^.space136[137] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 20;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 6;
-      solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
           subject.children[1]^.fp_reg_pair_max,
           subject.children[2]^.fp_reg_pair_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -877,7 +877,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.w[13] = 13 then begin
+  if p2_node_ptr_t(subject.il)^.w[13] = 13 then begin
     if isc_user_routines_354 then begin
       write('Pattern 318 matched the semantics.');
       writeln;
@@ -890,8 +890,8 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
-      solution^.rule := 318;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 318;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
@@ -903,9 +903,9 @@ begin
         solution^.space136[137] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 20;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 6;
-      solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
           subject.children[1]^.fp_reg_pair_max,
           subject.children[2]^.fp_reg_pair_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -946,7 +946,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.sym)^.w[13] <> 11) or (p2_node_ptr_t(subject.sym)^.w[12] <> 5) and (p2_node_ptr_t(subject.sym)^.w[12] <> 4) and (p2_node_ptr_t(subject.sym)^.w[12] <> 1) and (p2_node_ptr_t(subject.sym)^.w[12] <> 2)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 11) or (p2_node_ptr_t(subject.il)^.w[12] <> 5) and (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 319 matched the semantics.');
       writeln;
@@ -959,8 +959,8 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 319;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 319;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
@@ -987,7 +987,7 @@ begin
         solution^.space136[140] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 80;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + 3;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + 3;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 22;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max + 1;
       solution^.ip_reg_result := 1;
@@ -1018,7 +1018,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.sym)^.w[13] <> 11) or (p2_node_ptr_t(subject.sym)^.w[12] <> 7)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 11) or (p2_node_ptr_t(subject.il)^.w[12] <> 7)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 320 matched the semantics.');
       writeln;
@@ -1031,8 +1031,8 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
-      solution^.rule := 320;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 320;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
@@ -1059,7 +1059,7 @@ begin
         solution^.space136[140] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 72;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + 3;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + 3;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 21;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + 1;
       solution^.fp_reg_pair_result := 1;
@@ -1088,7 +1088,7 @@ var
 begin
   result := nil;
   work := nil;
-  if (p2_node_ptr_t(subject.sym)^.w[13] <> 12) and (p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.sym)^.w[13]] & 128 = 0) and (p2_node_ptr_t(subject.sym)^.w[13] <> 13) and (p2_node_ptr_t(subject.sym)^.w[13] <> 11) and (p2_node_ptr_t(subject.sym)^.w[13] <> 14) and (p2_node_ptr_t(subject.sym)^.w[13] <> 15) then begin
+  if (p2_node_ptr_t(subject.il)^.w[13] <> 12) and (p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.il)^.w[13]] & 128 = 0) and (p2_node_ptr_t(subject.il)^.w[13] <> 13) and (p2_node_ptr_t(subject.il)^.w[13] <> 11) and (p2_node_ptr_t(subject.il)^.w[13] <> 14) and (p2_node_ptr_t(subject.il)^.w[13] <> 15) then begin
     if isc_user_routines_354 then begin
       write('Pattern 321 matched the semantics.');
       writeln;
@@ -1101,8 +1101,8 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
-      solution^.rule := 321;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 321;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
@@ -1114,7 +1114,7 @@ begin
         solution^.space136[137] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-      solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 2;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + 1;
       solution^.fp_reg_pair_result := 1;
@@ -1142,7 +1142,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.w[12] = 6 then begin
+  if p2_node_ptr_t(subject.il)^.w[12] = 6 then begin
     if isc_user_routines_354 then begin
       write('Pattern 322 matched the semantics.');
       writeln;
@@ -1155,15 +1155,15 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-      solution^.rule := 322;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 322;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + 4;
-      solution^.memory_refs := subject.children[1]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references;
       solution^.delay := subject.children[1]^.delay + 2;
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max + 1;
       solution^.fp_reg_result := 1;
@@ -1192,7 +1192,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.w[12] = 7 then begin
+  if p2_node_ptr_t(subject.il)^.w[12] = 7 then begin
     if isc_user_routines_354 then begin
       write('Pattern 323 matched the semantics.');
       writeln;
@@ -1205,8 +1205,8 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
-      solution^.rule := 323;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 323;
+      solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
         solution^.space136[136] := chr(1);
       end else begin
@@ -1218,7 +1218,7 @@ begin
         solution^.space136[137] := chr(2);
       end;
       solution^.code_bytes := subject.children[1]^.code_bytes + 4;
-      solution^.memory_refs := subject.children[1]^.memory_refs;
+      solution^.memory_references := subject.children[1]^.memory_references;
       solution^.delay := subject.children[1]^.delay + 2;
       solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + 1;
       solution^.fp_reg_pair_result := 1;

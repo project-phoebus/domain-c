@@ -72,7 +72,7 @@ procedure transform_228_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  debug_lir_main_$entry(self.sym);
+  debug_lir_main_$entry(self.il);
 end;
 
 { transform_229_pass_2 - rule 229: void <- branch_node ($1: irrelevant).
@@ -81,8 +81,8 @@ procedure transform_229_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  debug_lir_$branch_instruction(result.inherited,
-      isc_$get_label(subject^.children[1]^.sym), ord(opc$jump), 0);
+  debug_lir_$branch_instruction(result.inherited_attributes,
+      isc_$get_label(subject^.children[1]^.il), ord(opc$jump), 0);
 end;
 
 { transform_230_pass_2 - rule 230: void <- case_node_range_check ($1:
@@ -95,12 +95,12 @@ var
   t1: isc_solution_ptr_t;
   t2: isc_solution_ptr_t;
 begin
-  t1 := create_solution_for_case_jump_base(self.sym);
+  t1 := create_solution_for_case_jump_base(self.il);
   t2 := create_solution_for_ip_reg;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$add), 0,
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$add), 0,
       subject^.children[4], t1, t2);
-  debug_lir_$dispatch_instruction(result.inherited, t2, ord(opc$dispatch),
-      16#800000);
+  debug_lir_$dispatch_instruction(result.inherited_attributes, t2,
+      ord(opc$dispatch), 16#800000);
 end;
 
 { transform_231_pass_2 - rule 231: void <- case_node_no_range_check ($1:
@@ -113,12 +113,12 @@ var
   t1: isc_solution_ptr_t;
   t2: isc_solution_ptr_t;
 begin
-  t1 := create_solution_for_case_jump_base(self.sym);
+  t1 := create_solution_for_case_jump_base(self.il);
   t2 := create_solution_for_ip_reg;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$add), 0,
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$add), 0,
       subject^.children[1], t1, t2);
-  debug_lir_$dispatch_instruction(result.inherited, t2, ord(opc$dispatch),
-      16#800000);
+  debug_lir_$dispatch_instruction(result.inherited_attributes, t2,
+      ord(opc$dispatch), 16#800000);
 end;
 
 { transform_232_pass_2 - rule 232: void <- cbranch_node ($1: irrelevant, $2:
@@ -139,13 +139,15 @@ procedure transform_233_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     if ord(result.space136[137]) <> 1 then begin
-      debug_lir_$branch_instruction(result.inherited,
-          univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$jump), 0);
+      debug_lir_$branch_instruction(result.inherited_attributes,
+          univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+          ord(opc$jump), 0);
     end;
   end
   else if ord(result.space136[138]) = 1 then begin
-    debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$jump), 0);
+    debug_lir_$branch_instruction(result.inherited_attributes,
+        univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+        ord(opc$jump), 0);
   end;
 end;
 
@@ -159,76 +161,89 @@ var
   t1: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
-      subject^.children[2]^.f76.b77, subject^.children[2],
-      find_well_known_literal_solution(subject^.children[2]^.f76.b76), t1);
+  debug_lir_$field_instruction(result.inherited_attributes,
+      ord(opc$extractu), 0, subject^.children[2]^.f76.field_precision,
+      subject^.children[2],
+      find_well_known_literal_solution(subject^.children[2]^.f76.bit_position_of_lsb),
+      t1);
   if ord(result.space136[136]) = 1 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$move), 8, t1,
-        create_solution_for_ip_reg, nil);
-    debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$beq), 0);
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
+        8, t1, create_solution_for_ip_reg, nil);
+    debug_lir_$branch_instruction(result.inherited_attributes,
+        univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+        ord(opc$beq), 0);
   end
   else if ord(result.space136[136]) = 2 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$move), 8, t1,
-        create_solution_for_ip_reg, nil);
-    debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bne), 0);
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
+        8, t1, create_solution_for_ip_reg, nil);
+    debug_lir_$branch_instruction(result.inherited_attributes,
+        univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+        ord(opc$bne), 0);
   end
   else if ord(result.space136[136]) = 3 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$move), 4, t1,
-        create_solution_for_ip_reg, nil);
-    debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$blo), 0);
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
+        4, t1, create_solution_for_ip_reg, nil);
+    debug_lir_$branch_instruction(result.inherited_attributes,
+        univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+        ord(opc$blo), 0);
   end
   else if ord(result.space136[136]) = 4 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$move), 4, t1,
-        create_solution_for_ip_reg, nil);
-    debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bls), 0);
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
+        4, t1, create_solution_for_ip_reg, nil);
+    debug_lir_$branch_instruction(result.inherited_attributes,
+        univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+        ord(opc$bls), 0);
   end
   else if ord(result.space136[136]) = 5 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$move), 4, t1,
-        create_solution_for_ip_reg, nil);
-    debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bhi), 0);
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
+        4, t1, create_solution_for_ip_reg, nil);
+    debug_lir_$branch_instruction(result.inherited_attributes,
+        univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+        ord(opc$bhi), 0);
   end
   else if ord(result.space136[136]) = 6 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$move), 4, t1,
-        create_solution_for_ip_reg, nil);
-    debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bhs), 0);
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
+        4, t1, create_solution_for_ip_reg, nil);
+    debug_lir_$branch_instruction(result.inherited_attributes,
+        univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+        ord(opc$bhs), 0);
   end
   else if ord(result.space136[136]) = 7 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t1,
-        create_solution_for_ip_reg, nil);
-    debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$blt), 0);
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
+        2, t1, create_solution_for_ip_reg, nil);
+    debug_lir_$branch_instruction(result.inherited_attributes,
+        univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+        ord(opc$blt), 0);
   end
   else if ord(result.space136[136]) = 8 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t1,
-        create_solution_for_ip_reg, nil);
-    debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$ble), 0);
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
+        2, t1, create_solution_for_ip_reg, nil);
+    debug_lir_$branch_instruction(result.inherited_attributes,
+        univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+        ord(opc$ble), 0);
   end
   else if ord(result.space136[136]) = 9 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t1,
-        create_solution_for_ip_reg, nil);
-    debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bgt), 0);
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
+        2, t1, create_solution_for_ip_reg, nil);
+    debug_lir_$branch_instruction(result.inherited_attributes,
+        univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+        ord(opc$bgt), 0);
   end
   else if ord(result.space136[136]) = 10 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t1,
-        create_solution_for_ip_reg, nil);
-    debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bge), 0);
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
+        2, t1, create_solution_for_ip_reg, nil);
+    debug_lir_$branch_instruction(result.inherited_attributes,
+        univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+        ord(opc$bge), 0);
   end
   else if ord(result.space136[136]) = 11 then begin
-    debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$jump), 0);
+    debug_lir_$branch_instruction(result.inherited_attributes,
+        univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+        ord(opc$jump), 0);
   end
   else if ord(result.space136[136]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+    pattern_match_error(11, il$t(subject^.il_kind), 0,
+        subject^.inherited_attributes^.pos.source_line_number);
   end;
 end;
 
@@ -253,46 +268,52 @@ begin
     if ord(result.space136[137]) = 1 then begin
       t4 := subject^.children[2];
     end else begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$extend7), 0,
-          subject^.children[2], t1, nil);
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$extend7), 0, subject^.children[2], t1, nil);
       t4 := t1;
     end;
     if ord(result.space136[138]) = 1 then begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t4,
-          create_solution_for_ip_reg, nil);
-      debug_lir_$branch_instruction(result.inherited,
-          univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$blt), 0);
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$move), 2, t4, create_solution_for_ip_reg, nil);
+      debug_lir_$branch_instruction(result.inherited_attributes,
+          univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+          ord(opc$blt), 0);
     end else begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t4,
-          create_solution_for_ip_reg, nil);
-      debug_lir_$branch_instruction(result.inherited,
-          univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bge), 0);
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$move), 2, t4, create_solution_for_ip_reg, nil);
+      debug_lir_$branch_instruction(result.inherited_attributes,
+          univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+          ord(opc$bge), 0);
     end;
   end
   else if ord(result.space136[139]) = 1 then begin
     if ord(result.space136[140]) = 1 then begin
       t5 := subject^.children[2];
     end else begin
-      debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0, 8,
-          subject^.children[2], find_well_known_literal_solution(0), t2);
+      debug_lir_$field_instruction(result.inherited_attributes,
+          ord(opc$extractu), 0, 8, subject^.children[2],
+          find_well_known_literal_solution(0), t2);
       t5 := t2;
     end;
-    debug_lir_$simple_instruction(result.inherited, ord(opc$move), 8, t5,
-        create_solution_for_ip_reg, nil);
-    debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bne), 0);
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
+        8, t5, create_solution_for_ip_reg, nil);
+    debug_lir_$branch_instruction(result.inherited_attributes,
+        univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+        ord(opc$bne), 0);
   end else begin
     if ord(result.space136[141]) = 1 then begin
       t6 := subject^.children[2];
     end else begin
-      debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0, 8,
-          subject^.children[2], find_well_known_literal_solution(0), t3);
+      debug_lir_$field_instruction(result.inherited_attributes,
+          ord(opc$extractu), 0, 8, subject^.children[2],
+          find_well_known_literal_solution(0), t3);
       t6 := t3;
     end;
-    debug_lir_$simple_instruction(result.inherited, ord(opc$move), 8, t6,
-        create_solution_for_ip_reg, nil);
-    debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$beq), 0);
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
+        8, t6, create_solution_for_ip_reg, nil);
+    debug_lir_$branch_instruction(result.inherited_attributes,
+        univ_ptr(subject^.children[2]^.inherited_attributes^.conditional_target),
+        ord(opc$beq), 0);
   end;
 end;
 
@@ -302,7 +323,7 @@ procedure transform_236_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  debug_lir_main_$handler_reentry(self.sym);
+  debug_lir_main_$handler_reentry(self.il);
 end;
 
 { transform_237_pass_2 - rule 237: void <- label_node.
@@ -311,7 +332,7 @@ procedure transform_237_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  debug_lir_$label(result.inherited, isc_$get_label(self.sym));
+  debug_lir_$label(result.inherited_attributes, isc_$get_label(self.il));
 end;
 
 { transform_238_pass_2 - rule 238: void <- nlbranch_node ($1: ip_reg).
@@ -320,8 +341,8 @@ procedure transform_238_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  debug_lir_$dispatch_instruction(result.inherited, subject^.children[1],
-      ord(opc$dispatch), 16#40000);
+  debug_lir_$dispatch_instruction(result.inherited_attributes,
+      subject^.children[1], ord(opc$dispatch), 16#40000);
 end;
 
 { transform_239_pass_2 - rule 239: void <- raise_exception.
@@ -330,8 +351,8 @@ procedure transform_239_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  debug_lir_$simple_instruction(result.inherited, ord(opc$trap), 0, nil, nil,
-      nil);
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$trap),
+      0, nil, nil, nil);
 end;
 
 { transform_240_pass_2 - rule 240: void <- return_node.

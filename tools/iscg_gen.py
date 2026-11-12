@@ -17,7 +17,7 @@ dseeaggs/iscg_input/hd69fbe76.000/iscg_input):
                            pattern_matcher: the fixed traces around
                            `case solution^.kind of' with an arm per
                            solution kind (a chain rule's tries) and, for
-                           a proper_subtree, `case il$t(solution^.w98)
+                           a proper_subtree, `case il$t(solution^.il_kind)
                            of' with an arm per IL operator some pattern
                            names; each arm the tries of the rules tried
                            under it, in rule order, a try being the
@@ -52,9 +52,11 @@ dseeaggs/iscg_input/hd69fbe76.000/iscg_input):
                            tools/iscg_p2lang.py), for each section none of
                            whose actions is still residue.
 
-The attribute names of the rule file are the image's (dump_solution's);
-FIELD_MAP gives the field of isc_solution_fields.ins.pas each is read
-through (docs/questions.md 267: no rename yet).
+The attribute names of the rule file are the image's (dump_solution's,
+isc_print_il_node's), and isc_solution_fields.ins.pas and
+isc_attribute_records.ins.pas name their fields after them
+(docs/questions.md 267, 271): an attribute is read through the field of
+its name (tools/iscg_p2lang.py sol_path, tools/iscg_pass1.py inh_path).
 """
 import argparse
 import difflib
@@ -70,13 +72,6 @@ RULES_DIR = os.path.join(ROOT, ISCG, 'rules')
 OUT_DIR = os.path.join(ROOT, ISCG, 'hd69fbe76.000', 'iscg_input')
 OUTPUTS = ['isc_pattern_matcher.pas', 'isc_pass_2_main.pas', 'isc_vars.pas', 'iscg_names.txt',
            'isc_pass_1_main.pas']
-
-# The image's attribute names -> isc_solution_t's fields (questions 267).
-FIELD_MAP = {
-    'kind': 'kind',
-    'il_kind': 'w98',
-    'children': 'children',
-}
 
 INCLUDES = '''%include '/sys/ins/base.ins.pas';
 %include '/sys/ins/fault.ins.pas';
@@ -454,7 +449,7 @@ class Gen:
                 if 'il_' + spec[1] not in self.il_index:
                     raise Bad('no operator %s' % spec[1])
                 out.append('(%s^.kind = ord(solution$proper_subtree))' % p)
-                out.append('(%s^.w98 = ord(il_%s))' % (p, spec[1]))
+                out.append('(%s^.il_kind = ord(il_%s))' % (p, spec[1]))
                 out.extend(self.tests(spec[2], p))
         return out
 
@@ -501,7 +496,7 @@ class Gen:
                 L.append('      end;')
             elif k == prop:
                 L.append('    solution$proper_subtree:')
-                L.append('      case il$t(solution^.w98) of')
+                L.append('      case il$t(solution^.il_kind) of')
                 for v, tries in il_arms:
                     L.append('        %s: begin' % self.ils[v])
                     emit_tries(tries, '          ')

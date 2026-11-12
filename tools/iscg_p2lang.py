@@ -61,63 +61,87 @@ EMIT_KINDS = ('simple', 'load', 'store', 'field', 'branch', 'dispatch', 'mfpr', 
               'operate_and_branch', 'pa_risc_shift_double', 'label')
 
 # --------------------------------------------------------------------------
-# the solution's fields: the image's attribute name -> (offset, size, bit)
-# and the insert's field (isc_solution_fields.ins.pas: no rename,
-# docs/questions.md 267) with its type class
+# the solution's fields: isc_solution_fields.ins.pas names them after the
+# image's attributes (docs/questions.md 267), so an attribute's field is
+# its name, inside f76 (+76..+87) or f114 (+114, +115) (sol_path); the
+# tables give each field's type class and the fields dump_solution does
+# not print (by offset)
 
-# offset -> (insert path, class) for the whole longwords, words, bytes
+
+def sol_path(name, off):
+    """The insert's field path of the solution attribute name at off."""
+    return ('f76.' if 76 <= off < 88 else 'f114.' if off in (114, 115) else '') + name
+
+
+# (offset, size) -> (insert path, class) for the whole longwords, words,
+# bytes
 SOL_FIELDS = {
-    (0, 4): ('obj_w_name', 'up'), (4, 4): ('base_reg', 'lr'), (8, 4): ('index_reg', 'lr'),
-    (12, 4): ('l12', 'i32'), (16, 4): ('l16', 'i32'), (20, 4): ('live_range', 'lr'),
-    (24, 4): ('lr2', 'lr'), (28, 4): ('l28', 'i32'), (32, 4): ('bits_known', 'i32'),
-    (36, 4): ('bits_trusted', 'i32'), (40, 4): ('l40', 'i32'), (44, 4): ('l44', 'i32'),
-    (48, 4): ('disp', 'i32'), (52, 4): ('l52', 'i32'),
-    (56, 2): ('w56', 'i16'), (58, 2): ('fp_reg_max', 'i16'), (60, 2): ('fp_reg_result', 'i16'),
+    (0, 4): ('object_with_name', 'up'), (4, 4): ('base_register', 'lr'),
+    (8, 4): ('index_register', 'lr'), (12, 4): ('l12', 'i32'), (16, 4): ('false_label', 'i32'),
+    (20, 4): ('live_range', 'lr'), (24, 4): ('live_range_of_imaginary_part', 'lr'),
+    (28, 4): ('advancing_displacement', 'i32'), (32, 4): ('bits_known', 'i32'),
+    (36, 4): ('bits_trusted', 'i32'), (40, 4): ('bits_known_of_fetched_value', 'i32'),
+    (44, 4): ('bits_trusted_of_fetched_value', 'i32'), (48, 4): ('literal_32_bits_value', 'i32'),
+    (52, 4): ('pass_1_size', 'i32'),
+    (56, 2): ('bytes', 'i16'), (58, 2): ('fp_reg_max', 'i16'), (60, 2): ('fp_reg_result', 'i16'),
     (62, 2): ('fp_reg_pair_max', 'i16'), (64, 2): ('fp_reg_pair_result', 'i16'),
     (66, 2): ('fp_reg_quad_max', 'i16'), (68, 2): ('fp_reg_quad_result', 'i16'),
-    (70, 2): ('ip_reg_max', 'i16'), (72, 2): ('ip_reg_result', 'i16'), (74, 2): ('w74', 'i16'),
-    (76, 1): ('f76.b76', 'u8'), (77, 1): ('f76.b77', 'u8'), (78, 1): ('f76.reg', 'u8'),
-    (79, 1): ('f76.shift', 'u8'), (80, 1): ('f76.b80', 'u8'), (85, 1): ('f76.b85', 'u8'),
+    (70, 2): ('ip_reg_max', 'i16'), (72, 2): ('ip_reg_result', 'i16'),
+    (74, 2): ('n_bytes_to_back_up', 'i16'),
+    (76, 1): ('f76.bit_position_of_lsb', 'u8'), (77, 1): ('f76.field_precision', 'u8'),
+    (78, 1): ('f76.physical_register_number', 'u8'), (79, 1): ('f76.scale', 'u8'),
+    (80, 1): ('f76.slevel_attribute', 'u8'), (85, 1): ('f76.b85', 'u8'),
     (86, 1): ('f76.b86', 'u8'), (87, 1): ('f76.b87', 'u8'),
-    (88, 4): ('chain', 'isp'), (92, 2): ('code_bytes', 'u16'), (94, 2): ('delay', 'u16'),
-    (96, 2): ('eval_order', 'i16'), (98, 2): ('w98', 'i16'), (100, 4): ('sym', 'up'),
-    (104, 4): ('inherited', 'inh'), (108, 2): ('kind', 'i16'), (110, 2): ('memory_refs', 'u16'),
-    (112, 2): ('rule', 'i16'), (114, 1): ('f114.nchildren', 'u8'),
+    (88, 4): ('before_transform', 'isp'), (92, 2): ('code_bytes', 'u16'), (94, 2): ('delay', 'u16'),
+    (96, 2): ('evaluation_order', 'i16'), (98, 2): ('il_kind', 'i16'), (100, 4): ('il', 'up'),
+    (104, 4): ('inherited_attributes', 'inh'), (108, 2): ('kind', 'i16'),
+    (110, 2): ('memory_references', 'u16'), (112, 2): ('which_transform', 'i16'),
+    (114, 1): ('f114.number_of_children', 'u8'),
 }
 for _k in range(5):
     SOL_FIELDS[(116 + 4 * _k, 4)] = ('children[%d]' % (_k + 1), 'isp')
-# (offset, bit) -> insert path, for the booleans the insert names
+# (offset, bit) -> insert path, for the booleans (+81 .. +84 in f76, +115
+# in f114; f76.b84_4_0 and f114.b2 .. b0 are not attributes)
 SOL_BITS = {
-    (81, 1): 'f76.embedded_sr_temp', (81, 0): 'f76.b81_0', (82, 7): 'f76.has_sym_disp',
-    (82, 6): 'f76.b82_6', (82, 5): 'f76.b82_5', (82, 4): 'f76.b82_4', (82, 3): 'f76.b82_3',
-    (82, 2): 'f76.b82_2', (82, 1): 'f76.b82_1', (82, 0): 'f76.b82_0', (83, 3): 'f76.physical',
-    (83, 2): 'f76.b83_2', (83, 1): 'f76.no_modify', (83, 0): 'f76.serialize',
-    (84, 7): 'f76.b84_7', (84, 6): 'f76.uses_disp', (84, 5): 'f76.uses_index_reg',
-    (115, 7): 'f114.copied', (115, 6): 'f114.b6', (115, 5): 'f114.b5',
-    (115, 4): 'f114.preserved', (115, 3): 'f114.pass_2_done', (115, 2): 'f114.b2',
-    (115, 1): 'f114.b1', (115, 0): 'f114.b0',
+    (81, 7): 'all_zeroes_or_all_ones', (81, 6): 'arg_block_location',
+    (81, 5): 'bit_7_was_sign_extended', (81, 4): 'bit_15_was_sign_extended',
+    (81, 3): 'dead_end', (81, 2): 'derived_from_literal',
+    (81, 1): 'embedded_strength_reduction_temporary', (81, 0): 'field_requires_sign_extend',
+    (82, 7): 'has_a_symbolic_displacement', (82, 6): 'is_atomic', (82, 5): 'is_complex',
+    (82, 4): 'is_destroyable', (82, 3): 'is_dynm_vat', (82, 2): 'is_entire_object',
+    (82, 1): 'is_physical', (82, 0): 'is_set_temporary',
+    (83, 7): 'is_volatile', (83, 6): 'literal_64_bits_value_is_zero',
+    (83, 5): 'literal_derived_from_floating_constant', (83, 4): 'materialize_true_as_1',
+    (83, 3): 'physical_register', (83, 2): 'physical_register_from_function_call',
+    (83, 1): 'physical_register_is_no_modify', (83, 0): 'physical_register_user_declared',
+    (84, 7): 'uses_the_base_register', (84, 6): 'uses_the_displacement',
+    (84, 5): 'uses_the_index_register',
+    (115, 7): 'already_preserved', (115, 6): 'builtin_could_deadlock_sched',
+    (115, 5): 'builtin_is_local_cse', (115, 4): 'builtin_local_cse_has_been_preserved',
+    (115, 3): 'already_through_pass_2', (115, 2): 'b2', (115, 1): 'b1', (115, 0): 'b0',
 }
-# the booleans the insert lumps into one field (b81_7_2, b83_7_4,
-# b84_4_0): reached through the module's view p2_flags_t (bytes 81..84)
-VIEW_BITS = {(81, b) for b in range(2, 8)} | {(83, b) for b in range(4, 8)}
+SOL_BITS = {_k: sol_path(_n, _k[0]) for _k, _n in SOL_BITS.items()}
 
-# the inherited attributes (isc_attribute_records.ins.pas, the image's
-# names: docs/questions.md 271): name -> (offset, size or bit, insert
-# path, class)
+# the inherited attributes (isc_attribute_records.ins.pas, whose fields
+# carry the image's names: docs/questions.md 271): name -> (offset, size
+# or bit, insert path, class); the path is the name, inside pos (+32,
+# +34) or f38 (+38, +39)
 INH_ATTRS = {
-    'il': (0, 4, 'node', 'node'), 'exception_frame': (4, 4, 'top', 'node'),
-    'original_il': (12, 4, 'stmt', 'node'), 'conditional_target': (16, 4, 'l16', 'i32'),
-    'call_instruction_ptr': (20, 4, 'call', 'up'), 'fetch_precision': (24, 4, 'precision', 'i32'),
-    'required_precision': (28, 4, 'available', 'i32'),
-    'source_line_number': (32, 2, 'pos.line', 'i16'), 'stmt_number': (34, 2, 'pos.stmt', 'i16'),
-    'parent_il_kind': (36, 1, 'b36', 'char'), 'required_arithmetic': (38, 1, 'f38.arith', 'u8'),
-    'conditional_sense': (39, 'b7', 'f38.b7', 'bool'),
-    'immediate_parent_has_signed': (39, 'b6', 'f38.b6', 'bool'),
-    'immediate_parent_wants_lvalue': (39, 'b5', 'f38.b5', 'bool'),
-    'immediate_parent_wants_set_temporary': (39, 'b4', 'f38.b4', 'bool'),
-    'immediate_parent_wants_signed': (39, 'b3', 'f38.b3', 'bool'),
-    'inside_a_cse': (39, 'b2', 'f38.preserve', 'bool'),
+    'il': (0, 4, 'node'), 'exception_frame': (4, 4, 'node'),
+    'original_il': (12, 4, 'node'), 'conditional_target': (16, 4, 'i32'),
+    'call_instruction_ptr': (20, 4, 'up'), 'fetch_precision': (24, 4, 'i32'),
+    'required_precision': (28, 4, 'i32'),
+    'source_line_number': (32, 2, 'i16'), 'stmt_number': (34, 2, 'i16'),
+    'parent_il_kind': (36, 1, 'char'), 'required_arithmetic': (38, 1, 'u8'),
+    'conditional_sense': (39, 'b7', 'bool'),
+    'immediate_parent_has_signed': (39, 'b6', 'bool'),
+    'immediate_parent_wants_lvalue': (39, 'b5', 'bool'),
+    'immediate_parent_wants_set_temporary': (39, 'b4', 'bool'),
+    'immediate_parent_wants_signed': (39, 'b3', 'bool'),
+    'inside_a_cse': (39, 'b2', 'bool'),
 }
+INH_ATTRS = {_n: (_o, _s, ('pos.' if _o in (32, 34) else 'f38.' if _o in (38, 39) else '') + _n, _c)
+             for _n, (_o, _s, _c) in INH_ATTRS.items()}
 INH_BY_OFF = {}
 for _n, (_o, _s, _p, _c) in INH_ATTRS.items():
     INH_BY_OFF[(_o, _s if isinstance(_s, int) else int(_s[1:]) + 100)] = _n
@@ -685,11 +709,7 @@ class Emitter:
         if bit is not None:
             if (off, bit) in SOL_BITS:
                 return '%s.%s' % (r, SOL_BITS[(off, bit)]), 'bool'
-            if (off, bit) in VIEW_BITS:
-                return 'p2_flags_ptr_t(addr(%s.f76))^.%s' % (r, s), 'bool'
             raise LangError('rule %d: bit %s' % (self.rule, s))
-        if s == 'il_kind':
-            return '%s.w98' % r, 'i16'
         p, c = SOL_FIELDS[(off, size)]
         if s in ('il', 'object_with_name'):
             c = 'node'

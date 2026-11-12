@@ -66,26 +66,6 @@ type
       2: (w: array [0..255] of integer);
       3: (p: array [0..127] of univ_ptr);
     end;
-  { The booleans isc_solution_fields.ins.pas lumps into one field
-    (f76.b81_7_2, f76.b83_7_4), under the image's names: a view of a
-    solution's f76 (+76..+87). }
-  p2_flags_ptr_t = ^p2_flags_t;
-  p2_flags_t = packed record
-    b76, b77, b78, b79, b80: 0..255;    { +76 }
-    all_zeroes_or_all_ones: boolean;    { +81 .7 }
-    arg_block_location: boolean;        { .6 }
-    bit_7_was_sign_extended: boolean;   { .5 }
-    bit_15_was_sign_extended: boolean;  { .4 }
-    dead_end: boolean;                  { .3 }
-    derived_from_literal: boolean;      { .2 }
-    b81_1_0: 0..3;
-    b82: 0..255;                        { +82 }
-    is_volatile: boolean;               { +83 .7 }
-    literal_64_bits_value_is_zero: boolean;  { .6 }
-    literal_derived_from_floating_constant: boolean;  { .5 }
-    materialize_true_as_1: boolean;     { .4 }
-    b83_3_0: 0..15;
-    end;
   { A rule's own fields where the insert has none of their size: words
     and longwords below +352 (the insert has bytes there, space136),
     bytes and longwords at an offset 4k + 2 from +352 (the insert has
@@ -108,14 +88,14 @@ procedure transform_241_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
-  result.base_reg := lr_ptr_t(subject^.children[2]);
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
+  result.base_register := lr_ptr_t(subject^.children[2]);
 end;
 
 { transform_242_pass_2 - rule 242: processor_reg <- dindex_node ($1:
@@ -128,17 +108,17 @@ var
   t1: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$add), 0,
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$add), 0,
       subject^.children[2],
-      isc_solution_ptr_t(subject^.children[1]^.base_reg), t1);
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+      isc_solution_ptr_t(subject^.children[1]^.base_register), t1);
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
-  result.base_reg := lr_ptr_t(t1);
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
+  result.base_register := lr_ptr_t(t1);
 end;
 
 { transform_243_pass_2 - rule 243: processor_reg <- dindex_node ($1:
@@ -151,18 +131,18 @@ var
   t1: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$lsl), 0,
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$lsl), 0,
       subject^.children[2],
-      find_well_known_literal_solution(p2_node_ptr_t(subject^.sym)^.w[20]),
+      find_well_known_literal_solution(p2_node_ptr_t(subject^.il)^.w[20]),
       t1);
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
-  result.base_reg := lr_ptr_t(t1);
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
+  result.base_register := lr_ptr_t(t1);
 end;
 
 { transform_244_pass_2 - rule 244: processor_reg <- dindex_node ($1:
@@ -175,18 +155,18 @@ var
   t1: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$add), 0,
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$add), 0,
       ip_reg_to_ip_reg_scaled(subject^.children[2],
-      p2_node_ptr_t(subject^.sym)^.w[20]),
-      isc_solution_ptr_t(subject^.children[1]^.base_reg), t1);
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+      p2_node_ptr_t(subject^.il)^.w[20]),
+      isc_solution_ptr_t(subject^.children[1]^.base_register), t1);
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
-  result.base_reg := lr_ptr_t(t1);
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
+  result.base_register := lr_ptr_t(t1);
 end;
 
 { transform_245_pass_2 - rule 245: processor_reg <- disp_node ($1:
@@ -196,13 +176,13 @@ procedure transform_245_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
 end;
 
 { transform_246_pass_2 - rule 246: processor_reg <- disp_node ($1:
@@ -217,36 +197,39 @@ var
   t3: integer32;
 begin
   if ord(result.space136[136]) = 1 then begin
-    debug_lir_$simple_instruction(result.inherited, ord(opc$add), 0,
-        find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.sym)^.p[8])),
-        isc_solution_ptr_t(subject^.children[1]^.base_reg), nil);
+    debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$add),
+        0,
+        find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[8])),
+        isc_solution_ptr_t(subject^.children[1]^.base_register), nil);
     t3 := 0;
   end else begin
     t1 := create_solution_for_ip_reg;
     if ord(result.space136[137]) = 1 then begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-          find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.sym)^.p[8])),
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$move), 0,
+          find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[8])),
           t1, nil);
     end else begin
-      t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.sym)^.p[8]));
-      debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t2,
-          isc_solution_ptr_t(t2^.base_reg), t1, t2^.sym, 0, t2^.bits_known,
-          t2^.bits_trusted);
+      t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.il)^.p[8]));
+      debug_lir_$load_instruction(result.inherited_attributes,
+          ord(opc$loadl), 0, t2, isc_solution_ptr_t(t2^.base_register), t1,
+          t2^.il, 0, t2^.bits_known, t2^.bits_trusted);
     end;
     if ord(result.space136[138]) = 1 then begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$add), 0,
-          isc_solution_ptr_t(subject^.children[1]^.base_reg), t1, t1);
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$add), 0,
+          isc_solution_ptr_t(subject^.children[1]^.base_register), t1, t1);
     end;
     t3 := integer32(t1);
   end;
-  result.base_reg := subject^.children[1]^.base_reg;
-  result.index_reg := subject^.children[1]^.index_reg;
-  result.l16 := subject^.children[1]^.l16;
-  result.obj_w_name := subject^.children[1]^.obj_w_name;
+  result.base_register := subject^.children[1]^.base_register;
+  result.index_register := subject^.children[1]^.index_register;
+  result.false_label := subject^.children[1]^.false_label;
+  result.object_with_name := subject^.children[1]^.object_with_name;
   result.live_range := subject^.children[1]^.live_range;
-  result.lr2 := subject^.children[1]^.lr2;
-  result.f114.pass_2_done := subject^.children[1]^.f114.pass_2_done;
-  result.base_reg := lr_ptr_t(t3);
+  result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
+  result.base_register := lr_ptr_t(t3);
 end;
 
 { transform_247_pass_2 - rule 247: void <- pack_aop ($1: processor_reg, $2:
@@ -265,12 +248,12 @@ var
   t7: isc_solution_ptr_t;
   t8: isc_solution_ptr_t;
 begin
-  if p2_flags_ptr_t(addr(subject^.children[1]^.f76))^.is_volatile then begin
+  if subject^.children[1]^.f76.is_volatile then begin
     t1 := 2048;
   end else begin
     t1 := 0;
   end;
-  if p2_flags_ptr_t(addr(subject^.children[1]^.f76))^.is_volatile then begin
+  if subject^.children[1]^.f76.is_volatile then begin
     t2 := 16#400000;
   end else begin
     t2 := 0;
@@ -279,47 +262,50 @@ begin
     t8 := subject^.children[2];
   end else begin
     t3 := create_solution_for_ip_reg;
-    debug_lir_$mfpr_instruction(result.inherited, ord(opc$mfpr), t1 + t2,
-        subject^.children[1],
-        isc_solution_ptr_t(subject^.children[1]^.base_reg), t3,
-        subject^.children[1]^.obj_w_name);
+    debug_lir_$mfpr_instruction(result.inherited_attributes, ord(opc$mfpr),
+        t1 + t2, subject^.children[1],
+        isc_solution_ptr_t(subject^.children[1]^.base_register), t3,
+        subject^.children[1]^.object_with_name);
     if ord(result.space136[137]) = 1 then begin
-      debug_lir_$field_instruction(result.inherited, ord(opc$transfer), 0,
-          integer32(result.fields[0]), subject^.children[2],
+      debug_lir_$field_instruction(result.inherited_attributes,
+          ord(opc$transfer), 0, integer32(result.fields[0]),
+          subject^.children[2],
           find_well_known_literal_solution(integer32(result.fields[1])), t3);
     end
     else if ord(result.space136[138]) = 1 then begin
       if ord(result.space136[139]) = 1 then begin
-        t4 := find_well_known_literal_solution(subject^.children[2]^.disp);
+        t4 := find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value);
         t7 := t4;
       end else begin
         t5 := create_solution_for_ip_reg;
         if ord(result.space136[140]) = 1 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(subject^.children[2]^.disp),
+          debug_lir_$simple_instruction(result.inherited_attributes,
+              ord(opc$move), 0,
+              find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
               t5, nil);
         end else begin
-          t6 := address_mode_for_integer32_value(subject^.children[2]^.disp);
-          debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t6, isc_solution_ptr_t(t6^.base_reg), t5, t6^.sym, 0,
-              t6^.bits_known, t6^.bits_trusted);
+          t6 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
+          debug_lir_$load_instruction(result.inherited_attributes,
+              ord(opc$loadl), 0, t6, isc_solution_ptr_t(t6^.base_register),
+              t5, t6^.il, 0, t6^.bits_known, t6^.bits_trusted);
         end;
         t7 := t5;
       end;
-      debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
-          integer32(result.fields[0]), t7,
+      debug_lir_$field_instruction(result.inherited_attributes,
+          ord(opc$insert), 0, integer32(result.fields[0]), t7,
           find_well_known_literal_solution(integer32(result.fields[1])), t3);
     end else begin
-      debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
-          integer32(result.fields[0]), subject^.children[2],
+      debug_lir_$field_instruction(result.inherited_attributes,
+          ord(opc$insert), 0, integer32(result.fields[0]),
+          subject^.children[2],
           find_well_known_literal_solution(integer32(result.fields[1])), t3);
     end;
     t8 := t3;
   end;
-  debug_lir_$mtpr_instruction(result.inherited, ord(opc$mtpr), t1 + t2, t8,
-      subject^.children[1],
-      isc_solution_ptr_t(subject^.children[1]^.base_reg),
-      subject^.children[1]^.obj_w_name);
+  debug_lir_$mtpr_instruction(result.inherited_attributes, ord(opc$mtpr),
+      t1 + t2, t8, subject^.children[1],
+      isc_solution_ptr_t(subject^.children[1]^.base_register),
+      subject^.children[1]^.object_with_name);
 end;
 
 { transform_248_pass_2 - rule 248: void <- scalar_aop ($1: processor_reg,
@@ -338,12 +324,12 @@ var
   t7: isc_solution_ptr_t;
   t8: isc_solution_ptr_t;
 begin
-  if p2_flags_ptr_t(addr(subject^.children[1]^.f76))^.is_volatile then begin
+  if subject^.children[1]^.f76.is_volatile then begin
     t1 := 2048;
   end else begin
     t1 := 0;
   end;
-  if p2_flags_ptr_t(addr(subject^.children[1]^.f76))^.is_volatile then begin
+  if subject^.children[1]^.f76.is_volatile then begin
     t2 := 16#400000;
   end else begin
     t2 := 0;
@@ -352,47 +338,50 @@ begin
     t8 := subject^.children[2];
   end else begin
     t3 := create_solution_for_ip_reg;
-    debug_lir_$mfpr_instruction(result.inherited, ord(opc$mfpr), t1 + t2,
-        subject^.children[1],
-        isc_solution_ptr_t(subject^.children[1]^.base_reg), t3,
-        subject^.children[1]^.obj_w_name);
+    debug_lir_$mfpr_instruction(result.inherited_attributes, ord(opc$mfpr),
+        t1 + t2, subject^.children[1],
+        isc_solution_ptr_t(subject^.children[1]^.base_register), t3,
+        subject^.children[1]^.object_with_name);
     if ord(result.space136[137]) = 1 then begin
-      debug_lir_$field_instruction(result.inherited, ord(opc$transfer), 0,
-          integer32(result.fields[0]), subject^.children[2],
+      debug_lir_$field_instruction(result.inherited_attributes,
+          ord(opc$transfer), 0, integer32(result.fields[0]),
+          subject^.children[2],
           find_well_known_literal_solution(integer32(result.fields[1])), t3);
     end
     else if ord(result.space136[138]) = 1 then begin
       if ord(result.space136[139]) = 1 then begin
-        t4 := find_well_known_literal_solution(subject^.children[2]^.disp);
+        t4 := find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value);
         t7 := t4;
       end else begin
         t5 := create_solution_for_ip_reg;
         if ord(result.space136[140]) = 1 then begin
-          debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
-              find_well_known_literal_solution(subject^.children[2]^.disp),
+          debug_lir_$simple_instruction(result.inherited_attributes,
+              ord(opc$move), 0,
+              find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
               t5, nil);
         end else begin
-          t6 := address_mode_for_integer32_value(subject^.children[2]^.disp);
-          debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t6, isc_solution_ptr_t(t6^.base_reg), t5, t6^.sym, 0,
-              t6^.bits_known, t6^.bits_trusted);
+          t6 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
+          debug_lir_$load_instruction(result.inherited_attributes,
+              ord(opc$loadl), 0, t6, isc_solution_ptr_t(t6^.base_register),
+              t5, t6^.il, 0, t6^.bits_known, t6^.bits_trusted);
         end;
         t7 := t5;
       end;
-      debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
-          integer32(result.fields[0]), t7,
+      debug_lir_$field_instruction(result.inherited_attributes,
+          ord(opc$insert), 0, integer32(result.fields[0]), t7,
           find_well_known_literal_solution(integer32(result.fields[1])), t3);
     end else begin
-      debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
-          integer32(result.fields[0]), subject^.children[2],
+      debug_lir_$field_instruction(result.inherited_attributes,
+          ord(opc$insert), 0, integer32(result.fields[0]),
+          subject^.children[2],
           find_well_known_literal_solution(integer32(result.fields[1])), t3);
     end;
     t8 := t3;
   end;
-  debug_lir_$mtpr_instruction(result.inherited, ord(opc$mtpr), t1 + t2, t8,
-      subject^.children[1],
-      isc_solution_ptr_t(subject^.children[1]^.base_reg),
-      subject^.children[1]^.obj_w_name);
+  debug_lir_$mtpr_instruction(result.inherited_attributes, ord(opc$mtpr),
+      t1 + t2, t8, subject^.children[1],
+      isc_solution_ptr_t(subject^.children[1]^.base_register),
+      subject^.children[1]^.object_with_name);
 end;
 
 { transform_249_pass_2 - rule 249: processor_reg <- var_name.
@@ -408,26 +397,27 @@ begin
   if ord(result.space136[136]) <> 1 then begin
     t1 := create_solution_for_ip_reg;
     if ord(result.space136[137]) = 1 then begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
+      debug_lir_$simple_instruction(result.inherited_attributes,
+          ord(opc$move), 0,
           find_well_known_literal_solution(integer32(result.fields[0])), t1,
           nil);
     end else begin
       t2 := address_mode_for_integer32_value(integer32(result.fields[0]));
-      debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0, t2,
-          isc_solution_ptr_t(t2^.base_reg), t1, t2^.sym, 0, t2^.bits_known,
-          t2^.bits_trusted);
+      debug_lir_$load_instruction(result.inherited_attributes,
+          ord(opc$loadl), 0, t2, isc_solution_ptr_t(t2^.base_register), t1,
+          t2^.il, 0, t2^.bits_known, t2^.bits_trusted);
     end;
     t3 := t1;
   end else begin
     t3 := nil;
   end;
   if p2_locals_ptr_t(addr(result))^.c[356] & 128 <> 0 then begin
-    result.base_reg := lr_ptr_t(isc_user_routines_31c);
+    result.base_register := lr_ptr_t(isc_user_routines_31c);
   end else begin
-    result.base_reg := lr_ptr_t(t3);
+    result.base_register := lr_ptr_t(t3);
   end;
-  result.index_reg := lr_ptr_t(isc_user_routines_31c);
-  result.obj_w_name := self.sym;
+  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.object_with_name := self.il;
 end;
 
 { transform_250_pass_2 - rule 250: ip_reg_field <- processor_reg.
@@ -439,19 +429,19 @@ var
   t1: integer32;
   t2: integer32;
 begin
-  if p2_flags_ptr_t(addr(subject^.f76))^.is_volatile then begin
+  if subject^.f76.is_volatile then begin
     t1 := 2048;
   end else begin
     t1 := 0;
   end;
-  if p2_flags_ptr_t(addr(subject^.f76))^.is_volatile then begin
+  if subject^.f76.is_volatile then begin
     t2 := 16#400000;
   end else begin
     t2 := 0;
   end;
-  debug_lir_$mfpr_instruction(result.inherited, ord(opc$mfpr), t2 + t1,
-      subject, isc_solution_ptr_t(subject^.base_reg), solution,
-      subject^.obj_w_name);
+  debug_lir_$mfpr_instruction(result.inherited_attributes, ord(opc$mfpr),
+      t2 + t1, subject, isc_solution_ptr_t(subject^.base_register), solution,
+      subject^.object_with_name);
 end;
 
 { transform_251_pass_2 - rule 251: processor_reg <- processor_reg.
@@ -460,13 +450,13 @@ procedure transform_251_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_reg := subject^.base_reg;
-  result.index_reg := subject^.index_reg;
-  result.l16 := subject^.l16;
-  result.obj_w_name := subject^.obj_w_name;
+  result.base_register := subject^.base_register;
+  result.index_register := subject^.index_register;
+  result.false_label := subject^.false_label;
+  result.object_with_name := subject^.object_with_name;
   result.live_range := subject^.live_range;
-  result.lr2 := subject^.lr2;
-  result.f114.pass_2_done := subject^.f114.pass_2_done;
+  result.live_range_of_imaginary_part := subject^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.f114.already_through_pass_2;
 end;
 
 { transform_252_pass_2 - rule 252: processor_reg <- processor_reg.
@@ -478,15 +468,15 @@ var
   t1: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$sub), 0,
+  debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$sub), 0,
       find_well_known_literal_solution(integer32(result.fields[0])),
-      isc_solution_ptr_t(subject^.base_reg), t1);
-  result.base_reg := subject^.base_reg;
-  result.index_reg := subject^.index_reg;
-  result.l16 := subject^.l16;
-  result.obj_w_name := subject^.obj_w_name;
+      isc_solution_ptr_t(subject^.base_register), t1);
+  result.base_register := subject^.base_register;
+  result.index_register := subject^.index_register;
+  result.false_label := subject^.false_label;
+  result.object_with_name := subject^.object_with_name;
   result.live_range := subject^.live_range;
-  result.lr2 := subject^.lr2;
-  result.f114.pass_2_done := subject^.f114.pass_2_done;
-  result.base_reg := lr_ptr_t(t1);
+  result.live_range_of_imaginary_part := subject^.live_range_of_imaginary_part;
+  result.f114.already_through_pass_2 := subject^.f114.already_through_pass_2;
+  result.base_register := lr_ptr_t(t1);
 end;

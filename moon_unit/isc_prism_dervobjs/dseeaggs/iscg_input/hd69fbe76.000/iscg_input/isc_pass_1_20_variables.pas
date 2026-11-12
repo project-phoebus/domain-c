@@ -101,26 +101,6 @@ type
       2: (b: packed array [0..3119] of 0..255);
       3: (l: array [0..779] of integer32);
     end;
-  { The booleans isc_solution_fields.ins.pas lumps into one field
-    (f76.b81_7_2, f76.b83_7_4), under the image's names: a view of a
-    solution's f76 (+76..+87). }
-  p2_flags_ptr_t = ^p2_flags_t;
-  p2_flags_t = packed record
-    b76, b77, b78, b79, b80: 0..255;    { +76 }
-    all_zeroes_or_all_ones: boolean;    { +81 .7 }
-    arg_block_location: boolean;        { .6 }
-    bit_7_was_sign_extended: boolean;   { .5 }
-    bit_15_was_sign_extended: boolean;  { .4 }
-    dead_end: boolean;                  { .3 }
-    derived_from_literal: boolean;      { .2 }
-    b81_1_0: 0..3;
-    b82: 0..255;                        { +82 }
-    is_volatile: boolean;               { +83 .7 }
-    literal_64_bits_value_is_zero: boolean;  { .6 }
-    literal_derived_from_floating_constant: boolean;  { .5 }
-    materialize_true_as_1: boolean;     { .4 }
-    b83_3_0: 0..15;
-    end;
   { A rule's own fields where the insert has none of their size: words
     and longwords below +352 (the insert has bytes there, space136),
     bytes and longwords at an offset 4k + 2 from +352 (the insert has
@@ -181,10 +161,10 @@ var
 begin
   result := nil;
   work := nil;
-  t1 := side_effect_symbol_fill_in_size(isc_node_ptr_t(subject.sym),
-      subject.inherited^.precision);
-  t2 := sz_fsym(subject.sym);
-  if not ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) <> 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) <> 2) or (subject.inherited^.precision > 32) or not (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#20000 <> 0) or not t1 or (t2 * 8 <> subject.inherited^.precision) or not (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.sym) <> 11)) then begin
+  t1 := side_effect_symbol_fill_in_size(isc_node_ptr_t(subject.il),
+      subject.inherited_attributes^.fetch_precision);
+  t2 := sz_fsym(subject.il);
+  if not ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) <> 3) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) <> 2) or (subject.inherited_attributes^.fetch_precision > 32) or not (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#20000 <> 0) or not t1 or (t2 * 8 <> subject.inherited_attributes^.fetch_precision) or not (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.il) <> 11)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 35 matched the semantics.');
       writeln;
@@ -197,30 +177,30 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 35;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 35;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := 0;
+      solution^.f76.bit_position_of_lsb := 0;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
-      solution^.f76.embedded_sr_temp := true;
-      solution^.f76.has_sym_disp := true;
+      solution^.f76.embedded_strength_reduction_temporary := true;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 1;
       solution^.ip_reg_result := 1;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[27] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[27] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[27] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[27] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[27] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[27] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -247,8 +227,8 @@ var
 begin
   result := nil;
   work := nil;
-  t1 := sz_fsym(subject.sym);
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.precision <= 32) and (t1 * 8 > subject.inherited^.precision) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
+  t1 := sz_fsym(subject.il);
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision <= 32) and (t1 * 8 > subject.inherited_attributes^.fetch_precision) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11) then begin
     if isc_user_routines_354 then begin
       write('Pattern 36 matched the semantics.');
       writeln;
@@ -261,32 +241,32 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
-      solution^.rule := 36;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 36;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      t3 := sz_fsym(subject.sym);
-      solution^.f76.b76 := t3 * 8 - subject.inherited^.precision;
+      t3 := sz_fsym(subject.il);
+      solution^.f76.bit_position_of_lsb := t3 * 8 - subject.inherited_attributes^.fetch_precision;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
-      solution^.f76.b77 := subject.inherited^.precision;
-      solution^.f76.b81_0 := false;
-      solution^.f76.has_sym_disp := true;
+      solution^.f76.field_precision := subject.inherited_attributes^.fetch_precision;
+      solution^.f76.field_requires_sign_extend := false;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 1;
       solution^.ip_reg_result := 1;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[27] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[27] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[27] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[27] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[27] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[27] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -312,8 +292,8 @@ var
 begin
   result := nil;
   work := nil;
-  t1 := sz_fsym(subject.sym);
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.precision <= 32) and (t1 * 8 = subject.inherited^.precision) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
+  t1 := sz_fsym(subject.il);
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision <= 32) and (t1 * 8 = subject.inherited_attributes^.fetch_precision) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11) then begin
     if isc_user_routines_354 then begin
       write('Pattern 37 matched the semantics.');
       writeln;
@@ -326,29 +306,29 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 37;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 37;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := 0;
+      solution^.f76.bit_position_of_lsb := 0;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
-      solution^.f76.has_sym_disp := true;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 1;
       solution^.ip_reg_result := 1;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[27] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[27] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[27] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[27] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[27] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[27] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -373,7 +353,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.precision = 32) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 8) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision = 32) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 8) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
     if isc_user_routines_354 then begin
       write('Pattern 38 matched the semantics.');
       writeln;
@@ -386,29 +366,29 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-      solution^.rule := 38;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 38;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := 0;
+      solution^.f76.bit_position_of_lsb := 0;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
       solution^.fp_reg_max := 1;
       solution^.fp_reg_result := 1;
-      solution^.f76.has_sym_disp := true;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[27] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[27] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[27] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.has_a_symbolic_displacement := true;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[27] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[27] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[27] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -433,7 +413,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.precision = 64) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 9) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision = 64) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 9) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
     if isc_user_routines_354 then begin
       write('Pattern 39 matched the semantics.');
       writeln;
@@ -446,34 +426,34 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
-      solution^.rule := 39;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 39;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       if not isc_user_routines_358 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := 0;
+      solution^.f76.bit_position_of_lsb := 0;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
       solution^.fp_reg_pair_max := 1;
       solution^.fp_reg_pair_result := 1;
-      solution^.f76.has_sym_disp := true;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[27] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[27] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[27] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.has_a_symbolic_displacement := true;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[27] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[27] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[27] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -498,7 +478,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.precision = 128) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 10) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision = 128) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 10) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
     if isc_user_routines_354 then begin
       write('Pattern 40 matched the semantics.');
       writeln;
@@ -511,34 +491,34 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
-      solution^.rule := 40;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 40;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       if not isc_user_routines_358 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := 0;
+      solution^.f76.bit_position_of_lsb := 0;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
       solution^.fp_reg_quad_max := 1;
       solution^.fp_reg_quad_result := 1;
-      solution^.f76.has_sym_disp := true;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[27] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[27] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[27] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.has_a_symbolic_displacement := true;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[27] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[27] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[27] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -565,7 +545,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 = 0) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 1024 = 0) then begin
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 1024 = 0) then begin
     if isc_user_routines_354 then begin
       write('Pattern 41 matched the semantics.');
       writeln;
@@ -578,29 +558,29 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-      solution^.rule := 41;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 41;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
       solution^.bits_known := 0;
-      t2 := get_alignment(subject.sym);
+      t2 := get_alignment(subject.il);
       solution^.bits_trusted := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + t2];
-      solution^.l40 := 0;
-      solution^.l44 := 0;
-      solution^.f76.has_sym_disp := true;
+      solution^.bits_known_of_fetched_value := 0;
+      solution^.bits_trusted_of_fetched_value := 0;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 0;
       solution^.ip_reg_result := 0;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[27] & 2 <> 0;
-      solution^.f76.b82_3 := true;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[27] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[27] & 1 <> 0;
-      solution^.disp := 0;
-      t3 := sz_fsym(subject.sym);
-      solution^.l52 := t3 * 8;
-      solution^.f76.b84_7 := true;
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[27] & 2 <> 0;
+      solution^.f76.is_dynm_vat := true;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[27] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[27] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      t3 := sz_fsym(subject.il);
+      solution^.pass_1_size := t3 * 8;
+      solution^.f76.uses_the_base_register := true;
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -628,7 +608,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 = 0) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 1024 <> 0) then begin
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 1024 <> 0) then begin
     if isc_user_routines_354 then begin
       write('Pattern 42 matched the semantics.');
       writeln;
@@ -641,57 +621,57 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-      solution^.rule := 42;
-      solution^.chain := addr(subject);
-      t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.sym)^.p[3]),
+      solution^.which_transform := 42;
+      solution^.before_transform := addr(subject);
+      t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[3]),
           ord(opc$loadl), 1);
       p2_locals_ptr_t(addr(solution^))^.c[352] := 255 * ord(t2);
       if t2 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
-        if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.sym)^.p[3]), ord(opc$move), 1) then begin
+        if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[3]), ord(opc$move), 1) then begin
           solution^.space136[137] := chr(1);
         end else begin
           solution^.space136[137] := chr(2);
         end;
       end;
       solution^.code_bytes := cost_42_3[ord(solution^.space136[137])];
-      solution^.memory_refs := cost_42_2[ord(solution^.space136[137])];
+      solution^.memory_references := cost_42_2[ord(solution^.space136[137])];
       solution^.delay := cost_42_1[ord(solution^.space136[137])];
       solution^.bits_known := 0;
-      if number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.sym)^.p[3])) > 3 then begin
+      if number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[3])) > 3 then begin
         t3 := 3;
       end else begin
-        t3 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.sym)^.p[3]));
+        t3 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[3]));
       end;
       solution^.bits_trusted := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + t3];
-      solution^.l40 := 0;
-      solution^.l44 := 0;
-      solution^.f76.has_sym_disp := false;
+      solution^.bits_known_of_fetched_value := 0;
+      solution^.bits_trusted_of_fetched_value := 0;
+      solution^.f76.has_a_symbolic_displacement := false;
       solution^.ip_reg_max := 0;
       solution^.ip_reg_result := 0;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[27] & 2 <> 0;
-      solution^.f76.b82_3 := true;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[27] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[27] & 1 <> 0;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[27] & 2 <> 0;
+      solution^.f76.is_dynm_vat := true;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[27] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[27] & 1 <> 0;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.disp := integer32(p2_node_ptr_t(subject.sym)^.p[3]);
+        solution^.literal_32_bits_value := integer32(p2_node_ptr_t(subject.il)^.p[3]);
       end else begin
-        solution^.disp := 0;
+        solution^.literal_32_bits_value := 0;
       end;
-      t4 := sz_fsym(subject.sym);
-      solution^.l52 := t4 * 8;
-      solution^.f76.b84_7 := true;
+      t4 := sz_fsym(subject.il);
+      solution^.pass_1_size := t4 * 8;
+      solution^.f76.uses_the_base_register := true;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.f76.uses_disp := true;
+        solution^.f76.uses_the_displacement := true;
       end else begin
-        solution^.f76.uses_disp := false;
+        solution^.f76.uses_the_displacement := false;
       end;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.f76.uses_index_reg := false;
+        solution^.f76.uses_the_index_register := false;
       end else begin
-        solution^.f76.uses_index_reg := true;
+        solution^.f76.uses_the_index_register := true;
       end;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -719,8 +699,8 @@ var
 begin
   result := nil;
   work := nil;
-  t1 := sz_fsym(subject.sym);
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 5) and (p2_node_ptr_t(subject.sym)^.b[44] & 2 <> 0) and (subject.inherited^.precision <= 32) and (t1 * 8 > subject.inherited^.precision) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
+  t1 := sz_fsym(subject.il);
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 5) and (p2_node_ptr_t(subject.il)^.b[44] & 2 <> 0) and (subject.inherited_attributes^.fetch_precision <= 32) and (t1 * 8 > subject.inherited_attributes^.fetch_precision) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11) then begin
     if isc_user_routines_354 then begin
       write('Pattern 43 matched the semantics.');
       writeln;
@@ -733,32 +713,32 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
-      solution^.rule := 43;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 43;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      t3 := sz_fsym(subject.sym);
-      solution^.f76.b76 := t3 * 8 - subject.inherited^.precision;
+      t3 := sz_fsym(subject.il);
+      solution^.f76.bit_position_of_lsb := t3 * 8 - subject.inherited_attributes^.fetch_precision;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
-      solution^.f76.b77 := subject.inherited^.precision;
-      solution^.f76.b81_0 := false;
-      solution^.f76.has_sym_disp := true;
+      solution^.f76.field_precision := subject.inherited_attributes^.fetch_precision;
+      solution^.f76.field_requires_sign_extend := false;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 1;
       solution^.ip_reg_result := 1;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[27] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[27] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[27] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[27] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[27] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[27] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -783,7 +763,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 5) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 5) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11) then begin
     if isc_user_routines_354 then begin
       write('Pattern 44 matched the semantics.');
       writeln;
@@ -796,26 +776,26 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 44;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 44;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.has_sym_disp := true;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 1;
       solution^.ip_reg_result := 1;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[27] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[27] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[27] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[27] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[27] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[27] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -841,7 +821,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 5) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 = 0) then begin
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 5) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 = 0) then begin
     if isc_user_routines_354 then begin
       write('Pattern 45 matched the semantics.');
       writeln;
@@ -854,26 +834,26 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-      solution^.rule := 45;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 45;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
       solution^.bits_known := 0;
-      t2 := get_alignment(subject.sym);
+      t2 := get_alignment(subject.il);
       solution^.bits_trusted := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + t2];
-      solution^.l40 := 0;
-      solution^.l44 := 0;
-      solution^.f76.has_sym_disp := true;
+      solution^.bits_known_of_fetched_value := 0;
+      solution^.bits_trusted_of_fetched_value := 0;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 0;
       solution^.ip_reg_result := 0;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[27] & 2 <> 0;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[27] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[27] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.b84_7 := true;
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[27] & 2 <> 0;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[27] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[27] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.uses_the_base_register := true;
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -900,7 +880,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) <> 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) <> 1) and (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) <> 4) or (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0)) then begin
+  if not ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) <> 3) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) <> 1) and (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) <> 4) or (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 46 matched the semantics.');
       writeln;
@@ -913,54 +893,54 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-      solution^.rule := 46;
-      solution^.chain := addr(subject);
-      t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.sym)^.p[3]),
+      solution^.which_transform := 46;
+      solution^.before_transform := addr(subject);
+      t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[3]),
           ord(opc$loadl), 1);
       p2_locals_ptr_t(addr(solution^))^.c[352] := 255 * ord(t2);
       if t2 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
-        if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.sym)^.p[3]), ord(opc$move), 1) then begin
+        if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[3]), ord(opc$move), 1) then begin
           solution^.space136[137] := chr(1);
         end else begin
           solution^.space136[137] := chr(2);
         end;
       end;
       solution^.code_bytes := cost_46_3[ord(solution^.space136[137])];
-      solution^.memory_refs := cost_46_2[ord(solution^.space136[137])];
+      solution^.memory_references := cost_46_2[ord(solution^.space136[137])];
       solution^.delay := cost_46_1[ord(solution^.space136[137])];
       solution^.bits_known := 0;
-      if number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.sym)^.p[3])) > 3 then begin
+      if number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[3])) > 3 then begin
         t3 := 3;
       end else begin
-        t3 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.sym)^.p[3]));
+        t3 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[3]));
       end;
       solution^.bits_trusted := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + t3];
-      solution^.l40 := 0;
-      solution^.l44 := 0;
-      solution^.f76.has_sym_disp := false;
+      solution^.bits_known_of_fetched_value := 0;
+      solution^.bits_trusted_of_fetched_value := 0;
+      solution^.f76.has_a_symbolic_displacement := false;
       solution^.ip_reg_max := 0;
       solution^.ip_reg_result := 0;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[27] & 2 <> 0;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[27] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[27] & 1 <> 0;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[27] & 2 <> 0;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[27] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[27] & 1 <> 0;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.disp := integer32(p2_node_ptr_t(subject.sym)^.p[3]);
+        solution^.literal_32_bits_value := integer32(p2_node_ptr_t(subject.il)^.p[3]);
       end else begin
-        solution^.disp := 0;
+        solution^.literal_32_bits_value := 0;
       end;
-      solution^.f76.b84_7 := true;
+      solution^.f76.uses_the_base_register := true;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.f76.uses_disp := true;
+        solution^.f76.uses_the_displacement := true;
       end else begin
-        solution^.f76.uses_disp := false;
+        solution^.f76.uses_the_displacement := false;
       end;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.f76.uses_index_reg := false;
+        solution^.f76.uses_the_index_register := false;
       end else begin
-        solution^.f76.uses_index_reg := true;
+        solution^.f76.uses_the_index_register := true;
       end;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -986,7 +966,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) <> 1) or (p2_node_ptr_t(subject.sym)^.p[10] <> nil) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) <> 5) or not (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.sym) <> 11)) then begin
+  if not ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) <> 1) or (p2_node_ptr_t(subject.il)^.p[10] <> nil) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) <> 5) or not (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.il) <> 11)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 47 matched the semantics.');
       writeln;
@@ -999,19 +979,19 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 47;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 47;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
       solution^.ip_reg_max := 0;
       solution^.ip_reg_result := 1;
-      solution^.f76.b82_4 := false;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.is_destroyable := false;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1036,7 +1016,7 @@ var
 begin
   result := nil;
   work := nil;
-  if rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 6 then begin
+  if rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 6 then begin
     if isc_user_routines_354 then begin
       write('Pattern 48 matched the semantics.');
       writeln;
@@ -1049,22 +1029,22 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-      solution^.rule := 48;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 48;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
       solution^.bits_known := 0;
       solution^.bits_trusted := 3;
-      solution^.l40 := 0;
-      solution^.l44 := 0;
-      solution^.f76.has_sym_disp := true;
+      solution^.bits_known_of_fetched_value := 0;
+      solution^.bits_trusted_of_fetched_value := 0;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 0;
       solution^.ip_reg_result := 0;
-      solution^.disp := 0;
-      solution^.f76.b84_7 := true;
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.uses_the_base_register := true;
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1091,7 +1071,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.sym)^.w[36] <> 11) or (p2_node_ptr_t(subject.sym)^.b[35] & 32 <> 0) or (p2_node_ptr_t(subject.sym)^.w[21] & 1024 <> 0)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[36] <> 11) or (p2_node_ptr_t(subject.il)^.b[35] & 32 <> 0) or (p2_node_ptr_t(subject.il)^.w[21] & 1024 <> 0)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 49 matched the semantics.');
       writeln;
@@ -1104,51 +1084,51 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-      solution^.rule := 49;
-      solution^.chain := addr(subject);
-      t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.sym)^.p[14]),
+      solution^.which_transform := 49;
+      solution^.before_transform := addr(subject);
+      t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[14]),
           ord(opc$loadl), 1);
       p2_locals_ptr_t(addr(solution^))^.c[352] := 255 * ord(t2);
       if t2 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
-        if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.sym)^.p[14]), ord(opc$move), 1) then begin
+        if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[14]), ord(opc$move), 1) then begin
           solution^.space136[137] := chr(1);
         end else begin
           solution^.space136[137] := chr(2);
         end;
       end;
       solution^.code_bytes := cost_49_3[ord(solution^.space136[137])];
-      solution^.memory_refs := cost_49_2[ord(solution^.space136[137])];
+      solution^.memory_references := cost_49_2[ord(solution^.space136[137])];
       solution^.delay := cost_49_1[ord(solution^.space136[137])];
       solution^.bits_known := 0;
-      t3 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.sym)^.p[14]));
+      t3 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[14]));
       solution^.bits_trusted := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + t3];
-      solution^.l40 := 0;
-      solution^.l44 := 0;
-      solution^.f76.has_sym_disp := false;
+      solution^.bits_known_of_fetched_value := 0;
+      solution^.bits_trusted_of_fetched_value := 0;
+      solution^.f76.has_a_symbolic_displacement := false;
       solution^.ip_reg_max := 0;
       solution^.ip_reg_result := 0;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[35] & 2 <> 0;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[35] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[35] & 1 <> 0;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.disp := integer32(p2_node_ptr_t(subject.sym)^.p[14]);
+        solution^.literal_32_bits_value := integer32(p2_node_ptr_t(subject.il)^.p[14]);
       end else begin
-        solution^.disp := 0;
+        solution^.literal_32_bits_value := 0;
       end;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.f76.b84_7 := false;
+        solution^.f76.uses_the_base_register := false;
       end else begin
-        solution^.f76.b84_7 := true;
+        solution^.f76.uses_the_base_register := true;
       end;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.f76.uses_disp := true;
+        solution^.f76.uses_the_displacement := true;
       end else begin
-        solution^.f76.uses_disp := false;
+        solution^.f76.uses_the_displacement := false;
       end;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1174,9 +1154,9 @@ var
 begin
   result := nil;
   work := nil;
-  t1 := side_effect_symbol_fill_in_size(isc_node_ptr_t(subject.sym),
-      subject.inherited^.precision);
-  if not ((p2_node_ptr_t(subject.sym)^.w[36] <> 2) or (subject.inherited^.precision > 32) or not (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#20000 <> 0) or not t1 or (subject.inherited^.precision <> integer32(p2_node_ptr_t(subject.sym)^.p[9])) or not (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.sym) <> 11)) then begin
+  t1 := side_effect_symbol_fill_in_size(isc_node_ptr_t(subject.il),
+      subject.inherited_attributes^.fetch_precision);
+  if not ((p2_node_ptr_t(subject.il)^.w[36] <> 2) or (subject.inherited_attributes^.fetch_precision > 32) or not (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#20000 <> 0) or not t1 or (subject.inherited_attributes^.fetch_precision <> integer32(p2_node_ptr_t(subject.il)^.p[9])) or not (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.il) <> 11)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 50 matched the semantics.');
       writeln;
@@ -1189,30 +1169,30 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 50;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 50;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := 0;
+      solution^.f76.bit_position_of_lsb := 0;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
-      solution^.f76.embedded_sr_temp := true;
-      solution^.f76.has_sym_disp := true;
+      solution^.f76.embedded_strength_reduction_temporary := true;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 1;
       solution^.ip_reg_result := 1;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[35] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[35] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[35] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1237,7 +1217,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.sym)^.w[36] = 2) or (p2_node_ptr_t(subject.sym)^.w[36] = 1)) and (subject.inherited^.precision > 0) and (subject.inherited^.precision <= 32) and (subject.inherited^.precision < integer32(p2_node_ptr_t(subject.sym)^.p[9])) and (p2_node_ptr_t(subject.sym)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[36] = 2) or (p2_node_ptr_t(subject.il)^.w[36] = 1)) and (subject.inherited_attributes^.fetch_precision > 0) and (subject.inherited_attributes^.fetch_precision <= 32) and (subject.inherited_attributes^.fetch_precision < integer32(p2_node_ptr_t(subject.il)^.p[9])) and (p2_node_ptr_t(subject.il)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11) then begin
     if isc_user_routines_354 then begin
       write('Pattern 51 matched the semantics.');
       writeln;
@@ -1250,31 +1230,31 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
-      solution^.rule := 51;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 51;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := p2_node_ptr_t(subject.sym)^.b[39] - subject.inherited^.precision;
+      solution^.f76.bit_position_of_lsb := p2_node_ptr_t(subject.il)^.b[39] - subject.inherited_attributes^.fetch_precision;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
-      solution^.f76.b77 := subject.inherited^.precision;
-      solution^.f76.b81_0 := false;
-      solution^.f76.has_sym_disp := true;
+      solution^.f76.field_precision := subject.inherited_attributes^.fetch_precision;
+      solution^.f76.field_requires_sign_extend := false;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 1;
       solution^.ip_reg_result := 1;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[35] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[35] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[35] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1299,7 +1279,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.sym)^.w[36] = 2) or (p2_node_ptr_t(subject.sym)^.w[36] = 1)) and (subject.inherited^.precision <= 32) and (subject.inherited^.precision = integer32(p2_node_ptr_t(subject.sym)^.p[9])) and (p2_node_ptr_t(subject.sym)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[36] = 2) or (p2_node_ptr_t(subject.il)^.w[36] = 1)) and (subject.inherited_attributes^.fetch_precision <= 32) and (subject.inherited_attributes^.fetch_precision = integer32(p2_node_ptr_t(subject.il)^.p[9])) and (p2_node_ptr_t(subject.il)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11) then begin
     if isc_user_routines_354 then begin
       write('Pattern 52 matched the semantics.');
       writeln;
@@ -1312,29 +1292,29 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 52;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 52;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := 0;
+      solution^.f76.bit_position_of_lsb := 0;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
-      solution^.f76.has_sym_disp := true;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 1;
       solution^.ip_reg_result := 1;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[35] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[35] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[35] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1359,7 +1339,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.sym)^.w[36] = 2) or (p2_node_ptr_t(subject.sym)^.w[36] = 1)) and (p2_node_ptr_t(subject.sym)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 8) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[36] = 2) or (p2_node_ptr_t(subject.il)^.w[36] = 1)) and (p2_node_ptr_t(subject.il)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 8) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
     if isc_user_routines_354 then begin
       write('Pattern 53 matched the semantics.');
       writeln;
@@ -1372,29 +1352,29 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-      solution^.rule := 53;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 53;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := 0;
+      solution^.f76.bit_position_of_lsb := 0;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
       solution^.fp_reg_max := 1;
       solution^.fp_reg_result := 1;
-      solution^.f76.has_sym_disp := true;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.has_a_symbolic_displacement := true;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[35] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[35] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[35] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1419,7 +1399,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.sym)^.w[36] = 2) or (p2_node_ptr_t(subject.sym)^.w[36] = 1)) and (p2_node_ptr_t(subject.sym)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 9) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[36] = 2) or (p2_node_ptr_t(subject.il)^.w[36] = 1)) and (p2_node_ptr_t(subject.il)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 9) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
     if isc_user_routines_354 then begin
       write('Pattern 54 matched the semantics.');
       writeln;
@@ -1432,34 +1412,34 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
-      solution^.rule := 54;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 54;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       if not isc_user_routines_358 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := 0;
+      solution^.f76.bit_position_of_lsb := 0;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
       solution^.fp_reg_pair_max := 1;
       solution^.fp_reg_pair_result := 1;
-      solution^.f76.has_sym_disp := true;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.has_a_symbolic_displacement := true;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[35] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[35] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[35] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1485,7 +1465,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.sym)^.w[36] <> 2) or (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0) or (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 1024 <> 0)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[36] <> 2) or (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) or (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 1024 <> 0)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 55 matched the semantics.');
       writeln;
@@ -1498,28 +1478,28 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-      solution^.rule := 55;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 55;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
       solution^.bits_known := 0;
-      t2 := alignment_from_il_node(subject.sym);
+      t2 := alignment_from_il_node(subject.il);
       solution^.bits_trusted := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + t2];
-      solution^.l40 := 0;
-      solution^.l44 := 0;
-      solution^.f76.has_sym_disp := true;
+      solution^.bits_known_of_fetched_value := 0;
+      solution^.bits_trusted_of_fetched_value := 0;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 0;
       solution^.ip_reg_result := 0;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-      solution^.f76.b82_3 := true;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.l52 := integer32(p2_node_ptr_t(subject.sym)^.p[9]);
-      solution^.f76.b84_7 := true;
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[35] & 2 <> 0;
+      solution^.f76.is_dynm_vat := true;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[35] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[35] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.pass_1_size := integer32(p2_node_ptr_t(subject.il)^.p[9]);
+      solution^.f76.uses_the_base_register := true;
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1546,7 +1526,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.sym)^.w[36] <> 2) or (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0) or not (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 1024 <> 0)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[36] <> 2) or (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) or not (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 1024 <> 0)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 56 matched the semantics.');
       writeln;
@@ -1559,56 +1539,56 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-      solution^.rule := 56;
-      solution^.chain := addr(subject);
-      t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.sym)^.p[14]),
+      solution^.which_transform := 56;
+      solution^.before_transform := addr(subject);
+      t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[14]),
           ord(opc$loadl), 1);
       p2_locals_ptr_t(addr(solution^))^.c[352] := 255 * ord(t2);
       if t2 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
-        if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.sym)^.p[14]), ord(opc$move), 1) then begin
+        if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[14]), ord(opc$move), 1) then begin
           solution^.space136[137] := chr(1);
         end else begin
           solution^.space136[137] := chr(2);
         end;
       end;
       solution^.code_bytes := cost_56_3[ord(solution^.space136[137])];
-      solution^.memory_refs := cost_56_2[ord(solution^.space136[137])];
+      solution^.memory_references := cost_56_2[ord(solution^.space136[137])];
       solution^.delay := cost_56_1[ord(solution^.space136[137])];
       solution^.bits_known := 0;
-      if number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.sym)^.p[14])) > 3 then begin
+      if number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[14])) > 3 then begin
         t3 := 3;
       end else begin
-        t3 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.sym)^.p[14]));
+        t3 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[14]));
       end;
       solution^.bits_trusted := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + t3];
-      solution^.l40 := 0;
-      solution^.l44 := 0;
-      solution^.f76.has_sym_disp := false;
+      solution^.bits_known_of_fetched_value := 0;
+      solution^.bits_trusted_of_fetched_value := 0;
+      solution^.f76.has_a_symbolic_displacement := false;
       solution^.ip_reg_max := 0;
       solution^.ip_reg_result := 0;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-      solution^.f76.b82_3 := true;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[35] & 2 <> 0;
+      solution^.f76.is_dynm_vat := true;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[35] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[35] & 1 <> 0;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.disp := integer32(p2_node_ptr_t(subject.sym)^.p[14]);
+        solution^.literal_32_bits_value := integer32(p2_node_ptr_t(subject.il)^.p[14]);
       end else begin
-        solution^.disp := 0;
+        solution^.literal_32_bits_value := 0;
       end;
-      solution^.l52 := integer32(p2_node_ptr_t(subject.sym)^.p[9]);
-      solution^.f76.b84_7 := true;
+      solution^.pass_1_size := integer32(p2_node_ptr_t(subject.il)^.p[9]);
+      solution^.f76.uses_the_base_register := true;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.f76.uses_disp := true;
+        solution^.f76.uses_the_displacement := true;
       end else begin
-        solution^.f76.uses_disp := false;
+        solution^.f76.uses_the_displacement := false;
       end;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.f76.uses_index_reg := false;
+        solution^.f76.uses_the_index_register := false;
       end else begin
-        solution^.f76.uses_index_reg := true;
+        solution^.f76.uses_the_index_register := true;
       end;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -1634,7 +1614,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.sym)^.w[36] <> 5) or not (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.sym) <> 11)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[36] <> 5) or not (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.il) <> 11)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 57 matched the semantics.');
       writeln;
@@ -1647,29 +1627,29 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 57;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.sym));
+      solution^.which_transform := 57;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := 0;
+      solution^.f76.bit_position_of_lsb := 0;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
-      solution^.f76.has_sym_disp := true;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 1;
       solution^.ip_reg_result := 1;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[35] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[35] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[35] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1695,7 +1675,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.sym)^.w[36] <> 5) or (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[36] <> 5) or (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 58 matched the semantics.');
       writeln;
@@ -1708,26 +1688,26 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-      solution^.rule := 58;
-      solution^.chain := addr(subject);
+      solution^.which_transform := 58;
+      solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
       solution^.bits_known := 0;
-      t2 := alignment_from_il_node(subject.sym);
+      t2 := alignment_from_il_node(subject.il);
       solution^.bits_trusted := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + t2];
-      solution^.l40 := 0;
-      solution^.l44 := 0;
-      solution^.f76.has_sym_disp := true;
+      solution^.bits_known_of_fetched_value := 0;
+      solution^.bits_trusted_of_fetched_value := 0;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 0;
       solution^.ip_reg_result := 0;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.b84_7 := true;
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[35] & 2 <> 0;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[35] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[35] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.uses_the_base_register := true;
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1754,7 +1734,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.sym)^.w[36] = 1) or (p2_node_ptr_t(subject.sym)^.w[36] = 4)) and (p2_node_ptr_t(subject.sym)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 = 0) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[36] = 1) or (p2_node_ptr_t(subject.il)^.w[36] = 4)) and (p2_node_ptr_t(subject.il)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 = 0) then begin
     if isc_user_routines_354 then begin
       write('Pattern 59 matched the semantics.');
       writeln;
@@ -1767,54 +1747,54 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-      solution^.rule := 59;
-      solution^.chain := addr(subject);
-      t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.sym)^.p[14]),
+      solution^.which_transform := 59;
+      solution^.before_transform := addr(subject);
+      t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[14]),
           ord(opc$loadl), 1);
       p2_locals_ptr_t(addr(solution^))^.c[352] := 255 * ord(t2);
       if t2 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
-        if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.sym)^.p[14]), ord(opc$move), 1) then begin
+        if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[14]), ord(opc$move), 1) then begin
           solution^.space136[137] := chr(1);
         end else begin
           solution^.space136[137] := chr(2);
         end;
       end;
       solution^.code_bytes := cost_59_3[ord(solution^.space136[137])];
-      solution^.memory_refs := cost_59_2[ord(solution^.space136[137])];
+      solution^.memory_references := cost_59_2[ord(solution^.space136[137])];
       solution^.delay := cost_59_1[ord(solution^.space136[137])];
       solution^.bits_known := 0;
-      if number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.sym)^.p[14])) > 3 then begin
+      if number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[14])) > 3 then begin
         t3 := 3;
       end else begin
-        t3 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.sym)^.p[14]));
+        t3 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[14]));
       end;
       solution^.bits_trusted := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + t3];
-      solution^.l40 := 0;
-      solution^.l44 := 0;
-      solution^.f76.has_sym_disp := false;
+      solution^.bits_known_of_fetched_value := 0;
+      solution^.bits_trusted_of_fetched_value := 0;
+      solution^.f76.has_a_symbolic_displacement := false;
       solution^.ip_reg_max := 0;
       solution^.ip_reg_result := 0;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[35] & 2 <> 0;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[35] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[35] & 1 <> 0;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.disp := integer32(p2_node_ptr_t(subject.sym)^.p[14]);
+        solution^.literal_32_bits_value := integer32(p2_node_ptr_t(subject.il)^.p[14]);
       end else begin
-        solution^.disp := 0;
+        solution^.literal_32_bits_value := 0;
       end;
-      solution^.f76.b84_7 := true;
+      solution^.f76.uses_the_base_register := true;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.f76.uses_disp := true;
+        solution^.f76.uses_the_displacement := true;
       end else begin
-        solution^.f76.uses_disp := false;
+        solution^.f76.uses_the_displacement := false;
       end;
       if p2_locals_ptr_t(addr(solution^))^.c[352] & 128 <> 0 then begin
-        solution^.f76.uses_index_reg := false;
+        solution^.f76.uses_the_index_register := false;
       end else begin
-        solution^.f76.uses_index_reg := true;
+        solution^.f76.uses_the_index_register := true;
       end;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -1840,7 +1820,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (not (p2_node_ptr_t(subject.sym)^.w[21] & 1024 <> 0) or (lshft(rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16), 16) ! rshft(rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16), 16) <> 0)) then begin
+  if not (not (p2_node_ptr_t(subject.il)^.w[21] & 1024 <> 0) or (lshft(rshft(integer32(p2_node_ptr_t(subject.il)^.p[14]), 16), 16) ! rshft(rshft(integer32(p2_node_ptr_t(subject.il)^.p[14]), 16), 16) <> 0)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 60 matched the semantics.');
       writeln;
@@ -1853,29 +1833,29 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
-      solution^.rule := 60;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(lir_4090[p2_node_ptr_t(subject.sym)^.w[29]]);
+      solution^.which_transform := 60;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(lir_4090[p2_node_ptr_t(subject.il)^.w[29]]);
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := 0;
+      solution^.f76.bit_position_of_lsb := 0;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
-      solution^.f76.has_sym_disp := true;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 1;
       solution^.ip_reg_result := 1;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[35] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[35] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[35] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1900,7 +1880,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (not (p2_node_ptr_t(subject.sym)^.w[21] & 1024 <> 0) or (lshft(rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16), 16) ! rshft(rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16), 16) <> 1) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not (not (p2_node_ptr_t(subject.il)^.w[21] & 1024 <> 0) or (lshft(rshft(integer32(p2_node_ptr_t(subject.il)^.p[14]), 16), 16) ! rshft(rshft(integer32(p2_node_ptr_t(subject.il)^.p[14]), 16), 16) <> 1) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 61 matched the semantics.');
       writeln;
@@ -1913,29 +1893,29 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
-      solution^.rule := 61;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.sym)^.w[29]]);
+      solution^.which_transform := 61;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.il)^.w[29]]);
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := 0;
+      solution^.f76.bit_position_of_lsb := 0;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
-      solution^.f76.has_sym_disp := true;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 1;
       solution^.ip_reg_result := 1;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[35] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[35] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[35] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1960,7 +1940,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (not (p2_node_ptr_t(subject.sym)^.w[21] & 1024 <> 0) or (lshft(rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16), 16) ! rshft(rshft(integer32(p2_node_ptr_t(subject.sym)^.p[14]), 16), 16) <> 2) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not (not (p2_node_ptr_t(subject.il)^.w[21] & 1024 <> 0) or (lshft(rshft(integer32(p2_node_ptr_t(subject.il)^.p[14]), 16), 16) ! rshft(rshft(integer32(p2_node_ptr_t(subject.il)^.p[14]), 16), 16) <> 2) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 62 matched the semantics.');
       writeln;
@@ -1973,34 +1953,34 @@ begin
     end
     else begin
       solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
-      solution^.rule := 62;
-      solution^.chain := addr(subject);
-      solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.sym)^.w[29]]);
+      solution^.which_transform := 62;
+      solution^.before_transform := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.il)^.w[29]]);
       if not isc_user_routines_358 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
       end;
       solution^.code_bytes := 0;
-      solution^.memory_refs := 0;
+      solution^.memory_references := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := 0;
+      solution^.f76.bit_position_of_lsb := 0;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
-      solution^.f76.has_sym_disp := true;
+      solution^.f76.has_a_symbolic_displacement := true;
       solution^.ip_reg_max := 1;
       solution^.ip_reg_result := 1;
-      solution^.f76.b82_6 := p2_node_ptr_t(subject.sym)^.b[35] & 2 <> 0;
-      solution^.f76.b82_4 := false;
-      solution^.f76.b82_1 := p2_node_ptr_t(subject.sym)^.b[35] & 4 <> 0;
-      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_node_ptr_t(subject.sym)^.b[35] & 1 <> 0;
-      solution^.disp := 0;
-      solution^.f76.physical := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.reg := get_live_range_register(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.serialize := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      solution^.f76.uses_disp := true;
-      solution^.f76.uses_index_reg := false;
+      solution^.f76.is_atomic := p2_node_ptr_t(subject.il)^.b[35] & 2 <> 0;
+      solution^.f76.is_destroyable := false;
+      solution^.f76.is_physical := p2_node_ptr_t(subject.il)^.b[35] & 4 <> 0;
+      solution^.f76.is_volatile := p2_node_ptr_t(subject.il)^.b[35] & 1 <> 0;
+      solution^.literal_32_bits_value := 0;
+      solution^.f76.physical_register := get_live_range_assigned(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
+      solution^.f76.uses_the_displacement := true;
+      solution^.f76.uses_the_index_register := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
