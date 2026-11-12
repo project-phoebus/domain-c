@@ -10,140 +10,347 @@ section 20 variables  image pass_1 a5 16#468E94, pass_2 a5 16#4800A4;
 
 transform 35  ip_reg <- fortran_symbol
   pass_1 image 16#15DBEC;
-  pass_2 image 16#1CE7D4;
+  pass_2 image 16#1CE7D4 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 36  ip_reg_field <- fortran_symbol
   pass_1 image 16#15DEE8;
-  pass_2 image 16#1CE7FA;
+  pass_2 image 16#1CE7FA begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 37  ip_reg <- fortran_symbol
   pass_1 image 16#15E1B8;
-  pass_2 image 16#1CE820;
+  pass_2 image 16#1CE820 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 38  fp_reg <- fortran_symbol
   pass_1 image 16#15E462;
-  pass_2 image 16#1CE846;
+  pass_2 image 16#1CE846 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 39  fp_reg_pair <- fortran_symbol
   pass_1 image 16#15E70E;
-  pass_2 image 16#1CE86C;
+  pass_2 image 16#1CE86C begin
+    if result.c136 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    result.live_range <- result.l352;
+    result.live_range_of_imaginary_part <- get_live_range_of_imaginary_part(self.il);
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 40  fp_reg_quad <- fortran_symbol
   pass_1 image 16#15E9D0;
-  pass_2 image 16#1CE8CA;
+  pass_2 image 16#1CE8CA begin
+    if result.c136 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    result.live_range <- result.l352;
+    result.live_range_of_imaginary_part <- get_live_range_of_imaginary_part(self.il);
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 41  address_mode <- fortran_symbol
   pass_1 image 16#15EC92;
-  pass_2 image 16#1CE928;
+  pass_2 image 16#1CE928 begin
+    result.base_register <- isc_user_routines_340;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 42  address_mode <- fortran_symbol
   pass_1 image 16#15EEBC;
-  pass_2 image 16#1CE958;
+  pass_2 image 16#1CE958 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    if result.c136 <> 1 then
+      t1 <- create_solution_for_ip_reg();
+      if result.c137 = 1 then
+        emit simple(opc$move, 0, find_well_known_literal_solution(subject.il.l12), t1, nil);
+      else
+        t2 <- address_mode_for_integer32_value(subject.il.l12);
+        emit load(opc$loadl, 0, t2, t2.base_register, t1, t2.il, 0, t2.bits_known, t2.bits_trusted);
+      end;
+      t3 <- t1;
+    else
+      t3 <- 0;
+    end;
+    if subject.il.l24 & 16#40000000 <> 0 then
+      result.base_register <- isc_user_routines_340;
+    else
+      result.base_register <- isc_user_routines_33c;
+    end;
+    if result.c352 & 128 <> 0 then
+      result.index_register <- isc_user_routines_31c;
+    else
+      result.index_register <- t3;
+    end;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 43  ip_reg_field <- fortran_symbol
   pass_1 image 16#15F1AA;
-  pass_2 image 16#1CEA3C;
+  pass_2 image 16#1CEA3C begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 44  ip_reg <- fortran_symbol
   pass_1 image 16#15F47E;
-  pass_2 image 16#1CEA62;
+  pass_2 image 16#1CEA62 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 45  address_mode <- fortran_symbol
   pass_1 image 16#15F6F2;
-  pass_2 image 16#1CEA88;
+  pass_2 image 16#1CEA88 begin
+    result.base_register <- isc_user_routines_33c;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 46  address_mode <- fortran_symbol
   pass_1 image 16#15F8FC;
-  pass_2 image 16#1CEAB8;
+  pass_2 image 16#1CEAB8 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    if result.c136 <> 1 then
+      t1 <- create_solution_for_ip_reg();
+      if result.c137 = 1 then
+        emit simple(opc$move, 0, find_well_known_literal_solution(subject.il.l12), t1, nil);
+      else
+        t2 <- address_mode_for_integer32_value(subject.il.l12);
+        emit load(opc$loadl, 0, t2, t2.base_register, t1, t2.il, 0, t2.bits_known, t2.bits_trusted);
+      end;
+      t3 <- t1;
+    else
+      t3 <- 0;
+    end;
+    result.base_register <- isc_user_routines_338;
+    if result.c352 & 128 <> 0 then
+      result.index_register <- isc_user_routines_31c;
+    else
+      result.index_register <- t3;
+    end;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 47  ip_reg <- fortran_symbol
   pass_1 image 16#15FBC6;
-  pass_2 image 16#1CEB84;
+  pass_2 image 16#1CEB84 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 48  address_mode <- fortran_symbol
   pass_1 image 16#15FDC2;
-  pass_2 image 16#1CEBAA;
+  pass_2 image 16#1CEBAA begin
+    result.base_register <- isc_user_routines_330;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- subject.il.l48;
+  end;
 end;
 
 transform 49  address_mode <- var_name
   pass_1 image 16#15FF38;
-  pass_2 image 16#1CEBE4;
+  pass_2 image 16#1CEBE4 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    if result.c136 <> 1 then
+      t1 <- create_solution_for_ip_reg();
+      if result.c137 = 1 then
+        emit simple(opc$move, 0, find_well_known_literal_solution(subject.il.l56), t1, nil);
+      else
+        t2 <- address_mode_for_integer32_value(subject.il.l56);
+        emit load(opc$loadl, 0, t2, t2.base_register, t1, t2.il, 0, t2.bits_known, t2.bits_trusted);
+      end;
+      t3 <- t1;
+    else
+      t3 <- 0;
+    end;
+    if result.c352 & 128 <> 0 then
+      result.base_register <- isc_user_routines_31c;
+    else
+      result.base_register <- t3;
+    end;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 50  ip_reg <- var_name
   pass_1 image 16#1601EA;
-  pass_2 image 16#1CECB0;
+  pass_2 image 16#1CECB0 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 51  ip_reg_field <- var_name
   pass_1 image 16#160484;
-  pass_2 image 16#1CECD6;
+  pass_2 image 16#1CECD6 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 52  ip_reg <- var_name
   pass_1 image 16#160726;
-  pass_2 image 16#1CECFC;
+  pass_2 image 16#1CECFC begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 53  fp_reg <- var_name
   pass_1 image 16#1609A4;
-  pass_2 image 16#1CED22;
+  pass_2 image 16#1CED22 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 54  fp_reg_pair <- var_name
   pass_1 image 16#160C2E;
-  pass_2 image 16#1CED48;
+  pass_2 image 16#1CED48 begin
+    if result.c136 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 55  address_mode <- var_name
   pass_1 image 16#160ECE;
-  pass_2 image 16#1CED96;
+  pass_2 image 16#1CED96 begin
+    result.base_register <- isc_user_routines_340;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 56  address_mode <- var_name
   pass_1 image 16#1610C8;
-  pass_2 image 16#1CEDC6;
+  pass_2 image 16#1CEDC6 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    if result.c136 <> 1 then
+      t1 <- create_solution_for_ip_reg();
+      if result.c137 = 1 then
+        emit simple(opc$move, 0, find_well_known_literal_solution(subject.il.l56), t1, nil);
+      else
+        t2 <- address_mode_for_integer32_value(subject.il.l56);
+        emit load(opc$loadl, 0, t2, t2.base_register, t1, t2.il, 0, t2.bits_known, t2.bits_trusted);
+      end;
+      t3 <- t1;
+    else
+      t3 <- 0;
+    end;
+    result.base_register <- isc_user_routines_33c;
+    if result.c352 & 128 <> 0 then
+      result.index_register <- isc_user_routines_31c;
+    else
+      result.index_register <- t3;
+    end;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 57  ip_reg <- var_name
   pass_1 image 16#161392;
-  pass_2 image 16#1CEE92;
+  pass_2 image 16#1CEE92 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 58  address_mode <- var_name
   pass_1 image 16#1615EA;
-  pass_2 image 16#1CEEB8;
+  pass_2 image 16#1CEEB8 begin
+    result.base_register <- isc_user_routines_33c;
+    result.index_register <- isc_user_routines_31c;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 59  address_mode <- var_name
   pass_1 image 16#1617CC;
-  pass_2 image 16#1CEEE8;
+  pass_2 image 16#1CEEE8 begin
+    temp t1: solution;
+    temp t2: solution;
+    temp t3: solution;
+    if result.c136 <> 1 then
+      t1 <- create_solution_for_ip_reg();
+      if result.c137 = 1 then
+        emit simple(opc$move, 0, find_well_known_literal_solution(subject.il.l56), t1, nil);
+      else
+        t2 <- address_mode_for_integer32_value(subject.il.l56);
+        emit load(opc$loadl, 0, t2, t2.base_register, t1, t2.il, 0, t2.bits_known, t2.bits_trusted);
+      end;
+      t3 <- t1;
+    else
+      t3 <- 0;
+    end;
+    result.base_register <- isc_user_routines_338;
+    if result.c352 & 128 <> 0 then
+      result.index_register <- isc_user_routines_31c;
+    else
+      result.index_register <- t3;
+    end;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 60  ip_reg <- var_name
   pass_1 image 16#161A92;
-  pass_2 image 16#1CEFB4;
+  pass_2 image 16#1CEFB4 begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 61  fp_reg <- var_name
   pass_1 image 16#161CE2;
-  pass_2 image 16#1CEFDA;
+  pass_2 image 16#1CEFDA begin
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;
 
 transform 62  fp_reg_pair <- var_name
   pass_1 image 16#161F4C;
-  pass_2 image 16#1CF000;
+  pass_2 image 16#1CF000 begin
+    if result.c136 = 1 then
+      pattern_match_error(4, subject.il_kind, 0, subject.inherited_attributes.source_line_number);
+    end;
+    result.live_range <- result.l352;
+    result.object_with_name <- self.il;
+  end;
 end;

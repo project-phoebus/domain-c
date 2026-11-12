@@ -23,9 +23,13 @@ moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/rules):
                      header in rule order: number, result kind, pattern
                      (the IL operators it is tried under and the child
                      kinds, nested patterns as operator(children)), the
-                     flags (check_permissible, no_could_deadlock_child)
-                     and a placeholder for its two actions naming their
-                     image addresses (the action bodies come later)
+                     flags (check_permissible, no_could_deadlock_child),
+                     the pass-1 action's image address (a placeholder:
+                     the body comes later) and the pass-2 action: its
+                     address and its body, lifted to the statement
+                     language by tools/iscg_p2lift.py (`residue' where it
+                     cannot be; a body marked `hand' in the files being
+                     replaced is kept: tools/iscg_p2gen.py)
   readonly.isc       isc_readonly_tables (the ISC's hand-kept tables,
                      defined by isc_vars): its bytes, as words
 
@@ -49,6 +53,8 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import cc_isc_inventory as inv  # noqa: E402
+import iscg_p2gen  # noqa: E402
+import iscg_p2lift  # noqa: E402
 import iscg_pass1  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
@@ -509,6 +515,9 @@ def extract(binary):
     empty2 = [r for r in range(1, nrules + 1) if im.read(p2[r - 1], 2) == b'\x4e\x75']
     fields = inv.decode_fields(im, [named_routine(im, 'dump_solution')])
     ops = operators(im)
+    # the pass-2 actions' bodies, lifted (tools/iscg_p2lift.py)
+    p2img = iscg_p2lift.Image(binary, im)
+    p2_bodies = {r: iscg_p2lift.lift_rule(p2img, r) for r in range(1, nrules + 1)}
     return {
         'nrules': nrules, 'result_kind': result_kind, 'per_il': per_il, 'tail': tail,
         'check_permissible': [bool(x) for x in f1], 'no_could_deadlock_child': [bool(x) for x in f2],
@@ -516,7 +525,7 @@ def extract(binary):
         'arms': [[k[0], k[1], [[r, [[list(g[0])] + list(g[1:]) for g in gd]] for r, gd in v]]
                  for k, v in arms.items()],
         'layout': mt.layout, 'patterns': pats, 'sections': sections, 'section_of': sec_of,
-        'fields': fields, 'operators': ops, 'ils': ils,
+        'fields': fields, 'operators': ops, 'ils': ils, 'p2_bodies': p2_bodies,
         'readonly': list(im.read(ISC_READONLY, ISC_READONLY_LEN)),
     }
 
@@ -536,6 +545,7 @@ HEADER = '''{ %s - the ISC generator's input (docs/iscg-design.md), %s.
 
 def write_rules(x, out):
     os.makedirs(out, exist_ok=True)
+    hand = iscg_p2gen.hand_bodies(out)      # kept: written by hand
     ils = x['ils']
     n = x['nrules']
     written = []
@@ -602,8 +612,12 @@ def write_rules(x, out):
             if flags:
                 lines.append('  ' + ' '.join(flags) + ';')
             lines.append('  pass_1 image 16#%06X;' % x['p1'][r - 1])
-            lines.append('  pass_2 image 16#%06X%s;' % (x['p2'][r - 1],
-                                                        ' empty' if r in x['empty_p2'] else ''))
+            if r in hand:
+                lines.extend(hand[r])
+            else:
+                stmts, why = x['p2_bodies'][r]
+                lines.extend(iscg_p2gen.fmt_clause(x['p2'][r - 1], r in x['empty_p2'],
+                                                   stmts, False, why))
             lines.append('end;')
             lines.append('')
         with open(os.path.join(out, fn), 'w') as f:
