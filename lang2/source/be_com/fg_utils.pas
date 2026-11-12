@@ -18,11 +18,9 @@
     birthpoint instructions', +24 their inputs', +48 the dominator
     buckets'), then the cells the routines below use.
 
-  TODO(pascal) fg_utils: 29 of 53 routines (with the insert's
+  TODO(pascal) fg_utils: 35 of 53 routines (with the insert's
   utils_ins_$operands_instruction; the first ones in address order,
-  through fg_utils_$end_senseless_loops, 0x23619E); not translated
-  yet: reverse_depth_first_search, compress,
-  eval, evaldef, compute_rel, replace_exposed_lts,
+  through replace_exposed_lts, 0x2365CC); not translated yet:
   fg_utils_$generate_join_birthpoint, fg_utils_$insert_join_birthpoint,
   traverse, fg_utils_$add_jbi, add_join_birthpoint_inputs,
   fg_utils_$dominators, drop_jbis_on_exposed_list,
@@ -53,22 +51,30 @@ module fg_utils;
 var
   jbi_heap: mrh_$heap_t;                { +0: the join birthpoint
                                           instructions }
+  fg_unused_20: integer32;              { +20 }
   jbi_input_heap: mrh_$heap_t;          { +24: their inputs (ut_jbi_t) }
+  fg_unused_44: integer32;              { +44 }
   bucket_heap: mrh_$heap_t;             { +48: the dominator buckets }
-  fg_72: integer32;                     { +72 }
+  rdfs_last: bb_ptr_t;                  { +68: the reverse depth-first
+                                          search's last block }
+  rdfs_first: bb_ptr_t;                 { +72: and its first }
   dfs_level: integer32;                 { +76: compute_dfs_lists' debug
                                           level }
   order_count: integer32;               { +80: the blocks
                                           order_successor_lists has
                                           numbered (their order its low
                                           word) }
-  fg_84: integer32;                     { +84 }
+  dom_rtn: rtn_ptr_t;                   { +84: the routine the dominators
+                                          are computed for (its l192 the
+                                          vectors' size) }
   final_bb: bb_ptr_t;                   { +88: the block add_final_edges
                                           gives an edge to }
   fg_92: integer;                       { +92 }
-  fg_94: boolean;                       { +94: set for each routine }
-  fg_95: char;                          { +95 }
-  fg_96: boolean;                       { +96: set for each routine }
+  fg_94: boolean;                       { +94: set for each routine:
+                                          intervals clears nothing }
+  fg_96: boolean;                       { +96: set for each routine:
+                                          compute_dfs_lists clears
+                                          nothing }
 
 { fg_utils_$begin_compilation - the three heaps made.
 
@@ -1501,4 +1507,180 @@ begin
     b := nxt;
   end;
   fg_utils_$end_senseless_loops := changed;
+end;
+
+{ reverse_depth_first_search - bb visited in the reverse flow graph
+  (through its edges in): its members and l150 itself, numbered in
+  preorder (w8, rdfs_first .. rdfs_last chained at l98 and back at
+  l102); each predecessor not visited with a nonzero l150 visited with
+  bb its parent (l106); an edge from a predecessor with l150 nil
+  dropped (the previous edge is the last one recursed through: an
+  edge from a visited block does not move it, as the image has it).
+
+  0x236390, 0x94 bytes, no A5 load (its caller's): bb (8) in A3. }
+
+procedure reverse_depth_first_search(
+    bb: bb_ptr_t); options(val_param, internal);
+var
+  prev: fg_edge_ptr_t;
+  e: fg_edge_ptr_t;
+  s: bb_ptr_t;
+begin
+  bb^.members := bb;
+  bb^.l150 := bb;
+  if rdfs_first = nil then begin
+    rdfs_first := bb;
+    bb^.w8 := 1;
+  end
+  else begin
+    rdfs_last^.l98 := fg_edge_ptr_t(bb);
+    bb^.w8 := rdfs_last^.w8 + 1;
+  end;
+  bb^.l102 := rdfs_last;
+  rdfs_last := bb;
+  prev := nil;
+  e := bb^.preds;
+  while e <> nil do begin
+    s := e^.source;
+    if s^.members = nil then
+      if s^.l150 <> nil then begin
+        s^.l106 := bb;
+        reverse_depth_first_search(e^.source);
+        prev := e;
+      end
+      else if prev = nil then
+        bb^.preds := e^.next_pred
+      else
+        prev^.next_pred := e^.next_pred;
+    e := e^.next_pred;
+  end;
+end;
+
+{ compress - the path compression of the dominator computation
+  (Lengauer and Tarjan): v's ancestor (mark146, a block) compressed
+  first, its vector (avail_gen) ored into v's, v's label (l150) the
+  ancestor's when the ancestor's label's semidominator (members) comes
+  first, v's ancestor the ancestor's.
+
+  0x236424, 0x7C bytes, no A5 load: v (8) in A2. }
+
+procedure compress(
+    v: bb_ptr_t); options(val_param, internal);
+var
+  a: bb_ptr_t;
+begin
+  a := bb_ptr_t(v^.mark146);
+  if a^.mark146 <> 0 then begin
+    compress(a);
+    bv_$or(dom_rtn^.l192 + 1, a^.avail_gen, v^.avail_gen);
+    if a^.l150^.members^.w8 < v^.l150^.members^.w8 then
+      v^.l150 := a^.l150;
+    v^.mark146 := a^.mark146;
+  end;
+end;
+
+{ eval - v when it has no ancestor, else its label after compression.
+
+  0x2364A0, 0x26 bytes, no A5 load. }
+
+function eval(
+    v: bb_ptr_t): bb_ptr_t; options(val_param, internal);
+begin
+  if v^.mark146 = 0 then
+    eval := v
+  else begin
+    compress(v);
+    eval := v^.l150;
+  end;
+end;
+
+{ evaldef - nil when v has no ancestor, else its vector after
+  compression.
+
+  0x2364C6, 0x26 bytes, no A5 load. }
+
+function evaldef(
+    v: bb_ptr_t): bv_ptr_t; options(val_param, internal);
+begin
+  if v^.mark146 = 0 then
+    evaldef := nil
+  else begin
+    compress(v);
+    evaldef := v^.avail_gen;
+  end;
+end;
+
+{ compute_rel - for each child c of b in the dominator tree (l46,
+  siblings at l50), its subtree first: c's avail_gen its live_in, or
+  its avail_in unless marked (+19 bit 2), less its avail_out; copied
+  into b's avail_in (when b is marked) or ored into it; b unmarked.
+
+  0x2364EC, 0xE0 bytes, no A5 load: b (8) in A2. }
+
+procedure compute_rel(
+    b: bb_ptr_t); options(val_param, internal);
+var
+  c: bb_ptr_t;
+begin
+  c := b^.l46;
+  while c <> nil do begin
+    compute_rel(c);
+    bv_$copy(dom_rtn^.l192 + 1, c^.live_in, c^.avail_gen);
+    if not c^.f.b19_2 then
+      bv_$or(dom_rtn^.l192 + 1, c^.avail_in, c^.avail_gen);
+    bv_$subtract(dom_rtn^.l192 + 1, c^.avail_out, c^.avail_gen);
+    if b^.f.b19_2 then
+      bv_$copy(dom_rtn^.l192 + 1, c^.avail_gen, b^.avail_in)
+    else
+      bv_$or(dom_rtn^.l192 + 1, c^.avail_gen, b^.avail_in);
+    b^.f.b19_2 := false;
+    c := c^.l50;
+  end;
+end;
+
+{ replace_exposed_lts - lr's exposed segment in bb replaced by a new
+  segment after it on lr's list: with the lists by live range
+  (lir_main_c86 1) the new one takes the old one's place on lr's
+  exposed list (bug_check when the hint is wrong) and becomes the hint;
+  otherwise the old one taken off the block's exposed list and the new
+  one put on.  The new segment.
+
+  0x2365CC, 0xB8 bytes, no A5: lr (8) in D2, bb (12) in A3. }
+
+function replace_exposed_lts(
+    lr: lr_ptr_t;
+    bb: bb_ptr_t): lts_ptr_t; options(val_param, internal);
+var
+  old: lts_ptr_t;
+  nw: lts_ptr_t;
+  p: lts_ptr_t;
+begin
+  old := utils_$find_exposed_lts(lr, bb);
+  nw := lir_$new_lifetime_segment(lr);
+  nw^.bb := bb;
+  nw^.next := old^.next;
+  old^.next := nw;
+  if lir_main_c86 = 1 then begin
+    old^.f2.exposed := false;
+    nw^.f2.exposed := true;
+    nw^.next_exposed := old^.next_exposed;
+    old^.next_exposed := nil;
+    p := lr^.exposed_prev;
+    if p = nil then begin
+      if lr^.exposed <> old then
+        bug_check('FG_UTILS: replace_exposed -- bad exposed list (case #1)%$');
+      lr^.exposed := nw;
+    end
+    else begin
+      if p^.next_exposed <> old then
+        bug_check('FG_UTILS: replace_exposed -- bad exposed list (case #2)%$');
+      p^.next_exposed := nw;
+    end;
+    lr^.exposed_hint := nw;
+  end
+  else begin
+    utils_$remove_lts_from_exposed_list(old);
+    utils_$put_lts_on_exposed_list(nw);
+  end;
+  replace_exposed_lts := nw;
 end;
