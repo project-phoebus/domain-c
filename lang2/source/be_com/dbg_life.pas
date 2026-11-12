@@ -229,18 +229,16 @@ type
   end;
 
   { batch A's rtn_t where it has not named what the phase reads: the
-    arguments (+16), the stack frame's live range (+116), the spill
-    slots (+196: the register allocator's count) and the stack frame's
-    register (+208). }
+    arguments (+16: the routine's calling conventions), the stack
+    frame's live range (+116) and the stack frame's register (+208,
+    dmp's sf_reg). }
   dbg_rtn_ptr_t = ^dbg_rtn_t;
   dbg_rtn_t = record
     space0: array [0..15] of char;
     conv: dbg_conv_ptr_t;               { +16 }
     space20: array [20..115] of char;
     sf_lr: lr_ptr_t;                    { +116 }
-    space120: array [120..195] of char;
-    nslots: integer32;                  { +196 }
-    space200: array [200..207] of char;
+    space120: array [120..207] of char;
     sf_reg: integer;                    { +208 }
   end;
 
@@ -614,7 +612,7 @@ var
     fp_phys := univ_ptr(addr(lir_3f90));
     for i := 1 to rtn^.l192 do begin
       lr := rtn^.lr_map^[i];
-      r := lr^.f2.b2;
+      r := lr^.f2.reg;
       if rrp$ip_reg in lr^.rrp then begin
         if (ip_phys^[r] = lr) or (r > 29) then begin
           lr^.node20 := nil;
@@ -954,7 +952,7 @@ begin
       dl_fp_open^[i]^.stop := at;
       dl_fp_open^[i] := nil;
     end;
-  for i := 1 to dbg_rtn_ptr_t(rtn)^.nslots do
+  for i := 1 to rtn^.spills do
     if dl_spills^[i].f24.open then begin
       dl_spills^[i].current^.stop := at;
       dl_spills^[i].f24.open := false;
@@ -998,7 +996,7 @@ begin
     cur := dl_spills^[slot].current
   else begin
     if kind = 1 then
-      if lr^.f2.b2 > 29 then
+      if lr^.f2.reg > 29 then
         return;
     cur := dbg_lr_ptr_t(lr)^.current;
   end;
@@ -1028,13 +1026,13 @@ begin
     dl_spills^[slot].f24.open := true
   else begin
     if kind = 1 then
-      openp := addr(dl_ip_open^[lr^.f2.b2])
+      openp := addr(dl_ip_open^[lr^.f2.reg])
     else
-      openp := addr(dl_fp_open^[lr^.f2.b2]);
+      openp := addr(dl_fp_open^[lr^.f2.reg]);
     if openp^ <> nil then
       if kind <> 3 then
         if (slot <> 0) or (lr^.mate = nil) then begin
-          reg := lr^.f2.b2;
+          reg := lr^.f2.reg;
           vfmt_$write('DBG_LIFE_$OPEN_PC_RANGE: Register %wd already open.%.',
               reg);
         end;
@@ -1107,12 +1105,12 @@ begin
     else begin
       nlr := gspace(88);
       dbg_lr_ptr_t(nlr)^.kind := chr(kind);
-      nlr^.f2.b2 := lr_ptr_t(i^.opnds[kf].ptr)^.f2.b2;
+      nlr^.f2.reg := lr_ptr_t(i^.opnds[kf].ptr)^.f2.reg;
       nlr^.rrp := lr_ptr_t(i^.opnds[kf].ptr)^.rrp;
       nlr^.node20 := lr_ptr_t(i^.opnds[jf].ptr)^.node20;
       nlr^.mate := lr_ptr_t(i^.opnds[jf].ptr)^.mate;
       dbg_life_$open_pc_range(instr^.l28, instr^.l28, 0, nlr, kind);
-      dbg_life_$close_pc_range(i^.l28, kind, nlr^.f2.b2);
+      dbg_life_$close_pc_range(i^.l28, kind, nlr^.f2.reg);
     end;
 end;
 
@@ -1470,7 +1468,7 @@ begin
         lr^.node20, true);
     if r <> nil then begin
       r^.slot_sym := nil;
-      r^.f12.reg := lr^.f2.b2;
+      r^.f12.reg := lr^.f2.reg;
       if rrp$ip_reg in lr^.rrp then
         r^.f12.kind := 0
       else if lr^.mate = nil then
@@ -1487,7 +1485,7 @@ begin
     end;
     lr := lr^.next;
   end;
-  for i := 1 to dbg_rtn_ptr_t(rtn)^.nslots do begin
+  for i := 1 to rtn^.spills do begin
     rec := addr(dl_spills^[i]);
     if rec^.first <> nil then begin
       r := add_live_range(rec^.first, rec^.f24.count, rec^.var_sym, false);
@@ -1599,9 +1597,9 @@ begin
   if cargs_$options.db >= 2 then begin
     mrh_$initialize(dl_heap, 1, 12, 'DBG_LIFE heap%');
     dl_lr_words := (rtn^.l192 + 32) div 32;
-    dl_spill_words := (dbg_rtn_ptr_t(rtn)^.nslots + 32) div 32;
+    dl_spill_words := (rtn^.spills + 32) div 32;
     bv_$initialize_bit_vectors(rtn, (dl_spill_words + dl_lr_words) * 32, 7, false);
-    size := (dbg_rtn_ptr_t(rtn)^.nslots * 28 + 3) & (~3);
+    size := (rtn^.spills * 28 + 3) & (~3);
     if size <> 0 then begin
       dl_spills := rws_$alloc_heap(size);
       for i := 1 to size div 4 do
@@ -1614,7 +1612,7 @@ begin
     dl_fp_open := mrh_$alloc(dl_heap, 256);
     dl_lrs := nil;
     dbg_life_$find_symbols(rtn);
-    for i := 1 to dbg_rtn_ptr_t(rtn)^.nslots do begin
+    for i := 1 to rtn^.spills do begin
       v := dl_spills^[i].var_sym;
       if v <> nil then
         if v^.kind = 109 then
@@ -1626,7 +1624,7 @@ begin
     dbg_life_$mark_ap_relative_vars(rtn);
     if at_backend_switches.sw10 then begin
       vfmt_$write('SPILLED LIVE RANGES:%.');
-      for i := 1 to dbg_rtn_ptr_t(rtn)^.nslots do
+      for i := 1 to rtn^.spills do
         if dl_spills^[i].sym <> nil then begin
           vfmt_$write('%.');
           vfmt_$write('%3ZLD%$', i);
