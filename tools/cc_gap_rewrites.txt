@@ -255,3 +255,5 @@ lang2/source/be_com/ra_utils.pas	s/^(            \{ A new live range for the rel
 # gap 28 (ra_utils, translator PB5): add_spill_code's values outlive dpc's registers: the store's later readers' linking left out of the check (a conditional variable not set)
 lang2/source/be_com/ra_utils.pas	s/^(          \{ The later readers linked to the stored register\. \})$/%var gap28w;\n%if gap28w %then { gap 28 }\n$1/
 lang2/source/be_com/ra_utils.pas	s/^(          \{ A TST made of the writing move reads no register\. \})$/%endif { gap 28 }\n$1/
+# gap 7 (oli): the real constant 0.0 passed (an integer constant node instead, for the check)
+lang2/source/be_com/oli.pas	s/(dp|rl)contk\(0\.0\)/smcontk(81, 0) { gap 7 }/
