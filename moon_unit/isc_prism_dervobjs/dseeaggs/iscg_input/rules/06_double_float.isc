@@ -1,0 +1,237 @@
+{ 06_double_float.isc - the ISC generator's input (docs/iscg-design.md), section 6, rules 489..532.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 06 double_float  image pass_1 a5 16#45A80C, pass_2 a5 16#48006C;
+
+transform 489  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
+  pass_1 image 16#116E58;
+  pass_2 image 16#1A7A64;
+end;
+
+transform 490  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
+  pass_1 image 16#1173DA;
+  pass_2 image 16#1A7B06;
+end;
+
+transform 491  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
+  pass_1 image 16#117972;
+  pass_2 image 16#1A7C04;
+end;
+
+transform 492  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
+  pass_1 image 16#117EB6;
+  pass_2 image 16#1A7CA6;
+end;
+
+transform 493  fp_reg_pair <- f_add_top ($1: fp_reg_pair, $2: fp_reg_pair)
+  pass_1 image 16#11844E;
+  pass_2 image 16#1A7DE2;
+end;
+
+transform 494  fp_reg_quad <- f_add_top ($1: fp_reg_quad, $2: fp_reg_quad)
+  pass_1 image 16#118622;
+  pass_2 image 16#1A7EAA;
+end;
+
+transform 495  fp_reg_pair <- f_div_top ($1: fp_reg_pair, $2: fp_reg_pair)
+  no_could_deadlock_child;
+  pass_1 image 16#1187F6;
+  pass_2 image 16#1A7F72;
+end;
+
+transform 496  fp_reg_pair <- f_div_top ($1: fp_reg_pair, $2: fp_reg_pair)
+  no_could_deadlock_child;
+  pass_1 image 16#1189CE;
+  pass_2 image 16#1A817A;
+end;
+
+transform 497  fp_reg_quad <- f_div_top ($1: fp_reg_quad, $2: fp_reg_quad)
+  no_could_deadlock_child;
+  pass_1 image 16#118BA6;
+  pass_2 image 16#1A83CC;
+end;
+
+transform 498  fp_reg_quad <- f_div_top ($1: fp_reg_quad, $2: fp_reg_quad)
+  no_could_deadlock_child;
+  pass_1 image 16#118D7E;
+  pass_2 image 16#1A85D4;
+end;
+
+transform 499  fp_reg_pair <- f_extend_top ($1: ip_reg, $2: void)
+  pass_1 image 16#118F56;
+  pass_2 image 16#1A882C;
+end;
+
+transform 500  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: void)
+  pass_1 image 16#119232;
+  pass_2 image 16#1A89EE;
+end;
+
+transform 501  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: fp_reg)
+  pass_1 image 16#11941A;
+  pass_2 image 16#1A8AD2;
+end;
+
+transform 502  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
+  pass_1 image 16#1195F8;
+  pass_2 image 16#1A8B56;
+end;
+
+transform 503  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: fp_reg_pair)
+  pass_1 image 16#119840;
+  pass_2 image 16#1A8C7E;
+end;
+
+transform 504  fp_reg_quad <- f_extend_top ($1: ip_reg, $2: void)
+  pass_1 image 16#119A7E;
+  pass_2 image 16#1A8D42;
+end;
+
+transform 505  fp_reg_quad <- f_extend_top ($1: fp_reg, $2: void)
+  pass_1 image 16#119D02;
+  pass_2 image 16#1A8EC8;
+end;
+
+transform 506  fp_reg_quad <- f_extend_top ($1: fp_reg, $2: fp_reg)
+  pass_1 image 16#119EF0;
+  pass_2 image 16#1A8FAA;
+end;
+
+transform 507  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: void)
+  pass_1 image 16#11A12E;
+  pass_2 image 16#1A906E;
+end;
+
+transform 508  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: fp_reg_pair)
+  pass_1 image 16#11A2B8;
+  pass_2 image 16#1A910C;
+end;
+
+transform 509  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: void)
+  pass_1 image 16#11A496;
+  pass_2 image 16#1A9190;
+end;
+
+transform 510  ip_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
+  pass_1 image 16#11A686;
+  pass_2 image 16#1A9274;
+end;
+
+transform 511  fp_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
+  pass_1 image 16#11A880;
+  pass_2 image 16#1A9334;
+end;
+
+transform 512  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
+  pass_1 image 16#11AA02;
+  pass_2 image 16#1A9386;
+end;
+
+transform 513  ip_reg <- f_extend_top ($1: fp_reg_quad, $2: void)
+  pass_1 image 16#11ABE8;
+  pass_2 image 16#1A941E;
+end;
+
+transform 514  fp_reg <- f_extend_top ($1: fp_reg_quad, $2: void)
+  pass_1 image 16#11ADE2;
+  pass_2 image 16#1A94DE;
+end;
+
+transform 515  fp_reg_pair <- f_extend_top ($1: fp_reg_quad, $2: void)
+  pass_1 image 16#11AFC8;
+  pass_2 image 16#1A9576;
+end;
+
+transform 516  fp_reg_pair <- f_extend_top ($1: fp_reg_quad, $2: void)
+  pass_1 image 16#11B14A;
+  pass_2 image 16#1A95C8;
+end;
+
+transform 517  fp_reg <- f_math_top ($1: fp_reg_pair, $2: void)
+  pass_1 image 16#11B33A;
+  pass_2 image 16#1A96AC;
+end;
+
+transform 518  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
+  pass_1 image 16#11B4BC;
+  pass_2 image 16#1A96FE;
+end;
+
+transform 519  fp_reg_pair <- f_math_top ($1: fp_reg_quad, $2: void)
+  pass_1 image 16#11B644;
+  pass_2 image 16#1A97A2;
+end;
+
+transform 520  fp_reg_quad <- f_math_top ($1: fp_reg_quad, $2: void)
+  pass_1 image 16#11B7C6;
+  pass_2 image 16#1A97F4;
+end;
+
+transform 521  fp_reg_pair <- f_mul_top ($1: fp_reg_pair, $2: fp_reg_pair)
+  no_could_deadlock_child;
+  pass_1 image 16#11B94E;
+  pass_2 image 16#1A9898;
+end;
+
+transform 522  fp_reg_pair <- f_mul_top ($1: fp_reg_pair, $2: fp_reg_pair)
+  no_could_deadlock_child;
+  pass_1 image 16#11BB26;
+  pass_2 image 16#1A99F0;
+end;
+
+transform 523  fp_reg_quad <- f_mul_top ($1: fp_reg_quad, $2: fp_reg_quad)
+  no_could_deadlock_child;
+  pass_1 image 16#11BCFE;
+  pass_2 image 16#1A9B92;
+end;
+
+transform 524  fp_reg_quad <- f_mul_top ($1: fp_reg_quad, $2: fp_reg_quad)
+  no_could_deadlock_child;
+  pass_1 image 16#11BED6;
+  pass_2 image 16#1A9CEA;
+end;
+
+transform 525  fp_reg_pair <- f_neg_top ($1: fp_reg_pair)
+  pass_1 image 16#11C0AE;
+  pass_2 image 16#1A9E92;
+end;
+
+transform 526  fp_reg_quad <- f_neg_top ($1: fp_reg_quad)
+  pass_1 image 16#11C212;
+  pass_2 image 16#1A9F36;
+end;
+
+transform 527  fp_reg_pair <- f_sub_top ($1: fp_reg_pair, $2: fp_reg_pair)
+  pass_1 image 16#11C376;
+  pass_2 image 16#1A9FDA;
+end;
+
+transform 528  fp_reg_quad <- f_sub_top ($1: fp_reg_quad, $2: fp_reg_quad)
+  pass_1 image 16#11C54A;
+  pass_2 image 16#1AA0A2;
+end;
+
+transform 529  fp_reg_pair <- fp_reg_pair
+  pass_1 image 16#11C71E;
+  pass_2 image 16#1AA16A;
+end;
+
+transform 530  fp_reg_quad <- fp_reg_quad
+  pass_1 image 16#11CB9E;
+  pass_2 image 16#1AA212;
+end;
+
+transform 531  fp_reg_pair <- isc_func_call_top
+  pass_1 image 16#11D01E;
+  pass_2 image 16#1AA2F2;
+end;
+
+transform 532  fp_reg_quad <- isc_func_call_top
+  pass_1 image 16#11D224;
+  pass_2 image 16#1AA39E;
+end;

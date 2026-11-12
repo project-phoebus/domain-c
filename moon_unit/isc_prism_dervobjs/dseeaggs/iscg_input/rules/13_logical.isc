@@ -1,0 +1,91 @@
+{ 13_logical.isc - the ISC generator's input (docs/iscg-design.md), section 13, rules 324..339.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 13 logical  image pass_1 a5 16#46183C, pass_2 a5 16#480088;
+
+transform 324  ip_reg <- and_top | eor_top | or_top ($1: ip_reg, $2: ip_reg_scaled)
+  pass_1 image 16#13FB74;
+  pass_2 image 16#1BC210;
+end;
+
+transform 325  ip_reg <- and_top | eor_top | or_top ($1: ip_reg_scaled, $2: ip_reg)
+  pass_1 image 16#13FDE4;
+  pass_2 image 16#1BC266;
+end;
+
+transform 326  ip_reg <- and_top | eor_top | or_top ($1: ip_reg, $2: [ip_reg, literal_32_bits])
+  pass_1 image 16#140016;
+  pass_2 image 16#1BC2BC;
+end;
+
+transform 327  ip_reg_field <- and_top | eor_top | or_top ($1: ip_reg_field, $2: literal_32_bits)
+  pass_1 image 16#14027E;
+  pass_2 image 16#1BC312;
+end;
+
+transform 328  ip_reg_field <- and_top | eor_top | or_top ($1: ip_reg_field, $2: ip_reg_field)
+  pass_1 image 16#14051E;
+  pass_2 image 16#1BC392;
+end;
+
+transform 329  ip_reg_field <- and_top | eor_top | or_top ($1: ip_reg_field, $2: ip_reg_field)
+  pass_1 image 16#1407C6;
+  pass_2 image 16#1BC49C;
+end;
+
+transform 330  fp_reg <- and_top | eor_top | or_top ($1: fp_reg, $2: fp_reg)
+  pass_1 image 16#140A7A;
+  pass_2 image 16#1BC5A2;
+end;
+
+transform 331  ip_reg <- and_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#140CA0;
+  pass_2 image 16#1BC5F8;
+end;
+
+transform 332  ip_reg <- and_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#140F34;
+  pass_2 image 16#1BC658;
+end;
+
+transform 333  ip_reg <- and_top ($1: ip_reg, $2: literal_32_bits)
+  no_could_deadlock_child;
+  pass_1 image 16#1411A4;
+  pass_2 image 16#1BC6AA;
+end;
+
+transform 334  ip_reg <- and_top ($1: ip_reg, $2: not_top($1: ip_reg))
+  pass_1 image 16#14186C;
+  pass_2 image 16#1BC7DC;
+end;
+
+transform 335  ip_reg <- and_top ($1: not_top($1: ip_reg), $2: ip_reg)
+  pass_1 image 16#141B0C;
+  pass_2 image 16#1BC872;
+end;
+
+transform 336  ip_reg_field <- not_top ($1: ip_reg_field)
+  pass_1 image 16#141DB0;
+  pass_2 image 16#1BC908;
+end;
+
+transform 337  ip_reg <- not_top ($1: ip_reg)
+  pass_1 image 16#14237C;
+  pass_2 image 16#1BC970;
+end;
+
+transform 338  fp_reg <- not_top ($1: fp_reg)
+  pass_1 image 16#142542;
+  pass_2 image 16#1BC9D8;
+end;
+
+transform 339  ip_reg_field <- or_top ($1: [ip_reg, ip_reg_field], $2: literal_32_bits)
+  no_could_deadlock_child;
+  pass_1 image 16#1426F2;
+  pass_2 image 16#1BCA1C;
+end;

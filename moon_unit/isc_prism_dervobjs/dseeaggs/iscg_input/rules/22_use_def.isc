@@ -1,0 +1,14 @@
+{ 22_use_def.isc - the ISC generator's input (docs/iscg-design.md), section 22, rules 1..1.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 22 use_def  image pass_1 a5 16#469050, pass_2 a5 none;
+
+transform 1  void <- use_def_ob
+  pass_1 image 16#162AFC;
+  pass_2 image 16#1CF06C empty;
+end;

@@ -1,0 +1,27 @@
+{ 19_strings.isc - the ISC generator's input (docs/iscg-design.md), section 19, rules 375..377.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 19 strings  image pass_1 a5 16#468AEC, pass_2 a5 16#4800A0;
+
+transform 375  ip_reg <- strcmp_top ($1: address_mode, $2: address_mode)
+  no_could_deadlock_child;
+  pass_1 image 16#15CF70;
+  pass_2 image 16#1CD4AC;
+end;
+
+transform 376  ip_reg <- strlen_top ($1: address_mode)
+  no_could_deadlock_child;
+  pass_1 image 16#15D494;
+  pass_2 image 16#1CDE04;
+end;
+
+transform 377  ip_reg <- strncmp_top ($1: address_mode, $2: address_mode, $3: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#15D70E;
+  pass_2 image 16#1CE0D6;
+end;

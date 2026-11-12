@@ -1,0 +1,54 @@
+{ 05_calls.isc - the ISC generator's input (docs/iscg-design.md), section 5, rules 340..348.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 05 calls  image pass_1 a5 16#45A78C, pass_2 a5 16#480068;
+
+transform 340  ip_reg <- call_top ($1: ip_reg)
+  pass_1 image 16#115C64;
+  pass_2 image 16#1A773C empty;
+end;
+
+transform 341  ip_reg <- func_call_top ($1: ip_reg)
+  pass_1 image 16#115DDA;
+  pass_2 image 16#1A773E empty;
+end;
+
+transform 342  ip_reg <- isc_call_top
+  pass_1 image 16#115F12;
+  pass_2 image 16#1A7740;
+end;
+
+transform 343  ip_reg <- isc_fio_init ($1: ip_reg)
+  pass_1 image 16#116036;
+  pass_2 image 16#1A778E;
+end;
+
+transform 344  address_mode <- isc_func_call_hidden_temp_top
+  pass_1 image 16#116566;
+  pass_2 image 16#1A7806;
+end;
+
+transform 345  ip_reg <- isc_func_call_top
+  pass_1 image 16#1166E2;
+  pass_2 image 16#1A785E;
+end;
+
+transform 346  fp_reg <- isc_func_call_top
+  pass_1 image 16#1168A4;
+  pass_2 image 16#1A78AE;
+end;
+
+transform 347  fp_reg_pair <- isc_func_call_top
+  pass_1 image 16#116A7E;
+  pass_2 image 16#1A78FE;
+end;
+
+transform 348  ip_reg <- pf_call ($1: address_mode)
+  pass_1 image 16#116C78;
+  pass_2 image 16#1A7970;
+end;

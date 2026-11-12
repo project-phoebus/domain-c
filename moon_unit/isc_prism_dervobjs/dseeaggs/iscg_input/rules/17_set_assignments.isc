@@ -1,0 +1,39 @@
+{ 17_set_assignments.isc - the ISC generator's input (docs/iscg-design.md), section 17, rules 200..205.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 17 set_assignments  image pass_1 a5 16#46669C, pass_2 a5 16#480098;
+
+transform 200  void <- set_and_to_aop ($1: [address_mode, ip_reg], $2: ip_reg)
+  pass_1 image 16#154A94;
+  pass_2 image 16#1C84DC;
+end;
+
+transform 201  void <- set_and_to_aop ($1: address_mode, $2: address_mode)
+  pass_1 image 16#155776;
+  pass_2 image 16#1C964C;
+end;
+
+transform 202  void <- set_diff_from_aop ($1: [address_mode, ip_reg], $2: ip_reg)
+  pass_1 image 16#155BB2;
+  pass_2 image 16#1C9AA8;
+end;
+
+transform 203  void <- set_diff_from_aop ($1: address_mode, $2: address_mode)
+  pass_1 image 16#1568E6;
+  pass_2 image 16#1CAC58;
+end;
+
+transform 204  void <- set_or_to_aop ($1: [address_mode, ip_reg], $2: ip_reg)
+  pass_1 image 16#156D5C;
+  pass_2 image 16#1CB0FE;
+end;
+
+transform 205  void <- set_or_to_aop ($1: address_mode, $2: address_mode)
+  pass_1 image 16#157A56;
+  pass_2 image 16#1CC266;
+end;

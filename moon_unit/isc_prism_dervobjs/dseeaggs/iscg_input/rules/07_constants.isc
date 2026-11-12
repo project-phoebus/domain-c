@@ -1,0 +1,64 @@
+{ 07_constants.isc - the ISC generator's input (docs/iscg-design.md), section 7, rules 2..12.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 07 constants  image pass_1 a5 16#45A9B4, pass_2 a5 16#480070;
+
+transform 2  literal_32_bits <- binteger_ob | ubinteger_ob | blogical_ob | integer_ob | uinteger_ob | linteger_ob | ulinteger_ob | llogical_ob | slogical_ob | sinteger_ob | usinteger_ob
+  pass_1 image 16#11D42C;
+  pass_2 image 16#1AA44C;
+end;
+
+transform 3  literal_32_bits <- char_ob
+  pass_1 image 16#11D530;
+  pass_2 image 16#1AA46C;
+end;
+
+transform 4  literal_32_bits <- char_string_ob
+  pass_1 image 16#11D634;
+  pass_2 image 16#1AA48C;
+end;
+
+transform 5  address_mode <- char_string_ob
+  pass_1 image 16#11D788;
+  pass_2 image 16#1AA4AC;
+end;
+
+transform 6  address_mode <- complex_ob
+  pass_1 image 16#11D934;
+  pass_2 image 16#1AA4F0;
+end;
+
+transform 7  address_mode <- dpcomplex_ob
+  pass_1 image 16#11DA94;
+  pass_2 image 16#1AA520;
+end;
+
+transform 8  literal_32_bits <- dpreal_ob
+  pass_1 image 16#11DBF4;
+  pass_2 image 16#1AA550;
+end;
+
+transform 9  literal_64_bits <- dpreal_ob
+  pass_1 image 16#11DD08;
+  pass_2 image 16#1AA570;
+end;
+
+transform 10  literal_32_bits <- real_ob
+  pass_1 image 16#11DE24;
+  pass_2 image 16#1AA590;
+end;
+
+transform 11  address_mode <- namelist_constant_ob | set_con_ob
+  pass_1 image 16#11DF4E;
+  pass_2 image 16#1AA5B0;
+end;
+
+transform 12  address_mode <- set_con_ob
+  pass_1 image 16#11E0C0;
+  pass_2 image 16#1AA5E0;
+end;

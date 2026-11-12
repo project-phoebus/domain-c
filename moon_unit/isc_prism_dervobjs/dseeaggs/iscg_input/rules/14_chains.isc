@@ -1,0 +1,142 @@
+{ 14_chains.isc - the ISC generator's input (docs/iscg-design.md), section 14, rules 378..403.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 14 chains  image pass_1 a5 16#4619DC, pass_2 a5 16#48008C;
+
+transform 378  address_mode <- address_mode
+  pass_1 image 16#142E24;
+  pass_2 image 16#1BCB64;
+end;
+
+transform 379  address_mode <- address_mode
+  pass_1 image 16#14339E;
+  pass_2 image 16#1BCC98;
+end;
+
+transform 380  ip_reg <- address_mode
+  pass_1 image 16#14448E;
+  pass_2 image 16#1BE14C;
+end;
+
+transform 381  ip_reg <- address_mode
+  pass_1 image 16#144C4C;
+  pass_2 image 16#1BE97C;
+end;
+
+transform 382  fp_reg <- address_mode
+  check_permissible;
+  pass_1 image 16#145456;
+  pass_2 image 16#1BF474;
+end;
+
+transform 383  fp_reg_pair <- address_mode
+  pass_1 image 16#145A9A;
+  pass_2 image 16#1BFBC8;
+end;
+
+transform 384  fp_reg_quad <- address_mode
+  pass_1 image 16#14676A;
+  pass_2 image 16#1C0D34;
+end;
+
+transform 385  ip_reg <- fp_reg
+  pass_1 image 16#14811A;
+  pass_2 image 16#1C308A;
+end;
+
+transform 386  fp_reg <- fp_reg
+  pass_1 image 16#1485A2;
+  pass_2 image 16#1C30C4;
+end;
+
+transform 387  fp_reg_pair <- fp_reg_pair
+  pass_1 image 16#1489FE;
+  pass_2 image 16#1C30FE;
+end;
+
+transform 388  fp_reg <- fp_reg_pair
+  pass_1 image 16#148E7E;
+  pass_2 image 16#1C3162;
+end;
+
+transform 389  ip_reg <- ip_reg_field
+  pass_1 image 16#1492F0;
+  pass_2 image 16#1C3184;
+end;
+
+transform 390  ip_reg_field <- ip_reg_field
+  pass_1 image 16#149742;
+  pass_2 image 16#1C31E0;
+end;
+
+transform 391  ip_reg_field <- ip_reg_field
+  pass_1 image 16#149B82;
+  pass_2 image 16#1C323C;
+end;
+
+transform 392  ip_reg <- ip_reg_field
+  pass_1 image 16#14A094;
+  pass_2 image 16#1C3292;
+end;
+
+transform 393  ip_reg <- ip_reg_field
+  pass_1 image 16#14A402;
+  pass_2 image 16#1C3550;
+end;
+
+transform 394  ip_reg <- ip_reg_scaled
+  pass_1 image 16#14A602;
+  pass_2 image 16#1C359A;
+end;
+
+transform 395  fp_reg <- ip_reg
+  check_permissible;
+  pass_1 image 16#14AA62;
+  pass_2 image 16#1C35F6;
+end;
+
+transform 396  ip_reg <- ip_reg
+  pass_1 image 16#14B074;
+  pass_2 image 16#1C3718;
+end;
+
+transform 397  ip_reg <- literal_32_bits
+  pass_1 image 16#14B4B4;
+  pass_2 image 16#1C3752;
+end;
+
+transform 398  ip_reg <- literal_32_bits
+  pass_1 image 16#14B68E;
+  pass_2 image 16#1C3776;
+end;
+
+transform 399  fp_reg <- literal_32_bits
+  pass_1 image 16#14B8A0;
+  pass_2 image 16#1C381C;
+end;
+
+transform 400  fp_reg <- literal_32_bits
+  check_permissible;
+  pass_1 image 16#14B8DA;
+  pass_2 image 16#1C3840;
+end;
+
+transform 401  address_mode <- literal_32_bits
+  pass_1 image 16#14BB20;
+  pass_2 image 16#1C3916;
+end;
+
+transform 402  fp_reg_pair <- literal_64_bits
+  pass_1 image 16#14BCAE;
+  pass_2 image 16#1C3944;
+end;
+
+transform 403  address_mode <- literal_64_bits
+  pass_1 image 16#14BCE8;
+  pass_2 image 16#1C3968;
+end;

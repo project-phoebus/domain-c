@@ -1,0 +1,285 @@
+{ 09_addresses_and_fields.isc - the ISC generator's input (docs/iscg-design.md), section 9, rules 435..488.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 09 addresses_and_fields  image pass_1 a5 16#45AA38, pass_2 a5 16#480078;
+
+transform 435  ip_reg <- nop_top | value_top ($1: ip_reg)
+  pass_1 image 16#120134;
+  pass_2 image 16#1AACEC;
+end;
+
+transform 436  ip_reg <- nop_top | value_top ($1: ip_reg)
+  pass_1 image 16#1206CA;
+  pass_2 image 16#1AAD8E;
+end;
+
+transform 437  fp_reg <- nop_top | value_top ($1: fp_reg)
+  pass_1 image 16#120C32;
+  pass_2 image 16#1AAE04;
+end;
+
+transform 438  fp_reg <- nop_top | value_top ($1: fp_reg)
+  pass_1 image 16#121176;
+  pass_2 image 16#1AAEA6;
+end;
+
+transform 439  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
+  pass_1 image 16#1216EC;
+  pass_2 image 16#1AAF1C;
+end;
+
+transform 440  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
+  pass_1 image 16#121C30;
+  pass_2 image 16#1AAFBE;
+end;
+
+transform 441  ip_reg <- addr_top ($1: address_mode)
+  pass_1 image 16#1221C0;
+  pass_2 image 16#1AB058;
+end;
+
+transform 442  ip_reg <- addr_top ($1: ip_reg)
+  pass_1 image 16#1223C4;
+  pass_2 image 16#1AB14C;
+end;
+
+transform 443  ip_reg <- addr_top ($1: fp_reg)
+  pass_1 image 16#12252C;
+  pass_2 image 16#1AB216;
+end;
+
+transform 444  ip_reg <- addr_top ($1: fp_reg_pair)
+  pass_1 image 16#1226B2;
+  pass_2 image 16#1AB2C8;
+end;
+
+transform 445  ip_reg <- addr_top ($1: fp_reg_quad)
+  pass_1 image 16#122852;
+  pass_2 image 16#1AB39C;
+end;
+
+transform 446  ip_reg <- align_top ($1: ip_reg)
+  pass_1 image 16#124152;
+  pass_2 image 16#1AD5F8;
+end;
+
+transform 447  address_mode <- align_top ($1: address_mode)
+  pass_1 image 16#124682;
+  pass_2 image 16#1AD670;
+end;
+
+transform 448  address_mode <- align_top ($1: address_mode)
+  pass_1 image 16#124BD8;
+  pass_2 image 16#1AD6E8;
+end;
+
+transform 449  ip_reg <- allocate_dynamic_space_top ($1: ip_reg)
+  pass_1 image 16#125A8C;
+  pass_2 image 16#1AEC1A empty;
+end;
+
+transform 450  void <- bit_field_assign ($1: address_mode, $2: literal_32_bits, $3: address_mode, $4: literal_32_bits, $5: literal_32_bits)
+  pass_1 image 16#125BC4;
+  pass_2 image 16#1AEC1C;
+end;
+
+transform 451  ip_reg <- bit_set_top ($1: literal_32_bits, $2: ip_reg, $3: ip_reg)
+  pass_1 image 16#12725C;
+  pass_2 image 16#1B107E;
+end;
+
+transform 452  ip_reg <- bit_set_top ($1: ip_reg_scaled, $2: ip_reg, $3: ip_reg)
+  pass_1 image 16#127438;
+  pass_2 image 16#1B1182;
+end;
+
+transform 453  ip_reg <- bit_set_top ($1: ip_reg, $2: ip_reg, $3: ip_reg)
+  pass_1 image 16#127608;
+  pass_2 image 16#1B12A6;
+end;
+
+transform 454  ip_reg <- bit_set_top ($1: literal_32_bits, $2: ip_reg, $3: void)
+  pass_1 image 16#1277D8;
+  pass_2 image 16#1B13CA;
+end;
+
+transform 455  ip_reg <- bit_set_top ($1: ip_reg_scaled, $2: ip_reg, $3: void)
+  pass_1 image 16#127984;
+  pass_2 image 16#1B1438;
+end;
+
+transform 456  ip_reg <- bit_set_top ($1: ip_reg, $2: ip_reg, $3: void)
+  pass_1 image 16#127B26;
+  pass_2 image 16#1B14C6;
+end;
+
+transform 457  literal_32_bits <- chk_top ($1: literal_32_bits, $2: literal_32_bits)
+  pass_1 image 16#127CC8;
+  pass_2 image 16#1B1554;
+end;
+
+transform 458  ip_reg <- chk_top ($1: ip_reg, $2: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#12823A;
+  pass_2 image 16#1B15CC;
+end;
+
+transform 459  ip_reg_field <- cs_node ($1: ip_reg_field, $2: [ip_reg, literal_32_bits])
+  pass_1 image 16#128922;
+  pass_2 image 16#1B1834;
+end;
+
+transform 460  ip_reg <- cs_node ($1: ip_reg, $2: [ip_reg, literal_32_bits])
+  pass_1 image 16#128E70;
+  pass_2 image 16#1B18AC;
+end;
+
+transform 461  address_mode <- cs_node ($1: address_mode, $2: [ip_reg, literal_32_bits])
+  pass_1 image 16#1293BE;
+  pass_2 image 16#1B1924;
+end;
+
+transform 462  void <- eval_node
+  pass_1 image 16#12990C;
+  pass_2 image 16#1B199C empty;
+end;
+
+transform 463  ip_reg_field <- extract_bit_field_top ($1: address_mode, $2: literal_32_bits)
+  pass_1 image 16#129A02;
+  pass_2 image 16#1B199E;
+end;
+
+transform 464  ip_reg <- extract_bit_field_top ($1: address_mode, $2: ip_reg)
+  pass_1 image 16#12A1DA;
+  pass_2 image 16#1B20D2;
+end;
+
+transform 465  fp_reg <- f_range_check_top ($1: fp_reg, $2: fp_reg, $3: fp_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#12A6AA;
+  pass_2 image 16#1B274C;
+end;
+
+transform 466  fp_reg_pair <- f_range_check_top ($1: fp_reg_pair, $2: fp_reg_pair, $3: fp_reg_pair)
+  no_could_deadlock_child;
+  pass_1 image 16#12AD0A;
+  pass_2 image 16#1B293A;
+end;
+
+transform 467  ip_reg <- index_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#12B36A;
+  pass_2 image 16#1B2B28;
+end;
+
+transform 468  void <- insert_bit_field ($1: address_mode, $2: literal_32_bits, $3: ip_reg)
+  pass_1 image 16#12B59C;
+  pass_2 image 16#1B2B6E;
+end;
+
+transform 469  void <- insert_bit_field ($1: address_mode, $2: ip_reg, $3: ip_reg)
+  pass_1 image 16#12BEC0;
+  pass_2 image 16#1B3714;
+end;
+
+transform 470  ip_reg <- isc_addr_top ($1: address_mode)
+  pass_1 image 16#12C422;
+  pass_2 image 16#1B3F32;
+end;
+
+transform 471  ip_reg <- isc_addr_top ($1: ip_reg)
+  pass_1 image 16#12C636;
+  pass_2 image 16#1B4026;
+end;
+
+transform 472  ip_reg <- isc_addr_top ($1: fp_reg)
+  pass_1 image 16#12C79E;
+  pass_2 image 16#1B40F0;
+end;
+
+transform 473  ip_reg <- isc_addr_top ($1: fp_reg_pair)
+  pass_1 image 16#12C924;
+  pass_2 image 16#1B41A2;
+end;
+
+transform 474  ip_reg <- isc_addr_top ($1: fp_reg_quad)
+  pass_1 image 16#12CAC4;
+  pass_2 image 16#1B4276;
+end;
+
+transform 475  ip_reg <- mark_dynamic_space_top
+  pass_1 image 16#12E3C4;
+  pass_2 image 16#1B64E0 empty;
+end;
+
+transform 476  address_mode <- nop_top ($1: address_mode)
+  pass_1 image 16#12E4E8;
+  pass_2 image 16#1B64E2;
+end;
+
+transform 477  ip_reg <- physical_top ($1: ip_reg)
+  pass_1 image 16#12EA18;
+  pass_2 image 16#1B655A;
+end;
+
+transform 478  ip_reg <- range_check_top ($1: ip_reg, $2: literal_32_bits, $3: literal_32_bits)
+  no_could_deadlock_child;
+  pass_1 image 16#12EB54;
+  pass_2 image 16#1B65A2;
+end;
+
+transform 479  ip_reg <- range_check_top ($1: ip_reg, $2: literal_32_bits, $3: literal_32_bits)
+  no_could_deadlock_child;
+  pass_1 image 16#12F2A0;
+  pass_2 image 16#1B67FC;
+end;
+
+transform 480  ip_reg <- range_check_top ($1: ip_reg, $2: [ip_reg, literal_32_bits], $3: [ip_reg, literal_32_bits])
+  no_could_deadlock_child;
+  pass_1 image 16#12FA90;
+  pass_2 image 16#1B6AA2;
+end;
+
+transform 481  void <- release_dynamic_space ($1: ip_reg)
+  pass_1 image 16#130544;
+  pass_2 image 16#1B70C6 empty;
+end;
+
+transform 482  void <- sr_top ($1: [ip_reg, literal_32_bits], $2: [ip_reg, literal_32_bits, void])
+  pass_1 image 16#130640;
+  pass_2 image 16#1B70C8;
+end;
+
+transform 483  ip_reg <- sr_top ($1: [ip_reg, literal_32_bits], $2: [ip_reg, literal_32_bits, void])
+  pass_1 image 16#130786;
+  pass_2 image 16#1B7116;
+end;
+
+transform 484  ip_reg_field <- unpack_top ($1: [ip_reg, ip_reg_field], $2: literal_32_bits)
+  pass_1 image 16#1308DE;
+  pass_2 image 16#1B7174;
+end;
+
+transform 485  ip_reg <- unpack_top ($1: [ip_reg, ip_reg_field], $2: literal_32_bits)
+  pass_1 image 16#130ED4;
+  pass_2 image 16#1B71EC;
+end;
+
+transform 486  ip_reg <- unpack_top ($1: [ip_reg, ip_reg_field], $2: literal_32_bits)
+  pass_1 image 16#131150;
+  pass_2 image 16#1B7280;
+end;
+
+transform 487  ip_reg <- unpack_top ($1: [ip_reg, ip_reg_field], $2: ip_reg)
+  pass_1 image 16#1313D0;
+  pass_2 image 16#1B72D4;
+end;
+
+transform 488  ip_reg <- unpack_top ($1: [ip_reg, ip_reg_field], $2: ip_reg)
+  pass_1 image 16#131666;
+  pass_2 image 16#1B74D8;
+end;

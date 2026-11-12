@@ -1,0 +1,294 @@
+{ 04_integer_arithmetic.isc - the ISC generator's input (docs/iscg-design.md), section 4, rules 253..305.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 04 integer_arithmetic  image pass_1 a5 16#45898C, pass_2 a5 16#480064;
+
+transform 253  ip_reg_field <- add_top | sub_top ($1: ip_reg_field, $2: literal_32_bits)
+  pass_1 image 16#10A02C;
+  pass_2 image 16#1A20A0;
+end;
+
+transform 254  ip_reg <- add_top | sub_top ($1: ip_reg, $2: [ip_reg, literal_32_bits])
+  pass_1 image 16#10A300;
+  pass_2 image 16#1A2120;
+end;
+
+transform 255  ip_reg <- add_top | sub_top ($1: ip_reg, $2: [ip_reg, literal_32_bits])
+  no_could_deadlock_child;
+  pass_1 image 16#10A574;
+  pass_2 image 16#1A2176;
+end;
+
+transform 256  ip_reg <- add_top | sub_top ($1: ip_reg, $2: ip_reg_scaled)
+  pass_1 image 16#10A9CA;
+  pass_2 image 16#1A23EC;
+end;
+
+transform 257  ip_reg <- add_top | sub_top ($1: ip_reg_scaled, $2: ip_reg)
+  pass_1 image 16#10AC08;
+  pass_2 image 16#1A2442;
+end;
+
+transform 258  ip_reg_field <- add_top | sub_top ($1: ip_reg_field, $2: ip_reg_field)
+  pass_1 image 16#10AE46;
+  pass_2 image 16#1A2498;
+end;
+
+transform 259  ip_reg_field <- add_top | sub_top ($1: ip_reg_field, $2: ip_reg_field)
+  pass_1 image 16#10B278;
+  pass_2 image 16#1A2596;
+end;
+
+transform 260  fp_reg <- add_top | sub_top ($1: fp_reg, $2: fp_reg)
+  pass_1 image 16#10B6BC;
+  pass_2 image 16#1A2686;
+end;
+
+transform 261  ip_reg <- abs_top ($1: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#10B8EE;
+  pass_2 image 16#1A26DC;
+end;
+
+transform 262  ip_reg <- abs_top ($1: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#10BB04;
+  pass_2 image 16#1A283A;
+end;
+
+transform 263  ip_reg <- ada_expon_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#10BE1A;
+  pass_2 image 16#1A2B62 empty;
+end;
+
+transform 264  ip_reg <- div_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#10BF70;
+  pass_2 image 16#1A2B64 empty;
+end;
+
+transform 265  ip_reg <- expon_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#10C0C6;
+  pass_2 image 16#1A2B66 empty;
+end;
+
+transform 266  ip_reg <- f_ada_expon_top ($1: fp_reg, $2: ip_reg)
+  pass_1 image 16#10C21C;
+  pass_2 image 16#1A2B68 empty;
+end;
+
+transform 267  ip_reg_scaled <- isc_mul_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#10C372;
+  pass_2 image 16#1A2B6A;
+end;
+
+transform 268  ip_reg_scaled <- isc_mul_top ($1: literal_32_bits, $2: ip_reg)
+  pass_1 image 16#10C908;
+  pass_2 image 16#1A2BE2;
+end;
+
+transform 269  ip_reg <- isc_mul_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#10CE9E;
+  pass_2 image 16#1A2C5A;
+end;
+
+transform 270  ip_reg <- isc_mul_top ($1: ip_reg, $2: literal_32_bits)
+  no_could_deadlock_child;
+  pass_1 image 16#10D0AE;
+  pass_2 image 16#1A2CAA;
+end;
+
+transform 271  ip_reg <- isc_mul_top ($1: literal_32_bits, $2: ip_reg)
+  pass_1 image 16#10D3AE;
+  pass_2 image 16#1A2E7A;
+end;
+
+transform 272  ip_reg <- isc_mul_top ($1: literal_32_bits, $2: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#10D5BE;
+  pass_2 image 16#1A2ECA;
+end;
+
+transform 273  fp_reg <- isc_mul_top ($1: fp_reg, $2: fp_reg)
+  pass_1 image 16#10D8BE;
+  pass_2 image 16#1A309A;
+end;
+
+transform 274  fp_reg <- isc_signed_mod_top ($1: [fp_reg, ip_reg], $2: [fp_reg, ip_reg])
+  no_could_deadlock_child;
+  pass_1 image 16#10DB42;
+  pass_2 image 16#1A3276;
+end;
+
+transform 275  fp_reg <- isc_signed_rem_top ($1: [fp_reg, ip_reg], $2: [fp_reg, ip_reg])
+  no_could_deadlock_child;
+  pass_1 image 16#10E16C;
+  pass_2 image 16#1A3A6A;
+end;
+
+transform 276  ip_reg <- isc_unsigned_mod_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#10E790;
+  pass_2 image 16#1A3FFA empty;
+end;
+
+transform 277  ip_reg <- isc_unsigned_rem_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#10E8E6;
+  pass_2 image 16#1A3FFC empty;
+end;
+
+transform 278  ip_reg <- max_top ($1: ip_reg, $2: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#10EA3C;
+  pass_2 image 16#1A3FFE;
+end;
+
+transform 279  ip_reg <- min_top ($1: ip_reg, $2: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#10EF7E;
+  pass_2 image 16#1A4318;
+end;
+
+transform 280  ip_reg <- mod_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#10F4C0;
+  pass_2 image 16#1A4632 empty;
+end;
+
+transform 281  ip_reg <- mul_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#10F616;
+  pass_2 image 16#1A4634 empty;
+end;
+
+transform 282  ip_reg_field <- neg_top ($1: ip_reg_field)
+  pass_1 image 16#10F76C;
+  pass_2 image 16#1A4636;
+end;
+
+transform 283  ip_reg_field <- neg_top ($1: ip_reg_field)
+  pass_1 image 16#10FD14;
+  pass_2 image 16#1A467E;
+end;
+
+transform 284  ip_reg <- neg_top ($1: ip_reg)
+  pass_1 image 16#1102E0;
+  pass_2 image 16#1A46C6;
+end;
+
+transform 285  ip_reg <- neg_top ($1: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#11047A;
+  pass_2 image 16#1A470E;
+end;
+
+transform 286  fp_reg <- neg_top ($1: fp_reg)
+  pass_1 image 16#110702;
+  pass_2 image 16#1A489A;
+end;
+
+transform 287  ip_reg <- neg_top ($1: compare_top($1: [ip_reg, ip_reg_field], $2: literal_32_bits))
+  pass_1 image 16#1108BE;
+  pass_2 image 16#1A48DE;
+end;
+
+transform 288  ip_reg <- signed_div_top ($1: ip_reg, $2: literal_32_bits)
+  no_could_deadlock_child;
+  pass_1 image 16#110B2E;
+  pass_2 image 16#1A499A;
+end;
+
+transform 289  ip_reg <- signed_div_top ($1: ip_reg, $2: literal_32_bits)
+  no_could_deadlock_child;
+  pass_1 image 16#110E3E;
+  pass_2 image 16#1A4B92;
+end;
+
+transform 290  fp_reg <- signed_div_top ($1: fp_reg, $2: [fp_reg, ip_reg])
+  no_could_deadlock_child;
+  pass_1 image 16#1110C6;
+  pass_2 image 16#1A4C92;
+end;
+
+transform 291  ip_reg_field <- signed_mod_top ($1: [ip_reg, ip_reg_field], $2: literal_32_bits)
+  pass_1 image 16#111654;
+  pass_2 image 16#1A5122;
+end;
+
+transform 292  fp_reg <- signed_mod_top ($1: [fp_reg, ip_reg], $2: [fp_reg, ip_reg])
+  no_could_deadlock_child;
+  pass_1 image 16#111CE6;
+  pass_2 image 16#1A519A;
+end;
+
+transform 293  ip_reg_field <- sub_top ($1: literal_32_bits, $2: ip_reg_field)
+  pass_1 image 16#112344;
+  pass_2 image 16#1A5812;
+end;
+
+transform 294  ip_reg <- sub_top ($1: literal_32_bits, $2: ip_reg)
+  pass_1 image 16#1125CA;
+  pass_2 image 16#1A5882;
+end;
+
+transform 295  ip_reg <- sub_top ($1: literal_32_bits, $2: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#11282A;
+  pass_2 image 16#1A58C8;
+end;
+
+transform 296  ip_reg <- sub_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#112B70;
+  pass_2 image 16#1A5A50;
+end;
+
+transform 297  ip_reg <- sub_top ($1: ip_reg, $2: literal_32_bits)
+  no_could_deadlock_child;
+  pass_1 image 16#112DD4;
+  pass_2 image 16#1A5AAC;
+end;
+
+transform 298  ip_reg_field <- sub_top ($1: ip_reg_field, $2: literal_32_bits)
+  pass_1 image 16#11311E;
+  pass_2 image 16#1A5C4C;
+end;
+
+transform 299  ip_reg_field <- unsigned_div_top ($1: [ip_reg, ip_reg_field], $2: literal_32_bits)
+  pass_1 image 16#1133AA;
+  pass_2 image 16#1A5CBE;
+end;
+
+transform 300  ip_reg <- unsigned_div_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#113A1A;
+  pass_2 image 16#1A5D36;
+end;
+
+transform 301  fp_reg <- unsigned_div_top ($1: [fp_reg, ip_reg], $2: [fp_reg, ip_reg])
+  no_could_deadlock_child;
+  pass_1 image 16#113C48;
+  pass_2 image 16#1A5D86;
+end;
+
+transform 302  fp_reg <- unsigned_div_top ($1: [fp_reg, ip_reg], $2: [fp_reg, ip_reg])
+  no_could_deadlock_child;
+  pass_1 image 16#114388;
+  pass_2 image 16#1A62EE;
+end;
+
+transform 303  ip_reg_field <- unsigned_mod_top ($1: [ip_reg, ip_reg_field], $2: literal_32_bits)
+  pass_1 image 16#114908;
+  pass_2 image 16#1A68F2;
+end;
+
+transform 304  fp_reg <- unsigned_mod_top ($1: [fp_reg, ip_reg], $2: [fp_reg, ip_reg])
+  no_could_deadlock_child;
+  pass_1 image 16#114F5C;
+  pass_2 image 16#1A696A;
+end;
+
+transform 305  fp_reg <- unsigned_mod_top ($1: [fp_reg, ip_reg], $2: [fp_reg, ip_reg])
+  no_could_deadlock_child;
+  pass_1 image 16#1156AA;
+  pass_2 image 16#1A700E;
+end;

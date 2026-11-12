@@ -1,0 +1,107 @@
+{ 03_single_float.isc - the ISC generator's input (docs/iscg-design.md), section 3, rules 306..323.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 03 single_float  image pass_1 a5 16#45887C, pass_2 a5 16#480060;
+
+transform 306  fp_reg <- f_add_top | f_div_top | f_mul_top | f_sub_top ($1: fp_reg, $2: fp_reg)
+  pass_1 image 16#107A18;
+  pass_2 image 16#1A06E0;
+end;
+
+transform 307  fp_reg_pair <- f_add_top | f_div_top | f_mul_top | f_sub_top ($1: fp_reg_pair, $2: fp_reg_pair)
+  pass_1 image 16#107C6E;
+  pass_2 image 16#1A0758;
+end;
+
+transform 308  ip_reg <- f_expon_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#107E9C;
+  pass_2 image 16#1A07F2 empty;
+end;
+
+transform 309  fp_reg <- f_math_top ($1: fp_reg, $2: void)
+  pass_1 image 16#107FF2;
+  pass_2 image 16#1A07F4;
+end;
+
+transform 310  fp_reg <- f_math_top ($1: fp_reg_pair, $2: void)
+  pass_1 image 16#108278;
+  pass_2 image 16#1A0962;
+end;
+
+transform 311  fp_reg <- f_math_top ($1: fp_reg, $2: fp_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#1084EA;
+  pass_2 image 16#1A0A9E;
+end;
+
+transform 312  fp_reg <- f_math_top ($1: fp_reg, $2: fp_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#108704;
+  pass_2 image 16#1A0BA6;
+end;
+
+transform 313  ip_reg <- f_math_top ($1: fp_reg, $2: void)
+  no_could_deadlock_child;
+  pass_1 image 16#10891E;
+  pass_2 image 16#1A0CAE;
+end;
+
+transform 314  fp_reg <- f_math_top ($1: fp_reg, $2: void)
+  no_could_deadlock_child;
+  pass_1 image 16#108B8C;
+  pass_2 image 16#1A1066;
+end;
+
+transform 315  fp_reg <- f_math_top ($1: fp_reg, $2: void)
+  pass_1 image 16#108DD8;
+  pass_2 image 16#1A13F8;
+end;
+
+transform 316  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
+  pass_1 image 16#108F9A;
+  pass_2 image 16#1A147E;
+end;
+
+transform 317  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: fp_reg_pair)
+  no_could_deadlock_child;
+  pass_1 image 16#109188;
+  pass_2 image 16#1A151A;
+end;
+
+transform 318  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: fp_reg_pair)
+  no_could_deadlock_child;
+  pass_1 image 16#1093B8;
+  pass_2 image 16#1A1644;
+end;
+
+transform 319  ip_reg <- f_math_top ($1: fp_reg_pair, $2: void)
+  no_could_deadlock_child;
+  pass_1 image 16#1095E8;
+  pass_2 image 16#1A176E;
+end;
+
+transform 320  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
+  no_could_deadlock_child;
+  pass_1 image 16#10986C;
+  pass_2 image 16#1A1B5C;
+end;
+
+transform 321  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
+  pass_1 image 16#109ACE;
+  pass_2 image 16#1A1F0A;
+end;
+
+transform 322  fp_reg <- f_neg_top ($1: fp_reg)
+  pass_1 image 16#109CB6;
+  pass_2 image 16#1A1FB2;
+end;
+
+transform 323  fp_reg_pair <- f_neg_top ($1: fp_reg_pair)
+  pass_1 image 16#109E66;
+  pass_2 image 16#1A2018;
+end;

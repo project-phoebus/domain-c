@@ -1,0 +1,211 @@
+{ 25_compares.isc - the ISC generator's input (docs/iscg-design.md), section 25, rules 101..139.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 25 compares  image pass_1 a5 16#479960, pass_2 a5 16#4800B8;
+
+transform 101  literal_32_bits <- bit_test_top ($1: literal_32_bits, $2: [address_mode, ip_reg, ip_reg_field])
+  pass_1 image 16#17CD58;
+  pass_2 image 16#1EF574 empty;
+end;
+
+transform 102  ip_reg <- bit_test_top ($1: literal_32_bits, $2: ip_reg_field)
+  pass_1 image 16#17CE8E;
+  pass_2 image 16#1EF576;
+end;
+
+transform 103  ip_reg <- bit_test_top ($1: literal_32_bits, $2: ip_reg)
+  pass_1 image 16#17D0DA;
+  pass_2 image 16#1EF61A;
+end;
+
+transform 104  ip_reg <- bit_test_top ($1: literal_32_bits, $2: address_mode)
+  pass_1 image 16#17D2E8;
+  pass_2 image 16#1EF6BA;
+end;
+
+transform 105  ip_reg <- bit_test_top ($1: ip_reg, $2: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#17D6BE;
+  pass_2 image 16#1EF954;
+end;
+
+transform 106  ip_reg <- bit_test_top ($1: ip_reg, $2: address_mode)
+  no_could_deadlock_child;
+  pass_1 image 16#17DA12;
+  pass_2 image 16#1EFBE6;
+end;
+
+transform 107  ip_reg <- compare_top ($1: [ip_reg, ip_reg_field], $2: literal_32_bits)
+  pass_1 image 16#17DEB2;
+  pass_2 image 16#1F002E;
+end;
+
+transform 108  ip_reg <- flow
+  no_could_deadlock_child;
+  pass_1 image 16#17E0F0;
+  pass_2 image 16#1F00CA;
+end;
+
+transform 109  flow <- extend_top ($1: flow)
+  pass_1 image 16#17E2AC;
+  pass_2 image 16#1F018C;
+end;
+
+transform 110  flow <- neg_top ($1: flow)
+  pass_1 image 16#17E7A0;
+  pass_2 image 16#1F0204;
+end;
+
+transform 111  flow <- rshf_top ($1: flow, $2: literal_32_bits)
+  pass_1 image 16#17ECA8;
+  pass_2 image 16#1F027C;
+end;
+
+transform 112  flow <- compare_top | set_compare_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#17F1DE;
+  pass_2 image 16#1F02F4;
+end;
+
+transform 113  flow <- compare_top | set_compare_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#17FB52;
+  pass_2 image 16#1F1028;
+end;
+
+transform 114  flow <- compare_top | set_compare_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#180686;
+  pass_2 image 16#1F1CBE;
+end;
+
+transform 115  flow <- compare_top | set_compare_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#181100;
+  pass_2 image 16#1F271E;
+end;
+
+transform 116  flow <- compare_top | set_compare_top ($1: ip_reg, $2: literal_32_bits)
+  pass_1 image 16#181BB4;
+  pass_2 image 16#1F3194;
+end;
+
+transform 117  flow <- compare_top | set_compare_top ($1: ip_reg_field, $2: ip_reg_field)
+  pass_1 image 16#1826CE;
+  pass_2 image 16#1F3C7E;
+end;
+
+transform 118  flow <- compare_top | set_compare_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#182AAC;
+  pass_2 image 16#1F4166;
+end;
+
+transform 119  flow <- compare_top | set_compare_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#182F58;
+  pass_2 image 16#1F46CC;
+end;
+
+transform 120  flow <- agg_compare_top ($1: [address_mode, ip_reg], $2: [address_mode, ip_reg])
+  pass_1 image 16#183534;
+  pass_2 image 16#1F4B80;
+end;
+
+transform 121  flow <- agg_compare_top ($1: [address_mode, ip_reg], $2: [address_mode, ip_reg])
+  pass_1 image 16#185468;
+  pass_2 image 16#1F798C;
+end;
+
+transform 122  flow <- agg_compare_top ($1: address_mode, $2: address_mode)
+  pass_1 image 16#1863BA;
+  pass_2 image 16#1F9152;
+end;
+
+transform 123  flow <- bit_field_cmp_top ($1: address_mode, $2: literal_32_bits, $3: address_mode, $4: literal_32_bits, $5: literal_32_bits)
+  pass_1 image 16#186BC2;
+  pass_2 image 16#1F9B98;
+end;
+
+transform 124  flow <- bit_test_top ($1: literal_32_bits, $2: ip_reg_field)
+  pass_1 image 16#187DAA;
+  pass_2 image 16#1FB680;
+end;
+
+transform 125  flow <- bit_test_top ($1: literal_32_bits, $2: ip_reg)
+  pass_1 image 16#18809C;
+  pass_2 image 16#1FB970;
+end;
+
+transform 126  flow <- bit_test_top ($1: literal_32_bits, $2: address_mode)
+  pass_1 image 16#18838E;
+  pass_2 image 16#1FBC54;
+end;
+
+transform 127  flow <- bit_test_top ($1: ip_reg, $2: ip_reg)
+  no_could_deadlock_child;
+  pass_1 image 16#188850;
+  pass_2 image 16#1FC140;
+end;
+
+transform 128  flow <- bit_test_top ($1: ip_reg, $2: address_mode)
+  no_could_deadlock_child;
+  pass_1 image 16#188C8A;
+  pass_2 image 16#1FC612;
+end;
+
+transform 129  flow <- f_compare_top ($1: fp_reg, $2: [fp_reg, literal_32_bits])
+  pass_1 image 16#189210;
+  pass_2 image 16#1FCC90;
+end;
+
+transform 130  flow <- f_compare_top ($1: fp_reg_pair, $2: [fp_reg_pair, literal_64_bits])
+  pass_1 image 16#18943A;
+  pass_2 image 16#1FCD4C;
+end;
+
+transform 131  flow <- f_compare_top ($1: fp_reg_pair, $2: fp_reg_pair)
+  no_could_deadlock_child;
+  pass_1 image 16#18968A;
+  pass_2 image 16#1FCE2A;
+end;
+
+transform 132  flow <- f_compare_top ($1: fp_reg_quad, $2: fp_reg_quad)
+  no_could_deadlock_child;
+  pass_1 image 16#1898EE;
+  pass_2 image 16#1FCFC8;
+end;
+
+transform 133  flow <- isc_agg_cmp_top ($1: address_mode, $2: address_mode, $3: ip_reg)
+  pass_1 image 16#189B52;
+  pass_2 image 16#1FD166;
+end;
+
+transform 134  flow <- isc_agg_lex_cmp_top ($1: address_mode, $2: address_mode, $3: ip_reg, $4: ip_reg)
+  pass_1 image 16#18A3AA;
+  pass_2 image 16#1FDC62;
+end;
+
+transform 135  flow <- set_compare_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#18AD68;
+  pass_2 image 16#1FE906;
+end;
+
+transform 136  flow <- set_compare_top ($1: ip_reg, $2: ip_reg)
+  pass_1 image 16#18B05E;
+  pass_2 image 16#1FEC20;
+end;
+
+transform 137  flow <- set_compare_top ($1: address_mode, $2: address_mode)
+  pass_1 image 16#18B354;
+  pass_2 image 16#1FEF3A;
+end;
+
+transform 138  flow <- set_compare_top ($1: address_mode, $2: address_mode)
+  pass_1 image 16#18BB76;
+  pass_2 image 16#1FF980;
+end;
+
+transform 139  flow <- set_compare_top ($1: address_mode, $2: address_mode)
+  pass_1 image 16#18C07E;
+  pass_2 image 16#1FFED6;
+end;

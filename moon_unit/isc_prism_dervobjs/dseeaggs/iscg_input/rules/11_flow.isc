@@ -1,0 +1,79 @@
+{ 11_flow.isc - the ISC generator's input (docs/iscg-design.md), section 11, rules 227..240.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+section 11 flow  image pass_1 a5 16#461680, pass_2 a5 16#480080;
+
+transform 227  void <- blk_end_node
+  pass_1 image 16#13BAE0;
+  pass_2 image 16#1BB678 empty;
+end;
+
+transform 228  void <- block_entry_node
+  pass_1 image 16#13BBCA;
+  pass_2 image 16#1BB67A;
+end;
+
+transform 229  void <- branch_node ($1: irrelevant)
+  pass_1 image 16#13BCB4;
+  pass_2 image 16#1BB6A2;
+end;
+
+transform 230  void <- case_node_range_check ($1: irrelevant, $2: ip_reg, $3: flow, $4: ip_reg)
+  pass_1 image 16#13BDB8;
+  pass_2 image 16#1BB6F2;
+end;
+
+transform 231  void <- case_node_no_range_check ($1: ip_reg)
+  pass_1 image 16#13BF10;
+  pass_2 image 16#1BB768;
+end;
+
+transform 232  void <- cbranch_node ($1: irrelevant, $2: flow)
+  pass_1 image 16#13C026;
+  pass_2 image 16#1BB7DE empty;
+end;
+
+transform 233  void <- cbranch_node ($1: irrelevant, $2: [ip_reg, literal_32_bits])
+  pass_1 image 16#13C15E;
+  pass_2 image 16#1BB7E0;
+end;
+
+transform 234  void <- cbranch_node ($1: irrelevant, $2: ip_reg_field)
+  pass_1 image 16#13C35C;
+  pass_2 image 16#1BB83C;
+end;
+
+transform 235  void <- cbranch_node ($1: irrelevant, $2: ip_reg)
+  pass_1 image 16#13C5B6;
+  pass_2 image 16#1BBB1E;
+end;
+
+transform 236  void <- exception_handler_entry
+  pass_1 image 16#13C87E;
+  pass_2 image 16#1BBCF0;
+end;
+
+transform 237  void <- label_node
+  pass_1 image 16#13C968;
+  pass_2 image 16#1BBD18;
+end;
+
+transform 238  void <- nlbranch_node ($1: ip_reg)
+  pass_1 image 16#13CA52;
+  pass_2 image 16#1BBD5C;
+end;
+
+transform 239  void <- raise_exception
+  pass_1 image 16#13CF4E;
+  pass_2 image 16#1BBD9E;
+end;
+
+transform 240  void <- return_node
+  pass_1 image 16#13D03A;
+  pass_2 image 16#1BBDD4 empty;
+end;

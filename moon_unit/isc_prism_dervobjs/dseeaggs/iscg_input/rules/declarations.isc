@@ -1,0 +1,485 @@
+{ declarations.isc - the ISC generator's input (docs/iscg-design.md), the declarations.
+  Written by tools/iscg_extract.py from cc.a88k; tools/iscg_gen.py
+  generates the ISC's Pascal from these files.  Not known from the
+  original: the language's syntax (only "pattern", "transform" and
+  `let result <- ...;' survive in the image), the files' names and
+  layout. }
+
+
+{ The solution kinds (solution$t: the SOLUTION$ identifiers). }
+kinds none, case_jump_base, fp_reg_pair_high, fp_reg_pair_low, local_routine, address_mode, ctl_reg, flow, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits, literal_64_bits, processor_reg, sc_reg, sr_reg, dummy, any_solution, irrelevant, proper_subtree, void, k_max;
+
+{ The attributes, as dump_solution prints them: name, offset (and bit)
+  in the solution, size class. }
+attribute kind +108 integer;
+attribute il_kind +98 integer;
+attribute which_transform +112 integer;
+attribute advancing_displacement +28 integer32;
+attribute all_zeroes_or_all_ones +81.7 boolean;
+attribute arg_block_location +81.6 boolean;
+attribute bit_7_was_sign_extended +81.5 boolean;
+attribute bit_15_was_sign_extended +81.4 boolean;
+attribute bit_position_of_lsb +76 byte;
+attribute bits_known +32 integer32;
+attribute bits_trusted +36 integer32;
+attribute bits_known_of_fetched_value +40 integer32;
+attribute bits_trusted_of_fetched_value +44 integer32;
+attribute bytes +56 integer;
+attribute dead_end +81.3 boolean;
+attribute derived_from_literal +81.2 boolean;
+attribute embedded_strength_reduction_temporary +81.1 boolean;
+attribute field_precision +77 byte;
+attribute field_requires_sign_extend +81.0 boolean;
+attribute fp_reg_max +58 integer;
+attribute fp_reg_result +60 integer;
+attribute fp_reg_pair_max +62 integer;
+attribute fp_reg_pair_result +64 integer;
+attribute fp_reg_quad_max +66 integer;
+attribute fp_reg_quad_result +68 integer;
+attribute has_a_symbolic_displacement +82.7 boolean;
+attribute ip_reg_max +70 integer;
+attribute ip_reg_result +72 integer;
+attribute is_atomic +82.6 boolean;
+attribute is_complex +82.5 boolean;
+attribute is_destroyable +82.4 boolean;
+attribute is_dynm_vat +82.3 boolean;
+attribute is_entire_object +82.2 boolean;
+attribute is_physical +82.1 boolean;
+attribute is_set_temporary +82.0 boolean;
+attribute is_volatile +83.7 boolean;
+attribute literal_32_bits_value +48 integer32;
+attribute literal_64_bits_value_is_zero +83.6 boolean;
+attribute literal_derived_from_floating_constant +83.5 boolean;
+attribute materialize_true_as_1 +83.4 boolean;
+attribute n_bytes_to_back_up +74 integer;
+attribute pass_1_size +52 integer32;
+attribute physical_register +83.3 boolean;
+attribute physical_register_from_function_call +83.2 boolean;
+attribute physical_register_number +78 byte;
+attribute physical_register_is_no_modify +83.1 boolean;
+attribute physical_register_user_declared +83.0 boolean;
+attribute scale +79 byte;
+attribute slevel_attribute +80 byte;
+attribute uses_the_base_register +84.7 boolean;
+attribute uses_the_displacement +84.6 boolean;
+attribute uses_the_index_register +84.5 boolean;
+attribute before_transform +88 pointer;
+attribute code_bytes +92 integer;
+attribute delay +94 integer;
+attribute evaluation_order +96 integer;
+attribute il +100 pointer;
+attribute inherited_attributes +104 pointer;
+attribute memory_references +110 integer;
+attribute number_of_children +114 byte;
+attribute already_preserved +115.7 boolean;
+attribute builtin_could_deadlock_sched +115.6 boolean;
+attribute builtin_is_local_cse +115.5 boolean;
+attribute builtin_local_cse_has_been_preserved +115.4 boolean;
+attribute case_value +136 local;
+attribute already_address_mode +342 local;
+attribute already_fp_reg +343 local;
+attribute already_fp_reg_pair +344 local;
+attribute already_fp_reg_quad +345 local;
+attribute already_ip_reg +346 local;
+attribute already_ip_reg_field +347 local;
+attribute already_processor_reg +348 local;
+attribute base_register +4 pointer;
+attribute index_register +8 pointer;
+attribute false_label +16 pointer;
+attribute object_with_name;
+attribute live_range +20 pointer;
+attribute live_range_of_imaginary_part +24 pointer;
+attribute already_through_pass_2 +115.3 boolean;
+
+{ The operators: isc_pass_1_main's routine for each, the il$t it
+  gives the proper_subtree, the number of children and the permissible
+  set of each pass_1 call in order (derived: the union of the kinds
+  the patterns test at that position; inherited: the routine's own;
+  -np: less not_permissible_function's). }
+operator isc_addr_con il addr_con children 1
+  pass_1 derived;
+operator isc_ap_register il ap_register children 0;
+operator isc_argument_block_location_ob il argument_block_location_ob children 0;
+operator isc_assign_node_add_to_aop il add_to_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_agg_aop il agg_aop children 2
+  pass_1 inherited, [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, any_solution], [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, literal_32_bits, any_solution];
+operator isc_assign_node_agg_len_aop il agg_len_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_and_to_aop il and_to_aop children 2
+  pass_1 derived, [ip_reg, ip_reg_scaled, literal_32_bits];
+operator isc_assign_node_div_by_aop il div_by_aop children 2
+  pass_1 derived, derived, inherited;
+operator isc_assign_node_eor_to_aop il eor_to_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_f_add_to_aop il f_add_to_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_f_div_by_aop il f_div_by_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_f_mul_to_aop il f_mul_to_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_f_range_check_to_aop il f_range_check_to_aop children 3
+  pass_1 derived, derived, derived;
+operator isc_assign_node_f_sub_from_aop il f_sub_from_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_fp_aop il fp_aop children 2
+  pass_1 inherited, [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, any_solution], [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, literal_32_bits, any_solution];
+operator isc_assign_node_isc_agg_aop il isc_agg_aop children 3
+  pass_1 inherited, [address_mode, any_solution], [address_mode, any_solution], [ip_reg, literal_32_bits];
+operator isc_assign_node_isc_agg_zero_aop il isc_agg_zero_aop children 2
+  pass_1 inherited;
+operator isc_assign_node_isc_fill_aop il isc_fill_aop children 3
+  pass_1 [address_mode, ip_reg, ip_reg_field, any_solution], [literal_32_bits, any_solution], derived;
+operator isc_assign_node_isc_mul_to_aop il isc_mul_to_aop children 2
+  pass_1 derived, derived, inherited;
+operator isc_assign_node_isc_slice_aop il isc_slice_aop children 3
+  pass_1 inherited;
+operator isc_assign_node_lshft_to_aop il lshft_to_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_mul_to_aop il mul_to_aop children 2
+  pass_1 inherited;
+operator isc_assign_node_neg_to_aop il neg_to_aop children 1
+  pass_1 derived;
+operator isc_assign_node_not_to_aop il not_to_aop children 1
+  pass_1 derived;
+operator isc_assign_node_or_to_aop il or_to_aop children 2
+  pass_1 derived, [ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits];
+operator isc_assign_node_pack_aop il pack_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_range_check_to_aop il range_check_to_aop children 3
+  pass_1 derived, derived, derived;
+operator isc_assign_node_rshft_to_aop il rshft_to_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_scalar_aop il scalar_aop children 2
+  pass_1 inherited, [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, processor_reg, any_solution], [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, literal_32_bits, any_solution];
+operator isc_assign_node_set_and_to_aop il set_and_to_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_set_diff_from_aop il set_diff_from_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_set_or_to_aop il set_or_to_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_strcat_aop il strcat_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_strcpy_aop il strcpy_aop children 2
+  pass_1 derived, derived;
+operator isc_assign_node_strncat_aop il strncat_aop children 3
+  pass_1 derived, derived, derived;
+operator isc_assign_node_strncpy_aop il strncpy_aop children 3
+  pass_1 derived, derived, derived;
+operator isc_assign_node_sub_from_aop il sub_from_aop children 2
+  pass_1 derived, derived;
+operator isc_at_lib_dsc il at_lib_dsc children 0
+  pass_1 inherited;
+operator isc_binteger_ob il binteger_ob children 0;
+operator isc_ubinteger_ob il ubinteger_ob children 0;
+operator isc_bit_field_assign il bit_field_assign children 5
+  pass_1 derived, derived, derived, derived, derived, inherited;
+operator isc_blk_end_node il blk_end_node children 0
+  pass_1 inherited;
+operator isc_block_entry_node il block_entry_node children 0;
+operator isc_blogical_ob il blogical_ob children 0;
+operator isc_branch_node il branch_node;
+operator isc_case_node_range_check il case_node_range_check children 4
+  pass_1 [ip_reg], [flow], [ip_reg];
+operator isc_case_node_no_range_check il case_node_no_range_check children 1
+  pass_1 derived;
+operator isc_cbranch_node il cbranch_node children 2
+  pass_1 [flow, ip_reg, ip_reg_field, literal_32_bits];
+operator isc_cc_call il cc_call children 0;
+operator isc_char_ob il char_ob children 0;
+operator isc_char_string_ob il char_string_ob children 0
+  pass_1 inherited;
+operator isc_cmp_tree_node_agg_compare_top il agg_compare_top children 2
+  pass_1 derived, derived;
+operator isc_cmp_tree_node_bit_field_cmp_top il bit_field_cmp_top children 5
+  pass_1 derived, derived, derived, derived, derived, inherited;
+operator isc_cmp_tree_node_bit_test_top il bit_test_top children 2
+  pass_1 [address_mode, ip_reg, ip_reg_field], [ip_reg, literal_32_bits];
+operator isc_cmp_tree_node_compare_top il compare_top children 2
+  pass_1 inherited, [ip_reg, ip_reg_field], [ip_reg, ip_reg_field, literal_32_bits];
+operator isc_cmp_tree_node_f_compare_top il f_compare_top children 2
+  pass_1 derived, derived;
+operator isc_cmp_tree_node_set_compare_top il set_compare_top children 2
+  pass_1 derived, derived;
+operator isc_complex_ob il complex_ob children 0;
+operator isc_cs_node il cs_node children 2
+  pass_1 derived, derived;
+operator isc_cs_temp il cs_temp children 0
+  pass_1 inherited;
+operator isc_cse_parent_ob il cse_parent_ob children 0;
+operator isc_cse_use_ob il cse_use_ob children 0;
+operator isc_db_register il db_register children 0;
+operator isc_dindex_node il dindex_node children 2
+  pass_1 derived, derived;
+operator isc_disp_node il disp_node children 1
+  pass_1 [address_mode, fp_reg, fp_reg_pair, fp_reg_quad, ip_reg, ip_reg_field, processor_reg];
+operator isc_display_register il display_register children 0;
+operator isc_dpcomplex_ob il dpcomplex_ob children 0;
+operator isc_dpreal_ob il dpreal_ob children 0;
+operator isc_entry_blk il entry_blk children 0
+  pass_1 inherited;
+operator isc_eval_node il eval_node children 0;
+operator isc_exception_handler_entry il exception_handler_entry children 0;
+operator isc_exception_register il exception_register children 0;
+operator isc_fortran_symbol il fortran_symbol children 0
+  pass_1 inherited, inherited, inherited;
+operator isc_function_blk il function_blk children 0
+  pass_1 inherited;
+operator isc_insert_bit_field il insert_bit_field children 3
+  pass_1 derived, derived, derived;
+operator isc_integer_ob il integer_ob children 0;
+operator isc_uinteger_ob il uinteger_ob children 0;
+operator isc_label_node il label_node children 0;
+operator isc_lb_register il lb_register children 0;
+operator isc_lib_dsc il lib_dsc children 0
+  pass_1 inherited;
+operator isc_linteger_ob il linteger_ob children 0;
+operator isc_ulinteger_ob il ulinteger_ob children 0;
+operator isc_llogical_ob il llogical_ob children 0;
+operator isc_namelist_constant_ob il namelist_constant_ob children 0
+  pass_1 inherited;
+operator isc_nlbranch_node il nlbranch_node children 1
+  pass_1 inherited, [ip_reg];
+operator isc_pf_call il pf_call children 1
+  pass_1 derived;
+operator isc_physical_register_ob il physical_register_ob children 0;
+operator isc_procedure_blk il procedure_blk children 0
+  pass_1 inherited;
+operator isc_ptr_node il ptr_node children 1
+  pass_1 [ip_reg];
+operator isc_raise_exception il raise_exception children 0
+  pass_1 inherited;
+operator isc_real_ob il real_ob children 0;
+operator isc_release_dynamic_space il release_dynamic_space children 1
+  pass_1 inherited;
+operator isc_return_node il return_node children 0
+  pass_1 inherited;
+operator isc_sb_register il sb_register children 0;
+operator isc_set_con_ob il set_con_ob children 0
+  pass_1 inherited;
+operator isc_slogical_ob il slogical_ob children 0;
+operator isc_sinteger_ob il sinteger_ob children 0;
+operator isc_usinteger_ob il usinteger_ob children 0;
+operator isc_sym_disp_node il sym_disp_node children 1
+  pass_1 derived;
+operator isc_tree_node_abs_top il abs_top children 1
+  pass_1 derived;
+operator isc_tree_node_ada_expon_top il ada_expon_top children 2
+  pass_1 inherited;
+operator isc_tree_node_add_top il add_top children 2
+  pass_1 inherited, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled] -np, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits] -np;
+operator isc_tree_node_addr_top il addr_top children 1
+  pass_1 derived;
+operator isc_tree_node_agg_compare_top il agg_compare_top children 2
+  pass_1 derived, derived;
+operator isc_tree_node_align_top il align_top children 1
+  pass_1 derived;
+operator isc_tree_node_allocate_dynamic_space_top il allocate_dynamic_space_top children 1
+  pass_1 inherited;
+operator isc_tree_node_alshf_top il alshf_top children 2
+  pass_1 derived, derived;
+operator isc_tree_node_and_top il and_top children 2
+  pass_1 inherited, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled] -np, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits] -np;
+operator isc_tree_node_arshf_top il arshf_top children 2
+  pass_1 [ip_reg, literal_32_bits], derived;
+operator isc_tree_node_bit_field_cmp_top il bit_field_cmp_top children 5
+  pass_1 derived, derived, derived, derived, derived, inherited;
+operator isc_tree_node_bit_set_top il bit_set_top children 3
+  pass_1 derived, derived, derived;
+operator isc_tree_node_bit_test_top il bit_test_top children 2
+  pass_1 [address_mode, ip_reg, ip_reg_field], [ip_reg, literal_32_bits];
+operator isc_tree_node_cache_top il cache_top children 0;
+operator isc_tree_node_call_top il call_top children 1
+  pass_1 inherited;
+operator isc_tree_node_chk_top il chk_top children 2
+  pass_1 derived, derived;
+operator isc_tree_node_compare_top il compare_top children 2
+  pass_1 inherited, [ip_reg, ip_reg_field], [ip_reg, ip_reg_field, literal_32_bits];
+operator isc_tree_node_div_top il div_top children 2
+  pass_1 inherited, inherited, inherited, inherited;
+operator isc_tree_node_eor_top il eor_top children 2
+  pass_1 inherited, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled] -np, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits] -np;
+operator isc_tree_node_expon_top il expon_top children 2
+  pass_1 inherited;
+operator isc_tree_node_extend_top il extend_top children 1
+  pass_1 [flow, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits];
+operator isc_tree_node_extract_bit_field_top il extract_bit_field_top children 2
+  pass_1 derived, derived;
+operator isc_tree_node_f_ada_expon_top il f_ada_expon_top children 2
+  pass_1 inherited;
+operator isc_tree_node_f_add_top il f_add_top children 2
+  pass_1 derived -np, derived -np;
+operator isc_tree_node_f_compare_top il f_compare_top children 2
+  pass_1 derived, derived;
+operator isc_tree_node_f_div_top il f_div_top children 2
+  pass_1 inherited, derived, [fp_reg, fp_reg_pair, fp_reg_quad];
+operator isc_tree_node_f_expon_top il f_expon_top children 2
+  pass_1 inherited;
+operator isc_tree_node_f_extend_top il f_extend_top children 2
+  pass_1 [fp_reg, fp_reg_pair, fp_reg_quad, ip_reg], derived;
+operator isc_tree_node_f_math_top il f_math_top children 2
+  pass_1 derived, derived, inherited;
+operator isc_tree_node_f_mul_top il f_mul_top children 2
+  pass_1 derived -np, derived -np;
+operator isc_tree_node_f_neg_top il f_neg_top children 1
+  pass_1 derived -np;
+operator isc_tree_node_f_range_check_top il f_range_check_top children 3
+  pass_1 derived, derived, derived;
+operator isc_tree_node_f_sub_top il f_sub_top children 2
+  pass_1 derived -np, derived -np;
+operator isc_tree_node_func_call_top il func_call_top
+  pass_1 inherited;
+operator isc_tree_node_index_top il index_top children 2
+  pass_1 derived, derived;
+operator isc_tree_node_isc_addr_top il isc_addr_top children 1
+  pass_1 derived;
+operator isc_tree_node_isc_agg_cmp_top il isc_agg_cmp_top children 3
+  pass_1 derived, derived, derived;
+operator isc_tree_node_isc_agg_lex_cmp_top il isc_agg_lex_cmp_top children 4
+  pass_1 derived, derived, derived, derived;
+operator isc_tree_node_isc_call_top il isc_call_top children 0;
+operator isc_tree_node_isc_fio_init il isc_fio_init children 1
+  pass_1 derived;
+operator isc_tree_node_isc_func_call_hidden_temp_top il isc_func_call_hidden_temp_top children 0;
+operator isc_tree_node_isc_func_call_top il isc_func_call_top children 0;
+operator isc_tree_node_isc_mul_top il isc_mul_top children 2
+  pass_1 derived, derived, inherited;
+operator isc_tree_node_isc_signed_mod_top il isc_signed_mod_top children 2
+  pass_1 derived, derived;
+operator isc_tree_node_isc_signed_rem_top il isc_signed_rem_top children 2
+  pass_1 derived, derived;
+operator isc_tree_node_isc_unsigned_mod_top il isc_unsigned_mod_top children 2
+  pass_1 inherited;
+operator isc_tree_node_isc_unsigned_rem_top il isc_unsigned_rem_top children 2
+  pass_1 inherited;
+operator isc_tree_node_lshf_top il lshf_top children 2
+  pass_1 [ip_reg, literal_32_bits], derived;
+operator isc_tree_node_mark_dynamic_space_top il mark_dynamic_space_top children 0
+  pass_1 inherited;
+operator isc_tree_node_max_top il max_top children 2
+  pass_1 inherited, derived, [ip_reg];
+operator isc_tree_node_min_top il min_top children 2
+  pass_1 inherited, derived, [ip_reg];
+operator isc_tree_node_mod_top il mod_top children 2
+  pass_1 inherited, inherited, inherited, inherited;
+operator isc_tree_node_mul_top il mul_top children 2
+  pass_1 inherited, inherited, inherited;
+operator isc_tree_node_neg_top il neg_top children 1
+  pass_1 [flow, fp_reg, ip_reg, ip_reg_field] -np;
+operator isc_tree_node_nop_top il nop_top children 1
+  pass_1 derived -np;
+operator isc_tree_node_not_top il not_top children 1
+  pass_1 [fp_reg, ip_reg, ip_reg_field] -np;
+operator isc_tree_node_or_top il or_top children 2
+  pass_1 inherited, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled] -np, [fp_reg, ip_reg, ip_reg_field, ip_reg_scaled, literal_32_bits] -np;
+operator isc_tree_node_physical_top il physical_top children 1
+  pass_1 derived;
+operator isc_tree_node_range_check_top il range_check_top children 3
+  pass_1 derived, derived, derived;
+operator isc_tree_node_rshf_top il rshf_top children 2
+  pass_1 [flow, ip_reg, literal_32_bits], derived;
+operator isc_tree_node_set_and_top il set_and_top children 2
+  pass_1 derived -np, derived -np;
+operator isc_tree_node_set_bit_in_set_top il set_bit_in_set_top children 2
+  pass_1 derived, derived;
+operator isc_tree_node_set_compare_top il set_compare_top children 2
+  pass_1 derived, derived;
+operator isc_tree_node_set_diff_top il set_diff_top children 2
+  pass_1 derived -np, derived -np;
+operator isc_tree_node_set_extend_top il set_extend_top children 1
+  pass_1 derived;
+operator isc_tree_node_set_or_top il set_or_top children 2
+  pass_1 derived -np, derived -np;
+operator isc_tree_node_set_range_in_set_top il set_range_in_set_top children 3
+  pass_1 derived, derived, derived;
+operator isc_tree_node_signed_div_top il signed_div_top children 2
+  pass_1 [fp_reg, ip_reg, literal_32_bits], [fp_reg, ip_reg];
+operator isc_tree_node_signed_mod_top il signed_mod_top children 2
+  pass_1 [fp_reg, ip_reg, literal_32_bits], [fp_reg, ip_reg, ip_reg_field];
+operator isc_tree_node_sr_top il sr_top children 2
+  pass_1 derived, derived;
+operator isc_tree_node_strcmp_top il strcmp_top children 2
+  pass_1 derived, derived;
+operator isc_tree_node_strlen_top il strlen_top children 1
+  pass_1 derived;
+operator isc_tree_node_strncmp_top il strncmp_top children 3
+  pass_1 derived, derived, derived;
+operator isc_tree_node_sub_top il sub_top children 2
+  pass_1 derived -np, derived -np;
+operator isc_tree_node_unpack_top il unpack_top children 2
+  pass_1 derived, derived;
+operator isc_tree_node_unsigned_div_top il unsigned_div_top children 2
+  pass_1 [fp_reg, ip_reg, literal_32_bits], [fp_reg, ip_reg, ip_reg_field];
+operator isc_tree_node_unsigned_mod_top il unsigned_mod_top children 2
+  pass_1 [fp_reg, ip_reg, literal_32_bits], [fp_reg, ip_reg, ip_reg_field];
+operator isc_tree_node_value_top il value_top children 1
+  pass_1 derived -np;
+operator isc_use_def_ob il use_def_ob children 0;
+operator isc_var_name il var_name children 0;
+
+{ The opcode maps: by il$t, the opcode of the operation (isc_tool_
+  generated_readonly_tables after the result kinds, 178 words each). }
+map opcode_rr_reversed
+  add_to_aop -> add,
+  and_to_aop -> and,
+  eor_to_aop -> xor,
+  or_to_aop -> or,
+  sub_from_aop -> rsub,
+  add_top -> add,
+  and_top -> and,
+  eor_top -> xor,
+  or_top -> or,
+  sub_top -> rsub;
+map opcode_rr
+  add_to_aop -> add,
+  and_to_aop -> and,
+  eor_to_aop -> xor,
+  or_to_aop -> or,
+  sub_from_aop -> sub,
+  add_top -> add,
+  and_top -> and,
+  eor_top -> xor,
+  or_top -> or,
+  sub_top -> sub;
+map opcode_immediate
+  add_to_aop -> addi,
+  and_to_aop -> andi,
+  eor_to_aop -> xori,
+  or_to_aop -> ori,
+  sub_from_aop -> subi,
+  add_top -> addi,
+  and_top -> andi,
+  eor_top -> xori,
+  or_top -> ori,
+  sub_top -> subi;
+map opcode_double
+  f_add_to_aop -> addd,
+  f_div_by_aop -> divd,
+  f_mul_to_aop -> muld,
+  f_sub_from_aop -> subd,
+  f_add_top -> addd,
+  f_div_top -> divd,
+  f_mul_top -> muld,
+  f_neg_top -> negd,
+  f_sub_top -> subd;
+map opcode_immediate_negated
+  add_to_aop -> addi,
+  and_to_aop -> andi,
+  eor_to_aop -> xori,
+  neg_to_aop -> negi,
+  or_to_aop -> ori,
+  add_top -> addi,
+  and_top -> andi,
+  eor_top -> xori,
+  neg_top -> negi,
+  or_top -> ori;
+map opcode_single
+  f_add_to_aop -> adds,
+  f_div_by_aop -> divs,
+  f_mul_to_aop -> muls,
+  f_sub_from_aop -> subs,
+  f_add_top -> adds,
+  f_div_top -> divs,
+  f_mul_top -> muls,
+  f_neg_top -> negs,
+  f_sub_top -> subs;
