@@ -333,7 +333,7 @@ begin
       else
         ok := false;
       lr := o^.lts^.lr;
-      if not ok and not lr^.f2.b3_7 and not replace
+      if not ok and not lr^.f2.physical and not replace
           and not (rrp$intend_to_modify in m^.lts^.rrp)
           and not (rrp$intend_to_modify in lr^.rrp)
           and not lr^.f2.b3_4 and not m^.lts^.f2.final then begin
@@ -375,7 +375,7 @@ begin
       end
       else begin
         { a preference move copies l into o's segment }
-        mv := lir_utils_$create_preference_move(ord(o^.h.kind), at, 0);
+        mv := lir_utils_$create_preference_move(o^.h.kind, at, false);
         mv^.opnds[1].lts := res;
         if not replace then begin
           p := res^.refs;
@@ -449,9 +449,9 @@ begin
       else
         after := true;
       if after then
-        mv := lir_utils_$create_preference_move(ord(o^.h.kind), a, -1)
+        mv := lir_utils_$create_preference_move(o^.h.kind, a, true)
       else
-        mv := lir_utils_$create_preference_move(ord(o^.h.kind), a, 0);
+        mv := lir_utils_$create_preference_move(o^.h.kind, a, false);
       if (def = nil) or ((opnd_bytes_ptr_t(def)^.rrp & 12) = 0) then begin
         mv^.opnds[1].link := def;
         res^.refs := addr(mv^.opnds[1]);
@@ -669,7 +669,7 @@ begin
     find_calls_snuggle_move := utils_ins_$operands_instruction(o);
     return;
   end;
-  if not o^.lts^.lr^.f2.b3_7 or (o^.link^.link <> nil) then
+  if not o^.lts^.lr^.f2.physical or (o^.link^.link <> nil) then
     bug_check('COM_$find_calls_snuggle_move:  physical operand looks funny.%$');
   i := utils_ins_$operands_instruction(o^.link);
   if i^.h.b0_6 then begin
@@ -743,7 +743,7 @@ begin
     if nm = nil then
       bug_check('COM_$replace_oprs_value: dst is reg_pair bug src is not.%$');
   snug := nil;
-  if old^.lts^.lr^.f2.b3_7 then begin
+  if old^.lts^.lr^.f2.physical then begin
     i := utils_ins_$operands_instruction(old);
     if i^.opc = ord(opc$call) then begin
       snug := find_calls_snuggle_move(old);
@@ -761,7 +761,7 @@ begin
       end;
     end;
   end;
-  if new^.lts^.lr^.f2.b3_7 then
+  if new^.lts^.lr^.f2.physical then
     if utils_ins_$operands_instruction(new)^.opc = ord(opc$call) then begin
       new := addr(find_calls_snuggle_move(new)^.opnds[2]);
       if nm <> nil then begin
@@ -835,8 +835,8 @@ begin
         nl2^.next_final := new^.lts^.bb^.finals;
         new^.lts^.bb^.finals := nl2;
       end;
-      mv := lir_utils_$create_preference_move(ord(new^.h.kind),
-          utils_ins_$operands_instruction(new), -1);
+      mv := lir_utils_$create_preference_move(new^.h.kind,
+          utils_ins_$operands_instruction(new), true);
       opnd_bytes_ptr_t(addr(mv^.opnds[1]))^.rrp :=
           opnd_bytes_ptr_t(addr(mv^.opnds[1]))^.rrp
           ! (opnd_bytes_ptr_t(new)^.rrp & 3);
@@ -1200,8 +1200,7 @@ end;
   own segments: readers its exposed segment (until a write), writers
   a new segment; the block's last ones put on the final list.
   0x2274D0, 0x53A bytes, no A5: the preference move's third argument
-  pushed by `st' (true; lir_utils_$create_preference_move's heading
-  says integer: -1); the operand copied as three longwords. }
+  pushed by `st' (true); the operand copied as three longwords. }
 
 procedure replace_mem_instrs(
     instrs: instr_ptr_t;
@@ -1223,8 +1222,8 @@ begin
     nx := instr_ptr_t(i^.l24);
     if i^.h.b2_6 then begin
       if instruction_attributes[i^.opc].class = class$load then begin
-        mv := lir_utils_$create_preference_move(ord(i^.opnds[3].h.kind),
-                                                i, -1);
+        mv := lir_utils_$create_preference_move(i^.opnds[3].h.kind,
+                                                i, true);
         mv^.l24 := integer32(repl);
         repl := mv;
         mv^.opnds[1].lts := lts_ptr_t(nlr);
@@ -1250,7 +1249,7 @@ begin
       end
       else begin
         mv := lir_utils_$create_preference_move(
-            ord(no_reg_like_kinds(i^.opnds[1].h.kind)), i, -1);
+            no_reg_like_kinds(i^.opnds[1].h.kind), i, true);
         mv^.l24 := integer32(repl);
         repl := mv;
         mv^.opnds[2].lts := lts_ptr_t(nlr);
@@ -1673,7 +1672,7 @@ var
 begin
   ok := true;
   lr := l^.lr;
-  simple := (lr^.rrp * [rrp$fp_reg, rrp$ip_reg] = []) and not lr^.f2.b3_7;
+  simple := (lr^.rrp * [rrp$fp_reg, rrp$ip_reg] = []) and not lr^.f2.physical;
   if l^.mark = m3 then
     goto 9;
   if simple then begin
@@ -1961,7 +1960,7 @@ begin
     if is_join_bp(l^.refs) then
       if lr^.rrp * [rrp$fp_reg, rrp$ip_reg] = [] then
         if lr^.l40 <> mark then
-          if not lr^.f2.b3_7 then
+          if not lr^.f2.physical then
             if partition_memory(l, mark, l42, m2, invar, variant, lrs,
                                 marked) then begin
               c := invar;
@@ -2240,7 +2239,7 @@ begin
                                 operand$displacement_routine..operand$immediate]) then
             goto 8;
           if o^.h.kind in [operand$ip_reg..operand$well_behaved_memory] then begin
-            if o^.lts^.lr^.f2.b3_7 then
+            if o^.lts^.lr^.f2.physical then
               goto 8;
             if o^.h.read then
               r := lr_value_same_on_loop_exit(o^.lts, exits, mark)
@@ -2812,7 +2811,7 @@ begin
       goto 9;
     if (instruction_attributes[st^.opc].class = class$store)
         and (st^.opnds[1].h.kind in [operand$ip_reg..operand$well_behaved_memory]) then
-      phys := st^.opnds[1].lts^.lr^.f2.b3_7
+      phys := st^.opnds[1].lts^.lr^.f2.physical
     else
       phys := false;
     if ld^.h.sets_cc and ((instruction_attributes[ld^.opc].w18 & 7) < 2) then
@@ -3279,7 +3278,7 @@ end;
   ip_reg_like, lir_main_c4c's segment), the MOVEs that copy it treated
   the same way (recursively, made not snuggle), the segments excised,
   and mv excised unless it sets condition codes.  0x22A0B2, 0xE8 bytes,
-  no A5: lir_utils_$excise_inst's result dropped. }
+  no A5: the excision a procedure call. }
 
 procedure move_is_zero(
     mv: instr_ptr_t); options(val_param); internal;
@@ -3292,7 +3291,7 @@ begin
   if mv^.opnds[2].h.kind <> operand$ip_reg then
     return;
   lr := mv^.opnds[2].lts^.lr;
-  if (rrp$modify in lr^.rrp) or lr^.f2.b3_7 then
+  if (rrp$modify in lr^.rrp) or lr^.f2.physical then
     return;
   if lr^.id <> 0 then
     if not lr^.f2.b3_1 then
@@ -3319,7 +3318,7 @@ begin
   end;
   lr^.ltss := nil;
   if not mv^.h.sets_cc then
-    discard(lir_utils_$excise_inst(mv));
+    lir_utils_$excise_inst(mv);
 end;
 
 { replace_zero_valued_lrs - every live MOVE of an immediate 0, or of the
@@ -3344,8 +3343,8 @@ begin
             move_is_zero(i)
           else if i^.opnds[1].h.kind = operand$ip_reg_like then begin
             lr := i^.opnds[1].lts^.lr;
-            if lr^.f2.b3_7 then
-              if lr^.f2.b2 = target_properties.p_14[0] then
+            if lr^.f2.physical then
+              if lr^.f2.reg = target_properties.p_14[0] then
                 move_is_zero(i);
           end;
       i := i^.next;
@@ -3498,7 +3497,7 @@ begin
         lr := o^.lts^.lr;
         if not lr^.f2.b3_1 then
           return;
-        if lr^.f2.b3_7 then
+        if lr^.f2.physical then
           return;
         if not def_dominates_use(o^.lts) then
           anywrite := true;
@@ -4128,7 +4127,7 @@ begin
     end;
     if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical,
                      operand$argument_block_memory..operand$well_behaved_memory] then
-      if o^.lts^.lr^.f2.b3_7 then begin
+      if o^.lts^.lr^.f2.physical then begin
         if com_level >= 4 then
           vfmt_$write('Warn: physical%.');
         phys := true;
@@ -4275,7 +4274,7 @@ begin
                 if kind in [operand$fp_reg, operand$fp_reg_physical,
                             operand$fp_reg_like] then
                   if a2^.lts^.lr^.mate <> nil then
-                    if not a2^.lts^.lr^.f2.b3_7 then
+                    if not a2^.lts^.lr^.f2.physical then
                       goto 20;
                 if a2^.lts^.f2.final
                     or (rrp$intend_to_modify in a2^.lts^.rrp) then
@@ -4305,7 +4304,7 @@ begin
               if c^.opc = ord(opc$move) then
                 if c^.opnds[2].h.kind = operand$ip_reg then begin
                   lr := c^.opnds[2].lts^.lr;
-                  if (rrp$modify in lr^.rrp) or lr^.f2.b3_7 then
+                  if (rrp$modify in lr^.rrp) or lr^.f2.physical then
                     ok := false
                   else if lr^.id <> 0 then
                     if not lr^.f2.b3_1 then

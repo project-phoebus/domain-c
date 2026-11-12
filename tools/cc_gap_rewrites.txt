@@ -28,10 +28,6 @@ lang/lang/source/prfpkg.pas	s/^(\s*)if last_mrh = mrh_bytes then begin$/${1}if l
 lang/lang/source/celpkg.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
 # gap 4 (gen_exception): writeln (dropped, for the check)
 lang/lang/source/gen_exception.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
-# gap 13 (pds): testing an element of a packed array of 2048 booleans (test the bitmap pointer instead)
-lang/common/source/pds.pas	s/if \((\w+) <> (\w+)\) and (\w+)\^\.refs\^\[i\] then begin/if ($1 <> $2) and ($3^.refs <> nil) then begin { gap 13 }/
-lang/common/source/pds.pas	s/if \(i <> main_index\) and scope_refs\^\[i\] then begin/if (i <> main_index) and (scope_refs <> nil) then begin { gap 13 }/
-lang/common/source/pds.pas	s/^(\s*)m\^\.refs\^\[i\] := m\^\.refs\^\[i\] or node\^\.bucket\^\.refs\^\[i\];/$1m^.refs^[i] := true; { gap 13 }/
 # gap 7 (c_lex_pp): real constants in a comparison (the single-range flag tested instead, for the check)
 lang/c_compiler/source/c_lex_pp.pas	s/^(\s*)if \(lex_token\^\.real_value > 3\.402823466e38\) or$/$1if not lex_token^.real_single_range { gap 7 }/
 lang/c_compiler/source/c_lex_pp.pas	s/^\s*\(lex_token\^\.real_value < -3\.402823466e38\) then$/ then/
@@ -39,8 +35,6 @@ lang/c_compiler/source/c_lex_pp.pas	s/^\s*\(lex_token\^\.real_value < -3\.402823
 lang/c_compiler/source/c_lex_pp.pas	s/goto 99;  \{ non-local \}/ch := chr(0); { gap 14 }/
 # gap 16: ptoc and ctop (dropped, for the check)
 lang/c_compiler/source/c_main.pas	s/^(\s*)(ptoc|ctop)\((\w+)\);/${1}{ gap 16 }/
-# gap 17: a string constant assigned to a varying string (the length cleared instead, for the check)
-lang/c_compiler/source/c_main.pas	s/^(\s*)arg := '[^']*';/${1}arg.length := 0; { gap 17 }/
 # gap 1 (c_main): whole varying assignment (the length only, for the check)
 lang/c_compiler/source/c_main.pas	s/^(\s*)arg := tmp;/${1}arg.length := tmp.length; { gap 1 }/
 # gap 19 (unix_objmod): a function returning real (the single taken as a longword, for the check)
@@ -53,15 +47,7 @@ lang/c_compiler/source/c_expr_syn.pas	s/^(\s*)check\(102, follow \+ \[ctk_lparen
 lang/c_compiler/source/c_expr_syn.pas	s/^(\s*)eval_expr\(s \+ \[ctk_rparen\]\);/${1}eval_expr(s); { gap 20 }/
 # gap 7 (c_stmt_sem): real constants passed (an integer constant node instead, for the check)
 lang/c_compiler/source/c_stmt_sem.pas	s/(dp|rl)contk\(([01])\.0\)/smcontk(81, $2) { gap 7 }/
-# gap 22 (attributes): ord of a boolean (an if statement, for the check)
-lang/lang/source/attributes.pas	s/^(\s*)attr_curr_align_env := ord\(cargs_\$options\.b28b_0\);/${1}if cargs_\$options.b28b_0 then attr_curr_align_env := 1 else attr_curr_align_env := 0; { gap 22 }/
-# gap 21 (spos): routine parameters (the routine pointers of before, for the check)
-lang/common/source/spos.ins.pas	s/^(\s*)procedure proc\(region: integer32\)\); extern;/$1proc: spos_\$region_proc_t); options(val_param); extern; { gap 21 }/
-lang/common/source/spos.ins.pas	s/^(\s*)procedure proc\(region: integer32; mark: integer32\)\); extern;/$1proc: spos_\$marked_region_proc_t); options(val_param); extern; { gap 21 }/
-lang/common/source/spos.pas	s/^(\s*)procedure proc\(region: integer32\)\);/$1proc: spos_\$region_proc_t); { gap 21 }/
-lang/common/source/spos.pas	s/^(\s*)procedure proc\(region: integer32; mark: integer32\)\);/$1proc: spos_\$marked_region_proc_t); { gap 21 }/
-lang/common/source/spos.pas	s/^(\s*)proc\((r|r, db\.regions\[r\]\.mark)\);/$1proc^($2); { gap 21 }/
-# gap 21 (debug_sym_dmp): nested routines passed as routine parameters (nil, for the check)
+# gap 21 (debug_sym_dmp): nested routines passed as routine parameters (nil, for the check) [still needed with dpc 78f475b]
 lang/lang/source/debug_sym_dmp.pas	s/spos_\$apply_over_(marked_)?source_files\((add_file_table_entry|write_string_for_file_table_entry|add_unit_table_entry|add_file_entry)\);/spos_\$apply_over_$1source_files(nil); { gap 21 }/
 # gap 7 (c_expr_sem): real conversions (dropped, for the check)
 lang/c_compiler/source/c_expr_sem.pas	s/^(\s*)r := node\^\.(int|real)_value;/${1}{ gap 7 }/
@@ -116,8 +102,6 @@ lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s#\n(  legal_specs: )#\n 
 # gap 7 (c_syntax): an integer converted to a double, a real truncated (dropped; the high longword taken, for the check)
 lang/c_compiler/source/c_syntax.pas	s/^(\s*)(?:tmp := n\^\.int_value|r := n\^\.real_value|r := tmp)(;?)$/${1}kind := kind${2} { gap 7 }/
 lang/c_compiler/source/c_syntax.pas	s/^(\s*)v := trunc\(orig\^\.real_value\);/${1}v := orig^.bits[1]; { gap 7 }/
-# gap 22 (cg_call): ord of a boolean (0, for the check)
-lang/lang/source/cg_call.pas	s/ord\(pass_len\)/0 { gap 22 }/
 # gap 28 (cg_call): gen_call's values exceed dpc's registers (the registers' and aliases' loop after the call dropped)
 lang/lang/source/cg_call.pas	if ((/^  \{ The registers and objects the call may change\. \}/ .. /^  \{ The result.s register\. \}/) && !/The result.s register/) { $_ = "  { gap 28 }\n" }
 # gap 4 (add_node): writeln (dropped, for the check)
@@ -194,7 +178,7 @@ lang/lang/source/opt_reachdef.pas	s/^(        16, 15: begin)$/%var gap25r;\n%if 
 lang/lang/source/opt_reachdef.pas	s/^(        11: begin)$/%endif { gap 25 }\n$1/
 # gap 4 (reg_alloc): dump_lifetimes' writeln (dropped, for the check)
 lang/lang/source/reg_alloc.pas	s/^(\s*)writeln;\s*$/$1; { gap 4 }/
-# gap 21 (reg_color_68k): nested routines passed to walkconflicts (a routine pointer, nil, for the check)
+# gap 21 (reg_color_68k): nested routines passed to walkconflicts (a routine pointer, nil, for the check) [still needed with dpc 78f475b]
 lang/lang/source/reg_color_68k.pas	s/^(\s*)procedure p\(var x: reg_range_t\);/$1p: rc_walk_t; { gap 21 }/
 lang/lang/source/reg_color_68k.pas	s/^(\s*)p\(reg_ranges\^\[c\^\.num\]\);/$1p^(reg_ranges^[c^.num]); { gap 21 }/
 lang/lang/source/reg_color_68k.pas	s/walkconflicts\((checkout|targetfunctionresult|computecommonregs|setcommonregs), /walkconflicts(nil, /
@@ -230,15 +214,8 @@ lang2/source/be_com/lst.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
 lang2/source/be_com/lst.pas	if ((/^      \{ The registers' column of the classic form\. \}/ .. /^      \{ The numbered label\. \}/) && !/The numbered label/) { $_ = "      { gap 28 }\n" }
 # gap 7 (bin): real := double (the single literal left unset, for the check)
 lang2/source/be_com/bin.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
-# gap 13 (bin): an element of a packed array of 65536 booleans (test the bitmap pointer instead)
-lang2/source/be_com/bin.pas	s/if stmt_bits\^\[stmt\] then/if stmt_bits <> nil then { gap 13 }/
-lang2/source/be_com/bin.pas	s/if stmt_bits\^\[0\] and \(map\^\[0\] <> 0\) then begin/if (stmt_bits <> nil) and (map^[0] <> 0) then begin { gap 13 }/
-# gap 22 (bin): ord of a boolean (an if statement, for the check)
-lang2/source/be_com/bin.pas	s/^(\s*)(\w+) := ord\(([^()]*(?:\([^()]*\))?[^()]*)\) & 1;/${1}if $3 then $2 := 1 else $2 := 0; { gap 22 }/
 # gap 32 (backend.ins.pas, translator PB2): an initialized overlay section named as its variable (the sections the .init files define renamed, for the check)
 lang2/source/be_com/backend.ins.pas	s/^var \((instruction_mnemonic|instruction_mnemonic_length|instruction_assembly|operand_string|operand_string_length)\)/var (${1}_s) { gap 32 }/
-# gap 22 (asm, translator PB2): ord of a boolean (an if statement, for the check)
-lang2/source/be_com/asm.pas	s/^(\s*)(\w+) := ord\(([^()]*(?:\([^()]*\))?[^()]*)\) & 1;/${1}if $3 then $2 := 1 else $2 := 0; { gap 22 }/
 # gap 25 (asm, translator PB2): asm_$process_routine exceeds dpc's virtual registers (pass 1's literals and instruction kinds, pass 2's immediate forms left out of the check)
 lang2/source/be_com/asm.pas	s/^(  \{ Its literals\. \})$/%var gap25b;\n%if gap25b %then { gap 25 }\n$1/
 lang2/source/be_com/asm.pas	s/^(2:)$/%endif { gap 25 }\n$1/
@@ -246,3 +223,14 @@ lang2/source/be_com/asm.pas	s/^(                case form of)$/%var gap25c;\n%if
 lang2/source/be_com/asm.pas	s/^(                \{ The forms done\. \})$/%endif { gap 25 }\n$1/
 # gap 30 (com): `in' on a local set held in a register as an operand of `and' (process_instruction's cache of birthpoints: the test dropped, for the check)
 lang2/source/be_com/com.pas	s/if \(k <= 31\) and \(k in seen\) then/if k <= 0 then { gap 30 }/
+# gap 4 (dmp): write of an IL node kind (dropped, for the check)
+lang2/source/be_com/dmp.pas	s/^(\s*)write\(.*\);\s*$/${1}dmp_3c0 := dmp_3c0; { gap 4 }\n/
+# gap 25 (call_conv, translator PA3): at_call_conv exceeds dpc's virtual registers (part 3, the descriptors by the parameters' kind, part 4's aggregates split over registers and part 5, the formals, left out of the check)
+lang2/source/be_com/call_conv.pas	s/^(  if opr = nil then)$/%var gap25a;\n%if gap25a %then { gap 25 }\n$1/
+lang2/source/be_com/call_conv.pas	s/^(60:)$/%endif { gap 25 }\n$1/
+lang2/source/be_com/call_conv.pas	s/^(  \{ 5\. The b25 flags, the variable arguments. registers, the formals.)$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
+lang2/source/be_com/call_conv.pas	s/^(  props\^\.args_size := offs;)$/%endif { gap 25 }\n$1/
+lang2/source/be_com/call_conv.pas	s/^(        \{ An aggregate by value: its longwords in the integer registers)$/%var gap25b;\n%if gap25b %then { gap 25 }\n$1/
+lang2/source/be_com/call_conv.pas	s/^(        \{ The aggregate done\. \})$/%endif { gap 25 }\n$1/
+# gap 22 (cg_call): ord of a boolean (0, for the check) [kept with dpc ca0dd28: without it the routine meets gap 28, more values live than registers]
+lang/lang/source/cg_call.pas	s/ord\(pass_len\)/0 { gap 22 }/

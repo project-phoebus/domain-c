@@ -372,20 +372,20 @@ begin
   lr := rtn^.lrs;
   while lr <> nil do begin
     lts := lr^.ltss;
-    if lr^.f2.b3_7 or (lr = rtn^.lr140) or (lr = rtn^.memory_lr)
+    if lr^.f2.physical or (lr = rtn^.lr140) or (lr = rtn^.memory_lr)
        or (lr = rtn^.lr108) then
       complex := true
     else if lts = nil then
       complex := false
     else if lr^.f2.b3_4 and (zero_init or (lts^.next <> nil)) then
       complex := true
-    else if memory_home_is_initialized_fsym(il_$node_ptr_t(lr^.sym)) then
+    else if memory_home_is_initialized_fsym(il_$node_ptr_t(lr^.memory_home)) then
       complex := true
     else if lr^.mate = nil then
       complex := false
     else
       complex := memory_home_is_initialized_fsym(
-                     il_$node_ptr_t(lr^.mate^.sym));
+                     il_$node_ptr_t(lr^.mate^.memory_home));
     if complex then begin
       lr^.ltss := nil;
       bv_$make_live_range_complex(rtn, lr);
@@ -680,12 +680,11 @@ begin
     lr := nil;
     cursor := nil;
     repeat
-      k := lir_utils_$get_next_async_exposed_lr(integer32(rtn), lr,
-                                                addr(cursor));
+      k := lir_utils_$get_next_async_exposed_lr(rtn, lr, cursor);
       if k <> 0 then begin
         lr := rtn^.lr_map^[k];
         if ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) <> [])
-           and (lr <> lr_ptr_t(rtn^.l112)) and not lr^.f2.b3_7 then begin
+           and (lr <> lr_ptr_t(rtn^.l112)) and not lr^.f2.physical then begin
           need_all_writes(lr);
           if lr^.mate <> nil then
             need_all_writes(lr^.mate);
@@ -735,7 +734,7 @@ begin
         if not rebuild_bb_exposed_and_final_lists(lr) then begin
           lr^.f2.b3_4 := false;
           if ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) <> [])
-             and not lr^.f2.b3_7 and (lr <> rtn^.lr108) then
+             and not lr^.f2.physical and (lr <> rtn^.lr108) then
             lr^.id := 0;
         end;
       end
@@ -748,13 +747,13 @@ begin
         if not r1 then begin
           lr^.f2.b3_4 := false;
           if ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) <> [])
-             and not lr^.f2.b3_7 and not r2 then
+             and not lr^.f2.physical and not r2 then
             lr^.id := 0;
         end;
         if not r2 then begin
           mate^.f2.b3_4 := false;
           if ((mate^.rrp * [rrp$fp_reg, rrp$ip_reg]) <> [])
-             and not mate^.f2.b3_7 and not r1 then
+             and not mate^.f2.physical and not r1 then
             mate^.id := 0;
         end;
       end;

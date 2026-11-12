@@ -156,6 +156,31 @@ const
   class$join_bp = 26;
   class$trap_cond = 27;                 { trap_gt .. trapd_flt }
 
+{ batch B (PB3): the phases, at_backend_phase's values: their order in
+  at_backend's table (A5 0x485830, each entry's name at +20); dmp tests
+  the running phase against them. }
+const
+  phase$isc = 0;
+  phase$fga = 1;
+  phase$mmt = 2;
+  phase$dfa = 3;
+  phase$konst = 4;
+  phase$hal = 5;
+  phase$trans = 6;
+  phase$life = 7;
+  phase$com = 8;
+  phase$iv = 9;
+  phase$oli = 10;
+  phase$xtp = 11;
+  phase$sched = 12;
+  phase$ra = 13;
+  phase$post = 14;
+  phase$jbr = 15;
+  phase$asm = 16;
+  phase$dbg_life = 17;
+  phase$zzzzz = 18;
+  phase$bin = 19;
+
 type
   instr_ptr_t = ^instr_t;
   opnd_ptr_t = ^opnd_t;
@@ -184,9 +209,16 @@ type
     to an instruction's +2 bit 5; bits 6..3 the operands an
     instruction of the opcode has when made with its default size;
     bits 2..0 nresults, the operands it writes: sem_utils, zzzzz),
-    b14_0, b15, b19 (bits read by post, utils, ra_utils). }
+    b14_0, b15, b19 (bits read by post, utils, ra_utils).  batch A
+    (PA3, sanity): amse (+1 bits 6..4) the opcode's access size, the
+    index of the amse_ tables (a load's or store's immediate
+    displacement range); +0..+1 were w0. }
+  instr_attr_ptr_t = ^instr_attr_t;
   instr_attr_t = packed record
-    w0: 0..65535;                       { +0 }
+    b0: 0..255;                         { +0 }
+    b1_7: boolean;                      { +1 }
+    amse: 0..7;                         { .6..4 }
+    b1_3_0: 0..15;
     w2: 0..65535;                       { +2 }
     b4: 0..255;                         { +4 (asm: compared with 10) }
     num1: 0..255;                       { +5: 1 in every entry }
@@ -237,7 +269,11 @@ type
     b2_7, b2_6: boolean;                { +2 }
     count: 0..3;                        { .5..4 }
     b2_3_0: 0..15;
-    b3_7, b3_6, b3_5: boolean;          { +3 }
+    bytes: 0..7;                        { +3 .7..5: the size of what it
+                                          addresses in bytes (sanity's
+                                          ".bytes", asm's literal size;
+                                          batch A (PA3): were b3_7,
+                                          b3_6, b3_5) }
     kind: operand$t;                    { .4..0 }
   end;
   opnd_t = record
@@ -280,7 +316,20 @@ type
                                           instruction the global walk
                                           reached, fga and hal one that
                                           must stay) }
-    width: 0..255;                      { +3 }
+    case integer of                     { +3 }
+      1: (width: 0..255);               { the whole byte }
+      2: (modify: 0..3;                 { .7..6: a load's or store's
+                                          am$t (sanity: 1 postmodify,
+                                          2 premodify; batch A, PA3) }
+          lsq: 0..3;                    { .5..4: its lsq$t (sanity: not
+                                          lsq$normal is a qualified
+                                          access) }
+          b3_3: boolean;                { .3: sanity sets it on a CALL
+                                          whose physical result is live
+                                          out of the block and clears it
+                                          on every control transfer
+                                          once phase 3 is past }
+          b3_2, b3_1, b3_0: boolean);
   end;
   instr_t = record
     h: instr_hdr_t;                     { +0 }
@@ -518,13 +567,20 @@ type
   lr_t = record
     rrp: rrp$set_t;                     { +0 }
     f2: packed record                   { +2 }
-      b2: 0..255;
-      b3_7: boolean;                    { .7 (tr_utils: its uses depend
-                                          on every instruction; utils
-                                          tests it with `tst.b (3)':
-                                          batch A read +2 as a word w2
-                                          and 16#80) }
-      b3_6, b3_5, b3_4, b3_3: boolean;
+      reg: 0..255;                      { +2: its register, of a live
+                                          range of a physical register
+                                          (asm; sanity excepts 30 and
+                                          31; batch A (PA3): was b2) }
+      physical: boolean;                { .7: a physical register's live
+                                          range, reg its number (sanity,
+                                          asm; translator PC3's reading;
+                                          tr_utils: its uses depend on
+                                          every instruction; batch A
+                                          (PA3): was b3_7) }
+      b3_6, b3_5: boolean;
+      b3_4: boolean;                    { .4 (set by make_entering_lts:
+                                          translator PC3) }
+      b3_3: boolean;
       b3_2: boolean;                    { .2 (tr_utils: marked) }
       b3_1, b3_0: boolean;
       end;
@@ -543,9 +599,17 @@ type
     node20: univ_ptr;                   { +20: an IL node (a VAR_NAME,
                                           109, or 110: utils reads its
                                           flags; batch C: l20) }
-    sym: univ_ptr;                      { +24 }
+    memory_home: univ_ptr;              { +24: its home in memory, a
+                                          variable (109) or a common
+                                          member (110): the original's
+                                          name (lir_utils_$add_memory_home's
+                                          message "LR^.memory_home");
+                                          batch A (PA3): was sym }
     l28: integer32;                     { +28 }
-    l32: integer32;                     { +32 }
+    home_lr: lr_ptr_t;                  { +32: the live range whose memory
+                                          home it shares (lir_utils_$add_memory_home
+                                          gives that one a home first;
+                                          batch A, PA3: was l32) }
     ltss: lts_ptr_t;                    { +36 }
     l40: integer32;                     { +40 (tr_utils: a serial
                                           number) }
@@ -577,11 +641,11 @@ type
     jump's operand 1 has (zzzzz); l192 (+192) passed on by dfa and xtp
     to df_utils_$global_walk. }
   rtn_t = record
-    node: univ_ptr;                     { +0: an il_$node_ptr_t (batch
-                                          A: univ_ptr, since fga, hal,
-                                          life, sanity, sym and tm_utils
-                                          open this insert without the
-                                          prelude's il.ins.pas) }
+    node: univ_ptr;                     { +0: an il_$node_ptr_t (univ_ptr
+                                          kept; every unit that opens
+                                          this insert opens the prelude
+                                          first, so it could be narrowed:
+                                          docs/questions.md 174) }
     space4: array [4..51] of char;      { +4 }
     lrs: lr_ptr_t;                      { +52 }
     lrs_last: lr_ptr_t;                 { +56: the last live range
@@ -623,7 +687,14 @@ type
     memory_lr: lr_ptr_t;                { +144: the memory live range
                                           (df_utils: "Memory LR"; batch
                                           A) }
-    space148: array [148..179] of char; { +148 }
+    written_ip: integer32;              { +148: dmp's written_ip; the integer registers it
+                                          clobbers (call_conv: a later
+                                          call's conventions take them;
+                                          batch A, PA3) }
+    written_fp: array [0..1] of integer32;     { +152: written_fp; the floating
+                                          registers 32..63, 0..31 it
+                                          clobbers (call_conv) }
+    space160: array [160..179] of char; { +160 }
     marks: integer32;                   { +180: the walks' marks and
                                           serial numbers, counted up
                                           (utils, tr_utils_$mark_dependents;
@@ -633,7 +704,10 @@ type
     l192: integer32;                    { +192: its complex live
                                           ranges, the last complex id
                                           given (bv) }
-    space196: array [196..199] of char; { +196 }
+    spills: integer32;                  { +196: the spill ids given
+                                          (lir_utils' assign_spill_id
+                                          counts up, a word id from its
+                                          low half; batch A, PA3) }
     l200: integer32;                    { +200: the number of the last
                                           live range life splits
                                           (batch A) }
@@ -641,16 +715,36 @@ type
     f226: packed record                 { +226 (batch A: fga) }
       b226_7, b226_6, b226_5, b226_4, b226_3: boolean;
       b226_2: boolean;                  { .2: sets b226_0 (fga) }
-      b226_1: boolean;
+      needs_db: boolean;                { .1: dmp's "needs_db" (call_conv's
+                                          needs_db; batch A, PA3: was
+                                          b226_1) }
       b226_0: boolean;                  { .0: the AP read may be taken
                                           out of the RETURN (fga) }
       b227_7: boolean;                  { +227 }
       b227_6: boolean;                  { .6: some block may be resumed
                                           asynchronously (fga) }
-      b227_5, b227_4, b227_3, b227_2, b227_1, b227_0: boolean;
+      b227_5: boolean;
+      no_memory_read: boolean;          { .4: the memory model's
+                                          properties of the routine (mmt
+                                          sets them), which call_conv
+                                          copies to the conventions of a
+                                          later call (call_conv.ins.pas
+                                          +33..+42); the names dmp's
+                                          printout's (batch A, PA3: were
+                                          b227_4 .. b227_0, b228_7 ..
+                                          b228_3) }
+      no_memory_write: boolean;         { .3 }
+      no_arg_block_read: boolean;       { .2: class 16 }
+      no_arg_block_write: boolean;      { .1 }
+      common_block_untouched: boolean;  { .0: class 1 }
       end;
     f228: packed record                 { +228 }
-      b228_7, b228_6, b228_5, b228_4, b228_3: boolean;
+      static_storage_untouched: boolean;    { .7 }
+      no_pointer_dereference: boolean;  { .6: neither class 12 nor 13
+                                          (mmt) }
+      uplevel_dynamic_storage_untouched: boolean;   { .5 }
+      no_fp_cc_write: boolean;          { .4 }
+      no_ip_cc_write: boolean;          { .3 }
       b228_2: boolean;                  { .2 (tr_utils) }
       b228_1, b228_0: boolean;
       end;
@@ -877,6 +971,14 @@ type
   32): the gate renames those sections. }
 var (instruction_attributes)
   instruction_attributes: instr_attrs_t;
+var (amse_premod_immed_low)
+  amse_premod_immed_low: array [0..7] of integer32;
+var (amse_premod_immed_high)
+  amse_premod_immed_high: array [0..7] of integer32;
+var (amse_postmod_immed_low)
+  amse_postmod_immed_low: array [0..7] of integer32;
+var (amse_postmod_immed_high)
+  amse_postmod_immed_high: array [0..7] of integer32;
 var (instruction_mnemonic)
   instruction_mnemonic: array [0..383] of packed array [1..12] of char;
 var (instruction_mnemonic_length)
@@ -974,8 +1076,11 @@ var
 
   { Other units' cells reached absolutely. }
   asm_658: extern integer32;            { asm +0x658 (lir, ra_utils) }
-  dmp_3c2: extern integer;              { dmp +0x3C2 (at_backend; ra
-                                          reads its low byte) }
+  dmp_3c2: extern at_switches_t;        { dmp +0x3C2: the debug switches
+                                          dmp_$starting_basic_block turns
+                                          on at one block (at_backend;
+                                          ra reads its level; batch B
+                                          (PB3): was integer) }
   lst_13c: extern univ_ptr;             { lst +0x13C (at_backend, bin,
                                           dmp) }
   lst_140: extern integer;              { lst +0x140 (sym) }
@@ -1312,14 +1417,20 @@ procedure dfa_$process_routine(
 
 { dmp.pas (cc.a88k). }
 
-{ DMP_$STARTING_BASIC_BLOCK - 0x22F188, 0x5E bytes; called from ra.  Frame
-  8:al. }
-procedure dmp_$starting_basic_block(
-    p1: univ_ptr); options(val_param); extern;
+{ batch B (PB3): the headings narrowed from dmp.pas's bodies (dmp
+  reads one parameter of dmp_$get_line_number and dmp_$instruction,
+  whose frames the callers' pushes suggested had more). }
 
-{ DMP_$NOTE_LABEL - 0x22F1FC, 0x22 bytes; called from lir.  Frame 8:pw. }
+{ DMP_$STARTING_BASIC_BLOCK - at the block numbered dmp_3c0, the debug
+  switches dmp_3c2 are turned on (off elsewhere); with dmp_3c0 0 and
+  dmp_3c2's level set, the block's number is written.  0x22F188, 0x5E
+  bytes; called from ra. }
+procedure dmp_$starting_basic_block(
+    bb: bb_ptr_t); options(val_param); extern;
+
+{ DMP_$NOTE_LABEL - "L$n:".  0x22F1FC, 0x22 bytes; called from lir. }
 procedure dmp_$note_label(
-    p1: integer); options(val_param); extern;
+    lab: integer); options(val_param); extern;
 
 { DMP_$COMPLEX_LR_BIT_VECTOR_HEADER - 0x22F374, 0x2A bytes; called from
   dbg_life mmt.  Frame 8:al.  (batch C: narrowed from mmt's calls.) }
@@ -1331,6 +1442,11 @@ procedure dmp_$complex_lr_bit_vector_header(
 type
   dmp_$text_t = array [1..256] of char;
 
+  { batch B (PB3): a live range's name as dmp writes it, in D0: "nnn "
+    (its number), "rnn " or "fnn " (its register), "pc_ ", "sf_ ",
+    "icc ", "fcc ". }
+  dmp_$lr_name_t = packed array [1..4] of char;
+
 { DMP_$COMPLEX_LR_BIT_VECTOR - 0x22F48C, 0x12A bytes; called from dbg_life
   mmt.  Frame 8:al; 12:a; 16:alp; 20:al.  (batch C: narrowed from mmt's
   calls: the text by address, its length by value, the vector.) }
@@ -1340,51 +1456,53 @@ procedure dmp_$complex_lr_bit_vector(
     len: integer32;
     v: bv_ptr_t); options(val_param); extern;
 
-{ DMP_$REG_SET - 0x22F5D8, 0xE4 bytes; called from ra.  Frame 8:l; 12:l. }
+{ DMP_$REG_SET - a register set as "[0, 3..5, 34 ]": hi registers
+  32..63, lo 0..31 (bit k register k).  0x22F5D8, 0xE4 bytes; called
+  from ra. }
 procedure dmp_$reg_set(
-    p1: integer32;
-    p2: integer32); options(val_param); extern;
+    hi: bv_word_t;
+    lo: bv_word_t); options(val_param); extern;
 
-{ DMP_$ALL_BASIC_BLOCK_HEADERS - 0x2304A8, 0x40 bytes; called from ra.
-  Frame 8:al. }
+{ DMP_$ALL_BASIC_BLOCK_HEADERS - 0x2304A8, 0x40 bytes; called from ra. }
 procedure dmp_$all_basic_block_headers(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
-{ DMP_$GET_LINE_NUMBER - 0x2309C4, 0x6A bytes; called from fg_utils.
-  Frame 8:a; 12:a.  Result: D0 (callers: D0l3). }
+{ DMP_$GET_LINE_NUMBER - an instruction's source line as the listing
+  numbers it (lst_13c), 0 beyond the last.  0x2309C4, 0x6A bytes;
+  called from fg_utils. }
 function dmp_$get_line_number(
-    p1: univ_ptr;
-    p2: univ_ptr): integer32; options(val_param); extern;
+    instr: instr_ptr_t): integer32; options(val_param); extern;
 
-{ DMP_$INSTRUCTION - 0x230A2E, 0x800 bytes; called from lir.  Frame 8:al;
-  110:w; 612:w. }
+{ DMP_$INSTRUCTION - an instruction, its flags and its operands, one
+  line each.  0x230A2E, 0x800 bytes; called from lir. }
 procedure dmp_$instruction(
-    p1: univ_ptr;
-    p2: integer;
-    p3: integer); options(val_param); extern;
+    instr: instr_ptr_t); options(val_param); extern;
 
-{ DMP_$THREE_CHAR_LR_NAME_FROM_LR - 0x232010, 0x114 bytes; called from ra.
-  Frame 8:al; 12:a; 16:a.  Result: D0 (callers: D0l23). }
+{ DMP_$THREE_CHAR_LR_NAME_FROM_LR - 0x232010, 0x114 bytes; called from
+  ra. }
 function dmp_$three_char_lr_name_from_lr(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr): integer32; options(val_param); extern;
+    lr: lr_ptr_t): dmp_$lr_name_t; options(val_param); extern;
 
-{ DMP_$WHOLE_ROUTINE - 0x23394A, 0x718 bytes; called from at_backend com
-  fg_utils ra ra_utils.  Frame 8:al; 12:b; 14:b. }
+{ DMP_$WHOLE_ROUTINE - the routine, its blocks and instructions (with
+  verbose dmp_$instruction's lines, else one line each), and its live
+  ranges; unless this_phase, as the phase before the running one.
+  0x23394A, 0x718 bytes; called from at_backend com fg_utils ra
+  ra_utils. }
 procedure dmp_$whole_routine(
-    p1: univ_ptr;
-    p2: boolean;
-    p3: boolean); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    verbose: boolean;
+    this_phase: boolean); options(val_param); extern;
 
-{ DMP_$INTERFERENCE_GRAPH_ANALYSIS - 0x2345FA, 0xC8 bytes; called from ra.
-  Frame 8:a; 12:a; 16:p; 20:a; 24:b. }
+{ DMP_$INTERFERENCE_GRAPH_ANALYSIS - two titles, the chromatic number
+  and the live ranges in allocation order (chained at their l52), with
+  their conflicts (full: display_ra_info's lines).  0x2345FA, 0xC8
+  bytes; called from ra. }
 procedure dmp_$interference_graph_analysis(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: integer32;
-    p4: univ_ptr;
-    p5: boolean); options(val_param); extern;
+    in title1: univ dmp_$text_t;
+    in title2: univ dmp_$text_t;
+    chromatic: integer32;
+    lrs: lr_ptr_t;
+    full: boolean); options(val_param); extern;
 
 { DMP_$MEMORY_USAGE - 0x23474A, 0x188 bytes; called from at_backend. }
 procedure dmp_$memory_usage; extern;
@@ -1938,18 +2056,22 @@ procedure lir_main_$save_and_restore_code(
 
 { lir_utils.pas (cc.a88k). }
 
-{ LIR_UTILS_$EXCISE_INST - 0x24C0FC, 0x52 bytes; called from com fg_utils
-  mmt mmt_utils tr_utils utils.  Frame 8:al.  Result: read (callers:
-  D0l1). }
-function lir_utils_$excise_inst(
-    p1: univ_ptr): integer32; options(val_param); extern;
+{ LIR_UTILS_$EXCISE_INST - instr unlinked from its block, its +2 bit 6
+  cleared.  0x24C0FC, 0x52 bytes; called from com fg_utils mmt mmt_utils
+  tr_utils utils.  No result (A0 is left holding instr; batch A, PA3:
+  was a function). }
+procedure lir_utils_$excise_inst(
+    instr: instr_ptr_t); options(val_param); extern;
 
-{ LIR_UTILS_$CREATE_PREFERENCE_MOVE - 0x24C14E, 0xFC bytes; called from
-  com ra_utils.  Frame 8:w; 10:al; 14:bw.  Result: read (callers: A08). }
+{ LIR_UTILS_$CREATE_PREFERENCE_MOVE - a register move (move_opcode by
+  kind) put next to anchor (after it when after), its operands' kinds
+  kind and its non-_like form.  0x24C14E, 0xFC bytes; called from com
+  ra_utils.  Frame 8:w; 10:al; 14:b (callers push `st'/`clr.b': batch A,
+  PA3, was integer).  Result: A0. }
 function lir_utils_$create_preference_move(
-    p1: integer;
-    p2: univ_ptr;
-    p3: integer): univ_ptr; options(val_param); extern;
+    kind: operand$t;
+    anchor: instr_ptr_t;
+    after: boolean): instr_ptr_t; options(val_param); extern;
 
 { LIR_UTILS_$ADD_LTS_TO_LR - 0x24C24A, 0x5E bytes; called from com iv mmt
   mmt_utils ra_utils tr_utils.  Frame 8:w; 10:al; 14:l; 18:a: a new
@@ -1968,7 +2090,7 @@ procedure lir_utils_$add_lts_to_lr(
   A04). }
 function lir_utils_$add_lts_after_lts(
     lts: lts_ptr_t;
-    p2: integer;
+    rrp: integer;
     bb: bb_ptr_t): lts_ptr_t; options(val_param); extern;
 
 { LIR_UTILS_$TRANS_INSERT_MOVE - 0x24C312, 0x912 bytes; called from com
@@ -1976,12 +2098,15 @@ function lir_utils_$add_lts_after_lts(
 procedure lir_utils_$trans_insert_move(
     p1: univ_ptr); options(val_param); extern;
 
-{ LIR_UTILS_$ADD_MEMORY_HOME - 0x24D0F2, 0x18C bytes; called from
-  ra_utils.  Frame 8:l; 12:al; 16:bw.  Result: read (callers: D0l1). }
-function lir_utils_$add_memory_home(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: integer): integer32; options(val_param); extern;
+{ LIR_UTILS_$ADD_MEMORY_HOME - lr (or its even mate) given a memory
+  home with a spill id: its old one kept when big enough, else a new
+  temporary (allocated static when static).  0x24D0F2, 0x18C bytes;
+  called from ra_utils.  Frame 8:l; 12:al; 16:b.  No result (batch A,
+  PA3: was a function). }
+procedure lir_utils_$add_memory_home(
+    rtn: rtn_ptr_t;
+    lr: lr_ptr_t;
+    static: boolean); options(val_param); extern;
 
 { LIR_UTILS_$FLESH_OUT_NEW_LOAD_OR_STORE - 0x24D34C, 0x288 bytes; called
   from ra_utils.  Frame 8:al; 12:al; 16:al; 20:al; 24:l; 28:a; 32:al;
@@ -2001,12 +2126,15 @@ function lir_utils_$flesh_out_new_load_or_store(
     p12: integer32;
     p13: univ_ptr): integer32; options(val_param); extern;
 
-{ LIR_UTILS_$GET_NEXT_ASYNC_EXPOSED_LR - 0x24D65A, 0xF4 bytes; called from
-  df_utils mmt.  Frame 8:l; 12:al; 16:a.  Result: D0 (callers: D0l3). }
+{ LIR_UTILS_$GET_NEXT_ASYNC_EXPOSED_LR - the next complex id after lr's
+  (all from 0 when lr is nil) live into an asynchronous path's block,
+  the start block's edges walked through edge (nil to begin); 0 at the
+  end.  0x24D65A, 0xF4 bytes; called from df_utils mmt.  Frame 8:l;
+  12:al; 16:a.  Result: D0. }
 function lir_utils_$get_next_async_exposed_lr(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: univ_ptr): integer32; options(val_param); extern;
+    rtn: rtn_ptr_t;
+    lr: lr_ptr_t;
+    var edge: univ fg_edge_ptr_t): integer32; options(val_param); extern;
 
 { LIR_UTILS_$FIX_STORE_THROUGH_LRS - 0x24D808, 0xC8E bytes; called from
   fga.  Frame 8:al. }
@@ -2017,7 +2145,7 @@ procedure lir_utils_$fix_store_through_lrs(
   sched_utils tr_utils trans utils.  Frame 8:al.  Result: read (callers:
   A014 D0w1). }
 function lir_utils_$find_mate_operand(
-    p1: univ_ptr): univ_ptr; options(val_param); extern;
+    op: opnd_ptr_t): opnd_ptr_t; options(val_param); extern;
 
 { lst.pas (cc.a88k). }
 
@@ -2369,8 +2497,8 @@ function sym_$allocation_size_in_bytes(
 { SYM_$ALLOCATE_STATIC_VARIABLE - 0x27B2C6, 0xE4 bytes; called from
   lir_utils rewrite.  Frame 8:a; 12:al. }
 procedure sym_$allocate_static_variable(
-    p1: univ_ptr;
-    p2: univ_ptr); options(val_param); extern;
+    sym: univ_ptr;
+    size: integer32); options(val_param); extern;
 
 { SYM_$REFORMAT_LITERAL - 0x27B47A, 0x1F2 bytes; called from asm.  Frame
   8:al.  Result: A0 (callers: A02). }

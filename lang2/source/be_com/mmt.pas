@@ -373,13 +373,13 @@ begin
       if mmt_lists^[k] <> nil then
         c := c + [k];
     if (c * [12, 13]) = [] then begin
-      mmt_rtn^.f228.b228_6 := true;
+      mmt_rtn^.f228.no_pointer_dereference := true;
       if not (1 in c) then
         mmt_rtn_v_ptr_t(mmt_rtn)^.f227.b0 := true;
       if (c * mmt_static_classes) = [] then
-        mmt_rtn^.f228.b228_7 := true;
+        mmt_rtn^.f228.static_storage_untouched := true;
       if (c * mmt_dynamic_classes) = [] then
-        mmt_rtn^.f228.b228_5 := true
+        mmt_rtn^.f228.uplevel_dynamic_storage_untouched := true
       else begin
         if (cc * mmt_dynamic_classes) <> [] then
           f := false
@@ -399,7 +399,7 @@ begin
               until done or (t = nil);
             end;
         end;
-        mmt_rtn^.f228.b228_5 := f;
+        mmt_rtn^.f228.uplevel_dynamic_storage_untouched := f;
       end;
     end;
   end;
@@ -629,8 +629,7 @@ begin
     lr := nil;
     state := 0;
     repeat
-      k := lir_utils_$get_next_async_exposed_lr(integer32(mmt_rtn), lr,
-                                                addr(state));
+      k := lir_utils_$get_next_async_exposed_lr(mmt_rtn, lr, state);
       if k <> 0 then begin
         t := mmt_token_map^[k];
         lr := t^.lr;
@@ -1391,7 +1390,7 @@ begin
           end;
           mmt_stats[5] := mmt_stats[5] - i^.h.nopnds;
           mmt_stats[11] := mmt_stats[11] - 1;
-          discard(lir_utils_$excise_inst(i));
+          lir_utils_$excise_inst(i);
         end
         else
           i^.h.b2_5 := false;
@@ -1513,7 +1512,7 @@ begin
                 and mmt_utils_$can_combine_mmt_seqs(seq, mmt_384, mmt_380) then begin
               mmt_utils_$mmt_seq_add_tokens_from_instr(seq);
               n := mmt_utils_$mmt_seq_emit(seq, true);
-              discard(lir_utils_$excise_inst(seq));
+              lir_utils_$excise_inst(seq);
               seq := n;
             end
             else begin
@@ -1776,7 +1775,7 @@ begin
               mmt_utils_$mmt_seq_add_tokens_from_instr(i);
               n := mmt_utils_$mmt_seq_emit(i, false);
               if i^.opc = ord(opc$mmt_seq) then begin
-                discard(lir_utils_$excise_inst(i));
+                lir_utils_$excise_inst(i);
                 nxt := n;
                 exit;
               end;
@@ -1876,7 +1875,7 @@ begin
     n^.opnds[j].value := old^.opnds[j].value;
     n^.opnds[j].h.kind := old^.opnds[j].h.kind;
   end;
-  discard(lir_utils_$excise_inst(old));
+  lir_utils_$excise_inst(old);
   mmt_stats[11] := mmt_stats[11] + 1;
   mmt_stats[5] := mmt_stats[5] + n^.h.nopnds;
   build_real_mmt_seq := n;

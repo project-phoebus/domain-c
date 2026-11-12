@@ -1,0 +1,16 @@
+{ am_string.init - a DSEE derived object of be_com/backend.ins.pas
+  (cc.a88k only): the names of the addressing modes (am$t's elements without the
+  prefix), 3 of 10 characters.
+  Included by dmp.pas after its other inserts.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k: dmp's data +0x320 (30 bytes, set by .rwdi).
+
+  Not known from the original: the declaration's form (its name is the
+  file's). }
+
+var
+  am_string: array [am$t] of packed array [1..10] of char := [
+    'nomodify  ',
+    'postmodify',
+    'premodify '];

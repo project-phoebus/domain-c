@@ -79,6 +79,7 @@ Conventions the translators should know:
 | `lang2/source/be_com/lst.pas` | 33 | the assembler listing, classic and -PRASM (translator PB; dpc gaps 7, 8, 28) |
 | `lang2/source/be_com/bin.pas` | 32 | the code's bytes, displacements, exception stubs, .lines and unwind scopes (translator PB; dpc gaps 7, 13, 22) |
 | `lang2/source/be_com/asm.pas` | 21 | the encoder (pass 2), the layout and pipeline NOPs (pass 1), the literal pools, case tables (translator PB2; dpc gaps 22, 25, 32; the .init files by `define`, questions 161) |
+| `lang2/source/be_com/dmp.pas` | 27 | the phases' dumps: blocks, instructions, live ranges, interference graph, MRH (translator PB3; batch A's record fields read through views, their meanings in its comments; phase$ constants in backend.ins.pas; dpc gaps 4, 33, 34) |
 
 exs.pas (27 routines, 4168 bytes, nested routines with uplevel
 references) was not reached with the core; batch A translated it
@@ -102,6 +103,18 @@ Batch A continued (translator PA2, 2026-11-11):
 | `lang2/source/be_com/hal.pas` | 19 | done: the HAL phase; bb_t l46, l50 (dominator tree), l58 (candidate hammock ends), l74, l78, l150 named, l54/next114/l98/avail_out uses documented; fg_utils_$separate_loop_header_edges named (bb, head, p3: boolean): fg_edge_ptr_t |
 | `lang2/source/be_com/life.pas` | 14 | done: the LIFE phase; rtn_t l200 named; lts_t's lr/mark and lr_t's l52 serve life's union-find (cast there, documented in life.pas) |
 | `lang2/source/be_com/sanity.pas` | 6 | begun, 5 of 6: sanity_$check_entire_routine (0x2721B4, 0xD76) remains (extern in the unit meanwhile); lir_utils_$repair_lts_properties named (rtn) |
+
+Batch A continued (translator PA3, 2026-11-11):
+
+| unit | routines | notes |
+|------|----------|-------|
+| `lang2/source/be_com/sanity.pas` | 6 | done: sanity_$check_entire_routine (five walks: instructions, operands, address modes against the amse_ sections, exposed and final lists, the live ranges' segments); backend.ins.pas instr_attr_t amse (+1 bits 6..4), instr_hdr_t +3 as modify/lsq/b3_3, opnd_hdr_t bytes, lr_t f2.reg, the amse_ sections declared |
+| `lang2/source/be_com/call_conv.pas` | 9 | done: call_conv.ins.pas's records (call_conv_$t, call_conv_$arg_t, call_conv_$preset_t; question 171); rtn_t ip_clobbered, fp_clobbered and the memory properties at +227/+228 (question 169); isc_lir.ins.pas make_expression_temporary; dpc gaps 22, 25 (parts 3, 4's aggregates and 5 of at_call_conv left out of the check) |
+| `lang2/source/be_com/lir_utils.pas` | 15 | begun, 12 of 15: trans_insert_move (0x912), flesh_out_new_load_or_store (0x288) and fix_store_through_lrs (0xC8E, with new_db_lts) TODO; lr_t memory_home (+24, the original's name), home_lr (+32), physical (+3 bit 7); rtn_t spills (+196); move_opcode.init; lir.pvt.pas lir_3c00; headings narrowed |
+
+Question 174 is answered: these units open the prelude (fga, hal, life and sanity now do).
+
+Remaining in batch A after PA3: lir_utils' three routines; lir, lir_main, sym, fg_utils, tm_utils, post.  Translator PA2's remaining list read: sanity_$check_entire_routine; call_conv (question 167), lir_utils, lir, lir_main, sym, fg_utils, tm_utils, post.  Notes for whoever continues: sym, tm_utils (and fga, hal, life, sanity) open backend.ins.pas without the lang prelude: backend.ins.pas must not use the prelude's types (rtn_t.node is univ_ptr for that reason), and a unit that needs il_180, cargs_$options or idntk declares them through views of its own (fga.pas; docs/questions.md 174).  sym calls isc_$get_il_live_range without opening an ISC insert.  tm_utils includes the named sections' initializers (operand_forms_mask.init, the amse_*.init), which question 161 has not settled.
 
 Batch C (translators PC, PC2, PC3, PC4, 2026-11-11):
 

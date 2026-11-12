@@ -900,3 +900,55 @@ cc.m68k unless marked.
     a static link.**  ltss_on_stores_to_same_addr's nested
     get_the_right_instr (0x229968) is called `pea (A0); bsr' with its
     one argument only, and reads no frame of its parent.
+## The dumps (translator PB3, cc.a88k dmp)
+
+119. **String constants overlapped in the pool.**  dmp_$instruction
+    (0x230A2E) pads an operand kind's name from a 24-blank constant at
+    0x231D72 whose last two blanks are the start of '  fw=%ld%$'
+    (0x231D88, used by the width lines): the pool shares a constant's
+    head with the tail of another (a suffix of one string the prefix of
+    the next).  Likewise 'AVAIL_ON_ENTRY', 'KILLED', 'LIVE_ON_ENTRY'
+    (passed with their lengths, no terminator) lie back to back
+    (pattern 113), and identical control strings ('%.', ' %$', ' ]%.')
+    are one constant for the whole unit, referenced from routines far
+    apart.  dpc lays each out on its own.
+120. **A test of a pointer just cleared, folded into a jump.**
+    display_ra_info (0x2336CA) clears A3 (`suba.l A3,A3') and branches
+    straight to its epilogue (`bra.w 0x233878'): the loop over the
+    conflicts' displacements and the preferenced set that follow are
+    never reached, though their code is there, and the loop's test at
+    its bottom is skipped too.  Written as `c := nil; if c <> nil then
+    begin repeat ... until c = nil; ... end': Rev 8.89 knows the
+    register's value from the clear (pattern 75) and drops the test.
+121. **An operand's instruction computed inline.**  print_lts_list
+    (0x233054) finds the instruction of a segment's operand as
+    `operand - 32 - 12 * operand^.num' (`move.b (A0),D1; lsl.w #2;
+    ...; subi.l #32; sub.l D4'), utils_ins_$operands_instruction's
+    body, without a call: dmp does not open utils.ins.pas (an inline
+    function or a macro in the original; written as the expression).
+122. **A record after the object it describes, reached by a negative
+    displacement.**  print_alias_desc (0x230834) reads a load's or
+    store's alias descriptor (alias_$desc_t, 24 bytes) at the
+    instruction's address less 24 (`subi.l #24'): lir allocates it in
+    front of the instruction.
+## The calling conventions and the LIR checks (translator PA3, call_conv, sanity, lir_utils; cc.a88k)
+
+123. **A boolean register as a `btst' bit number.**  at_call_conv
+    (cc.a88k 0x0B49EE) tests a kind 175 callee's byte +76 with
+    `btst D3,(76,A2); sne D3', D3 holding nested, false (0) on that
+    path: bit 0.  Written `(byte & 1) <> 0'.  Item 75's reuse of a
+    register's value, as a bit number.
+124. **An address loaded and never used.**  sanity_$check_entire_
+    routine's third and fourth walks load lir_main_c86's address into D3
+    (`lea 0x48C032,A1; move.l A1,D3', then `tst.w (A1)' through it) and
+    `move.l #0x48BFEC,D4' (lir_main_c40's) that nothing reads before D4
+    is reloaded.
+125. **A word parameter before a longword: frame 8:w, 10:l.**
+    make_expression_temporary (isc_user_routines 0x2144EA) is called
+    `subq.l #2,SP; pea 0x20; move.w #122,-(SP)' (8 bytes): the word
+    first at 8, the longword at 10, then two bytes of pad.
+126. **A record array's elements of 26 bytes.**  at_call_conv's argument
+    descriptors (call_conv_$arg_t) are indexed by `add.l; move.l; lsl.l
+    #2; add.l; add.l; add.l' (26k) and the record allocated as 26(n - 1)
+    + 108 bytes; copies move 6 longwords and a word.  dpc lays the
+    record out at 26 bytes too (checked with sizeof).

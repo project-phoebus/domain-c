@@ -1,0 +1,25 @@
+{ move_opcode.init - a DSEE derived object of be_com/backend.ins.pas
+  (cc.a88k only): the opcode of a register-to-register move by the
+  operands' kind (operand$t): MOVE for the integer registers, COPYS for
+  a single, COPYD for a double (a pair), the physical and _like kinds
+  as their registers'.  Included by lir_utils.pas after its other
+  inserts (lir_utils_$create_preference_move).
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k: lir_utils' data +0 (16 words, set by .rwdi but for kinds
+  8..11, which no record sets), read by create_preference_move
+  (`move.w (0,A5,D0.w)' with twice the kind).
+
+  Not known from the original: the declaration's form (its name is the
+  file's); the generator covered operand$none..operand$forward_label_
+  reference, as register_letter.init. }
+
+var
+  move_opcode: array [operand$none..operand$forward_label_reference]
+    of integer := [
+    0, ord(opc$move), ord(opc$copys), ord(opc$copyd),   { none, ip_reg,
+                                          fp_reg, fp_reg_pair }
+    ord(opc$move), ord(opc$copys), ord(opc$copyd),   { physical }
+    0, 0, 0, 0, 0,                      { condition codes, memory }
+    ord(opc$move), ord(opc$copys), ord(opc$copyd),   { _like }
+    0];                                 { forward_label_reference }
