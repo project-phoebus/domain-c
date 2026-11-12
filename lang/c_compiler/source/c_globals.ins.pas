@@ -77,6 +77,15 @@ type
     them to errorlst (a 16-byte frame array, by address). }
   cerr_args_t = array [1..3] of univ_ptr;
 
+  { The current source line (lex_text): a length word and 520
+    characters, 522 bytes (lex_tokens follows it at +0x26E8; a varying
+    [520] of char takes 526, language reference 3.11.4.1).
+    docs/questions.md 279. }
+  lex_text_t = record
+    length: integer;
+    body: array [1..520] of char;
+  end;
+
 { TODO(pascal) most cells are named by offset
 
   Rename them as their owners and users are translated (c_main sets
@@ -248,7 +257,7 @@ var
                                           messages (error_hdr); c_main }
   lex_24da: extern integer;             { +0x24DA: attributes counts }
   lex_24dc: extern integer;             { +0x24DC: attributes counts }
-  lex_text: extern varying [520] of char;  { +0x24DE: the current
+  lex_text: extern lex_text_t;          { +0x24DE: the current
                                           source line: characters 1..8
                                           hold the listing's line number
                                           field, the text begins at 9
