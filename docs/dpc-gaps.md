@@ -464,6 +464,8 @@ when this tree is merged).
          if (k = 1) or f(k) then b := true;
        end;
 
+   Also opt_inline.pas (translator KK): function_return's `(b^.kind =
+   108) and assert_routine_returns_void(b)' (cc.m68k 0x08F690).
    Also opt_strength.pas (translator FF): `and check_tree_node(t)'
    (checkauto 0x0E7F92), `and opt_str_$is_loop_constant_integer(...)'
    (recognize_induction_variables 0x0EA862), `and

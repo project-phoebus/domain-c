@@ -1013,3 +1013,26 @@ revisited.
    three descriptors of fpa's data lie 24 bytes apart (20 used), as
    cg_assign's and cg_tree's (questions 106, 107): perhaps the
    descriptor type is 24 bytes.
+132. Translator KK: opt_inline.pas uses a call graph edge's +12
+   (runbackend.pas's rb_edge_t ref_stmt, "module +0x4") as a block:
+   put_on_bct adds variables to its +16/+20 list, find_varn searches
+   it and process_blocks links the copied blocks after it and moves
+   levels from its +294.  opt_inline names the field scope; is
+   runbackend's module +0x4 the current block rather than a
+   statement?
+133. Translator KK: opt_inline.pas, probable slips of the original
+   kept: allocate_local_var passes strtk the length 66 for 'Bad rlen
+   encountered in \\opt_inline\allocate_local_var' (55 characters);
+   ptr_variable's identifier node for a language 1 name is 29 bytes
+   from gspace, room for 11 characters, while assign_name writes
+   '<OI$nnnnn$' plus the name plus '>'; process_display_ptrs sets its
+   cursor to the new pointer's successor (`prev := v^.next') after
+   inserting it; call_status has a `btst #3' of the callee's +374
+   whose result no instruction reads (0x0935AE).  get_size_rlen's
+   and callee_status's comparisons of a word count with 65535 (`cmpi.w
+   #-1; bhi') can never hold.
+134. Translator KK: opt_inline's module data has an initialized table
+   of the bytes of each register class at +0x5ED8 ([0..12]: 0, 1, 2, 0,
+   4, 4, 4, 8, 8, 0, 0, 0, 16) like delay.pas's class_size; and the
+   names' serial at +0x5EF4 is a longword whose low word assign_name
+   reads (+0x5EF6, an integer32 assigned to an integer).

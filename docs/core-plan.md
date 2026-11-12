@@ -439,3 +439,14 @@ Translator HH, banshee (finished, 1 of 1): dobansheefpx's heading in
 final.ins.pas (final's peepholer calls it); celpkg.pas defines
 null_ads, which banshee copies absolutely; opinfo's operand sizes
 (0x2D01CE) declared in the unit.
+Translator KK (2026-11-11), opt_inline (started, 54 of 62): the two
+binaries' code is the same but for absolute addresses, so one body
+(no `%if cc_a88k').  The unit opens neither g_opt.ins.pas nor any
+opt_main insert and needs no opt_main cell; it declares its own
+views: the call graph edge (oi_edge_t, runbackend's rb_edge_t; +12
+used as a block, docs/questions.md 132), the hash entries and display
+records, type_exp's result, process_operand's context.  No shared
+insert changed (inline_$inline_expand keeps globals_from_backend's
+heading; inline_$mark_reference_params keeps opt_vector's local
+heading's types).  process_operand and its seven nested routines are
+not written (declared extern in the unit; a TODO in its header).

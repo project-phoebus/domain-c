@@ -101,10 +101,39 @@
   rb_edge_t), statements, blocks and other nodes are read by offset
   (il.ins.pas's views), a block's nesting level through oi_level_t.
 
-  dpc gaps (docs/dpc-gaps.md): 8 (`in' on node kind sets).
+  dpc gaps (docs/dpc-gaps.md): 8 (`in' on node kind sets), 24
+  (function_return's call as a right operand of `and').  find_block,
+  get_referenced_symbol and inliner_actual set their pointer results
+  from a local (gap 15).
 
-  Not known from the original: every name but the routines'.
+  Not known from the original: every name but the routines'; the
+  display record's (oi_info_t) and the context's (oi_ctx_t) fields
+  are named by use.
 }
+
+{ TODO(pascal) opt_inline: 54 of 62 routines written
+
+  Not written: process_operand (0x092228, cc.a88k 0x093C08, 0xBD8
+  bytes) and the seven routines nested in it: process_opr_ind
+  (0x091CAE / 0x09368E), process_index_opr (0x091A1E / 0x0933FE),
+  apply_disp (0x09196A / 0x09334A), disp_offset (0x091956 /
+  0x093336), adjust_disp (0x09192E / 0x09330E), get_sym_ind_info
+  (0x0918BA / 0x09329A) and substitutee_sym_ind (0x091822 / 0x093202,
+  nested in get_sym_ind_info).  process_operand is declared extern
+  below (before process_statements, which calls it).  What was read
+  of them: substitutee_sym_ind(e, n, var ctx) maps n through the hash
+  table (ctx.subst set for flags 0..2; flag 1 keeps n; else the value,
+  its address operand, a 195's +12, a 147's or 146's +28);
+  get_sym_ind_info(e, var blk, var ctx, out raw, out sub: oi_symind_t)
+  takes ctx.c16 and ctx.c20 (an identifier 76 looked up by find_varn)
+  and their substitutes; adjust_disp(disp, sym, node, var r) fills
+  r's node, disp and dsym; disp_offset(n) is n's +32 (0 for nil);
+  apply_disp(e, x, ctx, var info, var t) makes t a symbolic (add_sdn)
+  or plain (add_dn) displacement from info (or moves ctx.dnode's +32),
+  then maps x to t; process_index_opr(e, x, var t, ctx, var r, a, b)
+  rebases an indexing between two variables' storage (class 1 or 7
+  through il_e0, 2 or 6 through il_e4, -CPU element 6) and calls
+  process_operand. }
 module opt_inline;
 
 %include '/sys/ins/base.ins.pas';
@@ -1171,9 +1200,9 @@ begin
   extend(e, t, have, want, signed);
 end;
 
-{ start_il_stream - a new stream of statements for the copy at call
-  s: its head an evaluation (139) of one operand, an integer constant
-  node (81, 12 bytes), at s's line, flags +41..+42 0x8000 (+41 bit 7).
+{ start_il_stream - a new stream of statements for the copy of call
+  x: its head an evaluation (139) of one operand, an integer constant
+  node (81, 12 bytes), at x's line, flags +41..+42 0x8000 (+41 bit 7).
 
   0x08FC5C, 0x7E bytes: the first parameter not read; the header's
   flags stored as `andi.l #0xFF0000FF; or.l #0x800000' of the
@@ -1214,7 +1243,7 @@ begin
 end;
 
 { patch_il - the stream built for edge e put in place of its call's
-  statement (+20): when x's result (+4) is set, the stream goes
+  statement (+20): when x's result is set, the stream goes
   before the statement and the call's slots (e's sites, through l)
   get the result (the value the callee's result variable became,
   get_hash_info, its operand when flags 1 or 2; converted to the
