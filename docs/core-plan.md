@@ -418,3 +418,17 @@ dobansheefpx (banshee.pas is not started) and a copy of celpkg's empty
 descriptor.  peepholer_ops and its six nested try_ routines, deltest,
 opttest, optmove, opta, floatop and seven more are not written (a TODO
 in the header; peepholer_ops declared extern at module level).
+Translator JJ (2026-11-11), final (finished, 120 of 120): peepholer_ops
+and its six try_ routines are nested in peepholer (GG's module-level
+stand-in removed); deltest (with backov), opttest, optmove, opta,
+floatop, merge_add_sub, try_pre_dec, try_post_incr,
+transform_ptr_in_d_use, final_$cmp_branch_becomes_eor,
+final_$redundant_lea, final_$collapsed_index_calc and
+final_$try_reducing_literal translated.  No shared insert changed.  The
+module data's cells are named by use (fn_ads0 +0, fn_test +36,
+fn_test_size +42, fn_mask/fn_adjust/fn_size_f6 +0x60..+0x83 replacing
+fn_60, fn_fop_a/fn_fop_b +0x2A8/+0x2B8, fn_fmovecr +0x2E8, fn_fabs_op
++0x3A0, fn_fabs_b/fn_fabs_a +0x3B0/+0x530); cc_change takes deltest's
+unread second argument.  docs/dpc-gaps.md 31 (new), 2, 7, 24 (also);
+rev889-patterns 89-92; questions 130-133.
+
