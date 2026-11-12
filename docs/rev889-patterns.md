@@ -1364,3 +1364,16 @@ cc.m68k unless marked.
     side_effect_set_var_$address_exposed; move.l A0,(-8,A6)' (0x1AB17E,
     rule 442's action): the callers use the pointer argument the
     procedure left in A0 (docs/questions.md 285).
+350. **A branch to a re-test threaded to the re-test's target.**
+    entry_blk (0x0E409A): `bne' on the block's two bits goes straight to
+    the kind-2 rewrite (0x0E415A), past the `tst.w d0; bne' (0x0E40B0)
+    that tests the same bits again after the comparison with il_180's
+    block; the then part `(bits <> 0) or (+188 <> il_180's +188)' and
+    its inner `if bits <> 0' compile so (also function_blk,
+    procedure_blk).
+351. **An or-chain's last two tests merged with `seq' and `or.b'.**
+    f_math_top (0x0E993A): `cmpi.w #12,d1; seq d0; ...; or.b
+    (424,a3),d0; bmi then', the test of opmod1 = 12 and the boolean of
+    isc_readonly_tables +424 by opmod1 evaluated together before the
+    branch, the earlier tests (15, 14, 11) each a `beq then' and the
+    last (13) a `bne else'.

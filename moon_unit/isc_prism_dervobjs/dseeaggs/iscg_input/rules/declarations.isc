@@ -103,7 +103,15 @@ attribute already_through_pass_2 +115.3 boolean;
   kinds the patterns test at that position; inherited: the node's own;
   -np: less not_permissible_function's).  `fixed': the routine is the
   generator's fixed text (tools/iscg_text.py P1_ROUTINES; its pass_1
-  calls' sets listed, position: set). }
+  calls' sets listed, position: set).  `child K NODE solution KIND': the
+  child's list is one solution of KIND made here (NODE nil: no inherited
+  attributes).  `if COND; ... [else; ...] endif;': COND an and/or of
+  relations ((il.w52 = 9)), booleans (il.b30.7, a function's result) and
+  the globals target_properties.p_be, target_properties.l180 and
+  il_180.<field>.  A rewritten node's fields: nK.wN, nK.pN, nK.bN, nK.bN.B
+  and nK.index (the statement index, 16 bits at bit 8 of +42); the
+  attributes' values may be rlen_arith(X), rlen_bits(X) (isc_readonly_
+  tables by rlen) and a compare (il.w36 = 59). }
 operator isc_unrecognized_il_node image 16#0DB51C;
   fixed;
 end;

@@ -799,8 +799,8 @@ modules, isc_pass_1_main's operator routines.
    the named units, so that pass_2 and pattern_matcher end where the
    image's code does.  cc_check.sh calls it for files the manifest names
    and .blocks does not.
-3. isc_pass_1_main: generated (10.5); 53 operator routines remain
-   `fixed' (extern, listed in the unit's header).
+3. isc_pass_1_main: generated (10.5); all 186 routines generated or
+   fixed text (GD2).
 4. isc_main's preserve_solution table and isc_debug's dump_solution
    field list (question 270: hand-translated units, generated parts by
    marked includes).
@@ -862,6 +862,75 @@ call it).
   cc_datacheck_known.txt entry (no .blocks unit owns it).  The writes
   are gap 4 (a rewrite line for the unit).
 - Questions 420 .. 423; patterns 173 .. 343.
+
+**The 53 routines left `fixed' (translator GD2, 2026-11-12): all 186
+done, none extern.**  Each was either lifted (the lifter and the rule
+file's statements extended, so the generator emits it from declarations.isc)
+or written as fixed text (iscg_text.P1_ROUTINES, read off the image by
+hand; its declaration keeps `fixed;' with the pass_1 calls' sets):
+
+- *Lifted* (29): agg_aop, fp_aop, scalar_aop (a field condition and the
+  rewrite_$agg_aop rewrite), char_string_ob, namelist_constant_ob,
+  set_con_ob (target_properties.p_be and +0xB4), at_lib_dsc, lib_dsc
+  (il_180's fields as arguments), isc_addr_top, set_extend_top (a
+  zero-extended word argument), signed_div_top, unsigned_div_top,
+  signed_mod_top, unsigned_mod_top (`immediate_parent_wants_signed <-
+  il.w36 = 59': a boolean from `cmpi; seq'), blk_end_node (an or-chain
+  and a bit of il.p48's byte), raise_exception (a boolean function's
+  result), isc_signed_mod_top, isc_signed_rem_top (bits set by one
+  `or.w #72' of +38), addr_con, branch_node, case_node_range_check,
+  cbranch_node (a child whose list is one solution made in the routine:
+  `child K NODE solution KIND'), nlbranch_node (il_kind_function in a
+  condition), addr_top (precision_from_il_node, arithmetic_from_il_node),
+  bit_set_top, f_extend_top, sr_top (a condition after the children, the
+  void solution in its then part), isc_unsigned_mod_top,
+  isc_unsigned_rem_top (two longwords of the node copied by `lea; move.l
+  (A)+; move.l (A)'), isc_agg_zero_aop (a statement's index, `nK.index
+  <- il.index'), insert_bit_field (`rlen_bits(X)'), bit_field_assign and
+  both bit_field_cmp_top (three booleans and-ed through a local, a
+  compare of il_node_to_integer_value's result).
+- *Fixed text* (24): the routines whose control flow is not one
+  condition over children and rewrites, or that read tables the
+  language does not name: isc_func_call_top (pass_1_isc_call, depth
+  0), f_math_top (an or-chain merged with a boolean table of
+  isc_readonly_tables +424, children at rlen_bits), func_call_top (the
+  temporary's kind by cases), f_div_top (the reciprocal rewrite under
+  an and/or of five calls), return_node (the assignment of the return
+  value: a word table at +346, rlen_bits div 8), isc_agg_aop (the count
+  times the element's bytes), entry_blk, function_blk, procedure_blk
+  (a two-bit field, a comparison with il_180's, each branch with its
+  own trace), fortran_symbol (three paths and initialize_symbol), both
+  compare_top (the converse relation from the word table at +0x30),
+  mul_top, isc_mul_top, isc_mul_to_aop, div_by_aop, div_top, mod_top
+  (the large rewrites: library calls through std_lib_rtns[1], [5], [7],
+  the in-line conditions over il_180's bit 4 of +374 and
+  cargs_$options.flags_286 elements 13 and 14, value_top_over).
+  _p1() builds a routine from its comment and body (`@COPY v' the
+  default copy, `@TRACE' the REWRITE trace); _blk, _compare and
+  _p1_rewrite_tail share the repeated ones.
+- **The lifter's additions** (iscg_pass1.Lifter): tests (cmpi, cmp, tst,
+  btst, a boolean function's tstb) and their branches as and/or chains
+  (an or when a test jumps over the next one to the then part); `scc'
+  booleans stored as attributes; booleans and-ed through a local;
+  global cells (GLOBAL_CELLS: target_properties.p_be, .l180) and the
+  node pointer il_180 (GLOBAL_NODES) as roots; clr stores of a rewritten
+  node; bit 7 copied from a loaded byte; bits set together by or.w/or.b;
+  rlen_bits; the index; solution_list$new/new_solution/append as a
+  solution child; one condition anywhere in the body (after children
+  too), its else part optional, its then part ending at the exit or at
+  the `st' of solutions_made.  BOOL_FUNCS, EXPR_FUNCS and ORD_FUNCS list
+  the functions read as expressions; CALL_CASTS and CALL_BOOL the
+  arguments the headings need cast (il_$node_ptr_t, false).  The
+  extractor takes the lifter's il$t and children where
+  cc_isc_inventory's reading has none (branch_node stores the count
+  through a data register's copy).
+- **The fixed text's views** (P1_TYPES): p1_node_chars_t (a node's bytes
+  as values), p1_target_view_t (target_properties +0xB4),
+  p1_readonly_bytes_t and p1_readonly_words_t (isc_readonly_tables by
+  byte and word).
+- **Gate**: errors=0, 186 routines, similarity 0.43 (0.59 modulo
+  registers); the data and `iscg_gen.py --check' agree.  Questions 440 ..
+  443, patterns 350, 351.
 
 ### 10.6 The pass-2 actions (translator GC, 2026-11-12)
 

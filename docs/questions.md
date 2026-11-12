@@ -2402,3 +2402,40 @@ revisited.
    +0x720..+0x30BA0) would move to cc_isc_check once the pass-1 action
    modules are generated and the generator writes their lines.  Agreed
    as the plan?
+440. Translator GD2, isc_pass_1_main (docs/iscg-design.md 10.5): **the
+   rule file's new operator statements are named by us**: `child K NODE
+   solution KIND' (a child's list of one solution made in the routine:
+   irrelevant for a label, void for a missing operand), `nK.index' (a
+   statement's index, the 16 bits at bit 8 of +42), `rlen_bits(X)'
+   beside `rlen_arith(X)', the roots `il_180' and
+   `target_properties.p_be' / `target_properties.l180' (+0xB4, which
+   target_properties.ins.pas leaves inside p_b0).  Other names?
+441. Translator GD2: **isc_readonly_tables and target_properties read
+   through isc_pass_1_main's views.**  The fixed text reads a word table
+   by rlen at isc_readonly_tables +346 (return_node: the assignment
+   operator of a return value), a word table at +0x30 by a relation's
+   absolute value (compare_top: its converse) and a boolean byte table
+   at +424 by opmod1 (f_math_top: the functions done in line), through
+   p1_readonly_words_t / p1_readonly_bytes_t; target_properties +0xB4
+   (a longword, the literal-pool size limit of char_string_ob and its
+   siblings) through p1_target_view_t.  With question 288's tables:
+   name them in isc_types.ins.pas and target_properties.ins.pas (p_b0
+   split), or keep the unit-local views?
+442. Translator GD2: **zero-extended words.**  The image pushes some
+   node words zero-extended (`clr.l d0; move.w (26,a0),d0; move.l
+   d0,-(sp)': set_extend_top's and isc_addr_top's size, mod_top's
+   value_top_over size) and compares char_string_ob's +16 zero-extended
+   with target_properties +0xB4; the rule file and the fixed text write
+   il.wN (an `integer', sign-extended by dpc).  The same for values
+   below 32768.  Mark unsigned words in the language (il.uwN, emitted
+   as `& 16#FFFF') or leave it?
+443. Translator GD2: **the large rewrites' conditions as written.**
+   mul_top, isc_mul_top, isc_mul_to_aop, div_by_aop, div_top and
+   mod_top test whether the multiplication or division can be done in
+   line as `c or not (X or (not X and Y))' (isc_mul_to_aop: `(not X and
+   Y) or c or not X'), X il_180's bit 4 of +374 or -NO_FP, Y -SOME_FP;
+   entry_blk and its two siblings give each branch its own trace.  The
+   fixed text keeps the image's evaluation order; the original may have
+   had a macro (the trace with every rewrite) and a simpler condition.
+   Acceptable as fixed text, or should the language grow `rewrite'
+   blocks with nested conditions so these are generated too?
