@@ -228,9 +228,8 @@ transform 150  void <- agg_aop | fp_aop | scalar_aop ($1: ip_reg, $2: address_mo
     temp t7: integer32;
     temp t8: integer32;
     temp t9: integer32;
-    condition subject.il.l48 u<= 4;
     t1 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
-    condition not ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or $2.arg_block_location and $1.physical_register and not $1.physical_register_user_declared);
+    condition not (subject.il.l48 u> 4 or (not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or $2.arg_block_location and $1.physical_register and not $1.physical_register_user_declared);
     result.l352 <- nil;
     t3 <- make_bit_mask_1(8, 0);
     t4 <- make_bit_mask_1(16, 0);
@@ -808,9 +807,8 @@ transform 151  void <- agg_aop | fp_aop | scalar_aop ($1: fp_reg, $2: address_mo
   pass_1 image 16#0F8FEE begin
     temp t1: boolean;
     temp t3: integer32;
-    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 4);
     t1 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
-    condition not ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or $2.arg_block_location and $1.physical_register and not $1.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 4 or ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or $2.arg_block_location and $1.physical_register and not $1.physical_register_user_declared) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
     result.l352 <- nil;
     result.l356 <- nil;
     t3 <- make_bit_mask_1(16, 0);
@@ -1064,9 +1062,8 @@ transform 152  void <- agg_aop | fp_aop | scalar_aop ($1: fp_reg_pair, $2: addre
     temp t1: boolean;
     temp t3: integer32;
     temp t4: integer32;
-    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 8);
     t1 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
-    condition not ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or not isc_user_routines_358 or ($2.arg_block_location and $1.physical_register and not $1.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
+    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 8 or ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or not isc_user_routines_358) or ($2.arg_block_location and $1.physical_register and not $1.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
     result.l352 <- nil;
     result.l356 <- nil;
     result.l360 <- nil;
@@ -1697,9 +1694,8 @@ transform 153  void <- agg_aop | fp_aop | scalar_aop ($1: fp_reg_quad, $2: addre
     temp t4: integer32;
     temp t5: integer32;
     temp t6: integer32;
-    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 16);
     t1 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
-    condition not ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or not isc_user_routines_358 or ($2.arg_block_location and $1.physical_register and not $1.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
+    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 16 or ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or not isc_user_routines_358) or ($2.arg_block_location and $1.physical_register and not $1.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
     result.l352 <- nil;
     result.l356 <- nil;
     result.l360 <- nil;
@@ -3023,9 +3019,8 @@ transform 154  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: [ip_
     temp t9: integer32;
     temp t10: integer32;
     temp t11: integer32;
-    condition subject.il.l48 u<= 4;
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition not ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or $2.kind = 12 and ($2.bit_position_of_lsb <> 0 or $2.field_precision < $1.inherited_attributes.fetch_precision) or $1.arg_block_location and $2.physical_register and not $2.physical_register_user_declared);
+    condition not (subject.il.l48 u> 4 or (not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or $2.kind = 12 and ($2.bit_position_of_lsb <> 0 or $2.field_precision < $1.inherited_attributes.fetch_precision) or $1.arg_block_location and $2.physical_register and not $2.physical_register_user_declared);
     if $1.is_atomic then
       result.l352 <- 16#200000;
     else
@@ -3610,9 +3605,8 @@ transform 155  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: fp_r
     temp t3: integer32;
     temp t4: integer32;
     temp t5: integer32;
-    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 4);
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition not ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or $1.arg_block_location and $2.physical_register and not $2.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 4 or ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or $1.arg_block_location and $2.physical_register and not $2.physical_register_user_declared) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
     if $1.is_atomic then
       result.l352 <- 16#200000;
     else
@@ -3868,9 +3862,8 @@ transform 156  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: fp_r
     temp t7: integer32;
     temp t8: integer32;
     temp t9: integer32;
-    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 8);
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition not ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or not isc_user_routines_358 or ($1.arg_block_location and $2.physical_register and not $2.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
+    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 8 or ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or not isc_user_routines_358) or ($1.arg_block_location and $2.physical_register and not $2.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
     if $1.is_atomic then
       result.l352 <- 16#200000;
     else
@@ -4502,11 +4495,10 @@ transform 157  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: fp_r
     temp t14: integer32;
     temp t15: integer32;
     temp t16: integer32;
-    temp t17: integer32;
-    temp t18: integer32;
-    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 16);
+    temp t17: boolean;
+    temp t18: boolean;
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition not ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or not isc_user_routines_358 or ($1.arg_block_location and $2.physical_register and not $2.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
+    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 16 or ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or not isc_user_routines_358) or ($1.arg_block_location and $2.physical_register and not $2.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
     if $1.is_atomic then
       result.l352 <- 16#200000;
     else
@@ -4814,7 +4806,6 @@ transform 157  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: fp_r
         else
           result.c174 <- 2;
         end;
-        t17 <- t5;
       end;
       t18 <- t17;
     else
@@ -4825,7 +4816,6 @@ transform 157  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: fp_r
       else
         result.c146 <- 2;
       end;
-      t18 <- t5;
     end;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
       result.c189 <- 1;
@@ -6208,9 +6198,8 @@ transform 161  void <- agg_aop ($1: ip_reg_field, $2: address_mode)
   pass_1 image 16#10109E begin
     temp t1: boolean;
     temp t3: integer32;
-    condition subject.il.l48 u<= 4;
     t1 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
-    condition lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $2.uses_the_displacement) and not $2.has_a_symbolic_displacement or not $2.is_physical and not $2.is_atomic) or $2.kind <> 5;
+    condition not (subject.il.l48 u> 4 or (not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5));
     result.l352 <- subject.il.l48;
     t3 <- make_bit_mask_1(8, 0);
     if $2.uses_the_base_register then
@@ -6360,9 +6349,8 @@ transform 164  void <- agg_aop ($1: ip_reg, $2: address_mode)
   pass_1 image 16#101688 begin
     temp t1: boolean;
     temp t3: integer32;
-    condition subject.il.l48 u<= 4;
     t1 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
-    condition lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $2.uses_the_displacement) and not $2.has_a_symbolic_displacement or not $2.is_physical and not $2.is_atomic) or $2.kind <> 5;
+    condition not (subject.il.l48 u> 4 or (not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5));
     result.l352 <- subject.il.l48;
     t3 <- make_bit_mask_1(8, 0);
     if $2.uses_the_base_register then
@@ -6446,9 +6434,8 @@ transform 165  void <- agg_aop ($1: address_mode, $2: ip_reg_field)
   pass_1 image 16#10193A begin
     temp t1: boolean;
     temp t3: integer32;
-    condition subject.il.l48 u<= 4;
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $1.uses_the_displacement) and not $1.has_a_symbolic_displacement or not $1.is_atomic and not $1.is_physical) or $1.kind <> 5;
+    condition not (subject.il.l48 u> 4 or (not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_atomic or $1.is_physical)) and ($1.kind = 5));
     result.l352 <- subject.il.l48;
     t3 <- make_bit_mask_1(8, 0);
     if $1.uses_the_base_register then
@@ -6524,9 +6511,8 @@ transform 166  void <- agg_aop ($1: address_mode, $2: ip_reg)
   pass_1 image 16#101BE8 begin
     temp t1: boolean;
     temp t3: integer32;
-    condition subject.il.l48 u<= 4;
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $1.uses_the_displacement) and not $1.has_a_symbolic_displacement or not $1.is_physical and not $1.is_atomic) or $1.kind <> 5;
+    condition not (subject.il.l48 u> 4 or (not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5));
     result.l352 <- subject.il.l48;
     t3 <- make_bit_mask_1(8, 0);
     if $1.uses_the_base_register then
@@ -6630,29 +6616,29 @@ transform 169  void <- fp_aop ($1: address_mode, $2: address_mode)
   pass_1 image 16#102192 begin
     temp t1: boolean;
     temp t2: boolean;
-    temp t4: integer32;
+    temp t3: boolean;
     temp t5: integer32;
     temp t6: integer32;
     temp t7: integer32;
-    condition subject.il.l48 = 8;
+    temp t8: integer32;
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $1.uses_the_displacement) and not $1.has_a_symbolic_displacement or not $1.is_physical and not $1.is_atomic) or $1.kind <> 5;
-    t2 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
-    condition not ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t2 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    t2 <- lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1);
+    t3 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
+    condition not (subject.il.l48 <> 8 or (not t2 or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t3 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
     result.l352 <- nil;
     result.l356 <- nil;
     result.l360 <- nil;
-    t4 <- make_bit_mask_1(16, 0);
+    t5 <- make_bit_mask_1(16, 0);
     result.l364 <- nil;
     result.l368 <- nil;
-    t5 <- make_bit_mask_1(16, 0);
+    t6 <- make_bit_mask_1(16, 0);
     result.l372 <- nil;
     result.l376 <- nil;
     result.l380 <- nil;
-    t6 <- make_bit_mask_1(16, 0);
+    t7 <- make_bit_mask_1(16, 0);
     result.l384 <- nil;
     result.l388 <- nil;
-    t7 <- make_bit_mask_1(16, 0);
+    t8 <- make_bit_mask_1(16, 0);
     if not isc_user_routines_358 then
       result.c136 <- 1;
     else
@@ -7783,7 +7769,7 @@ transform 170  void <- fp_aop ($1: address_mode, $2: address_mode)
   pass_1 image 16#10395E begin
     temp t1: boolean;
     temp t2: boolean;
-    temp t4: integer32;
+    temp t3: boolean;
     temp t5: integer32;
     temp t6: integer32;
     temp t7: integer32;
@@ -7791,39 +7777,39 @@ transform 170  void <- fp_aop ($1: address_mode, $2: address_mode)
     temp t9: integer32;
     temp t10: integer32;
     temp t11: integer32;
-    condition subject.il.l48 = 16;
+    temp t12: integer32;
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $1.uses_the_displacement) and not $1.has_a_symbolic_displacement or not $1.is_physical and not $1.is_atomic) or $1.kind <> 5;
-    t2 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
-    condition not ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t2 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    t2 <- lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1);
+    t3 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
+    condition not (subject.il.l48 <> 16 or (not t2 or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t3 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
     result.l352 <- nil;
     result.l356 <- nil;
     result.l360 <- nil;
-    t4 <- make_bit_mask_1(16, 0);
+    t5 <- make_bit_mask_1(16, 0);
     result.l364 <- nil;
     result.l368 <- nil;
-    t5 <- make_bit_mask_1(16, 0);
+    t6 <- make_bit_mask_1(16, 0);
     result.l372 <- nil;
     result.l376 <- nil;
     result.l380 <- nil;
-    t6 <- make_bit_mask_1(16, 0);
+    t7 <- make_bit_mask_1(16, 0);
     result.l384 <- nil;
     result.l388 <- nil;
-    t7 <- make_bit_mask_1(16, 0);
+    t8 <- make_bit_mask_1(16, 0);
     result.l392 <- nil;
     result.l396 <- nil;
     result.l400 <- nil;
-    t8 <- make_bit_mask_1(16, 0);
+    t9 <- make_bit_mask_1(16, 0);
     result.l404 <- nil;
     result.l408 <- nil;
-    t9 <- make_bit_mask_1(16, 0);
+    t10 <- make_bit_mask_1(16, 0);
     result.l412 <- nil;
     result.l416 <- nil;
     result.l420 <- nil;
-    t10 <- make_bit_mask_1(16, 0);
+    t11 <- make_bit_mask_1(16, 0);
     result.l424 <- nil;
     result.l428 <- nil;
-    t11 <- make_bit_mask_1(16, 0);
+    t12 <- make_bit_mask_1(16, 0);
     if not isc_user_routines_358 then
       result.c136 <- 1;
     else
@@ -10213,62 +10199,62 @@ transform 171  void <- scalar_aop ($1: address_mode, $2: [address_mode, literal_
   pass_1 image 16#106B0A begin
     temp t1: boolean;
     temp t2: boolean;
-    temp t4: integer32;
+    temp t3: boolean;
     temp t5: integer32;
     temp t6: integer32;
     temp t7: integer32;
     temp t8: integer32;
     temp t9: integer32;
-    temp t10: boolean;
-    condition not (subject.il.w52 <> 4 or not ($1.bits_trusted & 1 <> 0) or $1.bits_known & 1 <> 0 or $2.kind <> 14 and ($2.bits_trusted & 1 = 0 or $2.bits_known & 1 <> 0));
+    temp t10: integer32;
+    temp t11: boolean;
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $1.uses_the_displacement) and not $1.has_a_symbolic_displacement or not $1.is_physical and not $1.is_atomic) or $1.kind <> 5;
-    t2 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
-    condition lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) and ((t2 or not $2.uses_the_displacement) and not $2.has_a_symbolic_displacement or not $2.is_physical and not $2.is_atomic) or $2.kind <> 5;
+    t2 <- lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1);
+    t3 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
+    condition not (subject.il.w52 <> 4 or not ($1.bits_trusted & 1 <> 0) or $1.bits_known & 1 <> 0 or $2.kind <> 14 and ($2.bits_trusted & 1 = 0 or $2.bits_known & 1 <> 0) or ((not t2 or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or (not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t3 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5)));
     if $1.is_atomic then
       result.l352 <- 16#200000;
     else
       result.l352 <- nil;
     end;
     if $1.is_volatile then
-      t4 <- 2048;
-    else
-      t4 <- 0;
-    end;
-    if $1.is_atomic then
-      t5 <- 512;
+      t5 <- 2048;
     else
       t5 <- 0;
     end;
-    if $1.is_volatile then
-      t6 <- 16#400000;
+    if $1.is_atomic then
+      t6 <- 512;
     else
       t6 <- 0;
     end;
-    result.l356 <- t6 + t4;
+    if $1.is_volatile then
+      t7 <- 16#400000;
+    else
+      t7 <- 0;
+    end;
+    result.l356 <- t7 + t5;
     result.l368 <- $2.literal_32_bits_value;
     result.l360 <- sign_extend(rshft(result.l368, 16), 16);
     result.l364 <- sign_extend(result.w370, 16);
     if $2.is_physical then
-      t7 <- 128;
-    else
-      t7 <- 0;
-    end;
-    if $2.is_volatile then
-      t8 <- 2048;
+      t8 <- 128;
     else
       t8 <- 0;
     end;
     if $2.is_volatile then
-      t9 <- 16#400000;
+      t9 <- 2048;
     else
       t9 <- 0;
     end;
-    result.l372 <- t7 + t9 + t8;
+    if $2.is_volatile then
+      t10 <- 16#400000;
+    else
+      t10 <- 0;
+    end;
+    result.l372 <- t8 + t10 + t9;
     if $2.kind = 14 then
       result.c136 <- 1;
-      t10 <- lir_$can_encode_as_immediate_operand(result.l360, opc$move, 1);
-      if lir_$can_encode_as_immediate_operand(result.l364, opc$move, 1) and t10 then
+      t11 <- lir_$can_encode_as_immediate_operand(result.l360, opc$move, 1);
+      if lir_$can_encode_as_immediate_operand(result.l364, opc$move, 1) and t11 then
         result.c137 <- 1;
         if result.l360 = nil then
           result.c138 <- 1;
@@ -10330,14 +10316,14 @@ transform 171  void <- scalar_aop ($1: address_mode, $2: [address_mode, literal_
           result.c149 <- 2;
         end;
       end;
-      if t5 = 512 then
+      if t6 = 512 then
         result.c150 <- 1;
       else
         result.c150 <- 2;
       end;
     else
       result.c145 <- 1;
-      if t5 = 512 then
+      if t6 = 512 then
         result.c146 <- 1;
       else
         result.c146 <- 2;
@@ -10465,10 +10451,9 @@ transform 172  void <- scalar_aop ($1: address_mode, $2: literal_32_bits)
     temp t2: boolean;
     temp t4: integer32;
     temp t5: integer32;
-    condition subject.il.w52 = 2;
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
     t2 <- lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1);
-    condition not ((not t2 or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or not lir_$can_encode_as_immediate_operand(sign_extend($2.literal_32_bits_value, 16), opc$move, 1));
+    condition not (subject.il.w52 <> 2 or (not t2 or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or not lir_$can_encode_as_immediate_operand(sign_extend($2.literal_32_bits_value, 16), opc$move, 1));
     result.l352 <- sign_extend($2.literal_32_bits_value, 16);
     if $1.is_atomic then
       result.l356 <- 16#200000;

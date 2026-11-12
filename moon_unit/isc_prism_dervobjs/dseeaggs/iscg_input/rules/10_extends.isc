@@ -59,8 +59,17 @@ transform 406  ip_reg_field <- extend_top ($1: ip_reg_field)
 end;
 
 transform 407  ip_reg <- extend_top ($1: ip_reg)
-  { not lifted: skeleton: no trace where the body begins }
-  pass_1 image 16#1328A0 residue;
+  pass_1 image 16#1328A0 begin
+    temp t1: boolean;
+    temp t2: boolean;
+    temp t3: boolean;
+    t1 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0);
+    t2 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
+    t3 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 25, 0);
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.w26 <> 5 and (subject.il.w26 <> 4) and ((not t2 or subject.il.w26 <> 2) and (not t1 or subject.il.w26 <> 1) or subject.il.b30 & 64 <> 0) and (subject.il.b30 & 64 = 0 or not $1.all_zeroes_or_all_ones and (not t3 or subject.il.w26 <> 1) and (not verify_bits($1.bits_known, $1.bits_trusted, 15, 17, 0) or subject.il.w26 <> 2)));
+    cycle_guard already_ip_reg;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#1B77D8 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -73,8 +82,81 @@ transform 407  ip_reg <- extend_top ($1: ip_reg)
 end;
 
 transform 408  ip_reg <- extend_top ($1: ip_reg)
-  { not lifted: skeleton: no trace where the body begins }
-  pass_1 image 16#132ECA residue;
+  pass_1 image 16#132ECA begin
+    temp t1: boolean;
+    temp t2: boolean;
+    temp t3: boolean;
+    temp t4: boolean;
+    temp t5: boolean;
+    temp t6: boolean;
+    temp t7: boolean;
+    temp t8: boolean;
+    temp t9: boolean;
+    temp t10: boolean;
+    temp t11: boolean;
+    temp t12: boolean;
+    temp t13: boolean;
+    temp t14: boolean;
+    temp t15: boolean;
+    temp t16: boolean;
+    temp t17: boolean;
+    temp t18: boolean;
+    temp t19: boolean;
+    temp t20: boolean;
+    temp t21: boolean;
+    temp t22: boolean;
+    temp t23: boolean;
+    temp t24: boolean;
+    temp t25: boolean;
+    temp t26: boolean;
+    temp t27: boolean;
+    temp t28: boolean;
+    temp t29: boolean;
+    temp t30: boolean;
+    temp t31: boolean;
+    temp t32: boolean;
+    temp t33: boolean;
+    temp t34: boolean;
+    temp t35: boolean;
+    t1 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 9, 0);
+    t2 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 9, 1);
+    t3 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 25, 0);
+    t4 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 25, 1);
+    t5 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 9, 0);
+    t6 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 9, 1);
+    t7 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 17, 0);
+    t8 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 17, 1);
+    t9 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 25, 0);
+    t10 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 25, 1);
+    t11 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 17, 0);
+    t12 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 17, 1);
+    t13 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 1, 0);
+    t14 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 9, 0);
+    t15 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 25, 0);
+    t16 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 8, 0);
+    t17 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 1, 0);
+    t18 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 17, 0);
+    t19 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0);
+    t20 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
+    t21 <- verify_bits($1.bits_known, $1.bits_trusted, 31, 1, 0);
+    t22 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 8, 0);
+    t23 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0);
+    t24 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 8, 0);
+    t25 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
+    t26 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0);
+    t27 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
+    t28 <- verify_bits($1.bits_known, $1.bits_trusted, 31, 1, 0);
+    t29 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 17, 0);
+    t30 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 25, 0);
+    t31 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
+    t32 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 1, 0);
+    t33 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 9, 0);
+    t34 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0);
+    t35 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 1, 0);
+    condition not (subject.il.b30 & 128 = 0 or ((not t12 and not t11 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t10 and not t9 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t8 and not t7 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t6 and not t5 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t4 and not t3 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and ((not t2 and not t1 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (subject.il.w26 <> 1 or subject.il.w24 <> 1))) and (subject.il.w26 <> 2 or subject.il.w24 <> 2)))) and (subject.il.w26 <> 4 or subject.il.w24 <> 4) or (subject.il.w28 <> 1 or subject.il.b30 & 64 = 0)) and ((not t21 or (subject.il.w26 <> 4 or subject.il.w24 <> 4)) and ((not t20 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t19 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t18 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t17 or (subject.il.w26 <> 2 or subject.il.w24 <> 2)) and ((not t16 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t15 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and ((not t14 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (not t13 or (subject.il.w26 <> 1 or subject.il.w24 <> 1))))))))) or (subject.il.w28 <> 1 or subject.il.b30 & 64 <> 0)) and ((not t27 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t26 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t25 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t24 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t23 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and ((not t22 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (subject.il.w26 <> 1 or subject.il.w24 <> 1))) and (subject.il.w26 <> 2 or subject.il.w24 <> 2)))) and (subject.il.w26 <> 4 or subject.il.w24 <> 4) or (subject.il.w28 <> 0 or subject.il.b30 & 64 <> 0)) and (subject.il.w28 <> 0 or subject.il.b30 & 64 = 0 or (not t28 or (subject.il.w26 <> 4 or subject.il.w24 <> 4)) and (not t29 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t30 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and (not t31 or (subject.il.w26 <> 2 or subject.il.w24 <> 4))) and ((not t32 or (subject.il.w26 <> 2 or subject.il.w24 <> 2)) and (not t33 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t34 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and (not t35 or (subject.il.w26 <> 1 or subject.il.w24 <> 1)))) and (not verify_bits($1.bits_known, $1.bits_trusted, 8, 8, 0) or subject.il.w26 <> 1 or subject.il.w24 <> 2)));
+    cycle_guard already_ip_reg;
+    copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
+  end;
   pass_2 image 16#1B7850 begin
     result.base_register <- $1.base_register;
     result.index_register <- $1.index_register;
@@ -87,8 +169,70 @@ transform 408  ip_reg <- extend_top ($1: ip_reg)
 end;
 
 transform 409  ip_reg <- extend_top ($1: ip_reg)
-  { not lifted: skeleton: no trace where the body begins }
-  pass_1 image 16#133CFE residue;
+  pass_1 image 16#133CFE begin
+    temp t1: boolean;
+    temp t2: boolean;
+    temp t3: boolean;
+    temp t4: boolean;
+    temp t5: boolean;
+    temp t6: boolean;
+    temp t7: boolean;
+    temp t8: boolean;
+    temp t9: boolean;
+    temp t10: boolean;
+    temp t11: boolean;
+    temp t12: boolean;
+    temp t13: boolean;
+    temp t14: boolean;
+    temp t15: boolean;
+    temp t16: boolean;
+    temp t17: boolean;
+    temp t18: boolean;
+    temp t19: boolean;
+    temp t20: boolean;
+    temp t21: boolean;
+    temp t22: boolean;
+    temp t23: boolean;
+    temp t24: boolean;
+    temp t25: boolean;
+    temp t26: boolean;
+    temp t27: boolean;
+    temp t28: boolean;
+    temp t29: boolean;
+    t1 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 9, 1);
+    t2 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 9, 0);
+    t3 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 25, 1);
+    t4 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 25, 0);
+    t5 <- verify_any_bits($1.bits_known, $1.bits_trusted, 15, 17, 1);
+    t6 <- verify_any_bits($1.bits_known, $1.bits_trusted, 15, 17, 0);
+    t7 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 1, 1);
+    t8 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 9, 1);
+    t9 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 25, 1);
+    t10 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 8, 1);
+    t11 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 1, 1);
+    t12 <- verify_any_bits($1.bits_known, $1.bits_trusted, 15, 17, 1);
+    t13 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 24, 1);
+    t14 <- verify_any_bits($1.bits_known, $1.bits_trusted, 16, 16, 1);
+    t15 <- verify_bits($1.bits_known, $1.bits_trusted, 31, 1, 1);
+    t16 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 8, 1);
+    t17 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 24, 1);
+    t18 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 8, 1);
+    t19 <- verify_any_bits($1.bits_known, $1.bits_trusted, 16, 16, 1);
+    t20 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 24, 1);
+    t21 <- verify_any_bits($1.bits_known, $1.bits_trusted, 16, 16, 1);
+    t22 <- verify_bits($1.bits_known, $1.bits_trusted, 31, 1, 1);
+    t23 <- verify_any_bits($1.bits_known, $1.bits_trusted, 15, 17, 1);
+    t24 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 25, 1);
+    t25 <- verify_any_bits($1.bits_known, $1.bits_trusted, 16, 16, 1);
+    t26 <- verify_bits($1.bits_known, $1.bits_trusted, 15, 1, 1);
+    t27 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 9, 1);
+    t28 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 8, 1);
+    t29 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 24, 1);
+    condition not (subject.il.b30 & 128 = 0 or ((not t6 or (not t5 or (subject.il.w26 <> 4 or subject.il.w24 <> 2))) and ((not t4 or (not t3 or (subject.il.w26 <> 4 or subject.il.w24 <> 1))) and (not t2 or (not t1 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)))) or (subject.il.w28 <> 1 or subject.il.b30 & 64 = 0)) and ((not t15 or (subject.il.w26 <> 4 or subject.il.w24 <> 4)) and ((not t14 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t13 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t12 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t11 or (subject.il.w26 <> 2 or subject.il.w24 <> 2)) and ((not t10 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t9 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and ((not t8 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (not t7 or (subject.il.w26 <> 1 or subject.il.w24 <> 1))))))))) or (subject.il.w28 <> 1 or subject.il.b30 & 64 <> 0)) and ((not t21 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t20 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t19 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t18 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t17 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and (not t16 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)))))) or (subject.il.w28 <> 0 or subject.il.b30 & 64 <> 0)) and (subject.il.b30 & 64 = 0 or subject.il.w28 <> 0 or (not t22 or (subject.il.w26 <> 4 or subject.il.w24 <> 4)) and (not t23 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t24 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and (not t25 or (subject.il.w26 <> 2 or subject.il.w24 <> 4))) and ((not t26 or (subject.il.w26 <> 2 or subject.il.w24 <> 2)) and (not t27 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t28 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (not t29 or subject.il.w26 <> 1 or subject.il.w24 <> 4))) and (not verify_bits($1.bits_known, $1.bits_trusted, 7, 1, 1) or subject.il.w26 <> 1 or subject.il.w24 <> 1)));
+    cycle_guard already_ip_reg;
+    result.code_bytes <- $1.code_bytes + 4;
+    copy memory_references, delay from $1;
+  end;
   pass_2 image 16#1B78C8 begin
     emit simple(opc$trap, 0, $1, nil, nil);
   end;
@@ -2097,7 +2241,7 @@ transform 424  fp_reg <- f_extend_top ($1: ip_reg, $2: void)
     temp t3: integer32;
     temp t4: boolean;
     temp t5: boolean;
-    temp t6: integer32;
+    temp t6: boolean;
     condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = 6 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or not (14 in cargs_$options.flags_286))));
     cycle_guard already_fp_reg;
     t2 <- make_bit_mask_1(8, 0);
@@ -2121,7 +2265,6 @@ transform 424  fp_reg <- f_extend_top ($1: ip_reg, $2: void)
       else
         result.c137 <- 3;
       end;
-      t6 <- t3;
     else
       result.c136 <- 2;
       if $1.inherited_attributes.fetch_precision = 8 then
@@ -2143,7 +2286,6 @@ transform 424  fp_reg <- f_extend_top ($1: ip_reg, $2: void)
           t4 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
         else
           result.c140 <- 3;
-          t4 <- t3;
         end;
         t5 <- t4;
       end;
@@ -2394,7 +2536,7 @@ transform 429  fp_reg_pair <- f_extend_top ($1: ip_reg, $2: void)
     temp t3: integer32;
     temp t4: boolean;
     temp t5: boolean;
-    temp t6: integer32;
+    temp t6: boolean;
     condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = 7 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or not (14 in cargs_$options.flags_286))));
     cycle_guard already_fp_reg_pair;
     t2 <- make_bit_mask_1(8, 0);
@@ -2423,7 +2565,6 @@ transform 429  fp_reg_pair <- f_extend_top ($1: ip_reg, $2: void)
       else
         result.c138 <- 3;
       end;
-      t6 <- t3;
     else
       result.c137 <- 2;
       if $1.inherited_attributes.fetch_precision = 8 then
@@ -2445,7 +2586,6 @@ transform 429  fp_reg_pair <- f_extend_top ($1: ip_reg, $2: void)
           t4 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
         else
           result.c141 <- 3;
-          t4 <- t3;
         end;
         t5 <- t4;
       end;

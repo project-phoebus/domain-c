@@ -1804,7 +1804,7 @@ begin
     solution^.memory_refs := subject.children[1]^.memory_refs;
     solution^.delay := subject.children[1]^.delay;
     solution^.bits_known := integer32(p2_node_ptr_t(subject.children[1]^.sym)^.p[4]);
-    solution^.bits_trusted := -1;
+    solution^.bits_trusted := (-1);
     solution^.disp := integer32(p2_node_ptr_t(subject.children[1]^.sym)^.p[4]);
     p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := true;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;

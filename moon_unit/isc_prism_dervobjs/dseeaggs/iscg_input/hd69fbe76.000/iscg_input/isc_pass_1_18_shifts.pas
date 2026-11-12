@@ -181,7 +181,7 @@ begin
     solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
     solution^.bits_known := 0;
-    solution^.bits_trusted := -1;
+    solution^.bits_trusted := (-1);
     solution^.disp := 0;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -883,7 +883,7 @@ begin
   solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
   solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
   solution^.bits_known := lshft(subject.children[1]^.disp, t2);
-  solution^.bits_trusted := -1;
+  solution^.bits_trusted := (-1);
   solution^.disp := lshft(subject.children[1]^.disp, t2);
   p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
   p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -983,7 +983,7 @@ begin
       solution^.f76.uses_disp := subject.children[1]^.children[1]^.f76.uses_disp;
       solution^.f76.uses_index_reg := subject.children[1]^.children[1]^.f76.uses_index_reg;
       solution^.bits_known := t3 & subject.children[1]^.children[1]^.bits_known;
-      solution^.bits_trusted := subject.children[1]^.children[1]^.bits_trusted ! (-1 - t3);
+      solution^.bits_trusted := subject.children[1]^.children[1]^.bits_trusted ! ((-1) - t3);
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
       p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
@@ -1318,7 +1318,7 @@ begin
       solution^.f76.uses_disp := subject.children[1]^.children[1]^.f76.uses_disp;
       solution^.f76.uses_index_reg := subject.children[1]^.children[1]^.f76.uses_index_reg;
       solution^.bits_known := integer32(solution^.fields[2]) & subject.children[1]^.children[1]^.bits_known;
-      solution^.bits_trusted := subject.children[1]^.children[1]^.bits_trusted ! (-1 - integer32(solution^.fields[2]));
+      solution^.bits_trusted := subject.children[1]^.children[1]^.bits_trusted ! ((-1) - integer32(solution^.fields[2]));
       solution^.f76.physical := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -1756,7 +1756,7 @@ begin
     solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
     solution^.bits_known := 0;
-    solution^.bits_trusted := -1;
+    solution^.bits_trusted := (-1);
     solution^.disp := 0;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -1807,7 +1807,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
       solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-      solution^.bits_known := subject.children[1]^.bits_known & (-1 - t2);
+      solution^.bits_known := subject.children[1]^.bits_known & ((-1) - t2);
       solution^.bits_trusted := subject.children[1]^.bits_trusted ! t2;
       solution^.eval_order := evaluation_order_function(il$t(subject.w98),
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,

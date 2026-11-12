@@ -762,6 +762,8 @@ class Lifter(P2.Lifter):
             elif y.mn in ('sne', 'seq', 'smi', 'spl', 'sgt', 'sge', 'slt', 'sle', 'shi', 'sls',
                           'scc', 'scs') and dreg:
                 pass
+            elif y.mn in ('move', 'clr') and re.match(r'%fp@\(-\d+\)$', last):
+                pass        # a frame temporary of the condition
             elif y.mn in ('pea', 'move', 'clr', 'subq', 'addq', 'lea') and push and \
                     '@+' not in y.ops[0]:
                 pass
@@ -946,13 +948,21 @@ class Lifter(P2.Lifter):
                 newst.regs.pop(r, None)
                 continue
             if self.live(e1, r):
-                c = Cell(None, v1.typ if isinstance(v1, Cell) else 'int32', False, self.bound)
+                t1_, t2_ = self.typ_of(v1), self.typ_of(v2)
+                typ = t1_ or 'int32'
+                arms_ = ((b_then, v1), (b_else, v2))
+                if (t1_ == 'bool') != (t2_ == 'bool'):
+                    # a boolean on one way, a register's stale value on the
+                    # other (dead there): the boolean's way sets it
+                    typ = 'bool'
+                    arms_ = [(b, v) for b, v in arms_ if self.typ_of(v) == 'bool']
+                c = Cell(None, typ, False, self.bound)
                 c.need = True
                 self.cells.append(c)
                 c.phi = True
                 c.mark = ['mark', c]
                 out.append(c.mark)
-                for body, v in ((b_then, v1), (b_else, v2)):
+                for body, v in arms_:
                     body.append(['phi', c, v])
                 newst.regs[r] = c
             else:
@@ -1200,6 +1210,13 @@ def skeleton1(stmts, rule, kind):
             ('path', 'inh', []), ('path', 'il', []), ('num', 0)]
     if s0[2][2] != want:
         raise Skeleton('new_solution%s' % L.fmt_expr(('call', '', s0[2][2])))
+    # temps Rev 8.89 computes before the solution's first stores (they
+    # read nothing the stores set): the body's first statements
+    early = []
+    while len(rest) > 1 and temps_only(rest[1]) and not any(
+            p_[0] == 'path' and p_[1] == t for p_ in L1.paths_in(rest[1])):
+        early.append(rest[1])
+        rest = rest[:1] + rest[2:]
     if rest[1] != ('set', ('path', t, ['which_transform']), ('num', rule)):
         raise Skeleton('no which_transform')
     if rest[2] != ('set', ('path', t, ['before_transform']), ('path', 'subject', [])):
@@ -1222,7 +1239,7 @@ def skeleton1(stmts, rule, kind):
              ('set', ('path', '@result', []), ('path', t, []))]
     if rest[-len(tail):] != tail:
         raise Skeleton('the end is not the already_ copies and work, result')
-    body = rest[3:-len(tail)]
+    body = early + rest[3:-len(tail)]
     for s in L.walk(body):
         if s[0] == 'set' and s[1][0] == 'path' and s[1][1].startswith('@'):
             raise Skeleton('work or result set in the body')

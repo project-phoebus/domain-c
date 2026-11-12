@@ -365,14 +365,14 @@ begin
     solution^.chain := addr(subject);
     if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 0, 32, 0) then begin
       solution^.space136[136] := chr(1);
-      if p2_node_ptr_t(subject.sym)^.b[60] = -1 then begin
+      if p2_node_ptr_t(subject.sym)^.b[60] = (-1) then begin
         solution^.space136[137] := chr(1);
       end else begin
         solution^.space136[137] := chr(2);
       end;
     end else begin
       solution^.space136[136] := chr(2);
-      if p2_node_ptr_t(subject.sym)^.b[60] = -1 then begin
+      if p2_node_ptr_t(subject.sym)^.b[60] = (-1) then begin
         solution^.space136[138] := chr(1);
       end else begin
         solution^.space136[138] := chr(2);
@@ -506,14 +506,14 @@ begin
       end else begin
         solution^.space136[137] := chr(2);
       end;
-      if p2_node_ptr_t(subject.sym)^.b[60] = -1 then begin
+      if p2_node_ptr_t(subject.sym)^.b[60] = (-1) then begin
         solution^.space136[138] := chr(1);
       end else begin
         solution^.space136[138] := chr(2);
       end;
     end else begin
       solution^.space136[136] := chr(2);
-      if p2_node_ptr_t(subject.sym)^.b[60] = -1 then begin
+      if p2_node_ptr_t(subject.sym)^.b[60] = (-1) then begin
         solution^.space136[139] := chr(1);
         if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 8, 24, 0) then begin
           solution^.space136[140] := chr(1);

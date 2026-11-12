@@ -81,9 +81,8 @@ transform 379  address_mode <- address_mode
     temp t4: pointer;
     temp t5: integer32;
     temp t6: integer32;
-    condition not (not subject.inherited_attributes.immediate_parent_wants_set_temporary or subject.is_set_temporary);
     t1 <- lir_$can_encode_as_immediate_postincrement(subject.literal_32_bits_value, opc$loadl);
-    condition lir_$can_encode_as_immediate_operand(subject.literal_32_bits_value, opc$loadl, 1) and ((t1 or not subject.uses_the_displacement) and not subject.has_a_symbolic_displacement or not subject.is_physical and not subject.is_atomic) or subject.kind <> 5;
+    condition not (not subject.inherited_attributes.immediate_parent_wants_set_temporary or subject.is_set_temporary or (not lir_$can_encode_as_immediate_operand(subject.literal_32_bits_value, opc$loadl, 1) or (not t1 and subject.uses_the_displacement or subject.has_a_symbolic_displacement) and (subject.is_physical or subject.is_atomic)) and (subject.kind = 5));
     cycle_mark already_address_mode;
     t3 <- make_expression_temporary(122, subject.inherited_attributes.fetch_precision);
     side_effect_set_var_$address_exposed(t3);
@@ -3741,9 +3740,8 @@ transform 391  ip_reg_field <- ip_reg_field
     temp t3: integer32;
     temp t4: integer32;
     temp t5: integer32;
-    condition not (subject.inherited_attributes.parent_il_kind = -85 or subject.inherited_attributes.immediate_parent_wants_lvalue or (subject.bit_position_of_lsb + subject.field_precision u>= 32 or subject.bit_position_of_lsb = 0));
     t1 <- verify_bits(subject.bits_known, subject.bits_trusted, subject.bit_position_of_lsb + subject.field_precision, 32 - (subject.bit_position_of_lsb + subject.field_precision), 0);
-    condition not verify_bits(subject.bits_known, subject.bits_trusted, 0, subject.bit_position_of_lsb, 0) or not t1;
+    condition not (subject.inherited_attributes.parent_il_kind = -85 or subject.inherited_attributes.immediate_parent_wants_lvalue or (subject.bit_position_of_lsb + subject.field_precision u>= 32 or subject.bit_position_of_lsb = 0) or verify_bits(subject.bits_known, subject.bits_trusted, 0, subject.bit_position_of_lsb, 0) and t1);
     cycle_mark already_ip_reg_field;
     result.l356 <- subject.field_precision;
     result.l352 <- subject.bit_position_of_lsb;
@@ -4110,8 +4108,13 @@ transform 398  ip_reg <- literal_32_bits
 end;
 
 transform 399  fp_reg <- literal_32_bits
-  { not lifted: 0x14B8C4: frame +-44 }
-  pass_1 image 16#14B8A0 residue;
+  pass_1 image 16#14B8A0 hand dropped begin
+    { written by hand: the image tests the subject's inherited
+      immediate_parent_wants_lvalue (btst #5 of +39) and nothing
+      follows: Rev 8.89 removed the rest (no trace, no solution); the
+      test's sense is rule 397's, not known from the image }
+    condition not subject.inherited_attributes.immediate_parent_wants_lvalue;
+  end;
   pass_2 image 16#1C381C begin
     result.live_range <- result.l352;
     result.object_with_name <- subject.object_with_name;
@@ -4200,8 +4203,13 @@ transform 401  address_mode <- literal_32_bits
 end;
 
 transform 402  fp_reg_pair <- literal_64_bits
-  { not lifted: 0x14BCD2: frame +-44 }
-  pass_1 image 16#14BCAE residue;
+  pass_1 image 16#14BCAE hand dropped begin
+    { written by hand: the image tests the subject's inherited
+      immediate_parent_wants_lvalue (btst #5 of +39) and nothing
+      follows: Rev 8.89 removed the rest (no trace, no solution); the
+      test's sense is rule 397's, not known from the image }
+    condition not subject.inherited_attributes.immediate_parent_wants_lvalue;
+  end;
   pass_2 image 16#1C3944 begin
     result.live_range <- result.l352;
     result.object_with_name <- subject.object_with_name;

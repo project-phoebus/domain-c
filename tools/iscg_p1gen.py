@@ -10,8 +10,11 @@ clauses).  A transform's pass-1 action is one of
                          a clause in the statement language (tools/
                          iscg_p1lang.py), lifted from the image by tools/
                          iscg_p1lift.py; the generator writes the skeleton
-    pass_1 image 16#ADDR [rewrite] hand begin ... end;
-                         written by hand (the extractor keeps it)
+    pass_1 image 16#ADDR [rewrite] hand [dropped] begin ... end;
+                         written by hand (the extractor keeps it); a
+                         `dropped' clause is an action whose arm Rev 8.89
+                         removed (its conditions' first tests survive, no
+                         trace, no solution: rules 399 and 402)
     pass_1 image 16#ADDR residue;
                          not lifted yet ({ why } before it)
 
@@ -32,7 +35,8 @@ import iscg_p1lang as L1  # noqa: E402
 
 P1_END = 0x18C588       # pass_2: the first routine after the pass-1 modules
 MODULE = 'isc_pass_1_%02d_%s'
-BODY = re.compile(r'\bpass_1\s+image\s+(16#[0-9A-Fa-f]+)\s+(rewrite\s+)?(hand\s+)?begin\b')
+BODY = re.compile(r'\bpass_1\s+image\s+(16#[0-9A-Fa-f]+)\s+(rewrite\s+)?(hand\s+)?'
+                  r'(dropped\s+)?begin\b')
 
 
 # --------------------------------------------------------------------------
@@ -57,7 +61,7 @@ def extract_bodies(text):
             stmts = p.body()
         except L.LangError as e:
             raise L.LangError('the pass_1 clause at %s: %s' % (m.group(1), e))
-        bodies[n] = (stmts, bool(m.group(2)), bool(m.group(3)))
+        bodies[n] = (stmts, bool(m.group(2)), bool(m.group(3)), bool(m.group(4)))
         out.append(text[pos:m.start()])
         out.append('pass_1 image %s body %d;' % (m.group(1), n))
         pos = end
@@ -71,9 +75,10 @@ def clause(tr, body, bodies):
     tr['p1_clause'] = None
     tr['p1_residue'] = 'residue' in body
     if 'body' in body:
-        stmts, rewrite, hand = bodies[int(body[body.index('body') + 1])]
+        stmts, rewrite, hand, dropped = bodies[int(body[body.index('body') + 1])]
         c = L1.clause_of(stmts, tr['rule'], rewrite)
         c.hand = hand
+        c.flags['dropped'] = dropped
         tr['p1_clause'] = c
 
 
@@ -94,7 +99,8 @@ def hand_clauses(rules_dir):
             m = re.match(r'transform (\d+) ', lines[k])
             if m:
                 rule = int(m.group(1))
-            if re.match(r'\s*pass_1 image 16#[0-9A-F]+ (rewrite )?hand begin', lines[k]):
+            if re.match(r'\s*pass_1 image 16#[0-9A-F]+ (rewrite )?hand (dropped )?begin',
+                        lines[k]):
                 j = k
                 text = ''
                 while True:
@@ -247,7 +253,7 @@ def routine(r, t, headings, tables):
     em = L1.Emitter(r, headings, tables)
     em.int_fields = L1.int_fields(list(f['chain']) + list(c.body), headings)
     decls = []
-    if not f['rewrite']:
+    if not f['rewrite'] and not f.get('dropped'):
         decls.append('  solution: isc_solution_ptr_t;     { the new solution (`result\') }')
     for s in c.decls:
         if s[2] not in L.TEMP_TYPES:
@@ -271,7 +277,10 @@ def routine(r, t, headings, tables):
     i2 = ind + '  ' * depth
     inner = trace_lines(L1.MATCHED % r if hasattr(L1, 'MATCHED') else
                         'Pattern %d matched the semantics.' % r, i2)
-    if f['rewrite']:
+    if f.get('dropped'):
+        # the arm Rev 8.89 removed: the conditions' tests alone
+        inner = [i2 + '{ the rest of the action: not in the image }']
+    elif f['rewrite']:
         inner.append(i2 + 'result := addr(subject);')
         inner.extend(em.stmts(c.body, i2))
     else:

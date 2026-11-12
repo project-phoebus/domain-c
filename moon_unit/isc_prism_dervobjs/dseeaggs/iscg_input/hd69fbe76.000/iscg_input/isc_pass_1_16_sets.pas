@@ -353,91 +353,92 @@ var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: boolean;
   t2: boolean;
+  t3: boolean;
 begin
   result := nil;
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
       ord(opc$loadl));
-  if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_disp) and not subject.children[1]^.f76.has_sym_disp or not subject.children[1]^.f76.b82_1 and not subject.children[1]^.f76.b82_6) or (subject.children[1]^.kind <> 5) then begin
-    t2 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.disp,
-        ord(opc$loadl));
-    if lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$loadl), 1) and ((t2 or not subject.children[2]^.f76.uses_disp) and not subject.children[2]^.f76.has_sym_disp or not subject.children[2]^.f76.b82_1 and not subject.children[2]^.f76.b82_6) or (subject.children[2]^.kind <> 5) then begin
+  t2 := lir_$can_encode_as_immediate_operand(subject.children[1]^.disp,
+      ord(opc$loadl), 1);
+  t3 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.disp,
+      ord(opc$loadl));
+  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_disp or subject.children[1]^.f76.has_sym_disp) and (subject.children[1]^.f76.b82_1 or subject.children[1]^.f76.b82_6)) and (subject.children[1]^.kind = 5) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_disp or subject.children[2]^.f76.has_sym_disp) and (subject.children[2]^.f76.b82_1 or subject.children[2]^.f76.b82_6)) and (subject.children[2]^.kind = 5)) then begin
+    if isc_user_routines_354 then begin
+      write('Pattern 534 matched the semantics.');
+      writeln;
+    end;
+    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
       if isc_user_routines_354 then begin
-        write('Pattern 534 matched the semantics.');
+        write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
       end;
-      if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
-        if isc_user_routines_354 then begin
-          write('Infinite cycle prevented by NOT adding this to the work list.');
-          writeln;
-        end;
-      end
-      else begin
-        solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-        solution^.rule := 534;
-        solution^.chain := addr(subject);
-        solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.sym)^.p[5]);
-        if subject.children[1]^.f76.b84_7 then begin
-          solution^.space136[136] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
-            solution^.space136[137] := chr(2);
-          end else begin
-            solution^.space136[137] := chr(1);
-          end;
+    end
+    else begin
+      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution^.rule := 534;
+      solution^.chain := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.sym)^.p[5]);
+      if subject.children[1]^.f76.b84_7 then begin
+        solution^.space136[136] := chr(1);
+        if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          solution^.space136[137] := chr(2);
         end else begin
-          solution^.space136[136] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
-            solution^.space136[138] := chr(1);
-          end else begin
-            solution^.space136[138] := chr(2);
-          end;
+          solution^.space136[137] := chr(1);
         end;
-        if subject.children[2]^.f76.b84_7 then begin
-          solution^.space136[139] := chr(1);
-          if (subject.children[2]^.disp <> 0) or subject.children[2]^.f76.uses_index_reg or subject.children[2]^.f76.has_sym_disp then begin
-            solution^.space136[140] := chr(2);
-          end else begin
-            solution^.space136[140] := chr(1);
-          end;
+      end else begin
+        solution^.space136[136] := chr(2);
+        if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          solution^.space136[138] := chr(1);
         end else begin
-          solution^.space136[139] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$move), 1) then begin
-            solution^.space136[141] := chr(1);
-          end else begin
-            solution^.space136[141] := chr(2);
-          end;
+          solution^.space136[138] := chr(2);
         end;
-        if lir_$can_encode_as_immediate_operand(integer32(solution^.fields[0]), ord(opc$move), 1) then begin
-          solution^.space136[142] := chr(1);
-        end else begin
-          solution^.space136[142] := chr(2);
-        end;
-        solution^.code_bytes := cost_534_11[ord(solution^.space136[137])] + cost_534_10[ord(solution^.space136[138])] + cost_534_9[ord(solution^.space136[140])] + cost_534_8[ord(solution^.space136[141])] + cost_534_7[ord(solution^.space136[142])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 32;
-        solution^.memory_refs := cost_534_6[ord(solution^.space136[138])] + cost_534_5[ord(solution^.space136[141])] + cost_534_4[ord(solution^.space136[142])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + 3;
-        solution^.delay := cost_534_3[ord(solution^.space136[138])] + cost_534_2[ord(solution^.space136[141])] + cost_534_1[ord(solution^.space136[142])] + subject.children[1]^.delay + subject.children[2]^.delay + 3;
-        solution^.bits_known := 0;
-        solution^.bits_trusted := 3;
-        solution^.l40 := 0;
-        solution^.l44 := 0;
-        solution^.f76.has_sym_disp := true;
-        solution^.ip_reg_max := 0;
-        solution^.ip_reg_result := 0;
-        solution^.f76.b82_0 := true;
-        solution^.disp := 0;
-        solution^.f76.b84_7 := true;
-        solution^.f76.uses_disp := true;
-        solution^.f76.uses_index_reg := false;
-        p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-        p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-        p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-        p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-        p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-        p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-        p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-        p1_already_ptr_t(solution)^.already_address_mode := true;
-        work := solution;
-        result := solution;
       end;
+      if subject.children[2]^.f76.b84_7 then begin
+        solution^.space136[139] := chr(1);
+        if (subject.children[2]^.disp <> 0) or subject.children[2]^.f76.uses_index_reg or subject.children[2]^.f76.has_sym_disp then begin
+          solution^.space136[140] := chr(2);
+        end else begin
+          solution^.space136[140] := chr(1);
+        end;
+      end else begin
+        solution^.space136[139] := chr(2);
+        if lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$move), 1) then begin
+          solution^.space136[141] := chr(1);
+        end else begin
+          solution^.space136[141] := chr(2);
+        end;
+      end;
+      if lir_$can_encode_as_immediate_operand(integer32(solution^.fields[0]), ord(opc$move), 1) then begin
+        solution^.space136[142] := chr(1);
+      end else begin
+        solution^.space136[142] := chr(2);
+      end;
+      solution^.code_bytes := cost_534_11[ord(solution^.space136[137])] + cost_534_10[ord(solution^.space136[138])] + cost_534_9[ord(solution^.space136[140])] + cost_534_8[ord(solution^.space136[141])] + cost_534_7[ord(solution^.space136[142])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 32;
+      solution^.memory_refs := cost_534_6[ord(solution^.space136[138])] + cost_534_5[ord(solution^.space136[141])] + cost_534_4[ord(solution^.space136[142])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + 3;
+      solution^.delay := cost_534_3[ord(solution^.space136[138])] + cost_534_2[ord(solution^.space136[141])] + cost_534_1[ord(solution^.space136[142])] + subject.children[1]^.delay + subject.children[2]^.delay + 3;
+      solution^.bits_known := 0;
+      solution^.bits_trusted := 3;
+      solution^.l40 := 0;
+      solution^.l44 := 0;
+      solution^.f76.has_sym_disp := true;
+      solution^.ip_reg_max := 0;
+      solution^.ip_reg_result := 0;
+      solution^.f76.b82_0 := true;
+      solution^.disp := 0;
+      solution^.f76.b84_7 := true;
+      solution^.f76.uses_disp := true;
+      solution^.f76.uses_index_reg := false;
+      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
+      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
+      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
+      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
+      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+      p1_already_ptr_t(solution)^.already_address_mode := true;
+      work := solution;
+      result := solution;
     end;
   end;
 end;
@@ -654,136 +655,134 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.children[1]^.f76.b82_0 then begin
-    t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
-        ord(opc$loadl));
-    if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_disp) and not subject.children[1]^.f76.has_sym_disp or not subject.children[1]^.f76.b82_1 and not subject.children[1]^.f76.b82_6) or (subject.children[1]^.kind <> 5) then begin
+  t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
+      ord(opc$loadl));
+  if not (not subject.children[1]^.f76.b82_0 or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_disp or subject.children[1]^.f76.has_sym_disp) and (subject.children[1]^.f76.b82_1 or subject.children[1]^.f76.b82_6)) and (subject.children[1]^.kind = 5)) then begin
+    if isc_user_routines_354 then begin
+      write('Pattern 537 matched the semantics.');
+      writeln;
+    end;
+    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
       if isc_user_routines_354 then begin
-        write('Pattern 537 matched the semantics.');
+        write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
       end;
-      if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
-        if isc_user_routines_354 then begin
-          write('Infinite cycle prevented by NOT adding this to the work list.');
-          writeln;
-        end;
-      end
-      else begin
-        solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-        solution^.rule := 537;
-        solution^.chain := addr(subject);
-        p1_int_fields_ptr_t(addr(solution^))^.i[0] := integer32(p2_node_ptr_t(subject.sym)^.p[5]) * 8 - 1;
-        t3 := make_bit_mask_1(1, 0);
-        if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$rsub), 1) then begin
-          solution^.space136[136] := chr(1);
+    end
+    else begin
+      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution^.rule := 537;
+      solution^.chain := addr(subject);
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := integer32(p2_node_ptr_t(subject.sym)^.p[5]) * 8 - 1;
+      t3 := make_bit_mask_1(1, 0);
+      if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$rsub), 1) then begin
+        solution^.space136[136] := chr(1);
+      end else begin
+        solution^.space136[136] := chr(2);
+        if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$move), 1) then begin
+          solution^.space136[137] := chr(1);
         end else begin
-          solution^.space136[136] := chr(2);
-          if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$move), 1) then begin
-            solution^.space136[137] := chr(1);
-          end else begin
-            solution^.space136[137] := chr(2);
-          end;
+          solution^.space136[137] := chr(2);
         end;
-        if subject.children[1]^.f76.b84_7 then begin
-          solution^.space136[138] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
-            solution^.space136[139] := chr(2);
-          end else begin
-            solution^.space136[139] := chr(1);
-          end;
-        end else begin
-          solution^.space136[138] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
-            solution^.space136[140] := chr(1);
-          end else begin
-            solution^.space136[140] := chr(2);
-          end;
-        end;
-        if lir_$can_encode_as_immediate_operand(1, ord(opc$insert), 1) then begin
-          solution^.space136[141] := chr(1);
-        end else begin
-          solution^.space136[141] := chr(2);
-          if lir_$can_encode_as_immediate_operand(1, ord(opc$move), 1) then begin
-            solution^.space136[142] := chr(1);
-          end else begin
-            solution^.space136[142] := chr(2);
-          end;
-        end;
-        solution^.code_bytes := cost_537_11[ord(solution^.space136[136])] + cost_537_10[ord(solution^.space136[137])] + cost_537_9[ord(solution^.space136[139])] + cost_537_8[ord(solution^.space136[140])] + cost_537_7[ord(solution^.space136[142])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 24;
-        solution^.memory_refs := cost_537_6[ord(solution^.space136[137])] + cost_537_5[ord(solution^.space136[140])] + cost_537_4[ord(solution^.space136[142])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + 2;
-        solution^.delay := cost_537_3[ord(solution^.space136[137])] + cost_537_2[ord(solution^.space136[140])] + cost_537_1[ord(solution^.space136[142])] + subject.children[1]^.delay + subject.children[2]^.delay + 2;
-        solution^.l28 := subject.children[1]^.l28;
-        p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-        p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-        p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-        p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-        solution^.f76.b76 := subject.children[1]^.f76.b76;
-        solution^.bits_known := subject.children[1]^.bits_known;
-        solution^.bits_trusted := subject.children[1]^.bits_trusted;
-        solution^.l40 := subject.children[1]^.l40;
-        solution^.l44 := subject.children[1]^.l44;
-        solution^.w56 := subject.children[1]^.w56;
-        p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-        p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-        solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-        solution^.f76.b77 := subject.children[1]^.f76.b77;
-        solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
-        solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
-        solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
-        solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
-        solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
-        solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
-        solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-        solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
-        solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
-        solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-        solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-        solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-        solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-        solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-        solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-        solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-        solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-        p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-        solution^.disp := subject.children[1]^.disp;
-        p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-        p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-        p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-        solution^.w74 := subject.children[1]^.w74;
-        solution^.l52 := subject.children[1]^.l52;
-        solution^.f76.physical := subject.children[1]^.f76.physical;
-        solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-        solution^.f76.reg := subject.children[1]^.f76.reg;
-        solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-        solution^.f76.serialize := subject.children[1]^.f76.serialize;
-        solution^.f76.shift := subject.children[1]^.f76.shift;
-        solution^.f76.b80 := subject.children[1]^.f76.b80;
-        solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-        solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-        solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
-        t4 := subject.children[1]^.ip_reg_max;
-        if t4 = subject.children[2]^.ip_reg_max then begin
-          solution^.ip_reg_max := t4 + 1;
-        end else begin
-          if t4 <= subject.children[2]^.ip_reg_max then begin
-            t5 := subject.children[2]^.ip_reg_max;
-          end else begin
-            t5 := t4;
-          end;
-          solution^.ip_reg_max := t5;
-        end;
-        solution^.ip_reg_result := 0;
-        p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-        p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-        p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-        p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-        p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-        p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-        p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-        p1_already_ptr_t(solution)^.already_address_mode := true;
-        work := solution;
-        result := solution;
       end;
+      if subject.children[1]^.f76.b84_7 then begin
+        solution^.space136[138] := chr(1);
+        if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          solution^.space136[139] := chr(2);
+        end else begin
+          solution^.space136[139] := chr(1);
+        end;
+      end else begin
+        solution^.space136[138] := chr(2);
+        if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          solution^.space136[140] := chr(1);
+        end else begin
+          solution^.space136[140] := chr(2);
+        end;
+      end;
+      if lir_$can_encode_as_immediate_operand(1, ord(opc$insert), 1) then begin
+        solution^.space136[141] := chr(1);
+      end else begin
+        solution^.space136[141] := chr(2);
+        if lir_$can_encode_as_immediate_operand(1, ord(opc$move), 1) then begin
+          solution^.space136[142] := chr(1);
+        end else begin
+          solution^.space136[142] := chr(2);
+        end;
+      end;
+      solution^.code_bytes := cost_537_11[ord(solution^.space136[136])] + cost_537_10[ord(solution^.space136[137])] + cost_537_9[ord(solution^.space136[139])] + cost_537_8[ord(solution^.space136[140])] + cost_537_7[ord(solution^.space136[142])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 24;
+      solution^.memory_refs := cost_537_6[ord(solution^.space136[137])] + cost_537_5[ord(solution^.space136[140])] + cost_537_4[ord(solution^.space136[142])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + 2;
+      solution^.delay := cost_537_3[ord(solution^.space136[137])] + cost_537_2[ord(solution^.space136[140])] + cost_537_1[ord(solution^.space136[142])] + subject.children[1]^.delay + subject.children[2]^.delay + 2;
+      solution^.l28 := subject.children[1]^.l28;
+      p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
+      p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
+      p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
+      p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
+      solution^.f76.b76 := subject.children[1]^.f76.b76;
+      solution^.bits_known := subject.children[1]^.bits_known;
+      solution^.bits_trusted := subject.children[1]^.bits_trusted;
+      solution^.l40 := subject.children[1]^.l40;
+      solution^.l44 := subject.children[1]^.l44;
+      solution^.w56 := subject.children[1]^.w56;
+      p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
+      p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
+      solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
+      solution^.f76.b77 := subject.children[1]^.f76.b77;
+      solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+      solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
+      solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
+      solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
+      solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
+      solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
+      solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
+      solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+      solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
+      solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
+      solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
+      solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
+      solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
+      solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
+      solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
+      solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
+      solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
+      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
+      solution^.disp := subject.children[1]^.disp;
+      p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
+      p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
+      p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
+      solution^.w74 := subject.children[1]^.w74;
+      solution^.l52 := subject.children[1]^.l52;
+      solution^.f76.physical := subject.children[1]^.f76.physical;
+      solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
+      solution^.f76.reg := subject.children[1]^.f76.reg;
+      solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
+      solution^.f76.serialize := subject.children[1]^.f76.serialize;
+      solution^.f76.shift := subject.children[1]^.f76.shift;
+      solution^.f76.b80 := subject.children[1]^.f76.b80;
+      solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
+      solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
+      solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+      t4 := subject.children[1]^.ip_reg_max;
+      if t4 = subject.children[2]^.ip_reg_max then begin
+        solution^.ip_reg_max := t4 + 1;
+      end else begin
+        if t4 <= subject.children[2]^.ip_reg_max then begin
+          t5 := subject.children[2]^.ip_reg_max;
+        end else begin
+          t5 := t4;
+        end;
+        solution^.ip_reg_max := t5;
+      end;
+      solution^.ip_reg_result := 0;
+      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
+      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
+      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
+      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
+      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+      p1_already_ptr_t(solution)^.already_address_mode := true;
+      work := solution;
+      result := solution;
     end;
   end;
 end;
@@ -816,7 +815,7 @@ begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
       solution^.rule := 538;
       solution^.chain := addr(subject);
-      if lir_$can_encode_as_immediate_operand(-1, ord(opc$xor), 1) then begin
+      if lir_$can_encode_as_immediate_operand((-1), ord(opc$xor), 1) then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
@@ -869,99 +868,100 @@ var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: boolean;
   t2: boolean;
+  t3: boolean;
 begin
   result := nil;
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
       ord(opc$loadl));
-  if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_disp) and not subject.children[1]^.f76.has_sym_disp or not subject.children[1]^.f76.b82_1 and not subject.children[1]^.f76.b82_6) or (subject.children[1]^.kind <> 5) then begin
-    t2 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.disp,
-        ord(opc$loadl));
-    if lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$loadl), 1) and ((t2 or not subject.children[2]^.f76.uses_disp) and not subject.children[2]^.f76.has_sym_disp or not subject.children[2]^.f76.b82_1 and not subject.children[2]^.f76.b82_6) or (subject.children[2]^.kind <> 5) then begin
+  t2 := lir_$can_encode_as_immediate_operand(subject.children[1]^.disp,
+      ord(opc$loadl), 1);
+  t3 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.disp,
+      ord(opc$loadl));
+  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_disp or subject.children[1]^.f76.has_sym_disp) and (subject.children[1]^.f76.b82_1 or subject.children[1]^.f76.b82_6)) and (subject.children[1]^.kind = 5) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_disp or subject.children[2]^.f76.has_sym_disp) and (subject.children[2]^.f76.b82_1 or subject.children[2]^.f76.b82_6)) and (subject.children[2]^.kind = 5)) then begin
+    if isc_user_routines_354 then begin
+      write('Pattern 539 matched the semantics.');
+      writeln;
+    end;
+    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
       if isc_user_routines_354 then begin
-        write('Pattern 539 matched the semantics.');
+        write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
       end;
-      if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
-        if isc_user_routines_354 then begin
-          write('Infinite cycle prevented by NOT adding this to the work list.');
-          writeln;
-        end;
-      end
-      else begin
-        solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-        solution^.rule := 539;
-        solution^.chain := addr(subject);
-        solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.sym)^.p[5]);
-        if subject.children[1]^.f76.b84_7 then begin
-          solution^.space136[136] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
-            solution^.space136[137] := chr(2);
-          end else begin
-            solution^.space136[137] := chr(1);
-          end;
+    end
+    else begin
+      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution^.rule := 539;
+      solution^.chain := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.sym)^.p[5]);
+      if subject.children[1]^.f76.b84_7 then begin
+        solution^.space136[136] := chr(1);
+        if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          solution^.space136[137] := chr(2);
         end else begin
-          solution^.space136[136] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
-            solution^.space136[138] := chr(1);
-          end else begin
-            solution^.space136[138] := chr(2);
-          end;
+          solution^.space136[137] := chr(1);
         end;
-        if subject.children[2]^.f76.b84_7 then begin
-          solution^.space136[139] := chr(1);
-          if (subject.children[2]^.disp <> 0) or subject.children[2]^.f76.uses_index_reg or subject.children[2]^.f76.has_sym_disp then begin
-            solution^.space136[140] := chr(2);
-          end else begin
-            solution^.space136[140] := chr(1);
-          end;
+      end else begin
+        solution^.space136[136] := chr(2);
+        if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          solution^.space136[138] := chr(1);
         end else begin
-          solution^.space136[139] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$move), 1) then begin
-            solution^.space136[141] := chr(1);
-          end else begin
-            solution^.space136[141] := chr(2);
-          end;
+          solution^.space136[138] := chr(2);
         end;
-        if lir_$can_encode_as_immediate_operand(integer32(solution^.fields[0]), ord(opc$move), 1) then begin
-          solution^.space136[142] := chr(1);
-        end else begin
-          solution^.space136[142] := chr(2);
-        end;
-        if lir_$can_encode_as_immediate_operand(-1, ord(opc$xor), 1) then begin
-          solution^.space136[143] := chr(1);
-        end else begin
-          solution^.space136[143] := chr(2);
-        end;
-        solution^.code_bytes := cost_539_12[ord(solution^.space136[137])] + cost_539_11[ord(solution^.space136[138])] + cost_539_10[ord(solution^.space136[140])] + cost_539_9[ord(solution^.space136[141])] + cost_539_8[ord(solution^.space136[142])] + cost_539_7[ord(solution^.space136[143])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 32;
-        solution^.memory_refs := cost_539_6[ord(solution^.space136[138])] + cost_539_5[ord(solution^.space136[141])] + cost_539_4[ord(solution^.space136[142])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + 3;
-        solution^.delay := cost_539_3[ord(solution^.space136[138])] + cost_539_2[ord(solution^.space136[141])] + cost_539_1[ord(solution^.space136[142])] + subject.children[1]^.delay + subject.children[2]^.delay + 3;
-        solution^.bits_known := 0;
-        solution^.bits_trusted := 3;
-        solution^.l40 := 0;
-        solution^.l44 := 0;
-        solution^.eval_order := evaluation_order_function(il$t(subject.w98),
-            subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
-            2);
-        solution^.f76.has_sym_disp := true;
-        solution^.ip_reg_max := 0;
-        solution^.ip_reg_result := 0;
-        solution^.f76.b82_0 := true;
-        solution^.disp := 0;
-        solution^.f76.b84_7 := true;
-        solution^.f76.uses_disp := true;
-        solution^.f76.uses_index_reg := false;
-        p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-        p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-        p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-        p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-        p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-        p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-        p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-        p1_already_ptr_t(solution)^.already_address_mode := true;
-        work := solution;
-        result := solution;
       end;
+      if subject.children[2]^.f76.b84_7 then begin
+        solution^.space136[139] := chr(1);
+        if (subject.children[2]^.disp <> 0) or subject.children[2]^.f76.uses_index_reg or subject.children[2]^.f76.has_sym_disp then begin
+          solution^.space136[140] := chr(2);
+        end else begin
+          solution^.space136[140] := chr(1);
+        end;
+      end else begin
+        solution^.space136[139] := chr(2);
+        if lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$move), 1) then begin
+          solution^.space136[141] := chr(1);
+        end else begin
+          solution^.space136[141] := chr(2);
+        end;
+      end;
+      if lir_$can_encode_as_immediate_operand(integer32(solution^.fields[0]), ord(opc$move), 1) then begin
+        solution^.space136[142] := chr(1);
+      end else begin
+        solution^.space136[142] := chr(2);
+      end;
+      if lir_$can_encode_as_immediate_operand((-1), ord(opc$xor), 1) then begin
+        solution^.space136[143] := chr(1);
+      end else begin
+        solution^.space136[143] := chr(2);
+      end;
+      solution^.code_bytes := cost_539_12[ord(solution^.space136[137])] + cost_539_11[ord(solution^.space136[138])] + cost_539_10[ord(solution^.space136[140])] + cost_539_9[ord(solution^.space136[141])] + cost_539_8[ord(solution^.space136[142])] + cost_539_7[ord(solution^.space136[143])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 32;
+      solution^.memory_refs := cost_539_6[ord(solution^.space136[138])] + cost_539_5[ord(solution^.space136[141])] + cost_539_4[ord(solution^.space136[142])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + 3;
+      solution^.delay := cost_539_3[ord(solution^.space136[138])] + cost_539_2[ord(solution^.space136[141])] + cost_539_1[ord(solution^.space136[142])] + subject.children[1]^.delay + subject.children[2]^.delay + 3;
+      solution^.bits_known := 0;
+      solution^.bits_trusted := 3;
+      solution^.l40 := 0;
+      solution^.l44 := 0;
+      solution^.eval_order := evaluation_order_function(il$t(subject.w98),
+          subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
+          2);
+      solution^.f76.has_sym_disp := true;
+      solution^.ip_reg_max := 0;
+      solution^.ip_reg_result := 0;
+      solution^.f76.b82_0 := true;
+      solution^.disp := 0;
+      solution^.f76.b84_7 := true;
+      solution^.f76.uses_disp := true;
+      solution^.f76.uses_index_reg := false;
+      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
+      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
+      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
+      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
+      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+      p1_already_ptr_t(solution)^.already_address_mode := true;
+      work := solution;
+      result := solution;
     end;
   end;
 end;
@@ -1094,7 +1094,7 @@ begin
         t3 := t2;
       end;
       if subject.children[1]^.inherited^.precision = 32 then begin
-        t5 := -1;
+        t5 := (-1);
       end else begin
         t4 := make_bit_mask_2(subject.children[1]^.inherited^.precision - 1,
             0);
@@ -1295,77 +1295,75 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.w[13] < integer32(p2_node_ptr_t(subject.sym)^.p[5]) then begin
-    t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
-        ord(opc$loadl));
-    if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_disp) and not subject.children[1]^.f76.has_sym_disp or not subject.children[1]^.f76.b82_1 and not subject.children[1]^.f76.b82_6) or (subject.children[1]^.kind <> 5) then begin
+  t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
+      ord(opc$loadl));
+  if not ((p2_node_ptr_t(subject.sym)^.w[13] >= integer32(p2_node_ptr_t(subject.sym)^.p[5])) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_disp or subject.children[1]^.f76.has_sym_disp) and (subject.children[1]^.f76.b82_1 or subject.children[1]^.f76.b82_6)) and (subject.children[1]^.kind = 5)) then begin
+    if isc_user_routines_354 then begin
+      write('Pattern 543 matched the semantics.');
+      writeln;
+    end;
+    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
       if isc_user_routines_354 then begin
-        write('Pattern 543 matched the semantics.');
+        write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
       end;
-      if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
-        if isc_user_routines_354 then begin
-          write('Infinite cycle prevented by NOT adding this to the work list.');
-          writeln;
-        end;
-      end
-      else begin
-        solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-        solution^.rule := 543;
-        solution^.chain := addr(subject);
-        p1_int_fields_ptr_t(addr(solution^))^.i[0] := integer32(p2_node_ptr_t(subject.sym)^.p[5]) - p2_node_ptr_t(subject.sym)^.w[13];
-        p1_int_fields_ptr_t(addr(solution^))^.i[1] := p2_node_ptr_t(subject.sym)^.w[13];
-        if subject.children[1]^.f76.b84_7 then begin
-          solution^.space136[136] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
-            solution^.space136[137] := chr(2);
-          end else begin
-            solution^.space136[137] := chr(1);
-          end;
+    end
+    else begin
+      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution^.rule := 543;
+      solution^.chain := addr(subject);
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := integer32(p2_node_ptr_t(subject.sym)^.p[5]) - p2_node_ptr_t(subject.sym)^.w[13];
+      p1_int_fields_ptr_t(addr(solution^))^.i[1] := p2_node_ptr_t(subject.sym)^.w[13];
+      if subject.children[1]^.f76.b84_7 then begin
+        solution^.space136[136] := chr(1);
+        if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          solution^.space136[137] := chr(2);
         end else begin
-          solution^.space136[136] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
-            solution^.space136[138] := chr(1);
-          end else begin
-            solution^.space136[138] := chr(2);
-          end;
+          solution^.space136[137] := chr(1);
         end;
-        if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$move), 1) then begin
-          solution^.space136[139] := chr(1);
+      end else begin
+        solution^.space136[136] := chr(2);
+        if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          solution^.space136[138] := chr(1);
         end else begin
-          solution^.space136[139] := chr(2);
+          solution^.space136[138] := chr(2);
         end;
-        if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[1], ord(opc$move), 1) then begin
-          solution^.space136[140] := chr(1);
-        end else begin
-          solution^.space136[140] := chr(2);
-        end;
-        solution^.code_bytes := cost_543_10[ord(solution^.space136[137])] + cost_543_9[ord(solution^.space136[138])] + cost_543_8[ord(solution^.space136[139])] + cost_543_7[ord(solution^.space136[140])] + subject.children[1]^.code_bytes + 40;
-        solution^.memory_refs := cost_543_6[ord(solution^.space136[138])] + cost_543_5[ord(solution^.space136[139])] + cost_543_4[ord(solution^.space136[140])] + subject.children[1]^.memory_refs + 3;
-        solution^.delay := cost_543_3[ord(solution^.space136[138])] + cost_543_2[ord(solution^.space136[139])] + cost_543_1[ord(solution^.space136[140])] + subject.children[1]^.delay + 3;
-        solution^.bits_known := 0;
-        solution^.bits_trusted := 3;
-        solution^.l40 := 0;
-        solution^.l44 := 0;
-        solution^.f76.has_sym_disp := true;
-        solution^.ip_reg_max := 0;
-        solution^.ip_reg_result := 0;
-        solution^.f76.b82_0 := true;
-        solution^.disp := 0;
-        solution^.f76.b84_7 := true;
-        solution^.f76.uses_disp := true;
-        solution^.f76.uses_index_reg := false;
-        p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-        p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-        p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-        p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-        p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-        p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-        p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-        p1_already_ptr_t(solution)^.already_address_mode := true;
-        work := solution;
-        result := solution;
       end;
+      if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$move), 1) then begin
+        solution^.space136[139] := chr(1);
+      end else begin
+        solution^.space136[139] := chr(2);
+      end;
+      if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[1], ord(opc$move), 1) then begin
+        solution^.space136[140] := chr(1);
+      end else begin
+        solution^.space136[140] := chr(2);
+      end;
+      solution^.code_bytes := cost_543_10[ord(solution^.space136[137])] + cost_543_9[ord(solution^.space136[138])] + cost_543_8[ord(solution^.space136[139])] + cost_543_7[ord(solution^.space136[140])] + subject.children[1]^.code_bytes + 40;
+      solution^.memory_refs := cost_543_6[ord(solution^.space136[138])] + cost_543_5[ord(solution^.space136[139])] + cost_543_4[ord(solution^.space136[140])] + subject.children[1]^.memory_refs + 3;
+      solution^.delay := cost_543_3[ord(solution^.space136[138])] + cost_543_2[ord(solution^.space136[139])] + cost_543_1[ord(solution^.space136[140])] + subject.children[1]^.delay + 3;
+      solution^.bits_known := 0;
+      solution^.bits_trusted := 3;
+      solution^.l40 := 0;
+      solution^.l44 := 0;
+      solution^.f76.has_sym_disp := true;
+      solution^.ip_reg_max := 0;
+      solution^.ip_reg_result := 0;
+      solution^.f76.b82_0 := true;
+      solution^.disp := 0;
+      solution^.f76.b84_7 := true;
+      solution^.f76.uses_disp := true;
+      solution^.f76.uses_index_reg := false;
+      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
+      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
+      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
+      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
+      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+      p1_already_ptr_t(solution)^.already_address_mode := true;
+      work := solution;
+      result := solution;
     end;
   end;
 end;
@@ -1473,71 +1471,69 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.sym)^.w[13] > integer32(p2_node_ptr_t(subject.sym)^.p[5]) then begin
-    t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
-        ord(opc$loadl));
-    if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_disp) and not subject.children[1]^.f76.has_sym_disp or not subject.children[1]^.f76.b82_1 and not subject.children[1]^.f76.b82_6) or (subject.children[1]^.kind <> 5) then begin
+  t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
+      ord(opc$loadl));
+  if not ((p2_node_ptr_t(subject.sym)^.w[13] <= integer32(p2_node_ptr_t(subject.sym)^.p[5])) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_disp or subject.children[1]^.f76.has_sym_disp) and (subject.children[1]^.f76.b82_1 or subject.children[1]^.f76.b82_6)) and (subject.children[1]^.kind = 5)) then begin
+    if isc_user_routines_354 then begin
+      write('Pattern 545 matched the semantics.');
+      writeln;
+    end;
+    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
       if isc_user_routines_354 then begin
-        write('Pattern 545 matched the semantics.');
+        write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
       end;
-      if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
-        if isc_user_routines_354 then begin
-          write('Infinite cycle prevented by NOT adding this to the work list.');
-          writeln;
-        end;
-      end
-      else begin
-        solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-        solution^.rule := 545;
-        solution^.chain := addr(subject);
-        solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.sym)^.p[5]);
-        if subject.children[1]^.f76.b84_7 then begin
-          solution^.space136[136] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
-            solution^.space136[137] := chr(2);
-          end else begin
-            solution^.space136[137] := chr(1);
-          end;
+    end
+    else begin
+      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution^.rule := 545;
+      solution^.chain := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.sym)^.p[5]);
+      if subject.children[1]^.f76.b84_7 then begin
+        solution^.space136[136] := chr(1);
+        if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          solution^.space136[137] := chr(2);
         end else begin
-          solution^.space136[136] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
-            solution^.space136[138] := chr(1);
-          end else begin
-            solution^.space136[138] := chr(2);
-          end;
+          solution^.space136[137] := chr(1);
         end;
-        if lir_$can_encode_as_immediate_operand(integer32(solution^.fields[0]), ord(opc$move), 1) then begin
-          solution^.space136[139] := chr(1);
+      end else begin
+        solution^.space136[136] := chr(2);
+        if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          solution^.space136[138] := chr(1);
         end else begin
-          solution^.space136[139] := chr(2);
+          solution^.space136[138] := chr(2);
         end;
-        solution^.code_bytes := cost_545_7[ord(solution^.space136[137])] + cost_545_6[ord(solution^.space136[138])] + cost_545_5[ord(solution^.space136[139])] + subject.children[1]^.code_bytes + 28;
-        solution^.memory_refs := cost_545_4[ord(solution^.space136[138])] + cost_545_3[ord(solution^.space136[139])] + subject.children[1]^.memory_refs + 2;
-        solution^.delay := cost_545_2[ord(solution^.space136[138])] + cost_545_1[ord(solution^.space136[139])] + subject.children[1]^.delay + 2;
-        solution^.bits_known := 0;
-        solution^.bits_trusted := 3;
-        solution^.l40 := 0;
-        solution^.l44 := 0;
-        solution^.f76.has_sym_disp := true;
-        solution^.ip_reg_max := 0;
-        solution^.ip_reg_result := 0;
-        solution^.f76.b82_0 := true;
-        solution^.disp := 0;
-        solution^.f76.b84_7 := true;
-        solution^.f76.uses_disp := true;
-        solution^.f76.uses_index_reg := false;
-        p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-        p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-        p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-        p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-        p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-        p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-        p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-        p1_already_ptr_t(solution)^.already_address_mode := true;
-        work := solution;
-        result := solution;
       end;
+      if lir_$can_encode_as_immediate_operand(integer32(solution^.fields[0]), ord(opc$move), 1) then begin
+        solution^.space136[139] := chr(1);
+      end else begin
+        solution^.space136[139] := chr(2);
+      end;
+      solution^.code_bytes := cost_545_7[ord(solution^.space136[137])] + cost_545_6[ord(solution^.space136[138])] + cost_545_5[ord(solution^.space136[139])] + subject.children[1]^.code_bytes + 28;
+      solution^.memory_refs := cost_545_4[ord(solution^.space136[138])] + cost_545_3[ord(solution^.space136[139])] + subject.children[1]^.memory_refs + 2;
+      solution^.delay := cost_545_2[ord(solution^.space136[138])] + cost_545_1[ord(solution^.space136[139])] + subject.children[1]^.delay + 2;
+      solution^.bits_known := 0;
+      solution^.bits_trusted := 3;
+      solution^.l40 := 0;
+      solution^.l44 := 0;
+      solution^.f76.has_sym_disp := true;
+      solution^.ip_reg_max := 0;
+      solution^.ip_reg_result := 0;
+      solution^.f76.b82_0 := true;
+      solution^.disp := 0;
+      solution^.f76.b84_7 := true;
+      solution^.f76.uses_disp := true;
+      solution^.f76.uses_index_reg := false;
+      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
+      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
+      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
+      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
+      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+      p1_already_ptr_t(solution)^.already_address_mode := true;
+      work := solution;
+      result := solution;
     end;
   end;
 end;
@@ -1618,91 +1614,92 @@ var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: boolean;
   t2: boolean;
+  t3: boolean;
 begin
   result := nil;
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
       ord(opc$loadl));
-  if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_disp) and not subject.children[1]^.f76.has_sym_disp or not subject.children[1]^.f76.b82_1 and not subject.children[1]^.f76.b82_6) or (subject.children[1]^.kind <> 5) then begin
-    t2 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.disp,
-        ord(opc$loadl));
-    if lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$loadl), 1) and ((t2 or not subject.children[2]^.f76.uses_disp) and not subject.children[2]^.f76.has_sym_disp or not subject.children[2]^.f76.b82_1 and not subject.children[2]^.f76.b82_6) or (subject.children[2]^.kind <> 5) then begin
+  t2 := lir_$can_encode_as_immediate_operand(subject.children[1]^.disp,
+      ord(opc$loadl), 1);
+  t3 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.disp,
+      ord(opc$loadl));
+  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_disp or subject.children[1]^.f76.has_sym_disp) and (subject.children[1]^.f76.b82_1 or subject.children[1]^.f76.b82_6)) and (subject.children[1]^.kind = 5) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_disp or subject.children[2]^.f76.has_sym_disp) and (subject.children[2]^.f76.b82_1 or subject.children[2]^.f76.b82_6)) and (subject.children[2]^.kind = 5)) then begin
+    if isc_user_routines_354 then begin
+      write('Pattern 547 matched the semantics.');
+      writeln;
+    end;
+    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
       if isc_user_routines_354 then begin
-        write('Pattern 547 matched the semantics.');
+        write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
       end;
-      if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
-        if isc_user_routines_354 then begin
-          write('Infinite cycle prevented by NOT adding this to the work list.');
-          writeln;
-        end;
-      end
-      else begin
-        solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-        solution^.rule := 547;
-        solution^.chain := addr(subject);
-        solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.sym)^.p[5]);
-        if subject.children[1]^.f76.b84_7 then begin
-          solution^.space136[136] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
-            solution^.space136[137] := chr(2);
-          end else begin
-            solution^.space136[137] := chr(1);
-          end;
+    end
+    else begin
+      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution^.rule := 547;
+      solution^.chain := addr(subject);
+      solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.sym)^.p[5]);
+      if subject.children[1]^.f76.b84_7 then begin
+        solution^.space136[136] := chr(1);
+        if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          solution^.space136[137] := chr(2);
         end else begin
-          solution^.space136[136] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
-            solution^.space136[138] := chr(1);
-          end else begin
-            solution^.space136[138] := chr(2);
-          end;
+          solution^.space136[137] := chr(1);
         end;
-        if subject.children[2]^.f76.b84_7 then begin
-          solution^.space136[139] := chr(1);
-          if (subject.children[2]^.disp <> 0) or subject.children[2]^.f76.uses_index_reg or subject.children[2]^.f76.has_sym_disp then begin
-            solution^.space136[140] := chr(2);
-          end else begin
-            solution^.space136[140] := chr(1);
-          end;
+      end else begin
+        solution^.space136[136] := chr(2);
+        if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          solution^.space136[138] := chr(1);
         end else begin
-          solution^.space136[139] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$move), 1) then begin
-            solution^.space136[141] := chr(1);
-          end else begin
-            solution^.space136[141] := chr(2);
-          end;
+          solution^.space136[138] := chr(2);
         end;
-        if lir_$can_encode_as_immediate_operand(integer32(solution^.fields[0]), ord(opc$move), 1) then begin
-          solution^.space136[142] := chr(1);
-        end else begin
-          solution^.space136[142] := chr(2);
-        end;
-        solution^.code_bytes := cost_547_11[ord(solution^.space136[137])] + cost_547_10[ord(solution^.space136[138])] + cost_547_9[ord(solution^.space136[140])] + cost_547_8[ord(solution^.space136[141])] + cost_547_7[ord(solution^.space136[142])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 32;
-        solution^.memory_refs := cost_547_6[ord(solution^.space136[138])] + cost_547_5[ord(solution^.space136[141])] + cost_547_4[ord(solution^.space136[142])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + 3;
-        solution^.delay := cost_547_3[ord(solution^.space136[138])] + cost_547_2[ord(solution^.space136[141])] + cost_547_1[ord(solution^.space136[142])] + subject.children[1]^.delay + subject.children[2]^.delay + 3;
-        solution^.bits_known := 0;
-        solution^.bits_trusted := 3;
-        solution^.l40 := 0;
-        solution^.l44 := 0;
-        solution^.f76.has_sym_disp := true;
-        solution^.ip_reg_max := 0;
-        solution^.ip_reg_result := 0;
-        solution^.f76.b82_0 := true;
-        solution^.disp := 0;
-        solution^.f76.b84_7 := true;
-        solution^.f76.uses_disp := true;
-        solution^.f76.uses_index_reg := false;
-        p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-        p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-        p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-        p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-        p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-        p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-        p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-        p1_already_ptr_t(solution)^.already_address_mode := true;
-        work := solution;
-        result := solution;
       end;
+      if subject.children[2]^.f76.b84_7 then begin
+        solution^.space136[139] := chr(1);
+        if (subject.children[2]^.disp <> 0) or subject.children[2]^.f76.uses_index_reg or subject.children[2]^.f76.has_sym_disp then begin
+          solution^.space136[140] := chr(2);
+        end else begin
+          solution^.space136[140] := chr(1);
+        end;
+      end else begin
+        solution^.space136[139] := chr(2);
+        if lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$move), 1) then begin
+          solution^.space136[141] := chr(1);
+        end else begin
+          solution^.space136[141] := chr(2);
+        end;
+      end;
+      if lir_$can_encode_as_immediate_operand(integer32(solution^.fields[0]), ord(opc$move), 1) then begin
+        solution^.space136[142] := chr(1);
+      end else begin
+        solution^.space136[142] := chr(2);
+      end;
+      solution^.code_bytes := cost_547_11[ord(solution^.space136[137])] + cost_547_10[ord(solution^.space136[138])] + cost_547_9[ord(solution^.space136[140])] + cost_547_8[ord(solution^.space136[141])] + cost_547_7[ord(solution^.space136[142])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 32;
+      solution^.memory_refs := cost_547_6[ord(solution^.space136[138])] + cost_547_5[ord(solution^.space136[141])] + cost_547_4[ord(solution^.space136[142])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + 3;
+      solution^.delay := cost_547_3[ord(solution^.space136[138])] + cost_547_2[ord(solution^.space136[141])] + cost_547_1[ord(solution^.space136[142])] + subject.children[1]^.delay + subject.children[2]^.delay + 3;
+      solution^.bits_known := 0;
+      solution^.bits_trusted := 3;
+      solution^.l40 := 0;
+      solution^.l44 := 0;
+      solution^.f76.has_sym_disp := true;
+      solution^.ip_reg_max := 0;
+      solution^.ip_reg_result := 0;
+      solution^.f76.b82_0 := true;
+      solution^.disp := 0;
+      solution^.f76.b84_7 := true;
+      solution^.f76.uses_disp := true;
+      solution^.f76.uses_index_reg := false;
+      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
+      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
+      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
+      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
+      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+      p1_already_ptr_t(solution)^.already_address_mode := true;
+      work := solution;
+      result := solution;
     end;
   end;
 end;
@@ -1868,153 +1865,151 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.children[1]^.f76.b82_0 then begin
-    t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
-        ord(opc$loadl));
-    if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_disp) and not subject.children[1]^.f76.has_sym_disp or not subject.children[1]^.f76.b82_1 and not subject.children[1]^.f76.b82_6) or (subject.children[1]^.kind <> 5) then begin
+  t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
+      ord(opc$loadl));
+  if not (not subject.children[1]^.f76.b82_0 or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_disp or subject.children[1]^.f76.has_sym_disp) and (subject.children[1]^.f76.b82_1 or subject.children[1]^.f76.b82_6)) and (subject.children[1]^.kind = 5)) then begin
+    if isc_user_routines_354 then begin
+      write('Pattern 550 matched the semantics.');
+      writeln;
+    end;
+    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
       if isc_user_routines_354 then begin
-        write('Pattern 550 matched the semantics.');
+        write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
       end;
-      if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
-        if isc_user_routines_354 then begin
-          write('Infinite cycle prevented by NOT adding this to the work list.');
-          writeln;
-        end;
-      end
-      else begin
-        solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
-        solution^.rule := 550;
-        solution^.chain := addr(subject);
-        p1_int_fields_ptr_t(addr(solution^))^.i[0] := integer32(p2_node_ptr_t(subject.sym)^.p[5]) * 8 - 1;
-        t3 := find_well_known_literal_solution(integer32(p2_node_ptr_t(subject.sym)^.p[5]) * 8 - 1);
-        solution^.fields[1] := t3;
-        if lir_$can_encode_as_immediate_operand(-t3^.disp, ord(opc$add), 1) then begin
-          solution^.space136[136] := chr(1);
+    end
+    else begin
+      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution^.rule := 550;
+      solution^.chain := addr(subject);
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := integer32(p2_node_ptr_t(subject.sym)^.p[5]) * 8 - 1;
+      t3 := find_well_known_literal_solution(integer32(p2_node_ptr_t(subject.sym)^.p[5]) * 8 - 1);
+      solution^.fields[1] := t3;
+      if lir_$can_encode_as_immediate_operand(-t3^.disp, ord(opc$add), 1) then begin
+        solution^.space136[136] := chr(1);
+      end else begin
+        solution^.space136[136] := chr(2);
+        if lir_$can_encode_as_immediate_operand(solution^.fields[1]^.disp, ord(opc$move), 1) then begin
+          solution^.space136[137] := chr(1);
         end else begin
-          solution^.space136[136] := chr(2);
-          if lir_$can_encode_as_immediate_operand(solution^.fields[1]^.disp, ord(opc$move), 1) then begin
-            solution^.space136[137] := chr(1);
-          end else begin
-            solution^.space136[137] := chr(2);
-          end;
+          solution^.space136[137] := chr(2);
         end;
-        if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$move), 1) then begin
-          solution^.space136[138] := chr(1);
-        end else begin
-          solution^.space136[138] := chr(2);
-        end;
-        if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$rsub), 1) then begin
-          solution^.space136[139] := chr(1);
-        end else begin
-          solution^.space136[139] := chr(2);
-          if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$move), 1) then begin
-            solution^.space136[140] := chr(1);
-          end else begin
-            solution^.space136[140] := chr(2);
-          end;
-        end;
-        if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$rsub), 1) then begin
-          solution^.space136[141] := chr(1);
-        end else begin
-          solution^.space136[141] := chr(2);
-          if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$move), 1) then begin
-            solution^.space136[142] := chr(1);
-          end else begin
-            solution^.space136[142] := chr(2);
-          end;
-        end;
-        if subject.children[1]^.f76.b84_7 then begin
-          solution^.space136[143] := chr(1);
-          if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
-            solution^.space136[144] := chr(2);
-          end else begin
-            solution^.space136[144] := chr(1);
-          end;
-        end else begin
-          solution^.space136[143] := chr(2);
-          if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
-            solution^.space136[145] := chr(1);
-          end else begin
-            solution^.space136[145] := chr(2);
-          end;
-        end;
-        solution^.space136[146] := chr(2);
-        solution^.code_bytes := cost_550_20[ord(solution^.space136[136])] + cost_550_19[ord(solution^.space136[137])] + cost_550_18[ord(solution^.space136[138])] + cost_550_17[ord(solution^.space136[139])] + cost_550_16[ord(solution^.space136[140])] + cost_550_15[ord(solution^.space136[141])] + cost_550_14[ord(solution^.space136[142])] + cost_550_13[ord(solution^.space136[144])] + cost_550_12[ord(solution^.space136[145])] + cost_550_11[ord(solution^.space136[146])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 176;
-        solution^.memory_refs := cost_550_10[ord(solution^.space136[137])] + cost_550_9[ord(solution^.space136[138])] + cost_550_8[ord(solution^.space136[140])] + cost_550_7[ord(solution^.space136[142])] + cost_550_6[ord(solution^.space136[145])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs + 7;
-        solution^.delay := cost_550_5[ord(solution^.space136[137])] + cost_550_4[ord(solution^.space136[138])] + cost_550_3[ord(solution^.space136[140])] + cost_550_2[ord(solution^.space136[142])] + cost_550_1[ord(solution^.space136[145])] + subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay + 10;
-        solution^.l28 := subject.children[1]^.l28;
-        p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
-        p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
-        p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
-        p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
-        solution^.f76.b76 := subject.children[1]^.f76.b76;
-        solution^.bits_known := subject.children[1]^.bits_known;
-        solution^.bits_trusted := subject.children[1]^.bits_trusted;
-        solution^.l40 := subject.children[1]^.l40;
-        solution^.l44 := subject.children[1]^.l44;
-        solution^.w56 := subject.children[1]^.w56;
-        p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
-        p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
-        solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
-        solution^.f76.b77 := subject.children[1]^.f76.b77;
-        solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
-        solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
-        solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
-        solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
-        solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
-        solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
-        solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
-        solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
-        solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
-        solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
-        solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
-        solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
-        solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
-        solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
-        solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
-        solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
-        solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
-        p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
-        solution^.disp := subject.children[1]^.disp;
-        p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
-        p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
-        p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
-        solution^.w74 := subject.children[1]^.w74;
-        solution^.l52 := subject.children[1]^.l52;
-        solution^.f76.physical := subject.children[1]^.f76.physical;
-        solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
-        solution^.f76.reg := subject.children[1]^.f76.reg;
-        solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
-        solution^.f76.serialize := subject.children[1]^.f76.serialize;
-        solution^.f76.shift := subject.children[1]^.f76.shift;
-        solution^.f76.b80 := subject.children[1]^.f76.b80;
-        solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
-        solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
-        solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
-        t4 := subject.children[1]^.ip_reg_max;
-        if t4 = subject.children[2]^.ip_reg_max then begin
-          solution^.ip_reg_max := t4 + 1;
-        end else begin
-          if t4 <= subject.children[2]^.ip_reg_max then begin
-            t5 := subject.children[2]^.ip_reg_max;
-          end else begin
-            t5 := t4;
-          end;
-          solution^.ip_reg_max := t5;
-        end;
-        solution^.ip_reg_result := 0;
-        p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-        p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-        p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-        p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-        p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-        p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-        p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-        p1_already_ptr_t(solution)^.already_address_mode := true;
-        work := solution;
-        result := solution;
       end;
+      if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$move), 1) then begin
+        solution^.space136[138] := chr(1);
+      end else begin
+        solution^.space136[138] := chr(2);
+      end;
+      if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$rsub), 1) then begin
+        solution^.space136[139] := chr(1);
+      end else begin
+        solution^.space136[139] := chr(2);
+        if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$move), 1) then begin
+          solution^.space136[140] := chr(1);
+        end else begin
+          solution^.space136[140] := chr(2);
+        end;
+      end;
+      if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$rsub), 1) then begin
+        solution^.space136[141] := chr(1);
+      end else begin
+        solution^.space136[141] := chr(2);
+        if lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0], ord(opc$move), 1) then begin
+          solution^.space136[142] := chr(1);
+        end else begin
+          solution^.space136[142] := chr(2);
+        end;
+      end;
+      if subject.children[1]^.f76.b84_7 then begin
+        solution^.space136[143] := chr(1);
+        if (subject.children[1]^.disp <> 0) or subject.children[1]^.f76.uses_index_reg or subject.children[1]^.f76.has_sym_disp then begin
+          solution^.space136[144] := chr(2);
+        end else begin
+          solution^.space136[144] := chr(1);
+        end;
+      end else begin
+        solution^.space136[143] := chr(2);
+        if lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$move), 1) then begin
+          solution^.space136[145] := chr(1);
+        end else begin
+          solution^.space136[145] := chr(2);
+        end;
+      end;
+      solution^.space136[146] := chr(2);
+      solution^.code_bytes := cost_550_20[ord(solution^.space136[136])] + cost_550_19[ord(solution^.space136[137])] + cost_550_18[ord(solution^.space136[138])] + cost_550_17[ord(solution^.space136[139])] + cost_550_16[ord(solution^.space136[140])] + cost_550_15[ord(solution^.space136[141])] + cost_550_14[ord(solution^.space136[142])] + cost_550_13[ord(solution^.space136[144])] + cost_550_12[ord(solution^.space136[145])] + cost_550_11[ord(solution^.space136[146])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 176;
+      solution^.memory_refs := cost_550_10[ord(solution^.space136[137])] + cost_550_9[ord(solution^.space136[138])] + cost_550_8[ord(solution^.space136[140])] + cost_550_7[ord(solution^.space136[142])] + cost_550_6[ord(solution^.space136[145])] + subject.children[1]^.memory_refs + subject.children[2]^.memory_refs + subject.children[3]^.memory_refs + 7;
+      solution^.delay := cost_550_5[ord(solution^.space136[137])] + cost_550_4[ord(solution^.space136[138])] + cost_550_3[ord(solution^.space136[140])] + cost_550_2[ord(solution^.space136[142])] + cost_550_1[ord(solution^.space136[145])] + subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay + 10;
+      solution^.l28 := subject.children[1]^.l28;
+      p2_flags_ptr_t(addr(solution^.f76))^.all_zeroes_or_all_ones := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.all_zeroes_or_all_ones;
+      p2_flags_ptr_t(addr(solution^.f76))^.arg_block_location := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location;
+      p2_flags_ptr_t(addr(solution^.f76))^.bit_7_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended;
+      p2_flags_ptr_t(addr(solution^.f76))^.bit_15_was_sign_extended := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended;
+      solution^.f76.b76 := subject.children[1]^.f76.b76;
+      solution^.bits_known := subject.children[1]^.bits_known;
+      solution^.bits_trusted := subject.children[1]^.bits_trusted;
+      solution^.l40 := subject.children[1]^.l40;
+      solution^.l44 := subject.children[1]^.l44;
+      solution^.w56 := subject.children[1]^.w56;
+      p2_flags_ptr_t(addr(solution^.f76))^.dead_end := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.dead_end;
+      p2_flags_ptr_t(addr(solution^.f76))^.derived_from_literal := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.derived_from_literal;
+      solution^.f76.embedded_sr_temp := subject.children[1]^.f76.embedded_sr_temp;
+      solution^.f76.b77 := subject.children[1]^.f76.b77;
+      solution^.f76.b81_0 := subject.children[1]^.f76.b81_0;
+      solution^.fp_reg_max := subject.children[1]^.fp_reg_max;
+      solution^.fp_reg_result := subject.children[1]^.fp_reg_result;
+      solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max;
+      solution^.fp_reg_pair_result := subject.children[1]^.fp_reg_pair_result;
+      solution^.fp_reg_quad_max := subject.children[1]^.fp_reg_quad_max;
+      solution^.fp_reg_quad_result := subject.children[1]^.fp_reg_quad_result;
+      solution^.f76.has_sym_disp := subject.children[1]^.f76.has_sym_disp;
+      solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
+      solution^.ip_reg_result := subject.children[1]^.ip_reg_result;
+      solution^.f76.b82_6 := subject.children[1]^.f76.b82_6;
+      solution^.f76.b82_5 := subject.children[1]^.f76.b82_5;
+      solution^.f76.b82_4 := subject.children[1]^.f76.b82_4;
+      solution^.f76.b82_3 := subject.children[1]^.f76.b82_3;
+      solution^.f76.b82_2 := subject.children[1]^.f76.b82_2;
+      solution^.f76.b82_1 := subject.children[1]^.f76.b82_1;
+      solution^.f76.b82_0 := subject.children[1]^.f76.b82_0;
+      p2_flags_ptr_t(addr(solution^.f76))^.is_volatile := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.is_volatile;
+      solution^.disp := subject.children[1]^.disp;
+      p2_flags_ptr_t(addr(solution^.f76))^.literal_64_bits_value_is_zero := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_64_bits_value_is_zero;
+      p2_flags_ptr_t(addr(solution^.f76))^.literal_derived_from_floating_constant := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.literal_derived_from_floating_constant;
+      p2_flags_ptr_t(addr(solution^.f76))^.materialize_true_as_1 := p2_flags_ptr_t(addr(subject.children[1]^.f76))^.materialize_true_as_1;
+      solution^.w74 := subject.children[1]^.w74;
+      solution^.l52 := subject.children[1]^.l52;
+      solution^.f76.physical := subject.children[1]^.f76.physical;
+      solution^.f76.b83_2 := subject.children[1]^.f76.b83_2;
+      solution^.f76.reg := subject.children[1]^.f76.reg;
+      solution^.f76.no_modify := subject.children[1]^.f76.no_modify;
+      solution^.f76.serialize := subject.children[1]^.f76.serialize;
+      solution^.f76.shift := subject.children[1]^.f76.shift;
+      solution^.f76.b80 := subject.children[1]^.f76.b80;
+      solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
+      solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
+      solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
+      t4 := subject.children[1]^.ip_reg_max;
+      if t4 = subject.children[2]^.ip_reg_max then begin
+        solution^.ip_reg_max := t4 + 1;
+      end else begin
+        if t4 <= subject.children[2]^.ip_reg_max then begin
+          t5 := subject.children[2]^.ip_reg_max;
+        end else begin
+          t5 := t4;
+        end;
+        solution^.ip_reg_max := t5;
+      end;
+      solution^.ip_reg_result := 0;
+      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
+      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
+      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
+      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
+      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
+      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
+      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+      p1_already_ptr_t(solution)^.already_address_mode := true;
+      work := solution;
+      result := solution;
     end;
   end;
 end;

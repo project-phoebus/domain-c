@@ -283,8 +283,58 @@ transform 257  ip_reg <- add_top | sub_top ($1: ip_reg_scaled, $2: ip_reg)
 end;
 
 transform 258  ip_reg_field <- add_top | sub_top ($1: ip_reg_field, $2: ip_reg_field)
-  { not lifted: skeleton: no trace where the body begins }
-  pass_1 image 16#10AE46 residue;
+  pass_1 image 16#10AE46 begin
+    temp t1: boolean;
+    temp t2: boolean;
+    temp t3: boolean;
+    temp t4: boolean;
+    temp t5: boolean;
+    temp t6: boolean;
+    temp t8: integer32;
+    temp t9: integer;
+    temp t10: integer;
+    t1 <- verify_bits($2.bits_known, $2.bits_trusted, 0, $2.bit_position_of_lsb, 0);
+    t2 <- verify_bits($1.bits_known, $1.bits_trusted, $1.bit_position_of_lsb - 1, 1, 0);
+    t3 <- verify_bits($2.bits_known, $2.bits_trusted, $2.bit_position_of_lsb - 1, 1, 0);
+    t4 <- verify_bits($1.bits_known, $1.bits_trusted, 0, $1.bit_position_of_lsb, 0);
+    t5 <- verify_bits($2.bits_known, $2.bits_trusted, 0, $2.bit_position_of_lsb, 0);
+    t6 <- verify_bits($2.bits_known, $2.bits_trusted, $2.bit_position_of_lsb - 1, 1, 1);
+    condition not (subject.il.b30 & 128 <> 0 or not t1 and (not t5 and (not t4 and (not t3 or (not t2 or subject.il.w36 <> 1)))) and (not t6 or not verify_bits($1.bits_known, $1.bits_trusted, $1.bit_position_of_lsb - 1, 1, 0) or subject.il.w36 <> 2) or ($1.field_precision <> $2.field_precision or $1.field_precision < subject.inherited_attributes.required_precision));
+    cycle_guard already_ip_reg_field;
+    t8 <- abs($1.bit_position_of_lsb - $2.bit_position_of_lsb);
+    result.l352 <- t8;
+    if $1.bit_position_of_lsb = $2.bit_position_of_lsb then
+      result.c136 <- 1;
+    elsif $2.bit_position_of_lsb - $1.bit_position_of_lsb <= 0 or $2.bit_position_of_lsb - $1.bit_position_of_lsb > 3 then
+      if $1.bit_position_of_lsb u> $2.bit_position_of_lsb then
+        result.c136 <- 3;
+      else
+        result.c136 <- 4;
+      end;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- words(0, 0, 4, 4)[result.c136] + $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.bit_position_of_lsb <- $2.bit_position_of_lsb;
+    result.bits_known <- bits_known_function(subject.il_kind, $1.bits_known, $2.bits_known);
+    result.bits_trusted <- bits_trusted_function(subject.il_kind, $1.bits_trusted, $2.bits_trusted);
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    result.field_precision <- $2.field_precision;
+    result.field_requires_sign_extend <- $1.field_requires_sign_extend and $2.field_requires_sign_extend;
+    t9 <- $1.ip_reg_max;
+    if t9 = $2.ip_reg_max then
+      result.ip_reg_max <- t9 + 1;
+    else
+      if t9 u<= $2.ip_reg_max then
+        t10 <- $2.ip_reg_max;
+      else
+        t10 <- t9;
+      end;
+      result.ip_reg_max <- t10;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1A2498 begin
     temp t1: solution;
     temp t2: solution;
@@ -306,8 +356,58 @@ transform 258  ip_reg_field <- add_top | sub_top ($1: ip_reg_field, $2: ip_reg_f
 end;
 
 transform 259  ip_reg_field <- add_top | sub_top ($1: ip_reg_field, $2: ip_reg_field)
-  { not lifted: skeleton: no trace where the body begins }
-  pass_1 image 16#10B278 residue;
+  pass_1 image 16#10B278 begin
+    temp t1: boolean;
+    temp t2: boolean;
+    temp t3: boolean;
+    temp t4: boolean;
+    temp t5: boolean;
+    temp t6: boolean;
+    temp t8: integer32;
+    temp t9: integer;
+    temp t10: integer;
+    t1 <- verify_bits($2.bits_known, $2.bits_trusted, 0, $2.bit_position_of_lsb, 0);
+    t2 <- verify_bits($1.bits_known, $1.bits_trusted, $1.bit_position_of_lsb - 1, 1, 0);
+    t3 <- verify_bits($2.bits_known, $2.bits_trusted, $2.bit_position_of_lsb - 1, 1, 0);
+    t4 <- verify_bits($1.bits_known, $1.bits_trusted, 0, $1.bit_position_of_lsb, 0);
+    t5 <- verify_bits($2.bits_known, $2.bits_trusted, 0, $2.bit_position_of_lsb, 0);
+    t6 <- verify_bits($2.bits_known, $2.bits_trusted, $2.bit_position_of_lsb - 1, 1, 1);
+    condition not (subject.il.b30 & 128 <> 0 or $1.bit_position_of_lsb = $2.bit_position_of_lsb or not t1 and (not t5 and (not t4 and (not t3 or (not t2 or subject.il.w36 <> 1)))) and (not t6 or not verify_bits($1.bits_known, $1.bits_trusted, $1.bit_position_of_lsb - 1, 1, 0) or subject.il.w36 <> 2) or ($1.field_precision <> $2.field_precision or $1.field_precision < subject.inherited_attributes.required_precision));
+    cycle_guard already_ip_reg_field;
+    t8 <- abs($1.bit_position_of_lsb - $2.bit_position_of_lsb);
+    result.l352 <- t8;
+    if $1.bit_position_of_lsb = $2.bit_position_of_lsb then
+      result.c136 <- 1;
+    elsif $1.bit_position_of_lsb - $2.bit_position_of_lsb <= 0 or $1.bit_position_of_lsb - $2.bit_position_of_lsb > 3 then
+      if $2.bit_position_of_lsb u> $1.bit_position_of_lsb then
+        result.c136 <- 3;
+      else
+        result.c136 <- 4;
+      end;
+    else
+      result.c136 <- 2;
+    end;
+    result.code_bytes <- words(0, 0, 4, 4)[result.c136] + $1.code_bytes + $2.code_bytes + 4;
+    sum memory_references, delay of $1, $2;
+    result.bit_position_of_lsb <- $1.bit_position_of_lsb;
+    result.bits_known <- bits_known_function(subject.il_kind, $1.bits_known, $2.bits_known);
+    result.bits_trusted <- bits_trusted_function(subject.il_kind, $1.bits_trusted, $2.bits_trusted);
+    result.evaluation_order <- evaluation_order_function(subject.il_kind, $1.ip_reg_max, $2.ip_reg_max, legal_evaluation_orders($1, $2));
+    result.field_precision <- $1.field_precision;
+    result.field_requires_sign_extend <- $1.field_requires_sign_extend and $2.field_requires_sign_extend;
+    t9 <- $1.ip_reg_max;
+    if t9 = $2.ip_reg_max then
+      result.ip_reg_max <- t9 + 1;
+    else
+      if t9 u<= $2.ip_reg_max then
+        t10 <- $2.ip_reg_max;
+      else
+        t10 <- t9;
+      end;
+      result.ip_reg_max <- t10;
+    end;
+    result.ip_reg_result <- 1;
+  end;
   pass_2 image 16#1A2596 begin
     temp t1: solution;
     temp t2: solution;
@@ -3366,14 +3466,12 @@ transform 302  fp_reg <- unsigned_div_top ($1: [fp_reg, ip_reg], $2: [fp_reg, ip
           t6 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
         else
           result.c138 <- 3;
-          t6 <- t5;
         end;
         t7 <- t6;
       end;
       t8 <- t7;
     else
       result.c137 <- 2;
-      t8 <- t5;
     end;
     if $2.kind = 11 then
       result.c141 <- 1;
@@ -3926,14 +4024,12 @@ transform 305  fp_reg <- unsigned_mod_top ($1: [fp_reg, ip_reg], $2: [fp_reg, ip
           t6 <- verify_bits($1.bits_known, $1.bits_trusted, 16, 16, 0);
         else
           result.c138 <- 3;
-          t6 <- t5;
         end;
         t7 <- t6;
       end;
       t8 <- t7;
     else
       result.c137 <- 2;
-      t8 <- t5;
     end;
     if $2.kind = 11 then
       result.c141 <- 1;

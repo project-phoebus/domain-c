@@ -1492,25 +1492,26 @@ end;
 
 transform 448  address_mode <- align_top ($1: address_mode)
   pass_1 image 16#124BD8 begin
-    temp t1: boolean;
-    temp t3: pointer;
+    temp t1: integer;
+    temp t2: boolean;
     temp t4: pointer;
-    temp t5: integer32;
+    temp t5: pointer;
     temp t6: integer32;
-    condition bits_to_alignment($1.bits_known, $1.bits_trusted) < subject.il.w26;
-    t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $1.uses_the_displacement) and not $1.has_a_symbolic_displacement or not $1.is_physical and not $1.is_atomic) or $1.kind <> 5;
+    temp t7: integer32;
+    t1 <- bits_to_alignment($1.bits_known, $1.bits_trusted);
+    t2 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
+    condition not (t1 >= subject.il.w26 or (not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t2 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5));
     cycle_guard already_address_mode;
-    t3 <- make_expression_temporary(122, $1.inherited_attributes.fetch_precision);
-    side_effect_set_var_$address_exposed(t3);
-    t4 <- t3;
-    result.l356 <- t4;
-    result.l352 <- address_mode_for_expression_temporary(t4, $1.inherited_attributes.fetch_precision, 0, readonly_l2728[subject.il.w26]);
+    t4 <- make_expression_temporary(122, $1.inherited_attributes.fetch_precision);
+    side_effect_set_var_$address_exposed(t4);
+    t5 <- t4;
+    result.l356 <- t5;
+    result.l352 <- address_mode_for_expression_temporary(t5, $1.inherited_attributes.fetch_precision, 0, readonly_l2728[subject.il.w26]);
     result.l360 <- $1.inherited_attributes.fetch_precision div 8;
     result.l364 <- nil;
-    t5 <- make_bit_mask_1(16, 0);
-    result.l368 <- nil;
     t6 <- make_bit_mask_1(16, 0);
+    result.l368 <- nil;
+    t7 <- make_bit_mask_1(16, 0);
     if $1.inherited_attributes.fetch_precision <= 32 then
       result.c136 <- 1;
       if $1.inherited_attributes.fetch_precision = 32 then
@@ -2175,7 +2176,7 @@ transform 450  void <- bit_field_assign ($1: address_mode, $2: literal_32_bits, 
   pass_1 image 16#125BC4 begin
     temp t1: boolean;
     temp t2: boolean;
-    temp t4: integer32;
+    temp t3: boolean;
     temp t5: integer32;
     temp t6: integer32;
     temp t7: integer32;
@@ -2195,10 +2196,11 @@ transform 450  void <- bit_field_assign ($1: address_mode, $2: literal_32_bits, 
     temp t21: integer32;
     temp t22: integer32;
     temp t23: integer32;
+    temp t24: integer32;
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) and ((t1 or not $1.uses_the_displacement) and not $1.has_a_symbolic_displacement or not $1.is_physical and not $1.is_atomic) or $1.kind <> 5;
-    t2 <- lir_$can_encode_as_immediate_postincrement($3.literal_32_bits_value, opc$loadl);
-    condition lir_$can_encode_as_immediate_operand($3.literal_32_bits_value, opc$loadl, 1) and ((t2 or not $3.uses_the_displacement) and not $3.has_a_symbolic_displacement or not $3.is_physical and not $3.is_atomic) or $3.kind <> 5;
+    t2 <- lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1);
+    t3 <- lir_$can_encode_as_immediate_postincrement($3.literal_32_bits_value, opc$loadl);
+    condition not ((not t2 or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or (not lir_$can_encode_as_immediate_operand($3.literal_32_bits_value, opc$loadl, 1) or (not t3 and $3.uses_the_displacement or $3.has_a_symbolic_displacement) and ($3.is_physical or $3.is_atomic)) and ($3.kind = 5));
     result.l352 <- $5.literal_32_bits_value;
     result.l356 <- arshft($2.literal_32_bits_value, 3);
     result.l360 <- (arshft($2.literal_32_bits_value + result.l352 - 1, 3) - result.l356 + 1) * 8;
@@ -2207,28 +2209,28 @@ transform 450  void <- bit_field_assign ($1: address_mode, $2: literal_32_bits, 
     result.l372 <- (arshft($4.literal_32_bits_value + result.l352 - 1, 3) - result.l368 + 1) * 8;
     result.l376 <- -($4.literal_32_bits_value & 7) + result.l372 - result.l352;
     result.l380 <- nil;
-    t4 <- make_bit_mask_1(8, 0);
-    t5 <- make_bit_mask_1(16, 0);
-    t6 <- make_bit_mask_1(24, 0);
-    t7 <- make_bit_mask_1(8, 0);
-    t8 <- make_bit_mask_1(16, 0);
-    t9 <- make_bit_mask_1(8, 0);
-    t10 <- make_bit_mask_1(result.l352, 0);
+    t5 <- make_bit_mask_1(8, 0);
+    t6 <- make_bit_mask_1(16, 0);
+    t7 <- make_bit_mask_1(24, 0);
+    t8 <- make_bit_mask_1(8, 0);
+    t9 <- make_bit_mask_1(16, 0);
+    t10 <- make_bit_mask_1(8, 0);
+    t11 <- make_bit_mask_1(result.l352, 0);
     result.l384 <- nil;
-    t11 <- make_bit_mask_1(8, 0);
-    t12 <- make_bit_mask_1(16, 0);
-    t13 <- make_bit_mask_1(24, 0);
-    t14 <- make_bit_mask_1(8, 0);
-    t15 <- make_bit_mask_1(16, 0);
-    t16 <- make_bit_mask_1(8, 0);
-    t17 <- make_bit_mask_1(result.l352, 0);
+    t12 <- make_bit_mask_1(8, 0);
+    t13 <- make_bit_mask_1(16, 0);
+    t14 <- make_bit_mask_1(24, 0);
+    t15 <- make_bit_mask_1(8, 0);
+    t16 <- make_bit_mask_1(16, 0);
+    t17 <- make_bit_mask_1(8, 0);
+    t18 <- make_bit_mask_1(result.l352, 0);
     result.l388 <- nil;
-    t18 <- make_bit_mask_1(8, 0);
     t19 <- make_bit_mask_1(8, 0);
     t20 <- make_bit_mask_1(8, 0);
     t21 <- make_bit_mask_1(8, 0);
     t22 <- make_bit_mask_1(8, 0);
     t23 <- make_bit_mask_1(8, 0);
+    t24 <- make_bit_mask_1(8, 0);
     if result.l372 = 32 then
       result.c136 <- 1;
       if not lir_$can_encode_as_immediate_operand($3.literal_32_bits_value + result.l368 + 3, opc$loadl, 1) and not $3.has_a_symbolic_displacement or $3.uses_the_index_register then

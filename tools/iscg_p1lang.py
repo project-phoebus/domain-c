@@ -347,6 +347,8 @@ def fmt_clause(addr, c, why=None):
         words.append('rewrite')
     if c.hand:
         words.append('hand')
+    if c.flags.get('dropped'):
+        words.append('dropped')
     lines[0] = '  %s begin' % ' '.join(words)
     return lines
 
@@ -618,6 +620,10 @@ class Emitter(L.Emitter):
         return super().select(text, cls, s)
 
     def expr1(self, e):
+        if e[0] == 'num' and e[1] < 0:
+            # a negative number is an operand of & and the others too
+            t, c = super().expr1(e)
+            return '(%s)' % t, c
         if e[0] == 'index' and e[1] == 'lir_4090':
             return 'lir_4090[%s]' % self.expr(e[2]), 'lr'
         if e[0] == 'index' and re.match(r'readonly_l\d+$', e[1]):
@@ -787,3 +793,20 @@ def _coerce(self, text, cls, want):
 
 
 Emitter.coerce = _coerce
+
+
+def paths_in(s):
+    """The paths a statement reads or sets (its expressions')."""
+    out = []
+
+    def walk(e):
+        if isinstance(e, tuple):
+            if e and e[0] == 'path':
+                out.append(e)
+            for x in e[1:]:
+                walk(x)
+        elif isinstance(e, list):
+            for x in e:
+                walk(x)
+    walk(s)
+    return out

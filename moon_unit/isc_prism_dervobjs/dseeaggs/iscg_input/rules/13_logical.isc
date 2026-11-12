@@ -602,11 +602,10 @@ transform 339  ip_reg_field <- or_top ($1: [ip_reg, ip_reg_field], $2: literal_3
     temp t8: integer32;
     temp t9: integer;
     temp t10: integer;
-    condition $1.is_destroyable;
     t1 <- available_precision_function($1);
     t2 <- validate_shift_count(32 - t1);
     t3 <- validate_shift_count($1.bit_position_of_lsb);
-    condition is_sequence_of_ones(lshft($2.literal_32_bits_value & rshft(-1, t2), t3));
+    condition not (not $1.is_destroyable or not is_sequence_of_ones(lshft($2.literal_32_bits_value & rshft(-1, t2), t3)));
     cycle_guard already_ip_reg_field;
     t5 <- available_precision_function($1);
     t6 <- validate_shift_count(32 - t5);
