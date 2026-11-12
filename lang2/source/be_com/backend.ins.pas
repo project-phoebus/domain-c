@@ -220,7 +220,10 @@ type
     read); +2 bits 5..4 a count sem_utils subtracts; +3 bits 4..0 the
     kind (operand$t).  link (+4) the operand it is tied to (the
     definition a use reads: utils_ins_$operands_instruction of it); +8
-    the immediate value, or a register operand's lifetime segment. }
+    the immediate value, or a register operand's lifetime segment.
+    batch A (fga): an immediate's, a bind-time immediate's and an XSB
+    displacement's +4 (link) points to its node (a constant or symbol);
+    a flow graph edge operand's +8 is the edge. }
   opnd_hdr_t = packed record
     num: 0..255;                        { +0 }
     spare_1: boolean;                   { +1 .7 (rrp$'s elements 7..0) }
@@ -272,7 +275,11 @@ type
     b0_1: boolean;
     b0_0: boolean;
     nopnds: 0..255;                     { +1 }
-    b2_7, b2_6, b2_5, b2_4, b2_3, b2_2, b2_1, b2_0: boolean;   { +2 }
+    b2_7, b2_6, b2_5, b2_4, b2_3, b2_2, b2_1, b2_0: boolean;   { +2
+                                          (b2_6: df_utils marks an
+                                          instruction the global walk
+                                          reached, fga and hal one that
+                                          must stay) }
     width: 0..255;                      { +3 }
   end;
   instr_t = record
@@ -280,12 +287,17 @@ type
     next: instr_ptr_t;                  { +4 }
     prev: instr_ptr_t;                  { +8 }
     bb: bb_ptr_t;                       { +12 }
-    l16: integer32;                     { +16 }
+    l16: integer32;                     { +16: a walk's mark (tr_utils;
+                                          df_utils: queued in this walk) }
     opc: opc$w_t;                       { +20 }
     w22: integer;                       { +22 }
-    l24: integer32;                     { +24 }
+    l24: integer32;                     { +24 (df_utils: the next in its
+                                          work queue, the last pointing
+                                          to itself) }
     l28: integer32;                     { +28: source position }
-    l32: integer32;                     { +32: source position }
+    l32: integer32;                     { +32: source position (df_utils,
+                                          fga: the next on lir_main_c44's
+                                          chain) }
     l36: integer32;                     { +36 }
     class: char;                        { +40: class$... }
     b41: char;                          { +41 }
@@ -349,11 +361,22 @@ type
     w32: integer;                       { +32 }
     first: instr_ptr_t;                 { +34 }
     last: instr_ptr_t;                  { +38 }
-    space42: array [42..53] of char;    { +42 }
+    space42: array [42..45] of char;    { +42 }
+    l46: bb_ptr_t;                      { +46: its first child in the
+                                          dominator tree (hal; batch A) }
+    l50: bb_ptr_t;                      { +50: its next sibling there
+                                          (hal; batch A) }
     l54: bb_ptr_t;                      { +54: a list of blocks
                                           utils_$locate_definition
-                                          searches first }
-    space58: array [58..61] of char;    { +58 }
+                                          searches first (hal walks up
+                                          through it from a loop's exit:
+                                          its immediate dominator, most
+                                          likely) }
+    l58: bb_ptr_t;                      { +58: hal's candidates for the
+                                          end of a hammock headed here,
+                                          chained through their l58 (its
+                                          immediate postdominator, most
+                                          likely; batch A) }
     exposed: lts_ptr_t;                 { +62: its exposed segments
                                           (with lir_main_c86 0; chained
                                           at their +16) }
@@ -361,7 +384,11 @@ type
                                           (chained at +20) }
     l70: bb_ptr_t;                      { +70: the head of its interval
                                           (tr_utils' bb_interval) }
-    space74: array [74..81] of char;    { +74 }
+    l74: univ_ptr;                      { +74 (hal: a loop head without
+                                          it gets a tail block; batch A) }
+    l78: bb_ptr_t;                      { +78: a chain hal puts a new
+                                          block on after the block it
+                                          precedes (batch A) }
     l82: bb_ptr_t;                      { +82 (tr_utils: the hammock
                                           head, of a block not one) }
     live_out: bv_ptr_t;                 { +86: the union of the
@@ -375,7 +402,11 @@ type
                                           transparent) or live_gen
                                           (batch C: l94, exposed) }
     l98: fg_edge_ptr_t;                 { +98: an edge (tr_utils: its
-                                          target follows the hammock) }
+                                          target follows the hammock);
+                                          batch A: hal's hammock record
+                                          (hal_hammock_t: head +0, the
+                                          block after it +4, so the
+                                          edge's target is that block) }
     l102: bb_ptr_t;                     { +102: the first block of its
                                           hammock (tr_utils) }
     l106: bb_ptr_t;                     { +106: the next block of the
@@ -385,17 +416,31 @@ type
                                           batch C: l110, written) }
     next114: bb_ptr_t;                  { +114: the order (from the
                                           routine's +72) bv's backward
-                                          propagation walks }
+                                          propagation walks: the block
+                                          before it in code order (hal
+                                          links a new block in before a
+                                          block through next and
+                                          next114) }
     next: bb_ptr_t;                     { +118 }
     avail_in: bv_ptr_t;                 { +122: the predecessors'
                                           avail_out, joined (bv) }
     avail_out: bv_ptr_t;                { +126: (avail_in and
-                                          transparent) or avail_gen }
+                                          transparent) or avail_gen
+                                          (hal keeps the block's
+                                          dominators there while it
+                                          finds hammocks: bit order) }
     avail_gen: bv_ptr_t;                { +130 }
-    space134: array [134..145] of char; { +134 }
+    l134: univ_ptr;                     { +134: segments by block,
+                                          chained at their next, while
+                                          df_utils rebuilds the live
+                                          ranges' lists; fga walks the
+                                          blocks through it (batch A) }
+    space138: array [138..145] of char; { +138 }
     mark146: integer32;                 { +146: a visit mark (utils'
                                           look_for_path, tr_utils;
                                           batch C: l146) }
+    l150: bb_ptr_t;                     { +150: hal's work list (batch
+                                          A) }
   end;
 
   { A flow graph edge (bv, tr_utils; zzzzz's zz_edge_t reads the
@@ -532,7 +577,11 @@ type
     jump's operand 1 has (zzzzz); l192 (+192) passed on by dfa and xtp
     to df_utils_$global_walk. }
   rtn_t = record
-    node: il_$node_ptr_t;               { +0 }
+    node: univ_ptr;                     { +0: an il_$node_ptr_t (batch
+                                          A: univ_ptr, since fga, hal,
+                                          life, sanity, sym and tm_utils
+                                          open this insert without the
+                                          prelude's il.ins.pas) }
     space4: array [4..51] of char;      { +4 }
     lrs: lr_ptr_t;                      { +52 }
     lrs_last: lr_ptr_t;                 { +56: the last live range
@@ -545,12 +594,36 @@ type
                                           bv's backward propagation
                                           walks (chained at +114) }
     bbs: bb_ptr_t;                      { +76 }
-    space80: array [80..87] of char;    { +80 }
+    bb80: bb_ptr_t;                     { +80: a block the memory live
+                                          range is live out of (df_utils:
+                                          batch A) }
+    space84: array [84..87] of char;    { +84 }
     cells: cell_ptr_t;                  { +88 }
     epilogues: cell_ptr_t;              { +92 }
-    space96: array [96..111] of char;   { +96 }
-    l112: lts_ptr_t;                    { +112 }
-    space116: array [116..179] of char; { +116 }
+    return_instr: instr_ptr_t;          { +96: its RETURN (fga's
+                                          messages; batch A) }
+    ap_lr: lr_ptr_t;                    { +100: the argument pointer's
+                                          live range, the RETURN's
+                                          operand 3 (fga); df_utils makes
+                                          it complex for every walk
+                                          (batch A) }
+    space104: array [104..107] of char; { +104 }
+    lr108: lr_ptr_t;                    { +108: a live range df_utils
+                                          always makes complex and never
+                                          drops (batch A) }
+    l112: lts_ptr_t;                    { +112: zzzzz compares a
+                                          returning jump's operand 1
+                                          segment with it, but df_utils
+                                          makes it complex and compares
+                                          live ranges with it: a live
+                                          range (cast there) }
+    space116: array [116..139] of char; { +116 }
+    lr140: lr_ptr_t;                    { +140: a live range df_utils
+                                          always makes complex (batch A) }
+    memory_lr: lr_ptr_t;                { +144: the memory live range
+                                          (df_utils: "Memory LR"; batch
+                                          A) }
+    space148: array [148..179] of char; { +148 }
     marks: integer32;                   { +180: the walks' marks and
                                           serial numbers, counted up
                                           (utils, tr_utils_$mark_dependents;
@@ -560,7 +633,22 @@ type
     l192: integer32;                    { +192: its complex live
                                           ranges, the last complex id
                                           given (bv) }
-    space196: array [196..227] of char; { +196 }
+    space196: array [196..199] of char; { +196 }
+    l200: integer32;                    { +200: the number of the last
+                                          live range life splits
+                                          (batch A) }
+    space204: array [204..225] of char; { +204 }
+    f226: packed record                 { +226 (batch A: fga) }
+      b226_7, b226_6, b226_5, b226_4, b226_3: boolean;
+      b226_2: boolean;                  { .2: sets b226_0 (fga) }
+      b226_1: boolean;
+      b226_0: boolean;                  { .0: the AP read may be taken
+                                          out of the RETURN (fga) }
+      b227_7: boolean;                  { +227 }
+      b227_6: boolean;                  { .6: some block may be resumed
+                                          asynchronously (fga) }
+      b227_5, b227_4, b227_3, b227_2, b227_1, b227_0: boolean;
+      end;
     f228: packed record                 { +228 }
       b228_7, b228_6, b228_5, b228_4, b228_3: boolean;
       b228_2: boolean;                  { .2 (tr_utils) }
@@ -1168,17 +1256,20 @@ procedure df_utils_$end_compilation; extern;
   fg_utils fga iv mmt trans xtp.  Frame 8:al; 12:l; 16:w; 18:l. }
 procedure df_utils_$global_walk(
     rtn: rtn_ptr_t;
-    p2: integer32;
-    p3: integer;
+    nlrs: integer32;
+    how: integer;
     level: integer32); options(val_param); extern;
 
 { DF_UTILS_$GLOBAL_WALK_WITH_ASYNC_PROTECTION - 0x22F070, 0x36 bytes;
-  called from fga.  Frame 8:al; 12:l; 16:w; 18:l. }
+  called from fga.  Frame 8:al; 12:l; 16:w; 18:l.  batch A: both walks
+  named from df_utils' bodies: nlrs the routine's complex live ranges
+  (stored at its +192), how lir_main_c86's next value (1: the segment
+  lists by live range), level stored and not read. }
 procedure df_utils_$global_walk_with_async_protection(
-    p1: univ_ptr;
-    p2: integer32;
-    p3: integer;
-    p4: integer32); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    nlrs: integer32;
+    how: integer;
+    level: integer32); options(val_param); extern;
 
 { dfa.pas (cc.a88k). }
 
@@ -1302,11 +1393,12 @@ procedure fg_utils_$drop_this_block(
     p2: univ_ptr); options(val_param); extern;
 
 { FG_UTILS_$FORWARD_THIS_BLOCK - 0x234C3C, 0x3C8 bytes; called from fga
-  post.  Frame 8:l; 12:al; 16:al. }
+  post.  Frame 8:l; 12:al; 16:al (batch A: from fga's call, a block
+  whose one instruction is a jump, and the jump). }
 procedure fg_utils_$forward_this_block(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    bb: bb_ptr_t;
+    jump: instr_ptr_t); options(val_param); extern;
 
 { FG_UTILS_$COMPUTE_DFS_LISTS - 0x2354E0, 0xA2 bytes; called from dfa fga.
   Frame 8:al; 12:l; 16:b. }
@@ -1321,11 +1413,14 @@ procedure fg_utils_$intervals(
     rtn: rtn_ptr_t); options(val_param); extern;
 
 { FG_UTILS_$SEPARATE_LOOP_HEADER_EDGES - 0x235822, 0x8E bytes; called from
-  hal oli.  Frame 8:l; 12:l; 16:bw.  Result: A0 (callers: A04). }
+  hal oli.  Frame 8:l; 12:l; 16:bw.  Result: A0 (callers: A04).  batch
+  A: from hal's calls, the block whose edges in are separated, the
+  loop's head, a flag (false from guarantee_header, true from
+  hal_$insert_loop_tails); the edges taken off, chained at next_pred. }
 function fg_utils_$separate_loop_header_edges(
-    p1: integer32;
-    p2: integer32;
-    p3: integer): univ_ptr; options(val_param); extern;
+    bb: bb_ptr_t;
+    head: bb_ptr_t;
+    p3: boolean): fg_edge_ptr_t; options(val_param); extern;
 
 { FG_UTILS_$MAKE_LOOPS_UNCONDITIONAL - 0x235F04, 0x30 bytes; called from
   dfa.  Frame 8:a. }
@@ -2101,7 +2196,7 @@ function ra_utils_$spill_pass_through_lrs(
 { LIR_UTILS_$REPAIR_LTS_PROPERTIES - 0x273C46, 0x24 bytes; called from
   com.  Frame 8:al. }
 procedure lir_utils_$repair_lts_properties(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { LIR_UTILS_$SANITY_CHECK - 0x273C6A, 0x24 bytes; called from com dfa fga
   hal iv life mmt oli sched trans xtp.  Frame 8:al. }

@@ -1421,3 +1421,39 @@ revisited.
    classes); mmt.pas reads them through a view (mmt_call_info_t) until
    call_conv.ins.pas declares the record.
 
+172. Translator PA2, backend.ins.pas rtn_t +112: zzzzz compares a
+   returning jump's operand 1 segment with it (`cmpa.l (112,A0),A2'
+   with the operand's +8), but df_utils and life pass it to
+   bv_$make_live_range_complex and compare live ranges with it, as
+   with the routine's +100 (the argument pointer's live range, fga's
+   messages), +108, +140 and +144 (the memory live range).  Kept as
+   l112: lts_ptr_t (cast to lr_ptr_t in df_utils and life) so zzzzz is
+   unchanged.  Is it a live range (the return address's, most likely),
+   and zzzzz's comparison a slip of the original or a reading of
+   operand +8 after register allocation?
+173. Translator PA2, fga.pas: conditionally_asynchronous tries the
+   identifier SETJMP (upper case) unless cargs +0x288 bit 3 is set
+   (cargs.ins.pas: flags_286's element 0, -MGBL by perfsummary's
+   printout).  An upper-case setjmp seems tied to case folding rather
+   than to -MGBL; is flags_286's element 0 named right?
+174. Translator PA2: fga, hal, life, sanity, sym and tm_utils open
+   backend.ins.pas without the lang prelude (their .blocks include
+   lists), yet fga reads il.pas's +0x180 and cargs' options and calls
+   idntk, and backend.ins.pas used il_$node_ptr_t (now univ_ptr).  fga
+   declares the three through views of its own (il_180: extern
+   fga_node_ptr_t, cargs_$options: extern array of char, idntk with a
+   univ string).  Apollo's units must have seen them through an insert
+   they open (be_prism/target.ins.pas or at_base.ins.pas, both stubs
+   here) or through declarations in the unit; should a small insert of
+   the prelude's cells for the back end be made instead?
+175. Translator PA2, fga_$process_routine: the instructions chained
+   from lir_main_c44 at their +32 are unchained (+32 cleared) but
+   lir_main_c44 itself is left pointing to the first; df_utils's async
+   walk (do_global_walk) clears it.  Kept as the image has it; a slip?
+176. Translator PA2, backend.ins.pas bb_t +110: batch A named it
+   transparent (bv: all ones initially, "not written in the block"),
+   batch C written; df_utils's process_marked_instructions sets a live
+   range's bit there for each write it reaches (bv_$set), which fits
+   batch C's reading for the dfa vectors (bv_$create_dfa_bit_vectors)
+   and batch A's for the availability ones.  The field keeps its name;
+   the two vector sets may lay out +86..+130 differently.

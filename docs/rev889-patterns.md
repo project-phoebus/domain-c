@@ -837,3 +837,23 @@ cc.m68k unless marked.
     emitted (fill_in_ltss's like unlinking, 0x257342, does `tst.l').
     dpc tests again.
 
+
+## The flow graph phases (translator PA2, df_utils, fga, hal, life, sanity; cc.a88k)
+
+112. **An `and' with a mask that clears only low-byte bits done as
+    `andi.b'.**  hal_$find_hammocks (0x238818) rounds a block count up
+    to 32 bits as `addi.l #31,D2; andi.b #0xE0,D2; lsr.l #3,D2': the
+    longword's `and' with not 31 narrowed to its low byte, since the
+    mask's other bytes are all ones.  dpc does `andi.l'.
+113. **Back-to-back identifier constants without a terminator.**  fga's
+    conditionally_asynchronous passes 'setjmp' and 'SETJMP' to idntk
+    (length 6 each) from 0x23807E and 0x238084: twelve bytes with no
+    pad or NUL, so the next routine's `link' (0x4E56, "NV") follows the
+    second; the strings of a routine are laid out at their exact
+    lengths when they are not messages ending in %$.
+114. **A routine's whole failure path as one branch target that also
+    finishes the work.**  conditionally_asynchronous (0x237CC6) branches
+    from some twenty tests to 0x23806C, a loop marking the block's
+    instructions not examined yet, and returns its flag from there:
+    written as `goto 99' to a label before that loop (a flag-structured
+    version compiled 0x140 bytes longer).
