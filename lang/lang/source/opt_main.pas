@@ -161,18 +161,6 @@
   Not known from the original: the names of the module's own cells
   (om_), of the parameters and the locals.
 }
-
-{ TODO(pascal) g_opt and its nested routines are not written
-
-  g_opt (0x0E0D46, cc.a88k 0x2ADF36) and the routines nested in it,
-  which read its frame through A1: find_eval 0x0DF458,
-  count_interior_nodes_for_postorder_node_list 0x0DF4E4 (with
-  crush_undesired_extend 0x0DF48E nested in it),
-  count_for_postorder_node_list 0x0DFCE6, note_variable_use 0x0DFF7C,
-  add_interior_node_to_postorder_node_list 0x0DFFE2,
-  make_new_postorder_node_list 0x0E04B0 and recompute_node_lists
-  0x0E0CD0.  g_opt is declared by globals_from_backend.ins.pas and not
-  defined here until then. }
 module opt_main;
 
 %include 'lang/lang/source/globals.ins.pas';
@@ -247,8 +235,9 @@ var
   om_dfs_block_tab: extern g_opt_nums_ptr_t;       { +0x3C }
   om_stmt_num: extern integer;          { +0x58: the number of the
                                           statement at hand }
-  om_5c: extern g_opt_num_t;            { +0x5C: set from g_opt's
-                                          (-36,A6) with opt_nblocks }
+  om_max_nodes: extern g_opt_num_t;     { +0x5C: the most nodes of a
+                                          routine (make_new_postorder_
+                                          node_list) }
   om_nvars: extern integer;             { +0x64: the routine's variables
                                           (il_utl_$count_vars) }
   om_nstmts: extern g_opt_num_t;        { +0x66: the top-level statements
@@ -291,7 +280,7 @@ define
   om_live_out_tab, om_not_killed_tab, om_used_tab, om_dfs_number_tab,
   om_dfs_block_tab, opt_live_out, opt_not_killed, opt_used,
   opt_var_types, opt_dfs_number, opt_dfs_block, om_stmt_num,
-  opt_nblocks, om_5c, opt_region, opt_max_stmts, opt_max_vars,
+  opt_nblocks, om_max_nodes, opt_region, opt_max_stmts, opt_max_vars,
   om_nvars, om_nstmts, opt_last_block, opt_first_block,
   opt_track_lines, om_unused_6e;
   om_class_bytes := [0, 2, 4, 4, 8, 8, 1, 4, 4, 0, 0, 0, 0, 0, 0, 0];
@@ -299,7 +288,7 @@ define
   om_block_num, opt_dom, opt_4009c;
   opt_main_$ensure_var_set, check_dominators, reviseuses,
   opt_main_$symidx_of_varn_or_fsym, opt_main_$var_is_param_of_routine,
-  opt_main_$is_fortran_asf, fixup_blocks, opt_main_$initialize;
+  opt_main_$is_fortran_asf, fixup_blocks, g_opt, opt_main_$initialize;
 
 { assert_optimizer_is_enabled - the optimizer runs: target_properties'
   +0x7F, else not -DBA (cargs db 3) and -OPT's level above 2.
@@ -3640,6 +3629,1140 @@ begin
              (s^.next^.x48^.kind <> 172) then
             return;
   end;
+end;
+
+{ g_opt - the global optimizer (runbackend's optimize_and_code; the
+  heading in globals_from_backend.ins.pas): unless the optimizer is off
+  or the IL is Ada's: the assignments merged, products distributed
+  (opt_on 21), unreachable code removed and the blocks counted, the
+  statements numbered, the postorder node list and the blocks made,
+  their relationships, then for each routine (from its entry, a region
+  statement marked entry, to its end, marked b42_2): the variables'
+  types, the depth-first order, the dominators, the loops, reaching
+  definitions (opt_on 10), strength reduction (20), the indexed
+  references remade, common subexpressions (9, 15, 16), loop
+  optimization (16, 18), their clean-up, the uses revised, the free
+  registers, live variables (11), constant motion (17), general_opts
+  (8), the register allocator (13); a Fortran statement function only
+  gets the allocator.  -TREE n stops at phase n with the IL listed;
+  the profiler's phases are switched around each.
+
+  0x0E0D46, 0x9FA bytes: A5 loaded; the frame holds the nested
+  routines' shared state (A1 the static link): the statement at hand
+  (-12), the current block (-28), the routine's first block number
+  (-32), the node count (-34), the most nodes and blocks of a routine
+  (-36, -38), the loop index (-48), the routine's blocks (-50), the
+  flags (-52 within an assignment, -54 an abnormal label met, -56 a
+  167 met, -58 the first routine) and the counts of assigned gotos and
+  their labels (-24, -20); `goto' the shared exits (the dump at phases
+  8, 9, 12 returns at once; the others print the IL and clean up). }
+
+procedure g_opt;
+label
+  quit, dump, done;
+var
+  tmp4: il_$node_ptr_t;                 { (-4) }
+  tmp: g_opt_stmt_ptr_t;                { (-8) }
+  cur: g_opt_stmt_ptr_t;                { (-12): the statement at hand }
+  nlabels: integer32;                   { (-20) }
+  ngotos: integer32;                    { (-24) }
+  blk: g_opt_block_ptr_t;               { (-28): the current block }
+  rtn_block: g_opt_num_t;               { (-32) }
+  cnt: g_opt_num_t;                     { (-34): the node count }
+  max_nodes: g_opt_num_t;               { (-36) }
+  max_blocks: g_opt_num_t;              { (-38) }
+  k: g_opt_num_t;                       { (-48) }
+  nblk: g_opt_num_t;                    { (-50) }
+  in_asg: boolean;                      { (-52) }
+  abnormal: boolean;                    { (-54) }
+  entry_block: boolean;                 { (-56) }
+  first_rtn: boolean;                   { (-58) }
+  s: g_opt_stmt_ptr_t;
+  e: g_opt_stmt_ptr_t;
+  r: g_opt_num_t;
+  rb: il_$node_ptr_t;
+
+  { find_eval - the evaluation statement (139) before conditional
+    branch s whose operand is s's condition, nil when the nearest one
+    before s has another.
+
+    0x0DF458, 0x36 bytes: nested, the parent's frame not used; the
+    result in A0. }
+
+  function find_eval(
+      s: g_opt_stmt_ptr_t): g_opt_stmt_ptr_t; options(val_param);
+  var
+    e: g_opt_stmt_ptr_t;
+  begin
+    e := s;
+    repeat
+      e := e^.prev;
+    until (e = nil) or (e^.kind = 139);
+    if e <> nil then
+      if s^.br_cond <> e^.eval_opnd[1] then
+        e := nil;
+    find_eval := e;
+  end;
+
+  { count_interior_nodes_for_postorder_node_list - the nodes of tree t
+    (statement s's) counted into il_126 (an error 17 at 65000), each
+    once (flag 5 marks it; its stmt cleared), their phases (getphase)
+    or-ed into their parents' flags (without 6, 21, ...; flag 1 of a
+    non-26 operator becomes 2): for a call (unless opt_track_lines) the
+    statement starts a block when the routine may return abnormally; a
+    conditional branch on a shared tree (b42_6) gets an evaluation of
+    it before (find_eval's, else a new 139 of the condition, made a
+    143 into 137 or a test (17) built); an assignment to a variable
+    passed by reference to the call gets one too; each argument that is
+    a variable (or a displacement into one, an indexed reference of a
+    Fortran symbol) gets its use and definition statements
+    (add_use_defs_for_call_site, from the last); a word product of two
+    word extensions of the same sign is made a word product (unless
+    target_properties' +0x85), else a longword product's operands lose
+    their extensions (crush_undesired_extend).
+
+    0x0DF4E4, 0x7FC bytes: nested, recursive; the kinds by the set at
+    0x0DC12C, the operators by the set of 0..47 at 0x0DFCE0 ([2, 4..6,
+    11, 15..16, 21, 35, 37]: the operands walked from the last); the
+    evaluation statement 56 bytes from gspace, s's +4..+45 copied
+    (`dbf' of five longword pairs and a word). }
+
+  procedure count_interior_nodes_for_postorder_node_list(
+      t: il_$node_ptr_t;
+      s: g_opt_stmt_ptr_t); options(val_param);
+  var
+    m: g_opt_tree_ptr_t;
+    f: il_$node_ptr_t;
+    x: il_$node_ptr_t;
+    v: il_$node_ptr_t;
+    e: g_opt_stmt_ptr_t;
+    c: il_$node_ptr_t;
+    j: integer;
+    abn: boolean;
+    found: boolean;
+    d: add_node_$desc_t;
+    ops: array [1..1] of il_$node_ptr_t;
+    ph: add_node_$phase_t;
+
+    { crush_undesired_extend - a longword operand t (by address, its
+      size at size, by address) that is a word extension (18) of sign
+      sgn used once becomes the word itself.
+
+      0x0DF48E, 0x56 bytes: nested in count_interior_nodes_for_
+      postorder_node_list, its frame not used. }
+
+    procedure crush_undesired_extend(
+        sgn: boolean;
+        var t: il_$node_ptr_t;
+        var size: integer);
+    var
+      a: g_opt_tree_ptr_t;
+    begin
+      if size = 4 then begin
+        a := g_opt_tree_ptr_t(t);
+        if (a^.kind = 137) and (a^.op = 18) and (a^.uses = 1) and
+           (a^.dflags.signed = sgn) and (a^.w26 = 2) then begin
+          size := 2;
+          t := a^.opnd[1];
+        end;
+      end;
+    end;
+
+  begin
+    if t = nil then
+      return;
+    m := g_opt_tree_ptr_t(t);
+    if t^.kind in [137..138, 143, 145..147, 164, 171, 175, 189, 205] then
+      if 5 in m^.flags then
+        return;
+    if t^.kind in [137..138, 143, 145..147, 164, 171, 175, 189, 205] then begin
+      m^.stmt := 0;
+      m^.flags := m^.flags + [5];
+    end;
+    case t^.kind of
+      143, 137: begin
+        il_126 := il_126 + 1;
+        if assert_is_call_tree(t) then begin
+          f := m^.opnd[1];
+          if not opt_track_lines then begin
+            abn := false;
+            case f^.kind of
+              108, 107:
+                abn := (ord(f^.xc[376]) & 16#20) <> 0;
+              171: begin
+                x := f^.xp[4];
+                if not ((x^.kind = 147) or (x^.kind = 146) or
+                        (x^.kind = 145) or (x^.kind = 137)) then
+                  abn := (ord(x^.xc[376]) & 16#20) <> 0;
+              end;
+              175:
+                abn := (ord(f^.xp[5]^.xc[79]) & 16#20) <> 0;
+              110:
+                abn := f = opt_abnormal_routine;
+              otherwise
+                ;
+            end;
+            if abn then
+              mark_begins_basic_block(s);
+          end;
+          e := s;
+          if (s^.kind = 142) and not opt_track_lines and s^.hdr.b42_6 then begin
+            c := s^.br_cond;
+            found := false;
+            if (c^.kind = 137) and (c^.xw[8] > 1) then begin
+              e := find_eval(s);
+              found := e <> nil;
+            end;
+            if not found then begin
+              e := gspace(56);
+              e^.kind := 139;
+              e^.eval_count := 1;
+              e^.prev := s^.prev;
+              e^.next := s^.next;
+              e^.unused_12 := s^.unused_12;
+              e^.block := s^.block;
+              e^.line := s^.line;
+              e^.vars := s^.vars;
+              e^.cses := s^.cses;
+              e^.regs := s^.regs;
+              e^.vset := s^.vset;
+              e^.hdr := s^.hdr;
+              e^.next := s;
+              e^.prev^.next := e;
+              s^.prev := e;
+              s^.line := spos_$null_position;
+              s^.hdr.first := false;
+              c := s^.br_cond;
+              if c^.kind = 143 then
+                c^.kind := 137
+              else begin
+                d.rlen := 1;
+                if s^.br_sense then
+                  d.w6 := 11
+                else
+                  d.w6 := 7;
+                d.w8 := 0;
+                d.size := 1;
+                d.flags.signed := false;
+                ops[1] := c;
+                c := buildtreenode(17, d, ops, 1);
+                s^.br_cond := c;
+                count_interior_nodes_for_postorder_node_list(c, s);
+              end;
+              e^.eval_opnd[1] := c;
+              c^.xw[8] := c^.xw[8] + 1;
+              il_126 := il_126 + 1;
+            end;
+          end
+          else if (s^.kind = 140) and assert_is_a_variable(s^.asg_lhs) and
+                  (m^.op = 16) then begin
+            found := false;
+            for j := 2 to m^.count - m^.w26 do
+              if m^.opnd[j] = s^.asg_lhs then
+                if paramclass(t, j - 1) in [1, 3, 4] then begin
+                  found := true;
+                  exit;
+                end;
+            if found then begin
+              e := gspace(56);
+              e^.kind := 139;
+              e^.eval_count := 1;
+              e^.prev := s^.prev;
+              e^.next := s^.next;
+              e^.unused_12 := s^.unused_12;
+              e^.block := s^.block;
+              e^.line := s^.line;
+              e^.vars := s^.vars;
+              e^.cses := s^.cses;
+              e^.regs := s^.regs;
+              e^.vset := s^.vset;
+              e^.hdr := s^.hdr;
+              e^.next := s;
+              e^.prev^.next := e;
+              s^.prev := e;
+              s^.line := spos_$null_position;
+              s^.hdr.first := false;
+              e^.eval_opnd[1] := t;
+              m^.uses := m^.uses + 1;
+              il_126 := il_126 + 1;
+            end;
+          end;
+          for j := m^.count downto 2 do begin
+            x := m^.opnd[j];
+            if (x^.kind = 109) or (x^.kind = 146) or (x^.kind = 110) then
+              il_126 := il_126 + 1;
+            x := m^.opnd[j];
+            v := nil;
+            case x^.kind of
+              110, 109:
+                v := x;
+              147:
+                if (x^.xp[6]^.kind = 110) or (x^.xp[6]^.kind = 109) then
+                  v := x^.xp[6];
+              164: begin
+                c := x^.xp[5];
+                if c^.kind = 110 then
+                  v := c
+                else if (c^.kind = 145) and (c^.xp[7]^.kind = 110) then
+                  v := c^.xp[7]
+                else if (c^.kind = 147) and
+                        ((c^.xp[6]^.kind = 110) or (c^.xp[6]^.kind = 109)) then
+                  v := c^.xp[6];
+              end;
+              otherwise
+                ;
+            end;
+            if v <> nil then
+              add_use_defs_for_call_site(e, m, m^.opnd[1], v, j);
+          end;
+        end;
+        if m^.op in [2, 4..6, 11, 15..16, 21, 35, 37] then
+          for j := m^.count downto 1 do begin
+            count_interior_nodes_for_postorder_node_list(m^.opnd[j], s);
+            ph := getphase(m^.opnd[j]);
+            m^.flags := m^.flags + (ph - [21]);
+            if (1 in m^.flags) and (m^.op <> 26) then
+              m^.flags := m^.flags - [1] + [2];
+          end
+        else begin
+          if (target_properties.p_85 < chr(128)) and not opt_track_lines and
+             (m^.op = 3) then begin
+            if (m^.opnd[1]^.kind = 137) and
+               (g_opt_tree_ptr_t(m^.opnd[1])^.op = 18) and (m^.w26 = 4) and
+               (g_opt_tree_ptr_t(m^.opnd[1])^.w26 = 2) and
+               (m^.opnd[2]^.kind = 137) and
+               (g_opt_tree_ptr_t(m^.opnd[2])^.op = 18) and (m^.w28 = 4) and
+               (g_opt_tree_ptr_t(m^.opnd[2])^.w26 = 2) and
+               (g_opt_tree_ptr_t(m^.opnd[1])^.dflags.signed =
+                g_opt_tree_ptr_t(m^.opnd[2])^.dflags.signed) and
+               (m^.dflags.signed <>
+                g_opt_tree_ptr_t(m^.opnd[1])^.dflags.signed) then begin
+              m^.dflags.signed := g_opt_tree_ptr_t(m^.opnd[1])^.dflags.signed;
+              m^.opnd[1] := g_opt_tree_ptr_t(m^.opnd[1])^.opnd[1];
+              m^.opnd[2] := g_opt_tree_ptr_t(m^.opnd[2])^.opnd[1];
+              m^.w26 := 2;
+              m^.w28 := 2;
+            end
+            else if m^.rlen = 4 then begin
+              crush_undesired_extend(m^.dflags.signed, m^.opnd[1], m^.w26);
+              crush_undesired_extend(m^.dflags.signed, m^.opnd[2], m^.w28);
+            end;
+          end;
+          for j := 1 to m^.count do begin
+            count_interior_nodes_for_postorder_node_list(m^.opnd[j], s);
+            ph := getphase(m^.opnd[j]);
+            m^.flags := m^.flags + (ph - [6, 21]);
+            if (1 in m^.flags) and (m^.op <> 26) then
+              m^.flags := m^.flags - [1] + [2];
+          end;
+        end;
+        if assert_is_call_tree(t) then
+          m^.flags := m^.flags - [1..4];
+      end;
+      147, 205: begin
+        count_interior_nodes_for_postorder_node_list(t^.xp[6], s);
+        ph := getphase(t^.xp[6]) + getphase(t^.xp[7]);
+        m^.flags := m^.flags + (ph - [6, 21]);
+        il_126 := il_126 + 1;
+      end;
+      146: begin
+        count_interior_nodes_for_postorder_node_list(t^.xp[6], s);
+        ph := getphase(t^.xp[6]) + getphase(t^.xp[7]);
+        m^.flags := m^.flags + (ph - [6, 8, 17, 21]);
+        if 1 in m^.flags then
+          if not ((t^.xp[6]^.kind = 109) and (t^.xp[6]^.xw[36] = 5)) then
+            m^.flags := m^.flags - [1] + [2];
+        il_126 := il_126 + 1;
+      end;
+      145: begin
+        count_interior_nodes_for_postorder_node_list(t^.xp[6], s);
+        count_interior_nodes_for_postorder_node_list(t^.xp[9], s);
+        ph := getphase(t^.xp[6]) + getphase(t^.xp[9]) + getphase(t^.xp[7]);
+        m^.flags := m^.flags + (ph - [6, 17, 21]);
+        if 20 in getphase(t^.xp[9]) then
+          m^.flags := m^.flags - [20];
+        il_126 := il_126 + 1;
+      end;
+      164: begin
+        count_interior_nodes_for_postorder_node_list(t^.xp[5], s);
+        count_interior_nodes_for_postorder_node_list(t^.xp[6], s);
+        ph := getphase(t^.xp[5]) + getphase(t^.xp[6]);
+        m^.flags := m^.flags + (ph - [6, 21]);
+        il_126 := il_126 + 1;
+      end;
+      175, 171: begin
+        count_interior_nodes_for_postorder_node_list(t^.xp[4], s);
+        ph := getphase(t^.xp[4]);
+        m^.flags := m^.flags + (ph - [6, 21]);
+        il_126 := il_126 + 1;
+      end;
+      189, 190:
+        il_126 := il_126 + 1;
+      otherwise
+        ;
+    end;
+    if il_126 >= 65000 then
+      cgerr_no_source(17, 0);
+  end;
+
+  { count_for_postorder_node_list - il_126 counts the routine's nodes
+    for the postorder list (the statements of interest and their trees,
+    count_interior_nodes_for_postorder_node_list); an evaluation's
+    unused operands dropped first; a conditional branch to the next
+    statement made an evaluation of its condition; branches count
+    their labels' references (+50); a routine's entry clears its
+    depth-first lists and adds the definitions of its statics and
+    parameters (a 167's own count of variables cleared); in Fortran,
+    na counts the non-local branches and nb (once) the labels an
+    assigned goto may reach.  Unless opt_track_lines for the
+    references and definitions.
+
+    0x0DFCE6, 0x296 bytes: nested; a jump table on the kind
+    (139..150); the statement, a temporary and the loop index in the
+    parent's frame. }
+
+  procedure count_for_postorder_node_list(
+      var na: integer32;
+      var nb: integer32);
+  var
+    v: il_$node_ptr_t;
+    rt: g_opt_rtn_ptr_t;
+  begin
+    na := 0;
+    nb := 0;
+    il_126 := 0;
+    cur := g_opt_stmt_ptr_t(il_d4);
+    while cur <> nil do begin
+      if assert_statement_is_interesting_in_postorder_node_list(
+           il_$node_ptr_t(cur)) then
+        il_126 := il_126 + 1;
+      case cur^.kind of
+        140: begin
+          count_interior_nodes_for_postorder_node_list(cur^.asg_rhs, cur);
+          count_interior_nodes_for_postorder_node_list(cur^.asg_lhs, cur);
+          count_interior_nodes_for_postorder_node_list(cur^.asg_x, cur);
+        end;
+        139: begin
+          opt_gen_$prune_eval_operands(cur);
+          for k := 1 to cur^.eval_count do
+            count_interior_nodes_for_postorder_node_list(
+              cur^.eval_opnd[k], cur);
+        end;
+        141:
+          if not opt_track_lines then
+            cur^.br_target^.xw[25] := cur^.br_target^.xw[25] + 1;
+        142:
+          if cur^.br_target = il_$node_ptr_t(cur^.next) then begin
+            tmp4 := cur^.br_cond;
+            cur^.kind := 139;
+            cur^.eval_count := 1;
+            cur^.eval_opnd[1] := tmp4;
+            count_interior_nodes_for_postorder_node_list(tmp4, cur);
+          end
+          else begin
+            count_interior_nodes_for_postorder_node_list(cur^.br_cond, cur);
+            if not opt_track_lines then
+              cur^.br_target^.xw[25] := cur^.br_target^.xw[25] + 1;
+          end;
+        148:
+          if not opt_track_lines then begin
+            rt := g_opt_rtn_ptr_t(cur^.x48);
+            rt^.pre_first := nil;
+            rt^.pre_last := nil;
+            rt^.post_first := nil;
+            rt^.post_last := nil;
+            if cur^.x48^.kind = 167 then
+              entry_block := true;
+            if (cur^.x48^.kind <> 167) and (cur^.x48^.kind <> 172) then begin
+              il_180 := cur^.x48;
+              add_def_for_params_at_routine_entry(cur);
+            end
+            else if cur^.x48^.kind = 167 then begin
+              add_def_for_params_at_routine_entry(cur);
+              cur^.x48^.xw[145] := 0;
+            end;
+          end;
+        150:
+          if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+            if not opt_track_lines then begin
+              na := na + 1;
+              if nb = 0 then begin
+                v := il_180^.xp[4];
+                while v <> nil do begin
+                  if rshft(ord(v^.xc[44]) & 16#F0, 4) = 6 then
+                    if (ord(v^.xc[45]) & 16#40) <> 0 then
+                      if (ord(v^.xc[45]) & 16#10) = 0 then
+                        nb := nb + 1;
+                  v := v^.xp[1];
+                end;
+              end;
+            end;
+        otherwise
+          ;
+      end;
+      if il_126 >= 65000 then
+        cgerr_no_source(17, 0);
+      cur := cur^.next;
+    end;
+  end;
+
+  { note_variable_use - v, a variable of opt_region's table (number
+    n), added to the set s (by address; made when nil).
+
+    0x0DFF7C, 0x66 bytes: nested, the parent's frame not used; the
+    element added through a 32-byte frame set without a range check. }
+
+  procedure note_variable_use(
+      v: il_$node_ptr_t;
+      var s: g_opt_varset_ptr_t); options(val_param);
+  var
+    n: 0..255;
+    one: g_opt_varset_t;
+  begin
+    if assert_is_a_variable(v) then begin
+      n := find_var(v);
+      if n <> 0 then begin
+        opt_main_$ensure_var_set(s);
+        one := [];
+        one := one + [n];
+        s^ := s^ + one;
+      end;
+    end;
+  end;
+
+  { add_interior_node_to_postorder_node_list - tree t's nodes put in
+    il_120 in postorder (each once: flag 5 taken off as it is put in,
+    its owner the statement at hand, its stmt its number there; a use
+    (189) its parent's tree's), the variables they use noted in the
+    statement's set; a call's arguments that are variables get a 179
+    node (12 bytes: the argument's number and the call) before them,
+    the statement marked kills and b42_4; a real tree (register class
+    6, 7, 12, 8) marks it b4; a variable counts in opt_region's table
+    and is the statement's vnum when it is an assignment's
+    destination (in_asg), else a use.
+
+    0x0DFFE2, 0x4CE bytes: nested, recursive; the parent's frame in D5
+    (its node count at -34, its statement at -12, in_asg at -52); the
+    kinds compared in turn; the operators by the set at 0x0DFCE0 (the
+    operands from the last). }
+
+  procedure add_interior_node_to_postorder_node_list(
+      t: il_$node_ptr_t); options(val_param);
+  var
+    m: g_opt_tree_ptr_t;
+    x: il_$node_ptr_t;
+    n: il_$node_ptr_t;
+    e: g_opt_stmt_ptr_t;
+    j: integer;
+    v: integer;
+  begin
+    if t = nil then
+      return;
+    m := g_opt_tree_ptr_t(t);
+    if t^.kind in [137..138, 143, 145..147, 164, 171, 175, 189, 205] then
+      if not (5 in m^.flags) then
+        return;
+    case t^.kind of
+      143, 137: begin
+        e := opt_4009c[om_stmt_num];
+        if (m^.op = 16) or (m^.op = 15) then begin
+          for j := m^.count downto 2 do begin
+            x := m^.opnd[j];
+            if (x^.kind = 109) or (x^.kind = 146) or (x^.kind = 110) then begin
+              n := gspace(12);
+              n^.kind := 179;
+              n^.xw[3] := j;
+              n^.xp[2] := t;
+              new_postorder_node_list_entry(cnt, n);
+              if m^.opnd[j]^.kind = 146 then
+                add_interior_node_to_postorder_node_list(m^.opnd[j]);
+              e^.hdr.kills := true;
+            end
+            else
+              add_interior_node_to_postorder_node_list(x);
+          end;
+          e^.hdr.b42_4 := true;
+          add_interior_node_to_postorder_node_list(m^.opnd[1]);
+        end
+        else begin
+          if (m^.rlen = 6) or (m^.rlen = 7) or (m^.rlen = 12) or
+             (m^.rlen = 8) then
+            e^.hdr.b4 := true;
+          if m^.op in [2, 4..6, 11, 15..16, 21, 35, 37] then
+            for j := m^.count downto 1 do begin
+              add_interior_node_to_postorder_node_list(m^.opnd[j]);
+              note_variable_use(m^.opnd[j], e^.vset);
+            end
+          else
+            for j := 1 to m^.count do begin
+              add_interior_node_to_postorder_node_list(m^.opnd[j]);
+              note_variable_use(m^.opnd[j], e^.vset);
+            end;
+        end;
+        new_postorder_node_list_entry(cnt, t);
+      end;
+      147, 205: begin
+        add_interior_node_to_postorder_node_list(t^.xp[6]);
+        note_variable_use(t^.xp[7], opt_4009c[om_stmt_num]^.vset);
+        new_postorder_node_list_entry(cnt, t);
+      end;
+      146: begin
+        add_interior_node_to_postorder_node_list(t^.xp[6]);
+        new_postorder_node_list_entry(cnt, t);
+      end;
+      145: begin
+        e := opt_4009c[om_stmt_num];
+        add_interior_node_to_postorder_node_list(t^.xp[6]);
+        add_interior_node_to_postorder_node_list(t^.xp[9]);
+        note_variable_use(t^.xp[7], e^.vset);
+        note_variable_use(t^.xp[9], e^.vset);
+        new_postorder_node_list_entry(cnt, t);
+      end;
+      164: begin
+        add_interior_node_to_postorder_node_list(t^.xp[5]);
+        add_interior_node_to_postorder_node_list(t^.xp[6]);
+        new_postorder_node_list_entry(cnt, t);
+      end;
+      175: begin
+        add_interior_node_to_postorder_node_list(t^.xp[4]);
+        new_postorder_node_list_entry(cnt, t);
+      end;
+      171: begin
+        add_interior_node_to_postorder_node_list(t^.xp[4]);
+        x := t^.xp[4];
+        if x^.kind = 146 then
+          if x^.xp[6] <> nil then
+            if x^.xp[6]^.kind = 109 then
+              note_variable_use(x^.xp[6], opt_4009c[om_stmt_num]^.vset);
+        new_postorder_node_list_entry(cnt, t);
+      end;
+      189, 190:
+        new_postorder_node_list_entry(cnt, t);
+      109, 110:
+        if om_nvars > 0 then begin
+          v := find_var(t);
+          if v <> 0 then begin
+            e := opt_4009c[om_stmt_num];
+            opt_4009c[opt_region]^.vars^[v]^.count :=
+              opt_4009c[opt_region]^.vars^[v]^.count + 1;
+            if cur^.kind <> 140 then
+              note_variable_use(t, e^.vset)
+            else if not in_asg then
+              note_variable_use(t, e^.vset)
+            else if cur^.asg_lhs = t then
+              e^.hdr.vnum := v
+            else if (cur^.asg_lhs^.kind = 147) and
+                    (cur^.asg_lhs^.xp[6] = t) then
+              e^.hdr.vnum := v
+            else
+              note_variable_use(t, e^.vset);
+          end;
+        end;
+      otherwise
+        ;
+    end;
+    if t^.kind in [137..138, 143, 145..147, 164, 171, 175, 189, 205] then
+      if 5 in m^.flags then begin
+        m^.flags := m^.flags - [5];
+        m^.owner := opt_4009c[om_stmt_num];
+        if t^.kind = 189 then
+          m^.stmt := t^.xp[5]^.xw[5]
+        else
+          m^.stmt := cnt;
+      end;
+  end;
+
+  { make_new_postorder_node_list - for each top-level statement (its
+    free registers narrowed by reg_save, its region number om_stmt_num,
+    not last): a block start makes a basic block (unless
+    opt_track_lines, which takes the statement's own block): an unused
+    label of kind 11 is unlinked and marked deleted instead (its block
+    start passed to the next statement, or il_124 one less); else
+    om_block_num counts it, the block before gets its successor list
+    (two, more for a Fortran non-local branch: nb), the new block its
+    predecessors (one after linear flow, a label's references, na for
+    a Fortran label reached abnormally) and a label its block (+52).
+    Then the statement's trees are put in il_120
+    (add_interior_node_to_postorder_node_list; an assignment's
+    destination within in_asg), a routine's entry numbers its variables
+    (init_opt_info_for_vars) and starts a run of blocks, its end
+    updates the most statements, blocks and nodes of a routine and
+    marks the region's end (b42_2, last); a statement of interest is
+    put in il_120 (its num); each statement of a routine with variables
+    gets a table of the variables it assigns or uses (copies of
+    opt_region's); the statement before a block start is its block's
+    last.
+
+    0x0E04B0, 0x820 bytes: nested; the parent's frame in A2 (the
+    state listed at g_opt); the successor count in D2 and the
+    predecessor count in D5; the label's word at +41..+42 rewritten
+    as one field (`andi.w #-3; ori.w #256'); its own frame word -36 a
+    temporary of the copy loop. }
+
+  procedure make_new_postorder_node_list(
+      na: integer32;
+      nb: integer32); options(val_param);
+  var
+    nsucc: integer;
+    npred: integer;
+    p: g_opt_stmt_ptr_t;
+    t: g_opt_stmt_ptr_t;
+    x: il_$node_ptr_t;
+    e: g_opt_stmt_ptr_t;
+  begin
+    om_block_num := 0;
+    cnt := 0;
+    om_stmt_num := 0;
+    in_asg := false;
+    abnormal := false;
+    cur := g_opt_stmt_ptr_t(il_d4);
+    blk := nil;
+    while cur <> nil do begin
+      cur^.regs := cur^.regs * reg_save(il_$node_ptr_t(cur));
+      cur^.hdr.region := om_stmt_num;
+      cur^.hdr.last := false;
+      if cur^.hdr.first then
+        if opt_track_lines then begin
+          om_block_num := om_block_num + 1;
+          blk := cur^.block;
+          blk^.first_stmt := cur;
+          blk^.first := cnt + 1;
+        end
+        else begin
+          npred := 0;
+          p := cur^.prev;
+          if p <> nil then
+            if p^.kind <> 141 then
+              if (p^.kind <> 150) or
+                 (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2) then
+                if p^.kind <> 149 then
+                  npred := 1
+                else if p^.x48^.kind = 172 then
+                  npred := 1;
+          if (cur^.kind = 144) and (il_$node_ptr_t(cur)^.xc[74] = chr(0)) and
+             (rshft(ord(il_$node_ptr_t(cur)^.xc[72]) & 16#3E, 1) = 11) and
+             (il_$node_ptr_t(cur)^.xw[25] = 0) then begin
+            t := cur;
+            tmp := cur^.prev;
+            cur := cur^.next;
+            tmp^.next := cur;
+            cur^.prev := tmp;
+            t^.hdr.first := false;
+            t^.hdr.deleted := true;
+            if cur^.hdr.first then
+              il_124 := il_124 - 1
+            else if new_block(cur) then
+              cur^.hdr.first := true
+            else
+              il_124 := il_124 - 1;
+            if blk <> nil then
+              t^.block := blk;
+            om_stmt_num := om_stmt_num + 1;
+            next;
+          end;
+          om_block_num := om_block_num + 1;
+          if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+            if cur^.kind = 144 then
+              if (il_$node_ptr_t(cur)^.xc[75] <> chr(0)) or
+                 (il_$node_ptr_t(cur)^.xc[74] <> chr(0)) then
+                npred := npred + na;
+          nblk := nblk + 1;
+          if cur^.kind = 144 then
+            npred := npred + il_$node_ptr_t(cur)^.xw[25];
+          if blk <> nil then
+            new_successor_list(blk, nsucc);
+          nsucc := 2;
+          blk := new_basic_block(om_block_num, npred, cur, cnt + 1,
+                                 g_opt_blocks_ptr_t(il_11c)^[rtn_block]);
+          g_opt_blocks_ptr_t(il_11c)^[om_block_num] := blk;
+          if cur^.kind = 144 then
+            il_$node_ptr_t(cur)^.xp[13] := il_$node_ptr_t(blk);
+        end;
+      case cur^.kind of
+        151, 150: begin
+          if cur^.kind = 150 then
+            if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+              nsucc := nsucc + nb;
+          x := cur^.x48;
+          if x <> nil then
+            if (x^.kind = 109) or (x^.kind = 146) or (x^.kind = 110) then
+              if x^.kind <> 146 then
+                note_variable_use(x, cur^.vset)
+              else if x^.xp[6] <> nil then
+                note_variable_use(x^.xp[6], cur^.vset);
+        end;
+        140: begin
+          add_interior_node_to_postorder_node_list(cur^.asg_rhs);
+          in_asg := true;
+          add_interior_node_to_postorder_node_list(cur^.asg_lhs);
+          add_interior_node_to_postorder_node_list(cur^.asg_x);
+          in_asg := false;
+        end;
+        139:
+          for k := 1 to cur^.eval_count do
+            add_interior_node_to_postorder_node_list(cur^.eval_opnd[k]);
+        142:
+          add_interior_node_to_postorder_node_list(cur^.br_cond);
+        148: begin
+          if cur^.x48^.kind = 167 then
+            entry_block := true;
+          if (cur^.x48^.kind <> 167) and (cur^.x48^.kind <> 172) and
+             not opt_track_lines then begin
+            init_opt_info_for_vars(first_rtn, rtn_block, cur, om_block_num);
+            blk^.loop := nil;
+            rtn_block := om_block_num;
+            blk^.flags.run := true;
+            nblk := 1;
+          end
+          else if (cur^.x48^.kind = 167) and not opt_track_lines then
+            blk^.flags.b6 := true;
+        end;
+        149:
+          if cur^.x48^.kind <> 172 then begin
+            if om_stmt_num - opt_region + 1 > opt_max_stmts then
+              opt_max_stmts := om_stmt_num - opt_region + 1;
+            opt_4009c[om_stmt_num]^.hdr.b42_2 := true;
+            opt_4009c[om_stmt_num]^.hdr.last := true;
+            if max_blocks <= nblk then
+              max_blocks := nblk;
+            k := cnt - g_opt_blocks_ptr_t(il_11c)^[rtn_block]^.first;
+            if max_nodes <= k then
+              max_nodes := k;
+            blk^.flags.last := true;
+          end;
+        188:
+          if not opt_track_lines then
+            use_def_proc(cur);
+        144:
+          if il_$node_ptr_t(cur)^.xc[74] <> chr(0) then
+            abnormal := true;
+        otherwise
+          ;
+      end;
+      if assert_statement_is_interesting_in_postorder_node_list(
+           il_$node_ptr_t(cur)) then begin
+        new_postorder_node_list_entry(cnt, il_$node_ptr_t(cur));
+        cur^.hdr.num := cnt;
+      end;
+      if opt_region <> 0 then
+        if opt_4009c[opt_region]^.vars <> nil then
+          if il_180^.xw[145] > 0 then
+            if om_stmt_num <> opt_region then
+              if not opt_track_lines then begin
+                e := opt_4009c[om_stmt_num];
+                e^.vars := mem_$alloc(opt_main_18, il_180^.xw[145] * 4);
+                for k := 1 to il_180^.xw[145] do
+                  if (e^.hdr.vnum = k) or
+                     ((e^.vset <> nil) and (k in e^.vset^)) then begin
+                    e^.vars^[k] := mem_$alloc(opt_main_18, 18);
+                    e^.vars^[k]^ := opt_4009c[opt_region]^.vars^[k]^;
+                    e^.vars^[k]^.count := 0;
+                  end
+                  else
+                    e^.vars^[k] := nil;
+              end;
+      if cur^.hdr.first then
+        if cur^.prev <> nil then
+          cur^.prev^.hdr.last := true;
+      blk^.last_stmt := cur;
+      blk^.last := cnt;
+      cur^.block := blk;
+      cur := cur^.next;
+      om_stmt_num := om_stmt_num + 1;
+    end;
+    opt_nblocks := max_blocks;
+    om_max_nodes := max_nodes;
+  end;
+
+  { recompute_node_lists - after a phase changed the statements: the
+    nodes' marks, the statements' numbers, il_120 counted and made
+    again, the blocks' first and last statements; reaching definitions
+    again under opt_on 10 or 20.  opt_track_lines set.
+
+    0x0E0CD0, 0x76 bytes: nested; the parent's frame from the dynamic
+    link (`movea.l (A6),A2'). }
+
+  procedure recompute_node_lists;
+  begin
+    opt_track_lines := true;
+    killvisited;
+    recompute_stmt_nodes;
+    count_for_postorder_node_list(ngotos, nlabels);
+    dispose_postorder_node_list;
+    alloc_postorder_node_list;
+    make_new_postorder_node_list(ngotos, nlabels);
+    fixup_blocks;
+    if cargs_$options.opt_on * [10, 20] <> [] then begin
+      releaserd;
+      initrd;
+      markuses;
+      reachingdefinitions;
+    end;
+  end;
+
+begin
+  if not assert_optimizer_is_enabled then
+    return;
+  if assert_language_on_il_spine_is_ada then
+    return;
+  prfpkg_$activate_phase(18);
+  cse_limit := limit_of_cse_backwards_reach;
+  opt_track_lines := false;
+  entry_block := false;
+  if il_180^.kind = 105 then
+    il_180^.xc[379] := chr(ord(il_180^.xc[379]) ! 16#10);
+  prfpkg_$activate_phase(14);
+  coalesce_adjacent_and_eliminate_dead_assignments;
+  if 21 in cargs_$options.opt_on then
+    if il_d4 <> nil then begin
+      prfpkg_$activate_phase(11);
+      if cargs_$options.tree = 8 then
+        goto quit;
+      distribute;
+      if cargs_$options.tree = 9 then
+        goto quit;
+    end;
+  prfpkg_$activate_phase(18);
+  opt_loop_hoist := nil;
+  first_rtn := true;
+  opt_max_stmts := 0;
+  opt_max_vars := 0;
+  rtn_block := 1;
+  opt_region := 0;
+  om_nvars := 0;
+  max_blocks := 0;
+  nblk := 0;
+  max_nodes := 0;
+  count_for_postorder_node_list(ngotos, nlabels);
+  prfpkg_$activate_phase(16);
+  eliminate_dead_code_and_count_basic_blocks;
+  if cargs_$options.tree = 12 then
+    goto quit;
+  prfpkg_$activate_phase(18);
+  initialize_stmt_nodes(om_nstmts);
+  alloc_block_list;
+  alloc_postorder_node_list;
+  make_new_postorder_node_list(ngotos, nlabels);
+  prfpkg_$activate_phase(7);
+  compute_basic_block_relationships;
+  prfpkg_$activate_phase(18);
+  if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+    compute_label_backward_refs_due_to_assigned_goto;
+  pas_$new(om_live_out_tab, max_blocks * 32);
+  pas_$new(om_used_tab, max_blocks * 32);
+  pas_$new(om_not_killed_tab, max_blocks * 32);
+  pas_$new(om_dfs_block_tab, max_blocks * 2);
+  pas_$new(om_dfs_number_tab, max_blocks * 2);
+  if (om_live_out_tab = nil) or (om_used_tab = nil) or
+     (om_not_killed_tab = nil) or (om_dfs_block_tab = nil) or
+     (om_dfs_number_tab = nil) then
+    cgerr_no_source(9, 0);
+  for k := 1 to max_blocks do begin
+    om_dfs_block_tab^[k] := 0;
+    om_dfs_number_tab^[k] := 0;
+    om_live_out_tab^[k] := [];
+    om_used_tab^[k] := [];
+    om_not_killed_tab^[k] := [];
+  end;
+  if 10 in cargs_$options.opt_on then
+    initrd;
+  s := g_opt_stmt_ptr_t(il_d4);
+  while s <> nil do begin
+    r := s^.hdr.region;
+    e := opt_4009c[r];
+    if e^.block = nil then begin
+      s := s^.next;
+      next;
+    end;
+    if e^.hdr.entry then begin
+      opt_first_block := e^.block^.num;
+      opt_region := r;
+      il_180 := e^.x48;
+      opt_dfs_block := adjust_ptr(om_dfs_block_tab, 2);
+      opt_used := adjust_ptr(om_used_tab, 32);
+      opt_not_killed := adjust_ptr(om_not_killed_tab, 32);
+      opt_live_out := adjust_ptr(om_live_out_tab, 32);
+      opt_dfs_number := adjust_ptr(om_dfs_number_tab, 2);
+    end;
+    if not e^.hdr.b42_2 then begin
+      s := s^.next;
+      next;
+    end;
+    runbackend_16 := r;
+    opt_last_block := e^.block^.num;
+    if g_opt_blocks_ptr_t(il_11c)^[opt_last_block]^.last < il_126 then
+      il_126 := g_opt_blocks_ptr_t(il_11c)^[opt_last_block]^.last;
+    if opt_main_$is_fortran_asf(opt_4009c[opt_region]) then begin
+      opt_main_$strip_all_use_def_obs;
+      fixup_blocks;
+      if 13 in cargs_$options.opt_on then begin
+        prfpkg_$activate_phase(17);
+        reg_alloc;
+        prfpkg_$activate_phase(18);
+      end;
+      rb := opt_4009c[opt_region]^.x48;
+      rb^.xp[41] := il_11c;
+      rb^.xw[137] := il_124;
+      rb^.xp[42] := il_120;
+      rb^.xw[136] := il_126;
+    end
+    else begin
+      compute_variable_type_descriptors(opt_var_types);
+      compute_depth_first_order_of_basic_blocks;
+      compute_basic_block_dominance_relationships(entry_block, abnormal);
+      if (cargs_$options.tree = 14) or (cargs_$options.tree = 15) then
+        goto dump;
+      recompute_usedef_for_uplevel_addressing;
+      if cargs_$options.tree = 16 then
+        goto dump;
+      prfpkg_$activate_phase(10);
+      if cargs_$options.tree = 17 then
+        goto dump;
+      find_loops;
+      if cargs_$options.tree = 18 then
+        goto dump;
+      prfpkg_$activate_phase(18);
+      g_opt_blocks_ptr_t(il_11c)^[1]^.dom := nil;
+      if 10 in cargs_$options.opt_on then begin
+        prfpkg_$activate_phase(8);
+        if cargs_$options.tree = 19 then
+          goto dump;
+        reachingdefinitions;
+        recompute_node_lists;
+        if cargs_$options.tree = 20 then
+          goto dump;
+        prfpkg_$activate_phase(18);
+      end;
+      opt_track_lines := true;
+      if 20 in cargs_$options.opt_on then begin
+        prfpkg_$activate_phase(11);
+        strengthreduce;
+        if (cargs_$options.tree >= 21) and (cargs_$options.tree <= 30) then
+          goto done;
+        fixup_blocks;
+        prfpkg_$activate_phase(18);
+      end;
+      if target_properties.p_58 > 0 then
+        if 20 in cargs_$options.opt_on then
+          recover_scaled;
+      if 20 in cargs_$options.opt_on then begin
+        prfpkg_$activate_phase(8);
+        recompute_node_lists;
+        recompute_usedef_for_strength_reduction;
+        prfpkg_$activate_phase(18);
+      end;
+      if assert_common_subexpression_phase_is_enabled or
+         (16 in cargs_$options.opt_on) then begin
+        prfpkg_$activate_phase(12);
+        alloc_hoist((il_126 & 16#FFFF) * 2);
+        if cargs_$options.tree = 31 then
+          goto dump;
+        cse;
+        if cargs_$options.tree = 32 then
+          goto dump;
+        prfpkg_$activate_phase(18);
+      end;
+      if cargs_$options.opt_on * [16, 18] <> [] then begin
+        prfpkg_$activate_phase(10);
+        if cargs_$options.tree = 33 then
+          goto dump;
+        loopopt;
+        if cargs_$options.tree = 34 then
+          goto dump;
+        prfpkg_$activate_phase(18);
+      end;
+      if assert_common_subexpression_phase_is_enabled or
+         target_properties.p_7f then begin
+        prfpkg_$activate_phase(12);
+        if cargs_$options.tree = 35 then
+          goto dump;
+        csecleanup;
+        if cargs_$options.tree = 36 then
+          goto dump;
+        prfpkg_$activate_phase(18);
+      end;
+      if assert_common_subexpression_phase_is_enabled then begin
+        prfpkg_$activate_phase(8);
+        if cargs_$options.tree = 37 then
+          goto dump;
+        reviseuses;
+        if cargs_$options.tree = 38 then
+          goto dump;
+        prfpkg_$activate_phase(18);
+      end;
+      if not target_properties.p_7f then
+        estimate_register_consumption_of_all_statements;
+      if (11 in cargs_$options.opt_on) or
+         (target_properties.p_7f and (cargs_$options.opt <> 0)) then begin
+        prfpkg_$activate_phase(13);
+        if cargs_$options.tree = 39 then
+          goto dump;
+        liveanalysis;
+        if cargs_$options.tree = 40 then
+          goto dump;
+        prfpkg_$activate_phase(18);
+      end;
+      if 17 in cargs_$options.opt_on then begin
+        prfpkg_$activate_phase(9);
+        if cargs_$options.tree = 41 then
+          goto dump;
+        motion_constants;
+        if cargs_$options.tree = 42 then
+          goto dump;
+        prfpkg_$activate_phase(18);
+      end;
+      if 8 in cargs_$options.opt_on then begin
+        prfpkg_$activate_phase(14);
+        if cargs_$options.tree = 43 then
+          goto dump;
+        general_opts;
+        if cargs_$options.tree = 44 then
+          goto dump;
+        prfpkg_$activate_phase(18);
+      end;
+      recompute_node_lists;
+      if 13 in cargs_$options.opt_on then begin
+        prfpkg_$activate_phase(17);
+        if cargs_$options.tree = 45 then
+          goto dump;
+        reg_alloc;
+        if cargs_$options.tree = 46 then
+          goto dump;
+        prfpkg_$activate_phase(18);
+      end;
+      if cargs_$options.tree = 0 then
+        opt_main_$strip_all_use_def_obs;
+      fixup_blocks;
+      pas_$dispose(opt_var_types, il_180^.xw[145] * 28 + 28);
+    end;
+    s := s^.next;
+  end;
+  goto done;
+dump:
+  list_tree_$print_whole_il;
+done:
+  prfpkg_$activate_phase(18);
+  if 10 in cargs_$options.opt_on then
+    releaserd;
+  if cargs_$options.tree = 0 then begin
+    mem_$empty_pool(om_succ_pool);
+    mem_$empty_pool(opt_main_18);
+  end
+  else begin
+    il_180^.xp[41] := il_11c;
+    il_180^.xw[137] := il_124;
+    il_180^.xp[42] := il_120;
+    il_180^.xw[136] := il_126;
+  end;
+  if max_blocks <> 0 then
+    pas_$dispose(om_dfs_block_tab, max_blocks * 2);
+  if assert_common_subexpression_phase_is_enabled then
+    dispose_hoist;
+  prfpkg_$stop_active_phase;
+  return;
+quit:
+  list_tree_$print_whole_il;
+  prfpkg_$stop_active_phase;
 end;
 
 { opt_main_$initialize - the optimizer's ten memory pools opened (MRH
