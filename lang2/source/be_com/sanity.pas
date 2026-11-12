@@ -28,6 +28,7 @@ module sanity;
 %include '/sys/ins/base.ins.pas';
 %include '/sys/ins/vfmt.ins.pas';
 %include 'lang2/source/lt_utils/source/bug_check.ins.pas';
+%include 'lang/lang/source/globals.ins.pas';
 %include 'lang2/source/be_com/backend.ins.pas';
 %include 'lang2/source/lt_utils/source/mrh.ins.pas';
 %include 'lang/lang/source/prtsub.ins.pas';

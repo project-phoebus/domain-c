@@ -604,11 +604,11 @@ type
     jump's operand 1 has (zzzzz); l192 (+192) passed on by dfa and xtp
     to df_utils_$global_walk. }
   rtn_t = record
-    node: univ_ptr;                     { +0: an il_$node_ptr_t (batch
-                                          A: univ_ptr, since fga, hal,
-                                          life, sanity, sym and tm_utils
-                                          open this insert without the
-                                          prelude's il.ins.pas) }
+    node: univ_ptr;                     { +0: an il_$node_ptr_t (univ_ptr
+                                          kept; every unit that opens
+                                          this insert opens the prelude
+                                          first, so it could be narrowed:
+                                          docs/questions.md 174) }
     space4: array [4..51] of char;      { +4 }
     lrs: lr_ptr_t;                      { +52 }
     lrs_last: lr_ptr_t;                 { +56: the last live range

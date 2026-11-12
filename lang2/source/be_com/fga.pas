@@ -23,9 +23,10 @@
     A5 0x4864D0: the module's data, 4 bytes (the switches' level).
 
   The fga_$ routines other than the phase's entries do not load A5 and
-  nothing outside calls them: internal.  fga does not open the prelude:
-  idntk (lang strings.ins.pas), il_180 and cargs_$options are declared
-  here through views of their own.
+  nothing outside calls them: internal.  fga opens the prelude (its
+  .blocks list has globals.ins.pas and its members after
+  bug_check.ins.pas): idntk, il_180 and cargs_$options are the
+  prelude's (docs/questions.md 174, answered by translator PA3).
 
   Opcodes by their names (the opcode enumeration): a block ending in
   BEQ or BNE on condition codes a TST or MOVE (one source) or an ADD,
@@ -33,14 +34,14 @@
   immediate loaded.
 
   Not known from the original: every local and parameter name; level's
-  name; idntk's parameter types here (strings.ins.pas's in the
-  prelude). }
+  name. }
 module fga;
 
 %include '/sys/ins/base.ins.pas';
 %include '/sys/ins/pfm.ins.pas';
 %include '/sys/ins/vfmt.ins.pas';
 %include 'lang2/source/lt_utils/source/bug_check.ins.pas';
+%include 'lang/lang/source/globals.ins.pas';
 %include 'lang2/source/be_com/backend.ins.pas';
 %include 'lang2/source/lt_utils/source/mrh.ins.pas';
 %include 'lang/lang/source/prtsub.ins.pas';
@@ -49,8 +50,6 @@ module fga;
 %include 'lang2/source/be_com/utils.ins.pas';
 
 type
-  fga_chars_t = array [1..6] of char;
-
   { What an immediate's or an XSB displacement's operand +4 (its link
     field) points to,
     as fga reads it: kind (+2: 163 and 195 the constants analyzed), a
@@ -78,23 +77,10 @@ type
                                           +379 }
   end;
 
-  { cargs_$options (lang cargs.ins.pas), as bytes from its +0x278. }
-  fga_cargs_t = array [0..19] of char;
-
-{ IDNTK - lang strings.pas's: the identifier node of kind for s. }
-function idntk(
-    kind: integer;
-    in s: univ fga_chars_t;
-    len: integer): univ_ptr; options(val_param); extern;
+  { batch A (PA3): fga_cargs_t, idntk's heading and the il_180 and
+    cargs_$options views went with the prelude (docs/questions.md 174). }
 
 var
-  { Cells of the prelude's units, declared here since fga does not
-    open the prelude: il.pas's +0x180 (il.ins.pas il_180, the routine
-    being compiled) and cargs' options (cargs.ins.pas cargs_$options:
-    +16 bit 3 is flags_286's element 0). }
-  il_180: extern fga_node_ptr_t;
-  cargs_$options: extern fga_cargs_t;
-
   level: integer32;                     { +0 }
 
 { fga_$begin_compilation - nothing.  0x237A82, 2 bytes. }
@@ -428,7 +414,7 @@ begin
     if bb^.succs^.next_succ^.next_succ <> nil then
       goto 99;
     if idntk(76, 'setjmp', 6) <> sym^.xp[74] then begin
-      if (ord(cargs_$options[16]) & 8) <> 0 then
+      if 0 in cargs_$options.flags_286 then
         goto 99;
       if idntk(76, 'SETJMP', 6) <> sym^.xp[74] then
         goto 99;
