@@ -522,4 +522,7 @@ lang/lang/source/opt_main.pas	BEGIN { undef $/ } s{((?:\w+(?:\[[^\]]*\])?\^?\.)*
 # gap 29 (opt_main): recompute_usedef_for_uplevel_addressing's guarded test of a word in a 32-byte set (the range test only, for the check)
 lang/lang/source/opt_main.pas	s/if n in s\^\.vset\^ then/if n <= 255 then { gap 29 }/
 # gap 2 (opt_main): recover_scaled's case of 4 labels over a range of 13 (empty labels added, for the check)
-lang/lang/source/opt_main.pas	s/^(\s+)151:$/${1}141, 143, 144, 145, 146, 147, 148, 149, 150: ; { gap 2 }\n${1}151:/
+lang/lang/source/opt_main.pas	s/^(          )151:$/${1}141, 143, 144, 145, 146, 147, 148, 149, 150: ; { gap 2 }\n${1}151:/
+# gap 7 (opt_main): convert_exponentiation's real exponent (trunc, compared back; the longword at +12 and no test, for the check)
+lang/lang/source/opt_main.pas	s/n := trunc\(e\^\.real_value\);/n := e^.xl[3]; { gap 7 }/
+lang/lang/source/opt_main.pas	s/if n <> e\^\.real_value then/if n <> n then { gap 7 }/

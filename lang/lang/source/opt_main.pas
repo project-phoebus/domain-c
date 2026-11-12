@@ -23,6 +23,8 @@ type
   { Raw memory (zero_longwords, zero_bytes). }
   om_longs_ptr_t = ^integer32;
   om_bytes_ptr_t = ^char;
+  { A longword's bits (convert_exponentiation's exponent). }
+  om_bits_t = set of 0..31;
 
 var
   { The module's data (A5 0x2D2EF0 in cc.m68k, 0x49389C in cc.a88k),
@@ -36,6 +38,12 @@ var
   om_complex_size: extern array [6..7] of integer;  { +0x28 }
   om_class_bytes: extern array [0..9] of integer;   { +0x70 }
   om_stmt_num: extern integer;          { +0x58 }
+
+var
+  { delay.pas's +888 (cc.m68k 0x169968, cc.a88k 0x2E99D8): the bytes of
+    each register class (delay.pas's class_size; opt_strength.pas
+    declares it the same way). }
+  class_size: extern array [0..12] of integer;
 
 { REG_SAVE_$REGISTERS_PRESERVED_BY_STATEMENT - reg_save.pas 0x0ED458
   (cc.a88k target_at_dummies): the registers top-level statement s
@@ -2098,5 +2106,535 @@ begin
         end;
         s := s^.next;
       until (s^.kind = 149) and (s^.x48^.kind <> 172);
+  end;
+end;
+
+{ distrib_mul - t, a multiplication (3) or left shift (27) of
+  something by an integer constant, distributed over an addition (1)
+  below it (through a conversion, 18): (b * c' + v) * c becomes b * (c'
+  * c) + v * c (opt_str_$product_of forms the product; both products'
+  register classes fixed up); ((x << k1 + y) + z << k2) << k3 has k3
+  added to the inner shifts and y shifted; under opt_on 20, (v1 + v2)
+  << c becomes v1 + (v2 << c) for two variables or references.  The
+  result is the tree that stands for t (the addition when t was
+  distributed).
+
+  0x0DDA32, 0x56C bytes: the result in D2, A0 at the end; the
+  constants by the set at 0x0DC6EE, the shifted operands by the set of
+  0..159 at 0x0DDF9E ([109..110, 145..147]); the second form's test of
+  no_enforce_parens_and_ucs_eq_1 returns t unchanged when it is true
+  (`bmi'), the first's when it is false (`bpl'): kept. }
+
+function distrib_mul(
+    t: il_$node_ptr_t): il_$node_ptr_t; options(val_param); internal;
+type
+  rlens_t = set of 0..15;
+var
+  r: il_$node_ptr_t;
+  m: g_opt_tree_ptr_t;
+  a: g_opt_tree_ptr_t;
+  b: g_opt_tree_ptr_t;
+  c: g_opt_tree_ptr_t;
+  p: g_opt_tree_ptr_t;
+  x: il_$node_ptr_t;
+  ops: array [1..2] of il_$node_ptr_t;
+  done: boolean;
+
+  { no_enforce_parens_and_ucs_eq_1 - neither the product a nor the sum
+    b below it is parenthesized (flag 21), when f neither displacement
+    operand (a's second, b's first's first) is a displacement (147) of
+    other than a Fortran symbol, and a, a's first operand, b and b's
+    first operand are each used once.
+
+    0x0DD6CE, 0x8C bytes: nested, the parent's frame not used. }
+
+  function no_enforce_parens_and_ucs_eq_1(
+      a: g_opt_tree_ptr_t;
+      b: g_opt_tree_ptr_t;
+      f: boolean): boolean; options(val_param);
+  var
+    c: g_opt_tree_ptr_t;
+    x: il_$node_ptr_t;
+  begin
+    no_enforce_parens_and_ucs_eq_1 := false;
+    c := g_opt_tree_ptr_t(b^.opnd[1]);
+    if not (21 in b^.flags) and not (21 in c^.flags) then begin
+      if f then begin
+        x := b^.opnd[2];
+        if x^.kind = 147 then
+          if x^.xp[6]^.kind <> 110 then
+            return;
+        x := c^.opnd[1];
+        if x^.kind = 147 then
+          if x^.xp[6]^.kind <> 110 then
+            return;
+      end;
+      if (a^.uses = 1) and (a^.opnd[1]^.xw[8] = 1) and (b^.uses = 1) and
+         (c^.uses = 1) then
+        no_enforce_parens_and_ucs_eq_1 := true;
+    end;
+  end;
+
+  { convert_lshf_to_mul - a left shift t by a constant k made the
+    product by 2 ** k, its operands of t's register class's size.
+
+    0x0DD75A, 0x56 bytes: nested; `lsl.l' of 1. }
+
+  procedure convert_lshf_to_mul(
+      t: g_opt_tree_ptr_t); options(val_param);
+  begin
+    if t^.op = 27 then begin
+      t^.opnd[2] := smcontk(81, lshft(1, t^.opnd[2]^.int_value));
+      t^.w26 := class_size[t^.rlen];
+      t^.w28 := t^.w26;
+      t^.op := 3;
+    end;
+  end;
+
+  { possible_rlens_of_operand - the sizes t may be used at as an
+    operand: a constant [2, 4] when it fits a word, else [4]; a
+    displacement of 2 bytes into a 4-byte variable used once [2, 4];
+    else the one opt_str_$opmod_of_operand gives (size, sgn).
+
+    0x0DD7B0, 0xB8 bytes: nested; the set a word (20, 16; `bset' into a
+    cleared frame word, range-checked). }
+
+  function possible_rlens_of_operand(
+      t: il_$node_ptr_t;
+      size: integer;
+      sgn: boolean): rlens_t; options(val_param);
+  var
+    k: integer32;
+  begin
+    if t^.kind in [77..87, 101, 200] then begin
+      if (t^.int_value >= -32768) and (t^.int_value <= 32767) then
+        possible_rlens_of_operand := [2, 4]
+      else
+        possible_rlens_of_operand := [4];
+    end
+    else if (t^.kind = 147) and (t^.xl[8] = 2) and (t^.xw[8] = 1) and
+            ((t^.xp[6]^.kind = 110) or (t^.xp[6]^.kind = 109)) and
+            (opt_str_$opmod_of_operand(t^.xp[6], 2, true) = 4) then
+      possible_rlens_of_operand := [2, 4]
+    else begin
+      k := opt_str_$opmod_of_operand(t, size, sgn);
+      possible_rlens_of_operand := [k];
+    end;
+  end;
+
+  { crush_disp_2 - operand t (by address) used at 4 bytes: a constant
+    as it is, a displacement of 2 bytes into a 4-byte variable used
+    once replaced by the variable; size (by address) 4 then.
+
+    0x0DD868, 0x8A bytes: nested. }
+
+  procedure crush_disp_2(
+      var t: il_$node_ptr_t;
+      var size: integer);
+  begin
+    if t^.kind in [77..87, 101, 200] then
+      size := 4
+    else if (t^.kind = 147) and (t^.xl[8] = 2) and (t^.xw[8] = 1) and
+            ((t^.xp[6]^.kind = 110) or (t^.xp[6]^.kind = 109)) and
+            (opt_str_$opmod_of_operand(t^.xp[6], 2, true) = 4) then begin
+      t := t^.xp[6];
+      size := 4;
+    end;
+  end;
+
+  { fixup_rlen_of_mul - product (or left shift) t given register class
+    rlen: unless it already is a product of that class whose operands
+    may be used at their sizes, the operands are widened to 4 bytes
+    (crush_disp_2) and a shift made a product, except for a word
+    product of words; the class, the operands' sizes and the size set.
+
+    0x0DD8F2, 0x116 bytes: nested; a shift's operand sizes from its
+    classes (class_size); the sets tested range-checked (`cmp.w #15;
+    bcs; btst'); the sizes through frame copies. }
+
+  procedure fixup_rlen_of_mul(
+      t: g_opt_tree_ptr_t;
+      rlen: integer); options(val_param);
+  var
+    a: integer;
+    b: integer;
+    pa: rlens_t;
+    pb: rlens_t;
+  begin
+    if t^.op = 27 then begin
+      a := class_size[t^.w26];
+      b := class_size[t^.w28];
+    end
+    else if t^.op = 3 then begin
+      a := t^.w26;
+      b := t^.w28;
+    end
+    else
+      bug_check('opt_main:  bad call to fixup_rlen_of_mul%.');
+    pa := possible_rlens_of_operand(t^.opnd[1], a, t^.dflags.signed);
+    pb := possible_rlens_of_operand(t^.opnd[2], b, t^.dflags.signed);
+    if (t^.rlen = rlen) and (a in pa) and (b in pb) and (t^.op = 3) then
+      return;
+    if not ((rlen = 2) and (a = 2) and (b = 2)) then begin
+      crush_disp_2(t^.opnd[1], a);
+      crush_disp_2(t^.opnd[2], b);
+      convert_lshf_to_mul(t);
+    end;
+    t^.rlen := rlen;
+    t^.w26 := a;
+    t^.w28 := b;
+    t^.size := class_size[rlen] & 16#FFFF;
+  end;
+
+begin
+  r := t;
+  if t = nil then
+    begin
+      distrib_mul := r;
+      return;
+    end;
+  m := g_opt_tree_ptr_t(t);
+  if m^.kind <> 137 then
+    begin
+      distrib_mul := r;
+      return;
+    end;
+  if not ((m^.op = 27) or (m^.op = 3)) then
+    begin
+      distrib_mul := r;
+      return;
+    end;
+  if m^.flags * [1..4, 21] <> [] then
+    begin
+      distrib_mul := r;
+      return;
+    end;
+  a := g_opt_tree_ptr_t(m^.opnd[1]);
+  if (a^.kind = 137) and (a^.op = 18) then
+    a := g_opt_tree_ptr_t(a^.opnd[1]);
+  { a sum's variable operand put second }
+  if (m^.op = 27) or (m^.op = 3) then
+    if m^.opnd[2]^.kind in [77..87, 101, 200] then
+      if (a^.kind = 137) and (a^.op = 1) then begin
+        x := a^.opnd[1];
+        if (x^.kind = 109) or (x^.kind = 110) or (x^.kind = 205) or
+           (x^.kind = 147) then
+          if a^.opnd[2]^.kind = 137 then begin
+            a^.opnd[1] := a^.opnd[2];
+            a^.opnd[2] := x;
+          end;
+      end;
+  done := false;
+  { (b * c' + v) * c }
+  if (m^.op = 27) or (m^.op = 3) then
+    if m^.opnd[2]^.kind in [77..87, 101, 200] then
+      if (a^.kind = 137) and (a^.op = 1) then begin
+        x := a^.opnd[2];
+        b := g_opt_tree_ptr_t(a^.opnd[1]);
+        if (x^.kind = 109) or (x^.kind = 110) or (x^.kind = 205) or
+           (x^.kind = 147) then
+          if b^.kind = 137 then
+            if (b^.op = 27) or (b^.op = 3) then
+              if b^.opnd[2]^.kind in [77..87, 101, 200] then begin
+                x := b^.opnd[1];
+                if (x^.kind = 109) or (x^.kind = 110) or (x^.kind = 205) or
+                   (x^.kind = 147) then begin
+                  if not no_enforce_parens_and_ucs_eq_1(m, a, true) then
+                    begin
+                      distrib_mul := r;
+                      return;
+                    end;
+                  b := g_opt_tree_ptr_t(a^.opnd[1]);
+                  if (m^.op = 3) and (b^.op = 27) then
+                    convert_lshf_to_mul(b);
+                  p := g_opt_tree_ptr_t(opt_str_$product_of(
+                         m^.op, il_$node_ptr_t(b), m^.opnd[2], b^.rlen,
+                         b^.w26, b^.w28,
+                         b^.dflags.signed or m^.dflags.signed, b));
+                  m^.opnd[1] := a^.opnd[2];
+                  a^.opnd[1] := il_$node_ptr_t(p);
+                  a^.opnd[2] := t;
+                  m^.w26 := class_size[a^.rlen];
+                  a^.rlen := m^.rlen;
+                  a^.size := class_size[m^.rlen] & 16#FFFF;
+                  fixup_rlen_of_mul(p, m^.rlen);
+                  fixup_rlen_of_mul(m, m^.rlen);
+                  r := il_$node_ptr_t(a);
+                  done := true;
+                end;
+              end;
+      end;
+  { ((x << k1 + y) + z << k2) << k3 }
+  if not done then
+    if m^.op = 27 then
+      if m^.opnd[2]^.kind in [77..87, 101, 200] then
+        if (a^.kind = 137) and (a^.op = 1) then begin
+          c := g_opt_tree_ptr_t(a^.opnd[2]);
+          if (c^.kind = 137) and (c^.op = 27) then
+            if c^.opnd[2]^.kind in [77..87, 101, 200] then
+              if c^.opnd[1]^.kind in [109..110, 145..147] then begin
+                b := g_opt_tree_ptr_t(a^.opnd[1]);
+                if (b^.kind = 137) and (b^.op = 1) then begin
+                  p := g_opt_tree_ptr_t(b^.opnd[1]);
+                  if (p^.kind = 137) and (p^.op = 27) then
+                    if p^.opnd[2]^.kind in [77..87, 101, 200] then
+                      if p^.opnd[1]^.kind in [109..110, 145..147] then
+                        if b^.opnd[2]^.kind in [109..110, 145..147] then begin
+                          if no_enforce_parens_and_ucs_eq_1(m, a, false) then
+                            begin
+                              distrib_mul := r;
+                              return;
+                            end;
+                          p^.opnd[2] := smcontk(81, p^.opnd[2]^.int_value +
+                                                    m^.opnd[2]^.int_value);
+                          c^.opnd[2] := smcontk(81, c^.opnd[2]^.int_value +
+                                                    m^.opnd[2]^.int_value);
+                          ops[1] := b^.opnd[2];
+                          ops[2] := m^.opnd[2];
+                          b^.opnd[2] := buildtreenode(27, m^.size, ops, 2);
+                          x := b^.opnd[2];
+                          if (g_opt_tree_ptr_t(x)^.rlen = 4) and
+                             (a^.rlen = 2) then begin
+                            a^.rlen := 4;
+                            if b^.rlen = 2 then
+                              b^.rlen := 4;
+                          end;
+                          r := il_$node_ptr_t(a);
+                          done := true;
+                        end;
+                end;
+              end;
+        end;
+  { (v1 + v2) << c under opt_on 20 }
+  if not done then
+    if 20 in cargs_$options.opt_on then begin
+      a := g_opt_tree_ptr_t(m^.opnd[1]);
+      if m^.op = 27 then
+        if m^.opnd[2]^.kind in [77..87, 101, 200] then
+          if (a^.kind = 137) and (a^.op = 1) then begin
+            b := g_opt_tree_ptr_t(a^.opnd[1]);
+            c := g_opt_tree_ptr_t(a^.opnd[2]);
+            if ((b^.kind = 109) or (b^.kind = 110) or (b^.kind = 205) or
+                (b^.kind = 147)) and
+               ((c^.kind = 109) or (c^.kind = 110) or (c^.kind = 205) or
+                (c^.kind = 147)) and
+               not (21 in m^.flags) and not (21 in a^.flags) and
+               (m^.uses = 1) and (a^.uses = 1) then
+              if (b^.kind <> 147) or
+                 (il_$node_ptr_t(b)^.xp[6]^.kind = 110) then
+                if (c^.kind <> 147) or
+                   (il_$node_ptr_t(c)^.xp[6]^.kind = 110) then begin
+                  ops[1] := il_$node_ptr_t(c);
+                  ops[2] := m^.opnd[2];
+                  a^.opnd[2] := buildtreenode(27, m^.size, ops, 2);
+                  m^.opnd[1] := a^.opnd[1];
+                  a^.opnd[1] := t;
+                  r := il_$node_ptr_t(a);
+                end;
+          end;
+    end;
+  distrib_mul := r;
+end;
+
+{ convert_exponentiation - t, a power (used once, not kept) of an
+  operand used once by an integer constant or an integral real n of
+  at most 6 multiplications (the highest bit's index - 1 + the bits
+  set), becomes a chain of products of operator op (36 real, 3
+  integer): the operand squared once for each bit, the squares of the
+  bits set multiplied together, the last product made in t itself
+  (its operand classes t's class).
+
+  0x0DDFB2, 0x1F4 bytes: the exponent's kinds by the set of 0..207 at
+  0x0DE1A6 ([77..89, 101, 200]); a real's `jsr fpp_$' 0x0074 0x00D0
+  (trunc) and 0x00C4 0x00B4 (compared back, `bne' out;
+  docs/dpc-gaps.md 7); the bits counted with a `dbf' loop of 32; the
+  operands through frame copies for copy_tree. }
+
+procedure convert_exponentiation(
+    t: g_opt_tree_ptr_t;
+    op: integer); options(val_param); internal;
+var
+  a: il_$node_ptr_t;
+  e: il_$node_ptr_t;
+  n: integer32;
+  ns: om_bits_t;
+  hi: integer32;
+  bits: integer32;
+  k: integer32;
+  p: il_$node_ptr_t;
+  acc: il_$node_ptr_t;
+  tmp: il_$node_ptr_t;
+  ops: array [1..2] of il_$node_ptr_t;
+begin
+  a := t^.opnd[1];
+  if a^.kind in [137..138, 143, 145..147, 164, 171, 175, 189, 205] then
+    if a^.xw[8] <> 1 then
+      return;
+  if t^.uses <> 1 then
+    return;
+  if 12 in t^.flags then
+    return;
+  e := t^.opnd[2];
+  if not (e^.kind in [77..89, 101, 200]) then
+    return;
+  if e^.kind in [77..87, 101, 200] then
+    n := e^.int_value
+  else if (e^.kind = 89) or (e^.kind = 88) then begin
+    n := trunc(e^.real_value);
+    if n <> e^.real_value then
+      return;
+  end
+  else
+    return;
+  hi := 0;
+  bits := hi;
+  ns := om_bits_t(n);
+  for k := 0 to 31 do
+    if k in ns then begin
+        bits := bits + 1;
+        hi := k;
+      end;
+  if hi - 1 < 0 then
+    return;
+  if hi - 1 + bits > 6 then
+    return;
+  t^.w26 := t^.rlen;
+  t^.w28 := t^.rlen;
+  p := t^.opnd[1];
+  ops[1] := p;
+  if 0 in ns then
+    acc := p
+  else
+    acc := nil;
+  k := 1;
+  while k <= hi do begin
+    if (k = hi) and (bits = 1) then
+      acc := p
+    else begin
+      tmp := p;
+      ops[2] := copy_tree(tmp);
+      adjust_uc(ops[2], 1);
+      p := buildtreenode(op, t^.size, ops, 2);
+    end;
+    ops[1] := p;
+    if k in ns then
+      if acc = nil then
+        acc := p
+      else begin
+        tmp := acc;
+        ops[2] := copy_tree(tmp);
+        acc := tmp;
+        adjust_uc(ops[2], 1);
+        if k < hi then
+          acc := buildtreenode(op, t^.size, ops, 2)
+        else begin
+          t^.op := op;
+          t^.opnd[1] := ops[1];
+          t^.opnd[2] := ops[2];
+        end;
+      end;
+    k := k + 1;
+  end;
+end;
+
+{ dwalk - the trees below t (by address) walked bottom up: a tree's
+  operands, then the tree distributed (distrib_mul) when not marked
+  (flags 1..4); a division's (13) dividend class taken from its
+  divisor tree's; a power (42 real, 43 integer) turned into products;
+  an indexed reference's index at least as used as the reference and
+  its class the index tree's.
+
+  0x0DE1C0, 0x16E bytes: recursive; the kinds compared in turn. }
+
+procedure dwalk(
+    var t: il_$node_ptr_t); internal;
+var
+  k: integer;
+  m: g_opt_tree_ptr_t;
+  x: g_opt_tree_ptr_t;
+begin
+  if t <> nil then
+    case t^.kind of
+      143, 137: begin
+        for k := 1 to g_opt_tree_ptr_t(t)^.count do
+          dwalk(g_opt_tree_ptr_t(t)^.opnd[k]);
+        if (t^.xl[1] & 30) = 0 then
+          t := distrib_mul(t);
+        m := g_opt_tree_ptr_t(t);
+        if m^.op = 13 then begin
+          x := g_opt_tree_ptr_t(m^.opnd[2]);
+          if x^.kind = 137 then
+            if x^.rlen <> m^.w26 then
+              m^.w26 := x^.rlen;
+        end;
+        m := g_opt_tree_ptr_t(t);
+        if (t^.xl[1] & 30) = 0 then
+          if m^.op = 42 then
+            convert_exponentiation(m, 36)
+          else if m^.op = 43 then
+            convert_exponentiation(m, 3);
+      end;
+      205, 147, 146:
+        dwalk(t^.xp[6]);
+      145: begin
+        dwalk(t^.xp[6]);
+        dwalk(t^.xp[9]);
+        x := g_opt_tree_ptr_t(t^.xp[9]);
+        if x^.kind = 137 then
+          if t^.xw[8] > x^.uses then
+            x^.uses := t^.xw[8];
+        x := g_opt_tree_ptr_t(t^.xp[9]);
+        if x^.kind = 137 then
+          if x^.rlen <> t^.xw[21] then
+            t^.xw[21] := x^.rlen;
+      end;
+      164: begin
+        dwalk(t^.xp[5]);
+        dwalk(t^.xp[6]);
+      end;
+      175:
+        dwalk(t^.xp[4]);
+      171:
+        dwalk(t^.xp[4]);
+      otherwise
+        ;
+    end;
+end;
+
+{ distribute - the trees of each top-level statement walked (dwalk): an
+  evaluation's operands, an assignment's three, a conditional branch's
+  condition, a 151's operand; a routine's entry (148) of other than a
+  167 or 172 sets il_180.
+
+  0x0DE32E, 0xD4 bytes: a jump table on the kind (139..151). }
+
+procedure distribute; internal;
+var
+  s: g_opt_stmt_ptr_t;
+  k: integer;
+begin
+  s := g_opt_stmt_ptr_t(il_d4);
+  while s <> nil do begin
+    case s^.kind of
+      139:
+        for k := 1 to s^.eval_count do
+          dwalk(s^.eval_opnd[k]);
+      140: begin
+        dwalk(s^.asg_rhs);
+        dwalk(s^.asg_lhs);
+        dwalk(s^.asg_x);
+      end;
+      142:
+        dwalk(s^.br_cond);
+      148:
+        if (s^.x48^.kind <> 167) and (s^.x48^.kind <> 172) then
+          il_180 := s^.x48;
+      151:
+        if s^.x48 <> nil then
+          dwalk(s^.x48);
+      otherwise
+        ;
+    end;
+    s := s^.next;
   end;
 end;
