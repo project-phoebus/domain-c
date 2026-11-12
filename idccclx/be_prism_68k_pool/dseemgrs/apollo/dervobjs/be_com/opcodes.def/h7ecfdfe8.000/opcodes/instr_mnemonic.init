@@ -1,0 +1,18 @@
+{ instr_mnemonic.init - a DSEE derived object of be_com/opcodes.def
+  (cc.a88k only), which the opcode generator made with
+  opcode_enumeration.ins.pas: the initializer of the section
+  instruction_mnemonic (0x2B7A3C: 384 entries of 12 characters, the
+  opcodes' names without the OPC$ prefix, "********" for 0).  Included
+  by lst.pas after the opcode enumeration.
+
+  No Apollo copy survives.  backend.ins.pas declares the section's
+  variable (instruction_mnemonic) for every unit, so this file cannot
+  declare it again with the initializer (dpc: already declared); the
+  data are the opcode enumeration's identifiers
+  (`tools/cc_enumnames.py ctape/.../cc.a88k 0x209FEE').
+
+  Not known from the original: how Apollo's units shared the section
+  (docs/questions.md, translator PB). }
+
+{ TODO(pascal) instr_mnemonic.init: the section's initializer (see
+  above) }

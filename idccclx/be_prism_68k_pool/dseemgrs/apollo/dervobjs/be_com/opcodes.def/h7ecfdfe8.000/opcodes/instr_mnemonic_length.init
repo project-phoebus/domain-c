@@ -1,0 +1,13 @@
+{ instr_mnemonic_length.init - a DSEE derived object of
+  be_com/opcodes.def (cc.a88k only): the initializer of the section
+  instruction_mnemonic_length (0x2B773C: 384 words, the length of each
+  instruction_mnemonic entry).  Included by lst.pas after
+  instr_mnemonic.init.
+
+  No Apollo copy survives.  As instr_mnemonic.init: backend.ins.pas
+  declares the section's variable, so the initializer cannot be given
+  here.
+
+  Not known from the original: how Apollo's units shared the section. }
+
+{ TODO(pascal) instr_mnemonic_length.init: the section's initializer }

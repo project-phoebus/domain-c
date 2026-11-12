@@ -75,6 +75,7 @@ Conventions the translators should know:
 | `lang2/source/be_com/sem_utils.pas` | 7 | low-order bits an operand needs |
 | `lang2/source/be_com/xtp.pas` | 7 (+ utils_ins_) | the XTP phase, insert_ipccnop |
 | `lang2/source/be_com/zzzzz.pas` | 9 | code cells, epilogue marks (dpc gap 2) |
+| `lang2/source/be_com/lst.pas` | 33 | the assembler listing, classic and -PRASM (translator PB; dpc gaps 7, 8, 28) |
 
 exs.pas (27 routines, 4168 bytes, nested routines with uplevel
 references) was not reached: it heads batch A.

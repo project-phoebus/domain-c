@@ -588,3 +588,9 @@ lang/lang/source/opt_inline.pas	s/x\^\.kind in \[109, 110, 111, 163, 195\]/((x^.
 lang/lang/source/opt_inline.pas	s/ed\^\.callee\^\.kind in \[105\.\.108, 172, 209\]/(((ed^.callee^.kind >= 105) and (ed^.callee^.kind <= 108)) or (ed^.callee^.kind = 172) or (ed^.callee^.kind = 209)) { gap 8 }/
 # gap 2 (zzzzz): a case of 5 labels over a range of 15 (the empty labels added, for the check)
 lang2/source/be_com/zzzzz.pas	s/^(\s*)75:(\s*)\{ move \}$/${1}76, 77, 78, 80, 82, 83, 84, 85, 86, 87: ; { gap 2 }\n${1}75:${2}{ move }/
+# gap 7 (lst): real := double (the single literal left unset, for the check)
+lang2/source/be_com/lst.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
+# gap 8 (lst): in on a constant set with a word element (the comparisons)
+lang2/source/be_com/lst.pas	s/(\w+\^\.kind) in \[45\.\.58, 60, 61, 69, 156, 176, 198, 200\]/((($1 >= 45) and ($1 <= 58)) or ($1 = 60) or ($1 = 61) or ($1 = 69) or ($1 = 156) or ($1 = 176) or ($1 = 198) or ($1 = 200)) { gap 8 }/g
+# gap 28 (lst): lst_$display_code_cell's values exceed dpc's registers (the classic form's registers' column dropped, for the check)
+lang2/source/be_com/lst.pas	if ((/^      \{ The registers' column of the classic form\. \}/ .. /^      \{ The numbered label\. \}/) && !/The numbered label/) { $_ = "      { gap 28 }\n" }

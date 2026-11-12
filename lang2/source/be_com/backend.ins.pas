@@ -420,6 +420,126 @@ type
     level: 0..7;                        { .2..0 }
   end;
 
+  { batch B: the views lst, bin and asm (translator PB) read the
+    opcode tables and the code cells through. }
+
+  { instr_attr_t as four operand descriptions from +4, one longword
+    each: form (of$t: lst prints an immediate of form
+    of$ip_compare_a_operand negated, `#' before the forms of its
+    set), num (k, the operand's number), b2 (bits 7..6: lst prints the
+    insert/extract width before an operand whose b2 has them, when the
+    opcode's b14_7_1 is odd), b3 (operand 1's is the class, +7). }
+  instr_attr_opnd_t = packed record
+    form: 0..255;                       { +4k }
+    num: 0..255;                        { +4k+1 }
+    b2: 0..255;                         { +4k+2 }
+    b3: 0..255;                         { +4k+3 }
+  end;
+  instr_attr_view_ptr_t = ^instr_attr_view_t;
+  instr_attr_view_t = record
+    w0: 0..65535;                       { +0 }
+    w2: 0..65535;                       { +2 }
+    opnds: array [1..4] of instr_attr_opnd_t;    { +4 }
+  end;
+
+  { A code cell's first longword (cell_hdr_t) with its +3 as lst reads
+    it by the cell's kind: modify (bits 7..6) am$t of a load or store
+    and the squash mode of a branch (lst's ".SN", ".ST", ".SF", ".SA"),
+    lsq (bits 5..4) lsq$t of a load or store; width the whole byte (an
+    insert's or extract's field width, a load_pair's offset as
+    signed). }
+  cell_head_ptr_t = ^cell_head_t;
+  cell_head_t = packed record
+    flags: 0..255;                      { +0 }
+    opc: 0..255;                        { +1 }
+    b2: 0..255;                         { +2: bits 3..0 lst's cycle
+                                          column, bit 6 the next cell
+                                          continues this one }
+    case integer of
+      1: (modify: 0..3;                 { +3 .7..6 }
+          lsq: 0..3;                    { .5..4 }
+          b3_3_0: 0..15);
+      2: (width: 0..255);
+      3: (offset: -128..127);
+  end;
+
+  { An opcode's assembly (the section instruction_assembly, 44 bytes by
+    opcode, for opc$undefined..opc$adj_move; asm.pas includes its
+    initializer, instr_assembly.init).  w0 and w4 the encoding, +8 bit
+    5 (squash) the branch takes a squash suffix, bit 4 (no_hex) lst
+    shows no instruction word, prasm_len the length of prasm_name; +9
+    name_len the length of name, half (bits 3..1) the operands that
+    name a single's half (lst's ".H"); prasm_format (+10) how lst
+    lays the instruction out in -PRASM form; prasm_name (+11) its
+    operator there, name (+19) its mnemonic; opnd (+36) a word for
+    each operand (bits 2..1 lst's display format: 0 decimal, 2
+    hexadecimal). }
+  instr_asm_ptr_t = ^instr_asm_t;
+  instr_asm_t = packed record
+    w0: integer32;                      { +0 }
+    w4: integer32;                      { +4 }
+    b8_7, b8_6: boolean;                { +8 }
+    squash: boolean;                    { .5 }
+    no_hex: boolean;                    { .4 }
+    prasm_len: 0..15;                   { .3..0 }
+    name_len: 0..15;                    { +9 .7..4 }
+    half: 0..7;                         { .3..1 }
+    b9_0: boolean;
+    text: packed array [10..35] of char;    { +10: prasm_format
+                                          (text[10]), prasm_name
+                                          (text[11..18]), name
+                                          (text[19..34]); dpc puts a
+                                          character array of a packed
+                                          record on an even offset }
+    opnd: array [1..4] of 0..65535;     { +36 }
+  end;
+  instr_asms_t = array [0..211] of instr_asm_t;
+
+  { A literal (lst_$prtlit, lst_$display_literal): kind (+4) 0..21: 0
+    integer, 1 short, 2 byte, 3 long, 4..7 their unsigned forms, 8..10
+    word, byte and long booleans, 11 char, 12 single (held as a
+    double), 13 double, 14 complex, 15 double complex, 16 namelist
+    descriptor (p0^'s +18), 18 varying string (w12 its length, chars
+    from +14), 19 string (len its length, chars from +12), 20
+    read-only data, 21 a def_const; 17 unknown. }
+  lit_ptr_t = ^lit_t;
+  lit_t = record
+    p0: univ_ptr;                       { +0 }
+    kind: integer;                      { +4 }
+    len: integer;                       { +6 }
+    case integer of
+      1: (value: integer32;             { +8 }
+          l12: integer32;               { +12 }
+          l16: integer32;               { +16 }
+          l20: integer32);              { +20 }
+      2: (d: double;                    { +8 }
+          d16: double);                 { +16 }
+      3: (r: real;                      { +8 }
+          r12: real);                   { +12 }
+      4: (w8: integer;                  { +8 }
+          w10: integer;                 { +10 }
+          w12: integer;                 { +12 }
+          chars14: array [1..256] of char);    { +14 }
+      5: (b8, b9, b10, b11: char;       { +8 }
+          chars: array [1..256] of char);      { +12 }
+  end;
+
+  { A literal pool entry (lst_$display_literal, bin): lit (+4) the
+    literal, size (+16), addr (+20) its address in the pool. }
+  lpe_ptr_t = ^lpe_t;
+  lpe_t = record
+    l0: integer32;                      { +0 }
+    lit: lit_ptr_t;                     { +4 }
+    l8: integer32;                      { +8 }
+    l12: integer32;                     { +12 }
+    size: integer32;                    { +16 }
+    addr: integer32;                    { +20 }
+  end;
+
+  { The listing's line (prtsub.ins.pas's prtsub_$line_t, which is
+    opened after this insert). }
+  lst_line_t = varying [256] of char;
+
 { The named sections of the opcode and operand tables (DSEE
   initializers: instr_attributes.init in lir.pas, instr_mnemonic.init and
   instr_mnemonic_length.init in lst.pas, instr_assembly.init in asm.pas,
@@ -442,6 +562,11 @@ var (operand_string_length)
   operand_string_length: array [0..31] of integer;
 var (operand_string)
   operand_string: array [0..31] of packed array [1..25] of char;
+
+{ batch B: the opcodes' assembly (0x2B9CCC, 212 entries of 44 bytes;
+  lst and asm read it, asm includes instr_assembly.init). }
+var (instruction_assembly)
+  instruction_assembly: instr_asms_t;
 
 var
   { at_backend.pas's data (A5 0x485830), reached absolutely. }
@@ -516,6 +641,14 @@ var
   ra_654: extern integer32;             { ra +0x654 (lir_main) }
   ra_658: extern integer32;             { ra +0x658 (lir_main) }
   sched_3158: extern integer32;         { sched +0x3158 (lir_main) }
+
+  { batch B: cells lst reaches. }
+  lir_main_ac0: extern array [0..31] of univ_ptr;    { lir_main +0xAC0
+                                          (0x48BE6C): by register
+                                          number, what a register
+                                          operand's link is when it
+                                          names the physical register
+                                          (lst_$display_operand) }
 
 
 { asm.pas (cc.a88k). }
@@ -1536,45 +1669,45 @@ procedure lst_$new_line; extern;
 { LST_$DEFINE_DATA_SECTION - 0x24EB0A, 0x84 bytes; called from bin.  Frame
   8:al. }
 procedure lst_$define_data_section(
-    p1: univ_ptr); options(val_param); extern;
+    sect: univ_ptr); options(val_param); extern;
 
 { LST_$SET_DATA_SECTION - 0x24EB98, 0xD4 bytes; called from bin.  Frame
   8:a. }
 procedure lst_$set_data_section(
-    p1: univ_ptr); options(val_param); extern;
+    sect: univ_ptr); options(val_param); extern;
 
 { LST_$PROGRAM_SECTION - 0x24EC88, 0xF8 bytes; called from bin.  Frame
   8:al. }
 procedure lst_$program_section(
-    p1: univ_ptr); options(val_param); extern;
+    sect: univ_ptr); options(val_param); extern;
 
 { LST_$PROCEDURE_ENTRY - 0x24ED94, 0x50A bytes; called from bin.  Frame
   8:al; 12:a; 16:al. }
 procedure lst_$procedure_entry(
-    p1: univ_ptr;
+    info: univ_ptr;
     p2: univ_ptr;
-    p3: univ_ptr); options(val_param); extern;
+    node: univ_ptr); options(val_param); extern;
 
 { LST_$PRTLIT - 0x24F8FC, 0x490 bytes; called from dmp.  Frame 8:a; 12:al.
   }
 procedure lst_$prtlit(
-    p1: univ_ptr;
-    p2: univ_ptr); options(val_param); extern;
+    in out s: univ lst_line_t;
+    lit: lit_ptr_t); options(val_param); extern;
 
 { LST_$DISPLAY_CODE_CELL - 0x250A0A, 0xD28 bytes; called from bin.  Frame
   8:al. }
 procedure lst_$display_code_cell(
-    p1: univ_ptr); options(val_param); extern;
+    cell: cell_ptr_t); options(val_param); extern;
 
 { LST_$DISPLAY_LITERAL - 0x251796, 0x326 bytes; called from bin.  Frame
   8:a. }
 procedure lst_$display_literal(
-    p1: univ_ptr); options(val_param); extern;
+    entry: lpe_ptr_t); options(val_param); extern;
 
 { LST_$DISPLAY_TABLE - 0x251C92, 0xD0 bytes; called from bin.  Frame 8:a.
   }
 procedure lst_$display_table(
-    p1: univ_ptr); options(val_param); extern;
+    cell: cell_ptr_t); options(val_param); extern;
 
 { mmt.pas (cc.a88k). }
 

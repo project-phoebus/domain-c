@@ -1299,3 +1299,23 @@ revisited.
 156. Translator MM: basic_block_label (zzzzz 0x2880E8) reads the old
    first instruction's +28 even when the block is empty (nil^ in the
    image); kept.
+157. Translator PB, lst.pas: the named sections' initializers.  lst
+   includes the generated instr_mnemonic.init and
+   instr_mnemonic_length.init (and asm instr_assembly.init, lir
+   instr_attributes.init), but backend.ins.pas declares the sections'
+   variables (`var (instruction_mnemonic) instruction_mnemonic: ...')
+   for every unit, and dpc refuses a second declaration with the
+   initializer.  The .init files hold a TODO; the data are recoverable
+   (the opcode enumeration's identifiers, the sections' bytes).  How
+   should the sections be shared: (a) the .init files declare the
+   initialized variables and backend.ins.pas's declarations move behind
+   an `%if' the including units set, (b) backend.ins.pas declares them
+   `extern' and the including units `define' them with the
+   initializers (if dpc accepts an initializer on a defined variable),
+   or (c) leave them uninitialized in the translation?
+158. Translator PB, lst.pas: the -PRASM listing writes the integer
+   registers as ".n" (`move.w #0x2E00' before the number), the singles
+   ".FSn", the doubles ".FDn", and register 30 of kind ip_reg_like as
+   ".PC" (classic "PC"); taken from the image as they are, though
+   ".n" for a register looks odd (the PRISM assembler's syntax is not
+   known here).
