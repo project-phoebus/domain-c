@@ -5,7 +5,7 @@
 
 .data and the named data sections hold no file bytes; the loader builds
 them from .rwdi records (Coff.rwdi(): kind 0 copies bytes to an address,
-kind 1 repeats the previous record).  This applies the records to the
+kind 1 repeats the previous record count-1 more times).  This applies the records to the
 range asked for and prints it as hex lines (`..' for bytes no record
 sets), N bytes a line (default 16).
 """
@@ -21,12 +21,19 @@ import coff_compare as cc  # noqa: E402
 def initial(coff, lo, n):
     out = [None] * n
     last = None
-    for kind, _, addr, data in coff.rwdi():
+    rw = coff.section('.rwdi')
+    for kind, va, addr, data in coff.rwdi():
         if kind == 0:
             last = (addr, data)
             spans = [(addr, data)]
         elif kind == 1 and last:
-            spans = []      # repeat counts are rare; not applied here
+            # count.l after the kind word: the previous record's bytes
+            # count-1 more times, following it
+            o = rw[3] + va - rw[1]
+            count = int.from_bytes(coff.data[o + 2:o + 6], 'big')
+            a0, d0 = last
+            spans = [(a0 + len(d0) * k, d0) for k in range(1, count)]
+            last = (a0 + len(d0) * (count - 1), d0)
         else:
             continue
         for a, d in spans:
