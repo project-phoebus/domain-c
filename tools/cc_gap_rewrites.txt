@@ -240,3 +240,5 @@ lang2/source/be_com/lir.pvt.pas	s/^var \(spill_instr_forms\)/var (spill_instr_fo
 # gap 25 (lir_utils, translator PA4): fix_store_through_lrs exceeds dpc's virtual registers (the stores after a written store-through register left out of the check)
 lang2/source/be_com/lir_utils.pas	s/^(        \{ The stores after the instruction\. \})$/%var gap25a;\n%if gap25a %then { gap 25 }\n$1/
 lang2/source/be_com/lir_utils.pas	s/^(        \{ The stores done\. \})$/%endif { gap 25 }\n$1/
+# gap 7 (oli): the real constant 0.0 passed (an integer constant node instead, for the check)
+lang2/source/be_com/oli.pas	s/(dp|rl)contk\(0\.0\)/smcontk(81, 0) { gap 7 }/
