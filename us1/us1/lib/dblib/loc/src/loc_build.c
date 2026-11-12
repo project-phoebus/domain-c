@@ -48,7 +48,10 @@
    0x0876B2  0x089092  loc_build__unknown_loc
  *   (.blocks lists all 33 at level 2, in reverse order.)
  *
- * A5 0x35319C (cc.m68k), 0x513B44 (cc.a88k).  The module data, A5-8 ..
+ * A5 0x35319C (cc.m68k), 0x513B44 (cc.a88k).  The module data is the
+ * named section loc_data (cc.m68k 0x353194, cc.a88k 0x513B3C, 0x204
+ * bytes: how the source named it, by a compiler option or in the text,
+ * is not known), A5-8 ..
  * A5+505 (the .rwdi bytes are the same in both binaries; the offsets
  * are with each definition below): at -8 and -4 the cells through which
  * free and malloc are reached (named by the .rwdi relocations; 0 in

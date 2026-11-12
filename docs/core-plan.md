@@ -460,3 +460,13 @@ entry (was b42_0; opt_livevar, reg_action, opt_strength follow), a
 into its bits; walkuses' t is univ (reviseuses passes an entry of
 opt_4009c).
 
+
+Translator LL (2026-11-11), the last non-back-end leftovers: loc_build.c
+(33 routines, C; its records in us1/.../loc_private.h, its prototypes in
+loc_build.h, loc.h, loc_pack.h and the derived loc_codes.h, loc_sets.h
+stubs), const_op.ftn (14 routines, FORTRAN 77), c_data.asm (GNU as,
+byte-identical), empty.pas (an empty module), std_lib.pas (section
+libdsc byte-identical; std_lib's pointers TODO, question 140) and
+opinfo.pas (the seven tables .blocks names, byte-identical).  No shared
+insert changed; the users' extern names for opinfo's tables and the
+prelude's std_lib_rtns are left for the merge (questions 140, 141).
