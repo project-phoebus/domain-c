@@ -187,8 +187,9 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang2/source/be_com/zzzzz.pas` | 9 | translated (cc.a88k only; best effort; code cells through backend.ins.pas's cell_t, code_cell_size initialized; dpc gap 2) |
 | `lang2/source/be_com/tr_utils.pas` | 68 | translated (cc.a88k only; best effort, translator PC; instructions, operands, segments, live ranges and blocks through backend.ins.pas; validators as routine pointers; dpc gaps 8, 11, 12, 15, 24) |
 | `lang2/source/be_com/mmt_utils.pas` | 37 | begun: 15 of 37 (translator PC; the leaf routines: memory live ranges and MMT_SEQ instructions kept for reuse; the rest listed in the file's TODO) |
-| `lang2/source/be_com/lst.pas` | 33 | translated (cc.a88k only; best effort; the classic and -PRASM listings; the section initializers of instr_mnemonic*.init TODO; dpc gaps 7, 8, 28) |
+| `lang2/source/be_com/lst.pas` | 33 | translated (cc.a88k only; best effort; the classic and -PRASM listings; instr_mnemonic*.init filled (translator PB2); dpc gaps 7, 8, 28) |
 | `lang2/source/be_com/bin.pas` | 32 | translated (cc.a88k only; best effort; defines unix_objmod's emit_108 at +0x30; records by offset; dpc gaps 7, 13, 22) |
+| `lang2/source/be_com/asm.pas` | 21 | translated (cc.a88k only; best effort; the PRISM encoder and literal pools, translator PB2; instr_assembly.init, operand_string*.init; docs/prism-isa.md; dpc gaps 22, 25, 32) |
 | `lang2/source/be_com/bv.pas` | 32 | translated (cc.a88k only; translator PA; best effort; vectors as sets of 0..31 (backend.ins.pas bv_t), the masks initialized) |
 | `lang/common/source/exs.pas` | 27 | translated (cc.a88k only; translator PA; best effort; IL nodes through the unit's views (exs_frame_t, exs_handler_t, ...); headings narrowed in exs.ins.pas) |
 | `lang2/source/be_com/utils.pas` | 54 | translated (cc.a88k only; translator PA; best effort; instructions, operands, segments and live ranges through backend.ins.pas (fields named by role), join inputs and statement lists through the unit's views; utils.ins.pas narrowed; dpc gap 12) |

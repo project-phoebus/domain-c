@@ -820,3 +820,31 @@ cc.m68k unless marked.
     (bv_$copy 0x224E84 ...: `clr.w D1', `addq.w #1,D1', `clr.l D0;
     move.w D1,D0; cmp.l D2,D0; bls') run once even when the limit
     ((n + 31) div 32 - 1, unsigned) would be -1; written as for loops.
+
+## The assembler (translator PB2, cc.a88k asm)
+
+130. **A 32-bit word built in a local packed record, field by field.**
+    asm_$process_routine's encoder fills the frame's longword at -300
+    with byte, word and longword `andi'/`or' pairs (`andi.b #-32,
+    (-297,A6); or.b D0,(-297,A6)' for bits 4..0, `andi.w #-993,
+    (-300,A6)' for 25..21, `andi.l #-262144,(-300,A6)' for 17..0,
+    `bset #3,(-300,A6)' for bit 27): a packed record with variants,
+    each field's width choosing the access (dpc does the same:
+    asm_word_t).  The template is ORed in at the end (`move.l
+    (-300,A6),D0; or.l (-188,A6),D0').
+131. **A literal passed by reference placed among the routine's
+    strings.**  bug_check's last argument 12 (the mnemonic's length
+    for %a) is the longword 0x0000000C at 0x2214B8, between two
+    messages; zzzzz_$new_code_cell's `in' opcode 204 is the word 0x00CC
+    at 0x21E6BC before append_literal_pool__code_cell's message.
+132. **A record's leading fields cleared from a code constant.**
+    clear_literal_pool (0x21E768) copies 48 bytes (lo and hi -1, the
+    rest 0) with `lea (0x21E7D0,PC),A0' and twelve `move.l (A0)+,
+    (A1)+' (the last `move.l (A0),(A1)'), then stores the tails one by
+    one: a structured constant (or an aggregate) for the first 48 bytes
+    of an 80-byte record.  Written as field assignments.
+133. **A char value parameter as a word.**  dump_pass_one_instruction's
+    mark is pushed `move.w #0x2000,-(SP)' (' '), 0x2B00 ('+'), 0x7800
+    ('x'): the character in the word's high byte, printed with %M1ZA
+    from (16,A6).
+

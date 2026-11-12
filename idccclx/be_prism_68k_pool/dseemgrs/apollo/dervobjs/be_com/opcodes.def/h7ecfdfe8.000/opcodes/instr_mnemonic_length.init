@@ -1,13 +1,45 @@
 { instr_mnemonic_length.init - a DSEE derived object of
   be_com/opcodes.def (cc.a88k only): the initializer of the section
-  instruction_mnemonic_length (0x2B773C: 384 words, the length of each
-  instruction_mnemonic entry).  Included by lst.pas after
+  instruction_mnemonic_length (0x2B773C: 384 words, the lengths of
+  instruction_mnemonic's names).  Included by lst.pas after
   instr_mnemonic.init.
 
-  No Apollo copy survives.  As instr_mnemonic.init: backend.ins.pas
-  declares the section's variable, so the initializer cannot be given
-  here.
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k, the section's bytes.
 
-  Not known from the original: how Apollo's units shared the section. }
+  How the section is shared (docs/questions.md 161, settled by
+  translator PB2): backend.ins.pas declares the section's variable for
+  every unit (`var (instruction_mnemonic_length) instruction_mnemonic_length: ...'); this file, included by
+  the one unit that holds the data, gives it its initial value with a
+  `define' statement (the language reference's section 7.2.2, method 2:
+  a define statement after the var declaration, "useful ... when you
+  write an %include file").  dpc lays the defined variable out in the
+  named section with its data.
 
-{ TODO(pascal) instr_mnemonic_length.init: the section's initializer }
+  Not known from the original: the file's layout. }
+
+define instruction_mnemonic_length := [
+    0, 6, 5, 4, 4, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3,  { 0 }
+    3, 2, 3, 3, 3, 2, 4, 4, 4, 4, 4, 4, 7, 7, 7, 7,  { 16 }
+    7, 7, 7, 7, 7, 6, 7, 7, 7, 6, 8, 8, 8, 8, 8, 8,  { 32 }
+    8, 8, 8, 8, 8, 8, 8, 8, 8, 7, 8, 8, 8, 7, 9, 9,  { 48 }
+    9, 9, 9, 9, 4, 4, 8, 4, 4, 3, 3, 4, 5, 3, 3, 3,  { 64 }
+    4, 3, 4, 4, 3, 2, 3, 7, 7, 8, 3, 3, 3, 7, 6, 8,  { 80 }
+    6, 8, 6, 6, 6, 6, 5, 6, 6, 5, 5, 6, 6, 5, 9, 8,  { 96 }
+    7, 6, 7, 4, 4, 9, 6, 6, 6, 6, 7, 7, 6, 4, 4, 6,  { 112 }
+    7, 4, 3, 4, 6, 5, 6, 4, 4, 4, 4, 4, 3, 4, 5, 5,  { 128 }
+    5, 6, 5, 4, 4, 5, 7, 6, 7, 6, 4, 4, 4, 6, 4, 4,  { 144 }
+    4, 5, 6, 5, 4, 4, 5, 7, 6, 7, 6, 4, 4, 4, 6, 4,  { 160 }
+    4, 4, 4, 4, 5, 4, 4, 5, 4, 4, 5, 5, 8, 5, 5, 8,  { 176 }
+    3, 4, 7, 8, 5, 5, 8, 5, 6, 3, 7, 7, 5, 6, 6, 6,  { 192 }
+    6, 8, 4, 8, 2, 3, 3, 7, 8, 6, 6, 8, 8, 5, 9, 9,  { 208 }
+    9, 9, 9, 9, 6, 4, 6, 7, 7, 4, 7, 7, 5, 8, 8, 4,  { 224 }
+    7, 4, 7, 4, 7, 4, 7, 5, 8, 8, 7, 7, 8, 7, 5, 8,  { 240 }
+    8, 7, 10, 7, 10, 6, 9, 6, 9, 6, 9, 9, 9, 9, 7, 7,  { 256 }
+    8, 7, 8, 7, 10, 7, 10, 6, 9, 6, 9, 6, 9, 9, 9, 9,  { 272 }
+    4, 7, 9, 9, 9, 6, 10, 7, 9, 9, 6, 10, 7, 7, 7, 7,  { 288 }
+    7, 7, 7, 7, 7, 7, 6, 7, 6, 7, 11, 11, 7, 7, 7, 7,  { 304 }
+    7, 7, 7, 7, 7, 7, 6, 7, 6, 7, 8, 8, 7, 8, 7, 8,  { 320 }
+    10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 5, 10, 5, 10, 8, 9,  { 336 }
+    6, 9, 11, 11, 9, 6, 6, 11, 8, 4, 4, 4, 4, 4, 4, 8,  { 352 }
+    8, 11, 8, 11, 6, 6, 6, 9, 9, 3, 3, 4, 4, 9, 9, 7];  { 368 }

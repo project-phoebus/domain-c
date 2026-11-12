@@ -746,6 +746,36 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
          b := s * [0..28] = [];
        end;
 
+32. **An initialized overlay section named as its variable.**  The
+   back end's named sections (`var (instruction_assembly)
+   instruction_assembly: ...' in backend.ins.pas) are given their data
+   by the .init files with a `define' statement (reference 7.2.2,
+   method 2; docs/questions.md 161): asm.pas defines
+   instruction_assembly, operand_string and operand_string_length,
+   lst.pas instruction_mnemonic and instruction_mnemonic_length.  In
+   Apollo's object module the variable is the section itself (offset
+   0); dpc emits a global label for the variable beside the section's
+   symbol and refuses the clash: "an overlay section named like a
+   routine or variable symbol of the unit (`INSTRUCTION_MNEMONIC`) is
+   not supported yet" (an uninitialized section, a .comm, passes).
+   The gate renames the five sections (`_s') in backend.ins.pas's
+   scratch copy.  Reproducer:
+
+       module g32;
+       var (tab) tab: array [0..1] of integer;
+       define tab := [1, 2];
+       procedure p;
+       begin
+         tab[0] := tab[1];
+       end;
+
+   Translator PB2 (asm.pas) also met gaps 22 (the traces' flags as 0
+   or 1) and 25 (asm_$process_routine, 0x19A2 bytes: the check leaves
+   out pass 1's literal and pipeline-kind code, from `{ Its
+   literals. }' to label 2, and pass 2's immediate forms, `case form
+   of' to `{ The forms done. }').  dpc refused `while true do' in
+   dump_literal_pool (codegen-patterns 7.2: written with a label).
+
 Translator PC (cc.a88k tr_utils) met gaps 8 (`opc in [77, 79..83]', a
 word element: tst_elim_within_bb, validate_lts_for_tst), 11
 (index_operand, base_operand: `:= nil' last), 12 (a pointer function

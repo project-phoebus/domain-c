@@ -620,3 +620,12 @@ lang2/source/be_com/bin.pas	s/^(\s*)(\w+) := ord\(([^()]*(?:\([^()]*\))?[^()]*)\
 # gap 12 (utils, translator PA): an A0 function result compared with a variable (the operands swapped)
 lang2/source/be_com/utils.pas	s/if utils_\$find_exposed_lts\(lr, bb\) <> lts then/if lts <> utils_\$find_exposed_lts(lr, bb) then { gap 12 }/
 lang2/source/be_com/utils.pas	s/if utils_\$find_final_lts\(lr, bb\) <> lts then/if lts <> utils_\$find_final_lts(lr, bb) then { gap 12 }/
+# gap 32 (backend.ins.pas, translator PB2): an initialized overlay section named as its variable (the sections the .init files define renamed, for the check)
+lang2/source/be_com/backend.ins.pas	s/^var \((instruction_mnemonic|instruction_mnemonic_length|instruction_assembly|operand_string|operand_string_length)\)/var (${1}_s) { gap 32 }/
+# gap 22 (asm, translator PB2): ord of a boolean (an if statement, for the check)
+lang2/source/be_com/asm.pas	s/^(\s*)(\w+) := ord\(([^()]*(?:\([^()]*\))?[^()]*)\) & 1;/${1}if $3 then $2 := 1 else $2 := 0; { gap 22 }/
+# gap 25 (asm, translator PB2): asm_$process_routine exceeds dpc's virtual registers (pass 1's literals and instruction kinds, pass 2's immediate forms left out of the check)
+lang2/source/be_com/asm.pas	s/^(  \{ Its literals\. \})$/%var gap25b;\n%if gap25b %then { gap 25 }\n$1/
+lang2/source/be_com/asm.pas	s/^(2:)$/%endif { gap 25 }\n$1/
+lang2/source/be_com/asm.pas	s/^(                case form of)$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
+lang2/source/be_com/asm.pas	s/^(                \{ The forms done\. \})$/%endif { gap 25 }\n$1/
