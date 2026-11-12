@@ -1007,29 +1007,6 @@ class Lifter(P2.Lifter):
         c, t, f, _ = nodes[first]
         return c, t, f
 
-    def frame_live(self, a, off):
-        """Whether the frame temporary at off is read at or after a before
-        it is set."""
-        seen, work = set(), [a]
-        pat = '%%fp@(%d)' % off
-        while work:
-            a = work.pop()
-            while a in self.at and a not in seen and a < self.epilogue:
-                seen.add(a)
-                x = self.ins[self.at[a]]
-                if pat in x.text:
-                    if x.ops and x.ops[-1].strip() == pat and x.mn in ('move', 'clr') and \
-                            x.text.count(pat) == 1:
-                        break
-                    return True
-                if x.mn == 'bra':
-                    a = x.target
-                    continue
-                if x.target is not None:
-                    work.append(x.target)
-                a = self.ins[self.at[a] + 1].addr
-        return False
-
     def arms(self, x, cond, t, f, st, out, stops, st_t=None, st_f=None):
         """`if cond then <t> else <f>' to the merge point (p2's branch)."""
         self.use(cond)
@@ -1076,23 +1053,7 @@ class Lifter(P2.Lifter):
             else:
                 newst.regs.pop(r, None)
         # frame temporaries likewise (a value set on both arms)
-        frame = dict(s_then.frame)
-        for off in sorted(set(s_then.frame) | set(s_else.frame)):
-            v1, v2 = s_then.frame.get(off), s_else.frame.get(off)
-            if v1 is v2 or (v1 is not None and v2 is not None and self.same(v1, v2)):
-                continue
-            if v1 is None or v2 is None or not self.frame_live(e1, off):
-                frame.pop(off, None)
-                continue
-            c = Cell(None, v1.typ if isinstance(v1, Cell) else 'int32', False, self.bound)
-            c.need = True
-            self.cells.append(c)
-            c.phi = True
-            c.mark = ['mark', c]
-            out.append(c.mark)
-            for body, v in ((b_then, v1), (b_else, v2)):
-                body.append(['phi', c, v])
-            frame[off] = c
+        frame = self.join_frame(s_then, s_else, e1, b_then, b_else, out)
         if P2.pending(s_then.stack) != P2.pending(s_else.stack):
             raise Unliftable('0x%X: the arms leave different stacks' % x.addr)
         out.append(('if', [(cond, b_then)], b_else))

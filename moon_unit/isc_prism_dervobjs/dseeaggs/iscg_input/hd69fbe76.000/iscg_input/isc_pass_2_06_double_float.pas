@@ -534,6 +534,9 @@ var
   t4: isc_solution_ptr_t;
   t5: isc_solution_ptr_t;
   t6: isc_solution_ptr_t;
+  t7: isc_solution_ptr_t;
+  t8: isc_solution_ptr_t;
+  t9: isc_solution_ptr_t;
 begin
   t1 := high_half_of_fp_reg_pair(solution);
   t2 := low_half_of_fp_reg_pair(solution);
@@ -553,15 +556,25 @@ begin
     end else begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$extend7), 0,
           subject^.children[1], t4, nil);
+      t5 := t4;
     end;
-  end
-  else if ord(result.space136[138]) = 2 then begin
-    if ord(result.space136[140]) <> 1 then begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$extend15), 0,
-          subject^.children[1], t4, nil);
+    t8 := t5;
+  end else begin
+    if ord(result.space136[138]) = 2 then begin
+      if ord(result.space136[140]) = 1 then begin
+        t6 := subject^.children[1];
+      end else begin
+        debug_lir_$simple_instruction(result.inherited, ord(opc$extend15), 0,
+            subject^.children[1], t4, nil);
+        t6 := t4;
+      end;
+      t7 := t6;
+    end else begin
+      t7 := subject^.children[1];
     end;
+    t8 := t7;
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0, t5, t3,
+  debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0, t8, t3,
       nil);
   debug_lir_$simple_instruction(result.inherited, ord(opc$cvtis), 0, t3, t1,
       nil);
@@ -573,10 +586,10 @@ begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
         isc_solution_ptr_t(lir_3d60[0]), t2, nil);
   end else begin
-    t6 := address_mode_for_integer32_value(0);
-    debug_lir_$load_instruction(result.inherited, ord(opc$loads), 0, t6,
-        isc_solution_ptr_t(t6^.base_reg), t2, t6^.sym, 0, t6^.bits_known,
-        t6^.bits_trusted);
+    t9 := address_mode_for_integer32_value(0);
+    debug_lir_$load_instruction(result.inherited, ord(opc$loads), 0, t9,
+        isc_solution_ptr_t(t9^.base_reg), t2, t9^.sym, 0, t9^.bits_known,
+        t9^.bits_trusted);
   end;
   result.live_range := t1^.live_range;
   result.lr2 := t2^.live_range;
@@ -715,6 +728,9 @@ var
   t4: isc_solution_ptr_t;
   t5: isc_solution_ptr_t;
   t6: isc_solution_ptr_t;
+  t7: isc_solution_ptr_t;
+  t8: isc_solution_ptr_t;
+  t9: isc_solution_ptr_t;
 begin
   t1 := high_half_of_fp_reg_quad(solution);
   t2 := low_half_of_fp_reg_quad(solution);
@@ -734,22 +750,32 @@ begin
     end else begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$extend7), 0,
           subject^.children[1], t4, nil);
+      t5 := t4;
     end;
-  end
-  else if ord(result.space136[138]) = 2 then begin
-    if ord(result.space136[140]) <> 1 then begin
-      debug_lir_$simple_instruction(result.inherited, ord(opc$extend15), 0,
-          subject^.children[1], t4, nil);
+    t8 := t5;
+  end else begin
+    if ord(result.space136[138]) = 2 then begin
+      if ord(result.space136[140]) = 1 then begin
+        t6 := subject^.children[1];
+      end else begin
+        debug_lir_$simple_instruction(result.inherited, ord(opc$extend15), 0,
+            subject^.children[1], t4, nil);
+        t6 := t4;
+      end;
+      t7 := t6;
+    end else begin
+      t7 := subject^.children[1];
     end;
+    t8 := t7;
   end;
-  debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0, t5, t3,
+  debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0, t8, t3,
       nil);
   debug_lir_$simple_instruction(result.inherited, ord(opc$cvtid), 0, t3, t1,
       nil);
-  t6 := address_mode_for_double_value(0.0);
-  debug_lir_$load_instruction(result.inherited, ord(opc$loadd), 0, t6,
-      isc_solution_ptr_t(t6^.base_reg), t2, t6^.sym, 0, t6^.bits_known,
-      t6^.bits_trusted);
+  t9 := address_mode_for_double_value(0.0);
+  debug_lir_$load_instruction(result.inherited, ord(opc$loadd), 0, t9,
+      isc_solution_ptr_t(t9^.base_reg), t2, t9^.sym, 0, t9^.bits_known,
+      t9^.bits_trusted);
   result.live_range := t1^.live_range;
   result.lr2 := t2^.live_range;
 end;

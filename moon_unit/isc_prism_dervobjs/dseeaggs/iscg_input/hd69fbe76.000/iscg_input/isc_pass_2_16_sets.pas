@@ -328,6 +328,7 @@ var
   t5: isc_solution_ptr_t;
   t6: isc_solution_ptr_t;
   t7: isc_solution_ptr_t;
+  t8: isc_solution_ptr_t;
 begin
   t1 := lir_$new_label;
   t2 := lir_$new_label;
@@ -353,6 +354,7 @@ begin
   debug_lir_$branch_instruction(result.inherited, t2, ord(opc$blo), 0);
   if ord(result.space136[138]) = 1 then begin
     t5 := find_well_known_literal_solution(1);
+    t8 := t5;
   end else begin
     t6 := create_solution_for_ip_reg;
     if ord(result.space136[139]) = 1 then begin
@@ -364,8 +366,9 @@ begin
           isc_solution_ptr_t(t7^.base_reg), t6, t7^.sym, 0, t7^.bits_known,
           t7^.bits_trusted);
     end;
+    t8 := t6;
   end;
-  debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0, 1, t5,
+  debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0, 1, t8,
       subject^.children[2], subject^.children[1]);
   debug_lir_$label(result.inherited, t2);
   debug_lir_$label(result.inherited, t1);
@@ -400,6 +403,7 @@ var
   t13: isc_solution_ptr_t;
   t14: isc_solution_ptr_t;
   t15: isc_solution_ptr_t;
+  t16: isc_solution_ptr_t;
 begin
   t1 := lir_$new_label;
   t2 := lir_$new_label;
@@ -479,6 +483,7 @@ begin
       subject^.children[1]^.bits_known, subject^.children[1]^.bits_trusted);
   if ord(result.space136[141]) = 1 then begin
     t13 := find_well_known_literal_solution(1);
+    t16 := t13;
   end else begin
     t14 := create_solution_for_ip_reg;
     if ord(result.space136[142]) = 1 then begin
@@ -490,8 +495,9 @@ begin
           isc_solution_ptr_t(t15^.base_reg), t14, t15^.sym, 0,
           t15^.bits_known, t15^.bits_trusted);
     end;
+    t16 := t14;
   end;
-  debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0, 1, t13,
+  debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0, 1, t16,
       t9, t10);
   debug_lir_$store_instruction(result.inherited, ord(opc$storeb),
       t3 + t4 + t5 + 16#1000000, t10, t7, t8, subject^.children[1]^.sym, 0,

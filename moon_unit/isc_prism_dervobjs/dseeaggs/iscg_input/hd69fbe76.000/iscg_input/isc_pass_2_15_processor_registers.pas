@@ -263,6 +263,7 @@ var
   t5: isc_solution_ptr_t;
   t6: isc_solution_ptr_t;
   t7: isc_solution_ptr_t;
+  t8: isc_solution_ptr_t;
 begin
   if p2_flags_ptr_t(addr(subject^.children[1]^.f76))^.is_volatile then begin
     t1 := 2048;
@@ -275,44 +276,47 @@ begin
     t2 := 0;
   end;
   if ord(result.space136[136]) = 1 then begin
-    t3 := subject^.children[2];
+    t8 := subject^.children[2];
   end else begin
-    t4 := create_solution_for_ip_reg;
+    t3 := create_solution_for_ip_reg;
     debug_lir_$mfpr_instruction(result.inherited, ord(opc$mfpr), t1 + t2,
         subject^.children[1],
-        isc_solution_ptr_t(subject^.children[1]^.base_reg), t4,
+        isc_solution_ptr_t(subject^.children[1]^.base_reg), t3,
         subject^.children[1]^.obj_w_name);
     if ord(result.space136[137]) = 1 then begin
       debug_lir_$field_instruction(result.inherited, ord(opc$transfer), 0,
           integer32(result.fields[0]), subject^.children[2],
-          find_well_known_literal_solution(integer32(result.fields[1])), t4);
+          find_well_known_literal_solution(integer32(result.fields[1])), t3);
     end
     else if ord(result.space136[138]) = 1 then begin
       if ord(result.space136[139]) = 1 then begin
-        t5 := find_well_known_literal_solution(subject^.children[2]^.disp);
+        t4 := find_well_known_literal_solution(subject^.children[2]^.disp);
+        t7 := t4;
       end else begin
-        t6 := create_solution_for_ip_reg;
+        t5 := create_solution_for_ip_reg;
         if ord(result.space136[140]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
               find_well_known_literal_solution(subject^.children[2]^.disp),
-              t6, nil);
+              t5, nil);
         end else begin
-          t7 := address_mode_for_integer32_value(subject^.children[2]^.disp);
+          t6 := address_mode_for_integer32_value(subject^.children[2]^.disp);
           debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t7, isc_solution_ptr_t(t7^.base_reg), t6, t7^.sym, 0,
-              t7^.bits_known, t7^.bits_trusted);
+              t6, isc_solution_ptr_t(t6^.base_reg), t5, t6^.sym, 0,
+              t6^.bits_known, t6^.bits_trusted);
         end;
+        t7 := t5;
       end;
       debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
-          integer32(result.fields[0]), t5,
-          find_well_known_literal_solution(integer32(result.fields[1])), t4);
+          integer32(result.fields[0]), t7,
+          find_well_known_literal_solution(integer32(result.fields[1])), t3);
     end else begin
       debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
           integer32(result.fields[0]), subject^.children[2],
-          find_well_known_literal_solution(integer32(result.fields[1])), t4);
+          find_well_known_literal_solution(integer32(result.fields[1])), t3);
     end;
+    t8 := t3;
   end;
-  debug_lir_$mtpr_instruction(result.inherited, ord(opc$mtpr), t1 + t2, t3,
+  debug_lir_$mtpr_instruction(result.inherited, ord(opc$mtpr), t1 + t2, t8,
       subject^.children[1],
       isc_solution_ptr_t(subject^.children[1]^.base_reg),
       subject^.children[1]^.obj_w_name);
@@ -332,6 +336,7 @@ var
   t5: isc_solution_ptr_t;
   t6: isc_solution_ptr_t;
   t7: isc_solution_ptr_t;
+  t8: isc_solution_ptr_t;
 begin
   if p2_flags_ptr_t(addr(subject^.children[1]^.f76))^.is_volatile then begin
     t1 := 2048;
@@ -344,44 +349,47 @@ begin
     t2 := 0;
   end;
   if ord(result.space136[136]) = 1 then begin
-    t3 := subject^.children[2];
+    t8 := subject^.children[2];
   end else begin
-    t4 := create_solution_for_ip_reg;
+    t3 := create_solution_for_ip_reg;
     debug_lir_$mfpr_instruction(result.inherited, ord(opc$mfpr), t1 + t2,
         subject^.children[1],
-        isc_solution_ptr_t(subject^.children[1]^.base_reg), t4,
+        isc_solution_ptr_t(subject^.children[1]^.base_reg), t3,
         subject^.children[1]^.obj_w_name);
     if ord(result.space136[137]) = 1 then begin
       debug_lir_$field_instruction(result.inherited, ord(opc$transfer), 0,
           integer32(result.fields[0]), subject^.children[2],
-          find_well_known_literal_solution(integer32(result.fields[1])), t4);
+          find_well_known_literal_solution(integer32(result.fields[1])), t3);
     end
     else if ord(result.space136[138]) = 1 then begin
       if ord(result.space136[139]) = 1 then begin
-        t5 := find_well_known_literal_solution(subject^.children[2]^.disp);
+        t4 := find_well_known_literal_solution(subject^.children[2]^.disp);
+        t7 := t4;
       end else begin
-        t6 := create_solution_for_ip_reg;
+        t5 := create_solution_for_ip_reg;
         if ord(result.space136[140]) = 1 then begin
           debug_lir_$simple_instruction(result.inherited, ord(opc$move), 0,
               find_well_known_literal_solution(subject^.children[2]^.disp),
-              t6, nil);
+              t5, nil);
         end else begin
-          t7 := address_mode_for_integer32_value(subject^.children[2]^.disp);
+          t6 := address_mode_for_integer32_value(subject^.children[2]^.disp);
           debug_lir_$load_instruction(result.inherited, ord(opc$loadl), 0,
-              t7, isc_solution_ptr_t(t7^.base_reg), t6, t7^.sym, 0,
-              t7^.bits_known, t7^.bits_trusted);
+              t6, isc_solution_ptr_t(t6^.base_reg), t5, t6^.sym, 0,
+              t6^.bits_known, t6^.bits_trusted);
         end;
+        t7 := t5;
       end;
       debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
-          integer32(result.fields[0]), t5,
-          find_well_known_literal_solution(integer32(result.fields[1])), t4);
+          integer32(result.fields[0]), t7,
+          find_well_known_literal_solution(integer32(result.fields[1])), t3);
     end else begin
       debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
           integer32(result.fields[0]), subject^.children[2],
-          find_well_known_literal_solution(integer32(result.fields[1])), t4);
+          find_well_known_literal_solution(integer32(result.fields[1])), t3);
     end;
+    t8 := t3;
   end;
-  debug_lir_$mtpr_instruction(result.inherited, ord(opc$mtpr), t1 + t2, t3,
+  debug_lir_$mtpr_instruction(result.inherited, ord(opc$mtpr), t1 + t2, t8,
       subject^.children[1],
       isc_solution_ptr_t(subject^.children[1]^.base_reg),
       subject^.children[1]^.obj_w_name);
