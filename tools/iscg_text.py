@@ -662,6 +662,11 @@ P1_TYPES = '''type
   p1_readonly_bytes_ptr_t = ^p1_readonly_bytes_t;
   p1_readonly_bytes_t = array [0..3119] of p1_bits_t;
 
+  { isc_readonly_tables as words (the word tables by rlen the views
+    above do not name). }
+  p1_readonly_words_ptr_t = ^p1_readonly_words_t;
+  p1_readonly_words_t = array [0..1559] of integer;
+
   { target_properties at +0xB4: a longword target_properties.ins.pas
     leaves inside p_b0 (the size above which char_string_ob,
     namelist_constant_ob and set_con_ob go to the literal pool when
@@ -1292,5 +1297,56 @@ begin
       if solution_list$empty(children[1]) then
         no_solutions := true;
     end;
+  end;
+end;''')
+
+P1_ROUTINES['isc_return_node'] = _p1('isc_return_node', '''the
+  proper_subtree il_return_node, no children; a return whose value must
+  be assigned to the function's result (return_value_needs_assign_node
+  of the value, +48, and the routine's result variable, il_180's +96)
+  is rewritten as that assignment (an assign_node, kind 140: +64 the
+  result, +68 the value, +8 and +12 the return's, +76 the assignment
+  operator by rlen from isc_readonly_tables +346, +52 the rlen, +48 its
+  bytes (rlen_bits div 8), +20 the line, +43 the statement index), and
+  that node's solutions.
+
+  0x0E5850, 0x1C4 bytes: A2 il, D4 the value, D5 inh; the index copied
+  as a 16-bit field at bit 8 of +42 (`and.l #16#FFFF00', `and.l
+  #-16776961').
+
+  Not known from the original: the table's name; how the index was
+  written (a packed field).''', '''
+var
+  n: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_return_node);
+  number_of_children := 0;
+  if return_value_needs_assign_node(isc_node_ptr_t(il)^.xp[12],
+      isc_node_ptr_t(il_180)^.xp[24]) then begin
+    @TRACE
+    n := mrh_$alloc(isc_preserve_heap, 80);
+    isc_node_ptr_t(n)^.kind := 140;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[16] := isc_node_ptr_t(il_180)^.xp[24];
+    isc_node_ptr_t(n)^.xp[17] := isc_node_ptr_t(il)^.xp[12];
+    isc_node_ptr_t(n)^.xl[2] := isc_node_ptr_t(il)^.xl[2];
+    isc_node_ptr_t(n)^.xl[3] := isc_node_ptr_t(il)^.xl[3];
+    isc_node_ptr_t(n)^.xw[38] :=
+        p1_readonly_words_ptr_t(addr(isc_readonly_tables))^[173 + isc_node_ptr_t(il)^.xw[26]];
+    isc_node_ptr_t(n)^.xw[28] := 0;
+    isc_node_ptr_t(n)^.xw[26] := isc_node_ptr_t(il)^.xw[26];
+    isc_node_ptr_t(n)^.xl[12] := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[26]] div 8;
+    isc_node_ptr_t(n)^.xw[10] := inh^.pos.line;
+    isc_node_ptr_t(n)^.st_l42 := (isc_node_ptr_t(n)^.st_l42 & 16#FF0000FF)
+        ! (isc_node_ptr_t(il)^.st_l42 & 16#FFFF00);
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+    solutions_made := true;
   end;
 end;''')

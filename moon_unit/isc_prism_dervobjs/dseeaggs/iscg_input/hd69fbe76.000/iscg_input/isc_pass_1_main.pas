@@ -227,13 +227,12 @@
 
   Not generated yet (declared extern below; the operator
   declarations mark them `fixed'; their text is to be read off the
-  image into tools/iscg_text.py P1_ROUTINES): 19 routines,
+  image into tools/iscg_text.py P1_ROUTINES): 17 routines,
     isc_assign_node_div_by_aop, isc_assign_node_isc_agg_aop,
-    isc_assign_node_isc_agg_zero_aop, isc_assign_node_isc_mul_to_aop,
-    isc_bit_field_assign, isc_cmp_tree_node_bit_field_cmp_top,
-    isc_cmp_tree_node_compare_top, isc_entry_blk, isc_fortran_symbol,
-    isc_function_blk, isc_insert_bit_field, isc_procedure_blk,
-    isc_return_node, isc_tree_node_bit_field_cmp_top,
+    isc_assign_node_isc_mul_to_aop, isc_bit_field_assign,
+    isc_cmp_tree_node_bit_field_cmp_top, isc_cmp_tree_node_compare_top,
+    isc_entry_blk, isc_fortran_symbol, isc_function_blk,
+    isc_insert_bit_field, isc_procedure_blk, isc_tree_node_bit_field_cmp_top,
     isc_tree_node_compare_top, isc_tree_node_div_top,
     isc_tree_node_isc_mul_top, isc_tree_node_mod_top, isc_tree_node_mul_top
 
@@ -300,6 +299,11 @@ type
   { isc_readonly_tables' bytes and their bits (bit 7 first). }
   p1_readonly_bytes_ptr_t = ^p1_readonly_bytes_t;
   p1_readonly_bytes_t = array [0..3119] of p1_bits_t;
+
+  { isc_readonly_tables as words (the word tables by rlen the views
+    above do not name). }
+  p1_readonly_words_ptr_t = ^p1_readonly_words_t;
+  p1_readonly_words_t = array [0..1559] of integer;
 
   { target_properties at +0xB4: a longword target_properties.ins.pas
     leaves inside p_b0 (the size above which char_string_ob,
@@ -1352,7 +1356,7 @@ procedure isc_assign_node_isc_agg_aop(
     var solutions_made: boolean;
     var no_solutions: boolean); options(val_param); extern;
 
-{ isc_assign_node_isc_agg_zero_aop (0x0DEDD6): not generated yet (the unit's header). }
+{ isc_assign_node_isc_agg_zero_aop - the proper_subtree il_isc_agg_zero_aop, 2 children (0x0DEDD6). }
 
 procedure isc_assign_node_isc_agg_zero_aop(
     il: univ_ptr;
@@ -1364,7 +1368,46 @@ procedure isc_assign_node_isc_agg_zero_aop(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  inh_1: inherited_attributes_ptr_t;
+  n1, n5: univ_ptr;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_isc_agg_zero_aop);
+  number_of_children := 2;
+  if isc_user_routines_356 or isc_user_routines_354 then begin
+    write('*********************');
+    writeln;
+    write('R E W R I T E ! ! ! !');
+    writeln;
+    write('*********************');
+    writeln;
+    writeln;
+  end;
+  n1 := mrh_$alloc(isc_preserve_heap, 12);
+  isc_node_ptr_t(n1)^.kind := 81;
+  isc_node_ptr_t(n1)^.rewritten := true;
+  isc_node_ptr_t(n1)^.xl[2] := 0;
+  n5 := mrh_$alloc(isc_preserve_heap, 80);
+  isc_node_ptr_t(n5)^.kind := 140;
+  isc_node_ptr_t(n5)^.rewritten := true;
+  isc_node_ptr_t(n5)^.xp[16] := isc_node_ptr_t(il)^.xp[16];
+  isc_node_ptr_t(n5)^.xp[17] := n1;
+  isc_node_ptr_t(n5)^.xp[18] := isc_node_ptr_t(il)^.xp[18];
+  isc_node_ptr_t(n5)^.xp[3] := isc_node_ptr_t(il)^.xp[3];
+  isc_node_ptr_t(n5)^.xw[38] := 34;
+  isc_node_ptr_t(n5)^.xw[26] := isc_node_ptr_t(il)^.xw[26];
+  isc_node_ptr_t(n5)^.xw[10] := inh^.pos.line;
+  isc_node_ptr_t(n5)^.st_l42 := (isc_node_ptr_t(n5)^.st_l42 & 16#FF0000FF) ! (isc_node_ptr_t(il)^.st_l42 & 16#FFFF00);
+  inh_1 := new_inherited_attributes(isc_heap, n5);
+  inh_1^ := inh^;
+  inh_1^.node := n5;
+  inh_1^.stmt := il;
+  solutions := pass_1(n5, inh_1, depth, permissible);
+  solutions_made := true;
+end;
 
 { isc_assign_node_isc_fill_aop - the proper_subtree il_isc_fill_aop, 3 children (0x0DEF70). }
 
@@ -4257,7 +4300,22 @@ begin
   solutions_made := true;
 end;
 
-{ isc_return_node (0x0E5850): not generated yet (the unit's header). }
+{ isc_return_node - the
+  proper_subtree il_return_node, no children; a return whose value must
+  be assigned to the function's result (return_value_needs_assign_node
+  of the value, +48, and the routine's result variable, il_180's +96)
+  is rewritten as that assignment (an assign_node, kind 140: +64 the
+  result, +68 the value, +8 and +12 the return's, +76 the assignment
+  operator by rlen from isc_readonly_tables +346, +52 the rlen, +48 its
+  bytes (rlen_bits div 8), +20 the line, +43 the statement index), and
+  that node's solutions.
+
+  0x0E5850, 0x1C4 bytes: A2 il, D4 the value, D5 inh; the index copied
+  as a 16-bit field at bit 8 of +42 (`and.l #16#FFFF00', `and.l
+  #-16776961').
+
+  Not known from the original: the table's name; how the index was
+  written (a packed field). }
 
 procedure isc_return_node(
     il: univ_ptr;
@@ -4269,7 +4327,49 @@ procedure isc_return_node(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  n: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_return_node);
+  number_of_children := 0;
+  if return_value_needs_assign_node(isc_node_ptr_t(il)^.xp[12],
+      isc_node_ptr_t(il_180)^.xp[24]) then begin
+    if isc_user_routines_356 or isc_user_routines_354 then begin
+      write('*********************');
+      writeln;
+      write('R E W R I T E ! ! ! !');
+      writeln;
+      write('*********************');
+      writeln;
+      writeln;
+    end;
+    n := mrh_$alloc(isc_preserve_heap, 80);
+    isc_node_ptr_t(n)^.kind := 140;
+    isc_node_ptr_t(n)^.rewritten := true;
+    isc_node_ptr_t(n)^.xp[16] := isc_node_ptr_t(il_180)^.xp[24];
+    isc_node_ptr_t(n)^.xp[17] := isc_node_ptr_t(il)^.xp[12];
+    isc_node_ptr_t(n)^.xl[2] := isc_node_ptr_t(il)^.xl[2];
+    isc_node_ptr_t(n)^.xl[3] := isc_node_ptr_t(il)^.xl[3];
+    isc_node_ptr_t(n)^.xw[38] :=
+        p1_readonly_words_ptr_t(addr(isc_readonly_tables))^[173 + isc_node_ptr_t(il)^.xw[26]];
+    isc_node_ptr_t(n)^.xw[28] := 0;
+    isc_node_ptr_t(n)^.xw[26] := isc_node_ptr_t(il)^.xw[26];
+    isc_node_ptr_t(n)^.xl[12] := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[26]] div 8;
+    isc_node_ptr_t(n)^.xw[10] := inh^.pos.line;
+    isc_node_ptr_t(n)^.st_l42 := (isc_node_ptr_t(n)^.st_l42 & 16#FF0000FF)
+        ! (isc_node_ptr_t(il)^.st_l42 & 16#FFFF00);
+    inh_1 := new_inherited_attributes(isc_heap, n);
+    inh_1^ := inh^;
+    inh_1^.node := n;
+    inh_1^.stmt := il;
+    solutions := pass_1(n, inh_1, depth, permissible);
+    solutions_made := true;
+  end;
+end;
 
 { isc_sb_register - the proper_subtree il_sb_register, 0 children (0x0E5A14). }
 

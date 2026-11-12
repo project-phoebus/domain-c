@@ -547,6 +547,21 @@ class Lifter:
                     low.append(('store', dst, src) if dst[0] == 'inh' else ('nstore', dst[1], src))
                     k += 8
                     continue
+            # a statement's index (the 16 bits at bit 8 of +42) copied to a
+            # rewritten node: movel X@(42),D; clrl D2; andil #16#FFFF00,D;
+            # orl D,D2; andil #-16776961,Y@(42); orl D2,Y@(42)
+            m = re.match(r'andil #16776960,%(d\d)$', t)
+            if m and regs.get(m.group(1), ('',))[0] == 'field' and \
+                    regs[m.group(1)][1].endswith('.l42') and k + 3 < len(ins):
+                mo = re.match(r'orl %%%s,%%(d\d)$' % m.group(1), ins[k + 1][1])
+                ma = re.match(r'andil #-16776961,%(a\d)@\(42\)$', ins[k + 2][1])
+                if mo and ma and ins[k + 3][1] == 'orl %%%s,%%%s@(42)' % (mo.group(1),
+                                                                         ma.group(1)) and \
+                        regs.get(ma.group(1), ('',))[0] == 'callres':
+                    low.append(('nstore', '%s.index' % self.render(regs[ma.group(1)]),
+                                '%s.index' % regs[m.group(1)][1][:-4]))
+                    k += 4
+                    continue
             # bit 7 of a byte loaded: moveb X,D; andib #-128,D; orb D,D2;
             # andib #127,Y; orb D2,Y
             m = re.match(r'andib #-128,%(d\d)$', t)
@@ -659,6 +674,8 @@ class Lifter:
                     fld = {4: 'p' if src.startswith('%a') or '@' in src else 'l',
                            2: 'w', 1: 'b'}[size]
                     v = self.val(src, size)
+                    if re.match(r'n\d+$', v):
+                        fld = 'p'
                     if fld == 'p':
                         v = re.sub(r'^il\.l(\d+)$', r'il.p\1', v)
                     low.append(('nstore', '%s.%s%d' % (self.render(base), fld, off), v))
@@ -1581,6 +1598,12 @@ def emit_body(L, body, ind, unions, kinds):
                 emit_body(L, b[3], ind + '  ', unions, kinds)
             L.append('%send;' % ind)
             continue
+        if b[0] == 'nstore' and b[1].endswith('.index'):
+            n, src = b[1][:-6], b[2][:-6]
+            L.extend(wrap_stmt('%s := (isc_node_ptr_t(%s)^.st_l42 & 16#FF0000FF) ! '
+                               '(isc_node_ptr_t(%s)^.st_l42 & 16#FFFF00);' % (
+                                   node_target(b[1]), n, src), ind))
+            continue
         if b[0] == 'nstore':
             v = expr(b[2])
             if re.match(r'n\d+\.b\d+$', b[1]) and not b[1].endswith('.b0'):
@@ -1652,6 +1675,9 @@ def node_target(t):
     m = re.match(r'(n\d+)\.b(\d+)$', t)
     if m:
         return 'p1_node_chars_ptr_t(%s)^[%s]' % (m.group(1), m.group(2))
+    m = re.match(r'(n\d+)\.index$', t)
+    if m:
+        return 'isc_node_ptr_t(%s)^.st_l42' % m.group(1)
     return expr(t)
 
 
