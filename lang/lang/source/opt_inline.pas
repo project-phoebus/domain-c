@@ -255,7 +255,7 @@ var
   cur_stmt: il_$node_ptr_t;             { +0x5EF8 }
 
 define
-  inline_$mark_reference_params;
+  inline_$mark_reference_params, inline_$inline_expand;
 
 { inline_$is_fortran_asf - b is a Fortran statement function: the
   callee's language 2 and b a routine block (108) with +376 bit 3.
@@ -2931,4 +2931,475 @@ begin
     b := b^.xp[1];
   end;
   mrh_$release_all(heap);
+end;
+
+{ assert_is_symbolically_opaque_address - reference t (205, 147, 146,
+  145) without a captured lvalue's indirection
+  (alias_$ind_for_captured_lvalue) whose base (+28) is a field (120,
+  119).
+
+  0x0938F0, 0x78 bytes, link #-12: the kinds evaluated whole. }
+
+function assert_is_symbolically_opaque_address(
+    t: il_$node_ptr_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+begin
+  r := false;
+  if t <> nil then
+    if (t^.kind = 205) or (t^.kind = 147) or (t^.kind = 146) or
+       (t^.kind = 145) then
+      if alias_$ind_for_captured_lvalue(t) = nil then begin
+        if t^.xp[7] <> nil then
+          r := (t^.xp[7]^.kind = 120) or (t^.xp[7]^.kind = 119);
+      end
+      else
+        r := false;
+  assert_is_symbolically_opaque_address := r;
+end;
+
+{ assert_contains_symbolically_opaque_addressing - tree t holds a
+  symbolically opaque reference (assert_is_symbolically_opaque_address)
+  not inside another reference (inside): through operators' operands
+  (137, 143), references' bases (+24; an indexing's index +36), 175's
+  and 171's +16, 164's +20 and +24.
+
+  0x093968, 0x15C bytes, link #-16: inside a byte at (12,A6), stored
+  back there; the operands' loop by `dbf'; the second operand looked
+  at only when the first holds none. }
+
+function assert_contains_symbolically_opaque_addressing(
+    t: il_$node_ptr_t;
+    inside: boolean): boolean; options(val_param); internal;
+var
+  r: boolean;
+  k: integer;
+begin
+  r := false;
+  if t = nil then begin
+    assert_contains_symbolically_opaque_addressing := false;
+    return;
+  end;
+  if (t^.kind = 110) or (t^.kind = 109) then begin
+    assert_contains_symbolically_opaque_addressing := false;
+    return;
+  end;
+  if not assert_is_nonleaf_lvalue(t) then
+    inside := false
+  else begin
+    if not inside then
+      if assert_is_symbolically_opaque_address(t) then begin
+        assert_contains_symbolically_opaque_addressing := true;
+        return;
+      end;
+    inside := true;
+  end;
+  case t^.kind of
+    137, 143:
+      for k := 1 to t^.xw[19] do
+        if assert_contains_symbolically_opaque_addressing(t^.xp[9 + k], inside) then begin
+          assert_contains_symbolically_opaque_addressing := true;
+          return;
+        end;
+    146, 147, 205:
+      r := assert_contains_symbolically_opaque_addressing(t^.xp[6], inside);
+    145: begin
+      r := assert_contains_symbolically_opaque_addressing(t^.xp[6], inside);
+      if not r then
+        r := assert_contains_symbolically_opaque_addressing(t^.xp[9], inside);
+    end;
+    175:
+      r := assert_contains_symbolically_opaque_addressing(t^.xp[4], inside);
+    171:
+      r := assert_contains_symbolically_opaque_addressing(t^.xp[4], inside);
+    164: begin
+      r := assert_contains_symbolically_opaque_addressing(t^.xp[5], inside);
+      if not r then
+        r := assert_contains_symbolically_opaque_addressing(t^.xp[6], inside);
+    end;
+    otherwise
+      ;
+  end;
+  assert_contains_symbolically_opaque_addressing := r;
+end;
+
+{ assert_statement_contains_symbolically_opaque_addressing - statement
+  s's trees hold a symbolically opaque reference: an evaluation's
+  operands (139), an assignment's right, left and extra trees (140:
+  +68, +64, +72), a branch's target or operand (141, 150, 151: +48;
+  142: +48, +56).
+
+  0x093AC4, 0xEA bytes, link #-16: the kinds 139..151 by a jump table
+  of 13; `inside' false. }
+
+function assert_statement_contains_symbolically_opaque_addressing(
+    s: il_$node_ptr_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+  k: integer;
+begin
+  r := false;
+  case s^.kind of
+    139:
+      for k := 1 to s^.xw[25] do
+        if assert_contains_symbolically_opaque_addressing(s^.xp[12 + k], false) then begin
+          assert_statement_contains_symbolically_opaque_addressing := true;
+          return;
+        end;
+    140: begin
+      r := assert_contains_symbolically_opaque_addressing(s^.xp[17], r);
+      if not r then
+        r := assert_contains_symbolically_opaque_addressing(s^.xp[16], r);
+      if not r then
+        r := assert_contains_symbolically_opaque_addressing(s^.xp[18], r);
+    end;
+    142: begin
+      r := assert_contains_symbolically_opaque_addressing(s^.xp[12], r);
+      if not r then
+        r := assert_contains_symbolically_opaque_addressing(s^.xp[14], r);
+    end;
+    141, 150, 151:
+      r := assert_contains_symbolically_opaque_addressing(s^.xp[12], r);
+    otherwise
+      ;
+  end;
+  assert_statement_contains_symbolically_opaque_addressing := r;
+end;
+
+{ assert_routine_contains_symbolically_opaque_addressing - a statement
+  of routine block b (from +100) holds a symbolically opaque
+  reference; b not a routine block is a bug (bug_check).
+
+  0x093BAE, 0x54 bytes, link #-12: the message after the routine. }
+
+function assert_routine_contains_symbolically_opaque_addressing(
+    b: il_$node_ptr_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+  s: il_$node_ptr_t;
+begin
+  r := false;
+  if not assert_is_a_routine_block(b) then
+    bug_check('OPT_INLINE_\ASSERT_ROUTINE_CONTAINS_SYMBOLICALLY_OPAQUE_ADDRESSING -- not a routine block%.');
+  s := b^.xp[25];
+  while s <> nil do begin
+    if assert_statement_contains_symbolically_opaque_addressing(s) then begin
+      r := true;
+      s := nil;
+    end
+    else
+      s := s^.xp[2];
+  end;
+  assert_routine_contains_symbolically_opaque_addressing := r;
+end;
+
+{ callee_status - whether routine b (108, 107) may be expanded where
+  it is called (63) or why not: 27 not a routine, marked +375 bit 6,
+  or inlining not asked for it (opt_on 24, a statement function's 25;
+  without +375 bit 5, 26), 39 too large (more than 255 variables, a
+  frame past -24K, any +176, static data past 24K, unless -CPU M020;
+  more than 100 nodes unless forced), 42 it contains a 167, 47 a
+  Fortran variable of class 7 (+44), 44 a language 1 variable or
+  parameter of type 133, 45 a variable of a type name of an array
+  (132) with +34 bit 7, 41 a parameter that is a Fortran temporary of
+  class 1 (or of class 7 and +10 bit 7 under -DBS) or a parameter of a
+  routine type (174, 173), 36 a parameter of no class, +374 bit 5, a
+  result of class 7 and +10 bit 7, or symbolically opaque addressing.
+
+  0x093C5E, 0x318 bytes, link #-72: cargs' address loaded and not
+  used (pattern 53); the nodes' count compared `cmpi.w #-1; bhi'. }
+
+function callee_status(
+    b: il_$node_ptr_t): integer; options(val_param); internal;
+var
+  n: il_$node_ptr_t;
+  v: il_$node_ptr_t;
+  f: il_$node_ptr_t;
+  p: il_$node_ptr_t;
+  te: oi_texp_t;
+  d: add_node_$desc_t;
+  k: integer;
+begin
+  callee_status := 27;
+  if b = nil then
+    return;
+  if not ((b^.kind = 108) or (b^.kind = 107)) then
+    return;
+  if (ord(b^.xc[375]) & 64) <> 0 then
+    return;
+  if inline_$is_fortran_asf(b) then begin
+    if not (25 in cargs_$options.opt_on) then
+      return;
+  end
+  else begin
+    if not (24 in cargs_$options.opt_on) then
+      return;
+    if (ord(b^.xc[375]) & 32) = 0 then
+      if not (26 in cargs_$options.opt_on) then
+        return;
+  end;
+  callee_status := 39;
+  if (b^.xw[136] & 16#FFFF) > 65535 then
+    return;
+  if b^.xw[145] > 255 then
+    return;
+  if b^.xl[28] < -24576 then
+    if not (3 in cargs_$options.cpu) then
+      return;
+  if b^.xl[44] <> 0 then
+    if not (3 in cargs_$options.cpu) then
+      return;
+  if b^.xp[48]^.xl[5] > 24576 then
+    if not (3 in cargs_$options.cpu) then
+      return;
+  if ((ord(b^.xc[375]) & 32) = 0) and not cargs_$options.force_inline then
+    if (b^.xw[136] & 16#FFFF) > 100 then
+      return;
+  n := b^.xp[1];
+  while n <> nil do
+    if oi_level_ptr_t(n)^.level < oi_level_ptr_t(b)^.level then
+      n := nil
+    else if (oi_level_ptr_t(n)^.level = oi_level_ptr_t(b)^.level) and
+            (n^.kind <> 167) then
+      n := nil
+    else if n^.kind = 167 then begin
+      callee_status := 42;
+      return;
+    end
+    else
+      n := n^.xp[1];
+  if language = 2 then begin
+    v := b^.xp[4];
+    while v <> nil do begin
+      if rshft(ord(v^.xc[44]) & 16#F0, 4) = 7 then begin
+        callee_status := 47;
+        return;
+      end;
+      v := v^.xp[1];
+    end;
+  end
+  else if language = 1 then begin
+    v := b^.xp[4];
+    while v <> nil do begin
+      type_exp(v, addr(te));
+      if te.base^.kind = 133 then begin
+        callee_status := 44;
+        return;
+      end;
+      if v^.kind = 109 then
+        if v^.xp[7]^.kind = 118 then
+          if v^.xp[7]^.xp[7]^.kind = 132 then
+            if ord(v^.xp[7]^.xp[7]^.xc[34]) >= 128 then begin
+              callee_status := 45;
+              return;
+            end;
+      v := v^.xp[4];
+    end;
+    v := b^.xp[3];
+    while v <> nil do begin
+      type_exp(v, addr(te));
+      if te.base^.kind = 133 then begin
+        callee_status := 44;
+        return;
+      end;
+      v := v^.xp[1];
+    end;
+  end;
+  p := nil;
+  if language <> 2 then
+    p := b^.xp[3];
+  for k := 1 to ord(b^.xc[293]) do begin
+    if language = 2 then
+      f := oi_ftab_ptr_t(b^.xp[3])^[k].sym
+    else
+      f := find_varn(b, p);
+    if f^.kind = 110 then begin
+      if rshft(ord(f^.xc[44]) & 16#F0, 4) = 1 then begin
+        callee_status := 41;
+        return;
+      end;
+      if cargs_$options.db = 2 then
+        if (ord(f^.xc[10]) & 15) = 7 then
+          if ord(f^.xc[10]) >= 128 then begin
+            callee_status := 41;
+            return;
+          end;
+    end
+    else if f^.xp[7]^.kind = 121 then
+      if (f^.xp[7]^.xp[4]^.kind = 174) or (f^.xp[7]^.xp[4]^.kind = 173) then begin
+        callee_status := 41;
+        return;
+      end;
+    get_size_rlen(f, d);
+    if d.rlen = 0 then begin
+      callee_status := 36;
+      return;
+    end;
+    if language <> 2 then
+      p := p^.xp[1];
+  end;
+  callee_status := 36;
+  if (ord(b^.xc[374]) & 32) <> 0 then
+    return;
+  v := function_return(b);
+  if v <> nil then
+    if v^.kind = 110 then
+      if (ord(v^.xc[10]) & 15) = 7 then
+        if ord(v^.xc[10]) >= 128 then
+          return;
+  if assert_routine_contains_symbolically_opaque_addressing(b) then
+    return;
+  callee_status := 63;
+end;
+
+{ anything_to_expand - whether the compilation has routines to expand:
+  the IL's first node (il_d4) a label (144) followed by the call (148)
+  of the main routine, whose language (+377 bits 6..4) is kept and
+  must be 1..4, and inlining asked for (opt_on 24..26); then each
+  block's callee_status kept (status): an expandable one marked +375
+  bit 7, the others but 27 reported (cgerr, at the block's line +300)
+  when forced (+375 bit 5, -FORCE_INLINE) and asked for (a statement
+  function's opt_on 25, another's 24).
+
+  0x093F76, 0xF0 bytes, link #-12: the language set by `btst' of 30;
+  opt_on's elements by `andi.l #0x7FFFFFFE; lsr.l #1; andi.l
+  #0x7000000' of cargs +0x280. }
+
+function anything_to_expand: boolean; internal;
+var
+  any: boolean;
+  s: il_$node_ptr_t;
+  b: il_$node_ptr_t;
+  report: boolean;
+begin
+  any := false;
+  if il_d4 <> nil then
+    if il_d4^.kind = 144 then
+      if il_d4^.xp[2]^.kind = 148 then begin
+        b := il_d4^.xp[2]^.xp[12];
+        language := rshft(ord(b^.xc[377]) & 16#70, 4);
+        if language in [1..4] then
+          if (cargs_$options.opt_on * [24..26]) <> [] then begin
+            b := il_184;
+            while b <> nil do begin
+              status := callee_status(b);
+              if status = 63 then begin
+                b^.xc[375] := chr(ord(b^.xc[375]) ! 128);
+                any := true;
+              end
+              else if status <> 27 then
+                if ((ord(b^.xc[375]) & 32) <> 0) or cargs_$options.force_inline then
+                  if b^.xw[150] <> 0 then begin
+                    if inline_$is_fortran_asf(b) then
+                      report := 25 in cargs_$options.opt_on
+                    else
+                      report := false;
+                    if not report then
+                      report := 24 in cargs_$options.opt_on;
+                    if report then
+                      cgerr(status, b^.xw[150], b^.xp[74]);
+                  end;
+              b := b^.xp[1];
+            end;
+          end;
+      end;
+  anything_to_expand := any;
+end;
+
+{ inline_$inline_expand - runbackend's entry: the IL's block chain
+  restarted (il_180 := il_184), the calls expanded when there is
+  anything to expand, and the routines' flags settled: a routine
+  block (105, 108, 107) without calls gets +379 bit 4 (a leaf) unless
+  +379 bit 5, and +379 bit 3 cleared; with calls, each call's
+  reference parameters are marked (inline_$mark_reference_params) and
+  a call of itself sets +379 bit 3; the main program (105) is a leaf
+  and not recursive; without target_properties' +0x10 every node gets
+  +378 bit 4.  Then, until nothing changes, a routine all of whose
+  callees are leaves (unless +379 bit 5), or all of whose callers are
+  (unless +374 bit 3), becomes one; a 172 follows the routine before
+  it.
+
+  0x094066, 0x1A0 bytes, link #-24: loads A5; target_properties'
+  address and il_184's loaded before the loops (patterns 5, 53); the
+  last routine block kept in A0 for the 172s, unset before the first
+  (pattern 84). }
+
+procedure inline_$inline_expand;
+var
+  b: il_$node_ptr_t;
+  ed: oi_edge_ptr_t;
+  r: il_$node_ptr_t;
+  all: boolean;
+  done: boolean;
+begin
+  il_180 := il_184;
+  if anything_to_expand then
+    check_call_sites_and_expand;
+  b := il_184;
+  while b <> nil do begin
+    ed := oi_edge_ptr_t(b^.xp[61]);
+    if (b^.kind = 105) or (b^.kind = 108) or (b^.kind = 107) then begin
+      if ed = nil then begin
+        if (ord(b^.xc[379]) & 32) = 0 then
+          b^.xc[379] := chr(ord(b^.xc[379]) ! 16)
+        else
+          b^.xc[379] := chr(ord(b^.xc[379]) & 16#EF);
+        b^.xc[379] := chr(ord(b^.xc[379]) & 16#F7);
+      end
+      else
+        while ed <> nil do begin
+          inline_$mark_reference_params(ed^.call, ed^.stmt);
+          if ed^.callee = b then
+            b^.xc[379] := chr(ord(b^.xc[379]) ! 8);
+          ed := ed^.caller_next;
+        end;
+      if b^.kind = 105 then begin
+        b^.xc[379] := chr(ord(b^.xc[379]) ! 16);
+        b^.xc[379] := chr(ord(b^.xc[379]) & 16#F7);
+      end;
+    end;
+    if target_properties.p_10 = 0 then
+      b^.xc[378] := chr(ord(b^.xc[378]) ! 16);
+    b := b^.xp[1];
+  end;
+  repeat
+    done := true;
+    b := il_184;
+    while b <> nil do begin
+      if (b^.kind = 105) or (b^.kind = 108) or (b^.kind = 107) then begin
+        if (ord(b^.xc[379]) & 32) = 0 then begin
+          all := true;
+          ed := oi_edge_ptr_t(b^.xp[61]);
+          while ed <> nil do begin
+            if all and (ed^.callee <> nil) then
+              all := (ord(ed^.callee^.xc[379]) & 16) <> 0
+            else
+              all := false;
+            ed := ed^.caller_next;
+          end;
+          if all and ((ord(b^.xc[379]) & 16) = 0) then begin
+            b^.xc[379] := chr(ord(b^.xc[379]) ! 16);
+            done := false;
+          end;
+        end;
+        if (ord(b^.xc[374]) & 8) = 0 then begin
+          all := true;
+          ed := oi_edge_ptr_t(b^.xp[63]);
+          while ed <> nil do begin
+            all := all and ((ord(ed^.caller^.xc[379]) & 16) <> 0);
+            ed := ed^.callee_next;
+          end;
+          if all and ((ord(b^.xc[379]) & 16) = 0) then begin
+            b^.xc[379] := chr(ord(b^.xc[379]) ! 16);
+            done := false;
+          end;
+        end;
+        r := b;
+      end;
+      if b^.kind = 172 then
+        if (ord(r^.xc[379]) & 16) <> 0 then
+          b^.xc[379] := chr(ord(b^.xc[379]) ! 16);
+      b := b^.xp[1];
+    end;
+  until done;
 end;
