@@ -235,11 +235,21 @@ type
 
   { An instruction's +28 as the scheduler uses it (batch A's instr_t
     l28; sched_utils' su_instr_t): the precedence height, compared
-    unsigned. }
+    unsigned, and its enable count (+30). }
   oli_instr_v_ptr_t = ^oli_instr_v_t;
   oli_instr_v_t = record
     space0: array [0..27] of char;
     height: 0..65535;                   { +28 }
+    enable: integer;                    { +30: the count of what must be
+                                          scheduled before it }
+  end;
+
+  { A segment's +34 word as the scheduler uses it (batch A's lts_t
+    l32's low half): the readers not yet scheduled. }
+  oli_lts_v_ptr_t = ^oli_lts_v_t;
+  oli_lts_v_t = record
+    space0: array [0..33] of char;
+    enable: integer;                    { +34 }
   end;
 
 var
@@ -259,6 +269,10 @@ var
   { +0x340: the bookkeeping heap (reductions, recurrences, ...). }
   oli_heap: mrh_$heap_t;
 
+  { +0x358: the nodes of the cycles' lists of uncounted instructions
+    (oli_sched's column 3), taken in order from 1. }
+  oli_unodes: array [1..200] of oli_qnode_t;
+
   { +0x998: the queue's nodes, chained on oli_qfree. }
   oli_qnodes: array [0..199] of oli_qnode_t;
 
@@ -277,14 +291,18 @@ var
                                           the iteration interval }
 
   { +0x1C58: the schedule: by cycle of the interval (1..200) the
-    instruction of each functional unit (fu_of: 0..3). }
+    instruction of each functional unit (fu_of: 0 integer, 1 and 2
+    floating), and (3) the list of the cycle's instructions of the
+    uncounted classes (an oli_qnode_ptr_t, cast). }
   oli_sched: array [1..200, 0..3] of instr_ptr_t;
 
   oli_5op_k: array [1..200] of integer32;  { +0x28D8: the input of a
                                           five-operand candidate its
                                           result can share (is_5op_
                                           candidate) }
-  oli_2bf8: array [1..200] of boolean;  { +0x2BF8 (init_sched clears) }
+  oli_paired: array [1..200] of boolean;   { +0x2BF8: a floating
+                                          instruction paired with a
+                                          multiply in its cycle }
   oli_5op: array [1..200] of boolean;   { +0x2CC0: a five-operand
                                           candidate }
 
@@ -334,14 +352,17 @@ var
                                           (stages) the schedule spans }
   oli_ii: integer32;                    { +0x2E40: the iteration
                                           interval (cycles) }
-  oli_2e44: integer32;                  { +0x2E44 }
+  oli_fp_budget: integer32;             { +0x2E44: the floating pairs
+                                          the schedule may still make
+                                          (oli_fp_spare at its start) }
   oli_fp_spare: integer32;              { +0x2E48: the floating
                                           instructions that pair (nfp
                                           less the interval) }
   oli_nint: integer32;                  { +0x2E4C: the integer unit's
                                           instructions }
   oli_nfp: integer32;                   { +0x2E50: the floating unit's }
-  oli_2e54: integer32;                  { +0x2E54 }
+  oli_nunodes: integer32;               { +0x2E54: oli_unodes used, plus
+                                          one }
   oli_nsched: integer32;                { +0x2E58: oli_sched_list's
                                           length }
   oli_qfree: oli_qnode_ptr_t;           { +0x2E5C: the free nodes }
@@ -453,7 +474,8 @@ end;
 { build_sched_array - oli_sched_list: the scheduled instructions,
   iteration by iteration from the last, cycle by cycle, unit by unit
   (an instruction in more than one unit of a cycle once; the branch and
-  the counter's decrement left out), each one's place in oli_order.
+  the counter's decrement and the uncounted lists left out), each
+  one's place in oli_order.
   0x257ED8, 0x158 bytes. }
 
 procedure build_sched_array; internal;
@@ -468,6 +490,8 @@ begin
   for it := oli_iters downto 1 do
     for row := 1 to oli_ii do
       for fu := 0 to 3 do begin
+        if fu = 3 then
+          goto 10;
         i := oli_sched[row, fu];
         if (i <> nil) and (oli_iter[i^.num] = it) and (i <> oli_decr)
             and (i <> oli_branch) then begin
@@ -723,8 +747,8 @@ var
   k, fu: integer32;
 begin
   for k := 1 to 200 do
-    oli_2bf8[k] := false;
-  oli_2e54 := 1;
+    oli_paired[k] := false;
+  oli_nunodes := 1;
   oli_qfree := addr(oli_qnodes[0]);
   oli_queue := nil;
   for k := 1 to 200 do
@@ -737,7 +761,7 @@ begin
   oli_2e1c := 0;
   oli_2e18 := 0;
   oli_2e14 := 0;
-  oli_2e44 := oli_fp_spare;
+  oli_fp_budget := oli_fp_spare;
   oli_2e2c := oli_ii;
   oli_2e30 := oli_nfpctl;
   oli_iters := 0;
@@ -2042,4 +2066,551 @@ begin
   else
     r := ii;
   iteration_interval := r;
+end;
+
+{ assign_enable_counts - the counts the scheduler releases by: an
+  instruction's (+30 word) the segments it defines that have readers
+  or are first in the block, and one for each intend-to-modify write
+  after it whose segment it reads; a segment's (+34 word) its
+  readers, one more for a first segment in the block (not condition
+  codes) or an exposed one first in it.  0x25A18A, 0x176 bytes. }
+
+procedure assign_enable_counts(
+    bb: bb_ptr_t); options(val_param); internal;
+var
+  i, j: instr_ptr_t;
+  s, t: lts_ptr_t;
+  o, r: opnd_ptr_t;
+  k: integer32;
+begin
+  i := bb^.first;
+  while i <> nil do begin
+    oli_instr_v_ptr_t(i)^.enable := 0;
+    i := i^.next;
+  end;
+  s := bb^.exposed;
+  while s <> nil do begin
+    if s^.f2.first_in_bb then
+      oli_lts_v_ptr_t(s)^.enable := 1
+    else
+      oli_lts_v_ptr_t(s)^.enable := 0;
+    r := s^.refs;
+    while r <> nil do begin
+      if r^.h.read then
+        oli_lts_v_ptr_t(s)^.enable := oli_lts_v_ptr_t(s)^.enable + 1;
+      r := r^.link;
+    end;
+    s := s^.next_exposed;
+  end;
+  i := bb^.first;
+  while i <> nil do begin
+    for k := 1 to i^.h.nopnds do begin
+      o := addr(i^.opnds[k]);
+      if o^.h.kind in [operand$ip_reg..operand$well_behaved_memory] then
+          begin
+        if (opnd_bytes_ptr_t(o)^.rrp & 12) <> 0 then
+          if (o^.link <> nil) or o^.lts^.f2.first_in_bb then begin
+            oli_instr_v_ptr_t(i)^.enable := oli_instr_v_ptr_t(i)^.enable + 1;
+            t := o^.lts;
+            oli_lts_v_ptr_t(t)^.enable := 0;
+            r := t^.refs^.link;
+            while r <> nil do begin
+              if r^.h.read then
+                oli_lts_v_ptr_t(t)^.enable := oli_lts_v_ptr_t(t)^.enable + 1;
+              r := r^.link;
+            end;
+            if t^.f2.first_in_bb then
+              if o^.h.kind <> operand$ip_condition_codes then
+                oli_lts_v_ptr_t(t)^.enable := oli_lts_v_ptr_t(t)^.enable + 1;
+          end;
+        if (opnd_bytes_ptr_t(o)^.rrp & 48) = 48 then begin
+          t := o^.lts;
+          r := t^.refs;
+          if not t^.f2.exposed then
+            r := r^.link;
+          while r <> nil do begin
+            if r^.h.read and not r^.h.intend_to_modify then begin
+              j := utils_ins_$operands_instruction(r);
+              oli_instr_v_ptr_t(j)^.enable := oli_instr_v_ptr_t(j)^.enable + 1;
+            end;
+            r := r^.link;
+          end;
+        end;
+      end;
+    end;
+    i := i^.next;
+  end;
+end;
+
+{ decrement_ienable_count - i's count taken down; at 0 it is enabled
+  (queued).  0x25A300, 0x1E bytes. }
+
+procedure decrement_ienable_count(
+    i: instr_ptr_t); options(val_param); internal;
+begin
+  oli_instr_v_ptr_t(i)^.enable := oli_instr_v_ptr_t(i)^.enable - 1;
+  if oli_instr_v_ptr_t(i)^.enable = 0 then
+    enqueue_enabled_instruction(i);
+end;
+
+{ decrement_lenable_count - s's count taken down; at 0, for a segment
+  not exposed, its definition's count.  0x25A31E, 0x40 bytes: loads A5
+  (a global routine nothing outside calls; s by address). }
+
+procedure decrement_lenable_count(
+    var s: lts_ptr_t);
+begin
+  oli_lts_v_ptr_t(s)^.enable := oli_lts_v_ptr_t(s)^.enable - 1;
+  if oli_lts_v_ptr_t(s)^.enable = 0 then
+    if not s^.f2.exposed then
+      decrement_ienable_count(utils_ins_$operands_instruction(s^.refs));
+end;
+
+{ swap_inputs - i's operands 1 and 2 exchanged (renumbered); for an
+  addd also its operands 4 and 5, whose segments' operand chains are
+  relinked first.  0x25A35E, 0xEC bytes: operands 1 and 2 are not
+  relinked (kept). }
+
+procedure swap_inputs(
+    i: instr_ptr_t); options(val_param); internal;
+var
+  t: opnd_t;
+  o: opnd_ptr_t;
+begin
+  t := i^.opnds[2];
+  i^.opnds[2] := i^.opnds[1];
+  i^.opnds[1] := t;
+  i^.opnds[1].h.num := 1;
+  i^.opnds[2].h.num := 2;
+  if i^.opc = 171 then begin            { addd }
+    o := i^.opnds[4].lts^.refs;
+    if o = addr(i^.opnds[4]) then
+      i^.opnds[4].lts^.refs := addr(i^.opnds[5])
+    else begin
+      while o^.link <> addr(i^.opnds[4]) do
+        o := o^.link;
+      o^.link := addr(i^.opnds[5]);
+    end;
+    o := i^.opnds[5].lts^.refs;
+    if o = addr(i^.opnds[5]) then
+      i^.opnds[5].lts^.refs := addr(i^.opnds[4])
+    else begin
+      while o^.link <> addr(i^.opnds[5]) do
+        o := o^.link;
+      o^.link := addr(i^.opnds[4]);
+    end;
+    t := i^.opnds[5];
+    i^.opnds[5] := i^.opnds[4];
+    i^.opnds[4] := t;
+    i^.opnds[4].h.num := 4;
+    i^.opnds[5].h.num := 5;
+  end;
+end;
+
+{ find_open_slot - a cycle for i at or before slot (counted down,
+  wrapping to the interval's end into the next iteration, it), with its
+  unit free: the integer unit (0) for most, the floating units (1, 2)
+  for floating ones; fp_control all three; the uncounted classes
+  anywhere.  A floating multiply (or add, subtract, truncate) not
+  setting the condition codes first looks, within the pairing budget,
+  back over the cycles its share of the interval allows for a
+  five-operand candidate (a multiply) to pair with in the other unit;
+  the counts of paired and unpaired ones (oli_2e14 .. oli_2e20) kept.
+  0x25A44A, 0x86E bytes: truncdi's last search does not step (kept). }
+
+function find_open_slot(
+    i: instr_ptr_t;
+    var slot: integer32;
+    var iter: integer32): boolean; options(val_param); internal;
+label
+  10, 90, 99;
+var
+  s, it, lim: integer32;
+  cls: integer;
+  j: instr_ptr_t;
+begin
+  s := slot;
+  it := iter;
+  cls := instruction_attributes[i^.opc].class;
+  if cls = class$fp_control then begin
+    repeat
+      if oli_sched[s, 1] = nil then
+        if oli_sched[s, 0] = nil then
+          if oli_sched[s, 2] = nil then
+            goto 10;
+      s := s - 1;
+      if s <= 0 then begin
+        s := s + oli_ii;
+        it := it + 1;
+      end;
+    until s = slot;
+    goto 90;
+  end;
+  if cls in [4..7, 18, 19, 26] then
+    goto 10;
+  case i^.opc of
+    181, 184: begin                     { muls, muld }
+      if not i^.h.fp_ccs then
+        if oli_fp_budget > 0 then
+          if ((i^.opc = 181) and (oli_2e20 > 0)) or
+              ((i^.opc = 184) and (oli_2e1c > 0)) then begin
+            if i^.opc = 181 then
+              lim := s - (oli_ii * oli_2e20) div oli_n5s
+            else
+              lim := s - (oli_ii * oli_2e1c) div oli_n5d;
+            if lim <= 0 then
+              lim := lim + oli_ii;
+            repeat
+              if oli_sched[s, 1] = nil then begin
+                j := oli_sched[s, 2];
+                if j <> nil then
+                  if oli_5op[j^.num] then
+                    if instruction_attributes[j^.opc].class = class$fp_single
+                        then
+                      if is_5op_candidate(j) then
+                        goto 10;
+              end;
+              s := s - 1;
+              if s <= 0 then begin
+                s := s + oli_ii;
+                it := it + 1;
+              end;
+            until s = lim;
+            s := slot;
+            it := iter;
+          end;
+      repeat
+        if oli_sched[s, 1] = nil then
+          if oli_sched[s, 2] = nil then begin
+            if not i^.h.fp_ccs then
+              if i^.opc = 181 then
+                oli_2e18 := oli_2e18 + 1
+              else
+                oli_2e14 := oli_2e14 + 1;
+            goto 10;
+          end;
+        s := s - 1;
+        if s <= 0 then begin
+          s := s + oli_ii;
+          it := it + 1;
+        end;
+      until s = slot;
+      goto 90;
+    end;
+    154, 155, 171, 172: begin           { adds, subs, addd, subd }
+      if oli_5op[i^.num] then
+        if oli_fp_budget > 0 then
+          if (((i^.opc = 154) or (i^.opc = 155)) and (oli_2e18 > 0)) or
+              (((i^.opc = 171) or (i^.opc = 172)) and (oli_2e14 > 0)) then
+            if is_5op_candidate(i) then begin
+              if (i^.opc = 154) or (i^.opc = 155) then
+                lim := slot - (oli_ii * oli_2e18) div oli_nmuls
+              else
+                lim := slot - (oli_ii * oli_2e14) div oli_nmuld;
+              if lim <= 0 then
+                lim := lim + oli_ii;
+              repeat
+                if oli_sched[s, 2] = nil then begin
+                  j := oli_sched[s, 1];
+                  if j <> nil then
+                    if ((j^.opc = 181) and ((i^.opc = 154) or (i^.opc = 155)))
+                        or ((j^.opc = 184) and ((i^.opc = 171) or
+                        (i^.opc = 172))) then
+                      if not j^.h.fp_ccs then
+                        goto 10;
+                end;
+                s := s - 1;
+                if s <= 0 then begin
+                  s := s + oli_ii;
+                  it := it + 1;
+                end;
+              until s = lim;
+              s := slot;
+              it := iter;
+            end;
+      repeat
+        if oli_sched[s, 1] = nil then
+          if oli_sched[s, 2] = nil then begin
+            if oli_5op[i^.num] then
+              if is_5op_candidate(i) then
+                if (i^.opc = 154) or (i^.opc = 155) then
+                  oli_2e20 := oli_2e20 + 1
+                else
+                  oli_2e1c := oli_2e1c + 1;
+            goto 10;
+          end;
+        s := s - 1;
+        if s <= 0 then begin
+          s := s + oli_ii;
+          it := it + 1;
+        end;
+      until s = slot;
+      goto 90;
+    end;
+    152: begin                          { truncsi }
+      if oli_fp_budget > 0 then
+        if oli_2e18 > 0 then begin
+          lim := s - (oli_ii * oli_2e18) div oli_nmuls;
+          if lim <= 0 then
+            lim := lim + oli_ii;
+          repeat
+            if oli_sched[s, 2] = nil then begin
+              j := oli_sched[s, 1];
+              if j <> nil then
+                if j^.opc = 181 then
+                  if not j^.h.fp_ccs then
+                    goto 10;
+            end;
+            s := s - 1;
+            if s <= 0 then begin
+              s := s + oli_ii;
+              it := it + 1;
+            end;
+          until s = lim;
+          s := slot;
+          it := iter;
+        end;
+      repeat
+        if oli_sched[s, 1] = nil then
+          if oli_sched[s, 2] = nil then begin
+            oli_2e20 := oli_2e20 + 1;
+            goto 10;
+          end;
+        s := s - 1;
+        if s <= 0 then begin
+          s := s + oli_ii;
+          it := it + 1;
+        end;
+      until s = slot;
+      goto 90;
+    end;
+    169: begin                          { truncdi }
+      if oli_fp_budget > 0 then
+        if oli_2e14 > 0 then begin
+          lim := s - (oli_ii * oli_2e14) div oli_nmuld;
+          if lim <= 0 then
+            lim := lim + oli_ii;
+          repeat
+            if oli_sched[s, 2] = nil then begin
+              j := oli_sched[s, 1];
+              if j <> nil then
+                if j^.opc = 184 then
+                  if not j^.h.fp_ccs then
+                    goto 10;
+            end;
+            s := s - 1;
+            if s <= 0 then begin
+              s := s + oli_ii;
+              it := it + 1;
+            end;
+          until s = lim;
+          s := slot;
+          it := iter;
+        end;
+      repeat
+        if oli_sched[s, 1] = nil then
+          if oli_sched[s, 2] = nil then begin
+            oli_2e1c := oli_2e1c + 1;
+            goto 10;
+          end;
+        if s <= 0 then begin
+          s := s + oli_ii;
+          it := it + 1;
+        end;
+      until s = slot;
+      goto 90;
+    end;
+    otherwise
+      if cls in [class$fp_double, class$immediate, class$fp_single] then begin
+        repeat
+          if oli_sched[s, 2] = nil then
+            if oli_sched[s, 1] = nil then
+              goto 10;
+          s := s - 1;
+          if s <= 0 then begin
+            s := s + oli_ii;
+            it := it + 1;
+          end;
+        until s = slot;
+      end
+      else
+        repeat
+          if oli_sched[s, 0] = nil then
+            goto 10;
+          s := s - 1;
+          if s <= 0 then begin
+            s := s + oli_ii;
+            it := it + 1;
+          end;
+        until s = slot;
+  end;
+90:
+  find_open_slot := false;
+  goto 99;
+10:
+  slot := s;
+  iter := it;
+  find_open_slot := true;
+99:
+end;
+
+{ schedule_instr - i put in cycle slot of iteration iter: in the units
+  its interaction class uses (an uncounted one on the cycle's list,
+  column 3, from oli_unodes); a floating pair completed counts against
+  the budget (oli_paired the partner); its cycle and iteration noted;
+  the segments it reads and the readers its intend-to-modify writes
+  wait for released.  0x25ACB8, 0x224 bytes. }
+
+procedure schedule_instr(
+    i: instr_ptr_t;
+    slot: integer32;
+    iter: integer32); options(val_param); internal;
+var
+  two: boolean;
+  k: integer;
+  n: integer32;
+  j: instr_ptr_t;
+  o, r: opnd_ptr_t;
+  t: lts_ptr_t;
+begin
+  two := false;
+  k := instruction_attributes[i^.opc].interaction;
+  if k in [1, 4..16] then
+    oli_sched[slot, 0] := i;
+  if k in [2, 11, 13] then begin
+    oli_sched[slot, 2] := i;
+    two := true;
+  end;
+  if k in [3, 11, 13] then begin
+    oli_sched[slot, 1] := i;
+    two := true;
+  end;
+  if instruction_attributes[i^.opc].class in [4..7, 18, 19, 26] then begin
+    n := oli_nunodes;
+    oli_nunodes := oli_nunodes + 1;
+    oli_unodes[n].next := oli_qnode_ptr_t(oli_sched[slot, 3]);
+    oli_sched[slot, 3] := instr_ptr_t(addr(oli_unodes[n]));
+    oli_unodes[n].instr := i;
+  end;
+  if two then
+    if oli_sched[slot, 1] <> oli_sched[slot, 2] then
+      if oli_sched[slot, 2] <> nil then
+        if oli_sched[slot, 1] <> nil then begin
+          j := oli_sched[slot, 2];
+          oli_paired[j^.num] := true;
+          oli_fp_budget := oli_fp_budget - 1;
+          if j = i then
+            if j^.opc = 154 then
+              oli_2e18 := oli_2e18 - 1
+            else
+              oli_2e14 := oli_2e14 - 1
+          else if j^.opc = 154 then
+            oli_2e20 := oli_2e20 - 1
+          else
+            oli_2e1c := oli_2e1c - 1;
+        end;
+  oli_slot[i^.num] := slot;
+  oli_iter[i^.num] := iter;
+  for n := 1 to i^.h.nopnds do begin
+    o := addr(i^.opnds[n]);
+    if o^.h.read then
+      if o^.h.kind in [operand$ip_reg..operand$well_behaved_memory] then
+        decrement_lenable_count(o^.lts);
+    if o^.h.intend_to_modify then begin
+      t := o^.lts;
+      r := t^.refs;
+      if not t^.f2.exposed then
+        r := r^.link;
+      while r <> nil do begin
+        if r^.h.read and not r^.h.intend_to_modify then
+          decrement_ienable_count(utils_ins_$operands_instruction(r));
+        r := r^.link;
+      end;
+    end;
+  end;
+end;
+
+{ find_data_flow_constraints - the latest cycle (slot, iteration iter)
+  i can be put in, counting back from the readers already scheduled:
+  for a value it writes, each reader's cycle less the delays (one less
+  again unless either is of an uncounted class); for a register it
+  reads that a later instruction intends to modify, that instruction's
+  cycle (less one, likewise).  0x25AEDC, 0x250 bytes. }
+
+procedure find_data_flow_constraints(
+    i: instr_ptr_t;
+    var slot: integer32;
+    var iter: integer32); options(val_param); internal;
+var
+  k: integer32;
+  r: opnd_ptr_t;
+  j: instr_ptr_t;
+  d, it: integer32;
+  unc, upd: boolean;
+begin
+  slot := oli_ii;
+  iter := 1;
+  for k := 1 to i^.h.nopnds do
+    if (opnd_bytes_ptr_t(addr(i^.opnds[k]))^.rrp & 12) <> 0 then begin
+      r := i^.opnds[k].lts^.refs^.link;
+      while r <> nil do begin
+        j := utils_ins_$operands_instruction(r);
+        d := i^.opnds[k].h.b2_3_0 + r^.h.b2_3_0;
+        it := oli_iter[j^.num];
+        if (instruction_attributes[j^.opc].class in [4..7, 18, 19, 26]) or
+            (instruction_attributes[i^.opc].class in [4..7, 18, 19, 26]) then
+          d := oli_slot[j^.num] - d
+        else
+          d := oli_slot[j^.num] - 1 - d;
+        while d <= 0 do begin
+          d := d + oli_ii;
+          it := it + 1;
+        end;
+        if it > iter then begin
+          iter := it;
+          slot := d;
+        end
+        else if d < slot then
+          slot := d;
+        r := r^.link;
+      end;
+    end
+    else if i^.opnds[k].h.kind in [operand$ip_reg..
+        operand$well_behaved_memory] then
+      if i^.opnds[k].h.read and not i^.opnds[k].h.intend_to_modify then begin
+        r := i^.opnds[k].lts^.refs^.link;
+        while r <> nil do begin
+          if r^.h.intend_to_modify then begin
+            j := utils_ins_$operands_instruction(r);
+            unc := (instruction_attributes[j^.opc].class in
+                [4..7, 18, 19, 26]) or
+                (instruction_attributes[i^.opc].class in [4..7, 18, 19, 26]);
+            if unc then begin
+              if oli_iter[j^.num] > iter then begin
+                iter := oli_iter[j^.num];
+                slot := oli_slot[j^.num];
+              end
+              else if oli_slot[j^.num] < slot then
+                slot := oli_slot[j^.num];
+            end
+            else begin
+              upd := false;
+              if oli_iter[j^.num] > iter then begin
+                iter := oli_iter[j^.num];
+                upd := true;
+              end
+              else if oli_slot[j^.num] < slot then
+                upd := true;
+              if upd then begin
+                slot := oli_slot[j^.num] - 1;
+                if slot <= 0 then begin
+                  slot := slot + oli_ii;
+                  iter := iter + 1;
+                end;
+              end;
+            end;
+          end;
+          r := r^.link;
+        end;
+      end;
 end;
