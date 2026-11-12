@@ -987,3 +987,57 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
    (A at +0, B at +2, C at +4 in dpc's output; the image's layout
    would put B at +1.)
 
+
+38. **A set constructor with a run-time range.**  ra.pas
+   ra_$begin_compilation (translator PB6, cc.a88k 0x266C90) and
+   ra_$determine_available_registers (0x26BD72) build the allocatable
+   registers as `[first .. first + count - 1]' from target_properties
+   (+0x1C/+0x24, +0x3C/+0x44): Rev 8.89 clears a temporary, clamps the
+   upper bound to the set's (`cmpi.w #31; bls'), skips an empty range
+   (`sub.w; bcs') and sets the bits downwards with `bset; dbf'.  dpc: "a
+   set constructor with a run-time range or several run-time members
+   (codegen-patterns 5.1: PAS_$SET_BUILD 0xE11FA8 is never called from
+   compiled code) is not supported yet"; for a 64-bit set "`in` on a
+   large set with a computed byte element".  The check subtracts the
+   two bounds as members (the 64-bit one dropped).  Reproducer:
+
+       module g38;
+       var s: set of 0..31; a, b: integer;
+       procedure p;
+       begin
+         s := [a .. b];
+       end;
+
+39. **`odd' of a byte field.**  ra.pas get_lr_equivalence_class_parent
+   (0x266EB8): `odd(lr^.f2.reg)' of a packed 0..255 field (`btst
+   #0,(2,A2)').  dpc: "`odd` of a byte value is not supported yet".
+   The check masks the low bit.  Reproducer:
+
+       module g39;
+       type r_t = packed record b: 0..255; c: 0..255; end;
+       var r: r_t; x: boolean;
+       procedure p;
+       begin
+         x := odd(r.b);
+       end;
+
+40. **A frame beyond `link.w'.**  ra.pas ra_$collapse_conflict_graph
+   (0x26AE56) has a local table of 65536 pointers: `link.w A6,#-120;
+   suba.l #262144,SP' (the table above the other locals, its address
+   kept at -106).  dpc: "a 262280-byte frame (beyond `link.w`) is not
+   supported yet".  The check shrinks the table's type to two entries.
+   Reproducer:
+
+       module g40;
+       type t_t = array [0..65535] of integer32;
+       procedure q(var t: t_t); extern;
+       procedure p;
+       var t: t_t;
+       begin
+         q(t);
+       end;
+
+   ra.pas also meets gap 7 (the spill costs: rules store 0 and compare
+   the bits), gap 28 (ra_$build_conflict_graph, 0x1000 bytes: a write's
+   conflicts, its going live and a call's clobbers left out of the
+   check) and gap 37 (its boolean cells at +0x662..+0x66A).

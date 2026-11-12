@@ -1086,3 +1086,38 @@ cc.m68k unless marked.
     +0xDA8, +0xDAA, +0xDB4 followed by unaddressed bytes): Rev 8.89
     gives a boolean module variable one byte.  dpc gives each two
     (docs/dpc-gaps.md 37).
+
+
+## The register allocator (translator PB6, cc.a88k ra)
+
+240. **A data register's leftover value as a `btst' bit number on
+    memory.**  ra_$accumulate_true_writes (cc.a88k 0x26D41E) tests a
+    move's sets_cc with `btst D2,(A0)', D2 still holding the class mask
+    0x100004 it tested just before: on memory `btst' takes the bit
+    number modulo 8, so bit 4.  Item 123's reuse, for a constant bit
+    number.
+241. **The FPP's single operations (fpp_$eslv) in groups of twelve.**
+    0x0000 add, 0x000C subtract, 0x0018 reverse subtract, 0x0024
+    multiply, 0x0030 divide, 0x003C reverse divide, 0x0048 compare (the
+    codes for `bpl'/`slt'); +8 takes an immediate single (0x002C 2.0,
+    0x0050 1.0 or 1.0e-4); the accumulator is the last operand pushed,
+    so `x := x - w' is 0x000C after `push w; push x' and `x := x - 2.0 *
+    w' 0x0018 after `push x; push w; 0x002C 2.0'.  fpp_$ (doubles):
+    0x005C an integer operand, 0x00C4 a longword, 0x00A0 a multiply by
+    an immediate double, 0x007C the accumulator stored to an address
+    operand, 0x0078 an immediate loaded, 0x0148 the power (accumulator
+    ** the stored operand: ra's `2.0 ** (depth * 4.0)', 0x266C90 and
+    0x269B32), 0x00D4 0xFF3E the result stored as a single.
+242. **A constant comparison repeated, its second arm dead.**
+    ra_$remove_lr_from_graph (0x26ABF6) tests `moveq #1,D0; cmp.w
+    (58,A2),D0; bcc' twice: the arm after the second test (the live
+    range moved between work lists) is never reached (an `else if' of
+    the same condition; docs/questions.md 301).
+243. **A routine's whole body jumped over, again.**
+    ra_$spill_zero_cost_lrs (0x26D51C) returns false at once (`clr.b
+    D0; bra.w' to the epilogue); its loop's live range is never set
+    (item 101).
+244. **A pointer list's link tags in the low bits.**  The conflict
+    records' pointers (a live range's +44, a record's +8 and +12) are
+    masked `andi.l #-4' before each use, and a record's +15 bit 0 (the
+    low bit of its second link) marks it removed from the graph.

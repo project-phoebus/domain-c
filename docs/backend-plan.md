@@ -83,6 +83,7 @@ Conventions the translators should know:
 | `lang2/source/be_com/dbg_life.pas` | 24 | the DBG_LIFE phase: spill slots numbered after the complex live ranges, its own seven vectors a block, the pc ranges of each variable's register and slot homes, the debug records chained from the IL nodes (+68 / +54) (translator PB4; dpc gap 30) |
 | `lang2/source/be_com/sched_utils.pas` | 15 | the scheduler's utilities: operand delays, precedence heights (+28 a word during SCHED), snuggle moves next to physical registers' writers and readers (translator PB4; headings narrowed, sched_utils_$flags_t) |
 | `lang2/source/be_com/ra_utils.pas` | 45 | the allocator's utilities: XTP's pass-through spilling around hammocks (nine bit vectors, hal's records' +24..+36), rematerialization, the spill code (reloads, stores, loops broken from spill victims, readers linked to one reload) (translator PB5; ra.pvt.pas headings narrowed, ra_650; backend.ins.pas ra_utils_10 (was post_6b8), lir_main_c88/_c89 bytes; dpc gaps 7, 21, 25, 28) |
+| `lang2/source/be_com/ra.pas` | 62 | the allocator (translator PB6): ra.pvt.pas ra_classes_t, ra_$clean_bb_and_init_bit_vectors and ra_$build_conflict_graph narrowed (classes; first, count_only); ra_654/ra_658 defined; the 'ISD' letters at +0x65C (question 300); batch A fields read through views (question 302); dpc gaps 7, 28, 38, 39, 40 |
 
 exs.pas (27 routines, 4168 bytes, nested routines with uplevel
 references) was not reached with the core; batch A translated it
