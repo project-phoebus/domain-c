@@ -12,9 +12,8 @@
   testcc; the same address: sameaddr) and edit them (detach, makejump,
   makecbr, moverefcell, movejump, reversecond, label_merge).
 
-  TODO(pascal) final.pas is not finished: 112 of its 120 routines are
+  TODO(pascal) final.pas is not finished: 113 of its 120 routines are
   translated.  Not yet translated (cc.m68k address, bytes):
-    0x10D600 0x75A  opttest
     0x10DD5A 0x1DC  transform_ptr_in_d_use
     0x10DF52 0x7E2  optmove
     0x10E8EA 0x332  merge_add_sub
@@ -22,8 +21,8 @@
     0x10F30C 0x3B8  try_post_incr
     0x10F6C4 0x4C0  opta
     0x10FB84 0x3D4  floatop
-  The four of them that peepholer_ops calls (opttest, optmove, opta,
-  floatop) are declared extern before peepholer until they are written.
+  The three of them that peepholer_ops calls (optmove, opta, floatop)
+  are declared extern before peepholer until they are written.
 
   Image addresses (DOMAIN C 6.9; cc.m68k only: cc.a88k has no final):
     cc.m68k   cc.a88k
@@ -3669,6 +3668,245 @@ begin
   final_$cmp_branch_becomes_eor := r;
 end;
 
+{ opttest - a test or compare c removed or simplified (not under -DBA,
+  not on a postincremented, predecremented or mode 11 operand or
+  untouchable memory, not an FP test under -CPU 160): a kind 6 add.l
+  (op 16) handed to final_$collapsed_index_calc; a compare whose
+  branches only load 0 and 1 made an eor (final_$cmp_branch_becomes_eor);
+  a tst (kind 3, ops 113..115) of a register after a move of an
+  immediate to another register after a move to the tested one: the
+  two moves swapped; btst (kinds 14, 15, ops 77, 76) opt_btst; a
+  compare repeating the one before (final_$redundant_compare) removed;
+  a tst before beq or bne (142, 143): a jump made; then by the op: a
+  tst whose codes are not tested removed; a compare (102..104) likewise
+  or of a register with itself (final_$unity_compare_and_branch); a
+  compare with an immediate (107..109) removed when its codes are not
+  tested, else for -1 after a subq of 1 (ops 32, 33) from the same
+  register and before a beq whose codes are not tested made a dbra
+  (kind 23, op 183; under -CPU 68000 a bne before it to the target and
+  a clr.w after it); an lea or pea (105, 106) whose codes are not tested
+  removed; an FP test (298..303) likewise (codes 48); otherwise, and for
+  compares with 0, fn_test and its operands, size and the codes the
+  next cell uses (cc_use) set up and the test removed when deltest
+  finds every path to it sets those codes alike (w 48 for FP tests,
+  else 15), then the visited cells unmarked.  The cell to go on from:
+  the one after c, or after what replaced it.
+
+  0x10D600, 0x75A bytes, no A5 load: the answer in D3; c's prev and
+  its prev in A2 and D4, then the next cell in D4; the ops compared in
+  turn (115, 114, 113, 104, ..., 298); the node kinds of an integer
+  constant `btst' on final_$is_int's set at 0x1091E4; getcodecell's 3
+  final_$try_reducing_literal's word (0x10AC56); deltest's w at -34;
+  final_$collapsed_index_calc's answer not read (the cell passed by
+  address in -16). }
+
+function opttest(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+label
+  9;
+var
+  r: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+  pv: codegen_$cell_ptr_t;
+  pp: codegen_$cell_ptr_t;
+  n: codegen_$cell_ptr_t;
+  d: codegen_$cell_ptr_t;
+  k: codegen_$cell_ptr_t;
+  q: codegen_$cell_ptr_t;
+  nd: il_$node_ptr_t;
+  ok: boolean;
+  w: integer;
+begin
+  r := nxtlcc(c);
+  if cargs_$options.db = 3 then
+    goto 9;
+  if c^.ads2.f1 in [8, 9, 11] then
+    goto 9;
+  if has_untouchable_mem_attrs(c^.ads2) then
+    goto 9;
+  if (c^.op in [298..303]) and (2 in cargs_$options.cpu) then
+    goto 9;
+  if (c^.kind = dest1_sz_instyp) and not (c^.op in [113..115]) then
+    goto 9;
+  if (c^.kind = src2_sz_instyp) and not (c^.op in [102..104]) then begin
+    if c^.op <> 16 then
+      goto 9;
+    t := c;
+    ok := final_$collapsed_index_calc(t);
+    goto 9;
+  end;
+  pv := c^.prev;
+  pp := pv^.prev;
+  if ((c^.kind = src2_sz_instyp) and (c^.op in [102..104])) or
+     ((c^.kind = i_instyp) and (c^.op in [107..109])) then
+    if final_$cmp_branch_becomes_eor(c) then begin
+      r := pv^.next;
+      goto 9;
+    end;
+  if (c^.kind = dest1_sz_instyp) and (c^.op in [113..115]) and
+     (c^.ads2.f1 = 1) and (pv^.kind = move_instyp) and (pv^.ads1.f1 = 3) and
+     (pv^.ads2.f1 = 1) and not sameaddr(pv^.ads2, c^.ads2) and
+     (pp^.kind = move_instyp) and sameaddr(pp^.ads2, c^.ads2) then
+    if not involves(pp^.ads1, pv^.ads2.f2) then begin
+      delink(pp);
+      after(pv, pp);
+    end;
+  if (c^.kind = dest2_instyp) or (c^.kind = i_w_instyp) then begin
+    if (c^.op = 77) or (c^.op = 76) then
+      r := opt_btst(c);
+    goto 9;
+  end;
+  if final_$is_unmoveable_ftest(c) then
+    goto 9;
+  if ((c^.kind = i_instyp) or (c^.kind = src2_sz_instyp)) and
+     ((c^.op in [102..104]) or (c^.op in [107..109])) then
+    if final_$redundant_compare(c) then begin
+      detach(c);
+      goto 9;
+    end;
+  n := nxtcc(c);
+  if (n^.kind = cbr_instyp) and (c^.op in [113..115]) then
+    if n^.op = 142 then begin
+      r := makejump(c, br_target(n));
+      detach(c);
+      goto 9;
+    end
+    else if n^.op = 143 then begin
+      r := makejump(c, nxtlcc(n));
+      detach(c);
+      goto 9;
+    end
+    else if (n^.op = 140) or (n^.op = 141) then
+      goto 9;
+  case c^.op of
+    113, 114, 115:
+      if not testcc(nxtcc(c), 15) then begin
+        detach(c);
+        goto 9;
+      end;
+    102, 103, 104: begin
+      if testcc(nxtcc(c), 15) then
+        if not final_$unity_compare_and_branch(c) then
+          goto 9;
+      r := nxtlcc(c);
+      detach(c);
+      goto 9;
+    end;
+    107, 108, 109: begin
+      if not testcc(nxtcc(c), 15) then begin
+        detach(c);
+        goto 9;
+      end;
+      nd := il_$node_ptr_t(c^.ads1.x);
+      if (c^.ads1.f1 <> 3) or not (nd^.kind in [77..87, 101, 200]) or
+         (nd^.int_value <> 0) then begin
+        if nd^.int_value <> -1 then
+          goto 9;
+        if (c^.ads2.f1 <> 1) and (c^.ads2.f1 <> 2) then
+          goto 9;
+        pv := prvlcc(c);
+        if pv^.kind <> q_instyp then
+          goto 9;
+        if (pv^.op <> 32) and (pv^.op <> 33) then
+          goto 9;
+        if il_$node_ptr_t(pv^.ads1.x)^.int_value <> 1 then
+          goto 9;
+        if not sameaddr(pv^.ads2, c^.ads2) then
+          goto 9;
+        if (n^.kind <> cbr_instyp) or (n^.op <> 144) then
+          goto 9;
+        if testcc(nxtcc(n), 15) then
+          goto 9;
+        if (c^.ads2.f1 = 1) and (pv^.ads2.f2 < 8) then begin
+          if (c^.op = 108) and (pv^.op = 32) then begin
+            detach(pv);
+            n^.kind := dbcc_instyp;
+            n^.op := 183;
+            n^.ads1 := c^.ads2;
+            n^.size := ilength(n);
+            r := nxtlcc(n);
+            detach(c);
+            goto 9;
+          end;
+          if (c^.op <> 109) or (pv^.op <> 33) then
+            goto 9;
+          n^.op := 142;
+          if not (3 in cargs_$options.cpu) then begin
+            d := makecbr(prvlcc(pv), br_target(n));
+            d^.kind := dbcc_instyp;
+            d^.op := 183;
+            d^.ads1 := c^.ads2;
+            d^.size := ilength(d);
+            k := getcodecell(dest1_sz_instyp);
+            k^.op := 10;
+            k^.ads1 := fn_null_ads;
+            k^.ads2 := c^.ads2;
+            k^.size := ilength(k);
+            after(d, k);
+          end;
+          r := n;
+          detach(c);
+          goto 9;
+        end
+        else if c^.ads2.f1 = 2 then begin
+          if has_untouchable_mem_attrs(c^.ads2) then
+            goto 9;
+          if ((c^.op = 108) and (pv^.op = 32)) or
+             ((c^.op = 109) and (pv^.op = 33)) then begin
+            n^.op := 142;
+            detach(c);
+          end;
+          goto 9;
+        end
+        else
+          goto 9;
+      end;
+    end;
+    105, 106: begin
+      if not testcc(nxtcc(c), 15) then begin
+        detach(c);
+        goto 9;
+      end;
+      if c^.ads1.f1 <> 3 then
+        goto 9;
+      nd := il_$node_ptr_t(c^.ads1.x);
+      if not (nd^.kind in [77..87, 101, 200]) then
+        goto 9;
+      if nd^.int_value <> 0 then
+        goto 9;
+    end;
+    298, 299, 300, 301, 302, 303:
+      if not testcc(nxtcc(c), 48) then begin
+        detach(c);
+        goto 9;
+      end;
+    otherwise
+      ;
+  end;
+  fn_test := c;
+  fn_test_size := opinfo_size[c^.op][2];
+  fn_ads := c^.ads2;
+  fn_ads0 := c^.ads1;
+  fn_ccset := fn_ccs_t(cc_use(nxtcc(c)));
+  fn_32 := nil;
+  if (c^.op >= 298) and (c^.op <= 303) then
+    w := 48
+  else
+    w := 15;
+  if deltest(prvlcc(c), true, w) then begin
+    r := nxtlcc(c);
+    detach(c);
+  end;
+  q := fn_32;
+  while q <> nil do begin
+    t := q^.visit;
+    q^.visit := nil;
+    q := t;
+  end;
+9:
+  opttest := r;
+end;
+
 { test_add_sub - c adds (ops 17..24: '+') or subtracts (28..35: '-') an
   immediate integer constant (kinds 8, 5, 4); ch the sign.
 
@@ -4182,13 +4420,10 @@ begin
   final_$unlink_opts := nx;
 end;
 
-{ TODO(pascal) opttest (0x10D600), optmove (0x10DF52), opta (0x10F6C4)
-  and floatop (0x10FB84) are not translated yet: declared here
+{ TODO(pascal) optmove (0x10DF52), opta (0x10F6C4) and floatop
+  (0x10FB84) are not translated yet: declared here
   (headings read off their frames and peepholer_ops's calls) until
   they are written. }
-
-function opttest(
-    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); extern;
 
 function optmove(
     c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); extern;
