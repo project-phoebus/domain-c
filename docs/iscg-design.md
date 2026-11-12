@@ -613,9 +613,53 @@ produce the same):
 - The flags at pattern_matcher A5+0xB04 (a byte reset per call, set when
   a proper_subtree is re-queued).
 - Why pass-2 modules have four data bytes and no output cell.
-- How much of isc_debug and isc_main is generator text and how much is
-  the generator's own output; whether isc_print_il_node was generated.
+- How much of isc_main is generator text and how much is the
+  generator's own output.  (isc_debug: section 9; isc_print_il_node was
+  generated.)
 - Pass-1 actions 399 and 402 have no trace string: generated without
   it (an input flag?) or a different skeleton.
 - Whether the ISC objects really were bound in alphabetical order (the
   basis for guessing module names).
+
+## 9. isc_debug's generated regions (translator PE)
+
+isc_debug.pas is translated by hand (question 270); the regions between
+the comments `{ iscg: begin <what> }` and `{ iscg: end }` are the ones
+the generator is to own.  They are written out in full for now, so the
+unit compiles and compares.
+
+| region (in order) | where | generated from |
+|---|---|---|
+| `print_il_node views` | type section: `pin_<kind>_t` / `pin_<kind>_ptr_t`, 54 records | the IL description: each node kind's static attributes, named as printed, at the offsets the code reads (fillers unnamed; aliases at one offset, e.g. var_name's address/disp/processor_register_address at +56, as variants) |
+| `dump_solution view` | type section: `ds_solution_t` | the attribute declarations (2.4): the solution record under the image's names (isc_solution_fields.ins.pas's isc_solution_t keeps the hand-written units' names, question 267) |
+| `static attributes by IL node kind` | isc_print_il_node: the arms of `case kind of` | one arm per node kind of il$t (the 64 node kinds, exactly il$t's non-operator elements; 10 have no static attributes and share an empty arm), in il$t's order; assign_node, tree_node and cmp_tree_node have a nested `case op of` in alphabetical order: assign_node one arm per il$t aop (34), cmp_tree_node one per il$t comparison (6), tree_node 76 (il$t's tree operators but mark_dynamic_space_top and physical_top, and the six comparisons too); each arm writes its attributes in alphabetical order |
+| `inherited attributes` | isc_print_il_node, after the case | the inherited attribute declarations (17, alphabetical but il last), written for every node |
+| `dump_solution fields` | dump_solution, under at_backend_switches.level = 7 | the attribute declarations: the declared pass-1 attributes (alphabetical), then the generator's fields (before_transform .. already_through_pass_2) |
+| `solution kinds` | print_permissible_solution_kinds | solution$t, one test per kind 1..23 |
+
+The evidence that isc_print_il_node is generated (section 8's open point):
+its 64 arms are exactly il$t's node kinds, the code holds them in il$t's
+alphabetical order (a jump table does not need it), the comparison
+operators' compare chain tests them in that order (24, 84, 11, 12, 40,
+23), the attributes are printed under the input's names with a fixed
+`static <name>: ` / `inherited <name>: ` shape and the same writes per
+type (integer `:1`, unsigned, boolean, enumerated through the type's
+identifier table, pointers through isc_user_routines' printers or as
+integers without a width), and an assignment's `static
+source_line_number` prints the inherited one.  The generator's input must
+therefore also declare each IL node kind's static attributes (name,
+type, node offset) and the inherited attributes; the fixed text is the
+routine's frame: the nil test, the `Node <kind>: address = ` line, the
+otherwise bug_check, and indent.
+
+The view records duplicate knowledge of isc_types.ins.pas's isc_node_t
+variants (assign_node +76 op, tree_node +36 op, var_name +28 type, ...)
+under the attribute names; a generator that emits both from one
+description would remove the duplication.
+
+isc_print_il_node is 0x168C0 bytes; Rev 8.89 reaches its far arms
+through `jmp (-n,A5)` thunks (pattern 164; every jump-table entry has a
+stub of its own).  dpc refuses a routine of that size ("a `case` arm
+beyond the reach of a 16-bit table offset": docs/dpc-gaps.md 46); the
+gate does not meet it because the gap-4 rule drops the writes, which
+shrinks the routine to 0x4B0C bytes.

@@ -37,7 +37,10 @@
   ds_solution_t) carry the attribute names the image prints; their
   field offsets are read off the code.
 
-  The writes are dpc gap 4 (docs/dpc-gaps.md 4): the check drops them.
+  The writes are dpc gap 4 (docs/dpc-gaps.md 4): the check drops them,
+  which also keeps isc_print_il_node below 32 KB; at its full size dpc
+  refuses it (docs/dpc-gaps.md 46: the far arms Rev 8.89 reaches
+  through the thunks).
 
   Not known from the original: the parameters' and locals' names, the
   types' names, the view records' unnamed fillers. }
@@ -1146,7 +1149,9 @@ procedure indent(
   (inh +32).
 
   Not known from the original: whether the arms were written in one
-  `case' (as here) or the kinds without an arm were listed. }
+  `case' (as here) or the kinds without an arm were listed; whether
+  depth is one longword or two words of which the first is unused
+  (pass_1's `clr.l' would push both). }
 
 procedure isc_print_il_node;
 begin
