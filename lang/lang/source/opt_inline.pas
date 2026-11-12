@@ -198,6 +198,38 @@ type
     unused_8: integer32;                { +8 }
   end;
 
+  { What dfs_walk keeps of a call being expanded (its frame at -16):
+    the callee's result variable (call_status) and the call's line
+    (current_ln). }
+  oi_call_t = record
+    unused_0: integer32;                { +0 }
+    result: il_$node_ptr_t;             { +4 }
+    line: integer;                      { +8 }
+  end;
+
+  { A variable and the symbol it is reached by (get_sym_ind_info). }
+  oi_symind_t = record
+    v: il_$node_ptr_t;                  { +0 }
+    sym: il_$node_ptr_t;                { +4 }
+  end;
+
+  { process_operand's context (30 bytes, by value): the reference
+    being rebuilt (+0 its base, +8 a displacement node, +12 another,
+    +16 and +20 the symbol and variable of a symbolic displacement,
+    +24 the reference's kind), +26 the use count for the nodes made,
+    +28 set when a substitution was made (substitutee_sym_ind). }
+  oi_ctx_t = record
+    base: il_$node_ptr_t;               { +0 }
+    c4: il_$node_ptr_t;                 { +4 }
+    dnode: il_$node_ptr_t;              { +8 }
+    c12: il_$node_ptr_t;                { +12 }
+    c16: il_$node_ptr_t;                { +16 }
+    c20: il_$node_ptr_t;                { +20 }
+    kind: integer;                      { +24 }
+    uses: integer;                      { +26 }
+    subst: boolean;                     { +28 }
+  end;
+
   { A descriptor cleared bytewise (extend). }
   oi_desc_t = record
     case integer of
@@ -1149,7 +1181,7 @@ end;
 
 procedure start_il_stream(
     e: oi_edge_ptr_t;
-    s: il_$node_ptr_t); options(val_param); internal;
+    var x: oi_call_t); options(val_param); internal;
 begin
   stream_head := gspace(56);
   stream_head^.kind := 139;
@@ -1157,7 +1189,7 @@ begin
   stream_head^.xp[13] := gspace(12);
   stream_head^.xp[13]^.kind := 81;
   stream_head^.xl[10] := (stream_head^.xl[10] & 16#FF0000FF) ! 16#800000;
-  stream_head^.xw[10] := s^.xw[4];
+  stream_head^.xw[10] := x.line;
   stream_tail := stream_head;
 end;
 
@@ -1198,7 +1230,7 @@ end;
 
 procedure patch_il(
     e: oi_edge_ptr_t;
-    x: il_$node_ptr_t;
+    var x: oi_call_t;
     var l: oi_site_list_ptr_t); options(val_param); internal;
 var
   s: il_$node_ptr_t;
@@ -1210,7 +1242,7 @@ var
   d2: add_node_$desc_t;
   b: il_$node_ptr_t;
 begin
-  if x^.xp[1] <> nil then begin
+  if x.result <> nil then begin
     if inline_$is_fortran_asf(e^.callee) then begin
       s := stream_tail;
       while s^.kind <> 140 do
@@ -1226,7 +1258,7 @@ begin
       e^.stmt^.xp[1]^.xp[2] := e^.stmt;
     end
     else begin
-      get_hash_info(e, x^.xp[1], val, flags, info);
+      get_hash_info(e, x.result, val, flags, info);
       v := val;
       if (flags * [1, 2]) <> [] then
         v := v^.xp[10];
@@ -1759,7 +1791,7 @@ end;
 
 procedure process_parameters(
     e: oi_edge_ptr_t;
-    x: il_$node_ptr_t); options(val_param); internal;
+    var x: oi_call_t); options(val_param); internal;
 
   { assign - a new assignment (140) of rhs to lhs, its descriptor
     lhs's (get_size_rlen), rhs converted (coerce) to it from the k-th
@@ -2105,7 +2137,7 @@ begin
     if language <> 2 then
       p := p^.xp[1];
   end;
-  f := x^.xp[1];
+  f := x.result;
   if f <> nil then begin
     v := copy_var(e, f);
     put_on_bct(e, e^.scope, v);
@@ -2371,4 +2403,532 @@ begin
     end;
     s := s^.xp[2];
   until (s^.kind = 149) and (s^.xp[12] = e^.callee);
+end;
+
+{ TODO(pascal) process_operand and its nested routines
+
+  process_operand (0x092228, 0xBD8 bytes) with substitutee_sym_ind
+  (0x091822, in get_sym_ind_info), get_sym_ind_info (0x0918BA),
+  adjust_disp (0x09192E), disp_offset (0x091956), apply_disp
+  (0x09196A), process_index_opr (0x091A1E) and process_opr_ind
+  (0x091CAE) are not written yet.  process_operand copies statement
+  or tree t of the callee for edge e into the stream (the copy left
+  in t; nil for a statement not copied), mapping its nodes through
+  the hash table; ctx is the reference being rebuilt, r the display
+  record of the reference.  It loads A5 (recursive through its nested
+  routines) and is declared here so that process_statements can call
+  it. }
+
+procedure process_operand(
+    e: oi_edge_ptr_t;
+    var x: oi_call_t;
+    var t: il_$node_ptr_t;
+    ctx: oi_ctx_t;
+    var r: oi_info_t); options(val_param); extern;
+
+{ process_statements - the callee's statements, from its first (+100)
+  to its end (149 of the callee, +48), copied (process_operand, the
+  context empty but for a use count of 1) and put on the stream; a
+  call with a line (x.line) reported (cgerr 37) first.
+
+  0x092E20, 0xB0 bytes, link #-72: the context initialized from 28
+  bytes after the routine (+27 the 1), +28 cleared; the display
+  record the empty one's copy. }
+
+procedure process_statements(
+    e: oi_edge_ptr_t;
+    var x: oi_call_t); options(val_param); internal;
+var
+  t: il_$node_ptr_t;
+  ctx: oi_ctx_t;
+  info: oi_info_t;
+  s: il_$node_ptr_t;
+begin
+  if x.line <> 0 then
+    cgerr(37, x.line, e^.callee^.xp[74]);
+  ctx.base := nil;
+  ctx.c4 := nil;
+  ctx.dnode := nil;
+  ctx.c12 := nil;
+  ctx.c16 := nil;
+  ctx.c20 := nil;
+  ctx.kind := 0;
+  ctx.uses := 1;
+  ctx.subst := false;
+  info := empty_info;
+  s := e^.callee^.xp[25];
+  repeat
+    t := s;
+    process_operand(e, x, t, ctx, info);
+    if t <> nil then
+      put_on_il_stream(t);
+    if (s^.kind = 149) and (s^.xp[12] = e^.callee) then
+      exit;
+    s := s^.xp[2];
+  until false;
+end;
+
+{ process_blocks - the blocks of the copy: the callee's block becomes
+  a new block (172, 396 bytes: the callee's name, +92, data section
+  +188, +192, level, first and last statements; +374..+377 flags
+  0x04000800 with the language's, +378 bit 7) the caller expands
+  into (caller_blk); the callee's +264 lowered and +374 bit 1 set.
+  Its first statement maps to the stream's head, its last (and each
+  contained block's) to nothing (flag 4).  Each contained block is
+  copied (396 bytes, and two per parameter in languages 1 and 2;
+  its variables cleared) and the copies chained after caller_blk in
+  the block list of e's block (+12), their enclosing blocks (+8) and
+  levels (+294) moved by the depth.  e's block's last variable (+20)
+  set when only its first is; the caller marked +376 bit 7 when the
+  callee is.
+
+  0x092EEC, 0x30E bytes, link #-76: the sizes by a jump table of 4
+  on the language (another reported); put_hash_info's frames popped
+  2 short (pattern 51). }
+
+procedure process_blocks(
+    e: oi_edge_ptr_t); options(val_param); internal;
+var
+  cal: il_$node_ptr_t;
+  b: il_$node_ptr_t;
+  n: il_$node_ptr_t;
+  last: il_$node_ptr_t;
+  p: il_$node_ptr_t;
+  v: il_$node_ptr_t;
+  w: il_$node_ptr_t;
+  save: il_$node_ptr_t;
+  dl: integer;
+  size: integer;
+  len: integer32;
+  fl: oi_flags_t;
+  info: oi_info_t;
+begin
+  e^.callee^.xw[132] := e^.callee^.xw[132] - 1;
+  e^.callee^.xc[374] := chr(ord(e^.callee^.xc[374]) ! 2);
+  cal := e^.callee;
+  caller_blk := gspace(396);
+  caller_blk^.kind := 172;
+  caller_blk^.xp[74] := cal^.xp[74];
+  caller_blk^.xp[23] := cal^.xp[23];
+  caller_blk^.xl2[93] := (caller_blk^.xl2[93] & 16#7FF) ! 16#04000800;
+  caller_blk^.xw[188] := caller_blk^.xw[188] & 16#FE7F;
+  caller_blk^.xc[377] := chr((ord(caller_blk^.xc[377]) & 16#8F) !
+                             (ord(cal^.xc[377]) & 16#70));
+  caller_blk^.xc[378] := chr(ord(caller_blk^.xc[378]) ! 128);
+  caller_blk^.xp[47] := cal^.xp[47];
+  caller_blk^.xp[48] := cal^.xp[48];
+  oi_level_ptr_t(caller_blk)^.level := oi_level_ptr_t(cal)^.level;
+  caller_blk^.xp[25] := cal^.xp[25];
+  caller_blk^.xp[26] := cal^.xp[26];
+  put_hash_info(e, cal, caller_blk, [], empty_info);
+  put_hash_info(e, cal^.xp[25], stream_head, [], empty_info);
+  put_hash_info(e, cal^.xp[26], nil, [4], empty_info);
+  dl := oi_level_ptr_t(e^.scope)^.level + 1 - oi_level_ptr_t(cal)^.level;
+  b := next_contained_block(e^.callee, e^.callee);
+  while b <> nil do begin
+    case language of
+      1, 2:
+        size := ord(b^.xc[293]) * 2 + 396;
+      3, 4:
+        size := 396;
+      otherwise
+        cgerr_no_source(28, integer32(strtk('unexpected IL encountered', 25)));
+    end;
+    n := gspace(size);
+    len := size;
+    lib_$data_move(b, n, len);
+    n^.xp[4] := nil;
+    n^.xp[5] := nil;
+    put_hash_info(e, b, n, [], empty_info);
+    put_hash_info(e, b^.xp[25], nil, [4], empty_info);
+    put_hash_info(e, b^.xp[26], nil, [4], empty_info);
+    b := next_contained_block(e^.callee, b);
+  end;
+  save := e^.scope^.xp[1];
+  e^.scope^.xp[1] := caller_blk;
+  caller_blk^.xp[2] := e^.scope;
+  oi_level_ptr_t(caller_blk)^.level := oi_level_ptr_t(caller_blk)^.level + dl;
+  last := caller_blk;
+  p := caller_blk;
+  b := next_contained_block(e^.callee, e^.callee);
+  while b <> nil do begin
+    get_hash_info(e, b, last, fl, info);
+    p^.xp[1] := last;
+    if b^.xp[2] = e^.callee then
+      last^.xp[2] := caller_blk
+    else
+      get_hash_info(e, b^.xp[2], last^.xp[2], fl, info);
+    oi_level_ptr_t(last)^.level := oi_level_ptr_t(last)^.level + dl;
+    p := p^.xp[1];
+    b := next_contained_block(e^.callee, b);
+  end;
+  last^.xp[1] := save;
+  if (e^.scope^.xp[4] <> nil) and (e^.scope^.xp[5] = nil) then begin
+    v := e^.scope^.xp[4];
+    repeat
+      if v^.kind = 110 then
+        w := v^.xp[1]
+      else
+        w := v^.xp[4];
+      if w <> nil then
+        v := w;
+    until w = nil;
+    e^.scope^.xp[5] := v;
+  end;
+  if ord(e^.callee^.xc[376]) >= 128 then
+    e^.caller^.xc[376] := chr(ord(e^.caller^.xc[376]) ! 128);
+end;
+
+{ cleanup_expansion - block b's storage after expansions: the data
+  section's offsets (+192: +24, +20) aligned up to 4, the frame (+112)
+  down to 4 and +176 up to 4; +80 the least of itself and the frame.
+
+  0x0931FA, 0x6C bytes, link #-12: align's two words pushed as one
+  longword (#0x20000, #0x20001, pattern 54). }
+
+procedure cleanup_expansion(
+    b: il_$node_ptr_t); options(val_param); internal;
+var
+  m: integer32;
+begin
+  align(b^.xp[48]^.xl[6], 2, 0);
+  align(b^.xp[48]^.xl[5], 2, 0);
+  align(b^.xl[28], 2, 1);
+  align(b^.xl[44], 2, 0);
+  m := b^.xl[28];
+  if m > b^.xl[20] then
+    m := b^.xl[20];
+  b^.xl[20] := m;
+end;
+
+{ call_status - whether the call of edge e can be expanded (63) or
+  why not: 27 the callee not inlinable (+375 bit 7 clear), 43 another
+  data section (+188) unless forced (+375 bit 5), 40 the callee
+  contains routines (107, 108) or has a variable whose address is
+  exposed (+34 bit 8; in Fortran +26 bit 8) while another routine
+  calls it too, 35 the parameters do not match (count, a Fortran
+  statement function's temporary of class 7, +10 bit 7, or in
+  languages 3 and 4 a real or block passed for a parameter of
+  another class), 39 too large (variables past 255, counts past
+  65535, the frame or static data past 24K, more than 100 nodes
+  unless forced or -FORCE_INLINE).  x.result is set to the callee's
+  result variable (function_return).
+
+  0x093266, 0x392 bytes, link #-60: the parameters counted by `dbf';
+  pass_method's answers by a jump table of 4 (3 adds 7 bytes); the
+  sizes of the copies and the result summed with 7 bytes each; a
+  dead `btst #3' of the callee's +374 before the last loop. }
+
+function call_status(
+    e: oi_edge_ptr_t;
+    var x: oi_call_t): integer; options(val_param); internal;
+var
+  cal: il_$node_ptr_t;
+  b: il_$node_ptr_t;
+  f: il_$node_ptr_t;
+  a: il_$node_ptr_t;
+  p: il_$node_ptr_t;
+  v: il_$node_ptr_t;
+  ed: oi_edge_ptr_t;
+  size: integer32;
+  k: integer;
+  w: integer;
+  m: integer;
+  d: add_node_$desc_t;
+  found: boolean;
+begin
+  cal := e^.callee;
+  if ord(cal^.xc[375]) < 128 then begin
+    call_status := 27;
+    return;
+  end;
+  if e^.caller^.xp[47] <> cal^.xp[47] then
+    if (ord(cal^.xc[375]) & 32) = 0 then begin
+      call_status := 43;
+      return;
+    end;
+  b := next_contained_block(cal, cal);
+  while b <> nil do begin
+    if (b^.kind = 107) or (b^.kind = 108) then begin
+      call_status := 40;
+      return;
+    end;
+    b := next_contained_block(e^.callee, b);
+  end;
+  if ord(cal^.xc[293]) <> e^.call^.xw[19] - 1 then begin
+    call_status := 35;
+    return;
+  end;
+  size := 0;
+  p := nil;
+  if language <> 2 then
+    p := cal^.xp[3];
+  for k := 1 to ord(cal^.xc[293]) do begin
+    if language = 2 then
+      f := oi_ftab_ptr_t(e^.callee^.xp[3])^[k].sym
+    else
+      f := find_varn(e^.callee, p);
+    a := inliner_actual(e^.call^.xp[10 + k]);
+    m := pass_method(e, k, a, f, p);
+    case m of
+      0: begin
+        if language = 2 then
+          if f^.kind = 110 then
+            if (ord(f^.xc[10]) & 15) = 7 then
+              if ord(f^.xc[10]) >= 128 then begin
+                call_status := 35;
+                return;
+              end;
+        get_size_rlen(f, d);
+        size := size + d.size + 7;
+        if language in [3, 4] then begin
+          w := e^.call^.xp[10]^.xw[9 + 2 * k];
+          if ((w = 7) or (w = 6)) and not ((d.rlen = 7) or (d.rlen = 6)) then begin
+            call_status := 35;
+            return;
+          end;
+          if (d.rlen = 7) or (d.rlen = 6) then
+            if not ((w = 7) or (w = 6)) then begin
+              call_status := 35;
+              return;
+            end;
+          if (w = 11) and (d.rlen <> 11) then begin
+            call_status := 35;
+            return;
+          end;
+          if (d.rlen = 11) and (w <> 11) then begin
+            call_status := 35;
+            return;
+          end;
+        end;
+      end;
+      3:
+        size := size + 7;
+      otherwise
+        ;
+    end;
+    if language <> 2 then
+      p := p^.xp[1];
+  end;
+  x.result := function_return(e^.callee);
+  if x.result <> nil then begin
+    get_size_rlen(x.result, d);
+    size := size + d.size + 7;
+  end;
+  b := e^.caller;
+  cal := e^.callee;
+  if b^.xw[145] + cal^.xw[145] > 255 then begin
+    call_status := 39;
+    return;
+  end;
+  if (b^.xw[136] & 16#FFFF) + (cal^.xw[136] & 16#FFFF) > 65535 then begin
+    call_status := 39;
+    return;
+  end;
+  if b^.kind = 105 then begin
+    if size + b^.xp[48]^.xl[5] + cal^.xl[44] - cal^.xl[28] > 24576 then begin
+      call_status := 39;
+      return;
+    end;
+  end
+  else if b^.xl[28] - b^.xl[44] - size - cal^.xl[44] + cal^.xl[28] < -24576 then begin
+    call_status := 39;
+    return;
+  end;
+  if ((ord(cal^.xc[375]) & 32) = 0) and not cargs_$options.force_inline then
+    if (cal^.xw[136] & 16#FFFF) > 100 then begin
+      call_status := 39;
+      return;
+    end;
+  v := cal^.xp[4];
+  found := false;
+  while (v <> nil) and not found do
+    if rshft(ord(e^.callee^.xc[377]) & 16#70, 4) = 2 then begin
+      found := (v^.xw[13] & 16#100) <> 0;
+      v := v^.xp[1];
+    end
+    else if (v^.kind = 109) and (v^.xp[7]^.kind <> 107) then begin
+      found := (v^.xw[17] & 16#100) <> 0;
+      v := v^.xp[4];
+    end
+    else
+      v := v^.xp[4];
+  if found then begin
+    b := il_184;
+    while b <> nil do begin
+      if b <> e^.caller then begin
+        ed := oi_edge_ptr_t(b^.xp[61]);
+        while ed <> nil do begin
+          if ed^.callee = e^.callee then begin
+            call_status := 40;
+            return;
+          end;
+          ed := ed^.caller_next;
+        end;
+      end;
+      b := b^.xp[1];
+    end;
+  end;
+  call_status := 63;
+end;
+
+{ remove_call_graph_edge - edge e taken off its caller's edges out
+  (+244, through caller_next) and its callee's edges in (+252,
+  through callee_next).
+
+  0x0935F8, 0x64 bytes, no frame. }
+
+procedure remove_call_graph_edge(
+    e: oi_edge_ptr_t); options(val_param); internal;
+var
+  p: oi_edge_ptr_t;
+begin
+  if oi_edge_ptr_t(e^.caller^.xp[61]) = e then
+    e^.caller^.xp[61] := il_$node_ptr_t(e^.caller_next)
+  else begin
+    p := oi_edge_ptr_t(e^.caller^.xp[61]);
+    while p <> nil do begin
+      if p^.caller_next = e then begin
+        p^.caller_next := e^.caller_next;
+        exit;
+      end;
+      p := p^.caller_next;
+    end;
+  end;
+  if oi_edge_ptr_t(e^.callee^.xp[63]) = e then
+    e^.callee^.xp[63] := il_$node_ptr_t(e^.callee_next)
+  else begin
+    p := oi_edge_ptr_t(e^.callee^.xp[63]);
+    while p <> nil do begin
+      if p^.callee_next = e then begin
+        p^.callee_next := e^.callee_next;
+        exit;
+      end;
+      p := p^.callee_next;
+    end;
+  end;
+end;
+
+{ dfs_walk - the calls of routine block b (107, 108, 105; not yet
+  visited, +374 bit 0) expanded, callees first: b marked visited and
+  on the walk (+379 bit 1, cleared at the end); each edge out to a
+  routine (105..108, 172, 209) not on the walk has its callee walked
+  and, when call_status allows (63), the call expanded (the stream
+  started, the blocks, parameters, display pointers, labels,
+  variables and statements copied, the stream patched in, the hash
+  table's entries for b forgotten, the edge removed); a call not
+  expanded (a recursive one: 38) is reported at its line (cgerr)
+  when the callee is inlinable (+375 bit 7) and forced (+375 bit 5,
+  -FORCE_INLINE), but for 27, and its reference parameters marked.
+  After any expansion b's storage is settled (cleanup_expansion) and
+  the table cleared of b's entries.
+
+  0x09365C, 0x1BE bytes, link #-28: the callee's kind against the
+  28-byte set after the routine; the call's record at -16, the sites'
+  cursor at -24; cleanup_expansion's frame popped 2 short (pattern
+  51). }
+
+procedure dfs_walk(
+    b: il_$node_ptr_t); options(val_param); internal;
+var
+  ed: oi_edge_ptr_t;
+  c: il_$node_ptr_t;
+  st: integer;
+  x: oi_call_t;
+  l: oi_site_list_ptr_t;
+  expanded: boolean;
+begin
+  if b = nil then
+    return;
+  if not ((b^.kind = 107) or (b^.kind = 108) or (b^.kind = 105)) then
+    return;
+  if odd(ord(b^.xc[374])) then
+    return;
+  b^.xc[374] := chr(ord(b^.xc[374]) ! 1);
+  b^.xc[379] := chr(ord(b^.xc[379]) ! 2);
+  expanded := false;
+  ed := oi_edge_ptr_t(b^.xp[61]);
+  while ed <> nil do begin
+    x.line := current_ln(ed^.stmt);
+    st := 0;
+    if ed^.callee <> nil then
+      if ed^.callee^.kind in [105..108, 172, 209] then begin
+        c := ed^.callee;
+        if (ord(c^.xc[379]) & 2) <> 0 then begin
+          if ((ord(c^.xc[375]) & 32) <> 0) or cargs_$options.force_inline then
+            if ord(c^.xc[375]) >= 128 then
+              if x.line <> 0 then
+                cgerr(38, x.line, c^.xp[74]);
+        end
+        else begin
+          dfs_walk(c);
+          st := call_status(ed, x);
+          status := st;
+          if st = 63 then begin
+            expanded := true;
+            start_il_stream(ed, x);
+            process_blocks(ed);
+            process_parameters(ed, x);
+            process_display_ptrs(ed);
+            process_labels(ed);
+            process_variables(ed);
+            process_statements(ed, x);
+            patch_il(ed, x, l);
+            cleanup_hash(b, 0);
+            remove_call_graph_edge(ed);
+          end
+          else if st <> 27 then begin
+            c := ed^.callee;
+            if ((ord(c^.xc[375]) & 32) <> 0) or cargs_$options.force_inline then
+              if ord(c^.xc[375]) >= 128 then
+                if x.line <> 0 then
+                  cgerr(st, x.line, c^.xp[74]);
+          end;
+        end;
+      end;
+    if st <> 63 then
+      inline_$mark_reference_params(ed^.call, ed^.stmt);
+    ed := ed^.caller_next;
+  end;
+  if expanded then begin
+    cleanup_expansion(b);
+    cleanup_hash(b, 1);
+  end;
+  b^.xc[379] := chr(ord(b^.xc[379]) & 16#FD);
+end;
+
+{ check_call_sites_and_expand - the heap set up ('opt_inline'), the
+  hash table's heads cleared, each block's walk mark (+379 bit 1)
+  cleared and its count of variables (+290) taken
+  (il_utl_$count_vars), the empty display record cleared, and the
+  routines marked +374 bit 3 walked (dfs_walk); the heap released.
+
+  0x093836, 0xAE bytes, link #-12: the heads' two longwords stored by
+  `move.l #0' (pattern 82); mrh_$initialize's two words pushed as one
+  `clr.l'. }
+
+procedure check_call_sites_and_expand; internal;
+var
+  i: integer;
+  b: il_$node_ptr_t;
+begin
+  mrh_$initialize(heap, 0, 0, 'opt_inline%');
+  for i := 0 to 1008 do begin
+    hash[i].next := nil;
+    hash[i].node := nil;
+  end;
+  b := il_184;
+  while b <> nil do begin
+    b^.xc[379] := chr(ord(b^.xc[379]) & 16#FD);
+    b^.xw[145] := il_utl_$count_vars(b);
+    b := b^.xp[1];
+  end;
+  nil_out_dispinfo(empty_info);
+  b := il_184;
+  while b <> nil do begin
+    if (ord(b^.xc[374]) & 8) <> 0 then
+      dfs_walk(b);
+    b := b^.xp[1];
+  end;
+  mrh_$release_all(heap);
 end;
