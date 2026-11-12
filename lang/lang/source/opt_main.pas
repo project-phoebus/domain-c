@@ -1650,3 +1650,453 @@ begin
       check_dominators;
   compute_dominator_matrix;
 end;
+
+{ recompute_usedef_for_strength_reduction - after strength reduction,
+  each statement using variables (vset) gets, for each variable it
+  uses, an entry in its table (a copy of opt_region's entry's, 18 bytes
+  from the var_chain pool, uses cleared) and its use-def chain
+  (make_motioned_ud_chain with the region at hand, om_stmt_num); an
+  entry without a chain gets one.
+
+  0x0DCB9C, 0x128 bytes: an empty set found with `tst.l (A0)+; dbne';
+  the variables' loop over il_180's +290; make_motioned_ud_chain's
+  arguments by address (the variable and the statement through frame
+  copies). }
+
+procedure recompute_usedef_for_strength_reduction; internal;
+var
+  s: g_opt_stmt_ptr_t;
+  v: 0..255;
+begin
+  om_stmt_num := 0;
+  s := g_opt_stmt_ptr_t(il_d4);
+  while s <> nil do begin
+    if s^.hdr.region <> 0 then
+      om_stmt_num := s^.hdr.region;
+    if s^.vset = nil then
+      s := s^.next
+    else if s^.vset^ = [] then
+      s := s^.next
+    else begin
+      for v := 1 to il_180^.xw[145] do
+        if v in s^.vset^ then
+          if s^.vars^[v] = nil then begin
+            s^.vars^[v] := mem_$alloc(opt_main_18, 18);
+            s^.vars^[v]^ := opt_4009c[opt_region]^.vars^[v]^;
+            s^.vars^[v]^.count := 0;
+            make_motioned_ud_chain(v, om_stmt_num, s);
+          end
+          else if s^.vars^[v]^.ud = nil then
+            make_motioned_ud_chain(v, om_stmt_num, s);
+      s := s^.next;
+    end;
+  end;
+end;
+
+{ recompute_usedef_for_uplevel_addressing - outside Fortran, each call
+  (in each block's nodes) of a routine (107, 167, 108) marked to reach
+  its callers' variables (+378 bit 6) nested no deeper than the
+  current routine (+294, signed bytes) uses the variable that routine
+  addresses its enclosing frames through (the current routine's +240
+  chain, +12 down as many levels as the nesting differs): when it is a
+  variable of opt_region's table not yet in the call's statement's set,
+  it is added there with an entry (a copy of opt_region's, one use,
+  flags 16#200).
+
+  0x0DCCC4, 0x1DE bytes: the variable's number in D3, set only when
+  the chain ends at a variable's name (otherwise the previous call's,
+  or whatever D3 held, is used: kept); the set's element added through
+  a 32-byte frame set (`bset', then `or.l' of the eight longwords). }
+
+procedure recompute_usedef_for_uplevel_addressing; internal;
+var
+  i: g_opt_num_t;
+  j: g_opt_num_t;
+  k: integer;
+  n: g_opt_num_t;
+  t: il_$node_ptr_t;
+  r: il_$node_ptr_t;
+  v: il_$node_ptr_t;
+  s: g_opt_stmt_ptr_t;
+  one: g_opt_varset_t;
+begin
+  if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then
+    for i := opt_first_block to opt_last_block do
+      for j := g_opt_blocks_ptr_t(il_11c)^[i]^.first to
+               g_opt_blocks_ptr_t(il_11c)^[i]^.last do begin
+        t := g_opt_nodes_ptr_t(il_120)^[j];
+        if assert_is_call_tree(t) then begin
+          r := g_opt_tree_ptr_t(t)^.opnd[1];
+          if (r^.kind = 107) or (r^.kind = 167) or (r^.kind = 108) then
+            if (ord(r^.xc[378]) & 16#40) <> 0 then
+              if ord(r^.xc[294]) <= ord(il_180^.xc[294]) then begin
+                v := il_180^.xp[60];
+                for k := 1 to ord(il_180^.xc[294]) - ord(r^.xc[294]) do
+                  v := v^.xp[3];
+                if assert_is_var_name(v) then
+                  n := find_var(v);
+                if n <> 0 then begin
+                  s := g_opt_tree_ptr_t(t)^.owner;
+                  if s^.vset <> nil then
+                    if n in s^.vset^ then
+                      next;
+                  opt_main_$ensure_var_set(s^.vset);
+                  one := [];
+                  one := one + [n];
+                  s^.vset^ := s^.vset^ + one;
+                  s^.vars^[n] := mem_$alloc(opt_main_18, 18);
+                  s^.vars^[n]^ := opt_4009c[opt_region]^.vars^[n]^;
+                  s^.vars^[n]^.count := 1;
+                  s^.vars^[n]^.flags := s^.vars^[n]^.flags ! 16#200;
+                end;
+              end;
+        end;
+      end;
+end;
+
+{ eliminate_dead_code_and_count_basic_blocks - il_124 counts the
+  statements starting basic blocks (marked first unless
+  opt_track_lines); after an unconditional branch, the statements up
+  to a label still reached (not of kind 11, or abnormal, or referenced:
+  +50) are unlinked (the label relinked after the branch; at a
+  routine's start or end, 148 or 149, nothing is relinked); when one
+  of them was code (not 148, 149) and none was quiet (+41 bits 7, 5) or
+  a store to a variable marked +34 bit 14, warning 33 (unreachable
+  code) at the first line found: theirs, else the branch's next
+  source-generated statement's (when the branch has a line), else the
+  first line from the stopping statement on.
+
+  0x0DCEA2, 0x1CE bytes: the flags in D2 (code), D3 (quiet), D4
+  (marked store); the line in (-18,A6); the quiet bits by `andi.w
+  #0xA000' of the word at +41. }
+
+procedure eliminate_dead_code_and_count_basic_blocks; internal;
+var
+  s: g_opt_stmt_ptr_t;
+  t: g_opt_stmt_ptr_t;
+  line: integer;
+  code: boolean;
+  quiet: boolean;
+  marked: boolean;
+  stop: boolean;
+begin
+  il_124 := 0;
+  s := g_opt_stmt_ptr_t(il_d4);
+  while s <> nil do begin
+    if not opt_track_lines then
+      mark_if_begins_basic_block(s);
+    if s^.hdr.first then
+      il_124 := il_124 + 1;
+    code := false;
+    quiet := true;
+    marked := code;
+    if assert_is_unconditional_branch(il_$node_ptr_t(s)) then begin
+      t := s;
+      line := spos_$null_position;
+      stop := false;
+      repeat
+        t := t^.next;
+        if t = nil then begin
+          s^.next := t;
+          stop := true;
+        end
+        else if (t^.kind = 144) and
+                ((rshft(ord(il_$node_ptr_t(t)^.xc[72]) & 16#3E, 1) <> 11) or
+                 (il_$node_ptr_t(t)^.xc[74] <> chr(0)) or
+                 (il_$node_ptr_t(t)^.xw[25] <> 0)) then begin
+          s^.next := t;
+          t^.prev := s;
+          stop := true;
+        end
+        else if (t^.kind = 149) or (t^.kind = 148) then
+          stop := true
+        else begin
+          code := true;
+          if not (t^.hdr.b7 or t^.hdr.b5) then
+            quiet := false;
+          if t^.kind = 140 then
+            if t^.asg_lhs^.kind = 109 then
+              marked := (t^.asg_lhs^.xw[17] & 16#4000) <> 0;
+          if not assert_is_defined_spos(line) then
+            if assert_is_defined_spos(t^.line) then
+              line := t^.line;
+        end;
+      until stop;
+      if not (quiet or marked) then
+        if assert_is_defined_spos(line) then
+          cgerr(33, line, nil)
+        else if code then
+          if assert_is_defined_spos(s^.line) then begin
+            t := g_opt_stmt_ptr_t(il_utils_$source_generated_top_level_node(
+                                    il_$node_ptr_t(s^.next)));
+            cgerr(33, t^.line, nil);
+          end
+          else if t <> nil then
+            if not assert_is_defined_spos(t^.line) then begin
+              while t <> nil do begin
+                line := t^.line;
+                if assert_is_defined_spos(t^.line) then
+                  exit;
+                if (t^.kind = 149) or (t^.kind = 148) then
+                  exit;
+                t := t^.next;
+              end;
+              if assert_is_defined_spos(line) then
+                cgerr(33, line, nil);
+            end;
+    end;
+    s := s^.next;
+  end;
+end;
+
+{ coalesce_adjacent_and_eliminate_dead_assignments - for each top-level
+  statement: Fortran's complex stores collapsed
+  (opt_main_$collapse_fortran_complex_assigns, which may move s back); a
+  routine's entry clears its routine's depth-first lists (+132..+147);
+  an artificial statement is marked quiet (+41 bit 5); an assignment
+  not followed by one, or followed by one of operator 27..30, is
+  merged with the run after it (opt_assign's assign_opt).
+
+  0x0DD070, 0xA8 bytes: s through a frame copy; the operators by
+  `btst' in the longword 0x78000000 after `cmp.w #31; bcs'. }
+
+procedure coalesce_adjacent_and_eliminate_dead_assignments; internal;
+var
+  s: g_opt_stmt_ptr_t;
+  t: g_opt_stmt_ptr_t;
+  r: g_opt_rtn_ptr_t;
+begin
+  s := g_opt_stmt_ptr_t(il_d4);
+  while s <> nil do begin
+    t := s;
+    opt_main_$collapse_fortran_complex_assigns(t);
+    s := t;
+    if s^.kind = 148 then begin
+      r := g_opt_rtn_ptr_t(s^.x48);
+      r^.pre_first := nil;
+      r^.pre_last := nil;
+      r^.post_first := nil;
+      r^.post_last := nil;
+    end;
+    if assert_is_artificial_statement(il_$node_ptr_t(s)) then
+      s^.hdr.b5 := true;
+    if (s^.kind = 140) and (s^.next^.kind <> 140) then
+      assign_opt(s)
+    else if (s^.kind = 140) and (s^.next^.kind = 140) then
+      if (s^.next^.asg_op <= 31) and (s^.next^.asg_op in [27..30]) then
+        assign_opt(s);
+    s := s^.next;
+  end;
+end;
+
+{ makedindex - outside Fortran, a dereference t (146, no flags 1..4)
+  of a sum (137, operator 1, register class 5) of a variable (109) and
+  a reference (109, 145, 147, 146) becomes an indexed reference of the
+  reference by the variable (add_dindexn, 4 bytes an element, t's
+  alignment +22 signed and +23), unused, substituted for t in p.
+
+  0x0DD118, 0x118 bytes: t by address; the two orders written out. }
+
+procedure makedindex(
+    var t: il_$node_ptr_t;
+    p: il_$node_ptr_t); options(val_param); internal;
+var
+  n: il_$node_ptr_t;
+  a: g_opt_tree_ptr_t;
+  x: il_$node_ptr_t;
+  y: il_$node_ptr_t;
+  r: il_$node_ptr_t;
+  al: integer;
+begin
+  if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then
+    if t <> nil then begin
+      n := t;
+      if (n^.kind = 146) and ((n^.xl[1] & 30) = 0) then begin
+        a := g_opt_tree_ptr_t(n^.xp[6]);
+        if (a^.kind = 137) and (a^.op = 1) and (a^.rlen = 5) then begin
+          x := a^.opnd[1];
+          al := ord(n^.xc[22]);
+          if al > 127 then
+            al := al - 256;
+          if (x^.kind = 109) and
+             ((a^.opnd[2]^.kind = 109) or (a^.opnd[2]^.kind = 145) or
+              (a^.opnd[2]^.kind = 147) or (a^.opnd[2]^.kind = 146)) then
+            r := add_dindexn(a^.opnd[2], n^.xp[7], x, 0, 4, al, ord(n^.xc[23]))
+          else begin
+            y := a^.opnd[2];
+            if y^.kind <> 109 then
+              return;
+            if not ((x^.kind = 109) or (x^.kind = 145) or (x^.kind = 147) or
+                    (x^.kind = 146)) then
+              return;
+            r := add_dindexn(x, n^.xp[7], y, 0, 4, al, ord(n^.xc[23]));
+          end;
+          r^.xw[8] := 0;
+          il_utils_$do_substitution(p, t, r);
+        end;
+      end;
+    end;
+end;
+
+{ recover - the indexed references of tree t and below remade
+  (makedindex) where the original's dereferences of sums were kept: a
+  tree used once and not marked to be kept (flags 3, 4) is walked by
+  kind; an indexed reference (145) whose index is a left shift by a
+  constant 0..3, or a product by 2, 4 or 8, of the index's class gets
+  that scale (+40) and the shift's or product's operand as its index (a
+  product of a word by 2 not of the index's class: the operand
+  displaced 2 bytes, add_dn).
+
+  0x0DD230, 0x38A bytes: recursive; the kinds by the set of 0..207 at
+  0x0DC12C (killvisited's), `andi.l #24' of +4; the constants' kinds by
+  the set at 0x0DC6EE. }
+
+procedure recover(
+    t: il_$node_ptr_t); options(val_param); internal;
+var
+  k: integer;
+  a: g_opt_tree_ptr_t;
+  c: il_$node_ptr_t;
+begin
+  if t = nil then
+    return;
+  if t^.kind in [137..138, 143, 145..147, 164, 171, 175, 189, 205] then
+    if ((t^.xl[1] & 24) <> 0) or (t^.xw[8] > 1) then
+      return;
+  case t^.kind of
+    190:
+      recover(t^.xp[1]);
+    143, 137:
+      for k := 1 to g_opt_tree_ptr_t(t)^.count do begin
+        makedindex(g_opt_tree_ptr_t(t)^.opnd[k], t);
+        recover(g_opt_tree_ptr_t(t)^.opnd[k]);
+      end;
+    205, 147, 146: begin
+      makedindex(t^.xp[6], t);
+      recover(t^.xp[6]);
+    end;
+    175: begin
+      makedindex(t^.xp[4], t);
+      recover(t^.xp[4]);
+    end;
+    171: begin
+      makedindex(t^.xp[4], t);
+      recover(t^.xp[4]);
+    end;
+    164: begin
+      makedindex(t^.xp[5], t);
+      makedindex(t^.xp[6], t);
+      recover(t^.xp[5]);
+      recover(t^.xp[6]);
+    end;
+    145: begin
+      makedindex(t^.xp[6], t);
+      makedindex(t^.xp[9], t);
+      a := g_opt_tree_ptr_t(t^.xp[9]);
+      if (a^.kind = 137) and (a^.op = 27) then begin
+        c := a^.opnd[2];
+        if c^.kind in [77..87, 101, 200] then
+          if c^.int_value <= 3 then
+            if (t^.xw[21] = a^.rlen) and (t^.xw[8] = 1) then begin
+              t^.xw[20] := c^.xw[5];
+              adjust_uc(t^.xp[9], -1);
+              t^.xp[9] := g_opt_tree_ptr_t(t^.xp[9])^.opnd[1];
+              adjust_uc(t^.xp[9], 1);
+            end;
+      end;
+      a := g_opt_tree_ptr_t(t^.xp[9]);
+      if (a^.kind = 137) and (a^.op = 3) then begin
+        c := a^.opnd[2];
+        if c^.kind in [77..87, 101, 200] then
+          if (c^.int_value = 2) or (c^.int_value = 8) or
+             (c^.int_value = 4) then
+            if (t^.xw[21] = a^.rlen) and (t^.xw[21] = a^.w26) and
+               (t^.xw[21] = a^.w28) and (t^.xw[8] = 1) then begin
+              if c^.int_value = 8 then
+                t^.xw[20] := 3
+              else if c^.int_value = 4 then
+                t^.xw[20] := 2
+              else
+                t^.xw[20] := 1;
+              adjust_uc(t^.xp[9], -1);
+              t^.xp[9] := g_opt_tree_ptr_t(t^.xp[9])^.opnd[1];
+              adjust_uc(t^.xp[9], 1);
+            end;
+      end;
+      a := g_opt_tree_ptr_t(t^.xp[9]);
+      if (a^.kind = 137) and (a^.op = 3) then begin
+        c := a^.opnd[2];
+        if c^.kind in [77..87, 101, 200] then
+          if (c^.int_value = 2) or (c^.int_value = 8) or
+             (c^.int_value = 4) then
+            if (t^.xw[21] = a^.rlen) and (t^.xw[21] <> a^.w26) and
+               (t^.xw[21] = a^.w28) and (t^.xw[21] = 2) and
+               (t^.xw[8] = 1) then begin
+              if c^.int_value = 8 then
+                t^.xw[20] := 3
+              else if c^.int_value = 4 then
+                t^.xw[20] := 2
+              else
+                t^.xw[20] := 1;
+              adjust_uc(t^.xp[9], -1);
+              t^.xp[9] := add_dn(g_opt_tree_ptr_t(t^.xp[9])^.opnd[1],
+                                 g_opt_tree_ptr_t(t^.xp[9])^.opnd[1], 2);
+              adjust_uc(t^.xp[9], 1);
+            end;
+      end;
+      recover(t^.xp[6]);
+      recover(t^.xp[9]);
+    end;
+    otherwise
+      ;
+  end;
+end;
+
+{ recover_scaled - when target_properties' +0x58 is positive, each
+  statement's trees from the first block's on, up to the end of the
+  outermost routine (149, not of a 172), get their indexed references
+  back (makedindex, recover): an assignment's three, an evaluation's
+  operands, a conditional branch's condition, a 151's operand.
+
+  0x0DD5BA, 0x114 bytes: the loop entered at the first statement
+  without a test. }
+
+procedure recover_scaled; internal;
+var
+  s: g_opt_stmt_ptr_t;
+  k: integer;
+begin
+  if target_properties.p_58 > 0 then begin
+    s := g_opt_blocks_ptr_t(il_11c)^[opt_first_block]^.first_stmt;
+    if s <> nil then
+      repeat
+        case s^.kind of
+          140: begin
+            makedindex(s^.asg_rhs, il_$node_ptr_t(s));
+            makedindex(s^.asg_x, il_$node_ptr_t(s));
+            makedindex(s^.asg_lhs, il_$node_ptr_t(s));
+            recover(s^.asg_rhs);
+            recover(s^.asg_lhs);
+            recover(s^.asg_x);
+          end;
+          139:
+            for k := 1 to s^.eval_count do begin
+              makedindex(s^.eval_opnd[k], il_$node_ptr_t(s));
+              recover(s^.eval_opnd[k]);
+            end;
+          142: begin
+            makedindex(s^.br_cond, il_$node_ptr_t(s));
+            recover(s^.br_cond);
+          end;
+          151:
+            if s^.x48 <> nil then begin
+              makedindex(s^.x48, il_$node_ptr_t(s));
+              recover(s^.x48);
+            end;
+          otherwise
+            ;
+        end;
+        s := s^.next;
+      until (s^.kind = 149) and (s^.x48^.kind <> 172);
+  end;
+end;

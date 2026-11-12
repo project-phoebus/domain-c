@@ -519,3 +519,7 @@ lang/lang/source/opt_main.pas	s/^(\s*)writeln\(.*\);\s*$/$1; { gap 4 }\n/
 lang/lang/source/opt_main.pas	s/trunc\(old \* 1\.05\)/old + old div 20 { gap 7 }/
 # gap 8 (opt_main): in on constant sets with word elements (every one in the file, as comparisons; the sets span lines)
 lang/lang/source/opt_main.pas	BEGIN { undef $/ } s{((?:\w+(?:\[[^\]]*\])?\^?\.)*\w+)\s+in\s+\[([^\]]+)\]}{my ($e, $l) = ($1, $2); $l =~ s/\s+/ /g; '((' . join(') or (', map { /^(\d+)\.\.(\d+)$/ ? "($e >= $1) and ($e <= $2)" : "$e = $_" } split(/\s*,\s*/, $l)) . ')) { gap 8 }'}ge
+# gap 29 (opt_main): recompute_usedef_for_uplevel_addressing's guarded test of a word in a 32-byte set (the range test only, for the check)
+lang/lang/source/opt_main.pas	s/if n in s\^\.vset\^ then/if n <= 255 then { gap 29 }/
+# gap 2 (opt_main): recover_scaled's case of 4 labels over a range of 13 (empty labels added, for the check)
+lang/lang/source/opt_main.pas	s/^(\s+)151:$/${1}141, 143, 144, 145, 146, 147, 148, 149, 150: ; { gap 2 }\n${1}151:/
