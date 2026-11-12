@@ -182,8 +182,6 @@ lang/lang/source/reg_alloc.pas	s/^(\s*)writeln;\s*$/$1; { gap 4 }/
 lang/lang/source/reg_color_68k.pas	s/^(\s*)procedure p\(var x: reg_range_t\);/$1p: rc_walk_t; { gap 21 }/
 lang/lang/source/reg_color_68k.pas	s/^(\s*)p\(reg_ranges\^\[c\^\.num\]\);/$1p^(reg_ranges^[c^.num]); { gap 21 }/
 lang/lang/source/reg_color_68k.pas	s/walkconflicts\((checkout|targetfunctionresult|computecommonregs|setcommonregs), /walkconflicts(nil, /
-# gap 30 (reg_save): `in' on a set parameter held in a register as an operand of `and' (the parameter's test dropped, for the check)
-lang/lang/source/reg_save.pas	s/\(b in s\) and \(b in \[/(b in [/
 # gap 26 (final): substr (the length compared instead, for the check)
 lang/lang/source/final.pas	s/^(\s*)substr\(fn_chars_ptr_t\(addr\(n\^\.xc\[12\]\)\)\^, 1, 7\) = 'fp040_\$'/$1n^.xw[4] = 7 { gap 26 }/
 # gap 7 (emit, translator HH): a real constant compared with 0.0 (the double tested by its longwords, for the check)
@@ -221,8 +219,6 @@ lang2/source/be_com/asm.pas	s/^(  \{ Its literals\. \})$/%var gap25b;\n%if gap25
 lang2/source/be_com/asm.pas	s/^(2:)$/%endif { gap 25 }\n$1/
 lang2/source/be_com/asm.pas	s/^(                case form of)$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
 lang2/source/be_com/asm.pas	s/^(                \{ The forms done\. \})$/%endif { gap 25 }\n$1/
-# gap 30 (com): `in' on a local set held in a register as an operand of `and' (process_instruction's cache of birthpoints: the test dropped, for the check)
-lang2/source/be_com/com.pas	s/if \(k <= 31\) and \(k in seen\) then/if k <= 0 then { gap 30 }/
 # gap 4 (dmp): write of an IL node kind (dropped, for the check)
 lang2/source/be_com/dmp.pas	s/^(\s*)write\(.*\);\s*$/${1}dmp_3c0 := dmp_3c0; { gap 4 }\n/
 # gap 25 (call_conv, translator PA3): at_call_conv exceeds dpc's virtual registers (part 3, the descriptors by the parameters' kind, part 4's aggregates split over registers and part 5, the formals, left out of the check)
@@ -234,5 +230,3 @@ lang2/source/be_com/call_conv.pas	s/^(        \{ An aggregate by value: its long
 lang2/source/be_com/call_conv.pas	s/^(        \{ The aggregate done\. \})$/%endif { gap 25 }\n$1/
 # gap 22 (cg_call): ord of a boolean (0, for the check) [kept with dpc ca0dd28: without it the routine meets gap 28, more values live than registers]
 lang/lang/source/cg_call.pas	s/ord\(pass_len\)/0 { gap 22 }/
-# gap 30 (dbg_life): `in' on a local set held in a register as an operand of `or' (the record's set tested instead, for the check)
-lang2/source/be_com/dbg_life.pas	s/clobbered := \(reg in set32\) or \(reg \+ 1 in set32\);/clobbered := (reg in c^.fp_hi) or (reg + 1 in c^.fp_hi); { gap 30 }/

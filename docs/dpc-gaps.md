@@ -33,6 +33,9 @@ when this tree is merged).
   returning a 4-byte array) and 34 (string constants to short char
   arrays): fixed in 3e7b09c and ca0dd28.**  Their rules removed, but
   for cg_call's gap 22 rule: without it the routine meets gap 28.
+- **Gap 30 (`in' on a set held in a register, as a value or under
+  `and'): fixed in 8cd3f59.**  Its rules (reg_save, com, dbg_life)
+  removed.
 - Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
   spiller finds values to spill but runs out of virtual register
   numbers (240 per class) adding the reloads, and the colouring's
@@ -42,7 +45,7 @@ when this tree is merged).
   purpose (the image cannot tell it from `repeat ... until false'):
   write such loops with a label.
 - All compile best effort (a warning; `--strict' still refuses).  Their
-  rewrites are gone from tools/cc_gap_rewrites.txt (279 rules removed in all);
+  rewrites are gone from tools/cc_gap_rewrites.txt (282 rules removed in all);
   the full gate is clean without them.
 - Gaps 4 (write/writeln) and 7 (real arithmetic) are not being worked
   on in dpc for now (the domain-pascal owner's choice).
