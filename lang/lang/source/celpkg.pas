@@ -54,6 +54,9 @@ var
   label_ads: codegen_$ads_t := [f1 := 7, f2 := 0, f3 := 0, f4 := 0,
       f5 := 0, f6 := 0, pad := 0, x := 0, y := 0];      { +40 }
 
+define
+  null_ads;                             { banshee copies it absolutely }
+
 { init_celpkg - the pools empty.
 
   0x0B645C, 0x32 bytes: a counted loop of three (`dbf') storing 0 to
