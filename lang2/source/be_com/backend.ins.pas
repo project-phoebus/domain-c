@@ -538,6 +538,18 @@ type
     b2: 0..255;                         { +2 }
     b3: 0..255;                         { +3 }
   end;
+
+  { An address comparison (mmt_utils_$addr_compare, or what oli sets with
+    mmt_utils_$set_address_comparison_function): how the memory
+    references of two loads or stores relate (1 the same, 2 and 4/5
+    overlapping, 3 disjoint, 0 not known), disp the second's
+    displacement from the first; report true when mmt_utils asks only to
+    be told (inform_about_relationships). }
+  mmt_compare_t = ^function(
+      a: instr_ptr_t;
+      b: instr_ptr_t;
+      report: boolean;
+      out disp: integer32): integer; options(val_param);
 { end batch C }
 
 { The named sections of the opcode and operand tables (DSEE
@@ -1737,32 +1749,36 @@ procedure mmt_utils_$end_routine(
   at_backend. }
 procedure mmt_utils_$end_compilation; extern;
 
-{ MMT_UTILS_$ADDR_COMPARE - 0x255DA8, 0x272 bytes; called from com oli.
+{ MMT_UTILS_$ADDR_COMPARE - how two loads' or stores' memory references
+  relate (mmt_compare_t).  0x255DA8, 0x272 bytes; called from com oli.
   Frame 8:al; 12:al; 16:bw; 18:al.  Result: D0 (callers: D01 D0w6). }
 function mmt_utils_$addr_compare(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: integer;
-    p4: univ_ptr): integer; options(val_param); extern;
+    a: instr_ptr_t;
+    b: instr_ptr_t;
+    report: boolean;
+    out disp: integer32): integer; options(val_param); extern;
 
-{ MMT_UTILS_$SET_ADDRESS_COMPARISON_FUNCTION - 0x25601A, 0x3A bytes;
-  called from oli.  Frame 8:al; 12:bw. }
+{ MMT_UTILS_$SET_ADDRESS_COMPARISON_FUNCTION - the comparison
+  discover_relationships uses (nil: addr_compare) and whether it is
+  told every pair of related references.  0x25601A, 0x3A bytes; called
+  from oli.  Frame 8:al; 12:bw. }
 procedure mmt_utils_$set_address_comparison_function(
-    p1: univ_ptr;
-    p2: integer); options(val_param); extern;
+    f: mmt_compare_t;
+    inform: boolean); options(val_param); extern;
 
-{ MMT_UTILS_$ANALYZE_ONE_BB - 0x25789E, 0x3CE bytes; called from oli.
-  Frame 8:al; 12:al; 16:l. }
+{ MMT_UTILS_$ANALYZE_ONE_BB - the memory references of bb put into
+  MMT_SEQ tokens.  0x25789E, 0x3CE bytes; called from oli.  Frame 8:al;
+  12:al; 16:l. }
 procedure mmt_utils_$analyze_one_bb(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: integer32); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    bb: bb_ptr_t;
+    level: integer32); options(val_param); extern;
 
-{ MMT_UTILS_$ANALYZE_BLOCKS - 0x257CEC, 0x74 bytes; called from com.
-  Frame 8:al; 12:l. }
+{ MMT_UTILS_$ANALYZE_BLOCKS - analyze_one_bb for each block of rtn.
+  0x257CEC, 0x74 bytes; called from com.  Frame 8:al; 12:l. }
 procedure mmt_utils_$analyze_blocks(
-    p1: univ_ptr;
-    p2: integer32); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    level: integer32); options(val_param); extern;
 
 { oli.pas (cc.a88k). }
 
