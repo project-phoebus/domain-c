@@ -822,6 +822,50 @@ type
                                           3080 bytes }
   end;
 
+  { batch A (PA4): an operand's solution, what lir_$build_operand makes
+    an operand from (the ISC's matcher fills one for each operand of a
+    pattern; lir_utils_$flesh_out_new_load_or_store fills post's,
+    lir_main's +0x250 and +0x760 and takes isc_user_routines' +0x330 and
+    +0x340): node (+0) the object (a memory home, a constant), lr (+20)
+    the live range of a register, disp (+48) a displacement, w56 (+56)
+    4 for a constant from smcontk, reg (+78) the register of a physical
+    live range, +83 the live range's physical (bit 3), no_modify (bit
+    1) and serialize (bit 0), kind (+108) its solution$ kind (the
+    SOLUTION$ identifiers: 3 fp_reg_pair_low, 8 fp_reg, 9 fp_reg_pair,
+    11 ip_reg).  The rest by offset (build_operand reads +8, +79, +100,
+    +104); its size is not known (112 here). }
+  solution_ptr_t = ^solution_t;
+  solution_t = record
+    node: univ_ptr;                     { +0 }
+    l4: integer32;                      { +4 }
+    l8: integer32;                      { +8 }
+    l12: integer32;                     { +12 }
+    l16: integer32;                     { +16 }
+    lr: lr_ptr_t;                       { +20 }
+    space24: array [24..47] of char;    { +24 }
+    disp: integer32;                    { +48 }
+    l52: integer32;                     { +52 }
+    w56: integer;                       { +56 }
+    space58: array [58..77] of char;    { +58 }
+    f78: packed record                  { +78 }
+      reg: 0..255;                      { +78 }
+      b79: 0..255;                      { +79 }
+      b80: 0..255;                      { +80 }
+      b81: 0..255;                      { +81 }
+      b82: 0..255;                      { +82 }
+      b83_7_4: 0..15;                   { +83 }
+      physical: boolean;                { .3 }
+      b83_2: boolean;
+      no_modify: boolean;               { .1 }
+      serialize: boolean;               { .0 }
+      end;
+    space84: array [84..99] of char;    { +84 }
+    l100: integer32;                    { +100 }
+    l104: integer32;                    { +104 }
+    kind: integer;                      { +108 }
+    w110: integer;                      { +110 }
+  end;
+
   { The current phase's debug switches (at_backend +0x500: the phase
     letter's word of cargs_$debug_switches, set by run_phase and
     begin/end_compilation), MSB first: sw8 makes at_backend print the
@@ -1129,6 +1173,11 @@ var
   ra_654: extern integer32;             { ra +0x654 (lir_main) }
   ra_658: extern integer32;             { ra +0x658 (lir_main) }
   sched_3158: extern integer32;         { sched +0x3158 (lir_main) }
+  post_6b8: extern solution_t;          { post +0x6B8 (0x48FB04): the
+                                          solution of a new load's or
+                                          store's register operand
+                                          (lir_utils_$flesh_out_new_load_
+                                          or_store; batch A, PA4) }
 
   { batch B: cells lst reaches. }
   lir_main_ac0: extern array [0..31] of univ_ptr;    { lir_main +0xAC0
@@ -1785,15 +1834,20 @@ procedure lir_$begin_compilation; extern;
 procedure lir_$complete_top_level_node_inherited_attrs(
     p1: univ_ptr); options(val_param); extern;
 
-{ LIR_$GET_NEW_INSTRUCTION_NO_EXCEPTIONS - 0x2433C2, 0x40 bytes; called
-  from lir_main lir_utils ra_utils.  Frame 8:l; 12:w; 14:al; 18:l; 22:al.
-  Result: read (callers: A015). }
+{ LIR_$GET_NEW_INSTRUCTION_NO_EXCEPTIONS - a new instruction of opcode
+  opc for the IL node node (nil for none; lir's begin_instruction and
+  copy_build_instruction, its +2 bit 5 and +32 cleared): flags bits
+  13 (home given), 21, 22, 27 read by begin_instruction.  0x2433C2, 0x40
+  bytes; called from lir_main lir_utils ra_utils.  Frame 8:l; 12:w;
+  14:l; 18:l; 22:l, passed on to begin_instruction; lir_utils pushes
+  only node, opc and flags (and home with flag 13): docs/questions.md
+  251 (batch A, PA4: named).  Result: A0. }
 function lir_$get_new_instruction_no_exceptions(
-    p1: integer32;
-    p2: integer;
-    p3: univ_ptr;
-    p4: integer32;
-    p5: univ_ptr): univ_ptr; options(val_param); extern;
+    node: univ_ptr;
+    opc: integer;
+    flags: integer32;
+    home: univ_ptr;
+    p5: univ_ptr): instr_ptr_t; options(val_param); extern;
 
 { LIR_$ADD_FLOW_GRAPH_EDGE - 0x243402, 0x68 bytes; called from asm
   fg_utils fga hal lir_main oli post utils.  Frame 8:al; 12:al.  Result:
@@ -1880,14 +1934,15 @@ function lir_$optimizer_new_instruction(
     opc: integer;
     after: boolean): instr_ptr_t; options(val_param); extern;
 
-{ LIR_$BUILD_OPERAND - 0x24409A, 0xF58 bytes; called from lir_main
-  lir_utils.  Frame 8:al; 12:al; 16:bl; 17:b; 18:b. }
+{ LIR_$BUILD_OPERAND - op made from the solution sol as an operand of
+  form form (an opcode's operand description: form +16, its number +17,
+  +18).  0x24409A, 0xF58 bytes; called from lir_main lir_utils.  Frame
+  8:al; 12:al; 16:l (read as the bytes 16, 17, 18; batch A, PA4: p3..p5
+  were integer32 and two booleans over it). }
 procedure lir_$build_operand(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: integer32;
-    p4: boolean;
-    p5: boolean); options(val_param); extern;
+    op: opnd_ptr_t;
+    sol: solution_ptr_t;
+    form: instr_attr_opnd_t); options(val_param); extern;
 
 { LIR_$COMPLETE_INSTRUCTION - 0x2457F4, 0xDCE bytes; called from lir_main.
   Frame 8:al.  Result: read (callers: D0l1). }
@@ -2152,23 +2207,8 @@ procedure lir_utils_$add_memory_home(
     lr: lr_ptr_t;
     static: boolean); options(val_param); extern;
 
-{ LIR_UTILS_$FLESH_OUT_NEW_LOAD_OR_STORE - 0x24D34C, 0x288 bytes; called
-  from ra_utils.  Frame 8:al; 12:al; 16:al; 20:al; 24:l; 28:a; 32:al;
-  36:l; 40:l; 44:l; 48:l; 52:l; 56:a.  Result: D0 (callers: D0l1). }
-function lir_utils_$flesh_out_new_load_or_store(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr;
-    p4: univ_ptr;
-    p5: integer32;
-    p6: univ_ptr;
-    p7: univ_ptr;
-    p8: integer32;
-    p9: integer32;
-    p10: integer32;
-    p11: integer32;
-    p12: integer32;
-    p13: univ_ptr): integer32; options(val_param); extern;
+{ LIR_UTILS_$FLESH_OUT_NEW_LOAD_OR_STORE - in lir.pvt.pas (only
+  lir_utils and ra_utils call it; batch A, PA4). }
 
 { LIR_UTILS_$GET_NEXT_ASYNC_EXPOSED_LR - the next complex id after lr's
   (all from 0 when lr is nil) live into an asynchronous path's block,
@@ -2180,10 +2220,13 @@ function lir_utils_$get_next_async_exposed_lr(
     lr: lr_ptr_t;
     var edge: univ fg_edge_ptr_t): integer32; options(val_param); extern;
 
-{ LIR_UTILS_$FIX_STORE_THROUGH_LRS - 0x24D808, 0xC8E bytes; called from
-  fga.  Frame 8:al. }
+{ LIR_UTILS_$FIX_STORE_THROUGH_LRS - the store-through live ranges
+  (common members live into a handler's or an asynchronous path's
+  blocks) given memory homes, loaded at those blocks' entries and
+  stored after each write.  0x24D808, 0xC8E bytes; called from fga.
+  Frame 8:al (batch A, PA4: rtn). }
 procedure lir_utils_$fix_store_through_lrs(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { LIR_UTILS_$FIND_MATE_OPERAND - 0x24E5F8, 0x26 bytes; called from com
   sched_utils tr_utils trans utils.  Frame 8:al.  Result: read (callers:

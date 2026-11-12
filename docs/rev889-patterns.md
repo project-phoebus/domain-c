@@ -952,3 +952,20 @@ cc.m68k unless marked.
     a static link.**  ltss_on_stores_to_same_addr's nested
     get_the_right_instr (0x229968) is called `pea (A0); bsr' with its
     one argument only, and reads no frame of its parent.
+
+## The LIR utilities, continued (translator PA4, lir_utils; cc.a88k)
+
+190. **utils_ins_$operands_instruction inline in a unit that opens
+    utils.ins.pas.**  lir_utils_$trans_insert_move (cc.a88k 0x24C312)
+    finds op's instruction as `move.b (A1),D0; lsl.w #2,D0; ...; subi.l
+    #32,D2; sub.l D1,D2' (pattern 121's expression) though lir_utils
+    opens utils.ins.pas and has no copy of the insert's routine
+    (pattern 98): written as the expression.
+191. **A call pushing fewer arguments than the callee reads.**
+    lir_$get_new_instruction_no_exceptions (0x2433C2) passes its five
+    frame longwords (8, 12:w, 14, 18, 22) on to begin_instruction, but
+    fix_store_through_lrs pushes three (`subq.l #2,SP; clr.l -(SP);
+    move.w (10,A3),-(SP); move.l #0x48AD00,-(SP)') or four (with the
+    memory home after `pea 0x2000'): the slots not pushed are read as
+    whatever lies above (begin_instruction reads 18 only under flag
+    bit 13).  dpc pushes every parameter (nil or 0 here).
