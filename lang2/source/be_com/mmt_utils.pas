@@ -84,11 +84,6 @@ module mmt_utils;
 type
   mu_heap_ptr_t = ^mrh_$heap_t;
 
-  { A bit vector as the units here index it: element k of the vector is
-    element k mod 32 of longword k div 32. }
-  mu_bv_t = array [0..1000000] of set of 0..31;
-  mu_bv_ptr_t = ^mu_bv_t;
-
   { A descriptor (40 bytes; +92's table, by number from 1): one class
     of memory references of the block being analyzed.  lr its live range;
     exposed, final the segments on the block's lists; last the final
@@ -103,9 +98,9 @@ type
     final: lts_ptr_t;                   { +8 }
     last: lts_ptr_t;                    { +12 }
     instr: instr_ptr_t;                 { +16 }
-    related: mu_bv_ptr_t;               { +20 }
+    related: bv_ptr_t;               { +20 }
     l24: integer32;                     { +24 }
-    compared: mu_bv_ptr_t;              { +28 }
+    compared: bv_ptr_t;              { +28 }
     equiv: integer;                     { +32 }
     num: integer;                       { +34 }
     f36: packed record                  { +36 }
@@ -117,19 +112,6 @@ type
   end;
   mu_descs_t = array [1..100000] of mu_desc_t;
   mu_descs_ptr_t = ^mu_descs_t;
-
-  { A canonical birthpoint (utils_$get_canonical_birthpoint, 24 bytes). }
-  mu_bp_t = record
-    l0: integer32;                      { +0 }
-    l4: integer32;                      { +4 }
-    base: integer32;                    { +8 }
-    disp: integer32;                    { +12 }
-    f16: packed record                  { +16 }
-      exact: boolean;
-      b16: 0..127;
-      end;
-    space18: array [18..23] of char;
-  end;
 
   longs_t = array [1..1000000] of integer32;
   longs_ptr_t = ^longs_t;
@@ -282,9 +264,9 @@ begin
   if mu_free_lrs <> nil then begin
     lr := mu_free_lrs;
     mu_free_lrs := lr^.next;
-    w := lr^.w6;
+    w := lr^.num;
     zero(lr, 88);
-    lr^.w6 := w;
+    lr^.num := w;
     lr^.f2.b3_3 := true;
     mmt_rtn^.lrs_last^.next := lr;
     mmt_rtn^.lrs_last := lr;
@@ -307,9 +289,9 @@ begin
     mmt_utils_$lr_is_for_memory := false
   else if lr^.ltss = nil then
     mmt_utils_$lr_is_for_memory := true
-  else if lr^.ltss^.def = nil then
+  else if lr^.ltss^.refs = nil then
     mmt_utils_$lr_is_for_memory := true
-  else if lr^.ltss^.def^.h.kind = operand$argument_block_memory then
+  else if lr^.ltss^.refs^.h.kind = operand$argument_block_memory then
     mmt_utils_$lr_is_for_memory := false
   else
     mmt_utils_$lr_is_for_memory := true;
@@ -433,7 +415,7 @@ end;
   (8).  More than 255 operands make a chain of MMT_SEQs: each takes up
   to 254 (the read-only tokens first, then the read and written, then
   the written only), writes a live range (a token written, or
-  mmt_last_token's) that the next reads first.  The tokens' flags and
+  mmt_connector's) that the next reads first.  The tokens' flags and
   links are cleared and the list emptied; nil when it is empty.
 
   0x255576, 0x34E bytes: the operand count a register passed through a
@@ -537,7 +519,7 @@ begin
       t := nxt;
     until k >= 254;
     if last = nil then begin
-      last := mmt_last_token.lr;
+      last := mmt_connector.lr;
       add_operand(i, k, last, 8);
     end;
     m := n + 1;
@@ -630,7 +612,7 @@ end;
   0x255A90, 0x74 bytes. }
 
 function mmt_utils_$mmt_seq_add_tokens_from_bv(
-    bv: univ_ptr;
+    bv: bv_ptr_t;
     read: boolean;
     written: boolean): boolean;
 var
@@ -657,8 +639,8 @@ end;
 
 function mmt_utils_$can_combine_mmt_seqs(
     seq: instr_ptr_t;
-    bv: univ_ptr;
-    live: univ_ptr): boolean;
+    bv: bv_ptr_t;
+    live: bv_ptr_t): boolean;
 var
   k, c, m, j: integer32;
   t: mmt_token_ptr_t;
@@ -746,7 +728,7 @@ function disp_known(
     out d: integer32): boolean; options(val_param); internal;
 var
   k: operand$t;
-  bp1, bp2: mu_bp_t;
+  bp1, bp2: utils_$birthpoint_t;
 begin
   k := a^.h.kind;
   if (k = operand$immediate) and (b^.h.kind = operand$immediate) then begin
@@ -774,17 +756,17 @@ begin
   end
   else if (a^.h.count = b^.h.count) and (b^.h.kind = k)
       and (k in [operand$ip_reg..operand$well_behaved_memory]) then begin
-    discard(utils_$get_canonical_birthpoint(a^.ptr, 7, addr(bp1)));
-    discard(utils_$get_canonical_birthpoint(b^.ptr, 7, addr(bp2)));
-    if bp1.f16.exact and bp2.f16.exact then begin
-      d := bp1.disp - bp2.disp;
+    utils_$get_canonical_birthpoint(a^.lts, 7, bp1);
+    utils_$get_canonical_birthpoint(b^.lts, 7, bp2);
+    if bp1.has_base and bp2.has_base then begin
+      d := bp1.base - bp2.base;
       disp_known := true;
     end
     else begin
-      d := bp1.base - bp2.base;
-      bp1.base := 0;
-      bp2.base := 0;
-      disp_known := utils_$compare_birthpoints(addr(bp1), addr(bp2));
+      d := bp1.offset - bp2.offset;
+      bp1.offset := 0;
+      bp2.offset := 0;
+      disp_known := utils_$compare_birthpoints(bp1, bp2);
     end;
   end
   else
@@ -960,7 +942,7 @@ begin
         lr := mmt_rtn_v_ptr_t(mmt_rtn)^.all_lr;
         for k := 1 to mmt_count do
           if (mu_descs^[k].lr = lr) and (mu_descs^[k].final <> nil) then
-            i^.l16 := mmt_lts_v_ptr_t(mu_descs^[k].final)^.desc;
+            i^.l16 := mu_descs^[k].final^.mark;
       end
       else begin
         mmt_count := mmt_count + 1;
@@ -973,22 +955,22 @@ begin
     d := i^.l16;
   end
   else begin
-    d := mmt_lts_v_ptr_t(l)^.desc;
+    d := l^.mark;
     if d = 0 then begin
       mmt_count := mmt_count + 1;
       d := mmt_count;
-      mmt_lts_v_ptr_t(l)^.desc := d;
+      l^.mark := d;
     end;
     p := addr(mu_descs^[d]);
     p^.lr := l^.lr;
-    if l^.f2.b3_7 then begin
+    if l^.f2.exposed then begin
       p^.exposed := l;
       p^.f36.flag := true;
       if (p^.lr^.l40 <> 0) and (p^.lr^.l40 <> d) then
         bug_check('MMT_UTILS_$allocate_descriptors:  exposed LTS must be allocated before final%$');
       p^.lr^.l40 := d;
     end;
-    if l^.f2.b3_4 then begin
+    if l^.f2.final then begin
       p^.final := l;
       p^.last := l;
       p^.f36.flag := true;
@@ -1012,7 +994,7 @@ function compared_already(
     a: integer32;
     b: integer32): boolean; options(val_param); internal;
 var
-  ca, cb: mu_bv_ptr_t;
+  ca, cb: bv_ptr_t;
 begin
   ca := mu_descs^[a].compared;
   cb := mu_descs^[b].compared;
@@ -1032,7 +1014,7 @@ procedure ids_related(
     a: integer32;
     b: integer32); options(val_param); internal;
 var
-  ra, rb: mu_bv_ptr_t;
+  ra, rb: bv_ptr_t;
 begin
   ra := mu_descs^[a].related;
   rb := mu_descs^[b].related;
@@ -1053,7 +1035,7 @@ procedure inform_about_relationships(
     bb: bb_ptr_t); options(val_param); internal;
 var
   d, j, m: integer32;
-  rel: univ_ptr;
+  rel: bv_ptr_t;
   disp: integer32;
 begin
   mmt_rtn^.l192 := mmt_count;
@@ -1127,8 +1109,8 @@ begin
         if (i^.opnds[j].h.kind in [operand$inscrutable_memory,
                                    operand$well_behaved_memory])
             and ((opnd_bytes_ptr_t(addr(i^.opnds[j]))^.rrp & 12) <> 0) then begin
-          if (i^.opnds[j].lts^.lr^.l40 <> 0) and i^.opnds[j].lts^.f2.b3_4 then
-            ids_related(d, mmt_lts_v_ptr_t(i^.opnds[j].lts)^.desc);
+          if (i^.opnds[j].lts^.lr^.l40 <> 0) and i^.opnds[j].lts^.f2.final then
+            ids_related(d, i^.opnds[j].lts^.mark);
           mark_related_references(cmp, d, i^.opnds[j].link);
         end;
     p := p^.link;
@@ -1162,13 +1144,13 @@ var
 begin
   mu_all_related := true;
   mu_mark := 0;
-  l := mmt_bb_v_ptr_t(bb)^.exposed;
+  l := bb^.exposed;
   while l <> nil do begin
     if l^.lr^.l40 <> 0 then begin
       mu_mark := mu_mark + 1;
-      mark_related_references(nil, l^.lr^.l40, l^.def);
+      mark_related_references(nil, l^.lr^.l40, l^.refs);
     end;
-    l := mmt_lts_v_ptr_t(l)^.next_exposed;
+    l := l^.next_exposed;
   end;
   i := bb^.first;
   while i <> nil do begin
@@ -1181,8 +1163,8 @@ begin
           l := o^.lts;
           if (opnd_bytes_ptr_t(o)^.rrp & 12) <> 0 then begin
             e := allocate_descriptor(o, nil);
-            if (mmt_lts_v_ptr_t(l)^.desc <> 0) and o^.lts^.f2.b3_4 then
-              ids_related(e, mmt_lts_v_ptr_t(l)^.desc);
+            if (l^.mark <> 0) and o^.lts^.f2.final then
+              ids_related(e, l^.mark);
             mu_mark := mu_mark + 1;
             mark_related_references(i, e, o^.link);
           end
@@ -1198,7 +1180,7 @@ begin
               end;
             end;
           end
-          else if l^.lr^.w4 <> 0 then begin
+          else if l^.lr^.id <> 0 then begin
             f := nil;
             for d := 1 to mmt_count do
               if (mu_descs^[d].lr = l^.lr)
@@ -1209,14 +1191,14 @@ begin
             if f <> nil then
               if f = l then begin
                 e := allocate_descriptor(o, nil);
-                ids_related(e, mmt_lts_v_ptr_t(l)^.desc);
+                ids_related(e, l^.mark);
               end
               else begin
                 while rrp$modify in f^.rrp do
                   f := f^.next;
                 if not (rrp$write in f^.rrp) then
                   bug_check('MMT_UTILS_$discover_relationships: expected pure write%$');
-                ii := utils_ins_$operands_instruction(f^.def);
+                ii := utils_ins_$operands_instruction(f^.refs);
                 r := nil;
                 for jj := 1 to ii^.h.nopnds do
                   if ii^.opnds[jj].h.read then
@@ -1304,14 +1286,14 @@ begin
       until l^.bb = bb;
     repeat
       nxt := l^.next;
-      if l^.f2.b3_7 then
+      if l^.f2.exposed then
         exit;
-      if not l^.f2.b3_4 then begin
+      if not l^.f2.final then begin
         if prev = nil then
           lr^.ltss := nxt
         else
           prev^.next := nxt;
-        l^.def := nil;
+        l^.refs := nil;
         l^.lr := nil;
         lir_$free_lifetime_segment(l);
       end
@@ -1331,13 +1313,13 @@ begin
                                 operand$well_behaved_memory] then begin
         l := i^.opnds[j].lts;
         lr := l^.lr;
-        if (lr <> nil) and (lr^.ltss <> nil) and (l^.def <> nil) then begin
+        if (lr <> nil) and (lr^.ltss <> nil) and (l^.refs <> nil) then begin
           l := lr^.ltss;
-          if lr^.w4 = 0 then begin
+          if lr^.id = 0 then begin
             lr^.ltss := nil;
             repeat
               nxt := l^.next;
-              l^.def := nil;
+              l^.refs := nil;
               lir_$free_lifetime_segment(l);
               l := nxt;
             until l = nil;
@@ -1351,7 +1333,7 @@ begin
             end;
             repeat
               nxt := l^.next;
-              l^.def := nil;
+              l^.refs := nil;
               if prev = nil then
                 lr^.ltss := nxt
               else
@@ -1406,7 +1388,7 @@ begin
 end;
 
 { bind_new_tokens_to_operands - a token for each descriptor and one
-  more (the last, copied to mmt_last_token): its vectors, number and
+  more (the last, copied to mmt_connector): its vectors, number and
   equivalent flag the descriptor's, its live range the descriptor's (a
   memory live range for one without), which takes the descriptor's
   number (its own kept in the descriptor) and the token; a descriptor
@@ -1443,19 +1425,19 @@ begin
     if p^.lr = nil then
       p^.lr := mmt_utils_$get_mem_lr;
     t^.lr := p^.lr;
-    p^.num := p^.lr^.w4;
-    p^.lr^.w4 := d;
+    p^.num := p^.lr^.id;
+    p^.lr^.id := d;
     mmt_lr_v_ptr_t(p^.lr)^.token := t;
     mmt_lr_v_ptr_t(p^.lr)^.uses := nil;
   end;
-  mmt_last_token := mmt_token_map^[mmt_count]^;
+  mmt_connector := mmt_token_map^[mmt_count]^;
   for d := 1 to mmt_count do
-    if mu_descs^[d].lr^.w4 <> d then begin
+    if mu_descs^[d].lr^.id <> d then begin
       l := mrh_$alloc(mmt_token_heap, 88);
-      l^.w4 := d;
+      l^.id := d;
       mmt_lr_v_ptr_t(l)^.token := mmt_token_map^[d];
       mmt_token_map^[d]^.lr := l;
-      mmt_token_map^[d]^.equiv := mmt_token_map^[mu_descs^[d].lr^.w4];
+      mmt_token_map^[d]^.equiv := mmt_token_map^[mu_descs^[d].lr^.id];
     end;
   i := bb^.first;
   while i <> nil do begin
@@ -1500,7 +1482,7 @@ var
   lr: lr_ptr_t;
   t: mmt_token_ptr_t;
   after: boolean;
-  bv: univ_ptr;
+  bv: bv_ptr_t;
 begin
   for d := 1 to mmt_count do begin
     p := addr(mu_descs^[d]);
@@ -1520,7 +1502,7 @@ begin
       if i^.opnds[j].h.kind in [operand$inscrutable_memory,
                                 operand$well_behaved_memory] then begin
         lr := i^.opnds[j].ptr;
-        i^.opnds[j].ptr := mu_descs^[lr^.w4].lr;
+        i^.opnds[j].ptr := mu_descs^[lr^.id].lr;
       end;
     i := i^.next;
   end;
@@ -1528,7 +1510,7 @@ begin
     t := mmt_token_map^[d];
     lr := t^.lr;
     if mu_descs^[d].lr <> lr then
-      mmt_token_map^[d] := mmt_token_map^[mu_descs^[d].lr^.w4]
+      mmt_token_map^[d] := mmt_token_map^[mu_descs^[d].lr^.id]
     else if mu_descs^[d].exposed <> nil then
       if mu_descs^[d].exposed = mu_descs^[d].final then
         bv_$clear(mmt_140, mu_descs^[d].lr);
@@ -1553,9 +1535,9 @@ begin
     if p^.lr = nil then
       exit;
     if (p^.final <> nil) and (p^.exposed = nil) then begin
-      bv_$and_to(mu_bv_bits, p^.related, p^.compared, integer32(bv));
+      bv_$and_to(mu_bv_bits, p^.related, p^.compared, bv);
       discard(mmt_utils_$mmt_seq_add_tokens_from_bv(bv, true, false));
-      bv_$and_to(mu_bv_bits, mmt_140, p^.related, integer32(bv));
+      bv_$and_to(mu_bv_bits, mmt_140, p^.related, bv);
       discard(mmt_utils_$mmt_seq_add_tokens_from_bv(bv, true, true));
       mmt_utils_$mmt_seq_add_token(mmt_token_map^[p^.lr^.l40], false, true);
       if mmt_active^.next = nil then begin
@@ -1580,7 +1562,7 @@ begin
           seq := i;
         end;
         after := true;
-        discard(bv_$subtract(mu_bv_bits, bv, mmt_140));
+        bv_$subtract(mu_bv_bits, bv, mmt_140);
       end;
     end;
   end;
@@ -1659,32 +1641,32 @@ begin
         if o^.h.read then begin
           if mmt_lr_v_ptr_t(lr)^.cur <> nil then begin
             l := mmt_lr_v_ptr_t(lr)^.cur;
-            mmt_lts_v_ptr_t(l)^.last^.link := o;
+            opnd_ptr_t(l^.l40)^.link := o;
             o^.lts := l;
           end
           else begin
-            l := mu_descs^[lr^.w4].exposed;
+            l := mu_descs^[lr^.id].exposed;
             if l = nil then
               bug_check('MMT_UTILS_$fill_in_ltss: LTS shouldn''t be exposed%$');
             mmt_lr_v_ptr_t(lr)^.cur := l;
-            l^.def := o;
+            l^.refs := o;
             o^.lts := l;
           end;
         end
         else begin
           if mmt_lr_v_ptr_t(lr)^.cur <> nil then
-            mmt_lts_v_ptr_t(mmt_lr_v_ptr_t(lr)^.cur)^.last := nil;
-          l := mu_descs^[lr^.w4].last;
+            mmt_lr_v_ptr_t(lr)^.cur^.l40 := 0;
+          l := mu_descs^[lr^.id].last;
           if l = nil then
             lir_utils_$add_lts_to_lr(0, lr, bb, l)
           else
             l := lir_utils_$add_lts_after_lts(l, 0, bb);
           o^.lts := l;
-          l^.def := o;
+          l^.refs := o;
           mmt_lr_v_ptr_t(lr)^.cur := l;
         end;
         o^.link := nil;
-        mmt_lts_v_ptr_t(o^.lts)^.last := o;
+        o^.lts^.l40 := integer32(o);
         o^.lts^.rrp := rrp$set_t(integer(o^.lts^.rrp)
                                  ! (opnd_bytes_ptr_t(o)^.rrp & 60));
         o^.lts^.lr^.rrp := rrp$set_t(integer(o^.lts^.lr^.rrp)
@@ -1706,14 +1688,14 @@ begin
         bug_check('MMT_UTILS_$fill_in_ltss: LTS list out of order%$');
       if mu_descs^[d].exposed = l then
         bug_check('MMT_UTILS_$fill_in_ltss: LR %3ZWD may not be written in BB#%3ZWD%$',
-                  l^.lr^.w6, bb^.num);
-      q := l^.next^.def;
+                  l^.lr^.num, bb^.num);
+      q := l^.next^.refs;
       while q <> nil do begin
         q^.lts := l;
         q := q^.link;
       end;
       s := l^.next;
-      l^.def := s^.def;
+      l^.refs := s^.refs;
       l^.rrp := s^.rrp;
       l^.next := s^.next;
       lir_$free_lifetime_segment(s);
@@ -1721,9 +1703,9 @@ begin
   end;
   for d := 1 to mmt_count do begin
     lr := mu_descs^[d].lr;
-    lr^.w4 := mu_descs^[d].num;
+    lr^.id := mu_descs^[d].num;
     if mmt_lr_v_ptr_t(lr)^.cur <> nil then
-      mmt_lts_v_ptr_t(mmt_lr_v_ptr_t(lr)^.cur)^.last := nil
+      mmt_lr_v_ptr_t(lr)^.cur^.l40 := 0
     else if (lr^.ltss = nil) and lr^.f2.b3_3 then
       mmt_utils_$mark_lr_for_removal(lr);
   end;
@@ -1745,7 +1727,7 @@ begin
           l := l^.next;
           while rrp$modify in l^.rrp do
             l := l^.next;
-          if l^.f2.b3_7 then
+          if l^.f2.exposed then
             done := true
           else begin
             nlr := mmt_utils_$get_mem_lr;
@@ -1775,23 +1757,23 @@ var
   l: lts_ptr_t;
 begin
   c := 0;
-  l := mmt_bb_v_ptr_t(bb)^.exposed;
+  l := bb^.exposed;
   while l <> nil do begin
     if mmt_utils_$lr_is_for_memory(l^.lr) then begin
       c := c + 1;
       if bind then
         discard(allocate_descriptor(nil, l));
     end;
-    l := mmt_lts_v_ptr_t(l)^.next_exposed;
+    l := l^.next_exposed;
   end;
-  l := mmt_bb_v_ptr_t(bb)^.final;
+  l := bb^.finals;
   while l <> nil do begin
     if mmt_utils_$lr_is_for_memory(l^.lr) then begin
       c := c + 1;
       if bind then
         discard(allocate_descriptor(nil, l));
     end;
-    l := mmt_lts_v_ptr_t(l)^.next_final;
+    l := l^.next_final;
   end;
   count_and_bind_complex_lrs := c;
 end;
@@ -1843,7 +1825,7 @@ begin
         l := lr^.ltss;
         if l <> nil then begin
           repeat
-            mmt_lts_v_ptr_t(l)^.desc := 0;
+            l^.mark := 0;
             l := l^.next;
           until l = nil;
           prev := lr;
@@ -1900,9 +1882,9 @@ begin
   zero(mu_bvs, size);
   p := integer32(mu_bvs);
   for d := 1 to mu_ndescs do begin
-    mu_descs^[d].related := univ_ptr(p);
+    mu_descs^[d].related := bv_ptr_t(p);
     p := p + mu_bv_bytes;
-    mu_descs^[d].compared := univ_ptr(p);
+    mu_descs^[d].compared := bv_ptr_t(p);
     p := p + mu_bv_bytes;
   end;
   mmt_$allocate_scratch_vectors(mu_bv_bytes);
@@ -1925,7 +1907,7 @@ begin
         lr^.l40 := 0;
         l := lr^.ltss;
         while l <> nil do begin
-          mmt_lts_v_ptr_t(l)^.desc := 0;
+          l^.mark := 0;
           l := l^.next;
         end;
       end;

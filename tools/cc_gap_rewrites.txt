@@ -604,5 +604,21 @@ lang2/source/be_com/tr_utils.pas	s/^(\s*)cur, nil, true, disp, offset\) then beg
 lang2/source/be_com/tr_utils.pas	s/([a-z]+)\^\.opc in \[77, 79\.\.83\]/(($1^.opc = 77) or (($1^.opc >= 79) and ($1^.opc <= 83))) { gap 8 }/
 lang2/source/be_com/tr_utils.pas	s/and n_bit_unconsumed\(tst\) then/and (n_bit_unconsumed(tst) = true) then { gap 24 }/
 lang2/source/be_com/tr_utils.pas	s/^(\s*)find_suitable_driving_lts_for_tst := lts;/$1find_suitable_driving_lts_for_tst := last; { gap 15 }/
+# gap 7 (lst): real := double (the single literal left unset, for the check)
+lang2/source/be_com/lst.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
+# gap 8 (lst): in on a constant set with a word element (the comparisons)
+lang2/source/be_com/lst.pas	s/(\w+\^\.kind) in \[45\.\.58, 60, 61, 69, 156, 176, 198, 200\]/((($1 >= 45) and ($1 <= 58)) or ($1 = 60) or ($1 = 61) or ($1 = 69) or ($1 = 156) or ($1 = 176) or ($1 = 198) or ($1 = 200)) { gap 8 }/g
+# gap 28 (lst): lst_$display_code_cell's values exceed dpc's registers (the classic form's registers' column dropped, for the check)
+lang2/source/be_com/lst.pas	if ((/^      \{ The registers' column of the classic form\. \}/ .. /^      \{ The numbered label\. \}/) && !/The numbered label/) { $_ = "      { gap 28 }\n" }
+# gap 7 (bin): real := double (the single literal left unset, for the check)
+lang2/source/be_com/bin.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
+# gap 13 (bin): an element of a packed array of 65536 booleans (test the bitmap pointer instead)
+lang2/source/be_com/bin.pas	s/if stmt_bits\^\[stmt\] then/if stmt_bits <> nil then { gap 13 }/
+lang2/source/be_com/bin.pas	s/if stmt_bits\^\[0\] and \(map\^\[0\] <> 0\) then begin/if (stmt_bits <> nil) and (map^[0] <> 0) then begin { gap 13 }/
+# gap 22 (bin): ord of a boolean (an if statement, for the check)
+lang2/source/be_com/bin.pas	s/^(\s*)(\w+) := ord\(([^()]*(?:\([^()]*\))?[^()]*)\) & 1;/${1}if $3 then $2 := 1 else $2 := 0; { gap 22 }/
+# gap 12 (utils, translator PA): an A0 function result compared with a variable (the operands swapped)
+lang2/source/be_com/utils.pas	s/if utils_\$find_exposed_lts\(lr, bb\) <> lts then/if lts <> utils_\$find_exposed_lts(lr, bb) then { gap 12 }/
+lang2/source/be_com/utils.pas	s/if utils_\$find_final_lts\(lr, bb\) <> lts then/if lts <> utils_\$find_final_lts(lr, bb) then { gap 12 }/
 # gap 12 (mmt_utils, translator PC2): a pointer function's result compared with a variable (two variables, for the check)
 lang2/source/be_com/mmt_utils.pas	s/if utils_ins_\$operands_instruction\(p\) <> i then begin/if p <> o then begin { gap 12 }/

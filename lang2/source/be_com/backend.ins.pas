@@ -164,7 +164,18 @@ type
   lts_ptr_t = ^lts_t;
   rtn_ptr_t = ^rtn_t;
   cell_ptr_t = ^cell_t;
-  bb_edge_ptr_t = ^bb_edge_t;           { batch C }
+
+  { batch A: bit vectors (bv.pas): bit k of a vector is bit k mod 32 of
+    its longword k div 32 (bv_$test: `lsr.w #5', `and.w #31', `btst
+    Dn,Dn'), so a longword is a set of 0..31 in dpc's layout.  A live
+    range's complex id (its +4 word) numbers its bit.  The routine's
+    map from complex ids to live ranges (+60) is an array of them. }
+  bv_word_t = set of 0..31;
+  bv_t = array [0..65535] of bv_word_t;
+  bv_ptr_t = ^bv_t;
+  lr_map_t = array [0..65535] of lr_ptr_t;
+  lr_map_ptr_t = ^lr_map_t;
+  fg_edge_ptr_t = ^fg_edge_t;
 
   { An opcode's attributes (the section instruction_attributes, 20
     bytes by opcode, for opc$undefined..opc$adj_move).  Fields by
@@ -306,14 +317,20 @@ type
     l4: integer32;                      { +4 }
     w8: integer;                        { +8 }
     num: integer;                       { +10 }
-    w12: integer;                       { +12: its position (tr_utils
-                                          orders segments by it) }
+    order: 0..65535;                    { +12: its place in the order
+                                          the live ranges' segment lists
+                                          follow (utils; tr_utils orders
+                                          segments by it: `clr.l;
+                                          move.w', unsigned; batch A
+                                          (PA): was w12, batch C (PC):
+                                          w12) }
     f14: packed record                  { +14 }
       b14: 0..255;                      { (tr_utils: compared with 1 and
                                           2) }
       b15: 0..255;
       end;
-    f: bb_flags_t;                      { +16 }
+    f: bb_flags_t;                      { +16 (utils: +19 bit 1 marks a
+                                          block find_definition saw) }
     f20: packed record                  { +20 }
       b20_7: boolean;
       b20_6: boolean;                   { .6 (tr_utils) }
@@ -322,83 +339,129 @@ type
       b20_2, b20_1, b20_0: boolean;
       b21: 0..255;                      { +21 }
       end;
-    l22: bb_edge_ptr_t;                 { +22: the edges out (their +4
-                                          the target, chained at +8:
-                                          tr_utils) }
-    l26: bb_edge_ptr_t;                 { +26: the edges in (their +0
-                                          the source, chained at +12:
-                                          tr_utils) }
+    succs: fg_edge_ptr_t;               { +22: edges out, chained at
+                                          their next_succ (bv,
+                                          tr_utils; batch C: l22) }
+    preds: fg_edge_ptr_t;               { +26: edges in, chained at
+                                          their next_pred (bv,
+                                          tr_utils; batch C: l26) }
     w30: integer;                       { +30 }
     w32: integer;                       { +32 }
     first: instr_ptr_t;                 { +34 }
     last: instr_ptr_t;                  { +38 }
-    space42: array [42..69] of char;    { +42 }
+    space42: array [42..53] of char;    { +42 }
+    l54: bb_ptr_t;                      { +54: a list of blocks
+                                          utils_$locate_definition
+                                          searches first }
+    space58: array [58..61] of char;    { +58 }
+    exposed: lts_ptr_t;                 { +62: its exposed segments
+                                          (with lir_main_c86 0; chained
+                                          at their +16) }
+    finals: lts_ptr_t;                  { +66: its final segments
+                                          (chained at +20) }
     l70: bb_ptr_t;                      { +70: the head of its interval
                                           (tr_utils' bb_interval) }
     space74: array [74..81] of char;    { +74 }
     l82: bb_ptr_t;                      { +82 (tr_utils: the hammock
                                           head, of a block not one) }
-    l86: univ_ptr;                      { +86: a bit vector of live
-                                          ranges (tr_utils: of those
-                                          final in the block) }
-    l90: univ_ptr;                      { +90: a bit vector (tr_utils:
-                                          exposed) }
-    l94: univ_ptr;                      { +94: a bit vector (tr_utils:
-                                          exposed) }
-    l98: bb_edge_ptr_t;                 { +98: an edge (tr_utils: its
+    live_out: bv_ptr_t;                 { +86: the union of the
+                                          successors' live_in (bv;
+                                          tr_utils sets a live range's
+                                          bit when its segment is final
+                                          in the block; batch C: l86) }
+    live_gen: bv_ptr_t;                 { +90: read before written
+                                          (batch C: l90, exposed) }
+    live_in: bv_ptr_t;                  { +94: (live_out and
+                                          transparent) or live_gen
+                                          (batch C: l94, exposed) }
+    l98: fg_edge_ptr_t;                 { +98: an edge (tr_utils: its
                                           target follows the hammock) }
     l102: bb_ptr_t;                     { +102: the first block of its
                                           hammock (tr_utils) }
     l106: bb_ptr_t;                     { +106: the next block of the
                                           hammock (tr_utils) }
-    l110: univ_ptr;                     { +110: a bit vector (tr_utils:
-                                          written) }
-    space114: array [114..117] of char; { +114 }
+    transparent: bv_ptr_t;              { +110: not written in the
+                                          block (all ones initially;
+                                          batch C: l110, written) }
+    next114: bb_ptr_t;                  { +114: the order (from the
+                                          routine's +72) bv's backward
+                                          propagation walks }
     next: bb_ptr_t;                     { +118 }
-    space122: array [122..145] of char; { +122 }
-    l146: integer32;                    { +146: a visit mark
-                                          (tr_utils) }
+    avail_in: bv_ptr_t;                 { +122: the predecessors'
+                                          avail_out, joined (bv) }
+    avail_out: bv_ptr_t;                { +126: (avail_in and
+                                          transparent) or avail_gen }
+    avail_gen: bv_ptr_t;                { +130 }
+    space134: array [134..145] of char; { +134 }
+    mark146: integer32;                 { +146: a visit mark (utils'
+                                          look_for_path, tr_utils;
+                                          batch C: l146) }
   end;
 
-  { batch C: a flow graph edge, on its source's list of edges out (+22)
-    and its target's of edges in (+26). }
-  bb_edge_t = record
+  { A flow graph edge (bv, tr_utils; zzzzz's zz_edge_t reads the
+    target): on its source's list of edges out (succs, +22) chained at
+    next_succ, and its target's of edges in (preds, +26) chained at
+    next_pred.  Batches A and C each declared it (batch C as bb_edge_t,
+    next_out, next_in); batch A's names kept. }
+  fg_edge_t = record
     source: bb_ptr_t;                   { +0 }
-    target: bb_ptr_t;                   { +4 (zzzzz) }
-    next_out: bb_edge_ptr_t;            { +8 }
-    next_in: bb_edge_ptr_t;             { +12 }
+    target: bb_ptr_t;                   { +4 }
+    next_succ: fg_edge_ptr_t;           { +8 }
+    next_pred: fg_edge_ptr_t;           { +12 }
   end;
 
   { A lifetime segment: rrp (+0) its properties (xtp: an IPCCNOP's
     result segment gets modify and loses write); +3 bit 4 (xtp: a
-    condition code segment's that needs no IPCCNOP when clear); def
-    (+4) the operand that defines it; next (+8) in its live range's
+    condition code segment's that needs no IPCCNOP when clear); refs
+    (+4) the operands that refer to it, the definition first; next (+8) in its live range's
     list; +40 a longword dfa clears; lr (+48) its live range. }
+  { batch A (utils): num, exposed, first_in_bb, final, refs (was def),
+    bb .. mark named; l44 was integer32.  The operands that refer to a
+    segment (its definition first, then its readers) are chained from
+    its refs through their link (+4); an
+    exposed segment's l44 is the final segment (of another block) that
+    reaches it, whose l28 heads the exposed segments it reaches
+    (chained at their l28); a join birthpoint's segment's l44 heads its
+    inputs (records chained at +0, utils' ut_jbi_t). }
   lts_t = record
     rrp: rrp$set_t;                     { +0 }
     f2: packed record                   { +2 }
-      b2: 0..255;                       { (tr_utils: its number in its
-                                          live range) }
-      b3_7: boolean;                    { .7 (tr_utils: on the block's
-                                          exposed list) }
-      b3_6: boolean;                    { .6 (tr_utils: set on one
-                                          segment of its live range in
-                                          each block) }
+      num: 0..255;                      { its number in the live range
+                                          (printed lr.num; batch C: b2) }
+      exposed: boolean;                 { +3.7: on the block's exposed
+                                          list (batch C: b3_7) }
+      first_in_bb: boolean;             { .6: the live range's first in
+                                          its block (tr_utils: set on
+                                          one segment of its live range
+                                          in each block; batch C: b3_6) }
       b3_5: boolean;
-      b3_4: boolean;                    { .4 (xtp; tr_utils: on the
-                                          block's final list) }
-      b3_3, b3_2, b3_1, b3_0: boolean;  { .2 (tr_utils: marked) }
+      final: boolean;                   { .4: on the block's final list
+                                          (xtp, tr_utils; batch C:
+                                          b3_4) }
+      b3_3: boolean;
+      b3_2: boolean;                    { .2 (tr_utils: marked) }
+      b3_1, b3_0: boolean;
       end;
-    def: opnd_ptr_t;                    { +4 }
-    next: lts_ptr_t;                    { +8 }
+    refs: opnd_ptr_t;                   { +4: the operands that refer to
+                                          it, its definition first
+                                          (MM's and batch C's def) }
+    next: lts_ptr_t;                    { +8: in its live range's list,
+                                          by block order }
     bb: bb_ptr_t;                       { +12: its block }
-    space16: array [16..27] of char;    { +16 }
-    l28: lts_ptr_t;                     { +28 (tr_utils: chained from
-                                          l44's) }
-    space32: array [32..39] of char;    { +32 }
+    next_exposed: lts_ptr_t;            { +16 }
+    next_final: lts_ptr_t;              { +20 }
+    l24: integer32;                     { +24 (utils clears it in phase
+                                          9) }
+    l28: lts_ptr_t;                     { +28 (chained from l44's) }
+    l32: integer32;                     { +32 }
+    mark: integer32;                    { +36: the walks' marks }
     l40: integer32;                     { +40 (dfa clears it) }
-    l44: lts_ptr_t;                     { +44 (tr_utils: the final
-                                          segment it was merged after) }
+    l44: univ_ptr;                      { +44: an lts_ptr_t (the final
+                                          segment that reaches it;
+                                          tr_utils: the one it was
+                                          merged after) or a join's
+                                          inputs (batch C had
+                                          lts_ptr_t) }
     lr: lr_ptr_t;                       { +48 }
   end;
 
@@ -412,20 +475,29 @@ type
     f2: packed record                   { +2 }
       b2: 0..255;
       b3_7: boolean;                    { .7 (tr_utils: its uses depend
-                                          on every instruction) }
+                                          on every instruction; utils
+                                          tests it with `tst.b (3)':
+                                          batch A read +2 as a word w2
+                                          and 16#80) }
       b3_6, b3_5, b3_4, b3_3: boolean;
       b3_2: boolean;                    { .2 (tr_utils: marked) }
       b3_1, b3_0: boolean;
       end;
-    w4: integer;                        { +4: its number (its bit in
-                                          the blocks' bit vectors; 0 for
-                                          none) }
-    w6: integer;                        { +6 }
+    id: 0..65535;                       { +4: its complex id, its bit
+                                          in the bit vectors (bv; 0 for
+                                          none; batch C: w4) }
+    num: integer;                       { +6: its number (printed;
+                                          batch C: w6) }
     l8: integer32;                      { +8 }
     next: lr_ptr_t;                     { +12 }
-    l16: lr_ptr_t;                      { +16: its mate (tr_utils_$merge_lrs
-                                          merges the mates too) }
-    l20: integer32;                     { +20 }
+    mate: lr_ptr_t;                     { +16: its mate, the other half
+                                          of a pair: made complex with
+                                          it (bv), merged with it
+                                          (tr_utils_$merge_lrs; batch
+                                          A: lr16, batch C: l16) }
+    node20: univ_ptr;                   { +20: an IL node (a VAR_NAME,
+                                          109, or 110: utils reads its
+                                          flags; batch C: l20) }
     sym: univ_ptr;                      { +24 }
     l28: integer32;                     { +28 }
     l32: integer32;                     { +32 }
@@ -439,11 +511,17 @@ type
     w56: integer;                       { +56: its segments' count }
     w58: integer;                       { +58 }
     l60: integer32;                     { +60 }
-    l64: integer32;                     { +64 }
-    l68: integer32;                     { +68 }
-    l72: integer32;                     { +72 (tr_utils_$merge_lrs
-                                          clears it) }
-    l76: integer32;                     { +76 (likewise) }
+    { batch A (utils): the segment lists by block (lir_main_c86 1) and
+      their hints (the last found and the one before it, valid with
+      lir_main_c8d). }
+    exposed_hint: lts_ptr_t;            { +64 }
+    exposed_prev: lts_ptr_t;            { +68 }
+    exposed: lts_ptr_t;                 { +72 (tr_utils_$merge_lrs
+                                          clears it; batch C: l72) }
+    finals: lts_ptr_t;                  { +76 (likewise; batch C:
+                                          l76) }
+    final_hint: lts_ptr_t;              { +80 }
+    final_prev: lts_ptr_t;              { +84 }
   end;
 
   { A routine being compiled: what at_backend's phases are passed.
@@ -460,7 +538,12 @@ type
     lrs_last: lr_ptr_t;                 { +56: the last live range
                                           (lir_$alloc_live_range,
                                           mmt_utils) }
-    space60: array [60..75] of char;    { +60 }
+    lr_map: lr_map_ptr_t;               { +60: the live ranges by
+                                          complex id (bv) }
+    space64: array [64..71] of char;    { +64 }
+    bbs72: bb_ptr_t;                    { +72: the blocks in the order
+                                          bv's backward propagation
+                                          walks (chained at +114) }
     bbs: bb_ptr_t;                      { +76 }
     space80: array [80..87] of char;    { +80 }
     cells: cell_ptr_t;                  { +88 }
@@ -468,11 +551,15 @@ type
     space96: array [96..111] of char;   { +96 }
     l112: lts_ptr_t;                    { +112 }
     space116: array [116..179] of char; { +116 }
-    l180: integer32;                    { +180: a serial number
-                                          (tr_utils_$mark_dependents
-                                          counts it up) }
-    space184: array [184..191] of char; { +184 }
-    l192: integer32;                    { +192 }
+    marks: integer32;                   { +180: the walks' marks and
+                                          serial numbers, counted up
+                                          (utils, tr_utils_$mark_dependents;
+                                          batch C: l180) }
+    nbbs: integer32;                    { +184: its blocks (bv) }
+    l188: integer32;                    { +188 }
+    l192: integer32;                    { +192: its complex live
+                                          ranges, the last complex id
+                                          given (bv) }
     space196: array [196..227] of char; { +196 }
     f228: packed record                 { +228 }
       b228_7, b228_6, b228_5, b228_4, b228_3: boolean;
@@ -526,6 +613,126 @@ type
     level: 0..7;                        { .2..0 }
   end;
 
+  { batch B: the views lst, bin and asm (translator PB) read the
+    opcode tables and the code cells through. }
+
+  { instr_attr_t as four operand descriptions from +4, one longword
+    each: form (of$t: lst prints an immediate of form
+    of$ip_compare_a_operand negated, `#' before the forms of its
+    set), num (k, the operand's number), b2 (bits 7..6: lst prints the
+    insert/extract width before an operand whose b2 has them, when the
+    opcode's b14_7_1 is odd), b3 (operand 1's is the class, +7). }
+  instr_attr_opnd_t = packed record
+    form: 0..255;                       { +4k }
+    num: 0..255;                        { +4k+1 }
+    b2: 0..255;                         { +4k+2 }
+    b3: 0..255;                         { +4k+3 }
+  end;
+  instr_attr_view_ptr_t = ^instr_attr_view_t;
+  instr_attr_view_t = record
+    w0: 0..65535;                       { +0 }
+    w2: 0..65535;                       { +2 }
+    opnds: array [1..4] of instr_attr_opnd_t;    { +4 }
+  end;
+
+  { A code cell's first longword (cell_hdr_t) with its +3 as lst reads
+    it by the cell's kind: modify (bits 7..6) am$t of a load or store
+    and the squash mode of a branch (lst's ".SN", ".ST", ".SF", ".SA"),
+    lsq (bits 5..4) lsq$t of a load or store; width the whole byte (an
+    insert's or extract's field width, a load_pair's offset as
+    signed). }
+  cell_head_ptr_t = ^cell_head_t;
+  cell_head_t = packed record
+    flags: 0..255;                      { +0 }
+    opc: 0..255;                        { +1 }
+    b2: 0..255;                         { +2: bits 3..0 lst's cycle
+                                          column, bit 6 the next cell
+                                          continues this one }
+    case integer of
+      1: (modify: 0..3;                 { +3 .7..6 }
+          lsq: 0..3;                    { .5..4 }
+          b3_3_0: 0..15);
+      2: (width: 0..255);
+      3: (offset: -128..127);
+  end;
+
+  { An opcode's assembly (the section instruction_assembly, 44 bytes by
+    opcode, for opc$undefined..opc$adj_move; asm.pas includes its
+    initializer, instr_assembly.init).  w0 and w4 the encoding, +8 bit
+    5 (squash) the branch takes a squash suffix, bit 4 (no_hex) lst
+    shows no instruction word, prasm_len the length of prasm_name; +9
+    name_len the length of name, half (bits 3..1) the operands that
+    name a single's half (lst's ".H"); prasm_format (+10) how lst
+    lays the instruction out in -PRASM form; prasm_name (+11) its
+    operator there, name (+19) its mnemonic; opnd (+36) a word for
+    each operand (bits 2..1 lst's display format: 0 decimal, 2
+    hexadecimal). }
+  instr_asm_ptr_t = ^instr_asm_t;
+  instr_asm_t = packed record
+    w0: integer32;                      { +0 }
+    w4: integer32;                      { +4 }
+    b8_7, b8_6: boolean;                { +8 }
+    squash: boolean;                    { .5 }
+    no_hex: boolean;                    { .4 }
+    prasm_len: 0..15;                   { .3..0 }
+    name_len: 0..15;                    { +9 .7..4 }
+    half: 0..7;                         { .3..1 }
+    b9_0: boolean;
+    text: packed array [10..35] of char;    { +10: prasm_format
+                                          (text[10]), prasm_name
+                                          (text[11..18]), name
+                                          (text[19..34]); dpc puts a
+                                          character array of a packed
+                                          record on an even offset }
+    opnd: array [1..4] of 0..65535;     { +36 }
+  end;
+  instr_asms_t = array [0..211] of instr_asm_t;
+
+  { A literal (lst_$prtlit, lst_$display_literal): kind (+4) 0..21: 0
+    integer, 1 short, 2 byte, 3 long, 4..7 their unsigned forms, 8..10
+    word, byte and long booleans, 11 char, 12 single (held as a
+    double), 13 double, 14 complex, 15 double complex, 16 namelist
+    descriptor (p0^'s +18), 18 varying string (w12 its length, chars
+    from +14), 19 string (len its length, chars from +12), 20
+    read-only data, 21 a def_const; 17 unknown. }
+  lit_ptr_t = ^lit_t;
+  lit_t = record
+    p0: univ_ptr;                       { +0 }
+    kind: integer;                      { +4 }
+    len: integer;                       { +6 }
+    case integer of
+      1: (value: integer32;             { +8 }
+          l12: integer32;               { +12 }
+          l16: integer32;               { +16 }
+          l20: integer32);              { +20 }
+      2: (d: double;                    { +8 }
+          d16: double);                 { +16 }
+      3: (r: real;                      { +8 }
+          r12: real);                   { +12 }
+      4: (w8: integer;                  { +8 }
+          w10: integer;                 { +10 }
+          w12: integer;                 { +12 }
+          chars14: array [1..256] of char);    { +14 }
+      5: (b8, b9, b10, b11: char;       { +8 }
+          chars: array [1..256] of char);      { +12 }
+  end;
+
+  { A literal pool entry (lst_$display_literal, bin): lit (+4) the
+    literal, size (+16), addr (+20) its address in the pool. }
+  lpe_ptr_t = ^lpe_t;
+  lpe_t = record
+    l0: integer32;                      { +0 }
+    lit: lit_ptr_t;                     { +4 }
+    l8: integer32;                      { +8 }
+    l12: integer32;                     { +12 }
+    size: integer32;                    { +16 }
+    addr: integer32;                    { +20 }
+  end;
+
+  { The listing's line (prtsub.ins.pas's prtsub_$line_t, which is
+    opened after this insert). }
+  lst_line_t = varying [256] of char;
+
 { batch C (tr_utils, mmt, mmt_utils, trans, com, iv, oli): }
 type
   { An operand's first longword as four bytes: rrp (+1) is the low byte
@@ -575,6 +782,11 @@ var (operand_string_length)
 var (operand_string)
   operand_string: array [0..31] of packed array [1..25] of char;
 
+{ batch B: the opcodes' assembly (0x2B9CCC, 212 entries of 44 bytes;
+  lst and asm read it, asm includes instr_assembly.init). }
+var (instruction_assembly)
+  instruction_assembly: instr_asms_t;
+
 var
   { at_backend.pas's data (A5 0x485830), reached absolutely. }
   at_backend_4fc: extern univ_ptr;      { +0x4FC (get_calling_conventions'
@@ -605,17 +817,29 @@ var
                                           ^mrh_$heap_t: dfa, sem_utils
                                           and others open mrh.ins.pas
                                           after this insert }
-  lir_main_c78: extern integer32;       { +0xC78 }
-  lir_main_c7c: extern integer32;       { +0xC7C }
-  lir_main_c80: extern integer32;       { +0xC80 }
-  lir_main_c84: extern integer;         { +0xC84 (xtp: nonzero skips the
-                                          global walk) }
-  lir_main_c86: extern integer;         { +0xC86 (xtp sets it to 1) }
+  lir_main_c78: extern univ_ptr;        { +0xC78: the lifetime bit
+                                          vectors' space (bv; batch A:
+                                          was integer32) }
+  lir_main_c7c: extern univ_ptr;        { +0xC7C: the availability bit
+                                          vectors' space (bv; batch A:
+                                          was integer32) }
+  lir_main_c80: extern integer32;       { +0xC80: the bits each vector
+                                          has room for (bv) }
+  lir_main_c84: extern integer;         { +0xC84: the bit vectors each
+                                          block has, 0, 4 or 7 (bv; xtp:
+                                          nonzero skips the global
+                                          walk) }
+  lir_main_c86: extern integer;         { +0xC86: where the segment
+                                          lists are kept: 0 by block, 1
+                                          by live range (utils; xtp sets
+                                          it to 1) }
   lir_main_c88: extern boolean;         { +0xC88 }
   lir_main_c89: extern boolean;         { +0xC89 }
   lir_main_c8c: extern boolean;         { +0xC8C }
-  lir_main_c8d: extern boolean;         { +0xC8D }
-  lir_main_c8e: extern boolean;         { +0xC8E }
+  lir_main_c8d: extern boolean;         { +0xC8D: the live ranges'
+                                          hints valid (utils) }
+  lir_main_c8e: extern boolean;         { +0xC8E: definitions may be
+                                          located (utils) }
   lir_main_da4: extern boolean;         { +0xDA4: set by
                                           at_backend_$begin_compilation
                                           from the options; dfa and xtp
@@ -648,6 +872,14 @@ var
   ra_654: extern integer32;             { ra +0x654 (lir_main) }
   ra_658: extern integer32;             { ra +0x658 (lir_main) }
   sched_3158: extern integer32;         { sched +0x3158 (lir_main) }
+
+  { batch B: cells lst reaches. }
+  lir_main_ac0: extern array [0..31] of univ_ptr;    { lir_main +0xAC0
+                                          (0x48BE6C): by register
+                                          number, what a register
+                                          operand's link is when it
+                                          names the physical register
+                                          (lst_$display_operand) }
 
 
 { asm.pas (cc.a88k). }
@@ -705,176 +937,180 @@ procedure bin_$begin_compilation; extern;
 { BIN_$END_COMPILATION - 0x222BD8, 0x2 bytes (no A5). }
 procedure bin_$end_compilation; extern;
 
-{ BIN_$UNWIND_BITS - 0x223728, 0x5E bytes; called from lst.  Frame 8:a;
-  12:a; 16:a; 20:al; 24:al. }
+{ BIN_$UNWIND_BITS - a routine's unwind facts (the return register,
+  whether its frame is pushed, its frame register above 23, an ECB).
+  0x223728, 0x5E bytes; called from lst.  Frame 8:a; 12:a; 16:a; 20:al;
+  24:al (the results by address; narrowed by translator PB). }
 procedure bin_$unwind_bits(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr;
-    p4: univ_ptr;
-    p5: univ_ptr); options(val_param); extern;
+    info: univ_ptr;
+    out frame_reg: integer32;
+    out pushed: boolean;
+    out big_reg: boolean;
+    out ecb: boolean); extern;
 
-{ bv.pas (cc.a88k). }
+{ bv.pas (cc.a88k).  batch A: the headings narrowed from bv.pas's
+  bodies (n a vector's bits, a non-negative longword; v, src, dst bit
+  vectors; lr the live range whose complex id is the bit); bv_$subtract
+  and bv_$make_live_range_complex are procedures (their callers'
+  reads of D0/A0 were the registers' other uses). }
 
 { BV_$TEST - 0x224D0E, 0x32 bytes; called from fg_utils lir_utils mmt
-  mmt_utils ra ra_utils trans.  Frame 8:al; 12:al.  Result: D0 (callers:
-  D0b36). }
+  mmt_utils ra ra_utils trans. }
 function bv_$test(
-    p1: univ_ptr;
-    p2: univ_ptr): boolean; options(val_param); extern;
+    v: bv_ptr_t;
+    lr: lr_ptr_t): boolean; options(val_param); extern;
 
-{ BV_$TEST_AND_SET - 0x224D40, 0x46 bytes; called from df_utils.  Frame
-  8:al; 12:al.  Result: D0 (callers: D0b2). }
+{ BV_$TEST_AND_SET - 0x224D40, 0x46 bytes; called from df_utils. }
 function bv_$test_and_set(
-    p1: univ_ptr;
-    p2: univ_ptr): boolean; options(val_param); extern;
+    v: bv_ptr_t;
+    lr: lr_ptr_t): boolean; options(val_param); extern;
 
-{ BV_$TEST_AND_CLEAR - 0x224D86, 0x48 bytes; called from mmt.  Frame 8:al;
-  12:al.  Result: D0 (callers: D0b1). }
+{ BV_$TEST_AND_CLEAR - 0x224D86, 0x48 bytes; called from mmt. }
 function bv_$test_and_clear(
-    p1: univ_ptr;
-    p2: univ_ptr): boolean; options(val_param); extern;
+    v: bv_ptr_t;
+    lr: lr_ptr_t): boolean; options(val_param); extern;
 
 { BV_$SET - 0x224DCE, 0x38 bytes; called from dbg_life df_utils fg_utils
-  lir_utils mmt mmt_utils ra ra_utils tr_utils trans.  Frame 8:al; 12:al.
-  }
+  lir_utils mmt mmt_utils ra ra_utils tr_utils trans. }
 procedure bv_$set(
-    p1: univ_ptr;
-    p2: univ_ptr); options(val_param); extern;
+    v: bv_ptr_t;
+    lr: lr_ptr_t); options(val_param); extern;
 
-{ BV_$SET_IF_NOT_KILLED - 0x224E06, 0x44 bytes; called from dbg_life mmt
-  ra.  Frame 8:l; 12:al; 16:al. }
+{ BV_$SET_IF_NOT_KILLED - lr's bit set in v when it is in not_killed.
+  0x224E06, 0x44 bytes; called from dbg_life mmt ra. }
 procedure bv_$set_if_not_killed(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: univ_ptr); options(val_param); extern;
+    not_killed: bv_ptr_t;
+    lr: lr_ptr_t;
+    v: bv_ptr_t); options(val_param); extern;
 
 { BV_$CLEAR - 0x224E4A, 0x3A bytes; called from dbg_life lir_utils mmt
-  mmt_utils ra ra_utils trans utils.  Frame 8:al; 12:al. }
+  mmt_utils ra ra_utils trans utils. }
 procedure bv_$clear(
-    p1: univ_ptr;
-    p2: univ_ptr); options(val_param); extern;
+    v: bv_ptr_t;
+    lr: lr_ptr_t); options(val_param); extern;
 
-{ BV_$COPY - 0x224E84, 0x48 bytes; called from fg_utils mmt ra_utils.
-  Frame 8:l; 12:al; 16:al. }
+{ BV_$COPY - dst := src.  0x224E84, 0x48 bytes; called from fg_utils mmt
+  ra_utils. }
 procedure bv_$copy(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: univ_ptr); options(val_param); extern;
+    n: linteger;
+    src: bv_ptr_t;
+    dst: bv_ptr_t); options(val_param); extern;
 
-{ BV_$COPY_AND_TEST - 0x224ECC, 0x4C bytes; called from mmt.  Frame 8:l;
-  12:al; 16:al.  Result: D0 (callers: D0b1). }
+{ BV_$COPY_AND_TEST - dst := src; whether it has a bit set.  0x224ECC,
+  0x4C bytes; called from mmt. }
 function bv_$copy_and_test(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: univ_ptr): boolean; options(val_param); extern;
+    n: linteger;
+    src: bv_ptr_t;
+    dst: bv_ptr_t): boolean; options(val_param); extern;
 
-{ BV_$EQUAL - 0x224F18, 0x5A bytes; called from mmt mmt_utils ra_utils.
-  Frame 8:l; 12:al; 16:al.  Result: D0 (callers: D0b5). }
+{ BV_$EQUAL - 0x224F18, 0x5A bytes; called from mmt mmt_utils ra_utils. }
 function bv_$equal(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: univ_ptr): boolean; options(val_param); extern;
+    n: linteger;
+    a: bv_ptr_t;
+    b: bv_ptr_t): boolean; options(val_param); extern;
 
-{ BV_$OR - 0x224F72, 0x50 bytes; called from fg_utils mmt ra_utils.  Frame
-  8:l; 12:al; 16:al. }
+{ BV_$OR - dst := dst or src.  0x224F72, 0x50 bytes; called from fg_utils
+  mmt ra_utils. }
 procedure bv_$or(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: univ_ptr); options(val_param); extern;
+    n: linteger;
+    src: bv_ptr_t;
+    dst: bv_ptr_t); options(val_param); extern;
 
-{ BV_$AND - 0x224FC2, 0x50 bytes; called from ra_utils.  Frame 8:l; 12:al;
-  16:al. }
+{ BV_$AND - dst := dst and src.  0x224FC2, 0x50 bytes; called from
+  ra_utils. }
 procedure bv_$and(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: univ_ptr); options(val_param); extern;
+    n: linteger;
+    src: bv_ptr_t;
+    dst: bv_ptr_t); options(val_param); extern;
 
-{ BV_$AND_TO - 0x225012, 0x54 bytes; called from fg_utils mmt mmt_utils
-  ra_utils.  Frame 8:l; 12:al; 16:al; 20:l. }
+{ BV_$AND_TO - dst := a and b.  0x225012, 0x54 bytes; called from
+  fg_utils mmt mmt_utils ra_utils. }
 procedure bv_$and_to(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: univ_ptr;
-    p4: integer32); options(val_param); extern;
+    n: linteger;
+    a: bv_ptr_t;
+    b: bv_ptr_t;
+    dst: bv_ptr_t); options(val_param); extern;
 
-{ BV_$SUBTRACT - 0x225066, 0x52 bytes; called from fg_utils mmt mmt_utils
-  ra_utils.  Frame 8:l; 12:al; 16:al.  Result: D0 (callers: D0w1). }
-function bv_$subtract(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: univ_ptr): integer; options(val_param); extern;
+{ BV_$SUBTRACT - dst := dst and not src.  0x225066, 0x52 bytes; called
+  from fg_utils mmt mmt_utils ra_utils. }
+procedure bv_$subtract(
+    n: linteger;
+    src: bv_ptr_t;
+    dst: bv_ptr_t); options(val_param); extern;
 
-{ BV_$SET1_SUBSUMES_SET2 - 0x2250B8, 0x5C bytes; called from mmt.  Frame
-  8:l; 12:al; 16:al.  Result: D0 (callers: D0b3). }
+{ BV_$SET1_SUBSUMES_SET2 - whether every bit of set2 is in set1.
+  0x2250B8, 0x5C bytes; called from mmt. }
 function bv_$set1_subsumes_set2(
-    p1: integer32;
-    p2: univ_ptr;
-    p3: univ_ptr): boolean; options(val_param); extern;
+    n: linteger;
+    set1: bv_ptr_t;
+    set2: bv_ptr_t): boolean; options(val_param); extern;
 
-{ BV_$FIND_NEXT_VAL - 0x225114, 0x88 bytes; called from lir_utils mmt
-  mmt_utils.  Frame 8:al; 12:al; 16:l.  Result: D0 (callers: D0l13 D0w1).
-  }
+{ BV_$FIND_NEXT_VAL - the first bit of v after bit k (up to the
+  routine's last complex id), 0 for none.  0x225114, 0x88 bytes; called
+  from lir_utils mmt mmt_utils. }
 function bv_$find_next_val(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: integer32): integer; options(val_param); extern;
+    rtn: rtn_ptr_t;
+    v: bv_ptr_t;
+    k: integer32): integer32; options(val_param); extern;
 
-{ BV_$FIND_NEXT - 0x22519C, 0x78 bytes; called from dbg_life fg_utils
-  lir_utils ra ra_utils trans.  Frame 8:al; 12:l; 16:al.  Result: A0
-  (callers: A015). }
+{ BV_$FIND_NEXT - the live range of the first bit of v after lr's
+  (from the first for nil) whose map entry is a live range still
+  complex; nil for none.  0x22519C, 0x78 bytes; called from dbg_life
+  fg_utils lir_utils ra ra_utils trans. }
 function bv_$find_next(
-    p1: univ_ptr;
-    p2: integer32;
-    p3: univ_ptr): univ_ptr; options(val_param); extern;
+    rtn: rtn_ptr_t;
+    v: bv_ptr_t;
+    lr: lr_ptr_t): lr_ptr_t; options(val_param); extern;
 
-{ BV_$MAKE_LIVE_RANGE_COMPLEX - 0x225370, 0x214 bytes; called from com
-  df_utils iv life oli ra_utils trans.  Frame 8:al; 12:al.  Result: read
-  (callers: A01 D0l1). }
-function bv_$make_live_range_complex(
-    p1: univ_ptr;
-    p2: univ_ptr): univ_ptr; options(val_param); extern;
+{ BV_$MAKE_LIVE_RANGE_COMPLEX - a complex id for lr (and for the live
+  range at its +16), the vectors enlarged when the bits run out.
+  0x225370, 0x214 bytes; called from com df_utils iv life oli ra_utils
+  trans. }
+procedure bv_$make_live_range_complex(
+    rtn: rtn_ptr_t;
+    lr: lr_ptr_t); options(val_param); extern;
 
-{ BV_$CREATE_DFA_BIT_VECTORS - 0x225846, 0xA8 bytes; called from df_utils.
-  Frame 8:al. }
+{ BV_$CREATE_DFA_BIT_VECTORS - 0x225846, 0xA8 bytes; called from
+  df_utils. }
 procedure bv_$create_dfa_bit_vectors(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
-{ BV_$INITIALIZE_BIT_VECTORS - 0x2258EE, 0x6E bytes; called from dbg_life
-  mmt post ra ra_utils.  Frame 8:al; 12:al; 16:al; 20:bw. }
+{ BV_$INITIALIZE_BIT_VECTORS - the lifetime vectors (nvectors 4) or the
+  lifetime and availability vectors (7) for n bits, any_path saying how
+  availability joins (or, else and).  0x2258EE, 0x6E bytes; called from
+  dbg_life mmt post ra ra_utils. }
 procedure bv_$initialize_bit_vectors(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr;
-    p4: integer); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    n: linteger;
+    nvectors: integer32;
+    any_path: boolean); options(val_param); extern;
 
-{ BV_$PROPAGATE_LIFETIMES - 0x22599A, 0x17E bytes; called from dbg_life
-  mmt post ra_utils.  Frame 8:al; 12:al. }
+{ BV_$PROPAGATE_LIFETIMES - live_in and live_out to a fixed point.
+  0x22599A, 0x17E bytes; called from dbg_life mmt post ra_utils. }
 procedure bv_$propagate_lifetimes(
-    p1: univ_ptr;
-    p2: univ_ptr); options(val_param); extern;
+    n: linteger;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
-{ BV_$PROPAGATE_AVAILABILITY - 0x225B18, 0x1BE bytes; called from dbg_life
-  mmt post ra_utils.  Frame 8:al; 12:al; 16:b. }
+{ BV_$PROPAGATE_AVAILABILITY - avail_in and avail_out to a fixed point.
+  0x225B18, 0x1BE bytes; called from dbg_life mmt post ra_utils. }
 procedure bv_$propagate_availability(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: boolean); options(val_param); extern;
+    n: linteger;
+    rtn: rtn_ptr_t;
+    any_path: boolean); options(val_param); extern;
 
 { BV_$RELEASE_BIT_VECTORS - 0x225D1C, 0x5C bytes; called from dbg_life dfa
-  hal life mmt oli post ra ra_utils trans xtp.  Frame 8:al. }
+  hal life mmt oli post ra ra_utils trans xtp. }
 procedure bv_$release_bit_vectors(
     rtn: rtn_ptr_t); options(val_param); extern;
 
 { BV_$RELEASE_AVAILABILITY_BIT_VECTORS - 0x225D78, 0x4C bytes; called from
-  post ra ra_utils.  Frame 8:al. }
+  post ra ra_utils. }
 procedure bv_$release_availability_bit_vectors(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
-{ BV_$RELEASE_LR_MAP - 0x225DC4, 0x2E bytes; called from lir.  Frame 8:al.
-  }
+{ BV_$RELEASE_LR_MAP - 0x225DC4, 0x2E bytes; called from lir. }
 procedure bv_$release_lr_map(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
 
 { com.pas (cc.a88k). }
 
@@ -1673,45 +1909,45 @@ procedure lst_$new_line; extern;
 { LST_$DEFINE_DATA_SECTION - 0x24EB0A, 0x84 bytes; called from bin.  Frame
   8:al. }
 procedure lst_$define_data_section(
-    p1: univ_ptr); options(val_param); extern;
+    sect: univ_ptr); options(val_param); extern;
 
 { LST_$SET_DATA_SECTION - 0x24EB98, 0xD4 bytes; called from bin.  Frame
   8:a. }
 procedure lst_$set_data_section(
-    p1: univ_ptr); options(val_param); extern;
+    sect: univ_ptr); options(val_param); extern;
 
 { LST_$PROGRAM_SECTION - 0x24EC88, 0xF8 bytes; called from bin.  Frame
   8:al. }
 procedure lst_$program_section(
-    p1: univ_ptr); options(val_param); extern;
+    sect: univ_ptr); options(val_param); extern;
 
 { LST_$PROCEDURE_ENTRY - 0x24ED94, 0x50A bytes; called from bin.  Frame
   8:al; 12:a; 16:al. }
 procedure lst_$procedure_entry(
-    p1: univ_ptr;
+    info: univ_ptr;
     p2: univ_ptr;
-    p3: univ_ptr); options(val_param); extern;
+    node: univ_ptr); options(val_param); extern;
 
 { LST_$PRTLIT - 0x24F8FC, 0x490 bytes; called from dmp.  Frame 8:a; 12:al.
   }
 procedure lst_$prtlit(
-    p1: univ_ptr;
-    p2: univ_ptr); options(val_param); extern;
+    in out s: univ lst_line_t;
+    lit: lit_ptr_t); options(val_param); extern;
 
 { LST_$DISPLAY_CODE_CELL - 0x250A0A, 0xD28 bytes; called from bin.  Frame
   8:al. }
 procedure lst_$display_code_cell(
-    p1: univ_ptr); options(val_param); extern;
+    cell: cell_ptr_t); options(val_param); extern;
 
 { LST_$DISPLAY_LITERAL - 0x251796, 0x326 bytes; called from bin.  Frame
   8:a. }
 procedure lst_$display_literal(
-    p1: univ_ptr); options(val_param); extern;
+    entry: lpe_ptr_t); options(val_param); extern;
 
 { LST_$DISPLAY_TABLE - 0x251C92, 0xD0 bytes; called from bin.  Frame 8:a.
   }
 procedure lst_$display_table(
-    p1: univ_ptr); options(val_param); extern;
+    cell: cell_ptr_t); options(val_param); extern;
 
 { mmt.pas (cc.a88k). }
 

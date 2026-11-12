@@ -15,66 +15,62 @@
   name. }
 
 type
-  { A memory token (60 bytes; mmt's token heap hands out 64): next on
-    the active list of an MMT_SEQ being built (mmt_active); lr (+36)
-    the live range standing for its memory; related and compared
-    (+40, +44) the bit vectors of the tokens it may overlap and has
-    been compared with; equiv (+48) the token it is equivalent to; id
-    (+56) its number (the descriptor's); read and written (+58 bits
-    7, 6) what the MMT_SEQ being built does with it; equivalent (+58
-    bit 1) set when its descriptor had an equivalent; +58 bit 4 set on
-    mmt's first static token. }
+  { A set of alias classes (alias.ins.pas's alias_ constants). }
+  mmt_classes_t = set of 0..31;
+
+  { A memory token (60 bytes; mmt's token heap hands out 64): one class
+    of memory a live range stands for.  next (+0) on mmt's hash chain,
+    then on the active list of an MMT_SEQ being built (mmt_active);
+    next_class (+4) on its alias class's list (or the calls' list);
+    desc (+8) the alias descriptor it was made from, or for a call's
+    token the classes it reads and writes; equivs (+28) the tokens made
+    equivalent to it, chained; mate (+32) the token it is paired with
+    (an argument block MMT_SEQ's read and write); lr (+36) the live
+    range standing for its memory; related and compared (+40, +44) bit
+    vectors of the tokens' live ranges it may overlap and has been
+    compared with; equiv (+48) the token it is equivalent to
+    (mmt_utils); refs (+52) how many operands refer to it; id (+56) its
+    number; the flags (+58): read and written (bits 7, 6) what the
+    MMT_SEQ being built does with it, from_alias (5) made from an alias
+    descriptor, async (4) exposed in an asynchronous path, call (3) a
+    call's, call_async (2) the call may run asynchronously, equivalent
+    (1) merged into another. }
   mmt_token_ptr_t = ^mmt_token_t;
   mmt_token_t = record
     next: mmt_token_ptr_t;              { +0 }
-    space4: array [4..35] of char;      { +4 }
-    lr: lr_ptr_t;                       { +36 }
-    related: univ_ptr;                  { +40 }
-    compared: univ_ptr;                 { +44 }
-    equiv: mmt_token_ptr_t;             { +48 }
-    l52: univ_ptr;                      { +52 }
-    id: integer;                        { +56 }
-    f: packed record                    { +58 }
-      read: boolean;                    { .7 }
-      written: boolean;                 { .6 }
-      b5: boolean;
-      b4: boolean;                      { .4 }
-      b3, b2: boolean;
-      equivalent: boolean;              { .1 }
-      b0: boolean;
-      b59: 0..255;                      { +59 }
-      end;
+    next_class: mmt_token_ptr_t;        { +4 }
+    case integer of                     { +8 }
+      1: (desc: alias_$desc_t;
+          equivs: mmt_token_ptr_t;      { +28 }
+          mate: mmt_token_ptr_t;        { +32 }
+          lr: lr_ptr_t;                 { +36 }
+          related: bv_ptr_t;            { +40 }
+          compared: bv_ptr_t;           { +44 }
+          equiv: mmt_token_ptr_t;       { +48 }
+          refs: integer32;              { +52 }
+          id: integer;                  { +56 }
+          f: packed record              { +58 }
+            read: boolean;              { .7 }
+            written: boolean;           { .6 }
+            from_alias: boolean;        { .5 }
+            async: boolean;             { .4 }
+            call: boolean;              { .3 }
+            call_async: boolean;        { .2 }
+            equivalent: boolean;        { .1 }
+            b0: boolean;
+            b59: 0..255;                { +59 }
+            end);
+      2: (reads: mmt_classes_t;         { +8 }
+          writes: mmt_classes_t);       { +12 }
   end;
   mmt_token_map_t = array [1..1000000] of mmt_token_ptr_t;
   mmt_token_map_ptr_t = ^mmt_token_map_t;
 
-  { The memory model's view of a basic block: its lists of exposed
-    (+62, chained at a segment's +16) and final (+66, at +20) lifetime
-    segments. }
-  mmt_bb_v_ptr_t = ^mmt_bb_v_t;
-  mmt_bb_v_t = record
-    space0: array [0..61] of char;
-    exposed: lts_ptr_t;                 { +62 }
-    final: lts_ptr_t;                   { +66 }
-  end;
-
-  { The memory model's view of a lifetime segment: the exposed and final
-    lists' links, desc (+36) the descriptor mmt_utils gave it, last
-    (+40) the last operand that reads it (chained through the operands'
-    links). }
-  mmt_lts_v_ptr_t = ^mmt_lts_v_t;
-  mmt_lts_v_t = record
-    space0: array [0..15] of char;
-    next_exposed: lts_ptr_t;            { +16 }
-    next_final: lts_ptr_t;              { +20 }
-    space24: array [24..35] of char;
-    desc: integer32;                    { +36 }
-    last: opnd_ptr_t;                   { +40 }
-  end;
-
-  { The memory model's view of a live range: kind (+8, a byte: 28 is
-    made 27), uses (+44) the operands that refer to it (chained through
-    their links), +52 its token or the segment being filled in. }
+  { The memory model's view of a live range (fields batch A has not
+    named; backend.ins.pas lr_t): kind (+8, a byte: 28 is made 27),
+    uses (+44) the memory operands that refer to it while the tokens are
+    bound (chained through their links), +52 its token, or the segment
+    being filled in (mmt_utils' fill_in_ltss). }
   mmt_lr_v_ptr_t = ^mmt_lr_v_t;
   mmt_lr_v_t = record
     space0: array [0..7] of char;
@@ -90,14 +86,23 @@ type
       2: (cur: lts_ptr_t);
   end;
 
-  { The memory model's view of the routine: mem_lr (+140) the live range
-    of the routine's memory, all_lr (+144) the one mmt makes for all
-    memory (a return's). }
+  { The memory model's view of the routine (fields batch A has not
+    named; backend.ins.pas rtn_t): mem_lr (+140) the live range of the
+    routine's memory, all_lr (+144) the one mmt makes for all memory but
+    the local (a return's); +227 bit 6 the routine has asynchronous
+    paths, bit 0 set by mmt when its memory needs no class 1 token. }
   mmt_rtn_v_ptr_t = ^mmt_rtn_v_t;
   mmt_rtn_v_t = record
     space0: array [0..139] of char;
     mem_lr: lr_ptr_t;                   { +140 }
     all_lr: lr_ptr_t;                   { +144 }
+    space148: array [148..226] of char;
+    f227: packed record                 { +227 }
+      b7: boolean;
+      has_async: boolean;               { .6 }
+      b5, b4, b3, b2, b1: boolean;
+      b0: boolean;                      { .0 }
+      end;
   end;
 
 var
@@ -113,11 +118,13 @@ var
                                           allocation) }
   mmt_active: extern mmt_token_ptr_t;   { +0xE0: the tokens the MMT_SEQ
                                           being built reads or writes }
-  mmt_scratch: extern univ_ptr;         { +0xE4: a scratch bit vector }
+  mmt_scratch: extern bv_ptr_t;         { +0xE4: the scratch bit vectors'
+                                          storage, the first of them }
   mmt_token_heap: extern mrh_$heap_t;   { +0xE8: the tokens' heap }
-  mmt_last_token: extern mmt_token_t;   { +0x100: a copy of the last
-                                          token made }
-  mmt_140: extern univ_ptr;             { +0x140: a bit vector of live
+  mmt_connector: extern mmt_token_t;    { +0x100: the MMT_SEQ connector
+                                          token (mmt_utils copies the
+                                          last token it makes into it) }
+  mmt_140: extern bv_ptr_t;             { +0x140: a bit vector of live
                                           ranges (mmt_utils: active on
                                           exit) }
   mmt_token_map: extern mmt_token_map_ptr_t;   { +0x1A8: the tokens by
@@ -169,7 +176,7 @@ procedure mmt_utils_$mmt_seq_add_tokens_from_instr(
 { MMT_UTILS_$MMT_SEQ_ADD_TOKENS_FROM_BV - 0x255A90, 0x74 bytes; called
   from mmt.  Frame 8:l; 12:b; 14:bw.  Result: D0 (callers: D0b5). }
 function mmt_utils_$mmt_seq_add_tokens_from_bv(
-    bv: univ_ptr;
+    bv: bv_ptr_t;
     read: boolean;
     written: boolean): boolean; options(val_param); extern;
 
@@ -177,5 +184,5 @@ function mmt_utils_$mmt_seq_add_tokens_from_bv(
   mmt.  Frame 8:l; 12:al; 16:l.  Result: D0 (callers: D0b2). }
 function mmt_utils_$can_combine_mmt_seqs(
     seq: instr_ptr_t;
-    bv: univ_ptr;
-    live: univ_ptr): boolean; options(val_param); extern;
+    bv: bv_ptr_t;
+    live: bv_ptr_t): boolean; options(val_param); extern;

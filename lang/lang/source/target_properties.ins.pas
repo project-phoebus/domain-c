@@ -70,7 +70,13 @@ type
     p_90: integer32;                    { +0x90 }
     p_94: array [0..23] of char;        { +0x94 }
     p_ac: univ_ptr;                     { +0xAC: into at_lib_dsc }
-    p_b0: array [0..19] of char;        { +0xB0 }
+    p_b0: array [0..13] of char;        { +0xB0 }
+    p_be: boolean;                      { +0xBE: a boolean (tst.b, bpl:
+                                          cc.a88k's lst and asm print a
+                                          literal pool displacement as a
+                                          number when set, as an address
+                                          otherwise) }
+    p_bf: array [0..4] of char;         { +0xBF }
     p_c4: array [0..2] of integer32;    { +0xC4: three limits }
     user_mode: target_properties_$mode_t;    { +0xD0 }
     p_fa: array [0..5] of char;         { +0xFA }

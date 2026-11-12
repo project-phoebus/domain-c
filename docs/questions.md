@@ -1332,7 +1332,60 @@ revisited.
    or SUB's operand 1 the immediate (or a register), 2 the source, 3
    the result; condition codes the last operand.  backend.ins.pas
    documents none of this yet (to confirm against lir when translated).
-161. Translator PC2: **question 157 is answered: not the source's.**  The
+161. Translator PB, lst.pas: the named sections' initializers.  lst
+   includes the generated instr_mnemonic.init and
+   instr_mnemonic_length.init (and asm instr_assembly.init, lir
+   instr_attributes.init), but backend.ins.pas declares the sections'
+   variables (`var (instruction_mnemonic) instruction_mnemonic: ...')
+   for every unit, and dpc refuses a second declaration with the
+   initializer.  The .init files hold a TODO; the data are recoverable
+   (the opcode enumeration's identifiers, the sections' bytes).  How
+   should the sections be shared: (a) the .init files declare the
+   initialized variables and backend.ins.pas's declarations move behind
+   an `%if' the including units set, (b) backend.ins.pas declares them
+   `extern' and the including units `define' them with the
+   initializers (if dpc accepts an initializer on a defined variable),
+   or (c) leave them uninitialized in the translation?
+162. Translator PB, lst.pas: the -PRASM listing writes the integer
+   registers as ".n" (`move.w #0x2E00' before the number), the singles
+   ".FSn", the doubles ".FDn", and register 30 of kind ip_reg_like as
+   ".PC" (classic "PC"); taken from the image as they are, though
+   ".n" for a register looks odd (the PRISM assembler's syntax is not
+   known here).
+163. Translator PB, bin.pas: bin opens bug_check.ins.pas after
+   coff_dst.ins.pas (its .blocks list), but backend.ins.pas, opened
+   earlier, declares instr_bug_check and the phase_ routines with
+   bug_check.ins.pas's types (bug_check_$string_t, bug_check_$arg_t), so
+   dpc cannot compile the unit in that order; bin.pas opens bug_check
+   before at_base.ins.pas.  Apollo's backend.ins.pas must have declared
+   those headings without bug_check's types (or bin did not see them):
+   should backend.ins.pas's three headings use types of their own
+   (univ base types) so that the include order can be the image's?
+164. Translator PA, utils.pas: look_for_path (cc.a88k 0x286564) answers
+   from target_bb's mark146 (`movea.l (44,A5),A0; move.l (146,A0),D0;
+   cmp.l (56,A5),D0'), not from the block it is asked about, though
+   it marks the blocks it visits; it looks like a slip in the
+   original (the memo never hits), kept as the image has it.
+165. Translator PA, utils.pas: utils_$put_lts_on_final_list sets the
+   segment's first_in_bb (+3 bit 6) with final (`or.w #0x50,(2,A2)'),
+   while utils_$get_new_lts and utils_$excise_lts_cleanly keep bit 6
+   as "the live range's first segment in its block" (complex live
+   ranges only).  The name first_in_bb may be wrong; kept by offset
+   otherwise.
+166. Translator PA, backend.ins.pas: an lts's +4 (MM's def) is the
+   head of the operands that refer to the segment (the definition
+   first, then the readers, chained through the operands' link):
+   renamed refs, and xtp's uses follow.  Its +44 holds either the
+   final segment that reaches an exposed segment or (for a join
+   birthpoint's segment) the list of the join's inputs; it is a
+   univ_ptr, cast where used.
+167. Translator PA: call_conv.pas (batch A's third unit) was skipped for
+   utils.pas, whose 40 cross-unit headings batches B and C call;
+   at_call_conv (0x1B3C bytes) needs the conventions record and the
+   IL type nodes' layouts.  It remains, with lir_utils and the rest of
+   batch A.
+
+168. Translator PC2: **question 157 is answered: not the source's.**  The
    three tr_utils messages are whole in the image ('TR_UTILS_$relative_
    instr_position: instrs not in same bb%$', 'TR_UTILS_$separate_
    partitions: LTS was active on exit%$', 'TR_UTILS_$move_add_to_new_bb:
@@ -1343,14 +1396,12 @@ revisited.
    text; every '...%$' literal under lang2/source/be_com was checked
    against the binary's bytes.  (Worth a check elsewhere: any translator
    who read constants from a compacted disassembly.)
-162. Translator PC2, mmt_utils: bv_$and_to's fourth parameter (read off
-   the frame as integer32) is the bit vector the result goes to
-   (insert_mmt_seqs passes mmt's scratch vector): mmt_utils passes
-   integer32(bv) until bv's translator narrows the heading (and
-   bv_$find_next_val's result, read as a longword by 13 callers, is
-   declared a word).  Also: the memory model keeps its own numbers in
-   fields other phases use for something else (a live range's +40 and
-   +52, a segment's +36 and +40, an instruction's +16), so
-   mmt.pvt.pas reads them through unit-local views (mmt_lr_v_t,
-   mmt_lts_v_t, mmt_bb_v_t, mmt_rtn_v_t) rather than naming them in
-   backend.ins.pas; fold them in when the records settle?
+169. Translator PC2, mmt_utils and mmt: the memory model keeps its
+   own data in fields other phases use for something else or batch A
+   has not named: a live range's +8 (a byte: kind 28 made 27), +44 (the
+   memory operands referring to it), +52 (its token, or the segment
+   being filled in); a segment's +40 (its last reader, lts_t.l40); the
+   routine's +140, +144 (the memory live ranges) and +227 bits 6, 0; an
+   instruction's +16 (its descriptor, instr_t.l16).  mmt.pvt.pas reads
+   them through unit-local views (mmt_lr_v_t, mmt_rtn_v_t) rather than
+   naming them in backend.ins.pas: for batch A to name.
