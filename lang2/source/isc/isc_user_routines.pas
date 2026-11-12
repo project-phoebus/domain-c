@@ -1074,7 +1074,7 @@ begin
   if sol^.kind = 12 then
     available_precision_function := sol^.f76.b77
   else
-    available_precision_function := sol^.inherited^.precision;
+    available_precision_function := sol^.inherited^.fetch_precision;
 end;
 
 { is_all_zeroes - whether node is a set constant (156) whose words are
@@ -2397,7 +2397,7 @@ var
   s: isc_solution_ptr_t;
 begin
   inh := new_inherited_attributes(isc_heap, sym);
-  inh^.precision := precision;
+  inh^.fetch_precision := precision;
   s := new_solution(isc_heap, 5, 0, inh, sym, 176);
   s^.bits_known := known;
   s^.bits_trusted := trusted;
@@ -2430,7 +2430,7 @@ begin
   d := v;                              { fpp_$eslv: dpc gap 6 }
   c := rlcontk(d);
   inh := new_inherited_attributes(isc_heap, c);
-  inh^.precision := 32;
+  inh^.fetch_precision := 32;
   s := new_solution(isc_heap, 5, 0, inh, c, 93);
   s^.bits_known := 0;
   s^.bits_trusted := 3;
@@ -2460,7 +2460,7 @@ begin
   t := d;                              { a double copied: dpc gap 7 }
   c := dpcontk(t);
   inh := new_inherited_attributes(isc_heap, c);
-  inh^.precision := 64;
+  inh^.fetch_precision := 64;
   s := new_solution(isc_heap, 5, 0, inh, c, 70);
   s^.bits_known := 0;
   s^.bits_trusted := 7;
@@ -3910,13 +3910,13 @@ begin
                 or (a = arith_address)) then
           p := 32;
       inh := new_inherited_attributes(isc_heap, c);
-      inh^.top := eval^.xp[3];
-      inh^.precision := p;
-      inh^.stmt := parent^.xp[3];
-      inh^.f38.arith := ord(arithmetic_from_il_node(c));
-      inh^.available := p;
-      inh^.pos.line := eval^.xw[10];
-      inh^.pos.stmt := rshft(eval^.st_l42 & 16#FFFF00, 8);
+      inh^.exception_frame := eval^.xp[3];
+      inh^.fetch_precision := p;
+      inh^.original_il := parent^.xp[3];
+      inh^.f38.required_arithmetic := ord(arithmetic_from_il_node(c));
+      inh^.required_precision := p;
+      inh^.pos.source_line_number := eval^.xw[10];
+      inh^.pos.stmt_number := rshft(eval^.st_l42 & 16#FFFF00, 8);
       isc_$process_statement(c, inh);
     end
     else if isc_user_routines_356 or isc_user_routines_354 then begin

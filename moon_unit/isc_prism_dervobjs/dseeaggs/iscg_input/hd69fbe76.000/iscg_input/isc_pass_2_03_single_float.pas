@@ -94,7 +94,7 @@ procedure transform_306_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited,
       isc_tool_generated_readonly_tables.opcode_single[il$t(subject^.w98)],
@@ -110,11 +110,11 @@ procedure transform_307_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited,
       isc_tool_generated_readonly_tables.opcode_double[il$t(subject^.w98)],
@@ -144,7 +144,7 @@ var
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     debug_lir_$simple_instruction(result.inherited,
@@ -195,7 +195,7 @@ var
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited,
       p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[1108 + p2_node_ptr_t(subject^.sym)^.w[13]],
@@ -240,7 +240,7 @@ begin
   t2 := lir_$new_label;
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$cmps), 0,
       subject^.children[2], subject^.children[1], nil);
@@ -268,7 +268,7 @@ begin
   t2 := lir_$new_label;
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$cmps), 0,
       subject^.children[2], subject^.children[1], nil);
@@ -313,13 +313,13 @@ begin
   t9 := create_solution_for_fp_reg;
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$tsts), 0,
       subject^.children[1], nil, nil);
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   t10 := address_mode_for_single_value(real(16#3F000000));
   debug_lir_$load_instruction(result.inherited, ord(opc$loads), 0, t10,
@@ -328,7 +328,7 @@ begin
   debug_lir_$branch_instruction(result.inherited, t2, ord(opc$fbge), 0);
   if ord(result.space136[138]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   t11 := address_mode_for_single_value(real(-16#35000000));
   debug_lir_$load_instruction(result.inherited, ord(opc$loads), 0, t11,
@@ -349,7 +349,7 @@ begin
   debug_lir_$label(result.inherited, t2);
   if ord(result.space136[139]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   t12 := address_mode_for_single_value(real(16#4B000000));
   debug_lir_$load_instruction(result.inherited, ord(opc$loads), 0, t12,
@@ -400,13 +400,13 @@ begin
   t8 := create_solution_for_fp_reg;
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$tsts), 0,
       subject^.children[1], nil, nil);
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   t9 := address_mode_for_single_value(real(16#3F000000));
   debug_lir_$load_instruction(result.inherited, ord(opc$loads), 0, t9,
@@ -415,7 +415,7 @@ begin
   debug_lir_$branch_instruction(result.inherited, t2, ord(opc$fbge), 0);
   if ord(result.space136[138]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   t10 := address_mode_for_single_value(real(-16#35000000));
   debug_lir_$load_instruction(result.inherited, ord(opc$loads), 0, t10,
@@ -436,7 +436,7 @@ begin
   debug_lir_$label(result.inherited, t2);
   if ord(result.space136[139]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   t11 := address_mode_for_single_value(real(16#4B000000));
   debug_lir_$load_instruction(result.inherited, ord(opc$loads), 0, t11,
@@ -465,10 +465,11 @@ procedure transform_315_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   pattern_match_error(8, il$t(subject^.w98),
-      p2_node_ptr_t(subject^.sym)^.w[13], subject^.inherited^.pos.line);
+      p2_node_ptr_t(subject^.sym)^.w[13],
+      subject^.inherited^.pos.source_line_number);
   debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
       isc_solution_ptr_t(lir_3d60[0]), solution, nil);
 end;
@@ -482,11 +483,11 @@ procedure transform_316_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited,
       p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[596 + p2_node_ptr_t(subject^.sym)^.w[13]],
@@ -507,11 +508,11 @@ begin
   t2 := lir_$new_label;
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$cmpd), 0,
       subject^.children[2], subject^.children[1], nil);
@@ -539,11 +540,11 @@ begin
   t2 := lir_$new_label;
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$cmpd), 0,
       subject^.children[2], subject^.children[1], nil);
@@ -588,17 +589,17 @@ begin
   t9 := create_solution_for_fp_reg_pair;
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$tstd), 0,
       subject^.children[1], nil, nil);
   if ord(result.space136[138]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   t10 := address_mode_for_double_value(0.5);
   debug_lir_$load_instruction(result.inherited, ord(opc$loadd), 0, t10,
@@ -607,7 +608,7 @@ begin
   debug_lir_$branch_instruction(result.inherited, t2, ord(opc$fbge), 0);
   if ord(result.space136[139]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   t11 := address_mode_for_double_value(-4503599627370496.0);
   debug_lir_$load_instruction(result.inherited, ord(opc$loadd), 0, t11,
@@ -628,7 +629,7 @@ begin
   debug_lir_$label(result.inherited, t2);
   if ord(result.space136[140]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   t12 := address_mode_for_double_value(4503599627370496.0);
   debug_lir_$load_instruction(result.inherited, ord(opc$loadd), 0, t12,
@@ -679,17 +680,17 @@ begin
   t8 := create_solution_for_fp_reg_pair;
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$tstd), 0,
       subject^.children[1], nil, nil);
   if ord(result.space136[138]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   t9 := address_mode_for_double_value(0.5);
   debug_lir_$load_instruction(result.inherited, ord(opc$loadd), 0, t9,
@@ -698,7 +699,7 @@ begin
   debug_lir_$branch_instruction(result.inherited, t2, ord(opc$fbge), 0);
   if ord(result.space136[139]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   t10 := address_mode_for_double_value(-4503599627370496.0);
   debug_lir_$load_instruction(result.inherited, ord(opc$loadd), 0, t10,
@@ -719,7 +720,7 @@ begin
   debug_lir_$label(result.inherited, t2);
   if ord(result.space136[140]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   t11 := address_mode_for_double_value(4503599627370496.0);
   debug_lir_$load_instruction(result.inherited, ord(opc$loadd), 0, t11,
@@ -748,14 +749,15 @@ procedure transform_321_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   pattern_match_error(8, il$t(subject^.w98),
-      p2_node_ptr_t(subject^.sym)^.w[13], subject^.inherited^.pos.line);
+      p2_node_ptr_t(subject^.sym)^.w[13],
+      subject^.inherited^.pos.source_line_number);
   debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0,
       isc_solution_ptr_t(lir_3c60[0]), solution, nil);
 end;
@@ -768,7 +770,7 @@ procedure transform_322_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$negs), 0,
       subject^.children[1], solution, nil);
@@ -783,11 +785,11 @@ procedure transform_323_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$negd), 0,
       subject^.children[1], solution, nil);

@@ -156,7 +156,7 @@ procedure transform_347_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   pass_2_isc_call(isc_node_ptr_t(subject^.sym),
       p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,

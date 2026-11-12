@@ -125,10 +125,11 @@ end;
   nested deeper than the routine being compiled and that routine's
   attribute bit 6 is set; then the inputs' solutions, the routine's
   (a local routine, an address mode or an integer register, under
-  attributes with b5 set), the hidden temporary's (an integer
-  register) for an ISC_FUNC_CALL_HIDDEN_TEMP, and the outputs'; each
-  under new attributes carrying the call, inh's top, stmt, pos and
-  preserve, and preserved when inh asks.
+  attributes with immediate_parent_wants_lvalue set), the hidden
+  temporary's (an integer register) for an ISC_FUNC_CALL_HIDDEN_TEMP,
+  and the outputs'; each under new attributes carrying the call, inh's
+  exception_frame, original_il, pos and inside_a_cse, and preserved
+  when inh asks.
 
   0x0BA006, 0x2DA bytes: node 8, rclass a word at 12, inh 14, depth a
   word at 18 (the generated actions pass 4 and 0); `tst.l (76,A0); bne'
@@ -182,58 +183,58 @@ begin
 
     { the inputs }
     inh2 := new_inherited_attributes(isc_heap, node^.cl_inputs);
-    inh2^.call := call;
-    inh2^.top := inh^.top;
-    inh2^.f38.preserve := inh^.f38.preserve;
-    inh2^.stmt := inh^.stmt;
+    inh2^.call_instruction_ptr := call;
+    inh2^.exception_frame := inh^.exception_frame;
+    inh2^.f38.inside_a_cse := inh^.f38.inside_a_cse;
+    inh2^.original_il := inh^.original_il;
     inh2^.pos := inh^.pos;
     list := apply_pass_1_and_choose_to_list(node^.cl_inputs, inh2);
-    if inh^.f38.preserve then
+    if inh^.f38.inside_a_cse then
       list := solution_list$preserve(list);
     node^.cl_input_solutions := list;
 
     { the routine }
     inh2 := new_inherited_attributes(isc_heap, node^.cl_routine);
-    inh2^.call := call;
-    inh2^.top := inh^.top;
-    inh2^.f38.b5 := true;
-    inh2^.f38.preserve := inh^.f38.preserve;
-    inh2^.stmt := inh^.stmt;
+    inh2^.call_instruction_ptr := call;
+    inh2^.exception_frame := inh^.exception_frame;
+    inh2^.f38.immediate_parent_wants_lvalue := true;
+    inh2^.f38.inside_a_cse := inh^.f38.inside_a_cse;
+    inh2^.original_il := inh^.original_il;
     inh2^.pos := inh^.pos;
     permissible := [solution$local_routine, solution$address_mode,
                     solution$ip_reg];
     depth1 := depth + 1;
     sols := pass_1(node^.cl_routine, inh2, depth1, permissible);
     sol := choose_one_solution(sols);
-    if inh^.f38.preserve then
+    if inh^.f38.inside_a_cse then
       sol := preserve_solution(sol);
     node^.cl_solution := sol;
 
     { the hidden temporary }
     if node^.tr_op = 32 then begin
       inh2 := new_inherited_attributes(isc_heap, node^.cl_temp);
-      inh2^.call := call;
-      inh2^.top := inh^.top;
-      inh2^.f38.preserve := inh^.f38.preserve;
-      inh2^.stmt := inh^.stmt;
+      inh2^.call_instruction_ptr := call;
+      inh2^.exception_frame := inh^.exception_frame;
+      inh2^.f38.inside_a_cse := inh^.f38.inside_a_cse;
+      inh2^.original_il := inh^.original_il;
       inh2^.pos := inh^.pos;
       permissible := [solution$ip_reg];
       sols := pass_1(node^.cl_temp, inh2, depth1, permissible);
       sol := choose_one_solution(sols);
-      if inh^.f38.preserve then
+      if inh^.f38.inside_a_cse then
         sol := preserve_solution(sol);
       node^.cl_temp_solution := sol;
     end;
 
     { the outputs }
     inh2 := new_inherited_attributes(isc_heap, node^.cl_outputs);
-    inh2^.call := call;
-    inh2^.top := inh^.top;
-    inh2^.f38.preserve := inh^.f38.preserve;
-    inh2^.stmt := inh^.stmt;
+    inh2^.call_instruction_ptr := call;
+    inh2^.exception_frame := inh^.exception_frame;
+    inh2^.f38.inside_a_cse := inh^.f38.inside_a_cse;
+    inh2^.original_il := inh^.original_il;
     inh2^.pos := inh^.pos;
     list := apply_pass_1_and_choose_to_list(node^.cl_outputs, inh2);
-    if inh^.f38.preserve then
+    if inh^.f38.inside_a_cse then
       list := solution_list$preserve(list);
     node^.cl_output_solutions := list;
   end;

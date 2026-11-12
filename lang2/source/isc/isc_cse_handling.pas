@@ -205,9 +205,10 @@ end;
 { pass_1_cse_parent_ob - pass 1 of a CSE's tree under inh (once: tree
   is a 138 when done): the tree's solutions among an address mode, the
   floating registers, an integer register and a 32-bit literal, under
-  inh's copy with the tree's arithmetic, precision (available and
-  precision both precision_from_il_node's), statement top, line and
-  index, b5 clear and preserve set (depth 0); one chosen
+  inh's copy with the tree's arithmetic, precision (required_precision
+  and fetch_precision both precision_from_il_node's), statement
+  exception_frame, line and index, immediate_parent_wants_lvalue clear
+  and inside_a_cse set (depth 0); one chosen
   (choose_one_cse_solution), preserved and kept as parent's
   chosen_solution, and tree marked 138; bug_check with inh's line
   when none.
@@ -230,21 +231,21 @@ begin
   if tree^.kind <> 138 then begin
     inh2 := new_inherited_attributes(isc_heap, tree);
     inh2^ := inh^;
-    inh2^.f38.arith := ord(arithmetic_from_il_node(tree));
-    inh2^.available := precision_from_il_node(tree);
-    inh2^.precision := precision_from_il_node(tree);
-    inh2^.top := tree^.tr_top^.st_top;
-    inh2^.pos.line := tree^.tr_top^.st_line;
-    inh2^.pos.stmt := rshft(tree^.tr_top^.st_l42 & 16#FFFF00, 8);
-    inh2^.f38.b5 := false;
-    inh2^.f38.preserve := true;
+    inh2^.f38.required_arithmetic := ord(arithmetic_from_il_node(tree));
+    inh2^.required_precision := precision_from_il_node(tree);
+    inh2^.fetch_precision := precision_from_il_node(tree);
+    inh2^.exception_frame := tree^.tr_top^.st_top;
+    inh2^.pos.source_line_number := tree^.tr_top^.st_line;
+    inh2^.pos.stmt_number := rshft(tree^.tr_top^.st_l42 & 16#FFFF00, 8);
+    inh2^.f38.immediate_parent_wants_lvalue := false;
+    inh2^.f38.inside_a_cse := true;
     sols := pass_1(tree, inh2, 0,
         [solution$address_mode, solution$fp_reg, solution$fp_reg_pair,
          solution$fp_reg_quad, solution$ip_reg, solution$literal_32_bits]);
     s := choose_one_cse_solution(sols);
     if s = nil then
       bug_check('ISC: source line %wd: pass_1_cse_parent_ob: chosen_solution is nil, meaning cse has not yet been coded.%$',
-          inh^.pos.line)
+          inh^.pos.source_line_number)
     else begin
       s := preserve_solution(s);
       parent^.cp_chosen_solution := s;
@@ -636,21 +637,21 @@ begin
   if tree^.kind <> 138 then begin
     inh2 := new_inherited_attributes(isc_heap, tree);
     inh2^ := inh^;
-    inh2^.f38.arith := ord(arithmetic_from_il_node(tree));
-    inh2^.available := precision_from_il_node(tree);
-    inh2^.precision := precision_from_il_node(tree);
-    inh2^.top := tree^.tr_top^.st_top;
-    inh2^.pos.line := tree^.tr_top^.st_line;
-    inh2^.pos.stmt := rshft(tree^.tr_top^.st_l42 & 16#FFFF00, 8);
-    inh2^.f38.b5 := false;
-    inh2^.f38.preserve := true;
+    inh2^.f38.required_arithmetic := ord(arithmetic_from_il_node(tree));
+    inh2^.required_precision := precision_from_il_node(tree);
+    inh2^.fetch_precision := precision_from_il_node(tree);
+    inh2^.exception_frame := tree^.tr_top^.st_top;
+    inh2^.pos.source_line_number := tree^.tr_top^.st_line;
+    inh2^.pos.stmt_number := rshft(tree^.tr_top^.st_l42 & 16#FFFF00, 8);
+    inh2^.f38.immediate_parent_wants_lvalue := false;
+    inh2^.f38.inside_a_cse := true;
     sols := pass_1(tree, inh2, 0,
         [solution$address_mode, solution$fp_reg, solution$fp_reg_pair,
          solution$fp_reg_quad, solution$ip_reg, solution$literal_32_bits]);
     s := choose_one_cse_solution(sols);
     if s = nil then
       bug_check('ISC: source line %wd: pass_1_cse_use_ob: chosen_solution is nil, meaning cse has not yet been coded.%$',
-          inh^.pos.line)
+          inh^.pos.source_line_number)
     else begin
       parent := map_cse_use_ob_to_cse_parent_ob(use);
       s := preserve_solution(s);

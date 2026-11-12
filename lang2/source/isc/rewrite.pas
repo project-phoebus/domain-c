@@ -491,9 +491,9 @@ begin
     line := node^.line;
   end
   else begin
-    top := inh^.top;
-    stmt := inh^.pos.stmt;
-    line := inh^.pos.line;
+    top := inh^.exception_frame;
+    stmt := inh^.pos.stmt_number;
+    line := inh^.pos.source_line_number;
   end;
   if at_backend_switches.sw10 then begin
     vfmt_$write('REWRITE -- original tree for source line %wd:%.', line);

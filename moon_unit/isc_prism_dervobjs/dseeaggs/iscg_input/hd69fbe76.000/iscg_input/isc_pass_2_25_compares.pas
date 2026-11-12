@@ -598,7 +598,7 @@ begin
   t1 := create_solution_for_ip_reg;
   t2 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t4 := subject^.inherited^.l16;
+    t4 := subject^.inherited^.conditional_target;
   end else begin
     t3 := lir_$new_label;
     t4 := integer32(t3);
@@ -679,7 +679,7 @@ begin
       end
       else if ord(result.space136[140]) <> 12 then begin
         pattern_match_error(11, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
     end else begin
       t6 := create_solution_for_ip_reg;
@@ -756,7 +756,7 @@ begin
       end
       else if ord(result.space136[142]) <> 12 then begin
         pattern_match_error(11, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
     end;
   end
@@ -836,7 +836,7 @@ begin
       end
       else if ord(result.space136[145]) <> 12 then begin
         pattern_match_error(11, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
     end else begin
       t9 := create_solution_for_ip_reg;
@@ -913,7 +913,7 @@ begin
       end
       else if ord(result.space136[147]) <> 12 then begin
         pattern_match_error(11, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
     end;
   end
@@ -983,7 +983,7 @@ begin
   end
   else if ord(result.space136[148]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.l16 := t4;
 end;
@@ -1030,7 +1030,7 @@ var
   t33: isc_solution_ptr_t;
 begin
   if ord(result.space136[136]) = 1 then begin
-    t2 := subject^.inherited^.l16;
+    t2 := subject^.inherited^.conditional_target;
   end else begin
     t1 := lir_$new_label;
     t2 := integer32(t1);
@@ -1282,7 +1282,7 @@ begin
     end
     else if ord(result.space136[138]) <> 12 then begin
       pattern_match_error(11, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end else begin
     t33 := create_solution_for_ip_reg;
@@ -1357,7 +1357,7 @@ begin
     end
     else if ord(result.space136[159]) <> 12 then begin
       pattern_match_error(11, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end;
   result.l16 := t2;
@@ -1410,7 +1410,7 @@ var
 begin
   t1 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t3 := subject^.inherited^.l16;
+    t3 := subject^.inherited^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
@@ -1685,7 +1685,7 @@ begin
   end
   else if ord(result.space136[140]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.l16 := t3;
 end;
@@ -1737,7 +1737,7 @@ var
 begin
   t1 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t3 := subject^.inherited^.l16;
+    t3 := subject^.inherited^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
@@ -2013,7 +2013,7 @@ begin
   end
   else if ord(result.space136[140]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.l16 := t3;
 end;
@@ -2070,7 +2070,7 @@ var
 begin
   t1 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t3 := subject^.inherited^.l16;
+    t3 := subject^.inherited^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
@@ -2376,7 +2376,7 @@ begin
   end
   else if ord(result.space136[144]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.l16 := t3;
 end;
@@ -2411,7 +2411,7 @@ begin
   t1 := 31 - integer32(result.fields[1]);
   t2 := make_bit_mask_1(integer32(result.fields[1]), 0);
   if ord(result.space136[136]) = 1 then begin
-    t4 := subject^.inherited^.l16;
+    t4 := subject^.inherited^.conditional_target;
   end else begin
     t3 := lir_$new_label;
     t4 := integer32(t3);
@@ -2545,7 +2545,7 @@ begin
   end
   else if ord(result.space136[141]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.l16 := t4;
 end;
@@ -2562,7 +2562,7 @@ var
   t3: isc_solution_ptr_t;
 begin
   if ord(result.space136[136]) = 1 then begin
-    t2 := subject^.inherited^.l16;
+    t2 := subject^.inherited^.conditional_target;
   end else begin
     t1 := lir_$new_label;
     t2 := integer32(t1);
@@ -2644,7 +2644,7 @@ begin
     end
     else if ord(result.space136[138]) <> 12 then begin
       pattern_match_error(11, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end else begin
     t3 := create_solution_for_ip_reg;
@@ -2719,7 +2719,7 @@ begin
     end
     else if ord(result.space136[139]) <> 12 then begin
       pattern_match_error(11, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end;
   result.l16 := t2;
@@ -2758,7 +2758,7 @@ begin
   t1 := create_solution_for_ip_reg;
   t2 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t4 := subject^.inherited^.l16;
+    t4 := subject^.inherited^.conditional_target;
   end else begin
     t3 := lir_$new_label;
     t4 := integer32(t3);
@@ -2939,7 +2939,7 @@ begin
   end
   else if ord(result.space136[151]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.l16 := t4;
 end;
@@ -3122,7 +3122,7 @@ begin
     t14 := 0;
   end;
   if ord(result.space136[136]) = 1 then begin
-    t16 := subject^.inherited^.l16;
+    t16 := subject^.inherited^.conditional_target;
   end else begin
     t15 := lir_$new_label;
     t16 := integer32(t15);
@@ -3496,7 +3496,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
     end else begin
       if t26^.obj_w_name <> nil then begin
@@ -3624,7 +3624,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[178]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t46, find_well_known_literal_solution(16), t47);
@@ -3636,12 +3636,12 @@ begin
         if ord(result.space136[179]) <> 1 then begin
           if ord(result.space136[180]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[181]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -3699,12 +3699,12 @@ begin
         if ord(result.space136[187]) <> 1 then begin
           if ord(result.space136[188]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[189]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -3763,7 +3763,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
     end;
     if ord(result.space136[195]) = 1 then begin
@@ -4185,7 +4185,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
     end else begin
       if t72^.obj_w_name <> nil then begin
@@ -4313,7 +4313,7 @@ begin
                 subject^.children[2]^.bits_trusted);
           end;
           if ord(result.space136[242]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t92, find_well_known_literal_solution(16), t93);
@@ -4325,12 +4325,12 @@ begin
         if ord(result.space136[243]) <> 1 then begin
           if ord(result.space136[244]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[2]^.inherited^.pos.line);
+                subject^.children[2]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[245]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -4388,12 +4388,12 @@ begin
         if ord(result.space136[251]) <> 1 then begin
           if ord(result.space136[252]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[2]^.inherited^.pos.line);
+                subject^.children[2]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[253]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -4452,7 +4452,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
     end;
     if ord(result.space136[259]) = 1 then begin
@@ -4566,7 +4566,7 @@ begin
   end
   else if ord(result.space136[264]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.l16 := t16;
 end;
@@ -4636,7 +4636,7 @@ begin
     t12 := 0;
   end;
   if ord(result.space136[136]) = 1 then begin
-    t14 := subject^.inherited^.l16;
+    t14 := subject^.inherited^.conditional_target;
   end else begin
     t13 := lir_$new_label;
     t14 := integer32(t13);
@@ -4802,7 +4802,7 @@ begin
         end
         else if ord(result.space136[149]) <> 12 then begin
           pattern_match_error(11, il$t(subject^.w98), 0,
-              subject^.inherited^.pos.line);
+              subject^.inherited^.pos.source_line_number);
         end;
         debug_lir_$branch_instruction(result.inherited, t5, ord(opc$jump), 0);
       end;
@@ -4872,7 +4872,7 @@ begin
     end
     else if ord(result.space136[151]) <> 12 then begin
       pattern_match_error(11, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     debug_lir_$branch_instruction(result.inherited, univ_ptr(t14),
         ord(opc$jump), 0);
@@ -4973,7 +4973,7 @@ begin
         end
         else if ord(result.space136[156]) <> 12 then begin
           pattern_match_error(11, il$t(subject^.w98), 0,
-              subject^.inherited^.pos.line);
+              subject^.inherited^.pos.source_line_number);
         end;
         debug_lir_$branch_instruction(result.inherited, t5, ord(opc$jump), 0);
       end;
@@ -5043,7 +5043,7 @@ begin
     end
     else if ord(result.space136[158]) <> 12 then begin
       pattern_match_error(11, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     debug_lir_$branch_instruction(result.inherited, t5,
         p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[96 + p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[64 + p2_locals_ptr_t(addr(result))^.w[176]]],
@@ -5147,7 +5147,7 @@ begin
         end
         else if ord(result.space136[163]) <> 12 then begin
           pattern_match_error(11, il$t(subject^.w98), 0,
-              subject^.inherited^.pos.line);
+              subject^.inherited^.pos.source_line_number);
         end;
         debug_lir_$branch_instruction(result.inherited, t5, ord(opc$jump), 0);
       end;
@@ -5217,7 +5217,7 @@ begin
     end
     else if ord(result.space136[165]) <> 12 then begin
       pattern_match_error(11, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     debug_lir_$branch_instruction(result.inherited, univ_ptr(t14),
         ord(opc$jump), 0);
@@ -5305,7 +5305,7 @@ begin
   t14 := create_solution_for_ip_reg;
   t15 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t17 := subject^.inherited^.l16;
+    t17 := subject^.inherited^.conditional_target;
   end else begin
     t16 := lir_$new_label;
     t17 := integer32(t16);
@@ -5460,7 +5460,7 @@ begin
         end
         else if ord(result.space136[146]) <> 12 then begin
           pattern_match_error(11, il$t(subject^.w98), 0,
-              subject^.inherited^.pos.line);
+              subject^.inherited^.pos.source_line_number);
         end;
         debug_lir_$branch_instruction(result.inherited, t1, ord(opc$jump), 0);
       end;
@@ -5530,7 +5530,7 @@ begin
     end
     else if ord(result.space136[148]) <> 12 then begin
       pattern_match_error(11, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     debug_lir_$branch_instruction(result.inherited, univ_ptr(t17),
         ord(opc$jump), 0);
@@ -5648,7 +5648,7 @@ begin
     t11 := 0;
   end;
   if ord(result.space136[136]) = 1 then begin
-    t13 := subject^.inherited^.l16;
+    t13 := subject^.inherited^.conditional_target;
   end else begin
     t12 := lir_$new_label;
     t13 := integer32(t12);
@@ -6014,7 +6014,7 @@ begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0, nil,
         nil, nil);
     pattern_match_error(10, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
       integer32(result.fields[0]), t1,
@@ -6381,7 +6381,7 @@ begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0, nil,
         nil, nil);
     pattern_match_error(10, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
       integer32(result.fields[0]), t3,
@@ -6455,7 +6455,7 @@ begin
   end
   else if ord(result.space136[179]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.l16 := t13;
 end;
@@ -6473,7 +6473,7 @@ var
 begin
   t1 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t3 := subject^.inherited^.l16;
+    t3 := subject^.inherited^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
@@ -6548,7 +6548,7 @@ begin
   end
   else if ord(result.space136[137]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.l16 := t3;
 end;
@@ -6566,7 +6566,7 @@ var
 begin
   t1 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t3 := subject^.inherited^.l16;
+    t3 := subject^.inherited^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
@@ -6640,7 +6640,7 @@ begin
   end
   else if ord(result.space136[137]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.l16 := t3;
 end;
@@ -6685,7 +6685,7 @@ begin
   t5 := create_solution_for_ip_reg;
   t6 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t8 := subject^.inherited^.l16;
+    t8 := subject^.inherited^.conditional_target;
   end else begin
     t7 := lir_$new_label;
     t8 := integer32(t7);
@@ -6806,7 +6806,7 @@ begin
   end
   else if ord(result.space136[142]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.l16 := t8;
 end;
@@ -6835,7 +6835,7 @@ begin
   t4 := lir_$new_label;
   t5 := make_bit_mask_1(1, 0);
   if ord(result.space136[136]) = 1 then begin
-    t7 := subject^.inherited^.l16;
+    t7 := subject^.inherited^.conditional_target;
   end else begin
     t6 := lir_$new_label;
     t7 := integer32(t6);
@@ -6947,7 +6947,7 @@ begin
   end
   else if ord(result.space136[142]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$label(result.inherited, t1);
   result.l16 := t7;
@@ -6998,7 +6998,7 @@ begin
   t8 := lir_$new_label;
   t9 := make_bit_mask_1(1, 0);
   if ord(result.space136[136]) = 1 then begin
-    t11 := subject^.inherited^.l16;
+    t11 := subject^.inherited^.conditional_target;
   end else begin
     t10 := lir_$new_label;
     t11 := integer32(t10);
@@ -7145,7 +7145,7 @@ begin
   end
   else if ord(result.space136[146]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$label(result.inherited, t1);
   result.l16 := t11;
@@ -7169,7 +7169,7 @@ begin
     t1 := p2_node_ptr_t(subject^.sym)^.w[14];
   end;
   if ord(result.space136[136]) = 1 then begin
-    t3 := subject^.inherited^.l16;
+    t3 := subject^.inherited^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
@@ -7210,10 +7210,10 @@ begin
   end;
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    t3 := subject^.inherited^.l16;
+    t3 := subject^.inherited^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
@@ -7256,10 +7256,10 @@ begin
   t4 := low_half_of_fp_reg_pair(subject^.children[2]);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    t6 := subject^.inherited^.l16;
+    t6 := subject^.inherited^.conditional_target;
   end else begin
     t5 := lir_$new_label;
     t6 := integer32(t5);
@@ -7308,10 +7308,10 @@ begin
   t4 := low_half_of_fp_reg_quad(subject^.children[2]);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    t6 := subject^.inherited^.l16;
+    t6 := subject^.inherited^.conditional_target;
   end else begin
     t5 := lir_$new_label;
     t6 := integer32(t5);
@@ -7404,7 +7404,7 @@ begin
   t13 := create_solution_for_ip_reg;
   t14 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t16 := subject^.inherited^.l16;
+    t16 := subject^.inherited^.conditional_target;
   end else begin
     t15 := lir_$new_label;
     t16 := integer32(t15);
@@ -7577,7 +7577,7 @@ begin
         end
         else if ord(result.space136[146]) <> 12 then begin
           pattern_match_error(11, il$t(subject^.w98), 0,
-              subject^.inherited^.pos.line);
+              subject^.inherited^.pos.source_line_number);
         end;
         debug_lir_$branch_instruction(result.inherited, t1, ord(opc$jump), 0);
       end;
@@ -7647,7 +7647,7 @@ begin
     end
     else if ord(result.space136[148]) <> 12 then begin
       pattern_match_error(11, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     debug_lir_$branch_instruction(result.inherited, univ_ptr(t16),
         ord(opc$jump), 0);
@@ -7743,7 +7743,7 @@ begin
   t15 := create_solution_for_ip_reg;
   t16 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t18 := subject^.inherited^.l16;
+    t18 := subject^.inherited^.conditional_target;
   end else begin
     t17 := lir_$new_label;
     t18 := integer32(t17);
@@ -7933,7 +7933,7 @@ begin
         end
         else if ord(result.space136[146]) <> 12 then begin
           pattern_match_error(11, il$t(subject^.w98), 0,
-              subject^.inherited^.pos.line);
+              subject^.inherited^.pos.source_line_number);
         end;
         debug_lir_$branch_instruction(result.inherited, t1, ord(opc$jump), 0);
       end;
@@ -8003,7 +8003,7 @@ begin
     end
     else if ord(result.space136[148]) <> 12 then begin
       pattern_match_error(11, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     debug_lir_$branch_instruction(result.inherited, univ_ptr(t18),
         ord(opc$jump), 0);
@@ -8074,7 +8074,7 @@ var
 begin
   t1 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t3 := subject^.inherited^.l16;
+    t3 := subject^.inherited^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
@@ -8157,7 +8157,7 @@ begin
   end
   else if ord(result.space136[138]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.l16 := t3;
 end;
@@ -8176,7 +8176,7 @@ var
 begin
   t1 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t3 := subject^.inherited^.l16;
+    t3 := subject^.inherited^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
@@ -8259,7 +8259,7 @@ begin
   end
   else if ord(result.space136[138]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.l16 := t3;
 end;
@@ -8332,7 +8332,7 @@ begin
   t14 := create_solution_for_ip_reg;
   t15 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t17 := subject^.inherited^.l16;
+    t17 := subject^.inherited^.conditional_target;
   end else begin
     t16 := lir_$new_label;
     t17 := integer32(t16);
@@ -8487,7 +8487,7 @@ begin
         end
         else if ord(result.space136[146]) <> 12 then begin
           pattern_match_error(11, il$t(subject^.w98), 0,
-              subject^.inherited^.pos.line);
+              subject^.inherited^.pos.source_line_number);
         end;
         debug_lir_$branch_instruction(result.inherited, t1, ord(opc$jump), 0);
       end;
@@ -8557,7 +8557,7 @@ begin
     end
     else if ord(result.space136[148]) <> 12 then begin
       pattern_match_error(11, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     debug_lir_$branch_instruction(result.inherited, univ_ptr(t17),
         ord(opc$jump), 0);
@@ -8654,7 +8654,7 @@ begin
   t15 := create_solution_for_ip_reg;
   t16 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t18 := subject^.inherited^.l16;
+    t18 := subject^.inherited^.conditional_target;
   end else begin
     t17 := lir_$new_label;
     t18 := integer32(t17);
@@ -8839,7 +8839,7 @@ begin
   t15 := create_solution_for_ip_reg;
   t16 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    t18 := subject^.inherited^.l16;
+    t18 := subject^.inherited^.conditional_target;
   end else begin
     t17 := lir_$new_label;
     t18 := integer32(t17);

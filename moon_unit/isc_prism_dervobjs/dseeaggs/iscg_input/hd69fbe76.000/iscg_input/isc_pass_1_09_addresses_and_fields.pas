@@ -1473,7 +1473,7 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.children[1]^.inherited^.precision <= 32 then begin
+  if subject.children[1]^.inherited^.fetch_precision <= 32 then begin
     if isc_user_routines_354 then begin
       write('Pattern 442 matched the semantics.');
       writeln;
@@ -1519,7 +1519,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 32) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((subject.children[1]^.inherited^.fetch_precision <> 32) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 443 matched the semantics.');
       writeln;
@@ -1565,7 +1565,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 64) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((subject.children[1]^.inherited^.fetch_precision <> 64) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 444 matched the semantics.');
       writeln;
@@ -1622,7 +1622,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 128) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((subject.children[1]^.inherited^.fetch_precision <> 128) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 445 matched the semantics.');
       writeln;
@@ -1638,11 +1638,11 @@ begin
       solution^.rule := 445;
       solution^.chain := addr(subject);
       t2 := make_expression_temporary(123,
-          subject.children[1]^.inherited^.precision);
+          subject.children[1]^.inherited^.fetch_precision);
       side_effect_set_var_$address_exposed(isc_node_ptr_t(t2));
       t3 := t2;
       solution^.fields[0] := address_mode_for_expression_temporary(t3,
-          subject.children[1]^.inherited^.precision, 0, 7);
+          subject.children[1]^.inherited^.fetch_precision, 0, 7);
       solution^.fields[1] := nil;
       solution^.fields[2] := nil;
       solution^.fields[3] := nil;
@@ -2309,21 +2309,21 @@ begin
       solution^.rule := 448;
       solution^.chain := addr(subject);
       t4 := make_expression_temporary(122,
-          subject.children[1]^.inherited^.precision);
+          subject.children[1]^.inherited^.fetch_precision);
       side_effect_set_var_$address_exposed(isc_node_ptr_t(t4));
       t5 := t4;
       solution^.fields[1] := t5;
       solution^.fields[0] := address_mode_for_expression_temporary(t5,
-          subject.children[1]^.inherited^.precision, 0,
+          subject.children[1]^.inherited^.fetch_precision, 0,
           p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + p2_node_ptr_t(subject.sym)^.w[13]]);
-      p1_int_fields_ptr_t(addr(solution^))^.i[2] := subject.children[1]^.inherited^.precision div 8;
+      p1_int_fields_ptr_t(addr(solution^))^.i[2] := subject.children[1]^.inherited^.fetch_precision div 8;
       p1_int_fields_ptr_t(addr(solution^))^.i[3] := 0;
       t6 := make_bit_mask_1(16, 0);
       solution^.fields[4] := nil;
       t7 := make_bit_mask_1(16, 0);
-      if subject.children[1]^.inherited^.precision <= 32 then begin
+      if subject.children[1]^.inherited^.fetch_precision <= 32 then begin
         solution^.space136[136] := chr(1);
-        if subject.children[1]^.inherited^.precision = 32 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 32 then begin
           solution^.space136[137] := chr(1);
           if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
             solution^.space136[138] := chr(1);
@@ -2380,7 +2380,7 @@ begin
             end;
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[137] := chr(2);
           solution^.space136[152] := chr(1);
           if p1_int_fields_ptr_t(addr(solution^))^.i[3] = 256 then begin
@@ -2404,7 +2404,7 @@ begin
             solution^.space136[157] := chr(1);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 8 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[137] := chr(3);
           solution^.space136[160] := chr(1);
           if p1_int_fields_ptr_t(addr(solution^))^.i[3] = 256 then begin
@@ -2415,7 +2415,7 @@ begin
         end else begin
           solution^.space136[137] := chr(4);
         end;
-        if solution^.fields[0]^.inherited^.precision = 32 then begin
+        if solution^.fields[0]^.inherited^.fetch_precision = 32 then begin
           solution^.space136[165] := chr(1);
           if (solution^.fields[0]^.bits_trusted & 3 = 3) and (solution^.fields[0]^.bits_known & 3 = 0) or (solution^.fields[0]^.bits_trusted & 1 = 0) or (solution^.fields[0]^.bits_known & 1 <> 0) then begin
             solution^.space136[166] := chr(1);
@@ -2460,7 +2460,7 @@ begin
             solution^.space136[179] := chr(2);
           end;
         end
-        else if solution^.fields[0]^.inherited^.precision = 16 then begin
+        else if solution^.fields[0]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[165] := chr(2);
           solution^.space136[180] := chr(1);
           solution^.space136[184] := chr(2);
@@ -2476,7 +2476,7 @@ begin
             solution^.space136[185] := chr(1);
           end;
         end
-        else if solution^.fields[0]^.inherited^.precision = 8 then begin
+        else if solution^.fields[0]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[165] := chr(3);
           solution^.space136[188] := chr(1);
           solution^.space136[192] := chr(2);
@@ -4880,7 +4880,7 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.children[1]^.inherited^.precision <= 32 then begin
+  if subject.children[1]^.inherited^.fetch_precision <= 32 then begin
     if isc_user_routines_354 then begin
       write('Pattern 471 matched the semantics.');
       writeln;
@@ -4926,7 +4926,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 32) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((subject.children[1]^.inherited^.fetch_precision <> 32) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 472 matched the semantics.');
       writeln;
@@ -4972,7 +4972,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 64) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((subject.children[1]^.inherited^.fetch_precision <> 64) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 473 matched the semantics.');
       writeln;
@@ -5029,7 +5029,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 128) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((subject.children[1]^.inherited^.fetch_precision <> 128) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 474 matched the semantics.');
       writeln;
@@ -5045,11 +5045,11 @@ begin
       solution^.rule := 474;
       solution^.chain := addr(subject);
       t2 := make_expression_temporary(123,
-          subject.children[1]^.inherited^.precision);
+          subject.children[1]^.inherited^.fetch_precision);
       side_effect_set_var_$address_exposed(isc_node_ptr_t(t2));
       t3 := t2;
       solution^.fields[0] := address_mode_for_expression_temporary(t3,
-          subject.children[1]^.inherited^.precision, 0, 7);
+          subject.children[1]^.inherited^.fetch_precision, 0, 7);
       solution^.fields[1] := nil;
       solution^.fields[2] := nil;
       solution^.fields[3] := nil;
@@ -6360,7 +6360,7 @@ begin
     solution^.f76.b84_7 := subject.children[1]^.f76.b84_7;
     solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
     solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
-    solution^.f76.b76 := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.precision - subject.children[2]^.disp - p2_node_ptr_t(subject.sym)^.b[29];
+    solution^.f76.b76 := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.fetch_precision - subject.children[2]^.disp - p2_node_ptr_t(subject.sym)^.b[29];
     solution^.eval_order := evaluation_order_function(il$t(subject.w98),
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -6427,7 +6427,7 @@ begin
         t2 := p2_node_ptr_t(subject.sym)^.w[14];
       end;
       t3 := make_bit_mask_2(t2 - 1, 0);
-      p1_int_fields_ptr_t(addr(solution^))^.i[0] := -(subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.precision - subject.children[2]^.disp - 1) + 31;
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := -(subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.fetch_precision - subject.children[2]^.disp - 1) + 31;
       p1_int_fields_ptr_t(addr(solution^))^.i[1] := 31 - p2_node_ptr_t(subject.sym)^.w[14] + 1;
       if p1_int_fields_ptr_t(addr(solution^))^.i[0] > 0 then begin
         solution^.space136[136] := chr(1);
@@ -6503,7 +6503,7 @@ begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
       solution^.rule := 486;
       solution^.chain := addr(subject);
-      p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.precision - subject.children[2]^.disp - p2_node_ptr_t(subject.sym)^.w[14];
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.fetch_precision - subject.children[2]^.disp - p2_node_ptr_t(subject.sym)^.w[14];
       if (p2_node_ptr_t(subject.sym)^.w[14] = 0) or (p2_node_ptr_t(subject.sym)^.w[14] > 31) then begin
         p1_int_fields_ptr_t(addr(solution^))^.i[1] := 1;
       end else begin
@@ -6579,7 +6579,7 @@ begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
       solution^.rule := 487;
       solution^.chain := addr(subject);
-      p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.precision - p2_node_ptr_t(subject.sym)^.w[14];
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.fetch_precision - p2_node_ptr_t(subject.sym)^.w[14];
       if (p2_node_ptr_t(subject.sym)^.w[14] = 0) or (p2_node_ptr_t(subject.sym)^.w[14] > 31) then begin
         p1_int_fields_ptr_t(addr(solution^))^.i[1] := 1;
       end else begin
@@ -6657,7 +6657,7 @@ begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
       solution^.rule := 488;
       solution^.chain := addr(subject);
-      p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.precision - p2_node_ptr_t(subject.sym)^.w[14];
+      p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.fetch_precision - p2_node_ptr_t(subject.sym)^.w[14];
       if (p2_node_ptr_t(subject.sym)^.w[14] = 0) or (p2_node_ptr_t(subject.sym)^.w[14] > 31) then begin
         p1_int_fields_ptr_t(addr(solution^))^.i[1] := 1;
       end else begin

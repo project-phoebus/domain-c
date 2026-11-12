@@ -347,7 +347,7 @@ begin
   result := nil;
   work := nil;
   t1 := validate_shift_count(subject.children[1]^.f76.b76);
-  if not (not lir_$can_encode_as_immediate_operand(lshft(subject.children[2]^.disp, t1), isc_tool_generated_readonly_tables.opcode_rr[il$t(subject.w98)], 1) or (subject.children[1]^.f76.b77 < subject.inherited^.available) and ((subject.children[2]^.disp & ((-1) - (lshft(1, subject.children[1]^.f76.b77) - 1)) <> 0) or (subject.w98 <> 110) and subject.children[1]^.f76.b81_0)) then begin
+  if not (not lir_$can_encode_as_immediate_operand(lshft(subject.children[2]^.disp, t1), isc_tool_generated_readonly_tables.opcode_rr[il$t(subject.w98)], 1) or (subject.children[1]^.f76.b77 < subject.inherited^.required_precision) and ((subject.children[2]^.disp & ((-1) - (lshft(1, subject.children[1]^.f76.b77) - 1)) <> 0) or (subject.w98 <> 110) and subject.children[1]^.f76.b81_0)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 327 matched the semantics.');
       writeln;
@@ -415,7 +415,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.f76.b77 <> subject.children[2]^.f76.b77) or (subject.children[1]^.f76.b77 < subject.inherited^.available) and (subject.children[1]^.f76.b81_0 or subject.children[2]^.f76.b81_0)) then begin
+  if not ((subject.children[1]^.f76.b77 <> subject.children[2]^.f76.b77) or (subject.children[1]^.f76.b77 < subject.inherited^.required_precision) and (subject.children[1]^.f76.b81_0 or subject.children[2]^.f76.b81_0)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 328 matched the semantics.');
       writeln;
@@ -495,7 +495,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.f76.b76 = subject.children[2]^.f76.b76) or (subject.children[1]^.f76.b77 <> subject.children[2]^.f76.b77) or (subject.children[1]^.f76.b77 < subject.inherited^.available) and (subject.children[1]^.f76.b81_0 or subject.children[2]^.f76.b81_0)) then begin
+  if not ((subject.children[1]^.f76.b76 = subject.children[2]^.f76.b76) or (subject.children[1]^.f76.b77 <> subject.children[2]^.f76.b77) or (subject.children[1]^.f76.b77 < subject.inherited^.required_precision) and (subject.children[1]^.f76.b81_0 or subject.children[2]^.f76.b81_0)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 329 matched the semantics.');
       writeln;

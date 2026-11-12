@@ -186,7 +186,8 @@ procedure transform_23_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pattern_match_error(9, il$t(subject^.w98), 0, subject^.inherited^.pos.line);
+  pattern_match_error(9, il$t(subject^.w98), 0,
+      subject^.inherited^.pos.source_line_number);
 end;
 
 { transform_24_pass_2 - rule 24: address_mode <- cs_temp.
@@ -283,7 +284,7 @@ procedure transform_33_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.live_range := lr_ptr_t(result.fields[0]);
   result.obj_w_name := self.sym;

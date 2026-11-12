@@ -209,7 +209,7 @@ begin
   result := nil;
   work := nil;
   t1 := precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[1]);
-  if not ((subject.inherited^.precision > 32) or (t1 <> subject.inherited^.precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.sym)) <> 11)) then begin
+  if not ((subject.inherited^.fetch_precision > 32) or (t1 <> subject.inherited^.fetch_precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.sym)) <> 11)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 89 matched the semantics.');
       writeln;
@@ -267,7 +267,7 @@ begin
   result := nil;
   work := nil;
   t1 := precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[1]);
-  if not ((subject.inherited^.precision <= 0) or (subject.inherited^.precision > 32) or (t1 <= subject.inherited^.precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.sym)) <> 11)) then begin
+  if not ((subject.inherited^.fetch_precision <= 0) or (subject.inherited^.fetch_precision > 32) or (t1 <= subject.inherited^.fetch_precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.sym)) <> 11)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 90 matched the semantics.');
       writeln;
@@ -286,13 +286,13 @@ begin
       solution^.memory_refs := 0;
       solution^.delay := 0;
       t3 := precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[1]);
-      solution^.f76.b76 := t3 - subject.inherited^.precision;
+      solution^.f76.b76 := t3 - subject.inherited^.fetch_precision;
       solution^.bits_known := pass_1_cse_parent_bits_known(isc_node_ptr_t(subject.sym));
       solution^.bits_trusted := pass_1_cse_parent_bits_trusted(isc_node_ptr_t(subject.sym));
       solution^.code_bytes := pass_1_cse_parent_code_bytes(isc_node_ptr_t(subject.sym));
       solution^.delay := pass_1_cse_parent_delay(isc_node_ptr_t(subject.sym));
       solution^.f76.embedded_sr_temp := pass_1_cse_parent_embedded_sr_temp(isc_node_ptr_t(subject.sym));
-      solution^.f76.b77 := subject.inherited^.precision;
+      solution^.f76.b77 := subject.inherited^.fetch_precision;
       solution^.f76.b81_0 := false;
       solution^.ip_reg_max := pass_1_cse_parent_ip_reg_max(isc_node_ptr_t(subject.sym));
       solution^.ip_reg_result := pass_1_cse_parent_ip_reg_result(isc_node_ptr_t(subject.sym));
@@ -599,7 +599,7 @@ begin
   result := nil;
   work := nil;
   t1 := precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[5]);
-  if not ((subject.inherited^.precision > 32) or (t1 <> subject.inherited^.precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.sym)) <> 11)) then begin
+  if not ((subject.inherited^.fetch_precision > 32) or (t1 <> subject.inherited^.fetch_precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.sym)) <> 11)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 96 matched the semantics.');
       writeln;
@@ -657,7 +657,7 @@ begin
   result := nil;
   work := nil;
   t1 := precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[5]);
-  if not ((subject.inherited^.precision <= 0) or (subject.inherited^.precision > 32) or (t1 <= subject.inherited^.precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.sym)) <> 11)) then begin
+  if not ((subject.inherited^.fetch_precision <= 0) or (subject.inherited^.fetch_precision > 32) or (t1 <= subject.inherited^.fetch_precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.sym)) <> 11)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 97 matched the semantics.');
       writeln;
@@ -676,13 +676,13 @@ begin
       solution^.memory_refs := 0;
       solution^.delay := 0;
       t3 := precision_from_il_node(p2_node_ptr_t(subject.sym)^.p[5]);
-      solution^.f76.b76 := t3 - subject.inherited^.precision;
+      solution^.f76.b76 := t3 - subject.inherited^.fetch_precision;
       solution^.bits_known := pass_1_cse_use_bits_known(isc_node_ptr_t(subject.sym));
       solution^.bits_trusted := pass_1_cse_use_bits_trusted(isc_node_ptr_t(subject.sym));
       solution^.code_bytes := pass_1_cse_use_code_bytes(isc_node_ptr_t(subject.sym));
       solution^.delay := pass_1_cse_use_delay(isc_node_ptr_t(subject.sym));
       solution^.f76.embedded_sr_temp := pass_1_cse_use_embedded_sr_temp(isc_node_ptr_t(subject.sym));
-      solution^.f76.b77 := subject.inherited^.precision;
+      solution^.f76.b77 := subject.inherited^.fetch_precision;
       solution^.f76.b81_0 := false;
       solution^.ip_reg_max := pass_1_cse_use_ip_reg_max(isc_node_ptr_t(subject.sym));
       solution^.ip_reg_result := pass_1_cse_use_ip_reg_result(isc_node_ptr_t(subject.sym));

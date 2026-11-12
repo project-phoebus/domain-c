@@ -101,23 +101,26 @@ SOL_BITS = {
 # b84_4_0): reached through the module's view p2_flags_t (bytes 81..84)
 VIEW_BITS = {(81, b) for b in range(2, 8)} | {(83, b) for b in range(4, 8)}
 
-# the inherited attributes (isc_attribute_records.ins.pas, the image's
-# names: docs/questions.md 271): name -> (offset, size or bit, insert
-# path, class)
+# the inherited attributes (isc_attribute_records.ins.pas, whose fields
+# carry the image's names: docs/questions.md 271): name -> (offset, size
+# or bit, insert path, class); the path is the name, inside pos (+32,
+# +34) or f38 (+38, +39)
 INH_ATTRS = {
-    'il': (0, 4, 'node', 'node'), 'exception_frame': (4, 4, 'top', 'node'),
-    'original_il': (12, 4, 'stmt', 'node'), 'conditional_target': (16, 4, 'l16', 'i32'),
-    'call_instruction_ptr': (20, 4, 'call', 'up'), 'fetch_precision': (24, 4, 'precision', 'i32'),
-    'required_precision': (28, 4, 'available', 'i32'),
-    'source_line_number': (32, 2, 'pos.line', 'i16'), 'stmt_number': (34, 2, 'pos.stmt', 'i16'),
-    'parent_il_kind': (36, 1, 'b36', 'char'), 'required_arithmetic': (38, 1, 'f38.arith', 'u8'),
-    'conditional_sense': (39, 'b7', 'f38.b7', 'bool'),
-    'immediate_parent_has_signed': (39, 'b6', 'f38.b6', 'bool'),
-    'immediate_parent_wants_lvalue': (39, 'b5', 'f38.b5', 'bool'),
-    'immediate_parent_wants_set_temporary': (39, 'b4', 'f38.b4', 'bool'),
-    'immediate_parent_wants_signed': (39, 'b3', 'f38.b3', 'bool'),
-    'inside_a_cse': (39, 'b2', 'f38.preserve', 'bool'),
+    'il': (0, 4, 'node'), 'exception_frame': (4, 4, 'node'),
+    'original_il': (12, 4, 'node'), 'conditional_target': (16, 4, 'i32'),
+    'call_instruction_ptr': (20, 4, 'up'), 'fetch_precision': (24, 4, 'i32'),
+    'required_precision': (28, 4, 'i32'),
+    'source_line_number': (32, 2, 'i16'), 'stmt_number': (34, 2, 'i16'),
+    'parent_il_kind': (36, 1, 'char'), 'required_arithmetic': (38, 1, 'u8'),
+    'conditional_sense': (39, 'b7', 'bool'),
+    'immediate_parent_has_signed': (39, 'b6', 'bool'),
+    'immediate_parent_wants_lvalue': (39, 'b5', 'bool'),
+    'immediate_parent_wants_set_temporary': (39, 'b4', 'bool'),
+    'immediate_parent_wants_signed': (39, 'b3', 'bool'),
+    'inside_a_cse': (39, 'b2', 'bool'),
 }
+INH_ATTRS = {_n: (_o, _s, ('pos.' if _o in (32, 34) else 'f38.' if _o in (38, 39) else '') + _n, _c)
+             for _n, (_o, _s, _c) in INH_ATTRS.items()}
 INH_BY_OFF = {}
 for _n, (_o, _s, _p, _c) in INH_ATTRS.items():
     INH_BY_OFF[(_o, _s if isinstance(_s, int) else int(_s[1:]) + 100)] = _n

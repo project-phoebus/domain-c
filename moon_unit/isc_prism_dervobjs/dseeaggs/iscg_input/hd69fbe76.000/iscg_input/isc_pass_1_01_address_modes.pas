@@ -1216,8 +1216,8 @@ begin
       solution^.f76.uses_disp := subject.children[1]^.f76.uses_disp;
       solution^.f76.uses_index_reg := subject.children[1]^.f76.uses_index_reg;
       t2 := precision_from_il_node(subject.children[1]^.sym);
-      solution^.f76.b76 := t2 - subject.inherited^.precision - p2_node_ptr_t(subject.sym)^.b[35] * 8;
-      solution^.f76.b77 := subject.inherited^.precision;
+      solution^.f76.b76 := t2 - subject.inherited^.fetch_precision - p2_node_ptr_t(subject.sym)^.b[35] * 8;
+      solution^.f76.b77 := subject.inherited^.fetch_precision;
       solution^.f76.b81_0 := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -1243,7 +1243,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.sym)^.p[8] <> nil) or (subject.children[1]^.inherited^.precision <> 32)) then begin
+  if not ((p2_node_ptr_t(subject.sym)^.p[8] <> nil) or (subject.children[1]^.inherited^.fetch_precision <> 32)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 75 matched the semantics.');
       writeln;
@@ -1334,7 +1334,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.sym)^.p[8] <> nil) or (subject.children[1]^.inherited^.precision <> 64)) then begin
+  if not ((p2_node_ptr_t(subject.sym)^.p[8] <> nil) or (subject.children[1]^.inherited^.fetch_precision <> 64)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 76 matched the semantics.');
       writeln;
@@ -1425,7 +1425,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.sym)^.p[8] <> nil) or (subject.children[1]^.inherited^.precision <> 128)) then begin
+  if not ((p2_node_ptr_t(subject.sym)^.p[8] <> nil) or (subject.children[1]^.inherited^.fetch_precision <> 128)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 77 matched the semantics.');
       writeln;
@@ -1533,8 +1533,8 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + 8;
     solution^.memory_refs := subject.children[1]^.memory_refs;
     solution^.delay := subject.children[1]^.delay + 1;
-    solution^.f76.b76 := 32 - subject.inherited^.precision - p2_node_ptr_t(subject.sym)^.b[35] * 8;
-    solution^.f76.b77 := subject.inherited^.precision;
+    solution^.f76.b76 := 32 - subject.inherited^.fetch_precision - p2_node_ptr_t(subject.sym)^.b[35] * 8;
+    solution^.f76.b77 := subject.inherited^.fetch_precision;
     solution^.f76.b81_0 := false;
     p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
     p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -1560,7 +1560,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.inherited^.f38.b5 or (integer32(p2_node_ptr_t(subject.sym)^.p[8]) >= 4) or (subject.inherited^.precision >= 32)) then begin
+  if not (subject.inherited^.f38.immediate_parent_wants_lvalue or (integer32(p2_node_ptr_t(subject.sym)^.p[8]) >= 4) or (subject.inherited^.fetch_precision >= 32)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 79 matched the semantics.');
       writeln;
@@ -1578,8 +1578,8 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + 8;
       solution^.memory_refs := subject.children[1]^.memory_refs;
       solution^.delay := subject.children[1]^.delay + 1;
-      solution^.f76.b76 := 32 - subject.inherited^.precision - p2_node_ptr_t(subject.sym)^.b[35] * 8;
-      solution^.f76.b77 := subject.inherited^.precision;
+      solution^.f76.b76 := 32 - subject.inherited^.fetch_precision - p2_node_ptr_t(subject.sym)^.b[35] * 8;
+      solution^.f76.b77 := subject.inherited^.fetch_precision;
       solution^.f76.b81_0 := false;
       p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
       p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
@@ -1605,7 +1605,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.inherited^.f38.b5 or (p2_node_ptr_t(subject.sym)^.p[8] <> nil) or (subject.inherited^.precision <> 32)) then begin
+  if not (subject.inherited^.f38.immediate_parent_wants_lvalue or (p2_node_ptr_t(subject.sym)^.p[8] <> nil) or (subject.inherited^.fetch_precision <> 32)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 80 matched the semantics.');
       writeln;
@@ -1698,7 +1698,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.inherited^.f38.b5 or (integer32(p2_node_ptr_t(subject.sym)^.p[8]) <> 4) or (subject.inherited^.precision <> 32)) then begin
+  if not (subject.inherited^.f38.immediate_parent_wants_lvalue or (integer32(p2_node_ptr_t(subject.sym)^.p[8]) <> 4) or (subject.inherited^.fetch_precision <> 32)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 81 matched the semantics.');
       writeln;
@@ -1792,7 +1792,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((integer32(p2_node_ptr_t(subject.sym)^.p[8]) <> 4) or (subject.inherited^.precision <> 32)) then begin
+  if not ((integer32(p2_node_ptr_t(subject.sym)^.p[8]) <> 4) or (subject.inherited^.fetch_precision <> 32)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 82 matched the semantics.');
       writeln;

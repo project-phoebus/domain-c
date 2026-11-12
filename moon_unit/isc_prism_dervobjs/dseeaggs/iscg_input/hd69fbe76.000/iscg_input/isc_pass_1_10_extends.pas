@@ -1123,7 +1123,7 @@ begin
     solution^.rule := 411;
     solution^.chain := addr(subject);
     t2 := sign_extend(subject.children[1]^.disp,
-        subject.children[1]^.inherited^.precision);
+        subject.children[1]^.inherited^.fetch_precision);
     solution^.code_bytes := subject.children[1]^.code_bytes;
     solution^.memory_refs := subject.children[1]^.memory_refs;
     solution^.delay := subject.children[1]^.delay;
@@ -1355,7 +1355,7 @@ begin
       t5 := make_bit_mask_1(16, 0);
       if p2_node_ptr_t(subject.sym)^.b[30] & 64 <> 0 then begin
         solution^.space136[136] := chr(1);
-        if subject.children[1]^.inherited^.precision = 8 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[137] := chr(1);
           if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
             solution^.space136[138] := chr(1);
@@ -1363,7 +1363,7 @@ begin
             solution^.space136[138] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[137] := chr(2);
           if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
             solution^.space136[139] := chr(1);
@@ -1375,7 +1375,7 @@ begin
         end;
       end else begin
         solution^.space136[136] := chr(2);
-        if subject.children[1]^.inherited^.precision = 8 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[140] := chr(1);
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 24, 0) then begin
             solution^.space136[141] := chr(1);
@@ -1383,7 +1383,7 @@ begin
             solution^.space136[141] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[140] := chr(2);
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 16, 16, 0) then begin
             solution^.space136[142] := chr(1);
@@ -1617,7 +1617,7 @@ begin
       t5 := make_bit_mask_1(16, 0);
       if p2_node_ptr_t(subject.sym)^.b[30] & 64 <> 0 then begin
         solution^.space136[136] := chr(1);
-        if subject.children[1]^.inherited^.precision = 8 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[137] := chr(1);
           if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
             solution^.space136[138] := chr(1);
@@ -1625,7 +1625,7 @@ begin
             solution^.space136[138] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[137] := chr(2);
           if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
             solution^.space136[139] := chr(1);
@@ -1637,7 +1637,7 @@ begin
         end;
       end else begin
         solution^.space136[136] := chr(2);
-        if subject.children[1]^.inherited^.precision = 8 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[140] := chr(1);
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 24, 0) then begin
             solution^.space136[141] := chr(1);
@@ -1645,7 +1645,7 @@ begin
             solution^.space136[141] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[140] := chr(2);
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 16, 16, 0) then begin
             solution^.space136[142] := chr(1);
@@ -1716,7 +1716,7 @@ begin
       t5 := make_bit_mask_1(16, 0);
       if p2_node_ptr_t(subject.sym)^.b[30] & 64 <> 0 then begin
         solution^.space136[136] := chr(1);
-        if subject.children[1]^.inherited^.precision = 8 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[137] := chr(1);
           if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
             solution^.space136[138] := chr(1);
@@ -1724,7 +1724,7 @@ begin
             solution^.space136[138] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[137] := chr(2);
           if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
             solution^.space136[139] := chr(1);
@@ -1736,7 +1736,7 @@ begin
         end;
       end else begin
         solution^.space136[136] := chr(2);
-        if subject.children[1]^.inherited^.precision = 8 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[140] := chr(1);
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 24, 0) then begin
             solution^.space136[141] := chr(1);
@@ -1744,7 +1744,7 @@ begin
             solution^.space136[141] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[140] := chr(2);
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 16, 16, 0) then begin
             solution^.space136[142] := chr(1);
@@ -2046,7 +2046,7 @@ begin
       t5 := make_bit_mask_1(16, 0);
       if p2_node_ptr_t(subject.sym)^.b[30] & 64 <> 0 then begin
         solution^.space136[136] := chr(1);
-        if subject.children[1]^.inherited^.precision = 8 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[137] := chr(1);
           if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
             solution^.space136[138] := chr(1);
@@ -2054,7 +2054,7 @@ begin
             solution^.space136[138] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[137] := chr(2);
           if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
             solution^.space136[139] := chr(1);
@@ -2066,7 +2066,7 @@ begin
         end;
       end else begin
         solution^.space136[136] := chr(2);
-        if subject.children[1]^.inherited^.precision = 8 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[140] := chr(1);
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 24, 0) then begin
             solution^.space136[141] := chr(1);
@@ -2074,7 +2074,7 @@ begin
             solution^.space136[141] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[140] := chr(2);
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 16, 16, 0) then begin
             solution^.space136[142] := chr(1);
@@ -2145,7 +2145,7 @@ begin
       t5 := make_bit_mask_1(16, 0);
       if p2_node_ptr_t(subject.sym)^.b[30] & 64 <> 0 then begin
         solution^.space136[136] := chr(1);
-        if subject.children[1]^.inherited^.precision = 8 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[137] := chr(1);
           if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
             solution^.space136[138] := chr(1);
@@ -2153,7 +2153,7 @@ begin
             solution^.space136[138] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[137] := chr(2);
           if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
             solution^.space136[139] := chr(1);
@@ -2165,7 +2165,7 @@ begin
         end;
       end else begin
         solution^.space136[136] := chr(2);
-        if subject.children[1]^.inherited^.precision = 8 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[140] := chr(1);
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 24, 0) then begin
             solution^.space136[141] := chr(1);
@@ -2173,7 +2173,7 @@ begin
             solution^.space136[141] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[140] := chr(2);
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 16, 16, 0) then begin
             solution^.space136[142] := chr(1);
@@ -2955,7 +2955,7 @@ begin
       t3 := make_bit_mask_1(16, 0);
       if p2_node_ptr_t(subject.sym)^.b[30] & 64 <> 0 then begin
         solution^.space136[136] := chr(1);
-        if subject.children[1]^.inherited^.precision = 8 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[137] := chr(1);
           if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
             solution^.space136[138] := chr(1);
@@ -2963,7 +2963,7 @@ begin
             solution^.space136[138] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[137] := chr(2);
           if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
             solution^.space136[139] := chr(1);
@@ -2975,7 +2975,7 @@ begin
         end;
       end else begin
         solution^.space136[136] := chr(2);
-        if subject.children[1]^.inherited^.precision = 8 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[140] := chr(1);
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 24, 0) then begin
             solution^.space136[141] := chr(1);
@@ -2985,7 +2985,7 @@ begin
           t5 := verify_bits(subject.children[1]^.bits_known,
               subject.children[1]^.bits_trusted, 8, 24, 0);
         end else begin
-          if subject.children[1]^.inherited^.precision = 16 then begin
+          if subject.children[1]^.inherited^.fetch_precision = 16 then begin
             solution^.space136[140] := chr(2);
             if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 16, 16, 0) then begin
               solution^.space136[142] := chr(1);
@@ -3281,7 +3281,7 @@ begin
       end;
       if p2_node_ptr_t(subject.sym)^.b[30] & 64 <> 0 then begin
         solution^.space136[137] := chr(1);
-        if subject.children[1]^.inherited^.precision = 8 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[138] := chr(1);
           if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
             solution^.space136[139] := chr(1);
@@ -3289,7 +3289,7 @@ begin
             solution^.space136[139] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[138] := chr(2);
           if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
             solution^.space136[140] := chr(1);
@@ -3301,7 +3301,7 @@ begin
         end;
       end else begin
         solution^.space136[137] := chr(2);
-        if subject.children[1]^.inherited^.precision = 8 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[141] := chr(1);
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 24, 0) then begin
             solution^.space136[142] := chr(1);
@@ -3311,7 +3311,7 @@ begin
           t5 := verify_bits(subject.children[1]^.bits_known,
               subject.children[1]^.bits_trusted, 8, 24, 0);
         end else begin
-          if subject.children[1]^.inherited^.precision = 16 then begin
+          if subject.children[1]^.inherited^.fetch_precision = 16 then begin
             solution^.space136[141] := chr(2);
             if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 16, 16, 0) then begin
               solution^.space136[143] := chr(1);

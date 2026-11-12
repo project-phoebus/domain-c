@@ -835,7 +835,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_operand(subject.children[2]^.disp,
       ord(opc$insert), 1);
-  if not ((subject.children[1]^.bits_known & 3 <> 0) or ((subject.children[1]^.inherited^.available <> 32) or (subject.children[2]^.kind = 14)) and ((subject.children[1]^.inherited^.available >= 32) or ((32 - subject.children[1]^.w74 * 8 - p2_node_ptr_t(subject.sym)^.w[27] - p2_node_ptr_t(subject.sym)^.w[28] <> subject.children[2]^.f76.b76) or (subject.children[2]^.kind <> 12)) and (not t1 and (subject.children[2]^.kind = 14) or (subject.children[2]^.kind = 12) and (subject.children[2]^.f76.b76 <> 0))) or (available_precision_function(subject.children[2]) < p2_node_ptr_t(subject.sym)^.w[28])) then begin
+  if not ((subject.children[1]^.bits_known & 3 <> 0) or ((subject.children[1]^.inherited^.required_precision <> 32) or (subject.children[2]^.kind = 14)) and ((subject.children[1]^.inherited^.required_precision >= 32) or ((32 - subject.children[1]^.w74 * 8 - p2_node_ptr_t(subject.sym)^.w[27] - p2_node_ptr_t(subject.sym)^.w[28] <> subject.children[2]^.f76.b76) or (subject.children[2]^.kind <> 12)) and (not t1 and (subject.children[2]^.kind = 14) or (subject.children[2]^.kind = 12) and (subject.children[2]^.f76.b76 <> 0))) or (available_precision_function(subject.children[2]) < p2_node_ptr_t(subject.sym)^.w[28])) then begin
     if isc_user_routines_354 then begin
       write('Pattern 247 matched the semantics.');
       writeln;
@@ -848,7 +848,7 @@ begin
     t3 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[0], 0);
     t4 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[0], 0);
     t5 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[0], 0);
-    if subject.children[1]^.inherited^.available = 32 then begin
+    if subject.children[1]^.inherited^.required_precision = 32 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -908,7 +908,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.bits_known & 3 <> 0) or ((subject.children[1]^.inherited^.available <> 32) or (subject.children[2]^.kind = 14)) and ((subject.children[1]^.inherited^.available >= 32) or ((32 - (subject.children[1]^.w74 * 8 + subject.children[1]^.inherited^.precision) <> subject.children[2]^.f76.b76) or (subject.children[2]^.kind <> 12)) and (not lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$insert), 1) and (subject.children[2]^.kind = 14) or (subject.children[2]^.kind = 12) and (subject.children[2]^.f76.b76 <> 0)))) then begin
+  if not ((subject.children[1]^.bits_known & 3 <> 0) or ((subject.children[1]^.inherited^.required_precision <> 32) or (subject.children[2]^.kind = 14)) and ((subject.children[1]^.inherited^.required_precision >= 32) or ((32 - (subject.children[1]^.w74 * 8 + subject.children[1]^.inherited^.fetch_precision) <> subject.children[2]^.f76.b76) or (subject.children[2]^.kind <> 12)) and (not lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$insert), 1) and (subject.children[2]^.kind = 14) or (subject.children[2]^.kind = 12) and (subject.children[2]^.f76.b76 <> 0)))) then begin
     if isc_user_routines_354 then begin
       write('Pattern 248 matched the semantics.');
       writeln;
@@ -917,11 +917,11 @@ begin
     solution^.rule := 248;
     solution^.chain := addr(subject);
     p1_int_fields_ptr_t(addr(solution^))^.i[0] := available_precision_function(subject.children[2]);
-    p1_int_fields_ptr_t(addr(solution^))^.i[1] := 32 - (subject.children[1]^.w74 * 8 + subject.children[1]^.inherited^.precision);
+    p1_int_fields_ptr_t(addr(solution^))^.i[1] := 32 - (subject.children[1]^.w74 * 8 + subject.children[1]^.inherited^.fetch_precision);
     t2 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[0], 0);
     t3 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[0], 0);
     t4 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[0], 0);
-    if subject.children[1]^.inherited^.available = 32 then begin
+    if subject.children[1]^.inherited^.required_precision = 32 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -1071,7 +1071,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.inherited^.f38.b5 or (subject.bits_known & 3 <> 0) or (subject.w74 * 8 + subject.inherited^.precision > 32)) then begin
+  if not (subject.inherited^.f38.immediate_parent_wants_lvalue or (subject.bits_known & 3 <> 0) or (subject.w74 * 8 + subject.inherited^.fetch_precision > 32)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 250 matched the semantics.');
       writeln;
@@ -1139,10 +1139,10 @@ begin
       solution^.f76.uses_disp := subject.f76.uses_disp;
       solution^.f76.uses_index_reg := subject.f76.uses_index_reg;
       solution^.memory_refs := subject.memory_refs;
-      solution^.f76.b76 := 32 - (subject.w74 * 8 + subject.inherited^.precision);
+      solution^.f76.b76 := 32 - (subject.w74 * 8 + subject.inherited^.fetch_precision);
       solution^.bits_known := subject.l40;
       solution^.bits_trusted := subject.l44;
-      solution^.f76.b77 := subject.inherited^.available;
+      solution^.f76.b77 := subject.inherited^.required_precision;
       solution^.f76.b81_0 := false;
       solution^.ip_reg_max := subject.ip_reg_max + 1;
       solution^.ip_reg_result := 1;

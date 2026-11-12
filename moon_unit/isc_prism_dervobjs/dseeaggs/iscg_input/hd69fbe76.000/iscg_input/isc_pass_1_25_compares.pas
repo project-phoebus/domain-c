@@ -1268,7 +1268,7 @@ begin
           t4 := lir_$can_encode_as_immediate_operand(p1_int_fields_ptr_t(addr(solution^))^.i[0],
               ord(opc$move), 1);
         end;
-        if (t3 = 7) and not subject.inherited^.f38.b7 or (t3 = 6) and subject.inherited^.f38.b7 then begin
+        if (t3 = 7) and not subject.inherited^.f38.conditional_sense or (t3 = 6) and subject.inherited^.f38.conditional_sense then begin
           solution^.space136[139] := chr(1);
         end else begin
           solution^.space136[139] := chr(2);
@@ -1377,7 +1377,7 @@ begin
       end;
       if (p2_node_ptr_t(subject.sym)^.w[14] < 0) or (p2_node_ptr_t(subject.sym)^.b[30] & 4 <> 0) then begin
         solution^.space136[139] := chr(1);
-        if (t4 = 7) and not subject.inherited^.f38.b7 or (t4 = 6) and subject.inherited^.f38.b7 then begin
+        if (t4 = 7) and not subject.inherited^.f38.conditional_sense or (t4 = 6) and subject.inherited^.f38.conditional_sense then begin
           solution^.space136[140] := chr(1);
         end else begin
           solution^.space136[140] := chr(2);
@@ -1532,7 +1532,7 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.inherited^.l16 = 0 then begin
+  if subject.inherited^.conditional_target = 0 then begin
     if isc_user_routines_354 then begin
       write('Pattern 108 matched the semantics.');
       writeln;
@@ -1852,14 +1852,14 @@ begin
     solution^.chain := addr(subject);
     p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.sym)^.w[13]]);
     t2 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := t2;
     end else begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t2];
     end;
     t3 := make_bit_mask_1(8, 0);
     t4 := make_bit_mask_1(16, 0);
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -2158,13 +2158,13 @@ begin
         t4 := 0;
       end;
       t5 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
-      if subject.inherited^.f38.b7 then begin
+      if subject.inherited^.f38.conditional_sense then begin
         p2_locals_ptr_t(addr(solution^))^.w[178] := t5;
       end else begin
         p2_locals_ptr_t(addr(solution^))^.w[178] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t5];
       end;
       t6 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[0], 0);
-      if subject.inherited^.l16 <> 0 then begin
+      if subject.inherited^.conditional_target <> 0 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
@@ -2408,7 +2408,7 @@ begin
       solution^.chain := addr(subject);
       p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.sym)^.w[13]]);
       t3 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
-      if subject.inherited^.f38.b7 then begin
+      if subject.inherited^.f38.conditional_sense then begin
         p2_locals_ptr_t(addr(solution^))^.w[176] := t3;
       end else begin
         p2_locals_ptr_t(addr(solution^))^.w[176] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t3];
@@ -2422,7 +2422,7 @@ begin
       end else begin
         p2_locals_ptr_t(addr(solution^))^.p2[89] := subject.children[2];
       end;
-      if subject.inherited^.l16 <> 0 then begin
+      if subject.inherited^.conditional_target <> 0 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
@@ -2643,7 +2643,7 @@ begin
       solution^.chain := addr(subject);
       p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.sym)^.w[13]]);
       t3 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
-      if subject.inherited^.f38.b7 then begin
+      if subject.inherited^.f38.conditional_sense then begin
         p2_locals_ptr_t(addr(solution^))^.w[176] := t3;
       end else begin
         p2_locals_ptr_t(addr(solution^))^.w[176] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t3];
@@ -2658,7 +2658,7 @@ begin
       end;
       t4 := make_bit_mask_1(8, 0);
       t5 := make_bit_mask_1(16, 0);
-      if subject.inherited^.l16 <> 0 then begin
+      if subject.inherited^.conditional_target <> 0 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
@@ -2879,14 +2879,14 @@ begin
       solution^.chain := addr(subject);
       p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.sym)^.w[13]]);
       t3 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
-      if subject.inherited^.f38.b7 then begin
+      if subject.inherited^.f38.conditional_sense then begin
         p2_locals_ptr_t(addr(solution^))^.w[176] := t3;
       end else begin
         p2_locals_ptr_t(addr(solution^))^.w[176] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t3];
       end;
       t4 := make_bit_mask_1(8, 0);
       t5 := make_bit_mask_1(16, 0);
-      if subject.inherited^.l16 <> 0 then begin
+      if subject.inherited^.conditional_target <> 0 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
@@ -3131,12 +3131,12 @@ begin
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := t3;
       p1_int_fields_ptr_t(addr(solution^))^.i[1] := subject.children[1]^.f76.b77;
       t4 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
-      if subject.inherited^.f38.b7 then begin
+      if subject.inherited^.f38.conditional_sense then begin
         p2_locals_ptr_t(addr(solution^))^.w[180] := t4;
       end else begin
         p2_locals_ptr_t(addr(solution^))^.w[180] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t4];
       end;
-      if subject.inherited^.l16 <> 0 then begin
+      if subject.inherited^.conditional_target <> 0 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
@@ -3269,13 +3269,13 @@ begin
         t4 := 0;
       end;
       t5 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
-      if subject.inherited^.f38.b7 then begin
+      if subject.inherited^.f38.conditional_sense then begin
         p2_locals_ptr_t(addr(solution^))^.w[178] := t5;
       end else begin
         p2_locals_ptr_t(addr(solution^))^.w[178] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t5];
       end;
       t6 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[0], 0);
-      if subject.inherited^.l16 <> 0 then begin
+      if subject.inherited^.conditional_target <> 0 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
@@ -3420,7 +3420,7 @@ begin
     solution^.chain := addr(subject);
     p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.sym)^.w[13]]);
     t2 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := t2;
     end else begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t2];
@@ -3429,7 +3429,7 @@ begin
     t4 := make_bit_mask_1(16, 0);
     t5 := make_bit_mask_1(8, 0);
     t6 := make_bit_mask_1(16, 0);
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -3630,7 +3630,7 @@ begin
     solution^.chain := addr(subject);
     t2 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
     p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(integer32(p2_node_ptr_t(subject.sym)^.p[5]) * 8);
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := t2;
     end else begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t2];
@@ -3661,7 +3661,7 @@ begin
     t22 := make_bit_mask_1(16, 0);
     t23 := make_bit_mask_1(8, 0);
     t24 := make_bit_mask_1(16, 0);
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -3713,7 +3713,7 @@ begin
       solution^.space136[137] := chr(2);
       if p2_node_ptr_t(subject.sym)^.w[13] = 9 then begin
         solution^.space136[145] := chr(1);
-        if subject.children[1]^.inherited^.precision = 32 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 32 then begin
           solution^.space136[146] := chr(1);
           if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + 3, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
             solution^.space136[147] := chr(2);
@@ -3741,7 +3741,7 @@ begin
             solution^.space136[151] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 24 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 24 then begin
           solution^.space136[146] := chr(2);
           if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + 2, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
             solution^.space136[152] := chr(2);
@@ -3769,7 +3769,7 @@ begin
             solution^.space136[156] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[146] := chr(3);
           if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + 1, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
             solution^.space136[157] := chr(2);
@@ -3797,7 +3797,7 @@ begin
             solution^.space136[161] := chr(2);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 8 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[146] := chr(4);
           solution^.space136[162] := chr(1);
           if integer32(p2_locals_ptr_t(addr(solution^))^.p2[89]) = 256 then begin
@@ -3810,7 +3810,7 @@ begin
         end;
       end else begin
         solution^.space136[145] := chr(2);
-        if subject.children[1]^.inherited^.precision = 32 then begin
+        if subject.children[1]^.inherited^.fetch_precision = 32 then begin
           solution^.space136[167] := chr(1);
           if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
             solution^.space136[168] := chr(1);
@@ -3867,7 +3867,7 @@ begin
             end;
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 16 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[167] := chr(2);
           solution^.space136[182] := chr(1);
           if integer32(p2_locals_ptr_t(addr(solution^))^.p2[90]) = 256 then begin
@@ -3891,7 +3891,7 @@ begin
             solution^.space136[187] := chr(1);
           end;
         end
-        else if subject.children[1]^.inherited^.precision = 8 then begin
+        else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[167] := chr(3);
           solution^.space136[190] := chr(1);
           if integer32(p2_locals_ptr_t(addr(solution^))^.p2[90]) = 256 then begin
@@ -3987,7 +3987,7 @@ begin
       solution^.space136[200] := chr(2);
       if p2_node_ptr_t(subject.sym)^.w[13] = 9 then begin
         solution^.space136[209] := chr(1);
-        if subject.children[2]^.inherited^.precision = 32 then begin
+        if subject.children[2]^.inherited^.fetch_precision = 32 then begin
           solution^.space136[210] := chr(1);
           if not lir_$can_encode_as_immediate_operand(subject.children[2]^.disp + 3, ord(opc$loadl), 1) and not subject.children[2]^.f76.has_sym_disp or subject.children[2]^.f76.uses_index_reg then begin
             solution^.space136[211] := chr(2);
@@ -4015,7 +4015,7 @@ begin
             solution^.space136[215] := chr(2);
           end;
         end
-        else if subject.children[2]^.inherited^.precision = 24 then begin
+        else if subject.children[2]^.inherited^.fetch_precision = 24 then begin
           solution^.space136[210] := chr(2);
           if not lir_$can_encode_as_immediate_operand(subject.children[2]^.disp + 2, ord(opc$loadl), 1) and not subject.children[2]^.f76.has_sym_disp or subject.children[2]^.f76.uses_index_reg then begin
             solution^.space136[216] := chr(2);
@@ -4043,7 +4043,7 @@ begin
             solution^.space136[220] := chr(2);
           end;
         end
-        else if subject.children[2]^.inherited^.precision = 16 then begin
+        else if subject.children[2]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[210] := chr(3);
           if not lir_$can_encode_as_immediate_operand(subject.children[2]^.disp + 1, ord(opc$loadl), 1) and not subject.children[2]^.f76.has_sym_disp or subject.children[2]^.f76.uses_index_reg then begin
             solution^.space136[221] := chr(2);
@@ -4071,7 +4071,7 @@ begin
             solution^.space136[225] := chr(2);
           end;
         end
-        else if subject.children[2]^.inherited^.precision = 8 then begin
+        else if subject.children[2]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[210] := chr(4);
           solution^.space136[226] := chr(1);
           if integer32(p2_locals_ptr_t(addr(solution^))^.p2[91]) = 256 then begin
@@ -4084,7 +4084,7 @@ begin
         end;
       end else begin
         solution^.space136[209] := chr(2);
-        if subject.children[2]^.inherited^.precision = 32 then begin
+        if subject.children[2]^.inherited^.fetch_precision = 32 then begin
           solution^.space136[231] := chr(1);
           if (subject.children[2]^.bits_trusted & 3 = 3) and (subject.children[2]^.bits_known & 3 = 0) or (subject.children[2]^.bits_trusted & 1 = 0) or (subject.children[2]^.bits_known & 1 <> 0) then begin
             solution^.space136[232] := chr(1);
@@ -4141,7 +4141,7 @@ begin
             end;
           end;
         end
-        else if subject.children[2]^.inherited^.precision = 16 then begin
+        else if subject.children[2]^.inherited^.fetch_precision = 16 then begin
           solution^.space136[231] := chr(2);
           solution^.space136[246] := chr(1);
           if integer32(p2_locals_ptr_t(addr(solution^))^.p2[92]) = 256 then begin
@@ -4165,7 +4165,7 @@ begin
             solution^.space136[251] := chr(1);
           end;
         end
-        else if subject.children[2]^.inherited^.precision = 8 then begin
+        else if subject.children[2]^.inherited^.fetch_precision = 8 then begin
           solution^.space136[231] := chr(3);
           solution^.space136[254] := chr(1);
           if integer32(p2_locals_ptr_t(addr(solution^))^.p2[92]) = 256 then begin
@@ -4313,7 +4313,7 @@ begin
     t6 := make_bit_mask_1(8, 0);
     t7 := make_bit_mask_1(8, 0);
     t8 := make_bit_mask_1(8, 0);
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -4368,7 +4368,7 @@ begin
     end else begin
       solution^.space136[146] := chr(2);
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[147] := chr(1);
       if p2_locals_ptr_t(addr(solution^))^.w[176] = 7 then begin
         solution^.space136[148] := chr(1);
@@ -4475,7 +4475,7 @@ begin
     end else begin
       solution^.space136[153] := chr(2);
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[154] := chr(1);
       if p2_locals_ptr_t(addr(solution^))^.w[176] = 7 then begin
         solution^.space136[155] := chr(1);
@@ -4582,7 +4582,7 @@ begin
     end else begin
       solution^.space136[160] := chr(2);
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[161] := chr(1);
       if p2_locals_ptr_t(addr(solution^))^.w[176] = 7 then begin
         solution^.space136[162] := chr(1);
@@ -4679,7 +4679,7 @@ begin
         end;
       end;
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[166] := chr(1);
       if p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[80 + p2_locals_ptr_t(addr(solution^))^.w[176]] & 128 <> 0 then begin
         solution^.space136[167] := chr(1);
@@ -4758,7 +4758,7 @@ begin
     solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.sym)^.p[5]);
     t5 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
     p2_locals_ptr_t(addr(solution^))^.w[178] := t5;
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -4798,7 +4798,7 @@ begin
     end else begin
       solution^.space136[143] := chr(2);
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[144] := chr(1);
       if p2_locals_ptr_t(addr(solution^))^.w[178] = 7 then begin
         solution^.space136[145] := chr(1);
@@ -4895,7 +4895,7 @@ begin
         end;
       end;
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[149] := chr(1);
       if p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[80 + p2_locals_ptr_t(addr(solution^))^.w[178]] & 128 <> 0 then begin
         solution^.space136[150] := chr(1);
@@ -4991,7 +4991,7 @@ begin
       solution^.chain := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[5]^.disp;
       t6 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
-      if subject.inherited^.f38.b7 then begin
+      if subject.inherited^.f38.conditional_sense then begin
         p2_locals_ptr_t(addr(solution^))^.w[178] := t6;
       end else begin
         p2_locals_ptr_t(addr(solution^))^.w[178] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t6];
@@ -5023,7 +5023,7 @@ begin
       t18 := make_bit_mask_1(16, 0);
       t19 := make_bit_mask_1(8, 0);
       t20 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[0], 0);
-      if subject.inherited^.l16 <> 0 then begin
+      if subject.inherited^.conditional_target <> 0 then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
@@ -5349,13 +5349,13 @@ begin
     solution^.rule := 124;
     solution^.chain := addr(subject);
     t2 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := t2;
     end else begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t2];
     end;
     t3 := make_bit_mask_1(1, 0);
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -5451,13 +5451,13 @@ begin
     solution^.rule := 125;
     solution^.chain := addr(subject);
     t2 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := t2;
     end else begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t2];
     end;
     t3 := make_bit_mask_1(1, 0);
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -5558,13 +5558,13 @@ begin
     p1_int_fields_ptr_t(addr(solution^))^.i[0] := rshft(integer32(p2_node_ptr_t(subject.sym)^.p[5]) * 8 - 1 - subject.children[1]^.disp,
         3);
     t3 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       p2_locals_ptr_t(addr(solution^))^.w[178] := t3;
     end else begin
       p2_locals_ptr_t(addr(solution^))^.w[178] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t3];
     end;
     t4 := make_bit_mask_1(1, 0);
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -5684,13 +5684,13 @@ begin
   solution^.rule := 127;
   solution^.chain := addr(subject);
   t2 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
-  if subject.inherited^.f38.b7 then begin
+  if subject.inherited^.f38.conditional_sense then begin
     p2_locals_ptr_t(addr(solution^))^.w[176] := t2;
   end else begin
     p2_locals_ptr_t(addr(solution^))^.w[176] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t2];
   end;
   p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(integer32(p2_node_ptr_t(subject.sym)^.p[5]) * 8 - 1);
-  if subject.inherited^.l16 <> 0 then begin
+  if subject.inherited^.conditional_target <> 0 then begin
     solution^.space136[136] := chr(1);
   end else begin
     solution^.space136[136] := chr(2);
@@ -5711,7 +5711,7 @@ begin
       t3 := lir_$can_encode_as_immediate_operand(integer32(p2_locals_ptr_t(addr(solution^))^.p2[88]),
           ord(opc$move), 1);
     end;
-    if (t2 = 7) and not subject.inherited^.f38.b7 or (t2 = 6) and subject.inherited^.f38.b7 then begin
+    if (t2 = 7) and not subject.inherited^.f38.conditional_sense or (t2 = 6) and subject.inherited^.f38.conditional_sense then begin
       solution^.space136[140] := chr(1);
     end else begin
       solution^.space136[140] := chr(2);
@@ -5817,13 +5817,13 @@ begin
     solution^.rule := 128;
     solution^.chain := addr(subject);
     t3 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := t3;
     end else begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t3];
     end;
     p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(integer32(p2_node_ptr_t(subject.sym)^.p[5]) * 8 - 1);
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -5849,7 +5849,7 @@ begin
     end;
     if (p2_node_ptr_t(subject.sym)^.w[14] < 0) or (p2_node_ptr_t(subject.sym)^.b[30] & 4 <> 0) then begin
       solution^.space136[140] := chr(1);
-      if (t3 = 7) and not subject.inherited^.f38.b7 or (t3 = 6) and subject.inherited^.f38.b7 then begin
+      if (t3 = 7) and not subject.inherited^.f38.conditional_sense or (t3 = 6) and subject.inherited^.f38.conditional_sense then begin
         solution^.space136[141] := chr(1);
       end else begin
         solution^.space136[141] := chr(2);
@@ -5965,7 +5965,7 @@ begin
     solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
     solution^.rule := 129;
     solution^.chain := addr(subject);
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -5975,7 +5975,7 @@ begin
     end else begin
       solution^.space136[137] := chr(2);
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[138] := chr(1);
     end else begin
       solution^.space136[138] := chr(2);
@@ -6036,7 +6036,7 @@ begin
     end else begin
       solution^.space136[136] := chr(2);
     end;
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[137] := chr(1);
     end else begin
       solution^.space136[137] := chr(2);
@@ -6046,7 +6046,7 @@ begin
     end else begin
       solution^.space136[138] := chr(2);
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[139] := chr(1);
     end else begin
       solution^.space136[139] := chr(2);
@@ -6113,12 +6113,12 @@ begin
       end else begin
         solution^.space136[136] := chr(2);
       end;
-      if subject.inherited^.l16 <> 0 then begin
+      if subject.inherited^.conditional_target <> 0 then begin
         solution^.space136[137] := chr(1);
       end else begin
         solution^.space136[137] := chr(2);
       end;
-      if subject.inherited^.f38.b7 and (t3 = 6) or not subject.inherited^.f38.b7 and (t3 = 7) then begin
+      if subject.inherited^.f38.conditional_sense and (t3 = 6) or not subject.inherited^.f38.conditional_sense and (t3 = 7) then begin
         solution^.space136[138] := chr(1);
       end else begin
         solution^.space136[138] := chr(2);
@@ -6186,12 +6186,12 @@ begin
       end else begin
         solution^.space136[136] := chr(2);
       end;
-      if subject.inherited^.l16 <> 0 then begin
+      if subject.inherited^.conditional_target <> 0 then begin
         solution^.space136[137] := chr(1);
       end else begin
         solution^.space136[137] := chr(2);
       end;
-      if subject.inherited^.f38.b7 and (t3 = 6) or not subject.inherited^.f38.b7 and (t3 = 7) then begin
+      if subject.inherited^.f38.conditional_sense and (t3 = 6) or not subject.inherited^.f38.conditional_sense and (t3 = 7) then begin
         solution^.space136[138] := chr(1);
       end else begin
         solution^.space136[138] := chr(2);
@@ -6262,7 +6262,7 @@ begin
     t5 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
     p2_locals_ptr_t(addr(solution^))^.w[176] := t5;
     p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.sym)^.w[13]]);
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -6305,7 +6305,7 @@ begin
     end else begin
       solution^.space136[143] := chr(3);
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[144] := chr(1);
       if p2_locals_ptr_t(addr(solution^))^.w[176] = 7 then begin
         solution^.space136[145] := chr(1);
@@ -6402,7 +6402,7 @@ begin
         end;
       end;
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[149] := chr(1);
       if p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[80 + p2_locals_ptr_t(addr(solution^))^.w[176]] & 128 <> 0 then begin
         solution^.space136[150] := chr(1);
@@ -6481,7 +6481,7 @@ begin
     t5 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
     p2_locals_ptr_t(addr(solution^))^.w[176] := t5;
     p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.sym)^.w[13]]);
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -6524,7 +6524,7 @@ begin
     end else begin
       solution^.space136[143] := chr(3);
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[144] := chr(1);
       if p2_locals_ptr_t(addr(solution^))^.w[176] = 7 then begin
         solution^.space136[145] := chr(1);
@@ -6621,7 +6621,7 @@ begin
         end;
       end;
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[149] := chr(1);
       if p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[112 + p2_locals_ptr_t(addr(solution^))^.w[176]] & 128 <> 0 then begin
         solution^.space136[150] := chr(1);
@@ -6636,7 +6636,7 @@ begin
         solution^.space136[151] := chr(2);
       end;
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[152] := chr(1);
       if p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[96 + p2_locals_ptr_t(addr(solution^))^.w[176]] & 128 <> 0 then begin
         solution^.space136[153] := chr(1);
@@ -6651,7 +6651,7 @@ begin
         solution^.space136[154] := chr(2);
       end;
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[155] := chr(1);
       if p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[80 + p2_locals_ptr_t(addr(solution^))^.w[176]] & 128 <> 0 then begin
         solution^.space136[156] := chr(1);
@@ -6719,12 +6719,12 @@ begin
     solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
     solution^.rule := 135;
     solution^.chain := addr(subject);
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := 7;
     end else begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := 6;
     end;
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -6825,12 +6825,12 @@ begin
     solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
     solution^.rule := 136;
     solution^.chain := addr(subject);
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := 7;
     end else begin
       p2_locals_ptr_t(addr(solution^))^.w[176] := 6;
     end;
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -6944,7 +6944,7 @@ begin
     solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.sym)^.p[5]);
     t6 := abs(p2_node_ptr_t(subject.sym)^.w[14]);
     p2_locals_ptr_t(addr(solution^))^.w[178] := t6;
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -6984,7 +6984,7 @@ begin
     end else begin
       solution^.space136[143] := chr(2);
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[144] := chr(1);
       if p2_locals_ptr_t(addr(solution^))^.w[178] = 7 then begin
         solution^.space136[145] := chr(1);
@@ -7081,7 +7081,7 @@ begin
         end;
       end;
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[149] := chr(1);
       if p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[80 + p2_locals_ptr_t(addr(solution^))^.w[178]] & 128 <> 0 then begin
         solution^.space136[150] := chr(1);
@@ -7159,7 +7159,7 @@ begin
     solution^.rule := 138;
     solution^.chain := addr(subject);
     solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.sym)^.p[5]);
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -7204,12 +7204,12 @@ begin
     end else begin
       solution^.space136[144] := chr(2);
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[145] := chr(1);
     end else begin
       solution^.space136[145] := chr(2);
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[146] := chr(1);
     end else begin
       solution^.space136[146] := chr(2);
@@ -7277,7 +7277,7 @@ begin
     solution^.rule := 139;
     solution^.chain := addr(subject);
     solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.sym)^.p[5]);
-    if subject.inherited^.l16 <> 0 then begin
+    if subject.inherited^.conditional_target <> 0 then begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
@@ -7322,12 +7322,12 @@ begin
     end else begin
       solution^.space136[144] := chr(2);
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[145] := chr(1);
     end else begin
       solution^.space136[145] := chr(2);
     end;
-    if subject.inherited^.f38.b7 then begin
+    if subject.inherited^.f38.conditional_sense then begin
       solution^.space136[146] := chr(1);
     end else begin
       solution^.space136[146] := chr(2);

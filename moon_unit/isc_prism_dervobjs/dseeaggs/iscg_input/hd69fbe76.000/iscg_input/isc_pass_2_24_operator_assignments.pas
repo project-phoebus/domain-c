@@ -377,7 +377,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[148]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t10, find_well_known_literal_solution(16), t11);
@@ -389,12 +389,12 @@ begin
         if ord(result.space136[149]) <> 1 then begin
           if ord(result.space136[150]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[151]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -452,12 +452,12 @@ begin
         if ord(result.space136[157]) <> 1 then begin
           if ord(result.space136[158]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[159]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -516,7 +516,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       t18 := t7;
     end;
@@ -650,18 +650,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[177]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[178]) <> 1 then begin
         if ord(result.space136[179]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[180]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -720,12 +720,12 @@ begin
       if ord(result.space136[186]) <> 1 then begin
         if ord(result.space136[187]) = 1 then begin
           pattern_match_error(3, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[188]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -785,7 +785,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(10, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end;
 end;
@@ -989,7 +989,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[148]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t10, find_well_known_literal_solution(16), t11);
@@ -1001,12 +1001,12 @@ begin
         if ord(result.space136[149]) <> 1 then begin
           if ord(result.space136[150]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[151]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -1064,12 +1064,12 @@ begin
         if ord(result.space136[157]) <> 1 then begin
           if ord(result.space136[158]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[159]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -1128,7 +1128,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       t18 := t7;
     end;
@@ -1262,18 +1262,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[177]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[178]) <> 1 then begin
         if ord(result.space136[179]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[180]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -1332,12 +1332,12 @@ begin
       if ord(result.space136[186]) <> 1 then begin
         if ord(result.space136[187]) = 1 then begin
           pattern_match_error(3, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[188]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -1397,7 +1397,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(10, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end;
 end;
@@ -1663,7 +1663,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[151]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t15, find_well_known_literal_solution(16), t16);
@@ -1675,12 +1675,12 @@ begin
         if ord(result.space136[152]) <> 1 then begin
           if ord(result.space136[153]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[154]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -1738,12 +1738,12 @@ begin
         if ord(result.space136[160]) <> 1 then begin
           if ord(result.space136[161]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[162]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -1802,7 +1802,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       result.fields[2] := t12;
       t23 := t12;
@@ -2236,18 +2236,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[212]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[213]) <> 1 then begin
         if ord(result.space136[214]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[215]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -2307,12 +2307,12 @@ begin
       if ord(result.space136[221]) <> 1 then begin
         if ord(result.space136[222]) = 1 then begin
           pattern_match_error(3, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[223]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -2373,7 +2373,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(10, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end;
 end;
@@ -2474,7 +2474,7 @@ begin
     t11 := create_solution_for_ip_reg;
     if ord(result.space136[137]) = 1 then begin
       pattern_match_error(5, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if t11^.obj_w_name <> nil then begin
       t11^.obj_w_name := t11^.obj_w_name;
@@ -2537,7 +2537,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(15, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end else begin
       t14 := create_solution_for_ip_reg;
       if t14^.obj_w_name <> nil then begin
@@ -2654,7 +2654,7 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[154]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
         debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
             16, t17, find_well_known_literal_solution(16), t18);
@@ -2666,12 +2666,12 @@ begin
       if ord(result.space136[155]) <> 1 then begin
         if ord(result.space136[156]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[157]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0, t14,
@@ -2686,7 +2686,7 @@ begin
   if ord(result.space136[158]) <> 1 then begin
     if ord(result.space136[159]) = 1 then begin
       pattern_match_error(5, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if ord(result.space136[160]) = 1 then begin
       if ord(result.space136[161]) = 1 then begin
@@ -2745,7 +2745,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(15, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end else begin
       t25 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited, ord(opc$mffp), 0,
@@ -2867,18 +2867,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[176]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[177]) <> 1 then begin
         if ord(result.space136[178]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[179]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end;
@@ -2982,7 +2982,7 @@ begin
   if ord(result.space136[136]) = 1 then begin
     if ord(result.space136[137]) = 1 then begin
       pattern_match_error(5, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if result.fields[0]^.obj_w_name <> nil then begin
       result.fields[0]^.obj_w_name := result.fields[0]^.obj_w_name;
@@ -3046,7 +3046,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(15, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end else begin
       t14 := create_solution_for_ip_reg;
       if t14^.obj_w_name <> nil then begin
@@ -3163,7 +3163,7 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[154]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
         debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
             16, t17, find_well_known_literal_solution(16), t18);
@@ -3175,12 +3175,12 @@ begin
       if ord(result.space136[155]) <> 1 then begin
         if ord(result.space136[156]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[157]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0, t14,
@@ -3242,7 +3242,7 @@ begin
   if ord(result.space136[162]) = 1 then begin
     if ord(result.space136[163]) = 1 then begin
       pattern_match_error(5, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if ord(result.space136[164]) = 1 then begin
       if ord(result.space136[165]) = 1 then begin
@@ -3302,7 +3302,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(15, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end else begin
       t29 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited, ord(opc$mffp), 0,
@@ -3424,18 +3424,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[180]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[181]) <> 1 then begin
         if ord(result.space136[182]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[183]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end;
@@ -3650,7 +3650,7 @@ begin
   end;
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     t49 := subject^.children[1];
@@ -3659,11 +3659,11 @@ begin
     t26 := create_solution_for_ip_reg;
     if ord(result.space136[138]) = 1 then begin
       pattern_match_error(5, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if ord(result.space136[139]) = 1 then begin
       pattern_match_error(4, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if t26^.obj_w_name <> nil then begin
       t26^.obj_w_name := t26^.obj_w_name;
@@ -3726,13 +3726,13 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(15, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end else begin
       t29 := high_half_of_fp_reg_pair(t26);
       t30 := low_half_of_fp_reg_pair(t26);
       if ord(result.space136[146]) = 1 then begin
         pattern_match_error(5, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       if t29^.obj_w_name <> nil then begin
         t29^.obj_w_name := t29^.obj_w_name;
@@ -3795,7 +3795,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(15, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end else begin
         t33 := create_solution_for_ip_reg;
         if t33^.obj_w_name <> nil then begin
@@ -3922,7 +3922,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[163]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t36, find_well_known_literal_solution(16), t37);
@@ -3934,12 +3934,12 @@ begin
         if ord(result.space136[164]) <> 1 then begin
           if ord(result.space136[165]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[166]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0,
@@ -3947,7 +3947,7 @@ begin
       end;
       if ord(result.space136[167]) = 1 then begin
         pattern_match_error(5, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       if t30^.obj_w_name <> nil then begin
         t30^.obj_w_name := t30^.obj_w_name;
@@ -4010,7 +4010,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(15, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end else begin
         t42 := create_solution_for_ip_reg;
         if t42^.obj_w_name <> nil then begin
@@ -4137,7 +4137,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[184]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t45, find_well_known_literal_solution(16), t46);
@@ -4149,12 +4149,12 @@ begin
         if ord(result.space136[185]) <> 1 then begin
           if ord(result.space136[186]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[187]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0,
@@ -4171,11 +4171,11 @@ begin
   if ord(result.space136[188]) <> 1 then begin
     if ord(result.space136[189]) = 1 then begin
       pattern_match_error(5, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if ord(result.space136[190]) = 1 then begin
       pattern_match_error(4, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if ord(result.space136[191]) = 1 then begin
       if ord(result.space136[192]) = 1 then begin
@@ -4236,13 +4236,13 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(15, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end else begin
       t53 := high_half_of_fp_reg_pair(isc_solution_ptr_t(t50));
       t54 := low_half_of_fp_reg_pair(isc_solution_ptr_t(t50));
       if ord(result.space136[197]) = 1 then begin
         pattern_match_error(5, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       if ord(result.space136[198]) = 1 then begin
         if ord(result.space136[199]) = 1 then begin
@@ -4301,7 +4301,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(15, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end else begin
         t57 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$mffp), 0,
@@ -4434,24 +4434,24 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[214]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
         if ord(result.space136[215]) <> 1 then begin
           if ord(result.space136[216]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[217]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end;
       if ord(result.space136[218]) = 1 then begin
         pattern_match_error(5, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       if ord(result.space136[219]) = 1 then begin
         if ord(result.space136[220]) = 1 then begin
@@ -4510,7 +4510,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(15, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end else begin
         t66 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$mffp), 0,
@@ -4643,18 +4643,18 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[235]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
         if ord(result.space136[236]) <> 1 then begin
           if ord(result.space136[237]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[238]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end;
@@ -4875,11 +4875,11 @@ begin
   if ord(result.space136[136]) = 1 then begin
     if ord(result.space136[137]) = 1 then begin
       pattern_match_error(5, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if ord(result.space136[138]) = 1 then begin
       pattern_match_error(4, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if result.fields[0]^.obj_w_name <> nil then begin
       result.fields[0]^.obj_w_name := result.fields[0]^.obj_w_name;
@@ -4943,13 +4943,13 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(15, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end else begin
       t29 := high_half_of_fp_reg_pair(result.fields[0]);
       t30 := low_half_of_fp_reg_pair(result.fields[0]);
       if ord(result.space136[145]) = 1 then begin
         pattern_match_error(5, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       if t29^.obj_w_name <> nil then begin
         t29^.obj_w_name := t29^.obj_w_name;
@@ -5012,7 +5012,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(15, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end else begin
         t33 := create_solution_for_ip_reg;
         if t33^.obj_w_name <> nil then begin
@@ -5139,7 +5139,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[162]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t36, find_well_known_literal_solution(16), t37);
@@ -5151,12 +5151,12 @@ begin
         if ord(result.space136[163]) <> 1 then begin
           if ord(result.space136[164]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[165]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0,
@@ -5164,7 +5164,7 @@ begin
       end;
       if ord(result.space136[166]) = 1 then begin
         pattern_match_error(5, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       if t30^.obj_w_name <> nil then begin
         t30^.obj_w_name := t30^.obj_w_name;
@@ -5227,7 +5227,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(15, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end else begin
         t42 := create_solution_for_ip_reg;
         if t42^.obj_w_name <> nil then begin
@@ -5354,7 +5354,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[183]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t45, find_well_known_literal_solution(16), t46);
@@ -5366,12 +5366,12 @@ begin
         if ord(result.space136[184]) <> 1 then begin
           if ord(result.space136[185]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[186]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0,
@@ -5435,11 +5435,11 @@ begin
   if ord(result.space136[191]) = 1 then begin
     if ord(result.space136[192]) = 1 then begin
       pattern_match_error(5, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if ord(result.space136[193]) = 1 then begin
       pattern_match_error(4, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if ord(result.space136[194]) = 1 then begin
       if ord(result.space136[195]) = 1 then begin
@@ -5499,13 +5499,13 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(15, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end else begin
       t57 := high_half_of_fp_reg_pair(result.fields[0]);
       t58 := low_half_of_fp_reg_pair(result.fields[0]);
       if ord(result.space136[200]) = 1 then begin
         pattern_match_error(5, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       if ord(result.space136[201]) = 1 then begin
         if ord(result.space136[202]) = 1 then begin
@@ -5564,7 +5564,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(15, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end else begin
         t61 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$mffp), 0,
@@ -5697,24 +5697,24 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[217]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
         if ord(result.space136[218]) <> 1 then begin
           if ord(result.space136[219]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[220]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end;
       if ord(result.space136[221]) = 1 then begin
         pattern_match_error(5, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       if ord(result.space136[222]) = 1 then begin
         if ord(result.space136[223]) = 1 then begin
@@ -5773,7 +5773,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(15, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end else begin
         t70 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited, ord(opc$mffp), 0,
@@ -5906,18 +5906,18 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[238]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
         if ord(result.space136[239]) <> 1 then begin
           if ord(result.space136[240]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[241]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end;
@@ -6123,7 +6123,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[148]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t9, find_well_known_literal_solution(16), t10);
@@ -6135,12 +6135,12 @@ begin
         if ord(result.space136[149]) <> 1 then begin
           if ord(result.space136[150]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[151]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -6198,12 +6198,12 @@ begin
         if ord(result.space136[157]) <> 1 then begin
           if ord(result.space136[158]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[159]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -6262,7 +6262,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       t17 := t6;
     end;
@@ -6417,18 +6417,18 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[179]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
         if ord(result.space136[180]) <> 1 then begin
           if ord(result.space136[181]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[182]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -6487,12 +6487,12 @@ begin
         if ord(result.space136[188]) <> 1 then begin
           if ord(result.space136[189]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[190]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -6552,7 +6552,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
     end;
   end;
@@ -6810,7 +6810,7 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[148]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
         debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
             16, t9, find_well_known_literal_solution(16), t10);
@@ -6822,12 +6822,12 @@ begin
       if ord(result.space136[149]) <> 1 then begin
         if ord(result.space136[150]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[151]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -6885,12 +6885,12 @@ begin
       if ord(result.space136[157]) <> 1 then begin
         if ord(result.space136[158]) = 1 then begin
           pattern_match_error(3, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[159]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -6949,7 +6949,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(10, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     t17 := t6;
     t18 := t6;
@@ -7120,18 +7120,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[183]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[184]) <> 1 then begin
         if ord(result.space136[185]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[186]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -7190,12 +7190,12 @@ begin
       if ord(result.space136[192]) <> 1 then begin
         if ord(result.space136[193]) = 1 then begin
           pattern_match_error(3, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[194]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -7255,7 +7255,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(10, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end;
 end;
@@ -7460,7 +7460,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[148]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t11, find_well_known_literal_solution(16), t12);
@@ -7472,12 +7472,12 @@ begin
         if ord(result.space136[149]) <> 1 then begin
           if ord(result.space136[150]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[151]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -7535,12 +7535,12 @@ begin
         if ord(result.space136[157]) <> 1 then begin
           if ord(result.space136[158]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[159]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -7599,7 +7599,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       t19 := t8;
     end;
@@ -7737,18 +7737,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[178]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[179]) <> 1 then begin
         if ord(result.space136[180]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[181]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -7807,12 +7807,12 @@ begin
       if ord(result.space136[187]) <> 1 then begin
         if ord(result.space136[188]) = 1 then begin
           pattern_match_error(3, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[189]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -7872,7 +7872,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(10, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end;
 end;
@@ -8070,7 +8070,7 @@ begin
     end else begin
       if ord(result.space136[138]) = 1 then begin
         pattern_match_error(5, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       if t6^.obj_w_name <> nil then begin
         t6^.obj_w_name := t6^.obj_w_name;
@@ -8133,7 +8133,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(15, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end else begin
         t36 := create_solution_for_ip_reg;
         if t36^.obj_w_name <> nil then begin
@@ -8260,7 +8260,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[155]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t39, find_well_known_literal_solution(16), t40);
@@ -8272,12 +8272,12 @@ begin
         if ord(result.space136[156]) <> 1 then begin
           if ord(result.space136[157]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[158]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0,
@@ -8286,7 +8286,7 @@ begin
     end;
     if ord(result.space136[159]) = 1 then begin
       pattern_match_error(5, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     debug_lir_$simple_instruction(result.inherited, ord(opc$cvtid), 0, t6,
         t14, nil);
@@ -8368,11 +8368,11 @@ begin
   end else begin
     if ord(result.space136[167]) = 1 then begin
       pattern_match_error(4, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if ord(result.space136[168]) = 1 then begin
       pattern_match_error(5, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     debug_lir_$simple_instruction(result.inherited, ord(opc$cvtid), 0,
         subject^.children[2], t2, nil);
@@ -8391,7 +8391,7 @@ begin
     if ord(result.space136[169]) = 1 then begin
       if ord(result.space136[170]) = 1 then begin
         pattern_match_error(5, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       if t6^.obj_w_name <> nil then begin
         t6^.obj_w_name := t6^.obj_w_name;
@@ -8454,7 +8454,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(15, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end else begin
         t57 := create_solution_for_ip_reg;
         if t57^.obj_w_name <> nil then begin
@@ -8581,7 +8581,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[187]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t60, find_well_known_literal_solution(16), t61);
@@ -8593,12 +8593,12 @@ begin
         if ord(result.space136[188]) <> 1 then begin
           if ord(result.space136[189]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[190]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0,
@@ -8619,7 +8619,7 @@ begin
     end;
     if ord(result.space136[192]) = 1 then begin
       pattern_match_error(5, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     debug_lir_$simple_instruction(result.inherited, ord(opc$cvtid), 0, t6,
         t1, nil);
@@ -8654,7 +8654,7 @@ begin
   end else begin
     if ord(result.space136[194]) = 1 then begin
       pattern_match_error(5, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if ord(result.space136[195]) = 1 then begin
       if ord(result.space136[196]) = 1 then begin
@@ -8713,7 +8713,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(15, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end else begin
       t68 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited, ord(opc$mffp), 0, t7,
@@ -8835,18 +8835,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[211]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[212]) <> 1 then begin
         if ord(result.space136[213]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[214]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end;
@@ -9078,7 +9078,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[148]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t11, find_well_known_literal_solution(16), t12);
@@ -9090,12 +9090,12 @@ begin
         if ord(result.space136[149]) <> 1 then begin
           if ord(result.space136[150]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[151]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -9153,12 +9153,12 @@ begin
         if ord(result.space136[157]) <> 1 then begin
           if ord(result.space136[158]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[159]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -9217,7 +9217,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       t19 := t8;
     end;
@@ -9350,18 +9350,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[177]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[178]) <> 1 then begin
         if ord(result.space136[179]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[180]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -9420,12 +9420,12 @@ begin
       if ord(result.space136[186]) <> 1 then begin
         if ord(result.space136[187]) = 1 then begin
           pattern_match_error(3, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[188]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -9485,7 +9485,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(10, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end;
 end;
@@ -9608,7 +9608,7 @@ begin
     end else begin
       if ord(result.space136[138]) = 1 then begin
         pattern_match_error(5, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       if t1^.obj_w_name <> nil then begin
         t1^.obj_w_name := t1^.obj_w_name;
@@ -9671,7 +9671,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(15, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end else begin
         t18 := create_solution_for_ip_reg;
         if t18^.obj_w_name <> nil then begin
@@ -9798,7 +9798,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[155]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t21, find_well_known_literal_solution(16), t22);
@@ -9810,12 +9810,12 @@ begin
         if ord(result.space136[156]) <> 1 then begin
           if ord(result.space136[157]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[158]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$mtfp), 0,
@@ -9840,7 +9840,7 @@ begin
   end else begin
     if ord(result.space136[160]) = 1 then begin
       pattern_match_error(5, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     if ord(result.space136[161]) = 1 then begin
       if ord(result.space136[162]) = 1 then begin
@@ -9899,7 +9899,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(15, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end else begin
       t28 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited, ord(opc$mffp), 0, t3,
@@ -10021,18 +10021,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[177]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[178]) <> 1 then begin
         if ord(result.space136[179]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[180]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end;
@@ -10237,7 +10237,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[148]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t10, find_well_known_literal_solution(16), t11);
@@ -10249,12 +10249,12 @@ begin
         if ord(result.space136[149]) <> 1 then begin
           if ord(result.space136[150]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[151]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -10312,12 +10312,12 @@ begin
         if ord(result.space136[157]) <> 1 then begin
           if ord(result.space136[158]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[159]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -10376,7 +10376,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       t18 := t7;
     end;
@@ -10514,18 +10514,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[178]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[179]) <> 1 then begin
         if ord(result.space136[180]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[181]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -10584,12 +10584,12 @@ begin
       if ord(result.space136[187]) <> 1 then begin
         if ord(result.space136[188]) = 1 then begin
           pattern_match_error(3, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[189]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -10649,7 +10649,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(10, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end;
 end;
@@ -10861,7 +10861,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[148]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t10, find_well_known_literal_solution(16), t11);
@@ -10873,12 +10873,12 @@ begin
         if ord(result.space136[149]) <> 1 then begin
           if ord(result.space136[150]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[151]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -10936,12 +10936,12 @@ begin
         if ord(result.space136[157]) <> 1 then begin
           if ord(result.space136[158]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[159]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -11000,7 +11000,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       t18 := t7;
     end;
@@ -11133,18 +11133,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[177]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[178]) <> 1 then begin
         if ord(result.space136[179]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[180]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -11203,12 +11203,12 @@ begin
       if ord(result.space136[186]) <> 1 then begin
         if ord(result.space136[187]) = 1 then begin
           pattern_match_error(3, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[188]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -11268,7 +11268,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(10, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end;
 end;
@@ -11471,7 +11471,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[148]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t10, find_well_known_literal_solution(16), t11);
@@ -11483,12 +11483,12 @@ begin
         if ord(result.space136[149]) <> 1 then begin
           if ord(result.space136[150]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[151]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -11546,12 +11546,12 @@ begin
         if ord(result.space136[157]) <> 1 then begin
           if ord(result.space136[158]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[159]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -11610,7 +11610,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       t18 := t7;
     end;
@@ -11748,18 +11748,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[178]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[179]) <> 1 then begin
         if ord(result.space136[180]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[181]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -11818,12 +11818,12 @@ begin
       if ord(result.space136[187]) <> 1 then begin
         if ord(result.space136[188]) = 1 then begin
           pattern_match_error(3, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[189]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -11883,7 +11883,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(10, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end;
 end;
@@ -12111,7 +12111,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[148]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t9, find_well_known_literal_solution(16), t10);
@@ -12123,12 +12123,12 @@ begin
         if ord(result.space136[149]) <> 1 then begin
           if ord(result.space136[150]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[151]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -12186,12 +12186,12 @@ begin
         if ord(result.space136[157]) <> 1 then begin
           if ord(result.space136[158]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[159]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -12250,7 +12250,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       t17 := t6;
     end;
@@ -12405,18 +12405,18 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[179]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
         if ord(result.space136[180]) <> 1 then begin
           if ord(result.space136[181]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[182]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -12475,12 +12475,12 @@ begin
         if ord(result.space136[188]) <> 1 then begin
           if ord(result.space136[189]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[190]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -12540,7 +12540,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
     end;
   end;
@@ -12792,7 +12792,7 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[148]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
         debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
             16, t9, find_well_known_literal_solution(16), t10);
@@ -12804,12 +12804,12 @@ begin
       if ord(result.space136[149]) <> 1 then begin
         if ord(result.space136[150]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[151]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -12867,12 +12867,12 @@ begin
       if ord(result.space136[157]) <> 1 then begin
         if ord(result.space136[158]) = 1 then begin
           pattern_match_error(3, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[159]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -12931,7 +12931,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(10, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
     t17 := t6;
     t18 := t6;
@@ -13096,18 +13096,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[181]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[182]) <> 1 then begin
         if ord(result.space136[183]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[184]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -13166,12 +13166,12 @@ begin
       if ord(result.space136[190]) <> 1 then begin
         if ord(result.space136[191]) = 1 then begin
           pattern_match_error(3, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[192]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -13231,7 +13231,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(10, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end;
 end;
@@ -13434,7 +13434,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[148]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t10, find_well_known_literal_solution(16), t11);
@@ -13446,12 +13446,12 @@ begin
         if ord(result.space136[149]) <> 1 then begin
           if ord(result.space136[150]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[151]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -13509,12 +13509,12 @@ begin
         if ord(result.space136[157]) <> 1 then begin
           if ord(result.space136[158]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[159]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -13573,7 +13573,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       t18 := t7;
     end;
@@ -13711,18 +13711,18 @@ begin
               subject^.children[1]^.bits_trusted);
         end;
         if ord(result.space136[178]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
       if ord(result.space136[179]) <> 1 then begin
         if ord(result.space136[180]) = 1 then begin
           pattern_match_error(2, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[181]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -13781,12 +13781,12 @@ begin
       if ord(result.space136[187]) <> 1 then begin
         if ord(result.space136[188]) = 1 then begin
           pattern_match_error(3, il$t(0), 0,
-              subject^.children[1]^.inherited^.pos.line);
+              subject^.children[1]^.inherited^.pos.source_line_number);
         end;
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         if ord(result.space136[189]) = 1 then begin
-          warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+          warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
         end;
       end;
     end
@@ -13846,7 +13846,7 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       pattern_match_error(10, il$t(subject^.w98), 0,
-          subject^.inherited^.pos.line);
+          subject^.inherited^.pos.source_line_number);
     end;
   end;
 end;
@@ -13924,8 +13924,8 @@ begin
     if ord(result.space136[136]) = 2 then begin
       t7 := create_solution_for_ip_reg;
       debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
-          subject^.children[1]^.inherited^.precision, subject^.children[1],
-          find_well_known_literal_solution(0), t7);
+          subject^.children[1]^.inherited^.fetch_precision,
+          subject^.children[1], find_well_known_literal_solution(0), t7);
       t19 := t7;
     end else begin
       t8 := create_solution_for_ip_reg;
@@ -14054,7 +14054,7 @@ begin
                 subject^.children[1]^.bits_trusted);
           end;
           if ord(result.space136[148]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited, ord(opc$insert), 0,
               16, t11, find_well_known_literal_solution(16), t12);
@@ -14066,12 +14066,12 @@ begin
         if ord(result.space136[149]) <> 1 then begin
           if ord(result.space136[150]) = 1 then begin
             pattern_match_error(2, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[151]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -14129,12 +14129,12 @@ begin
         if ord(result.space136[157]) <> 1 then begin
           if ord(result.space136[158]) = 1 then begin
             pattern_match_error(3, il$t(0), 0,
-                subject^.children[1]^.inherited^.pos.line);
+                subject^.children[1]^.inherited^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
               nil, nil, nil);
           if ord(result.space136[159]) = 1 then begin
-            warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+            warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
           end;
         end;
       end
@@ -14193,7 +14193,7 @@ begin
         debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
             nil, nil, nil);
         pattern_match_error(10, il$t(subject^.w98), 0,
-            subject^.inherited^.pos.line);
+            subject^.inherited^.pos.source_line_number);
       end;
       t19 := t8;
     end;
@@ -14334,18 +14334,18 @@ begin
             subject^.children[1]^.bits_trusted);
       end;
       if ord(result.space136[178]) = 1 then begin
-        warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+        warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
       end;
     end;
     if ord(result.space136[179]) <> 1 then begin
       if ord(result.space136[180]) = 1 then begin
         pattern_match_error(2, il$t(0), 0,
-            subject^.children[1]^.inherited^.pos.line);
+            subject^.children[1]^.inherited^.pos.source_line_number);
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       if ord(result.space136[181]) = 1 then begin
-        warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+        warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
       end;
     end;
   end
@@ -14403,12 +14403,12 @@ begin
     if ord(result.space136[187]) <> 1 then begin
       if ord(result.space136[188]) = 1 then begin
         pattern_match_error(3, il$t(0), 0,
-            subject^.children[1]^.inherited^.pos.line);
+            subject^.children[1]^.inherited^.pos.source_line_number);
       end;
       debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0,
           nil, nil, nil);
       if ord(result.space136[189]) = 1 then begin
-        warning_unaligned_atomic_access(subject^.inherited^.pos.line);
+        warning_unaligned_atomic_access(subject^.inherited^.pos.source_line_number);
       end;
     end;
   end
@@ -14467,6 +14467,6 @@ begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$costly), 0, nil,
         nil, nil);
     pattern_match_error(10, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
 end;

@@ -1200,7 +1200,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1224,7 +1224,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1251,7 +1251,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1275,7 +1275,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1299,7 +1299,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1332,7 +1332,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1356,7 +1356,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1380,7 +1380,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1404,7 +1404,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1428,7 +1428,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1449,7 +1449,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1473,7 +1473,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1500,7 +1500,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1521,7 +1521,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1542,7 +1542,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1563,7 +1563,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1590,7 +1590,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1611,7 +1611,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1641,7 +1641,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1668,7 +1668,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1692,7 +1692,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1716,7 +1716,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1740,7 +1740,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1770,7 +1770,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1791,7 +1791,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1821,7 +1821,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1848,7 +1848,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1872,7 +1872,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1896,7 +1896,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1920,7 +1920,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1944,7 +1944,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1968,7 +1968,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -1992,7 +1992,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -2016,7 +2016,7 @@ begin
             write('static next: ', il_node_to_string(pin_assign_node_ptr_t(node)^.next));
             writeln('.');
             indent(depth);
-            write('static source_line_number: ', inh^.pos.line:1);
+            write('static source_line_number: ', inh^.pos.source_line_number:1);
             writeln('.');
             indent(depth);
             write('static stmt_no: ', pin_assign_node_ptr_t(node)^.f42.stmt_no:1);
@@ -2054,7 +2054,7 @@ begin
         write('static next: ', il_node_to_string(pin_bit_field_assign_ptr_t(node)^.next));
         writeln('.');
         indent(depth);
-        write('static source_line_number: ', inh^.pos.line:1);
+        write('static source_line_number: ', inh^.pos.source_line_number:1);
         writeln('.');
         indent(depth);
         write('static stmt_no: ', pin_bit_field_assign_ptr_t(node)^.f42.stmt_no:1);
@@ -2111,7 +2111,7 @@ begin
         write('static next: ', il_node_to_string(pin_case_node_range_check_ptr_t(node)^.next));
         writeln('.');
         indent(depth);
-        write('static source_line_number: ', inh^.pos.line:1);
+        write('static source_line_number: ', inh^.pos.source_line_number:1);
         writeln('.');
         indent(depth);
         write('static stmt_no: ', pin_case_node_range_check_ptr_t(node)^.f42.stmt_no:1);
@@ -2126,7 +2126,7 @@ begin
         write('static next: ', il_node_to_string(pin_case_node_no_range_check_ptr_t(node)^.next));
         writeln('.');
         indent(depth);
-        write('static source_line_number: ', inh^.pos.line:1);
+        write('static source_line_number: ', inh^.pos.source_line_number:1);
         writeln('.');
         indent(depth);
         write('static stmt_no: ', pin_case_node_no_range_check_ptr_t(node)^.f42.stmt_no:1);
@@ -2141,7 +2141,7 @@ begin
         write('static next: ', il_node_to_string(pin_cbranch_node_ptr_t(node)^.next));
         writeln('.');
         indent(depth);
-        write('static source_line_number: ', inh^.pos.line:1);
+        write('static source_line_number: ', inh^.pos.source_line_number:1);
         writeln('.');
         indent(depth);
         write('static stmt_no: ', pin_cbranch_node_ptr_t(node)^.f42.stmt_no:1);
@@ -2400,7 +2400,7 @@ begin
         write('static next: ', il_node_to_string(pin_eval_node_ptr_t(node)^.next));
         writeln('.');
         indent(depth);
-        write('static source_line_number: ', inh^.pos.line:1);
+        write('static source_line_number: ', inh^.pos.source_line_number:1);
         writeln('.');
         indent(depth);
         write('static stmt_no: ', pin_eval_node_ptr_t(node)^.f42.stmt_no:1);
@@ -2412,7 +2412,7 @@ begin
       exception_handler_entry:
         begin
         indent(depth);
-        write('static exception_frame: ', inh^.top);
+        write('static exception_frame: ', inh^.exception_frame);
         writeln('.');
         end;
       fortran_symbol:
@@ -2475,7 +2475,7 @@ begin
         write('static next: ', il_node_to_string(pin_insert_bit_field_ptr_t(node)^.next));
         writeln('.');
         indent(depth);
-        write('static source_line_number: ', inh^.pos.line:1);
+        write('static source_line_number: ', inh^.pos.source_line_number:1);
         writeln('.');
         indent(depth);
         write('static stmt_no: ', pin_insert_bit_field_ptr_t(node)^.f42.stmt_no:1);
@@ -2541,7 +2541,7 @@ begin
         write('static next: ', il_node_to_string(pin_nlbranch_node_ptr_t(node)^.next));
         writeln('.');
         indent(depth);
-        write('static source_line_number: ', inh^.pos.line:1);
+        write('static source_line_number: ', inh^.pos.source_line_number:1);
         writeln('.');
         indent(depth);
         write('static stmt_no: ', pin_nlbranch_node_ptr_t(node)^.f42.stmt_no:1);
@@ -2595,7 +2595,7 @@ begin
         write('static next: ', il_node_to_string(pin_raise_exception_ptr_t(node)^.next));
         writeln('.');
         indent(depth);
-        write('static source_line_number: ', inh^.pos.line:1);
+        write('static source_line_number: ', inh^.pos.source_line_number:1);
         writeln('.');
         indent(depth);
         write('static stmt_no: ', pin_raise_exception_ptr_t(node)^.f42.stmt_no:1);
@@ -2622,7 +2622,7 @@ begin
         write('static next: ', il_node_to_string(pin_release_dynamic_space_ptr_t(node)^.next));
         writeln('.');
         indent(depth);
-        write('static source_line_number: ', inh^.pos.line:1);
+        write('static source_line_number: ', inh^.pos.source_line_number:1);
         writeln('.');
         indent(depth);
         write('static stmt_no: ', pin_release_dynamic_space_ptr_t(node)^.f42.stmt_no:1);
@@ -2637,7 +2637,7 @@ begin
         write('static next: ', il_node_to_string(pin_return_node_ptr_t(node)^.next));
         writeln('.');
         indent(depth);
-        write('static source_line_number: ', inh^.pos.line:1);
+        write('static source_line_number: ', inh^.pos.source_line_number:1);
         writeln('.');
         indent(depth);
         write('static stmt_no: ', pin_return_node_ptr_t(node)^.f42.stmt_no:1);
@@ -3913,57 +3913,55 @@ begin
       bug_check('ISC: source line %wd: isc_print_il_node: unknown node type.%$', inh^.pos);
     end;
     { iscg: begin inherited attributes }
-    { The inherited attributes under the generator's names (inherited_
-      attributes_t's names are the hand-written units': call +20,
-      l16 +16, top +4, precision +24, the flags +39 b7 .. b3 and
-      preserve (b2), stmt +12, b36, f38.arith, available +28, pos). }
+    { The inherited attributes under the generator's names, which are
+      inherited_attributes_t's (docs/questions.md 271). }
     indent(depth);
-    write('inherited call_instruction_ptr: ', instruction_to_string(inh^.call));
+    write('inherited call_instruction_ptr: ', instruction_to_string(inh^.call_instruction_ptr));
     writeln('.');
     indent(depth);
-    write('inherited conditional_sense: ', inh^.f38.b7:1);
+    write('inherited conditional_sense: ', inh^.f38.conditional_sense:1);
     writeln('.');
     indent(depth);
-    write('inherited conditional_target: ', label_to_string(univ_ptr(inh^.l16)));
+    write('inherited conditional_target: ', label_to_string(univ_ptr(inh^.conditional_target)));
     writeln('.');
     indent(depth);
-    write('inherited exception_frame: ', integer32(inh^.top));
+    write('inherited exception_frame: ', integer32(inh^.exception_frame));
     writeln('.');
     indent(depth);
-    write('inherited fetch_precision: ', inh^.precision:1);
+    write('inherited fetch_precision: ', inh^.fetch_precision:1);
     writeln('.');
     indent(depth);
-    write('inherited immediate_parent_has_signed: ', inh^.f38.b6:1);
+    write('inherited immediate_parent_has_signed: ', inh^.f38.immediate_parent_has_signed:1);
     writeln('.');
     indent(depth);
-    write('inherited immediate_parent_wants_lvalue: ', inh^.f38.b5:1);
+    write('inherited immediate_parent_wants_lvalue: ', inh^.f38.immediate_parent_wants_lvalue:1);
     writeln('.');
     indent(depth);
-    write('inherited immediate_parent_wants_set_temporary: ', inh^.f38.b4:1);
+    write('inherited immediate_parent_wants_set_temporary: ', inh^.f38.immediate_parent_wants_set_temporary:1);
     writeln('.');
     indent(depth);
-    write('inherited immediate_parent_wants_signed: ', inh^.f38.b3:1);
+    write('inherited immediate_parent_wants_signed: ', inh^.f38.immediate_parent_wants_signed:1);
     writeln('.');
     indent(depth);
-    write('inherited inside_a_cse: ', inh^.f38.preserve:1);
+    write('inherited inside_a_cse: ', inh^.f38.inside_a_cse:1);
     writeln('.');
     indent(depth);
-    write('inherited original_il: ', integer32(inh^.stmt));
+    write('inherited original_il: ', integer32(inh^.original_il));
     writeln('.');
     indent(depth);
-    write('inherited parent_il_kind: ', il$t(ord(inh^.b36)):1);
+    write('inherited parent_il_kind: ', il$t(ord(inh^.parent_il_kind)):1);
     writeln('.');
     indent(depth);
-    write('inherited required_arithmetic: ', arith$t(ord(inh^.f38.arith)):1);
+    write('inherited required_arithmetic: ', arith$t(ord(inh^.f38.required_arithmetic)):1);
     writeln('.');
     indent(depth);
-    write('inherited required_precision: ', inh^.available:1);
+    write('inherited required_precision: ', inh^.required_precision:1);
     writeln('.');
     indent(depth);
-    write('inherited source_line_number: ', inh^.pos.line:1);
+    write('inherited source_line_number: ', inh^.pos.source_line_number:1);
     writeln('.');
     indent(depth);
-    write('inherited stmt_number: ', inh^.pos.stmt:1);
+    write('inherited stmt_number: ', inh^.pos.stmt_number:1);
     writeln('.');
     indent(depth);
     write('inherited il: ', integer32(inh));

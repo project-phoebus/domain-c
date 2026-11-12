@@ -4700,13 +4700,13 @@ begin
         otherwise
           if isc_user_routines_356 or isc_user_routines_354 then begin
             write('ISC: source line ');
-            write(inh^.pos.line:1);
+            write(inh^.pos.source_line_number:1);
             write(': pattern_matcher: Unrecognized solution^.il_kind.');
             writeln;
             end
           else
             bug_check('ISC: source line %wd: pattern_matcher: Unrecognized solution^.il_kind.%$',
-                      inh^.pos.line);
+                      inh^.pos.source_line_number);
         end;
     solution$case_jump_base, solution$fp_reg_pair_high,
     solution$fp_reg_pair_low, solution$local_routine, solution$ctl_reg,
@@ -4716,13 +4716,13 @@ begin
     otherwise
       if isc_user_routines_356 or isc_user_routines_354 then begin
         write('ISC: source line ');
-        write(inh^.pos.line:1);
+        write(inh^.pos.source_line_number:1);
         write(': pattern_matcher: Unrecognized solution^.kind.');
         writeln;
         end
       else
         bug_check('ISC: source line %wd: pattern_matcher: Unrecognized solution^.kind.%$',
-                  inh^.pos.line);
+                  inh^.pos.source_line_number);
     end;
   if isc_user_routines_354 then begin
     write('*************************');

@@ -143,11 +143,11 @@ begin
   t2 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if solution^.obj_w_name <> nil then begin
     solution^.obj_w_name := solution^.obj_w_name;
@@ -208,11 +208,11 @@ begin
   t4 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if solution^.obj_w_name <> nil then begin
     solution^.obj_w_name := solution^.obj_w_name;
@@ -544,11 +544,11 @@ begin
   t4 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[138]) = 1 then begin
     if ord(result.space136[139]) = 1 then begin
@@ -580,7 +580,7 @@ begin
       nil);
   if ord(result.space136[141]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[142]) = 1 then begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
@@ -612,7 +612,7 @@ begin
       subject^.children[1], t1, nil);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
@@ -662,17 +662,17 @@ begin
   t2 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$cvtds), 0,
       subject^.children[1], t1, nil);
   if ord(result.space136[138]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[139]) = 1 then begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$copys), 0,
@@ -701,11 +701,11 @@ begin
   t2 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$cvtds), 0,
       subject^.children[1], t1, nil);
@@ -738,11 +738,11 @@ begin
   t4 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[138]) = 1 then begin
     if ord(result.space136[139]) = 1 then begin
@@ -795,11 +795,11 @@ begin
   t2 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$cvtsd), 0,
       subject^.children[1], t1, nil);
@@ -825,11 +825,11 @@ begin
   t2 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$cvtsd), 0,
       subject^.children[1], t1, nil);
@@ -900,11 +900,11 @@ begin
   t4 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$cvtsd), 0, t1, t3,
       nil);
@@ -928,11 +928,11 @@ begin
   t2 := create_solution_for_fp_reg;
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$truncsi), 0, t1,
       t2, nil);
@@ -963,11 +963,11 @@ begin
   t1 := high_half_of_fp_reg_pair(subject^.children[1]);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$cvtsd), 0, t1,
       solution, nil);
@@ -987,11 +987,11 @@ begin
   t2 := create_solution_for_fp_reg;
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$truncdi), 0, t1,
       t2, nil);
@@ -1011,11 +1011,11 @@ begin
   t1 := high_half_of_fp_reg_quad(subject^.children[1]);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$cvtds), 0, t1,
       solution, nil);
@@ -1050,11 +1050,11 @@ begin
   t4 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$cvtds), 0, t1, t3,
       nil);
@@ -1427,11 +1427,11 @@ begin
   t2 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0, subject,
       solution, nil);
@@ -1456,11 +1456,11 @@ begin
   t4 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$copyd), 0, t1, t3,
       nil);
@@ -1478,11 +1478,11 @@ procedure transform_531_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   pass_2_isc_call(isc_node_ptr_t(subject^.sym),
       p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,
@@ -1500,11 +1500,11 @@ procedure transform_532_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(5, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   pass_2_isc_call(isc_node_ptr_t(subject^.sym),
       p2_node_ptr_t(subject^.sym)^.b[13] & 128 <> 0,

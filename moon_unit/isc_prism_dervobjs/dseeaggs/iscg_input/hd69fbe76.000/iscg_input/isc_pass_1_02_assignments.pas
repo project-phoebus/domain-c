@@ -1835,7 +1835,7 @@ begin
     t9 := make_bit_mask_1(16, 0);
     if (p2_node_ptr_t(subject.sym)^.w[28] <> 0) or (p2_node_ptr_t(subject.sym)^.w[38] <> 6) or (p2_node_ptr_t(subject.sym)^.w[26] <> 9) then begin
       solution^.space136[136] := chr(2);
-      if subject.children[2]^.inherited^.precision = 32 then begin
+      if subject.children[2]^.inherited^.fetch_precision = 32 then begin
         solution^.space136[158] := chr(1);
         if (subject.children[2]^.bits_trusted & 3 = 3) and (subject.children[2]^.bits_known & 3 = 0) or (subject.children[2]^.bits_trusted & 1 = 0) or (subject.children[2]^.bits_known & 1 <> 0) then begin
           solution^.space136[159] := chr(1);
@@ -1892,7 +1892,7 @@ begin
           end;
         end;
       end
-      else if subject.children[2]^.inherited^.precision = 16 then begin
+      else if subject.children[2]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[158] := chr(2);
         solution^.space136[173] := chr(1);
         if p1_int_fields_ptr_t(addr(solution^))^.i[1] = 256 then begin
@@ -1916,7 +1916,7 @@ begin
           solution^.space136[178] := chr(1);
         end;
       end
-      else if subject.children[2]^.inherited^.precision = 8 then begin
+      else if subject.children[2]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[158] := chr(3);
         solution^.space136[181] := chr(1);
         if p1_int_fields_ptr_t(addr(solution^))^.i[1] = 256 then begin
@@ -1929,7 +1929,7 @@ begin
       end;
     end else begin
       solution^.space136[136] := chr(1);
-      if subject.children[2]^.inherited^.precision = 32 then begin
+      if subject.children[2]^.inherited^.fetch_precision = 32 then begin
         solution^.space136[137] := chr(1);
         if not lir_$can_encode_as_immediate_operand(subject.children[2]^.disp + 3, ord(opc$loadl), 1) and not subject.children[2]^.f76.has_sym_disp or subject.children[2]^.f76.uses_index_reg then begin
           solution^.space136[138] := chr(2);
@@ -1957,7 +1957,7 @@ begin
           solution^.space136[142] := chr(2);
         end;
       end
-      else if subject.children[2]^.inherited^.precision = 24 then begin
+      else if subject.children[2]^.inherited^.fetch_precision = 24 then begin
         solution^.space136[137] := chr(2);
         if not lir_$can_encode_as_immediate_operand(subject.children[2]^.disp + 2, ord(opc$loadl), 1) and not subject.children[2]^.f76.has_sym_disp or subject.children[2]^.f76.uses_index_reg then begin
           solution^.space136[143] := chr(2);
@@ -1985,7 +1985,7 @@ begin
           solution^.space136[147] := chr(2);
         end;
       end
-      else if subject.children[2]^.inherited^.precision = 16 then begin
+      else if subject.children[2]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[137] := chr(3);
         if not lir_$can_encode_as_immediate_operand(subject.children[2]^.disp + 1, ord(opc$loadl), 1) and not subject.children[2]^.f76.has_sym_disp or subject.children[2]^.f76.uses_index_reg then begin
           solution^.space136[148] := chr(2);
@@ -2013,7 +2013,7 @@ begin
           solution^.space136[152] := chr(2);
         end;
       end
-      else if subject.children[2]^.inherited^.precision = 8 then begin
+      else if subject.children[2]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[137] := chr(4);
         solution^.space136[153] := chr(1);
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
@@ -2966,7 +2966,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.disp,
       ord(opc$loadl));
-  if not ((integer32(p2_node_ptr_t(subject.sym)^.p[12]) > 4) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_disp or subject.children[1]^.f76.has_sym_disp) and (subject.children[1]^.f76.b82_1 or subject.children[1]^.f76.b82_6)) and (subject.children[1]^.kind = 5) or (subject.children[2]^.kind = 12) and ((subject.children[2]^.f76.b76 <> 0) or (subject.children[2]^.f76.b77 < subject.children[1]^.inherited^.precision)) or p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location and subject.children[2]^.f76.physical and not subject.children[2]^.f76.serialize) then begin
+  if not ((integer32(p2_node_ptr_t(subject.sym)^.p[12]) > 4) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_disp or subject.children[1]^.f76.has_sym_disp) and (subject.children[1]^.f76.b82_1 or subject.children[1]^.f76.b82_6)) and (subject.children[1]^.kind = 5) or (subject.children[2]^.kind = 12) and ((subject.children[2]^.f76.b76 <> 0) or (subject.children[2]^.f76.b77 < subject.children[1]^.inherited^.fetch_precision)) or p2_flags_ptr_t(addr(subject.children[1]^.f76))^.arg_block_location and subject.children[2]^.f76.physical and not subject.children[2]^.f76.serialize) then begin
     if isc_user_routines_354 then begin
       write('Pattern 154 matched the semantics.');
       writeln;
@@ -3003,7 +3003,7 @@ begin
     t11 := make_bit_mask_1(16, 0);
     if (p2_node_ptr_t(subject.sym)^.w[28] <> 0) or (p2_node_ptr_t(subject.sym)^.w[38] <> 6) or (p2_node_ptr_t(subject.sym)^.w[26] <> 9) then begin
       solution^.space136[136] := chr(2);
-      if subject.children[1]^.inherited^.precision = 32 then begin
+      if subject.children[1]^.inherited^.fetch_precision = 32 then begin
         solution^.space136[158] := chr(1);
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
           solution^.space136[159] := chr(1);
@@ -3060,7 +3060,7 @@ begin
           end;
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 16 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[158] := chr(2);
         solution^.space136[173] := chr(1);
         if t10 = 512 then begin
@@ -3084,7 +3084,7 @@ begin
           solution^.space136[178] := chr(1);
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 8 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[158] := chr(3);
         solution^.space136[181] := chr(1);
         if t10 = 512 then begin
@@ -3097,7 +3097,7 @@ begin
       end;
     end else begin
       solution^.space136[136] := chr(1);
-      if subject.children[1]^.inherited^.precision = 32 then begin
+      if subject.children[1]^.inherited^.fetch_precision = 32 then begin
         solution^.space136[137] := chr(1);
         if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + 3, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
           solution^.space136[138] := chr(2);
@@ -3125,7 +3125,7 @@ begin
           solution^.space136[142] := chr(2);
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 24 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 24 then begin
         solution^.space136[137] := chr(2);
         if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + 2, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
           solution^.space136[143] := chr(2);
@@ -3153,7 +3153,7 @@ begin
           solution^.space136[147] := chr(2);
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 16 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[137] := chr(3);
         if not lir_$can_encode_as_immediate_operand(subject.children[1]^.disp + 1, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_sym_disp or subject.children[1]^.f76.uses_index_reg then begin
           solution^.space136[148] := chr(2);
@@ -3181,7 +3181,7 @@ begin
           solution^.space136[152] := chr(2);
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 8 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[137] := chr(4);
         solution^.space136[153] := chr(1);
         if t3 = 512 then begin
@@ -6747,7 +6747,7 @@ begin
     end else begin
       solution^.space136[136] := chr(2);
     end;
-    if subject.children[1]^.inherited^.precision = 32 then begin
+    if subject.children[1]^.inherited^.fetch_precision = 32 then begin
       solution^.space136[137] := chr(1);
       if (subject.children[1]^.bits_known & 1 <> 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) then begin
         solution^.space136[138] := chr(1);
@@ -6804,7 +6804,7 @@ begin
         end;
       end;
     end
-    else if subject.children[1]^.inherited^.precision = 16 then begin
+    else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
       solution^.space136[137] := chr(2);
       solution^.space136[152] := chr(1);
       if t4 = 512 then begin
@@ -6828,7 +6828,7 @@ begin
         solution^.space136[157] := chr(1);
       end;
     end
-    else if subject.children[1]^.inherited^.precision = 8 then begin
+    else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
       solution^.space136[137] := chr(3);
       solution^.space136[160] := chr(1);
       if t4 = 512 then begin

@@ -429,7 +429,7 @@ begin
             writeln;
             writeln(tl_star_rule);
             write('ISC: end_statement: source line ');
-            write(q^.inh^.pos.line:1);
+            write(q^.inh^.pos.source_line_number:1);
             write(':');
             writeln;
             write('ISC:   ');
@@ -516,9 +516,9 @@ var
 begin
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write('debug_lir_$begin_call_or_svc: ');
     write('opcode = ');
@@ -578,9 +578,9 @@ var
 begin
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write(opc$t(opc):10);
     write(' ');
@@ -639,9 +639,9 @@ var
 begin
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write('debug_lir_$common_lhs_rhs_token: ');
     writeln;
@@ -668,9 +668,9 @@ var
 begin
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write('debug_lir_$disjoint_lhs_and_rhs_tokens: ');
     writeln;
@@ -700,9 +700,9 @@ var
 begin
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write(opc$t(opc):10);
     write(' ');
@@ -741,9 +741,9 @@ var
 begin
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write('debug_lir_$emit_call_or_svc: ');
     write('instr = ');
@@ -781,9 +781,9 @@ var
 begin
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write('debug_lir_$end_call_or_svc: ');
     write('instr = ');
@@ -819,9 +819,9 @@ begin
   guarantee_has_live_range(dst);
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write(opc$t(opc):10);
     write(' ');
@@ -863,9 +863,9 @@ var
 begin
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write(label_to_string(target));
     write(':');
@@ -904,9 +904,9 @@ begin
   guarantee_has_live_range(result);
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write(opc$t(opc):10);
     write(' ');
@@ -972,9 +972,9 @@ begin
     guarantee_has_live_range(op2);
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write(opc$t(opc):10);
     write(' ');
@@ -1025,9 +1025,9 @@ var
 begin
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write(opc$t(opc):10);
     write(' ');
@@ -1091,9 +1091,9 @@ begin
   guarantee_has_live_range(result);
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write(opc$t(opc):10);
     write(' ');
@@ -1145,9 +1145,9 @@ var
 begin
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write(opc$t(opc):10);
     write(' ');
@@ -1201,9 +1201,9 @@ var
 begin
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write(opc$t(opc):10);
     write(' ');
@@ -1305,9 +1305,9 @@ begin
   guarantee_has_live_range(op4);
   if at_backend_switches.sw14 then begin
     write('stmt(');
-    write(inh^.pos.line:5);
+    write(inh^.pos.source_line_number:5);
     write(' / ');
-    write(inh^.pos.stmt:5);
+    write(inh^.pos.stmt_number:5);
     write(') ');
     write(opc$t(opc):10);
     write(' ');

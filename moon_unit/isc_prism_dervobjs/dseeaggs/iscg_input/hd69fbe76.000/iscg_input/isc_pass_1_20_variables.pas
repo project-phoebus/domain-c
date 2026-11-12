@@ -182,9 +182,9 @@ begin
   result := nil;
   work := nil;
   t1 := side_effect_symbol_fill_in_size(isc_node_ptr_t(subject.sym),
-      subject.inherited^.precision);
+      subject.inherited^.fetch_precision);
   t2 := sz_fsym(subject.sym);
-  if not ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) <> 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) <> 2) or (subject.inherited^.precision > 32) or not (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#20000 <> 0) or not t1 or (t2 * 8 <> subject.inherited^.precision) or not (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.sym) <> 11)) then begin
+  if not ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) <> 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) <> 2) or (subject.inherited^.fetch_precision > 32) or not (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#20000 <> 0) or not t1 or (t2 * 8 <> subject.inherited^.fetch_precision) or not (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.sym) <> 11)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 35 matched the semantics.');
       writeln;
@@ -248,7 +248,7 @@ begin
   result := nil;
   work := nil;
   t1 := sz_fsym(subject.sym);
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.precision <= 32) and (t1 * 8 > subject.inherited^.precision) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
+  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.fetch_precision <= 32) and (t1 * 8 > subject.inherited^.fetch_precision) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
     if isc_user_routines_354 then begin
       write('Pattern 36 matched the semantics.');
       writeln;
@@ -268,10 +268,10 @@ begin
       solution^.memory_refs := 0;
       solution^.delay := 0;
       t3 := sz_fsym(subject.sym);
-      solution^.f76.b76 := t3 * 8 - subject.inherited^.precision;
+      solution^.f76.b76 := t3 * 8 - subject.inherited^.fetch_precision;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
-      solution^.f76.b77 := subject.inherited^.precision;
+      solution^.f76.b77 := subject.inherited^.fetch_precision;
       solution^.f76.b81_0 := false;
       solution^.f76.has_sym_disp := true;
       solution^.ip_reg_max := 1;
@@ -313,7 +313,7 @@ begin
   result := nil;
   work := nil;
   t1 := sz_fsym(subject.sym);
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.precision <= 32) and (t1 * 8 = subject.inherited^.precision) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
+  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.fetch_precision <= 32) and (t1 * 8 = subject.inherited^.fetch_precision) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
     if isc_user_routines_354 then begin
       write('Pattern 37 matched the semantics.');
       writeln;
@@ -373,7 +373,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.precision = 32) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 8) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
+  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.fetch_precision = 32) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 8) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
     if isc_user_routines_354 then begin
       write('Pattern 38 matched the semantics.');
       writeln;
@@ -433,7 +433,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.precision = 64) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 9) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
+  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.fetch_precision = 64) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 9) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
     if isc_user_routines_354 then begin
       write('Pattern 39 matched the semantics.');
       writeln;
@@ -498,7 +498,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.precision = 128) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 10) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
+  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 1)) and (subject.inherited^.fetch_precision = 128) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 10) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
     if isc_user_routines_354 then begin
       write('Pattern 40 matched the semantics.');
       writeln;
@@ -720,7 +720,7 @@ begin
   result := nil;
   work := nil;
   t1 := sz_fsym(subject.sym);
-  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 5) and (p2_node_ptr_t(subject.sym)^.b[44] & 2 <> 0) and (subject.inherited^.precision <= 32) and (t1 * 8 > subject.inherited^.precision) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
+  if ((rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.sym)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.sym)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.sym)^.b[11] & 240, 4) = 5) and (p2_node_ptr_t(subject.sym)^.b[44] & 2 <> 0) and (subject.inherited^.fetch_precision <= 32) and (t1 * 8 > subject.inherited^.fetch_precision) and (integer32(p2_node_ptr_t(subject.sym)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
     if isc_user_routines_354 then begin
       write('Pattern 43 matched the semantics.');
       writeln;
@@ -740,10 +740,10 @@ begin
       solution^.memory_refs := 0;
       solution^.delay := 0;
       t3 := sz_fsym(subject.sym);
-      solution^.f76.b76 := t3 * 8 - subject.inherited^.precision;
+      solution^.f76.b76 := t3 * 8 - subject.inherited^.fetch_precision;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
-      solution^.f76.b77 := subject.inherited^.precision;
+      solution^.f76.b77 := subject.inherited^.fetch_precision;
       solution^.f76.b81_0 := false;
       solution^.f76.has_sym_disp := true;
       solution^.ip_reg_max := 1;
@@ -1175,8 +1175,8 @@ begin
   result := nil;
   work := nil;
   t1 := side_effect_symbol_fill_in_size(isc_node_ptr_t(subject.sym),
-      subject.inherited^.precision);
-  if not ((p2_node_ptr_t(subject.sym)^.w[36] <> 2) or (subject.inherited^.precision > 32) or not (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#20000 <> 0) or not t1 or (subject.inherited^.precision <> integer32(p2_node_ptr_t(subject.sym)^.p[9])) or not (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.sym) <> 11)) then begin
+      subject.inherited^.fetch_precision);
+  if not ((p2_node_ptr_t(subject.sym)^.w[36] <> 2) or (subject.inherited^.fetch_precision > 32) or not (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#20000 <> 0) or not t1 or (subject.inherited^.fetch_precision <> integer32(p2_node_ptr_t(subject.sym)^.p[9])) or not (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.sym) <> 11)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 50 matched the semantics.');
       writeln;
@@ -1237,7 +1237,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.sym)^.w[36] = 2) or (p2_node_ptr_t(subject.sym)^.w[36] = 1)) and (subject.inherited^.precision > 0) and (subject.inherited^.precision <= 32) and (subject.inherited^.precision < integer32(p2_node_ptr_t(subject.sym)^.p[9])) and (p2_node_ptr_t(subject.sym)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
+  if ((p2_node_ptr_t(subject.sym)^.w[36] = 2) or (p2_node_ptr_t(subject.sym)^.w[36] = 1)) and (subject.inherited^.fetch_precision > 0) and (subject.inherited^.fetch_precision <= 32) and (subject.inherited^.fetch_precision < integer32(p2_node_ptr_t(subject.sym)^.p[9])) and (p2_node_ptr_t(subject.sym)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
     if isc_user_routines_354 then begin
       write('Pattern 51 matched the semantics.');
       writeln;
@@ -1256,10 +1256,10 @@ begin
       solution^.code_bytes := 0;
       solution^.memory_refs := 0;
       solution^.delay := 0;
-      solution^.f76.b76 := p2_node_ptr_t(subject.sym)^.b[39] - subject.inherited^.precision;
+      solution^.f76.b76 := p2_node_ptr_t(subject.sym)^.b[39] - subject.inherited^.fetch_precision;
       solution^.bits_known := 0;
       solution^.bits_trusted := 0;
-      solution^.f76.b77 := subject.inherited^.precision;
+      solution^.f76.b77 := subject.inherited^.fetch_precision;
       solution^.f76.b81_0 := false;
       solution^.f76.has_sym_disp := true;
       solution^.ip_reg_max := 1;
@@ -1299,7 +1299,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.sym)^.w[36] = 2) or (p2_node_ptr_t(subject.sym)^.w[36] = 1)) and (subject.inherited^.precision <= 32) and (subject.inherited^.precision = integer32(p2_node_ptr_t(subject.sym)^.p[9])) and (p2_node_ptr_t(subject.sym)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
+  if ((p2_node_ptr_t(subject.sym)^.w[36] = 2) or (p2_node_ptr_t(subject.sym)^.w[36] = 1)) and (subject.inherited^.fetch_precision <= 32) and (subject.inherited^.fetch_precision = integer32(p2_node_ptr_t(subject.sym)^.p[9])) and (p2_node_ptr_t(subject.sym)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.sym)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.sym) = 11) then begin
     if isc_user_routines_354 then begin
       write('Pattern 52 matched the semantics.');
       writeln;

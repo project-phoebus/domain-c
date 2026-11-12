@@ -140,12 +140,14 @@ begin
   if ord(result.space136[136]) = 1 then begin
     if ord(result.space136[137]) <> 1 then begin
       debug_lir_$branch_instruction(result.inherited,
-          univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$jump), 0);
+          univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+          ord(opc$jump), 0);
     end;
   end
   else if ord(result.space136[138]) = 1 then begin
     debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$jump), 0);
+        univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+        ord(opc$jump), 0);
   end;
 end;
 
@@ -166,69 +168,80 @@ begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 8, t1,
         create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$beq), 0);
+        univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+        ord(opc$beq), 0);
   end
   else if ord(result.space136[136]) = 2 then begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 8, t1,
         create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bne), 0);
+        univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+        ord(opc$bne), 0);
   end
   else if ord(result.space136[136]) = 3 then begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 4, t1,
         create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$blo), 0);
+        univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+        ord(opc$blo), 0);
   end
   else if ord(result.space136[136]) = 4 then begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 4, t1,
         create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bls), 0);
+        univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+        ord(opc$bls), 0);
   end
   else if ord(result.space136[136]) = 5 then begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 4, t1,
         create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bhi), 0);
+        univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+        ord(opc$bhi), 0);
   end
   else if ord(result.space136[136]) = 6 then begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 4, t1,
         create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bhs), 0);
+        univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+        ord(opc$bhs), 0);
   end
   else if ord(result.space136[136]) = 7 then begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t1,
         create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$blt), 0);
+        univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+        ord(opc$blt), 0);
   end
   else if ord(result.space136[136]) = 8 then begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t1,
         create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$ble), 0);
+        univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+        ord(opc$ble), 0);
   end
   else if ord(result.space136[136]) = 9 then begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t1,
         create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bgt), 0);
+        univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+        ord(opc$bgt), 0);
   end
   else if ord(result.space136[136]) = 10 then begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t1,
         create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bge), 0);
+        univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+        ord(opc$bge), 0);
   end
   else if ord(result.space136[136]) = 11 then begin
     debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$jump), 0);
+        univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+        ord(opc$jump), 0);
   end
   else if ord(result.space136[136]) <> 12 then begin
     pattern_match_error(11, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
 end;
 
@@ -261,12 +274,14 @@ begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t4,
           create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited,
-          univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$blt), 0);
+          univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+          ord(opc$blt), 0);
     end else begin
       debug_lir_$simple_instruction(result.inherited, ord(opc$move), 2, t4,
           create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited,
-          univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bge), 0);
+          univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+          ord(opc$bge), 0);
     end;
   end
   else if ord(result.space136[139]) = 1 then begin
@@ -280,7 +295,8 @@ begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 8, t5,
         create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$bne), 0);
+        univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+        ord(opc$bne), 0);
   end else begin
     if ord(result.space136[141]) = 1 then begin
       t6 := subject^.children[2];
@@ -292,7 +308,8 @@ begin
     debug_lir_$simple_instruction(result.inherited, ord(opc$move), 8, t6,
         create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited,
-        univ_ptr(subject^.children[2]^.inherited^.l16), ord(opc$beq), 0);
+        univ_ptr(subject^.children[2]^.inherited^.conditional_target),
+        ord(opc$beq), 0);
   end;
 end;
 

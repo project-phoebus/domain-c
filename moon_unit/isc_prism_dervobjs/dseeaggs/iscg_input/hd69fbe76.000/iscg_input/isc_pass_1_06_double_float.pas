@@ -960,7 +960,7 @@ begin
       end else begin
         solution^.space136[137] := chr(2);
       end;
-      if subject.children[1]^.inherited^.precision = 8 then begin
+      if subject.children[1]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[138] := chr(1);
         if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
           solution^.space136[139] := chr(1);
@@ -968,7 +968,7 @@ begin
           solution^.space136[139] := chr(2);
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 16 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[138] := chr(2);
         if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
           solution^.space136[140] := chr(1);
@@ -1289,7 +1289,7 @@ begin
       end else begin
         solution^.space136[137] := chr(2);
       end;
-      if subject.children[1]^.inherited^.precision = 8 then begin
+      if subject.children[1]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[138] := chr(1);
         if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
           solution^.space136[139] := chr(1);
@@ -1297,7 +1297,7 @@ begin
           solution^.space136[139] := chr(2);
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 16 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[138] := chr(2);
         if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
           solution^.space136[140] := chr(1);
@@ -2640,7 +2640,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.inherited^.f38.b5 or not subject.f76.physical or not subject.f76.b82_5) then begin
+  if not (subject.inherited^.f38.immediate_parent_wants_lvalue or not subject.f76.physical or not subject.f76.b82_5) then begin
     if isc_user_routines_354 then begin
       write('Pattern 529 matched the semantics.');
       writeln;
@@ -2736,7 +2736,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.inherited^.f38.b5 or not subject.f76.physical or not subject.f76.b82_5) then begin
+  if not (subject.inherited^.f38.immediate_parent_wants_lvalue or not subject.f76.physical or not subject.f76.b82_5) then begin
     if isc_user_routines_354 then begin
       write('Pattern 530 matched the semantics.');
       writeln;

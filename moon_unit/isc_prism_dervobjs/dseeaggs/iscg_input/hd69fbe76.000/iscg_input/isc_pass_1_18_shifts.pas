@@ -522,7 +522,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.disp <= 0) or (subject.children[2]^.disp > 31) or (subject.children[1]^.inherited^.precision >= 32)) then begin
+  if not ((subject.children[2]^.disp <= 0) or (subject.children[2]^.disp > 31) or (subject.children[1]^.inherited^.fetch_precision >= 32)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 354 matched the semantics.');
       writeln;
@@ -538,7 +538,7 @@ begin
       solution^.rule := 354;
       solution^.chain := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[2]^.disp;
-      if subject.children[1]^.inherited^.precision = 8 then begin
+      if subject.children[1]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[136] := chr(1);
         if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
           solution^.space136[137] := chr(1);
@@ -546,7 +546,7 @@ begin
           solution^.space136[137] := chr(2);
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 16 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[136] := chr(2);
         if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
           solution^.space136[138] := chr(1);
@@ -605,7 +605,7 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.children[1]^.inherited^.precision < 32 then begin
+  if subject.children[1]^.inherited^.fetch_precision < 32 then begin
     if isc_user_routines_354 then begin
       write('Pattern 355 matched the semantics.');
       writeln;
@@ -620,7 +620,7 @@ begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
       solution^.rule := 355;
       solution^.chain := addr(subject);
-      if subject.children[1]^.inherited^.precision = 8 then begin
+      if subject.children[1]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[136] := chr(1);
         if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_7_was_sign_extended then begin
           solution^.space136[137] := chr(1);
@@ -628,7 +628,7 @@ begin
           solution^.space136[137] := chr(2);
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 16 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[136] := chr(2);
         if p2_flags_ptr_t(addr(subject.children[1]^.f76))^.bit_15_was_sign_extended then begin
           solution^.space136[138] := chr(1);
@@ -685,7 +685,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.disp <= 0) or (subject.children[2]^.disp > 31) or (subject.children[1]^.inherited^.precision <> 32)) then begin
+  if not ((subject.children[2]^.disp <= 0) or (subject.children[2]^.disp > 31) or (subject.children[1]^.inherited^.fetch_precision <> 32)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 356 matched the semantics.');
       writeln;
@@ -750,7 +750,7 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.children[1]^.inherited^.precision = 32 then begin
+  if subject.children[1]^.inherited^.fetch_precision = 32 then begin
     if isc_user_routines_354 then begin
       write('Pattern 357 matched the semantics.');
       writeln;
@@ -1347,7 +1347,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 8) or (subject.children[2]^.disp <> 7) or (p2_node_ptr_t(subject.children[1]^.sym)^.w[14] <> 6) or (subject.children[1]^.children[2]^.inherited^.precision <> 16) or (subject.children[1]^.children[1]^.disp < 8) or (subject.children[1]^.children[1]^.disp > 15)) then begin
+  if not ((subject.children[1]^.inherited^.fetch_precision <> 8) or (subject.children[2]^.disp <> 7) or (p2_node_ptr_t(subject.children[1]^.sym)^.w[14] <> 6) or (subject.children[1]^.children[2]^.inherited^.fetch_precision <> 16) or (subject.children[1]^.children[1]^.disp < 8) or (subject.children[1]^.children[1]^.disp > 15)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 365 matched the semantics.');
       writeln;
@@ -1406,7 +1406,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 8) or (subject.children[2]^.disp <> 7) or (p2_node_ptr_t(subject.children[1]^.sym)^.w[14] <> 6)) then begin
+  if not ((subject.children[1]^.inherited^.fetch_precision <> 8) or (subject.children[2]^.disp <> 7) or (p2_node_ptr_t(subject.children[1]^.sym)^.w[14] <> 6)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 366 matched the semantics.');
       writeln;
@@ -1503,7 +1503,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 8) or (subject.children[2]^.disp <> 7) or (p2_node_ptr_t(subject.children[1]^.sym)^.w[14] <> 6)) then begin
+  if not ((subject.children[1]^.inherited^.fetch_precision <> 8) or (subject.children[2]^.disp <> 7) or (p2_node_ptr_t(subject.children[1]^.sym)^.w[14] <> 6)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 367 matched the semantics.');
       writeln;
@@ -1648,7 +1648,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited^.precision <> 8) or (subject.children[2]^.disp <> 7) or (subject.inherited^.available <> 1)) then begin
+  if not ((subject.children[1]^.inherited^.fetch_precision <> 8) or (subject.children[2]^.disp <> 7) or (subject.inherited^.required_precision <> 1)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 369 matched the semantics.');
       writeln;
@@ -1744,7 +1744,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.disp <= 0) or (subject.children[2]^.disp > 31) or (subject.children[1]^.inherited^.precision >= 32) or (subject.children[2]^.disp < subject.children[1]^.inherited^.precision)) then begin
+  if not ((subject.children[2]^.disp <= 0) or (subject.children[2]^.disp > 31) or (subject.children[1]^.inherited^.fetch_precision >= 32) or (subject.children[2]^.disp < subject.children[1]^.inherited^.fetch_precision)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 370 matched the semantics.');
       writeln;
@@ -1785,7 +1785,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.disp <= 0) or (subject.children[2]^.disp > 31) or (subject.children[1]^.inherited^.precision >= 32) or (subject.children[2]^.disp >= subject.children[1]^.inherited^.precision)) then begin
+  if not ((subject.children[2]^.disp <= 0) or (subject.children[2]^.disp > 31) or (subject.children[1]^.inherited^.fetch_precision >= 32) or (subject.children[2]^.disp >= subject.children[1]^.inherited^.fetch_precision)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 371 matched the semantics.');
       writeln;
@@ -1800,9 +1800,10 @@ begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
       solution^.rule := 371;
       solution^.chain := addr(subject);
-      t2 := make_bit_mask_2(31, subject.children[1]^.inherited^.precision);
+      t2 := make_bit_mask_2(31,
+          subject.children[1]^.inherited^.fetch_precision);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[2]^.disp;
-      t3 := make_bit_mask_1(subject.children[1]^.inherited^.precision - p1_int_fields_ptr_t(addr(solution^))^.i[0],
+      t3 := make_bit_mask_1(subject.children[1]^.inherited^.fetch_precision - p1_int_fields_ptr_t(addr(solution^))^.i[0],
           0);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
       solution^.memory_refs := subject.children[1]^.memory_refs + subject.children[2]^.memory_refs;
@@ -1852,7 +1853,7 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.children[1]^.inherited^.precision < 32 then begin
+  if subject.children[1]^.inherited^.fetch_precision < 32 then begin
     if isc_user_routines_354 then begin
       write('Pattern 372 matched the semantics.');
       writeln;
@@ -1867,8 +1868,9 @@ begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
       solution^.rule := 372;
       solution^.chain := addr(subject);
-      t2 := make_bit_mask_1(subject.children[1]^.inherited^.precision, 0);
-      if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, subject.children[1]^.inherited^.precision, 32 - subject.children[1]^.inherited^.precision, 0) then begin
+      t2 := make_bit_mask_1(subject.children[1]^.inherited^.fetch_precision,
+          0);
+      if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, subject.children[1]^.inherited^.fetch_precision, 32 - subject.children[1]^.inherited^.fetch_precision, 0) then begin
         solution^.space136[136] := chr(1);
       end else begin
         solution^.space136[136] := chr(2);
@@ -1920,7 +1922,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.disp <= 0) or (subject.children[2]^.disp > 31) or (subject.children[1]^.inherited^.precision <> 32)) then begin
+  if not ((subject.children[2]^.disp <= 0) or (subject.children[2]^.disp > 31) or (subject.children[1]^.inherited^.fetch_precision <> 32)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 373 matched the semantics.');
       writeln;
@@ -1985,7 +1987,7 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.children[1]^.inherited^.precision = 32 then begin
+  if subject.children[1]^.inherited^.fetch_precision = 32 then begin
     if isc_user_routines_354 then begin
       write('Pattern 374 matched the semantics.');
       writeln;

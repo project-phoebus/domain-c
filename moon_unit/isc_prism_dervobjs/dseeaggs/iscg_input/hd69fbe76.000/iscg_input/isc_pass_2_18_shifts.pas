@@ -596,7 +596,7 @@ procedure transform_371_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
-      subject^.children[1]^.inherited^.precision - integer32(result.fields[0]),
+      subject^.children[1]^.inherited^.fetch_precision - integer32(result.fields[0]),
       subject^.children[1],
       find_well_known_literal_solution(integer32(result.fields[0])),
       solution);
@@ -617,8 +617,8 @@ begin
   end else begin
     t1 := create_solution_for_ip_reg;
     debug_lir_$field_instruction(result.inherited, ord(opc$extractu), 0,
-        subject^.children[1]^.inherited^.precision, subject^.children[1],
-        find_well_known_literal_solution(0), t1);
+        subject^.children[1]^.inherited^.fetch_precision,
+        subject^.children[1], find_well_known_literal_solution(0), t1);
     t2 := t1;
   end;
   debug_lir_$simple_instruction(result.inherited, ord(opc$lsr), 0, t2,

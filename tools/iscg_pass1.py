@@ -41,32 +41,41 @@ is written, a TODO of the unit's header.
 """
 import re
 
-# inherited_attributes_t: the image's names (isc_print_il_node's), offset,
-# size (1 byte, 2 word, 4 longword; 'bN' a bit of +39) and the field of
-# isc_attribute_records.ins.pas they are written through.
+# inherited_attributes_t: the image's names (isc_print_il_node's), offset
+# and size (1 byte, 2 word, 4 longword; 'bN' a bit of +39).  The insert
+# (isc_attribute_records.ins.pas) names its fields after them
+# (docs/questions.md 271): an attribute is written through the field of
+# its name, inside pos (+32, +34) or f38 (+38, +39) (inh_path).
 INH_ATTRS = [
-    ('il', 0, 4, 'node'),
-    ('exception_frame', 4, 4, 'top'),
-    ('original_il', 12, 4, 'stmt'),
-    ('conditional_target', 16, 4, 'l16'),
-    ('call_instruction_ptr', 20, 4, 'call'),
-    ('fetch_precision', 24, 4, 'precision'),
-    ('required_precision', 28, 4, 'available'),
-    ('source_line_number', 32, 2, 'pos.line'),
-    ('stmt_number', 34, 2, 'pos.stmt'),
-    ('parent_il_kind', 36, 1, 'b36'),
-    ('required_arithmetic', 38, 1, 'f38.arith'),
-    ('conditional_sense', 39, 'b7', 'f38.b7'),
-    ('immediate_parent_has_signed', 39, 'b6', 'f38.b6'),
-    ('immediate_parent_wants_lvalue', 39, 'b5', 'f38.b5'),
-    ('immediate_parent_wants_set_temporary', 39, 'b4', 'f38.b4'),
-    ('immediate_parent_wants_signed', 39, 'b3', 'f38.b3'),
-    ('inside_a_cse', 39, 'b2', 'f38.preserve'),
+    ('il', 0, 4),
+    ('exception_frame', 4, 4),
+    ('original_il', 12, 4),
+    ('conditional_target', 16, 4),
+    ('call_instruction_ptr', 20, 4),
+    ('fetch_precision', 24, 4),
+    ('required_precision', 28, 4),
+    ('source_line_number', 32, 2),
+    ('stmt_number', 34, 2),
+    ('parent_il_kind', 36, 1),
+    ('required_arithmetic', 38, 1),
+    ('conditional_sense', 39, 'b7'),
+    ('immediate_parent_has_signed', 39, 'b6'),
+    ('immediate_parent_wants_lvalue', 39, 'b5'),
+    ('immediate_parent_wants_set_temporary', 39, 'b4'),
+    ('immediate_parent_wants_signed', 39, 'b3'),
+    ('inside_a_cse', 39, 'b2'),
 ]
+
+
+def inh_path(name, off):
+    """The insert's field path of the inherited attribute at off."""
+    return ('pos.' if off in (32, 34) else 'f38.' if off in (38, 39) else '') + name
+
+
 INH_BY_OFF = {}
-for _n, _o, _s, _f in INH_ATTRS:
+for _n, _o, _s in INH_ATTRS:
     INH_BY_OFF[(_o, _s)] = _n
-INH_FIELD = {n: f for n, o, s, f in INH_ATTRS}
+INH_FIELD = {n: inh_path(n, o) for n, o, s in INH_ATTRS}
 POINTER_ATTRS = ('il', 'exception_frame', 'original_il', 'conditional_target',
                  'call_instruction_ptr')
 

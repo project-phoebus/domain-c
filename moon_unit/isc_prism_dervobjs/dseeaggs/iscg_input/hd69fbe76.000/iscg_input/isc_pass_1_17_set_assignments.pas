@@ -411,7 +411,7 @@ begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
-      if subject.children[1]^.inherited^.precision = 32 then begin
+      if subject.children[1]^.inherited^.fetch_precision = 32 then begin
         solution^.space136[137] := chr(1);
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
           solution^.space136[138] := chr(1);
@@ -468,7 +468,7 @@ begin
           end;
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 16 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[137] := chr(2);
         solution^.space136[152] := chr(1);
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
@@ -492,7 +492,7 @@ begin
           solution^.space136[157] := chr(1);
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 8 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[137] := chr(3);
         solution^.space136[160] := chr(1);
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
@@ -508,7 +508,7 @@ begin
       solution^.space136[165] := chr(1);
     end else begin
       solution^.space136[165] := chr(2);
-      if subject.children[1]^.inherited^.precision = 32 then begin
+      if subject.children[1]^.inherited^.fetch_precision = 32 then begin
         solution^.space136[166] := chr(1);
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
           solution^.space136[167] := chr(1);
@@ -565,7 +565,7 @@ begin
           end;
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 16 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[166] := chr(2);
         solution^.space136[181] := chr(1);
         if t4 = 512 then begin
@@ -589,7 +589,7 @@ begin
           solution^.space136[186] := chr(1);
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 8 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[166] := chr(3);
         solution^.space136[189] := chr(1);
         if t4 = 512 then begin
@@ -753,7 +753,7 @@ begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
-      if subject.children[1]^.inherited^.precision = 32 then begin
+      if subject.children[1]^.inherited^.fetch_precision = 32 then begin
         solution^.space136[137] := chr(1);
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
           solution^.space136[138] := chr(1);
@@ -810,7 +810,7 @@ begin
           end;
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 16 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[137] := chr(2);
         solution^.space136[152] := chr(1);
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
@@ -834,7 +834,7 @@ begin
           solution^.space136[157] := chr(1);
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 8 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[137] := chr(3);
         solution^.space136[160] := chr(1);
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
@@ -855,7 +855,7 @@ begin
       solution^.space136[166] := chr(1);
     end else begin
       solution^.space136[166] := chr(2);
-      if subject.children[1]^.inherited^.precision = 32 then begin
+      if subject.children[1]^.inherited^.fetch_precision = 32 then begin
         solution^.space136[167] := chr(1);
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
           solution^.space136[168] := chr(1);
@@ -912,7 +912,7 @@ begin
           end;
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 16 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[167] := chr(2);
         solution^.space136[182] := chr(1);
         if t4 = 512 then begin
@@ -936,7 +936,7 @@ begin
           solution^.space136[187] := chr(1);
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 8 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[167] := chr(3);
         solution^.space136[190] := chr(1);
         if t4 = 512 then begin
@@ -1105,7 +1105,7 @@ begin
       solution^.space136[136] := chr(1);
     end else begin
       solution^.space136[136] := chr(2);
-      if subject.children[1]^.inherited^.precision = 32 then begin
+      if subject.children[1]^.inherited^.fetch_precision = 32 then begin
         solution^.space136[137] := chr(1);
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
           solution^.space136[138] := chr(1);
@@ -1162,7 +1162,7 @@ begin
           end;
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 16 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[137] := chr(2);
         solution^.space136[152] := chr(1);
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
@@ -1186,7 +1186,7 @@ begin
           solution^.space136[157] := chr(1);
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 8 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[137] := chr(3);
         solution^.space136[160] := chr(1);
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
@@ -1202,7 +1202,7 @@ begin
       solution^.space136[165] := chr(1);
     end else begin
       solution^.space136[165] := chr(2);
-      if subject.children[1]^.inherited^.precision = 32 then begin
+      if subject.children[1]^.inherited^.fetch_precision = 32 then begin
         solution^.space136[166] := chr(1);
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
           solution^.space136[167] := chr(1);
@@ -1259,7 +1259,7 @@ begin
           end;
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 16 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[166] := chr(2);
         solution^.space136[181] := chr(1);
         if t4 = 512 then begin
@@ -1283,7 +1283,7 @@ begin
           solution^.space136[186] := chr(1);
         end;
       end
-      else if subject.children[1]^.inherited^.precision = 8 then begin
+      else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[166] := chr(3);
         solution^.space136[189] := chr(1);
         if t4 = 512 then begin

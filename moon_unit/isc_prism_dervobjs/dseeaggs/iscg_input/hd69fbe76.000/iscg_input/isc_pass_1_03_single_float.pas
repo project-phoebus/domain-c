@@ -334,10 +334,10 @@ begin
           solution^.space136[138] := chr(2);
         end else begin
           solution^.space136[138] := chr(1);
-          if subject.inherited^.precision = 8 then begin
+          if subject.inherited^.fetch_precision = 8 then begin
             solution^.space136[139] := chr(1);
           end
-          else if subject.inherited^.precision = 16 then begin
+          else if subject.inherited^.fetch_precision = 16 then begin
             solution^.space136[139] := chr(2);
           end else begin
             solution^.space136[139] := chr(3);
@@ -398,10 +398,10 @@ begin
         solution^.space136[137] := chr(2);
       end else begin
         solution^.space136[137] := chr(1);
-        if subject.inherited^.precision = 8 then begin
+        if subject.inherited^.fetch_precision = 8 then begin
           solution^.space136[138] := chr(1);
         end
-        else if subject.inherited^.precision = 16 then begin
+        else if subject.inherited^.fetch_precision = 16 then begin
           solution^.space136[138] := chr(2);
         end else begin
           solution^.space136[138] := chr(3);

@@ -214,7 +214,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.sym)^.w[8] = 4) and (subject.inherited^.precision = 32) or (p2_node_ptr_t(subject.sym)^.w[8] = 1) and (subject.inherited^.precision = 8) or (p2_node_ptr_t(subject.sym)^.w[8] = 2) and (subject.inherited^.precision = 16)) and not subject.inherited^.f38.b5 then begin
+  if ((p2_node_ptr_t(subject.sym)^.w[8] = 4) and (subject.inherited^.fetch_precision = 32) or (p2_node_ptr_t(subject.sym)^.w[8] = 1) and (subject.inherited^.fetch_precision = 8) or (p2_node_ptr_t(subject.sym)^.w[8] = 2) and (subject.inherited^.fetch_precision = 16)) and not subject.inherited^.f38.immediate_parent_wants_lvalue then begin
     if isc_user_routines_354 then begin
       write('Pattern 4 matched the semantics.');
       writeln;
@@ -415,7 +415,7 @@ var
 begin
   result := nil;
   work := nil;
-  if subject.inherited^.precision = 32 then begin
+  if subject.inherited^.fetch_precision = 32 then begin
     if isc_user_routines_354 then begin
       write('Pattern 8 matched the semantics.');
       writeln;
@@ -580,7 +580,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (not subject.inherited^.f38.b4 or not is_all_zeroes(subject.sym)) then begin
+  if not (not subject.inherited^.f38.immediate_parent_wants_set_temporary or not is_all_zeroes(subject.sym)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 12 matched the semantics.');
       writeln;

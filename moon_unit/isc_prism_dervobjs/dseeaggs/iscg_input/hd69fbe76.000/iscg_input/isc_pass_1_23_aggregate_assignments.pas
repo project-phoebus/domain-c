@@ -1246,7 +1246,7 @@ begin
   result := nil;
   work := nil;
   t1 := available_precision_function(subject.children[1]);
-  if not ((t1 < p2_node_ptr_t(subject.sym)^.w[28]) or (available_precision_function(subject.children[2]) < p2_node_ptr_t(subject.sym)^.w[28]) or (subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.precision - p2_node_ptr_t(subject.sym)^.w[27] - p2_node_ptr_t(subject.sym)^.w[28] <> subject.children[2]^.f76.b76)) then begin
+  if not ((t1 < p2_node_ptr_t(subject.sym)^.w[28]) or (available_precision_function(subject.children[2]) < p2_node_ptr_t(subject.sym)^.w[28]) or (subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.fetch_precision - p2_node_ptr_t(subject.sym)^.w[27] - p2_node_ptr_t(subject.sym)^.w[28] <> subject.children[2]^.f76.b76)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 216 matched the semantics.');
       writeln;
@@ -1254,7 +1254,7 @@ begin
     solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
     solution^.rule := 216;
     solution^.chain := addr(subject);
-    p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.precision - p2_node_ptr_t(subject.sym)^.w[27] - p2_node_ptr_t(subject.sym)^.w[28];
+    p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.fetch_precision - p2_node_ptr_t(subject.sym)^.w[27] - p2_node_ptr_t(subject.sym)^.w[28];
     p1_int_fields_ptr_t(addr(solution^))^.i[1] := p2_node_ptr_t(subject.sym)^.w[28];
     t3 := make_bit_mask_1(p2_node_ptr_t(subject.sym)^.w[28], 0);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -1298,7 +1298,7 @@ begin
     solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
     solution^.rule := 217;
     solution^.chain := addr(subject);
-    p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.precision - p2_node_ptr_t(subject.sym)^.w[27] - p2_node_ptr_t(subject.sym)^.w[28];
+    p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.fetch_precision - p2_node_ptr_t(subject.sym)^.w[27] - p2_node_ptr_t(subject.sym)^.w[28];
     p1_int_fields_ptr_t(addr(solution^))^.i[1] := p2_node_ptr_t(subject.sym)^.w[28];
     t2 := make_bit_mask_1(p2_node_ptr_t(subject.sym)^.w[28], 0);
     if lir_$can_encode_as_immediate_operand(subject.children[2]^.disp, ord(opc$insert), 1) then begin
@@ -1354,7 +1354,7 @@ begin
     solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
     solution^.rule := 218;
     solution^.chain := addr(subject);
-    p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.precision - p2_node_ptr_t(subject.sym)^.w[27] - p2_node_ptr_t(subject.sym)^.w[28];
+    p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[1]^.f76.b76 + subject.children[1]^.inherited^.fetch_precision - p2_node_ptr_t(subject.sym)^.w[27] - p2_node_ptr_t(subject.sym)^.w[28];
     p1_int_fields_ptr_t(addr(solution^))^.i[1] := p2_node_ptr_t(subject.sym)^.w[28];
     t3 := make_bit_mask_1(p2_node_ptr_t(subject.sym)^.w[28], 0);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -1456,7 +1456,7 @@ begin
     t4 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[1], 0);
     solution^.fields[3] := nil;
     t5 := make_bit_mask_1(16, 0);
-    if subject.children[1]^.inherited^.precision = 32 then begin
+    if subject.children[1]^.inherited^.fetch_precision = 32 then begin
       solution^.space136[136] := chr(1);
       if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
         solution^.space136[137] := chr(1);
@@ -1513,7 +1513,7 @@ begin
         end;
       end;
     end
-    else if subject.children[1]^.inherited^.precision = 16 then begin
+    else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
       solution^.space136[136] := chr(2);
       solution^.space136[151] := chr(1);
       if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 256 then begin
@@ -1537,7 +1537,7 @@ begin
         solution^.space136[156] := chr(1);
       end;
     end
-    else if subject.children[1]^.inherited^.precision = 8 then begin
+    else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
       solution^.space136[136] := chr(3);
       solution^.space136[159] := chr(1);
       if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 256 then begin
@@ -1548,7 +1548,7 @@ begin
     end else begin
       solution^.space136[136] := chr(4);
     end;
-    if subject.children[1]^.inherited^.precision = 32 then begin
+    if subject.children[1]^.inherited^.fetch_precision = 32 then begin
       solution^.space136[164] := chr(1);
       if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
         solution^.space136[165] := chr(1);
@@ -1593,7 +1593,7 @@ begin
         solution^.space136[178] := chr(2);
       end;
     end
-    else if subject.children[1]^.inherited^.precision = 16 then begin
+    else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
       solution^.space136[164] := chr(2);
       solution^.space136[179] := chr(1);
       solution^.space136[183] := chr(2);
@@ -1609,7 +1609,7 @@ begin
         solution^.space136[184] := chr(1);
       end;
     end
-    else if subject.children[1]^.inherited^.precision = 8 then begin
+    else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
       solution^.space136[164] := chr(3);
       solution^.space136[187] := chr(1);
       solution^.space136[191] := chr(2);
@@ -1669,7 +1669,7 @@ begin
     t4 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[1], 0);
     solution^.fields[3] := nil;
     t5 := make_bit_mask_1(16, 0);
-    if subject.children[1]^.inherited^.precision = 32 then begin
+    if subject.children[1]^.inherited^.fetch_precision = 32 then begin
       solution^.space136[136] := chr(1);
       if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
         solution^.space136[137] := chr(1);
@@ -1726,7 +1726,7 @@ begin
         end;
       end;
     end
-    else if subject.children[1]^.inherited^.precision = 16 then begin
+    else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
       solution^.space136[136] := chr(2);
       solution^.space136[151] := chr(1);
       if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 256 then begin
@@ -1750,7 +1750,7 @@ begin
         solution^.space136[156] := chr(1);
       end;
     end
-    else if subject.children[1]^.inherited^.precision = 8 then begin
+    else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
       solution^.space136[136] := chr(3);
       solution^.space136[159] := chr(1);
       if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 256 then begin
@@ -1771,7 +1771,7 @@ begin
         solution^.space136[165] := chr(2);
       end;
     end;
-    if subject.children[1]^.inherited^.precision = 32 then begin
+    if subject.children[1]^.inherited^.fetch_precision = 32 then begin
       solution^.space136[166] := chr(1);
       if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
         solution^.space136[167] := chr(1);
@@ -1816,7 +1816,7 @@ begin
         solution^.space136[180] := chr(2);
       end;
     end
-    else if subject.children[1]^.inherited^.precision = 16 then begin
+    else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
       solution^.space136[166] := chr(2);
       solution^.space136[181] := chr(1);
       solution^.space136[185] := chr(2);
@@ -1832,7 +1832,7 @@ begin
         solution^.space136[186] := chr(1);
       end;
     end
-    else if subject.children[1]^.inherited^.precision = 8 then begin
+    else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
       solution^.space136[166] := chr(3);
       solution^.space136[189] := chr(1);
       solution^.space136[193] := chr(2);
@@ -1895,7 +1895,7 @@ begin
     t5 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[1], 0);
     solution^.fields[3] := nil;
     t6 := make_bit_mask_1(16, 0);
-    if subject.children[1]^.inherited^.precision = 32 then begin
+    if subject.children[1]^.inherited^.fetch_precision = 32 then begin
       solution^.space136[136] := chr(1);
       if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
         solution^.space136[137] := chr(1);
@@ -1952,7 +1952,7 @@ begin
         end;
       end;
     end
-    else if subject.children[1]^.inherited^.precision = 16 then begin
+    else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
       solution^.space136[136] := chr(2);
       solution^.space136[151] := chr(1);
       if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 256 then begin
@@ -1976,7 +1976,7 @@ begin
         solution^.space136[156] := chr(1);
       end;
     end
-    else if subject.children[1]^.inherited^.precision = 8 then begin
+    else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
       solution^.space136[136] := chr(3);
       solution^.space136[159] := chr(1);
       if p1_int_fields_ptr_t(addr(solution^))^.i[2] = 256 then begin
@@ -1987,7 +1987,7 @@ begin
     end else begin
       solution^.space136[136] := chr(4);
     end;
-    if subject.children[1]^.inherited^.precision = 32 then begin
+    if subject.children[1]^.inherited^.fetch_precision = 32 then begin
       solution^.space136[164] := chr(1);
       if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
         solution^.space136[165] := chr(1);
@@ -2032,7 +2032,7 @@ begin
         solution^.space136[178] := chr(2);
       end;
     end
-    else if subject.children[1]^.inherited^.precision = 16 then begin
+    else if subject.children[1]^.inherited^.fetch_precision = 16 then begin
       solution^.space136[164] := chr(2);
       solution^.space136[179] := chr(1);
       solution^.space136[183] := chr(2);
@@ -2048,7 +2048,7 @@ begin
         solution^.space136[184] := chr(1);
       end;
     end
-    else if subject.children[1]^.inherited^.precision = 8 then begin
+    else if subject.children[1]^.inherited^.fetch_precision = 8 then begin
       solution^.space136[164] := chr(3);
       solution^.space136[187] := chr(1);
       solution^.space136[191] := chr(2);

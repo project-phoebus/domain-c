@@ -976,7 +976,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.sym)^.w[13] >= integer32(p2_node_ptr_t(subject.sym)^.p[5])) or (integer32(p2_node_ptr_t(subject.sym)^.p[5]) > 4) or not verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, subject.children[1]^.inherited^.precision, 32 - subject.children[1]^.inherited^.precision, 0)) then begin
+  if not ((p2_node_ptr_t(subject.sym)^.w[13] >= integer32(p2_node_ptr_t(subject.sym)^.p[5])) or (integer32(p2_node_ptr_t(subject.sym)^.p[5]) > 4) or not verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, subject.children[1]^.inherited^.fetch_precision, 32 - subject.children[1]^.inherited^.fetch_precision, 0)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 540 matched the semantics.');
       writeln;
@@ -1087,20 +1087,22 @@ begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
       solution^.rule := 541;
       solution^.chain := addr(subject);
-      if subject.children[1]^.inherited^.precision = 32 then begin
+      if subject.children[1]^.inherited^.fetch_precision = 32 then begin
         t3 := 0;
       end else begin
-        t2 := make_bit_mask_2(31, subject.children[1]^.inherited^.precision);
+        t2 := make_bit_mask_2(31,
+            subject.children[1]^.inherited^.fetch_precision);
         t3 := t2;
       end;
-      if subject.children[1]^.inherited^.precision = 32 then begin
+      if subject.children[1]^.inherited^.fetch_precision = 32 then begin
         t5 := (-1);
       end else begin
-        t4 := make_bit_mask_2(subject.children[1]^.inherited^.precision - 1,
+        t4 := make_bit_mask_2(subject.children[1]^.inherited^.fetch_precision - 1,
             0);
         t5 := t4;
       end;
-      t6 := make_bit_mask_1(subject.children[1]^.inherited^.precision, 0);
+      t6 := make_bit_mask_1(subject.children[1]^.inherited^.fetch_precision,
+          0);
       solution^.code_bytes := subject.children[1]^.code_bytes + 4;
       solution^.memory_refs := subject.children[1]^.memory_refs;
       solution^.delay := subject.children[1]^.delay;
@@ -1152,16 +1154,16 @@ begin
       solution^.rule := 542;
       solution^.chain := addr(subject);
       t2 := make_expression_temporary(122,
-          subject.children[1]^.inherited^.precision);
+          subject.children[1]^.inherited^.fetch_precision);
       side_effect_set_var_$address_exposed(isc_node_ptr_t(t2));
       t3 := t2;
       solution^.fields[0] := address_mode_for_expression_temporary(t3,
-          subject.children[1]^.inherited^.precision, 0, 3);
+          subject.children[1]^.inherited^.fetch_precision, 0, 3);
       p1_int_fields_ptr_t(addr(solution^))^.i[1] := integer32(p2_node_ptr_t(subject.sym)^.p[5]) - p2_node_ptr_t(subject.sym)^.w[13];
       p1_int_fields_ptr_t(addr(solution^))^.i[2] := p2_node_ptr_t(subject.sym)^.w[13];
       solution^.fields[3] := nil;
       t4 := make_bit_mask_1(16, 0);
-      if solution^.fields[0]^.inherited^.precision = 32 then begin
+      if solution^.fields[0]^.inherited^.fetch_precision = 32 then begin
         solution^.space136[136] := chr(1);
         if (solution^.fields[0]^.bits_trusted & 3 = 3) and (solution^.fields[0]^.bits_known & 3 = 0) or (solution^.fields[0]^.bits_trusted & 1 = 0) or (solution^.fields[0]^.bits_known & 1 <> 0) then begin
           solution^.space136[137] := chr(1);
@@ -1206,7 +1208,7 @@ begin
           solution^.space136[150] := chr(2);
         end;
       end
-      else if solution^.fields[0]^.inherited^.precision = 16 then begin
+      else if solution^.fields[0]^.inherited^.fetch_precision = 16 then begin
         solution^.space136[136] := chr(2);
         solution^.space136[151] := chr(1);
         solution^.space136[155] := chr(2);
@@ -1222,7 +1224,7 @@ begin
           solution^.space136[156] := chr(1);
         end;
       end
-      else if solution^.fields[0]^.inherited^.precision = 8 then begin
+      else if solution^.fields[0]^.inherited^.fetch_precision = 8 then begin
         solution^.space136[136] := chr(3);
         solution^.space136[159] := chr(1);
         solution^.space136[163] := chr(2);

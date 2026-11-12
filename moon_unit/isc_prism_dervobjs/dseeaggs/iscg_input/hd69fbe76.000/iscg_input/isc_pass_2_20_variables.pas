@@ -145,7 +145,7 @@ procedure transform_39_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.live_range := lr_ptr_t(result.fields[0]);
   result.lr2 := get_live_range_of_imaginary_part(isc_node_ptr_t(self.sym));
@@ -160,7 +160,7 @@ procedure transform_40_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.live_range := lr_ptr_t(result.fields[0]);
   result.lr2 := get_live_range_of_imaginary_part(isc_node_ptr_t(self.sym));
@@ -387,7 +387,7 @@ procedure transform_54_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.live_range := lr_ptr_t(result.fields[0]);
   result.obj_w_name := self.sym;
@@ -523,7 +523,7 @@ procedure transform_62_pass_2(var self: isc_solution_t;
 begin
   if ord(result.space136[136]) = 1 then begin
     pattern_match_error(4, il$t(subject^.w98), 0,
-        subject^.inherited^.pos.line);
+        subject^.inherited^.pos.source_line_number);
   end;
   result.live_range := lr_ptr_t(result.fields[0]);
   result.obj_w_name := self.sym;

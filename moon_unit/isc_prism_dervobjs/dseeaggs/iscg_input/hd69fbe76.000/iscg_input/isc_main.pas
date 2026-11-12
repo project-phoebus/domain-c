@@ -136,12 +136,12 @@ var
   a: inherited_attributes_ptr_t;
 begin
   a := mrh_$alloc(heap, 40);
-  a^.node := node;
-  a^.stmt := node;
-  a^.precision := 32;
-  a^.b36 := chr(0);
-  a^.f38.arith := 1;
-  a^.available := 32;
+  a^.il := node;
+  a^.original_il := node;
+  a^.fetch_precision := 32;
+  a^.parent_il_kind := chr(0);
+  a^.f38.required_arithmetic := 1;
+  a^.required_precision := 32;
   new_inherited_attributes := a;
 end;
 
@@ -511,7 +511,7 @@ begin
   isc_user_routines_2ec := 0;
   save_356 := isc_user_routines_356;
   save_354 := isc_user_routines_354;
-  if (isc_user_routines_304 <> -1) and (inh^.pos.line <> isc_user_routines_304) then begin
+  if (isc_user_routines_304 <> -1) and (inh^.pos.source_line_number <> isc_user_routines_304) then begin
     isc_user_routines_356 := false;
     isc_user_routines_354 := false;
   end;
@@ -533,7 +533,7 @@ begin
   mrh_$release_to_mark(isc_heap, mark);
   if isc_user_routines_2ec > isc_user_routines_2e8 then begin
     isc_user_routines_2e8 := isc_user_routines_2ec;
-    isc_user_routines_2f0 := inh^.pos.stmt;
+    isc_user_routines_2f0 := inh^.pos.stmt_number;
   end;
 end;
 
@@ -637,8 +637,8 @@ begin
     else
       isc_user_routines_308 := s^.st_line;
     inh := new_inherited_attributes(isc_heap, s);
-    inh^.pos.line := s^.st_line;
-    inh^.pos.stmt := rshft(s^.st_l42 & 16#FFFF00, 8);
+    inh^.pos.source_line_number := s^.st_line;
+    inh^.pos.stmt_number := rshft(s^.st_l42 & 16#FFFF00, 8);
     isc_$process_statement(s, inh);
     mrh_$release_all(isc_heap);
     done := s^.kind = 149;
