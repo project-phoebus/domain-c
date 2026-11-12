@@ -2585,3 +2585,276 @@ begin
     r := not assert_bfextu_requires_test(nx);
   bit_field_inst_which_obviates_test := r;
 end;
+
+{ final_$stack_is_altered - between link c and its unlk (21) the code
+  calls, uses op 13, or changes SP (15) or A6 (14).
+
+  0x11010C, 0x7E bytes, no A5 load: the flag's complement and-ed with
+  the head test, then the unlk tested. }
+
+function final_$stack_is_altered(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+  p: codegen_$cell_ptr_t;
+begin
+  r := false;
+  p := nxtlcc(c);
+  while (not r and (p <> fn_sect^.head)) and (p^.kind <> unlk_instyp) do
+    if final_$is_call(p) or (p^.op = 13) or final_$reg_is_killed(p, 15) or
+       final_$reg_is_killed(p, 14) then
+      r := true
+    else
+      p := nxtlcc(p);
+  final_$stack_is_altered := r;
+end;
+
+{ final_$local_var_refs - between link c and its unlk the code refers to
+  a local (an operand through A6 at a displacement not above 0).
+
+  0x1101C0, 0x5E bytes, no A5 load: both operands tested (the first's
+  answer kept at -12 and or-ed). }
+
+function final_$local_var_refs(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+label
+  9;
+var
+  r: boolean;
+  p: codegen_$cell_ptr_t;
+  b: boolean;
+
+  { local_var_ref - a is A6-relative at a displacement not above 0.
+
+    0x11018A, 0x36 bytes, no A5 load. }
+
+  function local_var_ref(
+      in a: codegen_$ads_t): boolean;
+  var
+    r: boolean;
+  begin
+    r := false;
+    if involves(a, 14) and (a.y <= 0) then
+      r := true;
+    local_var_ref := r;
+  end;
+
+begin
+  r := true;
+  p := nxtlcc(c);
+  while p^.kind <> unlk_instyp do begin
+    if final_$reg_is_used(p, 14) <> 0 then begin
+      b := local_var_ref(p^.ads1);
+      if b or local_var_ref(p^.ads2) then
+        goto 9;
+    end;
+    p := nxtlcc(p);
+  end;
+  r := false;
+9:
+  final_$local_var_refs := r;
+end;
+
+{ final_$remove_sb_rel - between link c and its unlk, the operands
+  through A6 made SP-relative (register 15, the displacement less 4).
+
+  0x110252, 0x48 bytes, no A5 load. }
+
+procedure final_$remove_sb_rel(
+    c: codegen_$cell_ptr_t); options(val_param); internal;
+var
+  p: codegen_$cell_ptr_t;
+
+  { remove_sb_rel - a through A6 made through SP, 4 lower.
+
+    0x11021E, 0x34 bytes, no A5 load. }
+
+  procedure remove_sb_rel(
+      in out a: codegen_$ads_t);
+  begin
+    if involves(a, 14) then begin
+      a.f2 := 15;
+      a.y := a.y - 4;
+    end;
+  end;
+
+begin
+  p := nxtlcc(c);
+  while p^.kind <> unlk_instyp do begin
+    if final_$reg_is_used(p, 14) <> 0 then begin
+      remove_sb_rel(p^.ads1);
+      remove_sb_rel(p^.ads2);
+    end;
+    p := nxtlcc(p);
+  end;
+end;
+
+{ final_$try_to_suppress_stack_frame - under -OPT's optimization 29
+  (`btst #6' of +0x280), link c and its unlk removed when nothing
+  between them changes the stack or refers to a local: A6-relative
+  operands made SP-relative, the routine's block (il_180) no longer
+  marked as having a frame (+378 bit 4 cleared) and its parameters'
+  offsets 4 lower (a node 110's +12, a node 109's +56; the parameters
+  from the table at +12 when +377 bits 6..4 are 2, else found by name
+  on the block's chain at +16 from the list at +12).  The cell after the
+  unlk (c's next when nothing changes).
+
+  0x11029A, 0x126 bytes, no A5 load: the count of parameters the byte
+  at +293. }
+
+function final_$try_to_suppress_stack_frame(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+type
+  parm_t = record
+    n: il_$node_ptr_t;                  { +0 }
+    x: integer32;                       { +4 }
+    y: integer32;                       { +8 }
+  end;
+  parm_tab_ptr_t = ^parm_tab_t;
+  parm_tab_t = array [0..255] of parm_t;
+label
+  1;
+var
+  nx: codegen_$cell_ptr_t;
+  p: codegen_$cell_ptr_t;
+  rtn: il_$node_ptr_t;
+  l: il_$node_ptr_t;
+  n: il_$node_ptr_t;
+  v: il_$node_ptr_t;
+  i: integer;
+begin
+  p := c^.next;
+  nx := p;
+  if (29 in cargs_$options.opt_on) and not final_$stack_is_altered(c) and
+     not final_$local_var_refs(c) then begin
+    final_$remove_sb_rel(c);
+    detach(c);
+    while p^.kind <> unlk_instyp do
+      p := nxtlcc(p);
+    nx := p^.next;
+    detach(p);
+    rtn := il_180;
+    rtn^.xc[378] := chr(ord(rtn^.xc[378]) & 16#EF);
+    l := nil;
+    if rshft(ord(rtn^.xc[377]) & 112, 4) <> 2 then
+      l := rtn^.xp[3];
+    for i := 1 to ord(rtn^.xc[293]) do begin
+      if rshft(ord(il_180^.xc[377]) & 112, 4) = 2 then
+        v := parm_tab_ptr_t(il_180^.xp[3])^[i].n
+      else begin
+        n := il_180^.xp[4];
+        v := nil;
+        while n <> nil do begin
+          if (n^.kind = 109) and (n^.xp[1] = l^.xp[2]) then begin
+            v := n;
+            goto 1;
+          end;
+          n := n^.xp[4];
+        end;
+      1:
+        l := l^.xp[1];
+      end;
+      if v <> nil then
+        if v^.kind = 110 then
+          v^.xl[3] := v^.xl[3] - 4
+        else if v^.kind = 109 then
+          v^.xl[14] := v^.xl[14] - 4;
+    end;
+  end;
+  final_$try_to_suppress_stack_frame := nx;
+end;
+
+{ final_$link_opts - link c: final_$try_to_suppress_stack_frame.
+
+  0x1103C0, 0x10 bytes, no A5 load: its A0 returned. }
+
+function final_$link_opts(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+begin
+  final_$link_opts := final_$try_to_suppress_stack_frame(c);
+end;
+
+{ final_$unlink_opts - before unlk c, back to a label (and from the
+  bra's to it: backtrack), instructions that only adjust SP removed (a
+  lea from (SP), ops 24, 23, 17, 18, writing SP); stopping at branches,
+  calls (ops 13, 119, 123), the end of an inner block, and any other use
+  of SP.  The cell after c.
+
+  0x110412, 0x172 bytes, no A5 load: a `case' of the kind through a
+  table of 40; SP's tests in #0x409 (modes 0, 3, 10 do not use it). }
+
+function final_$unlink_opts(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+label
+  1, 9;
+var
+  nx: codegen_$cell_ptr_t;
+  p: codegen_$cell_ptr_t;
+  q: codegen_$cell_ptr_t;
+  op: integer;
+  m: integer;
+  reg: integer;
+
+  { backtrack - from each bra (17) to label lab, final_$unlink_opts.
+
+    0x1103D0, 0x42 bytes, no A5 load. }
+
+  procedure backtrack(
+      lab: codegen_$cell_ptr_t); options(val_param);
+  var
+    r: codegen_$cell_ptr_t;
+    first: codegen_$cell_ptr_t;
+    j: codegen_$cell_ptr_t;
+  begin
+    r := lab^.refs;
+    if r <> nil then begin
+      first := r;
+      repeat
+        j := codegen_$cell_ptr_t(r^.target);
+        r := r^.next;
+        if j^.kind = br_instyp then
+          j := final_$unlink_opts(j);
+      until r = first;
+    end;
+  end;
+
+begin
+  nx := c^.next;
+  p := prvlcc(c);
+  repeat
+    case p^.kind of
+      0:
+        backtrack(p);
+      32, 33:
+        if p^.blk^.kind <> 172 then
+          goto 9;
+      17, 18, 23, 27, 29, 30, 31, 39:
+        goto 9;
+      24, 28:
+        ;
+      otherwise begin
+        op := p^.op;
+        if (op = 13) or (op = 119) or (op = 123) then
+          goto 9;
+        m := p^.ads1.f1;
+        reg := p^.ads1.f2;
+        if ((op = 12) and (m = 2) and (reg = 15)) or (op = 24) or
+           (op = 23) or (op = 17) or (op = 18) then
+          if (p^.ads2.f1 = 1) and (p^.ads2.f2 = 15) then begin
+            q := p^.next;
+            detach(p);
+            p := q;
+            goto 1;
+          end;
+        if not (m in [0, 3, 10]) and (reg = 15) then
+          goto 9;
+        if not (p^.ads2.f1 in [0, 3, 10]) and (p^.ads2.f2 = 15) then
+          goto 9;
+      end;
+    end;
+  1:
+    p := p^.prev;
+  until p = fn_sect^.head;
+9:
+  final_$unlink_opts := nx;
+end;

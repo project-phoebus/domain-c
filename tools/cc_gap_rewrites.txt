@@ -439,7 +439,7 @@ lang/lang/source/final.pas	s/^(\s*)substr\(fn_chars_ptr_t\(addr\(n\^\.xc\[12\]\)
 # gap 8 (final): in on constant sets with word elements (the comparisons)
 lang/lang/source/final.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d., ]+)\]}{my $v=$1; "(".join(" or ", map { /^(\d+)\.\.(\d+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $_)" } split(/,\s*/, $2)).") { gap 8 }"}ge
 # gap 24 (final): calls of boolean functions as operands of and/or (compared with true, for the check)
-lang/lang/source/final.pas	s{(?<!function )\b(final_\$(?:is_call|is_branch|sets_m881_codes_for_fp0|is_fp040_libcall|is_int|is_int_load|in_15bit_range|is_call_or_branch|is_unmoveable_fp_inst|is_unmoveable_ftest)|assert_is_\w+|has_\w+|sameaddr|involves|testcc|odd|fpx_instruction|cc_change|scancc|isbranch|uncondjmpp|eqlbitfield|correct_cc_set|reg_mod|crossjump)(\((?:[^()]++|(?2))*\))}{(($1$2) = true)}g
+lang/lang/source/final.pas	s{(?<!function )\b(final_\$(?:is_call|is_branch|sets_m881_codes_for_fp0|is_fp040_libcall|is_int|is_int_load|in_15bit_range|is_call_or_branch|is_unmoveable_fp_inst|is_unmoveable_ftest)|assert_is_\w+|has_\w+|sameaddr|involves|testcc|odd|fpx_instruction|cc_change|scancc|isbranch|uncondjmpp|eqlbitfield|correct_cc_set|reg_mod|crossjump|local_var_ref|final_\$stack_is_altered|final_\$local_var_refs)(\((?:[^()]++|(?2))*\))}{(($1$2) = true)}g
 # gap 12 (final): a pointer function's result compared with a variable (the operands swapped)
 lang/lang/source/final.pas	s/:= alias_\$ind_for_captured_lvalue\(n\) = t;/:= t = alias_\$ind_for_captured_lvalue(n); { gap 12 }/
 # gap 2 (final): a case of 5 labels over a range of 14 (the other modes added, for the check)
@@ -452,3 +452,5 @@ lang/lang/source/final.pas	s{\b(if|while|until) (\w+(\((?:[^()]++|(?3))*\))) = (
 lang/lang/source/final.pas	s/^(\s*)140: change_br_value := 144;$/${1}142, 143, 144, 145, 146, 147, 148, 149: change_br_value := op; { gap 2 }\n${1}140: change_br_value := 144;/
 lang/lang/source/final.pas	s/^(\s*)if br_target\(x\) = nxtlcc\(xa\) then begin$/$1if xa = br_target(x) then begin { gap 12 }/
 lang/lang/source/final.pas	s{\((\w+(\((?:[^()]++|(?2))*\))) (=|<>) ([a-z]\w*)\)}{($4 $3 $1 { gap 12 })}g
+# gap 2 (final): unlink_opts's case of 13 labels over 40 (the kinds of its otherwise listed with 24, 28, for the check)
+lang/lang/source/final.pas	s/^(\s*)24, 28:$/${1}1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 25, 26, 34, 35, 36, 37, 38, 24, 28: { gap 2 }/
