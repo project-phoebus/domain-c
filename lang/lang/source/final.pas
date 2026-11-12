@@ -273,6 +273,14 @@ var
     437, 436, 439, 438, 441, 440];      { +0x298 }
 
 
+{ DFETCH - v's low len bytes, sign-extended when sgn (kfold.pas; as
+  cg_tree.pas declares it). }
+function dfetch(
+    v: integer32;
+    len: integer;
+    sgn: boolean): integer32; options(val_param); extern;
+
+
 { assert_is_lea - c is a lea (kind 4, op 12).
 
   0x10892C, 0x20 bytes, no frame: c at (4,SP). }
@@ -2356,4 +2364,224 @@ begin
       detach(c);
 9:
   f_pcondjmp := nx;
+end;
+
+{ puncondjmp - unconditional jump c simplified; the cell after the
+  dead code removed after it (deltolab).  Not under -DBA.  A bra to
+  the next instruction removed; a jump to jumps retargeted along them
+  (movejump) until one goes to itself or back to c; a bra to a
+  conditional branch that skips the instruction after c becomes that
+  branch reversed (to the instruction after the branch's target); a bra
+  to a conditional branch whose codes the instruction before c sets
+  from a constant (a moveq, clr or move of an immediate: the value by
+  its op, dfetch of 1 or 2 bytes signed, an address constant 1) goes
+  straight to where that branch goes (correct_cc_set); else, under
+  -OPT's optimization 5 without -VARARGS, the other references to c's
+  label cross-jumped (crossjump, makejump).
+
+  0x10C0D2, 0x2B2 bytes, no A5 load: a `case' of the constant's op
+  through a table of 12; the crossjump results at -20, -16. }
+
+function puncondjmp(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+label
+  1, 2, 9;
+var
+  nx: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+  q: codegen_$cell_ptr_t;
+  p: codegen_$cell_ptr_t;
+  r: codegen_$cell_ptr_t;
+  first: codegen_$cell_ptr_t;
+  j: codegen_$cell_ptr_t;
+  pa: codegen_$cell_ptr_t;
+  pb: codegen_$cell_ptr_t;
+  n: il_$node_ptr_t;
+  u: integer;
+  v: integer32;
+  s: integer;
+begin
+  nx := deltolab(c^.next);
+  if cargs_$options.db = 3 then
+    goto 9;
+  t := br_target(c);
+  if (c^.kind <> casejmp_instyp) and (nxtcc(c) = t) then begin
+    detach(c);
+    goto 9;
+  end;
+  while uncondjmpp(t) do begin
+    if t = c then
+      goto 9;
+    if br_target(t) = t then
+      goto 1;
+    movejump(c^.ads2, t^.ads2);
+    t := br_target(c);
+  end;
+1:
+  if c^.kind = casejmp_instyp then
+    goto 9;
+  q := nxtcc(c);
+  if (t^.kind = cbr_instyp) and (br_target(t) = q) then begin
+    c^.kind := cbr_instyp;
+    c^.op := t^.op;
+    reversecond(c);
+    moverefcell(codegen_$cell_ptr_t(c^.ads2.y), nxtlcc(t));
+    nx := c;
+    goto 9;
+  end;
+  p := prvlcc(c);
+  if t^.kind = cbr_instyp then
+    if (p^.kind = dest1_sz_instyp) or
+       ((p^.ads1.f1 = 3) and ((p^.kind = move_instyp) or
+        (p^.kind = i_instyp) or (p^.kind = moveq_instyp))) then begin
+      u := cc_use(t);
+      if ((u & 4) <> 0) and (opinfo_cc[opinfo_cc_class[p^.op]][2] <> 0) then
+        goto 2;
+      if ((u & 8) <> 0) and (opinfo_cc[opinfo_cc_class[p^.op]][3] <> 0) then
+        goto 2;
+      n := il_$node_ptr_t(p^.ads1.x);
+      case p^.op of
+        9, 10, 11:
+          v := 0;
+        0, 3:
+          v := dfetch(n^.int_value, 1, true);
+        1:
+          v := dfetch(n^.int_value, 2, true);
+        2:
+          if (n^.kind = 163) or (n^.kind = 182) or (n^.kind = 195) or
+             (n^.kind = 183) then
+            v := 1
+          else
+            v := n^.int_value;
+        otherwise
+          goto 2;
+      end;
+      s := 0;
+      if v < 0 then
+        s := 1
+      else if v = 0 then
+        s := 2;
+      if s <> 0 then begin
+        if correct_cc_set(t, s) then
+          q := br_target(t)
+        else
+          q := nxtcc(t);
+        moverefcell(codegen_$cell_ptr_t(c^.ads2.y), q);
+        nx := c;
+        goto 9;
+      end;
+    end;
+2:
+  if (5 in cargs_$options.opt_on) and not (5 in cargs_$options.flags_286) then begin
+    r := codegen_$cell_ptr_t(c^.ads2.y);
+    q := r^.next;
+    first := r^.owner^.refs;
+    if first <> q then
+      repeat
+        j := codegen_$cell_ptr_t(q^.target);
+        if j^.kind = c^.kind then
+          if crossjump(c, j, pa, pb) then begin
+            nx := makejump(pa, pb);
+            goto 9;
+          end;
+        q := q^.next;
+      until q = first;
+  end;
+9:
+  puncondjmp := nx;
+end;
+
+{ assert_n_bit_is_modified - c's op's class does not leave N alone
+  (opinfo_cc 0 not 1).
+
+  0x10C384, 0x36 bytes, no frame. }
+
+function assert_n_bit_is_modified(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+begin
+  if c = nil then
+    assert_n_bit_is_modified := false
+  else
+    assert_n_bit_is_modified := opinfo_cc[opinfo_cc_class[c^.op]][0] <> 1;
+end;
+
+{ assert_bfextu_requires_test - the instructions after c up to the
+  section's head scanned until one tests N (a branch or set, kinds 17,
+  18, 19, 23, 29 in #0x208E0000, of an op in a set of 0..207), or is a
+  label, call or branch, or changes N; the answer is true whatever
+  ended the scan.
+
+  0x10C3BA, 0x92 bytes, no A5 load: the scan's flag in D2, D0 set
+  (`st') at the end. }
+
+function assert_bfextu_requires_test(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+label
+  1;
+var
+  p: codegen_$cell_ptr_t;
+  done: boolean;
+  k: integer;
+begin
+  p := nxtlcc(c);
+  done := false;
+  while p <> fn_sect^.head do begin
+    k := p^.kind;
+    if (k in [17, 18, 19, 23, 29]) and
+       (p^.op in [120..123, 134..139, 148..153, 162..167, 176..181, 192..197]) then
+      done := true
+    else if k = def_lbl_instyp then
+      done := true
+    else if final_$is_call_or_branch(p) then
+      done := true
+    else
+      done := assert_n_bit_is_modified(p);
+    p := nxtlcc(p);
+    if done then
+      goto 1;
+  end;
+1:
+  assert_bfextu_requires_test := true;
+end;
+
+{ bit_field_inst_which_obviates_test - bit field instruction c (kind 45,
+  not op 214) on a field node (138) of 2 operands, or of 3 whose
+  constant bounds (81) span no more than the bits of nx's source
+  (final_$sizeof), sets the codes as the test nx would; a bfextu (op
+  215) only when assert_bfextu_requires_test is false.
+
+  0x10C466, 0xB6 bytes, no A5 load: the bounds' low words subtracted. }
+
+function bit_field_inst_which_obviates_test(
+    c: codegen_$cell_ptr_t;
+    nx: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+  n: il_$node_ptr_t;
+  lo: il_$node_ptr_t;
+  hi: il_$node_ptr_t;
+  w: integer;
+begin
+  r := false;
+  if (c^.kind = m020_src2_instyp) and
+     ((c^.op = 215) or (c^.op <> 214)) and (c^.ads1.x <> 0) then begin
+    n := il_$node_ptr_t(c^.ads1.x);
+    if n^.kind = 138 then
+      if n^.xw[19] = 2 then
+        r := true
+      else if (n^.xw[19] = 3) and (n^.xp[11] <> nil) then begin
+        lo := n^.xp[11];
+        if (lo^.kind = 81) and (n^.xp[12] <> nil) then begin
+          hi := n^.xp[12];
+          if hi^.kind = 81 then begin
+            w := hi^.xw[5] - lo^.xw[5] + 1;
+            if w <= final_$sizeof(nx, 1) * 8 then
+              r := true;
+          end;
+        end;
+      end;
+  end;
+  if r and (c^.op = 215) then
+    r := not assert_bfextu_requires_test(nx);
+  bit_field_inst_which_obviates_test := r;
 end;
