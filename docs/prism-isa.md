@@ -589,3 +589,60 @@ the floating operations 0x30..0x3E; the floating control 0xFC.
 | 209 | bugcheck | bugcheck |  | 00000000 | 00000000 | - |
 | 210 | none | none |  | 00000000 | 00000000 | - |
 | 211 | adj_move | ADD | ? | 00000000 | 00000000 | - |
+
+## Latencies and the scheduler's pipeline model (sched_utils.pas; new)
+
+Translator PB4 (sched_utils.pas, 0x279190..0x27A416; the SCHED phase
+itself, sched.pas, is not translated yet).
+
+- **Operand delays come from the opcode table.**  Each operand
+  description in `instruction_attributes` (+4k, four bytes) carries in
+  its third byte (+4k+2) a delay in bits 5..2 (0..15 cycles) and in
+  bits 7..6 a code: 1 or 2 mean the operand has no delay of its own.
+  The condition codes an opcode sets have their delay in the opcode's
+  +15 bits 7..4.  sched_utils_$operand_delay (0x279266) reads these;
+  sched_utils_$fill_in_operand_delays stores each operand's delay in
+  the operand's +2 bits 3..0, which lst later prints as the cycle
+  column.
+- **Implicit operands.**  An operand the listing does not show (number
+  above the opcode's shown count) takes the delay of the
+  intend_to_modify read of the same live range before it (the
+  read-modify-write pairs); a double's odd half takes its mate's.
+  Calls, the entry, SEQ, LIMIT, SVC and RETURN have no delays on their
+  implicit operands.
+- **One extra cycle**, taken in one of two directions (the flags'
+  element 1 says which; sched's pass 1 asks from the definition, oli
+  from the reader):
+  - an integer result read as operand 1 of a branch-like instruction
+    (branch, call, floating branch, jump, the FP-immediate class, SEQ,
+    trap, SVC, RETURN: bin's class mask 0x1104366) costs one more;
+  - an integer result of a load (load, load_pair, MFPR, floating
+    control: 0x419000) read by a reader with a count (operand +2 bits
+    5..4) costs one more: the load-use interlock;
+  - a floating result (floating double, single and FP-immediate
+    classes) read by a store or a floating control instruction costs
+    one more: the floating unit's result reaches the integer side
+    late;
+  - with the flags' element 0, a read of the integer condition codes
+    costs one more than the setter's delay.
+- **-CPU KODIAK** (cargs' cpu element 7) replaces the floating
+  operations' latencies: DIVI 9, SQRTS 8, DIVS 4, SQRTD 15, DIVD 8,
+  every other floating operation 0 (sched_utils_$kodiak_delay
+  0x2791E8); the table's values are the default CPU's.
+- **Precedence heights** (sched_utils_$calculate_precedence 0x279BC4):
+  during SCHED an instruction's +28 word is the longest chain of delays
+  from it to the end of its block (the segments final in the block and
+  the reads of the closing branches are the roots); an instruction's
+  height is at least 1.  A cycle among a block's definitions is a bug
+  check ("deadlocked"); every instruction but branches and labels must
+  get a height.  This is the list scheduler's priority: SCHED runs
+  before register allocation (phase 12, RA 13), on virtual registers.
+- **Snuggle moves** (sched_utils_$insert_snuggle_moves 0x27A398, from
+  com and xtp): a write or read of a physical register (an argument or
+  result register: its live range has +3 bit 7) gets a copy right next
+  to the instruction (lir_utils_$trans_insert_move) when the
+  instruction does more than move it, so that the physical register is
+  live only between the copy and the call, entry, SVC or RETURN that
+  needs it; the allocator can then use the register elsewhere.  A
+  physical result with two readers, or a modify of a physical register,
+  is a bug check.
