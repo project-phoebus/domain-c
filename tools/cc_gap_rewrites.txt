@@ -256,7 +256,7 @@ lang2/source/be_com/ra_utils.pas	s/^(            \{ A new live range for the rel
 lang2/source/be_com/ra_utils.pas	s/^(          \{ The later readers linked to the stored register\. \})$/%var gap28w;\n%if gap28w %then { gap 28 }\n$1/
 lang2/source/be_com/ra_utils.pas	s/^(          \{ A TST made of the writing move reads no register\. \})$/%endif { gap 28 }\n$1/
 # gap 37 (ra, translator PB6): a set constructor with a run-time range (the range's two bounds subtracted as members, for the check)
-lang2/source/be_com/ra.pas	s/^  f\.s := \[0\.\.63\] - \[target_properties\.p_14\[10\] \.\.$/  f.s := [0..63]; ra_pipe_len := { gap 37 }/
+lang2/source/be_com/ra.pas	s/^  ([fg])\.s := \[0\.\.63\] - \[target_properties\.p_14\[10\] \.\.$/  $1.s := [0..63]; ra_pipe_len := { gap 37 }/
 lang2/source/be_com/ra.pas	s/^      (target_properties\.p_14\[10\] \+ target_properties\.p_14\[12\] - 1)\];/      $1;/
 lang2/source/be_com/ra.pas	s/ - \[target_properties\.p_14\[(\d+)\] \.\.$/ - [target_properties.p_14[$1]] - { gap 37 } [/
 # gap 38 (ra, translator PB6): odd of a byte field (its low bit masked, for the check)
@@ -272,3 +272,6 @@ lang2/source/be_com/ra.pas	s/^(          \{ \(out of the pipe first\) \})$/%if g
 lang2/source/be_com/ra.pas	s/^(          \{ It may die at once\. \})$/%endif { gap 28 }\n$1/
 lang2/source/be_com/ra.pas	s/^(        \{ The clobbers of a call or SVC\. \})$/%if gap28w %then { gap 28 }\n$1/
 lang2/source/be_com/ra.pas	s/^(        \{ Ready for the next instruction\. \})$/%endif { gap 28 }\n$1/
+# gap 39 (ra, translator PB6): a frame beyond link.w (ra_$collapse_conflict_graph's 256K table of aversions: the table shrunk to two entries, for the check)
+lang2/source/be_com/ra.pas	s/^  ra_ap_table_t = array \[0\.\.65535\] of ra_ap_ptr_t;$/  ra_ap_table_t = array [0..1] of ra_ap_ptr_t; { gap 39 }/
+lang2/source/be_com/ra.pas	s/\.r < 1\.0e-4/.i < 16#38D1B717 { gap 7 }/

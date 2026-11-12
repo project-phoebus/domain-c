@@ -2653,6 +2653,13 @@ function sym_$reformat_literal_operand(
 function isc_$get_il_live_range(
     node: univ_ptr): lr_ptr_t; options(val_param); extern;
 
+{ batch B (PB6): ISC_$IS_A_REGISTER_CANDIDATE - whether the ISC made
+  node a register candidate.  isc_user_routines 0x213198; called from
+  ra (ra_$process_routine: the routine node's +240).  Frame 8:a.
+  Result: D0 (a byte). }
+function isc_$is_a_register_candidate(
+    node: univ_ptr): boolean; options(val_param); extern;
+
 { tm_utils.pas (cc.a88k). }
 
 { TM_UTILS_$BEGIN_COMPILATION - 0x27B714, 0x2 bytes (no A5); called from

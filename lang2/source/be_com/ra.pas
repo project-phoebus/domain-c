@@ -87,10 +87,11 @@
     characters, initialized), the work areas below, the bit masks 1 ..
     0x80 (+0x590, initialized) and the titles' lengths (+0x598, 13, 13,
     18), the register sets and counters (+0x5A0 .. +0x66A).  +0x65C
-    holds three initialized characters, 'ISD', that no instruction
-    reads: ra_utils has the same three at its +0x204, and only these two
-    units open ra.pvt.pas (an initialized variable of that insert, most
-    likely; docs/questions.md 300).
+    holds the classes' letters, 'ISD' (initialized; process_routine's
+    failure message reads one at A5 + 0x65B + class): ra_utils has the
+    same three characters at its +0x204, and only these two units open
+    ra.pvt.pas (an initialized variable of that insert, most likely;
+    docs/questions.md 300).
 
   Every routine but the four entry points and the two ra_utils calls
   (ra_$clean_bb_and_init_bit_vectors, ra_$build_conflict_graph) is
@@ -191,19 +192,47 @@ type
     b: ra_lr_ptr_t;                     { +4 }
     next_a: ra_ap_ptr_t;                { +8 }
     next_b: ra_ap_ptr_t;                { +12 }
-    l16: integer32;                     { +16 }
+    closure: ra_ap_ptr_t;               { +16: the preference closure
+                                          (ra_$close_live_range_preferences) }
     avoid: integer32;                   { +20 }
     pref: integer32;                    { +24 }
     depth: char;                        { +28 }
+    done: boolean;                      { +29: counted out of the active
+                                          ones (ra_$remove_lr_from_graph) }
   end;
+
+  ra_ap_table_t = array [0..65535] of ra_ap_ptr_t;
+  ra_ptrs_ptr_t = ^ra_ptrs_t;
+  ra_ptrs_t = array [0..16#3FFFFFF] of univ_ptr;
+
+  { A live range's +64, +68 while registers are assigned: the registers
+    it prefers (the floating 32..63, then the rest). }
+  ra_pref_ptr_t = ^ra_pref_t;
+  ra_pref_t = record
+    space0: array [0..63] of char;
+    hi: bv_word_t;                      { +64 }
+    lo: bv_word_t;                      { +68 }
+  end;
+  ra_lrs_ptr_t = ^ra_lrs_t;
+  ra_lrs_t = array [0..16#3FFFFFF] of ra_lr_ptr_t;
 
   { A conflict between two unassigned live ranges (on both their lists,
     +44).  From ra_conf_heaps[which]. }
+  ra_conf12_t = record
+    case integer of
+      1: (next_b: ra_conf_ptr_t);
+      2: (f: packed record
+            b12, b13, b14: 0..255;
+            b15_7_1: 0..127;
+            removed: boolean;           { +15 .0: taken out of the graph
+                                          (ra_$remove_lr_from_graph) }
+            end);
+  end;
   ra_conf_t = record
     a: ra_lr_ptr_t;                     { +0 }
     b: ra_lr_ptr_t;                     { +4 }
     next_a: ra_conf_ptr_t;              { +8 }
-    next_b: ra_conf_ptr_t;              { +12 }
+    f12: ra_conf12_t;                   { +12 }
   end;
 
   { A pending aversion (ra_$possible_aversions): a and b, the ticks b's
@@ -492,6 +521,9 @@ var
                                           register, if any }
   ra_ip_reserved: bv_word_t;            { +0x5B4: the zero and PC-like
                                           registers }
+  ra_pair_unalloc: ra_fpset_t;          { +0x5B8: the registers the pair
+                                          class may not use (every odd
+                                          one) }
   ra_fp_unalloc: ra_fpset_t;            { +0x5C0: the floating registers
                                           never allocated }
   ra_ip_unalloc: bv_word_t;             { +0x5C8: the integer registers
@@ -517,13 +549,29 @@ var
   ra_live_out: bv_ptr_t;                { +0x5F4 }
   ra_bb_mark: bb_ptr_t;                 { +0x5F8: the block being built
                                           (the simple indices') }
+  ra_work_low: integer32;               { +0x5FC: COLLAPSE_WORK_LOW, the
+                                          level the collapse is at }
+  ra_work: ra_lrs_ptr_t;                { +0x600: the work lists, by twice
+                                          the conflicts (+1 with active
+                                          aversions or preferences) }
+  ra_cand: ra_lrs_ptr_t;                { +0x608: the candidate lists, by
+                                          depth }
+  ra_unconstrained: integer32;          { +0x60C: COLLAPSE_UNCONSTRAINED }
   ra_clock: integer32;                  { +0x610: the protection pipe's
                                           clock }
   ra_ip_clobbered: bv_word_t;           { +0x614: the calls' and SVCs'
                                           clobbers }
   ra_fp_clobbered: ra_fpset_t;          { +0x618 }
+  ra_save_ip: integer32;                { +0x620: the bytes of integer
+                                          registers to save (ra_$open_registers) }
+  ra_save_bytes: integer32;             { +0x624: the bytes of the other
+                                          registers opened to save }
   ra_return_bb: bb_ptr_t;               { +0x628: the RETURN's block }
   ra_entry_bb: bb_ptr_t;                { +0x62C: the ENTRY's block }
+  ra_fp_alloc: ra_fpset_t;              { +0x630: the floating registers
+                                          allocated (complement of
+                                          ra_fp_unalloc) }
+  ra_ip_alloc: bv_word_t;               { +0x638 }
   ra_ip_used: bv_word_t;                { +0x63C }
   ra_fp_used: ra_fpset_t;               { +0x640 }
   ra_frame_objs: ra_var_ptr_t;          { +0x648: the stack frame's
@@ -540,10 +588,14 @@ var
   ra_final: boolean;                    { +0x668: the integer pass (the
                                           last): the frame is laid out }
   ra_db_used: boolean;                  { +0x66A }
-  ra_65c: packed array [1..3] of char := 'ISD';    { +0x65C }
+  ra_letters: packed array [ra_ip .. ra_pair] of char := 'ISD';  { +0x65C:
+                                          the classes' letters (the
+                                          failure's message) }
 
 define
   ra_650;                               { +0x650 }
+  ra_654;                               { +0x654 (lir_main sets it) }
+  ra_658;                               { +0x658 (lir_main sets it) }
 
 { zero - n bytes from p cleared, a longword at a time ((n + 3) div 4 of
   them; nothing for 0): rev889-patterns 100.
@@ -1756,7 +1808,7 @@ begin
     r := mrh_$alloc_fixed(ra_ap_heaps[which]);
     r^.a := a;
     r^.b := b;
-    r^.l16 := 0;
+    r^.closure := nil;
     r^.avoid := 0;
     r^.pref := 0;
     r^.depth := chr(depth);
@@ -1861,7 +1913,7 @@ begin
       c^.next_a := a^.x44.conf;
       a^.x44.conf := c;
       c^.b := b;
-      c^.next_b := b^.x44.conf;
+      c^.f12.next_b := b^.x44.conf;
       b^.x44.conf := c;
     end;
   end;
@@ -3017,4 +3069,2095 @@ begin
     ra_$release_rws_storage(ra_cs.vec);
     ra_$release_rws_storage(ra_ss.vec);
   end;
+end;
+
+{ enter_lr_in_appropriate_work_list - an unassigned live range put on
+  the collapse's work lists: one with no active aversions or
+  preferences (+58), or with few enough conflicts (+56, at most
+  ra_unconstrained), on the work list of its conflicts (twice its
+  conflicts, one more with active ones; ra_work_low follows the least);
+  the others (+10 bit 5) on the candidate list of the depth of their
+  first aversion/preference, ordered by its preference less aversion.
+
+  0x26A9CE, 0xFE bytes, internal. }
+
+procedure enter_lr_in_appropriate_work_list(
+    lr: ra_lr_ptr_t); options(val_param); internal;
+label
+  10;
+var
+  idx, key, d: integer32;
+  old, prv: ra_lr_ptr_t;
+begin
+  if lr^.f2.assigned then
+    return;
+  if (lr^.serial = 0) or (lr^.w56 <= ra_unconstrained) then begin
+    lr^.f8.b10_5 := false;
+    if lr^.w56 < ra_work_low then
+      ra_work_low := lr^.w56;
+    idx := lr^.w56 * 2;
+    if lr^.aps <> nil then
+      if lr^.serial <> 0 then
+        idx := idx + 1;
+    old := ra_work^[idx];
+    ra_work^[idx] := lr;
+  end
+  else begin
+    lr^.f8.b10_5 := true;
+    key := lr^.aps^.pref - lr^.aps^.avoid;
+    d := ord(lr^.aps^.depth);
+    old := ra_cand^[d];
+    if old <> nil then
+      if old^.aps^.pref - old^.aps^.avoid < key then begin
+        repeat
+          prv := old;
+          old := old^.x52.lr;
+          if old = nil then
+            goto 10;
+        until old^.aps^.pref - old^.aps^.avoid >= key;
+        old^.prev := lr;
+10:
+        lr^.prev := prv;
+        lr^.x52.lr := old;
+        prv^.x52.lr := lr;
+        return;
+      end;
+    ra_cand^[d] := lr;
+  end;
+  if old <> nil then
+    old^.prev := lr;
+  lr^.x52.lr := old;
+  lr^.prev := nil;
+end;
+
+{ remove_lr_from_current_work_list - an unassigned live range taken off
+  its work or candidate list.
+
+  0x26AACC, 0x7E bytes, internal: the unlinking branches on the flags
+  of the stores of the next (pattern 111). }
+
+procedure remove_lr_from_current_work_list(
+    lr: ra_lr_ptr_t); options(val_param); internal;
+var
+  nxt, prv: ra_lr_ptr_t;
+  idx: integer32;
+begin
+  nxt := lr^.x52.lr;
+  prv := lr^.prev;
+  if not lr^.f2.assigned then
+    if prv <> nil then begin
+      prv^.x52.lr := nxt;
+      if nxt <> nil then
+        nxt^.prev := prv;
+    end
+    else begin
+      if lr^.f8.b10_5 then
+        ra_cand^[ord(lr^.aps^.depth)] := nxt
+      else begin
+        idx := lr^.w56 * 2;
+        if lr^.aps <> nil then
+          if lr^.serial <> 0 then
+            idx := idx + 1;
+        ra_work^[idx] := nxt;
+      end;
+      if nxt <> nil then
+        nxt^.prev := nil;
+    end;
+end;
+
+{ ra_$remove_lr_from_graph - lr leaves the graph: each of its conflicts
+  not yet removed (marked in the record's +15 bit 0) lowers the other
+  live range's conflicts (moving it between work lists), and each of
+  its aversions and preferences not yet done (+29) the other's active
+  count (+58) by one while it is above 1.
+
+  0x26AB4A, 0xE4 bytes, internal: the conflict pointers' two low bits
+  masked off (`andi.l #-4'); the count of lr's conflicts ends the walk.
+  The path that would move a live range whose active count reaches 0
+  is never taken (both tests `cmp.w #1; bcc': a slip, docs/questions.md
+  301). }
+
+procedure ra_$remove_lr_from_graph(
+    lr: ra_lr_ptr_t); options(val_param); internal;
+var
+  c, cn: ra_conf_ptr_t;
+  ap, an: ra_ap_ptr_t;
+  other: ra_lr_ptr_t;
+  n: integer32;
+begin
+  c := lr^.x44.conf;
+  n := lr^.w56;
+  c := ra_conf_ptr_t(integer32(c) & (~3));
+  while c <> nil do begin
+    if c^.a = lr then begin
+      other := c^.b;
+      cn := c^.next_a;
+    end
+    else begin
+      other := c^.a;
+      cn := c^.f12.next_b;
+    end;
+    if not c^.f12.f.removed then begin
+      c^.f12.f.removed := true;
+      if other^.f8.b10_5 then
+        other^.w56 := other^.w56 - 1
+      else begin
+        remove_lr_from_current_work_list(other);
+        other^.w56 := other^.w56 - 1;
+        enter_lr_in_appropriate_work_list(other);
+      end;
+      n := n - 1;
+      if n = 0 then
+        exit;
+    end;
+    c := ra_conf_ptr_t(integer32(cn) & (~3));
+  end;
+  lr^.serial := 0;
+  ap := lr^.aps;
+  while ap <> nil do begin
+    if ap^.a = lr then begin
+      other := ap^.b;
+      an := ap^.next_a;
+    end
+    else begin
+      other := ap^.a;
+      an := ap^.next_b;
+    end;
+    if not ap^.done then begin
+      ap^.done := true;
+      if other^.serial > 1 then
+        other^.serial := other^.serial - 1
+      else if other^.serial > 1 then begin
+        remove_lr_from_current_work_list(other);
+        other^.serial := 0;
+        enter_lr_in_appropriate_work_list(other);
+      end;
+    end;
+    ap := an;
+  end;
+end;
+
+{ pick_uwork_candidate - the first candidate (shallowest depth first)
+  whose conflicts and active aversions/preferences together are at
+  most ra_work_low; nil when there is none.
+
+  0x26AC2E, 0x5A bytes, internal; A0. }
+
+function pick_uwork_candidate: ra_lr_ptr_t; internal;
+var
+  d: integer32;
+  lr: ra_lr_ptr_t;
+begin
+  for d := 0 to ra_max_depth do begin
+    lr := ra_cand^[d];
+    while lr <> nil do begin
+      if lr^.w56 + lr^.serial <= ra_work_low then begin
+        pick_uwork_candidate := lr;
+        return;
+      end;
+      lr := lr^.x52.lr;
+    end;
+  end;
+  pick_uwork_candidate := nil;
+end;
+
+{ pick_uwork_victim - at the shallowest depth that has one, the
+  candidate with the fewest conflicts among those with an aversion or
+  preference to a constrained (more than ra_unconstrained conflicts),
+  unassigned live range that is not a candidate itself; nil when there
+  is none.
+
+  0x26AC88, 0x9A bytes, internal; A0. }
+
+function pick_uwork_victim: ra_lr_ptr_t; internal;
+label
+  10;
+var
+  best, lr, other: ra_lr_ptr_t;
+  ap, an: ra_ap_ptr_t;
+  d: integer32;
+begin
+  best := nil;
+  for d := 0 to ra_max_depth do begin
+    lr := ra_cand^[d];
+    while lr <> nil do begin
+      ap := lr^.aps;
+      while ap <> nil do begin
+        if ap^.a = lr then begin
+          other := ap^.b;
+          an := ap^.next_a;
+        end
+        else begin
+          other := ap^.a;
+          an := ap^.next_b;
+        end;
+        if other^.w56 > ra_unconstrained then
+          if not other^.f2.assigned then
+            if not other^.f8.b10_5 then begin
+              if best = nil then
+                best := lr
+              else if best^.w56 > lr^.w56 then
+                best := lr;
+              goto 10;
+            end;
+        ap := an;
+      end;
+10:
+      lr := lr^.x52.lr;
+    end;
+    if best <> nil then
+      exit;
+  end;
+  pick_uwork_victim := best;
+end;
+
+{ sort_ap_table - table[lo..hi] sorted (a quicksort, the last element
+  the pivot) by depth, deepest first, then by the size of preference
+  less aversion, largest first.
+
+  0x26AD22, 0x134 bytes, internal, recursive. }
+
+procedure sort_ap_table(
+    var table: ra_ap_table_t;
+    lo: integer32;
+    hi: integer32); options(val_param); internal;
+var
+  i, j, key, k: integer32;
+  pivot, e: ra_ap_ptr_t;
+begin
+  i := lo;
+  j := hi - 1;
+  pivot := table[hi];
+  key := abs(pivot^.pref - pivot^.avoid);
+  repeat
+    while i < j do begin
+      e := table[i];
+      if e^.depth < pivot^.depth then
+        exit;
+      if e^.depth = pivot^.depth then
+        if abs(e^.pref - e^.avoid) < key then
+          exit;
+      i := i + 1;
+    end;
+    while i < j do begin
+      e := table[j];
+      if e^.depth > pivot^.depth then
+        exit;
+      if e^.depth = pivot^.depth then
+        if abs(e^.pref - e^.avoid) > key then
+          exit;
+      j := j - 1;
+    end;
+    if i < j then begin
+      e := table[i];
+      table[i] := table[j];
+      table[j] := e;
+    end;
+  until i >= j;
+  if i < hi then begin
+    e := table[i];
+    k := 0;
+    if e^.depth < pivot^.depth then
+      k := 1
+    else if e^.depth = pivot^.depth then
+      if abs(e^.pref - e^.avoid) < key then
+        k := 1;
+    if k <> 0 then begin
+      table[i] := table[hi];
+      table[hi] := e;
+    end;
+  end;
+  i := i + 1;
+  if i < hi then
+    sort_ap_table(table, i, hi);
+  if lo < j then
+    sort_ap_table(table, lo, j);
+end;
+
+{ ra_$collapse_conflict_graph - the allocation order: the live ranges
+  removed from the graph one by one onto order (each pushed on, so the
+  last removed is coloured first).  Those already assigned go on
+  flushed, as does a live range defined only by a plain move from an
+  assigned no_modify register (given that register).  Each other live
+  range's aversions and preferences that do not cancel are sorted (by
+  depth, then strength) and counted active (+58); the work lists hold
+  the unconstrained live ranges by conflicts.  At each level (from
+  ra_work_low) the work list's live range is removed (the costliest of
+  those without active aversions or preferences), or a candidate that
+  has become unconstrained, until the level reaches nregs; above it a
+  victim with an aversion or preference to a constrained live range,
+  and failing that the spill candidate of least cost per conflict (+3
+  bit 7 of rrp, spare_1, marks it; never one with life_mark), and when
+  there is none the remaining live ranges are taken as they come.
+  Finally the candidates still listed are flushed onto order.  Traced
+  with trace; the result is the highest level reached plus one (the
+  chromatic number).
+
+  0x26AE56, 0x760 bytes, internal: the aversion table in the frame
+  (262144 bytes past the locals, its address at -106); the work lists
+  and candidate lists from the heap (ra_work, ra_cand); the cost
+  comparisons through fpp_$eslv 0x0048 (`bpl'), cost per conflict
+  through fpp_$ 0x005C 0x003C; the best ratio starts at 0x7F7FFF9E (the
+  largest single, about 3.4e38); p2 is not read; the No Mod trace
+  passes a constant 0 (0x26B82E) and *UCAND* the address of the word
+  +58 for %4LD. }
+
+function ra_$collapse_conflict_graph(
+    nregs: integer32;
+    p2: integer32;
+    var flushed: ra_lr_ptr_t;
+    var order: ra_lr_ptr_t;
+    trace: boolean): integer32; options(val_param); internal;
+var
+  n, k, bytes, cnt, idx, top, maxlevel, active, id, w: integer32;
+  work, cand: ra_lrs_ptr_t;
+  moved, lr, nxt, p, src: ra_lr_ptr_t;
+  ap, prev: ra_ap_ptr_t;
+  op: opnd_ptr_t;
+  i: instr_ptr_t;
+  spilling: boolean;
+  best, ratio: ra_real_t;
+  table: ra_ap_table_t;
+begin
+  if trace then begin
+    vfmt_$write('%/%/TRACE OF RA_$COLLAPSE_CONFLICT_GRAPH -- THRESHOLD %LD / %$',
+        nregs);
+    vfmt_$write(ra_titles[ra_class]);
+  end;
+  n := (ra_max_conflicts + 1) * 2 + 1;
+  bytes := (n + 1) * 8;
+  work := rws_$alloc_heap(bytes);
+  ra_work := work;
+  for k := 0 to n do
+    work^[k] := nil;
+  bytes := (ra_max_depth + 1) * 4;
+  cand := rws_$alloc_heap(bytes);
+  ra_cand := cand;
+  for k := 0 to ra_max_depth do
+    cand^[k] := nil;
+  case ra_class of
+    ra_ip: begin
+      ra_unconstrained := ord(lir_main_c89);
+      if ra_unconstrained > nregs then
+        ra_unconstrained := nregs;
+      end;
+    ra_fp: begin
+      ra_unconstrained := ord(lir_main_c88);
+      if ra_unconstrained > nregs then
+        ra_unconstrained := nregs;
+      end;
+    ra_pair: begin
+      ra_unconstrained := rshft(ord(lir_main_c88), 1);
+      if ra_unconstrained > nregs then
+        ra_unconstrained := nregs;
+      end;
+  end;
+  ra_unconstrained := ra_unconstrained - 1;
+  ra_work_low := 0;
+  moved := nil;
+  flushed := nil;
+  order := nil;
+  lr := ra_lrs;
+  while lr <> nil do begin
+    lr^.serial := 0;
+    if lr^.f2.assigned then begin
+      lr^.x52.lr := flushed;
+      flushed := lr;
+    end
+    else begin
+      src := nil;
+      if not (rrp$true_write in lr^.rrp) and (lr^.defs <> nil) then
+        if lr^.defs^.next_def = nil then begin
+          op := lr^.defs^.refs;
+          i := instr_ptr_t(integer32(op) - 32 - 12 * op^.h.num);
+          if instruction_attributes[i^.opc].b6_0 and
+             (i^.opnds[1].h.count = 0) then begin
+            p := ra_lts_ptr_t(i^.opnds[1].lts)^.lr;
+            if p^.f2.assigned and p^.f2.no_modify then
+              src := p;
+          end;
+        end;
+      if src <> nil then begin
+        lr^.f2.assigned := true;
+        lr^.f2.reg := src^.f2.reg;
+        lr^.x52.lr := moved;
+        moved := lr;
+      end
+      else begin
+        cnt := 0;
+        ap := lr^.aps;
+        lr^.aps := nil;
+        while ap <> nil do begin
+          if ap^.avoid <> ap^.pref then begin
+            table[cnt] := ap;
+            cnt := cnt + 1;
+          end;
+          if ap^.a = lr then
+            ap := ap^.next_a
+          else
+            ap := ap^.next_b;
+        end;
+        lr^.serial := cnt;
+        if cnt <> 0 then begin
+          if cnt > 1 then
+            sort_ap_table(table, 0, cnt - 1);
+          prev := nil;
+          while cnt <> 0 do begin
+            cnt := cnt - 1;
+            ap := table[cnt];
+            if ap^.a = lr then
+              ap^.next_a := prev
+            else
+              ap^.next_b := prev;
+            prev := ap;
+          end;
+          lr^.aps := prev;
+        end;
+        enter_lr_in_appropriate_work_list(lr);
+      end;
+    end;
+    lr := lr^.next;
+  end;
+  while moved <> nil do begin
+    if trace then begin
+      w := moved^.w56;
+      id := moved^.id;
+      vfmt_$write('No Mod   LR %3ZWD,   COMPLEX_ID %3ZLD,  remaining =%4LD,  active A/Ps =%4LD%.',
+          moved^.num, id, w, 0);
+    end;
+    ra_$remove_lr_from_graph(moved);
+    nxt := moved^.x52.lr;
+    moved^.x52.lr := flushed;
+    flushed := moved;
+    moved := nxt;
+  end;
+  spilling := false;
+  maxlevel := 0;
+  ra_work_low := 0;
+  while ra_work_low <= ra_max_conflicts do begin
+    idx := ra_work_low * 2;
+    lr := work^[idx];
+    if lr = nil then begin
+      idx := idx + 1;
+      lr := work^[idx];
+    end;
+    if lr = nil then begin
+      lr := pick_uwork_candidate;
+      if trace and (lr <> nil) then begin
+        w := lr^.w56;
+        id := lr^.id;
+        vfmt_$write('*UCAND*  LR %3ZWD,   COMPLEX_ID %3ZLD,  remaining =%4LD,  active A/Ps =%4LD%.',
+            lr^.num, id, w, lr^.serial);
+      end;
+    end;
+    if lr = nil then begin
+      ra_work_low := ra_work_low + 1;
+      if trace then
+        vfmt_$write('-- COLLAPSE_WORK_LOW incremented to %LD%.', ra_work_low);
+    end
+    else begin
+      if spilling or (ra_work_low < nregs) then begin
+        if ra_work_low > maxlevel then begin
+          maxlevel := ra_work_low;
+          if ra_work_low < nregs then begin
+            ra_unconstrained := ra_work_low;
+            if trace then
+              vfmt_$write('-- COLLAPSE_UNCONSTRAINED increased to %LD%.',
+                  ra_unconstrained);
+          end;
+        end;
+        if not odd(idx) then begin
+          p := lr^.x52.lr;
+          while p <> nil do begin
+            if lr^.cost.r < p^.cost.r then
+              lr := p;
+            p := p^.x52.lr;
+          end;
+        end;
+        if lr^.serial <> 0 then
+          if lr^.w56 <= ra_unconstrained then
+            if not lr^.f8.b10_5 then begin
+              remove_lr_from_current_work_list(lr);
+              enter_lr_in_appropriate_work_list(lr);
+              if trace then begin
+                w := lr^.w56;
+                id := lr^.id;
+                vfmt_$write('*DEFER*  LR %3ZWD,   COMPLEX_ID %3ZLD,  remaining =%4LD,  active A/Ps =%4LD%.',
+                    lr^.num, id, w, lr^.serial);
+              end;
+              lr := nil;
+            end;
+      end
+      else begin
+        lr := pick_uwork_victim;
+        if trace and (lr <> nil) then begin
+          w := lr^.w56;
+          id := lr^.id;
+          vfmt_$write('*UVICT*  LR %3ZWD,   COMPLEX_ID %3ZLD,  remaining =%4LD,  active A/Ps =%4LD%.',
+              lr^.num, id, w, lr^.serial);
+        end;
+        if lr = nil then begin
+          best.i := 16#7F7FFF9E;
+          if trace then
+            vfmt_$write('  Spill candidates at level %LD:%.', ra_work_low);
+          top := ra_max_conflicts * 2 + 1;
+          for idx := top downto ra_work_low * 2 do begin
+            p := work^[idx];
+            while p <> nil do begin
+              if not (rrp$life_mark in p^.rrp) and not p^.f2.assigned then
+                if p^.w56 <> 0 then begin
+                  ratio.r := p^.cost.r / p^.w56;
+                  if ratio.r < best.r then begin
+                    best := ratio;
+                    lr := p;
+                  end;
+                end;
+              if trace then begin
+                w := p^.w56;
+                vfmt_$write('         LR %3ZWD: %15.3WF / %8JWD %15.3WF%.',
+                    p^.num, p^.cost, w, ratio);
+              end;
+              p := p^.x52.lr;
+            end;
+          end;
+          if lr = nil then
+            spilling := true
+          else begin
+            if rrp$life_mark in lr^.rrp then
+              bug_check('RA_$COLLAPSE_CONFLICT_GRAPH -- spill victim is marked never_spill%$');
+            lr^.rrp := lr^.rrp + [rrp$spare_1];
+          end;
+        end;
+      end;
+      if lr <> nil then begin
+        remove_lr_from_current_work_list(lr);
+        lr^.x52.lr := order;
+        order := lr;
+        if trace then begin
+          if lr^.aps = nil then
+            active := 0
+          else
+            active := lr^.serial;
+          w := lr^.w56;
+          id := lr^.id;
+          vfmt_$write('Removing LR %3ZWD,   COMPLEX_ID %3ZLD,  remaining =%4LD,  active A/Ps =%4LD%$',
+              lr^.num, id, w, active);
+          if rrp$life_mark in lr^.rrp then
+            vfmt_$write(', never spill%.')
+          else if rrp$spare_1 in lr^.rrp then
+            vfmt_$write(', spill candidate%.')
+          else
+            vfmt_$write('%.');
+        end;
+        ra_$remove_lr_from_graph(lr);
+      end;
+    end;
+  end;
+  ra_$release_rws_storage(work);
+  for k := 0 to ra_max_depth do
+    while cand^[k] <> nil do begin
+      lr := cand^[k];
+      remove_lr_from_current_work_list(lr);
+      ra_$remove_lr_from_graph(lr);
+      lr^.x52.lr := order;
+      order := lr;
+      if trace then begin
+        if lr^.aps = nil then
+          active := 0
+        else
+          active := lr^.serial;
+        w := lr^.w56;
+        id := lr^.id;
+        vfmt_$write('Flushing LR %3ZWD,   COMPLEX_ID %3ZLD,  remaining =%4LD,  active A/Ps =%4LD%$',
+            lr^.num, id, w, active);
+        if rrp$life_mark in lr^.rrp then
+          vfmt_$write(', never spill%.')
+        else if rrp$spare_1 in lr^.rrp then
+          vfmt_$write(', spill candidate%.')
+        else
+          vfmt_$write('%.');
+      end;
+    end;
+  ra_$release_rws_storage(cand);
+  if trace and (ra_650 > 1) then
+    dmp_$interference_graph_analysis('%/%/ALLOCATION ORDER -- %$',
+        ra_titles[ra_class], maxlevel + 1, lr_ptr_t(order), true);
+  ra_$collapse_conflict_graph := maxlevel + 1;
+end;
+
+{ ra_$extra_registers_needed - of the n registers wanted, those in avail
+  (each taken; one not yet in used costs step bytes of saving: 4, or 8
+  for pairs) and, beyond what avail held, those used already (free) or
+  else to be saved (step each); the registers still wanted.
+
+  0x26B8F2, 0xD6 bytes, internal: the sets in dpc's 64-bit layout (32..63
+  first); extra by address; the product by m$mis$lll. }
+
+function ra_$extra_registers_needed(
+    n: integer32;
+    in avail: ra_set64_t;
+    in used: ra_set64_t;
+    out extra: integer32): integer32; options(val_param); internal;
+var
+  step, cnt, r, d: integer32;
+begin
+  step := 4;
+  if ra_class = ra_pair then
+    step := 8;
+  extra := 0;
+  cnt := 0;
+  if avail.lo <> [] then
+    for r := 0 to 31 do
+      if (r mod 32) in avail.lo then begin
+        n := n - 1;
+        if not ((r mod 32) in used.lo) then
+          extra := extra + step;
+      end
+      else if (r mod 32) in used.lo then
+        cnt := cnt + 1;
+  if avail.hi <> [] then
+    for r := 0 to 31 do
+      if (r mod 32) in avail.hi then begin
+        n := n - 1;
+        if not ((r mod 32) in used.hi) then
+          extra := extra + step;
+      end
+      else if (r mod 32) in used.hi then
+        cnt := cnt + 1;
+  if n < 0 then
+    n := 0;
+  d := n - cnt;
+  if d > 0 then
+    extra := extra + d * step;
+  ra_$extra_registers_needed := n;
+end;
+
+{ ra_$open_another_fp_register - one more floating register (a pair's
+  even half in the pair class: the registers whose odd half the
+  conventions' fp60 names count as taken) added to regs: one the
+  conventions clobber anyway (paired true), else one they preserve,
+  preferring the other half of a pair one of whose halves regs already
+  has; false when none is left.  reg the register (for the pair
+  search, the pair's odd register).
+
+  0x26B9C8, 0x298 bytes, internal: regs, reg and paired by address; the
+  floating sets in dpc's layout (32..63 first); every bit test with the
+  compiler's range check after `and #31'. }
+
+function ra_$open_another_fp_register(
+    var regs: ra_set64_t;
+    conv: call_conv_$ptr_t;
+    out reg: integer32;
+    out paired: boolean): boolean; options(val_param); internal;
+label
+  10;
+var
+  hi, lo, nhi, nlo, c_hi, c_lo, bit: bv_word_t;
+  r, r1: integer32;
+begin
+  if ra_class = ra_fp then begin
+    hi := regs.hi + ra_fp_unalloc.hi;
+    lo := regs.lo + ra_fp_unalloc.lo;
+  end
+  else begin
+    hi := regs.hi + ra_pair_unalloc.hi;
+    lo := regs.lo + ra_pair_unalloc.lo;
+    r := 30;
+    r1 := 31;
+    while r >= 0 do begin
+      if (r1 mod 32) in bv_word_t(conv^.fp60[0]) then
+        hi := hi + [r mod 32];
+      if (r1 mod 32) in bv_word_t(conv^.fp60[1]) then
+        lo := lo + [r mod 32];
+      r := r - 2;
+      r1 := r1 - 2;
+    end;
+  end;
+  nhi := [0..31] - hi;
+  c_hi := nhi * bv_word_t(conv^.fp_clobbered[0]);
+  nlo := [0..31] - lo;
+  c_lo := nlo * bv_word_t(conv^.fp_clobbered[1]);
+  if (c_lo <> []) or (c_hi <> []) then
+    paired := true
+  else begin
+    paired := false;
+    c_hi := nhi * bv_word_t(conv^.fp_preserved[0]);
+    c_lo := nlo * bv_word_t(conv^.fp_preserved[1]);
+    if (c_lo = []) and (c_hi = []) then begin
+      ra_$open_another_fp_register := false;
+      return;
+    end;
+    r := 0;
+    r1 := 1;
+    while r < 32 do begin
+      if ((r1 mod 32) in regs.lo) and
+         ((r1 mod 32) in bv_word_t(conv^.fp_preserved[1])) and
+         ((r mod 32) in c_lo) then begin
+        regs.lo := regs.lo + [r mod 32];
+        goto 10;
+      end;
+      if ((r mod 32) in regs.lo) and
+         ((r mod 32) in bv_word_t(conv^.fp_preserved[1])) and
+         ((r1 mod 32) in c_lo) then begin
+        regs.lo := regs.lo + [r1 mod 32];
+        goto 10;
+      end;
+      r := r + 2;
+      r1 := r1 + 2;
+    end;
+    r := 0;
+    r1 := 33;
+    while r < 32 do begin
+      if ((r1 mod 32) in regs.hi) and
+         ((r1 mod 32) in bv_word_t(conv^.fp_preserved[0])) and
+         ((r mod 32) in c_hi) then begin
+        regs.hi := regs.hi + [r mod 32];
+        goto 10;
+      end;
+      if ((r mod 32) in regs.hi) and
+         ((r mod 32) in bv_word_t(conv^.fp_preserved[0])) and
+         ((r1 mod 32) in c_hi) then begin
+        regs.hi := regs.hi + [r1 mod 32];
+        goto 10;
+      end;
+      r := r + 2;
+      r1 := r1 + 2;
+    end;
+  end;
+  if c_lo <> [] then begin
+    r1 := 0;
+    while not ((r1 mod 32) in c_lo) do
+      r1 := r1 + 1;
+    regs.lo := regs.lo + [r1 mod 32];
+  end
+  else begin
+    r1 := 32;
+    while not ((r1 mod 32) in c_hi) do
+      r1 := r1 + 1;
+    regs.hi := regs.hi + [r1 mod 32];
+  end;
+10:
+  reg := r1;
+  ra_$open_another_fp_register := true;
+end;
+
+{ ra_$open_another_ip_register - one more integer register added to
+  regs (its low longword): one the conventions clobber (paired true),
+  else one they preserve; false when none is left.
+
+  0x26BC60, 0x84 bytes, internal. }
+
+function ra_$open_another_ip_register(
+    var regs: ra_set64_t;
+    conv: call_conv_$ptr_t;
+    out reg: integer32;
+    out paired: boolean): boolean; options(val_param); internal;
+var
+  na, c: bv_word_t;
+  r: integer32;
+begin
+  na := [0..31] - (regs.lo + ra_ip_unalloc);
+  c := na * bv_word_t(conv^.ip_clobbered);
+  if c <> [] then
+    paired := true
+  else begin
+    paired := false;
+    c := na * bv_word_t(conv^.ip_preserved);
+    if c = [] then begin
+      ra_$open_another_ip_register := false;
+      return;
+    end;
+  end;
+  r := 0;
+  while not ((r mod 32) in c) do
+    r := r + 1;
+  regs.lo := regs.lo + [r mod 32];
+  reg := r;
+  ra_$open_another_ip_register := true;
+end;
+
+{ ra_$count_available_registers - the registers of the pass's file that
+  could be opened from none (count), those clobbered anyway among them
+  (cheap).  0x26BCE4, 0x8E bytes, internal. }
+
+procedure ra_$count_available_registers(
+    rtn: rtn_ptr_t;
+    out count: integer32;
+    out cheap: integer32); options(val_param); internal;
+var
+  conv: call_conv_$ptr_t;
+  regs: ra_set64_t;
+  reg, n, c: integer32;
+  paired: boolean;
+begin
+  conv := ra_rtn_ptr_t(rtn)^.conv;
+  regs.hi := [];
+  regs.lo := [];
+  n := 0;
+  c := 0;
+  if ra_final then
+    while ra_$open_another_ip_register(regs, conv, reg, paired) do begin
+      n := n + 1;
+      if paired then
+        c := c + 1;
+    end
+  else
+    while ra_$open_another_fp_register(regs, conv, reg, paired) do begin
+      n := n + 1;
+      if paired then
+        c := c + 1;
+    end;
+  count := n;
+  cheap := c;
+end;
+
+{ ra_$determine_available_registers - the register files under the
+  routine's conventions: the integer registers reserved (the calls'
+  read registers, ip76, and the zero and PC-like registers) and never
+  allocated (the complement of the allocatable range, lir_420c's and
+  the reserved; ra_ip_alloc the complement); the floating ones reserved
+  (fp60 and the floating zero register) and never allocated (with
+  lir_4204/4208 and the complement of the allocatable range;
+  ra_fp_alloc the complement); then, in the floating class, as many
+  registers opened from the clobbered ones as the opening finds (three
+  eighths of them when that is above 6, else at most 6), the pair
+  class's unavailable registers (ra_pair_unalloc) the preserved ones
+  so opened, lir_main's ra_654/ra_658 and every odd register.
+
+  0x26BD72, 0x2A2 bytes, internal: the ranges' set constructors as in
+  ra_$begin_compilation (docs/dpc-gaps.md 37); ra_class set to 2. }
+
+procedure ra_$determine_available_registers(
+    conv: call_conv_$ptr_t); options(val_param); internal;
+var
+  s: bv_word_t;
+  f, g: ra_set64_t;
+  n, m, reg: integer32;
+  paired: boolean;
+begin
+  ra_ip_reserved := bv_word_t(conv^.ip76);
+  ra_ip_zero := target_properties.p_14[0];
+  if ra_ip_zero >= 0 then
+    ra_ip_reserved := ra_ip_reserved + [ra_ip_zero];
+  if target_properties.p_14[1] >= 0 then
+    ra_ip_reserved := ra_ip_reserved + [target_properties.p_14[1]];
+  s := [0..31] - [target_properties.p_14[2] ..
+      target_properties.p_14[2] + target_properties.p_14[4] - 1];
+  s := bv_word_t(lir_420c) + s;
+  s := ra_ip_reserved + s;
+  ra_ip_unalloc := s;
+  ra_ip_alloc := [0..31] - ra_ip_unalloc;
+  f.hi := bv_word_t(conv^.fp60[0]);
+  f.lo := bv_word_t(conv^.fp60[1]);
+  ra_fp_zero := target_properties.p_14[9];
+  if ra_fp_zero >= 0 then begin
+    g.s := [ra_fp_zero];
+    f.s := f.s + g.s;
+  end;
+  ra_fp_reserved.hi := f.hi;
+  ra_fp_reserved.lo := f.lo;
+  f.hi := f.hi + bv_word_t(lir_4208);
+  f.lo := f.lo + bv_word_t(lir_4204);
+  g.s := [0..63] - [target_properties.p_14[10] ..
+      target_properties.p_14[10] + target_properties.p_14[12] - 1];
+  f.s := f.s + g.s;
+  ra_fp_unalloc.hi := f.hi;
+  ra_fp_alloc.hi := [0..31] - ra_fp_unalloc.hi;
+  ra_fp_unalloc.lo := f.lo;
+  ra_fp_alloc.lo := [0..31] - ra_fp_unalloc.lo;
+  ra_class := ra_fp;
+  f.hi := bv_word_t(conv^.fp_clobbered[0]);
+  f.lo := bv_word_t(conv^.fp_clobbered[1]);
+  n := 0;
+  while ra_$open_another_fp_register(f, conv, reg, paired) do
+    n := n + 1;
+  m := rshft(n * 3, 3);
+  if m > 6 then
+    n := m
+  else if n > 6 then
+    n := 6;
+  f.hi := bv_word_t(conv^.fp_clobbered[0]);
+  f.lo := bv_word_t(conv^.fp_clobbered[1]);
+  while n > 0 do begin
+    if not ra_$open_another_fp_register(f, conv, reg, paired) then
+      exit;
+    n := n - 1;
+  end;
+  ra_pair_unalloc.hi := ([0..31] - bv_word_t(conv^.fp_clobbered[0])) * f.hi +
+      bv_word_t(ra_658) + bv_word_t(16#AAAAAAAA);
+  ra_pair_unalloc.lo := ([0..31] - bv_word_t(conv^.fp_clobbered[1])) * f.lo +
+      bv_word_t(ra_654) + bv_word_t(16#AAAAAAAA);
+end;
+
+{ ra_$combine_with_sf - lr given the conventions' frame register (w20)
+  and each of its definitions, a move from the frame register's
+  value (an ip_reg operand 1, no count, setting no condition codes,
+  whose live range has F1 or that register), made to read the move's
+  destination instead (its operand 1 the operand 2's segment): the
+  live range shares the stack frame's register.
+
+  0x26C014, 0xD2 bytes, internal: the definition's instruction computed
+  inline (pattern 121). }
+
+procedure ra_$combine_with_sf(
+    lr: ra_lr_ptr_t;
+    conv: call_conv_$ptr_t); options(val_param); internal;
+var
+  s: ra_lts_ptr_t;
+  op: opnd_ptr_t;
+  i: instr_ptr_t;
+  src: ra_lr_ptr_t;
+  ok: boolean;
+begin
+  lr^.f2.assigned := true;
+  lr^.f2.reg := conv^.w20 & 255;
+  s := lr^.defs;
+  while s <> nil do begin
+    op := s^.refs;
+    if op <> nil then begin
+      i := instr_ptr_t(integer32(op) - 32 - 12 * op^.h.num);
+      if i^.opc <> ord(opc$move) then
+        bug_check('RA_$COMBINE_WITH_SF -- defining instruction in not a MOVE%$');
+      ok := false;
+      if (i^.opnds[1].h.kind = operand$ip_reg) and
+         (i^.opnds[1].h.count = 0) and not i^.h.sets_cc then begin
+        src := ra_lts_ptr_t(i^.opnds[1].lts)^.lr;
+        if src^.f2.assigned then
+          if (src^.f2.reg = 1) or (src^.f2.reg = conv^.w20) then
+            ok := true;
+      end;
+      if not ok then
+        bug_check('RA_$COMBINE_WITH_SF -- problem with defining MOVE instruction%$');
+      i^.opnds[1].lts := i^.opnds[2].lts;
+    end;
+    s := s^.next_def;
+  end;
+end;
+
+{ ra_$open_registers - the registers the pass may assign: the routine's
+  written registers updated with the ENTRY's and the calls' (less the
+  reserved); in a floating pass those written (by pairs in the pair
+  class) and not reserved by the conventions (fp60) or never allocated,
+  plus as many of the conventions' preserved ones as the chromatic
+  number chrom still needs (ra_$extra_registers_needed; the saving
+  bytes in ra_save_bytes), the written sets then reset to the calls'
+  clobbers; in the integer pass those written and not read by calls
+  (ip76) or never allocated, the nested routine's static link register
+  (w18) unless a call reads it, and the return address register (w14:
+  the routine's +112 live range gets it, or the zero register with
+  save_rpc and needs_frame when chrom is below the registers there are,
+  the return address is saved already, there is no return block, or
+  the register is written), more registers opened as needed (saving
+  bytes in ra_save_ip), the frame needed when the saves with the frame
+  exceed 24 bytes (always with lir_main_da4, a call, or the routine
+  node's +378 bit 4).  needed the registers still wanted.
+
+  0x26C162, 0x272 bytes, internal: the sets by address (hi, lo); the
+  pair class's written sets folded `lsr.l #1; or; and #0x55555555'. }
+
+procedure ra_$open_registers(
+    rtn: rtn_ptr_t;
+    chrom: integer32;
+    nregs: integer32;
+    out hi: bv_word_t;
+    out lo: bv_word_t;
+    out needed: integer32); options(val_param); internal;
+var
+  w_hi, w_lo, w_ip, bit: bv_word_t;
+  conv: call_conv_$ptr_t;
+  avail, used: ra_set64_t;
+  reg: integer32;
+  paired: boolean;
+  sf: ra_lr_ptr_t;
+begin
+  w_hi := (bv_word_t(rtn^.written_fp[0]) + ra_fp_used.hi + ra_fp_clobbered.hi) -
+      ra_fp_reserved.hi;
+  rtn^.written_fp[0] := integer32(w_hi);
+  w_lo := (bv_word_t(rtn^.written_fp[1]) + ra_fp_used.lo + ra_fp_clobbered.lo) -
+      ra_fp_reserved.lo;
+  rtn^.written_fp[1] := integer32(w_lo);
+  w_ip := (bv_word_t(rtn^.written_ip) + ra_ip_used + ra_ip_clobbered) -
+      ra_ip_reserved;
+  rtn^.written_ip := integer32(w_ip);
+  conv := ra_rtn_ptr_t(rtn)^.conv;
+  if not ra_final then begin
+    if ra_class = ra_pair then begin
+      rtn^.written_fp[0] := (rshft(integer32(w_hi), 1) ! rtn^.written_fp[0]) &
+          16#55555555;
+      w_hi := bv_word_t(rtn^.written_fp[0]);
+      rtn^.written_fp[1] := (rshft(rtn^.written_fp[1], 1) ! rtn^.written_fp[1]) &
+          16#55555555;
+    end;
+    avail.hi := (w_hi - bv_word_t(conv^.fp60[0])) - ra_fp_unalloc.hi;
+    avail.lo := (bv_word_t(rtn^.written_fp[1]) - bv_word_t(conv^.fp60[1])) -
+        ra_fp_unalloc.lo;
+    used.hi := bv_word_t(conv^.fp_clobbered[0]);
+    used.lo := bv_word_t(conv^.fp_clobbered[1]);
+    needed := ra_$extra_registers_needed(nregs, avail, used, ra_save_bytes);
+    while needed <> 0 do begin
+      if not ra_$open_another_fp_register(avail, conv, reg, paired) then
+        exit;
+      needed := needed - 1;
+    end;
+    rtn^.written_fp[0] := integer32(ra_fp_clobbered.hi);
+    rtn^.written_fp[1] := integer32(ra_fp_clobbered.lo);
+  end
+  else begin
+    avail.hi := [];
+    avail.lo := (w_ip - bv_word_t(conv^.ip76)) - ra_ip_unalloc;
+    used.hi := [];
+    used.lo := bv_word_t(conv^.ip_clobbered);
+    if conv^.nested then
+      if not ((conv^.w18 & 31) in bv_word_t(conv^.ip76)) then
+        avail.lo := avail.lo + [conv^.w18 & 31];
+    sf := ra_lr_ptr_t(rtn^.l112);
+    if (chrom < nregs) or rtn^.f226.save_rpc or
+       rtn^.f226.no_return_block or ((conv^.w14 & 31) in w_ip) then begin
+      sf^.f2.reg := ra_ip_zero;
+      rtn^.f226.save_rpc := true;
+      rtn^.f226.needs_frame := true;
+    end
+    else
+      sf^.f2.reg := conv^.w14 & 255;
+    sf^.f2.assigned := true;
+    bit := [conv^.w14 & 31];
+    avail.lo := avail.lo + bit;
+    used.lo := used.lo + bit;
+    needed := ra_$extra_registers_needed(chrom, avail, used, ra_save_ip);
+    if lir_main_da4 or rtn^.f226.contains_call or
+       ((ord(ra_bytes_ptr_t(rtn^.node)^[378]) & 16) <> 0) then
+      rtn^.f226.needs_frame := true
+    else if ra_save_bytes + ra_save_ip + ra_rtn_ptr_t(rtn)^.frame_size > 24 then
+      rtn^.f226.needs_frame := true;
+    if not rtn^.f226.save_rpc then
+      avail.lo := avail.lo + [conv^.w14 & 31];
+    while needed <> 0 do begin
+      if not ra_$open_another_ip_register(avail, conv, reg, paired) then
+        exit;
+      needed := needed - 1;
+    end;
+    avail.lo := avail.lo - [sf^.f2.reg mod 32];
+    rtn^.written_ip := integer32(ra_ip_clobbered);
+  end;
+  hi := avail.hi;
+  lo := avail.lo;
+end;
+
+{ ra_$close_live_range_preferences - the registers (hi, lo) just given
+  to lr preferred by the live ranges its preferences (preference above
+  aversion) reach, transitively (+64, +68), through unassigned live
+  ranges that do not conflict with them; each record reached is chained
+  into the closure (+16, from root; the first to itself).  The last
+  record chained.
+
+  0x26C3D4, 0x9A bytes, internal, recursive (`bsr.s'); root (12) is
+  overwritten with each record reached; A0. }
+
+function ra_$close_live_range_preferences(
+    lr: ra_lr_ptr_t;
+    root: ra_ap_ptr_t;
+    hi: bv_word_t;
+    lo: bv_word_t): ra_ap_ptr_t; options(val_param); internal;
+var
+  last, ap, an: ra_ap_ptr_t;
+  other: ra_lr_ptr_t;
+begin
+  last := root;
+  ap := lr^.aps;
+  while ap <> nil do begin
+    if ap^.a = lr then begin
+      an := ap^.next_a;
+      other := ap^.b;
+    end
+    else begin
+      an := ap^.next_b;
+      other := ap^.a;
+    end;
+    if ap^.pref > ap^.avoid then
+      if ap^.closure = nil then
+        if not other^.f2.assigned then
+          if (hi * other^.avoid_hi) + (lo * other^.avoid_lo) = [] then begin
+            if last = nil then
+              ap^.closure := ap
+            else
+              ap^.closure := last;
+            root := ap;
+            ra_pref_ptr_t(other)^.hi := ra_pref_ptr_t(other)^.hi + hi;
+            ra_pref_ptr_t(other)^.lo := ra_pref_ptr_t(other)^.lo + lo;
+            last := ra_$close_live_range_preferences(other, root, hi, lo);
+          end;
+    ap := an;
+  end;
+  ra_$close_live_range_preferences := last;
+end;
+
+{ ra_$zero_closure_next_fields - the closure chained from ap undone.
+  0x26C46E, 0x1C bytes, internal, no frame. }
+
+procedure ra_$zero_closure_next_fields(
+    ap: ra_ap_ptr_t); options(val_param); internal;
+var
+  nxt: ra_ap_ptr_t;
+begin
+  while ap <> nil do begin
+    nxt := ap^.closure;
+    ap^.closure := nil;
+    if nxt = ap then
+      exit;
+    ap := nxt;
+  end;
+end;
+
+{ ra_$spill_lr - lr marked a spill victim (+3 bit 0) once; an assigned
+  one that may be spilled loses its register, which leaves the
+  conflicting registers of each unassigned live range it conflicts
+  with unless another of that one's conflicts holds it.
+
+  0x26C48A, 0x10A bytes, internal: the first conflict pointer of each
+  neighbour not masked, the later ones `andi.l #-4'. }
+
+procedure ra_$spill_lr(
+    lr: ra_lr_ptr_t); options(val_param); internal;
+label
+  10;
+var
+  r: integer32;
+  c, cn, q, qn: ra_conf_ptr_t;
+  other, o2: ra_lr_ptr_t;
+begin
+  if lr^.f2.spilled then
+    return;
+  lr^.f2.spilled := true;
+  if not lr^.f2.assigned then
+    return;
+  if rrp$life_mark in lr^.rrp then
+    return;
+  lr^.f2.assigned := false;
+  r := lr^.f2.reg;
+  lr^.f2.reg := 0;
+  c := lr^.x44.conf;
+  while c <> nil do begin
+    if c^.a = lr then begin
+      other := c^.b;
+      cn := c^.next_a;
+    end
+    else begin
+      other := c^.a;
+      cn := c^.f12.next_b;
+    end;
+    if not other^.f2.assigned then begin
+      q := other^.x44.conf;
+      while q <> nil do begin
+        if q^.a = other then begin
+          o2 := q^.b;
+          qn := q^.next_a;
+        end
+        else begin
+          o2 := q^.a;
+          qn := q^.f12.next_b;
+        end;
+        if o2^.f2.assigned then
+          if o2^.f2.reg = r then
+            goto 10;
+        q := ra_conf_ptr_t(integer32(qn) & (~3));
+      end;
+      if r <= 31 then
+        other^.avoid_lo := other^.avoid_lo - [r]
+      else
+        other^.avoid_hi := other^.avoid_hi - [r - 32];
+    end;
+10:
+    c := ra_conf_ptr_t(integer32(cn) & (~3));
+  end;
+end;
+
+{ ra_$pick_spill_lr - a live range lr (never spilled itself) conflicts
+  with to spill instead: of the conflicts that may be spilled and are
+  not victims yet, the first, replaced by an assigned one marked a
+  spill candidate (spare_1) when the choice is not, else by any later
+  assigned one when neither is a candidate, or a cheaper one when both
+  are.  Whether any conflict may be spilled at all.
+
+  0x26C594, 0xAC bytes, internal: victim by address; the costs through
+  fpp_$eslv 0x0048 (`slt'). }
+
+function ra_$pick_spill_lr(
+    lr: ra_lr_ptr_t;
+    out victim: ra_lr_ptr_t): boolean; options(val_param); internal;
+var
+  found, cheaper: boolean;
+  c: ra_conf_ptr_t;
+  other: ra_lr_ptr_t;
+begin
+  found := false;
+  victim := nil;
+  c := lr^.x44.conf;
+  while c <> nil do begin
+    if c^.a = lr then begin
+      other := c^.b;
+      c := c^.next_a;
+    end
+    else begin
+      other := c^.a;
+      c := c^.f12.next_b;
+    end;
+    if not (rrp$life_mark in other^.rrp) then begin
+      found := true;
+      if not other^.f2.spilled then
+        if victim = nil then
+          victim := other
+        else if other^.f2.assigned then
+          if (rrp$spare_1 in other^.rrp) and
+             not (rrp$spare_1 in victim^.rrp) then
+            victim := other
+          else begin
+            cheaper := other^.cost.r < victim^.cost.r;
+            if (cheaper and (rrp$spare_1 in other^.rrp)) =
+               (rrp$spare_1 in victim^.rrp) then
+              victim := other;
+          end;
+    end;
+    c := ra_conf_ptr_t(integer32(c) & (~3));
+  end;
+  ra_$pick_spill_lr := found;
+end;
+
+{ ra_$try_opening_another_register - one more register added to regs (in
+  the integer pass not the return address's register); one the
+  conventions preserve costs saving bytes (ra_save_bytes: 4, a pair 8)
+  and may make the frame needed.  false when none is left.
+
+  0x26C640, 0x132 bytes, internal: the opening works on a copy. }
+
+function ra_$try_opening_another_register(
+    rtn: rtn_ptr_t;
+    var regs: ra_set64_t): boolean; options(val_param); internal;
+var
+  t: ra_set64_t;
+  reg: integer32;
+  paired: boolean;
+begin
+  t.hi := regs.hi;
+  t.lo := regs.lo;
+  if ra_final then begin
+    t.lo := t.lo + [lr_ptr_t(rtn^.l112)^.f2.reg];
+    if not ra_$open_another_ip_register(t, ra_rtn_ptr_t(rtn)^.conv, reg,
+        paired) then begin
+      ra_$try_opening_another_register := false;
+      return;
+    end;
+    if not paired then
+      ra_save_bytes := ra_save_bytes + 4;
+    regs.lo := regs.lo + [reg mod 32];
+  end
+  else begin
+    if not ra_$open_another_fp_register(t, ra_rtn_ptr_t(rtn)^.conv, reg,
+        paired) then begin
+      ra_$try_opening_another_register := false;
+      return;
+    end;
+    if not paired then
+      if ra_class = ra_pair then
+        ra_save_bytes := ra_save_bytes + 8
+      else
+        ra_save_bytes := ra_save_bytes + 4;
+    if reg < 32 then
+      regs.lo := regs.lo + [reg mod 32]
+    else
+      regs.hi := regs.hi + [reg mod 32];
+  end;
+  if ra_save_bytes + ra_save_ip + ra_rtn_ptr_t(rtn)^.frame_size > 24 then
+    rtn^.f226.needs_frame := true;
+  ra_$try_opening_another_register := true;
+end;
+
+{ ra_$assign_registers - registers for the live ranges in allocation
+  order (chained at +52): each takes, from the allowed registers less
+  its conflicting ones (opening another register when none is left),
+  by preference: its home live range's, the ENTRY's physical register
+  its one definition copies, an assigned live range's it prefers
+  (avoiding those it averts, unless that empties the choice: then a
+  register is opened and the choice rescanned, or the aversion
+  ignored), registers its conflicts and their homes do not prefer, the
+  registers of its dead segments' writes and definitions' reads, its
+  own preferenced set; then, from a rotating start, a register already
+  written, else any (in the pair class the even one, the odd for an
+  fp_reg_odd_only half; its mate the other).  An assigned register goes
+  into its home's preferences, the written sets (a true write) and its
+  conflicts' conflicting sets, and its preference closure.  With no
+  register left, the live range (or, never spilled, the conflict
+  ra_$pick_spill_lr picks) is spilled with its mate, victim set and the
+  result false.  Traced with trace (verbose: the conflicts' new sets).
+
+  0x26C772, 0x982 bytes, internal: the candidates in D6/D5 (hi, lo);
+  the bit tests' ranges by `and #31' or `sub #32'; the first search
+  loops over the used sets (-24, -20), the second over the candidates. }
+
+function ra_$assign_registers(
+    rtn: rtn_ptr_t;
+    order: ra_lr_ptr_t;
+    in regs: ra_set64_t;
+    trace: boolean;
+    verbose: boolean;
+    out victim: ra_lr_ptr_t): boolean; options(val_param); internal;
+label
+  10, 20, 21, 30, 40;
+var
+  allowed: ra_set64_t;
+  ok, can_open: boolean;
+  start: integer;
+  used_hi, used_lo: bv_word_t;
+  lr, h, other, v, src: ra_lr_ptr_t;
+  c_hi, c_lo, t_hi, t_lo, s_hi, s_lo, b_hi, b_lo, o_hi, o_lo: bv_word_t;
+  ap, an: ra_ap_ptr_t;
+  c, cn: ra_conf_ptr_t;
+  d, s: ra_lts_ptr_t;
+  i, i2: instr_ptr_t;
+  k, r, n: integer32;
+  op: opnd_ptr_t;
+begin
+  allowed := regs;
+  if trace then begin
+    vfmt_$write('Allowed: %$');
+    dmp_$reg_set(allowed.hi, allowed.lo);
+    vfmt_$write('%.');
+  end;
+  ok := true;
+  victim := nil;
+  can_open := true;
+  start := 0;
+  used_hi := [];
+  used_lo := [];
+  lr := order;
+  while lr <> nil do begin
+    if trace then
+      vfmt_$write('%3ZWD%.', lr^.num);
+    if lr^.f2.spilled then begin
+      if trace then
+        vfmt_$write(' Spill victim.%.');
+      goto 40;
+    end;
+    if lr^.f2.assigned then begin
+      r := lr^.f2.reg;
+      goto 30;
+    end;
+    if get_lr_equivalence_class_parent(lr) <> lr then begin
+      if trace then
+        vfmt_$write('  Wait for mate.%.');
+      goto 40;
+    end;
+10:
+    c_hi := allowed.hi - lr^.avoid_hi;
+    c_lo := allowed.lo - lr^.avoid_lo;
+    if trace then begin
+      vfmt_$write('  Candidates:  %$');
+      dmp_$reg_set(c_hi, c_lo);
+      vfmt_$write('  Conflicts:   %$');
+      dmp_$reg_set(lr^.avoid_hi, lr^.avoid_lo);
+      if ra_pref_ptr_t(lr)^.hi + ra_pref_ptr_t(lr)^.lo <> [] then begin
+        vfmt_$write('  Preferences: %$');
+        dmp_$reg_set(ra_pref_ptr_t(lr)^.hi, ra_pref_ptr_t(lr)^.lo);
+      end;
+    end;
+    if can_open and (c_hi + c_lo = []) then begin
+      can_open := ra_$try_opening_another_register(rtn, allowed);
+      c_hi := allowed.hi - lr^.avoid_hi;
+      c_lo := allowed.lo - lr^.avoid_lo;
+      if can_open and trace then begin
+        vfmt_$write('  ** opening another register to avoid spilling; new candidates:  %$');
+        dmp_$reg_set(c_hi, c_lo);
+      end;
+    end;
+    if c_hi + c_lo = [] then begin
+      if trace then
+        vfmt_$write(' !!! Spill victim !!!%.');
+      if not (rrp$life_mark in lr^.rrp) then
+        v := lr
+      else begin
+        if not ra_$pick_spill_lr(lr, v) then
+          bug_check('RA_$ASSIGN_REGISTERS -- no spill victim to pick%$');
+        if trace then
+          vfmt_$write('Spilling %3ZWD instead%.', v^.num);
+      end;
+      if v <> nil then begin
+        ra_$spill_lr(v);
+        if v^.mate <> nil then
+          ra_$spill_lr(v^.mate);
+        victim := v;
+      end;
+      ok := false;
+      goto 40;
+    end;
+    h := lr^.home_lr;
+    if h <> nil then begin
+      t_hi := c_hi * ra_pref_ptr_t(h)^.hi;
+      t_lo := c_lo * ra_pref_ptr_t(h)^.lo;
+      if t_hi + t_lo <> [] then begin
+        c_hi := t_hi;
+        c_lo := t_lo;
+      end;
+      t_hi := c_hi - h^.avoid_hi;
+      t_lo := c_lo - h^.avoid_lo;
+      if t_hi + t_lo <> [] then begin
+        c_hi := t_hi;
+        c_lo := t_lo;
+      end;
+    end;
+    d := lr^.defs;
+    if d <> nil then
+      if d^.next_def = nil then begin
+        op := d^.refs;
+        i := instr_ptr_t(integer32(op) - 32 - 12 * op^.h.num);
+        if i^.h.preference then begin
+          s := ra_lts_ptr_t(i^.opnds[1].lts);
+          op := s^.refs;
+          i2 := instr_ptr_t(integer32(op) - 32 - 12 * op^.h.num);
+          if i2^.opc = ord(opc$entry) then begin
+            src := s^.lr;
+            if src^.f2.assigned then begin
+              r := src^.f2.reg;
+              if r <= 31 then begin
+                if (r mod 32) in c_lo then
+                  goto 20;
+              end
+              else if (r mod 32) in c_hi then
+                goto 20;
+            end;
+          end;
+        end;
+      end;
+    ap := lr^.aps;
+    while ap <> nil do begin
+      k := ap^.pref - ap^.avoid;
+      if ap^.a = lr then begin
+        other := ap^.b;
+        an := ap^.next_a;
+      end
+      else begin
+        other := ap^.a;
+        an := ap^.next_b;
+      end;
+      if k <> 0 then begin
+        r := other^.f2.reg;
+        if k > 0 then begin
+          if other^.f2.assigned then begin
+            if r <= 31 then begin
+              if (r mod 32) in c_lo then
+                goto 20;
+            end
+            else if (r mod 32) in c_hi then
+              goto 20;
+          end
+          else begin
+            t_hi := c_hi - other^.avoid_hi;
+            t_lo := c_lo - other^.avoid_lo;
+            if t_hi + t_lo <> [] then begin
+              c_hi := t_hi;
+              c_lo := t_lo;
+            end;
+            h := other^.home_lr;
+            if h <> nil then begin
+              t_hi := c_hi - h^.avoid_hi;
+              t_lo := c_lo - h^.avoid_lo;
+              if t_hi + t_lo <> [] then begin
+                c_hi := t_hi;
+                c_lo := t_lo;
+              end;
+            end;
+          end;
+        end
+        else begin
+          s_hi := c_hi;
+          s_lo := c_lo;
+          if other^.f2.assigned then begin
+            if r <= 31 then
+              c_lo := c_lo - [r mod 32]
+            else
+              c_hi := c_hi - [r mod 32];
+            if trace then begin
+              vfmt_$write('  -- aversion to LR %3ZWD assigned to %2ZLD; new candidates: %$',
+                  other^.num, r);
+              dmp_$reg_set(c_hi, c_lo);
+            end;
+          end;
+          if c_hi + c_lo = [] then begin
+            if can_open then begin
+              can_open := ra_$try_opening_another_register(rtn, allowed);
+              if can_open then begin
+                if trace then
+                  vfmt_$write('  !! opened another register; rescanning...%.');
+                goto 10;
+              end;
+            end;
+            if c_hi + c_lo = [] then begin
+              c_hi := s_hi;
+              c_lo := s_lo;
+              if trace then begin
+                vfmt_$write('  -- restoring candidates;       new candidates: %$');
+                dmp_$reg_set(c_hi, c_lo);
+              end;
+            end;
+          end;
+        end;
+      end;
+      ap := an;
+    end;
+    c := lr^.x44.conf;
+    while c <> nil do begin
+      if c^.a = lr then begin
+        other := c^.b;
+        cn := c^.next_a;
+      end
+      else begin
+        other := c^.a;
+        cn := c^.f12.next_b;
+      end;
+      t_hi := c_hi - ra_pref_ptr_t(other)^.hi;
+      t_lo := c_lo - ra_pref_ptr_t(other)^.lo;
+      if t_hi + t_lo <> [] then begin
+        c_hi := t_hi;
+        c_lo := t_lo;
+      end;
+      h := other^.home_lr;
+      if h <> nil then begin
+        t_hi := c_hi - ra_pref_ptr_t(h)^.hi;
+        t_lo := c_lo - ra_pref_ptr_t(h)^.lo;
+        if t_hi + t_lo <> [] then begin
+          c_hi := t_hi;
+          c_lo := t_lo;
+        end;
+      end;
+      c := ra_conf_ptr_t(integer32(cn) & (~3));
+    end;
+    s := lr^.dead;
+    while s <> nil do begin
+      op := s^.refs;
+      i := instr_ptr_t(integer32(op) - 32 - 12 * op^.h.num);
+      for n := i^.h.nopnds downto 1 do
+        if ord(i^.opnds[n].h.kind) = ra_class then
+          if i^.opnds[n].h.write then begin
+            other := ra_lts_ptr_t(i^.opnds[n].lts)^.lr;
+            if other^.f2.assigned then begin
+              r := other^.f2.reg;
+              if r <= 31 then begin
+                if (r mod 32) in c_lo then
+                  goto 20;
+              end
+              else if (r mod 32) in c_hi then
+                goto 20;
+            end;
+          end;
+      s := ra_lts_ptr_t(s^.last_ref);
+    end;
+    s := lr^.defs;
+    while s <> nil do begin
+      op := s^.refs;
+      i := instr_ptr_t(integer32(op) - 32 - 12 * op^.h.num);
+      for n := i^.h.nopnds downto 1 do
+        if ord(i^.opnds[n].h.kind) = ra_class then
+          if i^.opnds[n].h.read then begin
+            other := ra_lts_ptr_t(i^.opnds[n].lts)^.lr;
+            if other^.f2.assigned then begin
+              r := other^.f2.reg;
+              if r <= 31 then begin
+                if (r mod 32) in c_lo then
+                  goto 20;
+              end
+              else if (r mod 32) in c_hi then
+                goto 20;
+            end;
+          end;
+      s := s^.next_def;
+    end;
+    t_hi := c_hi * ra_pref_ptr_t(lr)^.hi;
+    t_lo := c_lo * ra_pref_ptr_t(lr)^.lo;
+    if t_hi + t_lo <> [] then begin
+      c_hi := t_hi;
+      c_lo := t_lo;
+    end;
+    for r := start to 31 do
+      if ((r mod 32) in c_lo) and ((r mod 32) in used_lo) then
+        goto 21;
+    for r := 32 to 63 do
+      if ((r mod 32) in c_hi) and ((r mod 32) in used_hi) then
+        goto 21;
+    for r := 0 to 31 do
+      if ((r mod 32) in c_lo) and ((r mod 32) in used_lo) then
+        goto 21;
+    for r := 32 to 63 do
+      if ((r mod 32) in c_hi) and ((r mod 32) in used_hi) then
+        goto 21;
+    for r := start to 31 do
+      if r in c_lo then
+        goto 21;
+    for r := 32 to 63 do
+      if (r - 32) in c_hi then
+        goto 21;
+    for r := 0 to 31 do
+      if r in c_lo then
+        goto 21;
+    for r := 32 to 63 do
+      if (r - 32) in c_hi then
+        goto 21;
+    bug_check('RA_$ASSIGN_REGISTERS -- could not find the candidate%$');
+21:
+    start := r + 1;
+20:
+    if ra_class = ra_pair then
+      r := (r & (~1)) ! ord(rrp$fp_reg_odd_only in lr^.rrp);
+    lr^.f2.reg := r;
+    lr^.f2.assigned := true;
+    if lr^.mate <> nil then begin
+      lr^.mate^.f2.reg := (r & (~1)) ! (1 - (r & 1));
+      lr^.mate^.f2.assigned := true;
+    end;
+30:
+    if r <= 31 then begin
+      b_hi := [];
+      b_lo := [r mod 32];
+    end
+    else begin
+      b_hi := [r mod 32];
+      b_lo := [];
+    end;
+    h := lr^.home_lr;
+    if h <> nil then begin
+      ra_pref_ptr_t(h)^.hi := ra_pref_ptr_t(h)^.hi + b_hi;
+      ra_pref_ptr_t(h)^.lo := ra_pref_ptr_t(h)^.lo + b_lo;
+    end;
+    if rrp$true_write in lr^.rrp then
+      if rrp$ip_reg in lr^.rrp then begin
+        rtn^.written_ip := rtn^.written_ip ! integer32(b_lo);
+        used_lo := used_lo + b_lo;
+      end
+      else begin
+        rtn^.written_fp[0] := rtn^.written_fp[0] ! integer32(b_hi);
+        rtn^.written_fp[1] := rtn^.written_fp[1] ! integer32(b_lo);
+        used_hi := used_hi + b_hi;
+        used_lo := used_lo + b_lo;
+      end;
+    c := lr^.x44.conf;
+    while c <> nil do begin
+      if c^.a = lr then begin
+        other := c^.b;
+        cn := c^.next_a;
+      end
+      else begin
+        other := c^.a;
+        cn := c^.f12.next_b;
+      end;
+      if verbose then begin
+        o_hi := other^.avoid_hi;
+        o_lo := other^.avoid_lo;
+      end;
+      other^.avoid_hi := other^.avoid_hi + b_hi;
+      other^.avoid_lo := other^.avoid_lo + b_lo;
+      h := other^.home_lr;
+      if h <> nil then begin
+        h^.avoid_hi := h^.avoid_hi + b_hi;
+        h^.avoid_lo := h^.avoid_lo + b_lo;
+      end;
+      if verbose then
+        if (other^.avoid_hi <> o_hi) or (other^.avoid_lo <> o_lo) then begin
+          vfmt_$write('  %3ZWD new conflicts: %$', other^.num);
+          dmp_$reg_set(other^.avoid_hi, other^.avoid_lo);
+        end;
+      c := ra_conf_ptr_t(integer32(cn) & (~3));
+    end;
+    ra_$zero_closure_next_fields(
+        ra_$close_live_range_preferences(lr, nil, b_hi, b_lo));
+40:
+    lr := lr^.x52.lr;
+  end;
+  ra_$assign_registers := ok;
+end;
+
+{ ra_$relocate_automatic_storage - the stack frame's objects moved past
+  the frame's fixed part (lir_main_c6c) and taken off ra_frame_objs'
+  chain; with a frame, the argument pointer's object at 0 and +112's
+  at 8.
+
+  0x26D2F8, 0x88 bytes, internal. }
+
+procedure ra_$relocate_automatic_storage(
+    rtn: rtn_ptr_t); options(val_param); internal;
+var
+  off: integer32;
+  v, nxt: ra_var_ptr_t;
+begin
+  off := lir_main_c6c;
+  v := ra_frame_objs;
+  while v <> nil do begin
+    if v^.kind = 109 then begin
+      v^.offset := v^.offset + off;
+      nxt := v^.next;
+      v^.next := nil;
+    end
+    else begin
+      ra_fsym_ptr_t(v)^.offset := ra_fsym_ptr_t(v)^.offset + off;
+      nxt := ra_fsym_ptr_t(v)^.next;
+      ra_fsym_ptr_t(v)^.next := nil;
+    end;
+    v := nxt;
+  end;
+  if rtn^.f226.needs_frame then begin
+    v := ra_var_ptr_t(rtn^.ap_lr^.node20);
+    if v^.kind = 109 then
+      v^.offset := 0
+    else
+      ra_fsym_ptr_t(v)^.offset := 0;
+    v := ra_var_ptr_t(lr_ptr_t(rtn^.l112)^.node20);
+    if v^.kind = 109 then
+      v^.offset := 8
+    else
+      ra_fsym_ptr_t(v)^.offset := 8;
+  end;
+end;
+
+{ ra_$accumulate_true_writes - the registers the routine writes: the
+  calls' and SVCs' clobbers and every assigned register written or
+  modified (a pair's both halves; the integer set for an ip_reg
+  operand, the floating sets for the other register kinds), but by the
+  ENTRY or by a move of a register to itself that sets no condition
+  codes.
+
+  0x26D380, 0x19C bytes, internal: the register kinds as the mask 126;
+  the move's sets_cc tested `btst D2,(A0)' with D2 still the class
+  mask 0x100004 (bit 4 modulo 8: pattern 240). }
+
+procedure ra_$accumulate_true_writes(
+    rtn: rtn_ptr_t); options(val_param); internal;
+label
+  10;
+var
+  bb: bb_ptr_t;
+  i: instr_ptr_t;
+  attr: instr_attr_ptr_t;
+  clob: ra_clob_ptr_t;
+  k: integer32;
+  r: integer;
+  bits: bv_word_t;
+begin
+  bb := rtn^.bbs;
+  while bb <> nil do begin
+    i := bb^.first;
+    while i <> nil do begin
+      attr := addr(instruction_attributes[i^.opc]);
+      if attr^.class in [class$call, class$svc] then begin
+        clob := univ_ptr(addr(i^.opnds[i^.h.nopnds + 1]));
+        rtn^.written_ip := rtn^.written_ip ! integer32(clob^.ip);
+        rtn^.written_fp[0] := rtn^.written_fp[0] ! integer32(clob^.fp_hi);
+        rtn^.written_fp[1] := rtn^.written_fp[1] ! integer32(clob^.fp_lo);
+      end;
+      if attr^.b6_0 and
+         (i^.opnds[1].h.kind in [operand$ip_reg ..
+              operand$fp_reg_pair_physical]) and
+         (i^.opnds[1].h.count = 0) and not i^.h.sets_cc and
+         not i^.h.fp_ccs then
+        if ra_lts_ptr_t(i^.opnds[1].lts)^.lr^.f2.reg =
+           ra_lts_ptr_t(i^.opnds[2].lts)^.lr^.f2.reg then
+          goto 10;
+      if i^.opc <> ord(opc$entry) then
+        for k := 1 to i^.h.nopnds do
+          if (opnd_bytes_ptr_t(addr(i^.opnds[k]))^.rrp & 12) <> 0 then
+            if i^.opnds[k].h.kind in [operand$ip_reg ..
+                operand$fp_reg_pair_physical] then begin
+              r := ra_lts_ptr_t(i^.opnds[k].lts)^.lr^.f2.reg;
+              bits := [r mod 32];
+              if i^.opnds[k].h.kind = operand$fp_reg_pair then
+                bits := bits + [((r & (~1)) ! (1 - (r & 1))) mod 32];
+              if i^.opnds[k].h.kind = operand$ip_reg then
+                rtn^.written_ip := rtn^.written_ip ! integer32(bits)
+              else if r <= 31 then
+                rtn^.written_fp[1] := rtn^.written_fp[1] ! integer32(bits)
+              else
+                rtn^.written_fp[0] := rtn^.written_fp[0] ! integer32(bits);
+            end;
+10:
+      i := i^.next;
+    end;
+    bb := bb^.next;
+  end;
+end;
+
+{ ra_$spill_zero_cost_lrs - false at once: the body (complex live
+  ranges whose cost is below 1.0e-4 marked spill victims, the marks
+  cleared, the spill code added, the frame and the RETURN's argument
+  pointer read settled) is jumped over (pattern 101), its loop's live
+  range never set.
+
+  0x26D51C, 0xF4 bytes, internal: `clr.b D0; bra.w' to the epilogue; the
+  cost compared through fpp_$eslv 0x0050 0x38D1B717. }
+
+function ra_$spill_zero_cost_lrs(
+    rtn: rtn_ptr_t): boolean; options(val_param); internal;
+var
+  lr: ra_lr_ptr_t;
+  s: ra_lts_ptr_t;
+  ap: ra_lr_ptr_t;
+begin
+  ra_$spill_zero_cost_lrs := false;
+  return;
+  while lr <> nil do begin
+    if lr^.id <> 0 then
+      if not lr^.f2.assigned and not (rrp$life_mark in lr^.rrp) and
+         not lr^.f2.spilled then
+        if lr^.cost.r < 1.0e-4 then begin
+          lr^.f2.spilled := true;
+          if lr^.mate <> nil then
+            lr^.mate^.f2.spilled := true;
+        end;
+    lr := lr^.next;
+  end;
+  lr := ra_lrs;
+  while lr <> nil do begin
+    lr^.rrp := lr^.rrp - [rrp$ra_marked];
+    s := lr^.ltss;
+    while s <> nil do begin
+      s^.rrp := s^.rrp - [rrp$ra_marked];
+      s := s^.next;
+    end;
+    lr := lr^.next;
+  end;
+  rtn^.lrs := lr_ptr_t(ra_lrs);
+  ra_utils_$add_spill_code(rtn, operand$t(ra_class), 0);
+  if ra_rtn_ptr_t(rtn)^.frame_size > 24 then
+    rtn^.f226.needs_frame := true;
+  ap := ra_lr_ptr_t(rtn^.ap_lr);
+  if ap^.f2.spilled and rtn^.f226.needs_frame and
+     not rtn^.f226.no_return_block and (rrp$read in ap^.rrp) then
+    rtn^.return_instr^.opnds[3].h.kind := operand$none;
+  ra_$spill_zero_cost_lrs := true;
+end;
+
+{ RA_$PROCESS_ROUTINE - the routine's registers: the heaps made (the
+  conflict heaps' names in the reverse of their use, "cc" for the
+  simple x simple records: a slip of the original), a map of the live
+  ranges by number from the heap, the register files under the
+  conventions; then for each class, pairs first and the integer
+  registers last (ra_final), passes until an assignment succeeds:
+  initialize, count the registers that can be opened, build the
+  conflict graph, collapse it, close the preferences of the live
+  ranges assigned already, open the registers the chromatic number
+  needs, assign; a failure undoes the assignments and adds the spill
+  code (pass 0 up to the fifth, 1 to the seventh, 2 after or with
+  lir_main_da4), more than 15 passes being a bug.  Each class's live
+  ranges go into the map.  Then without a frame the argument pointer
+  and the conventions' b30 live ranges (and the routine's common member
+  the ISC made a register candidate) share the frame register; the
+  return address register settled (save_rpc when it got the zero
+  register), the conventions' needs_db and the routine node's +374 bit
+  19 set; the writes accumulated, the saves and restores made
+  (lir_main_$save_and_restore_code), the frame's objects relocated; the
+  routine's live ranges rechained from the map in number order, the
+  node's +378 bit 2 the frame flag.  Dumps and traces by the switches
+  (sw9 after initialization, sw10 after the conflict graph, sw12 the
+  counts, sw13 the assignment).
+
+  0x26D610, 0x6D0 bytes (A5): the map 262144 bytes (the size a constant
+  after the strings, by address); the class's letter for %m1a from
+  ra_letters at A5 + 0x65B + class; isc_$get_il_live_range called with
+  combine_with_sf's second argument already pushed (pattern 103); the
+  node's +374 field `lsr.l #11' with bit 8 replaced. }
+
+procedure ra_$process_routine;
+label
+  10;
+var
+  map: ra_lrs_ptr_t;
+  start, pass, k, n, cheap, chrom, needed, w, t: integer32;
+  flushed, order, lr, victim, ap: ra_lr_ptr_t;
+  r: integer;
+  b_hi, b_lo: bv_word_t;
+  regs: ra_set64_t;
+  mode: integer;
+  conv: call_conv_$ptr_t;
+  ret: instr_ptr_t;
+  node: univ_ptr;
+  s: ra_lts_ptr_t;
+  bytes: integer32;
+begin
+  utils_$strip_extraneous_modifies(rtn);
+  mrh_$initialize(ra_conf_heaps[0], 0, 16, 'ra cc conflict heap%');
+  mrh_$initialize(ra_conf_heaps[1], 0, 16, 'ra sc conflict heap%');
+  mrh_$initialize(ra_conf_heaps[2], 0, 16, 'ra ss conflict heap%');
+  mrh_$initialize(ra_ap_heaps[0], 0, 32, 'ra ss real A/P heap%');
+  mrh_$initialize(ra_ap_heaps[1], 0, 32, 'ra sc real A/P heap%');
+  mrh_$initialize(ra_ap_heaps[2], 0, 32, 'ra cc real A/P heap%');
+  mrh_$initialize(ra_pend_bb_heap, 0, 16, 'ra pending aversion BB heap%');
+  mrh_$initialize(ra_pend_xx_heap, 0, 16, 'ra pending aversion xx heap%');
+  bytes := 16#40000;
+  map := rws_$alloc_heap(bytes);
+  if map = nil then
+    bug_check('RA_$PROCESS_ROUTINE -- failed (no disk space?)%$');
+  start := 0;
+  ra_save_ip := 0;
+  ra_save_bytes := 0;
+  ra_$determine_available_registers(ra_rtn_ptr_t(rtn)^.conv);
+  ra_frame_objs := nil;
+  ra_class := ra_pair;
+  ra_check_db := true;
+  repeat
+    ra_final := ra_class = ra_ip;
+    pass := 1;
+10:
+    ra_$initialize_routine(rtn);
+    if ra_$spill_zero_cost_lrs(rtn) then begin
+      bv_$release_bit_vectors(rtn);
+      ra_$initialize_routine(rtn);
+    end;
+    if at_backend_switches.sw9 then begin
+      vfmt_$write('%/%/%a  DUMP FOLLOWING CALL TO "ra_$initialize_routine"%/%.',
+          ra_titles[ra_class], ra_title_len[ra_class]);
+      dmp_$all_basic_block_headers(rtn);
+    end;
+    ra_$count_available_registers(rtn, n, cheap);
+    if at_backend_switches.sw12 then
+      vfmt_$write('RA_$COUNT_AVAILABLE_REGISTERS = %LD, CHEAP = %LD.%.', n,
+          cheap);
+    mrh_$release_all(ra_conf_heaps[0]);
+    mrh_$release_all(ra_conf_heaps[1]);
+    mrh_$release_all(ra_conf_heaps[2]);
+    mrh_$release_all(ra_ap_heaps[0]);
+    mrh_$release_all(ra_ap_heaps[1]);
+    mrh_$release_all(ra_ap_heaps[2]);
+    mrh_$release_all(ra_pend_bb_heap);
+    mrh_$release_all(ra_pend_xx_heap);
+    ra_$build_conflict_graph(rtn, [ra_class], false);
+    if at_backend_switches.sw10 then begin
+      vfmt_$write('%/%/%a  DUMP FOLLOWING CALL TO "ra_$build_conflict_graph"%/%.',
+          ra_titles[ra_class], ra_title_len[ra_class]);
+      dmp_$all_basic_block_headers(rtn);
+    end;
+    bv_$release_bit_vectors(rtn);
+    chrom := ra_$collapse_conflict_graph(n, cheap, flushed, order,
+        at_backend_switches.sw12);
+    lr := flushed;
+    while lr <> nil do begin
+      r := lr^.f2.reg;
+      if r <= 31 then begin
+        b_hi := [];
+        b_lo := [r mod 32];
+      end
+      else begin
+        b_hi := [r mod 32];
+        b_lo := [];
+      end;
+      ra_$zero_closure_next_fields(
+          ra_$close_live_range_preferences(lr, nil, b_hi, b_lo));
+      lr := lr^.x52.lr;
+    end;
+    ra_$open_registers(rtn, chrom, n, regs.hi, regs.lo, needed);
+    if at_backend_switches.sw12 then
+      vfmt_$write('RA_$OPEN_REGISTERS: needed = %LD.%.', needed);
+    if not ra_$assign_registers(rtn, order, regs, at_backend_switches.sw13,
+        at_backend_switches.sw13 and (ra_650 > 3), victim) then begin
+      lr := order;
+      while lr <> nil do begin
+        lr^.f2.assigned := false;
+        lr^.f2.reg := 0;
+        lr^.rrp := lr^.rrp - [rrp$ra_marked];
+        s := lr^.ltss;
+        while s <> nil do begin
+          s^.rrp := s^.rrp - [rrp$ra_marked];
+          s := s^.next;
+        end;
+        lr := lr^.x52.lr;
+      end;
+      if pass > 15 then begin
+        if at_backend_switches.sw4 then begin
+          vfmt_$write('RA_$PROCESS_ROUTINE -- no success spilling %m1aP registers, LR %3ZWD%.',
+              ra_letters[ra_class], victim^.num);
+          dmp_$whole_routine(rtn, at_backend_switches.sw5, true);
+        end;
+        bug_check('RA_$PROCESS_ROUTINE -- no success spilling %m1aP registers, LR %3ZWD%$',
+            ra_letters[ra_class], victim^.num);
+        goto 10;
+      end;
+      rtn^.lrs := lr_ptr_t(ra_lrs);
+      if lir_main_da4 or (pass > 7) then
+        mode := 2
+      else if pass > 5 then
+        mode := 1
+      else
+        mode := 0;
+      ra_utils_$add_spill_code(rtn, operand$t(ra_class), mode);
+      if ra_rtn_ptr_t(rtn)^.frame_size > 24 then
+        rtn^.f226.needs_frame := true;
+      ap := ra_lr_ptr_t(rtn^.ap_lr);
+      if ap^.f2.spilled and rtn^.f226.needs_frame and
+         not rtn^.f226.no_return_block and (rrp$read in ap^.rrp) then
+        rtn^.return_instr^.opnds[3].h.kind := operand$none;
+      pass := pass + 1;
+      goto 10;
+    end;
+    for k := start to rtn^.l200 do
+      map^[k] := nil;
+    start := rtn^.l200 + 1;
+    lr := ra_lrs;
+    while lr <> nil do begin
+      map^[lr^.num] := lr;
+      lr := lr^.next;
+    end;
+    ra_class := ra_class - 1;
+  until ra_class = 0;
+  conv := ra_rtn_ptr_t(rtn)^.conv;
+  if not rtn^.f226.needs_frame then begin
+    ap := ra_lr_ptr_t(rtn^.ap_lr);
+    if rrp$read in ap^.rrp then begin
+      ret := rtn^.return_instr;
+      if ra_lts_ptr_t(ret^.opnds[3].lts)^.lr <> ap then
+        bug_check('RA_$INITIALIZE_ROUTINE -- AP operand in RETURN not in expected position%$');
+      if ret^.opnds[3].h.kind = operand$ip_reg then
+        ra_$combine_with_sf(ap, conv);
+    end;
+    if conv^.b30 then begin
+      ra_$combine_with_sf(ra_rtn_ptr_t(rtn)^.lr120, conv);
+      node := ra_ptrs_ptr_t(rtn^.node)^[60];
+      if node <> nil then
+        if isc_$is_a_register_candidate(node) then
+          ra_$combine_with_sf(ra_lr_ptr_t(isc_$get_il_live_range(node)), conv);
+    end;
+  end;
+  lr := ra_lr_ptr_t(rtn^.l112);
+  if lr^.f2.reg = ra_ip_zero then
+    rtn^.f226.save_rpc := true;
+  lr^.f2.reg := conv^.w14 & 255;
+  conv^.needs_db := rtn^.f226.needs_db;
+  w := ra_longs_ptr_t(univ_ptr(integer32(rtn^.node) + 374))^[1];
+  t := rshft(w, 11) & (~16#100);
+  if conv^.needs_db then
+    t := t ! 16#100;
+  ra_longs_ptr_t(univ_ptr(integer32(rtn^.node) + 374))^[1] :=
+      (w & 2047) ! lshft(t, 11);
+  ra_$accumulate_true_writes(rtn);
+  lir_main_$save_and_restore_code(rtn);
+  ra_$relocate_automatic_storage(rtn);
+  bv_$release_bit_vectors(rtn);
+  mrh_$release_all(ra_conf_heaps[0]);
+  mrh_$release_all(ra_conf_heaps[1]);
+  mrh_$release_all(ra_conf_heaps[2]);
+  mrh_$release_all(ra_ap_heaps[0]);
+  mrh_$release_all(ra_ap_heaps[1]);
+  mrh_$release_all(ra_ap_heaps[2]);
+  mrh_$release_all(ra_pend_bb_heap);
+  mrh_$release_all(ra_pend_xx_heap);
+  lr := nil;
+  for k := rtn^.l200 downto 0 do
+    if map^[k] <> nil then begin
+      map^[k]^.next := lr;
+      lr := map^[k];
+    end;
+  rtn^.lrs := lr_ptr_t(lr);
+  if rtn^.f226.needs_frame then
+    ra_bytes_ptr_t(rtn^.node)^[378] := chr(ord(ra_bytes_ptr_t(rtn^.node)^[378]) ! 4)
+  else
+    ra_bytes_ptr_t(rtn^.node)^[378] := chr(ord(ra_bytes_ptr_t(rtn^.node)^[378]) & 251);
+  ra_$release_rws_storage(map);
+end;
+
+{ RA_$END_ROUTINE - nothing.  0x26DF22, 2 bytes (no A5). }
+
+procedure ra_$end_routine;
+begin
 end;
