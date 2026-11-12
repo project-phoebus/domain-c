@@ -373,13 +373,13 @@ begin
       if mmt_lists^[k] <> nil then
         c := c + [k];
     if (c * [12, 13]) = [] then begin
-      mmt_rtn^.f228.b228_6 := true;
+      mmt_rtn^.f228.own_only := true;
       if not (1 in c) then
         mmt_rtn_v_ptr_t(mmt_rtn)^.f227.b0 := true;
       if (c * mmt_static_classes) = [] then
-        mmt_rtn^.f228.b228_7 := true;
+        mmt_rtn^.f228.no_static := true;
       if (c * mmt_dynamic_classes) = [] then
-        mmt_rtn^.f228.b228_5 := true
+        mmt_rtn^.f228.no_dynamic := true
       else begin
         if (cc * mmt_dynamic_classes) <> [] then
           f := false
@@ -399,7 +399,7 @@ begin
               until done or (t = nil);
             end;
         end;
-        mmt_rtn^.f228.b228_5 := f;
+        mmt_rtn^.f228.no_dynamic := f;
       end;
     end;
   end;

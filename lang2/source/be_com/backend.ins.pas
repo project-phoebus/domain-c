@@ -650,7 +650,14 @@ type
     memory_lr: lr_ptr_t;                { +144: the memory live range
                                           (df_utils: "Memory LR"; batch
                                           A) }
-    space148: array [148..179] of char; { +148 }
+    ip_clobbered: integer32;            { +148: the integer registers it
+                                          clobbers (call_conv: a later
+                                          call's conventions take them;
+                                          batch A, PA3) }
+    fp_clobbered: array [0..1] of integer32;   { +152: the floating
+                                          registers 32..63, 0..31 it
+                                          clobbers (call_conv) }
+    space160: array [160..179] of char; { +160 }
     marks: integer32;                   { +180: the walks' marks and
                                           serial numbers, counted up
                                           (utils, tr_utils_$mark_dependents;
@@ -668,16 +675,35 @@ type
     f226: packed record                 { +226 (batch A: fga) }
       b226_7, b226_6, b226_5, b226_4, b226_3: boolean;
       b226_2: boolean;                  { .2: sets b226_0 (fga) }
-      b226_1: boolean;
+      b226_1: boolean;                  { .1: call_conv's b28 (may touch
+                                          memory) }
       b226_0: boolean;                  { .0: the AP read may be taken
                                           out of the RETURN (fga) }
       b227_7: boolean;                  { +227 }
       b227_6: boolean;                  { .6: some block may be resumed
                                           asynchronously (fga) }
-      b227_5, b227_4, b227_3, b227_2, b227_1, b227_0: boolean;
+      b227_5: boolean;
+      no_reads: boolean;                { .4: it reads no memory (the
+                                          memory model's properties of
+                                          the routine, which call_conv
+                                          copies to the conventions of a
+                                          later call: call_conv.ins.pas
+                                          +33..+40; batch A (PA3): were
+                                          b227_4 .. b227_0, b228_7 ..
+                                          b228_5) }
+      no_writes: boolean;               { .3: it writes none }
+      no_reads_16: boolean;             { .2: no class 16 read }
+      no_writes_16: boolean;            { .1: no class 16 written }
+      no_class_1: boolean;              { .0: no class 1 touched (mmt) }
       end;
     f228: packed record                 { +228 }
-      b228_7, b228_6, b228_5, b228_4, b228_3: boolean;
+      no_static: boolean;               { .7: no static class touched
+                                          (mmt) }
+      own_only: boolean;                { .6: it touches only what is
+                                          passed (mmt: neither class 12
+                                          nor 13) }
+      no_dynamic: boolean;              { .5: no dynamic class (mmt) }
+      b228_4, b228_3: boolean;          { .4, .3 (call_conv's b41, b42) }
       b228_2: boolean;                  { .2 (tr_utils) }
       b228_1, b228_0: boolean;
       end;
