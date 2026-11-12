@@ -352,11 +352,22 @@ type
     w32: integer;                       { +32 }
     first: instr_ptr_t;                 { +34 }
     last: instr_ptr_t;                  { +38 }
-    space42: array [42..53] of char;    { +42 }
+    space42: array [42..45] of char;    { +42 }
+    l46: bb_ptr_t;                      { +46: its first child in the
+                                          dominator tree (hal; batch A) }
+    l50: bb_ptr_t;                      { +50: its next sibling there
+                                          (hal; batch A) }
     l54: bb_ptr_t;                      { +54: a list of blocks
                                           utils_$locate_definition
-                                          searches first }
-    space58: array [58..61] of char;    { +58 }
+                                          searches first (hal walks up
+                                          through it from a loop's exit:
+                                          its immediate dominator, most
+                                          likely) }
+    l58: bb_ptr_t;                      { +58: hal's candidates for the
+                                          end of a hammock headed here,
+                                          chained through their l58 (its
+                                          immediate postdominator, most
+                                          likely; batch A) }
     exposed: lts_ptr_t;                 { +62: its exposed segments
                                           (with lir_main_c86 0; chained
                                           at their +16) }
@@ -364,7 +375,11 @@ type
                                           (chained at +20) }
     l70: bb_ptr_t;                      { +70: the head of its interval
                                           (tr_utils' bb_interval) }
-    space74: array [74..81] of char;    { +74 }
+    l74: univ_ptr;                      { +74 (hal: a loop head without
+                                          it gets a tail block; batch A) }
+    l78: bb_ptr_t;                      { +78: a chain hal puts a new
+                                          block on after the block it
+                                          precedes (batch A) }
     l82: bb_ptr_t;                      { +82 (tr_utils: the hammock
                                           head, of a block not one) }
     live_out: bv_ptr_t;                 { +86: the union of the
@@ -378,7 +393,11 @@ type
                                           transparent) or live_gen
                                           (batch C: l94, exposed) }
     l98: fg_edge_ptr_t;                 { +98: an edge (tr_utils: its
-                                          target follows the hammock) }
+                                          target follows the hammock);
+                                          batch A: hal's hammock record
+                                          (hal_hammock_t: head +0, the
+                                          block after it +4, so the
+                                          edge's target is that block) }
     l102: bb_ptr_t;                     { +102: the first block of its
                                           hammock (tr_utils) }
     l106: bb_ptr_t;                     { +106: the next block of the
@@ -388,12 +407,19 @@ type
                                           batch C: l110, written) }
     next114: bb_ptr_t;                  { +114: the order (from the
                                           routine's +72) bv's backward
-                                          propagation walks }
+                                          propagation walks: the block
+                                          before it in code order (hal
+                                          links a new block in before a
+                                          block through next and
+                                          next114) }
     next: bb_ptr_t;                     { +118 }
     avail_in: bv_ptr_t;                 { +122: the predecessors'
                                           avail_out, joined (bv) }
     avail_out: bv_ptr_t;                { +126: (avail_in and
-                                          transparent) or avail_gen }
+                                          transparent) or avail_gen
+                                          (hal keeps the block's
+                                          dominators there while it
+                                          finds hammocks: bit order) }
     avail_gen: bv_ptr_t;                { +130 }
     l134: univ_ptr;                     { +134: segments by block,
                                           chained at their next, while
@@ -404,6 +430,8 @@ type
     mark146: integer32;                 { +146: a visit mark (utils'
                                           look_for_path, tr_utils;
                                           batch C: l146) }
+    l150: bb_ptr_t;                     { +150: hal's work list (batch
+                                          A) }
   end;
 
   { A flow graph edge (bv, tr_utils; zzzzz's zz_edge_t reads the
@@ -1354,11 +1382,14 @@ procedure fg_utils_$intervals(
     rtn: rtn_ptr_t); options(val_param); extern;
 
 { FG_UTILS_$SEPARATE_LOOP_HEADER_EDGES - 0x235822, 0x8E bytes; called from
-  hal oli.  Frame 8:l; 12:l; 16:bw.  Result: A0 (callers: A04). }
+  hal oli.  Frame 8:l; 12:l; 16:bw.  Result: A0 (callers: A04).  batch
+  A: from hal's calls, the block whose edges in are separated, the
+  loop's head, a flag (false from guarantee_header, true from
+  hal_$insert_loop_tails); the edges taken off, chained at next_pred. }
 function fg_utils_$separate_loop_header_edges(
-    p1: integer32;
-    p2: integer32;
-    p3: integer): univ_ptr; options(val_param); extern;
+    bb: bb_ptr_t;
+    head: bb_ptr_t;
+    p3: boolean): fg_edge_ptr_t; options(val_param); extern;
 
 { FG_UTILS_$MAKE_LOOPS_UNCONDITIONAL - 0x235F04, 0x30 bytes; called from
   dfa.  Frame 8:a. }
