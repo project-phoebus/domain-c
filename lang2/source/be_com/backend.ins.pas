@@ -215,9 +215,14 @@ type
     displacement range); +0..+1 were w0. }
   instr_attr_ptr_t = ^instr_attr_t;
   instr_attr_t = packed record
-    b0: 0..255;                         { +0 }
-    b1_7: boolean;                      { +1 }
-    amse: 0..7;                         { .6..4 }
+    b0_7_4: 0..15;                      { +0 }
+    interaction: 0..31;                 { +0 .3..0, +1 .7: how the
+                                          instruction interacts with
+                                          its neighbours in the pipeline
+                                          (tm_utils' distances: `andi.w
+                                          #3968' of the word; batch A,
+                                          PA4: were b0, b1_7) }
+    amse: 0..7;                         { +1 .6..4 }
     b1_3_0: 0..15;
     w2: 0..65535;                       { +2 }
     b4: 0..255;                         { +4 (asm: compared with 10) }
@@ -2649,30 +2654,30 @@ function tm_utils_$can_encode_as_immediate_operand(
 { TM_UTILS_$CAN_POSTMODIFY_BASE_REGISTER_BY - 0x27BBA2, 0xC2 bytes; called
   from oli tr_utils.  Frame 8:l; 12:w.  Result: D0 (callers: D0b4). }
 function tm_utils_$can_postmodify_base_register_by(
-    p1: integer32;
-    p2: integer): boolean; options(val_param); extern;
+    disp: integer32;
+    opc: integer): boolean; options(val_param); extern;
 
 { TM_UTILS_$CAN_PREMODIFY_BASE_REGISTER_BY - 0x27BCB6, 0xC2 bytes; called
   from oli tr_utils.  Frame 8:l; 12:w.  Result: D0 (callers: D0b2). }
 function tm_utils_$can_premodify_base_register_by(
-    p1: integer32;
-    p2: integer): boolean; options(val_param); extern;
+    disp: integer32;
+    opc: integer): boolean; options(val_param); extern;
 
 { TM_UTILS_$INTERACTION_DISTANCE_BACKWARD - 0x27BDC8, 0xAA bytes; called
   from oli.  Frame 8:a.  Result: D0 (callers: D0l1). }
 function tm_utils_$interaction_distance_backward(
-    p1: univ_ptr): integer32; options(val_param); extern;
+    instr: instr_ptr_t): integer32; options(val_param); extern;
 
 { TM_UTILS_$INTERACTION_DISTANCE_FORWARD - 0x27BE72, 0x5E bytes; called
   from oli.  Frame 8:a.  Result: D0 (callers: D0l1). }
 function tm_utils_$interaction_distance_forward(
-    p1: univ_ptr): integer32; options(val_param); extern;
+    instr: instr_ptr_t): integer32; options(val_param); extern;
 
 { TM_UTILS_$MINIMUM_DISTANCE - 0x27BED0, 0x294 bytes; called from oli.
   Frame 8:a; 12:l.  Result: D0 (callers: D0l2). }
 function tm_utils_$minimum_distance(
-    p1: univ_ptr;
-    p2: integer32): integer32; options(val_param); extern;
+    a: instr_ptr_t;
+    b: instr_ptr_t): integer32; options(val_param); extern;
 
 { LIR_$CAN_ENCODE_AS_IMMEDIATE_OPERAND - tm_utils_$can_encode_as_
   immediate_operand's answer, its arguments passed on.  0x27C164, 0x26

@@ -117,6 +117,7 @@ Batch A continued (translator PA4, 2026-11-11):
 | unit | routines | notes |
 |------|----------|-------|
 | `lang2/source/be_com/lir_utils.pas` | 15 | done: trans_insert_move, flesh_out_new_load_or_store, fix_store_through_lrs (with new_db_lts); backend.ins.pas solution_t (lir_$build_operand's solution; post_6b8), lir_$build_operand (op, sol, form: instr_attr_opnd_t), lir_$get_new_instruction_no_exceptions named; lir.pvt.pas spill_desc_t, the section spill_instr_forms (defined in lir_utils.pas), lir_3b80, lir_3ba8, lir_main_250, lir_main_760, flesh_out's heading (moved from backend.ins.pas: only lir_utils and ra_utils call it); isc_var_externs.ins.pas isc_user_routines_330/_340 |
+| `lang2/source/be_com/tm_utils.pas` | 14 | done: operand_forms_mask.init and the four amse_*.init (the sections' bytes, PB2's define scheme); instr_attr_t interaction (+0 bits 3..0 and +1 bit 7, was b0 and b1_7); the headings named; can_increase_scale_by declared in the unit (no caller) |
 | core | | flags named by dmp's printout (instr_hdr_t atomic_update .. do_not_delete, bb_flags_t depth .. executable, f14 kind/path_to, rtn f226 save_sl .. shares_frame, lr no_modify/serialize), rtn db_lr (+108), bb l42, next142; lir_$can_encode_as_immediate_operand's k |
 
 Question 174 is answered: these units open the prelude (fga, hal, life and sanity now do).

@@ -215,7 +215,7 @@ lang2/source/be_com/lst.pas	if ((/^      \{ The registers' column of the classic
 # gap 7 (bin): real := double (the single literal left unset, for the check)
 lang2/source/be_com/bin.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
 # gap 32 (backend.ins.pas, translator PB2): an initialized overlay section named as its variable (the sections the .init files define renamed, for the check)
-lang2/source/be_com/backend.ins.pas	s/^var \((instruction_mnemonic|instruction_mnemonic_length|instruction_assembly|operand_string|operand_string_length)\)/var (${1}_s) { gap 32 }/
+lang2/source/be_com/backend.ins.pas	s/^var \((instruction_mnemonic|instruction_mnemonic_length|instruction_assembly|operand_string|operand_string_length|operand_forms_mask|amse_premod_immed_low|amse_premod_immed_high|amse_postmod_immed_low|amse_postmod_immed_high)\)/var (${1}_s) { gap 32 }/
 # gap 25 (asm, translator PB2): asm_$process_routine exceeds dpc's virtual registers (pass 1's literals and instruction kinds, pass 2's immediate forms left out of the check)
 lang2/source/be_com/asm.pas	s/^(  \{ Its literals\. \})$/%var gap25b;\n%if gap25b %then { gap 25 }\n$1/
 lang2/source/be_com/asm.pas	s/^(2:)$/%endif { gap 25 }\n$1/
