@@ -143,3 +143,8 @@ merge.
     owner to name.  (Batches A and C named the same fields differently
     in parallel and a reconciler had to merge them: docs/backend-plan.md
     "Reconciliation of batches A-C".)
+  - Take string literals from the binary's bytes (tools/cc_data.py, or
+    the section dump), never from a disassembly listing: objdump breaks
+    long data runs over continuation lines, and a compacting helper that
+    drops them truncates the string (three tr_utils messages were once
+    written with characters missing: docs/questions.md 157, 168).
