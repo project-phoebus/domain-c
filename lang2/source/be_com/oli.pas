@@ -348,6 +348,8 @@ var
   oli_2e30: integer32;                  { +0x2E30 }
   oli_nfpctl: integer32;                { +0x2E34: the fp_control
                                           instructions }
+  oli_niters: integer32;                { +0x2E38: oli_iters when the
+                                          schedule was made }
   oli_iters: integer32;                 { +0x2E3C: the iterations
                                           (stages) the schedule spans }
   oli_ii: integer32;                    { +0x2E40: the iteration
@@ -2613,4 +2615,237 @@ begin
           r := r^.link;
         end;
       end;
+end;
+
+{ ticks_to_most_remote_consumer - the cycles from where the value of
+  segment s (defined by operand o, nil for a value live into the loop)
+  is made to its last use in the schedule: for a first segment in the
+  block whose live range is exposed at the head through a join (not
+  when all) the time to the join plus, for an intend-to-modify chain,
+  from there on; else the furthest reader, following chains of
+  intend-to-modify readers and the five-operand pairs' results.
+  0x25B12C, 0x2CE bytes: m$mis$lll the products. }
+
+function ticks_to_most_remote_consumer(
+    i: instr_ptr_t;
+    o: opnd_ptr_t;
+    s: lts_ptr_t;
+    all: boolean): integer32; options(val_param); internal;
+label
+  20, 30, 99;
+var
+  sl, it, d, best, t: integer32;
+  j: instr_ptr_t;
+  u: lts_ptr_t;
+  r: opnd_ptr_t;
+  k: integer32;
+begin
+  if o = nil then begin
+    sl := 0;
+    it := 1;
+  end
+  else begin
+    j := utils_ins_$operands_instruction(o);
+    sl := oli_slot[j^.num];
+    it := oli_iter[j^.num];
+  end;
+  if s^.f2.first_in_bb then begin
+    u := s;
+    while (u^.next <> nil) and (u^.next^.bb = s^.bb) and
+        not u^.f2.exposed do
+      u := u^.next;
+    if all or not u^.f2.exposed then begin
+      ticks_to_most_remote_consumer := oli_ii - sl + (oli_iters - it) * oli_ii;
+      goto 99;
+    end;
+    r := u^.refs;
+    j := utils_ins_$operands_instruction(r);
+    if instruction_attributes[j^.opc].class <> class$join_bp then begin
+      ticks_to_most_remote_consumer := oli_ii * oli_iters;
+      goto 99;
+    end;
+    d := oli_ii - sl + (oli_iters - it) * oli_ii + oli_slot[j^.num]
+        + (oli_iter[j^.num] - 1) * oli_ii;
+    if r^.h.intend_to_modify and (j <> i) then
+      d := ticks_to_most_remote_consumer(i, addr(j^.opnds[2]),
+          j^.opnds[2].lts, all) + d;
+    ticks_to_most_remote_consumer := d;
+    goto 99;
+  end;
+  if o = nil then
+    r := s^.refs
+  else
+    r := o^.link;
+  best := 0;
+  while r <> nil do begin
+    j := utils_ins_$operands_instruction(r);
+    d := oli_slot[j^.num] - sl + (oli_iter[j^.num] - it) * oli_ii;
+    if r^.h.intend_to_modify and (j <> i) then begin
+      for k := j^.h.nopnds downto 1 do
+        if j^.opnds[k].h.kind in [operand$ip_reg..
+            operand$well_behaved_memory] then
+          if j^.opnds[k].lts^.lr = r^.lts^.lr then begin
+            t := ticks_to_most_remote_consumer(i, addr(j^.opnds[k]),
+                j^.opnds[k].lts, all) + d;
+            goto 20;
+          end;
+    end
+    else if oli_paired[j^.num] then
+      case j^.opc of
+        155, 154: begin                 { subs, adds }
+          t := ticks_to_most_remote_consumer(i, addr(j^.opnds[3]),
+              j^.opnds[3].lts, all) + d;
+          goto 20;
+        end;
+        172, 171: begin                 { subd, addd }
+          if r^.h.num = 2 then
+            t := ticks_to_most_remote_consumer(i, addr(j^.opnds[3]),
+                j^.opnds[3].lts, all) + d
+          else
+            t := ticks_to_most_remote_consumer(i, addr(j^.opnds[6]),
+                j^.opnds[6].lts, all) + d;
+          goto 20;
+        end;
+        152, 169:                       { truncsi, truncdi }
+          if best < d then
+            best := d;
+        otherwise
+      end
+    else if best < d then
+      best := d;
+    goto 30;
+20:
+    if best < t then
+      best := t;
+30:
+    r := r^.link;
+  end;
+  ticks_to_most_remote_consumer := best;
+99:
+end;
+
+{ schedule - the loop's modulo schedule at the current interval:
+  the branch put in the interval's last cycle of iteration 1, the
+  final segments released, then each enabled instruction (highest
+  first) put in the latest open cycle its consumers allow, moved back
+  further while an instruction already in a cycle its interaction
+  distances reach (tm_utils_$minimum_distance; forward distances first,
+  then backward) needs more room, unless that moved it before its
+  constraints' cycle in an earlier iteration; the list built and the
+  iterations renumbered.  False when an instruction finds no cycle.
+  0x25B3FA, 0x2B6 bytes. }
+
+function schedule: boolean; internal;
+label
+  50, 60, 70, 99;
+var
+  i: instr_ptr_t;
+  s, t: lts_ptr_t;
+  ds, di, sl, it, bk, fw, c, cyc, m, d: integer32;
+  u: integer;
+  done, ok: boolean;
+begin
+  init_sched;
+  assign_enable_counts(oli_bb);
+  schedule_instr(oli_branch, oli_ii - 1, 1);
+  s := oli_bb^.finals;
+  while s <> nil do begin
+    t := s;
+    decrement_lenable_count(t);
+    s := s^.next_final;
+  end;
+  i := dequeue_enabled_instruction;
+  while i <> nil do begin
+    find_data_flow_constraints(i, ds, di);
+    sl := ds;
+    it := di;
+    if not find_open_slot(i, sl, it) then begin
+      schedule := false;
+      goto 99;
+    end;
+    bk := tm_utils_$interaction_distance_backward(i);
+    fw := tm_utils_$interaction_distance_forward(i);
+    done := false;
+    repeat
+      if fw > 0 then
+        for c := fw downto 1 do begin
+          cyc := sl + c;
+          if cyc > oli_ii then
+            cyc := cyc - oli_ii;
+          m := 0;
+          for u := 0 to 3 do
+            if oli_sched[cyc, u] <> nil then
+              if u <> 3 then begin
+                d := tm_utils_$minimum_distance(i, oli_sched[cyc, u]);
+                if m < d then
+                  m := d;
+              end;
+          if m >= oli_ii then
+            goto 70;
+          if m > c then begin
+            d := cyc - m;
+            if d <= 0 then begin
+              d := d + oli_ii;
+              it := it + 1;
+            end;
+            sl := d;
+            ok := find_open_slot(i, sl, it);
+            goto 50;
+          end;
+        end;
+      if bk > 0 then begin
+        for c := 1 to bk do begin
+          cyc := sl - c;
+          if cyc <= 0 then
+            cyc := cyc + oli_ii;
+          m := 0;
+          for u := 0 to 3 do
+            if oli_sched[cyc, u] <> nil then
+              if u <> 3 then begin
+                d := tm_utils_$minimum_distance(i, oli_sched[cyc, u]);
+                if m < d then
+                  m := d;
+              end;
+          if m >= oli_ii then
+            goto 70;
+          if m > c then begin
+            d := cyc - m;
+            if d <= 0 then begin
+              d := d + oli_ii;
+              it := it + 1;
+            end;
+            sl := d;
+            ok := find_open_slot(i, sl, it);
+            goto 50;
+          end;
+        end;
+        done := true;
+      end
+      else
+        done := true;
+      goto 60;
+50:
+      if not ok then begin
+        schedule := false;
+        goto 99;
+      end;
+      if it < di then
+        if ds >= sl then begin
+          sl := ds;
+          it := di;
+          goto 70;
+        end;
+60:
+    until done;
+70:
+    schedule_instr(i, sl, it);
+    if oli_iters < it then
+      oli_iters := it;
+    i := dequeue_enabled_instruction;
+  end;
+  schedule := true;
+  build_sched_array;
+  reverse_iteration_numbers;
+  oli_niters := oli_iters;
+99:
 end;
