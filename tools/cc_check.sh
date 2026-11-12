@@ -7,6 +7,13 @@
 # A unit file is a .pas that is not an insert (*.ins.pas, *.pvt.pas) under
 # the tree's source roots.  A unit missing from a binary is skipped for it.
 # dpc errors fail the check; best-effort warnings do not.
+#
+# Then the data check (tools/cc_datacheck.py --objects, on the objects
+# just compiled): each unit's initialized data (its module data block and
+# the named sections it defines) against the image's initial bytes; a
+# data difference fails the check, a layout one (dpc's order or
+# alignment of cells) and those tools/cc_datacheck_known.txt lists do
+# not.  CC_NODATA=1 leaves it out.
 set -u
 here=$(cd "$(dirname "$0")/.." && pwd)
 cd "$here" || exit 1
@@ -49,11 +56,13 @@ for f in "$@"; do
     # conditional variable cc_a88k (%var cc_a88k; %if cc_a88k %then ...)
     config=
     [ "$bin" = "$a88k" ] && config="-config cc_a88k"
-    out=$(cd "$inc" && python3 "$here/tools/coff_compare.py" --binary "$here/$bin" --unit "${f%.pas}" "$src" -- -I "$here" $config 2>&1)
+    keep=$scratch/obj/$(printf '%s' "${f%.pas}" | tr / _).$(basename "$bin")
+    out=$(cd "$inc" && python3 "$here/tools/coff_compare.py" --keep "$keep" --binary "$here/$bin" --unit "${f%.pas}" "$src" -- -I "$here" $config 2>&1)
     rc=$?
     case "$out" in
       *"no single unit"*) continue ;;
     esac
+    printf '%s\t%s\t%s\n' "$f" "$(basename "$bin" | sed 's/^cc\.//')" "$keep/prog.o" >> "$scratch/objs.txt"
     errs=$(printf '%s\n' "$out" | grep -c ': error:')
     warns=$(printf '%s\n' "$out" | grep -c 'best effort')
     summary=$(printf '%s\n' "$out" | grep 'routine(s):' | tail -1)
@@ -66,4 +75,7 @@ for f in "$@"; do
   done
 done
 python3 tools/cc_addrcheck.py "$@" || fail=1
+if [ -z "${CC_NODATA:-}" ] && [ -s "$scratch/objs.txt" ]; then
+  python3 tools/cc_datacheck.py -q --objects "$scratch/objs.txt" || fail=1
+fi
 exit $fail

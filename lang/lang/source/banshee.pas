@@ -38,10 +38,10 @@ module banshee;
 var
   { The module's data (A5 0x354F44). }
   bans_areg: codegen_$uads_t := [f1 := 1, f2 := 31, f3 := 31, f4 := 0,
-      f5 := 1, f6 := 0, x := 0, y := 0];       { +0x0 }
+      f5 := 0, f6 := 1, x := 0, y := 0];       { +0x0 }
   bans_14: integer32 := 0;                    { +0x14 }
   bans_imm8: codegen_$uads_t := [f1 := 3, f2 := 31, f3 := 31, f4 := 0,
-      f5 := 1, f6 := 0, x := 0, y := 0];       { +0x18 }
+      f5 := 0, f6 := 1, x := 0, y := 0];       { +0x18 }
   bans_2c: integer32 := 0;                    { +0x2C }
   bans_opnd: codegen_$ads_t;                  { +0x30 }
   bans_3c: integer32 := 0;                    { +0x3C }

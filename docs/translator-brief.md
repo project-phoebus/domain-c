@@ -148,3 +148,25 @@ merge.
     long data runs over continuation lines, and a compacting helper that
     drops them truncates the string (three tr_utils messages were once
     written with characters missing: docs/questions.md 157, 168).
+  - **The gate checks initialized data too** (translator QA).
+    tools/cc_check.sh now ends with tools/cc_datacheck.py on the objects
+    it compiled: each unit's module data block (from its A5) and the
+    named sections it defines, byte for byte against the image's
+    initial bytes (tools/cc_data.py: file bytes, .rwdi copy and repeat
+    records; bytes nothing sets are don't-care).  It joined the gate
+    because the code comparison never looks at data: the first run
+    found zeros where .rwdi repeats a value (docs/questions.md 238, 254:
+    opinfo, alias, cg_tree, final, list_tree, outbin), initializers
+    missing or wrong (htm's upcasing table, banshee's descriptors,
+    diag, pds, ass, inc_list, c_macro_read, oli, opt_strength,
+    opt_vector) and a table sized short (iv), all in units the code
+    gate passed.  A difference it explains as layout (dpc's order of
+    own and defined cells, its alignment, gap 37: it aligns by the
+    cells' names in your comments and by content) does not fail; one
+    you have checked to be layout or a logged dpc gap goes in
+    tools/cc_datacheck_known.txt with its reason.  `CC_NODATA=1' skips
+    the pass; `tools/cc_datacheck.py FILE' runs it alone (compiling as
+    the gate does; -v for every unit).  Take initial data from
+    tools/cc_data.py and write it whole: never NUL characters inside a
+    string literal (outbin had three), and mind that a run of equal
+    values is often one repeat record.

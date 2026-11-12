@@ -199,8 +199,10 @@ var
   excluded: g_opt_varset_t;             { +32 }
   others: g_opt_varset_t;               { +64 }
   ivset: g_opt_varset_t;                { +96 }
-  auto_desc: add_node_$desc_t;          { +128: autoinc's descriptor of
-                                          the addresses it forms }
+  auto_desc: add_node_$desc_t := [size := 4, rlen := 5];
+                                        { +128: autoinc's descriptor of
+                                          the addresses it forms (.rwdi:
+                                          size 4, rlen 5) }
   cur_loop: g_opt_block_ptr_t;          { +144: the loop's blocks
                                           (select_loop) }
   ivs: sr_list_ptr_t;                   { +148: the induction variables }

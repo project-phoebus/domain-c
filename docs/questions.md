@@ -2093,3 +2093,37 @@ revisited.
    as a function's result: now a procedure, lir_main's discards gone).
    lir_$begin_call_or_svc's second and lir_$end_call_or_svc's first
    parameter are not read (kept as p2, p1 for the ISC's calls).
+
+254. Translator QA (data check), tools/cc_data.py: the repeat-record fix
+   of 238 repeated the last copy record after a `zero' record (kind 2),
+   so .data showed bytes no record sets (lir_main's block a 16-byte
+   pattern).  The loader (lib/pmlib/loader.pas process_rwdi) repeats
+   the record just before and copies nothing after a zero record; zero
+   records describe sections with file bytes (libdsc, cc.a88k's
+   read-only tables), whose bytes cc_data.py now prints too.  Any
+   initial data read with cc_data.py between 4a19a88 and this fix is
+   worth reading again (tools/cc_datacheck.py finds it).
+255. Translator QA, opt_strength (cc.m68k A5 0x3530D8): the image
+   initializes a descriptor at +0xA8 (size 4, rlen 4, w8 2), past the
+   cells the code addresses (+0 .. +161; no instruction reads +0xA8).
+   Not declared: whose variable is it?
+256. Translator QA, outbin's fpx_names (+0x8C8): the image has each
+   name followed by a NUL and the rest of its 12 characters unset, as
+   an initialized varying [12] of char gives it (dpc gap 43); the
+   translation's record has blanks there.  Declare them varying once
+   dpc can?  (list_tree's line, +0x18, is the same: length 0 and 256
+   blanks in the image.)
+257. Translator QA, dmp: the image's .init tables are longer than
+   dpc's: lsq_string_length +0x240 and lsq_string +0x260 (0x20 and 0x80
+   bytes, four entries set), am_string_length +0x300 and am_string
+   +0x320 (0x20 and 0xA0 bytes, three set), so dpc's block is 0x2E0
+   bytes for the image's 0x3F8.  Are the index types of
+   backend.ins.pas (batch A) narrower than the original's?
+258. Translator QA, c_main: dpc's module data is 0xF8C bytes; the
+   image's ends at +0xDBC (c_run_acpp.c's data follows at +0xDC0).
+   jmp_br_resolve likewise (dpc 0x28, the image 0x1C, opinfo's tables
+   after it).  Some declared size is larger than the original's.
+259. Translator QA, list_tree's size_letters (+0x130): .rwdi sets 12
+   pairs (the last four `**' by a repeat record) and leaves the
+   block's last 4 bytes (to +0x14C) unset: 12 entries (written so) or
+   14 with two zero ones?

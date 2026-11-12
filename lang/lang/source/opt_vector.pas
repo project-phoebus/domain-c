@@ -146,7 +146,9 @@ type
   end;
 
 var
-  unused_0: array [0..4] of integer32;  { +0 }
+  unused_0: array [0..4] of integer32 := [4, 16#40000, 16#4000, 0, 0];
+                                        { +0 (.rwdi: as an add_node_$desc_t,
+                                          size 4, rlen 4, signed) }
   width: integer;                       { +20 }
   unused_22: integer;                   { +22 }
   strided: boolean;                     { +24 }

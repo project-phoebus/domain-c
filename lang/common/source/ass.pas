@@ -26,8 +26,9 @@
   Module data as the image uses it: +0 a byte, true while a description
   is in force; +2 the prefix in force before it (DIAG_'s varying [200] of
   char); +208 the column then (a longword); +216 the program's name (a
-  varying [80] of char: the length word, the characters from +218); +304
-  the current context call-back.
+  varying [80] of char: the length word, the characters from +218;
+  initially `ass_$', .rwdi's bytes: docs/dpc-gaps.md 43); +304 the
+  current context call-back.
 
   The global routines load A5; show_context, which does not (it uses
   its callers' A5), is internal.  The failure routines load their eleven
@@ -52,7 +53,7 @@ var
   described: boolean;                   { +0 }
   prefix_before: diag_$vstring_t;       { +2 }
   column_before: integer32;             { +208 }
-  program_name: varying [80] of char;   { +216 }
+  program_name: varying [80] of char := 'ass_$';  { +216 }
   current_call_back: ass_$context_call_back_t;  { +304 }
 
 { show_context - run the context call-backs, each on a fresh line with

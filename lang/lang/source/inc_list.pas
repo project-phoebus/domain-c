@@ -12,7 +12,8 @@
     0x0ACD52  0x0AE732  open_inlib_list
     A5 0x2C3178 (cc.m68k), 0x4431E8 (cc.a88k): the module's data, 0x214
     bytes (to kfold's): the two lists and their counts (inc_list.ins.pas),
-    +0x210 a boolean only this unit uses.  Nothing is initialized.
+    +0x210 a boolean only this unit uses, initialized true (.rwdi's
+    0xFF; nothing else is initialized).
 
   Every routine is global and loads A5.
 }
@@ -42,8 +43,8 @@ define
 var
   { +0x210: passed as open_include_file's last argument (which it does
     not read); find_file_name clears it around its search and sets it
-    after. }
-  searching_flag: boolean;
+    after; initially true. }
+  searching_flag: boolean := true;
 
 { find_file_name - the path of the include file named by name.
 

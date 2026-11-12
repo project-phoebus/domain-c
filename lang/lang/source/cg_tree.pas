@@ -61,7 +61,9 @@
     builtin function (tree_fn_inst, 24 words), +0xA0 emit's
     instructions by operator (tree_op_inst, 92 words), +0x158 the FPA's
     routines by builtin function (tree_fn_rtn, 24 words; the three
-    tables' .rwdi leaves their zero words out), +0x188 cg_zero_ads,
+    tables' runs of equal words are .rwdi repeat records, read as zeros
+    at first: docs/questions.md 238; .rwdi leaves each table's last two
+    words out), +0x188 cg_zero_ads,
     +0x1A0 cg_null_ads (.rwdi: f2 and f3 31), +0x1B4 cg_tree_1b4, +0x1B8
     .. +0x230 the operands opw, opv (.rwdi: f1 10, f2 and f3 31, f5 4),
     opu, opt, ops, opr (24 bytes apart), +0x248 the statement for
@@ -148,16 +150,17 @@ var
   { The 68881's instruction of a builtin math function (+0x70, by
     desc.w6: 33 none). }
   tree_fn_inst: array [0..23] of integer := [50, 51, 52, 53, 54, 55, 57,
-      58, 33, 59, 60, 33, 12 of 0];     { +0x70 }
+      58, 33, 59, 60, 33, 10 of 33, 2 of 0];  { +0x70 }
 
   { emit's generic instruction of an operator (+0xA0, by op: 1 add, 2
     subtract, 3 and, 4 or, 11 and 12 the unary ones; 33 none). }
-  tree_op_inst: array [0..91] of integer := [33, 1, 2, 33, 3 of 0, 11,
-      12, 3, 4, 33, 7 of 0, 3, 4, 3, 33, 69 of 0];  { +0xA0 }
+  tree_op_inst: array [0..91] of integer := [33, 1, 2, 33, 3 of 33, 11,
+      12, 3, 4, 33, 7 of 33, 3, 4, 3, 33, 67 of 33, 2 of 0];  { +0xA0 }
 
   { The FPA's routine of a builtin math function (+0x158, by desc.w6). }
   tree_fn_rtn: array [0..23] of integer := [104, 106, 108, 110, 112, 114,
-      116, 118, 121, 125, 127, 129, 132, 137, 141, 143, 148, 7 of 0];
+      116, 118, 121, 125, 127, 129, 132, 137, 141, 143, 148, 5 of 148,
+      2 of 0];
                                         { +0x158 }
 
   { The operands generate's routines build (+0x1B8 .. +0x230, 24 bytes

@@ -243,8 +243,9 @@ var
     126, 135, 137, 138, 144, 178];
 
   { +0x330: the expression kind an instruction of each opcode computes
-    (0 none). }
-  iv_opc_kind: array [0..211] of integer := [
+    (0 none), by opcode 0..383 (0x300 bytes, up to iv_commuted; .rwdi
+    sets only the nonzero words). }
+  iv_opc_kind: array [0..383] of integer := [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 0 }
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 16 }
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 32 }
@@ -258,7 +259,7 @@ var
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 160 }
     0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 176 }
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 192 }
-    0, 0, 0, 0];                        { 208 }
+    0, 0, 0, 0, 172 of 0];              { 208 }
 
   { +0x630: the kind an expression of each kind becomes with its
     children exchanged (0 none). }
