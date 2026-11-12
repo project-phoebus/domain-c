@@ -695,4 +695,27 @@ cc.m68k unless marked.
     then `movea.l D5,A1' before each recursive call); recompute_node_lists
     takes it from the dynamic link (`movea.l (A6),A2'), since only g_opt
     calls it.
+## Stores, records and FPP words (translator JJ, final.pas)
+
+92. **Constant stores to two adjacent word fields merged into one
+    longword store.**  opta (cc.m68k 0x10F910) sets a cell's kind (+8)
+    to 5 and its size (+10) to 2 with `move.l #0x50002,(8,A2)'; optmove
+    (0x10E2AC) kind 16 and size 4 with `move.l #0x100004'.  Item 10's
+    merging, for whole words of a record.  dpc stores each.
+93. **More FPP operation words.**  0x0074 0xFF34: the operand (a double
+    by address) compared with 0.0, the codes left for `beq'/`bne'
+    (final.pas floatop 0x10FDE2; kfold 0x0AE534 before its division by
+    zero error); 0x0074 0x00D0: trunc of the double into D0 (floatop
+    0x10FE98, kfold 0x0AD898); 0x00C4 0x00B4: a longword pushed by value
+    converted and compared with a double by address (floatop 0x10FEBA).
+94. **An array of 10-byte records not padded.**  final.pas's table of the
+    68881's ROM constants (A5 +0x2E8: a word and a double each) is
+    indexed by 10 times the index (floatop 0x10FD4E: `add.l D3,D3' ...
+    `(736,A1)'), unlike item 48's 62-byte entries padded to 64.
+95. **A function's result not read.**  opttest (0x10D6BA) calls
+    final_$collapsed_index_calc and branches to its end without testing
+    D0 (item 86's dead assignment, here of a boolean); a procedure's
+    caller passing a value its callee never reads: deltest pushes
+    fn_ccset (`move.w (40,A5),-(SP)') for cc_change, which reads the
+    module cell itself (item 44's unread parameter, at its only call).
 

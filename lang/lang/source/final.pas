@@ -12,32 +12,14 @@
   testcc; the same address: sameaddr) and edit them (detach, makejump,
   makecbr, moverefcell, movejump, reversecond, label_merge).
 
-  TODO(pascal) final.pas is not finished: 99 of its 120 routines are
-  translated.  Not yet translated (cc.m68k address, bytes):
-    0x109BB6 0x8DA  final_$collapsed_index_calc
-    0x10A492 0x7C4  final_$try_reducing_literal
-    0x10C51C 0xB2   backov (in deltest)
-    0x10C5CE 0x60C  deltest
-    0x10CD7E 0x316  final_$redundant_lea
-    0x10D28A 0x372  final_$cmp_branch_becomes_eor
-    0x10D600 0x75A  opttest
-    0x10DD5A 0x1DC  transform_ptr_in_d_use
-    0x10DF52 0x7E2  optmove
-    0x10E8EA 0x332  merge_add_sub
-    0x10EF30 0x3BA  try_pre_dec
-    0x10F30C 0x3B8  try_post_incr
-    0x10F6C4 0x4C0  opta
-    0x10FB84 0x3D4  floatop
-    0x110CB4 0x242  try_loading_from_fp_reg (in peepholer_ops)
-    0x110F14 0x21C  try_loading_monadic_src_here (in peepholer_ops)
-    0x111130 0x322  try_long_extend_opts (in peepholer_ops)
-    0x111452 0x214  try_reducing_fabs_op (in peepholer_ops)
-    0x111666 0x1F0  try_removing_previous_clr (in peepholer_ops)
-    0x111856 0xFA   try_widening_clr (in peepholer_ops)
-    0x111950 0x638  peepholer_ops (in peepholer; an extern heading at
-                    module level stands for it)
-  peepholer_ops is the only caller of the others (opttest and optmove
-  call some of them too), so nothing translated calls them.
+  peepholer_ops (nested in peepholer) drives the optimizations by the
+  cells' kinds: opttest (tests and compares removed where deltest
+  finds the codes already set on every path), optmove, opta (merged
+  adds and subtracts, predecrement and postincrement, redundant leas
+  and moveas), final_$try_reducing_literal and
+  final_$collapsed_index_calc (shorter immediates, folded index
+  computations), floatop (68881 constants, singles, integers) and its
+  own try_ routines.
 
   Image addresses (DOMAIN C 6.9; cc.m68k only: cc.a88k has no final):
     cc.m68k   cc.a88k
@@ -166,11 +148,14 @@
     section, +32 scancc's chain, +36, +40 cc_change's set of codes, +42,
     +44 the change flag, then initialized tables (+0x30 the registers'
     bits, +0x88 the conditions' codes, +0xA8 and +0x250 brimply's and
-    f_brimply's answers, +0x230 and +0x298 the complements); +0..+15,
-    +36, +42, +0x60..+0x87 and the tables beyond +0x2A4 are used only by
-    routines not yet translated.  Absolute: cargs's options
-    (+0x280..+0x288), opinfo's tables (0x2CF4D8, 0x2CF5EC, 0x2CFDD8,
-    0x2D01CE), cg_null_ads (0x356600), il_180.
+    f_brimply's answers, +0x230 and +0x298 the complements, +0x3A0 and
+    +0x3B0..+0x6AC try_reducing_fabs_op's op and patterns, +0x60..+0x87
+    final_$try_reducing_literal's, +0x2A8, +0x2B8 and +0x2E8 (the
+    68881's ROM constants) floatop's; +0, +36 and +42 deltest's
+    test); +12, +0x84, +0x2C8 and +0x2D8 have no user found.
+    Absolute: cargs's options (+0x280..+0x288), opinfo's tables
+    (0x2CF4D8, 0x2CF5EC, 0x2CFDD8, 0x2D01CE), cg_null_ads (0x356600),
+    il_180.
 
   The code cells are read through codegen.ins.pas's codegen_$cell_t:
   the kind (+8), the operands' descriptors (ads1 +24, ads2 +36: f1 the
@@ -235,6 +220,47 @@ type
     (`cmpm.l', `dbne' 2). }
   fn_ads_words_t = array [1..3] of integer32;
 
+  { The condition codes (0..5: opinfo_cc's columns) as a word. }
+  fn_ccs_t = set of 0..15;
+
+  { A real constant as floatop reads it: the double, its bits as a set
+    (element 0 the lowest), its longwords. }
+  fn_dbl_t = record
+    case integer of
+      1: (d: double);
+      2: (s: set of 0..63);
+      3: (l: array [1..2] of integer32);
+  end;
+
+  { One of the 68881's ROM constants (10 bytes, indexed by `10 * i'):
+    its offset in the ROM (fmovecr's operand) and the double's
+    longwords. }
+  fn_cr_t = record
+    tag: integer;                       { +0 }
+    hi: integer32;                      { +2 }
+    lo: integer32;                      { +6 }
+  end;
+
+  { An immediate's value as final_$try_reducing_literal reads its
+    parts: the longword, its words, its bytes. }
+  fn_lit_t = record
+    case integer of
+      1: (l: integer32);
+      2: (w: array [1..2] of integer);
+      3: (c: array [1..4] of char);
+  end;
+
+  { A cell of a pattern try_reducing_fabs_op matches (76 bytes, indexed
+    by `76 * i'): the kinds it may have (`btst' from 63), whether its op
+    is checked and the ops it may have (from 511), whether its source
+    must be as long as the test's. }
+  fn_pat_t = record
+    kinds: set of 0..63;                { +0 }
+    check_op: boolean;                  { +8 }
+    ops: set of 0..511;                 { +10 }
+    check_size: boolean;                { +74 }
+  end;
+
 var
   { opinfo.pas's data (the unit without code; cc.m68k 0x2D01CE,
     absolute): each instruction's two operands' sizes ('B', 'W', 'L',
@@ -257,24 +283,44 @@ var
   opinfo_access: extern array [0..367] of packed array [1..2] of char;
 
   { The module's data (A5 0x3566F8). }
-  fn_0: array [0..3] of integer32;      { +0 }
-  fn_ads: codegen_$ads_t;               { +16 }
+  fn_ads0: codegen_$ads_t;              { +0: the operand a test's
+                                          compare is made against
+                                          (deltest) }
+  fn_12: integer32;                     { +12: no user found }
+  fn_ads: codegen_$ads_t;               { +16: the operand a test
+                                          tests (deltest) }
   fn_sect: fn_sect_ptr_t;               { +28: the section peepholer
                                           works on }
   fn_32: codegen_$cell_ptr_t;           { +32 }
-  fn_36: codegen_$cell_ptr_t;           { +36 }
-  fn_ccset: set of 0..15;               { +40: the condition codes
+  fn_test: codegen_$cell_ptr_t;         { +36: the test deltest
+                                          would remove }
+  fn_ccset: fn_ccs_t;                   { +40: the condition codes
                                           cc_change asks about (0..5) }
-  fn_42: char;                          { +42 }
+  fn_test_size: char;                   { +42: the test's size (as
+                                          opinfo_size gives it) }
   fn_changed: boolean;                  { +44: a cell was detached }
   fn_regmask: array [0..23] of 0..65535 := [
     1, 2, 4, 8, 16, 32, 64, 128,
     256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
     1, 2, 4, 8, 16, 32, 64, 128];       { +0x30: each register's bit in
                                           a movem's mask }
-  fn_60: array [0..9] of integer32 := [
-    255, 65535, 255, 65535, 1, 0, 3, 2, 1];  { +0x60: TODO(pascal) its
-                                          users not translated yet }
+  fn_mask: array [1..2] of array [0..1] of integer32 := [
+    [255, 65535], [255, 65535]];        { +0x60: a constant source's
+                                          mask when a move of size
+                                          [1..2] (word, long) is made one
+                                          of size [0..1] (byte, word):
+                                          final_$try_reducing_literal,
+                                          `(0x58,A1,D0.w)' with A1 A5
+                                          plus 8 times the old size }
+  fn_adjust: array [1..2] of array [0..1] of integer32 := [
+    [1, 0], [3, 2]];                    { +0x70: the displacement added
+                                          to a memory source then
+                                          (`(0x68,A1,D4.w)') }
+  fn_size_f6: array [0..1] of integer := [
+    0, 1];                              { +0x80: the immediate's size
+                                          (f6) for a move of that size
+                                          (`(129,A1)', the low byte) }
+  fn_84: integer32;                     { +0x84: no user found }
   fn_cond_cc: array [0..15] of integer := [
     0, 0, 10, 10, 8, 8, 2, 2, 4, 4, 1, 1, 5, 5, 7, 7];  { +0x88: the
                                           codes each condition (T, F,
@@ -314,6 +360,70 @@ var
                                           (ops less 436) }
   fn_fbr_complement: array [436..441] of integer := [
     437, 436, 439, 438, 441, 440];      { +0x298 }
+
+  { +0x2A8 and +0x2B8: the load (225..229) floatop makes of an FP
+    operation on memory (ops 271..275, 247..251) when it exchanges it
+    with the move before it (`(138,A1)' and `(202,A1)', A1 A5 plus twice
+    the op).  The words +0x2C8 (1, 2, 4, .., 128) and +0x2D8 (358..363)
+    after them have no user found. }
+  fn_fop_a: array [271..275] of integer := [225, 226, 227, 228, 229];
+  fn_fop_b: array [247..251] of integer := [225, 226, 227, 228, 229];
+
+  { +0x2E8: the 68881's ROM constants floatop looks a move's double up
+    in (`(736,A1)', `(740,A1)', the offset at `(734,A1)', A1 A5 plus 10
+    times the index from 1): pi, log10(2), e, log2(e), log10(e), 0.0,
+    ln(2), ln(10), 1.0, 10.0, 100.0, 1e4 (written 0.0 in the image),
+    1e8, 1e16, 1e32, 1e64, 1e128, 1e256. }
+  fn_fmovecr: array [1..18] of fn_cr_t := [
+    [tag := 16#00, hi := 16#400921FB, lo := 16#54442D18],
+    [tag := 16#0B, hi := 16#3FD34413, lo := 16#509F79FF],
+    [tag := 16#0C, hi := 16#4005BF0A, lo := 16#8B145769],
+    [tag := 16#0D, hi := 16#3FF71547, lo := 16#652B82FE],
+    [tag := 16#0E, hi := 16#3FDBCB7B, lo := 16#1526E50E],
+    [tag := 16#0F, hi := 0, lo := 0],
+    [tag := 16#30, hi := 16#3FE62E42, lo := 16#FEFA39EF],
+    [tag := 16#31, hi := 16#40026BB1, lo := 16#BBB55516],
+    [tag := 16#32, hi := 16#3FF00000, lo := 0],
+    [tag := 16#33, hi := 16#40240000, lo := 0],
+    [tag := 16#34, hi := 16#40590000, lo := 0],
+    [tag := 16#35, hi := 0, lo := 0],
+    [tag := 16#36, hi := 16#4197D784, lo := 0],
+    [tag := 16#37, hi := 16#4341C379, lo := 16#37E08000],
+    [tag := 16#38, hi := 16#4693B8B5, lo := 16#B5056E17],
+    [tag := 16#39, hi := 16#4D384F03, lo := 16#E93FF9F5],
+    [tag := 16#3A, hi := 16#5A827748, lo := 16#F9301D32],
+    [tag := 16#3B, hi := 16#75154FDD, lo := 16#7F73BF3C]];
+
+  { +0x3A0: the op a matched fabs pattern's operation (310..315) takes
+    on the test's cell (try_reducing_fabs_op: `move.w (308,A1)' with A1
+    A5 plus twice the op). }
+  fn_fabs_op: array [310..315] of integer := [
+    316, 317, 318, 319, 320, 321];
+
+  { +0x3B0 and +0x530: the five cells after an ftst that
+    try_reducing_fabs_op reduces: an fbcc (439 or 438), a move to an FP
+    register (kinds 40, 41, ops 224..230) or the operation (310..315),
+    a bra (kind 17, 120..122), a label, then the other of the two;
+    `lea (0,A5,D5.l)' with D5 76 times the index, `(868,A0)' and
+    `(1252,A0)'. }
+  fn_fabs_b: array [1..5] of fn_pat_t := [
+    [kinds := [39], check_op := true, ops := [439], check_size := false],
+    [kinds := [40..41], check_op := true, ops := [224..230],
+     check_size := true],
+    [kinds := [17], check_op := true, ops := [120..122],
+     check_size := false],
+    [kinds := [0], check_op := false, ops := [208], check_size := false],
+    [kinds := [40..41], check_op := true, ops := [310..315],
+     check_size := true]];
+  fn_fabs_a: array [1..5] of fn_pat_t := [
+    [kinds := [39], check_op := true, ops := [438], check_size := false],
+    [kinds := [40..41], check_op := true, ops := [310..315],
+     check_size := true],
+    [kinds := [17], check_op := true, ops := [120..122],
+     check_size := false],
+    [kinds := [0], check_op := false, ops := [208], check_size := false],
+    [kinds := [40..41], check_op := true, ops := [224..230],
+     check_size := true]];
 
   { celpkg.pas's empty descriptor (its +24, which the image copies from
     0x2CE68C): celpkg does not export it, so a copy here (as
@@ -1272,6 +1382,381 @@ begin
   final_$contiguous_distinct_addresses := r;
 end;
 
+{ final_$collapsed_index_calc - under -CPU M020 (`btst #5' of +0x285),
+  an index register computed just before cell c (by address) and used
+  in the cell after it (n) folded into n's addressing, the cells that
+  computed it removed and c set to n:
+  - c an addq or addi (ops 24, 21) of a constant to data register x,
+    after a move.l (kind 1, op 2) to x from another data register y:
+    where n uses x as an index, the index made y and the displacement
+    given the constant times the scale;
+  - c an add.l (op 16) of data register y to x after a move.l of a
+    constant to x: likewise;
+  - c an adda.l (op 18) of data register y to address register a
+    after a movea (kind 4, op 5) to a from address register b: where n
+    uses a as (a), the operand made (b,y.l) (mode 4, f5 bit 1 set);
+  - c an addi of a 16-bit constant to x after a move.l from y to x,
+    after a movea from b to a, n an adda.l (kind 4, op 18) of x to a:
+    n made an adda.l of y, a lea (kind 4, op 12) of the constant from
+    b to a put after c, the three removed.
+  In the first three x must die at n (reg_is_killed, or
+  reg_is_dead_henceforth after it) and the new displacement (the old
+  one plus the constant, unscaled) fit in 16 bits.  Whether it was
+  done.
+
+  0x109BB6, 0x8DA bytes, no A5 load: c by address in D4, the cell
+  before it in D5, the one before that at -16, n in A3; the registers'
+  classes `btst' in #0xFF and #0xFF00; the scale 1 shifted by the
+  operand's f4 multiplied with M$MIS$LLL; the three first cases share
+  their end (n's length, the two removed, c := n); the fourth gives the
+  lea c's length (`ilength' of c). }
+
+function final_$collapsed_index_calc(
+    in out c: codegen_$cell_ptr_t): boolean; internal;
+label
+  9;
+var
+  r: boolean;
+  m: codegen_$cell_ptr_t;
+  mm: codegen_$cell_ptr_t;
+  n: codegen_$cell_ptr_t;
+  k: codegen_$cell_ptr_t;
+begin
+  r := false;
+  if not (3 in cargs_$options.cpu) then
+    goto 9;
+  m := prvlcc(c);
+  mm := prvlcc(m);
+  n := nxtlcc(c);
+  if ((c^.op = 24) or (c^.op = 21)) and (c^.ads2.f1 = 1) and
+     (c^.ads2.f2 in [0..7]) and (m^.kind = move_instyp) and (m^.op = 2) and
+     sameaddr(m^.ads2, c^.ads2) and (m^.ads1.f1 = 1) and
+     (m^.ads1.f2 in [0..7]) and (m^.ads1.f2 <> c^.ads2.f2) and
+     (final_$reg_is_killed(n, c^.ads2.f2) or
+      final_$reg_is_dead_henceforth(n^.next, c^.ads2.f2)) and
+     (final_$reg_is_index(n^.ads1, c^.ads2.f2) or
+      final_$reg_is_index(n^.ads2, c^.ads2.f2)) then begin
+    if final_$reg_is_index(n^.ads1, c^.ads2.f2) then begin
+      if not final_$in_15bit_range(n^.ads1.y +
+                                   il_$node_ptr_t(c^.ads1.x)^.int_value) then
+        goto 9;
+      n^.ads1.f3 := m^.ads1.f2;
+      n^.ads1.y := n^.ads1.y + lshft(1, n^.ads1.f4) *
+                   il_$node_ptr_t(c^.ads1.x)^.int_value;
+    end;
+    if final_$reg_is_index(n^.ads2, c^.ads2.f2) then begin
+      if not final_$in_15bit_range(n^.ads2.y +
+                                   il_$node_ptr_t(c^.ads1.x)^.int_value) then
+        goto 9;
+      n^.ads2.f3 := m^.ads1.f2;
+      n^.ads2.y := n^.ads2.y + lshft(1, n^.ads2.f4) *
+                   il_$node_ptr_t(c^.ads1.x)^.int_value;
+    end;
+    n^.size := ilength(n);
+    detach(m);
+    detach(c);
+    c := n;
+    r := true;
+  end
+  else if (c^.op = 16) and (c^.ads2.f1 = 1) and (c^.ads2.f2 in [0..7]) and
+          (m^.kind = move_instyp) and (m^.op = 2) and
+          sameaddr(m^.ads2, c^.ads2) and (m^.ads1.f1 = 3) and
+          (c^.ads1.f1 = 1) and (c^.ads1.f2 in [0..7]) and
+          (m^.ads2.f2 <> c^.ads1.f2) and
+          (final_$reg_is_killed(n, c^.ads2.f2) or
+           final_$reg_is_dead_henceforth(n^.next, c^.ads2.f2)) and
+          (final_$reg_is_index(n^.ads1, c^.ads2.f2) or
+           final_$reg_is_index(n^.ads2, c^.ads2.f2)) then begin
+    if final_$reg_is_index(n^.ads1, c^.ads2.f2) then begin
+      if not final_$in_15bit_range(n^.ads1.y +
+                                   il_$node_ptr_t(m^.ads1.x)^.int_value) then
+        goto 9;
+      n^.ads1.f3 := c^.ads1.f2;
+      n^.ads1.y := n^.ads1.y + lshft(1, n^.ads1.f4) *
+                   il_$node_ptr_t(m^.ads1.x)^.int_value;
+    end;
+    if final_$reg_is_index(n^.ads2, c^.ads2.f2) then begin
+      if not final_$in_15bit_range(n^.ads2.y +
+                                   il_$node_ptr_t(m^.ads1.x)^.int_value) then
+        goto 9;
+      n^.ads2.f3 := c^.ads1.f2;
+      n^.ads2.y := n^.ads2.y + lshft(1, n^.ads2.f4) *
+                   il_$node_ptr_t(m^.ads1.x)^.int_value;
+    end;
+    n^.size := ilength(n);
+    detach(m);
+    detach(c);
+    c := n;
+    r := true;
+  end
+  else if (c^.op = 18) and (c^.ads2.f1 = 1) and (c^.ads2.f2 in [8..15]) and
+          (m^.kind = a_instyp) and (m^.op = 5) and
+          sameaddr(m^.ads2, c^.ads2) and (m^.ads1.f1 = 1) and
+          (m^.ads1.f2 in [8..15]) and (c^.ads1.f1 = 1) and
+          (c^.ads1.f2 in [0..7]) and
+          (final_$reg_is_killed(n, c^.ads2.f2) or
+           final_$reg_is_dead_henceforth(n^.next, c^.ads2.f2)) and
+          (final_$reg_is_simple_deferred(n^.ads1, c^.ads2.f2) or
+           final_$reg_is_simple_deferred(n^.ads2, c^.ads2.f2)) then begin
+    if final_$reg_is_simple_deferred(n^.ads1, c^.ads2.f2) then begin
+      n^.ads1.f1 := 4;
+      n^.ads1.f2 := m^.ads1.f2;
+      n^.ads1.f3 := c^.ads1.f2;
+      n^.ads1.f5 := n^.ads1.f5 ! 2;
+    end;
+    if final_$reg_is_simple_deferred(n^.ads2, c^.ads2.f2) then begin
+      n^.ads2.f1 := 4;
+      n^.ads2.f2 := m^.ads1.f2;
+      n^.ads2.f3 := c^.ads1.f2;
+      n^.ads2.f5 := n^.ads2.f5 ! 2;
+    end;
+    n^.size := ilength(n);
+    detach(m);
+    detach(c);
+    c := n;
+    r := true;
+  end
+  else if (c^.op = 21) and (c^.ads2.f1 = 1) and (c^.ads2.f2 in [0..7]) and
+          final_$in_15bit_range(il_$node_ptr_t(c^.ads1.x)^.int_value) and
+          (n^.kind = a_instyp) and (n^.op = 18) and
+          sameaddr(n^.ads1, c^.ads2) and (n^.ads2.f1 = 1) and
+          (n^.ads2.f2 in [8..15]) and (m^.kind = a_instyp) and (m^.op = 5) and
+          (m^.ads1.f1 = 1) and (m^.ads1.f2 in [8..15]) and
+          sameaddr(m^.ads2, n^.ads2) and (mm^.kind = move_instyp) and
+          (mm^.op = 2) and (mm^.ads1.f1 = 1) and (mm^.ads1.f2 in [0..7]) and
+          sameaddr(mm^.ads2, c^.ads2) and
+          final_$reg_is_dead_henceforth(n^.next, c^.ads2.f2) then begin
+    n^.ads1 := mm^.ads1;
+    k := getcodecell(a_instyp);
+    k^.op := 12;
+    k^.ads1.f1 := 2;
+    k^.ads1.f2 := m^.ads1.f2;
+    k^.ads1.y := il_$node_ptr_t(c^.ads1.x)^.int_value;
+    k^.ads2 := n^.ads2;
+    k^.size := ilength(c);
+    after(c, k);
+    detach(m);
+    detach(mm);
+    detach(c);
+    c := n;
+    r := true;
+  end;
+9:
+  final_$collapsed_index_calc := r;
+end;
+
+{ final_$try_reducing_literal - an instruction c (by address) with an
+  immediate source made cheaper, unless final_$collapsed_index_calc
+  folded it already; only for kind 8:
+  - a compare (ops 107..109) of 1 or -1 before a conditional branch made
+    a subtract (kind 3, op + 6), the branch's condition shifted (as
+    peepholer_init does);
+  - an operation on memory (not ops 107..109 or 45..47, not a register
+    destination, no untouchable memory, no conditional branch after it,
+    even past a line) whose long immediate has a zero low word made a
+    word (op - 1) or, when the second byte is 0 (255 for op 41), a byte
+    operation (op - 2) on the high part, two bytes shorter; a word
+    immediate with a zero low byte (255 for op 40) a byte one;
+  - an and (op 41 or 40) of 255 or 65535 with a data register: after
+    lsl.l #8 (kind 11, op 80) of a move.l from a data register, made a
+    clr.w (kind 3, op 11) before the move, which becomes op 1, the shift
+    op 85 and c that shift; an and.w of 255 then and.l of 65535 (the
+    next) made an and.l of 255; then an ext (ops 7, 6) of the register
+    of c's size before it removed, and a move into the register (ops
+    0, 2, 1) before it made a clr (kind 3, op 11 for and.l, 10 for
+    and.w) and c a move of a byte or word (op 0 for 255, 1 for 65535) of
+    its source, put after it: a memory source's displacement advanced
+    (fn_adjust) or a constant masked (fn_mask, fn_size_f6) when the
+    move is narrower; not for 255 from an address register.
+
+  0x10A492, 0x7C4 bytes, no A5 load: c by address in A3; the constant
+  at -8 (its bytes and words read alone: `tst.w (-6,A6)', `move.b
+  (-7,A6)', `move.w (-8,A6)'); a `case' of the branch's op less 142
+  through a table of 10; the searches' flags in D2 and D3; the
+  instructions' kinds tested on prvcc's set at 0x108BE8; getcodecell's
+  3 a word after the routine; the empty descriptor celpkg's (0x2CE68C,
+  fn_null_ads).
+
+  Not known from the original: how it read the constant's parts (a
+  variant record here). }
+
+procedure final_$try_reducing_literal(
+    in out c: codegen_$cell_ptr_t); internal;
+label
+  9;
+var
+  n: codegen_$cell_ptr_t;
+  nx: codegen_$cell_ptr_t;
+  p: codegen_$cell_ptr_t;
+  p1: codegen_$cell_ptr_t;
+  p2: codegen_$cell_ptr_t;
+  k: codegen_$cell_ptr_t;
+  ok: boolean;
+  found: boolean;
+  done: boolean;
+  v: fn_lit_t;
+  old: integer;
+begin
+  if final_$collapsed_index_calc(c) then
+    goto 9;
+  if c^.kind <> i_instyp then
+    goto 9;
+  n := nxtlcc(c);
+  if (c^.op in [107..109]) and (n^.kind = cbr_instyp) then begin
+    ok := true;
+    if il_$node_ptr_t(c^.ads1.x)^.int_value = 1 then
+      case n^.op of
+        142: n^.op := 144;
+        143: n^.op := 145;
+        150: n^.op := 152;
+        151: n^.op := 153;
+        otherwise
+          ok := false;
+      end
+    else if il_$node_ptr_t(c^.ads1.x)^.int_value = -1 then
+      case n^.op of
+        152: n^.op := 148;
+        153: n^.op := 149;
+        otherwise
+          ok := false;
+      end
+    else
+      ok := false;
+    if ok then begin
+      c^.op := c^.op + 6;
+      c^.kind := dest1_sz_instyp;
+    end;
+  end;
+  v.l := il_$node_ptr_t(c^.ads1.x)^.int_value;
+  if not (c^.op in [107..109]) and not (c^.op in [45..47]) and
+     (c^.ads2.f1 <> 1) and not has_untouchable_mem_attrs(c^.ads2) then begin
+    nx := c^.next;
+    if nx^.kind = cbr_instyp then
+      goto 9;
+    if (nx^.kind = line_no_instyp) and (nx^.next <> nil) then
+      if nx^.next^.kind = cbr_instyp then
+        goto 9;
+    if (c^.ads1.f6 = 2) and (v.w[2] = 0) and (c^.op <> 41) then begin
+      if ((ord(v.c[2]) = 0) and (c^.op <> 41)) or
+         ((ord(v.c[2]) = 255) and (c^.op = 41)) then begin
+        c^.ads1.x := integer32(smcontk(81, ord(v.c[1])));
+        c^.op := c^.op - 2;
+        c^.ads1.f6 := 0;
+      end
+      else begin
+        c^.ads1.x := integer32(smcontk(81, v.w[1]));
+        c^.op := c^.op - 1;
+        c^.ads1.f6 := 1;
+      end;
+      c^.size := c^.size - 2;
+    end
+    else if c^.ads1.f6 = 1 then
+      if ((ord(v.c[4]) = 0) and (c^.op <> 40)) or
+         ((ord(v.c[4]) = 255) and (c^.op = 40)) then begin
+        c^.ads1.x := integer32(smcontk(81, ord(v.c[3])));
+        c^.op := c^.op - 1;
+        c^.ads1.f6 := 0;
+        c^.size := ilength(c);
+      end;
+    goto 9;
+  end;
+  if (c^.ads2.f1 = 1) and ((c^.op = 41) or (c^.op = 40)) and
+     ((v.l = 255) or (v.l = 65535)) then begin
+    p1 := prvlcc(c);
+    p2 := prvlcc(p1);
+    if (c^.op = 41) and (v.l = 255) and (p1^.kind = shft_cnt_instyp) and
+       (p1^.op = 80) and final_$is_int(p1^.ads1, 8) and
+       sameaddr(p1^.ads2, c^.ads2) and (p2^.kind = move_instyp) and
+       (p2^.op = 2) and (p2^.ads1.f1 = 1) and sameaddr(p2^.ads2, c^.ads2) then
+      if not testcc(nxtlcc(c), 15) then begin
+        k := getcodecell(dest1_sz_instyp);
+        k^.op := 11;
+        k^.ads1 := fn_null_ads;
+        k^.ads2 := c^.ads2;
+        k^.size := ilength(k);
+        after(p2^.prev, k);
+        p2^.op := 1;
+        p2^.size := ilength(p2);
+        p1^.op := 85;
+        p1^.size := ilength(p1);
+        detach(c);
+        c := p1;
+        goto 9;
+      end;
+    if (c^.op = 40) and (v.l = 255) and (n^.kind = i_instyp) and
+       (n^.op = 41) and (il_$node_ptr_t(n^.ads1.x)^.int_value = 65535) and
+       sameaddr(c^.ads2, n^.ads2) then begin
+      c^.op := 41;
+      c^.ads1.f6 := 2;
+      c^.size := ilength(c);
+      detach(n);
+    end;
+    found := false;
+    p := c;
+    done := found;
+    repeat
+      p := prvlcc(p);
+      if not (p^.kind in [0, 24, 32..33]) and ((p^.op = 7) or (p^.op = 6)) and
+         sameaddr(p^.ads2, c^.ads2) and not involves(p^.ads1, c^.ads2.f2) and
+         (final_$sizeof(p, 2) = final_$sizeof(c, 2)) then
+        found := true
+      else
+        done := (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+                sameaddr(p^.ads1, c^.ads2) or involves(p^.ads1, c^.ads2.f2) or
+                final_$reg_is_killed(p, c^.ads2.f2);
+      done := done or (p = fn_sect^.head);
+    until found or done;
+    if found then
+      detach(p);
+    found := false;
+    p := c;
+    done := found;
+    repeat
+      p := prvlcc(p);
+      if not (p^.kind in [0, 24, 32..33]) and
+         ((p^.op = 0) or (p^.op = 2) or (p^.op = 1)) and
+         sameaddr(p^.ads2, c^.ads2) and not involves(p^.ads1, c^.ads2.f2) then
+        found := true
+      else
+        done := (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+                sameaddr(p^.ads1, c^.ads2) or involves(p^.ads1, c^.ads2.f2) or
+                final_$reg_is_killed(p, c^.ads2.f2);
+      done := done or (p = fn_sect^.head);
+    until found or done;
+    if found then begin
+      if v.l = 255 then
+        if assert_is_direct_use_of_address_reg(p^.ads1) then
+          goto 9;
+      c^.kind := p^.kind;
+      p^.kind := dest1_sz_instyp;
+      old := p^.op;
+      if c^.op = 41 then
+        p^.op := 11
+      else
+        p^.op := 10;
+      if v.l = 255 then
+        c^.op := 0
+      else
+        c^.op := 1;
+      c^.ads1 := p^.ads1;
+      if old > c^.op then
+        if c^.ads1.f1 in [2, 4..6, 12, 15] then
+          c^.ads1.y := c^.ads1.y + fn_adjust[old][c^.op]
+        else if c^.ads1.f1 = 3 then begin
+          c^.ads1.x := integer32(smcontk(81,
+              il_$node_ptr_t(c^.ads1.x)^.int_value & fn_mask[old][c^.op]));
+          c^.ads1.f6 := fn_size_f6[c^.op];
+        end;
+      p^.ads1.f1 := 0;
+      p^.size := ilength(p);
+      c^.size := ilength(c);
+      delink(c);
+      after(p, c);
+    end;
+  end;
+9:
+end;
+
 { fpx_instruction - c is an FPX instruction: kinds 41 and 44, and kinds
   40 (its source) and 42, 50 (its destination) whose operand is not an
   extended real ('X' in opinfo's sizes).
@@ -1315,10 +1800,12 @@ end;
   asked about first.
 
   0x10ACDA, 0x14C bytes, no A5 load: the set's elements by `btst' of
-  +41. }
+  +41.  Its caller (deltest) passes fn_ccset too, a word it does
+  not read (a second parameter: `move.w (40,A5),-(SP)'). }
 
 function cc_change(
-    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+    c: codegen_$cell_ptr_t;
+    codes: fn_ccs_t): boolean; options(val_param); internal;
 label
   1;
 var
@@ -2635,6 +3122,257 @@ begin
   bit_field_inst_which_obviates_test := r;
 end;
 
+{ deltest - test fn_test (of fn_ads, setting fn_ccset's codes, of size
+  fn_test_size; a compare's other operand fn_ads0) is redundant on
+  every path that reaches it, looking back from c: each cell marked
+  visited (scancc's chain, fn_32); the answer false when a path meets
+  an instruction whose class differs from the test's in a code of
+  fn_ccset (3, or other than 1 and the test's), a call, branch or other
+  kinds 13, 17, 23, 27, 29..31, a compare of another kind (ops 107..109,
+  119, 123; 102..104 unless the test is one too), an lea or pea (kind
+  4, ops 105, 106) or an address instruction whose register the
+  operand uses (or fn_ads0 for a test of kind 6), a change of the
+  operand or its registers (cc_change, opinfo_access's 'W', reg_mod),
+  an operand of mode 10, a cell setting the codes from another
+  operand (cc_mod 0: either operand fn_ads; 2) or of another size (the
+  operand's sizes from opinfo_size, unless
+  bit_field_inst_which_obviates_test; bfextu when
+  assert_bfextu_requires_test); true when it meets an instruction that
+  sets the codes from fn_ads itself (a compare against fn_ads0 for
+  compares; moves of up to a long before an lea, pea or tst (105, 106,
+  113..115), FP moves 224..235 before an FP test 298..303), and on
+  each path into a label (backov) unless one is false.  w is a
+  register the caller asks about: cc_mod 1 with w 48 or 3 with w 15
+  passes on (not clearing b).  b (cleared by any cell that is not a
+  label or passed on) and passed (an instruction other than an
+  alignment, label or line met) decide whether backov moves a branch
+  into the label to after the test.
+
+  0x10C5CE, 0x60C bytes, no A5 load: c, b (a byte at 12) and w (a word
+  at 14); b kept at -18 and passed at -14 for backov; the answer in D2,
+  the paths' in D3; opinfo_cc_class and opinfo_cc's addresses in D4 and
+  A3; the six codes tested in turn (`btst #0' .. `btst #5' of +41, the
+  loop over them unrolled); `case's of the kind (a table of 32), the
+  op less 102 (22) and cc_mod's answer (5); the operand's two sizes
+  tried from the second (`dbf' D5, the index D4 2 then 1).
+
+  Not known from the original: the names of the locals; whether the six
+  codes' tests were a loop. }
+
+function deltest(
+    c: codegen_$cell_ptr_t;
+    b: boolean;
+    w: integer): boolean; options(val_param); internal;
+label
+  9;
+var
+  r: boolean;
+  ok: boolean;
+  passed: boolean;
+  p: codegen_$cell_ptr_t;
+  cls: integer;
+  tcls: integer;
+  e: integer;
+  i: integer;
+  ch: char;
+  k: integer;
+  keep: boolean;
+
+  { backov - the paths into label lab (each branch referring to it,
+    from the first reference after its refs): deltest of the cell
+    before each branch (false, w); when it holds and b is still set and
+    no instruction has been passed, the branch's reference is moved to
+    the label after the test (moverefcell).  False for untouchable
+    memory, a branch just after the test, or any path that fails.
+
+    0x10C51C, 0xB2 bytes, no A5 load: deltest's frame by its dynamic
+    link (A4: w at 14, b at -18, passed at -14); the answer in D2; the
+    reference in A2, the next in A3, the branch at -24. }
+
+  function backov(
+      lab: codegen_$cell_ptr_t): boolean; options(val_param);
+  label
+    8;
+  var
+    r: boolean;
+    ref: codegen_$cell_ptr_t;
+    nx: codegen_$cell_ptr_t;
+    t: codegen_$cell_ptr_t;
+  begin
+    if has_untouchable_mem_attrs(lab^.ads2) then
+      r := false
+    else begin
+      r := true;
+      ref := lab^.refs;
+      if ref <> nil then begin
+        ref := ref^.next;
+        repeat
+          t := codegen_$cell_ptr_t(ref^.target);
+          nx := ref^.next;
+          if prvcc(t) = fn_test then begin
+            r := false;
+            goto 8;
+          end;
+          if deltest(prvlcc(t), false, w) then begin
+            if b and not passed then
+              moverefcell(ref, nxtlcc(fn_test));
+          end
+          else
+            r := false;
+          if lab^.refs = nil then
+            goto 8;
+          if ref = lab^.refs then
+            goto 8;
+          if ref = nx then
+            goto 8;
+          ref := nx;
+        until false;
+      end;
+    end;
+  8:
+    backov := r;
+  end;
+
+begin
+  r := false;
+  passed := false;
+  p := c;
+  if p = fn_test then
+    goto 9;
+  if p^.visit <> nil then
+    goto 9;
+  p^.visit := fn_32;
+  fn_32 := p;
+  ok := true;
+  repeat
+    if p = fn_test then
+      goto 9;
+    keep := false;
+    if p^.kind <> def_lbl_instyp then begin
+      cls := opinfo_cc_class[p^.op];
+      tcls := opinfo_cc_class[fn_test^.op];
+      if (cls <> tcls) and (cls <> 0) then
+        for i := 0 to 5 do
+          if i in fn_ccset then begin
+            e := opinfo_cc[cls][i];
+            if e = 3 then
+              goto 9;
+            if e <> opinfo_cc[tcls][i] then
+              if e <> 1 then
+                goto 9;
+          end;
+    end;
+    case p^.kind of
+      def_lbl_instyp:
+        ok := ok and backov(p);
+      a_instyp: begin
+        if (p^.op = 105) or (p^.op = 106) then
+          goto 9;
+        if involves(fn_ads, p^.ads2.f2) then
+          goto 9;
+        if involves(fn_ads0, p^.ads2.f2) then
+          if fn_test^.kind = src2_sz_instyp then
+            goto 9;
+      end;
+      cmpm_instyp, br_instyp, dbcc_instyp, fop_instyp, case_instyp,
+      casejmp_instyp, bsr_instyp:
+        goto 9;
+      otherwise begin
+        if p^.kind in [6, 8, 16] then
+          case p^.op of
+            102, 103, 104:
+              if not (fn_test^.op in [102..104]) then
+                goto 9;
+            107, 108, 109, 119, 123:
+              goto 9;
+            otherwise
+              ;
+          end;
+        if not cc_change(p, fn_ccset) then begin
+          if opinfo_access[p^.op][2] = 'W' then
+            if sameaddr(p^.ads2, fn_ads) then
+              goto 9;
+          if fn_ads.f1 = 1 then
+            if reg_mod(p, fn_ads.f2) then
+              goto 9;
+        end;
+        if fn_ads.f1 in [2, 5, 8, 9] then
+          if reg_mod(p, fn_ads.f2) then
+            goto 9;
+        if fn_ads.f1 in [4, 6] then
+          if reg_mod(p, fn_ads.f2) or reg_mod(p, fn_ads.f3) then
+            goto 9;
+        if p^.ads2.f1 = 10 then
+          goto 9;
+        if not ((p^.kind = align_instyp) or (p^.kind = def_lbl_instyp) or
+                (p^.kind = line_no_instyp)) then
+          passed := true;
+        k := cc_mod(p);
+        case k of
+          0: begin
+            if sameaddr(p^.ads1, fn_ads) then
+              goto 9;
+            if sameaddr(p^.ads2, fn_ads) then
+              goto 9;
+          end;
+          2:
+            goto 9;
+          1, 3, 4: begin
+            if ((k = 1) and (w = 48)) or ((k = 3) and (w = 15)) then
+              keep := true
+            else begin
+              if fn_test^.op in [102..104] then begin
+                if p^.op <> fn_test^.op then
+                  goto 9;
+                if not sameaddr(p^.ads2, fn_test^.ads2) then
+                  goto 9;
+                if not sameaddr(p^.ads1, fn_ads0) then
+                  goto 9;
+              end;
+              for i := 2 downto 1 do begin
+                ch := opinfo_size[p^.op][i];
+                if ch <> '-' then begin
+                  if ch <> fn_test_size then
+                    if not bit_field_inst_which_obviates_test(p, fn_test) then
+                      goto 9;
+                  if p^.op = 215 then
+                    if assert_bfextu_requires_test(fn_test) then
+                      goto 9;
+                  if i = 2 then begin
+                    if sameaddr(p^.ads2, fn_ads) then begin
+                      r := ok;
+                      goto 9;
+                    end;
+                    if not ((p^.op <= 2) and
+                            ((fn_test^.op in [105..106]) or
+                             (fn_test^.op in [113..115]))) then
+                      if not ((p^.op in [224..235]) and
+                              (fn_test^.op in [298..303])) then
+                        goto 9;
+                  end
+                  else begin
+                    if sameaddr(p^.ads1, fn_ads) then
+                      r := ok;
+                    goto 9;
+                  end;
+                end;
+              end;
+              goto 9;
+            end;
+          end;
+          otherwise
+            ;
+        end;
+      end;
+    end;
+    if not keep then
+      b := false;
+    p := prvlcc(p);
+  until p = fn_sect^.head;
+9:
+  deltest := r;
+end;
+
 { opt_btst - a btst c, a beq or bne (ops 145, 144) after it and the
   same btst again after that: the second removed when its op is the
   first's reflected (72 or 74 plus 77, less c's op), which c takes.  Not
@@ -2710,6 +3448,96 @@ begin
   final_$redundant_compare := r;
 end;
 
+{ final_$redundant_lea - lea c (op 12) of (An) or an indexed operand
+  (modes 2, 4) repeats an earlier lea into the same register of the
+  same address (the same base, and for mode 4 the same index and
+  scale), looking back past instructions that kill neither register up
+  to a label, a call or branch or the section's head; and from there to
+  c the destination register, wherever it is changed, only stepped by
+  an addq or subq of an integer constant (ops 24..20 add, 33..29
+  subtract) or by postincrement or predecrement (the operand's size),
+  so that the displacement it then holds is c's.
+
+  0x10CD7E, 0x316 bytes, no A5 load: the earlier lea in D5, then the
+  displacement in D5; the ops compared in turn; the flags in D2 (found,
+  then reached c), D4 and the answer in D3. }
+
+function final_$redundant_lea(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+var
+  found: boolean;
+  done: boolean;
+  r: boolean;
+  p: codegen_$cell_ptr_t;
+  q: codegen_$cell_ptr_t;
+  disp: integer32;
+begin
+  found := false;
+  done := found;
+  r := found;
+  p := c;
+  if (c^.op = 12) and (c^.ads1.f1 in [2, 4]) then begin
+    repeat
+      p := prvlcc(p);
+      if (p^.op = 12) and (p^.ads1.f2 = c^.ads1.f2) and
+         ((p^.ads1.f1 = 2) or
+          ((p^.ads1.f4 = c^.ads1.f4) and (p^.ads1.f3 = c^.ads1.f3) and
+           (p^.ads1.f1 = 4))) and
+         sameaddr(p^.ads2, c^.ads2) then begin
+        found := true;
+        q := p;
+      end
+      else begin
+        done := (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+                final_$reg_is_killed(p, c^.ads1.f2);
+        if c^.ads1.f1 = 4 then
+          done := done or final_$reg_is_killed(p, c^.ads1.f3);
+      end;
+      done := done or (p = fn_sect^.head);
+    until found or done;
+    if found then begin
+      done := false;
+      disp := q^.ads1.y;
+      repeat
+        p := nxtlcc(p);
+        found := p = c;
+        if not found then
+          if final_$reg_is_killed(p, c^.ads2.f2) then
+            if p^.ads2.f1 = 1 then
+              done := true
+            else begin
+              if (p^.ads1.f1 = 3) and
+                 (il_$node_ptr_t(p^.ads1.x)^.kind = 81) and
+                 ((p^.op = 24) or (p^.op = 23) or (p^.op = 22) or
+                  (p^.op = 21) or (p^.op = 20)) then
+                disp := disp + il_$node_ptr_t(p^.ads1.x)^.int_value
+              else if (p^.ads1.f1 = 3) and
+                      (il_$node_ptr_t(p^.ads1.x)^.kind = 81) and
+                      ((p^.op = 33) or (p^.op = 32) or (p^.op = 31) or
+                       (p^.op = 30) or (p^.op = 29)) then
+                disp := disp - il_$node_ptr_t(p^.ads1.x)^.int_value
+              else if has_xcrement_addressing(p^.ads1) or
+                      has_xcrement_addressing(p^.ads2) then begin
+                if (p^.ads1.f1 = 8) and (p^.ads1.f2 = c^.ads2.f2) then
+                  disp := disp + final_$sizeof(p, 1);
+                if (p^.ads2.f1 = 8) and (p^.ads2.f2 = c^.ads2.f2) then
+                  disp := disp + final_$sizeof(p, 2);
+                if (p^.ads1.f1 = 9) and (p^.ads1.f2 = c^.ads2.f2) then
+                  disp := disp - final_$sizeof(p, 1);
+                if (p^.ads2.f1 = 9) and (p^.ads2.f2 = c^.ads2.f2) then
+                  disp := disp - final_$sizeof(p, 2);
+              end
+              else
+                done := true;
+            end;
+      until found or done;
+      if found then
+        r := disp = c^.ads1.y;
+    end;
+  end;
+  final_$redundant_lea := r;
+end;
+
 { final_$redundant_movea - movea c (kind 4, op 5) of a label or node
   address (modes 12, 15: `btst' in #0x9000) is already done by an
   earlier identical movea, looking back past instructions that do not
@@ -2778,6 +3606,579 @@ begin
       detach(b);
   end;
   final_$unity_compare_and_branch := r;
+end;
+
+{ final_$cmp_branch_becomes_eor - compare c (of a data register or an
+  immediate with c's destination register) followed by bne (145) or beq
+  (144) to a label of its own (final_$is_sole_label_consumer), a load
+  of 0 (1 after beq) into that register, a bra (kind 17, ops 120..122),
+  the label, a load of 1 (0) of the same size into it and a label:
+  made an eor of c's operands (kind c's, op 45 for kind 8 else 42, plus
+  half c's destination size), an sne (kind 19, op 131) of the register
+  and an and of the immediate 1 (kind 8, op 39 plus half the loads'
+  size), the six cells but the labels removed.  Whether it was done.
+
+  0x10D28A, 0x372 bytes, no A5 load: the cells after c in D6, -28,
+  -24, A2, -16, A3; getcodecell's kinds 19 and 8 words after the
+  routine, c's kind passed by its address; the sizes halved with `lsr.l
+  #1'. }
+
+function final_$cmp_branch_becomes_eor(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+label
+  9;
+var
+  r: boolean;
+  b: codegen_$cell_ptr_t;
+  m1: codegen_$cell_ptr_t;
+  j: codegen_$cell_ptr_t;
+  l1: codegen_$cell_ptr_t;
+  m2: codegen_$cell_ptr_t;
+  l2: codegen_$cell_ptr_t;
+  e: codegen_$cell_ptr_t;
+  x: codegen_$cell_ptr_t;
+  y: codegen_$cell_ptr_t;
+  v: integer32;
+  s1: integer;
+  s2: integer;
+begin
+  r := false;
+  b := nxtlcc(c);
+  m1 := nxtlcc(b);
+  j := nxtlcc(m1);
+  l1 := nxtlcc(j);
+  m2 := nxtlcc(l1);
+  l2 := nxtlcc(m2);
+  if (b^.kind = cbr_instyp) and (b^.op = 145) then begin
+    if not final_$is_int_load(m1, 0) then
+      goto 9;
+    if (m1^.ads2.f2 <> c^.ads2.f2) or (j^.kind <> br_instyp) or
+       not (j^.op in [120..122]) or (l1^.kind <> def_lbl_instyp) then
+      goto 9;
+    if not final_$is_sole_label_consumer(b, l1) then
+      goto 9;
+    v := 1;
+  end
+  else if (b^.kind = cbr_instyp) and (b^.op = 144) then begin
+    if not final_$is_int_load(m1, 1) then
+      goto 9;
+    if (m1^.ads2.f2 <> c^.ads2.f2) or (j^.kind <> br_instyp) or
+       not (j^.op in [120..122]) or (l1^.kind <> def_lbl_instyp) then
+      goto 9;
+    if not final_$is_sole_label_consumer(b, l1) then
+      goto 9;
+    v := 0;
+  end
+  else
+    goto 9;
+  if not final_$is_int_load(m2, v) then
+    goto 9;
+  if (m2^.ads2.f2 <> c^.ads2.f2) or (l2^.kind <> def_lbl_instyp) then
+    goto 9;
+  if final_$sizeof(m2, 2) <> final_$sizeof(m1, 2) then
+    goto 9;
+  if not (c^.ads1.f1 in [1, 3]) then
+    goto 9;
+  if c^.ads1.f1 = 1 then
+    if not (c^.ads1.f2 in [0..7]) then
+      goto 9;
+  r := true;
+  s1 := final_$sizeof(c, 2) div 2;
+  s2 := final_$sizeof(m1, 2) div 2;
+  e := getcodecell(c^.kind);
+  if c^.kind = i_instyp then
+    e^.op := s1 + 45
+  else
+    e^.op := s1 + 42;
+  e^.ads1 := c^.ads1;
+  e^.ads2 := c^.ads2;
+  e^.size := ilength(e);
+  x := getcodecell(logicize_instyp);
+  x^.op := 131;
+  x^.ads2 := e^.ads2;
+  x^.size := ilength(x);
+  y := getcodecell(i_instyp);
+  y^.op := s2 + 39;
+  y^.ads1.f1 := 3;
+  y^.ads1.x := integer32(smcontk(81, 1));
+  y^.ads1.f6 := s2;
+  y^.ads2 := e^.ads2;
+  y^.size := ilength(y);
+  after(c^.prev, e);
+  after(e, x);
+  after(x, y);
+  detach(c);
+  detach(b);
+  detach(m1);
+  detach(j);
+  detach(m2);
+9:
+  final_$cmp_branch_becomes_eor := r;
+end;
+
+{ opttest - a test or compare c removed or simplified (not under -DBA,
+  not on a postincremented, predecremented or mode 11 operand or
+  untouchable memory, not an FP test under -CPU 160): a kind 6 add.l
+  (op 16) handed to final_$collapsed_index_calc; a compare whose
+  branches only load 0 and 1 made an eor (final_$cmp_branch_becomes_eor);
+  a tst (kind 3, ops 113..115) of a register after a move of an
+  immediate to another register after a move to the tested one: the
+  two moves swapped; btst (kinds 14, 15, ops 77, 76) opt_btst; a
+  compare repeating the one before (final_$redundant_compare) removed;
+  a tst before beq or bne (142, 143): a jump made; then by the op: a
+  tst whose codes are not tested removed; a compare (102..104) likewise
+  or of a register with itself (final_$unity_compare_and_branch); a
+  compare with an immediate (107..109) removed when its codes are not
+  tested, else for -1 after a subq of 1 (ops 32, 33) from the same
+  register and before a beq whose codes are not tested made a dbra
+  (kind 23, op 183; under -CPU 68000 a bne before it to the target and
+  a clr.w after it); an lea or pea (105, 106) whose codes are not tested
+  removed; an FP test (298..303) likewise (codes 48); otherwise, and for
+  compares with 0, fn_test and its operands, size and the codes the
+  next cell uses (cc_use) set up and the test removed when deltest
+  finds every path to it sets those codes alike (w 48 for FP tests,
+  else 15), then the visited cells unmarked.  The cell to go on from:
+  the one after c, or after what replaced it.
+
+  0x10D600, 0x75A bytes, no A5 load: the answer in D3; c's prev and
+  its prev in A2 and D4, then the next cell in D4; the ops compared in
+  turn (115, 114, 113, 104, ..., 298); the node kinds of an integer
+  constant `btst' on final_$is_int's set at 0x1091E4; getcodecell's 3
+  final_$try_reducing_literal's word (0x10AC56); deltest's w at -34;
+  final_$collapsed_index_calc's answer not read (the cell passed by
+  address in -16). }
+
+function opttest(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+label
+  9;
+var
+  r: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+  pv: codegen_$cell_ptr_t;
+  pp: codegen_$cell_ptr_t;
+  n: codegen_$cell_ptr_t;
+  d: codegen_$cell_ptr_t;
+  k: codegen_$cell_ptr_t;
+  q: codegen_$cell_ptr_t;
+  nd: il_$node_ptr_t;
+  ok: boolean;
+  w: integer;
+begin
+  r := nxtlcc(c);
+  if cargs_$options.db = 3 then
+    goto 9;
+  if c^.ads2.f1 in [8, 9, 11] then
+    goto 9;
+  if has_untouchable_mem_attrs(c^.ads2) then
+    goto 9;
+  if (c^.op in [298..303]) and (2 in cargs_$options.cpu) then
+    goto 9;
+  if (c^.kind = dest1_sz_instyp) and not (c^.op in [113..115]) then
+    goto 9;
+  if (c^.kind = src2_sz_instyp) and not (c^.op in [102..104]) then begin
+    if c^.op <> 16 then
+      goto 9;
+    t := c;
+    ok := final_$collapsed_index_calc(t);
+    goto 9;
+  end;
+  pv := c^.prev;
+  pp := pv^.prev;
+  if ((c^.kind = src2_sz_instyp) and (c^.op in [102..104])) or
+     ((c^.kind = i_instyp) and (c^.op in [107..109])) then
+    if final_$cmp_branch_becomes_eor(c) then begin
+      r := pv^.next;
+      goto 9;
+    end;
+  if (c^.kind = dest1_sz_instyp) and (c^.op in [113..115]) and
+     (c^.ads2.f1 = 1) and (pv^.kind = move_instyp) and (pv^.ads1.f1 = 3) and
+     (pv^.ads2.f1 = 1) and not sameaddr(pv^.ads2, c^.ads2) and
+     (pp^.kind = move_instyp) and sameaddr(pp^.ads2, c^.ads2) then
+    if not involves(pp^.ads1, pv^.ads2.f2) then begin
+      delink(pp);
+      after(pv, pp);
+    end;
+  if (c^.kind = dest2_instyp) or (c^.kind = i_w_instyp) then begin
+    if (c^.op = 77) or (c^.op = 76) then
+      r := opt_btst(c);
+    goto 9;
+  end;
+  if final_$is_unmoveable_ftest(c) then
+    goto 9;
+  if ((c^.kind = i_instyp) or (c^.kind = src2_sz_instyp)) and
+     ((c^.op in [102..104]) or (c^.op in [107..109])) then
+    if final_$redundant_compare(c) then begin
+      detach(c);
+      goto 9;
+    end;
+  n := nxtcc(c);
+  if (n^.kind = cbr_instyp) and (c^.op in [113..115]) then
+    if n^.op = 142 then begin
+      r := makejump(c, br_target(n));
+      detach(c);
+      goto 9;
+    end
+    else if n^.op = 143 then begin
+      r := makejump(c, nxtlcc(n));
+      detach(c);
+      goto 9;
+    end
+    else if (n^.op = 140) or (n^.op = 141) then
+      goto 9;
+  case c^.op of
+    113, 114, 115:
+      if not testcc(nxtcc(c), 15) then begin
+        detach(c);
+        goto 9;
+      end;
+    102, 103, 104: begin
+      if testcc(nxtcc(c), 15) then
+        if not final_$unity_compare_and_branch(c) then
+          goto 9;
+      r := nxtlcc(c);
+      detach(c);
+      goto 9;
+    end;
+    107, 108, 109: begin
+      if not testcc(nxtcc(c), 15) then begin
+        detach(c);
+        goto 9;
+      end;
+      nd := il_$node_ptr_t(c^.ads1.x);
+      if (c^.ads1.f1 <> 3) or not (nd^.kind in [77..87, 101, 200]) or
+         (nd^.int_value <> 0) then begin
+        if nd^.int_value <> -1 then
+          goto 9;
+        if (c^.ads2.f1 <> 1) and (c^.ads2.f1 <> 2) then
+          goto 9;
+        pv := prvlcc(c);
+        if pv^.kind <> q_instyp then
+          goto 9;
+        if (pv^.op <> 32) and (pv^.op <> 33) then
+          goto 9;
+        if il_$node_ptr_t(pv^.ads1.x)^.int_value <> 1 then
+          goto 9;
+        if not sameaddr(pv^.ads2, c^.ads2) then
+          goto 9;
+        if (n^.kind <> cbr_instyp) or (n^.op <> 144) then
+          goto 9;
+        if testcc(nxtcc(n), 15) then
+          goto 9;
+        if (c^.ads2.f1 = 1) and (pv^.ads2.f2 < 8) then begin
+          if (c^.op = 108) and (pv^.op = 32) then begin
+            detach(pv);
+            n^.kind := dbcc_instyp;
+            n^.op := 183;
+            n^.ads1 := c^.ads2;
+            n^.size := ilength(n);
+            r := nxtlcc(n);
+            detach(c);
+            goto 9;
+          end;
+          if (c^.op <> 109) or (pv^.op <> 33) then
+            goto 9;
+          n^.op := 142;
+          if not (3 in cargs_$options.cpu) then begin
+            d := makecbr(prvlcc(pv), br_target(n));
+            d^.kind := dbcc_instyp;
+            d^.op := 183;
+            d^.ads1 := c^.ads2;
+            d^.size := ilength(d);
+            k := getcodecell(dest1_sz_instyp);
+            k^.op := 10;
+            k^.ads1 := fn_null_ads;
+            k^.ads2 := c^.ads2;
+            k^.size := ilength(k);
+            after(d, k);
+          end;
+          r := n;
+          detach(c);
+          goto 9;
+        end
+        else if c^.ads2.f1 = 2 then begin
+          if has_untouchable_mem_attrs(c^.ads2) then
+            goto 9;
+          if ((c^.op = 108) and (pv^.op = 32)) or
+             ((c^.op = 109) and (pv^.op = 33)) then begin
+            n^.op := 142;
+            detach(c);
+          end;
+          goto 9;
+        end
+        else
+          goto 9;
+      end;
+    end;
+    105, 106: begin
+      if not testcc(nxtcc(c), 15) then begin
+        detach(c);
+        goto 9;
+      end;
+      if c^.ads1.f1 <> 3 then
+        goto 9;
+      nd := il_$node_ptr_t(c^.ads1.x);
+      if not (nd^.kind in [77..87, 101, 200]) then
+        goto 9;
+      if nd^.int_value <> 0 then
+        goto 9;
+    end;
+    298, 299, 300, 301, 302, 303:
+      if not testcc(nxtcc(c), 48) then begin
+        detach(c);
+        goto 9;
+      end;
+    otherwise
+      ;
+  end;
+  fn_test := c;
+  fn_test_size := opinfo_size[c^.op][2];
+  fn_ads := c^.ads2;
+  fn_ads0 := c^.ads1;
+  fn_ccset := fn_ccs_t(cc_use(nxtcc(c)));
+  fn_32 := nil;
+  if (c^.op >= 298) and (c^.op <= 303) then
+    w := 48
+  else
+    w := 15;
+  if deltest(prvlcc(c), true, w) then begin
+    r := nxtlcc(c);
+    detach(c);
+  end;
+  q := fn_32;
+  while q <> nil do begin
+    t := q^.visit;
+    q^.visit := nil;
+    q := t;
+  end;
+9:
+  opttest := r;
+end;
+
+{ transform_ptr_in_d_use - a move.l (kind 1, op 2) from (-4,An) (mode
+  2) to an operand not using An, after a movea.l (kind 4, op 5) of data
+  register Dx to An, after an addq (kind 5, op 24) of the integer
+  constant 4 to Dx: the source made (An)+ (mode 8), a move.l of An to Dx
+  put after c, the addq removed.
+
+  0x10DD5A, 0x1DC bytes, no A5 load: the cells before c in D2 and D3;
+  the integer constants' kinds on a set at 0x10DF36; getcodecell's 1 a
+  word after the routine; D0 holds 2, read by no caller. }
+
+procedure transform_ptr_in_d_use(
+    c: codegen_$cell_ptr_t); options(val_param); internal;
+var
+  pv: codegen_$cell_ptr_t;
+  pp: codegen_$cell_ptr_t;
+  k: codegen_$cell_ptr_t;
+  n: il_$node_ptr_t;
+begin
+  pv := prvlcc(c);
+  pp := prvlcc(pv);
+  n := il_$node_ptr_t(pp^.ads1.x);
+  if (c^.kind = move_instyp) and (c^.op = 2) and (c^.ads1.f1 = 2) and
+     (c^.ads1.y = -4) and not involves(c^.ads2, c^.ads1.f2) and
+     (pv^.kind = a_instyp) and (pv^.op = 5) and (pv^.ads1.f1 = 1) and
+     (pv^.ads1.f2 in [0..7]) and (pv^.ads2.f1 = 1) and
+     (pv^.ads2.f2 = c^.ads1.f2) and (pp^.kind = q_instyp) and
+     (pp^.op = 24) and (pp^.ads1.f1 = 3) and
+     (n^.kind in [77..87, 101, 200]) and (n^.int_value = 4) and
+     (pp^.ads2.f1 = 1) and (pp^.ads2.f2 = pv^.ads1.f2) then begin
+    c^.ads1.f1 := 8;
+    c^.ads1.y := 0;
+    k := getcodecell(move_instyp);
+    k^.op := 2;
+    k^.ads1.f1 := 1;
+    k^.ads1.f2 := c^.ads1.f2;
+    k^.ads2.f1 := 1;
+    k^.ads2.f2 := pv^.ads1.f2;
+    after(c, k);
+    detach(pp);
+  end;
+end;
+
+{ optmove - move c simplified: a move.b of 255 (op 0) whose codes are
+  not tested made st (kind 19, op 124); two pushes of word immediates
+  (op 1, -(SP)) made one of a long (op 2); a move of 0 (or a real 88
+  whose high word is 0) made a clr (kind 3, op + 9), unless to
+  untouchable memory before the 68020; pushes (op 0..2 to -(SP)):
+  following pushes of the same source (not SP, c not 2 bytes long, no
+  untouchable memory) made copies of the top of the stack, a push of a
+  16-bit constant whose codes are not tested made a pea (kind 16, op
+  13) of the absolute address (mode 12), a push of an address register
+  a pea of (An); then a move that undoes the move before it, or a move
+  of an operand to itself (when its codes are tested made a tst, kind
+  3, op + 113, and opttest), removed; a move to a register or (mode 2)
+  memory just written by the move before it of the same size makes that
+  one useless; a move of memory to a data register followed by a move of
+  the same memory gives the second the register; a move from a register
+  to the place a move of the same size from that register wrote just
+  before makes that one useless; transform_ptr_in_d_use.  The cell
+  after c (c may have become the cell before it).
+
+  0x10DF52, 0x7E2 bytes, no A5 load: three registers saved one by one
+  (`pea (A3); pea (A2); move.l D2,-(SP)'); the cell before c in A2; the
+  removed cell kept at -12; has_xcrement_addressing of both operands
+  or-ed whole (the first at -22); c^.kind and c^.size set by one
+  `move.l #0x100004'.
+
+  Not known from the original: the order of the tests where the image
+  merges them. }
+
+function optmove(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+label
+  5, 7, 9;
+var
+  p: codegen_$cell_ptr_t;
+  pv: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+  nx: codegen_$cell_ptr_t;
+  n: il_$node_ptr_t;
+begin
+  if (c^.op = 0) and (c^.ads1.f1 = 3) then begin
+    n := il_$node_ptr_t(c^.ads1.x);
+    if (n^.kind in [77..87, 101, 200]) and ((n^.int_value & 255) = 255) and
+       not has_untouchable_mem_attrs(c^.ads2) then
+      if not testcc(nxtcc(c), 15) then begin
+        c^.kind := logicize_instyp;
+        c^.op := 124;
+        c^.size := ilength(c);
+        c^.ads1.f1 := 0;
+      end;
+  end;
+  p := nxtlcc(c);
+  if (p^.kind = move_instyp) and (p^.op = 1) and (c^.op = 1) and
+     (p^.ads1.f1 = 3) and (c^.ads1.f1 = 3) and (p^.ads2.f1 = 9) and
+     (p^.ads2.f2 = 15) and (c^.ads2.f1 = 9) and (c^.ads2.f2 = 15) then begin
+    c^.op := 2;
+    c^.ads1.x := integer32(smcontk(81,
+        lshft(il_$node_ptr_t(p^.ads1.x)^.int_value, 16) !
+        (il_$node_ptr_t(c^.ads1.x)^.int_value & 16#FFFF)));
+    c^.ads1.f6 := 2;
+    c^.size := ilength(c);
+    detach(p);
+  end;
+  if (c^.op <= 2) and (c^.ads1.f1 = 3) then
+    if not has_untouchable_mem_attrs(c^.ads2) or (3 in cargs_$options.cpu) then begin
+      n := il_$node_ptr_t(c^.ads1.x);
+      if ((n^.kind in [77..87, 101, 200]) and (n^.int_value = 0)) or
+         ((n^.kind = 88) and (n^.bits[1] = 0)) then begin
+        c^.kind := dest1_sz_instyp;
+        c^.op := c^.op + 9;
+        c^.ads1.f1 := 0;
+        c^.size := ilength(c);
+        goto 5;
+      end;
+    end;
+  if (c^.op <= 2) and (c^.ads2.f1 = 9) and (c^.ads2.f2 = 15) then begin
+    p := c;
+    p := nxtlcc(p);
+    while (p^.kind = move_instyp) and (p^.op = c^.op) and (p^.ads2.f1 = 9) and
+          (p^.ads2.f2 = 15) and (c^.ads1.f2 <> 15) and (c^.size <> 2) and
+          sameaddr(c^.ads1, p^.ads1) and
+          not has_untouchable_mem_attrs(c^.ads1) do begin
+      p^.ads1.f1 := 2;
+      p^.ads1.f2 := 15;
+      p^.ads1.y := 0;
+      p^.size := 2;
+      p := nxtlcc(p);
+    end;
+    if (c^.op = 2) and (c^.ads1.f1 = 3) then begin
+      n := il_$node_ptr_t(c^.ads1.x);
+      if (n^.kind in [77..87, 101, 200]) and (n^.int_value <= 32767) and
+         (n^.int_value >= -32768) then
+        if not testcc(nxtcc(c), 15) then begin
+          c^.ads1.f1 := 12;
+          c^.ads1.f6 := 1;
+          c^.kind := dest1_instyp;
+          c^.size := 4;
+          c^.op := 13;
+          c^.ads2 := c^.ads1;
+          c^.ads1.f1 := 0;
+        end;
+    end;
+    if (c^.op = 2) and (c^.ads1.f1 = 1) and (c^.ads1.f2 in [8..15]) then begin
+      c^.ads1.f1 := 2;
+      c^.kind := dest1_instyp;
+      c^.ads1.x := 0;
+      c^.ads1.y := 0;
+      c^.op := 13;
+      c^.ads2 := c^.ads1;
+      c^.ads1.f1 := 0;
+    end;
+  end;
+5:
+  pv := prvlcc(c);
+  if (c^.op <= 2) and (pv^.kind = move_instyp) and (pv^.op = c^.op) and
+     sameaddr(c^.ads1, pv^.ads2) and sameaddr(pv^.ads1, c^.ads2) and
+     not has_untouchable_mem_attrs(c^.ads1) and
+     not has_untouchable_mem_attrs(c^.ads2) then
+    if not (has_xcrement_addressing(c^.ads2) or
+            has_xcrement_addressing(c^.ads1)) then
+      goto 7;
+  if (c^.op <= 2) and sameaddr(c^.ads1, c^.ads2) and
+     not (c^.ads1.f1 in [8, 9, 11, 12]) and
+     not has_untouchable_mem_attrs(c^.ads2) then begin
+    if not testcc(nxtcc(c), 15) then
+      goto 7;
+    c^.kind := dest1_sz_instyp;
+    c^.size := ilength(c);
+    c^.op := c^.op + 113;
+    c := opttest(c);
+    c := c^.prev;
+    goto 9;
+  end;
+  if (c^.kind = move_instyp) and (pv^.kind = move_instyp) and
+     (c^.op = pv^.op) then begin
+    if (c^.ads2.f1 = 1) and sameaddr(c^.ads2, pv^.ads2) and
+       not involves(c^.ads1, pv^.ads2.f2) and
+       not has_untouchable_mem_attrs(c^.ads1) and
+       not has_untouchable_mem_attrs(pv^.ads1) and
+       not has_xcrement_addressing(c^.ads1) and
+       not has_xcrement_addressing(pv^.ads1) then
+      detach(pv)
+    else if (c^.ads2.f1 = 2) and sameaddr(c^.ads2, pv^.ads2) and
+            not has_untouchable_mem_attrs(c^.ads2) and
+            not has_untouchable_mem_attrs(pv^.ads2) and
+            not has_untouchable_mem_attrs(c^.ads1) and
+            not has_untouchable_mem_attrs(pv^.ads1) and
+            not has_xcrement_addressing(c^.ads2) and
+            not has_xcrement_addressing(pv^.ads2) and
+            not has_xcrement_addressing(c^.ads1) and
+            not has_xcrement_addressing(pv^.ads1) then
+      detach(pv);
+  end
+  else if (c^.kind = move_instyp) and (c^.ads2.f1 = 1) and
+          (c^.ads1.f1 <> 1) and (c^.next^.kind = move_instyp) and
+          (c^.next^.ads2.f1 = 1) and sameaddr(c^.ads1, c^.next^.ads1) and
+          not has_untouchable_mem_attrs(c^.ads1) and
+          not has_untouchable_mem_attrs(c^.next^.ads1) and
+          not has_xcrement_addressing(c^.ads1) and
+          (c^.op = c^.next^.op) then begin
+    nx := c^.next;
+    nx^.ads1.f1 := 1;
+    nx^.ads1.f2 := c^.ads2.f2;
+    nx^.ads1.x := c^.ads2.x;
+    nx^.size := ilength(nx);
+  end;
+  goto 9;
+7:
+  t := c;
+  c := c^.prev;
+  detach(t);
+9:
+  pv := prvlcc(c);
+  if (c^.kind = move_instyp) and (pv^.kind = move_instyp) and
+     (c^.ads1.f1 = 1) and (pv^.ads1.f1 = 1) and (c^.ads1.f2 = pv^.ads1.f2) and
+     sameaddr(c^.ads2, pv^.ads2) and
+     (final_$sizeof(c, 1) = final_$sizeof(pv, 1)) and
+     not has_untouchable_mem_attrs(c^.ads2) and
+     not has_untouchable_mem_attrs(pv^.ads2) and
+     not has_xcrement_addressing(pv^.ads2) then
+    detach(pv);
+  transform_ptr_in_d_use(c);
+  optmove := c^.next;
 end;
 
 { test_add_sub - c adds (ops 17..24: '+') or subtracts (28..35: '-') an
@@ -2854,6 +4255,144 @@ begin
     final_$addr_adjust_value := c^.ads1.y
   else
     final_$addr_adjust_value := 0;
+end;
+
+{ merge_add_sub - an add or subtract c (by address; test_add_sub) of an
+  immediate to a register other than SP followed, past instructions
+  that do not use the register (final_$reg_is_used; not labels, calls,
+  branches and the others of a set of 0..47), by another on the same
+  register: the two merged into c (the constants added or subtracted by
+  their signs; a negative sum made positive with the operation turned
+  over, ops 17..24 and 28..35 by tables), an addq or subq whose
+  constant passes 8 made an addi or subi (kind 8, ops 19..21, 28..30)
+  for a data register or an adda or suba (kind 4, ops 17, 18, 34, 35)
+  for an address register (f6 the size), and a sum of 0 made a tst
+  (kind 3, ops 113..115) of a data register or, for an address
+  register, c removed (c then the cell after the second); the second
+  removed.  Whether it was done.
+
+  0x10E8EA, 0x332 bytes, no A5 load: c by address in A2; the signs at
+  -26 and -24 (D4, D5); the register in D2, the sum in D3 (then the
+  answer); `case's of the op less 17, less 28 (tables of 8) and less 19
+  (15); the set at 0x10EC1C. }
+
+function merge_add_sub(
+    in out c: codegen_$cell_ptr_t): boolean; internal;
+label
+  9;
+var
+  r: boolean;
+  s1: char;
+  s2: char;
+  reg: integer;
+  p: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+  v: integer32;
+  d: integer;
+begin
+  r := false;
+  if c^.ads2.f1 <> 1 then
+    goto 9;
+  if c^.ads2.f2 = 15 then
+    goto 9;
+  if not test_add_sub(c, s1) then
+    goto 9;
+  reg := c^.ads2.f2;
+  p := nxtlcc(c);
+  while p <> fn_sect^.head do begin
+    if test_add_sub(p, s2) and (p^.ads2.f2 = reg) and (p^.ads2.f1 = 1) then begin
+      if s1 <> s2 then
+        v := il_$node_ptr_t(c^.ads1.x)^.int_value -
+             il_$node_ptr_t(p^.ads1.x)^.int_value
+      else
+        v := il_$node_ptr_t(c^.ads1.x)^.int_value +
+             il_$node_ptr_t(p^.ads1.x)^.int_value;
+      if v < 0 then begin
+        v := -v;
+        if s1 = '+' then begin
+          s1 := '-';
+          case c^.op of
+            17: c^.op := 34;
+            18: c^.op := 35;
+            19: c^.op := 28;
+            20: c^.op := 29;
+            21: c^.op := 30;
+            22: c^.op := 31;
+            23: c^.op := 32;
+            24: c^.op := 33;
+            otherwise
+              ;
+          end;
+        end
+        else begin
+          s1 := '+';
+          case c^.op of
+            28: c^.op := 19;
+            29: c^.op := 20;
+            30: c^.op := 21;
+            31: c^.op := 22;
+            32: c^.op := 23;
+            33: c^.op := 24;
+            34: c^.op := 17;
+            35: c^.op := 18;
+            otherwise
+              ;
+          end;
+        end;
+      end;
+      c^.ads1.x := integer32(smcontk(81, v));
+      if (c^.kind = q_instyp) and (v > 8) then begin
+        if s1 = '+' then
+          d := c^.op - 22
+        else
+          d := c^.op - 31;
+        if reg < 8 then begin
+          c^.kind := i_instyp;
+          if s1 = '+' then
+            c^.op := 19 + d
+          else
+            c^.op := 28 + d;
+        end
+        else begin
+          c^.kind := a_instyp;
+          d := d - 1;
+          if s1 = '+' then
+            c^.op := 17 + d
+          else
+            c^.op := 34 + d;
+        end;
+        c^.ads1.f6 := d;
+        c^.size := ilength(c);
+      end;
+      if v = 0 then
+        if c^.ads2.f2 <= 7 then begin
+          case c^.op of
+            19, 22, 28, 31: c^.op := 113;
+            20, 23, 29, 32: c^.op := 114;
+            21, 24, 30, 33: c^.op := 115;
+            otherwise
+              ;
+          end;
+          c^.kind := dest1_sz_instyp;
+          c^.size := ilength(c);
+        end
+        else begin
+          t := c;
+          c := nxtlcc(p);
+          detach(t);
+        end;
+      detach(p);
+      r := true;
+      goto 9;
+    end;
+    if p^.kind in [0, 16..18, 21..23, 28..29, 31, 39] then
+      goto 9;
+    if final_$reg_is_used(p, reg) <> 0 then
+      goto 9;
+    p := nxtlcc(p);
+  end;
+9:
+  merge_add_sub := r;
 end;
 
 { merge_move_sub - a move.l of an immediate to a data register (op 2)
@@ -2975,6 +4514,625 @@ begin
       end;
       detach(n);
     end;
+end;
+
+{ try_pre_dec - a subtract (test_add_sub '-') of an immediate v from an
+  address register c (by address) folded into predecrement addressing:
+  looking on from c past instructions that do not use the register,
+  the first that uses it as (An) with no displacement (mode 2, of its
+  destination, else its source unless kind 16) and a size up to v made
+  -(An) (mode 9) and v less that size; else looking back from c, uses
+  of (-v,An) of exactly that size likewise; both stop at a label, call
+  or branch (the set at 0x10F2EA), a kind 16 of op 121 (123 looking
+  back), a bsr unless the register is A2..A4, a kind 16 of op 117 or 119
+  unless likewise, an op of the set at 0x10F2F0 using it, or another
+  use.  c then given what is left of v, or removed when nothing is (c
+  the cell after it).  Whether v changed.
+
+  0x10EF30, 0x3BA bytes, no A5 load: c by address in A2; the register
+  in D2, v in D4; final_$reg_is_used's answer (1 the source, 2 the
+  destination, 3 both) `btst' in #10 and #12, a `case' of it through a
+  table of 4 looking back. }
+
+function try_pre_dec(
+    in out c: codegen_$cell_ptr_t): boolean; internal;
+label
+  7, 8, 9;
+var
+  r: boolean;
+  ch: char;
+  reg: integer;
+  v: integer32;
+  s: integer32;
+  u: integer;
+  p: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+begin
+  r := false;
+  if not test_add_sub(c, ch) then
+    goto 9;
+  if ch = '+' then
+    goto 9;
+  if c^.ads2.f1 <> 1 then
+    goto 9;
+  if not (c^.ads2.f2 in [8..15]) then
+    goto 9;
+  reg := c^.ads2.f2;
+  v := il_$node_ptr_t(c^.ads1.x)^.int_value;
+  p := nxtlcc(c);
+  while p <> fn_sect^.head do begin
+    if p^.kind in [0, 17..18, 21..23, 28..29, 39] then
+      goto 7;
+    if (p^.kind = dest1_instyp) and (p^.op = 121) then
+      goto 7;
+    if (p^.kind = bsr_instyp) and not (reg in [10..12]) then
+      goto 7;
+    if (p^.kind = dest1_instyp) and not (reg in [10..12]) then
+      if (p^.op = 117) or (p^.op = 119) then
+        goto 7;
+    u := final_$reg_is_used(p, reg);
+    if u <> 0 then begin
+      if (u in [1, 3]) and (p^.ads1.f1 <> 2) then
+        goto 7;
+      if (u in [2, 3]) and (p^.ads2.f1 <> 2) then
+        goto 7;
+      if p^.op in [12..13, 213..216] then begin
+        if u <> 0 then
+          goto 7;
+      end
+      else if (p^.ads2.f1 = 2) and (p^.ads2.f2 = reg) then begin
+        if p^.ads2.y <> 0 then
+          goto 7;
+        s := final_$sizeof(p, 2);
+        if s > v then
+          goto 7;
+        p^.ads2.f1 := 9;
+        p^.size := ilength(p);
+        v := v - s;
+        goto 8;
+      end
+      else if p^.kind <> dest1_instyp then
+        if (p^.ads1.f1 = 2) and (p^.ads1.f2 = reg) then begin
+          if p^.ads1.y <> 0 then
+            goto 7;
+          s := final_$sizeof(p, 1);
+          if s > v then
+            goto 7;
+          p^.ads1.f1 := 9;
+          p^.size := ilength(p);
+          v := v - s;
+          goto 8;
+        end;
+    end;
+    p := nxtlcc(p);
+  end;
+7:
+  p := prvlcc(c);
+  while p <> fn_sect^.head do begin
+    if p^.kind in [0, 17..18, 21..23, 28..29, 39] then
+      goto 9;
+    if (p^.kind = dest1_instyp) and (p^.op = 123) then
+      goto 9;
+    if (p^.kind = bsr_instyp) and not (reg in [10..12]) then
+      goto 9;
+    if (p^.kind = dest1_instyp) and not (reg in [10..12]) then
+      if (p^.op = 117) or (p^.op = 119) then
+        goto 9;
+    u := final_$reg_is_used(p, reg);
+    if u <> 0 then
+      if p^.op in [12..13, 213..216] then
+        goto 9;
+    case u of
+      0:
+        ;
+      1: begin
+        if p^.ads1.f1 <> 2 then
+          goto 9;
+        if -p^.ads1.y <> v then
+          goto 8;
+        if p^.kind <> dest1_instyp then begin
+          s := final_$sizeof(p, 1);
+          if v <> s then
+            goto 8;
+          p^.ads1.f1 := 9;
+          p^.size := ilength(p);
+          v := v - s;
+          goto 8;
+        end;
+      end;
+      2: begin
+        if p^.ads2.f1 <> 2 then
+          goto 9;
+        if -p^.ads2.y <> v then
+          goto 8;
+        if p^.ads2.f2 = reg then begin
+          s := final_$sizeof(p, 2);
+          if v <> s then
+            goto 8;
+          p^.ads2.f1 := 9;
+          p^.size := ilength(p);
+          v := v - s;
+          goto 8;
+        end;
+      end;
+      3:
+        goto 9;
+      otherwise
+        ;
+    end;
+    p := prvlcc(p);
+  end;
+8:
+  if v = il_$node_ptr_t(c^.ads1.x)^.int_value then
+    goto 9;
+  if v = 0 then begin
+    t := nxtlcc(c);
+    detach(c);
+    c := t;
+  end
+  else
+    c^.ads1.x := integer32(smcontk(81, v));
+  r := true;
+9:
+  try_pre_dec := r;
+end;
+
+{ try_post_incr - an add (test_add_sub '+') of an immediate v to
+  address register c (A0..A4; by address) folded into postincrement
+  addressing, as try_pre_dec does with the directions swapped: looking
+  back from c, uses of (An) up to v long made (An)+ (mode 8); else
+  looking on, uses of (-v,An) of exactly v's size.
+
+  0x10F30C, 0x3B8 bytes, no A5 load: try_pre_dec's code with the
+  searches' directions, the sign, the registers (`btst' in #0x1F00)
+  and the mode changed. }
+
+function try_post_incr(
+    in out c: codegen_$cell_ptr_t): boolean; internal;
+label
+  7, 8, 9;
+var
+  r: boolean;
+  ch: char;
+  reg: integer;
+  v: integer32;
+  s: integer32;
+  u: integer;
+  p: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+begin
+  r := false;
+  if not test_add_sub(c, ch) then
+    goto 9;
+  if ch = '-' then
+    goto 9;
+  if c^.ads2.f1 <> 1 then
+    goto 9;
+  if not (c^.ads2.f2 in [8..12]) then
+    goto 9;
+  reg := c^.ads2.f2;
+  v := il_$node_ptr_t(c^.ads1.x)^.int_value;
+  p := prvlcc(c);
+  while p <> fn_sect^.head do begin
+    if p^.kind in [0, 17..18, 21..23, 28..29, 39] then
+      goto 7;
+    if (p^.kind = dest1_instyp) and (p^.op = 121) then
+      goto 7;
+    if (p^.kind = bsr_instyp) and not (reg in [10..12]) then
+      goto 7;
+    if (p^.kind = dest1_instyp) and not (reg in [10..12]) then
+      if (p^.op = 117) or (p^.op = 119) then
+        goto 7;
+    u := final_$reg_is_used(p, reg);
+    if u <> 0 then begin
+      if (u in [1, 3]) and (p^.ads1.f1 <> 2) then
+        goto 7;
+      if (u in [2, 3]) and (p^.ads2.f1 <> 2) then
+        goto 7;
+      if p^.op in [12..13, 213..216] then begin
+        if u <> 0 then
+          goto 7;
+      end
+      else if (p^.ads2.f1 = 2) and (p^.ads2.f2 = reg) then begin
+        if p^.ads2.y <> 0 then
+          goto 7;
+        s := final_$sizeof(p, 2);
+        if s > v then
+          goto 7;
+        p^.ads2.f1 := 8;
+        p^.size := ilength(p);
+        v := v - s;
+        goto 8;
+      end
+      else if p^.kind <> dest1_instyp then
+        if (p^.ads1.f1 = 2) and (p^.ads1.f2 = reg) then begin
+          if p^.ads1.y <> 0 then
+            goto 7;
+          s := final_$sizeof(p, 1);
+          if s > v then
+            goto 7;
+          p^.ads1.f1 := 8;
+          p^.size := ilength(p);
+          v := v - s;
+          goto 8;
+        end;
+    end;
+    p := prvlcc(p);
+  end;
+7:
+  p := nxtlcc(c);
+  while p <> fn_sect^.head do begin
+    if p^.kind in [0, 17..18, 21..23, 28..29, 39] then
+      goto 9;
+    if (p^.kind = dest1_instyp) and (p^.op = 123) then
+      goto 9;
+    if (p^.kind = bsr_instyp) and not (reg in [10..12]) then
+      goto 9;
+    if (p^.kind = dest1_instyp) and not (reg in [10..12]) then
+      if (p^.op = 117) or (p^.op = 119) then
+        goto 9;
+    u := final_$reg_is_used(p, reg);
+    if u <> 0 then
+      if p^.op in [12..13, 213..216] then
+        goto 9;
+    case u of
+      0:
+        ;
+      1: begin
+        if p^.ads1.f1 <> 2 then
+          goto 9;
+        if p^.kind <> dest1_instyp then begin
+          if -p^.ads1.y <> v then
+            goto 8;
+          s := final_$sizeof(p, 1);
+          if s <> v then
+            goto 8;
+          p^.ads1.f1 := 8;
+          p^.size := ilength(p);
+          v := v - s;
+          goto 8;
+        end;
+      end;
+      2: begin
+        if p^.ads2.f1 <> 2 then
+          goto 9;
+        if p^.ads2.f2 = reg then begin
+          if -p^.ads2.y <> v then
+            goto 8;
+          s := final_$sizeof(p, 2);
+          if s <> v then
+            goto 8;
+          p^.ads2.f1 := 8;
+          p^.size := ilength(p);
+          v := v - s;
+          goto 8;
+        end;
+      end;
+      3:
+        goto 9;
+      otherwise
+        ;
+    end;
+    p := nxtlcc(p);
+  end;
+8:
+  if v = il_$node_ptr_t(c^.ads1.x)^.int_value then
+    goto 9;
+  if v = 0 then begin
+    t := nxtlcc(c);
+    detach(c);
+    c := t;
+  end
+  else
+    c^.ads1.x := integer32(smcontk(81, v));
+  r := true;
+9:
+  try_post_incr := r;
+end;
+
+{ opta - an address or immediate instruction c simplified: a pea or lea
+  (kind 4, ops 105, 106) of 0 handed to opttest; an immediate (kinds 8,
+  5) final_$try_reducing_literal; an adda.l of a data register (op 18)
+  final_$collapsed_index_calc; then merge_add_sub, merge_move_sub,
+  final_$merge_movea_adjust, try_post_incr and try_pre_dec (each done
+  ends it) and merge_stack_adjusts; a movea (op 5) of a register to
+  itself or already done (final_$redundant_movea) removed, and a move
+  after it that undoes it or repeats it removed; an lea (op 12) of
+  (d,An) into An made nothing (d 0), an addq or subq of d (up to 8), or
+  of (An) into another register a movea, or removed when it repeats an
+  earlier one (final_$redundant_lea); a pea, adda or suba (ops 106, 17,
+  18, 34, 35) of a 16-bit integer constant made a pea of the word (op
+  105, f6 1) or an lea of the displacement (op 12, mode 2 on the
+  destination register); then a pea or lea of 0 and compares with an
+  immediate (ops 107..109) handed to opttest.  The cell after c (c may
+  have become the one before it).
+
+  0x10F6C4, 0x4C0 bytes, no A5 load: three registers saved one by one;
+  c passed on by its own address (the routines that may replace it);
+  final_$collapsed_index_calc's cell at -8, the removed cell at -8;
+  kind and size set by one `move.l #0x50002'; opttest's and
+  final_$collapsed_index_calc's cells returned as they are (A0, A3). }
+
+function opta(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+label
+  8, 9;
+var
+  r: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+  n: codegen_$cell_ptr_t;
+  nd: il_$node_ptr_t;
+  d: integer32;
+begin
+  if (c^.kind = a_instyp) and ((c^.op = 105) or (c^.op = 106)) then
+    if final_$is_int(c^.ads1, 0) then begin
+      r := opttest(c);
+      goto 9;
+    end;
+  if (c^.kind = i_instyp) or (c^.kind = q_instyp) then
+    final_$try_reducing_literal(c);
+  if c^.op = 18 then begin
+    t := c;
+    if final_$collapsed_index_calc(t) then begin
+      r := t;
+      goto 9;
+    end;
+  end;
+  if merge_add_sub(c) then begin
+    r := c;
+    goto 9;
+  end;
+  if merge_move_sub(c) then begin
+    r := c;
+    goto 9;
+  end;
+  if final_$merge_movea_adjust(c) then begin
+    r := c;
+    goto 9;
+  end;
+  if try_post_incr(c) then begin
+    r := c;
+    goto 9;
+  end;
+  if try_pre_dec(c) then begin
+    r := c;
+    goto 9;
+  end;
+  merge_stack_adjusts(c);
+  if c^.op = 5 then begin
+    if sameaddr(c^.ads1, c^.ads2) or final_$redundant_movea(c) then begin
+      t := c;
+      c := c^.prev;
+      detach(t);
+      goto 8;
+    end;
+    n := nxtlcc(c);
+    if ((n^.kind = a_instyp) and (n^.op = 5)) or
+       ((n^.kind = move_instyp) and (n^.op = 2)) then
+      if not involves(c^.ads1, c^.ads2.f2) then
+        if sameaddr(c^.ads1, n^.ads2) and sameaddr(n^.ads1, c^.ads2) then
+          detach(n)
+        else if sameaddr(c^.ads1, n^.ads1) and sameaddr(c^.ads2, n^.ads2) then
+          detach(n);
+  end
+  else if c^.op = 12 then begin
+    if (c^.ads1.f1 = 2) and (c^.ads1.f2 = c^.ads2.f2) then begin
+      if c^.ads1.y = 0 then begin
+        t := c;
+        c := c^.prev;
+        detach(t);
+        goto 8;
+      end;
+      d := c^.ads1.y;
+      if d > 0 then begin
+        if d <= 8 then begin
+          c^.op := 24;
+          c^.kind := q_instyp;
+          c^.size := 2;
+          c^.ads1.f1 := 3;
+          c^.ads1.x := integer32(smcontk(81, c^.ads1.y));
+          c^.ads1.y := 0;
+          c^.ads1.f6 := 2;
+          c^.size := ilength(c);
+          c := c^.prev;
+        end;
+      end
+      else if d >= -8 then begin
+        c^.op := 33;
+        c^.kind := q_instyp;
+        c^.size := 2;
+        c^.ads1.f1 := 3;
+        c^.ads1.x := integer32(smcontk(81, -c^.ads1.y));
+        c^.ads1.y := 0;
+        c^.ads1.f6 := 2;
+        c^.size := ilength(c);
+        c := c^.prev;
+      end;
+    end
+    else if (c^.ads1.f1 = 2) and (c^.ads1.y = 0) then begin
+      c^.op := 5;
+      c^.ads1.f1 := 1;
+    end
+    else if final_$redundant_lea(c) then begin
+      t := c;
+      c := c^.prev;
+      detach(t);
+    end;
+  end
+  else if ((c^.op = 106) or (c^.op = 35) or (c^.op = 34) or (c^.op = 17) or
+           (c^.op = 18)) and (c^.ads1.f1 = 3) then begin
+    nd := il_$node_ptr_t(c^.ads1.x);
+    if (nd^.kind in [77..87, 101, 200]) and (nd^.int_value >= -32767) and
+       (nd^.int_value <= 32767) then begin
+      if (c^.op = 35) or (c^.op = 34) then
+        c^.ads1.x := integer32(smcontk(81, -nd^.int_value));
+      if c^.op = 106 then begin
+        c^.ads1.f6 := 1;
+        c^.op := 105;
+      end
+      else begin
+        c^.ads1.f1 := 2;
+        c^.ads1.f2 := c^.ads2.f2;
+        c^.ads1.y := il_$node_ptr_t(c^.ads1.x)^.int_value;
+        c^.op := 12;
+      end;
+      c^.size := ilength(c);
+    end;
+  end;
+8:
+  if ((c^.op = 105) or (c^.op = 106)) and (c^.ads1.f1 = 3) then begin
+    nd := il_$node_ptr_t(c^.ads1.x);
+    if (nd^.kind in [77..87, 101, 200]) and (nd^.int_value = 0) then begin
+      c := opttest(c);
+      c := c^.prev;
+    end;
+  end;
+  if c^.op in [107..109] then begin
+    c := opttest(c);
+    c := c^.prev;
+  end;
+  r := c^.next;
+9:
+  opta := r;
+end;
+
+{ floatop - an FP instruction c simplified: an FP compare (kind 40, ops
+  304..309) repeating the one before it removed; under -CPU 5700 an
+  operation on memory (ops 247..251, 271..275) after a move between FP
+  registers (kind 41, op 224) into its register: the two exchanged (the
+  move becomes a load of the operand, op by fn_fop_b or fn_fop_a, and
+  the operation one between registers, op 246 or 270, on the move's
+  source); then for an immediate real (kinds 88, 89) source of a move
+  or operation (kinds 40, 37): under -CPU 5700 without MATHLIB a move of
+  one of the 68881's ROM constants made an fmovecr (kind 48, op 237,
+  the ROM offset; fn_fmovecr); not under -CPU FPX: a double that a
+  single holds exactly (0.0, or its low 29 bits clear and the
+  exponent as read in range) made a single (rlcontk, f6 4, 4 bytes
+  shorter, op - 1); an integral value (trunc, under a cleanup handler
+  that gives up on a floating-point fault) made an integer immediate
+  (smcontk; op - 1, - 2 for a double; f6 2, or 1 and 2 bytes shorter
+  for 16 bits; a single's only when it is 16 bits).  The cell after c.
+
+  0x10FB84, 0x3D4 bytes, no A5 load: the answer at -140; the real at
+  -104 (its 29 low bits tested by `and.l' with an 8-byte constant at
+  0x10FF7C, a set [0..28]); the cleanup record at -80, the status at
+  -108; the exponent `(high word and 0x7FFF) - 1023' in D6 (the high
+  longword's upper 16 bits, the sign and exponent of a 68881 extended,
+  not a double's), then trunc's value; the FPP's 0x0074 0xFF34 (a
+  compare with 0.0), 0x0074 0x00D0 (trunc), 0x00C4 0x00B4 (the integer
+  compared with the real); the op sets at 0x10FF58 (271..275) and
+  0x10FF84 (247..251); the MATHLIB test `and.w #0x3FFC' of +0x284 and
+  #0x600.
+
+  Not known from the original: how it read the real's bits (a
+  variant record here). }
+
+function floatop(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+label
+  9;
+var
+  r: codegen_$cell_ptr_t;
+  p: codegen_$cell_ptr_t;
+  n: il_$node_ptr_t;
+  k: integer;
+  op1: integer;
+  op2: integer;
+  save: codegen_$ads_t;
+  v: fn_dbl_t;
+  e: integer32;
+  iv: integer32;
+  i: integer;
+  crec: pfm_$cleanup_rec;
+  status: status_$t;
+begin
+  r := nxtlcc(c);
+  p := prvlcc(c);
+  if (c^.kind = m68881_src_ext_instyp) and (c^.op in [304..309]) then
+    if final_$redundant_compare(c) then begin
+      detach(c);
+      goto 9;
+    end;
+  if (c^.kind = m68881_src_ext_instyp) and (c^.ads1.f1 <> 3) and
+     ((c^.op in [271..275]) or (c^.op in [247..251])) and
+     (p^.kind = m68881_reg_reg_instyp) and (p^.op = 224) and
+     (p^.ads2.f2 = c^.ads2.f2) and (4 in cargs_$options.cpu) then begin
+    k := p^.kind;
+    save := p^.ads1;
+    if c^.op in [247..251] then begin
+      op2 := 246;
+      op1 := fn_fop_b[c^.op];
+    end
+    else begin
+      op2 := 270;
+      op1 := fn_fop_a[c^.op];
+    end;
+    p^.kind := c^.kind;
+    p^.ads1 := c^.ads1;
+    p^.op := op1;
+    c^.kind := k;
+    c^.ads1 := save;
+    c^.op := op2;
+  end;
+  if (c^.kind <> m68881_src_ext_instyp) and (c^.kind <> tern_src_ext_instyp) then
+    goto 9;
+  if c^.ads1.f1 <> 3 then
+    goto 9;
+  n := il_$node_ptr_t(c^.ads1.x);
+  if (n^.kind <> 88) and (n^.kind <> 89) then
+    goto 9;
+  v.d := n^.real_value;
+  if (c^.op in [224..229]) and (4 in cargs_$options.cpu) and
+     not (9 in cargs_$options.cpu) and not (10 in cargs_$options.cpu) then
+    for i := 1 to 18 do
+      if (n^.bits[1] = fn_fmovecr[i].hi) and (n^.bits[2] = fn_fmovecr[i].lo) then begin
+        c^.kind := m68881_i_instyp;
+        c^.op := 237;
+        c^.size := 4;
+        c^.ads1.x := integer32(smcontk(81, fn_fmovecr[i].tag));
+        goto 9;
+      end;
+  if 5 in cargs_$options.cpu then
+    goto 9;
+  e := (rshft(n^.bits[1], 16) & 16#7FFF) - 1023;
+  if n^.kind = 89 then
+    if (n^.real_value = 0.0) or
+       ((n^.kind = 89) and (v.s * [0..28] = []) and (e <= 128) and
+        (e >= -127)) then begin
+      c^.ads1.x := integer32(rlcontk(n^.real_value));
+      c^.ads1.f6 := 4;
+      c^.size := c^.size - 4;
+      c^.op := c^.op - 1;
+    end;
+  status := pfm_$cleanup(crec);
+  if status.all <> pfm_$cleanup_set then
+    if (status.subsys = 5) or (status.subsys = 0) then begin
+      pfm_$enable;
+      goto 9;
+    end
+    else
+      pfm_$signal(status);
+  iv := trunc(v.d);
+  pfm_$rls_cleanup(crec, status);
+  if iv <> v.d then
+    goto 9;
+  if c^.ads1.f6 = 4 then
+    if not final_$in_15bit_range(iv) then
+      goto 9;
+  c^.ads1.x := integer32(smcontk(81, iv));
+  if c^.ads1.f6 = 5 then begin
+    c^.size := c^.size - 4;
+    c^.op := c^.op - 1;
+  end;
+  c^.op := c^.op - 1;
+  c^.ads1.f6 := 2;
+  if final_$in_15bit_range(iv) then begin
+    c^.size := c^.size - 2;
+    c^.op := c^.op - 1;
+    c^.ads1.f6 := 1;
+  end;
+9:
+  floatop := r;
 end;
 
 { final_$logicize_opts - scc c (ops 124..139) followed by two
@@ -3293,17 +5451,6 @@ begin
   final_$unlink_opts := nx;
 end;
 
-{ TODO(pascal) peepholer_ops (0x111950, 0x638 bytes) and the six
-  routines nested in it (try_loading_from_fp_reg 0x110CB4,
-  try_loading_monadic_src_here 0x110F14, try_long_extend_opts
-  0x111130, try_reducing_fabs_op 0x111452, try_removing_previous_clr
-  0x111666, try_widening_clr 0x111856) are not translated yet: in the
-  image peepholer_ops is nested in peepholer (it runs on peepholer's
-  frame: its first cell, +12), declared here at module level until it
-  is written. }
-
-procedure peepholer_ops; extern;
-
 { peepholer - the peephole pass over a routine's code cells in section
   sect from first: peepholer_init; under -OPT's optimization 27 (`btst
   #4' of +0x280) peepholer_ops; peepholer_cleanup; under optimization
@@ -3598,6 +5745,636 @@ var
             p := p^.next;
         end;
     end;
+  end;
+
+  { peepholer_ops - the optimizations over the cells from first: a
+    first pass, repeated while a cell was detached (+44 cleared at the
+    start of each), by the cell's kind (labels plab, branches pcondjmp,
+    puncondjmp and f_pcondjmp, moves optmove, address instructions opta,
+    immediates final_$try_reducing_literal, the others opttest, floatop
+    and the try_ routines, a return the cells after it to the next label
+    deltolab), then a second pass (under -DBA only for block ends, lines
+    and labels): a move to an FPA or FP register from itself or back
+    from where the previous move took it removed, repeated pushes of an
+    address made copies of the top of the stack (kind 1, op 2, (SP) to
+    -(SP)), the first link final_$link_opts, each unlk
+    final_$unlink_opts, a line between a label after a line and a
+    return removed.
+
+    0x111950, 0x638 bytes, no A5 load: peepholer's frame by its dynamic
+    link (first its +12); two `case's of the kind through tables of 51
+    and 55; the op sets at 0x110EF6 (224..230), 0x111F88 (298..303) and
+    0x111FAE; the first pass's cell passed by address in -16, a
+    detached cell kept at -8, the pushes' cell in D4, the first link's
+    flag in D2.
+
+    Not known from the original: the names of the locals; how the
+    original wrote the loop over the pushes (one call of nxtlcc, at its
+    head). }
+
+  procedure peepholer_ops;
+  var
+    p: codegen_$cell_ptr_t;
+    q: codegen_$cell_ptr_t;
+    k: codegen_$cell_ptr_t;
+    t: codegen_$cell_ptr_t;
+    u: codegen_$cell_ptr_t;
+    r: boolean;
+    first_link: boolean;
+
+    { try_loading_from_fp_reg - move c (kind 40, ops 224..230) of a
+      memory operand into an FP register: when an earlier move of the
+      same operand into another FP register (mode 13) is found, looking
+      back past instructions that do not use c's register, kill its
+      address register or the FP register, are not leas, do not write
+      the operand (assert_modifies_object), have no destination of mode
+      4 or 12 and write no operand overlapping it (mode 2 on its
+      register, the extents compared), up to a label, a call or branch
+      or the section's head: c made a move between the FP registers
+      (kind 41, op 224) after it.  The cell before c's old place (c when
+      nothing was done).
+
+      0x110CB4, 0x242 bytes, no A5 load: the kinds set at 0x110CA6 (0,
+      24, 32, 33: not instructions), the ops at 0x110EF6; found at -40,
+      the result at -36. }
+
+    function try_loading_from_fp_reg(
+        c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param);
+    var
+      r: codegen_$cell_ptr_t;
+      found: boolean;
+      done: boolean;
+      p: codegen_$cell_ptr_t;
+      lo1: integer32;
+      hi1: integer32;
+      lo2: integer32;
+      hi2: integer32;
+    begin
+      r := c;
+      found := false;
+      done := false;
+      p := c;
+      repeat
+        p := prvlcc(p);
+        if not (p^.kind in [0, 24, 32..33]) and (p^.op in [224..230]) and
+           sameaddr(p^.ads1, c^.ads1) and (p^.ads2.f1 = 13) and
+           (p^.ads2.f2 <> c^.ads2.f2) then
+          found := true
+        else begin
+          done := (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+                  involves(p^.ads1, c^.ads2.f2) or
+                  final_$reg_is_killed(p, c^.ads1.f2) or
+                  final_$fp_reg_is_killed(p, c^.ads2.f2) or assert_is_lea(p) or
+                  assert_modifies_object(p, il_$node_ptr_t(c^.ads1.x)) or
+                  (p^.ads2.f1 = 4) or (p^.ads2.f1 = 12);
+          if not done then
+            if (p^.ads2.f1 = 2) and (p^.ads2.f2 = c^.ads1.f2) then begin
+              lo1 := abs(p^.ads2.y);
+              hi1 := final_$sizeof(p, 2) + lo1;
+              lo2 := abs(c^.ads1.y);
+              hi2 := final_$sizeof(c, 1) + lo2;
+              done := done or ((lo2 = lo1) and (hi2 = hi1)) or
+                      ((lo1 > lo2) and (lo1 < hi2)) or
+                      ((hi1 > lo2) and (hi1 < hi2));
+            end;
+        end;
+        done := done or (p = fn_sect^.head);
+      until found or done;
+      if found and not has_untouchable_mem_attrs(p^.ads1) and
+         not has_untouchable_mem_attrs(c^.ads1) then begin
+        c^.ads1 := p^.ads2;
+        c^.kind := m68881_reg_reg_instyp;
+        c^.op := 224;
+        r := prvlcc(c);
+        detach(c);
+        after(p, c);
+      end;
+      try_loading_from_fp_reg := r;
+    end;
+
+    { try_loading_monadic_src_here - monadic FP operation c (kind 41,
+      an op of the set at 0x111FAE) of an FP register on itself: when an
+      earlier move (ops 224..230) into that register is found, looking
+      back past instructions that do not change it (fp_reg_is_killed,
+      an FP register source of the same number) up to a label, a call
+      or branch or the section's head, and the move's source is an FP
+      register that nothing changes between the two, the operation takes
+      the move's source and the move is removed (for a source other
+      than an FP register, which the test before excludes, c would be
+      made kind 40 with its op advanced by the move's size, 225..229 by
+      1..5).  Nothing for op 430.
+
+      0x110F14, 0x21C bytes, no A5 load: c in D4; `clr.b D0' before the
+      branch to the end for op 430 (its caller reads no result); a
+      `case' of the move's op less 224 through a table of 7. }
+
+    procedure try_loading_monadic_src_here(
+        c: codegen_$cell_ptr_t); options(val_param);
+    var
+      found: boolean;
+      done: boolean;
+      killed: boolean;
+      p: codegen_$cell_ptr_t;
+      q: codegen_$cell_ptr_t;
+      d: integer;
+    begin
+      found := false;
+      p := c;
+      done := found;
+      repeat
+        p := prvlcc(p);
+        if not (p^.kind in [0, 24, 32..33]) and (p^.op in [224..230]) and
+           (p^.ads2.f1 = 13) and (p^.ads2.f2 = c^.ads1.f2) then
+          found := true
+        else
+          done := (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+                  ((p^.ads1.f1 = 13) and (p^.ads1.f2 = c^.ads1.f2)) or
+                  final_$fp_reg_is_killed(p, c^.ads1.f2);
+        done := done or (p = fn_sect^.head);
+      until found or done;
+      if found and (p^.ads1.f1 = 13) then begin
+        if c^.op = 430 then
+          return;
+        killed := false;
+        q := p;
+        repeat
+          q := nxtlcc(q);
+          if q <> c then
+            killed := ((q^.ads1.f1 = 13) and (q^.ads1.f2 = p^.ads1.f2)) or
+                      final_$fp_reg_is_killed(q, p^.ads1.f2);
+        until killed or (q = c);
+        if not killed and not has_untouchable_mem_attrs(p^.ads1) and
+           not has_untouchable_mem_attrs(c^.ads1) then begin
+          c^.ads1 := p^.ads1;
+          if p^.ads1.f1 <> 13 then begin
+            c^.kind := m68881_src_ext_instyp;
+            case p^.op of
+              224, 230: d := 0;
+              225: d := 1;
+              226: d := 2;
+              227: d := 3;
+              228: d := 4;
+              229: d := 5;
+              otherwise
+                d := 0;
+            end;
+            c^.op := d + c^.op;
+          end;
+          detach(p);
+        end;
+      end;
+    end;
+
+    { try_long_extend_opts - ext.l c (kind 16, op 7) of a data register:
+      after an ext.w of it (kind 16, op 6), looking back past
+      instructions that neither use nor kill the register up to a
+      label, a call or branch or the section's head, c becomes an extb.l
+      (op 8) and the ext.w is removed; else after a move.b into it (op
+      0), and before that a clr (kind 3, op 10) of it, with nothing
+      using or killing it between the clr and c but the move.b, and the
+      codes c sets not tested after it: the clr made op 11 and c
+      removed.  The cell before c when c was removed, else c.
+
+      0x111130, 0x322 bytes, no A5 load: the result in D4, the move.b's
+      cell in D5, the clr's in D3.  The search for the move.b alone
+      does not stop at labels, calls or branches. }
+
+    function try_long_extend_opts(
+        c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param);
+    var
+      r: codegen_$cell_ptr_t;
+      found: boolean;
+      done: boolean;
+      p: codegen_$cell_ptr_t;
+      m: codegen_$cell_ptr_t;
+      k: codegen_$cell_ptr_t;
+    begin
+      found := false;
+      r := c;
+      done := found;
+      p := c;
+      repeat
+        p := prvlcc(p);
+        if not (p^.kind in [0, 24, 32..33]) and (p^.kind = dest1_instyp) and
+           (p^.op = 6) and sameaddr(p^.ads2, c^.ads2) and
+           not involves(p^.ads1, c^.ads2.f2) then
+          found := true
+        else
+          done := (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+                  involves(p^.ads1, c^.ads2.f2) or
+                  final_$reg_is_killed(p, c^.ads2.f2);
+        done := done or (p = fn_sect^.head);
+      until found or done;
+      if found then begin
+        c^.op := 8;
+        detach(p);
+      end
+      else begin
+        found := false;
+        p := c;
+        done := found;
+        repeat
+          p := prvlcc(p);
+          if not (p^.kind in [0, 24, 32..33]) and (p^.op = 0) and
+             sameaddr(p^.ads2, c^.ads2) and
+             not involves(p^.ads1, c^.ads2.f2) then
+            found := true
+          else
+            done := involves(p^.ads1, c^.ads2.f2) or
+                    final_$reg_is_killed(p, c^.ads2.f2);
+          done := done or (p = fn_sect^.head);
+        until found or done;
+        if found then begin
+          found := false;
+          m := p;
+          done := found;
+          repeat
+            p := prvlcc(p);
+            if not (p^.kind in [0, 24, 32..33]) and
+               (p^.kind = dest1_sz_instyp) and (p^.op = 10) and
+               sameaddr(p^.ads2, c^.ads2) and
+               not involves(p^.ads1, c^.ads2.f2) then
+              found := true
+            else
+              done := (p^.kind = def_lbl_instyp) or
+                      final_$is_call_or_branch(p) or
+                      involves(p^.ads1, c^.ads2.f2) or
+                      final_$reg_is_killed(p, c^.ads2.f2);
+            done := done or (p = fn_sect^.head);
+          until found or done;
+          if found then begin
+            k := p;
+            done := false;
+            repeat
+              p := nxtlcc(p);
+              if p <> c then
+                done := involves(p^.ads1, c^.ads2.f2) or
+                        (final_$reg_is_killed(p, c^.ads2.f2) and (p <> m));
+            until done or (p = c);
+            if not done then begin
+              p := nxtlcc(c);
+              if not (p^.kind in [0, 24, 32..33]) then
+                if not testcc(p, 15) then begin
+                  k^.op := 11;
+                  r := prvlcc(c);
+                  detach(c);
+                end;
+            end;
+          end;
+        end;
+      end;
+      try_long_extend_opts := r;
+    end;
+
+    { try_reducing_fabs_op - an FP test c (ops 298..303) followed by
+      one of the two five-cell patterns fn_fabs_a and fn_fabs_b (the
+      kinds, the ops where checked, the source's size where checked;
+      both tried together, cell by cell), whose second and fifth cells
+      have the same operands: c becomes the pattern's operation
+      (kind, operands, op by fn_fabs_op) and its cells but the label
+      are removed.  Whether it was.
+
+      0x111452, 0x214 bytes, no A5 load: the cells at -32..-16
+      (`(-0x24,A6,D0.l)' with D0 four times the index); the two
+      patterns' flags in D2 and D3, the index in D4; c's size kept at
+      -48. }
+
+    function try_reducing_fabs_op(
+        c: codegen_$cell_ptr_t): boolean; options(val_param);
+    var
+      oka: boolean;
+      okb: boolean;
+      i: integer;
+      k: integer;
+      p: codegen_$cell_ptr_t;
+      cells: array [1..5] of codegen_$cell_ptr_t;
+    begin
+      oka := true;
+      i := 1;
+      okb := oka;
+      p := c;
+      while (oka or okb) and (i <= 5) do begin
+        p := nxtlcc(p);
+        cells[i] := p;
+        if not (p^.kind in fn_fabs_a[i].kinds) then
+          oka := false
+        else if fn_fabs_a[i].check_op and not (p^.op in fn_fabs_a[i].ops) then
+          oka := false
+        else if fn_fabs_a[i].check_size then
+          if final_$sizeof(p, 1) <> final_$sizeof(c, 1) then
+            oka := false;
+        if not (p^.kind in fn_fabs_b[i].kinds) then
+          okb := false
+        else if fn_fabs_b[i].check_op and not (p^.op in fn_fabs_b[i].ops) then
+          okb := false
+        else if fn_fabs_b[i].check_size then
+          if final_$sizeof(p, 1) <> final_$sizeof(c, 1) then
+            okb := false;
+        if oka or okb then
+          i := i + 1;
+      end;
+      if oka or okb then
+        if not sameaddr(cells[2]^.ads1, cells[5]^.ads1) or
+           not sameaddr(cells[2]^.ads2, cells[5]^.ads2) then begin
+          oka := false;
+          okb := oka;
+        end;
+      if oka or okb then begin
+        if oka then
+          k := 2
+        else
+          k := 5;
+        c^.kind := cells[k]^.kind;
+        c^.op := fn_fabs_op[cells[k]^.op];
+        c^.ads1 := cells[k]^.ads1;
+        c^.ads2 := cells[k]^.ads2;
+        c^.size := ilength(c);
+        detach(cells[1]);
+        detach(cells[2]);
+        detach(cells[3]);
+        detach(cells[5]);
+        try_reducing_fabs_op := true;
+      end
+      else
+        try_reducing_fabs_op := false;
+    end;
+
+    { try_removing_previous_clr - extb.l c (kind 16, op 8) of a data
+      register: a clr of it before (kind 3, ops 9, 11, 10), looking back
+      past instructions that do not use it up to a label, a call or
+      branch or the section's head, then a move.b into it (op 0) after
+      the clr, looking on past instructions that neither use nor kill
+      it, and nothing using or killing it from there to c: the clr is
+      removed.
+
+      0x111666, 0x1F0 bytes, no A5 load: the clr's cell at -20; the
+      ops compared in turn (`cmpi.w #9; beq; cmpi.w #11; beq; cmpi.w
+      #10; bne'). }
+
+    procedure try_removing_previous_clr(
+        c: codegen_$cell_ptr_t); options(val_param);
+    var
+      found: boolean;
+      done: boolean;
+      p: codegen_$cell_ptr_t;
+      k: codegen_$cell_ptr_t;
+    begin
+      found := false;
+      p := c;
+      done := found;
+      repeat
+        p := prvlcc(p);
+        if not (p^.kind in [0, 24, 32..33]) and (p^.kind = dest1_sz_instyp) and
+           ((p^.op = 9) or (p^.op = 11) or (p^.op = 10)) and
+           sameaddr(p^.ads2, c^.ads2) and
+           not involves(p^.ads1, c^.ads2.f2) then
+          found := true
+        else
+          done := (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+                  involves(p^.ads1, c^.ads2.f2);
+        done := done or (p = fn_sect^.head);
+      until found or done;
+      if found then begin
+        k := p;
+        found := false;
+        done := found;
+        repeat
+          p := nxtlcc(p);
+          if not (p^.kind in [0, 24, 32..33]) and (p^.op = 0) and
+             sameaddr(p^.ads2, c^.ads2) and
+             not involves(p^.ads1, c^.ads2.f2) then
+            found := true
+          else
+            done := involves(p^.ads1, c^.ads2.f2) or
+                    final_$reg_is_killed(p, c^.ads2.f2);
+        until found or done;
+        if found then begin
+          done := false;
+          repeat
+            p := nxtlcc(p);
+            if p <> c then
+              done := involves(p^.ads1, c^.ads2.f2) or
+                      final_$reg_is_killed(p, c^.ads2.f2);
+          until done or (p = c);
+          if not done then
+            detach(k);
+        end;
+      end;
+    end;
+
+    { try_widening_clr - a clr c (kind 3, ops 9..11) after a clr of the
+      same size (1 or 2 bytes) of the storage next to its own, under
+      -CPU M020 (`btst #5' of +0x285), neither of untouchable memory:
+      c clears both (final_$contiguous_distinct_addresses's lower
+      operand; op 10 for two bytes, 11 for four) and the other is
+      removed.
+
+      0x111856, 0xFA bytes, no A5 load: the lower operand at -24; the
+      sizes compared `cmp.w; bne', `cmpi.w #4; bge'. }
+
+    procedure try_widening_clr(
+        c: codegen_$cell_ptr_t); options(val_param);
+    var
+      p: codegen_$cell_ptr_t;
+      s1: integer;
+      s2: integer;
+      lo: codegen_$ads_t;
+    begin
+      p := prvlcc(c);
+      s1 := final_$sizeof(c, 2);
+      s2 := final_$sizeof(p, 2);
+      if (3 in cargs_$options.cpu) and not has_untouchable_mem_attrs(c^.ads2) and
+         not has_untouchable_mem_attrs(p^.ads2) and
+         (p^.kind = dest1_sz_instyp) and (p^.op in [9..11]) and (s1 = s2) and
+         (s1 < 4) and
+         final_$contiguous_distinct_addresses(c^.ads2, s1, p^.ads2, s2, lo) then begin
+        c^.ads2 := lo;
+        case s2 of
+          1: c^.op := 10;
+          2: c^.op := 11;
+        end;
+        c^.size := ilength(c);
+        detach(p);
+      end;
+    end;
+
+  begin
+    repeat
+      fn_changed := false;
+      p := first;
+      while p <> fn_sect^.head do
+        case p^.kind of
+          def_lbl_instyp:
+            p := plab(p);
+          cbr_instyp:
+            p := pcondjmp(p);
+          br_instyp, casejmp_instyp:
+            p := puncondjmp(p);
+          fbr_instyp:
+            p := f_pcondjmp(p);
+          move_instyp:
+            p := optmove(p);
+          dest1_instyp: begin
+            if (p^.op = 7) and (3 in cargs_$options.cpu) then
+              p := try_long_extend_opts(p);
+            if p^.op = 8 then
+              try_removing_previous_clr(p);
+            p := p^.next;
+          end;
+          q_instyp, i_instyp: begin
+            u := p;
+            final_$try_reducing_literal(u);
+            p := u^.next;
+          end;
+          a_instyp:
+            p := opta(p);
+          dest1_sz_instyp, src2_sz_instyp, i_w_instyp, dest2_instyp: begin
+            if (p^.kind = dest1_sz_instyp) and (p^.op in [9..11]) then
+              try_widening_clr(p);
+            p := opttest(p);
+          end;
+          logicize_instyp:
+            p := final_$logicize_opts(p);
+          tern_src_ext_instyp:
+            p := floatop(p);
+          m68881_src_ext_instyp: begin
+            if (p^.op in [224..230]) and (p^.ads1.f1 = 2) and
+               (p^.ads2.f1 = 13) then
+              p := try_loading_from_fp_reg(p);
+            p := floatop(p);
+          end;
+          rts_instyp:
+            p := deltolab(p^.next);
+          m68881_tst_reg_instyp, m68881_dest1_instyp: begin
+            r := true;
+            if p^.op in [298..303] then
+              r := not try_reducing_fabs_op(p);
+            if r then
+              p := opttest(p);
+          end;
+          m68881_reg_reg_instyp: begin
+            if sameaddr(p^.ads1, p^.ads2) then
+              if p^.op in [224..229] then begin
+                t := p;
+                p := p^.prev;
+                detach(t);
+              end
+              else if p^.op in [310, 316, 322, 328, 340, 352, 370, 382, 388, 394, 406, 418, 430] then
+                try_loading_monadic_src_here(p);
+            p := floatop(p);
+          end;
+          otherwise
+            p := p^.next;
+        end;
+    until not fn_changed;
+    p := first;
+    first_link := true;
+    while p <> fn_sect^.head do
+      if (cargs_$options.db = 3) and
+         not ((p^.kind = block_end_instyp) or (p^.kind = line_no_instyp) or
+              (p^.kind = def_lbl_instyp)) then
+        p := p^.next
+      else begin
+        k := p;
+        case p^.kind of
+          move_instyp:
+            p := optmove(p);
+          fpa_reg_reg_instyp:
+            if ((p^.op = 500) or (p^.op = 501)) and (p^.ads2.f2 = p^.ads2.f3) then begin
+              t := p;
+              p := p^.prev;
+              detach(t);
+            end
+            else
+              p := p^.next;
+          m68881_reg_reg_instyp: begin
+            q := prvlcc(p);
+            if (q^.kind = m68881_reg_reg_instyp) and (p^.op in [224..229]) and
+               (p^.op = q^.op) and sameaddr(p^.ads1, q^.ads2) and
+               sameaddr(p^.ads2, q^.ads1) then begin
+              t := p;
+              p := p^.prev;
+              detach(t);
+            end;
+            p := p^.next;
+          end;
+          m68881_dst_ext_instyp: begin
+            q := prvlcc(p);
+            if (q^.kind = m68881_src_ext_instyp) and (p^.op in [231..235]) and
+               (q^.op in [225..229]) and (q^.op - 225 = p^.op - 231) and
+               sameaddr(p^.ads1, q^.ads2) and sameaddr(q^.ads1, p^.ads2) and
+               not (p^.ads1.f1 in [8, 9, 11, 12]) and
+               not has_untouchable_mem_attrs(p^.ads2) then begin
+              t := p;
+              p := p^.prev;
+              detach(t);
+            end;
+            p := p^.next;
+          end;
+          casejmp_instyp:
+            p := puncondjmp(p);
+          dest1_instyp:
+            if (p^.op = 13) and (p^.size > 2) and (p^.ads2.f2 <> 15) then begin
+              k := nxtlcc(k);
+              while (k^.kind = dest1_instyp) and (k^.op = 13) and
+                    sameaddr(p^.ads2, k^.ads2) do begin
+                k^.kind := move_instyp;
+                k^.op := 2;
+                k^.size := 2;
+                k^.ads1.f1 := 2;
+                k^.ads1.y := 0;
+                k^.ads1.f2 := 15;
+                k^.ads1.x := k^.ads2.x;
+                k^.ads2.f1 := 9;
+                k^.ads2.y := 0;
+                k^.ads2.f2 := 15;
+                k^.ads2.x := 0;
+                k := nxtlcc(k);
+              end;
+              p := p^.next;
+            end
+            else if p^.op in [113..115] then
+              p := opttest(p)
+            else
+              p := p^.next;
+          m68881_tst_reg_instyp, m68881_dest1_instyp:
+            p := opttest(p);
+          link_instyp: begin
+            if first_link then
+              p := final_$link_opts(p)
+            else
+              p := p^.next;
+            first_link := false;
+          end;
+          unlk_instyp:
+            p := final_$unlink_opts(p);
+          def_lbl_instyp:
+            p := plab(p);
+          cbr_instyp:
+            p := pcondjmp(p);
+          br_instyp:
+            p := puncondjmp(p);
+          fbr_instyp:
+            p := f_pcondjmp(p);
+          a_instyp, q_instyp, i_instyp:
+            p := opta(p);
+          dest1_sz_instyp, src2_sz_instyp, i_w_instyp, dest2_instyp:
+            p := opttest(p);
+          line_no_instyp: begin
+            q := p^.prev;
+            if (q^.kind = rts_instyp) and (q^.prev^.kind = def_lbl_instyp) and
+               (q^.prev^.prev^.kind = line_no_instyp) then begin
+              t := p;
+              p := q;
+              detach(t);
+            end
+            else
+              p := p^.next;
+          end;
+          otherwise
+            p := p^.next;
+        end;
+      end;
   end;
 
   { damn_the_040s_hide_anyway - a nop (insert_integer_nop) put before

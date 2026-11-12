@@ -459,4 +459,17 @@ entry (was b42_0; opt_livevar, reg_action, opt_strength follow), a
 142's +60 br_sense, a 188's +52 arg_stmt; g_opt_vtype_t's +24 split
 into its bits; walkuses' t is univ (reviseuses passes an entry of
 opt_4009c).
+Translator JJ (2026-11-11), final (finished, 120 of 120): peepholer_ops
+and its six try_ routines are nested in peepholer (GG's module-level
+stand-in removed); deltest (with backov), opttest, optmove, opta,
+floatop, merge_add_sub, try_pre_dec, try_post_incr,
+transform_ptr_in_d_use, final_$cmp_branch_becomes_eor,
+final_$redundant_lea, final_$collapsed_index_calc and
+final_$try_reducing_literal translated.  No shared insert changed.  The
+module data's cells are named by use (fn_ads0 +0, fn_test +36,
+fn_test_size +42, fn_mask/fn_adjust/fn_size_f6 +0x60..+0x83 replacing
+fn_60, fn_fop_a/fn_fop_b +0x2A8/+0x2B8, fn_fmovecr +0x2E8, fn_fabs_op
++0x3A0, fn_fabs_b/fn_fabs_a +0x3B0/+0x530); cc_change takes deltest's
+unread second argument.  docs/dpc-gaps.md 31 (new), 2, 7, 24 (also);
+rev889-patterns 92-95; questions 136-139.
 

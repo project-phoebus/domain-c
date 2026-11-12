@@ -519,6 +519,8 @@ lang/lang/source/final.pas	s/^(\s*)substr\(fn_chars_ptr_t\(addr\(n\^\.xc\[12\]\)
 lang/lang/source/final.pas	s{\b((?:[a-z_]\w*)(?:\^|\.\w+|\[\w+\])*) in \[([\d., ]+)\]}{my $v=$1; "(".join(" or ", map { /^(\d+)\.\.(\d+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $_)" } split(/,\s*/, $2)).") { gap 8 }"}ge
 # gap 24 (final): calls of boolean functions as operands of and/or (compared with true, for the check)
 lang/lang/source/final.pas	s{(?<!function )\b(final_\$(?:is_call|is_branch|sets_m881_codes_for_fp0|is_fp040_libcall|is_int|is_int_load|in_15bit_range|is_call_or_branch|is_unmoveable_fp_inst|is_unmoveable_ftest)|assert_is_\w+|has_\w+|sameaddr|involves|testcc|odd|fpx_instruction|cc_change|scancc|isbranch|uncondjmpp|eqlbitfield|correct_cc_set|reg_mod|crossjump|local_var_ref|final_\$stack_is_altered|final_\$local_var_refs|final_\$redundant_\w+|final_\$unity_compare_and_branch|test_add_sub|is_stack_adjuster|merge_move_sub|final_\$merge_movea_adjust|final_\$reg_is_(?:killed|index|dead_henceforth|simple_deferred)|final_\$fp_reg_is_killed|final_\$reg_implicitly_used_by_inst)(\((?:[^()]++|(?2))*\))}{(($1$2) = true)}g
+# gap 24 (final): a negated call as an operand of and/or (compared with false, for the check)
+lang/lang/source/final.pas	s{\bnot \(\(((?:\w|\$)+(\((?:[^()]++|(?2))*\)))\) = true\)}{(($1) = false)}g
 # gap 12 (final): a pointer function's result compared with a variable (the operands swapped)
 lang/lang/source/final.pas	s/:= alias_\$ind_for_captured_lvalue\(n\) = t;/:= t = alias_\$ind_for_captured_lvalue(n); { gap 12 }/
 # gap 2 (final): a case of 5 labels over a range of 14 (the other modes added, for the check)
@@ -566,3 +568,12 @@ lang/lang/source/opt_main.pas	s/n := trunc\(e\^\.real_value\);/n := e^.xl[3]; { 
 lang/lang/source/opt_main.pas	s/if n <> e\^\.real_value then/if n <> n then { gap 7 }/
 # gap 29 (opt_main): make_new_postorder_node_list's guarded test of a word in a 32-byte set (the range test only, for the check)
 lang/lang/source/opt_main.pas	s/\(k in e\^\.vset\^\)/(k <= 255) { gap 29 }/
+# gap 2 (final): deltest's case of 8 labels over 22 (the otherwise's ops added, for the check)
+lang/lang/source/final.pas	s/^(\s*)107, 108, 109, 119, 123:$/${1}105, 106, 110, 111, 112, 113, 114, 115, 116, 117, 118, 120, 121, 122: ; { gap 2 }\n${1}107, 108, 109, 119, 123:/
+# gap 7 (final): floatop's real constant, trunc and real compare (the longwords used, for the check)
+lang/lang/source/final.pas	s/^(\s*)if \(n\^\.real_value = 0\.0\) or$/$1if (n^.bits[1] = 0) or { gap 7 }/
+lang/lang/source/final.pas	s/^(\s*)iv := trunc\(v\.d\);$/$1iv := v.l[1]; { gap 7 }/
+lang/lang/source/final.pas	s/^(\s*)if iv <> v\.d then$/$1if iv <> v.l[1] then { gap 7 }/
+lang/lang/source/final.pas	s/^(\s*)v\.d := n\^\.real_value;$/$1v.l[1] := n^.bits[1]; v.l[2] := n^.bits[2]; { gap 7 }/
+# gap 31 (final): an 8-byte set expression compared with [] (the low longword masked, for the check)
+lang/lang/source/final.pas	s/\(v\.s \* \[0\.\.28\] = \[\]\)/((v.l[2] \& 16#1FFFFFFF) = 0) { gap 31 }/

@@ -1062,4 +1062,29 @@ revisited.
    the table runs to +0x8F (om_param_conflicts follows): written as
    [0..15] with zeros for 10..15.  Was the original a 10-element array
    with 12 bytes of something unreferenced after it?
+136. Translator JJ, final: probable slips of the original kept:
+   try_loading_monadic_src_here (cc.m68k 0x110F14) tests that the move's
+   source is an FP register (mode 13) and then, for a source that is
+   not one, makes the operation kind 40 with its op advanced (dead
+   code), and clears D0 before giving up on op 430 (a procedure: its
+   caller reads nothing); floatop (0x10FB84) takes a double's exponent
+   as the high word and 0x7FFF less 1023 (an extended's layout), so the
+   range test of its single conversion never holds but for 0.0; the ROM
+   table's 1e4 (offset 0x35, A5 +0x356) is 0.0 in .rwdi;
+   final_$collapsed_index_calc's fourth case gives the lea it makes c's
+   length (`ilength' of c, 0x10A448).  Are any of these misreadings?
+137. final: deltest (0x10C5CE) tests the six condition codes of fn_ccset
+   with six copies of the same code (`btst #0' .. `btst #5' of +41):
+   written as a `for' loop; did the original have six `if's (Rev 8.89 is
+   not known to unroll loops)?  cc_change's second parameter (fn_ccset,
+   passed by deltest and not read) is added to its heading.
+138. final: the module data's words at +0x2C8 (1, 2, 4, .. 128) and
+   +0x2D8 (358..363) and the longwords +12 and +0x84 have no user in
+   final.pas; another unit's absolute references (or a slip) not
+   found.  They are not declared (the layout is dpc's in any case).
+139. final: peepholer_ops was a module-level extern stand-in (GG); it is
+   now nested in peepholer as in the image.  Its first pass keeps the
+   same cell when try_reducing_fabs_op succeeds (`bpl' to the loop's
+   test with A2 unchanged): the cell, now the pattern's operation, is
+   visited again under its new kind.
 

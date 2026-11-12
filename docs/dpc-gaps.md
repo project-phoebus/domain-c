@@ -61,6 +61,10 @@ when this tree is merged).
    Also opt_strength.pas (translator FF): ptrsub's case of 139, 140,
    142, 151 (a compare chain at 0x0E7786).
 
+   Also final.pas (translator JJ): deltest's `case' of the op (cc.m68k
+   0x10C8B0: a table of 22 from 102) with 8 labels (102..104, 107..109,
+   119, 123); the check adds the otherwise's 14 ops as labels.
+
 3. **`new` and `dispose`.**  c_macro_utl's mu_$enter_name (cc.m68k
    0x058FDC: PAS_$NEW with 0x100E), mu_$alloc_tle (0x05993C, 134182)
    and mu_$initialize (0x059220, PAS_$DISPOSE).  dpc: "undefined
@@ -146,6 +150,11 @@ when this tree is merged).
    "undefined identifier `trunc`", and under --check-only "operands of
    the comparison are not compatible" for the integer compared with a
    double.
+   Also final.pas floatop (translator JJ, cc.m68k 0x10FB84): `n^.real_value
+   = 0.0' (FPP 0x0074 0xFF34), `iv := trunc(v.d)' (0x0074 0x00D0), `iv
+   <> v.d' (0x00C4 0x00B4), and the copy of a double into a variant
+   record, `v.d := n^.real_value' (dpc: "a 8-byte value is not
+   supported yet"); the check compares and copies the longwords.
 
 8. **`in` on a constant set with a word element.**  `t^.kind in [77..87,
    101, 200]` (token.pas set_is_nil 0x09930E: `move.w #207,D0; sub.w
@@ -476,6 +485,12 @@ when this tree is merged).
    (recognize_induction_variables 0x0EA862), `and
    il_utils_$is_strength_reduction_temp(...)' (reduce 0x0EB03E).
 
+   Also final.pas (translator JJ): a negated call as an operand, `... and
+   not testcc(p, 15)' in try_long_extend_opts (0x111130) and `and not
+   has_untouchable_mem_attrs(c^.ads2)' in final_$try_reducing_literal
+   (0x10A492): the generic rule's `not ((f(...)) = true)' is refused
+   too; a second rule makes it `((f(...)) = false)'.
+
 Gap 21 (a routine parameter, reference 5.4; translator L's entry) also
 met in debug_sym_dmp.pas (translator N), where it differs in two ways:
 
@@ -676,4 +691,21 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
        begin
          if (b in s) and (b in [27..29]) then
            n := 1;
+       end;
+
+31. **A set expression of more than a longword compared with `[]'.**
+   final.pas floatop (cc.m68k 0x10FDF0): a double's low 29 bits tested
+   as `v.s * [0..28] = []' with v.s a `set of 0..63' view of the real
+   (`and.l' of the 8 bytes with a constant 0x00000000 0x1FFFFFFF in a
+   frame temporary, `tst.l' of both longwords).  dpc: "comparing a set
+   of more than a longword that is not a variable (no site known,
+   codegen-patterns 5.1) is not supported yet".  The check masks the
+   low longword.  Reproducer:
+
+       module g31;
+       type s_t = set of 0..63;
+       var s: s_t; b: boolean;
+       procedure p;
+       begin
+         b := s * [0..28] = [];
        end;
