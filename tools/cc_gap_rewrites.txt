@@ -501,3 +501,8 @@ lang/lang/source/reg_save.pas	s/n\^\.kind in \[139\.\.142, 144, 148\.\.151, 188,
 lang/lang/source/reg_save.pas	s/^\s*191, 214\.\.215, 223\.\.225, 227\.\.228, 231, 233\]$//
 # gap 30 (reg_save): `in' on a set parameter held in a register as an operand of `and' (the parameter's test dropped, for the check)
 lang/lang/source/reg_save.pas	s/\(b in s\) and \(b in \[/(b in [/
+# gap 24 (reg_save, translator HH): a call as the right operand of `or' (the result compared with true, for the check)
+lang/lang/source/reg_save.pas	s/^(\s*)cg_call_\$is_proc_var_call\(t\^\.opnd\[1\]\) then$/$1(cg_call_\$is_proc_var_call(t^.opnd[1]) = true) then { gap 24 }/
+lang/lang/source/reg_save.pas	s/if unaligned\(s\^\.asg_rhs\) or unaligned\(s\^\.asg_lhs\) then/if (unaligned(s^.asg_rhs) = true) or (unaligned(s^.asg_lhs) = true) then { gap 24 }/
+# gap 8 (reg_save, translator HH): in on the constant kind sets over the whole file (sets spanning lines; the comparisons, as cg_top's rule)
+lang/lang/source/reg_save.pas	BEGIN { undef $/ } s{((?:\b\w+\([^()]*\)|\b\w+)(?:\[[^\]\[]*\]|\^|\.\w+)*) in \[([^\]]*)\]}{my $v = $1; my @e = split(/\s*,\s*/, $2 =~ s/\s+/ /gr); "(" . join(" or ", map { my $x = $_ =~ s/^\s+|\s+$//gr; $x =~ /^(\S+)\s*\.\.\s*(\S+)$/ ? "(($v >= $1) and ($v <= $2))" : "($v = $x)" } @e) . ")"}ge

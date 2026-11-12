@@ -44,25 +44,15 @@
   (16#3FFFF), [0, 1, 8, 9, 16, 17] the scratch registers D0, D1, A0,
   A1, FP0, FP1 (16#30303).
 
+  Trees are read through cg.ins.pas's cg_tree_t, statements (the
+  assignments, evaluations, branches) through g_opt.ins.pas's
+  g_opt_stmt_t, other nodes by offset.
+
   Not known from the original: the parameters' and locals' names.
 
-  dpc gaps (docs/dpc-gaps.md): 8 (`in' on the node kind set).
+  dpc gaps (docs/dpc-gaps.md): 8 (`in' on the node kind sets), 24 (a
+  call as the right operand of `or'), 30 (`in' on a set parameter).
 }
-
-{ TODO(pascal) reg_save.pas is unfinished: six routines not written
-
-  registers_consumed_by_tree_operator (0x0EC3CE, 0x6F0 bytes: a case of
-  74 operators on the tree's +36, the extra temporaries each needs, the
-  string builtins through cg_misc_$strcmp_can_use_longs, the constant
-  multiplications through cg_tree_$is_decomposable_const_mul, the
-  library routines through reg_save_$killed_by_routine),
-  registers_consumed_by_agg_aop (0x0ECB64), registers_consumed_by_
-  assign_operator (0x0ECD06: a case on the assignment's +76),
-  assert_tree_result_depends_on_operands (0x0ECEB6),
-  registers_consumed_by_object (0x0ECEFE: by the object's kind, a set
-  of 0..207 at 0x0ED15E, 'NIL object' checked) and
-  registers_preserved_by_statement (0x0ED178: a top-level statement's
-  trees) are declared below and not translated yet. }
 
 module reg_save;
 
@@ -86,14 +76,14 @@ var
     here until its owner is translated (docs/questions.md). }
   opt_abnormal_routine: extern il_$node_ptr_t;
 
-{ The routines not translated yet (the TODO above). }
+{ registers_consumed_by_cc_call and registers_consumed_by_tree_operator
+  call them before their bodies. }
 
 function registers_consumed_by_object(
-    n: il_$node_ptr_t): reg_save_$regs_t; options(val_param); extern;
+    n: il_$node_ptr_t): reg_save_$regs_t; options(val_param); forward;
 
-function registers_preserved_by_statement(
-    s: il_$node_ptr_t;
-    whole: boolean): reg_save_$regs_t; options(val_param); extern;
+function reg_save_$killed_by_routine(
+    k: integer): reg_save_$regs_t; options(val_param); forward;
 
 define
   reg_save_$unaffected_by_routine, reg_save_$killed_by_routine,
@@ -397,6 +387,592 @@ begin
       registers_consumed_by_object(n^.xp[4]) + [0, 1, 8, 9, 16, 17];
 end;
 
+{ registers_consumed_by_tree_operator - the registers and extra
+  temporaries tree n's operator (+36) needs, its operands not counted:
+  the markers by operator (24..26 data, 27..29 address, 30 floating, 31
+  an FPA1 register), D0 and A0 for the multiplications without a 32-bit
+  multiply (-CPU 160, M020 not given), the library routine's registers
+  for a division done by a call (delay_$divide_attributes) or a
+  floating operation needing one (cg_tree_$needs_lib_support), a
+  conversion to a floating value without a floating unit (routine 18);
+  a call's (15, 16) for a routine not reached directly by its kind:
+  every register outside -XRS, else the scratch registers, A0 when
+  -PIC or a call through a variable, A1 for a routine (107, 167, 108)
+  with +378 bit 6.
+
+  0x0EC3CE, 0x6F0 bytes, link #-56: the operators by a jump table of 74
+  (0x0EC40C; 5, 30..33, 51..62, 64..67, 71 and the others none); the
+  result in D2 (cleared first); the arms needing a library routine end
+  in one tail (0x0ECA9E `bsr reg_save_$killed_by_routine', its argument
+  pushed by each arm, no pop); the constant kinds the set at 0x0ECB4A
+  (0..207: [77..87, 101, 200], gap 8), the operands' kinds the sets at
+  0x0ECB30 (references) and 0x0ECB16 (constants), the routine kinds
+  at 0x0ECB00 (0..175); the cpu word (0x2C3670) masked whole (`andi.w
+  #0x3FFC; lsr.w #2' then `andi.w #12' or `#0x714') or tested by its
+  bits (`btst #5' of 0x2C3671 M020, `btst #2' of 0x2C3670 FPA1, `#4'
+  MATHLIB_SR10); 41's sizes compared unsigned (`bhi'), its set of
+  0..31 (0xF100) tested after `cmp.l #31' of the zero-extended word.
+  delay_$divide_attributes' fields in frame words (-46 how, -44 the
+  routine, -52 b58), the library routine's index at -30.
+
+  Not known from the original: the names of the locals, the meaning of
+  the operator codes. }
+
+function registers_consumed_by_tree_operator(
+    n: il_$node_ptr_t): reg_save_$regs_t; options(val_param); internal;
+var
+  strategy: integer32;
+  rsize: integer32;
+  sh: integer32;
+  lsize: integer32;
+  w70: integer;
+  w66: integer;
+  rtn: integer;
+  w42: integer;
+  w34: integer;
+  w26: integer;
+  w62: integer;
+  w18: integer;
+  drtn: integer;
+  how: integer;
+  b58: boolean;
+  b54: boolean;
+  t: cg_tree_ptr_t;
+  r: reg_save_$regs_t;
+begin
+  if not assert_is_tree_node(n) then
+    bug_check('reg_save\registers_consumed_by_tree_operator -- not a tree node%$');
+  t := cg_tree_ptr_t(n);
+  r := [];
+  case t^.op of
+    69:
+      r := [24, 27];
+    68:
+      if cg_misc_$strcmp_can_use_longs(n) then
+        r := [24..28]
+      else if t^.desc.w6 = 1 then
+        r := [24, 27, 28]
+      else
+        r := [24, 25, 27, 28];
+    70:
+      if t^.desc.w6 = 1 then
+        r := [24, 25, 27..29]
+      else
+        r := [24..29];
+    3: begin
+      r := [24, 25, 27, 28];
+      if cg_tree_$is_decomposable_const_mul(n) then
+        r := [24..28];
+      if cargs_$options.cpu * [2, 3] = [] then
+        if (t^.desc.w6 <> 2) or (t^.desc.w8 <> 2) then
+          r := r + [0, 8];
+    end;
+    43:
+      r := [0, 8];
+    4: begin
+      r := [24, 25, 27, 28];
+      if not (3 in cargs_$options.cpu) then
+        r := [0, 8, 24, 25, 27, 28]
+      else if t^.desc.w8 <> 4 then
+        r := [24..28];
+    end;
+    6: begin
+      r := [24, 25];
+      delay_$divide_attributes(n, false, strategy, w18, lsize, w26, rsize,
+          w34, how, w42, drtn, sh, b54, b58, w62, w66, w70);
+      if how in [4, 8] then begin
+        if t^.desc.w8 <> 4 then
+          r := [24..26]
+        else if b58 then
+          r := [24..26];
+      end
+      else if how = 0 then
+        r := reg_save_$killed_by_routine(drtn);
+    end;
+    25: begin
+      r := [24, 25];
+      if t^.count > 2 then
+        if not ((t^.opnd[2]^.kind in [77..87, 101, 200]) and
+                (t^.opnd[3]^.kind in [77..87, 101, 200])) then
+          r := [24..26];
+    end;
+    7, 8:
+      r := [24];
+    47:
+      if t^.count <> 1 then
+        r := [24];
+    26:
+      r := [27];
+    12:
+      if t^.desc.w6 = 5 then
+        r := [24, 27]
+      else
+        r := [24];
+    1, 2, 9, 10:
+      if t^.desc.rlen = 5 then
+        r := [27]
+      else
+        r := [24];
+    14: begin
+      r := [24, 25, 27, 28];
+      if not (t^.opnd[2]^.kind in [77..87, 101, 200]) then
+        r := [24..28];
+    end;
+    0, 29, 45, 46, 48, 63, 72:
+      r := [24, 25, 27, 28];
+    13: begin
+      r := [27];
+      if t^.desc.rlen = 4 then
+        r := [24, 27];
+    end;
+    17: begin
+      if (t^.desc.rlen = 7) or (t^.desc.rlen = 6) then
+        if cargs_$options.cpu * [2, 4, 8, 9, 10] <> [] then
+          r := [30]
+        else
+          r := reg_save_$killed_by_routine(18);
+      if assert_is_tree_node(t^.opnd[1]) then begin
+        if (t^.desc.rlen = 1) or (t^.desc.rlen = 4) or
+           (t^.desc.rlen = 2) then
+          r := r + [24]
+        else if ((t^.desc.rlen = 7) or (t^.desc.rlen = 6)) and
+                (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = 5) then
+          r := r + [27]
+        else if t^.desc.rlen = 5 then
+          r := r + [27]
+        else if (t^.desc.rlen = 7) or (t^.desc.rlen = 6) then
+          if (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = 1) or
+             (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = 4) or
+             (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = 2) then
+            r := r + [27];
+      end
+      else if t^.opnd[1]^.kind in [109..110, 145..147, 163..164, 195,
+                                   205] then
+        r := r + [24, 27]
+      else if t^.opnd[1]^.kind in [77..90, 92..93, 101, 156, 176, 198,
+                                   200] then
+        r := r + [24]
+      else
+        r := r + [24, 25, 27, 28];
+    end;
+    27, 28, 44, 49, 50: begin
+      r := [24];
+      if not (t^.opnd[2]^.kind in [77..87, 101, 200]) then
+        r := [24, 25];
+    end;
+    23, 24, 73:
+      r := [24..28];
+    22:
+      r := [24, 27, 28];
+    11:
+      if not (t^.opnd[1]^.kind in [77..87, 101, 200]) then
+        if 3 in cargs_$options.cpu then
+          r := [24, 25]
+        else
+          r := [24..28];
+    15, 16: begin
+      if not (t^.opnd[1]^.kind in [107..108, 110, 159, 171, 173..175]) then
+        if cargs_$options.xrs then
+          r := [0, 1, 8, 9, 16, 17]
+        else
+          r := [0..23];
+      if not (7 in cargs_$options.flags_286) or
+         cg_call_$is_proc_var_call(t^.opnd[1]) then
+        r := r + [8];
+      if (t^.opnd[1]^.kind = 107) or (t^.opnd[1]^.kind = 167) or
+         (t^.opnd[1]^.kind = 108) then
+        if (ord(t^.opnd[1]^.xc[378]) & 16#40) <> 0 then
+          r := r + [9];
+    end;
+    19, 20, 21:
+      r := [24..29];
+    18:
+      r := [24];
+    34, 35, 36:
+      if cg_tree_$needs_lib_support(n, rtn) then
+        r := reg_save_$killed_by_routine(rtn)
+      else
+        r := [30];
+    37, 38:
+      if cg_tree_$needs_lib_support(n, rtn) then
+        r := reg_save_$killed_by_routine(rtn)
+      else begin
+        r := [30];
+        if 8 in cargs_$options.cpu then
+          r := [30, 31];
+      end;
+    39:
+      if cg_tree_$needs_lib_support(n, rtn) then
+        r := reg_save_$killed_by_routine(rtn)
+      else begin
+        r := [24, 25, 27, 28, 30];
+        if 8 in cargs_$options.cpu then
+          r := [24, 25, 27, 28, 30, 31];
+      end;
+    40:
+      if cg_tree_$needs_lib_support(n, rtn) then
+        r := reg_save_$killed_by_routine(rtn)
+      else begin
+        r := [24, 25, 27, 28, 30];
+        if 8 in cargs_$options.cpu then
+          r := [24..28, 30, 31];
+      end;
+    41:
+      if cg_tree_$needs_lib_support(n, rtn) then begin
+        r := reg_save_$killed_by_routine(rtn);
+        if (t^.desc.w6 = 11) and (t^.desc.rlen <= 4) then
+          r := r + [0];
+        if 10 in cargs_$options.cpu then
+          if t^.desc.w6 in [8, 12..15] then
+            r := r + [17];
+      end
+      else begin
+        r := [24, 25, 27, 28, 30];
+        if 8 in cargs_$options.cpu then
+          r := [24, 25, 27, 28, 30, 31];
+      end;
+    42:
+      if cg_tree_$needs_lib_support(n, rtn) then
+        r := reg_save_$killed_by_routine(rtn)
+      else
+        r := [24, 25, 27, 28, 30];
+    otherwise
+      ;
+  end;
+  registers_consumed_by_tree_operator := r;
+end;
+
+{ registers_consumed_by_agg_aop - the extra temporaries of an aggregate
+  assignment s (140, operator 6): moved by longwords (by bytes when
+  +58 bit 2 and either side may be unaligned) count times (size less
+  the varying length +56 for +52 = 9), with a remainder of rem bytes;
+  a short move (no more than two units, or one and up to 2 bytes) a
+  data register unless the source is a constant, and two more unless
+  the destination is a variable (109, 110); a longer one a counter and
+  two address registers (a data register more when the moves are
+  better done in a loop, cg_asn_$inline_move_is_best), all four for a
+  constant source; four more for a varying length.
+
+  0x0ECB64, 0x160 bytes, link #-28: bug_check of 'reg_save\registers_
+  consumed_by_agg_aop -- not an agg_aop assign%$'; the two unaligned
+  tests evaluated whole (`or.b' of a frame byte); the size and the
+  unit divided by M$OIS$LLL and M$DIS$LLL (signed); count - 1 kept
+  (D2), count passed to inline_move_is_best (`addq.l #1'); the constant
+  kinds the set at 0x0ECB16 (0..207).
+
+  Not known from the original: the names of the locals. }
+
+function registers_consumed_by_agg_aop(
+    s: g_opt_stmt_ptr_t): reg_save_$regs_t; options(val_param); internal;
+var
+  unit: cg_count_t;
+  size: integer32;
+  n: integer32;
+  rem: integer32;
+  r: reg_save_$regs_t;
+begin
+  if (s = nil) or (s^.kind <> 140) or (s^.asg_op <> 6) then
+    bug_check('reg_save\registers_consumed_by_agg_aop -- not an agg_aop assign%$');
+  unit := 4;
+  if s^.asg_flags.chars then
+    if unaligned(s^.asg_rhs) or unaligned(s^.asg_lhs) then
+      unit := 1;
+  if s^.asg_rlen = 9 then
+    size := s^.asg_size - s^.asg_w56
+  else
+    size := s^.asg_size;
+  rem := size mod unit;
+  n := size div unit - 1;
+  if (n < 0) or ((n = 1) and (rem = 0)) or ((n = 0) and (rem <= 2)) then begin
+    r := [];
+    if not (s^.asg_rhs^.kind in [77..90, 92..93, 101, 156, 176, 198, 200]) then
+      r := [24, 27];
+    if (s^.asg_lhs^.kind <> 110) and (s^.asg_lhs^.kind <> 109) then
+      r := r + [25, 28];
+  end
+  else if s^.asg_rhs^.kind in [77..90, 92..93, 101, 156, 176, 198, 200] then
+    r := [24, 25, 27, 28]
+  else begin
+    r := [27, 28];
+    if not cg_asn_$inline_move_is_best(n + 1, unit) then
+      r := [24, 27, 28];
+  end;
+  if (s^.asg_rlen = 9) and (s^.asg_w56 <> 0) then
+    r := r + [24, 25, 27, 28];
+  registers_consumed_by_agg_aop := r;
+end;
+
+{ registers_consumed_by_assign_operator - the extra temporaries the
+  store of assignment s (140) needs by its operator (+76): an aggregate
+  (6) registers_consumed_by_agg_aop's, the sets (7..9) five, a bit field
+  (10) one or two (without -CPU M020), 12 two, the floating ones (19..22)
+  a floating register (22 an FPA1 register too), the length aggregate
+  (25) four or three (a constant source) and the string builtins
+  (27..30) three or four; the others a data register for a source
+  that is not a constant, three or four temporaries in their place for
+  a store wider than a single (7 a double: two address registers).
+
+  0x0ECD06, 0x16A bytes, link #-12: bug_check of 'reg_save\registers_
+  consumed_by_assign_operator -- not an assign node%$'; a jump table
+  of 25 from 6; the result in D0 (cleared first); the class compared
+  unsigned (`bls'); the constant kinds the set at 0x0ECB16.
+
+  Not known from the original: the meaning of the operator codes. }
+
+function registers_consumed_by_assign_operator(
+    s: g_opt_stmt_ptr_t): reg_save_$regs_t; options(val_param); internal;
+var
+  r: reg_save_$regs_t;
+begin
+  if (s = nil) or (s^.kind <> 140) then
+    bug_check('reg_save\registers_consumed_by_assign_operator -- not an assign node%$');
+  r := [];
+  case s^.asg_op of
+    28:
+      r := [24, 27, 28];
+    30:
+      r := [24, 25, 27, 28];
+    27:
+      r := [24, 27, 28];
+    29:
+      r := [24, 25, 27, 28];
+    7, 8, 9:
+      r := [24..28];
+    6:
+      r := registers_consumed_by_agg_aop(s);
+    25:
+      if s^.asg_rhs^.kind in [77..90, 92..93, 101, 156, 176, 198, 200] then
+        r := [24, 25, 27, 28]
+      else
+        r := [24, 27, 28];
+    19, 20, 21:
+      r := [30];
+    22: begin
+      r := [30];
+      if 8 in cargs_$options.cpu then
+        r := [30, 31];
+    end;
+    10: begin
+      r := [24];
+      if not (3 in cargs_$options.cpu) then
+        r := [24, 25];
+    end;
+    12:
+      r := [24, 25];
+    otherwise begin
+      if not (s^.asg_rhs^.kind in [77..90, 92..93, 101, 156, 176, 198, 200]) then
+        r := [24];
+      if s^.asg_rlen > 6 then
+        if s^.asg_rlen = 7 then
+          r := [27, 28]
+        else
+          r := [24, 25, 27, 28];
+    end;
+  end;
+  registers_consumed_by_assign_operator := r;
+end;
+
+{ assert_tree_result_depends_on_operands - whether tree n's value is
+  formed in its operands' registers: not for operators 17, 16, 15 and
+  0 (a conversion, the calls, a value as it is), nor for a node that
+  is not a tree.
+
+  0x0ECEB6, 0x48 bytes, link #-8: the operators evaluated whole (`seq;
+  or.b', docs/rev889-patterns.md 29), then `not.b'. }
+
+function assert_tree_result_depends_on_operands(
+    n: il_$node_ptr_t): boolean; options(val_param); internal;
+begin
+  if assert_is_tree_node(n) then
+    assert_tree_result_depends_on_operands :=
+      not ((cg_tree_ptr_t(n)^.op = 17) or (cg_tree_ptr_t(n)^.op = 16) or
+           (cg_tree_ptr_t(n)^.op = 15) or (cg_tree_ptr_t(n)^.op = 0))
+  else
+    assert_tree_result_depends_on_operands := false;
+end;
+
+{ registers_consumed_by_object - the registers (and extra temporaries)
+  that evaluating object n consumes: none for a constant (the kinds of
+  the set at 0x0ED15E); a library routine's (159) all but those it
+  leaves alone (+4); the display register (155) A1; a common
+  subexpression (164) its two parts' and four temporaries; a routine,
+  a routine type, a call through a pointer or a call by their
+  routines; a tree (137, 143) its operator's with its operands' (taken
+  over the operator's when its result depends on them,
+  resolve_temp_reg_consumption_overlap); a variable (109) an address
+  register for the classes 6, 7, 8, 10 (+72); a Fortran symbol by
+  registers_consumed_by_fortran_symbol; a reference through a pointer
+  (146) the scratch registers for a Fortran routine, else an address
+  register, with its base's (+24); an indexed reference (145) its
+  index's (+36) and two temporaries, with its base's; 147 and 205
+  their base's; a cse use (190) its parent's (+4); others four
+  temporaries.
+
+  0x0ECEFE, 0x22A bytes, link #-32, A5 loaded: bug_check of 'reg_save\
+  registers_consumed_by_object -- NIL object%$' for nil; the kinds by
+  a compare chain (159, 155, 164, 108, 107, 174, 173, 175, 171, 137,
+  143, 109, 110, 146, 145, 147, 205, 190); the operands counted by
+  `dbf'; the classes `btst' in 0x05C0; the operands' consumption
+  passed to the overlap through a frame temporary (-8). }
+
+function registers_consumed_by_object;
+var
+  r: reg_save_$regs_t;
+  a: reg_save_$regs_t;
+  b: reg_save_$regs_t;
+  s: reg_save_$regs_t;
+  i: integer;
+begin
+  if n = nil then
+    bug_check('reg_save\registers_consumed_by_object -- NIL object%$');
+  r := [];
+  if n^.kind in [77..90, 92..93, 101, 153..154, 156, 163, 176, 195, 198,
+                 200] then begin
+    registers_consumed_by_object := r;
+    return;
+  end;
+  case n^.kind of
+    159:
+      r := [0..31] - reg_save_$regs_t(n^.xl[1]);
+    155:
+      r := [9];
+    164: begin
+      a := r;
+      b := a;
+      if n^.xp[5] <> nil then
+        a := registers_consumed_by_object(n^.xp[5]);
+      if n^.xp[6] <> nil then
+        b := registers_consumed_by_object(n^.xp[6]);
+      r := b + a + [24, 25, 27, 28];
+    end;
+    108, 107:
+      r := registers_consumed_by_routine_block(n);
+    174, 173:
+      r := registers_consumed_by_routine_type(n);
+    175:
+      r := registers_consumed_by_pf_call(n);
+    171:
+      r := registers_consumed_by_cc_call(n);
+    137, 143: begin
+      r := registers_consumed_by_tree_operator(n);
+      a := [];
+      for i := 1 to cg_tree_ptr_t(n)^.count do begin
+        s := registers_consumed_by_object(cg_tree_ptr_t(n)^.opnd[i]);
+        if assert_tree_result_depends_on_operands(n) then
+          resolve_temp_reg_consumption_overlap(a, s)
+        else
+          a := a + s;
+      end;
+      r := r + a;
+    end;
+    109:
+      if n^.xw[36] in [6..8, 10] then
+        r := [27];
+    110:
+      r := registers_consumed_by_fortran_symbol(n);
+    146: begin
+      if assert_is_ptr_over_fortran_routine(n) then
+        r := [0, 1, 8, 9, 16, 17]
+      else
+        r := [27];
+      r := r + registers_consumed_by_object(n^.xp[6]);
+    end;
+    145: begin
+      r := registers_consumed_by_object(n^.xp[9]) + [24, 27];
+      r := r + registers_consumed_by_object(n^.xp[6]);
+    end;
+    147:
+      r := registers_consumed_by_object(n^.xp[6]);
+    205:
+      r := registers_consumed_by_object(n^.xp[6]);
+    190:
+      r := registers_consumed_by_object(n^.xp[1]);
+    otherwise
+      r := [24, 25, 27, 28];
+  end;
+  registers_consumed_by_object := r;
+end;
+
+{ registers_preserved_by_statement - the registers top-level statement
+  s preserves (every register, the markers included, unless shown): a
+  label (144) reached by a computed or non-local goto (+74, +75) none
+  of the markers; a call (148) of a routine that is not an inner block
+  all but A0 and the address marker; an assignment (140), when whole,
+  all but those its store and its trees consume (overlapping); an
+  evaluation (139), when whole, all but those its operands consume; a
+  conditional branch (142) all but its condition's; a non-local
+  branch (150) not to a label name all but the address marker; a
+  return (151), when whole, all but its value's.
+
+  0x0ED178, 0x1DC bytes, link #-32: bug_check of 'reg_save\registers_
+  preserved_by_statement -- not a top-level node%$'; the kinds by a
+  compare chain (144, 148, 140, 139, 142, 150, 151, then 233, 231,
+  215, 214, 223, 225, 224, 228, 227, 191, 188 to the end, as is every
+  other kind); the label's flags `tst.b; bmi'; 140's store consumption
+  computed before whole is tested and its three trees' passed to the
+  overlap from frame longwords (-16 the result, -12, -24, -20); the
+  removals `not.l; and.l' (one tail for 142 and 151). }
+
+function registers_preserved_by_statement(
+    s: g_opt_stmt_ptr_t;
+    whole: boolean): reg_save_$regs_t; options(val_param); internal;
+var
+  c: reg_save_$regs_t;
+  a: reg_save_$regs_t;
+  x: reg_save_$regs_t;
+  b: reg_save_$regs_t;
+  r: reg_save_$regs_t;
+  i: integer;
+begin
+  r := [0..31];
+  if not assert_is_top_level_object(il_$node_ptr_t(s)) then
+    bug_check('reg_save\registers_preserved_by_statement -- not a top-level node%$');
+  case s^.kind of
+    144:
+      if (ord(il_$node_ptr_t(s)^.xc[74]) >= 128) or
+         (ord(il_$node_ptr_t(s)^.xc[75]) >= 128) then
+        r := [24..31];
+    148:
+      if s^.x48^.kind <> 172 then
+        r := [0..31] - [8, 27];
+    140: begin
+      c := registers_consumed_by_assign_operator(s);
+      if whole then begin
+        a := registers_consumed_by_object(s^.asg_rhs);
+        b := registers_consumed_by_object(s^.asg_lhs);
+        if s^.asg_x = nil then
+          x := []
+        else
+          x := registers_consumed_by_object(s^.asg_x);
+        resolve_temp_reg_consumption_overlap(c, a);
+        resolve_temp_reg_consumption_overlap(c, b);
+        resolve_temp_reg_consumption_overlap(c, x);
+        r := [0..31] - c;
+      end;
+    end;
+    139:
+      if whole then
+        for i := 1 to s^.eval_count do
+          if s^.eval_opnd[i] <> nil then
+            r := r - registers_consumed_by_object(s^.eval_opnd[i]);
+    142:
+      if s^.br_cond <> nil then
+        r := r - registers_consumed_by_object(s^.br_cond);
+    150:
+      if s^.br_target^.kind <> 117 then
+        r := [0..31] - [27];
+    151:
+      if whole then
+        if s^.x48 <> nil then
+          r := r - registers_consumed_by_object(s^.x48);
+    233, 231, 215, 214, 223, 225, 224, 228, 227, 191, 188:
+      ;
+    otherwise
+      ;
+  end;
+  registers_preserved_by_statement := r;
+end;
+
 { reg_save_$unaffected_by_routine - the registers run-time library
   routine k (std_lib_rtns[k]) leaves alone (its node's +4) with the
   markers, A0 not under -PIC (flags_286 element 7 clear).
@@ -427,8 +1003,7 @@ end;
   0x0ED438, 0x20 bytes: `not.l' of reg_save_$unaffected_by_routine's
   result. }
 
-function reg_save_$killed_by_routine(
-    k: integer): reg_save_$regs_t; options(val_param);
+function reg_save_$killed_by_routine;
 begin
   reg_save_$killed_by_routine := [0..31] - reg_save_$unaffected_by_routine(k);
 end;
@@ -443,7 +1018,7 @@ function reg_save_$registers_preserved_by_statement(
     s: il_$node_ptr_t): reg_save_$regs_t; options(val_param);
 begin
   reg_save_$registers_preserved_by_statement :=
-    registers_preserved_by_statement(s, true);
+    registers_preserved_by_statement(g_opt_stmt_ptr_t(s), true);
 end;
 
 { reg_save - the registers statement or object n preserves: a
@@ -456,7 +1031,7 @@ end;
 function reg_save;
 begin
   if assert_is_top_level_object(n) then
-    reg_save := registers_preserved_by_statement(n, false)
+    reg_save := registers_preserved_by_statement(g_opt_stmt_ptr_t(n), false)
   else if n <> nil then
     reg_save := [0..31] - registers_consumed_by_object(n)
   else

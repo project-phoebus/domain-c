@@ -402,3 +402,9 @@ the set).  registers_consumed_by_tree_operator, _agg_aop,
 _assign_operator, assert_tree_result_depends_on_operands,
 registers_consumed_by_object and registers_preserved_by_statement are
 declared extern in the unit (a TODO in its header).
+Translator HH (2026-11-11), reg_save (finished, 23 of 23): the six
+routines EE left (registers_consumed_by_tree_operator, _agg_aop,
+_assign_operator, assert_tree_result_depends_on_operands,
+registers_consumed_by_object, registers_preserved_by_statement); no
+insert changed (the statements through g_opt_stmt_t's variants, the
+trees through cg_tree_t).
