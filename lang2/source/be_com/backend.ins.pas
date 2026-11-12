@@ -1208,17 +1208,23 @@ procedure dmp_$note_label(
     p1: integer); options(val_param); extern;
 
 { DMP_$COMPLEX_LR_BIT_VECTOR_HEADER - 0x22F374, 0x2A bytes; called from
-  dbg_life mmt.  Frame 8:al. }
+  dbg_life mmt.  Frame 8:al.  (batch C: narrowed from mmt's calls.) }
 procedure dmp_$complex_lr_bit_vector_header(
-    p1: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t); options(val_param); extern;
+
+{ batch C: a line of text dmp_$complex_lr_bit_vector prints before a
+  vector (mmt passes constants and a 128-character buffer). }
+type
+  dmp_$text_t = array [1..256] of char;
 
 { DMP_$COMPLEX_LR_BIT_VECTOR - 0x22F48C, 0x12A bytes; called from dbg_life
-  mmt.  Frame 8:al; 12:a; 16:alp; 20:al. }
+  mmt.  Frame 8:al; 12:a; 16:alp; 20:al.  (batch C: narrowed from mmt's
+  calls: the text by address, its length by value, the vector.) }
 procedure dmp_$complex_lr_bit_vector(
-    p1: univ_ptr;
-    p2: univ_ptr;
-    p3: univ_ptr;
-    p4: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    in text: univ dmp_$text_t;
+    len: integer32;
+    v: bv_ptr_t); options(val_param); extern;
 
 { DMP_$REG_SET - 0x22F5D8, 0xE4 bytes; called from ra.  Frame 8:l; 12:l. }
 procedure dmp_$reg_set(
