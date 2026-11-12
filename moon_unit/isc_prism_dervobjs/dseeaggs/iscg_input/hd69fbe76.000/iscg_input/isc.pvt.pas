@@ -41,3 +41,8 @@ procedure dump_solution(
     sol: isc_solution_ptr_t;
     depth: integer;
     deep: boolean); options(val_param); extern;
+
+{ ISC_PASS_1_BEGIN_COMPILATION - isc_pass_1_main's tables set up for
+  the compilation.  0x0EFE96, 0x626 bytes; no parameters (called from
+  isc_main's isc_$begin_compilation; translator PD2). }
+procedure isc_pass_1_begin_compilation; extern;

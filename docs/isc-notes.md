@@ -113,16 +113,47 @@ a guess says so.
 ## isc_main
 
 isc_main.pas (moon_unit, 18 named routines, 4684 bytes in a span of 8684)
-is ordinary code: the solution and inherited-attribute allocators,
-preserve_solution, the solution lists, apply_pass_1_and_choose_to_list,
-apply_pass_2_to_list, and the phase's entry points (isc_$begin_
-compilation, isc_$begin_routine, isc_$process_statement,
-isc_$end_routine, isc_$end_compilation, isc_$initialize_routine).  Its
-headings are in isc_routine_externs.ins.pas; it was not translated
-(docs/backend-plan.md, "ISC (hand-written)").  Its span holds 3238
-bytes after isc_$end_routine that no .blocks record names (between
-0x0DA5B4 and 0x0DB25A): isc_$end_routine's identifier table of il$t
-(0x0DA74A) and, probably, generated code.
+is ordinary code, translated by translator PD2: the solution and
+inherited-attribute allocators, preserve_solution, the solution lists,
+apply_pass_1_and_choose_to_list, apply_pass_2_to_list, and the phase's
+entry points (isc_$begin_compilation, isc_$begin_routine,
+isc_$end_routine, isc_$end_compilation, isc_$initialize_routine,
+isc_$process_statement).  Its span holds 3238 bytes after
+isc_$end_routine (between 0x0DA5B4 and 0x0DB25A) that no .blocks record
+names: isc_$end_routine's strings and il$t's identifier table
+(0x0DA74A), no code.  What it shows of the generated side:
+
+- Its one table, im_rule_has_fields (isc_main's data +0x0, a boolean by
+  rule 1..563), is the generator's: true for the 30 rules
+  preserve_solution names (12, 114, 115, 177, 179, 181, 186, 262, 274,
+  275, 290, 292, 301, 304, 344, 375, 377..379, 418, 422, 423, 445, 448,
+  474, 479, 542, 548..550).  So there are 563 rules (pass 2's action
+  table at isc_pass_2_main's A5 - 4 has an entry per rule).
+  preserve_solution copies the rule's fields only for a solution with a
+  chain (+88); a solution without one has its children copied instead.
+- isc_$process_statement runs pass 1 with every solution kind but none
+  permitted (16#FFFFFE), choose_one_solution, pass_2(sol, 0) between
+  isc_to_lir's begin_statement and end_statement, the ISC heap marked
+  and released around the statement.  isc_$begin_routine walks the
+  routine's statements from rtn_t's +20 through +8 to the BLK_END_NODE
+  (149), each under fresh attributes (line +20, index +43..+44).
+  apply_pass_1_and_choose_to_list follows +8 only through the
+  statement kinds (an assignment of any operator but 12, 17, 18; 228,
+  149, 148, 141, 214, 215, 142, 139, 227, 144, 150, 224, 225, 151).
+- The generated units keep counts in isc_user_routines' data (the
+  metering under sw3 names them): +0x300 calls_to_pass_1
+  (isc_pass_1_main), +0x2FC calls_to_pass_2 (isc_pass_2_main), +0x2F8
+  calls_to_pattern_matcher (isc_pattern_matcher), +0x2F4
+  max_solutions_for_one_il_node and +0x350 the il$t that had it, +0x2EC
+  the solutions made from the ISC heap during a statement
+  (new_solution, duplicate_solution) with +0x2E8 the maximum and +0x2F0
+  its statement; +0x9C a boolean by IL node kind (the reference kinds:
+  137, 138, 143, 145..147, 164, 171, 175, 189, 205), read by
+  isc_pass_1_main.  isc_$begin_compilation calls isc_pass_1_main's
+  isc_pass_1_begin_compilation (0x0EFE96).
+- Traces: sw13 sets isc_user_routines_356 and asks on the terminal for
+  the source line to trace (+0x304; -1 every line), sw12 sets _354; a
+  statement on another line runs with both cleared.
 
 ## isc_user_routines: what the patterns call (translator PD2)
 

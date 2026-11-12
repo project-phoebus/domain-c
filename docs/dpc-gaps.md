@@ -1121,4 +1121,25 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
        begin
          v[0].w := 0;
        end;
+43. **A `for' loop over an array whose index starts below zero.**
+   isc_main.pas isc_$begin_compilation (cc.a88k 0x0D9AB4, translator
+   PD2): `for k := -1 to 32 do isc_literal_solutions[k] :=
+   solution_ptr_t(well_known_literal(k))' over an array [-1..32]; the
+   image steps a pointer (`lea (-4,A0),A2' from the array's address,
+   `move.l A0,(4,A2)', `addq.l #4,A2', `dbf' from 33).  dpc: "a `for`
+   loop stepping a pointer formed in place from a negative start (not
+   seen, codegen-patterns 7.4) is not supported yet".  Rewrite: the loop
+   from 0 to 33 with the index and argument less one, for the check.
+   Reproducer:
 
+       module g43;
+       var
+         a: extern array [-1..32] of univ_ptr;
+       function f(k: integer): univ_ptr; options(val_param); extern;
+       procedure p;
+       var
+         k: integer;
+       begin
+         for k := -1 to 32 do
+           a[k] := f(k);
+       end;

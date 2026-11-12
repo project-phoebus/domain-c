@@ -79,6 +79,30 @@ function solution_list$empty(
 function solution_list$preserve(
     list: solution_list_ptr_t): solution_list_ptr_t; options(val_param); extern;
 
+{ SOLUTION_LIST$DELETE - sol's cell taken out of list (translator PD2).
+  0x0D989A, 0x74 bytes: list 8, sol 12. }
+procedure solution_list$delete(
+    list: solution_list_ptr_t;
+    sol: isc_solution_ptr_t); options(val_param); extern;
+
+{ The phase's entry points (at_backend's phase table names the four
+  ISC_$ routines there; isc_user_routines' process_eval_node calls
+  isc_$process_statement): ISC_$BEGIN_COMPILATION - 0x0D9A52;
+  ISC_$INITIALIZE_ROUTINE - 0x0D9B92; ISC_$PROCESS_STATEMENT - 0x0D9C6C,
+  the statement node under inh selected and its code emitted;
+  ISC_$BEGIN_ROUTINE - 0x0DA1E4; ISC_$END_ROUTINE - 0x0DA27E;
+  ISC_$END_COMPILATION - 0x0DB25A (translator PD2). }
+procedure isc_$begin_compilation; extern;
+procedure isc_$initialize_routine; extern;
+procedure isc_$process_statement(
+    node: univ_ptr;
+    inh: inherited_attributes_ptr_t); options(val_param); extern;
+procedure isc_$begin_routine(
+    rtn: rtn_ptr_t); options(val_param); extern;
+procedure isc_$end_routine(
+    rtn: rtn_ptr_t); options(val_param); extern;
+procedure isc_$end_compilation; extern;
+
 { APPLY_PASS_1_AND_CHOOSE_TO_LIST - one chosen solution for each node
   of the chain from node (linked at +8) under inh, as a list.
   0x0D9DDC, 0x276 bytes: node 8, inh 12; A0. }
@@ -1126,12 +1150,6 @@ function value_top_over(
 function solution_kind_of_symbol(
     sym: univ_ptr): integer; options(val_param); extern;
 
-{ ISC_$PROCESS_STATEMENT - isc_main 0x0D9C6C (frame 8 node, 12 inh):
-  the statement node selected and its code emitted (process_eval_node
-  calls it for an EVAL_NODE's children). }
-procedure isc_$process_statement(
-    node: univ_ptr;
-    inh: inherited_attributes_ptr_t); options(val_param); extern;
 
 { The printers (each writes and returns a blank): ARG_LOC_T_TO_STRING -
   0x216EC8; BASIC_BLOCK_TO_STRING - 0x216FC8; BLOCK_REC_TO_STRING -
