@@ -2589,12 +2589,14 @@ function tm_utils_$minimum_distance(
     p1: univ_ptr;
     p2: integer32): integer32; options(val_param); extern;
 
-{ LIR_$CAN_ENCODE_AS_IMMEDIATE_OPERAND - 0x27C164, 0x26 bytes; called from
-  iv trans.  Frame 8:l; 12:w; 14:al.  Result: read (callers: D0b8). }
+{ LIR_$CAN_ENCODE_AS_IMMEDIATE_OPERAND - tm_utils_$can_encode_as_
+  immediate_operand's answer, its arguments passed on.  0x27C164, 0x26
+  bytes; called from iv trans.  Frame 8:l; 12:w; 14:l.  Result: D0
+  (batch A, PA4: k narrowed from univ_ptr to the operand's number). }
 function lir_$can_encode_as_immediate_operand(
-    p1: integer32;
-    p2: integer;
-    p3: univ_ptr): boolean; options(val_param); extern;
+    value: integer32;
+    opc: integer;
+    k: integer32): boolean; options(val_param); extern;
 
 { tr_utils.pas (cc.a88k). }
 

@@ -1440,18 +1440,18 @@ begin
           c := e^.child[n];
           if c^.kind = iv_value then begin
             if not lir_$can_encode_as_immediate_operand(c^.value,
-                       iv_ip_opc[e^.kind], univ_ptr(pos)) then
+                       iv_ip_opc[e^.kind], pos) then
               if (pos <> 1) and (iv_commuted[e^.kind] <> 0)
                   and first_operand_can_change(e)
                   and lir_$can_encode_as_immediate_operand(c^.value,
-                          iv_ip_opc[iv_commuted[e^.kind]], univ_ptr(1)) then begin
+                          iv_ip_opc[iv_commuted[e^.kind]], 1) then begin
                 x := e^.right;
                 e^.right := e^.left;
                 e^.left := x;
                 e^.kind := iv_commuted[e^.kind];
               end
               else if lir_$can_encode_as_immediate_operand(c^.value,
-                          ord(opc$move), univ_ptr(1)) then begin
+                          ord(opc$move), 1) then begin
                 e^.child[n] := create_move_expression(e^.child[n]);
                 e^.child[n]^.rclass := 1;
               end
@@ -1578,9 +1578,9 @@ begin
   r := elaborate_expression(e, rclass, true);
   p := pos;
   if r^.kind = iv_value then begin
-    if not lir_$can_encode_as_immediate_operand(r^.value, opc, univ_ptr(p)) then
+    if not lir_$can_encode_as_immediate_operand(r^.value, opc, p) then
       if lir_$can_encode_as_immediate_operand(r^.value, ord(opc$move),
-                                              univ_ptr(1)) then begin
+                                              1) then begin
         r := create_move_expression(r);
         r^.rclass := 1;
       end

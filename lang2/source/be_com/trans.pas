@@ -270,7 +270,7 @@ begin
         utils_$get_canonical_birthpoint(d^.opnds[1].lts, 1, bp);
         if bp.has_base and (d^.opnds[2].h.count = 0) then
           if lir_$can_encode_as_immediate_operand(bp.base, ord(opc$move),
-                                                  univ_ptr(1)) then begin
+                                                  1) then begin
             ok := true;
             utils_$set_instruction_opcode(d, ord(opc$move));
             v := bp.base;
@@ -278,13 +278,13 @@ begin
       end;
     end;
     if ok then
-      if lir_$can_encode_as_immediate_operand(v, i^.opc, univ_ptr(1)) then begin
+      if lir_$can_encode_as_immediate_operand(v, i^.opc, 1) then begin
         make_immediate_operand(o, v);
         r := true;
       end
       else if i^.opc = ord(opc$sub) then
         if lir_$can_encode_as_immediate_operand(-v, ord(opc$add),
-                                                univ_ptr(1)) then begin
+                                                1) then begin
           utils_$set_instruction_opcode(i, ord(opc$add));
           make_immediate_operand(o, -v);
           r := true;
