@@ -12,15 +12,12 @@
   testcc; the same address: sameaddr) and edit them (detach, makejump,
   makecbr, moverefcell, movejump, reversecond, label_merge).
 
-  TODO(pascal) final.pas is not finished: 115 of its 120 routines are
+  TODO(pascal) final.pas is not finished: 118 of its 120 routines are
   translated.  Not yet translated (cc.m68k address, bytes):
-    0x10E8EA 0x332  merge_add_sub
-    0x10EF30 0x3BA  try_pre_dec
-    0x10F30C 0x3B8  try_post_incr
     0x10F6C4 0x4C0  opta
     0x10FB84 0x3D4  floatop
-  The two of them that peepholer_ops calls (opta, floatop) are declared
-  extern before peepholer until they are written.
+  Both are declared extern before peepholer (peepholer_ops calls them)
+  until they are written.
 
   Image addresses (DOMAIN C 6.9; cc.m68k only: cc.a88k has no final):
     cc.m68k   cc.a88k
@@ -4207,6 +4204,144 @@ begin
     final_$addr_adjust_value := 0;
 end;
 
+{ merge_add_sub - an add or subtract c (by address; test_add_sub) of an
+  immediate to a register other than SP followed, past instructions
+  that do not use the register (final_$reg_is_used; not labels, calls,
+  branches and the others of a set of 0..47), by another on the same
+  register: the two merged into c (the constants added or subtracted by
+  their signs; a negative sum made positive with the operation turned
+  over, ops 17..24 and 28..35 by tables), an addq or subq whose
+  constant passes 8 made an addi or subi (kind 8, ops 19..21, 28..30)
+  for a data register or an adda or suba (kind 4, ops 17, 18, 34, 35)
+  for an address register (f6 the size), and a sum of 0 made a tst
+  (kind 3, ops 113..115) of a data register or, for an address
+  register, c removed (c then the cell after the second); the second
+  removed.  Whether it was done.
+
+  0x10E8EA, 0x332 bytes, no A5 load: c by address in A2; the signs at
+  -26 and -24 (D4, D5); the register in D2, the sum in D3 (then the
+  answer); `case's of the op less 17, less 28 (tables of 8) and less 19
+  (15); the set at 0x10EC1C. }
+
+function merge_add_sub(
+    in out c: codegen_$cell_ptr_t): boolean; internal;
+label
+  9;
+var
+  r: boolean;
+  s1: char;
+  s2: char;
+  reg: integer;
+  p: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+  v: integer32;
+  d: integer;
+begin
+  r := false;
+  if c^.ads2.f1 <> 1 then
+    goto 9;
+  if c^.ads2.f2 = 15 then
+    goto 9;
+  if not test_add_sub(c, s1) then
+    goto 9;
+  reg := c^.ads2.f2;
+  p := nxtlcc(c);
+  while p <> fn_sect^.head do begin
+    if test_add_sub(p, s2) and (p^.ads2.f2 = reg) and (p^.ads2.f1 = 1) then begin
+      if s1 <> s2 then
+        v := il_$node_ptr_t(c^.ads1.x)^.int_value -
+             il_$node_ptr_t(p^.ads1.x)^.int_value
+      else
+        v := il_$node_ptr_t(c^.ads1.x)^.int_value +
+             il_$node_ptr_t(p^.ads1.x)^.int_value;
+      if v < 0 then begin
+        v := -v;
+        if s1 = '+' then begin
+          s1 := '-';
+          case c^.op of
+            17: c^.op := 34;
+            18: c^.op := 35;
+            19: c^.op := 28;
+            20: c^.op := 29;
+            21: c^.op := 30;
+            22: c^.op := 31;
+            23: c^.op := 32;
+            24: c^.op := 33;
+            otherwise
+              ;
+          end;
+        end
+        else begin
+          s1 := '+';
+          case c^.op of
+            28: c^.op := 19;
+            29: c^.op := 20;
+            30: c^.op := 21;
+            31: c^.op := 22;
+            32: c^.op := 23;
+            33: c^.op := 24;
+            34: c^.op := 17;
+            35: c^.op := 18;
+            otherwise
+              ;
+          end;
+        end;
+      end;
+      c^.ads1.x := integer32(smcontk(81, v));
+      if (c^.kind = q_instyp) and (v > 8) then begin
+        if s1 = '+' then
+          d := c^.op - 22
+        else
+          d := c^.op - 31;
+        if reg < 8 then begin
+          c^.kind := i_instyp;
+          if s1 = '+' then
+            c^.op := 19 + d
+          else
+            c^.op := 28 + d;
+        end
+        else begin
+          c^.kind := a_instyp;
+          d := d - 1;
+          if s1 = '+' then
+            c^.op := 17 + d
+          else
+            c^.op := 34 + d;
+        end;
+        c^.ads1.f6 := d;
+        c^.size := ilength(c);
+      end;
+      if v = 0 then
+        if c^.ads2.f2 <= 7 then begin
+          case c^.op of
+            19, 22, 28, 31: c^.op := 113;
+            20, 23, 29, 32: c^.op := 114;
+            21, 24, 30, 33: c^.op := 115;
+            otherwise
+              ;
+          end;
+          c^.kind := dest1_sz_instyp;
+          c^.size := ilength(c);
+        end
+        else begin
+          t := c;
+          c := nxtlcc(p);
+          detach(t);
+        end;
+      detach(p);
+      r := true;
+      goto 9;
+    end;
+    if p^.kind in [0, 16..18, 21..23, 28..29, 31, 39] then
+      goto 9;
+    if final_$reg_is_used(p, reg) <> 0 then
+      goto 9;
+    p := nxtlcc(p);
+  end;
+9:
+  merge_add_sub := r;
+end;
+
 { merge_move_sub - a move.l of an immediate to a data register (op 2)
   followed by a subtract of an immediate from it (c, op 33): the move
   given the difference (smcontk), c removed and replaced by the move.
@@ -4326,6 +4461,320 @@ begin
       end;
       detach(n);
     end;
+end;
+
+{ try_pre_dec - a subtract (test_add_sub '-') of an immediate v from an
+  address register c (by address) folded into predecrement addressing:
+  looking on from c past instructions that do not use the register,
+  the first that uses it as (An) with no displacement (mode 2, of its
+  destination, else its source unless kind 16) and a size up to v made
+  -(An) (mode 9) and v less that size; else looking back from c, uses
+  of (-v,An) of exactly that size likewise; both stop at a label, call
+  or branch (the set at 0x10F2EA), a kind 16 of op 121 (123 looking
+  back), a bsr unless the register is A2..A4, a kind 16 of op 117 or 119
+  unless likewise, an op of the set at 0x10F2F0 using it, or another
+  use.  c then given what is left of v, or removed when nothing is (c
+  the cell after it).  Whether v changed.
+
+  0x10EF30, 0x3BA bytes, no A5 load: c by address in A2; the register
+  in D2, v in D4; final_$reg_is_used's answer (1 the source, 2 the
+  destination, 3 both) `btst' in #10 and #12, a `case' of it through a
+  table of 4 looking back. }
+
+function try_pre_dec(
+    in out c: codegen_$cell_ptr_t): boolean; internal;
+label
+  7, 8, 9;
+var
+  r: boolean;
+  ch: char;
+  reg: integer;
+  v: integer32;
+  s: integer32;
+  u: integer;
+  p: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+begin
+  r := false;
+  if not test_add_sub(c, ch) then
+    goto 9;
+  if ch = '+' then
+    goto 9;
+  if c^.ads2.f1 <> 1 then
+    goto 9;
+  if not (c^.ads2.f2 in [8..15]) then
+    goto 9;
+  reg := c^.ads2.f2;
+  v := il_$node_ptr_t(c^.ads1.x)^.int_value;
+  p := nxtlcc(c);
+  while p <> fn_sect^.head do begin
+    if p^.kind in [0, 17..18, 21..23, 28..29, 39] then
+      goto 7;
+    if (p^.kind = dest1_instyp) and (p^.op = 121) then
+      goto 7;
+    if (p^.kind = bsr_instyp) and not (reg in [10..12]) then
+      goto 7;
+    if (p^.kind = dest1_instyp) and not (reg in [10..12]) then
+      if (p^.op = 117) or (p^.op = 119) then
+        goto 7;
+    u := final_$reg_is_used(p, reg);
+    if u <> 0 then begin
+      if (u in [1, 3]) and (p^.ads1.f1 <> 2) then
+        goto 7;
+      if (u in [2, 3]) and (p^.ads2.f1 <> 2) then
+        goto 7;
+      if p^.op in [12..13, 213..216] then begin
+        if u <> 0 then
+          goto 7;
+      end
+      else if (p^.ads2.f1 = 2) and (p^.ads2.f2 = reg) then begin
+        if p^.ads2.y <> 0 then
+          goto 7;
+        s := final_$sizeof(p, 2);
+        if s > v then
+          goto 7;
+        p^.ads2.f1 := 9;
+        p^.size := ilength(p);
+        v := v - s;
+        goto 8;
+      end
+      else if p^.kind <> dest1_instyp then
+        if (p^.ads1.f1 = 2) and (p^.ads1.f2 = reg) then begin
+          if p^.ads1.y <> 0 then
+            goto 7;
+          s := final_$sizeof(p, 1);
+          if s > v then
+            goto 7;
+          p^.ads1.f1 := 9;
+          p^.size := ilength(p);
+          v := v - s;
+          goto 8;
+        end;
+    end;
+    p := nxtlcc(p);
+  end;
+7:
+  p := prvlcc(c);
+  while p <> fn_sect^.head do begin
+    if p^.kind in [0, 17..18, 21..23, 28..29, 39] then
+      goto 9;
+    if (p^.kind = dest1_instyp) and (p^.op = 123) then
+      goto 9;
+    if (p^.kind = bsr_instyp) and not (reg in [10..12]) then
+      goto 9;
+    if (p^.kind = dest1_instyp) and not (reg in [10..12]) then
+      if (p^.op = 117) or (p^.op = 119) then
+        goto 9;
+    u := final_$reg_is_used(p, reg);
+    if u <> 0 then
+      if p^.op in [12..13, 213..216] then
+        goto 9;
+    case u of
+      0:
+        ;
+      1: begin
+        if p^.ads1.f1 <> 2 then
+          goto 9;
+        if -p^.ads1.y <> v then
+          goto 8;
+        if p^.kind <> dest1_instyp then begin
+          s := final_$sizeof(p, 1);
+          if v <> s then
+            goto 8;
+          p^.ads1.f1 := 9;
+          p^.size := ilength(p);
+          v := v - s;
+          goto 8;
+        end;
+      end;
+      2: begin
+        if p^.ads2.f1 <> 2 then
+          goto 9;
+        if -p^.ads2.y <> v then
+          goto 8;
+        if p^.ads2.f2 = reg then begin
+          s := final_$sizeof(p, 2);
+          if v <> s then
+            goto 8;
+          p^.ads2.f1 := 9;
+          p^.size := ilength(p);
+          v := v - s;
+          goto 8;
+        end;
+      end;
+      3:
+        goto 9;
+      otherwise
+        ;
+    end;
+    p := prvlcc(p);
+  end;
+8:
+  if v = il_$node_ptr_t(c^.ads1.x)^.int_value then
+    goto 9;
+  if v = 0 then begin
+    t := nxtlcc(c);
+    detach(c);
+    c := t;
+  end
+  else
+    c^.ads1.x := integer32(smcontk(81, v));
+  r := true;
+9:
+  try_pre_dec := r;
+end;
+
+{ try_post_incr - an add (test_add_sub '+') of an immediate v to
+  address register c (A0..A4; by address) folded into postincrement
+  addressing, as try_pre_dec does with the directions swapped: looking
+  back from c, uses of (An) up to v long made (An)+ (mode 8); else
+  looking on, uses of (-v,An) of exactly v's size.
+
+  0x10F30C, 0x3B8 bytes, no A5 load: try_pre_dec's code with the
+  searches' directions, the sign, the registers (`btst' in #0x1F00)
+  and the mode changed. }
+
+function try_post_incr(
+    in out c: codegen_$cell_ptr_t): boolean; internal;
+label
+  7, 8, 9;
+var
+  r: boolean;
+  ch: char;
+  reg: integer;
+  v: integer32;
+  s: integer32;
+  u: integer;
+  p: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+begin
+  r := false;
+  if not test_add_sub(c, ch) then
+    goto 9;
+  if ch = '-' then
+    goto 9;
+  if c^.ads2.f1 <> 1 then
+    goto 9;
+  if not (c^.ads2.f2 in [8..12]) then
+    goto 9;
+  reg := c^.ads2.f2;
+  v := il_$node_ptr_t(c^.ads1.x)^.int_value;
+  p := prvlcc(c);
+  while p <> fn_sect^.head do begin
+    if p^.kind in [0, 17..18, 21..23, 28..29, 39] then
+      goto 7;
+    if (p^.kind = dest1_instyp) and (p^.op = 121) then
+      goto 7;
+    if (p^.kind = bsr_instyp) and not (reg in [10..12]) then
+      goto 7;
+    if (p^.kind = dest1_instyp) and not (reg in [10..12]) then
+      if (p^.op = 117) or (p^.op = 119) then
+        goto 7;
+    u := final_$reg_is_used(p, reg);
+    if u <> 0 then begin
+      if (u in [1, 3]) and (p^.ads1.f1 <> 2) then
+        goto 7;
+      if (u in [2, 3]) and (p^.ads2.f1 <> 2) then
+        goto 7;
+      if p^.op in [12..13, 213..216] then begin
+        if u <> 0 then
+          goto 7;
+      end
+      else if (p^.ads2.f1 = 2) and (p^.ads2.f2 = reg) then begin
+        if p^.ads2.y <> 0 then
+          goto 7;
+        s := final_$sizeof(p, 2);
+        if s > v then
+          goto 7;
+        p^.ads2.f1 := 8;
+        p^.size := ilength(p);
+        v := v - s;
+        goto 8;
+      end
+      else if p^.kind <> dest1_instyp then
+        if (p^.ads1.f1 = 2) and (p^.ads1.f2 = reg) then begin
+          if p^.ads1.y <> 0 then
+            goto 7;
+          s := final_$sizeof(p, 1);
+          if s > v then
+            goto 7;
+          p^.ads1.f1 := 8;
+          p^.size := ilength(p);
+          v := v - s;
+          goto 8;
+        end;
+    end;
+    p := prvlcc(p);
+  end;
+7:
+  p := nxtlcc(c);
+  while p <> fn_sect^.head do begin
+    if p^.kind in [0, 17..18, 21..23, 28..29, 39] then
+      goto 9;
+    if (p^.kind = dest1_instyp) and (p^.op = 123) then
+      goto 9;
+    if (p^.kind = bsr_instyp) and not (reg in [10..12]) then
+      goto 9;
+    if (p^.kind = dest1_instyp) and not (reg in [10..12]) then
+      if (p^.op = 117) or (p^.op = 119) then
+        goto 9;
+    u := final_$reg_is_used(p, reg);
+    if u <> 0 then
+      if p^.op in [12..13, 213..216] then
+        goto 9;
+    case u of
+      0:
+        ;
+      1: begin
+        if p^.ads1.f1 <> 2 then
+          goto 9;
+        if p^.kind <> dest1_instyp then begin
+          if -p^.ads1.y <> v then
+            goto 8;
+          s := final_$sizeof(p, 1);
+          if s <> v then
+            goto 8;
+          p^.ads1.f1 := 8;
+          p^.size := ilength(p);
+          v := v - s;
+          goto 8;
+        end;
+      end;
+      2: begin
+        if p^.ads2.f1 <> 2 then
+          goto 9;
+        if p^.ads2.f2 = reg then begin
+          if -p^.ads2.y <> v then
+            goto 8;
+          s := final_$sizeof(p, 2);
+          if s <> v then
+            goto 8;
+          p^.ads2.f1 := 8;
+          p^.size := ilength(p);
+          v := v - s;
+          goto 8;
+        end;
+      end;
+      3:
+        goto 9;
+      otherwise
+        ;
+    end;
+    p := nxtlcc(p);
+  end;
+8:
+  if v = il_$node_ptr_t(c^.ads1.x)^.int_value then
+    goto 9;
+  if v = 0 then begin
+    t := nxtlcc(c);
+    detach(c);
+    c := t;
+  end
+  else
+    c^.ads1.x := integer32(smcontk(81, v));
+  r := true;
+9:
+  try_post_incr := r;
 end;
 
 { final_$logicize_opts - scc c (ops 124..139) followed by two
