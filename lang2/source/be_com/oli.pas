@@ -280,10 +280,13 @@ var
     instruction of each functional unit (fu_of: 0..3). }
   oli_sched: array [1..200, 0..3] of instr_ptr_t;
 
+  oli_5op_k: array [1..200] of integer32;  { +0x28D8: the input of a
+                                          five-operand candidate its
+                                          result can share (is_5op_
+                                          candidate) }
   oli_2bf8: array [1..200] of boolean;  { +0x2BF8 (init_sched clears) }
-  oli_2cc0: array [1..200] of boolean;  { +0x2CC0
-                                          (init_software_pipelining
-                                          clears) }
+  oli_5op: array [1..200] of boolean;   { +0x2CC0: a five-operand
+                                          candidate }
 
   { +0x2DA4 .. +0x2E72: the routine's and the loop's state. }
   oli_recurrences: oli_rec_ptr_t;       { +0x2DA8 (record_recurrence) }
@@ -312,10 +315,11 @@ var
   oli_counter: lr_ptr_t;                { +0x2DF8: the loop counter }
   oli_rtn: rtn_ptr_t;                   { +0x2DFC }
   oli_2e00: integer32;                  { +0x2E00 }
-  oli_2e04: integer32;                  { +0x2E04 }
-  oli_2e08: integer32;                  { +0x2E08 }
-  oli_2e0c: integer32;                  { +0x2E0C }
-  oli_2e10: integer32;                  { +0x2E10 }
+  oli_nmuld: integer32;                 { +0x2E04: muld's (no fp_ccs) }
+  oli_nmuls: integer32;                 { +0x2E08: muls's }
+  oli_n5d: integer32;                   { +0x2E0C: the double
+                                          five-operand candidates }
+  oli_n5s: integer32;                   { +0x2E10: the single ones }
   oli_2e14: integer32;                  { +0x2E14 }
   oli_2e18: integer32;                  { +0x2E18 }
   oli_2e1c: integer32;                  { +0x2E1C }
@@ -324,15 +328,19 @@ var
   oli_2e28: integer32;                  { +0x2E28 }
   oli_2e2c: integer32;                  { +0x2E2C }
   oli_2e30: integer32;                  { +0x2E30 }
-  oli_2e34: integer32;                  { +0x2E34 }
+  oli_nfpctl: integer32;                { +0x2E34: the fp_control
+                                          instructions }
   oli_iters: integer32;                 { +0x2E3C: the iterations
                                           (stages) the schedule spans }
   oli_ii: integer32;                    { +0x2E40: the iteration
                                           interval (cycles) }
   oli_2e44: integer32;                  { +0x2E44 }
-  oli_2e48: integer32;                  { +0x2E48 }
-  oli_2e4c: integer32;                  { +0x2E4C }
-  oli_2e50: integer32;                  { +0x2E50 }
+  oli_fp_spare: integer32;              { +0x2E48: the floating
+                                          instructions that pair (nfp
+                                          less the interval) }
+  oli_nint: integer32;                  { +0x2E4C: the integer unit's
+                                          instructions }
+  oli_nfp: integer32;                   { +0x2E50: the floating unit's }
   oli_2e54: integer32;                  { +0x2E54 }
   oli_nsched: integer32;                { +0x2E58: oli_sched_list's
                                           length }
@@ -497,7 +505,7 @@ var
   k: integer32;
 begin
   for k := 1 to 200 do
-    oli_2cc0[k] := false;
+    oli_5op[k] := false;
   oli_ip_zero := nil;
   oli_sp_zero := nil;
   oli_dp_zero := nil;
@@ -729,9 +737,9 @@ begin
   oli_2e1c := 0;
   oli_2e18 := 0;
   oli_2e14 := 0;
-  oli_2e44 := oli_2e48;
+  oli_2e44 := oli_fp_spare;
   oli_2e2c := oli_ii;
-  oli_2e30 := oli_2e34;
+  oli_2e30 := oli_nfpctl;
   oli_iters := 0;
 end;
 
@@ -1714,4 +1722,324 @@ begin
       oli_mem_dep := 1;
 99:
   oli_$compare_memory_references := r;
+end;
+
+{ analyze_memory_references - bb's memory references put into MMT_SEQs
+  (comparing them through oli_$compare_memory_references, which sets
+  oli_mem_dep); oli_mem_dep returned.  0x259A48, 0x1C bytes. }
+
+function analyze_memory_references(
+    bb: bb_ptr_t): integer; options(val_param); internal;
+begin
+  mmt_utils_$analyze_one_bb(oli_rtn, bb, 0);
+  analyze_memory_references := oli_mem_dep;
+end;
+
+{ analyze_dependencies - what keeps bb's iterations apart: 2 (they
+  cannot overlap) when a register live around the loop (its final
+  segment reaching the head's exposed one, not memory) is neither an
+  induction variable nor a reduction; else the memory references'
+  answer (0 none, 1 recurrences, 2 not analysable).  0x259A64, 0x9A
+  bytes. }
+
+function analyze_dependencies(
+    bb: bb_ptr_t): integer; options(val_param); internal;
+label
+  99;
+var
+  s, t: lts_ptr_t;
+begin
+  oli_mem_dep := 0;
+  oli_recurrences := nil;
+  oli_bb := bb;
+  s := bb^.finals;
+  while s <> nil do begin
+    t := s;
+    while (t^.next <> nil) and (t^.next^.bb = bb) and
+        not t^.f2.exposed do
+      t := t^.next;
+    if t^.f2.exposed and (t <> s) then
+      if not (t^.refs^.h.kind in [operand$argument_block_memory..
+          operand$well_behaved_memory]) then
+        if t^.l24 = 0 then
+          if not is_exposed_reduction(t) then begin
+            analyze_dependencies := 2;
+            goto 99;
+          end;
+    s := s^.next_final;
+  end;
+  analyze_dependencies := analyze_memory_references(bb);
+99:
+end;
+
+{ modified - the last operand referring to s modifies it.  0x259AFE,
+  0x24 bytes, no frame. }
+
+function modified(
+    s: lts_ptr_t): boolean; options(val_param); internal;
+var
+  o: opnd_ptr_t;
+begin
+  o := s^.refs;
+  while o^.link <> nil do
+    o := o^.link;
+  modified := o^.h.modify;
+end;
+
+{ parity_matches - i's operands j and k ask for the same register
+  halves (rrp's fp_reg_even_only and fp_reg_odd_only).  0x259B22, 0x58
+  bytes. }
+
+function parity_matches(
+    i: instr_ptr_t;
+    j: integer32;
+    k: integer32): boolean; options(val_param); internal;
+begin
+  parity_matches := (opnd_bytes_ptr_t(addr(i^.opnds[j]))^.rrp & 3)
+      = (opnd_bytes_ptr_t(addr(i^.opnds[k]))^.rrp & 3);
+end;
+
+{ can_join - segments a and b, of simple live ranges (no complex id),
+  can share a register: a exposed and not read, or not exposed and
+  read once.  0x259B7A, 0x62 bytes. }
+
+function can_join(
+    a: lts_ptr_t;
+    b: lts_ptr_t): boolean; options(val_param); internal;
+begin
+  can_join := false;
+  if (a^.lr^.id = 0) and (b^.lr^.id = 0) then
+    if a^.f2.exposed and (a^.refs^.link = nil) then
+      can_join := true
+    else if not a^.f2.exposed then
+      if a^.refs^.link^.link = nil then
+        can_join := true;
+end;
+
+{ is_5op_candidate - a floating add or subtract that can become a
+  five-operand instruction (the result written into one of its inputs,
+  oli_5op_k the input): already so (its result modifies, or a subtract's
+  operand 2 intends to), or an input register not modified later that
+  can share the result's register with matching halves (oli_5op set);
+  truncsi and truncdi always.  0x259BDC, 0x33C bytes: addd's search
+  goes on after a match and tests can_join twice with the same
+  operands (kept). }
+
+function is_5op_candidate(
+    i: instr_ptr_t): boolean; options(val_param); internal;
+label
+  10, 20, 99;
+var
+  res: boolean;
+  k: integer32;
+  s: lts_ptr_t;
+begin
+  res := false;
+  case i^.opc of
+    154: begin                          { adds }
+      if i^.opnds[3].h.modify then begin
+        res := true;
+        oli_5op_k[i^.num] := 2;
+        goto 99;
+      end;
+      for k := 2 downto 1 do begin
+        s := i^.opnds[k].lts;
+        if i^.opnds[k].h.kind in [operand$ip_reg..
+            operand$well_behaved_memory] then
+          if not modified(s) then
+            if can_join(s, i^.opnds[3].lts) and parity_matches(i, k, 3)
+                then begin
+              res := true;
+              oli_5op[i^.num] := res;
+              oli_5op_k[i^.num] := k;
+              goto 99;
+            end;
+      end;
+    end;
+    171: begin                          { addd }
+      if i^.opnds[3].h.modify and i^.opnds[6].h.modify then begin
+        res := true;
+        goto 10;
+      end;
+      for k := 2 downto 1 do
+        if i^.opnds[k].h.kind in [operand$ip_reg..
+            operand$well_behaved_memory] then
+          if i^.opnds[k + 3].h.kind in [operand$ip_reg..
+              operand$well_behaved_memory] then
+            if not (modified(i^.opnds[k].lts) or
+                modified(i^.opnds[k + 3].lts)) then
+              if can_join(i^.opnds[k].lts, i^.opnds[3].lts)
+                  and can_join(i^.opnds[k].lts, i^.opnds[3].lts)
+                  and parity_matches(i, k, 3)
+                  and parity_matches(i, k + 1, 6) then begin
+                res := true;
+                oli_5op[i^.num] := res;
+                oli_5op_k[i^.num] := k;
+              end;
+    end;
+    155: begin                          { subs }
+      if i^.opnds[3].h.modify and i^.opnds[2].h.intend_to_modify then begin
+        res := true;
+        goto 10;
+      end;
+      s := i^.opnds[2].lts;
+      if i^.opnds[2].h.kind in [operand$ip_reg..
+          operand$well_behaved_memory] then
+        if not modified(s) then
+          if can_join(s, i^.opnds[3].lts) and parity_matches(i, 2, 3) then
+              begin
+            res := true;
+            goto 20;
+          end;
+    end;
+    172: begin                          { subd }
+      if i^.opnds[5].h.intend_to_modify and i^.opnds[2].h.intend_to_modify
+          and i^.opnds[3].h.modify and i^.opnds[6].h.modify then begin
+        res := true;
+        goto 10;
+      end;
+      if i^.opnds[2].h.kind in [operand$ip_reg..
+          operand$well_behaved_memory] then
+        if i^.opnds[5].h.kind in [operand$ip_reg..
+            operand$well_behaved_memory] then
+          if not (modified(i^.opnds[2].lts) or modified(i^.opnds[5].lts))
+              then
+            if can_join(i^.opnds[2].lts, i^.opnds[3].lts)
+                and can_join(i^.opnds[5].lts, i^.opnds[6].lts)
+                and parity_matches(i, 2, 3)
+                and parity_matches(i, 5, 6) then begin
+              res := true;
+              goto 20;
+            end;
+    end;
+    169, 152:                           { truncdi, truncsi }
+      res := true;
+    otherwise
+      bug_check('OLI_$is_5op_candidate: input instruction not add or subtract%$');
+  end;
+  goto 99;
+10:
+  oli_5op_k[i^.num] := 2;
+  goto 99;
+20:
+  oli_5op[i^.num] := res;
+  oli_5op_k[i^.num] := 2;
+99:
+  is_5op_candidate := res;
+end;
+
+{ max_recurrence_slope - the largest, over the recurrences, of the
+  longest path's delay spread over the recurrence's distance (rounded
+  up).  0x259F56, 0x62 bytes. }
+
+function max_recurrence_slope: integer32; internal;
+var
+  best, m, d: integer32;
+  r: oli_rec_ptr_t;
+  p: oli_path_ptr_t;
+begin
+  best := 0;
+  r := oli_recurrences;
+  while r <> nil do begin
+    m := 0;
+    p := r^.paths;
+    while p <> nil do begin
+      d := delay_along_data_flow_path(p^.steps);
+      if m < d then
+        m := d;
+      p := p^.next;
+    end;
+    d := (m + r^.dist - 1) div r^.dist;
+    if best < d then
+      best := d;
+    r := r^.next;
+  end;
+  max_recurrence_slope := best;
+end;
+
+{ iteration_interval - the cycles an iteration needs: the instructions
+  counted by unit (floating: fp_double, immediate, fp_single; integer:
+  the others but the uncounted classes and jumps; fp_control both),
+  the floating multiplies and five-operand candidates that can pair
+  (oli_n5s, oli_n5d) taken off the floating count; at least the
+  recurrences' slope when there are recurrences.  0x259FB8, 0x1D2
+  bytes. }
+
+function iteration_interval: integer32; internal;
+var
+  i: instr_ptr_t;
+  cls: integer;
+  a, b, ii, r: integer32;
+begin
+  oli_nfp := 0;
+  oli_nint := 0;
+  oli_nmuls := 0;
+  oli_nmuld := 0;
+  oli_n5d := 0;
+  oli_n5s := 0;
+  oli_nfpctl := 0;
+  i := oli_bb^.first;
+  while i <> nil do begin
+    cls := instruction_attributes[i^.opc].class;
+    if cls in [class$fp_double, class$immediate, class$fp_single] then begin
+      oli_nfp := oli_nfp + 1;
+      case i^.opc of
+        181:                            { muls }
+          if not i^.h.fp_ccs then
+            oli_nmuls := oli_nmuls + 1;
+        184:                            { muld }
+          if not i^.h.fp_ccs then
+            oli_nmuld := oli_nmuld + 1;
+        155, 154:                       { subs, adds }
+          if is_5op_candidate(i) then
+            oli_n5s := oli_n5s + 1;
+        152: begin                      { truncsi }
+          oli_5op[i^.num] := true;
+          oli_n5s := oli_n5s + 1;
+        end;
+        172, 171:                       { subd, addd }
+          if is_5op_candidate(i) then
+            oli_n5d := oli_n5d + 1;
+        169: begin                      { truncdi }
+          oli_5op[i^.num] := true;
+          oli_n5d := oli_n5d + 1;
+        end;
+        otherwise
+      end;
+    end
+    else if cls = class$fp_control then begin
+      oli_nfp := oli_nfp + 1;
+      oli_nint := oli_nint + 1;
+      oli_nfpctl := oli_nfpctl + 1;
+    end
+    else if not (cls in [4..7, 18, 19, 26]) then
+      if i^.opc <> 69 then              { jump }
+        oli_nint := oli_nint + 1;
+    i := i^.next;
+  end;
+  if oli_nint >= oli_nfp then begin
+    ii := oli_nint;
+    oli_fp_spare := 0;
+  end
+  else begin
+    a := oli_nmuls;
+    if a > oli_n5s then
+      a := oli_n5s;
+    b := oli_nmuld;
+    if b > oli_n5d then
+      b := oli_n5d;
+    ii := oli_nfp - a - b;
+    if ii < oli_nint then
+      ii := oli_nint;
+    oli_fp_spare := oli_nfp - ii;
+  end;
+  find_data_flow_paths;
+  if oli_dep = 1 then begin
+    r := max_recurrence_slope;
+    if r < ii then
+      r := ii;
+  end
+  else
+    r := ii;
+  iteration_interval := r;
 end;
