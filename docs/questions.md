@@ -1091,3 +1091,12 @@ revisited.
    word of its INTEGER*4 exponent for 0x0138 (a power by an
    integer*2): written A ** INT2(E).  Confirm from an FPP operation
    list if one turns up.
+139. Translator LL, empty.pas: the unit has no routines, no data and no
+   insert in either binary (its .blocks record is the module block
+   alone); its recorded code start lies inside other code (cc.m68k
+   cg_top's return_proc; cc.a88k the ISC routines without records), so
+   the survey's 4396 and 293168 bytes are spans to the next unit, not
+   its contents (the a88k span is not the ISC tables: those are the
+   named sections operand_string .. zzzzz_readonly_tables and the ISC
+   units' data).  Written as `module empty;' alone.  The ISC code
+   without records remains open item 1 of docs/survey.md.

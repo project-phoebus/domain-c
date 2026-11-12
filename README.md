@@ -172,4 +172,5 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `us1/us1/lib/dblib/loc/src/loc_build.c` | 33 | reconstructed (C; not checked by the gate: read against the disassembly, syntax-checked with a host C compiler; headers loc_private.h and loc_build.h, the others stubs) |
 | `lang2/source/ftn/source/const_op.ftn` | 14 | reconstructed (FORTRAN 77; not checked by the gate: read against the disassembly; r8_math's operations 9, 11, 12 by guess, docs/questions.md 138) |
 | `lang/c_compiler/source/c_data.asm` | 0 | reconstructed (assembly, GNU as syntax; not checked by the gate: assembled with m68k-elf-as, byte-identical to both binaries' 18384 bytes; c_globals.ins.pas's names kept) |
+| `lang/lang/source/empty.pas` | 0 | translated (an empty module: no routines, no data in either binary; docs/questions.md 139) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
