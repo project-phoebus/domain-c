@@ -257,6 +257,11 @@ when this tree is merged).
    0x0068): "a real constant is not supported yet", "undefined
    identifier `round`"; the check stores the bits and uses integer
    arithmetic.
+   Also the generated isc_pass_1_07_constants (translator GF, cc.a88k
+   0x11DD9E, 0x11DEB6): rule 9's `il_$node_ptr_t(subject.sym)^.real_value
+   = 0.0' (FPP 0x0074 0xFF34, `seq') and rule 10's `f.value :=
+   ...real_value' (real := double, 0x0074 0x00D4 0xFF3E); the check
+   compares the high longword with 0 and drops the conversion.
 
 8. **`in` on a constant set with a word element.**  `t^.kind in [77..87,
    101, 200]` (token.pas set_is_nil 0x09930E: `move.w #207,D0; sub.w

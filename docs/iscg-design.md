@@ -777,7 +777,8 @@ modules, isc_pass_1_main's operator routines.
 ### 10.4 What remains
 
 1. **The action bodies**: pass 2 done (10.6, translator GC); pass 1
-   done but 5 actions (10.7, translator GE).  The decompiler from the
+   done (10.7, translator GE; the last 5 actions 10.8, translator GF):
+   all 50 modules generated.  The decompiler from the
    pass-1 and pass-2 actions to the statement language (section 4),
    macros for the templates of 2.5, the cost tables of 2.6, and the
    generator's emission of the 50 modules.  The action headings are
@@ -1144,10 +1145,116 @@ reports only gap 4's message.
 **Tested**: the extraction gives the same rule file under any
 PYTHONHASHSEED (no set iterated for output); iscg_gen.py --check passes.
 
-**What remains**: the 5 residue actions (sections 07, 12, 23, 24); names
+**What remains**: the 5 residue actions (sections 07, 12, 23, 24: done, 10.8); names
 (the tables', the temps', questions 266, 286); the cc_datacheck_known.txt
 entry for isc_pass_1_main's span is gone (the manifest's A5s end its
 block at module 01's); the 4 ungenerated pass-1 modules' data are checked
 by nobody until their modules exist.  Questions 450 .. 455, patterns
 188 .. 371, dpc gap 47.
 
+
+### 10.8 The last pass-1 actions; the pass-2 join (translator GF, 2026-11-12)
+
+**All 563 pass-1 actions are in the rule file and all 25 pass-1 modules
+are generated**: 559 lifted, 4 by hand (399 and 402 as before, 9 and
+10), no residue.  Modules 07, 12, 23 and 24 compile with errors=0 under
+cc_isc_check and their data equal the image's; so do 02's past 32 KB
+now (below).
+
+**The five residue actions** (GE's question 300):
+
+- *Rule 20* (target_properties +0x9C): the field is named p_9c in
+  target_properties.ins.pas (split from the unused p_94; core commit;
+  rule 20's two reads are the only absolute references to it in
+  cc.a88k).  The lifter reads it through GLOBAL_FIELDS (address ->
+  variable, field, class); the language writes `target_properties.p_9c'
+  (iscg_p1lang EXTRA_FIELDS).  Lifted.
+- *Rule 211* (0x163B24, `bne' on unknown flags): every way into the
+  join ends in a store `move.l Dn,(356,A3)' from a different register,
+  and the join branches on those flags.  The p1 lifter records which
+  flags are a stored value's (flag_store: the flags' identity -> the
+  field) and an if's join whose arms both end in such a store to one
+  field tests the field (`if result.l356 = nil then').  Lifted (pattern
+  381).
+- *Rule 177* (0x16ACF6, `btst D2,(81,A0)'): D2 holds the 5 loaded for a
+  kind compare; the lifter takes a data register holding a constant as
+  the bit number (modulo 8 on memory, 32 on a register: pattern 148).
+  The same rule showed a slip in GE's join: a boolean on one arm and a
+  cleared byte (`clr.b d3') on the other was read as a dead value and
+  the arm dropped; a cleared byte is now `false' on its arm.  Lifted.
+- *Rules 9 and 10* (the FPP emulation: a double tested against zero,
+  0x0074 0xFF34 then `seq'; a double converted to a single, 0x0074
+  0x00D4 0xFF3E, and its bits read): `hand' clauses.  The language gains
+  a real constant node's selector `il.real_value' (il.ins.pas's double
+  at +12) and the temp type `single' (`f.value', `f.bits': the module's
+  view p1_single_t); real constants (`0.0') were in the parser already.
+  dpc refuses both (gap 7): cc_gap_rewrites.txt has two lines for
+  module 07 (the comparison as the high longword's with 0, as for
+  c_syntax; the conversion dropped).  Not lifted: the constructs occur
+  only here among the pass-1 actions.
+
+Re-extraction with the lifter's changes alters only rules 20, 211 and
+177 (no other clause changes: the flag and clr.b joins meet nothing
+else).
+
+**Module data past 32 KB** (question 297, pattern 380): Rev 8.89 keeps a
+table near while its start plus three times its rounded size (24, 40)
+is within 32 KB; the others go after the near tables' end rounded to 4,
+in order, each on 8 bytes from there.  This reproduces every table
+offset in modules 02 and 24 (2990 tables).  tools/iscg_p1gen.py's
+place_tables computes it; the module declares the near tables first,
+the last near one as p1_near_last_byte_costs_t / _word_costs_t (rounded
+to 4), then the far ones.  Module 02's cc_datacheck_known.txt entry is
+removed: its data match byte for byte (question 470 asks whether the
+rule's form is the compiler's).
+
+| module | routines | sim (mod. regs) | gap 25 | data |
+|--------|---------:|-----------------|--------|------|
+| 07 constants | 11 | 0.38 (0.56) | - | 102 bytes: equal |
+| 12 leaves | 22 | 0.39 (0.58) | - | no cost tables |
+| 23 aggregate assignments | 21 | 0.47 (0.68) | - | 8,840 bytes compared: equal |
+| 24 operator assignments | 27 | 0.43 (0.62) | 177, 180, 181, 186 | 45,152 bytes compared: equal |
+| 02 assignments (again) | 33 | 0.38 (0.59) | as before | 30,260 bytes compared: equal |
+
+tools/cc_typecheck.sh on the four reports only gap 4's and (07) gap 7's
+messages.
+
+**The pass-2 lifter's join** (GE's finding): iscg_p2lift's branch kept
+the then arm's frame temporaries after an if/else, so a temporary the
+else arm set otherwise was read with the then arm's value.  The join is
+now P2.Lifter.join_frame (shared with the p1 lifter, whose arms() had
+its own copy; frame_live moved with it): a value both arms agree on
+stays, one set differently on the two arms and read after the join
+becomes a temp set on each arm, the rest is not known after the join.
+A parameter's value copied into a temporary becomes its name in the
+phi (8 actions would otherwise have become residue).  **93 pass-2
+actions change** (02: 142, 158, 171; 03: 309, 310; 04: 255, 258, 259,
+261, 262, 270, 272..275, 278, 279, 285, 288..290, 292, 295, 297, 301,
+302, 304, 305; 06: 499, 504; 09: 458, 463..466, 468, 469, 478..480,
+485; 10: 418, 422..424, 429; 11: 235; 13: 328, 329, 333, 339; 14: 392,
+395; 15: 247, 248; 16: 536, 537; 17: 200, 202, 204; 18: 354, 355, 367,
+372; 23: 211..214, 217, 221; 24: 177..184, 186, 189, 195..197; 25: 104,
+112, 114..117, 119..121, 126), every one a real fix: e.g. rule 142's
+`emit field(opc$insert, 0, result.l356, t1, ...)' read t1, which only
+the then arm sets (find_well_known_literal_solution), where the else
+arm's register solution t2 belongs; now `t4 <- t1' / `t4 <- t2' and
+t4 is passed.  No pass-1 clause changes (the p1 lifter merged frames
+already).  16 pass-2 modules are regenerated; all 25 still compile
+with errors=0 under cc_isc_check (similarities within 0.01 of before),
+and cc_typecheck.sh reports only gap 7's message on them.  Extraction
+is deterministic: the rule files are identical under PYTHONHASHSEED=1
+and 4242.
+
+**Shared tools and inserts changed**: target_properties.ins.pas (p_9c,
+core commit); iscg_p2lift.py (join_frame, frame_live); iscg_p1lift.py
+(GLOBAL_FIELDS, flag_store, btst by a register, the clr.b join, its
+frame join now P2's); iscg_p1lang.py (EXTRA_GLOBALS target_properties,
+EXTRA_FIELDS, il.real_value, temp type single); iscg_p1gen.py
+(place_tables, NEAR_TYPES, SINGLE_VIEW); cc_gap_rewrites.txt (gap 7
+for module 07, gap 25 for module 24's 177, 180, 181, 186);
+cc_datacheck_known.txt (module 02's entry removed).  Questions 470 ..
+473, patterns 380 .. 382; no new dpc gap.
+
+**What remains** for the actions: names (questions 266, 286, 295, 471,
+472); the lifter's call count and order for pure functions (question
+473); the cost tables' derivation (question 296).

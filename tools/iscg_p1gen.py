@@ -11,8 +11,9 @@ clauses).  A transform's pass-1 action is one of
                          iscg_p1lang.py), lifted from the image by tools/
                          iscg_p1lift.py; the generator writes the skeleton
     pass_1 image 16#ADDR [rewrite] hand [dropped] begin ... end;
-                         written by hand (the extractor keeps it); a
-                         `dropped' clause is an action whose arm Rev 8.89
+                         written by hand (the extractor keeps it: rules 9
+                         and 10, the FPP emulation's real comparison and
+                         conversion, and 399, 402); a `dropped' clause is an action whose arm Rev 8.89
                          removed (its conditions' first tests survive, no
                          trace, no solution: rules 399 and 402)
     pass_1 image 16#ADDR residue;
@@ -247,7 +248,7 @@ def place_tables(layout):
     A5 + 0, in order) while its start plus three times its 8-rounded size
     (24, 40) is within 32 KB; the rest go far, in order, after the near
     tables' end rounded to 4 (reached through an absolute base in the
-    image: pattern 361).  Rules 170/171 (module 02) and 186..188 (module
+    image: pattern 189).  Rules 170/171 (module 02) and 186..188 (module
     24) are the only ones that pass 32 KB; the rule reproduces every
     table's offset in both (2990 tables; docs/rev889-patterns.md 380,
     docs/questions.md 470)."""

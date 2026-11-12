@@ -1431,3 +1431,25 @@ cc.m68k unless marked.
     which_transform store; rule 200: a frame temporary set
     on both arms of an if (`move.l #512,(-8,A6)' / `clr.l (-8,A6)',
     0x154BE2) and tested later.
+380. **Module data past 32 KB: which variables go far.**  In the two
+    pass-1 modules over 32 KB (02, 24) the cost tables lie in order, each
+    on 8 bytes, while a table's start plus three times its rounded size
+    (24 bytes, 40) is within 32 KB; a table that fails goes far, and
+    later small ones still fill the room below 32 KB (module 24: rule
+    186's tables 92.. far from A5 + 0x7FC4, rule 188's first two byte
+    tables near at +0x7F98 and +0x7FB0); the far tables follow the near
+    ones' end rounded to 4 (+0x7FC1 -> +0x7FC4; module 02 +0x7FC9 ->
+    +0x7FCC), in order, each on 8 bytes from there (item 189;
+    docs/questions.md 470).
+381. **A branch on the flags of the stores that end both arms.**  Rule
+    211 (0x163B24): every way into the join ends in `move.l Dn,
+    (356,A3)' (the registers differ: D0, D5) and the join tests `bne' at
+    once: the stored field compared with 0.
+382. **The FPP's test of a double against zero.**  Rule 9 (0x11DD9E):
+    `pea (12,A1); jsr fpp_$', the words 0x0074 0xFF34, then `seq d0'
+    (literal_64_bits_value_is_zero; final.pas floatop's `= 0.0' has
+    the same words, docs/dpc-gaps.md 7); rule 10 (0x11DEB6) converts the
+    same double to a single with 0x0074 0x00D4 0xFF3E into a temporary
+    and copies it to a four-byte local read as a longword.  Rule 177
+    (0x16ACF6) is item 148 again: `btst D2,(81,A0)' with D2 the 5
+    loaded for a kind compare (bit 5 of +81).
