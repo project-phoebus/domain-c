@@ -4714,7 +4714,7 @@ begin
     lr^.f2.reg := r;
     lr^.f2.assigned := true;
     if lr^.mate <> nil then begin
-      lr^.mate^.f2.reg := (r & (~1)) ! (1 - (r & 1));
+      lr^.mate^.f2.reg := xor(r, 1);
       lr^.mate^.f2.assigned := true;
     end;
 30:
@@ -4871,7 +4871,7 @@ begin
               r := ra_lts_ptr_t(i^.opnds[k].lts)^.lr^.f2.reg;
               bits := [r mod 32];
               if i^.opnds[k].h.kind = operand$fp_reg_pair then
-                bits := bits + [((r & (~1)) ! (1 - (r & 1))) mod 32];
+                bits := bits + [(xor(r, 1)) mod 32];
               if i^.opnds[k].h.kind = operand$ip_reg then
                 rtn^.written_ip := rtn^.written_ip ! integer32(bits)
               else if r <= 31 then

@@ -277,3 +277,7 @@ lang2/source/be_com/ra.pas	s/^(        \{ Ready for the next instruction\. \})$/
 # gap 40 (ra, translator PB6): a frame beyond link.w (ra_$collapse_conflict_graph's 256K table of aversions: the table shrunk to two entries, for the check)
 lang2/source/be_com/ra.pas	s/^  ra_ap_table_t = array \[0\.\.65535\] of ra_ap_ptr_t;$/  ra_ap_table_t = array [0..1] of ra_ap_ptr_t; { gap 40 }/
 lang2/source/be_com/ra.pas	s/\.r < 1\.0e-4/.i < 16#38D1B717 { gap 7 }/
+# gap 4 (konst, translator PB6): writeln (dropped, for the check)
+lang2/source/be_com/konst.pas	s/^(\s*)writeln\(.*\);\s*$/${1}; { gap 4 }/
+# gap 7 (konst, translator PB6): a double literal converted to a single (left unset, for the check)
+lang2/source/be_com/konst.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/

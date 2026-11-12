@@ -84,6 +84,7 @@ Conventions the translators should know:
 | `lang2/source/be_com/sched_utils.pas` | 15 | the scheduler's utilities: operand delays, precedence heights (+28 a word during SCHED), snuggle moves next to physical registers' writers and readers (translator PB4; headings narrowed, sched_utils_$flags_t) |
 | `lang2/source/be_com/ra_utils.pas` | 45 | the allocator's utilities: XTP's pass-through spilling around hammocks (nine bit vectors, hal's records' +24..+36), rematerialization, the spill code (reloads, stores, loops broken from spill victims, readers linked to one reload) (translator PB5; ra.pvt.pas headings narrowed, ra_650; backend.ins.pas ra_utils_10 (was post_6b8), lir_main_c88/_c89 bytes; dpc gaps 7, 21, 25, 28) |
 | `lang2/source/be_com/ra.pas` | 62 | the allocator (translator PB6): ra.pvt.pas ra_classes_t, ra_$clean_bb_and_init_bit_vectors and ra_$build_conflict_graph narrowed (classes; first, count_only); ra_654/ra_658 defined; the 'ISD' letters at +0x65C (question 300); batch A fields read through views (question 302); dpc gaps 7, 28, 38, 39, 40 |
+| `lang2/source/be_com/konst.pas` | 32 | KONST (translator PB6): definition descriptors (ko_dd_t, kinds 0..5), the edges' and join inputs' followed marks in their pointers' low bits; runs only at debug level 1 or more (at_backend_switches.level); dpc gaps 4, 7 |
 
 exs.pas (27 routines, 4168 bytes, nested routines with uplevel
 references) was not reached with the core; batch A translated it

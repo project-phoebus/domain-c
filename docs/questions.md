@@ -1877,3 +1877,18 @@ revisited.
    conventions' b30); the routine node's +240 a common member, +374
    bit 19 needs_db, +378 bit 4 (forces a frame) and bit 2 (has one).
    rtn_t's conv and frame_size (PA5) agree with ra's view.
+303. Translator PB6, konst (for batch A): fields KONST uses through views:
+   lts_t +28 the exposed segments a definition reaches (chained at
+   their +28: lts_t.l28), +32 the next on konst's queue (-1 the last),
+   +40 the definition descriptor, +44 a definition's join inputs (the
+   ut_jbi_t records chained at +0); a flow graph edge's next_pred low
+   bit (+15 bit 0) the mark that konst followed it (masked `andi.l
+   #-2' while set); ut_jbi_t's instr low bit (+15 bit 0) an input
+   reached along an executable path; bb_t +130 a join input, +146 the
+   walk number, +150 konst's block queue (-1 the last); instr_t +28 a
+   word, marked for evaluation; a join birthpoint's operand 3's link
+   (+72) its inputs (chained at +4).  And: KONST runs only when its
+   debug level (at_backend_switches.level) is nonzero; the reached-
+   block queue (+92/+80) is emptied but nothing fills it, and +96/+84
+   are set and never read.  Is the level test the original's (KONST
+   off by default)?
