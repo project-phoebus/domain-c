@@ -1,7 +1,13 @@
 { iv - the PRISM back end's induction variable phase (IV): the loops'
-  induction variables and the expressions of them found (ivr_, ixr_),
-  strength reduced (ixt_), and the expression utilities (iv_utils_) oli
-  shares.
+  induction variables (ivr_: candidates from the loop heads' joins,
+  propagated through adds, subs, moves and modifying loads and stores,
+  then verified), the induction expressions of them found in each block
+  (ixr_: instantiations of secondary variables, address modes),
+  strength reduced (ixt_: the most used expression of a secondary made
+  a new primary variable, the others rewritten from it), the variables
+  recomputed for oli; and the expression utilities (iv_utils_) oli
+  shares.  The loops are walked by interval, innermost first
+  (iv_$walk_basic_blocks_in_order).
 
   Image addresses (DOMAIN C 6.9; cc.a88k only):
     cc.m68k   cc.a88k
@@ -10,7 +16,13 @@
     --------  0x238EE0  iv_$end_compilation
     --------  0x238EE2  iv_$end_routine
     --------  0x238F3C  zero (internal)
+    --------  0x238F62  alloc_induction_lts (internal)
+    --------  0x238F98  alloc_induction_addr (internal)
+    --------  0x238FD0  alloc_induction_expr (internal)
+    --------  0x239008  alloc_induction_class (internal)
     --------  0x239040  alloc_expression (internal)
+    --------  0x239078  alloc_induction_variable (internal)
+    --------  0x2390B0  create_induction_addr (internal)
     --------  0x2390FC  free_expression (internal)
     --------  0x239110  iv_utils_$delete_expression
     --------  0x23916C  order_expressions (internal)
@@ -23,7 +35,7 @@
     --------  0x239508  iv_utils_$create_add_expression
     --------  0x239542  iv_utils_$create_sub_expression
     --------  0x23957C  iv_utils_$create_mul_expression
-    --------  0x2395B6  iv_utils_$create_neg_expression
+    --------  0x2395B6  iv_utils_$create_neg_expression (internal)
     --------  0x2395E2  iv_utils_$create_value_expression
     --------  0x239612  iv_utils_$create_lts_expression
     --------  0x239642  iv_utils_$create_operand_expression
@@ -48,31 +60,102 @@
     --------  0x23AB78  propagate_down_type (internal)
     --------  0x23AED4  elaborate_expression (internal)
     --------  0x23B07E  iv_utils_$elaborate_expression
+    --------  0x23B124  find_last_instruction (internal)
+    --------  0x23B16A  add_operand_to_segment (internal)
+    --------  0x23B1F6  create_operand_from_elaborated_expression (internal)
+    --------  0x23B876  iv_utils_$create_operand_from_expression
+    --------  0x23B8EE  iv_utils_$live_range_from_elaborated_expression
+    --------  0x23BBAE  increments_are_equal (internal)
+    --------  0x23BBE8  create_induction_lts (internal)
+    --------  0x23BC54  free_induction_lts (internal)
+    --------  0x23BC64  iv_utils_$delete_induction_lts
+    --------  0x23BD24  free_induction_addr (internal)
+    --------  0x23BD34  iv_utils_$delete_induction_addr (internal)
+    --------  0x23BD70  free_induction_expr (internal)
+    --------  0x23BD80  create_induction_expr (internal)
+    --------  0x23BDCC  create_induction_class (internal)
+    --------  0x23BE24  free_induction_class (internal)
+    --------  0x23BE34  create_induction_variable (internal)
+    --------  0x23BF04  free_induction_variable (internal)
+    --------  0x23BF14  iv_utils_$delete_induction_expr (internal)
+    --------  0x23BFB0  iv_utils_$delete_induction_class (internal)
+    --------  0x23C028  iv_utils_$delete_induction_variable (internal)
+    --------  0x23C112  interval_contains_bb (internal)
+    --------  0x23C140  lts_is_loop_invariant (internal)
+    --------  0x23C2AC  operand_is_loop_invariant (internal)
+    --------  0x23C316  find_definition (internal)
+    --------  0x23C3BA  iv_utils_$locate_definition (internal)
+    --------  0x23C44A  iv_utils_$create_expression_from_lts
+    --------  0x23C702  iv_utils_$create_expression_from_operand
+    --------  0x23C7AA  propagate_induction_increment (internal)
+    --------  0x23C850  ivr_$propagate_induction_for_lifetime_segment (internal)
+    --------  0x23CB6C  duplicate_increment_information (internal)
+    --------  0x23CBAE  ivr_$locate_induction_candidates (internal)
+    --------  0x23CD10  ivr_$propagate_induction_into_basic_block (internal)
+    --------  0x23CE66  operand_has_same_induction_variable (internal)
+    --------  0x23CEAE  apply_to_creating_induction_segments (internal)
+    --------  0x23CFB2  ivr_$mark_lifetime_segments_as_induction_variables
+    --------  0x23D062  ivr_$verify_candidate_is_induction_variable (internal)
+    --------  0x23D238  ivr_$finalize_induction_variables (internal)
+    --------  0x23D288  iv_$walk_basic_blocks_in_order
+    --------  0x23D340  operand_is_any_induction_expression (internal)
+    --------  0x23D39A  ixr_$find_current_lts_for_iv (internal)
+    --------  0x23D5A0  iv_utils_$compare_address_expressions
+    --------  0x23D60C  ixr_$find_induction_class (internal)
+    --------  0x23D692  ixr_$find_induction_expr (internal)
+    --------  0x23D718  ixr_$find_induction_variable (internal)
+    --------  0x23D852  ixr_$create_induction_lts_from_induction_instantiation (internal)
+    --------  0x23D8FE  ixr_$create_induction_addr_from_induction_instantiation (internal)
+    --------  0x23D9A0  ixr_$get_induction_instantiation_from_operand (internal)
+    --------  0x23DC0A  operand_is_current_induction_expression (internal)
+    --------  0x23DC6E  ixr_$induction_expr_plus_loop_invariant (internal)
+    --------  0x23DD6A  ixr_$induction_expr_plus_induction_expr (internal)
+    --------  0x23DF3C  ixr_$induction_expr_times_loop_invariant (internal)
+    --------  0x23E042  ixr_$induction_expr_shifted_loop_invariant (internal)
+    --------  0x23E14C  ixr_$induction_expression (internal)
+    --------  0x23E1D0  ixr_$scan_addressing_mode (internal)
+    --------  0x23E2B6  ixr_$scan_basic_block_for_induction_expressions
+    --------  0x23E6E6  ixt_$multiply_cost (internal)
+    --------  0x23E754  get_secondary_segment (internal)
+    --------  0x23E766  ixt_$induction_segment_exists (internal)
+    --------  0x23E7BE  ixt_$clear_primary_used_fields (internal)
+    --------  0x23E7D8  ixt_$mark_primary_used_fields (internal)
+    --------  0x23E86E  ixt_$count_primary_used_fields (internal)
+    --------  0x23E8B6  ixt_$replace_segment_references (internal)
+    --------  0x23E9FE  ixt_$create_increment_instruction (internal)
+    --------  0x23EB76  remove_segment_from_operand (internal)
+    --------  0x23EC12  ixt_$replace_induction_expr (internal)
+    --------  0x23EF5A  ixt_$cleanup_segment_references (internal)
+    --------  0x23EFD8  ixt_$cleanup_induction_expr (internal)
+    --------  0x23F054  ixt_$instantiate_induction_expr (internal)
+    --------  0x23F5E0  ixt_$process_secondary_induction_variable (internal)
+    --------  0x23F954  ixt_$process_primary_induction_variable (internal)
+    --------  0x23F9AC  ixt_$process_induction_transformations (internal)
+    --------  0x23F9DE  iv_$locate_induction_variables_at_loop_start
+    --------  0x23FA46  iv_$locate_induction_variables_for_basic_block
+    --------  0x23FA6A  iv_$locate_induction_variables_at_loop_end
+    --------  0x23FB02  iv_$build_nested_reverse_postorder_lists (internal)
+    --------  0x23FB60  get_increment_from_induction (internal)
+    --------  0x23FD98  recompute_for_oli
+    --------  0x23FF80  iv_$process_routine
     A5 0x486500: the module's data: instr_size (+0, instr_size.init),
-    iv_opc_kind (+0x330: the expression kind of an opcode), iv_commuted
-    (+0x630), iv_opnd_pos (+0x650), iv_opc (+0x688, two rows),
-    iv_opc_set (+0x300), iv_nchildren (+0x6C0), the six heaps (+0x6E0 .. +0x758),
-    the free lists (+0x778 .. +0x788, +0x7B0), iv_elab_class (+0x7C0).
+    iv_opc_set (+0x300), iv_opc_kind (+0x330: the expression kind of an
+    opcode), iv_commuted (+0x630), iv_opnd_pos (+0x650), iv_opc (+0x688,
+    two rows), iv_nchildren (+0x6C0), the six heaps (+0x6E0 .. +0x758),
+    iv_zero (+0x774), the free lists (+0x778 .. +0x788, +0x7B0), the
+    routine's state (+0x78C .. +0x7B8), iv_elab_class (+0x7C0),
+    iv_signs (+0x7DA, not read), the increment opcodes (+0x7E0, +0x7F0).
 
   The expression utilities' callers in other units reach them through
-  iv.ins.pas.  The global routines only iv calls are declared here
-  (module-level: they load A5).
+  iv.ins.pas, which also declares the induction records and (as the
+  image's .blocks list implies: they are listed with the routines
+  declared before their bodies) create_operand_from_expression and
+  create_expression_from_lts/_operand.  A module-level routine that
+  does not load A5 is internal, whatever its prefix.
 
   Not known from the original: every local, parameter, cell and type
   name. }
 
-{ TODO(pascal) iv: 43 of the image's 127 routines (the expressions, the
-  heaps).  Remaining, in address order: alloc_induction_lts (0x238F62),
-  alloc_induction_addr, alloc_induction_expr, alloc_induction_class,
-  alloc_induction_variable, create_induction_addr (0x2390B0),
-  find_last_instruction (0x23B124) .. iv_$process_routine (0x23FF80):
-  the operands made from elaborated expressions, the induction
-  records, the loop invariance tests, the candidates' propagation and
-  verification (ivr_), the induction expressions' recognition (ixr_)
-  and transformation (ixt_), the walks and process_routine.  The heaps'
-  other records (induction lts 36 bytes, address mode 28, induction
-  expression 22, class 20, variable 62; free lists chained at +16, +16,
-  +8, +8, +50) are declared when those routines are written. }
 module iv;
 
 %include '/sys/ins/base.ins.pas';
@@ -102,7 +185,7 @@ type
   end;
 
   { A join birthpoint's input, as utils.pas's ut_jbi_t: chained from
-    the join instruction's operand 3 (+8) at next_op. }
+    the join instruction's operand 3's link (+72) at next_op. }
   iv_jbi_ptr_t = ^iv_jbi_t;
   iv_jbi_t = record
     next: iv_jbi_ptr_t;                 { +0 }
@@ -120,6 +203,17 @@ type
     w4: integer;                        { +4 }
     w6: integer;                        { +6 }
     value: integer32;                   { +8 }
+  end;
+
+  { The state of an enclosing loop while an inner one is worked on (20
+    bytes, `new' and `dispose'): chained from iv_states. }
+  iv_state_ptr_t = ^iv_state_t;
+  iv_state_t = record
+    prev: iv_state_ptr_t;               { +0 }
+    head: bb_ptr_t;                     { +4 }
+    vars: iv_var_ptr_t;                 { +8 }
+    vars_last: iv_var_ptr_t;            { +12 }
+    l16: integer32;                     { +16 }
   end;
 
   { An instantiation of an induction variable (12 bytes, passed by
@@ -210,13 +304,27 @@ var
   iv_free_var: iv_var_ptr_t;            { +0x788 (+50) }
   iv_free_expr: iv_expr_ptr_t;          { +0x7B0 (+12) }
 
-  { +0x798 .. +0x7AC: the routine's state. }
+  { +0x774, +0x78C .. +0x7B8: the routine's state. }
+  iv_zero: iv_expr_ptr_t;               { +0x774: the constant 0 (what an
+                                          instantiated expression is
+                                          replaced by) }
+  iv_intervals: bb_ptr_t;               { +0x78C: the blocks in no
+                                          interval (the outermost heads
+                                          among them), chained at +142 }
+  iv_790: univ_ptr;                     { +0x790: cleared, not read }
+  iv_states: iv_state_ptr_t;            { +0x794: the enclosing loops' }
   iv_vars_last: iv_var_ptr_t;           { +0x798: the last on iv_vars }
   iv_vars: iv_var_ptr_t;                { +0x79C: the primary induction
                                           variables, chained at +50 }
   iv_head: bb_ptr_t;                    { +0x7A0: the loop (interval head)
                                           being worked on }
+  iv_bb80: bb_ptr_t;                    { +0x7A8: the routine's +80, not
+                                          read }
   iv_rtn: rtn_ptr_t;                    { +0x7AC: the routine }
+  iv_7b4: integer;                      { +0x7B4: set to 1, not read }
+  iv_7b6: integer;                      { +0x7B6: set to 1, not read }
+  iv_changed: boolean;                  { +0x7B8: an expression was
+                                          instantiated }
 
   { +0x7DA: six characters no instruction reads (as mmt's 'touched',
     docs/questions.md 170). }
@@ -391,7 +499,8 @@ end;
 
 { create_induction_addr - an address mode of operand o (of its
   instruction) by induction expression x, put first on x's list; the
-  variable's current segment ilts and o's base register operand.  0x2390B0, 0x4C bytes, no A5. }
+  variable's current segment ilts and o's base register operand.
+  0x2390B0, 0x4C bytes, no A5. }
 
 function create_induction_addr(
     x: iv_iexpr_ptr_t;
@@ -3037,7 +3146,7 @@ begin
     if i^.opc = 203 then begin          { join_bp }
       n_in := 0;
       n_out := 0;
-      inp := i^.opnds[3].ptr;
+      inp := iv_jbi_ptr_t(i^.opnds[3].link);
       while inp <> nil do begin
         t := inp^.lts;
         if interval_contains_bb(t^.bb, head) then
@@ -3117,7 +3226,7 @@ begin
       goto 9;
     i := utils_ins_$operands_instruction(d);
     if i^.opc = 203 then begin          { join_bp }
-      inp := i^.opnds[3].ptr;
+      inp := iv_jbi_ptr_t(i^.opnds[3].link);
       l := iv_lts_ptr_t(inp^.lts^.l24);
       if l <> nil then
         if l^.ivar <> nil then
@@ -3133,7 +3242,7 @@ begin
       if v = nil then
         goto 9;
       nl := create_induction_lts(1, s, v);
-      inp := i^.opnds[3].ptr;
+      inp := iv_jbi_ptr_t(i^.opnds[3].link);
       first := iv_lts_ptr_t(inp^.lts^.l24);
       while inp <> nil do begin
         if not increments_are_equal(first, iv_lts_ptr_t(inp^.lts^.l24)) then
@@ -3210,7 +3319,7 @@ begin
   else begin
     i := utils_ins_$operands_instruction(s^.refs);
     if i^.opc = 203 then begin          { join_bp }
-      inp := i^.opnds[3].ptr;
+      inp := iv_jbi_ptr_t(i^.opnds[3].link);
       while inp <> nil do begin
         fl := iv_lts_ptr_t(inp^.lts^.l24);
         if fl <> nil then
@@ -3290,7 +3399,7 @@ begin
   i := utils_ins_$operands_instruction(v^.lts^.refs);
   first := nil;
   same := ok;
-  inp := i^.opnds[3].ptr;
+  inp := iv_jbi_ptr_t(i^.opnds[3].link);
   while inp <> nil do begin
     if interval_contains_bb(inp^.lts^.bb, iv_head) then begin
       l := iv_lts_ptr_t(inp^.lts^.l24);
@@ -3355,7 +3464,7 @@ begin
       else begin
         i := utils_ins_$operands_instruction(s^.refs);
         if i^.opc = 203 then begin      { join_bp }
-          inp := i^.opnds[3].ptr;
+          inp := iv_jbi_ptr_t(i^.opnds[3].link);
           while inp <> nil do begin
             l := iv_lts_ptr_t(inp^.lts^.l24);
             if l <> nil then
@@ -3383,9 +3492,10 @@ end;
 
 { ivr_$finalize_induction_variables - each primary variable verified
   (made final, its multiplier 1) or deleted.  0x23D238, 0x50 bytes, no
-  A5. }
+  A5: head, which its caller pushes, is not read. }
 
-procedure ivr_$finalize_induction_variables; internal;
+procedure ivr_$finalize_induction_variables(
+    head: bb_ptr_t); options(val_param); internal;
 var
   v, n: iv_var_ptr_t;
 begin
@@ -3406,13 +3516,15 @@ end;
   bb in order: pre and each called for bb, each for its members, a
   member that heads an interval (+18 bit 6) walked in turn, then post
   for bb (any of them nil).  0x23D288, 0xB8 bytes: recursive; every
-  argument by address, copied to locals for the inner calls. }
+  argument by address (in: the callers pass the routines as constants
+  placed after their code, pattern 116), copied to locals for the inner
+  calls. }
 
 procedure iv_$walk_basic_blocks_in_order(
-    var bb: bb_ptr_t;
-    var pre: iv_bb_proc_t;
-    var each: iv_bb_proc_t;
-    var post: iv_bb_proc_t);
+    in bb: bb_ptr_t;
+    in pre: iv_bb_proc_t;
+    in each: iv_bb_proc_t;
+    in post: iv_bb_proc_t);
 var
   b, c, t: bb_ptr_t;
   p1, p2, p3: iv_bb_proc_t;
@@ -4694,5 +4806,741 @@ begin
     end;
     otherwise
       ;
+  end;
+end;
+
+{ ixt_$cleanup_segment_references - segment s dropped when nothing reads
+  it (with its induction lts), or its defining instruction excised when
+  its definition has no readers (and s is not exposed and reaches no
+  exposed segment; the induction lts deleted when the excision
+  happens).  0x23EF5A, 0x7E bytes, no A5. }
+
+procedure ixt_$cleanup_segment_references(
+    s: lts_ptr_t); options(val_param); internal;
+var
+  d: opnd_ptr_t;
+  l: iv_lts_ptr_t;
+begin
+  d := s^.refs;
+  l := iv_lts_ptr_t(s^.l24);
+  if d = nil then begin
+    iv_utils_$delete_induction_lts(l);
+    utils_$excise_lts_cleanly(s, true);
+  end
+  else if s^.l28 = nil then
+    if not s^.f2.exposed then
+      if (opnd_bytes_ptr_t(d)^.rrp & 12) <> 0 then
+        if d^.link = nil then
+          if utils_$excise_instruction_if_unconsumed(
+                 utils_ins_$operands_instruction(d), true) then
+            iv_utils_$delete_induction_lts(l);
+end;
+
+{ ixt_$cleanup_induction_expr - x's instantiations' segments (and the
+  exposed segments each reaches) cleaned up; an instantiation whose
+  segment is gone deleted.  0x23EFD8, 0x7C bytes, no A5. }
+
+procedure ixt_$cleanup_induction_expr(
+    x: iv_iexpr_ptr_t); options(val_param); internal;
+var
+  l, ln, t: iv_lts_ptr_t;
+  s, y, yn: lts_ptr_t;
+begin
+  l := x^.ltss;
+  while l <> nil do begin
+    ln := l^.next;
+    s := l^.lts;
+    if ixt_$induction_segment_exists(l) then
+      if not s^.f2.exposed then begin
+        y := s^.l28;
+        while y <> nil do begin
+          yn := y^.l28;
+          ixt_$cleanup_segment_references(y);
+          y := yn;
+        end;
+      end;
+    if ixt_$induction_segment_exists(l) then
+      ixt_$cleanup_segment_references(s)
+    else begin
+      t := l;
+      iv_utils_$delete_induction_lts(t);
+    end;
+    l := ln;
+  end;
+end;
+
+{ ixt_$instantiate_induction_expr - x (an expression of a secondary
+  variable) made a new primary variable: its initial value the
+  secondary's plus x's expression, its increment the secondary's,
+  multiplier 1, final; a new complex live range given a segment for
+  each run of the primary's segments in a block (until one with a
+  nonzero step; an exposed one not made in a block the primary is final
+  in), each with a confirmed induction lts (the step and increment
+  times the secondary's multiplier) that the run's segments record as
+  their secondary (those left without one take the one their block's
+  run or the segment reaching it has); the initial value moved into it
+  at the end of the loop's dominator; birthpoints for the exposed ones
+  (join inputs from inside the loop and the start value for a join in
+  the loop head), increment instructions between the runs; the new
+  variable's list made of the new segments, each once.  The routine's
+  change flag set.  0x23F054, 0x54A bytes, no A5: the move from
+  iv_incr_opc2's 0 row. }
+
+function ixt_$instantiate_induction_expr(
+    x: iv_iexpr_ptr_t): iv_var_ptr_t; options(val_param); internal;
+label
+  8;
+var
+  v, pv, nv: iv_var_ptr_t;
+  kind: integer;
+  lr: lr_ptr_t;
+  l, q, last, nl, y, c, a1, a0: iv_lts_ptr_t;
+  s, ls, t, f: lts_ptr_t;
+  bb, prevbb, dom, bbl: bb_ptr_t;
+  created: boolean;
+  i: instr_ptr_t;
+  k: integer32;
+  j: univ_ptr;
+  inp: iv_jbi_ptr_t;
+  p: ^iv_lts_ptr_t;
+begin
+  iv_changed := true;
+  v := x^.class^.ivar;
+  pv := v^.parent;
+  kind := v^.f48.kind;
+  nv := create_induction_variable(nil, nil, kind);
+  nv^.head := pv^.head;
+  nv^.incr := iv_utils_$duplicate_expression(v^.incr);
+  nv^.init := iv_utils_$canonicalize_expression(
+                  iv_utils_$create_add_expression(
+                      iv_utils_$duplicate_expression(v^.init),
+                      iv_utils_$duplicate_expression(x^.expr)));
+  nv^.mult := iv_utils_$create_value_expression(1);
+  nv^.w44 := pv^.w44;
+  nv^.f48.known := pv^.f48.known;
+  nv^.f48.final := true;
+  lr := lir_$new_live_range_for_kind(kind);
+  bv_$make_live_range_complex(iv_rtn, lr);
+  l := pv^.ltss;
+  while l <> nil do begin
+    l^.sec := nil;
+    l := l^.next;
+  end;
+  l := pv^.ltss;
+  dom := pv^.head^.l54;
+  prevbb := nil;
+  while l <> nil do begin
+    s := l^.lts;
+    bb := s^.bb;
+    last := l;
+    q := l^.next;
+    while q <> nil do begin
+      if q^.lts^.bb <> bb then
+        exit;
+      if last^.step = nil then
+        exit;
+      if not iv_utils_$expression_is_zero(last^.step) then
+        exit;
+      last := q;
+      q := q^.next;
+    end;
+    ls := last^.lts;
+    if last <> l then
+      if ls^.f2.exposed then
+        if s^.f2.final and (bb <> prevbb) then
+          goto 8;
+    if ls^.f2.exposed then begin
+      t := utils_$get_exposed_lts(lr, bb, created);
+      if s^.f2.final and (bb <> prevbb) then
+        utils_$put_lts_on_final_list(t);
+    end
+    else if s^.f2.final and (bb <> prevbb) then
+      t := utils_$get_final_lts(lr, bb, created)
+    else
+      t := lir_utils_$add_lts_after_lts(t, 36, bb);
+    nl := create_induction_lts(2, t, nv);
+    nl^.h.used_known := false;
+    y := l;
+    while y <> q do begin
+      y^.sec := nl;
+      y := y^.next;
+    end;
+    if last^.step <> nil then
+      nl^.step := iv_utils_$canonicalize_expression(
+                      iv_utils_$create_mul_expression(
+                          iv_utils_$duplicate_expression(last^.step),
+                          iv_utils_$duplicate_expression(v^.mult)));
+    if last^.incr <> nil then
+      nl^.incr := iv_utils_$canonicalize_expression(
+                      iv_utils_$create_mul_expression(
+                          iv_utils_$duplicate_expression(last^.incr),
+                          iv_utils_$duplicate_expression(v^.mult)));
+  8:
+    prevbb := bb;
+    l := q;
+  end;
+  l := pv^.ltss;
+  while l <> nil do begin
+    if l^.sec = nil then begin
+      c := l;
+      while c^.sec = nil do begin
+        a1 := c;
+        a0 := c^.next;
+        while (a1^.sec = nil) and (a0 <> nil) do begin
+          if a0^.lts^.bb <> c^.lts^.bb then
+            exit;
+          a1 := a0;
+          a0 := a0^.next;
+        end;
+        s := a1^.lts;
+        if s^.f2.exposed then
+          if s^.l44 <> nil then
+            s := s^.l44;
+        if iv_lts_ptr_t(s^.l24) = c then
+          bug_check('IV_$instantiate_induction_expr: No Secondary for LTS %3WD.%2ZWD%.',
+                    s^.lr^.num, s^.f2);
+        c := iv_lts_ptr_t(s^.l24);
+      end;
+      l^.sec := c^.sec;
+    end;
+    l := l^.next;
+  end;
+  f := utils_$get_final_lts(lr, dom, created);
+  i := lir_$optimizer_new_instruction(find_last_instruction(dom),
+                                      iv_incr_opc2[0, kind], false);
+  for k := 1 to i^.h.nopnds do
+    i^.opnds[k].h.num := k;
+  add_operand_to_segment(addr(i^.opnds[2]), f, 8, kind);
+  iv_utils_$create_operand_from_expression(addr(i^.opnds[1]), i, dom,
+                                           nv^.init, kind);
+  l := pv^.ltss;
+  while l <> nil do begin
+    s := l^.lts;
+    bbl := s^.bb;
+    nl := l^.sec;
+    if bbl = nl^.lts^.bb then
+      if s^.f2.exposed then begin
+        i := utils_ins_$operands_instruction(s^.refs);
+        if i^.opc <> 203 then           { join_bp }
+          utils_$add_birthpoint(get_secondary_segment(s^.l44), bbl, true)
+        else begin
+          j := fg_utils_$generate_join_birthpoint(
+                   get_secondary_segment(i^.opnds[1].lts),
+                   get_secondary_segment(i^.opnds[2].lts));
+          inp := iv_jbi_ptr_t(i^.opnds[3].link);
+          while inp <> nil do begin
+            if interval_contains_bb(inp^.lts^.bb, pv^.head) then
+              fg_utils_$add_jbi(j, get_secondary_segment(inp^.lts));
+            inp := inp^.next_op;
+          end;
+          if s^.bb = pv^.head then
+            fg_utils_$add_jbi(j, f);
+        end;
+      end
+      else if l^.step <> nil then
+        if l^.next^.sec <> nl then
+          ixt_$create_increment_instruction(nl^.step, kind,
+              l^.next^.sec^.lts, 48, nl^.lts, 4,
+              utils_ins_$operands_instruction(s^.refs), false, bbl, dom);
+    l := l^.next;
+  end;
+  p := addr(nv^.ltss);
+  l := pv^.ltss;
+  while l <> nil do begin
+    nl := l^.sec;
+    if not nl^.h.used_known then
+      if nl^.lts^.bb = l^.lts^.bb then begin
+        nl^.h.used_known := true;
+        p^ := nl;
+        p := addr(nl^.next);
+      end;
+    l := l^.next;
+  end;
+  p^ := nil;
+  ixt_$instantiate_induction_expr := nv;
+end;
+
+{ ixt_$process_secondary_induction_variable - secondary v strength
+  reduced: of each address class the induction expression whose
+  instantiation the most primary segments use (known, then unknown)
+  instantiated and replaced by the new variable (iv_zero), the others
+  used replaced by their difference from it; then the expression class
+  likewise when what it saves (its uses less those of zero expressions,
+  plus the multiply's cost) reaches the primary's adds; v deleted.
+  0x23F5E0, 0x374 bytes, no A5. }
+
+procedure ixt_$process_secondary_induction_variable(
+    v: iv_var_ptr_t); options(val_param); internal;
+var
+  pv: iv_var_ptr_t;
+  c, bc: iv_class_ptr_t;
+  x, best: iv_iexpr_ptr_t;
+  nk, nu, bk, bu, total, n, z: integer32;
+  d: iv_expr_ptr_t;
+begin
+  pv := v^.parent;
+  c := v^.classes;
+  while c <> nil do begin
+    if c^.w16 = 2 then begin
+      best := nil;
+      bk := 0;
+      bu := bk;
+      x := c^.iexprs;
+      while x <> nil do begin
+        ixt_$clear_primary_used_fields(pv);
+        ixt_$mark_primary_used_fields(x);
+        ixt_$count_primary_used_fields(pv, nk, nu);
+        if (best = nil) or (bk < nk) or ((bk = nk) and (bu < nu)) then begin
+          best := x;
+          bk := nk;
+          bu := nu;
+        end;
+        x := x^.next;
+      end;
+      if best <> nil then begin
+        discard(ixt_$instantiate_induction_expr(best));
+        ixt_$replace_induction_expr(best, iv_zero);
+        ixt_$cleanup_induction_expr(best);
+        x := c^.iexprs;
+        while x <> nil do begin
+          if x <> best then begin
+            ixt_$clear_primary_used_fields(pv);
+            ixt_$mark_primary_used_fields(x);
+            ixt_$count_primary_used_fields(pv, nk, nu);
+            if (nk > 0) or (nu > 0) then begin
+              d := iv_utils_$canonicalize_expression(
+                       iv_utils_$create_sub_expression(
+                           iv_utils_$duplicate_expression(x^.expr),
+                           iv_utils_$duplicate_expression(best^.expr)));
+              ixt_$replace_induction_expr(x, d);
+              ixt_$cleanup_induction_expr(x);
+              iv_utils_$delete_expression(d);
+            end;
+          end;
+          x := x^.next;
+        end;
+      end;
+    end;
+    c := c^.next;
+  end;
+  ixt_$clear_primary_used_fields(pv);
+  c := v^.classes;
+  while c <> nil do begin
+    if c^.w16 = 1 then
+      ixt_$mark_primary_used_fields(c^.iexprs);
+    c := c^.next;
+  end;
+  ixt_$count_primary_used_fields(pv, nk, nu);
+  total := nu + nk;
+  bc := nil;
+  bk := 0;
+  bu := bk;
+  c := v^.classes;
+  while c <> nil do begin
+    if c^.w16 = 1 then begin
+      ixt_$clear_primary_used_fields(pv);
+      ixt_$mark_primary_used_fields(c^.iexprs);
+      ixt_$count_primary_used_fields(pv, nk, nu);
+      if (bc = nil) or (bk < nk) or ((bk = nk) and (bu < nu)) then begin
+        bc := c;
+        bk := nk;
+        bu := nu;
+      end;
+    end;
+    c := c^.next;
+  end;
+  if bc <> nil then begin
+    ixt_$clear_primary_used_fields(pv);
+    ixt_$mark_primary_used_fields(bc^.iexprs);
+    ixt_$count_primary_used_fields(pv, nk, nu);
+    n := nk + nu;
+    ixt_$clear_primary_used_fields(pv);
+    c := v^.classes;
+    while c <> nil do begin
+      if c^.w16 = 1 then
+        if iv_utils_$expression_is_zero(c^.iexprs^.expr) then
+          ixt_$mark_primary_used_fields(c^.iexprs);
+      c := c^.next;
+    end;
+    ixt_$count_primary_used_fields(pv, nk, nu);
+    z := nk + nu;
+    n := n - z;
+    if ixt_$multiply_cost(v, total) + n >= pv^.w44 then begin
+      discard(ixt_$instantiate_induction_expr(bc^.iexprs));
+      ixt_$replace_induction_expr(bc^.iexprs, iv_zero);
+      ixt_$cleanup_induction_expr(bc^.iexprs);
+      c := v^.classes_last;
+      while c <> nil do begin
+        if c^.w16 = 1 then
+          if c <> bc then begin
+            ixt_$clear_primary_used_fields(pv);
+            ixt_$mark_primary_used_fields(c^.iexprs);
+            ixt_$count_primary_used_fields(pv, nk, nu);
+            if (nk > 0) or (nu > 0) then begin
+              d := iv_utils_$canonicalize_expression(
+                       iv_utils_$create_sub_expression(
+                           iv_utils_$duplicate_expression(c^.iexprs^.expr),
+                           iv_utils_$duplicate_expression(bc^.iexprs^.expr)));
+              ixt_$replace_induction_expr(c^.iexprs, d);
+              ixt_$cleanup_induction_expr(c^.iexprs);
+              iv_utils_$delete_expression(d);
+            end;
+          end;
+        c := c^.prev;
+      end;
+    end;
+  end;
+  iv_utils_$delete_induction_variable(v);
+end;
+
+{ ixt_$process_primary_induction_variable - v's secondaries with an
+  initial value processed, last first; v's classes deleted.  0x23F954,
+  0x58 bytes, no A5. }
+
+procedure ixt_$process_primary_induction_variable(
+    v: iv_var_ptr_t); options(val_param); internal;
+var
+  w, p: iv_var_ptr_t;
+  c, n: iv_class_ptr_t;
+begin
+  w := v^.children_last;
+  while w <> nil do begin
+    p := w^.l54;
+    if w^.init <> nil then
+      ixt_$process_secondary_induction_variable(w);
+    w := p;
+  end;
+  c := v^.classes;
+  while c <> nil do begin
+    n := c^.next;
+    iv_utils_$delete_induction_class(c);
+    c := n;
+  end;
+end;
+
+{ ixt_$process_induction_transformations - each primary variable
+  processed, up to the last there was when it began.  0x23F9AC, 0x32
+  bytes, no A5. }
+
+procedure ixt_$process_induction_transformations; internal;
+var
+  v, last: iv_var_ptr_t;
+begin
+  v := iv_vars;
+  last := iv_vars_last;
+  while v <> nil do begin
+    ixt_$process_primary_induction_variable(v);
+    if v = last then
+      exit;
+    v := v^.next;
+  end;
+end;
+
+{ iv_$locate_induction_variables_at_loop_start - the walk's entry into
+  the loop headed by bb: the enclosing loop's state pushed (a 20-byte
+  record), bb made the loop, its candidates found.  0x23F9DE, 0x68
+  bytes (`new'). }
+
+procedure iv_$locate_induction_variables_at_loop_start(
+    var bb: bb_ptr_t);
+var
+  b: bb_ptr_t;
+  f: iv_state_ptr_t;
+begin
+  b := bb;
+  new(f);
+  f^.prev := iv_states;
+  f^.head := iv_head;
+  f^.vars := iv_vars;
+  f^.vars_last := iv_vars_last;
+  iv_states := f;
+  iv_head := b;
+  iv_vars := nil;
+  iv_vars_last := nil;
+  ivr_$locate_induction_candidates(b);
+end;
+
+{ iv_$locate_induction_variables_for_basic_block - the candidates
+  propagated into a block of the loop.  0x23FA46, 0x24 bytes. }
+
+procedure iv_$locate_induction_variables_for_basic_block(
+    var bb: bb_ptr_t);
+begin
+  ivr_$propagate_induction_into_basic_block(bb);
+end;
+
+{ iv_$locate_induction_variables_at_loop_end - the walk's exit from the
+  loop headed by bb: its variables finalized; when some remain and the
+  head is not marked (+18 bit 5), its blocks scanned for induction
+  expressions and the transformations made; the enclosing state popped
+  (`dispose').  0x23FA6A, 0x90 bytes: the walk's routines passed as
+  constants by address (nil, scan, nil), placed after the routine. }
+
+procedure iv_$locate_induction_variables_at_loop_end(
+    var bb: bb_ptr_t);
+var
+  b, t: bb_ptr_t;
+  f: iv_state_ptr_t;
+begin
+  b := bb;
+  ivr_$finalize_induction_variables(b);
+  if iv_vars <> nil then
+    if not b^.f.b18_5 then begin
+      t := b;
+      iv_$walk_basic_blocks_in_order(t, nil,
+          addr(ixr_$scan_basic_block_for_induction_expressions), nil);
+      ixt_$process_induction_transformations;
+    end;
+  f := iv_states;
+  iv_head := iv_states^.head;
+  iv_vars := iv_states^.vars;
+  iv_vars_last := iv_states^.vars_last;
+  iv_states := iv_states^.prev;
+  dispose(f);
+end;
+
+{ iv_$build_nested_reverse_postorder_lists - each interval head's
+  members (+138, chained at +142) listed in the routine's walk order
+  (+72, at +114), put first; blocks in no interval on iv_intervals.
+  0x23FB02, 0x5E bytes, no frame. }
+
+procedure iv_$build_nested_reverse_postorder_lists(
+    rtn: rtn_ptr_t); options(val_param); internal;
+var
+  b, h: bb_ptr_t;
+begin
+  iv_intervals := nil;
+  b := rtn^.bbs;
+  while b <> nil do begin
+    if b^.f.b18_6 then
+      iv_bb_v_ptr_t(b)^.first138 := nil;
+    iv_bb_v_ptr_t(b)^.next142 := nil;
+    b := b^.next;
+  end;
+  b := rtn^.bbs72;
+  while b <> nil do begin
+    h := b^.l70;
+    if h <> nil then begin
+      iv_bb_v_ptr_t(b)^.next142 := iv_bb_v_ptr_t(h)^.first138;
+      iv_bb_v_ptr_t(h)^.first138 := b;
+    end
+    else begin
+      iv_bb_v_ptr_t(b)^.next142 := iv_intervals;
+      iv_intervals := b;
+    end;
+    b := b^.next114;
+  end;
+end;
+
+{ get_increment_from_induction - the step a segment's defining
+  instruction adds to the operand of its variable: an add's other
+  operand, a sub's or rsub's negated, a load's or store's displacement,
+  0 for a copy (neg, move and the like); nil otherwise (a bug).
+  0x23FB60, 0x1B4 bytes, no A5. }
+
+function get_increment_from_induction(
+    l: iv_lts_ptr_t): iv_expr_ptr_t; options(val_param); internal;
+var
+  i: instr_ptr_t;
+  o: opnd_ptr_t;
+  k: integer32;
+  r: iv_expr_ptr_t;
+  m: iv_lts_ptr_t;
+begin
+  o := nil;
+  i := utils_ins_$operands_instruction(l^.lts^.refs);
+  for k := 1 to l^.lts^.refs^.h.num - 1 do
+    if i^.opnds[k].h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
+      m := iv_lts_ptr_t(i^.opnds[k].lts^.l24);
+      if m <> nil then
+        if m^.ivar = l^.ivar then begin
+          o := addr(i^.opnds[k]);
+          exit;
+        end;
+    end;
+  if o = nil then
+    bug_check('IV_$get_increment_from_induction: no source operand found%.');
+  case i^.opc of
+    137, 79:                            { addi, add }
+      if o^.h.num = 1 then
+        r := iv_utils_$create_expression_from_operand(addr(i^.opnds[2]), nil)
+      else
+        r := iv_utils_$create_expression_from_operand(addr(i^.opnds[1]), nil);
+    138, 81:                            { subi, sub }
+      r := iv_utils_$canonicalize_expression(
+               iv_utils_$create_neg_expression(
+                   iv_utils_$create_expression_from_operand(
+                       addr(i^.opnds[1]), nil)));
+    83:                                 { rsub }
+      r := iv_utils_$canonicalize_expression(
+               iv_utils_$create_neg_expression(
+                   iv_utils_$create_expression_from_operand(
+                       addr(i^.opnds[2]), nil)));
+    221, 109, 106, 105, 104, 218, 103, 217:   { the loads }
+      r := iv_utils_$create_expression_from_operand(addr(i^.opnds[1]), nil);
+    228, 124, 121, 120, 119, 118:     { the stores }
+      r := iv_utils_$create_expression_from_operand(addr(i^.opnds[2]), nil);
+    135, 77, 144, 126, 116, 75:       { negi, neg, copys, mtfp, mffp, move }
+      r := iv_utils_$create_value_expression(0);
+    otherwise
+      bug_check('IV_$get_increment_from_induction: invalid increment instruction found%.');
+  end;
+  get_increment_from_induction := r;
+end;
+
+{ recompute_for_oli - after the transformations, the variables of the
+  joins (kept, +2 bit 6) at the head of bb recomputed from the code as
+  it now is, for oli: in a loop with a tail block (+74) their increment
+  and initial value dropped; else an initial value that is not a
+  constant made the expression of the final segment of its live range
+  in the nearest block up bb's l54 chain, each segment's non-constant
+  step that of its defining instruction, and a non-constant increment
+  (and each segment's incr) the steps' running sum.  0x23FD98, 0x1A8
+  bytes (loads A5: the walk calls it). }
+
+procedure recompute_for_oli(
+    var bb: bb_ptr_t);
+var
+  b, c: bb_ptr_t;
+  i: instr_ptr_t;
+  l: iv_lts_ptr_t;
+  v: iv_var_ptr_t;
+  lr: lr_ptr_t;
+  f: lts_ptr_t;
+  acc: iv_expr_ptr_t;
+begin
+  b := bb;
+  i := b^.first;
+  while i <> nil do begin
+    if (i^.opc <> 203) and (i^.opc <> 199) then   { join_bp, label }
+      exit;
+    if i^.opc = 203 then
+      if i^.h.b2_6 then begin
+        l := iv_lts_ptr_t(i^.opnds[1].lts^.l24);
+        if l <> nil then begin
+          v := l^.ivar;
+          if b^.l74 <> nil then begin
+            iv_utils_$delete_expression(v^.incr);
+            iv_utils_$delete_expression(v^.init);
+          end
+          else begin
+            lr := i^.opnds[1].lts^.lr;
+            if v^.init <> nil then
+              if v^.init^.kind <> iv_value then begin
+                iv_utils_$delete_expression(v^.init);
+                c := b^.l54;
+                f := nil;
+                while (c <> nil) and (f = nil) do begin
+                  f := utils_$find_final_lts(lr, c);
+                  c := c^.l54;
+                end;
+                if f = nil then
+                  bug_check('IV_$recompute_for_OLI: no creating LTS for initial value found%.');
+                v^.init := iv_utils_$create_expression_from_lts(f, nil);
+              end;
+            l := v^.ltss;
+            while l <> nil do begin
+              if l^.step <> nil then
+                if l^.step^.kind <> iv_value then begin
+                  iv_utils_$delete_expression(l^.step);
+                  l^.step := get_increment_from_induction(l);
+                end;
+              l := l^.next;
+            end;
+            if v^.incr <> nil then
+              if v^.incr^.kind <> iv_value then begin
+                iv_utils_$delete_expression(v^.incr);
+                acc := iv_utils_$create_value_expression(0);
+                l := v^.ltss;
+                while l <> nil do begin
+                  if l^.step <> nil then
+                    acc := iv_utils_$canonicalize_expression(
+                               iv_utils_$create_add_expression(acc,
+                                   iv_utils_$duplicate_expression(l^.step)));
+                  iv_utils_$delete_expression(l^.incr);
+                  l^.incr := iv_utils_$duplicate_expression(acc);
+                  l := l^.next;
+                end;
+                v^.incr := acc;
+              end;
+          end;
+        end;
+      end;
+    i := i^.next;
+  end;
+end;
+
+{ iv_$process_routine - the IV phase (unless at_backend_switches' sw15):
+  the state reset, the intervals listed; each outermost interval head
+  walked (loop start, each block, loop end); when something was
+  instantiated, unless sw14, the CSEs recomputed, copies eliminated and
+  adds and subs tried for autoincrement in walk order, the global data
+  flow walk redone and the variables recomputed for oli.  0x23FF80,
+  0x1D2 bytes: the walks' routines passed as constants by address,
+  placed after the routine (0x240152..). }
+
+procedure iv_$process_routine(
+    rtn: rtn_ptr_t);
+var
+  b, t: bb_ptr_t;
+  i: instr_ptr_t;
+begin
+  lir_utils_$sanity_check(rtn);
+  if at_backend_switches.sw15 then
+    return;
+  iv_rtn := rtn;
+  iv_bb80 := rtn^.bb80;
+  iv_changed := false;
+  iv_7b4 := 1;
+  iv_7b6 := 1;
+  iv_head := nil;
+  iv_vars := nil;
+  iv_vars_last := nil;
+  iv_states := nil;
+  iv_790 := nil;
+  iv_free_expr := nil;
+  iv_free_var := nil;
+  iv_free_class := nil;
+  iv_free_addr := nil;
+  iv_free_iexpr := nil;
+  iv_free_lts := nil;
+  iv_zero := iv_utils_$create_value_expression(0);
+  iv_$build_nested_reverse_postorder_lists(rtn);
+  b := iv_intervals;
+  while b <> nil do begin
+    if b^.f.b18_6 then begin
+      t := b;
+      iv_$walk_basic_blocks_in_order(t,
+          addr(iv_$locate_induction_variables_at_loop_start),
+          addr(iv_$locate_induction_variables_for_basic_block),
+          addr(iv_$locate_induction_variables_at_loop_end));
+    end;
+    b := iv_bb_v_ptr_t(b)^.next142;
+  end;
+  if iv_changed then begin
+    if not at_backend_switches.sw14 then begin
+      com_$compute_cses(rtn, 0);
+      b := rtn^.bbs72;
+      while b <> nil do begin
+        i := b^.first;
+        while i <> nil do begin
+          if instruction_attributes[i^.opc].b6_0 then
+            tr_utils_$attempt_copy_elimination(rtn, i)
+          else if (i^.opc = 79) or (i^.opc = 81) then   { add, sub }
+            discard(tr_utils_$attempt_autoincrement(rtn, i));
+          i := i^.next;
+        end;
+        b := b^.next114;
+      end;
+    end;
+    df_utils_$global_walk(rtn, rtn^.l192, 0, 0);
+    b := iv_intervals;
+    while b <> nil do begin
+      if b^.f.b18_6 then begin
+        t := b;
+        iv_$walk_basic_blocks_in_order(t, addr(recompute_for_oli), nil, nil);
+      end;
+      b := iv_bb_v_ptr_t(b)^.next142;
+    end;
   end;
 end;
