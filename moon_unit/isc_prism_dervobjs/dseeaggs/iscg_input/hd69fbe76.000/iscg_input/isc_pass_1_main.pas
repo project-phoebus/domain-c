@@ -227,13 +227,13 @@
 
   Not generated yet (declared extern below; the operator
   declarations mark them `fixed'; their text is to be read off the
-  image into tools/iscg_text.py P1_ROUTINES): 15 routines,
+  image into tools/iscg_text.py P1_ROUTINES): 12 routines,
     isc_assign_node_div_by_aop, isc_assign_node_isc_mul_to_aop,
     isc_bit_field_assign, isc_cmp_tree_node_bit_field_cmp_top,
-    isc_cmp_tree_node_compare_top, isc_entry_blk, isc_fortran_symbol,
-    isc_function_blk, isc_procedure_blk, isc_tree_node_bit_field_cmp_top,
-    isc_tree_node_compare_top, isc_tree_node_div_top,
-    isc_tree_node_isc_mul_top, isc_tree_node_mod_top, isc_tree_node_mul_top
+    isc_cmp_tree_node_compare_top, isc_fortran_symbol,
+    isc_tree_node_bit_field_cmp_top, isc_tree_node_compare_top,
+    isc_tree_node_div_top, isc_tree_node_isc_mul_top, isc_tree_node_mod_top,
+    isc_tree_node_mul_top
 
   Not known from the original: the parameters' and locals' names, the
   module data's names. }
@@ -3800,7 +3800,22 @@ begin
   number_of_children := 0;
 end;
 
-{ isc_entry_blk (0x0E4058): not generated yet (the unit's header). }
+{ isc_entry_blk - the
+  proper_subtree il_entry_blk, no children: a routine's block (its
+  address) is rewritten as an address constant (a node of kind 146
+  over make_new_addr_con of the block in il_180's section: kind 2 when
+  the block's two bits at +376 (16#180 of the word) are not zero, else
+  kind 6 unless it is the current routine's own, +188 against il_180's)
+  and that node's solutions; the current routine's own block with the
+  bits clear has none.
+
+  0x0E4058, 0x228 bytes: D0 the bits (`and.w #384', `lsr.w #7'), tested
+  again after the comparison (`tst.w d0'); each branch has its own
+  trace, the make_new_addr_con call and the rest shared (Rev 8.89
+  cross-jumping); A2 il.
+
+  Not known from the original: the bits' name; how the conditions were
+  written. }
 
 procedure isc_entry_blk(
     il: univ_ptr;
@@ -3812,7 +3827,56 @@ procedure isc_entry_blk(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  bits: integer;
+  n1, n2: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_entry_blk);
+  number_of_children := 0;
+  bits := rshft(isc_node_ptr_t(il)^.xw[188] & 384, 7);
+  if (bits <> 0) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
+    if bits <> 0 then begin
+      if isc_user_routines_356 or isc_user_routines_354 then begin
+        write('*********************');
+        writeln;
+        write('R E W R I T E ! ! ! !');
+        writeln;
+        write('*********************');
+        writeln;
+        writeln;
+      end;
+      n1 := make_new_addr_con(2, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
+    end
+    else begin
+      if isc_user_routines_356 or isc_user_routines_354 then begin
+        write('*********************');
+        writeln;
+        write('R E W R I T E ! ! ! !');
+        writeln;
+        write('*********************');
+        writeln;
+        writeln;
+      end;
+      n1 := make_new_addr_con(6, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
+    end;
+    n2 := mrh_$alloc(isc_preserve_heap, 32);
+    isc_node_ptr_t(n2)^.kind := 146;
+    isc_node_ptr_t(n2)^.rewritten := true;
+    isc_node_ptr_t(n2)^.xp[6] := n1;
+    p1_node_chars_ptr_t(n2)^[23] := chr(0);
+    p1_node_chars_ptr_t(n2)^[22] := chr(2);
+    inh_1 := new_inherited_attributes(isc_heap, n2);
+    inh_1^ := inh^;
+    inh_1^.node := n2;
+    inh_1^.stmt := il;
+    solutions := pass_1(n2, inh_1, depth, permissible);
+    solutions_made := true;
+  end;
+end;
 
 { isc_eval_node - the proper_subtree il_eval_node, 0 children (0x0E4280). }
 
@@ -3890,7 +3954,22 @@ procedure isc_fortran_symbol(
     var solutions_made: boolean;
     var no_solutions: boolean); options(val_param); extern;
 
-{ isc_function_blk (0x0E463C): not generated yet (the unit's header). }
+{ isc_function_blk - the
+  proper_subtree il_function_blk, no children: a routine's block (its
+  address) is rewritten as an address constant (a node of kind 146
+  over make_new_addr_con of the block in il_180's section: kind 2 when
+  the block's two bits at +376 (16#180 of the word) are not zero, else
+  kind 6 unless it is the current routine's own, +188 against il_180's)
+  and that node's solutions; the current routine's own block with the
+  bits clear has none.
+
+  0x0E463C, 0x228 bytes: D0 the bits (`and.w #384', `lsr.w #7'), tested
+  again after the comparison (`tst.w d0'); each branch has its own
+  trace, the make_new_addr_con call and the rest shared (Rev 8.89
+  cross-jumping); A2 il.
+
+  Not known from the original: the bits' name; how the conditions were
+  written. }
 
 procedure isc_function_blk(
     il: univ_ptr;
@@ -3902,7 +3981,56 @@ procedure isc_function_blk(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  bits: integer;
+  n1, n2: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_function_blk);
+  number_of_children := 0;
+  bits := rshft(isc_node_ptr_t(il)^.xw[188] & 384, 7);
+  if (bits <> 0) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
+    if bits <> 0 then begin
+      if isc_user_routines_356 or isc_user_routines_354 then begin
+        write('*********************');
+        writeln;
+        write('R E W R I T E ! ! ! !');
+        writeln;
+        write('*********************');
+        writeln;
+        writeln;
+      end;
+      n1 := make_new_addr_con(2, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
+    end
+    else begin
+      if isc_user_routines_356 or isc_user_routines_354 then begin
+        write('*********************');
+        writeln;
+        write('R E W R I T E ! ! ! !');
+        writeln;
+        write('*********************');
+        writeln;
+        writeln;
+      end;
+      n1 := make_new_addr_con(6, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
+    end;
+    n2 := mrh_$alloc(isc_preserve_heap, 32);
+    isc_node_ptr_t(n2)^.kind := 146;
+    isc_node_ptr_t(n2)^.rewritten := true;
+    isc_node_ptr_t(n2)^.xp[6] := n1;
+    p1_node_chars_ptr_t(n2)^[23] := chr(0);
+    p1_node_chars_ptr_t(n2)^[22] := chr(2);
+    inh_1 := new_inherited_attributes(isc_heap, n2);
+    inh_1^ := inh^;
+    inh_1^.node := n2;
+    inh_1^.stmt := il;
+    solutions := pass_1(n2, inh_1, depth, permissible);
+    solutions_made := true;
+  end;
+end;
 
 { isc_insert_bit_field - the proper_subtree il_insert_bit_field, 3 children (0x0E4864). }
 
@@ -4332,7 +4460,22 @@ begin
   number_of_children := 0;
 end;
 
-{ isc_procedure_blk (0x0E5276): not generated yet (the unit's header). }
+{ isc_procedure_blk - the
+  proper_subtree il_procedure_blk, no children: a routine's block (its
+  address) is rewritten as an address constant (a node of kind 146
+  over make_new_addr_con of the block in il_180's section: kind 2 when
+  the block's two bits at +376 (16#180 of the word) are not zero, else
+  kind 6 unless it is the current routine's own, +188 against il_180's)
+  and that node's solutions; the current routine's own block with the
+  bits clear has none.
+
+  0x0E5276, 0x228 bytes: D0 the bits (`and.w #384', `lsr.w #7'), tested
+  again after the comparison (`tst.w d0'); each branch has its own
+  trace, the make_new_addr_con call and the rest shared (Rev 8.89
+  cross-jumping); A2 il.
+
+  Not known from the original: the bits' name; how the conditions were
+  written. }
 
 procedure isc_procedure_blk(
     il: univ_ptr;
@@ -4344,7 +4487,56 @@ procedure isc_procedure_blk(
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
     var solutions_made: boolean;
-    var no_solutions: boolean); options(val_param); extern;
+    var no_solutions: boolean); options(val_param);
+var
+  bits: integer;
+  n1, n2: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_procedure_blk);
+  number_of_children := 0;
+  bits := rshft(isc_node_ptr_t(il)^.xw[188] & 384, 7);
+  if (bits <> 0) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
+    if bits <> 0 then begin
+      if isc_user_routines_356 or isc_user_routines_354 then begin
+        write('*********************');
+        writeln;
+        write('R E W R I T E ! ! ! !');
+        writeln;
+        write('*********************');
+        writeln;
+        writeln;
+      end;
+      n1 := make_new_addr_con(2, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
+    end
+    else begin
+      if isc_user_routines_356 or isc_user_routines_354 then begin
+        write('*********************');
+        writeln;
+        write('R E W R I T E ! ! ! !');
+        writeln;
+        write('*********************');
+        writeln;
+        writeln;
+      end;
+      n1 := make_new_addr_con(6, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
+    end;
+    n2 := mrh_$alloc(isc_preserve_heap, 32);
+    isc_node_ptr_t(n2)^.kind := 146;
+    isc_node_ptr_t(n2)^.rewritten := true;
+    isc_node_ptr_t(n2)^.xp[6] := n1;
+    p1_node_chars_ptr_t(n2)^[23] := chr(0);
+    p1_node_chars_ptr_t(n2)^[22] := chr(2);
+    inh_1 := new_inherited_attributes(isc_heap, n2);
+    inh_1^ := inh^;
+    inh_1^.node := n2;
+    inh_1^.stmt := il;
+    solutions := pass_1(n2, inh_1, depth, permissible);
+    solutions_made := true;
+  end;
+end;
 
 { isc_ptr_node - the proper_subtree il_ptr_node, 1 child (0x0E549E). }
 

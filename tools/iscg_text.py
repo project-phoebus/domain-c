@@ -1446,3 +1446,60 @@ begin
     end;
   end;
 end;''')
+
+
+def _blk(name, il, addr):
+    return _p1(name, '''the
+  proper_subtree il_%s, no children: a routine's block (its
+  address) is rewritten as an address constant (a node of kind 146
+  over make_new_addr_con of the block in il_180's section: kind 2 when
+  the block's two bits at +376 (16#180 of the word) are not zero, else
+  kind 6 unless it is the current routine's own, +188 against il_180's)
+  and that node's solutions; the current routine's own block with the
+  bits clear has none.
+
+  %s, 0x228 bytes: D0 the bits (`and.w #384', `lsr.w #7'), tested
+  again after the comparison (`tst.w d0'); each branch has its own
+  trace, the make_new_addr_con call and the rest shared (Rev 8.89
+  cross-jumping); A2 il.
+
+  Not known from the original: the bits' name; how the conditions were
+  written.''' % (il, addr), '''
+var
+  bits: integer;
+  n1, n2: univ_ptr;
+  inh_1: inherited_attributes_ptr_t;
+begin
+  solutions_made := false;
+  no_solutions := false;
+  il_kind := ord(il_%s);
+  number_of_children := 0;
+  bits := rshft(isc_node_ptr_t(il)^.xw[188] & 384, 7);
+  if (bits <> 0) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
+    if bits <> 0 then begin
+      @TRACE
+      n1 := make_new_addr_con(2, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
+    end
+    else begin
+      @TRACE
+      n1 := make_new_addr_con(6, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
+    end;
+    n2 := mrh_$alloc(isc_preserve_heap, 32);
+    isc_node_ptr_t(n2)^.kind := 146;
+    isc_node_ptr_t(n2)^.rewritten := true;
+    isc_node_ptr_t(n2)^.xp[6] := n1;
+    p1_node_chars_ptr_t(n2)^[23] := chr(0);
+    p1_node_chars_ptr_t(n2)^[22] := chr(2);
+    inh_1 := new_inherited_attributes(isc_heap, n2);
+    inh_1^ := inh^;
+    inh_1^.node := n2;
+    inh_1^.stmt := il;
+    solutions := pass_1(n2, inh_1, depth, permissible);
+    solutions_made := true;
+  end;
+end;''' % il)
+
+
+P1_ROUTINES['isc_entry_blk'] = _blk('isc_entry_blk', 'entry_blk', '0x0E4058')
+P1_ROUTINES['isc_function_blk'] = _blk('isc_function_blk', 'function_blk', '0x0E463C')
+P1_ROUTINES['isc_procedure_blk'] = _blk('isc_procedure_blk', 'procedure_blk', '0x0E5276')
