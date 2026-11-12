@@ -89,7 +89,13 @@ Batch A (translator PA, 2026-11-11):
 | `lang2/source/be_com/bv.pas` | 32 | done: vectors as sets of 0..31 (bv_t), the blocks' data flow vectors (bb_t +86 .. +130), lir_main_c78 .. c84 named; bv headings narrowed |
 | `lang/common/source/exs.pas` | 27 | done: exs.ins.pas checked against the bodies (IL nodes univ_ptr in the headings) |
 | `lang2/source/be_com/utils.pas` | 54 | done: utils.ins.pas narrowed (utils_$birthpoint_t, utils_$pair_func_t); lts_t, lr_t, bb_t, rtn_t fields for the segment lists |
-| call_conv, lir_utils, lir, lir_main, sym, df_utils, fg_utils, tm_utils, sanity, fga, hal, life, post | | not reached (docs/questions.md 167) |
+| call_conv, lir_utils, lir, lir_main, sym, df_utils, fg_utils, tm_utils, sanity, fga, hal, life, post | | not reached by PA (docs/questions.md 167); continued by PA2 below |
+
+Batch A continued (translator PA2, 2026-11-11):
+
+| unit | routines | notes |
+|------|----------|-------|
+| `lang2/source/be_com/df_utils.pas` | 17 | done: the global data flow walk; df_utils_$global_walk(_with_async_protection) named (rtn, nlrs, how, level); rtn_t bb80, lr100, lr108, lr140, memory_lr and bb_t l134 named (rtn +112 is a live range here, kept l112: lts_ptr_t for zzzzz) |
 
 ## Order: leaves first by the call graph
 

@@ -192,5 +192,6 @@ but it is not byte-identical.  The Rev 8.89 forms met are collected in
 | `lang2/source/be_com/bv.pas` | 32 | translated (cc.a88k only; translator PA; best effort; vectors as sets of 0..31 (backend.ins.pas bv_t), the masks initialized) |
 | `lang/common/source/exs.pas` | 27 | translated (cc.a88k only; translator PA; best effort; IL nodes through the unit's views (exs_frame_t, exs_handler_t, ...); headings narrowed in exs.ins.pas) |
 | `lang2/source/be_com/utils.pas` | 54 | translated (cc.a88k only; translator PA; best effort; instructions, operands, segments and live ranges through backend.ins.pas (fields named by role), join inputs and statement lists through the unit's views; utils.ins.pas narrowed; dpc gap 12) |
+| `lang2/source/be_com/df_utils.pas` | 17 | translated (cc.a88k only; translator PA2; best effort; the global data flow walk: segment lists made canonical, the work queue, the exposed and final lists rebuilt; rtn_t's +80, +100, +108, +140, +144 and bb_t's +134 named) |
 | core prelude (`lang/lang/source/globals.ins.pas` and its inserts) | | settled: headings, shared cells, types (docs/core-plan.md) |
 | PRISM back-end core (`lang2/source/be_com/backend.ins.pas`, `utils.ins.pas`, the opcode enumeration, ...) | | settled: headings of every cross-unit routine, shared cells, the records the leaf units use (docs/backend-plan.md) |

@@ -392,7 +392,11 @@ type
     avail_out: bv_ptr_t;                { +126: (avail_in and
                                           transparent) or avail_gen }
     avail_gen: bv_ptr_t;                { +130 }
-    space134: array [134..145] of char; { +134 }
+    l134: lts_ptr_t;                    { +134: segments by block,
+                                          chained at their next, while
+                                          df_utils rebuilds the live
+                                          ranges' lists (batch A) }
+    space138: array [138..145] of char; { +138 }
     mark146: integer32;                 { +146: a visit mark (utils'
                                           look_for_path, tr_utils;
                                           batch C: l146) }
@@ -545,12 +549,33 @@ type
                                           bv's backward propagation
                                           walks (chained at +114) }
     bbs: bb_ptr_t;                      { +76 }
-    space80: array [80..87] of char;    { +80 }
+    bb80: bb_ptr_t;                     { +80: a block the memory live
+                                          range is live out of (df_utils:
+                                          batch A) }
+    space84: array [84..87] of char;    { +84 }
     cells: cell_ptr_t;                  { +88 }
     epilogues: cell_ptr_t;              { +92 }
-    space96: array [96..111] of char;   { +96 }
-    l112: lts_ptr_t;                    { +112 }
-    space116: array [116..179] of char; { +116 }
+    space96: array [96..99] of char;    { +96 }
+    lr100: lr_ptr_t;                    { +100: a live range df_utils
+                                          makes complex for every walk
+                                          (batch A) }
+    space104: array [104..107] of char; { +104 }
+    lr108: lr_ptr_t;                    { +108: a live range df_utils
+                                          always makes complex and never
+                                          drops (batch A) }
+    l112: lts_ptr_t;                    { +112: zzzzz compares a
+                                          returning jump's operand 1
+                                          segment with it, but df_utils
+                                          makes it complex and compares
+                                          live ranges with it: a live
+                                          range (cast there) }
+    space116: array [116..139] of char; { +116 }
+    lr140: lr_ptr_t;                    { +140: a live range df_utils
+                                          always makes complex (batch A) }
+    memory_lr: lr_ptr_t;                { +144: the memory live range
+                                          (df_utils: "Memory LR"; batch
+                                          A) }
+    space148: array [148..179] of char; { +148 }
     marks: integer32;                   { +180: the walks' marks and
                                           serial numbers, counted up
                                           (utils, tr_utils_$mark_dependents;
@@ -1156,17 +1181,20 @@ procedure df_utils_$end_compilation; extern;
   fg_utils fga iv mmt trans xtp.  Frame 8:al; 12:l; 16:w; 18:l. }
 procedure df_utils_$global_walk(
     rtn: rtn_ptr_t;
-    p2: integer32;
-    p3: integer;
+    nlrs: integer32;
+    how: integer;
     level: integer32); options(val_param); extern;
 
 { DF_UTILS_$GLOBAL_WALK_WITH_ASYNC_PROTECTION - 0x22F070, 0x36 bytes;
-  called from fga.  Frame 8:al; 12:l; 16:w; 18:l. }
+  called from fga.  Frame 8:al; 12:l; 16:w; 18:l.  batch A: both walks
+  named from df_utils' bodies: nlrs the routine's complex live ranges
+  (stored at its +192), how lir_main_c86's next value (1: the segment
+  lists by live range), level stored and not read. }
 procedure df_utils_$global_walk_with_async_protection(
-    p1: univ_ptr;
-    p2: integer32;
-    p3: integer;
-    p4: integer32); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    nlrs: integer32;
+    how: integer;
+    level: integer32); options(val_param); extern;
 
 { dfa.pas (cc.a88k). }
 
