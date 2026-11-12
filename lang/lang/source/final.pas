@@ -12,7 +12,7 @@
   testcc; the same address: sameaddr) and edit them (detach, makejump,
   makecbr, moverefcell, movejump, reversecond, label_merge).
 
-  TODO(pascal) final.pas is not finished: 99 of its 120 routines are
+  TODO(pascal) final.pas is not finished: 106 of its 120 routines are
   translated.  Not yet translated (cc.m68k address, bytes):
     0x109BB6 0x8DA  final_$collapsed_index_calc
     0x10A492 0x7C4  final_$try_reducing_literal
@@ -28,16 +28,9 @@
     0x10F30C 0x3B8  try_post_incr
     0x10F6C4 0x4C0  opta
     0x10FB84 0x3D4  floatop
-    0x110CB4 0x242  try_loading_from_fp_reg (in peepholer_ops)
-    0x110F14 0x21C  try_loading_monadic_src_here (in peepholer_ops)
-    0x111130 0x322  try_long_extend_opts (in peepholer_ops)
-    0x111452 0x214  try_reducing_fabs_op (in peepholer_ops)
-    0x111666 0x1F0  try_removing_previous_clr (in peepholer_ops)
-    0x111856 0xFA   try_widening_clr (in peepholer_ops)
-    0x111950 0x638  peepholer_ops (in peepholer; an extern heading at
-                    module level stands for it)
-  peepholer_ops is the only caller of the others (opttest and optmove
-  call some of them too), so nothing translated calls them.
+  The five of them that peepholer_ops calls (final_$try_reducing_literal,
+  opttest, optmove, opta, floatop) are declared extern before peepholer
+  until they are written.
 
   Image addresses (DOMAIN C 6.9; cc.m68k only: cc.a88k has no final):
     cc.m68k   cc.a88k
@@ -166,9 +159,11 @@
     section, +32 scancc's chain, +36, +40 cc_change's set of codes, +42,
     +44 the change flag, then initialized tables (+0x30 the registers'
     bits, +0x88 the conditions' codes, +0xA8 and +0x250 brimply's and
-    f_brimply's answers, +0x230 and +0x298 the complements); +0..+15,
-    +36, +42, +0x60..+0x87 and the tables beyond +0x2A4 are used only by
-    routines not yet translated.  Absolute: cargs's options
+    f_brimply's answers, +0x230 and +0x298 the complements, +0x3A0 and
+    +0x3B0..+0x6AC try_reducing_fabs_op's op and patterns); +0..+15,
+    +36, +42, +0x60..+0x87 and +0x2A4..+0x39F are used only by routines
+    not yet translated (+0x2E8: the 68881's constant ROM, 16 doubles
+    each after its offset word).  Absolute: cargs's options
     (+0x280..+0x288), opinfo's tables (0x2CF4D8, 0x2CF5EC, 0x2CFDD8,
     0x2D01CE), cg_null_ads (0x356600), il_180.
 
@@ -234,6 +229,17 @@ type
   { An address descriptor's three longwords, as sameaddr compares two
     (`cmpm.l', `dbne' 2). }
   fn_ads_words_t = array [1..3] of integer32;
+
+  { A cell of a pattern try_reducing_fabs_op matches (76 bytes, indexed
+    by `76 * i'): the kinds it may have (`btst' from 63), whether its op
+    is checked and the ops it may have (from 511), whether its source
+    must be as long as the test's. }
+  fn_pat_t = record
+    kinds: set of 0..63;                { +0 }
+    check_op: boolean;                  { +8 }
+    ops: set of 0..511;                 { +10 }
+    check_size: boolean;                { +74 }
+  end;
 
 var
   { opinfo.pas's data (the unit without code; cc.m68k 0x2D01CE,
@@ -314,6 +320,37 @@ var
                                           (ops less 436) }
   fn_fbr_complement: array [436..441] of integer := [
     437, 436, 439, 438, 441, 440];      { +0x298 }
+
+  { +0x3A0: the op a matched fabs pattern's operation (310..315) takes
+    on the test's cell (try_reducing_fabs_op: `move.w (308,A1)' with A1
+    A5 plus twice the op). }
+  fn_fabs_op: array [310..315] of integer := [
+    316, 317, 318, 319, 320, 321];
+
+  { +0x3B0 and +0x530: the five cells after an ftst that
+    try_reducing_fabs_op reduces: an fbcc (439 or 438), a move to an FP
+    register (kinds 40, 41, ops 224..230) or the operation (310..315),
+    a bra (kind 17, 120..122), a label, then the other of the two;
+    `lea (0,A5,D5.l)' with D5 76 times the index, `(868,A0)' and
+    `(1252,A0)'. }
+  fn_fabs_b: array [1..5] of fn_pat_t := [
+    [kinds := [39], check_op := true, ops := [439], check_size := false],
+    [kinds := [40..41], check_op := true, ops := [224..230],
+     check_size := true],
+    [kinds := [17], check_op := true, ops := [120..122],
+     check_size := false],
+    [kinds := [0], check_op := false, ops := [208], check_size := false],
+    [kinds := [40..41], check_op := true, ops := [310..315],
+     check_size := true]];
+  fn_fabs_a: array [1..5] of fn_pat_t := [
+    [kinds := [39], check_op := true, ops := [438], check_size := false],
+    [kinds := [40..41], check_op := true, ops := [310..315],
+     check_size := true],
+    [kinds := [17], check_op := true, ops := [120..122],
+     check_size := false],
+    [kinds := [0], check_op := false, ops := [208], check_size := false],
+    [kinds := [40..41], check_op := true, ops := [224..230],
+     check_size := true]];
 
   { celpkg.pas's empty descriptor (its +24, which the image copies from
     0x2CE68C): celpkg does not export it, so a copy here (as
@@ -3293,16 +3330,25 @@ begin
   final_$unlink_opts := nx;
 end;
 
-{ TODO(pascal) peepholer_ops (0x111950, 0x638 bytes) and the six
-  routines nested in it (try_loading_from_fp_reg 0x110CB4,
-  try_loading_monadic_src_here 0x110F14, try_long_extend_opts
-  0x111130, try_reducing_fabs_op 0x111452, try_removing_previous_clr
-  0x111666, try_widening_clr 0x111856) are not translated yet: in the
-  image peepholer_ops is nested in peepholer (it runs on peepholer's
-  frame: its first cell, +12), declared here at module level until it
-  is written. }
+{ TODO(pascal) final_$try_reducing_literal (0x10A492), opttest
+  (0x10D600), optmove (0x10DF52), opta (0x10F6C4) and floatop (0x10FB84)
+  are not translated yet: declared here (headings read off their
+  frames and peepholer_ops's calls) until they are written. }
 
-procedure peepholer_ops; extern;
+procedure final_$try_reducing_literal(
+    in out c: codegen_$cell_ptr_t); extern;
+
+function opttest(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); extern;
+
+function optmove(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); extern;
+
+function opta(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); extern;
+
+function floatop(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); extern;
 
 { DOBANSHEEFPX - the FPX instructions of a routine's code cells, from
   first to the section's head, scheduled (banshee.pas 0x0EE84C, not
@@ -3607,6 +3653,636 @@ var
             p := p^.next;
         end;
     end;
+  end;
+
+  { peepholer_ops - the optimizations over the cells from first: a
+    first pass, repeated while a cell was detached (+44 cleared at the
+    start of each), by the cell's kind (labels plab, branches pcondjmp,
+    puncondjmp and f_pcondjmp, moves optmove, address instructions opta,
+    immediates final_$try_reducing_literal, the others opttest, floatop
+    and the try_ routines, a return the cells after it to the next label
+    deltolab), then a second pass (under -DBA only for block ends, lines
+    and labels): a move to an FPA or FP register from itself or back
+    from where the previous move took it removed, repeated pushes of an
+    address made copies of the top of the stack (kind 1, op 2, (SP) to
+    -(SP)), the first link final_$link_opts, each unlk
+    final_$unlink_opts, a line between a label after a line and a
+    return removed.
+
+    0x111950, 0x638 bytes, no A5 load: peepholer's frame by its dynamic
+    link (first its +12); two `case's of the kind through tables of 51
+    and 55; the op sets at 0x110EF6 (224..230), 0x111F88 (298..303) and
+    0x111FAE; the first pass's cell passed by address in -16, a
+    detached cell kept at -8, the pushes' cell in D4, the first link's
+    flag in D2.
+
+    Not known from the original: the names of the locals; how the
+    original wrote the loop over the pushes (one call of nxtlcc, at its
+    head). }
+
+  procedure peepholer_ops;
+  var
+    p: codegen_$cell_ptr_t;
+    q: codegen_$cell_ptr_t;
+    k: codegen_$cell_ptr_t;
+    t: codegen_$cell_ptr_t;
+    u: codegen_$cell_ptr_t;
+    r: boolean;
+    first_link: boolean;
+
+    { try_loading_from_fp_reg - move c (kind 40, ops 224..230) of a
+      memory operand into an FP register: when an earlier move of the
+      same operand into another FP register (mode 13) is found, looking
+      back past instructions that do not use c's register, kill its
+      address register or the FP register, are not leas, do not write
+      the operand (assert_modifies_object), have no destination of mode
+      4 or 12 and write no operand overlapping it (mode 2 on its
+      register, the extents compared), up to a label, a call or branch
+      or the section's head: c made a move between the FP registers
+      (kind 41, op 224) after it.  The cell before c's old place (c when
+      nothing was done).
+
+      0x110CB4, 0x242 bytes, no A5 load: the kinds set at 0x110CA6 (0,
+      24, 32, 33: not instructions), the ops at 0x110EF6; found at -40,
+      the result at -36. }
+
+    function try_loading_from_fp_reg(
+        c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param);
+    var
+      r: codegen_$cell_ptr_t;
+      found: boolean;
+      done: boolean;
+      p: codegen_$cell_ptr_t;
+      lo1: integer32;
+      hi1: integer32;
+      lo2: integer32;
+      hi2: integer32;
+    begin
+      r := c;
+      found := false;
+      done := false;
+      p := c;
+      repeat
+        p := prvlcc(p);
+        if not (p^.kind in [0, 24, 32..33]) and (p^.op in [224..230]) and
+           sameaddr(p^.ads1, c^.ads1) and (p^.ads2.f1 = 13) and
+           (p^.ads2.f2 <> c^.ads2.f2) then
+          found := true
+        else begin
+          done := (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+                  involves(p^.ads1, c^.ads2.f2) or
+                  final_$reg_is_killed(p, c^.ads1.f2) or
+                  final_$fp_reg_is_killed(p, c^.ads2.f2) or assert_is_lea(p) or
+                  assert_modifies_object(p, il_$node_ptr_t(c^.ads1.x)) or
+                  (p^.ads2.f1 = 4) or (p^.ads2.f1 = 12);
+          if not done then
+            if (p^.ads2.f1 = 2) and (p^.ads2.f2 = c^.ads1.f2) then begin
+              lo1 := abs(p^.ads2.y);
+              hi1 := final_$sizeof(p, 2) + lo1;
+              lo2 := abs(c^.ads1.y);
+              hi2 := final_$sizeof(c, 1) + lo2;
+              done := done or ((lo2 = lo1) and (hi2 = hi1)) or
+                      ((lo1 > lo2) and (lo1 < hi2)) or
+                      ((hi1 > lo2) and (hi1 < hi2));
+            end;
+        end;
+        done := done or (p = fn_sect^.head);
+      until found or done;
+      if found and not has_untouchable_mem_attrs(p^.ads1) and
+         not has_untouchable_mem_attrs(c^.ads1) then begin
+        c^.ads1 := p^.ads2;
+        c^.kind := m68881_reg_reg_instyp;
+        c^.op := 224;
+        r := prvlcc(c);
+        detach(c);
+        after(p, c);
+      end;
+      try_loading_from_fp_reg := r;
+    end;
+
+    { try_loading_monadic_src_here - monadic FP operation c (kind 41,
+      an op of the set at 0x111FAE) of an FP register on itself: when an
+      earlier move (ops 224..230) into that register is found, looking
+      back past instructions that do not change it (fp_reg_is_killed,
+      an FP register source of the same number) up to a label, a call
+      or branch or the section's head, and the move's source is an FP
+      register that nothing changes between the two, the operation takes
+      the move's source and the move is removed (for a source other
+      than an FP register, which the test before excludes, c would be
+      made kind 40 with its op advanced by the move's size, 225..229 by
+      1..5).  Nothing for op 430.
+
+      0x110F14, 0x21C bytes, no A5 load: c in D4; `clr.b D0' before the
+      branch to the end for op 430 (its caller reads no result); a
+      `case' of the move's op less 224 through a table of 7. }
+
+    procedure try_loading_monadic_src_here(
+        c: codegen_$cell_ptr_t); options(val_param);
+    var
+      found: boolean;
+      done: boolean;
+      killed: boolean;
+      p: codegen_$cell_ptr_t;
+      q: codegen_$cell_ptr_t;
+      d: integer;
+    begin
+      found := false;
+      p := c;
+      done := found;
+      repeat
+        p := prvlcc(p);
+        if not (p^.kind in [0, 24, 32..33]) and (p^.op in [224..230]) and
+           (p^.ads2.f1 = 13) and (p^.ads2.f2 = c^.ads1.f2) then
+          found := true
+        else
+          done := (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+                  ((p^.ads1.f1 = 13) and (p^.ads1.f2 = c^.ads1.f2)) or
+                  final_$fp_reg_is_killed(p, c^.ads1.f2);
+        done := done or (p = fn_sect^.head);
+      until found or done;
+      if found and (p^.ads1.f1 = 13) then begin
+        if c^.op = 430 then
+          return;
+        killed := false;
+        q := p;
+        repeat
+          q := nxtlcc(q);
+          if q <> c then
+            killed := ((q^.ads1.f1 = 13) and (q^.ads1.f2 = p^.ads1.f2)) or
+                      final_$fp_reg_is_killed(q, p^.ads1.f2);
+        until killed or (q = c);
+        if not killed and not has_untouchable_mem_attrs(p^.ads1) and
+           not has_untouchable_mem_attrs(c^.ads1) then begin
+          c^.ads1 := p^.ads1;
+          if p^.ads1.f1 <> 13 then begin
+            c^.kind := m68881_src_ext_instyp;
+            case p^.op of
+              224, 230: d := 0;
+              225: d := 1;
+              226: d := 2;
+              227: d := 3;
+              228: d := 4;
+              229: d := 5;
+              otherwise
+                d := 0;
+            end;
+            c^.op := d + c^.op;
+          end;
+          detach(p);
+        end;
+      end;
+    end;
+
+    { try_long_extend_opts - ext.l c (kind 16, op 7) of a data register:
+      after an ext.w of it (kind 16, op 6), looking back past
+      instructions that neither use nor kill the register up to a
+      label, a call or branch or the section's head, c becomes an extb.l
+      (op 8) and the ext.w is removed; else after a move.b into it (op
+      0), and before that a clr (kind 3, op 10) of it, with nothing
+      using or killing it between the clr and c but the move.b, and the
+      codes c sets not tested after it: the clr made op 11 and c
+      removed.  The cell before c when c was removed, else c.
+
+      0x111130, 0x322 bytes, no A5 load: the result in D4, the move.b's
+      cell in D5, the clr's in D3.  The search for the move.b alone
+      does not stop at labels, calls or branches. }
+
+    function try_long_extend_opts(
+        c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param);
+    var
+      r: codegen_$cell_ptr_t;
+      found: boolean;
+      done: boolean;
+      p: codegen_$cell_ptr_t;
+      m: codegen_$cell_ptr_t;
+      k: codegen_$cell_ptr_t;
+    begin
+      found := false;
+      r := c;
+      done := found;
+      p := c;
+      repeat
+        p := prvlcc(p);
+        if not (p^.kind in [0, 24, 32..33]) and (p^.kind = dest1_instyp) and
+           (p^.op = 6) and sameaddr(p^.ads2, c^.ads2) and
+           not involves(p^.ads1, c^.ads2.f2) then
+          found := true
+        else
+          done := (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+                  involves(p^.ads1, c^.ads2.f2) or
+                  final_$reg_is_killed(p, c^.ads2.f2);
+        done := done or (p = fn_sect^.head);
+      until found or done;
+      if found then begin
+        c^.op := 8;
+        detach(p);
+      end
+      else begin
+        found := false;
+        p := c;
+        done := found;
+        repeat
+          p := prvlcc(p);
+          if not (p^.kind in [0, 24, 32..33]) and (p^.op = 0) and
+             sameaddr(p^.ads2, c^.ads2) and
+             not involves(p^.ads1, c^.ads2.f2) then
+            found := true
+          else
+            done := involves(p^.ads1, c^.ads2.f2) or
+                    final_$reg_is_killed(p, c^.ads2.f2);
+          done := done or (p = fn_sect^.head);
+        until found or done;
+        if found then begin
+          found := false;
+          m := p;
+          done := found;
+          repeat
+            p := prvlcc(p);
+            if not (p^.kind in [0, 24, 32..33]) and
+               (p^.kind = dest1_sz_instyp) and (p^.op = 10) and
+               sameaddr(p^.ads2, c^.ads2) and
+               not involves(p^.ads1, c^.ads2.f2) then
+              found := true
+            else
+              done := (p^.kind = def_lbl_instyp) or
+                      final_$is_call_or_branch(p) or
+                      involves(p^.ads1, c^.ads2.f2) or
+                      final_$reg_is_killed(p, c^.ads2.f2);
+            done := done or (p = fn_sect^.head);
+          until found or done;
+          if found then begin
+            k := p;
+            done := false;
+            repeat
+              p := nxtlcc(p);
+              if p <> c then
+                done := involves(p^.ads1, c^.ads2.f2) or
+                        (final_$reg_is_killed(p, c^.ads2.f2) and (p <> m));
+            until done or (p = c);
+            if not done then begin
+              p := nxtlcc(c);
+              if not (p^.kind in [0, 24, 32..33]) then
+                if not testcc(p, 15) then begin
+                  k^.op := 11;
+                  r := prvlcc(c);
+                  detach(c);
+                end;
+            end;
+          end;
+        end;
+      end;
+      try_long_extend_opts := r;
+    end;
+
+    { try_reducing_fabs_op - an FP test c (ops 298..303) followed by
+      one of the two five-cell patterns fn_fabs_a and fn_fabs_b (the
+      kinds, the ops where checked, the source's size where checked;
+      both tried together, cell by cell), whose second and fifth cells
+      have the same operands: c becomes the pattern's operation
+      (kind, operands, op by fn_fabs_op) and its cells but the label
+      are removed.  Whether it was.
+
+      0x111452, 0x214 bytes, no A5 load: the cells at -32..-16
+      (`(-0x24,A6,D0.l)' with D0 four times the index); the two
+      patterns' flags in D2 and D3, the index in D4; c's size kept at
+      -48. }
+
+    function try_reducing_fabs_op(
+        c: codegen_$cell_ptr_t): boolean; options(val_param);
+    var
+      oka: boolean;
+      okb: boolean;
+      i: integer;
+      k: integer;
+      p: codegen_$cell_ptr_t;
+      cells: array [1..5] of codegen_$cell_ptr_t;
+    begin
+      oka := true;
+      i := 1;
+      okb := oka;
+      p := c;
+      while (oka or okb) and (i <= 5) do begin
+        p := nxtlcc(p);
+        cells[i] := p;
+        if not (p^.kind in fn_fabs_a[i].kinds) then
+          oka := false
+        else if fn_fabs_a[i].check_op and not (p^.op in fn_fabs_a[i].ops) then
+          oka := false
+        else if fn_fabs_a[i].check_size then
+          if final_$sizeof(p, 1) <> final_$sizeof(c, 1) then
+            oka := false;
+        if not (p^.kind in fn_fabs_b[i].kinds) then
+          okb := false
+        else if fn_fabs_b[i].check_op and not (p^.op in fn_fabs_b[i].ops) then
+          okb := false
+        else if fn_fabs_b[i].check_size then
+          if final_$sizeof(p, 1) <> final_$sizeof(c, 1) then
+            okb := false;
+        if oka or okb then
+          i := i + 1;
+      end;
+      if oka or okb then
+        if not sameaddr(cells[2]^.ads1, cells[5]^.ads1) or
+           not sameaddr(cells[2]^.ads2, cells[5]^.ads2) then begin
+          oka := false;
+          okb := oka;
+        end;
+      if oka or okb then begin
+        if oka then
+          k := 2
+        else
+          k := 5;
+        c^.kind := cells[k]^.kind;
+        c^.op := fn_fabs_op[cells[k]^.op];
+        c^.ads1 := cells[k]^.ads1;
+        c^.ads2 := cells[k]^.ads2;
+        c^.size := ilength(c);
+        detach(cells[1]);
+        detach(cells[2]);
+        detach(cells[3]);
+        detach(cells[5]);
+        try_reducing_fabs_op := true;
+      end
+      else
+        try_reducing_fabs_op := false;
+    end;
+
+    { try_removing_previous_clr - extb.l c (kind 16, op 8) of a data
+      register: a clr of it before (kind 3, ops 9, 11, 10), looking back
+      past instructions that do not use it up to a label, a call or
+      branch or the section's head, then a move.b into it (op 0) after
+      the clr, looking on past instructions that neither use nor kill
+      it, and nothing using or killing it from there to c: the clr is
+      removed.
+
+      0x111666, 0x1F0 bytes, no A5 load: the clr's cell at -20; the
+      ops compared in turn (`cmpi.w #9; beq; cmpi.w #11; beq; cmpi.w
+      #10; bne'). }
+
+    procedure try_removing_previous_clr(
+        c: codegen_$cell_ptr_t); options(val_param);
+    var
+      found: boolean;
+      done: boolean;
+      p: codegen_$cell_ptr_t;
+      k: codegen_$cell_ptr_t;
+    begin
+      found := false;
+      p := c;
+      done := found;
+      repeat
+        p := prvlcc(p);
+        if not (p^.kind in [0, 24, 32..33]) and (p^.kind = dest1_sz_instyp) and
+           ((p^.op = 9) or (p^.op = 11) or (p^.op = 10)) and
+           sameaddr(p^.ads2, c^.ads2) and
+           not involves(p^.ads1, c^.ads2.f2) then
+          found := true
+        else
+          done := (p^.kind = def_lbl_instyp) or final_$is_call_or_branch(p) or
+                  involves(p^.ads1, c^.ads2.f2);
+        done := done or (p = fn_sect^.head);
+      until found or done;
+      if found then begin
+        k := p;
+        found := false;
+        done := found;
+        repeat
+          p := nxtlcc(p);
+          if not (p^.kind in [0, 24, 32..33]) and (p^.op = 0) and
+             sameaddr(p^.ads2, c^.ads2) and
+             not involves(p^.ads1, c^.ads2.f2) then
+            found := true
+          else
+            done := involves(p^.ads1, c^.ads2.f2) or
+                    final_$reg_is_killed(p, c^.ads2.f2);
+        until found or done;
+        if found then begin
+          done := false;
+          repeat
+            p := nxtlcc(p);
+            if p <> c then
+              done := involves(p^.ads1, c^.ads2.f2) or
+                      final_$reg_is_killed(p, c^.ads2.f2);
+          until done or (p = c);
+          if not done then
+            detach(k);
+        end;
+      end;
+    end;
+
+    { try_widening_clr - a clr c (kind 3, ops 9..11) after a clr of the
+      same size (1 or 2 bytes) of the storage next to its own, under
+      -CPU M020 (`btst #5' of +0x285), neither of untouchable memory:
+      c clears both (final_$contiguous_distinct_addresses's lower
+      operand; op 10 for two bytes, 11 for four) and the other is
+      removed.
+
+      0x111856, 0xFA bytes, no A5 load: the lower operand at -24; the
+      sizes compared `cmp.w; bne', `cmpi.w #4; bge'. }
+
+    procedure try_widening_clr(
+        c: codegen_$cell_ptr_t); options(val_param);
+    var
+      p: codegen_$cell_ptr_t;
+      s1: integer;
+      s2: integer;
+      lo: codegen_$ads_t;
+    begin
+      p := prvlcc(c);
+      s1 := final_$sizeof(c, 2);
+      s2 := final_$sizeof(p, 2);
+      if (3 in cargs_$options.cpu) and not has_untouchable_mem_attrs(c^.ads2) and
+         not has_untouchable_mem_attrs(p^.ads2) and
+         (p^.kind = dest1_sz_instyp) and (p^.op in [9..11]) and (s1 = s2) and
+         (s1 < 4) and
+         final_$contiguous_distinct_addresses(c^.ads2, s1, p^.ads2, s2, lo) then begin
+        c^.ads2 := lo;
+        case s2 of
+          1: c^.op := 10;
+          2: c^.op := 11;
+        end;
+        c^.size := ilength(c);
+        detach(p);
+      end;
+    end;
+
+  begin
+    repeat
+      fn_changed := false;
+      p := first;
+      while p <> fn_sect^.head do
+        case p^.kind of
+          def_lbl_instyp:
+            p := plab(p);
+          cbr_instyp:
+            p := pcondjmp(p);
+          br_instyp, casejmp_instyp:
+            p := puncondjmp(p);
+          fbr_instyp:
+            p := f_pcondjmp(p);
+          move_instyp:
+            p := optmove(p);
+          dest1_instyp: begin
+            if (p^.op = 7) and (3 in cargs_$options.cpu) then
+              p := try_long_extend_opts(p);
+            if p^.op = 8 then
+              try_removing_previous_clr(p);
+            p := p^.next;
+          end;
+          q_instyp, i_instyp: begin
+            u := p;
+            final_$try_reducing_literal(u);
+            p := u^.next;
+          end;
+          a_instyp:
+            p := opta(p);
+          dest1_sz_instyp, src2_sz_instyp, i_w_instyp, dest2_instyp: begin
+            if (p^.kind = dest1_sz_instyp) and (p^.op in [9..11]) then
+              try_widening_clr(p);
+            p := opttest(p);
+          end;
+          logicize_instyp:
+            p := final_$logicize_opts(p);
+          tern_src_ext_instyp:
+            p := floatop(p);
+          m68881_src_ext_instyp: begin
+            if (p^.op in [224..230]) and (p^.ads1.f1 = 2) and
+               (p^.ads2.f1 = 13) then
+              p := try_loading_from_fp_reg(p);
+            p := floatop(p);
+          end;
+          rts_instyp:
+            p := deltolab(p^.next);
+          m68881_tst_reg_instyp, m68881_dest1_instyp: begin
+            r := true;
+            if p^.op in [298..303] then
+              r := not try_reducing_fabs_op(p);
+            if r then
+              p := opttest(p);
+          end;
+          m68881_reg_reg_instyp: begin
+            if sameaddr(p^.ads1, p^.ads2) then
+              if p^.op in [224..229] then begin
+                t := p;
+                p := p^.prev;
+                detach(t);
+              end
+              else if p^.op in [310, 316, 322, 328, 340, 352, 370, 382, 388, 394, 406, 418, 430] then
+                try_loading_monadic_src_here(p);
+            p := floatop(p);
+          end;
+          otherwise
+            p := p^.next;
+        end;
+    until not fn_changed;
+    p := first;
+    first_link := true;
+    while p <> fn_sect^.head do
+      if (cargs_$options.db = 3) and
+         not ((p^.kind = block_end_instyp) or (p^.kind = line_no_instyp) or
+              (p^.kind = def_lbl_instyp)) then
+        p := p^.next
+      else begin
+        k := p;
+        case p^.kind of
+          move_instyp:
+            p := optmove(p);
+          fpa_reg_reg_instyp:
+            if ((p^.op = 500) or (p^.op = 501)) and (p^.ads2.f2 = p^.ads2.f3) then begin
+              t := p;
+              p := p^.prev;
+              detach(t);
+            end
+            else
+              p := p^.next;
+          m68881_reg_reg_instyp: begin
+            q := prvlcc(p);
+            if (q^.kind = m68881_reg_reg_instyp) and (p^.op in [224..229]) and
+               (p^.op = q^.op) and sameaddr(p^.ads1, q^.ads2) and
+               sameaddr(p^.ads2, q^.ads1) then begin
+              t := p;
+              p := p^.prev;
+              detach(t);
+            end;
+            p := p^.next;
+          end;
+          m68881_dst_ext_instyp: begin
+            q := prvlcc(p);
+            if (q^.kind = m68881_src_ext_instyp) and (p^.op in [231..235]) and
+               (q^.op in [225..229]) and (q^.op - 225 = p^.op - 231) and
+               sameaddr(p^.ads1, q^.ads2) and sameaddr(q^.ads1, p^.ads2) and
+               not (p^.ads1.f1 in [8, 9, 11, 12]) and
+               not has_untouchable_mem_attrs(p^.ads2) then begin
+              t := p;
+              p := p^.prev;
+              detach(t);
+            end;
+            p := p^.next;
+          end;
+          casejmp_instyp:
+            p := puncondjmp(p);
+          dest1_instyp:
+            if (p^.op = 13) and (p^.size > 2) and (p^.ads2.f2 <> 15) then begin
+              k := nxtlcc(k);
+              while (k^.kind = dest1_instyp) and (k^.op = 13) and
+                    sameaddr(p^.ads2, k^.ads2) do begin
+                k^.kind := move_instyp;
+                k^.op := 2;
+                k^.size := 2;
+                k^.ads1.f1 := 2;
+                k^.ads1.y := 0;
+                k^.ads1.f2 := 15;
+                k^.ads1.x := k^.ads2.x;
+                k^.ads2.f1 := 9;
+                k^.ads2.y := 0;
+                k^.ads2.f2 := 15;
+                k^.ads2.x := 0;
+                k := nxtlcc(k);
+              end;
+              p := p^.next;
+            end
+            else if p^.op in [113..115] then
+              p := opttest(p)
+            else
+              p := p^.next;
+          m68881_tst_reg_instyp, m68881_dest1_instyp:
+            p := opttest(p);
+          link_instyp: begin
+            if first_link then
+              p := final_$link_opts(p)
+            else
+              p := p^.next;
+            first_link := false;
+          end;
+          unlk_instyp:
+            p := final_$unlink_opts(p);
+          def_lbl_instyp:
+            p := plab(p);
+          cbr_instyp:
+            p := pcondjmp(p);
+          br_instyp:
+            p := puncondjmp(p);
+          fbr_instyp:
+            p := f_pcondjmp(p);
+          a_instyp, q_instyp, i_instyp:
+            p := opta(p);
+          dest1_sz_instyp, src2_sz_instyp, i_w_instyp, dest2_instyp:
+            p := opttest(p);
+          line_no_instyp: begin
+            q := p^.prev;
+            if (q^.kind = rts_instyp) and (q^.prev^.kind = def_lbl_instyp) and
+               (q^.prev^.prev^.kind = line_no_instyp) then begin
+              t := p;
+              p := q;
+              detach(t);
+            end
+            else
+              p := p^.next;
+          end;
+          otherwise
+            p := p^.next;
+        end;
+      end;
   end;
 
   { damn_the_040s_hide_anyway - a nop (insert_integer_nop) put before
