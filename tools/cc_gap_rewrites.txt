@@ -577,3 +577,11 @@ lang/lang/source/final.pas	s/^(\s*)if iv <> v\.d then$/$1if iv <> v.l[1] then { 
 lang/lang/source/final.pas	s/^(\s*)v\.d := n\^\.real_value;$/$1v.l[1] := n^.bits[1]; v.l[2] := n^.bits[2]; { gap 7 }/
 # gap 31 (final): an 8-byte set expression compared with [] (the low longword masked, for the check)
 lang/lang/source/final.pas	s/\(v\.s \* \[0\.\.28\] = \[\]\)/((v.l[2] \& 16#1FFFFFFF) = 0) { gap 31 }/
+# gap 8 (opt_inline): in on constant sets with word elements (the comparisons)
+lang/lang/source/opt_inline.pas	s/r\^\.kind in \[107, 108, 159, 167, 171, 173, 174\]/((r^.kind = 107) or (r^.kind = 108) or (r^.kind = 159) or (r^.kind = 167) or (r^.kind = 171) or (r^.kind = 173) or (r^.kind = 174)) { gap 8 }/
+# gap 24 (opt_inline): calls as right operands of `and' and `or' (compared, for the check)
+lang/lang/source/opt_inline.pas	s/\(b\^\.kind = 108\) and assert_routine_returns_void\(b\) then/(b^.kind = 108) and (assert_routine_returns_void(b) = true) then { gap 24 }/
+lang/lang/source/opt_inline.pas	s/a\^\.kind in \[77\.\.82, 87\.\.90, 137, 143, 198, 200\]/(((a^.kind >= 77) and (a^.kind <= 82)) or ((a^.kind >= 87) and (a^.kind <= 90)) or (a^.kind = 137) or (a^.kind = 143) or (a^.kind = 198) or (a^.kind = 200)) { gap 8 }/
+lang/lang/source/opt_inline.pas	s/a\^\.kind in \[83\.\.86, 92, 93, 101, 156, 176\]/(((a^.kind >= 83) and (a^.kind <= 86)) or (a^.kind = 92) or (a^.kind = 93) or (a^.kind = 101) or (a^.kind = 156) or (a^.kind = 176)) { gap 8 }/
+lang/lang/source/opt_inline.pas	s/x\^\.kind in \[109, 110, 111, 163, 195\]/((x^.kind = 109) or (x^.kind = 110) or (x^.kind = 111) or (x^.kind = 163) or (x^.kind = 195)) { gap 8 }/
+lang/lang/source/opt_inline.pas	s/ed\^\.callee\^\.kind in \[105\.\.108, 172, 209\]/(((ed^.callee^.kind >= 105) and (ed^.callee^.kind <= 108)) or (ed^.callee^.kind = 172) or (ed^.callee^.kind = 209)) { gap 8 }/

@@ -473,3 +473,14 @@ fn_60, fn_fop_a/fn_fop_b +0x2A8/+0x2B8, fn_fmovecr +0x2E8, fn_fabs_op
 unread second argument.  docs/dpc-gaps.md 31 (new), 2, 7, 24 (also);
 rev889-patterns 92-95; questions 136-139.
 
+Translator KK (2026-11-11), opt_inline (started, 54 of 62): the two
+binaries' code is the same but for absolute addresses, so one body
+(no `%if cc_a88k').  The unit opens neither g_opt.ins.pas nor any
+opt_main insert and needs no opt_main cell; it declares its own
+views: the call graph edge (oi_edge_t, runbackend's rb_edge_t; +12
+used as a block, docs/questions.md 140), the hash entries and display
+records, type_exp's result, process_operand's context.  No shared
+insert changed (inline_$inline_expand keeps globals_from_backend's
+heading; inline_$mark_reference_params keeps opt_vector's local
+heading's types).  process_operand and its seven nested routines are
+not written (declared extern in the unit; a TODO in its header).
