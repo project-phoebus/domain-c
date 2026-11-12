@@ -351,3 +351,7 @@ lang2/source/be_com/bin.pas	s/^(\s*)(\w+) := ord\(([^()]*(?:\([^()]*\))?[^()]*)\
 # gap 23 (mmt, translator PC2): in on a one-word constant set with a byte element (the comparisons)
 lang2/source/be_com/mmt.pas	s/\(nt\^\.desc\.class in \[1, 13\.\.15\]\)/((nt^.desc.class = 1) or ((nt^.desc.class >= 13) and (nt^.desc.class <= 15))) { gap 23 }/
 lang2/source/be_com/mmt.pas	s/\(d\^\.class in \[1\.\.15\]\)/((d^.class >= 1) and (d^.class <= 15)) { gap 23 }/
+# gap 11 (trans, translator PC3): nil as a pointer function's last result (the block's last instruction, for the check)
+lang2/source/be_com/trans.pas	s/^(\s*)get_(omega|alpha)_candidate := nil$/$1get_$2_candidate := from_bb^.last { gap 11 }/
+# gap 23 (trans): in on a one-word constant set with a byte element (the class widened, for the check)
+lang2/source/be_com/trans.pas	s/^(\s*)while instruction_attributes\[i\^\.opc\]\.class$/$1while (instruction_attributes[i^.opc].class + 0) { gap 23 }/
