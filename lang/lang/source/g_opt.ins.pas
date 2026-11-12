@@ -16,9 +16,11 @@
 
 { TODO(pascal) g_opt.ins.pas holds what the translated units need
 
-  Add the optimizer's other cells (opt_main +0x14, +0x5A, +0x62, read by opt_reachdef, opt_strength, the
-  reg_ units) and headings as their units are translated; the record
-  fields are named by use. }
+  opt_main's cells other units read are all declared (opt_main.pas
+  defines them with its own in the image's layout); add the headings
+  of the optimizer's units not translated yet (opt_inline, ...) as
+  they are; the record fields are named by use (some statement header
+  bits still by position, docs/questions.md 128). }
 
 type
   { Block, node and variable numbers: words, zero-extended where read
