@@ -1775,3 +1775,22 @@ revisited.
    floating clobbers, +226 bit 1 needs_db); at_backend_4fc can be
    narrowed to rtn_ptr_t when at_backend is translated
    (docs/backend-plan.md has the phase table's layout).
+285. Translator PA5, fg_utils: reverse_depth_first_search (cc.a88k
+   0x236390) remembers the previous edge only after recursing through
+   it (`move.l A2,D0' after the call), not for an edge from a block
+   already visited, so dropping a later edge from a block with l150 nil
+   unlinks it from the wrong predecessor; reorder_start_bb_successor_
+   list (0x2353D2), when no ENTRY outside an ENTRY statement is found,
+   falls out of its loop into the append with A0 holding the last
+   block or node it loaded (translated as moving nothing); and
+   fg_utils_$recompute_ssa_form_for_lr returns with lir_main_c8d still
+   set when excising the old join birthpoints leaves the live range no
+   segments.  Slips of the original?  The first and third are kept as
+   the image has them.
+286. Translator PA5, fg_utils: traverse (0x236914) gives a live range a
+   join birthpoint in bb when its reaching definition is bb itself
+   (avail_out has its bit) or a block that does not pass it through and
+   is not the first block; the first case reads oddly (a block that
+   defines the live range gets a join for its live-in value).  Kept as
+   the image has it.
+
