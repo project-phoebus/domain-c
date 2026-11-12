@@ -25,6 +25,28 @@ type
   om_bytes_ptr_t = ^char;
   { A longword's bits (convert_exponentiation's exponent). }
   om_bits_t = set of 0..31;
+  { A routine's parameter list (its +12; var_is_param_of_routine): the
+    count at +10, 12-byte entries from +12, the variable first. }
+  om_parm_t = record
+    v: il_$node_ptr_t;                  { +0 }
+    unused_4: array [1..4] of integer;  { +4 }
+  end;
+  om_params_ptr_t = ^om_params_t;
+  om_params_t = record
+    unused_0: array [0..4] of integer;  { +0 }
+    count: integer;                     { +10 }
+    parm: array [1..1000] of om_parm_t; { +12 }
+  end;
+  { A routine block's +384 (init_opt_info_for_vars): a chain (+8) of
+    nodes whose +4 is a variable that gets flags 4 in its entry. }
+  om_blk_ptr_t = ^om_blk_t;
+  om_blk_t = record
+    unused_0: array [0..95] of integer32;  { +0..+383 }
+    vlist: il_$node_ptr_t;              { +384 }
+  end;
+  { The argument classes (paramclass) a later argument passing the
+    same variable may not have (om_param_conflicts). }
+  om_classes_t = set of 0..15;
 
 var
   { The module's data (A5 0x2D2EF0 in cc.m68k, 0x49389C in cc.a88k),
@@ -38,6 +60,8 @@ var
   om_complex_size: extern array [6..7] of integer;  { +0x28 }
   om_class_bytes: extern array [0..9] of integer;   { +0x70 }
   om_stmt_num: extern integer;          { +0x58 }
+  om_nvars: extern integer;             { +0x64 }
+  om_param_conflicts: extern array [0..4] of om_classes_t;  { +0x90 }
 
 var
   { delay.pas's +888 (cc.m68k 0x169968, cc.a88k 0x2E99D8): the bytes of
@@ -51,13 +75,22 @@ var
 function reg_save_$registers_preserved_by_statement(
     s: il_$node_ptr_t): reg_save_$regs_t; options(val_param); extern;
 
+{ OPT_MAIN_$IS_FORTRAN_ASF - (defined below, after its caller
+  add_def_for_params_at_routine_entry) whether s is the entry of a
+  Fortran statement function. }
+function opt_main_$is_fortran_asf(
+    s: g_opt_stmt_ptr_t): boolean; options(val_param); extern;
+
 define
   om_succ_pool, om_blocks_pool, om_hoist_pool, om_nodes_pool,
   om_varset_pool;
   om_complex_size := [8, 12];
   om_class_bytes := [0, 2, 4, 4, 8, 8, 1, 4, 4, 0];
-  om_stmt_num,
-  opt_main_$ensure_var_set, check_dominators;
+  om_stmt_num, om_nvars;
+  om_param_conflicts := [[0, 2], [1, 4], [0, 2], [3], [1, 4]];
+  opt_main_$ensure_var_set, check_dominators, reviseuses,
+  opt_main_$symidx_of_varn_or_fsym, opt_main_$var_is_param_of_routine,
+  opt_main_$is_fortran_asf, fixup_blocks;
 
 { assert_optimizer_is_enabled - the optimizer runs: target_properties'
   +0x7F, else not -DBA (cargs db 3) and -OPT's level above 2.
@@ -2636,5 +2669,766 @@ begin
         ;
     end;
     s := s^.next;
+  end;
+end;
+
+{ reviseuses - after strength reduction, each region statement from
+  opt_region to runbackend_16 (not a branch, label, non-local branch
+  or deleted statement) that still has variable v in its set but no
+  longer uses it (no chain cut, flags 16#200, and walkuses does not
+  find opt_region's node of v in it) loses v: its use-def chain is cut
+  (each defining statement's entry of v flagged 16#100) and v taken
+  out of its set.
+
+  0x0DE402, 0x196 bytes: A5 loaded; the entry's address kept in
+  (-96,A6) and passed to walkuses by address; the set's element
+  removed through a 32-byte frame set (`not.l; and.l'); the test of
+  v in the set range-checked (docs/dpc-gaps.md 29). }
+
+procedure reviseuses;
+var
+  i: g_opt_num_t;
+  v: g_opt_num_t;
+  s: g_opt_stmt_ptr_t;
+  node: il_$node_ptr_t;
+  used: boolean;
+  c: g_opt_chain_ptr_t;
+  one: g_opt_varset_t;
+begin
+  if il_180^.xw[145] <> 0 then
+    for i := opt_region to runbackend_16 do begin
+      s := opt_4009c[i];
+      if (s^.kind <> 141) and (s^.kind <> 144) and not s^.hdr.deleted and
+         (s^.kind <> 150) then
+        for v := 1 to il_180^.xw[145] do begin
+          s := opt_4009c[i];
+          if s^.vset <> nil then
+            if v in s^.vset^ then begin
+              node := opt_4009c[opt_region]^.vars^[v]^.node;
+              if (opt_4009c[i]^.vars^[v]^.flags & 16#200) <> 0 then
+                used := true
+              else
+                used := walkuses(opt_4009c[i], node);
+              if not used then begin
+                c := opt_4009c[i]^.vars^[v]^.ud;
+                while c <> nil do begin
+                  c^.stmt^.vars^[v]^.flags := c^.stmt^.vars^[v]^.flags ! 16#100;
+                  c := c^.next;
+                end;
+                opt_4009c[i]^.vars^[v]^.ud := nil;
+                one := [];
+                one := one + [v];
+                opt_4009c[i]^.vset^ := opt_4009c[i]^.vset^ - one;
+              end;
+            end;
+        end;
+    end;
+end;
+
+{ opt_main_$strip_all_use_def_obs - the use and definition statements
+  (188) of the routine from opt_region's entry to the end of the
+  outermost routine (149, not of a 172) unlinked and marked deleted;
+  the next statement takes over a line and a block start of one.
+
+  0x0DE598, 0x98 bytes: no A5 load (internal). }
+
+procedure opt_main_$strip_all_use_def_obs; internal;
+var
+  s: g_opt_stmt_ptr_t;
+  p: g_opt_stmt_ptr_t;
+  n: g_opt_stmt_ptr_t;
+begin
+  s := opt_4009c[opt_region];
+  while s <> nil do begin
+    if s^.kind = 188 then begin
+      s^.hdr.deleted := true;
+      if s^.line <> spos_$null_position then
+        if s^.next^.line = spos_$null_position then
+          s^.next^.line := s^.line;
+      p := s^.prev;
+      n := s^.next;
+      p^.next := n;
+      n^.prev := p;
+      if s^.hdr.first then
+        n^.hdr.first := true;
+      s := n;
+    end
+    else
+      s := s^.next;
+    if s <> nil then
+      if s^.kind = 149 then
+        if s^.x48^.kind <> 172 then
+          return;
+  end;
+end;
+
+{ opt_main_$symidx_of_varn_or_fsym - see g_opt.ins.pas: a variable's
+  number (+74 of a 109, +16 of a 110), 0 for other nodes.
+
+  0x0DE630, 0x5C bytes: A5 loaded; the result a word. }
+
+function opt_main_$symidx_of_varn_or_fsym(
+    t: il_$node_ptr_t): integer;
+var
+  k: integer;
+begin
+  k := 0;
+  if assert_is_a_variable(t) then
+    case t^.kind of
+      109:
+        k := t^.xw[37];
+      110:
+        k := t^.xw[8];
+      otherwise
+        bug_check('OPT_MAIN_$SYMIDX_OF_VAR_OR_FSYM -- p not a var_name or fortran_symbol%.');
+    end;
+  opt_main_$symidx_of_varn_or_fsym := k;
+end;
+
+{ create_use_def_ob - a use or definition statement (188, 4 bytes more
+  than its kind's) of variable v for statement s: mode 0 and 1 put it
+  before s (taking over s's line and block start; mode 0 its +45 from
+  the statement before s), 2 after s, 3 after the 188s of positive
+  argument number that follow s; its arg_stmt, arg_call and arg_num
+  (num) set, marked quiet (+41 bit 5), its vnum v's number when that is
+  not negative.
+
+  0x0DE6D4, 0x174 bytes: an error 9 when the node cannot be made; the
+  statement placed after in A1 (left as it was for another mode); the
+  block start moved as one 16-bit field (`andi.w #-3', `andi.w #2'). }
+
+procedure create_use_def_ob(
+    s: g_opt_stmt_ptr_t;
+    call: il_$node_ptr_t;
+    at: il_$node_ptr_t;
+    v: il_$node_ptr_t;
+    num: integer;
+    mode: integer); options(val_param); internal;
+var
+  n: g_opt_stmt_ptr_t;
+  p: g_opt_stmt_ptr_t;
+  k: integer;
+begin
+  n := g_opt_stmt_ptr_t(add_node_$new_top_level(188, 4));
+  if n = nil then
+    cgerr_no_source(9, 0);
+  case mode of
+    2, 1, 0:
+      p := s;
+    3: begin
+      p := s^.next;
+      while (p^.kind = 188) and (p^.arg_num > 0) do
+        p := p^.next;
+      p := p^.prev;
+    end;
+    otherwise
+      ;
+  end;
+  n^.x48 := v;
+  n^.arg_stmt := at;
+  n^.hdr.b5 := true;
+  n^.hdr.b45 := p^.hdr.b45;
+  n^.arg_call := call;
+  n^.arg_num := num;
+  case mode of
+    0, 1: begin
+      if mode = 0 then
+        n^.hdr.b45 := s^.prev^.hdr.b45;
+      n^.line := p^.line;
+      p^.line := spos_$null_position;
+      n^.hdr.first := p^.hdr.first;
+      p^.hdr.first := false;
+      n^.prev := p^.prev;
+      n^.next := p;
+      p^.prev^.next := n;
+      p^.prev := n;
+    end;
+    3, 2: begin
+      n^.line := spos_$null_position;
+      n^.hdr.first := false;
+      n^.prev := p;
+      n^.next := p^.next;
+      p^.next^.prev := n;
+      p^.next := n;
+    end;
+    otherwise
+      ;
+  end;
+  k := opt_main_$symidx_of_varn_or_fsym(v);
+  if k >= 0 then
+    n^.hdr.vnum := k;
+end;
+
+{ add_use_defs_for_call_site - unless opt_track_lines, variable v
+  passed as argument num (from 1; 0 for a call's effect on statics) of
+  call (in statement s) gets its use (unless passed by value, class 3:
+  mode 1; mode 0 for a parameter, +72 = 5) and, when the argument may
+  be changed (classes 1, 3, 4) and s does not store it or an alias of
+  it, its definition after s (mode 3, -num); not when a later argument
+  passes it too in a conflicting class (om_param_conflicts) or the call
+  is through a 159.
+
+  0x0DE848, 0x192 bytes: the argument's class in D5 (left as it was
+  when num is 0); the later arguments' variables compared directly, a
+  147's +24, a 164's +20; num 0 pushed with the mode as one longword
+  (`clr.l -(SP)'); `btst' of the class in 26. }
+
+procedure add_use_defs_for_call_site(
+    s: g_opt_stmt_ptr_t;
+    call: g_opt_tree_ptr_t;
+    at: il_$node_ptr_t;
+    v: il_$node_ptr_t;
+    num: integer); options(val_param); internal;
+var
+  cls: integer;
+  cnt: integer;
+  k: integer;
+  x: il_$node_ptr_t;
+  match: boolean;
+  da: alias_$desc_t;
+  db: alias_$desc_t;
+begin
+  if opt_track_lines then
+    return;
+  if num > 0 then
+    cls := paramclass(il_$node_ptr_t(call), num - 1);
+  if call = nil then
+    cnt := 0
+  else
+    cnt := call^.count;
+  for k := num + 1 to cnt do begin
+    x := call^.opnd[k];
+    case x^.kind of
+      110, 109:
+        match := x = v;
+      147:
+        match := x^.xp[6] = v;
+      164:
+        match := x^.xp[5] = v;
+      otherwise
+        match := false;
+    end;
+    if match then begin
+      if call^.opnd[1]^.kind = 159 then
+        return;
+      if paramclass(il_$node_ptr_t(call), k - 1) in om_param_conflicts[cls] then
+        return;
+    end;
+  end;
+  if num = 0 then
+    create_use_def_ob(s, il_$node_ptr_t(call), at, v, 0, 0)
+  else begin
+    if v <> nil then begin
+      if (v^.kind = 109) and (v^.xw[36] = 5) then
+        create_use_def_ob(s, il_$node_ptr_t(call), at, v, num, 0)
+      else if cls <> 3 then
+        create_use_def_ob(s, il_$node_ptr_t(call), at, v, num, 1);
+    end
+    else if cls <> 3 then
+      create_use_def_ob(s, il_$node_ptr_t(call), at, v, num, 1);
+    if s^.kind = 140 then begin
+      if s^.asg_lhs = v then
+        return;
+      alias_$alias_desc_with_size(s^.asg_lhs, s^.asg_size, da);
+      alias_$alias_desc_with_size(v, s^.asg_size, db);
+      if alias_$related(da, db) then
+        return;
+    end;
+    if cls in [1, 3, 4] then
+      create_use_def_ob(s, il_$node_ptr_t(call), at, v, -num, 3);
+  end;
+end;
+
+{ opt_main_$var_is_param_of_routine - the number (from 1) of v among
+  routine r's parameters (+12: a count at +10, 12-byte entries from
+  +12), -1 when it is not one.
+
+  0x0DE9DA, 0x5A bytes: A5 loaded; the result a word. }
+
+function opt_main_$var_is_param_of_routine(
+    v: il_$node_ptr_t;
+    r: il_$node_ptr_t): integer; options(val_param);
+var
+  p: om_params_ptr_t;
+  k: integer;
+begin
+  opt_main_$var_is_param_of_routine := -1;
+  if r^.xp[3] <> nil then begin
+    p := om_params_ptr_t(r^.xp[3]);
+    for k := 1 to p^.count do
+      if p^.parm[k].v = v then begin
+        opt_main_$var_is_param_of_routine := k;
+        return;
+      end;
+  end;
+end;
+
+{ assert_defined_on_entry - variable v of block blk (its type te) may
+  hold a value on entry to the routine rtn (so a definition of it is
+  made there): in Fortran (blk's language 2) a parameter (storage class
+  5 at +11 bits 7..4 and among rtn's parameters), a symbol of +44 bit
+  3, of a static class (3482: 1, 3, 4, 7, 8, 10, 11) outside a main
+  program (105) or under flags_286 element 2, or of class 3, 4, 8, 10
+  or 11 (3352); elsewhere a variable (109) not of a routine's type
+  (107): a parameter (+72 = 5) not an array (121), an array not of
+  3 dimensions' kind (+44) or whose type is ranged or a 135, 134 or
+  130, an address-taken one (+32 bits 6, 8), a static outside a main
+  program, or of type 135.
+
+  0x0DEA34, 0x13E bytes: the classes by `btst' in the words 3482 and
+  3352. }
+
+function assert_defined_on_entry(
+    v: il_$node_ptr_t;
+    in te: il_utils_$type_info_t;
+    blk: il_$node_ptr_t;
+    rtn: il_$node_ptr_t): boolean; options(val_param); internal;
+var
+  cls: integer;
+  t: il_$node_ptr_t;
+  k: integer;
+begin
+  if rshft(ord(blk^.xc[377]) & 16#70, 4) = 2 then begin
+    cls := rshft(ord(v^.xc[11]) & 16#F0, 4);
+    if cls = 5 then
+      if opt_main_$var_is_param_of_routine(v, rtn) >= 0 then begin
+        assert_defined_on_entry := true;
+        return;
+      end;
+    if (ord(v^.xc[44]) & 8) <> 0 then begin
+      assert_defined_on_entry := true;
+      return;
+    end;
+    if cls in [1, 3, 4, 7, 8, 10, 11] then
+      if (blk^.kind <> 105) or (2 in cargs_$options.flags_286) then begin
+        assert_defined_on_entry := true;
+        return;
+      end;
+    assert_defined_on_entry := cls in [3, 4, 8, 10, 11];
+  end
+  else if v^.kind = 109 then begin
+    t := v^.xp[7];
+    assert_defined_on_entry := true;
+    if t^.kind = 107 then begin
+      assert_defined_on_entry := false;
+      return;
+    end;
+    if (v^.xw[36] = 5) and (t^.kind <> 121) then
+      return;
+    if t^.kind = 121 then begin
+      if t^.xw[22] <> 3 then
+        return;
+      if (ord(te.c[25]) & 16#40) = 0 then
+        if not ((te.tp^.kind = 135) or (te.tp^.kind = 134) or
+                (te.tp^.kind = 130)) then
+          return;
+    end;
+    if (v^.xw[36] = 5) and (t^.kind = 121) then
+      if (ord(te.c[25]) & 16#40) <> 0 then
+        return;
+    if (v^.xl[8] & 320) <> 0 then
+      return;
+    k := v^.xw[36];
+    if k in [1, 3, 4, 7, 8, 10, 11] then
+      if blk^.kind <> 105 then
+        return;
+    assert_defined_on_entry := t^.kind = 135;
+  end
+  else
+    assert_defined_on_entry := false;
+end;
+
+{ add_use_defs_for_statics_and_params - for routine rtn and the blocks
+  (172) nested in it (a 167's +148 next): each variable that may hold a
+  value on entry gets a definition (create_use_def_ob, mode 0) before
+  the routine's first statement after its entry (from +100, past
+  labels and evaluations; at the routine's entry statement); in
+  Fortran a symbol of class 3 (+44 bits 7..4) without +58 and +32 in a
+  routine (not a 172), elsewhere a variable (109, not of a routine's
+  type) that is a parameter array, ranged, of type 123, 134, 130 or of
+  storage class 1 (+72).  Nothing under opt_track_lines.
+
+  0x0DEB72, 0x19A bytes: the type in a 32-byte frame record (passed
+  to assert_defined_on_entry even when type_exp was not called). }
+
+procedure add_use_defs_for_statics_and_params(
+    rtn: il_$node_ptr_t); options(val_param); internal;
+var
+  s: g_opt_stmt_ptr_t;
+  first: g_opt_stmt_ptr_t;
+  b: il_$node_ptr_t;
+  v: il_$node_ptr_t;
+  te: il_utils_$type_info_t;
+begin
+  s := g_opt_stmt_ptr_t(rtn^.xp[25]);
+  while (s^.kind = 144) or (s^.kind = 139) do
+    s := s^.next;
+  if s^.kind = 148 then
+    first := s^.next
+  else
+    first := s;
+  b := rtn;
+  while b <> nil do begin
+    v := b^.xp[4];
+    while v <> nil do
+      if rshft(ord(rtn^.xc[377]) & 16#70, 4) = 2 then begin
+        if not opt_track_lines then
+          if rshft(ord(v^.xc[44]) & 16#F0, 4) = 3 then
+            if assert_defined_on_entry(v, te, rtn, rtn) then
+              if (v^.xl2[14] = 0) and (v^.xp[8] = nil) and
+                 (rtn^.kind <> 172) then
+                create_use_def_ob(first, nil, il_$node_ptr_t(s), v, 0, 0);
+        v := v^.xp[1];
+      end
+      else begin
+        if not opt_track_lines and (v^.kind = 109) then
+          if v^.xp[7]^.kind <> 107 then begin
+            type_exp(v, addr(te));
+            if ((v^.xw[36] = 5) and (v^.xp[7]^.kind = 121)) or
+               ((ord(te.c[25]) & 16#40) <> 0) or
+               (te.tp^.kind = 123) or (te.tp^.kind = 134) or
+               (te.tp^.kind = 130) or (v^.xw[36] = 1) then
+              if assert_defined_on_entry(v, te, rtn, nil) then
+                create_use_def_ob(first, nil, il_$node_ptr_t(s), v, 0, 0);
+          end;
+        v := v^.xp[4];
+      end;
+    if b^.kind = 167 then
+      b := b^.xp[37]
+    else if b^.xp[1] = nil then
+      b := nil
+    else if rtn^.kind = 172 then
+      b := nil
+    else if b^.xp[1]^.kind = 172 then
+      b := b^.xp[1]
+    else
+      b := nil;
+  end;
+end;
+
+{ add_def_for_params_at_routine_entry - at a routine's entry s (148, not
+  of a 172, not a Fortran statement function), the definitions of its
+  statics and parameters and of its nested blocks' (172).  Nothing
+  under opt_track_lines.
+
+  0x0DED0C, 0x56 bytes. }
+
+procedure add_def_for_params_at_routine_entry(
+    s: g_opt_stmt_ptr_t); options(val_param); internal;
+var
+  r: il_$node_ptr_t;
+begin
+  if not opt_track_lines then
+    if s^.kind = 148 then
+      if s^.x48^.kind <> 172 then
+        if not opt_main_$is_fortran_asf(s) then begin
+          r := s^.x48;
+          repeat
+            add_use_defs_for_statics_and_params(r);
+            r := r^.xp[1];
+          until (r = nil) or (r^.kind <> 172);
+        end;
+end;
+
+{ use_def_proc - a use or definition statement s (188) of a variable of
+  opt_region's table (number v) applied to the statement at hand
+  (om_stmt_num's entry e): a definition without a call (a static's or
+  parameter's) makes e assign v; a use (argument number positive) adds
+  v to e's set; for a definition after a call (not of a reference: 146,
+  145, 147), e assigns v when the argument may be changed (classes 1,
+  3, 4), or for a call through a 159, when the call may change v's
+  storage (alias_$related_call) or the number is negative.  Nothing
+  under opt_track_lines.
+
+  0x0DED62, 0x184 bytes: the set's element added through a 32-byte
+  frame set; a 159's case tests the number twice (`tst.w; bne' then
+  `bge'). }
+
+procedure use_def_proc(
+    s: g_opt_stmt_ptr_t); options(val_param); internal;
+var
+  v: integer;
+  e: g_opt_stmt_ptr_t;
+  x: il_$node_ptr_t;
+  one: g_opt_varset_t;
+  d: alias_$desc_t;
+begin
+  if opt_track_lines then
+    return;
+  if s^.kind <> 188 then
+    return;
+  v := find_var(s^.x48);
+  if v = 0 then
+    return;
+  if (s^.arg_call = nil) and (s^.arg_num = 0) and (s^.x48 <> nil) then begin
+    opt_4009c[om_stmt_num]^.hdr.vnum := v;
+    return;
+  end;
+  e := opt_4009c[om_stmt_num];
+  if s^.arg_stmt = nil then
+    return;
+  if s^.arg_num > 0 then begin
+    opt_main_$ensure_var_set(e^.vset);
+    one := [];
+    one := one + [v];
+    e^.vset^ := e^.vset^ + one;
+    if s^.arg_num > 0 then
+      return;
+  end;
+  x := s^.x48;
+  if (x^.kind = 146) or (x^.kind = 145) or (x^.kind = 147) then
+    return;
+  if g_opt_tree_ptr_t(s^.arg_call)^.opnd[1]^.kind <> 159 then begin
+    if paramclass(s^.arg_call, -s^.arg_num - 1) in [1, 3, 4] then
+      e^.hdr.vnum := v;
+  end
+  else if s^.arg_num = 0 then begin
+    if e^.hdr.vnum <> v then begin
+      alias_$basic_alias_desc(opt_4009c[opt_region]^.vars^[v]^.node, d);
+      if alias_$related_call(d, s^.arg_call) then
+        e^.hdr.vnum := v;
+    end;
+  end
+  else if s^.arg_num < 0 then
+    e^.hdr.vnum := v;
+end;
+
+{ opt_main_$is_fortran_asf - s is the entry (148) of a Fortran
+  statement function: language 2, +376 bit 3, not a 172.
+
+  0x0DEEE6, 0x4C bytes: A5 loaded. }
+
+function opt_main_$is_fortran_asf(
+    s: g_opt_stmt_ptr_t): boolean; options(val_param);
+var
+  r: il_$node_ptr_t;
+begin
+  opt_main_$is_fortran_asf := false;
+  if s <> nil then
+    if s^.kind = 148 then begin
+      r := s^.x48;
+      if rshft(ord(r^.xc[377]) & 16#70, 4) = 2 then
+        if (ord(r^.xc[376]) & 8) <> 0 then
+          opt_main_$is_fortran_asf := r^.kind <> 172;
+    end;
+end;
+
+{ init_opt_info_for_vars - at a routine's entry s (unless
+  opt_track_lines): the entry heads the region (opt_region, its entry
+  mark; il_180 its routine); the first time (first, by address) lo (by
+  address) takes n; the variables' numbers cleared (a 110's +16, a
+  109's +74 outside Fortran), counted (il_utl_$count_vars: om_nvars,
+  the routine's +290; opt_max_vars the largest), and numbered from 1
+  by class (il_utl_$classify_variable: 4..6 a variable's +74, 13..15 a
+  Fortran symbol's +16 when not yet numbered, with +25 bit 5 when it
+  has +32) with an entry in the region's table (18 bytes from the
+  var_chain pool: node, flags 4 when on the routine's +384 chain, 16#80
+  when defined on entry); the numbers left negative cleared after.
+
+  0x0DEF32, 0x384 bytes: a jump table on the class (0..15); the walks
+  over a Fortran routine's 109s do not advance (the image's loops test
+  the language before stepping): kept. }
+
+procedure init_opt_info_for_vars(
+    var first: boolean;
+    var lo: g_opt_num_t;
+    s: g_opt_stmt_ptr_t;
+    n: g_opt_num_t); options(val_param); internal;
+var
+  r: il_$node_ptr_t;
+  v: il_$node_ptr_t;
+  next: il_$node_ptr_t;
+  p: il_$node_ptr_t;
+  e: g_opt_stmt_ptr_t;
+  x: g_opt_var_ptr_t;
+  k: integer;
+  nv: integer;
+  ok: boolean;
+  te: il_utils_$type_info_t;
+begin
+  if opt_track_lines then
+    return;
+  if first then begin
+    lo := n;
+    first := false;
+  end;
+  opt_region := om_stmt_num;
+  opt_4009c[om_stmt_num]^.hdr.entry := true;
+  il_180 := s^.x48;
+  r := il_180;
+  while r <> nil do begin
+    v := r^.xp[4];
+    while v <> nil do
+      if v^.kind = 110 then begin
+        v^.xw[8] := 0;
+        v := v^.xp[1];
+      end
+      else if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then begin
+        if v^.kind = 109 then
+          v^.xw[37] := 0;
+        v := v^.xp[4];
+      end;
+    if r^.xp[1] = nil then
+      r := nil
+    else if r^.xp[1]^.kind = 172 then
+      r := r^.xp[1]
+    else
+      r := nil;
+  end;
+  nv := il_utl_$count_vars(s^.x48);
+  om_nvars := nv;
+  s^.x48^.xw[145] := nv;
+  e := opt_4009c[om_stmt_num];
+  if nv > 0 then
+    e^.vars := mem_$alloc(opt_main_18, nv * 4)
+  else
+    e^.vars := nil;
+  e^.hdr.vnum := 0;
+  if e^.vset <> nil then
+    e^.vset^ := [];
+  il_180^.xw[145] := om_nvars;
+  if om_nvars = 0 then
+    return;
+  nv := om_nvars;
+  if nv < opt_max_vars then
+    nv := opt_max_vars;
+  opt_max_vars := nv;
+  k := 1;
+  r := il_180;
+  while r <> nil do begin
+    v := r^.xp[4];
+    while (k <= om_nvars) and (v <> nil) and (om_nvars > 0) do begin
+      ok := false;
+      if v^.kind = 109 then
+        if (v^.xl[8] & 16#201101) = 0 then
+          type_exp(v, addr(te));
+      case il_utl_$classify_variable(v, te, r, next) of
+        4, 5, 6: begin
+          v^.xw[37] := k;
+          opt_4009c[om_stmt_num]^.vars^[k] := mem_$alloc(opt_main_18, 18);
+          ok := true;
+        end;
+        13, 14, 15:
+          if v^.xw[8] <= 0 then begin
+            v^.xw[8] := k;
+            opt_4009c[om_stmt_num]^.vars^[k] := mem_$alloc(opt_main_18, 18);
+            ok := true;
+            if v^.xl[8] <> 0 then
+              v^.xc[25] := chr(ord(v^.xc[25]) ! 16#20);
+          end;
+        otherwise
+          ;
+      end;
+      if ok then begin
+        x := opt_4009c[om_stmt_num]^.vars^[k];
+        x^.node := v;
+        x^.unused_4 := 0;
+        x^.count := 0;
+        x^.ud := nil;
+        x^.du := nil;
+        x^.flags := 0;
+        p := om_blk_ptr_t(r)^.vlist;
+        while p <> nil do begin
+          if p^.xp[1] = v then
+            x^.flags := 4;
+          p := p^.xp[2];
+        end;
+        if assert_defined_on_entry(v, te, il_180, il_180) then
+          x^.flags := x^.flags ! 16#80;
+        k := k + 1;
+      end;
+      v := next;
+    end;
+    if v <> nil then
+      r := nil
+    else if r^.xp[1] = nil then
+      r := nil
+    else if r^.xp[1]^.kind = 172 then
+      r := r^.xp[1]
+    else
+      r := nil;
+    if k > om_nvars then
+      exit;
+  end;
+  r := il_180;
+  while r <> nil do begin
+    v := r^.xp[4];
+    while v <> nil do
+      if v^.kind = 110 then begin
+        if v^.xw[8] < 0 then
+          v^.xw[8] := 0;
+        v := v^.xp[1];
+      end
+      else if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then begin
+        if v^.kind = 109 then
+          if v^.xw[37] < 0 then
+            v^.xw[37] := 0;
+        v := v^.xp[4];
+      end;
+    r := r^.xp[1];
+  end;
+end;
+
+{ fixup_blocks - see g_opt.ins.pas: the region statements from
+  opt_region's on (skipping deleted entries, and marking deleted those
+  passed over: entries left by statements that are gone, up to a
+  strength reduction temporary's assignment) matched again with the
+  routine's statements: each block start's block gets its first
+  statement and every statement's block its last; error 3 when the
+  entries run past runbackend_16; it stops at a routine's entry label
+  (kind 13) followed by an entry of other than a 167 or 172.
+
+  0x0DF2B6, 0x1A2 bytes: A5 loaded; runbackend_16's address kept in
+  D4; a register's (191) and a strength reduction temporary's
+  assignment have no entry of their own. }
+
+procedure fixup_blocks;
+var
+  r: g_opt_num_t;
+  s: g_opt_stmt_ptr_t;
+  b: g_opt_block_ptr_t;
+  x: il_$node_ptr_t;
+begin
+  r := opt_region;
+  s := opt_4009c[r];
+  b := s^.block;
+  while s <> nil do begin
+    while opt_4009c[r]^.hdr.deleted do
+      r := r + 1;
+    if s^.kind <> 191 then
+      while (r < runbackend_16) and (opt_4009c[r] <> s) do begin
+        if s^.kind = 140 then
+          if il_utils_$is_strength_reduction_temp(s^.asg_lhs) then
+            exit;
+        if r > opt_region then
+          opt_4009c[r]^.hdr.deleted := true;
+        r := r + 1;
+      end;
+    if r > runbackend_16 then
+      cgerr(3, opt_4009c[runbackend_16]^.line, opt_4009c[runbackend_16]);
+    if s^.hdr.first then begin
+      b := opt_4009c[r]^.block;
+      b^.first_stmt := s;
+    end;
+    if s^.kind <> 191 then
+      if s^.kind <> 140 then
+        r := r + 1
+      else if s^.hdr.region <> 0 then
+        r := r + 1
+      else begin
+        x := s^.asg_lhs;
+        if not ((x^.kind = 110) or (x^.kind = 109)) then
+          r := r + 1
+        else if not il_utils_$is_strength_reduction_temp(x) then
+          r := r + 1;
+      end;
+    b^.last_stmt := s;
+    s := s^.next;
+    if assert_is_label(il_$node_ptr_t(s)) then
+      if rshft(ord(il_$node_ptr_t(s)^.xc[72]) & 16#3E, 1) = 13 then
+        if s^.next^.kind = 148 then
+          if (s^.next^.x48^.kind <> 167) and
+             (s^.next^.x48^.kind <> 172) then
+            return;
   end;
 end;
