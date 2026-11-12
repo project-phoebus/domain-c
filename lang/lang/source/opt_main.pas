@@ -35,6 +35,7 @@ var
   om_varset_pool: extern mem_$pool_t;   { +0x1C: variable_use_set }
   om_complex_size: extern array [6..7] of integer;  { +0x28 }
   om_class_bytes: extern array [0..9] of integer;   { +0x70 }
+  om_stmt_num: extern integer;          { +0x58 }
 
 { REG_SAVE_$REGISTERS_PRESERVED_BY_STATEMENT - reg_save.pas 0x0ED458
   (cc.a88k target_at_dummies): the registers top-level statement s
@@ -47,7 +48,8 @@ define
   om_varset_pool;
   om_complex_size := [8, 12];
   om_class_bytes := [0, 2, 4, 4, 8, 8, 1, 4, 4, 0];
-  opt_main_$ensure_var_set;
+  om_stmt_num,
+  opt_main_$ensure_var_set, check_dominators;
 
 { assert_optimizer_is_enabled - the optimizer runs: target_properties'
   +0x7F, else not -DBA (cargs db 3) and -OPT's level above 2.
@@ -1043,4 +1045,608 @@ begin
       end;
     end;
   end;
+end;
+
+{ compute_variable_type_descriptors - types (by address: opt_var_types)
+  allocated for the routine's variables (il_180's +290, from 0) and,
+  for each variable of the routine whose entry heads opt_region (a
+  148: il_180 set to its routine), its type: a Fortran variable's
+  (language 2) without a base type, unranged (low and high -1), the
+  size its data class (+10 low nibble) gives in om_class_bytes; the
+  others type_exp's.
+
+  0x0DBD58, 0x11C bytes: PAS_$NEW of 28 * n + 28 (`lsl #2; neg; lsl
+  #3; add'; an error 9 when there is no room); the loop over the
+  variables tests the entry's kind each time; +24 written as a word's
+  bits (`andi.b #7', `bclr #10', `bclr #9', `ori.w #64'). }
+
+procedure compute_variable_type_descriptors(
+    var types: g_opt_vtypes_ptr_t); internal;
+var
+  v: integer;
+  e: g_opt_stmt_ptr_t;
+  n: il_$node_ptr_t;
+begin
+  pas_$new(types, il_180^.xw[145] * 28 + 28);
+  if types = nil then
+    cgerr_no_source(9, 0);
+  for v := 1 to il_180^.xw[145] do begin
+    e := opt_4009c[opt_region];
+    if e^.kind = 148 then begin
+      il_180 := e^.x48;
+      n := e^.vars^[v]^.node;
+      if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then begin
+        types^[v].low := -1;
+        types^[v].high := -1;
+        types^[v].base := nil;
+        types^[v].flags.b24 := 0;
+        types^[v].flags.b24_2 := false;
+        types^[v].flags.b24_1 := false;
+        types^[v].flags.ranged := true;
+        types^[v].size := om_class_bytes[ord(n^.xc[10]) & 15];
+      end
+      else
+        type_exp(n, addr(types^[v]));
+    end;
+  end;
+end;
+
+{ check_dominators - for each block from an entry label or an unsafe
+  abnormal label on, a later block reached from an earlier block (by a
+  predecessor numbered below the entry's block) that the entry's block
+  reaches (assert_is_predecessor) loses its dominators (idom and dom).
+
+  0x0DBE74, 0x12E bytes: A5 loaded; the entry's number in (-12,A6),
+  cleared after its blocks are looked at; the predecessors' loop left
+  at the first that qualifies. }
+
+procedure check_dominators;
+var
+  entry: g_opt_num_t;
+  i: g_opt_num_t;
+  j: g_opt_num_t;
+  k: integer;
+  b: g_opt_block_ptr_t;
+begin
+  if il_11c <> nil then begin
+    entry := 0;
+    for i := 1 to opt_last_block do begin
+      if assert_is_entry_label(
+           il_$node_ptr_t(g_opt_blocks_ptr_t(il_11c)^[i]^.first_stmt)) or
+         assert_is_unsafe_abnormal_label(
+           il_$node_ptr_t(g_opt_blocks_ptr_t(il_11c)^[i]^.first_stmt)) then
+        entry := i;
+      if entry <> 0 then begin
+        for j := entry + 1 to opt_last_block do begin
+          b := g_opt_blocks_ptr_t(il_11c)^[j];
+          for k := 1 to b^.npreds do
+            if b^.pred[k]^.num < entry then
+              if assert_is_label(il_$node_ptr_t(b^.first_stmt)) then
+                if assert_is_predecessor(entry, j) then begin
+                  g_opt_blocks_ptr_t(il_11c)^[j]^.idom := nil;
+                  g_opt_blocks_ptr_t(il_11c)^[j]^.dom := nil;
+                  exit;
+                end;
+        end;
+        entry := 0;
+      end;
+    end;
+  end;
+end;
+
+{ initialize_stmt_nodes - the top-level statements numbered from 0 as
+  opt_4009c's entries (each its region number; vnum and num cleared,
+  its variable set emptied, no block, vars, cses, its free registers
+  all but 13..15), an error 17 at the 65000th; n (by address) one more
+  than the count.
+
+  0x0DBFA2, 0xA6 bytes: `andi.l #0xFF0000FF; or.l' of the longword at
+  +42 (region), `andi.l #0xFF' of +38; +22..+33 copied from a 12-byte
+  constant (0, 0, 0xFFFF1FFF); `cmpi.w #-536' (65000 unsigned). }
+
+procedure initialize_stmt_nodes(
+    var n: g_opt_num_t); internal;
+var
+  k: g_opt_num_t;
+  s: g_opt_stmt_ptr_t;
+begin
+  k := 0;
+  s := g_opt_stmt_ptr_t(il_d4);
+  while s <> nil do begin
+    opt_4009c[k] := s;
+    s^.hdr.region := k;
+    s^.hdr.vnum := 0;
+    s^.hdr.num := 0;
+    if s^.vset <> nil then
+      s^.vset^ := [];
+    s^.block := nil;
+    s^.vars := nil;
+    s^.cses := nil;
+    s^.regs := [0..12, 16..31];
+    k := k + 1;
+    if k >= 65000 then
+      cgerr_no_source(17, 0);
+    s := s^.next;
+  end;
+  n := k + 1;
+end;
+
+{ recompute_stmt_nodes - the top-level statements numbered again as
+  opt_4009c's entries; runbackend_16 the last routine's end (149, not
+  of a 172).
+
+  0x0DC054, 0x6E bytes. }
+
+procedure recompute_stmt_nodes; internal;
+var
+  k: g_opt_num_t;
+  s: g_opt_stmt_ptr_t;
+begin
+  k := 0;
+  s := g_opt_stmt_ptr_t(il_d4);
+  while s <> nil do begin
+    opt_4009c[k] := s;
+    s^.hdr.region := k;
+    if s^.kind = 149 then
+      if s^.x48^.kind <> 172 then
+        runbackend_16 := k;
+    k := k + 1;
+    s := s^.next;
+  end;
+end;
+
+{ killvisited - the nodes of il_120 of the kinds in the set (trees and
+  references) lose flag 5 (visited).
+
+  0x0DC0C2, 0x6A bytes: the set of 0..207 at 0x0DC12C, range-checked
+  (`bcs'), `bclr #5,(7,A1)'. }
+
+procedure killvisited; internal;
+var
+  k: integer;
+  n: g_opt_tree_ptr_t;
+begin
+  for k := 1 to il_126 do begin
+    n := g_opt_tree_ptr_t(g_opt_nodes_ptr_t(il_120)^[k]);
+    if n <> nil then
+      if n^.kind in [137..138, 143, 145..147, 164, 171, 175, 189, 205] then
+        n^.flags := n^.flags - [5];
+  end;
+end;
+
+{ resolve_nlbranch_targets - in a Fortran routine (language 2), each
+  label an assigned goto may reach (the routine's symbols from il_180's
+  +16, chained by +4) whose statement has a block makes that block a
+  successor of b (and b its predecessor): the block is no longer
+  skipped, the symbol loses +44 bit 1 and the statement is no longer
+  abnormal (+74).
+
+  0x0DC146, 0x9A bytes. }
+
+procedure resolve_nlbranch_targets(
+    b: g_opt_block_ptr_t); options(val_param); internal;
+var
+  l: il_$node_ptr_t;
+  t: g_opt_block_ptr_t;
+begin
+  if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then begin
+    if b = nil then
+      bug_check('OPT_MAIN_\RESOLVE_NLBRANCH_TARGETS -- NIL block%.');
+    l := il_180^.xp[4];
+    while l <> nil do begin
+      if assert_is_assigned_goto_label(l) then begin
+        t := g_opt_stmt_ptr_t(l^.xp[12])^.block;
+        if t <> nil then begin
+          add_successor(b, t);
+          add_predecessor(t, b);
+          t^.flags.skip := false;
+          l^.xc[44] := chr(ord(l^.xc[44]) & 16#FD);
+          l^.xp[12]^.xc[74] := chr(0);
+        end;
+      end;
+      l := l^.xp[1];
+    end;
+  end;
+end;
+
+{ compute_successors - block b's successors by its last statement: a
+  branch's target block (the label's +52), a conditional branch's and
+  the next block, a non-local branch's in Fortran
+  (resolve_nlbranch_targets), the next block after the end of a 172 or
+  any other statement.
+
+  0x0DC212, 0xDC bytes: a jump table on the kind (141..150), the next
+  block in (-8,A6); il_11c^[num + 1] read before the case. }
+
+procedure compute_successors(
+    b: g_opt_block_ptr_t); options(val_param); internal;
+var
+  next: g_opt_block_ptr_t;
+  s: g_opt_stmt_ptr_t;
+begin
+  if b = nil then
+    bug_check('OPT_MAIN_\COMPUTE_SUCCESSORS -- NIL block%.');
+  if b^.last_stmt = nil then
+    bug_check('OPT_MAIN_\COMPUTE_SUCCESSORS -- NIL block^.last_tree_ptr%.');
+  next := g_opt_blocks_ptr_t(il_11c)^[b^.num + 1];
+  s := b^.last_stmt;
+  case s^.kind of
+    141:
+      add_successor(b, g_opt_block_ptr_t(s^.br_target^.xp[13]));
+    142: begin
+      add_successor(b, next);
+      add_successor(b, g_opt_block_ptr_t(s^.br_target^.xp[13]));
+    end;
+    149:
+      if s^.x48^.kind = 172 then
+        add_successor(b, next);
+    150:
+      if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+        resolve_nlbranch_targets(b);
+    otherwise
+      add_successor(b, next);
+  end;
+end;
+
+{ assert_cleanup_body - block b is a cleanup handler's body: skipped and
+  its flags' bit 7 set.
+
+  0x0DC354, 0x26 bytes: `ori.b #0x81' (docs/rev889-patterns.md 10). }
+
+procedure assert_cleanup_body(
+    b: g_opt_block_ptr_t); options(val_param); internal;
+begin
+  if b = nil then
+    bug_check('OPT_MAIN_\ASSERT_CLEANUP_BODY -- NIL block%.');
+  b^.flags.b7 := true;
+  b^.flags.skip := true;
+end;
+
+{ assert_is_pointer_deref_of_volatile_object - n is a dereference (146)
+  without flags 1..4.
+
+  0x0DC3A6, 0x20 bytes, no frame: `moveq #30; and.l (4,A0); seq'. }
+
+function assert_is_pointer_deref_of_volatile_object(
+    n: il_$node_ptr_t): boolean; options(val_param); internal;
+begin
+  if n = nil then
+    assert_is_pointer_deref_of_volatile_object := false
+  else if n^.kind = 146 then
+    assert_is_pointer_deref_of_volatile_object := (n^.xl[1] & 30) = 0
+  else
+    assert_is_pointer_deref_of_volatile_object := false;
+end;
+
+{ assert_is_call_to_abnormal_routine - n is a call tree (operator 16 or
+  15 of a 143 or 137) of a routine that may return abnormally: a
+  routine (108, 107) or a routine variable's (171: a volatile
+  dereference, or its +16's) attribute +376 bit 5, a 175's +20's +79
+  bit 5, or the Fortran symbol opt_abnormal_routine (opt_livevar's +0,
+  docs/questions.md 122).
+
+  0x0DC3C6, 0xB6 bytes: the call test kept in D2 and and-ed with the
+  result (`and.b D2,D0'). }
+
+function assert_is_call_to_abnormal_routine(
+    n: il_$node_ptr_t): boolean; options(val_param); internal;
+var
+  call: boolean;
+  r: boolean;
+  p: il_$node_ptr_t;
+begin
+  r := false;
+  call := false;
+  if n <> nil then
+    if (n^.kind = 143) or (n^.kind = 137) then
+      call := (g_opt_tree_ptr_t(n)^.op = 16) or (g_opt_tree_ptr_t(n)^.op = 15);
+  if call then begin
+    p := g_opt_tree_ptr_t(n)^.opnd[1];
+    case p^.kind of
+      108, 107:
+        r := (ord(p^.xc[376]) & 16#20) <> 0;
+      171:
+        if assert_is_pointer_deref_of_volatile_object(p) then
+          r := true
+        else
+          r := (ord(p^.xp[4]^.xc[376]) & 16#20) <> 0;
+      175:
+        r := (ord(p^.xp[5]^.xc[79]) & 16#20) <> 0;
+      110:
+        r := p = opt_abnormal_routine;
+      otherwise
+        r := false;
+    end;
+  end;
+  assert_is_call_to_abnormal_routine := r and call;
+end;
+
+{ compute_abnormality_due_to_proc_calls - for each node of block b
+  that calls a routine that may return abnormally, b's successors are
+  skipped (and their successors computed); in a routine of language 1,
+  2 or 6, a successor ending in a conditional branch on a comparison
+  (operator 12) with the integer constant 16#03040003 (a cleanup
+  handler's status) marks the arm taken on it as a cleanup handler's
+  body, else every successor of it; language 3 likewise without
+  looking at the constant.
+
+  0x0DC47C, 0x234 bytes: `btst' of the language in the longword 70
+  ([1, 2, 6]); the comparison's sense from the branch's br_sense and
+  the comparison's register class (+28: 7, 6); the constant's kind by
+  the set of 0..207 at 0x0DC6EE. }
+
+procedure compute_abnormality_due_to_proc_calls(
+    b: g_opt_block_ptr_t); options(val_param); internal;
+var
+  i: g_opt_num_t;
+  k: integer;
+  m: integer;
+  lang: integer;
+  t: il_$node_ptr_t;
+  s: g_opt_block_ptr_t;
+  e: g_opt_stmt_ptr_t;
+  c: g_opt_tree_ptr_t;
+  x: il_$node_ptr_t;
+  neg: boolean;
+  done: boolean;
+begin
+  if b = nil then
+    bug_check('OPT_MAIN_\COMPUTE_ABNORMALITY_DUE_TO_PROC_CALLS -- NIL block%.');
+  for i := b^.first to b^.last do begin
+    t := g_opt_nodes_ptr_t(il_120)^[i];
+    if assert_is_call_to_abnormal_routine(t) then
+      for k := 1 to b^.nsucc do begin
+        s := b^.succ^[k];
+        s^.flags.skip := true;
+        compute_successors(b^.succ^[k]);
+        lang := rshft(ord(il_180^.xc[377]) & 16#70, 4);
+        done := false;
+        if lang in [1, 2, 6] then begin
+          e := s^.last_stmt;
+          if e^.kind = 142 then begin
+            c := g_opt_tree_ptr_t(e^.br_cond);
+            if (c^.kind = 143) and (c^.op = 12) then begin
+              neg := not e^.br_sense;
+              if ((c^.w28 = 7) and neg) or (e^.br_sense and (c^.w28 = 6)) then
+                if s^.nsucc = 2 then begin
+                  x := c^.opnd[2];
+                  if x^.kind in [77..87, 101, 200] then
+                    if x^.int_value = 16#03040003 then begin
+                      assert_cleanup_body(s^.succ^[2]);
+                      done := true;
+                    end;
+                end;
+              if not done then
+                if ((c^.w28 = 6) and neg) or (e^.br_sense and (c^.w28 = 7)) then
+                  if s^.nsucc = 1 then begin
+                    x := c^.opnd[2];
+                    if x^.kind in [77..87, 101, 200] then
+                      if x^.int_value = 16#03040003 then begin
+                        assert_cleanup_body(s^.succ^[1]);
+                        done := true;
+                      end;
+                  end;
+            end;
+          end;
+          if not done then
+            for m := 1 to s^.nsucc do
+              assert_cleanup_body(s^.succ^[m]);
+        end
+        else if lang = 3 then begin
+          e := s^.last_stmt;
+          if e^.kind = 142 then begin
+            c := g_opt_tree_ptr_t(e^.br_cond);
+            if (c^.kind = 143) and (c^.op = 12) then begin
+              neg := not e^.br_sense;
+              if ((c^.w28 = 7) and neg) or (e^.br_sense and (c^.w28 = 6)) then
+                if s^.nsucc = 2 then begin
+                  assert_cleanup_body(s^.succ^[2]);
+                  done := true;
+                end;
+              if not done then
+                if ((c^.w28 = 6) and neg) or (e^.br_sense and (c^.w28 = 7)) then
+                  if s^.succ^[1] <> nil then begin
+                    assert_cleanup_body(s^.succ^[1]);
+                    done := true;
+                  end;
+            end;
+          end;
+          if not done then
+            for m := 1 to s^.nsucc do
+              assert_cleanup_body(s^.succ^[m]);
+        end;
+      end;
+  end;
+end;
+
+{ compute_basic_block_relationships - for each top-level statement
+  (om_stmt_num counting them): a routine's entry sets opt_region and
+  il_180; a statement starting a block gives the block its predecessor
+  (the block before, when reached by linear flow), its successors and
+  their abnormality; a branch makes its target's block a successor of
+  the current one.
+
+  0x0DC708, 0xEE bytes: the block's number in D2. }
+
+procedure compute_basic_block_relationships; internal;
+var
+  n: g_opt_num_t;
+  s: g_opt_stmt_ptr_t;
+  b: g_opt_block_ptr_t;
+  t: g_opt_block_ptr_t;
+begin
+  n := 0;
+  om_stmt_num := n;
+  s := g_opt_stmt_ptr_t(il_d4);
+  while s <> nil do begin
+    if opt_4009c[om_stmt_num]^.hdr.entry then begin
+      opt_region := om_stmt_num;
+      il_180 := opt_4009c[om_stmt_num]^.x48;
+    end;
+    if s^.hdr.first then begin
+      n := n + 1;
+      b := g_opt_blocks_ptr_t(il_11c)^[n];
+      if assert_reached_by_linear_flow_from_previous_basic_block(s) then
+        add_predecessor(b, g_opt_blocks_ptr_t(il_11c)^[n - 1]);
+      compute_successors(b);
+      compute_abnormality_due_to_proc_calls(b);
+    end;
+    if (s^.kind = 142) or (s^.kind = 141) then begin
+      t := g_opt_block_ptr_t(s^.br_target^.xp[13]);
+      if t <> nil then
+        add_predecessor(t, g_opt_blocks_ptr_t(il_11c)^[n]);
+    end;
+    om_stmt_num := om_stmt_num + 1;
+    s := s^.next;
+  end;
+end;
+
+{ compute_depth_first_order_of_basic_blocks - the blocks numbered in
+  depth-first order (opt_select's dfs, n counting down from
+  opt_last_block): first from the blocks without predecessors, then
+  from any block not reached yet, until every block has its number.
+
+  0x0DC7F6, 0xD0 bytes: the count compared with opt_first_block - 1 as
+  longwords before each block; dfs's n through a frame copy. }
+
+procedure compute_depth_first_order_of_basic_blocks; internal;
+var
+  n: g_opt_num_t;
+  i: g_opt_num_t;
+  b: g_opt_block_ptr_t;
+begin
+  n := opt_last_block;
+  for i := opt_first_block to opt_last_block do begin
+    if n = opt_first_block - 1 then
+      exit;
+    b := g_opt_blocks_ptr_t(il_11c)^[i];
+    if not b^.flags.visited and (b^.npreds = 0) then
+      dfs(b, n);
+  end;
+  if n <> opt_first_block - 1 then
+    for i := opt_first_block to opt_last_block do begin
+      b := g_opt_blocks_ptr_t(il_11c)^[i];
+      if not b^.flags.visited then
+        dfs(b, n);
+    end;
+end;
+
+{ compute_dominator_matrix - opt_dom's rows (il_124 + 1 booleans each,
+  from the dom_matrix pool) for blocks 0..opt_last_block; each block's
+  row marks its dominators (the dom chain).
+
+  0x0DC8C6, 0xCE bytes: the size by M$MIU$LLL; both loops counted with
+  `dbf' and a borrow (docs/rev889-patterns.md 17); the second from
+  opt_last_block down to 1. }
+
+procedure compute_dominator_matrix; internal;
+var
+  size: integer32;
+  m: univ_ptr;
+  i: integer32;
+  d: g_opt_block_ptr_t;
+  row: g_opt_dom_row_ptr_t;
+begin
+  size := ((il_124 & 16#FFFF) + 1) * (opt_last_block + 1);
+  m := mem_$alloc(opt_main_8, size);
+  for i := 0 to opt_last_block do begin
+    opt_dom[i] := m;
+    m := univ_ptr(integer32(m) + (il_124 & 16#FFFF) + 1);
+  end;
+  for i := opt_last_block downto 1 do begin
+    d := g_opt_blocks_ptr_t(il_11c)^[i]^.dom;
+    row := opt_dom[i];
+    while d <> nil do begin
+      row^[d^.num] := true;
+      d := d^.dom;
+    end;
+  end;
+end;
+
+{ compute_preds_and_succs_for_dominance - each block's flow edges for
+  dominators: a list of its successors (succs, an edge from the block
+  to each; one empty edge when it has none) and of its predecessors
+  (preds_list, likewise), each edge 16 bytes from gspace.
+
+  0x0DC994, 0x13E bytes: il_11c's address kept in D6; the first edge
+  of each list filled in place, the others pushed in front. }
+
+procedure compute_preds_and_succs_for_dominance; internal;
+var
+  i: g_opt_num_t;
+  k: integer;
+  b: g_opt_block_ptr_t;
+  x: g_opt_block_ptr_t;
+  e: g_opt_edge_ptr_t;
+begin
+  for i := opt_first_block to opt_last_block do begin
+    b := g_opt_blocks_ptr_t(il_11c)^[i];
+    b^.succs := gspace(16);
+    b^.preds_list := gspace(16);
+    e := b^.succs;
+    e^.src := g_opt_blocks_ptr_t(il_11c)^[i];
+    e^.dest := nil;
+    e^.next_succ := nil;
+    e^.next_pred := nil;
+    for k := 1 to b^.nsucc do begin
+      x := b^.succ^[k];
+      e := b^.succs;
+      if e^.dest = nil then
+        e^.dest := x
+      else begin
+        e := gspace(16);
+        e^.dest := x;
+        e^.next_succ := b^.succs;
+        e^.src := g_opt_blocks_ptr_t(il_11c)^[i];
+        e^.next_pred := nil;
+        b^.succs := e;
+      end;
+    end;
+    e := b^.preds_list;
+    e^.dest := g_opt_blocks_ptr_t(il_11c)^[i];
+    e^.src := nil;
+    e^.next_succ := nil;
+    e^.next_pred := nil;
+    for k := 1 to b^.npreds do begin
+      x := b^.pred[k];
+      e := b^.preds_list;
+      if e^.src = nil then
+        e^.src := x
+      else begin
+        e := gspace(16);
+        e^.src := x;
+        e^.next_pred := b^.preds_list;
+        e^.dest := g_opt_blocks_ptr_t(il_11c)^[i];
+        e^.next_succ := nil;
+        b^.preds_list := e;
+      end;
+    end;
+  end;
+end;
+
+{ compute_basic_block_dominance_relationships - the flow edges, the
+  depth-first lists from the first block and from each block not
+  reached from it, the immediate dominators, check_dominators in
+  Fortran when either flag is set (g_opt's), the dominance matrix.
+
+  0x0DCAD2, 0xCA bytes: depth_first_dom's arguments il_180 and the
+  block by address (`move.l #0x169DF0'); a block not reached has no
+  semi (+72). }
+
+procedure compute_basic_block_dominance_relationships(
+    a: boolean;
+    b: boolean); options(val_param); internal;
+var
+  i: g_opt_num_t;
+begin
+  compute_preds_and_succs_for_dominance;
+  depth_first_dom(il_180, g_opt_blocks_ptr_t(il_11c)^[opt_first_block]);
+  for i := opt_first_block to opt_last_block do
+    if g_opt_blocks_ptr_t(il_11c)^[i]^.semi = nil then
+      depth_first_dom(il_180, g_opt_blocks_ptr_t(il_11c)^[i]);
+  dominators(il_180, g_opt_blocks_ptr_t(il_11c)^[opt_first_block]);
+  if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+    if a or b then
+      check_dominators;
+  compute_dominator_matrix;
 end;
