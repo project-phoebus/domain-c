@@ -911,3 +911,38 @@ revisited.
    holes in .rwdi (their zero words left out): the declarations write
    zeros there.  Is +0xA0 a table of its own (92 words, by operator)
    or the end of +0x70's (generate indexes it from +0xA0)?
+119. Translator EE: reg_alloc's compress_graph (cc.m68k 0x0C44C4)
+   clears the moved range's depth (+44, `clr.l (-0x14,A1,D3.l)' with
+   D3 the slot it moved to) among the stores that clear the slot it
+   left (D0): the moved range loses its loop depth, the emptied slot
+   keeps it.  Written as the image does (`r^[i].depth := 0'); probably
+   a slip of the original for `r^[j].depth'.
+
+120. Translator EE: reg_alloc's alloc_ftn_vars (0x0C41C4) sets a
+   strength reduction temporary's class (+11 high nibble) to 6 and then
+   tests it against the static classes 1, 4, 7, 8, 11: the static
+   branch can never be taken.  Written as the image does.
+
+121. Translator EE: reg_color_68k's pickcolor (cc.m68k 0x0C5674) sets
+   its result to 31 and then searches lo..hi with the loop's index in
+   D0, the result's register: when no register is found the image
+   returns hi + 1, not 31 (docs/rev889-patterns.md 80's sharing, here
+   for a result set before the loop).  Not met (color_graph calls it
+   after availcolors found one); written as returning 31.
+
+122. Translator EE: reg_save's registers_consumed_by_fortran_symbol
+   (cc.m68k 0x0EC0B0) compares a Fortran routine with the longword at
+   0x2D2ED8, opt_livevar's data +0, which opt_livevar.pas declares as
+   unused_0 (opt_livevar never addresses it) but opt_general and
+   opt_main (assert_is_call_to_abnormal_routine 0x0DC462, ...) reach
+   absolutely: a routine whose calls disturb every register but
+   FP2..FP7 ([0..17]).  reg_save.pas declares it `opt_abnormal_routine:
+   extern il_$node_ptr_t' until opt_main (or whichever unit owns it) is
+   translated; opt_livevar's cell should then be defined by name.
+
+123. Translator EE: reg_save's heading is now the prelude's
+   (globals_from_backend.ins.pas, reg_save_$regs_t = set of 0..31):
+   add_node calls it and opens no back-end insert, and cc.a88k's
+   target_at_dummies has the routine too.  cg_call's local integer32
+   `regs' takes it through a type transfer; a set type there would
+   read better.

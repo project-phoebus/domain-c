@@ -130,3 +130,18 @@ function sym_$displacement(
 function sym_$displacement_literal_pool(
     p1: univ_ptr;
     p2: univ_ptr): integer32; options(val_param); extern;
+
+{ REG_SAVE - the registers the statement or object n leaves alone: a
+  top-level statement's (registers_preserved_by_statement), else those
+  the object (a routine, a call, a tree) does not consume; all for nil.
+  cc.m68k reg_save.pas 0x0ED478, cc.a88k target_at_dummies.pas 0x27B6C0
+  (which returns none); add_node's add_tn, opt_livevar's varcheck and
+  liveanalysis, cg_call's gen_call: a pointer; D0, a set of register
+  numbers (0..7 D0..D7, 8..15 A0..A7, 16..23 the floating registers;
+  24..31 the extra temporaries a statement needs).  Here because
+  add_node uses it and opens no back-end insert. }
+type
+  reg_save_$regs_t = set of 0..31;
+
+function reg_save(
+    n: il_$node_ptr_t): reg_save_$regs_t; options(val_param); extern;

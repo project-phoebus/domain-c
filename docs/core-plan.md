@@ -377,3 +377,28 @@ emit_clr_fp1, fpa_fop_proc and fpa_temp (headings read off frames and
 generate's calls).  The unit declares add_node's swap_cc (0x2C2080)
 and opt_loop's is_scale_candidate (g_opt.ins.pas's, an insert cg_tree
 does not open) itself.
+
+Translator EE (2026-11-11), reg_alloc: reg_alloc.pas defines the
+insert's five cells; reg_range_t's +6 is degree, +12..+17 the range's
+own conflict cell (conflict: reg_conflict_t, the first of its
+conflicts, the others chained from it: newconflict's 8-byte cells),
++56 avail (the registers it may have, availcolors); flags element 6
+marks a range colourable whatever its conflicts get.  The insert gets
+the headings of newconflict, color_graph and the reg_life routines
+reg_alloc calls (add_range, add_cse_ranges, add_con_range,
+ranges_intersect, combine_ranges, run_interference).  Core change:
+g_opt.ins.pas declares reg_alloc (opt_main's g_opt calls it).
+Translator EE, reg_color_68k: reg_alloc.ins.pas gets add_conflict's
+heading (reg_life's run_interference calls it).  The four routines
+passed to walkconflicts are nested (docs/dpc-gaps.md 21); the gate
+checks a copy with a routine pointer (rc_walk_t) and nil.
+Translator EE, reg_life: reg_life.pas declares get_rlen (c_get_rlen;
+c_externs.ins.pas is not opened); the reg_life headings in
+reg_alloc.ins.pas are checked against the bodies.
+Translator EE, reg_save (started, 17 of 23): reg_save's heading moved
+to globals_from_backend.ins.pas (reg_save_$regs_t, a set of 0..31;
+cg.ins.pas's, opt_livevar's and add_node's removed, cg_call converts
+the set).  registers_consumed_by_tree_operator, _agg_aop,
+_assign_operator, assert_tree_result_depends_on_operands,
+registers_consumed_by_object and registers_preserved_by_statement are
+declared extern in the unit (a TODO in its header).

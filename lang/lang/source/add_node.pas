@@ -215,13 +215,6 @@ type
   an_bytes_t = array [1..16] of char;
   an_bytes_ptr_t = ^an_bytes_t;
 
-{ REG_SAVE - lang/lang/source/reg_save.pas 0x0ED478 (cc.a88k's
-  target_at_dummies.pas 0x27B6C0, which returns []): the registers the
-  statement or object n preserves; add_tn tests 18..23 of a call's.
-  Declared here: add_node opens no insert of reg_save's. }
-function reg_save(
-    n: il_$node_ptr_t): add_node_$phase_t; options(val_param); extern;
-
 { KFOLD - kfold.pas 0x0AF444 (cc.a88k 0x0AF6C4): fold the constants of
   the tree t, whose parent (by address) add_tn passes as a nil constant.
   Declared here as in c_syntax: no kfold insert is known

@@ -488,3 +488,16 @@ lang/lang/source/opt_strength.pas	s/if g_opt_tree_ptr_t\(t\)\^\.op in \[0\.\.10,
 lang/lang/source/opt_strength.pas	s/^\s*43\.\.46, 49\.\.53, 57, 59\.\.62, 74\.\.77,$/ or ((g_opt_tree_ptr_t(t)^.op >= 43) and (g_opt_tree_ptr_t(t)^.op <= 46)) or ((g_opt_tree_ptr_t(t)^.op >= 49) and (g_opt_tree_ptr_t(t)^.op <= 53)) or (g_opt_tree_ptr_t(t)^.op = 57) or ((g_opt_tree_ptr_t(t)^.op >= 59) and (g_opt_tree_ptr_t(t)^.op <= 62)) or ((g_opt_tree_ptr_t(t)^.op >= 74) and (g_opt_tree_ptr_t(t)^.op <= 77))/
 lang/lang/source/opt_strength.pas	s/^\s*86\] then begin$/ or (g_opt_tree_ptr_t(t)^.op = 86) then begin/
 lang/lang/source/opt_strength.pas	s/if op in \[1, 3, 9, 10, 19, 20, 34, 36, 44\.\.46\] then begin/if (op = 1) or (op = 3) or (op = 9) or (op = 10) or (op = 19) or (op = 20) or (op = 34) or (op = 36) or ((op >= 44) and (op <= 46)) then begin { gap 8 }/
+# gap 4 (reg_alloc): dump_lifetimes' writeln (dropped, for the check)
+lang/lang/source/reg_alloc.pas	s/^(\s*)writeln;\s*$/$1; { gap 4 }/
+# gap 8 (reg_alloc): in on constant sets with word elements (every one, as comparisons)
+lang/lang/source/reg_alloc.pas	s{((?:\w+(?:\[[^\]]*\])?\^?\.)*\w+)\s+in\s+\[([^\]]+)\]}{my ($e, $l) = ($1, $2); '((' . join(') or (', map { /^(\d+)\.\.(\d+)$/ ? "($e >= $1) and ($e <= $2)" : "$e = $_" } split(/\s*,\s*/, $l)) . ')) { gap 8 }'}ge
+# gap 21 (reg_color_68k): nested routines passed to walkconflicts (a routine pointer, nil, for the check)
+lang/lang/source/reg_color_68k.pas	s/^(\s*)procedure p\(var x: reg_range_t\);/$1p: rc_walk_t; { gap 21 }/
+lang/lang/source/reg_color_68k.pas	s/^(\s*)p\(reg_ranges\^\[c\^\.num\]\);/$1p^(reg_ranges^[c^.num]); { gap 21 }/
+lang/lang/source/reg_color_68k.pas	s/walkconflicts\((checkout|targetfunctionresult|computecommonregs|setcommonregs), /walkconflicts(nil, /
+# gap 8 (reg_save): in on the top-level kinds set (spans two lines: one comparison, for the check)
+lang/lang/source/reg_save.pas	s/n\^\.kind in \[139\.\.142, 144, 148\.\.151, 188,$/(n^.kind = 139) or (n^.kind = 188) { gap 8 }/
+lang/lang/source/reg_save.pas	s/^\s*191, 214\.\.215, 223\.\.225, 227\.\.228, 231, 233\]$//
+# gap 30 (reg_save): `in' on a set parameter held in a register as an operand of `and' (the parameter's test dropped, for the check)
+lang/lang/source/reg_save.pas	s/\(b in s\) and \(b in \[/(b in [/

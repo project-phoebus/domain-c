@@ -499,6 +499,12 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
   parameter's own parameters (the routines passed are val_param; the
   only trace is the error "Incompatible routine OPTIONS"), so the
   headings give none (a TODO in spos.ins.pas).
+   Also reg_color_68k.pas (translator EE): color_graph passes its
+   nested targetfunctionresult, computecommonregs, setcommonregs and
+   paint's nested checkout to walkconflicts (cc.m68k 0x0C51C0, `pea'
+   of a trampoline at -52, -74, -92, -36); walkconflicts is the unit's
+   own, so the rewrite gives it a routine pointer (rc_walk_t, called
+   with `^') and the calls pass nil.
    Also cg_tree.pas (translator AA): `or assert_is_f_math_op(...)',
    `and consecutivebits(...)' (needs_lib_support 0x0FF0AA, const_mul
    0x0FFF22).  And (translator DD) `or unaligned(...)' (agg_compare_proc
@@ -629,4 +635,22 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
        procedure p;
        begin
          b := i in s^;
+       end;
+
+30. **`in' on a set held in a register as an operand of `and'.**
+   reg_save.pas tally_extra_temp_regs_needed (cc.m68k 0x0EBF4E): `if
+   (b in s) and (b in [27..29]) then ... else if (b in s) and (b in
+   [24..26]) ...' with s a value parameter (a set of 0..31, kept in D0;
+   the image tests `btst D2,D0' before each class's mask).  dpc: "`in`
+   on a set held in a register, as a value, is not supported yet".
+   The rewrite drops the `b in s' tests from the scratch copy.
+   Reproducer:
+
+       module g30;
+       type s_t = set of 0..31;
+       var n: integer;
+       procedure p(s: s_t; b: integer); options(val_param);
+       begin
+         if (b in s) and (b in [27..29]) then
+           n := 1;
        end;
