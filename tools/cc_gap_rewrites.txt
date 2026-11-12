@@ -281,3 +281,7 @@ lang2/source/be_com/ra.pas	s/\.r < 1\.0e-4/.i < 16#38D1B717 { gap 7 }/
 lang2/source/be_com/konst.pas	s/^(\s*)writeln\(.*\);\s*$/${1}; { gap 4 }/
 # gap 7 (konst, translator PB6): a double literal converted to a single (left unset, for the check)
 lang2/source/be_com/konst.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
+# gap 29 (sched, translator PB7): a longword register number in a 12-byte set (set of 0..95; the range test only, for the check)
+lang2/source/be_com/sched.pas	s/\b([nk]( \+ \d+)?) in regs\b/$1 <= 95 { gap 29 }/g
+# gap 38 (sched, translator PB7): a run-time member added to a 12-byte set (left out, for the check)
+lang2/source/be_com/sched.pas	s/regs := regs \+ \[n\];/{ gap 38 }/

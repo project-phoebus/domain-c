@@ -1,0 +1,69 @@
+{ fp_registers_busy.init - a DSEE derived object of be_com/opcodes.def
+  (cc.a88k only): the floating registers each opcode reads and writes,
+  counted in singles (a double 2), as two bytes by opcode: reads at
+  2 opc, writes at 2 opc + 1.  Included by sched.pas (after
+  exs.ins.pas, before utils.ins.pas), whose instr_would_fit keeps a
+  cycle's floating register reads and writes within sched_3158 (set by
+  lir_main) and whose fit_instr adds an issued instruction's to the
+  cycle's counts.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k, the section sched_readonly_tables (0x2BE108, 768 bytes: the
+  opcodes 0..383, those past opc$adj_move (211) all zero).  The
+  section's name is the unit's (as lir_main_readonly_tables and
+  zzzzz_readonly_tables): a variable of sched's own, laid out in a
+  section of the module's name.
+
+  Not known from the original: the variable's name (the derived
+  object's), its type and the file's layout. }
+
+var (sched_readonly_tables)
+  fp_registers_busy: packed array [0..767] of 0..255 := [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 0 undefined }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 8 bgt }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 16 bnn }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 24 fbgt }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 32 trap_hi }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 40 trap_nv }
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  { 48 trapd_gt }
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  { 56 trapd_nn }
+    2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0,  { 64 trapd_fgt }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 72 tstw }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 80 addc }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 88 extend7 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 96 insert }
+    0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 2, 0, 0, 0, 0,  { 104 loadwu }
+    0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,  { 112 mfippsw }
+    0, 0, 1, 0, 1, 0, 1, 0, 2, 0, 0, 0, 0, 1, 0, 0,  { 120 storel }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,  { 128 disable }
+    1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1, 1, 1, 2,  { 136 comi }
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1,  { 144 copys }
+    1, 1, 1, 1, 2, 1, 2, 1, 2, 0, 1, 0, 1, 0, 2, 1,  { 152 truncsi }
+    2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1,  { 160 maxs }
+    2, 2, 2, 1, 2, 2, 4, 2, 4, 2, 4, 0, 2, 0, 2, 0,  { 168 roundd }
+    4, 2, 4, 2, 2, 1, 2, 1, 1, 1, 2, 1, 2, 1, 2, 2,  { 176 mind }
+    4, 2, 4, 2, 2, 1, 2, 1, 1, 1, 4, 2, 4, 2, 2, 1,  { 184 muld }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 192 nop }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 200 label }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 208 costly }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 216 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 224 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 232 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 240 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 248 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 256 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 264 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 272 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 280 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 288 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 296 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 304 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 312 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 320 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 328 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 336 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 344 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 352 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 360 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  { 368 }
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];  { 376 }
