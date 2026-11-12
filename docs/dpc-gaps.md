@@ -787,6 +787,10 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
            n := 1;
          s := s + [k];
        end;
+   Also dbg_life.pas dbg_life_$find_symbols (cc.a88k 0x22DC08, translator
+   PB4): `clobbered := (reg in set32) or (reg + 1 in set32)' with set32
+   a local set of 0..31 (the image keeps it in D5: `btst D0,D5' and
+   `btst D6,D5'); same message.  The rewrite tests the record's set.
 
 31. **A set expression of more than a longword compared with `[]'.**
    final.pas floatop (cc.m68k 0x10FDF0): a double's low 29 bits tested
@@ -890,3 +894,17 @@ tools/cc_gap_rewrites.txt under tr_utils.
 Translator PB3 (dmp.pas) also met gap 4 (dmp_$instruction writes an
 IL node kind as an enumerated value: `write('<object.kind= ',
 an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
+
+35. **An internal error on a function result dereferenced inside an
+   index inside an `in' test, in a large routine.**
+   sched_utils.pas sched_utils_$operand_delay (cc.a88k 0x279266, 0x5E8
+   bytes, translator PB4): `if instruction_attributes[
+   utils_ins_$operands_instruction(o)^.opc].class in su_branchy then'
+   in one arm of a long `case'.  dpc panics: "internal error: insertion
+   index (is 1) should be <= len (is 0) (at .../alloc/src/vec/mod.rs:
+   1972; please report)", at the routine's first line.  The same
+   expression elsewhere in the routine compiles, and so does the whole
+   routine when any one arm is removed; no small reproducer was found.
+   Worked around in the source with a temporary
+   (`i := utils_ins_$operands_instruction(o)'), which the image's code
+   allows (the result is in A0 either way); no gate rule.

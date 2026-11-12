@@ -80,6 +80,8 @@ Conventions the translators should know:
 | `lang2/source/be_com/bin.pas` | 32 | the code's bytes, displacements, exception stubs, .lines and unwind scopes (translator PB; dpc gaps 7, 13, 22) |
 | `lang2/source/be_com/asm.pas` | 21 | the encoder (pass 2), the layout and pipeline NOPs (pass 1), the literal pools, case tables (translator PB2; dpc gaps 22, 25, 32; the .init files by `define`, questions 161) |
 | `lang2/source/be_com/dmp.pas` | 27 | the phases' dumps: blocks, instructions, live ranges, interference graph, MRH (translator PB3; batch A's record fields read through views, their meanings in its comments; phase$ constants in backend.ins.pas; dpc gaps 4, 33, 34) |
+| `lang2/source/be_com/dbg_life.pas` | 24 | the DBG_LIFE phase: spill slots numbered after the complex live ranges, its own seven vectors a block, the pc ranges of each variable's register and slot homes, the debug records chained from the IL nodes (+68 / +54) (translator PB4; dpc gap 30) |
+| `lang2/source/be_com/sched_utils.pas` | 15 | the scheduler's utilities: operand delays, precedence heights (+28 a word during SCHED), snuggle moves next to physical registers' writers and readers (translator PB4; headings narrowed, sched_utils_$flags_t) |
 
 exs.pas (27 routines, 4168 bytes, nested routines with uplevel
 references) was not reached with the core; batch A translated it

@@ -952,3 +952,23 @@ cc.m68k unless marked.
     a static link.**  ltss_on_stores_to_same_addr's nested
     get_the_right_instr (0x229968) is called `pea (A0); bsr' with its
     one argument only, and reads no frame of its parent.
+
+## The debugger's lifetimes and the scheduler's utilities (translator PB4, cc.a88k dbg_life, sched_utils)
+
+129. **A for loop's longword limit read as its low word.**  dbg_life's
+    fill_not_killed_sets counts its live ranges `for i := 1 to
+    rtn^.l192' with an integer index as `move.w (194,A1),D4; subq.w
+    #1,D4' (the longword at +192 read at +194), the slots `move.w
+    (198,A2)' of rtn +196, and write_register's words `move.w
+    (34,A5)' of a longword module variable at +32; write_spilled_var
+    computes `slot + words * 32' into an integer in word arithmetic
+    from the same low word (`lsl.w #5'), where kill_spilled_var,
+    whose result is a longword, reads the whole longword.  dpc reads
+    the longword and narrows.
+130. **A 2-byte argument pad left on the stack across a call for the
+    next call's word.**  find_symbols pops 14 of the 16 bytes pushed
+    for dbg_life_$open_pc_range (`lea (14,SP),SP') and pushes the next
+    call's word without `subq.l #2,SP'; dbg_life_$process_routine pops
+    2 of 4 after dbg_life_$initialize (`addq.l #2,SP') before mrh_$alloc's
+    word: pattern 51 for internal routines.
+

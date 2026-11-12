@@ -234,3 +234,5 @@ lang2/source/be_com/call_conv.pas	s/^(        \{ An aggregate by value: its long
 lang2/source/be_com/call_conv.pas	s/^(        \{ The aggregate done\. \})$/%endif { gap 25 }\n$1/
 # gap 22 (cg_call): ord of a boolean (0, for the check) [kept with dpc ca0dd28: without it the routine meets gap 28, more values live than registers]
 lang/lang/source/cg_call.pas	s/ord\(pass_len\)/0 { gap 22 }/
+# gap 30 (dbg_life): `in' on a local set held in a register as an operand of `or' (the record's set tested instead, for the check)
+lang2/source/be_com/dbg_life.pas	s/clobbered := \(reg in set32\) or \(reg \+ 1 in set32\);/clobbered := (reg in c^.fp_hi) or (reg + 1 in c^.fp_hi); { gap 30 }/
