@@ -408,3 +408,8 @@ _assign_operator, assert_tree_result_depends_on_operands,
 registers_consumed_by_object, registers_preserved_by_statement); no
 insert changed (the statements through g_opt_stmt_t's variants, the
 trees through cg_tree_t).
+Translator HH, emit (finished, 11 of 11): emit.pas defines emit_108
+(+0x108, the record outbin, jmp_br_resolve and unix_objmod declare) and
+declares opinfo's instruction lists (opinfo_insts, 0x2CE8D8) and
+delay's class_size.  Core change: emit_assign's heading moved from
+cg.ins.pas to fpa.ins.pas with `in' descriptors (question 105).

@@ -520,6 +520,8 @@ met in debug_sym_dmp.pas (translator N), where it differs in two ways:
    (registers_consumed_by_tree_operator, cc.m68k 0x0EC8E6) and
    `unaligned(...) or unaligned(...)' (registers_consumed_by_agg_aop
    0x0ECB9C, evaluated whole); the rewrites compare with true.
+   And emit.pas: fnl_slct's `chk_op_restr(...) and chk_op_restr(...)
+   and chk_sz_restr(...)' (cc.m68k 0x0B750A, evaluated whole).
 
 25. **A routine needing more virtual registers than dpc numbers.**
    c_expr_sem.pas expr_op (cc.m68k 0x04CDBA, 0x2B7A bytes of code, some

@@ -648,3 +648,11 @@ cc.m68k unless marked.
     (0x107976) assign the routine on 4 of the 11 entries of a jump
     table.  The registers keep their callers' values; the translation
     leaves the variable unset there too.
+
+## Sets (translator HH, emit.pas)
+
+85. **Two removals from a register set kept apart.**  fnl_slct (cc.m68k
+    0x0B74D0) takes the 68881's features out of its missing set with
+    `andi.w #-9; andi.w #-2' (two statements, `- [3]' and `- [0]'),
+    not merged into one mask as consecutive constant stores to packed
+    fields are (item 10).  dpc does the same.

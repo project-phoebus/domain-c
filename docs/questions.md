@@ -949,3 +949,14 @@ revisited.
    target_at_dummies has the routine too.  cg_call's local integer32
    `regs' takes it through a type transfer; a set type there would
    read better.
+
+124. Translator HH: emit's fnl_slct (cc.m68k 0x0B738E), on its error
+   path (no instruction of the operation fits, or a condition out of
+   range: cgerr 5, then the inline 39's cell from a recursive call),
+   adds the length of its cell variable (A3) to cg_code_bytes after
+   the call: that variable was not set on the path when no entry
+   matched (A3 as the caller left it), and the recursive call has
+   already counted its own cell.  Written as the image does; a slip of
+   the original?  Likewise chk_op_restr (a code above 24), adrlen (an
+   immediate form 6 or 7) and sz_case (a size of 3, 5 or above 7)
+   leave their results unset (D0 holds the selector).
