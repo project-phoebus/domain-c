@@ -20,7 +20,7 @@
   slots: mmt's mmt_call_info_t reads +31, +33..+40).
 
   Not known from the original: the types' and fields' names but those
-  the memory model's reading gives (async, no_reads ...); the presets'
+  the memory model's reading gives (async, no_memory_read ...); the presets'
   meaning beyond how at_call_conv combines them. }
 
 type
@@ -91,10 +91,10 @@ type
     the callee's data section; w14 (22, or the 208 node's) and w20 (the
     preset's reg40) two registers: w14's is clobbered, w20's in ip76;
     nargs (+22) the descriptors; the booleans from +26: nested, b27 the
-    callee is defined here, b28 it may touch memory (cleared with
-    no_reads), b30 its block was made, async (+31: a cleanup handler,
+    callee is defined here, needs_db it may touch memory (cleared with
+    no_memory_read), b30 its block was made, async (+31: a cleanup handler,
     pfm_$cleanup, or the preset's flag 8), cleanup (+32), the memory
-    model's +33..+40 and b41, b42 (from the callee's rtn_t when it was
+    model's +33..+40 and no_fp_cc_write, no_ip_cc_write (from the callee's rtn_t when it was
     compiled first); the register sets as the presets', the callee's own
     clobbers moved from preserved to clobbered.  batch A (PA3); the
     memory model's names from mmt.pas's mmt_call_info_t (question 171). }
@@ -112,21 +112,21 @@ type
     w24: integer;                       { +24: -1, or the 208 node's }
     nested: boolean;                    { +26 }
     b27: boolean;                       { +27 }
-    b28: boolean;                       { +28 }
+    needs_db: boolean;                       { +28 }
     b29: boolean;                       { +29 }
     b30: boolean;                       { +30 }
     async: boolean;                     { +31 }
     cleanup: boolean;                   { +32 }
-    no_reads: boolean;                  { +33 }
-    no_writes: boolean;                 { +34 }
-    no_reads_16: boolean;               { +35 }
-    no_writes_16: boolean;              { +36 }
-    own_only: boolean;                  { +37 }
-    no_class_1: boolean;                { +38 }
-    no_static: boolean;                 { +39 }
-    no_dynamic: boolean;                { +40 }
-    b41: boolean;                       { +41 }
-    b42: boolean;                       { +42 }
+    no_memory_read: boolean;                  { +33 }
+    no_memory_write: boolean;                 { +34 }
+    no_arg_block_read: boolean;               { +35 }
+    no_arg_block_write: boolean;              { +36 }
+    no_pointer_dereference: boolean;                  { +37 }
+    common_block_untouched: boolean;                { +38 }
+    static_storage_untouched: boolean;                 { +39 }
+    uplevel_dynamic_storage_untouched: boolean;                { +40 }
+    no_fp_cc_write: boolean;                       { +41 }
+    no_ip_cc_write: boolean;                       { +42 }
     pad43: char;                        { +43 }
     fp_preserved: array [0..1] of integer32;   { +44 }
     fp_clobbered: array [0..1] of integer32;   { +52 }

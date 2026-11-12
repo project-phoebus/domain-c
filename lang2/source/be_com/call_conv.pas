@@ -872,20 +872,20 @@ begin
     props := mrh_$alloc(heap^, size);
   props^.link := link;
   props^.w12 := 3;
-  props^.b28 := true;
+  props^.needs_db := true;
   if node^.kind = 208 then begin
     props^.w24 := ord(node^.xc[47]);
     if props^.w24 > 127 then
       props^.w24 := props^.w24 - 256;
     props^.w14 := ord(node^.xc[46]);
     if ord(node^.xc[48]) < 128 then begin
-      props^.b28 := false;
-      props^.no_reads := true;
-      props^.no_reads_16 := true;
+      props^.needs_db := false;
+      props^.no_memory_read := true;
+      props^.no_arg_block_read := true;
     end;
     if (ord(node^.xc[48]) & 16#40) = 0 then begin
-      props^.no_writes := true;
-      props^.no_writes_16 := true;
+      props^.no_memory_write := true;
+      props^.no_arg_block_write := true;
     end;
   end
   else begin
@@ -911,7 +911,7 @@ begin
   if blk <> nil then begin
     props^.b27 := blk^.unused_374.cls = 0;
     if not props^.b27 then
-      props^.no_dynamic := true;
+      props^.uplevel_dynamic_storage_untouched := true;
     props^.data_sect := blk^.data_sect;
     props^.b30 := blk^.unused_374.made;
   end
@@ -951,25 +951,25 @@ begin
   if blk <> nil then
     if blk^.rtn <> nil then
       with blk^.rtn^ do begin
-        props^.b28 := f226.b226_1;
-        props^.no_reads := f226.no_reads;
-        props^.no_writes := f226.no_writes;
-        props^.no_reads_16 := f226.no_reads_16;
-        props^.no_writes_16 := f226.no_writes_16;
-        props^.own_only := f228.own_only;
-        props^.no_class_1 := f226.no_class_1;
-        props^.no_static := f228.no_static;
-        props^.no_dynamic := f228.no_dynamic;
-        props^.b41 := f228.b228_4;
-        props^.b42 := f228.b228_3;
-        m0 := ~fp_clobbered[0] & props^.fp_clobbered[0];
-        props^.fp_clobbered[0] := fp_clobbered[0];
+        props^.needs_db := f226.needs_db;
+        props^.no_memory_read := f226.no_memory_read;
+        props^.no_memory_write := f226.no_memory_write;
+        props^.no_arg_block_read := f226.no_arg_block_read;
+        props^.no_arg_block_write := f226.no_arg_block_write;
+        props^.no_pointer_dereference := f228.no_pointer_dereference;
+        props^.common_block_untouched := f226.common_block_untouched;
+        props^.static_storage_untouched := f228.static_storage_untouched;
+        props^.uplevel_dynamic_storage_untouched := f228.uplevel_dynamic_storage_untouched;
+        props^.no_fp_cc_write := f228.no_fp_cc_write;
+        props^.no_ip_cc_write := f228.no_ip_cc_write;
+        m0 := ~written_fp[0] & props^.fp_clobbered[0];
+        props^.fp_clobbered[0] := written_fp[0];
         props^.fp_preserved[0] := props^.fp_preserved[0] ! m0;
-        m0 := ~fp_clobbered[1] & props^.fp_clobbered[1];
-        props^.fp_clobbered[1] := fp_clobbered[1];
+        m0 := ~written_fp[1] & props^.fp_clobbered[1];
+        props^.fp_clobbered[1] := written_fp[1];
         props^.fp_preserved[1] := props^.fp_preserved[1] ! m0;
-        m0 := ~ip_clobbered & props^.ip_clobbered;
-        props^.ip_clobbered := ip_clobbered;
+        m0 := ~written_ip & props^.ip_clobbered;
+        props^.ip_clobbered := written_ip;
         props^.ip_preserved := props^.ip_preserved ! m0;
       end;
 

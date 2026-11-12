@@ -687,11 +687,11 @@ type
     memory_lr: lr_ptr_t;                { +144: the memory live range
                                           (df_utils: "Memory LR"; batch
                                           A) }
-    ip_clobbered: integer32;            { +148: the integer registers it
+    written_ip: integer32;              { +148: dmp's written_ip; the integer registers it
                                           clobbers (call_conv: a later
                                           call's conventions take them;
                                           batch A, PA3) }
-    fp_clobbered: array [0..1] of integer32;   { +152: the floating
+    written_fp: array [0..1] of integer32;     { +152: written_fp; the floating
                                           registers 32..63, 0..31 it
                                           clobbers (call_conv) }
     space160: array [160..179] of char; { +160 }
@@ -715,35 +715,36 @@ type
     f226: packed record                 { +226 (batch A: fga) }
       b226_7, b226_6, b226_5, b226_4, b226_3: boolean;
       b226_2: boolean;                  { .2: sets b226_0 (fga) }
-      b226_1: boolean;                  { .1: call_conv's b28 (may touch
-                                          memory) }
+      needs_db: boolean;                { .1: dmp's "needs_db" (call_conv's
+                                          needs_db; batch A, PA3: was
+                                          b226_1) }
       b226_0: boolean;                  { .0: the AP read may be taken
                                           out of the RETURN (fga) }
       b227_7: boolean;                  { +227 }
       b227_6: boolean;                  { .6: some block may be resumed
                                           asynchronously (fga) }
       b227_5: boolean;
-      no_reads: boolean;                { .4: it reads no memory (the
-                                          memory model's properties of
-                                          the routine, which call_conv
+      no_memory_read: boolean;          { .4: the memory model's
+                                          properties of the routine (mmt
+                                          sets them), which call_conv
                                           copies to the conventions of a
-                                          later call: call_conv.ins.pas
-                                          +33..+40; batch A (PA3): were
+                                          later call (call_conv.ins.pas
+                                          +33..+42); the names dmp's
+                                          printout's (batch A, PA3: were
                                           b227_4 .. b227_0, b228_7 ..
-                                          b228_5) }
-      no_writes: boolean;               { .3: it writes none }
-      no_reads_16: boolean;             { .2: no class 16 read }
-      no_writes_16: boolean;            { .1: no class 16 written }
-      no_class_1: boolean;              { .0: no class 1 touched (mmt) }
+                                          b228_3) }
+      no_memory_write: boolean;         { .3 }
+      no_arg_block_read: boolean;       { .2: class 16 }
+      no_arg_block_write: boolean;      { .1 }
+      common_block_untouched: boolean;  { .0: class 1 }
       end;
     f228: packed record                 { +228 }
-      no_static: boolean;               { .7: no static class touched
+      static_storage_untouched: boolean;    { .7 }
+      no_pointer_dereference: boolean;  { .6: neither class 12 nor 13
                                           (mmt) }
-      own_only: boolean;                { .6: it touches only what is
-                                          passed (mmt: neither class 12
-                                          nor 13) }
-      no_dynamic: boolean;              { .5: no dynamic class (mmt) }
-      b228_4, b228_3: boolean;          { .4, .3 (call_conv's b41, b42) }
+      uplevel_dynamic_storage_untouched: boolean;   { .5 }
+      no_fp_cc_write: boolean;          { .4 }
+      no_ip_cc_write: boolean;          { .3 }
       b228_2: boolean;                  { .2 (tr_utils) }
       b228_1, b228_0: boolean;
       end;

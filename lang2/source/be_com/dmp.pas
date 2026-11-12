@@ -949,21 +949,21 @@ end;
 procedure print_register_if_assigned(
     lr: lr_ptr_t); options(val_param, internal);
 begin
-  if lr^.f2.b3_7 then begin
+  if lr^.f2.physical then begin
     if lr^.rrp * [rrp$fp_reg, rrp$ip_reg] = [] then begin
-      if lr^.f2.b2 = 30 then
+      if lr^.f2.reg = 30 then
         vfmt_$write(', IP CONDITION CODES%$')
-      else if lr^.f2.b2 = 31 then
+      else if lr^.f2.reg = 31 then
         vfmt_$write(', FP CONDITION CODES%$')
       else
-        vfmt_$write(', lr^.register = %ld but no type bits%$', integer32(lr^.f2.b2));
+        vfmt_$write(', lr^.register = %ld but no type bits%$', integer32(lr^.f2.reg));
     end
     else begin
       vfmt_$write(', ASSIGNED TO %$');
       if rrp$ip_reg in lr^.rrp then
-        vfmt_$write('R%ld%$', integer32(lr^.f2.b2))
+        vfmt_$write('R%ld%$', integer32(lr^.f2.reg))
       else
-        vfmt_$write('F%ld%$', integer32(lr^.f2.b2));
+        vfmt_$write('F%ld%$', integer32(lr^.f2.reg));
     end;
     if lr^.f2.b3_6 then
       vfmt_$write(', NO_MODIFY%$');
@@ -1261,12 +1261,12 @@ var
   len: integer;
   reg: integer32;
 begin
-  if lr^.f2.b3_7 and (at_backend_phase < phase$ra) then begin
+  if lr^.f2.physical and (at_backend_phase < phase$ra) then begin
     if lr^.rrp * [rrp$fp_reg, rrp$ip_reg] <> [] then
       goto 2;
-    if lr^.f2.b2 = 30 then
+    if lr^.f2.reg = 30 then
       name.c[1] := 'i'
-    else if lr^.f2.b2 = 31 then
+    else if lr^.f2.reg = 31 then
       name.c[1] := 'f'
     else
       goto 1;
@@ -1279,7 +1279,7 @@ begin
   vfmt_$encode('%3ZWD %$', name.c, 4, len, lr^.num);
   goto 9;
 2:
-  reg := lr^.f2.b2;
+  reg := lr^.f2.reg;
   if rrp$fp_reg in lr^.rrp then
     name.c[1] := 'f'
   else if reg = target_properties.p_14[1] then begin
@@ -2022,27 +2022,27 @@ begin
   if rtn^.f226.b227_6 then
     vfmt_$write(', asynchronous return%$');
   vfmt_$write('%/   %$');
-  if rtn^.f226.b226_1 then
+  if rtn^.f226.needs_db then
     vfmt_$write(' needs_db%$');
-  if rtn^.f226.b227_4 then
+  if rtn^.f226.no_memory_read then
     vfmt_$write(' no_memory_read%$');
-  if rtn^.f226.b227_3 then
+  if rtn^.f226.no_memory_write then
     vfmt_$write(' no_memory_write%$');
-  if rtn^.f226.b227_2 then
+  if rtn^.f226.no_arg_block_read then
     vfmt_$write(' no_arg_block_read%$');
-  if rtn^.f226.b227_1 then
+  if rtn^.f226.no_arg_block_write then
     vfmt_$write(' no_arg_block_write%$');
-  if rtn^.f228.b228_6 then
+  if rtn^.f228.no_pointer_dereference then
     vfmt_$write(' no_pointer_dereference%$');
-  if rtn^.f226.b227_0 then
+  if rtn^.f226.common_block_untouched then
     vfmt_$write(' common_block_untouched%$');
-  if rtn^.f228.b228_7 then
+  if rtn^.f228.static_storage_untouched then
     vfmt_$write(' static_storage_untouched%$');
-  if rtn^.f228.b228_5 then
+  if rtn^.f228.uplevel_dynamic_storage_untouched then
     vfmt_$write(' uplevel_dynamic_storage_untouched%$');
-  if rtn^.f228.b228_4 then
+  if rtn^.f228.no_fp_cc_write then
     vfmt_$write(' no_fp_cc_write%$');
-  if rtn^.f228.b228_3 then
+  if rtn^.f228.no_ip_cc_write then
     vfmt_$write(' no_ip_cc_write%$');
   if rtn^.f226.b226_0 then begin
     if (r^.save_reg_4 <> 31) and (r^.save_reg_4 <> -1) then
@@ -2119,9 +2119,9 @@ begin
     while lr <> nil do begin
       vfmt_$write('%M4A%$', dmp_$three_char_lr_name_from_lr(lr));
       print_properties(lr^.rrp, lr^.f2.b3_4, lr^.f2.b3_1, 'U%$', false);
-      if lr^.f2.b3_7 then begin
-        vfmt_$write(', LR#%3ZWD = %2ZLD%$', lr^.num, integer32(lr^.f2.b2));
-        if lr^.f2.b3_7 then begin
+      if lr^.f2.physical then begin
+        vfmt_$write(', LR#%3ZWD = %2ZLD%$', lr^.num, integer32(lr^.f2.reg));
+        if lr^.f2.physical then begin
           if lr^.f2.b3_6 then
             vfmt_$write(', NO_MODIFY%$');
           if lr^.f2.b3_5 then
@@ -2139,7 +2139,7 @@ begin
         discard(sym_$display_symbol_print_name(lr^.node20));
         vfmt_$write('"%$');
       end;
-      print_memory_home(lr^.sym);
+      print_memory_home(lr^.memory_home);
       vfmt_$write('%.');
       if not at_backend_switches.sw6 then begin
         if at_backend_phase = phase$dbg_life then begin
