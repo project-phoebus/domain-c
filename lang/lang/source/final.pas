@@ -2813,6 +2813,170 @@ begin
     final_$addr_adjust_value := 0;
 end;
 
+{ merge_move_sub - a move.l of an immediate to a data register (op 2)
+  followed by a subtract of an immediate from it (c, op 33): the move
+  given the difference (smcontk), c removed and replaced by the move.
+
+  0x10EC22, 0xD8 bytes, no A5 load: c by address; the difference at -8;
+  the answer is not read by its caller. }
+
+function merge_move_sub(
+    in out c: codegen_$cell_ptr_t): boolean; internal;
+var
+  r: boolean;
+  s: codegen_$cell_ptr_t;
+  m: codegen_$cell_ptr_t;
+  v: integer32;
+begin
+  r := false;
+  s := c;
+  if (s^.op = 33) and (s^.ads2.f1 = 1) and (s^.ads2.f2 <= 7) and
+     (s^.ads1.f1 = 3) then begin
+    m := prvlcc(s);
+    if (m^.op = 2) and (m^.ads2.f1 = 1) and (m^.ads2.f2 = s^.ads2.f2) and
+       (m^.ads1.f1 = 3) then begin
+      r := true;
+      v := il_$node_ptr_t(m^.ads1.x)^.int_value -
+           il_$node_ptr_t(s^.ads1.x)^.int_value;
+      m^.ads1.x := integer32(smcontk(81, v));
+      detach(c);
+      c := m;
+    end;
+  end;
+  merge_move_sub := r;
+end;
+
+{ final_$merge_movea_adjust - a movea between address registers (kind
+  4, op 5) followed by an add or subtract quick (c, kind 5, ops 22..24,
+  31..33) to its destination, the codes not tested after: c made a lea
+  (kind 4, op 12) from the movea's source with the adjustment as its
+  displacement (final_$addr_adjust_value), the movea removed.
+
+  0x10ECFA, 0x124 bytes, no A5 load: the registers' tests in #0xFF00. }
+
+function final_$merge_movea_adjust(
+    c: codegen_$cell_ptr_t): boolean; options(val_param); internal;
+var
+  r: boolean;
+  p: codegen_$cell_ptr_t;
+  v: integer32;
+begin
+  r := false;
+  p := prvlcc(c);
+  if (c^.kind = q_instyp) and (c^.op in [22..24, 31..33]) and
+     (p^.kind = a_instyp) and (p^.op = 5) and (p^.ads1.f1 = 1) and
+     (p^.ads1.f2 in [8..15]) and (c^.ads2.f1 = 1) and
+     (c^.ads2.f2 in [8..15]) and sameaddr(c^.ads2, p^.ads2) and
+     not testcc(nxtlcc(c), 15) then begin
+    r := true;
+    v := final_$addr_adjust_value(c);
+    c^.kind := a_instyp;
+    c^.op := 12;
+    c^.ads1.f1 := 2;
+    c^.ads1.f2 := p^.ads1.f2;
+    c^.ads1.y := v;
+    c^.size := ilength(c);
+    detach(p);
+  end;
+  final_$merge_movea_adjust := r;
+end;
+
+{ merge_stack_adjusts - two stack adjusters in a row (c and the next)
+  merged into c: both removed when they cancel (c then the cell before
+  it), an addq or subq (kind 5, op 24 or 33) of up to 8, else a lea
+  (kind 4, op 12) from (SP) of the sum's magnitude (as the image has
+  it: the sign is lost); the second removed.
+
+  0x10EE1E, 0x112 bytes, no A5 load: c by address; the magnitude
+  compared unsigned (`bhi'). }
+
+procedure merge_stack_adjusts(
+    in out c: codegen_$cell_ptr_t); internal;
+var
+  n: codegen_$cell_ptr_t;
+  pv: codegen_$cell_ptr_t;
+  s: integer32;
+  a: integer32;
+begin
+  n := nxtlcc(c);
+  if n <> fn_sect^.head then
+    if is_stack_adjuster(c) and is_stack_adjuster(n) then begin
+      s := final_$addr_adjust_value(c);
+      s := final_$addr_adjust_value(n) + s;
+      if s = 0 then begin
+        pv := prvlcc(c);
+        detach(c);
+        c := pv;
+      end
+      else begin
+        a := s;
+        if a < 0 then
+          a := -a;
+        if a <= 8 then begin
+          c^.kind := q_instyp;
+          c^.ads1.f1 := 3;
+          if s < 0 then
+            c^.op := 33
+          else
+            c^.op := 24;
+          c^.ads1.x := integer32(smcontk(81, a));
+        end
+        else begin
+          c^.kind := a_instyp;
+          c^.op := 12;
+          c^.ads1.f1 := 2;
+          c^.ads1.f2 := 15;
+          c^.ads1.y := a;
+          c^.ads1.x := 0;
+        end;
+      end;
+      detach(n);
+    end;
+end;
+
+{ final_$logicize_opts - scc c (ops 124..139) followed by two
+  instructions of ops 58 and 8 (not labels, lines or block marks)
+  replaced by one instruction (kind 8, op 41) of the immediate 1 (f6 2)
+  on the first's destination; or followed by an instruction of kind 3,
+  op 61, on c's destination (no untouchable memory, the codes not
+  tested after): that instruction removed and c's condition reversed.
+  The cell after c.
+
+  0x10FFA4, 0x168 bytes, no A5 load. }
+
+function final_$logicize_opts(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+var
+  n1: codegen_$cell_ptr_t;
+  n2: codegen_$cell_ptr_t;
+  k: codegen_$cell_ptr_t;
+begin
+  n1 := nxtlcc(c);
+  n2 := nxtlcc(n1);
+  if (c^.op in [124..139]) and not (n1^.kind in [0, 24, 32..33]) and
+     (n1^.op = 58) and not (n2^.kind in [0, 24, 32..33]) and
+     (n2^.op = 8) then begin
+    k := getcodecell(i_instyp);
+    k^.op := 41;
+    k^.ads1.f1 := 3;
+    k^.ads1.x := integer32(smcontk(81, 1));
+    k^.ads1.f6 := 2;
+    k^.ads2 := n1^.ads2;
+    k^.size := ilength(k);
+    detach(n1);
+    detach(n2);
+    after(c, k);
+  end
+  else if (n1^.kind = dest1_sz_instyp) and (n1^.op = 61) and
+          sameaddr(c^.ads2, n1^.ads2) and
+          not has_untouchable_mem_attrs(c^.ads2) and
+          not testcc(nxtcc(c), 15) then begin
+    detach(n1);
+    reversecond(c);
+  end;
+  final_$logicize_opts := c^.next;
+end;
+
 { final_$stack_is_altered - between link c and its unlk (21) the code
   calls, uses op 13, or changes SP (15) or A6 (14).
 
