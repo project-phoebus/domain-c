@@ -18,8 +18,8 @@
   register's value to D0). }
 procedure emit_load_store(
     op: integer;
-    in out a: codegen_$uads_t;
-    in out b: codegen_$uads_t;
+    in a: codegen_$uads_t;
+    in b: codegen_$uads_t;
     size: integer); options(val_param); extern;
 
 { EMIT_ASSIGN - a move of size size from src to dst, a floating
@@ -38,14 +38,14 @@ procedure emit_assign(
 procedure emit_mul_add(
     op: integer;
     size: integer;
-    in out a: codegen_$uads_t;
-    in out b: codegen_$uads_t); options(val_param); extern;
+    in a: codegen_$uads_t;
+    in b: codegen_$uads_t); options(val_param); extern;
 
 procedure emit_div_sub(
     op: integer;
     size: integer;
-    in out a: codegen_$uads_t;
-    in out b: codegen_$uads_t); options(val_param); extern;
+    in a: codegen_$uads_t;
+    in b: codegen_$uads_t); options(val_param); extern;
 
 { PUSH_FPA_OPR - node n's value of size size given to the FPA as
   operand k (x: cg_assign passes 16).  fpa 0x0B9472: 8 a pointer, 12,
@@ -61,8 +61,8 @@ procedure push_fpa_opr(
   descriptors' addresses. }
 procedure emit_neg(
     size: integer;
-    in out a: codegen_$uads_t;
-    in out b: codegen_$uads_t); options(val_param); extern;
+    in a: codegen_$uads_t;
+    in b: codegen_$uads_t); options(val_param); extern;
 
 { EMIT_FMATH_TOP - the 68881's math function op (cg_tree's
   tree_fn_inst) of size size on operand b into a.  fpa 0x0B8652: 8 and
@@ -70,16 +70,16 @@ procedure emit_neg(
 procedure emit_fmath_top(
     op: integer;
     size: integer;
-    in out a: codegen_$uads_t;
-    in out b: codegen_$uads_t); options(val_param); extern;
+    in a: codegen_$uads_t;
+    in b: codegen_$uads_t); options(val_param); extern;
 
 { EMIT_EXTEND - a conversion of operand b of size from to a of size
   size (FPA1).  fpa 0x0B8864: 8 a word, 10 and 14 the descriptors'
   addresses, 18 a word. }
 procedure emit_extend(
     size: integer;
-    in out a: codegen_$uads_t;
-    in out b: codegen_$uads_t;
+    in a: codegen_$uads_t;
+    in b: codegen_$uads_t;
     from: integer); options(val_param); extern;
 
 { EMIT_COMPARE - the FPA1 comparison of size size of operands a and b
@@ -87,8 +87,8 @@ procedure emit_extend(
   10 and 14 the descriptors' addresses, 18 a word. }
 procedure emit_compare(
     size: integer;
-    in out a: codegen_$uads_t;
-    in out b: codegen_$uads_t;
+    in a: codegen_$uads_t;
+    in b: codegen_$uads_t;
     cc: integer); options(val_param); extern;
 
 { EMIT_JSR - a call of the FPA's routine op of size size (x: a
