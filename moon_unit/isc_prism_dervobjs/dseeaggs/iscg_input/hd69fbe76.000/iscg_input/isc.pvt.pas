@@ -42,7 +42,23 @@ procedure dump_solution(
     depth: integer;
     deep: boolean); options(val_param); extern;
 
-{ ISC_PASS_1_BEGIN_COMPILATION - isc_pass_1_main's tables set up for
+{ ISC_PRINT_IL_NODE - node written on the standard output with its
+  static attributes and the inherited attributes inh, indented by
+  depth.  isc_debug 0x0BD1DC, 0x168C0 bytes: node 8, inh 12, depth a
+  longword at 16 (read as its low word); called from pass_1 with
+  depth 0 (`clr.l'; translator PE). }
+procedure isc_print_il_node(
+    node: univ_ptr;
+    inh: inherited_attributes_ptr_t;
+    depth: integer32); options(val_param); extern;
+
+{ PRINT_PERMISSIBLE_SOLUTION_KINDS - the solution kinds of kinds written
+  on the standard output.  isc_debug 0x0D8E1A, 0x388 bytes: kinds a
+  longword at 8; called from pass_1 (translator PE). }
+procedure print_permissible_solution_kinds(
+    kinds: solution$set_t); options(val_param); extern;
+
+{ ISC_PASS_1_BEGIN_COMPILATION -isc_pass_1_main's tables set up for
   the compilation.  0x0EFE96, 0x626 bytes; no parameters (called from
   isc_main's isc_$begin_compilation; translator PD2). }
 procedure isc_pass_1_begin_compilation; extern;

@@ -2244,3 +2244,31 @@ revisited.
    **Lead, provisional:** agreed: isc_main is done (PD2); isc_debug is
    translated by hand, with the generator emitting only its generated
    parts (dump_solution's field list) into a marked include.
+271. Translator PE, isc_debug: **inherited_attributes_t's field names.**
+   isc_print_il_node prints every inherited attribute under the
+   generator's name (isc_attribute_records.ins.pas's names first):
+   node +0 `il', top +4 `exception_frame', stmt +12 `original_il', l16
+   +16 `conditional_target' (a label: label_to_string), call +20
+   `call_instruction_ptr', precision +24 `fetch_precision', available
+   +28 `required_precision', pos.line +32 `source_line_number',
+   pos.stmt +34 `stmt_number', b36 `parent_il_kind' (an il$t), f38.arith
+   +38 `required_arithmetic', +39 b7 `conditional_sense', b6
+   `immediate_parent_has_signed', b5 `immediate_parent_wants_lvalue', b4
+   `immediate_parent_wants_set_temporary', b3
+   `immediate_parent_wants_signed', preserve (b2) `inside_a_cse'.  The
+   insert is a derived object of the generator's input like
+   isc_solution_fields.ins.pas.  Rename with question 267's rename (one
+   mechanical change over the ISC units and lir's lir_3b80 view), or
+   keep?  Not decided here: isc_debug uses the insert's names, with the
+   image's in its comment.
+272. Translator PE, isc_debug: **the IL description in the generator's
+   input.**  isc_print_il_node is generated (docs/iscg-design.md 9): one
+   arm per IL node kind of il$t writing that kind's static attributes
+   (name, type, node offset), nested arms per operator for assign_node,
+   tree_node and cmp_tree_node.  isc_debug.pas carries them as 54 view
+   records (pin_<kind>_t, named as printed) and the arms, in marked
+   regions.  Should the generator's input declare the IL node kinds'
+   static attributes, so the generator emits the views and the arms
+   (and could emit isc_types.ins.pas's isc_node_t variants from the same
+   description), or should these regions stay hand-maintained text that
+   the generator copies?  Not decided here.

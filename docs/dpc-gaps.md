@@ -1181,3 +1181,31 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
    Reproducer:
 
 
+
+46. **A routine longer than 32 KB: a `case' arm beyond a 16-bit table
+   offset.**  isc_debug.pas isc_print_il_node (cc.a88k 0x0BD1DC, 0x168C0
+   bytes, translator PE): a `case' of 153 kinds whose arms reach 92 KB
+   past the jump table.  Rev 8.89 makes every table entry a 4-byte stub
+   `jmp (-n,A5)' into a cell of the module's data holding `jmp abs.l'
+   to the arm (docs/rev889-patterns.md 164).  dpc: "a `case` arm beyond
+   the reach of a 16-bit table offset is not supported yet" (and, best
+   effort, "a branch beyond the reach of a 16-bit displacement").  The
+   gate does not meet it: the gap-4 rule drops the writes, and the
+   routine compiles to 0x4B0C bytes.  With the writes compiled (gap 4
+   fixed) a gap-25-style rule will be needed, leaving arms out of the
+   check.  Reproducer:
+
+       module g46;
+       procedure q(a, b, c: integer32); options(val_param); extern;
+       procedure p(k: integer);
+       begin
+         case k of
+           1: begin
+             q(1, 2, 3);   { ... repeated 3000 times }
+             end;
+           2: q(4, 5, 6);
+           3: q(7, 8, 9);
+           4: q(10, 11, 12);
+           5: q(13, 14, 15);
+         end;
+       end;

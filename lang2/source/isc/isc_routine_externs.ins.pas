@@ -1160,7 +1160,16 @@ function arg_loc_t_to_string(
 function basic_block_to_string: char; extern;
 function block_rec_to_string(
     b: il_$node_ptr_t): char; options(val_param); extern;
-function case_index_array_to_string: char; extern;
+{ ISC: case_index_array_to_string's parameter (translator PE): isc_
+  debug's dump_solution passes a solution's +136 by address (`pea
+  (136,A0)'), the rules' byte locals from +136 to the pointer locals
+  at +352 less the seven already_ flags (+342 .. +348); the routine
+  does not read it. }
+type
+  isc_case_index_array_t = array [136..341] of 0..255;
+
+function case_index_array_to_string(
+    var case_value: isc_case_index_array_t): char; extern;
 function il_node_to_empty_string(
     node: univ_ptr): char; options(val_param); extern;
 

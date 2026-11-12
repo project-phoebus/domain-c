@@ -1244,3 +1244,42 @@ cc.m68k unless marked.
     (+81 bits 5 and 4) with `moveq #48,D0; or.w D0,(80,A2)': the word at
     +80 covers the byte at +81.  Whether two assignments were merged by
     the compiler or the generator wrote one statement is not known.
+
+## isc_debug (translator PE, cc.a88k)
+
+167. **Every entry of a far `case' table has a stub of its own.**
+    isc_print_il_node's jump tables (0x0BDE48: 153 entries; the
+    assignment operators' 0x0BE6E6: 37; the tree operators' 0x0CA958:
+    88) give each entry a 4-byte `jmp (-n,A5)' stub, even the 89
+    entries that go to the otherwise arm (`jmp (-20,A5)') and the 10
+    that go to the case's end (`jmp (-244,A5)'); the near arms of the
+    nested tables are reached directly.  Pattern 164 counted the thunk
+    cells: they are 53, A5-12 .. A5-428 (eight bytes nothing reads
+    below them, from A5-436), each used by exactly one stub or arm end
+    except -20 (90), -244 (28) and -380 (96).
+168. **A long routine repeats its identifier tables.**  The writes of an
+    enumerated value pass the type's identifier table pc-relative
+    (`pea (d16,PC)'), so a routine longer than 32 KB gets a copy within
+    reach of each group of writes: an_kind_t's at 0x0BD2D2, 0x0C523A and
+    0x0D44BE, the tree operators' at 0x0C69A4, 0x0CE4C6 and 0x0D3F0C,
+    the variable allocation kinds' at 0x0C7A7C, 0x0D2E18 and 0x0D5D6C,
+    and so on (tools/cc_enumnames.py lists them all), between the arms.
+169. **An enumerated value held in a byte written through a longword
+    temporary.**  `write(t(ord(b)):1)' for a byte field b: `clr.l D0;
+    move.b (n,A0),D0; swap D0; clr.w D0; move.l D0,(-8,A6); pea
+    (-8,A6)', so the word at -8 holds the value (a 4-bit or 2-bit field
+    the same, through `and.b'/`and.w', `lsr.l'), with the identifier
+    table and `move.l #16#10000' (width 1, no digits) and format
+    16#0F65.  A word field is passed by its own address.
+170. **pas_$write's format words seen in isc_debug** (the high byte the
+    default width, bits 7..6 the width's form, 5..4 the size, 3..0 the
+    kind: source/evidence/lib/ftnlib/pasio.codegen.md): 16#0A71
+    integer32 with a width, 16#0A31 integer32 without one (pointers
+    written as integers: `write(integer32(p))'), 16#0A60 integer,
+    16#0A68 a word subrange 0..65535 (unsigned), 16#0A79 an unsigned
+    longword (a byte subrange through `clr.l; move.b' into a temporary,
+    or a 0.. subrange longword field), 16#0F54 boolean (a packed one
+    through `btst; sne' or `tst.b; smi' into a byte temporary), 16#0F65
+    enumerated, 16#1877 double with a width, 16#0112 char (also a
+    printer function's char result, stored to a byte temporary),
+    16#0033 and 16#0023 character arrays.
