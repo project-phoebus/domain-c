@@ -70,8 +70,8 @@ when this tree is merged).
   rule) and 45 (a `for' loop from a negative start): fixed in 5534be4**,
   with gap 43 (an initialized varying string).  The rules removed and
   the gap 44 data cases (cargs, prfpkg, list_tree's line) now match; ass's
-  program_name still differs: the image has the length, the text and
-  one NUL with the rest unset, dpc blank-pads (reported).
+  program_name, which differed (the image ends the text with one NUL,
+  the rest unset), matches since dpc 6d33696.
 - Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
   spiller finds values to spill but runs out of virtual register
   numbers (240 per class) adding the reloads, and the colouring's

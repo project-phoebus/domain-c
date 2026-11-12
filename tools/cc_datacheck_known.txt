@@ -20,4 +20,3 @@ lang2/source/be_com/ra.pas	a88k	+0x590-+0x5A0	ra_masks: dpc lays them after the 
 lang2/source/be_com/ra_utils.pas	a88k	+0x0-+0x10	the spill classes' kinds: dpc lays them after the defined cells (all present)
 lang/lang/source/cg_tree.pas	m68k	+0x1A0-+0x1B4	cg_null_ads: a defined cell, laid out after the own ones by dpc (all present)
 lang2/source/be_com/lir.pas	a88k	+0x170-+0x1DC	build_message: pointers to the message strings, which the image places before A5 and dpc after the cells (the strings all present; rev889-patterns 159)
-lang/common/source/ass.pas	*	+0xD8-+0xE0	program_name 'ass_$': the image has the length, the text and one NUL (the rest unset); dpc 5534be4 pads with blanks, and lays the cell 4 bytes earlier (dpc gap 43, reported)
