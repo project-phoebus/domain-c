@@ -172,6 +172,22 @@ type
     head: codegen_$cell_ptr_t;          { +20 }
   end;
 
+  { A temporary label node (kind 144) as plab reads it: +41 set (a
+    byte), a class in +72 bits 5..1. }
+  fn_lnode_ptr_t = ^fn_lnode_t;
+  fn_lnode_t = record
+    unused_0: integer;                  { +0 }
+    kind: integer;                      { +2 }
+    unused_4: array [4..40] of char;    { +4 }
+    b41: boolean;                       { +41 }
+    unused_42: array [42..71] of char;  { +42 }
+    x72: packed record
+      hi: 0..3;                         { +72.7..6 }
+      cls: 0..31;                       { +72.5..1 }
+      lo: 0..1;                         { +72.0 }
+    end;
+  end;
+
   { An address descriptor's three longwords, as sameaddr compares two
     (`cmpm.l', `dbne' 2). }
   fn_ads_words_t = array [1..3] of integer32;
@@ -191,6 +207,11 @@ var
   { cg_tree.pas's empty operand (cc.m68k 0x356600, absolute; cg.ins.pas
     declares it, which final does not open). }
   cg_null_ads: extern codegen_$uads_t;
+
+  { opinfo.pas's data (cc.m68k 0x2CFDD8, absolute): each instruction's
+    two operands' access ('W' written), as instr_reorder.pas declares
+    it. }
+  opinfo_access: extern array [0..367] of packed array [1..2] of char;
 
   { The module's data (A5 0x3566F8). }
   fn_0: array [0..3] of integer32;      { +0 }
@@ -236,6 +257,20 @@ var
                                           two conditions (ops less 138);
                                           the entries .rwdi leaves unset
                                           given as 0 }
+  fn_cbr_complement: array [140..153] of integer := [
+    141, 140, 143, 142, 145, 144, 147, 146, 149, 148, 151, 150, 153,
+    152];                               { +0x230: each condition's
+                                          complement (pcondjmp) }
+  fn_fbrimply: array [0..5] of array [0..5] of integer := [
+    [2, 0, 1, 0, 0, 0],
+    [0, 2, 1, 0, 0, 1],
+    [1, 1, 2, 0, 1, 1],
+    [1, 0, 0, 2, 0, 1],
+    [1, 0, 1, 0, 2, 0],
+    [1, 0, 0, 0, 0, 2]];                { +0x250: f_brimply's answers
+                                          (ops less 436) }
+  fn_fbr_complement: array [436..441] of integer := [
+    437, 436, 439, 438, 441, 440];      { +0x298 }
 
 
 { assert_is_lea - c is a lea (kind 4, op 12).
@@ -1962,6 +1997,108 @@ begin
   end;
 end;
 
+{ pcondjmp - conditional branch c simplified; the cell after it (or
+  after what it removed).  Not under -DBA (cargs's db 3: bits 16..15 of
+  the longword at +0x282).  When it tests C or V (cc_use & 12) and the
+  instruction that set the codes (before it, passing the classes 18
+  and 0 of opinfo_cc_class, not a label) leaves C (V) clear (its
+  opinfo_cc 3 (2) is 0), the condition becomes the signed one
+  (change_br_value).  A branch to itself is left; one to the next
+  instruction removed; one to a branch: by brimply 0 retargeted past
+  it, 2 given its target (movejump); a conditional branch after it: by
+  brimply 0 made a bra (kind 17, op 120) when its condition is c's
+  complement (fn_cbr_complement, +0x230), 2 removed when it is the
+  same; an unconditional jump after it to c's target's place: c
+  reversed and given its target, the jump removed, or c removed when
+  both go to one place.
+
+  0x10B972, 0x240 bytes, no A5 load: the result in D4, the target in
+  D3, brimply's answer in D2. }
+
+function pcondjmp(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+label
+  1, 9;
+var
+  nx: codegen_$cell_ptr_t;
+  p: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+  q: codegen_$cell_ptr_t;
+  u: integer;
+  ok: boolean;
+begin
+  nx := nxtlcc(c);
+  if cargs_$options.db = 3 then
+    goto 9;
+  p := prvlcc(c);
+  u := cc_use(c);
+  if (p^.kind <> def_lbl_instyp) and ((u & 12) <> 0) then begin
+    ok := true;
+    while (opinfo_cc_class[p^.op] = 18) or (opinfo_cc_class[p^.op] = 0) do begin
+      p := prvlcc(p);
+      if p^.kind = def_lbl_instyp then begin
+        ok := false;
+        goto 1;
+      end;
+    end;
+    if ok then begin
+      if ((u & 8) <> 0) and (opinfo_cc[opinfo_cc_class[p^.op]][3] = 0) then
+        c^.op := change_br_value(c^.op);
+      if ((u & 4) <> 0) and (opinfo_cc[opinfo_cc_class[p^.op]][2] = 0) then
+        c^.op := change_br_value(c^.op);
+    end;
+  end;
+1:
+  t := br_target(c);
+  if t = c then
+    goto 9;
+  if nxtcc(c) = t then begin
+    detach(c);
+    goto 9;
+  end;
+  if isbranch(t) and (br_target(t) <> t) then
+    case brimply(c, t) of
+      0:
+        moverefcell(codegen_$cell_ptr_t(c^.ads2.y), nxtlcc(t));
+      1:
+        ;
+      2: begin
+        movejump(c^.ads2, t^.ads2);
+        goto 9;
+      end;
+      otherwise
+        ;
+    end;
+  q := nxtlcc(c);
+  if q^.kind = cbr_instyp then
+    case brimply(c, q) of
+      0:
+        if fn_cbr_complement[q^.op] = c^.op then begin
+          q^.kind := br_instyp;
+          q^.op := 120;
+        end;
+      2:
+        if q^.op = c^.op then begin
+          detach(q);
+          q := nxtlcc(c);
+          nx := q;
+        end;
+      otherwise
+        ;
+    end;
+  if uncondjmpp(q) then
+    if nxtcc(q) = t then begin
+      reversecond(c);
+      movejump(c^.ads2, q^.ads2);
+      nx := nxtlcc(q);
+      detach(q);
+    end
+    else if br_target(q) = t then
+      detach(c);
+9:
+  pcondjmp := nx;
+end;
+
 { cc_mod - what c does to the condition codes: 0 nothing, 1 sets the
   integer codes, 2 sets Z, 3 sets the floating codes, 4 clobbers them
   (an FPX instruction under -CPU FPX, a bsr, a jsr); by the kind (lea
@@ -2010,4 +2147,213 @@ begin
         r := 1;
     end;
   cc_mod := r;
+end;
+
+{ reg_mod - c changes register reg: a postincrement or predecrement of
+  it, or it as a register operand (mode 1) that opinfo marks written
+  ('W').
+
+  0x10BCCC, 0xD2 bytes, no A5 load. }
+
+function reg_mod(
+    c: codegen_$cell_ptr_t;
+    reg: integer): boolean; options(val_param); internal;
+var
+  r: boolean;
+begin
+  r := false;
+  if has_xcrement_addressing(c^.ads1) and (c^.ads1.f2 = reg) then
+    r := true
+  else if has_xcrement_addressing(c^.ads2) and (c^.ads2.f2 = reg) then
+    r := true
+  else if (c^.ads1.f1 = 1) and (opinfo_access[c^.op][1] = 'W') and
+          (c^.ads1.f2 = reg) then
+    r := true
+  else if (c^.ads2.f1 = 1) and (opinfo_access[c^.op][2] = 'W') and
+          (c^.ads2.f2 = reg) then
+    r := true;
+  reg_mod := r;
+end;
+
+{ plab - label cell c tidied (its node a temporary label, 144, not of
+  class 13 (+72 bits 5..1) unless +41 is set): removed when nothing
+  refers to it; else the labels after it merged into it (label_merge)
+  and, under -OPT's optimization 5 without -VARARGS, each bra to it
+  whose code before matches the code before the label cross-jumped
+  (crossjump, makejump).  The cell after it.
+
+  0x10BD9E, 0xC0 bytes, no A5 load: the references walked from the
+  label's list (+32) until it comes round or empties, stopping when
+  makejump removed the next one; the crossjump results at -24, -8. }
+
+function plab(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+label
+  1, 9;
+var
+  nx: codegen_$cell_ptr_t;
+  n: fn_lnode_ptr_t;
+  r: codegen_$cell_ptr_t;
+  r2: codegen_$cell_ptr_t;
+  j: codegen_$cell_ptr_t;
+  pa: codegen_$cell_ptr_t;
+  pb: codegen_$cell_ptr_t;
+begin
+  nx := c^.next;
+  n := fn_lnode_ptr_t(c^.ads2.x);
+  if n = nil then
+    goto 9;
+  if n^.kind <> 144 then
+    goto 9;
+  if (n^.x72.cls = 13) and not n^.b41 then
+    goto 9;
+  if c^.refs = nil then begin
+    detach(c);
+    goto 9;
+  end;
+  label_merge(c);
+  if not (5 in cargs_$options.opt_on) or (5 in cargs_$options.flags_286) then begin
+    nx := c^.next;
+    goto 9;
+  end;
+  r := c^.refs;
+  repeat
+    r2 := r^.next;
+    j := codegen_$cell_ptr_t(r^.target);
+    if j^.kind = br_instyp then
+      if crossjump(j, c, pa, pb) then begin
+        nx := makejump(pa, pb);
+        if r2^.next = nil then
+          goto 1;
+      end;
+    r := r2;
+  until (r = c^.refs) or (c^.refs = nil);
+1:
+  nx := c^.next;
+9:
+  plab := nx;
+end;
+
+{ correct_cc_set - whether conditional branch c is taken when the codes
+  are known (s: 1 N set, 2 Z set; C and V clear), by its condition
+  (ops 140..153); another op answers N.
+
+  0x10BE5E, 0x76 bytes, no A5 load: a `case' of op less 140 through a
+  table of 14. }
+
+function correct_cc_set(
+    c: codegen_$cell_ptr_t;
+    s: integer): boolean; options(val_param); internal;
+var
+  n: boolean;
+  z: boolean;
+  r: boolean;
+begin
+  n := (s & 1) <> 0;
+  z := (s & 2) <> 0;
+  r := n;
+  case c^.op of
+    140, 144: r := not z;
+    141, 145: r := z;
+    142, 146: r := true;
+    143, 147: r := false;
+    148, 150: r := not n;
+    149, 151: r := n;
+    152: r := not (n or z);
+    153: r := n or z;
+    otherwise
+      ;
+  end;
+  correct_cc_set := r;
+end;
+
+{ f_brimply - brimply for floating branches (fn_fbrimply, +0x250, by
+  the two ops less 436).
+
+  0x10BED4, 0x72 bytes, no A5 load. }
+
+function f_brimply(
+    a: codegen_$cell_ptr_t;
+    b: codegen_$cell_ptr_t): integer; options(val_param); internal;
+var
+  r: integer;
+begin
+  if uncondjmpp(b) then
+    r := 2
+  else begin
+    r := 1;
+    if not uncondjmpp(a) then
+      if a^.kind = b^.kind then
+        r := fn_fbrimply[a^.op - 436][b^.op - 436];
+  end;
+  f_brimply := r;
+end;
+
+{ f_pcondjmp - pcondjmp for a floating branch c (kind 39, f_brimply,
+  the complements fn_fbr_complement at +0x298 for ops 436..441).
+
+  0x10BF46, 0x18C bytes, no A5 load. }
+
+function f_pcondjmp(
+    c: codegen_$cell_ptr_t): codegen_$cell_ptr_t; options(val_param); internal;
+label
+  9;
+var
+  nx: codegen_$cell_ptr_t;
+  t: codegen_$cell_ptr_t;
+  q: codegen_$cell_ptr_t;
+begin
+  nx := nxtlcc(c);
+  if cargs_$options.db = 3 then
+    goto 9;
+  t := br_target(c);
+  if t = c then
+    goto 9;
+  if nxtcc(c) = t then begin
+    detach(c);
+    goto 9;
+  end;
+  if isbranch(t) and (br_target(t) <> t) then
+    case f_brimply(c, t) of
+      0:
+        moverefcell(codegen_$cell_ptr_t(c^.ads2.y), nxtlcc(t));
+      1:
+        ;
+      2: begin
+        movejump(c^.ads2, t^.ads2);
+        goto 9;
+      end;
+      otherwise
+        ;
+    end;
+  q := nxtlcc(c);
+  if q^.kind = fbr_instyp then
+    case f_brimply(c, q) of
+      0:
+        if fn_fbr_complement[q^.op] = c^.op then begin
+          q^.kind := br_instyp;
+          q^.op := 120;
+        end;
+      2:
+        if q^.op = c^.op then begin
+          detach(q);
+          q := nxtlcc(c);
+          nx := q;
+        end;
+      otherwise
+        ;
+    end;
+  if uncondjmpp(q) then
+    if nxtcc(q) = t then begin
+      if c^.op in [436..441] then begin
+        c^.op := fn_fbr_complement[c^.op];
+        movejump(c^.ads2, q^.ads2);
+        nx := nxtlcc(q);
+        detach(q);
+      end;
+    end
+    else if br_target(q) = t then
+      detach(c);
+9:
+  f_pcondjmp := nx;
 end;
