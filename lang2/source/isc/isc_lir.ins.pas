@@ -38,3 +38,33 @@ procedure rewrite_$entry(
     node: univ_ptr;
     var no_xsb: boolean;
     var second: univ_ptr); options(val_param); extern;
+
+{ LIR_$ISC_BUGCHECK - the ISC's pass 2 failure reported ('ISC pass 2
+  failure').  lir.pas 0x242820, 0x1E bytes: no parameters.  batch A
+  (PA6). }
+procedure lir_$isc_bugcheck; extern;
+
+type
+  { A well-known register's name (four characters, blank-filled: 'R12 ',
+    'F3  ', 'X10 ', 'PC  ', 'AP  ', ...).  batch A (PA6). }
+  isc_$reg_name_t = packed array [1..4] of char;
+
+{ ISC_$INIT_WELL_KNOWN_IP_REG - the solution of the integer register k
+  (-1 for a symbolic register: AP, DB, RPC, SL, ER, LB, SF) named name.
+  isc_user_routines 0x214296: name by address at 8 (its third character
+  tested for a blank), k a longword at 12; A0.  batch A (PA6, lir). }
+function isc_$init_well_known_ip_reg(
+    in name: isc_$reg_name_t;
+    k: integer32): solution_ptr_t; options(val_param); extern;
+
+{ ISC_$INIT_WELL_KNOWN_FP_REG - likewise a floating register's
+  (isc_user_routines 0x21435A). }
+function isc_$init_well_known_fp_reg(
+    in name: isc_$reg_name_t;
+    k: integer32): solution_ptr_t; options(val_param); extern;
+
+{ ISC_$INIT_WELL_KNOWN_FP_REG_PAIR - likewise an even floating register's
+  pair (isc_user_routines 0x214414). }
+function isc_$init_well_known_fp_reg_pair(
+    in name: isc_$reg_name_t;
+    k: integer32): solution_ptr_t; options(val_param); extern;

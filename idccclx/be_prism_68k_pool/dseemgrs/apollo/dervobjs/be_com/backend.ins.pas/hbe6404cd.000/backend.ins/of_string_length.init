@@ -1,0 +1,21 @@
+{ of_string_length.init - a DSEE derived object of
+  be_com/backend.ins.pas (cc.a88k only): the initializer of the section
+  of_string_length (0x2B712C: 43 words, the lengths of of_string's
+  names, by of$t; the section's last two bytes are padding).  Included by lir.pas.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k, the section's bytes (translator PA6).
+
+  How the section is shared (docs/questions.md 161, translator PB2's
+  scheme): backend.ins.pas declares the section's variable for every
+  unit; this file, included by lir.pas, gives it its initial value with
+  a `define' statement (the language reference's section 7.2.2, method
+  2).  dpc does not yet lay out such an initialized section named as
+  its variable (docs/dpc-gaps.md 32): the gate renames the section.
+
+  Not known from the original: the file's layout. }
+
+define of_string_length := [
+    4, 22, 21, 20, 11, 13, 19, 25, 9, 18, 26, 19, 25, 9, 30, 18,  { 0 }
+    18, 11, 6, 6, 8, 29, 23, 18, 17, 17, 24, 27, 27, 27, 28, 19,  { 16 }
+    16, 27, 27, 14, 28, 30, 8, 28, 14, 14, 28];  { 32 }

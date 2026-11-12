@@ -73,8 +73,10 @@ type
     operand$join_birthpoint_inputs, operand$exception_information,
     operand$spare_3, operand$spare_2, operand$spare_1);  { 29 }
 
-  { The operand forms an instruction's operand may take (of_string, 44
-    entries of 34 characters, the last empty; asm and lir print them). }
+  { The operand forms an instruction's operand may take (of_string, 43
+    entries of 34 characters; asm and lir print them; batch A, PA6: the
+    sections' sizes, 0x5B8 and 0x58, are 43 entries and padding, not
+    44). }
   of$t = (
     of$none, of$ip_reg_or_long_pc_disp, of$ip_reg_or_basic_block,
     of$ip_compare_a_operand, of$fp_reg_pair, of$short_pc_disp,  { 5 }
@@ -1141,9 +1143,9 @@ var (instruction_mnemonic_length)
 var (operand_forms_mask)
   operand_forms_mask: array [0..43] of char;
 var (of_string_length)
-  of_string_length: array [0..43] of integer;
+  of_string_length: array [0..42] of integer;
 var (of_string)
-  of_string: array [0..43] of packed array [1..34] of char;
+  of_string: array [0..42] of packed array [1..34] of char;
 var (operand_string_length)
   operand_string_length: array [0..31] of integer;
 var (operand_string)
@@ -1931,10 +1933,12 @@ procedure life_$end_routine(
   }
 procedure lir_$begin_compilation; extern;
 
-{ LIR_$COMPLETE_TOP_LEVEL_NODE_INHERITED_ATTRS - 0x242E7E, 0x58 bytes;
-  called from lir_main.  Frame 8:al. }
+{ LIR_$COMPLETE_TOP_LEVEL_NODE_INHERITED_ATTRS - the inherited
+  attributes attrs (a lir_inherited_t, lir.pvt.pas) completed from their
+  node's IL statement.  0x242E7E, 0x58 bytes; called from lir_main.
+  Frame 8:al (batch A, PA6: p1 named). }
 procedure lir_$complete_top_level_node_inherited_attrs(
-    p1: univ_ptr); options(val_param); extern;
+    attrs: univ_ptr); options(val_param); extern;
 
 { LIR_$GET_NEW_INSTRUCTION_NO_EXCEPTIONS - a new instruction of opcode
   opc for the IL node node (nil for none; lir's begin_instruction and

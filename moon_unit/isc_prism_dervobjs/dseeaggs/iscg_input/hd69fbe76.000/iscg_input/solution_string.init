@@ -1,0 +1,38 @@
+{ solution_string.init - a DSEE derived object of the ISC generator's
+  input (cc.a88k only): the names of the solution kinds (the SOLUTION$
+  enumeration, 25 entries of 32 characters, blank-filled: none ..
+  k_max).  Included by lir.pas after solution_kind.init, in the section
+  lir_readonly_tables (+0x340 .. +0x65F).
+
+  The declaration only (lir.pas's `var (lir_readonly_tables)').  No
+  Apollo copy survives; reconstructed from the section's bytes
+  (translator PA6).
+
+  Not known from the original: the variable's name. }
+
+  solution_string: array [0..24] of packed array [1..32] of char := [
+    'none                            ',  { 0 }
+    'case_jump_base                  ',  { 1 }
+    'fp_reg_pair_high                ',  { 2 }
+    'fp_reg_pair_low                 ',  { 3 }
+    'local_routine                   ',  { 4 }
+    'address_mode                    ',  { 5 }
+    'ctl_reg                         ',  { 6 }
+    'flow                            ',  { 7 }
+    'fp_reg                          ',  { 8 }
+    'fp_reg_pair                     ',  { 9 }
+    'fp_reg_quad                     ',  { 10 }
+    'ip_reg                          ',  { 11 }
+    'ip_reg_field                    ',  { 12 }
+    'ip_reg_scaled                   ',  { 13 }
+    'literal_32_bits                 ',  { 14 }
+    'literal_64_bits                 ',  { 15 }
+    'processor_reg                   ',  { 16 }
+    'sc_reg                          ',  { 17 }
+    'sr_reg                          ',  { 18 }
+    'dummy                           ',  { 19 }
+    'any_solution                    ',  { 20 }
+    'irrelevant                      ',  { 21 }
+    'proper_subtree                  ',  { 22 }
+    'void                            ',  { 23 }
+    'k_max                           '];  { 24 }

@@ -1,0 +1,448 @@
+{ instr_attributes.init - a DSEE derived object of be_com/opcodes.def
+  (cc.a88k only), which the opcode generator made with
+  opcode_enumeration.ins.pas: the initializer of the section
+  instruction_attributes (0x2B8C3C: 212 entries of 20 bytes, one by
+  opcode, opc$undefined .. opc$adj_move; backend.ins.pas's
+  instr_attr_t, whose fields are given in order: b0_7_4, interaction,
+  amse, b1_3_0, w2, b4, num1, b6_7_1, b6_0, class, form2, num2, b10,
+  b11_7, nopnds, nresults, b12, num3, b14_7_1, b14_0, b15, b16, num4,
+  w18).  Included by lir.pas after the opcode enumeration.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k, the section's bytes (translator PA6).
+
+  How the section is shared (docs/questions.md 161, translator PB2's
+  scheme): backend.ins.pas declares the section's variable for every
+  unit; this file, included by lir.pas, gives it its initial value with
+  a `define' statement (the language reference's section 7.2.2, method
+  2).  dpc does not yet lay out such an initialized section named as
+  its variable (docs/dpc-gaps.md 32): the gate renames the section.
+
+  Not known from the original: the generator's layout of the file and
+  the meaning of most fields (backend.ins.pas). }
+
+define instruction_attributes := [
+    { 0 opc$undefined }
+    [0, 0, 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 0, false, 0, 0, 0, 0, 0, false, 0, 0, 0, 0],
+    { 1 opc$bnever }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 1, 1, 0, 3, 0, false, 0, 0, 4, 7],
+    { 2 opc$bnl2v }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 3 opc$bl2v }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 4 opc$bnl2 }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 5, 0, 4, 79],
+    { 5 opc$bl2 }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 13, 0, 4, 79],
+    { 6 opc$bnz3 }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 6, 0, 4, 79],
+    { 7 opc$bz3 }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 14, 0, 4, 79],
+    { 8 opc$bgt }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 9 opc$ble }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 10 opc$bge }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 11 opc$blt }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 12 opc$bhi }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 13 opc$bls }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 14 opc$blo }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 4, 0, 4, 79],
+    { 15 opc$bhs }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 12, 0, 4, 79],
+    { 16 opc$bnn }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 1, 0, 4, 79],
+    { 17 opc$bn }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 9, 0, 4, 79],
+    { 18 opc$bne }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 2, 0, 4, 79],
+    { 19 opc$beq }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 10, 0, 4, 79],
+    { 20 opc$bnv }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 3, 0, 4, 79],
+    { 21 opc$bv }
+    [0, 1, 0, 0, 0, 2, 1, 2, false, 1, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 11, 0, 4, 79],
+    { 22 opc$fbeq }
+    [0, 16, 0, 0, 0, 2, 1, 2, false, 5, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 23 opc$fbne }
+    [0, 16, 0, 0, 0, 2, 1, 2, false, 5, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 24 opc$fbgt }
+    [0, 16, 0, 0, 0, 2, 1, 2, false, 5, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 25 opc$fble }
+    [0, 16, 0, 0, 0, 2, 1, 2, false, 5, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 26 opc$fbge }
+    [0, 16, 0, 0, 0, 2, 1, 2, false, 5, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 27 opc$fblt }
+    [0, 16, 0, 0, 0, 2, 1, 2, false, 5, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 28 opc$trap_gt }
+    [0, 1, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 29 opc$trap_le }
+    [0, 1, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 30 opc$trap_ge }
+    [0, 1, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 31 opc$trap_lt }
+    [0, 1, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 32 opc$trap_hi }
+    [0, 1, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 33 opc$trap_ls }
+    [0, 1, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 34 opc$trap_lo }
+    [0, 1, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 4, 0, 4, 79],
+    { 35 opc$trap_hs }
+    [0, 1, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 12, 0, 4, 79],
+    { 36 opc$trap_nn }
+    [0, 1, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 1, 0, 4, 79],
+    { 37 opc$trap_n }
+    [0, 1, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 9, 0, 4, 79],
+    { 38 opc$trap_ne }
+    [0, 1, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 2, 0, 4, 79],
+    { 39 opc$trap_eq }
+    [0, 1, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 10, 0, 4, 79],
+    { 40 opc$trap_nv }
+    [0, 1, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 3, 0, 4, 79],
+    { 41 opc$trap_v }
+    [0, 1, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 11, 0, 4, 79],
+    { 42 opc$trap_feq }
+    [0, 16, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 43 opc$trap_fne }
+    [0, 16, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 44 opc$trap_fgt }
+    [0, 16, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 45 opc$trap_fle }
+    [0, 16, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 46 opc$trap_fge }
+    [0, 16, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 47 opc$trap_flt }
+    [0, 16, 0, 0, 0, 22, 1, 64, false, 27, 0, 2, 0, true, 4, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 48 opc$trapd_gt }
+    [0, 1, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 49 opc$trapd_le }
+    [0, 1, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 50 opc$trapd_ge }
+    [0, 1, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 51 opc$trapd_lt }
+    [0, 1, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 52 opc$trapd_hi }
+    [0, 1, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 53 opc$trapd_ls }
+    [0, 1, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 54 opc$trapd_lo }
+    [0, 1, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 4, 0, 4, 79],
+    { 55 opc$trapd_hs }
+    [0, 1, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 12, 0, 4, 79],
+    { 56 opc$trapd_nn }
+    [0, 1, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 1, 0, 4, 79],
+    { 57 opc$trapd_n }
+    [0, 1, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 9, 0, 4, 79],
+    { 58 opc$trapd_ne }
+    [0, 1, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 2, 0, 4, 79],
+    { 59 opc$trapd_eq }
+    [0, 1, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 10, 0, 4, 79],
+    { 60 opc$trapd_nv }
+    [0, 1, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 3, 0, 4, 79],
+    { 61 opc$trapd_v }
+    [0, 1, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 11, 0, 4, 79],
+    { 62 opc$trapd_feq }
+    [0, 16, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 63 opc$trapd_fne }
+    [0, 16, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 64 opc$trapd_fgt }
+    [0, 16, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 65 opc$trapd_fle }
+    [0, 16, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 66 opc$trapd_fge }
+    [0, 16, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 67 opc$trapd_flt }
+    [0, 16, 0, 0, 0, 4, 1, 64, false, 27, 0, 2, 0, true, 6, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 68 opc$trap }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 14, 0, 2, 0, true, 2, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 69 opc$jump }
+    [0, 1, 0, 0, 0, 1, 1, 2, false, 6, 0, 2, 0, false, 1, 1, 0, 3, 0, false, 0, 0, 4, 7],
+    { 70 opc$dispatch }
+    [0, 1, 0, 0, 0, 1, 1, 2, false, 6, 0, 2, 0, false, 1, 1, 0, 3, 0, false, 0, 0, 4, 7],
+    { 71 opc$tstb }
+    [0, 1, 0, 0, 0, 18, 1, 0, false, 0, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 520],
+    { 72 opc$tstw }
+    [0, 1, 0, 0, 0, 18, 1, 0, false, 0, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 521],
+    { 73 opc$tst }
+    [0, 1, 0, 0, 0, 18, 1, 0, false, 0, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 522],
+    { 74 opc$cmp }
+    [0, 1, 0, 0, 0, 3, 1, 0, false, 0, 18, 2, 0, false, 3, 2, 0, 3, 0, false, 0, 0, 4, 522],
+    { 75 opc$move }
+    [0, 1, 0, 0, 0, 10, 1, 0, true, 0, 18, 2, 192, false, 3, 2, 0, 3, 0, true, 0, 0, 4, 10],
+    { 76 opc$pmove }
+    [0, 1, 0, 0, 0, 18, 1, 0, true, 18, 18, 2, 192, false, 2, 2, 0, 3, 0, false, 0, 0, 4, 2],
+    { 77 opc$neg }
+    [0, 1, 0, 0, 0, 18, 1, 0, false, 0, 18, 2, 192, false, 3, 2, 0, 3, 0, true, 0, 0, 4, 10],
+    { 78 opc$com }
+    [0, 1, 0, 0, 0, 18, 1, 0, false, 0, 18, 2, 192, false, 3, 2, 0, 3, 0, true, 0, 0, 4, 10],
+    { 79 opc$add }
+    [0, 1, 0, 0, 0, 10, 1, 0, false, 0, 18, 2, 0, false, 4, 3, 18, 3, 96, true, 0, 0, 4, 10],
+    { 80 opc$addc }
+    [0, 1, 0, 0, 0, 7, 1, 0, false, 0, 18, 2, 0, false, 5, 3, 18, 3, 96, true, 0, 0, 4, 74],
+    { 81 opc$sub }
+    [0, 1, 0, 0, 0, 7, 1, 0, false, 0, 18, 2, 0, false, 4, 3, 18, 3, 96, true, 0, 0, 4, 10],
+    { 82 opc$subc }
+    [0, 1, 0, 0, 0, 7, 1, 0, false, 0, 18, 2, 0, false, 5, 3, 18, 3, 96, true, 0, 0, 4, 74],
+    { 83 opc$rsub }
+    [0, 1, 0, 0, 0, 7, 1, 0, false, 0, 18, 2, 0, false, 4, 3, 18, 3, 96, true, 0, 0, 4, 10],
+    { 84 opc$and }
+    [0, 1, 0, 0, 0, 7, 1, 0, false, 0, 18, 2, 0, false, 4, 3, 18, 3, 96, true, 0, 0, 4, 10],
+    { 85 opc$or }
+    [0, 1, 0, 0, 0, 7, 1, 0, false, 0, 18, 2, 0, false, 4, 3, 18, 3, 96, true, 0, 0, 4, 10],
+    { 86 opc$xor }
+    [0, 1, 0, 0, 0, 7, 1, 0, false, 0, 18, 2, 0, false, 4, 3, 18, 3, 96, true, 0, 0, 4, 10],
+    { 87 opc$extend0 }
+    [0, 1, 0, 0, 0, 18, 1, 0, false, 0, 18, 2, 192, false, 3, 2, 0, 3, 0, true, 0, 0, 4, 10],
+    { 88 opc$extend7 }
+    [0, 1, 0, 0, 0, 18, 1, 0, false, 0, 18, 2, 192, false, 3, 2, 0, 3, 0, true, 0, 0, 4, 10],
+    { 89 opc$extend15 }
+    [0, 1, 0, 0, 0, 18, 1, 0, false, 0, 18, 2, 192, false, 3, 2, 0, 3, 0, true, 0, 0, 4, 10],
+    { 90 opc$asr }
+    [0, 1, 0, 0, 0, 18, 1, 0, false, 0, 16, 2, 0, false, 4, 3, 18, 3, 96, true, 0, 0, 4, 10],
+    { 91 opc$lsr }
+    [0, 1, 0, 0, 0, 18, 1, 0, false, 0, 16, 2, 0, false, 4, 3, 18, 3, 96, true, 0, 0, 4, 10],
+    { 92 opc$lsl }
+    [0, 15, 0, 0, 0, 18, 1, 0, false, 0, 16, 2, 0, false, 4, 3, 18, 3, 96, true, 0, 0, 4, 10],
+    { 93 opc$isolate }
+    [0, 15, 0, 0, 0, 18, 1, 0, false, 0, 16, 2, 0, false, 4, 3, 18, 3, 97, true, 0, 0, 4, 10],
+    { 94 opc$clrins }
+    [0, 15, 0, 0, 0, 18, 1, 0, false, 0, 16, 2, 0, false, 4, 3, 18, 3, 97, true, 0, 0, 4, 10],
+    { 95 opc$transfer }
+    [0, 15, 0, 0, 0, 18, 1, 0, false, 0, 16, 2, 0, false, 5, 3, 18, 3, 65, true, 0, 0, 4, 10],
+    { 96 opc$insert }
+    [0, 15, 0, 0, 0, 9, 1, 0, false, 0, 16, 2, 0, false, 5, 3, 18, 3, 65, true, 0, 0, 4, 10],
+    { 97 opc$extractu }
+    [0, 1, 0, 0, 0, 18, 1, 0, false, 0, 16, 2, 0, false, 4, 3, 18, 3, 97, true, 0, 0, 4, 10],
+    { 98 opc$widenb }
+    [0, 1, 0, 0, 0, 18, 1, 0, false, 0, 16, 2, 0, false, 4, 3, 18, 3, 97, false, 0, 0, 4, 520],
+    { 99 opc$widenw }
+    [0, 1, 0, 0, 0, 18, 1, 0, false, 0, 16, 2, 0, false, 4, 3, 18, 3, 97, false, 0, 0, 4, 521],
+    { 100 opc$synchb }
+    [0, 4, 0, 0, 0, 0, 1, 0, false, 10, 0, 2, 0, false, 2, 0, 0, 3, 0, false, 0, 0, 4, 0],
+    { 101 opc$synchw }
+    [0, 4, 0, 0, 0, 0, 1, 0, false, 10, 0, 2, 0, false, 2, 0, 0, 3, 0, false, 0, 0, 4, 1],
+    { 102 opc$synch }
+    [0, 4, 0, 0, 0, 0, 1, 0, false, 10, 0, 2, 0, false, 2, 0, 0, 3, 0, false, 0, 0, 4, 2],
+    { 103 opc$loadbu }
+    [0, 4, 4, 0, 0, 10, 1, 0, false, 16, 18, 2, 64, true, 6, 3, 18, 3, 98, true, 16, 0, 4, 8],
+    { 104 opc$loadwu }
+    [0, 4, 4, 0, 0, 10, 1, 0, false, 16, 18, 2, 64, true, 6, 3, 18, 3, 98, true, 16, 0, 4, 9],
+    { 105 opc$loadl }
+    [0, 4, 4, 0, 0, 10, 1, 0, false, 16, 18, 2, 64, true, 6, 3, 18, 3, 98, true, 16, 0, 4, 10],
+    { 106 opc$loads }
+    [0, 5, 4, 0, 0, 10, 1, 0, false, 16, 18, 2, 64, true, 5, 3, 19, 3, 98, false, 0, 0, 4, 2],
+    { 107 opc$loadse }
+    [0, 5, 4, 0, 0, 10, 1, 0, false, 16, 18, 2, 64, true, 5, 3, 19, 3, 98, false, 0, 0, 4, 2],
+    { 108 opc$loadso }
+    [0, 5, 4, 0, 0, 10, 1, 0, false, 16, 18, 2, 64, true, 5, 3, 19, 3, 98, false, 0, 0, 4, 2],
+    { 109 opc$loadd }
+    [0, 5, 4, 0, 0, 10, 1, 0, false, 16, 18, 2, 64, true, 6, 3, 4, 3, 98, false, 0, 0, 4, 3],
+    { 110 opc$load_pair }
+    [0, 10, 0, 0, 0, 18, 1, 0, false, 15, 18, 2, 196, true, 4, 3, 18, 3, 100, false, 0, 0, 4, 7],
+    { 111 opc$mfnextcc }
+    [0, 12, 0, 0, 0, 18, 1, 98, false, 0, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 79],
+    { 112 opc$mfippsw }
+    [0, 12, 0, 0, 0, 18, 1, 98, false, 0, 0, 2, 0, false, 1, 1, 0, 3, 0, false, 0, 0, 4, 7],
+    { 113 opc$mffpcc }
+    [0, 12, 0, 0, 0, 18, 1, 98, false, 0, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 0, 0, 4, 207],
+    { 114 opc$mffppsw }
+    [0, 12, 0, 0, 0, 18, 1, 98, false, 0, 0, 2, 0, false, 1, 1, 0, 3, 0, false, 0, 0, 4, 7],
+    { 115 opc$mfpr }
+    [0, 12, 0, 0, 0, 13, 1, 0, false, 22, 18, 2, 0, false, 5, 3, 18, 3, 98, true, 16, 0, 4, 10],
+    { 116 opc$mffp }
+    [0, 11, 0, 0, 0, 19, 1, 0, false, 12, 18, 2, 196, false, 3, 2, 0, 3, 0, true, 16, 0, 4, 10],
+    { 117 opc$fpquiesce }
+    [0, 11, 0, 0, 0, 0, 1, 0, false, 12, 0, 2, 0, false, 0, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 118 opc$storeb }
+    [0, 7, 5, 0, 0, 18, 1, 0, false, 21, 10, 2, 0, true, 6, 3, 18, 3, 32, false, 0, 0, 4, 0],
+    { 119 opc$storew }
+    [0, 7, 5, 0, 0, 18, 1, 0, false, 21, 10, 2, 0, true, 6, 3, 18, 3, 32, false, 0, 0, 4, 1],
+    { 120 opc$storel }
+    [0, 7, 5, 0, 0, 18, 1, 0, false, 21, 10, 2, 0, true, 6, 3, 18, 3, 32, false, 0, 0, 4, 2],
+    { 121 opc$stores }
+    [0, 8, 5, 0, 0, 19, 1, 0, false, 21, 10, 2, 0, true, 6, 3, 18, 3, 32, false, 0, 0, 4, 2],
+    { 122 opc$storese }
+    [0, 8, 5, 0, 0, 19, 1, 0, false, 21, 10, 2, 0, true, 6, 3, 18, 3, 32, false, 0, 0, 4, 2],
+    { 123 opc$storeso }
+    [0, 8, 5, 0, 0, 19, 1, 0, false, 21, 10, 2, 0, true, 6, 3, 18, 3, 32, false, 0, 0, 4, 2],
+    { 124 opc$stored }
+    [0, 8, 5, 0, 0, 4, 1, 0, false, 21, 10, 2, 0, true, 7, 3, 18, 3, 32, false, 0, 0, 4, 3],
+    { 125 opc$mtpr }
+    [0, 14, 0, 0, 0, 18, 1, 0, false, 23, 13, 2, 0, false, 5, 3, 18, 3, 0, false, 0, 0, 4, 7],
+    { 126 opc$mtfp }
+    [0, 13, 0, 0, 0, 18, 1, 0, false, 12, 19, 2, 196, false, 2, 2, 0, 3, 0, false, 0, 0, 4, 7],
+    { 127 opc$enable }
+    [0, 1, 0, 0, 0, 0, 1, 0, false, 7, 0, 2, 0, false, 2, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 128 opc$disable }
+    [0, 1, 0, 0, 0, 0, 1, 0, false, 7, 0, 2, 0, false, 2, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 129 opc$call }
+    [0, 1, 0, 0, 0, 1, 1, 2, false, 2, 18, 2, 192, false, 8, 2, 0, 3, 0, false, 0, 0, 4, 831],
+    { 130 opc$svc }
+    [0, 1, 0, 0, 0, 20, 1, 0, false, 20, 18, 2, 0, false, 8, 1, 0, 3, 0, false, 0, 0, 4, 831],
+    { 131 opc$svc2 }
+    [0, 1, 0, 0, 0, 20, 1, 0, false, 20, 20, 2, 0, false, 8, 2, 0, 3, 0, false, 0, 0, 4, 831],
+    { 132 opc$return }
+    [0, 1, 0, 0, 0, 18, 1, 2, false, 24, 0, 2, 0, false, 3, 1, 0, 3, 0, false, 0, 0, 4, 7],
+    { 133 opc$movei }
+    [0, 2, 0, 0, 0, 19, 1, 0, true, 8, 19, 2, 200, false, 3, 2, 0, 3, 0, false, 0, 0, 4, 2],
+    { 134 opc$pmovei }
+    [0, 2, 0, 0, 0, 19, 1, 0, true, 18, 19, 2, 192, false, 2, 2, 0, 3, 0, false, 0, 0, 4, 2],
+    { 135 opc$negi }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 8, 19, 2, 200, false, 2, 2, 0, 3, 0, false, 0, 0, 4, 2],
+    { 136 opc$comi }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 8, 19, 2, 200, false, 2, 2, 0, 3, 0, false, 0, 0, 4, 2],
+    { 137 opc$addi }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 8, 19, 2, 0, false, 3, 3, 19, 3, 100, false, 0, 0, 4, 2],
+    { 138 opc$subi }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 8, 19, 2, 0, false, 3, 3, 19, 3, 100, false, 0, 0, 4, 2],
+    { 139 opc$andi }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 8, 19, 2, 0, false, 3, 3, 19, 3, 100, false, 0, 0, 4, 2],
+    { 140 opc$ori }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 8, 19, 2, 0, false, 3, 3, 19, 3, 100, false, 0, 0, 4, 2],
+    { 141 opc$xori }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 8, 19, 2, 0, false, 3, 3, 19, 3, 100, false, 0, 0, 4, 2],
+    { 142 opc$cvtis }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 8, 19, 2, 200, false, 3, 2, 0, 3, 0, true, 0, 0, 4, 143],
+    { 143 opc$cvtid }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 8, 4, 2, 200, false, 4, 2, 0, 3, 0, true, 0, 0, 4, 143],
+    { 144 opc$copys }
+    [0, 2, 0, 0, 0, 19, 1, 0, true, 17, 19, 2, 200, false, 3, 2, 0, 3, 0, false, 64, 0, 4, 2],
+    { 145 opc$pcopys }
+    [0, 2, 0, 0, 0, 19, 1, 0, true, 18, 19, 2, 192, false, 2, 2, 0, 3, 0, false, 0, 0, 4, 2],
+    { 146 opc$moves }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 17, 19, 2, 200, true, 3, 2, 0, 3, 0, true, 64, 0, 4, 138],
+    { 147 opc$negs }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 17, 19, 2, 200, true, 3, 2, 0, 3, 0, true, 64, 0, 4, 138],
+    { 148 opc$abss }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 17, 19, 2, 200, true, 3, 2, 0, 3, 0, true, 64, 0, 4, 138],
+    { 149 opc$cvtsd }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 17, 4, 2, 200, true, 4, 2, 0, 3, 0, true, 64, 0, 4, 143],
+    { 150 opc$roundsi }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 17, 19, 2, 200, true, 2, 2, 0, 3, 0, false, 64, 0, 4, 7],
+    { 151 opc$rounds }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 17, 19, 2, 200, true, 3, 2, 0, 3, 0, true, 64, 0, 4, 138],
+    { 152 opc$truncsi }
+    [0, 2, 0, 0, 0, 19, 1, 1, false, 17, 19, 2, 200, true, 2, 2, 0, 3, 0, false, 64, 0, 4, 7],
+    { 153 opc$truncs }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 17, 19, 2, 200, true, 3, 2, 0, 3, 0, true, 64, 0, 4, 138],
+    { 154 opc$adds }
+    [0, 2, 0, 0, 0, 19, 1, 1, false, 17, 19, 2, 0, true, 4, 3, 19, 3, 100, true, 64, 0, 4, 138],
+    { 155 opc$subs }
+    [0, 2, 0, 0, 0, 19, 1, 1, false, 17, 19, 2, 0, true, 4, 3, 19, 3, 100, true, 64, 0, 4, 138],
+    { 156 opc$cmps }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 17, 19, 2, 0, true, 3, 2, 0, 3, 0, false, 64, 0, 4, 394],
+    { 157 opc$classs }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 17, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 64, 0, 4, 394],
+    { 158 opc$tsts }
+    [0, 2, 0, 0, 0, 19, 1, 0, false, 17, 0, 2, 0, false, 2, 1, 0, 3, 0, false, 64, 0, 4, 394],
+    { 159 opc$mins }
+    [0, 2, 0, 0, 0, 19, 1, 1, false, 17, 19, 2, 0, true, 4, 3, 19, 3, 100, true, 64, 0, 4, 138],
+    { 160 opc$maxs }
+    [0, 2, 0, 0, 0, 19, 1, 1, false, 17, 19, 2, 0, true, 4, 3, 19, 3, 100, true, 64, 0, 4, 138],
+    { 161 opc$copyd }
+    [0, 2, 0, 0, 0, 4, 1, 0, true, 3, 4, 2, 200, false, 5, 2, 0, 3, 0, false, 64, 0, 4, 3],
+    { 162 opc$pcopyd }
+    [0, 2, 0, 0, 0, 4, 1, 0, true, 18, 4, 2, 192, false, 4, 2, 0, 3, 0, false, 0, 0, 4, 3],
+    { 163 opc$moved }
+    [0, 2, 0, 0, 0, 4, 1, 0, false, 3, 4, 2, 200, true, 5, 2, 0, 3, 0, true, 64, 0, 4, 139],
+    { 164 opc$negd }
+    [0, 2, 0, 0, 0, 4, 1, 0, false, 3, 4, 2, 200, true, 5, 2, 0, 3, 0, true, 64, 0, 4, 139],
+    { 165 opc$absd }
+    [0, 2, 0, 0, 0, 4, 1, 0, false, 3, 4, 2, 200, true, 5, 2, 0, 3, 0, true, 64, 0, 4, 139],
+    { 166 opc$cvtds }
+    [0, 2, 0, 0, 0, 4, 1, 0, false, 3, 19, 2, 200, true, 4, 2, 0, 3, 0, true, 64, 0, 4, 143],
+    { 167 opc$rounddi }
+    [0, 2, 0, 0, 0, 4, 1, 0, false, 3, 19, 2, 200, true, 3, 2, 0, 3, 0, false, 64, 0, 4, 7],
+    { 168 opc$roundd }
+    [0, 2, 0, 0, 0, 4, 1, 0, false, 3, 4, 2, 200, true, 5, 2, 0, 3, 0, true, 64, 0, 4, 139],
+    { 169 opc$truncdi }
+    [0, 2, 0, 0, 0, 4, 1, 1, false, 3, 19, 2, 200, true, 3, 2, 0, 3, 0, false, 64, 0, 4, 7],
+    { 170 opc$truncd }
+    [0, 2, 0, 0, 0, 4, 1, 0, false, 3, 4, 2, 200, true, 5, 2, 0, 3, 0, true, 64, 0, 4, 139],
+    { 171 opc$addd }
+    [0, 2, 0, 0, 0, 4, 1, 1, false, 3, 4, 2, 0, true, 7, 3, 4, 3, 100, true, 64, 0, 4, 139],
+    { 172 opc$subd }
+    [0, 2, 0, 0, 0, 4, 1, 1, false, 3, 4, 2, 0, true, 7, 3, 4, 3, 100, true, 64, 0, 4, 139],
+    { 173 opc$cmpd }
+    [0, 2, 0, 0, 0, 4, 1, 0, false, 3, 4, 2, 0, true, 5, 2, 0, 3, 0, false, 64, 0, 4, 395],
+    { 174 opc$classd }
+    [0, 2, 0, 0, 0, 4, 1, 0, false, 3, 0, 2, 0, true, 3, 1, 0, 3, 0, false, 64, 0, 4, 395],
+    { 175 opc$tstd }
+    [0, 2, 0, 0, 0, 4, 1, 0, false, 3, 0, 2, 0, true, 3, 1, 0, 3, 0, false, 64, 0, 4, 395],
+    { 176 opc$mind }
+    [0, 2, 0, 0, 0, 4, 1, 1, false, 3, 4, 2, 0, true, 7, 3, 4, 3, 100, true, 64, 0, 4, 139],
+    { 177 opc$maxd }
+    [0, 2, 0, 0, 0, 4, 1, 1, false, 3, 4, 2, 0, true, 7, 3, 4, 3, 100, true, 64, 0, 4, 139],
+    { 178 opc$muli }
+    [0, 3, 0, 0, 0, 19, 1, 0, false, 8, 19, 2, 0, false, 3, 3, 19, 3, 100, false, 0, 0, 4, 2],
+    { 179 opc$divi }
+    [0, 3, 0, 0, 0, 19, 1, 0, false, 8, 19, 2, 0, false, 3, 3, 19, 3, 124, false, 0, 0, 4, 2],
+    { 180 opc$sqrts }
+    [5, 3, 0, 0, 0, 19, 1, 0, false, 17, 19, 2, 220, true, 3, 2, 0, 3, 0, true, 144, 0, 4, 138],
+    { 181 opc$muls }
+    [0, 3, 0, 0, 0, 19, 1, 1, false, 17, 19, 2, 0, true, 4, 3, 19, 3, 100, true, 64, 0, 4, 138],
+    { 182 opc$divs }
+    [3, 3, 0, 0, 0, 19, 1, 0, false, 17, 19, 2, 0, true, 4, 3, 19, 3, 106, true, 112, 0, 4, 138],
+    { 183 opc$sqrtd }
+    [11, 3, 0, 0, 0, 4, 1, 0, false, 3, 4, 2, 244, true, 5, 2, 0, 3, 0, true, 240, 0, 4, 139],
+    { 184 opc$muld }
+    [0, 3, 0, 0, 0, 4, 1, 1, false, 3, 4, 2, 0, true, 7, 3, 4, 3, 100, true, 64, 0, 4, 139],
+    { 185 opc$divd }
+    [5, 3, 0, 0, 0, 4, 1, 0, false, 3, 4, 2, 0, true, 7, 3, 4, 3, 110, true, 144, 0, 4, 139],
+    { 186 opc$adds5 }
+    [0, 2, 0, 0, 0, 19, 1, 1, false, 17, 19, 2, 136, true, 3, 2, 0, 3, 0, false, 0, 0, 4, 2],
+    { 187 opc$subs5 }
+    [0, 2, 0, 0, 0, 19, 1, 1, false, 17, 19, 2, 136, true, 3, 2, 0, 3, 0, false, 0, 0, 4, 2],
+    { 188 opc$truncsi5 }
+    [0, 2, 0, 0, 0, 19, 1, 1, false, 17, 19, 2, 200, true, 2, 2, 0, 3, 0, false, 0, 0, 4, 7],
+    { 189 opc$addd5 }
+    [0, 2, 0, 0, 0, 4, 1, 1, false, 3, 4, 2, 136, true, 6, 2, 0, 3, 0, false, 0, 0, 4, 3],
+    { 190 opc$subd5 }
+    [0, 2, 0, 0, 0, 4, 1, 1, false, 3, 4, 2, 136, true, 6, 2, 0, 3, 0, false, 0, 0, 4, 3],
+    { 191 opc$truncdi5 }
+    [0, 2, 0, 0, 0, 4, 1, 1, false, 3, 19, 2, 200, true, 3, 2, 0, 3, 0, false, 0, 0, 4, 7],
+    { 192 opc$nop }
+    [0, 1, 0, 0, 0, 0, 1, 0, false, 0, 0, 2, 0, false, 0, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 193 opc$fnop }
+    [0, 2, 0, 0, 0, 0, 1, 0, false, 8, 0, 2, 0, false, 0, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 194 opc$ipccnop }
+    [0, 1, 0, 0, 0, 0, 1, 0, false, 13, 0, 2, 0, false, 2, 0, 0, 3, 0, false, 0, 0, 4, 591],
+    { 195 opc$shiftnop }
+    [0, 1, 0, 0, 0, 18, 1, 0, false, 0, 18, 2, 192, false, 2, 2, 0, 3, 0, false, 0, 0, 4, 7],
+    { 196 opc$entry }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 4, 0, 2, 0, false, 3, 1, 0, 3, 0, false, 0, 0, 4, 7],
+    { 197 opc$limit }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 11, 0, 2, 0, false, 3, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 198 opc$epilogue }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 19, 0, 2, 0, false, 0, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 199 opc$label }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 19, 0, 2, 0, false, 0, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 200 opc$label$ }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 19, 0, 2, 0, false, 0, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 201 opc$seq }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 9, 0, 2, 0, false, 0, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 202 opc$mmt_seq }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 9, 0, 2, 0, false, 0, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 203 opc$join_bp }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 26, 0, 2, 0, false, 3, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 204 opc$ltorg }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 25, 0, 2, 0, false, 1, 1, 0, 3, 0, false, 0, 0, 4, 7],
+    { 205 opc$tableb }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 25, 0, 2, 0, false, 1, 1, 0, 3, 0, false, 0, 0, 4, 7],
+    { 206 opc$tablew }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 25, 0, 2, 0, false, 1, 1, 0, 3, 0, false, 0, 0, 4, 7],
+    { 207 opc$tablel }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 25, 0, 2, 0, false, 1, 1, 0, 3, 0, false, 0, 0, 4, 7],
+    { 208 opc$costly }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 0, 0, 2, 0, false, 0, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 209 opc$bugcheck }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 0, 0, 2, 0, false, 0, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 210 opc$none }
+    [0, 0, 0, 0, 0, 0, 1, 0, false, 0, 0, 2, 0, false, 0, 0, 0, 3, 0, false, 0, 0, 4, 7],
+    { 211 opc$adj_move }
+    [0, 0, 0, 0, 0, 0, 1, 0, true, 0, 0, 2, 0, false, 1, 0, 0, 3, 0, true, 0, 0, 4, 10]];

@@ -1,0 +1,14 @@
+{ build_low_bound.init - a DSEE derived object of be_com/lir.pas (lir.dir) (cc.a88k
+  only), included by lir.pas after solution_string_length.init (the
+  build_* files in the image's include order).  One of the tables lir's
+  operand builder (lir_$build_operand, by the solution's kind or the
+  operand's form) reads.
+
+  A stub (translator PA6): lir.pas is not translated yet.  lir's module
+  data (A5 0x487180) holds initialized tables from +0x28 to +0xC06 and
+  at +0x4190 (docs/backend-plan.md, PA6's notes); this file's is one of
+  them, which one is not settled.
+
+  Not known from the original: everything about its contents. }
+
+{ TODO(pascal) build_low_bound.init: the table's declaration with its data }

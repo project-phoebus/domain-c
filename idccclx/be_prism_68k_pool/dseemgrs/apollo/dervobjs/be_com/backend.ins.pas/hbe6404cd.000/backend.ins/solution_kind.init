@@ -1,0 +1,24 @@
+{ solution_kind.init - a DSEE derived object of be_com/backend.ins.pas
+  (cc.a88k only): by operand kind (operand$t), the ISC solution kind of
+  its register (solution$ip_reg 11 for operand$ip_reg, solution$fp_reg
+  8, solution$fp_reg_pair 9; solution$none otherwise).  Included by
+  lir.pas after instr_size.init, in the section lir_readonly_tables
+  (its second table, +0x300 .. +0x33F: 32 entries of two bytes, the
+  kind in the first byte, the second zero).
+
+  The declaration only: lir.pas opens `var (lir_readonly_tables)'
+  before instr_size.init.  No Apollo copy survives; reconstructed from
+  the section's bytes (translator PA6).
+
+  Not known from the original: the variable's name and element type
+  (a record of two bytes here; Rev 8.89 laid out the element in two
+  bytes with the value first). }
+
+  solution_kind: array [0..31] of packed record
+      kind: 0..255;
+      b1: 0..255;
+    end := [
+    [0, 0], [11, 0], [8, 0], [9, 0], [0, 0], [0, 0], [0, 0], [0, 0],  { 0 }
+    [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0],  { 8 }
+    [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0],  { 16 }
+    [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]];  { 24 }

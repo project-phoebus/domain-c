@@ -64,8 +64,12 @@ type
     l4: integer32;                      { +4 }
     l8: integer32;                      { +8 }
     l12: integer32;                     { +12 }
-    space16: array [16..33] of char;    { +16 }
-    w34: integer;                       { +34 }
+    space16: array [16..31] of char;    { +16 }
+    w32: integer;                       { +32: the node's +20 word
+                                          (lir_$complete_top_level_node_
+                                          inherited_attrs; batch A, PA6) }
+    w34: integer;                       { +34: the node's +43..+44
+                                          word (likewise) }
     l36: integer32;                     { +36 }
   end;
 

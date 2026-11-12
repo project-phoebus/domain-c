@@ -1,0 +1,62 @@
+{ of_string.init - a DSEE derived object of be_com/backend.ins.pas
+  (cc.a88k only): the initializer of the section of_string (0x2B7184:
+  43 names of 34 characters, blank-filled, by of$t; the section's
+  last two bytes are padding).
+  Included by lir.pas.
+
+  No Apollo copy survives; reconstructed from the DOMAIN C 6.9 binary
+  cc.a88k, the section's bytes (translator PA6).
+
+  How the section is shared (docs/questions.md 161, translator PB2's
+  scheme): backend.ins.pas declares the section's variable for every
+  unit; this file, included by lir.pas, gives it its initial value with
+  a `define' statement (the language reference's section 7.2.2, method
+  2).  dpc does not yet lay out such an initialized section named as
+  its variable (docs/dpc-gaps.md 32): the gate renames the section.
+
+  Not known from the original: the file's layout. }
+
+define of_string := [
+    'none                              ',  { 0 }
+    'ip_reg_or_long_pc_disp            ',  { 1 }
+    'ip_reg_or_basic_block             ',  { 2 }
+    'ip_compare_a_operand              ',  { 3 }
+    'fp_reg_pair                       ',  { 4 }
+    'short_pc_disp                     ',  { 5 }
+    'ip_reg_or_s_immed11               ',  { 6 }
+    'ip_reg_scaled_or_s_immed8         ',  { 7 }
+    's_immed16                         ',  { 8 }
+    'ip_reg_or_s_immed8                ',  { 9 }
+    'ip_reg_scaled_or_s_immed16        ',  { 10 }
+    'ip_reg_or_s_immed16               ',  { 11 }
+    'ip_reg_or_u_i16_or_hi_i16         ',  { 12 }
+    'u_immed13                         ',  { 13 }
+    'ip_reg_or_and_or_bic_u_immed16    ',  { 14 }
+    'sc_reg_or_u_immed5                ',  { 15 }
+    'ip_reg_or_u_immed5                ',  { 16 }
+    'fp_reg_quad                       ',  { 17 }
+    'ip_reg                            ',  { 18 }
+    'fp_reg                            ',  { 19 }
+    'u_immed4                          ',  { 20 }
+    'ip_reg_scaled_or_pa_add_immed     ',  { 21 }
+    'trap_serialize_register           ',  { 22 }
+    'ip_reg_or_s_immed5                ',  { 23 }
+    '0_mod_2_s_immed16                 ',  { 24 }
+    '0_mod_4_s_immed16                 ',  { 25 }
+    'ip_reg_or_s_u_hi_immed16          ',  { 26 }
+    'ip_reg_or_0_mod_2_s_immed16       ',  { 27 }
+    'ip_reg_or_0_mod_4_s_immed16       ',  { 28 }
+    'ip_reg_or_0_mod_8_s_immed16       ',  { 29 }
+    'ip_reg_or_0_mod_16_s_immed16      ',  { 30 }
+    'ip_reg_or_s_immed14               ',  { 31 }
+    'control_register                  ',  { 32 }
+    'ip_reg_scaled_3_or_s_immed5       ',  { 33 }
+    'ip_reg_scaled_2_or_s_immed5       ',  { 34 }
+    'signed_immed11                    ',  { 35 }
+    'ip_reg_scaled_2_or_s_immed14      ',  { 36 }
+    'ip_reg_scaled_or_pa_move_immed    ',  { 37 }
+    'u_immed5                          ',  { 38 }
+    'ip_reg_scaled_3_or_s_immed14      ',  { 39 }
+    'signed_immed14                    ',  { 40 }
+    'space_register                    ',  { 41 }
+    'ip_reg_scaled_1_or_s_immed14      '];  { 42 }
