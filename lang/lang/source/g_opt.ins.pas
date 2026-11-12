@@ -105,7 +105,11 @@ type
       last: boolean;                    { .3: its block's last_stmt }
       b42_2: boolean;
       first: boolean;                   { .1: its block's first_stmt }
-      b42_0: boolean;
+      entry: boolean;                   { .0: a routine's entry (148)
+                                          heading the routine's region
+                                          (opt_main's
+                                          compute_basic_block_
+                                          relationships) }
       region: 0..65535;                 { +43 }
       b45: 0..255;                      { +45 }
     end;
@@ -140,7 +144,12 @@ type
       { 141, 142, 150: the branch's target; 142's condition. }
       3: (br_target: il_$node_ptr_t;    { +48 }
           br_unused_52: integer32;      { +52 }
-          br_cond: il_$node_ptr_t);     { +56 }
+          br_cond: il_$node_ptr_t;      { +56 }
+          br_sense: boolean);           { +60: 142's sense, the branch
+                                          taken when br_cond is true
+                                          (cg_top; opt_main's
+                                          compute_abnormality_due_to_
+                                          proc_calls) }
       { 140: the stored value's descriptor (asg_size .. asg_flags) as
         a whole (assign_elim passes it to buildtreenode). }
       4: (asg_desc: add_node_$desc_t);  { +48 }
@@ -318,7 +327,11 @@ type
     size: integer32;                    { +16: bytes }
     bytes: integer32;                   { +20 }
     flags: packed record                { +24 }
-      b24: 0..255;                      { +24 }
+      b24: 0..31;                       { +24.7..3 }
+      b24_2, b24_1, b24_0: boolean;     { +24.2..0 (opt_main's
+                                          compute_variable_type_
+                                          descriptors clears .7..1 for
+                                          a Fortran variable) }
       b25_7: boolean;                   { +25.7 }
       ranged: boolean;                  { .6 }
       b25_5, b25_4, b25_3, b25_2, b25_1, b25_0: boolean;
@@ -532,6 +545,15 @@ var
     number, the block the node could be hoisted to (opt_cse's
     cse_$set_hoistability and cse, opt_main). }
   opt_loop_hoist: extern g_opt_nums_ptr_t;
+
+  { opt_livevar.pas's +0 (cc.m68k 0x2D2ED8, cc.a88k 0x493884): the
+    Fortran symbol (110) of the routine whose calls may return
+    abnormally and disturb every register but FP2..FP7 (opt_main's
+    assert_is_call_to_abnormal_routine and
+    count_interior_nodes_for_postorder_node_list, reg_save's
+    registers_consumed_by_fortran_symbol compare with it).  Nothing in
+    either binary stores to it: it stays nil (docs/questions.md 122). }
+  opt_abnormal_routine: extern il_$node_ptr_t;
 
   { opt_cse.pas's +0x88 (cc.m68k 0x2D2ED0, cc.a88k 0x49387C): how many
     nodes cse looks back from each candidate (opt_main's g_opt sets

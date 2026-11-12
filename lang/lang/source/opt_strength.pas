@@ -2291,7 +2291,7 @@ begin
   n^.hdr.last := false;
   n^.hdr.b42_2 := false;
   n^.hdr.first := false;
-  n^.hdr.b42_0 := false;
+  n^.hdr.entry := false;
   n^.asg_x := nil;
   n^.asg_op := op;
   if op = 0 then begin

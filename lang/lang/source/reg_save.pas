@@ -78,14 +78,6 @@ module reg_save;
 %include '/sys/ins/base.ins.pas';
 %include 'lang2/source/lt_utils/source/bug_check.ins.pas';
 
-var
-  { opt_livevar.pas's data +0 (cc.m68k 0x2D2ED8), reached absolutely by
-    opt_general, opt_main (assert_is_call_to_abnormal_routine) and
-    registers_consumed_by_fortran_symbol: taken to be the node of the
-    routine whose calls disturb every register but FP2..FP7.  Declared
-    here until its owner is translated (docs/questions.md). }
-  opt_abnormal_routine: extern il_$node_ptr_t;
-
 { The routines not translated yet (the TODO above). }
 
 function registers_consumed_by_object(
