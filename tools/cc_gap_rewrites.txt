@@ -244,3 +244,12 @@ lang2/source/be_com/asm.pas	s/^(  \{ Its literals\. \})$/%var gap25b;\n%if gap25
 lang2/source/be_com/asm.pas	s/^(2:)$/%endif { gap 25 }\n$1/
 lang2/source/be_com/asm.pas	s/^(                case form of)$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
 lang2/source/be_com/asm.pas	s/^(                \{ The forms done\. \})$/%endif { gap 25 }\n$1/
+# gap 22 (call_conv, translator PA3): ord of a boolean (has_result, dbl: 0, for the check)
+lang2/source/be_com/call_conv.pas	s/ord\(\(rlen = 9\) or has_result\)/0 { gap 22 }/g; s/ord\((has_result|dbl)\)/0 { gap 22 }/g
+# gap 25 (call_conv, translator PA3): at_call_conv exceeds dpc's virtual registers (part 3, the descriptors by the parameters' kind, part 4's aggregates split over registers and part 5, the formals, left out of the check)
+lang2/source/be_com/call_conv.pas	s/^(  if opr = nil then)$/%var gap25a;\n%if gap25a %then { gap 25 }\n$1/
+lang2/source/be_com/call_conv.pas	s/^(60:)$/%endif { gap 25 }\n$1/
+lang2/source/be_com/call_conv.pas	s/^(  \{ 5\. The b25 flags, the variable arguments. registers, the formals.)$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
+lang2/source/be_com/call_conv.pas	s/^(  props\^\.args_size := offs;)$/%endif { gap 25 }\n$1/
+lang2/source/be_com/call_conv.pas	s/^(        \{ An aggregate by value: its longwords in the integer registers)$/%var gap25b;\n%if gap25b %then { gap 25 }\n$1/
+lang2/source/be_com/call_conv.pas	s/^(        \{ The aggregate done\. \})$/%endif { gap 25 }\n$1/
