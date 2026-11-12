@@ -596,3 +596,7 @@ lang2/source/be_com/tr_utils.pas	s/^(\s*)bb_interval := bb$/$1bb_interval := bb^
 lang2/source/be_com/tr_utils.pas	s/if bb_interval\(bb\) <> tr_24 then/if tr_28 <> tr_24 then { gap 12 }/
 lang2/source/be_com/tr_utils.pas	s/\(base_operand\(i\) <> r\)/(i <> instr) { gap 12 }/
 lang2/source/be_com/tr_utils.pas	s/if utils_ins_\$operands_instruction\(last\) = add then/if last = base then { gap 12 }/
+# gap 24 (tr_utils): a call as a right operand of `and' (compared with true, for the check)
+lang2/source/be_com/tr_utils.pas	s/and can_adjust_creation_point\(p, add\^\.opnds\[2\]\.lts, add, disp, 0\)/and (can_adjust_creation_point(p, add^.opnds[2].lts, add, disp, 0) = true) { gap 24 }/
+lang2/source/be_com/tr_utils.pas	s/if not retry and mem_ref_positioned_for_postincrement\($/if not retry and (true = mem_ref_positioned_for_postincrement( { gap 24 }/
+lang2/source/be_com/tr_utils.pas	s/^(\s*)cur, nil, true, disp, offset\) then begin$/$1cur, nil, true, disp, offset)) then begin/

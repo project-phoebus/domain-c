@@ -2475,3 +2475,544 @@ begin
   end;
   can_adjust_creation_point := result;
 end;
+
+{ autoindex_within_bb - add (an ADD of an immediate to the base register,
+  operand 2, into operand 3; with try_both any of the opcodes, else
+  only ADD, disp then the smallest integer) folded into a load or store
+  of its block as a pre- or postmodification.  First the instructions
+  reading add's result (chained through +24, each once), in two
+  passes: one whose base is the result and that is positioned for a
+  preincrement (mem_ref_positioned_for_preincrement: offset 0 in the
+  first pass; in the second, with an immediate index, offset -index, or
+  with try_both as a postincrement with -(disp + index) and its
+  displacement then twiddled by -disp: tr_utils_$try_twiddling_disp)
+  takes add over: the result's readers before it adjusted by -disp
+  (preserve_operation) and moved to add's operand 2's segment, then
+  transform_to_autoindex (mode 2 for a zero index, else 1; the load's
+  result may be the base).  Otherwise operand 2's readers (operand 2
+  itself taken off their chain, where it must be last: bug_check)
+  chained in reverse, in two passes likewise: an instruction whose
+  creation of operand 2 can absorb disp (can_adjust_creation_point,
+  with try_both) or a load or store based on operand 2 positioned for a
+  postincrement (offset 0; then -index, or with try_both disp - index
+  and a twiddle by disp) takes add over: the readers after it, but add,
+  adjusted by disp and moved to add's result; when the operand writes
+  (a creation absorbed), the creation adjusted by -disp
+  (adjustable_creation_point applied; bug_check when it fails), the
+  result's readers given to operand 2's segment, the result's segment
+  excised (its definition moved to operand 2's segment first when it is
+  final) and add excised; else transform_to_autoindex (mode 1 for a
+  zero index, else 2).  Operand 2 put back on its chain when nothing
+  was done.  True when add was folded.
+
+  0x27EFC2, 0x598 bytes, no A5 (its callers'): the instruction lists
+  through +24; both passes counted by `dbf' with the pass in a word. }
+
+function autoindex_within_bb(
+    add: instr_ptr_t;
+    try_both: boolean;
+    disp: integer32): boolean; options(val_param); internal;
+var
+  result: boolean;
+  r, b, x, o, a2, t: opnd_ptr_t;
+  head, p, i: instr_ptr_t;
+  pass: integer;
+  k: integer32;
+  ok: boolean;
+  delta: integer32;
+  mode: integer;
+  lts, l3: lts_ptr_t;
+  op2: opnd_ptr_t;
+  last: opnd_ptr_t;
+begin
+  result := false;
+  if not try_both then begin
+    if add^.opc <> ord(opc$add) then begin
+      autoindex_within_bb := false;
+      return;
+    end;
+    disp := 16#80000000;
+  end;
+  tr_utils_$guarantee_operand_order(add^.opnds[3].lts);
+  r := add^.opnds[3].link;
+  if r = nil then
+    head := nil
+  else begin
+    head := utils_ins_$operands_instruction(r);
+    head^.l24 := 0;
+    p := head;
+    r := r^.link;
+    while r <> nil do begin
+      i := utils_ins_$operands_instruction(r);
+      p^.l24 := integer32(i);
+      if i <> p then
+        p := i;
+      p^.l24 := 0;
+      r := r^.link;
+    end;
+  end;
+  pass := 0;
+  for k := 1 to 2 do begin
+    p := head;
+    while p <> nil do begin
+      b := base_operand(p);
+      x := index_operand(p);
+      if (x <> nil) and (b <> nil) then
+        if b^.lts = add^.opnds[3].lts then begin
+          if pass <> 1 then
+            ok := mem_ref_positioned_for_preincrement(p, add, try_both, disp, 0)
+          else if x^.h.kind = operand$immediate then begin
+            ok := mem_ref_positioned_for_preincrement(p, add, try_both, disp,
+                                                      -x^.value);
+            if ok then
+              delta := 0
+            else if try_both then begin
+              ok := mem_ref_positioned_for_postincrement(p, add, try_both,
+                      disp, -(disp + x^.value));
+              delta := -disp;
+            end
+            else
+              ok := false;
+            if ok then
+              ok := tr_utils_$try_twiddling_disp(p, delta, false, false);
+          end
+          else
+            ok := false;
+          if ok then begin
+            if x^.value = 0 then
+              mode := 2
+            else
+              mode := 1;
+            a2 := add^.opnds[3].link;
+            if a2 <> b then begin
+              delta := -disp;
+              lts := add^.opnds[2].lts;
+              repeat
+                t := a2;
+                preserve_operation(t, delta);
+                a2 := t;
+                a2^.lts := lts;
+                last := a2;
+                a2 := a2^.link;
+              until a2 = b;
+              op2 := addr(add^.opnds[2]);
+              last^.link := op2;
+              if lts^.def = op2 then
+                lts^.def := add^.opnds[3].link
+              else begin
+                o := lts^.def;
+                while o^.link <> op2 do
+                  o := o^.link;
+                o^.link := add^.opnds[3].link;
+              end;
+              add^.opnds[3].link := b;
+            end;
+            transform_to_autoindex(p, b, x, add, mode, true);
+            autoindex_within_bb := true;
+            return;
+          end;
+        end;
+      p := instr_ptr_t(p^.l24);
+    end;
+    pass := pass + 1;
+  end;
+  tr_utils_$guarantee_operand_order(add^.opnds[2].lts);
+  a2 := add^.opnds[2].lts^.def;
+  if add^.opnds[2].link <> nil then
+    bug_check('TR_UTILS_$autoindex_within_bb: intend to modify opr should be last%$');
+  op2 := addr(add^.opnds[2]);
+  if a2 = op2 then begin
+    autoindex_within_bb := result;
+    return;
+  end;
+  while a2^.link <> op2 do
+    a2 := a2^.link;
+  a2^.link := nil;
+  a2 := add^.opnds[2].lts^.def;
+  if a2 = nil then
+    head := nil
+  else begin
+    head := utils_ins_$operands_instruction(a2);
+    head^.l24 := 0;
+    a2 := a2^.link;
+    while a2 <> nil do begin
+      i := utils_ins_$operands_instruction(a2);
+      if head <> i then begin
+        i^.l24 := integer32(head);
+        head := i;
+      end;
+      a2 := a2^.link;
+    end;
+  end;
+  pass := 0;
+  for k := 1 to 2 do begin
+    p := head;
+    while p <> nil do begin
+      ok := false;
+      if try_both
+         and can_adjust_creation_point(p, add^.opnds[2].lts, add, disp, 0)
+      then begin
+        ok := true;
+        b := add^.opnds[2].lts^.def;
+      end
+      else begin
+        b := base_operand(p);
+        x := index_operand(p);
+        if (x <> nil) and (b <> nil) then
+          if b^.lts = add^.opnds[2].lts then begin
+            if pass <> 1 then
+              ok := mem_ref_positioned_for_postincrement(p, add, try_both,
+                                                         disp, 0)
+            else if x^.h.kind = operand$immediate then begin
+              if mem_ref_positioned_for_postincrement(p, add, try_both, disp,
+                                                      -x^.value) then begin
+                ok := true;
+                delta := 0;
+              end
+              else if try_both then begin
+                ok := mem_ref_positioned_for_postincrement(p, add, try_both,
+                        disp, disp - x^.value);
+                delta := disp;
+              end;
+              if ok then
+                ok := tr_utils_$try_twiddling_disp(p, delta, false, false);
+            end;
+          end;
+      end;
+      if ok then begin
+        a2 := b^.link;
+        if a2 <> nil then begin
+          last := nil;
+          repeat
+            i := utils_ins_$operands_instruction(a2);
+            if i <> add then begin
+              t := a2;
+              preserve_operation(t, disp);
+              a2 := t;
+              last := a2;
+            end;
+            a2 := a2^.link;
+          until a2 = nil;
+          if last <> nil then begin
+            last^.link := add^.opnds[3].link;
+            add^.opnds[3].link := b^.link;
+            r := add^.opnds[3].link;
+            while r <> nil do begin
+              r^.lts := add^.opnds[3].lts;
+              r := r^.link;
+            end;
+          end;
+        end;
+        if (add^.opnds[1].h.kind = operand$ip_reg)
+           and (add^.opnds[1].lts = b^.lts) then
+          b^.link := addr(add^.opnds[1])
+        else
+          b^.link := op2;
+        lts := add^.opnds[2].lts;
+        if (opnd_bytes_ptr_t(b)^.rrp & 12) <> 0 then begin
+          if not adjustable_creation_point(lts^.def, -disp, add, false, false,
+                                           true) then
+            bug_check('TR_UTILS_$autoindex_within_bb: adjustable_creation_point failed%$');
+          add^.opnds[2].link := add^.opnds[3].link;
+          add^.opnds[3].link := nil;
+          r := add^.opnds[2].link;
+          while r <> nil do begin
+            r^.lts := lts;
+            r := r^.link;
+          end;
+          l3 := add^.opnds[3].lts;
+          if l3^.f2.b3_4 then begin
+            utils_$move_definition(l3, lts, 0);
+            utils_$excise_lts_cleanly(add^.opnds[3].lts, false);
+            utils_$put_lts_on_final_list(lts);
+          end
+          else
+            utils_$excise_lts_cleanly(l3, false);
+          discard(utils_$excise_instruction_cleanly(add, true));
+          autoindex_within_bb := true;
+          return;
+        end;
+        if x^.value = 0 then
+          mode := 1
+        else
+          mode := 2;
+        transform_to_autoindex(p, b, x, add, mode, false);
+        autoindex_within_bb := true;
+        return;
+      end;
+      p := instr_ptr_t(p^.l24);
+    end;
+    pass := pass + 1;
+  end;
+  o := add^.opnds[2].lts^.def;
+  while o^.link <> nil do
+    o := o^.link;
+  o^.link := op2;
+  autoindex_within_bb := result;
+end;
+
+{ autoincrement_solutions_acceptable - whether the solutions' last entry
+  (taken off; its segment in b) can take add's increment by disp: one
+  of the instructions reading the segment (chained through +24, each
+  once) whose creation can absorb disp (can_adjust_creation_point) or
+  that is a load or store based on the segment with an immediate index
+  positioned for a postincrement (with -index; else, or on a second
+  try of the same instruction, disp - index and a displacement twiddle
+  by disp when they differ); every other solution's segment then must
+  have such an instruction too (its entry's a set to it, or nil for a
+  creation), and the twiddle must succeed (tr_utils_$try_twiddling_disp).
+  The entry is put back with the instruction found (nil for a creation)
+  and the answer is yes.
+
+  0x27F5E0, 0x2C4 bytes, no A5 (its callers'): the frame bytes -58 (a
+  second try pending), -60 (twiddle) and -52 (the twiddle's disp). }
+
+function autoincrement_solutions_acceptable(
+    sols: tr_sol_ptr_t;
+    add: instr_ptr_t;
+    disp: integer32): boolean; options(val_param); internal;
+var
+  result: boolean;
+  lts, l2: lts_ptr_t;
+  r: opnd_ptr_t;
+  head, cur, found, p, i: instr_ptr_t;
+  retry: boolean;
+  ok: boolean;
+  twiddle: boolean;
+  tdisp: integer32;
+  offset: integer32;
+  b, x: opnd_ptr_t;
+  s: tr_sol_ptr_t;
+  k: integer32;
+label
+  next_entry, fail;
+begin
+  result := false;
+  lts := sols^.entries[sols^.count].b;
+  sols^.count := sols^.count - 1;
+  r := lts^.def;
+  if r = nil then begin
+    autoincrement_solutions_acceptable := false;
+    return;
+  end;
+  head := utils_ins_$operands_instruction(r);
+  head^.l24 := 0;
+  r := r^.link;
+  while r <> nil do begin
+    i := utils_ins_$operands_instruction(r);
+    if i <> head then begin
+      i^.l24 := integer32(head);
+      head := i;
+    end;
+    r := r^.link;
+  end;
+  retry := false;
+  cur := head;
+  while cur <> nil do begin
+    ok := false;
+    twiddle := false;
+    tdisp := 0;
+    offset := 0;
+    found := cur;
+    if can_adjust_creation_point(cur, lts, add, disp, offset) then begin
+      ok := true;
+      found := nil;
+    end
+    else begin
+      b := base_operand(cur);
+      x := index_operand(cur);
+      if (b <> nil) and (x <> nil) then
+        if (b^.lts = lts) and (x^.h.kind = operand$immediate) then begin
+          offset := -x^.value;
+          if not retry and mem_ref_positioned_for_postincrement(
+                               cur, nil, true, disp, offset) then begin
+            ok := true;
+            twiddle := offset <> 0;
+            retry := true;
+          end
+          else begin
+            offset := disp - x^.value;
+            tdisp := disp;
+            twiddle := tdisp <> x^.value;
+            ok := mem_ref_positioned_for_postincrement(cur, nil, true, disp,
+                                                       offset);
+            retry := false;
+          end;
+        end;
+    end;
+    if ok then begin
+      s := sols;
+      while s <> nil do begin
+        for k := 1 to s^.count do begin
+          l2 := s^.entries[k].b;
+          if l2^.def = nil then begin
+            autoincrement_solutions_acceptable := false;
+            return;
+          end;
+          p := utils_ins_$operands_instruction(l2^.def);
+          p^.l24 := 0;
+          r := l2^.def^.link;
+          while r <> nil do begin
+            i := utils_ins_$operands_instruction(r);
+            if i <> p then begin
+              i^.l24 := integer32(p);
+              p := i;
+            end;
+            r := r^.link;
+          end;
+          while p <> nil do begin
+            if can_adjust_creation_point(p, l2, add, disp, offset) then begin
+              s^.entries[k].a := nil;
+              goto next_entry;
+            end;
+            b := base_operand(p);
+            x := index_operand(p);
+            if (b <> nil) and (x <> nil) then
+              if (b^.lts = l2) and (x^.h.kind = operand$immediate) then
+                if mem_ref_positioned_for_postincrement(p, nil, true, disp,
+                                                        offset) then begin
+                  s^.entries[k].a := p;
+                  goto next_entry;
+                end;
+            p := instr_ptr_t(p^.l24);
+          end;
+          goto fail;
+        next_entry:
+        end;
+        s := s^.next;
+      end;
+      if twiddle then
+        if not tr_utils_$try_twiddling_disp(cur, tdisp, false, false) then
+          goto fail;
+      sols^.count := sols^.count + 1;
+      sols^.entries[sols^.count].a := found;
+      autoincrement_solutions_acceptable := true;
+      return;
+    end;
+  fail:
+    if not retry then
+      cur := instr_ptr_t(cur^.l24);
+  end;
+  autoincrement_solutions_acceptable := result;
+end;
+
+{ apply_autoincrement_solutions - each solution's segment takes add's
+  increment by disp: an entry without an instruction has its creation
+  adjusted by -disp (adjustable_creation_point applied; bug_check when
+  it fails), its readers kept; otherwise the entry's load or store (a
+  bug when not one) gets a free operand slot modifying lr's final
+  segment in the solution's block (utils_$get_final_lts; the base's
+  segment, which must be final, taken off the final list, means to
+  modify, and gives its definition to the new one when it writes), and
+  postmodifies (a zero index becomes disp, mode 1) or premodifies (mode
+  2).  The readers of the old base (or creation) follow the new
+  segment, each adjusted by disp (preserve_operation); the source
+  statements merged with add's.
+
+  0x27F8A4, 0x20E bytes, no A5: an entry's instruction tested by the
+  flags of its `move.l' (the next `movea.l' sets none). }
+
+procedure apply_autoincrement_solutions(
+    sols: tr_sol_ptr_t;
+    lr: lr_ptr_t;
+    disp: integer32;
+    add: instr_ptr_t); options(val_param); internal;
+var
+  s: tr_sol_ptr_t;
+  k: integer32;
+  mem: instr_ptr_t;
+  lts, nl: lts_ptr_t;
+  readers, n, b, x: opnd_ptr_t;
+  created: boolean;
+begin
+  s := sols;
+  while s <> nil do begin
+    for k := 1 to s^.count do begin
+      mem := s^.entries[k].a;
+      lts := s^.entries[k].b;
+      if mem = nil then begin
+        readers := lts^.def^.link;
+        lts^.def^.link := nil;
+        if not adjustable_creation_point(lts^.def, -disp, add, false, false,
+                                         true) then
+          bug_check('TR_UTILS_$apply_autoincrement_solutions: adjustable_creation_point failed%$');
+        mem := utils_ins_$operands_instruction(lts^.def);
+        nl := lts;
+        n := lts^.def;
+      end
+      else begin
+        if not (instruction_attributes[mem^.opc].class
+                in [class$load, class$store]) then
+          bug_check('TR_UTILS_$apply_autoincrement:  illegal opcode%$');
+        b := base_operand(mem);
+        lts := b^.lts;
+        readers := b^.link;
+        b^.link := nil;
+        if not lts^.f2.b3_4 then
+          bug_check('TR_UTILS_$apply_autoincrement:  can''t find final LTS%$');
+        utils_$remove_lts_from_final_list(lts);
+        nl := utils_$get_final_lts(lr, s^.entries[k].bb, created);
+        n := find_operand_of_kind(mem, 0, 0);
+        n^.h.kind := operand$ip_reg;
+        n^.link := nil;
+        opnd_bytes_ptr_t(n)^.rrp := 4;
+        n^.lts := nl;
+        nl^.rrp := nl^.rrp + [rrp$modify];
+        nl^.def := n;
+        lts^.rrp := lts^.rrp + [rrp$intend_to_modify];
+        b^.h.intend_to_modify := true;
+        if (lts^.rrp * [rrp$modify, rrp$write]) <> [] then
+          utils_$move_definition(lts, nl, 0);
+        x := index_operand(mem);
+        if x^.value = 0 then begin
+          x^.value := disp;
+          mem^.h.width := (mem^.h.width & 16#3F) ! 16#40;
+        end
+        else
+          mem^.h.width := (mem^.h.width & 16#3F) ! 16#80;
+      end;
+      if readers <> nil then begin
+        n^.link := readers;
+        nl^.rrp := nl^.rrp + [rrp$read];
+        repeat
+          readers^.lts := nl;
+          preserve_operation(readers, disp);
+          readers := readers^.link;
+        until readers = nil;
+      end;
+      utils_$maybe_merge_source_statements(mem, add);
+    end;
+    s := s^.next;
+  end;
+end;
+
+{ ok_to_add_auto - no (0): an autoincrement is never added on an edge.
+  0x27FB64, 0x16 bytes (loads A5). }
+
+function ok_to_add_auto(
+    lts: lts_ptr_t;
+    bb: bb_ptr_t;
+    arg: integer32;
+    out pair: tr_pair_t): integer; options(val_param);
+begin
+  ok_to_add_auto := 0;
+end;
+
+{ validate_lts_for_auto - a segment found for an autoincrement: no (0)
+  when it has no def or its block's +17 bit 6 is set; else yes (1)
+  with the segment as the pair's b (its a nil).  0x27FB7A, 0x40 bytes. }
+
+function validate_lts_for_auto(
+    lts: lts_ptr_t;
+    bb: bb_ptr_t;
+    arg: integer32;
+    out pair: tr_pair_t): integer; options(val_param);
+begin
+  pair.a := nil;
+  if (lts^.def = nil) or bb^.f.b17_6 then
+    validate_lts_for_auto := 0
+  else begin
+    pair.b := lts;
+    validate_lts_for_auto := 1;
+  end;
+end;

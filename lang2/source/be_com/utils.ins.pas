@@ -149,11 +149,13 @@ function utils_$get_exposed_lts(
 
 { UTILS_$GET_FINAL_LTS - 0x28590A, 0x7C bytes; called from com fg_utils iv
   tr_utils trans.  Frame 8:al; 12:l; 16:a.  Result: A0 (callers: A015
-  D0w1). }
+  D0w1).  lr's final segment in bb (nil for no lr), a new one put on
+  the final list when there is none (created true; the body read by
+  tr_utils' translator). }
 function utils_$get_final_lts(
-    p1: univ_ptr;
-    p2: integer32;
-    p3: univ_ptr): univ_ptr; options(val_param); extern;
+    lr: lr_ptr_t;
+    bb: bb_ptr_t;
+    out created: boolean): lts_ptr_t; options(val_param); extern;
 
 { UTILS_$COMPARE_BIRTHPOINTS - 0x285986, 0x70 bytes; called from com
   mmt_utils.  Frame 8:a; 12:a.  Result: D0 (callers: D0b3). }
