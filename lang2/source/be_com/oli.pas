@@ -767,7 +767,7 @@ begin
     i^.opnds[1].h.num := 1;
     opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 16;
     i^.opnds[2].h.kind := operand$ip_reg_like;
-    i^.opnds[2].value := lir_main_c48;
+    i^.opnds[2].lts := lir_main_c48;
     i^.opnds[2].h.num := 2;
     opnd_bytes_ptr_t(addr(i^.opnds[3]))^.rrp := 9;
     i^.opnds[3].h.kind := operand$fp_reg_pair;
@@ -818,7 +818,7 @@ begin
     i^.opnds[1].h.num := 1;
     opnd_bytes_ptr_t(addr(i^.opnds[2]))^.rrp := 16;
     i^.opnds[2].h.kind := operand$ip_reg_like;
-    i^.opnds[2].value := lir_main_c48;
+    i^.opnds[2].lts := lir_main_c48;
     i^.opnds[2].h.num := 2;
     opnd_bytes_ptr_t(addr(i^.opnds[3]))^.rrp := 8;
     i^.opnds[3].h.kind := operand$fp_reg;
