@@ -724,7 +724,10 @@ type
     bb80: bb_ptr_t;                     { +80: a block the memory live
                                           range is live out of (df_utils:
                                           batch A) }
-    space84: array [84..87] of char;    { +84 }
+    l84: bb_ptr_t;                      { +84: the blocks no interval
+                                          head owns, chained at their l78
+                                          (fg_utils_$drop_this_block;
+                                          batch A, PA5: was space84) }
     cells: cell_ptr_t;                  { +88 }
     epilogues: cell_ptr_t;              { +92 }
     return_instr: instr_ptr_t;          { +96: its RETURN (fga's
@@ -1715,8 +1718,8 @@ procedure fg_utils_$end_compilation; extern;
 { FG_UTILS_$DROP_THIS_BLOCK - 0x234AB8, 0x184 bytes; called from asm.
   Frame 8:al; 12:al. }
 procedure fg_utils_$drop_this_block(
-    p1: univ_ptr;
-    p2: univ_ptr); options(val_param); extern;
+    rtn: rtn_ptr_t;
+    bb: bb_ptr_t); options(val_param); extern;
 
 { FG_UTILS_$FORWARD_THIS_BLOCK - 0x234C3C, 0x3C8 bytes; called from fga
   post.  Frame 8:l; 12:al; 16:al (batch A: from fga's call, a block
