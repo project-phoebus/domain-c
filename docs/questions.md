@@ -3238,6 +3238,20 @@ answered by this policy and needs no reply.
    overlaying it and bat being assigned from integers.  call_conv's
    view is an il_$blk_atts_t (blk_atts; the conventions call_pas ..
    call_ada by name).  Code identical.
+   **RN7's two remaining deviations done (translator RN9,
+   2026-11-12):** il_utils' il_utl_$count_vars ors the bits into the
+   label's booleans, `q^.nlgoto := q^.nlgoto or ((ord(v^.xc[44]) & 1) <>
+   0)' (and abnormal), the image's `btst; sne D0; or.b D0,(75,A0)'
+   (0x07DC84, 0x07DC90) where setting them true gave `beq; st': dpc
+   gives `move.b (75,A0),D0; ...; sne D1; or.b D1,D0; move.b
+   D0,(75,A0)', not or'ing in place (docs/dpc-gaps.md 50); the longer
+   arm makes one earlier arm's branch to the end `bra.w' (the image's
+   `bra.s').  opt_main's make_new_postorder_node_list tests the unused
+   label with `and then' (kind, not abnormal, class lbl_user, +50 zero):
+   dpc now branches at each test as the image does (`cmpi.w #144;
+   bne.w; tst.b (74,A0); bmi.w; moveq #62; and.b (72,A0); lsr.w #1;
+   cmpi.w #11; bne.w; tst.w (50,A0); bne.w', 0x0E05CE..0x0E0600), the
+   same instructions, where the whole `and' gave `seq; not.b; and.b'.
 332. Translator RN5: **the assembly comparison** (every unit compiled as
    the gate compiles it, main eec0632 against the branch, dpc b9d77de
    stable: 207 of 277 objects identical, the other 70 all in units
