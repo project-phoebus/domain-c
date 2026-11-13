@@ -3,17 +3,9 @@
 # Each line names its gap in docs/dpc-gaps.md.
 # gap 1: whole varying assignment (copy the length only, for the check)
 lang/common/source/diag.pas	s/^(\s*)line_prefix := prefix;/$1line_prefix.length := prefix.length; { gap 1 }/
-# gap 4: write and writeln (dropped, for the check)
-lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
 # gap 10: ordering arrays of char (compare the lengths instead)
 lang/lang/source/sortidntk.pas	s/\^\.idnt_name ([<>]) pivot\^\.idnt_name/^.idnt_len $1 pivot^.idnt_len { gap 10 }/g
 lang/bind/source/objio.pas	s/^(\s*)writeln\(.*\);\s*$/$1; { gap 4 }\n/
-# gap 4 (prfpkg): write and writeln (dropped, for the check)
-lang/lang/source/prfpkg.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
-# gap 4 (celpkg): writeln (dropped, for the check)
-lang/lang/source/celpkg.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
-# gap 4 (gen_exception): writeln (dropped, for the check)
-lang/lang/source/gen_exception.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
 # gap 14: a non-local goto (an assignment instead, for the check)
 lang/c_compiler/source/c_lex_pp.pas	s/goto 99;  \{ non-local \}/ch := chr(0); { gap 14 }/
 # gap 16: ptoc and ctop (dropped, for the check)
@@ -32,29 +24,20 @@ lang/c_compiler/source/c_expr_sem.pas	s/((?:\w+(?:\[[^\]]*\])?\.)*\w+)\^\.kind i
 lang/c_compiler/source/c_expr_sem.pas	s/\bop in \[18, 27, 28, 32, 37\.\.42, 51\.\.61, 65\]/((op = 18) or (op = 27) or (op = 28) or (op = 32) or ((op >= 37) and (op <= 42)) or ((op >= 51) and (op <= 61)) or (op = 65)) { gap 8 }/g
 lang/c_compiler/source/c_expr_sem.pas	s/\bop in \[18, 27, 28, 44, 65\]/((op = 18) or (op = 27) or (op = 28) or (op = 44) or (op = 65)) { gap 8 }/g
 # subtraction on left out of the check by a conditional variable that is not set)
-# gap 4 (outbin): write and writeln (dropped, for the check)
-lang/lang/source/outbin.pas	s/^(\s*)write(ln)?\b.*;\s*$/${1}dbcod_on := dbcod_on; { gap 4 }\n/
 # gap 26 (outbin): substr (the length compared instead, for the check)
 lang/lang/source/outbin.pas	s/:= substr\(fpx_chars_ptr_t\(addr\(s\^\.str_chars\)\)\^, 1, s\^\.str_len\) = 'CommandCIR';/:= s^.str_len = 10; { gap 26 }/
 # gap 20 (c_syntax): set expressions passed to in parameters (the first operand passed, for the check)
 lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{([(]|,\s+)(\w+)((?:\s*\+\s*(?:\w+|\[[^\]]*\]))+)(?=\s*[,)])}{$1$2}g
 # gap 27 (c_syntax): set constants passed to in parameters (a module variable gap25_s passed, for the check)
 lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s#\n(  legal_specs: )#\n  gap25_s: c_tokset_t;\n$1#; s#(\(|, +)\[[^\]\[]*\](?=\s*[,)])#${1}gap25_s#g
-# gap 4 (add_node): writeln (dropped, for the check)
-lang/lang/source/add_node.pas	s/^(\s*)writeln\('Compiler internal warning.*,$/$1; { gap 4 }/
-lang/lang/source/add_node.pas	s/^\s*an_kind_t\(.*\), '\) is not top-level\.'\);$//
 # gap 29 (list_tree): in on a 32-byte set with a longword element (the range test only, for the check)
 lang/lang/source/list_tree.pas	s/\(i in t\^\.st_used\^\)/(i <= 255) { gap 29 }/
-# gap 4 (reg_alloc): dump_lifetimes' writeln (dropped, for the check)
-lang/lang/source/reg_alloc.pas	s/^(\s*)writeln;\s*$/$1; { gap 4 }/
 # gap 21 (reg_color_68k): nested routines passed to walkconflicts (a routine pointer, nil, for the check) [still needed with dpc 78f475b]
 lang/lang/source/reg_color_68k.pas	s/^(\s*)procedure p\(var x: reg_range_t\);/$1p: rc_walk_t; { gap 21 }/
 lang/lang/source/reg_color_68k.pas	s/^(\s*)p\(reg_ranges\^\[c\^\.num\]\);/$1p^(reg_ranges^[c^.num]); { gap 21 }/
 lang/lang/source/reg_color_68k.pas	s/walkconflicts\((checkout|targetfunctionresult|computecommonregs|setcommonregs), /walkconflicts(nil, /
 # gap 26 (final): substr (the length compared instead, for the check)
 lang/lang/source/final.pas	s/^(\s*)substr\(fn_chars_ptr_t\(addr\(n\^\.xc\[12\]\)\)\^, 1, 7\) = 'fp040_\$'/$1n^.xw[4] = 7 { gap 26 }/
-# gap 4 (opt_main): realloc_postorder_node_list's writeln (dropped, for the check)
-lang/lang/source/opt_main.pas	s/^(\s*)writeln\(.*\);\s*$/$1; { gap 4 }\n/
 # gap 29 (opt_main): recompute_usedef_for_uplevel_addressing's and reviseuses' guarded tests of a word in a 32-byte set (the range test only, for the check)
 lang/lang/source/opt_main.pas	s/if (n|v) in s\^\.vset\^ then( begin)?$/if $1 <= 255 then$2 { gap 29 }/
 # gap 29 (opt_main): make_new_postorder_node_list's guarded test of a word in a 32-byte set (the range test only, for the check)
@@ -63,8 +46,6 @@ lang/lang/source/opt_main.pas	s/\(k in e\^\.vset\^\)/(k <= 255) { gap 29 }/
 lang/lang/source/final.pas	s/\(v\.s \* \[0\.\.28\] = \[\]\)/((v.l[2] \& 16#1FFFFFFF) = 0) { gap 31 }/
 # gap 32 (backend.ins.pas, translator PB2): an initialized overlay section named as its variable (the sections the .init files define renamed, for the check)
 lang2/source/be_com/backend.ins.pas	s/^var \((instruction_mnemonic|instruction_mnemonic_length|instruction_assembly|operand_string|operand_string_length|of_string|of_string_length|instruction_attributes|operand_forms_mask|amse_premod_immed_low|amse_premod_immed_high|amse_postmod_immed_low|amse_postmod_immed_high)\)/var (${1}_s) { gap 32 }/
-# gap 4 (dmp): write of an IL node kind (dropped, for the check)
-lang2/source/be_com/dmp.pas	s/^(\s*)write\(.*\);\s*$/${1}dmp_3c0 := dmp_3c0; { gap 4 }\n/
 # gap 21 (lir_utils, translator PA4): fix_store_through_lrs's nested new_db_lts passed to flesh_out_new_load_or_store (a module-level stand-in, for the check) [still needed with dpc ca0dd28]
 lang2/source/be_com/lir_utils.pas	s/^procedure lir_utils_\$fix_store_through_lrs\($/function lir_utils_gap21: lts_ptr_t; begin lir_utils_gap21 := nil; end; { gap 21 }\nprocedure lir_utils_\$fix_store_through_lrs(/
 lang2/source/be_com/lir_utils.pas	s/^(\s*)new_db_lts\);/$1lir_utils_gap21); { gap 21 }/
@@ -82,54 +63,15 @@ lang2/source/be_com/ra_utils.pas	s/^(            \{ A new live range for the rel
 # gap 28 (ra_utils, translator PB5): add_spill_code's values outlive dpc's registers: the store's later readers' linking left out of the check (a conditional variable not set)
 lang2/source/be_com/ra_utils.pas	s/^(          \{ The later readers linked to the stored register\. \})$/%var gap28w;\n%if gap28w %then { gap 28 }\n$1/
 lang2/source/be_com/ra_utils.pas	s/^(          \{ A TST made of the writing move reads no register\. \})$/%endif { gap 28 }\n$1/
-# gap 4 (konst, translator PB6): writeln (dropped, for the check)
-lang2/source/be_com/konst.pas	s/^(\s*)writeln\(.*\);\s*$/${1}; { gap 4 }/
-# gap 4 (isc_call_handling): write and writeln (dropped, for the check)
-lang2/source/isc/isc_call_handling.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
-# gap 4 (isc_cse_handling): write and writeln (dropped, for the check)
-lang2/source/isc/isc_cse_handling.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
-# gap 4 (isc_to_lir): write and writeln (dropped, for the check; also after `then')
-lang2/source/isc/isc_to_lir.pas	s/\bwrite(ln)?(\(.*\))?;\s*$/; { gap 4 }\n/
 # gap 4 (isc_main): write, writeln, read and readln (a self-assignment of the trace flag instead, for the check)
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_main.pas	s/\b(write|read)(ln)?(\(.*\))?;\s*$/isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-# gap 4 (isc_user_routines): write and writeln (a self-assignment of the trace flag instead, for the check: a trace block may hold nothing else)
-lang2/source/isc/isc_user_routines.pas	s/\bwrite(ln)?(\(.*\))?;\s*$/isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-# gap 4 (lir, translator PA7): lir_$build_operand's dump of a physical register's attributes (writeln to output: dropped, for the check)
-lang2/source/be_com/lir.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
 # gap 4 (isc_debug): write and writeln (a self-assignment of the trace flag instead, for the check: also after `then' and `do')
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_debug.pas	s/\bwrite(ln)?(\(.*\))?;\s*$/isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-# gap 4 (the generated isc_pattern_matcher and isc_pass_2_main, translator GB): write and writeln (each a dummy assignment, for the check: an empty then part is refused)
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pattern_matcher.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_main.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
 # gap 32 (isc.pvt.pas and isc_types.ins.pas, translator GB): the sections isc_vars defines, named as their variables (renamed, for the check)
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc.pvt.pas	s/^var \((isc_tool_generated_readonly_tables)\)/var (${1}_s) { gap 32 }/
 lang2/source/isc/isc_types.ins.pas	s/^var \((isc_readonly_tables)\)/var (${1}_s) { gap 32 }/
-# gap 4 (isc_pass_1_main): write and writeln (dropped, for the check)
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_main.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_01_address_modes.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_02_assignments.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_03_single_float.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
+# gap 4 (isc_pattern_matcher, isc_pass_1_04, _09, _10): write and writeln (dropped, for the check) [kept with dpc 498d8b1: with the writes compiled, their data check differs (the pas_$output cell, the action table); being looked into]
+moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pattern_matcher.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_04_integer_arithmetic.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_05_calls.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_06_double_float.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_07_constants.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_08_cses.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_09_addresses_and_fields.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_10_extends.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_11_flow.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_12_leaves.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_13_logical.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_14_chains.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_15_processor_registers.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_16_sets.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_17_set_assignments.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_18_shifts.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_19_strings.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_20_variables.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_21_proper_subtrees.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_22_use_def.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_23_aggregate_assignments.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_24_operator_assignments.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_25_compares.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-# gap 4 (prfpkg): an if whose then part only writes (an assignment, so the then part is not empty once the writes are dropped)
-lang/lang/source/prfpkg.pas	s/^(\s*)if last_mrh = mrh_bytes then begin$/${1}if last_mrh = mrh_bytes then begin cpu_seconds := 0; { gap 4 }/

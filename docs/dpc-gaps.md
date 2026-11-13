@@ -81,6 +81,12 @@ when this tree is merged).
   (a real passed by address through a temporary) and 19 (a single
   function's result in D0; a double result still refused): fixed in
   ece74d5.**  99 rules removed (cg_tree's gap 25 ones with them).
+- **Gap 4 (write and writeln to the standard output): fixed in
+  498d8b1.**  41 rules removed; kept for isc_main (read/readln), isc_debug
+  (a routine over 32 KB once its writes stay, gap 46) and, for now,
+  isc_pattern_matcher and isc_pass_1_04, _09, _10, whose data check
+  differs with the writes compiled (the pas_$output cell, the action
+  table), being looked into.
 - Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
   spiller finds values to spill but runs out of virtual register
   numbers (240 per class) adding the reloads, and the colouring's
@@ -90,7 +96,7 @@ when this tree is merged).
   purpose (the image cannot tell it from `repeat ... until false'):
   write such loops with a label.
 - All compile best effort (a warning; `--strict' still refuses).  Their
-  rewrites are gone from tools/cc_gap_rewrites.txt (475 rules removed in all);
+  rewrites are gone from tools/cc_gap_rewrites.txt (516 rules removed in all);
   the full gate is clean without them.
 - Gaps 4 (write/writeln) and 7 (real arithmetic) are not being worked
   on in dpc for now (the domain-pascal owner's choice).
