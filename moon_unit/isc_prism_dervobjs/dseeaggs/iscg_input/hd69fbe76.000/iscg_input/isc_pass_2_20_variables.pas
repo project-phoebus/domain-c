@@ -83,7 +83,7 @@ type
       3: (p: array [0..127] of univ_ptr);
     end;
   { A rule's own fields where the insert has none of their size: words
-    and longwords below +352 (the insert has bytes there, space136),
+    and longwords below +352 (the insert has bytes there, case_value),
     bytes and longwords at an offset 4k + 2 from +352 (the insert has
     pointers at 4k): a view of the whole solution by offset / 2, offset
     / 4 (and (offset - 2) / 4) and offset. }
@@ -143,7 +143,7 @@ procedure transform_39_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -158,7 +158,7 @@ procedure transform_40_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -188,9 +188,9 @@ var
   t2: isc_solution_ptr_t;
   t3: isc_solution_ptr_t;
 begin
-  if ord(result.space136[136]) <> 1 then begin
+  if result.case_value[136] <> 1 then begin
     t1 := create_solution_for_ip_reg;
-    if ord(result.space136[137]) = 1 then begin
+    if result.case_value[137] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0,
           find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[3])),
@@ -259,9 +259,9 @@ var
   t2: isc_solution_ptr_t;
   t3: isc_solution_ptr_t;
 begin
-  if ord(result.space136[136]) <> 1 then begin
+  if result.case_value[136] <> 1 then begin
     t1 := create_solution_for_ip_reg;
-    if ord(result.space136[137]) = 1 then begin
+    if result.case_value[137] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0,
           find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[3])),
@@ -316,9 +316,9 @@ var
   t2: isc_solution_ptr_t;
   t3: isc_solution_ptr_t;
 begin
-  if ord(result.space136[136]) <> 1 then begin
+  if result.case_value[136] <> 1 then begin
     t1 := create_solution_for_ip_reg;
-    if ord(result.space136[137]) = 1 then begin
+    if result.case_value[137] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0,
           find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[14])),
@@ -388,7 +388,7 @@ procedure transform_54_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -417,9 +417,9 @@ var
   t2: isc_solution_ptr_t;
   t3: isc_solution_ptr_t;
 begin
-  if ord(result.space136[136]) <> 1 then begin
+  if result.case_value[136] <> 1 then begin
     t1 := create_solution_for_ip_reg;
-    if ord(result.space136[137]) = 1 then begin
+    if result.case_value[137] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0,
           find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[14])),
@@ -474,9 +474,9 @@ var
   t2: isc_solution_ptr_t;
   t3: isc_solution_ptr_t;
 begin
-  if ord(result.space136[136]) <> 1 then begin
+  if result.case_value[136] <> 1 then begin
     t1 := create_solution_for_ip_reg;
-    if ord(result.space136[137]) = 1 then begin
+    if result.case_value[137] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0,
           find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[14])),
@@ -526,7 +526,7 @@ procedure transform_62_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;

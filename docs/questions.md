@@ -2720,6 +2720,21 @@ answered by this policy and needs no reply.
    space136), ds_solution_t names them.  Declare them in the insert
    (case_value's type, isc_case_index_array_t, is in
    isc_routine_externs.ins.pas, which is opened after it)?
+   **Done (RN2, 2026-11-12):** isc_solution_t declares case_value
+   (+136, isc_case_index_array_t), already_address_mode ..
+   already_processor_reg (+342 .. +348) and x349; space136 is gone.
+   isc_case_index_array_t moved to isc_solution_fields.ins.pas (a
+   non-pointer type cannot be declared forward, and every unit that
+   opens isc_routine_externs.ins.pas opens it first); its printer's
+   heading stays, with a comment pointing there.  The generator reads a
+   rule's byte local cN as case_value[N] (a byte number where it was a
+   char: the chr() and ord() go) and cN for N in 342..348 as the flag
+   of its name; pass 1's view p1_already_t is retired.  dpc's code is
+   unchanged and the rule file is reproduced by re-extraction.
+   ds_solution_t is not folded in: it still differs from isc_solution_t
+   in the words it prints unsigned (0..65535 for isc_solution_t's
+   integers: bytes .. n_bytes_to_back_up, evaluation_order,
+   which_transform), +86 as one word, and its pointer types.
 314. Translator RN1 (2026-11-12), the IL node kinds (question 78):
    **il.ins.pas's il_$kind_t and the ISC's il$t.**  il_$kind_t is the
    237-name table after add_node_$dispose_top_level, in order (0 end_ob
@@ -2792,3 +2807,28 @@ answered by this policy and needs no reply.
    mem_$data$ are (AT_LIB_DSC is kind 208): every unit that opens
    at_lib_dsc.ins.pas now has the section as a .comm, as the other
    shared sections do.  Better names when the front end's are found?
+319. Translator RN2 (2026-11-12), after 312: **the kind parameters and
+   results that stay integers.**  new_solution takes its kind and
+   il_kind as integers (a word each, at 12 and 24): the generated pass
+   1 passes `ord(solution$...)', isc_pass_1_main's operator routines
+   an integer local il_kind set from `ord(il_...)', and new_solution
+   casts both into the record.  solution_kind_of_cse,
+   solution_kind_of_symbol and get_kind_of_home_solution return a
+   kind as an integer (`ord(s^.kind)'), and isc_tool_generated_
+   readonly_tables' result_kind table holds integers.  The words would
+   be the same as solution$t and il$t; retype the headings (and the
+   generator's calls) to the enumerations?
+320. Translator RN2: **backend.ins.pas's solution_t keeps integers.**
+   The LIR's view of the solution (solution_t) has kind an integer
+   (+108), base_register, index_register and false_label integer32:
+   solution$t is declared in isc_solution_fields.ins.pas, which units
+   that read solution_t without the ISC (sym, lir_utils' callers) do
+   not open.  Move solution$t (and il$t?) into backend.ins.pas so both
+   views share the types, or keep the LIR's view numeric?
+321. Translator RN2: **signed or unsigned words in the solution.**
+   isc_solution_t's bytes .. n_bytes_to_back_up, evaluation_order and
+   which_transform are integer, ds_solution_t's 0..65535 (dump_solution
+   writes them zero-extended).  Which was the original's type?  With
+   one answer ds_solution_t could be folded into isc_solution_t (its
+   remaining differences, +86 as a word and its pointer types, are
+   views).

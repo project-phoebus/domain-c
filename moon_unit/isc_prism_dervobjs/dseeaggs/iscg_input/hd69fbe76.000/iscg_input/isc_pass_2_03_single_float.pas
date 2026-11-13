@@ -92,7 +92,7 @@ procedure transform_306_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -108,11 +108,11 @@ procedure transform_307_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -142,11 +142,11 @@ var
   t3: isc_solution_ptr_t;
   t4: isc_solution_ptr_t;
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[340 + p2_node_ptr_t(subject^.il)^.w[13]],
         0, subject^.children[1], solution, nil);
@@ -154,17 +154,17 @@ begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[852 + p2_node_ptr_t(subject^.il)^.w[13]],
         0, subject^.children[1], solution, nil);
-    if ord(result.space136[138]) = 1 then begin
+    if result.case_value[138] = 1 then begin
       t1 := create_solution_for_ip_reg;
       t2 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$mffp), 0, solution, t1, nil);
-      if ord(result.space136[139]) = 1 then begin
+      if result.case_value[139] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$extend7), 0, t1, t2, nil);
         t4 := t2;
       end else begin
-        if ord(result.space136[139]) = 2 then begin
+        if result.case_value[139] = 2 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$extend15), 0, t1, t2, nil);
           t3 := t2;
@@ -193,24 +193,24 @@ var
   t3: isc_solution_ptr_t;
   t4: isc_solution_ptr_t;
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes,
       p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[1108 + p2_node_ptr_t(subject^.il)^.w[13]],
       0, subject^.children[1], solution, nil);
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     t1 := create_solution_for_ip_reg;
     t2 := create_solution_for_ip_reg;
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$mffp),
         0, solution, t1, nil);
-    if ord(result.space136[138]) = 1 then begin
+    if result.case_value[138] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$extend7), 0, t1, t2, nil);
       t4 := t2;
     end else begin
-      if ord(result.space136[138]) = 2 then begin
+      if result.case_value[138] = 2 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$extend15), 0, t1, t2, nil);
         t3 := t2;
@@ -238,7 +238,7 @@ var
 begin
   t1 := lir_$new_label;
   t2 := lir_$new_label;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -268,7 +268,7 @@ var
 begin
   t1 := lir_$new_label;
   t2 := lir_$new_label;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -315,13 +315,13 @@ begin
   t7 := create_solution_for_fp_reg;
   t8 := create_solution_for_fp_reg;
   t9 := create_solution_for_fp_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$tsts),
       0, subject^.children[1], nil, nil);
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -331,7 +331,7 @@ begin
       t10^.bits_trusted);
   debug_lir_$branch_instruction(result.inherited_attributes, t2,
       ord(opc$fbge), 0);
-  if ord(result.space136[138]) = 1 then begin
+  if result.case_value[138] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -355,7 +355,7 @@ begin
   debug_lir_$branch_instruction(result.inherited_attributes, t1,
       ord(opc$jump), 0);
   debug_lir_$label(result.inherited_attributes, t2);
-  if ord(result.space136[139]) = 1 then begin
+  if result.case_value[139] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -408,13 +408,13 @@ begin
   t6 := create_solution_for_fp_reg;
   t7 := create_solution_for_fp_reg;
   t8 := create_solution_for_fp_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$tsts),
       0, subject^.children[1], nil, nil);
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -424,7 +424,7 @@ begin
       t9^.bits_trusted);
   debug_lir_$branch_instruction(result.inherited_attributes, t2,
       ord(opc$fbge), 0);
-  if ord(result.space136[138]) = 1 then begin
+  if result.case_value[138] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -448,7 +448,7 @@ begin
   debug_lir_$branch_instruction(result.inherited_attributes, t1,
       ord(opc$jump), 0);
   debug_lir_$label(result.inherited_attributes, t2);
-  if ord(result.space136[139]) = 1 then begin
+  if result.case_value[139] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -479,7 +479,7 @@ procedure transform_315_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -496,11 +496,11 @@ procedure transform_316_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -521,11 +521,11 @@ var
 begin
   t1 := lir_$new_label;
   t2 := lir_$new_label;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -555,11 +555,11 @@ var
 begin
   t1 := lir_$new_label;
   t2 := lir_$new_label;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -606,17 +606,17 @@ begin
   t7 := create_solution_for_fp_reg_pair;
   t8 := create_solution_for_fp_reg_pair;
   t9 := create_solution_for_fp_reg_pair;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$tstd),
       0, subject^.children[1], nil, nil);
-  if ord(result.space136[138]) = 1 then begin
+  if result.case_value[138] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -626,7 +626,7 @@ begin
       t10^.bits_trusted);
   debug_lir_$branch_instruction(result.inherited_attributes, t2,
       ord(opc$fbge), 0);
-  if ord(result.space136[139]) = 1 then begin
+  if result.case_value[139] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -650,7 +650,7 @@ begin
   debug_lir_$branch_instruction(result.inherited_attributes, t1,
       ord(opc$jump), 0);
   debug_lir_$label(result.inherited_attributes, t2);
-  if ord(result.space136[140]) = 1 then begin
+  if result.case_value[140] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -703,17 +703,17 @@ begin
   t6 := create_solution_for_fp_reg_pair;
   t7 := create_solution_for_fp_reg_pair;
   t8 := create_solution_for_fp_reg_pair;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$tstd),
       0, subject^.children[1], nil, nil);
-  if ord(result.space136[138]) = 1 then begin
+  if result.case_value[138] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -723,7 +723,7 @@ begin
       t9^.bits_trusted);
   debug_lir_$branch_instruction(result.inherited_attributes, t2,
       ord(opc$fbge), 0);
-  if ord(result.space136[139]) = 1 then begin
+  if result.case_value[139] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -747,7 +747,7 @@ begin
   debug_lir_$branch_instruction(result.inherited_attributes, t1,
       ord(opc$jump), 0);
   debug_lir_$label(result.inherited_attributes, t2);
-  if ord(result.space136[140]) = 1 then begin
+  if result.case_value[140] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -778,11 +778,11 @@ procedure transform_321_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -798,7 +798,7 @@ procedure transform_322_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -813,11 +813,11 @@ procedure transform_323_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;

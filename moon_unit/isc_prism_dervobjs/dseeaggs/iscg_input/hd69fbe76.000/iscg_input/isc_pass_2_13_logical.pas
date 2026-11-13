@@ -132,15 +132,15 @@ begin
   end else begin
     t1 := subject^.children[1]^.f76.bit_position_of_lsb - subject^.children[2]^.f76.bit_position_of_lsb;
   end;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t7 := subject^.children[1];
   end else begin
-    if ord(result.space136[136]) = 2 then begin
+    if result.case_value[136] = 2 then begin
       t2 := ip_reg_to_ip_reg_scaled(subject^.children[1],
           subject^.children[2]^.f76.bit_position_of_lsb - subject^.children[1]^.f76.bit_position_of_lsb);
       t6 := t2;
     end else begin
-      if ord(result.space136[136]) = 3 then begin
+      if result.case_value[136] = 3 then begin
         t3 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$lsr), 0, subject^.children[1],
@@ -182,13 +182,13 @@ begin
   end else begin
     t1 := subject^.children[1]^.f76.bit_position_of_lsb - subject^.children[2]^.f76.bit_position_of_lsb;
   end;
-  if ord(result.space136[136]) <> 1 then begin
-    if ord(result.space136[136]) = 2 then begin
+  if result.case_value[136] <> 1 then begin
+    if result.case_value[136] = 2 then begin
       t2 := ip_reg_to_ip_reg_scaled(subject^.children[2],
           subject^.children[1]^.f76.bit_position_of_lsb - subject^.children[2]^.f76.bit_position_of_lsb);
       t6 := t2;
     end else begin
-      if ord(result.space136[136]) = 3 then begin
+      if result.case_value[136] = 3 then begin
         t3 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$lsr), 0, subject^.children[2],
@@ -264,12 +264,12 @@ var
   t3: isc_solution_ptr_t;
   t4: isc_solution_ptr_t;
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t1 := find_well_known_literal_solution(0);
     t4 := t1;
   end else begin
     t2 := create_solution_for_ip_reg;
-    if ord(result.space136[137]) = 1 then begin
+    if result.case_value[137] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0, find_well_known_literal_solution(0), t2, nil);
     end else begin
@@ -303,7 +303,7 @@ var
   t1: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$xor),
         0, isc_solution_ptr_t(isc_literal_solutions[-1]),
         subject^.children[2]^.children[1], t1);
@@ -326,7 +326,7 @@ var
   t1: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$xor),
         0, isc_solution_ptr_t(isc_literal_solutions[-1]),
         subject^.children[1]^.children[1], t1);
@@ -346,7 +346,7 @@ procedure transform_336_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$xor),
         0, isc_solution_ptr_t(isc_literal_solutions[-1]),
         subject^.children[1], solution);
@@ -363,7 +363,7 @@ procedure transform_337_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$xor),
         0, isc_solution_ptr_t(isc_literal_solutions[-1]),
         subject^.children[1], solution);
@@ -397,12 +397,12 @@ var
   t4: isc_solution_ptr_t;
   t5: isc_solution_ptr_t;
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t1 := find_well_known_literal_solution(-1);
     t4 := t1;
   end else begin
     t2 := create_solution_for_ip_reg;
-    if ord(result.space136[137]) = 1 then begin
+    if result.case_value[137] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0, find_well_known_literal_solution(-1), t2, nil);
     end else begin

@@ -282,7 +282,7 @@ procedure transform_33_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;

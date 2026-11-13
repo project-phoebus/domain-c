@@ -100,7 +100,7 @@ type
     w: array [0..1559] of integer;
     end;
   { A rule's own fields where the insert has none of their size: words
-    and longwords below +352 (the insert has bytes there, space136),
+    and longwords below +352 (the insert has bytes there, case_value),
     bytes and longwords at an offset 4k + 2 from +352 (the insert has
     pointers at 4k): a view of the whole solution by offset / 2, offset
     / 4 (and (offset - 2) / 4) and offset. }
@@ -137,7 +137,7 @@ begin
       ord(opc$extractu), 0, 1, subject^.children[2],
       find_well_known_literal_solution(subject^.children[2]^.f76.bit_position_of_lsb + subject^.children[1]^.literal_32_bits_value),
       t1);
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         ord(opc$extend0), 0, t1, solution, nil);
   end else begin
@@ -160,7 +160,7 @@ begin
       ord(opc$extractu), 0, 1, subject^.children[2],
       find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
       t1);
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         ord(opc$extend0), 0, t1, solution, nil);
   end else begin
@@ -206,12 +206,12 @@ begin
   t4 := create_solution_for_ip_reg;
   t5 := create_solution_for_ip_reg;
   t6 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t7 := find_well_known_literal_solution(integer32(result.fields[0]));
     t10 := t7;
   end else begin
     t8 := create_solution_for_ip_reg;
-    if ord(result.space136[137]) = 1 then begin
+    if result.case_value[137] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0,
           find_well_known_literal_solution(integer32(result.fields[0])), t8,
@@ -224,8 +224,8 @@ begin
     end;
     t10 := t8;
   end;
-  if ord(result.space136[138]) = 1 then begin
-    if ord(result.space136[139]) = 1 then begin
+  if result.case_value[138] = 1 then begin
+    if result.case_value[139] = 1 then begin
       if t4^.object_with_name <> nil then begin
         t4^.object_with_name := t4^.object_with_name;
       end else begin
@@ -241,7 +241,7 @@ begin
           subject^.children[2]^.base_register, t4);
     end;
   end
-  else if ord(result.space136[140]) = 1 then begin
+  else if result.case_value[140] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -260,7 +260,7 @@ begin
       ord(opc$extractu), 0, 1, t5,
       find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value & 7),
       t6);
-  if ord(result.space136[141]) = 1 then begin
+  if result.case_value[141] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         ord(opc$extend0), 0, t6, solution, nil);
   end else begin
@@ -288,14 +288,14 @@ begin
   t2 := create_solution_for_ip_reg;
   t3 := lir_$new_label;
   t4 := make_bit_mask_1(1, 0);
-  if ord(result.space136[136]) = 1 then begin
-    if ord(result.space136[137]) = 1 then begin
+  if result.case_value[136] = 1 then begin
+    if result.case_value[137] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4,
           find_well_known_literal_solution(integer32(result.fields[0])),
           subject^.children[1], t2);
     end else begin
-      if ord(result.space136[138]) = 1 then begin
+      if result.case_value[138] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(integer32(result.fields[0])),
@@ -311,7 +311,7 @@ begin
     end;
     debug_lir_$branch_instruction(result.inherited_attributes, t3,
         ord(opc$bhs), 0);
-    if ord(result.space136[139]) = 1 then begin
+    if result.case_value[139] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0, isc_solution_ptr_t(isc_literal_solutions[-1]),
           solution, nil);
@@ -324,7 +324,7 @@ begin
         ord(opc$jump), 0);
     debug_lir_$label(result.inherited_attributes, t3);
   end;
-  if ord(result.space136[140]) = 1 then begin
+  if result.case_value[140] = 1 then begin
     t6 := create_solution_for_ip_reg;
     t7 := create_solution_for_ip_reg;
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
@@ -338,7 +338,7 @@ begin
         ord(opc$extractu), 0, 1, subject^.children[2], subject^.children[1],
         t2);
   end;
-  if ord(result.space136[141]) = 1 then begin
+  if result.case_value[141] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         ord(opc$extend0), 0, t2, solution, nil);
   end else begin
@@ -390,12 +390,12 @@ begin
   t7 := create_solution_for_ip_reg;
   t8 := lir_$new_label;
   t9 := make_bit_mask_1(1, 0);
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         4, find_well_known_literal_solution(integer32(result.fields[0])),
         subject^.children[1], t5);
   end else begin
-    if ord(result.space136[138]) = 1 then begin
+    if result.case_value[138] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0,
           find_well_known_literal_solution(integer32(result.fields[0])), t5,
@@ -409,10 +409,10 @@ begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         4, t5, subject^.children[1], t5);
   end;
-  if ord(result.space136[139]) = 1 then begin
+  if result.case_value[139] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, t8,
         ord(opc$bhs), 0);
-    if ord(result.space136[140]) = 1 then begin
+    if result.case_value[140] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0, isc_solution_ptr_t(isc_literal_solutions[-1]),
           solution, nil);
@@ -427,8 +427,8 @@ begin
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$lsr), 0,
       t5, find_well_known_literal_solution(3), t5);
-  if ord(result.space136[141]) = 1 then begin
-    if ord(result.space136[142]) = 1 then begin
+  if result.case_value[141] = 1 then begin
+    if result.case_value[142] = 1 then begin
       if t6^.object_with_name <> nil then begin
         t6^.object_with_name := t6^.object_with_name;
       end else begin
@@ -444,7 +444,7 @@ begin
           subject^.children[2]^.base_register, t6);
     end;
   end
-  else if ord(result.space136[143]) = 1 then begin
+  else if result.case_value[143] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -461,7 +461,7 @@ begin
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$and), 0,
       isc_solution_ptr_t(isc_literal_solutions[7]), subject^.children[1],
       t6);
-  if ord(result.space136[144]) = 1 then begin
+  if result.case_value[144] = 1 then begin
     t12 := create_solution_for_ip_reg;
     t13 := create_solution_for_ip_reg;
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
@@ -474,7 +474,7 @@ begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$extractu), 0, 1, t5, t6, t7);
   end;
-  if ord(result.space136[145]) = 1 then begin
+  if result.case_value[145] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         ord(opc$extend0), 0, t7, solution, nil);
   end else begin
@@ -497,7 +497,7 @@ begin
   debug_lir_$field_instruction(result.inherited_attributes,
       ord(opc$extractu), 0, 1, subject^.children[1],
       find_well_known_literal_solution(integer32(result.fields[0])), t1);
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         ord(opc$extend0), 0, t1, solution, nil);
   end else begin
@@ -515,7 +515,7 @@ var
   t1: univ_ptr;
 begin
   t1 := lir_$new_label;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0, isc_solution_ptr_t(isc_literal_solutions[1]), solution, nil);
   end else begin
@@ -596,15 +596,15 @@ var
 begin
   t1 := create_solution_for_ip_reg;
   t2 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t4 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t3 := lir_$new_label;
     t4 := integer32(t3);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
-      if ord(result.space136[139]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
+      if result.case_value[139] = 1 then begin
         t5 := subject^.children[1];
       end else begin
         debug_lir_$field_instruction(result.inherited_attributes,
@@ -612,156 +612,156 @@ begin
             find_well_known_literal_solution(0), t1);
         t5 := t1;
       end;
-      if ord(result.space136[140]) = 1 then begin
+      if result.case_value[140] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 8, t5, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$beq), 0);
       end
-      else if ord(result.space136[140]) = 2 then begin
+      else if result.case_value[140] = 2 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 8, t5, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bne), 0);
       end
-      else if ord(result.space136[140]) = 3 then begin
+      else if result.case_value[140] = 3 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t5, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$blo), 0);
       end
-      else if ord(result.space136[140]) = 4 then begin
+      else if result.case_value[140] = 4 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t5, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bls), 0);
       end
-      else if ord(result.space136[140]) = 5 then begin
+      else if result.case_value[140] = 5 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t5, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bhi), 0);
       end
-      else if ord(result.space136[140]) = 6 then begin
+      else if result.case_value[140] = 6 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t5, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bhs), 0);
       end
-      else if ord(result.space136[140]) = 7 then begin
+      else if result.case_value[140] = 7 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t5, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$blt), 0);
       end
-      else if ord(result.space136[140]) = 8 then begin
+      else if result.case_value[140] = 8 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t5, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$ble), 0);
       end
-      else if ord(result.space136[140]) = 9 then begin
+      else if result.case_value[140] = 9 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t5, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bgt), 0);
       end
-      else if ord(result.space136[140]) = 10 then begin
+      else if result.case_value[140] = 10 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t5, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bge), 0);
       end
-      else if ord(result.space136[140]) = 11 then begin
+      else if result.case_value[140] = 11 then begin
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$jump), 0);
       end
-      else if ord(result.space136[140]) <> 12 then begin
+      else if result.case_value[140] <> 12 then begin
         pattern_match_error(11, subject^.il_kind, 0,
             subject^.inherited_attributes^.pos.source_line_number);
       end;
     end else begin
       t6 := create_solution_for_ip_reg;
-      if ord(result.space136[141]) = 1 then begin
+      if result.case_value[141] = 1 then begin
         t7 := subject^.children[1];
       end else begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$extend7), 0, subject^.children[1], t6, nil);
         t7 := t6;
       end;
-      if ord(result.space136[142]) = 1 then begin
+      if result.case_value[142] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 8, t7, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$beq), 0);
       end
-      else if ord(result.space136[142]) = 2 then begin
+      else if result.case_value[142] = 2 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 8, t7, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bne), 0);
       end
-      else if ord(result.space136[142]) = 3 then begin
+      else if result.case_value[142] = 3 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t7, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$blo), 0);
       end
-      else if ord(result.space136[142]) = 4 then begin
+      else if result.case_value[142] = 4 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t7, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bls), 0);
       end
-      else if ord(result.space136[142]) = 5 then begin
+      else if result.case_value[142] = 5 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t7, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bhi), 0);
       end
-      else if ord(result.space136[142]) = 6 then begin
+      else if result.case_value[142] = 6 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t7, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bhs), 0);
       end
-      else if ord(result.space136[142]) = 7 then begin
+      else if result.case_value[142] = 7 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t7, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$blt), 0);
       end
-      else if ord(result.space136[142]) = 8 then begin
+      else if result.case_value[142] = 8 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t7, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$ble), 0);
       end
-      else if ord(result.space136[142]) = 9 then begin
+      else if result.case_value[142] = 9 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t7, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bgt), 0);
       end
-      else if ord(result.space136[142]) = 10 then begin
+      else if result.case_value[142] = 10 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t7, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bge), 0);
       end
-      else if ord(result.space136[142]) = 11 then begin
+      else if result.case_value[142] = 11 then begin
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$jump), 0);
       end
-      else if ord(result.space136[142]) <> 12 then begin
+      else if result.case_value[142] <> 12 then begin
         pattern_match_error(11, subject^.il_kind, 0,
             subject^.inherited_attributes^.pos.source_line_number);
       end;
     end;
   end
-  else if ord(result.space136[137]) = 2 then begin
-    if ord(result.space136[143]) = 1 then begin
-      if ord(result.space136[144]) = 1 then begin
+  else if result.case_value[137] = 2 then begin
+    if result.case_value[143] = 1 then begin
+      if result.case_value[144] = 1 then begin
         t8 := subject^.children[1];
       end else begin
         debug_lir_$field_instruction(result.inherited_attributes,
@@ -769,218 +769,218 @@ begin
             find_well_known_literal_solution(0), t2);
         t8 := t2;
       end;
-      if ord(result.space136[145]) = 1 then begin
+      if result.case_value[145] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 8, t8, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$beq), 0);
       end
-      else if ord(result.space136[145]) = 2 then begin
+      else if result.case_value[145] = 2 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 8, t8, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bne), 0);
       end
-      else if ord(result.space136[145]) = 3 then begin
+      else if result.case_value[145] = 3 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t8, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$blo), 0);
       end
-      else if ord(result.space136[145]) = 4 then begin
+      else if result.case_value[145] = 4 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t8, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bls), 0);
       end
-      else if ord(result.space136[145]) = 5 then begin
+      else if result.case_value[145] = 5 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t8, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bhi), 0);
       end
-      else if ord(result.space136[145]) = 6 then begin
+      else if result.case_value[145] = 6 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t8, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bhs), 0);
       end
-      else if ord(result.space136[145]) = 7 then begin
+      else if result.case_value[145] = 7 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t8, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$blt), 0);
       end
-      else if ord(result.space136[145]) = 8 then begin
+      else if result.case_value[145] = 8 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t8, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$ble), 0);
       end
-      else if ord(result.space136[145]) = 9 then begin
+      else if result.case_value[145] = 9 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t8, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bgt), 0);
       end
-      else if ord(result.space136[145]) = 10 then begin
+      else if result.case_value[145] = 10 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t8, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bge), 0);
       end
-      else if ord(result.space136[145]) = 11 then begin
+      else if result.case_value[145] = 11 then begin
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$jump), 0);
       end
-      else if ord(result.space136[145]) <> 12 then begin
+      else if result.case_value[145] <> 12 then begin
         pattern_match_error(11, subject^.il_kind, 0,
             subject^.inherited_attributes^.pos.source_line_number);
       end;
     end else begin
       t9 := create_solution_for_ip_reg;
-      if ord(result.space136[146]) = 1 then begin
+      if result.case_value[146] = 1 then begin
         t10 := subject^.children[1];
       end else begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$extend15), 0, subject^.children[1], t9, nil);
         t10 := t9;
       end;
-      if ord(result.space136[147]) = 1 then begin
+      if result.case_value[147] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 8, t10, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$beq), 0);
       end
-      else if ord(result.space136[147]) = 2 then begin
+      else if result.case_value[147] = 2 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 8, t10, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bne), 0);
       end
-      else if ord(result.space136[147]) = 3 then begin
+      else if result.case_value[147] = 3 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t10, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$blo), 0);
       end
-      else if ord(result.space136[147]) = 4 then begin
+      else if result.case_value[147] = 4 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t10, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bls), 0);
       end
-      else if ord(result.space136[147]) = 5 then begin
+      else if result.case_value[147] = 5 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t10, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bhi), 0);
       end
-      else if ord(result.space136[147]) = 6 then begin
+      else if result.case_value[147] = 6 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 4, t10, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bhs), 0);
       end
-      else if ord(result.space136[147]) = 7 then begin
+      else if result.case_value[147] = 7 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t10, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$blt), 0);
       end
-      else if ord(result.space136[147]) = 8 then begin
+      else if result.case_value[147] = 8 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t10, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$ble), 0);
       end
-      else if ord(result.space136[147]) = 9 then begin
+      else if result.case_value[147] = 9 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t10, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bgt), 0);
       end
-      else if ord(result.space136[147]) = 10 then begin
+      else if result.case_value[147] = 10 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 2, t10, create_solution_for_ip_reg, nil);
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$bge), 0);
       end
-      else if ord(result.space136[147]) = 11 then begin
+      else if result.case_value[147] = 11 then begin
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t4), ord(opc$jump), 0);
       end
-      else if ord(result.space136[147]) <> 12 then begin
+      else if result.case_value[147] <> 12 then begin
         pattern_match_error(11, subject^.il_kind, 0,
             subject^.inherited_attributes^.pos.source_line_number);
       end;
     end;
   end
-  else if ord(result.space136[148]) = 1 then begin
+  else if result.case_value[148] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, subject^.children[1], create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[148]) = 2 then begin
+  else if result.case_value[148] = 2 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, subject^.children[1], create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[148]) = 3 then begin
+  else if result.case_value[148] = 3 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, subject^.children[1], create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[148]) = 4 then begin
+  else if result.case_value[148] = 4 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, subject^.children[1], create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[148]) = 5 then begin
+  else if result.case_value[148] = 5 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, subject^.children[1], create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[148]) = 6 then begin
+  else if result.case_value[148] = 6 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, subject^.children[1], create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[148]) = 7 then begin
+  else if result.case_value[148] = 7 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, subject^.children[1], create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[148]) = 8 then begin
+  else if result.case_value[148] = 8 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, subject^.children[1], create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[148]) = 9 then begin
+  else if result.case_value[148] = 9 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, subject^.children[1], create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[148]) = 10 then begin
+  else if result.case_value[148] = 10 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, subject^.children[1], create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[148]) = 11 then begin
+  else if result.case_value[148] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[148]) <> 12 then begin
+  else if result.case_value[148] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -1028,15 +1028,15 @@ var
   t32: isc_solution_ptr_t;
   t33: isc_solution_ptr_t;
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t2 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t1 := lir_$new_label;
     t2 := integer32(t1);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
-      if ord(result.space136[139]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
+      if result.case_value[139] = 1 then begin
         t3 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$add), 8,
@@ -1044,7 +1044,7 @@ begin
             subject^.children[1], t3);
       end else begin
         t4 := create_solution_for_ip_reg;
-        if ord(result.space136[140]) = 1 then begin
+        if result.case_value[140] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$move), 0,
               find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -1062,8 +1062,8 @@ begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$beq), 0);
     end
-    else if ord(result.space136[138]) = 2 then begin
-      if ord(result.space136[141]) = 1 then begin
+    else if result.case_value[138] = 2 then begin
+      if result.case_value[141] = 1 then begin
         t6 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$add), 8,
@@ -1071,7 +1071,7 @@ begin
             subject^.children[1], t6);
       end else begin
         t7 := create_solution_for_ip_reg;
-        if ord(result.space136[142]) = 1 then begin
+        if result.case_value[142] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$move), 0,
               find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -1089,8 +1089,8 @@ begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bne), 0);
     end
-    else if ord(result.space136[138]) = 3 then begin
-      if ord(result.space136[143]) = 1 then begin
+    else if result.case_value[138] = 3 then begin
+      if result.case_value[143] = 1 then begin
         t9 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$add), 4,
@@ -1098,7 +1098,7 @@ begin
             subject^.children[1], t9);
       end else begin
         t10 := create_solution_for_ip_reg;
-        if ord(result.space136[144]) = 1 then begin
+        if result.case_value[144] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$move), 0,
               find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -1116,8 +1116,8 @@ begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$blo), 0);
     end
-    else if ord(result.space136[138]) = 4 then begin
-      if ord(result.space136[145]) = 1 then begin
+    else if result.case_value[138] = 4 then begin
+      if result.case_value[145] = 1 then begin
         t12 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$add), 4,
@@ -1125,7 +1125,7 @@ begin
             subject^.children[1], t12);
       end else begin
         t13 := create_solution_for_ip_reg;
-        if ord(result.space136[146]) = 1 then begin
+        if result.case_value[146] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$move), 0,
               find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -1143,8 +1143,8 @@ begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bls), 0);
     end
-    else if ord(result.space136[138]) = 5 then begin
-      if ord(result.space136[147]) = 1 then begin
+    else if result.case_value[138] = 5 then begin
+      if result.case_value[147] = 1 then begin
         t15 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$add), 4,
@@ -1152,7 +1152,7 @@ begin
             subject^.children[1], t15);
       end else begin
         t16 := create_solution_for_ip_reg;
-        if ord(result.space136[148]) = 1 then begin
+        if result.case_value[148] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$move), 0,
               find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -1170,8 +1170,8 @@ begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bhi), 0);
     end
-    else if ord(result.space136[138]) = 6 then begin
-      if ord(result.space136[149]) = 1 then begin
+    else if result.case_value[138] = 6 then begin
+      if result.case_value[149] = 1 then begin
         t18 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$add), 4,
@@ -1179,7 +1179,7 @@ begin
             subject^.children[1], t18);
       end else begin
         t19 := create_solution_for_ip_reg;
-        if ord(result.space136[150]) = 1 then begin
+        if result.case_value[150] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$move), 0,
               find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -1197,8 +1197,8 @@ begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bhs), 0);
     end
-    else if ord(result.space136[138]) = 7 then begin
-      if ord(result.space136[151]) = 1 then begin
+    else if result.case_value[138] = 7 then begin
+      if result.case_value[151] = 1 then begin
         t21 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$add), 2,
@@ -1206,7 +1206,7 @@ begin
             subject^.children[1], t21);
       end else begin
         t22 := create_solution_for_ip_reg;
-        if ord(result.space136[152]) = 1 then begin
+        if result.case_value[152] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$move), 0,
               find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -1224,8 +1224,8 @@ begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$blt), 0);
     end
-    else if ord(result.space136[138]) = 8 then begin
-      if ord(result.space136[153]) = 1 then begin
+    else if result.case_value[138] = 8 then begin
+      if result.case_value[153] = 1 then begin
         t24 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$add), 2,
@@ -1233,7 +1233,7 @@ begin
             subject^.children[1], t24);
       end else begin
         t25 := create_solution_for_ip_reg;
-        if ord(result.space136[154]) = 1 then begin
+        if result.case_value[154] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$move), 0,
               find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -1251,8 +1251,8 @@ begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$ble), 0);
     end
-    else if ord(result.space136[138]) = 9 then begin
-      if ord(result.space136[155]) = 1 then begin
+    else if result.case_value[138] = 9 then begin
+      if result.case_value[155] = 1 then begin
         t27 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$add), 2,
@@ -1260,7 +1260,7 @@ begin
             subject^.children[1], t27);
       end else begin
         t28 := create_solution_for_ip_reg;
-        if ord(result.space136[156]) = 1 then begin
+        if result.case_value[156] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$move), 0,
               find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -1278,8 +1278,8 @@ begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bgt), 0);
     end
-    else if ord(result.space136[138]) = 10 then begin
-      if ord(result.space136[157]) = 1 then begin
+    else if result.case_value[138] = 10 then begin
+      if result.case_value[157] = 1 then begin
         t30 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$add), 2,
@@ -1287,7 +1287,7 @@ begin
             subject^.children[1], t30);
       end else begin
         t31 := create_solution_for_ip_reg;
-        if ord(result.space136[158]) = 1 then begin
+        if result.case_value[158] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$move), 0,
               find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -1305,11 +1305,11 @@ begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bge), 0);
     end
-    else if ord(result.space136[138]) = 11 then begin
+    else if result.case_value[138] = 11 then begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$jump), 0);
     end
-    else if ord(result.space136[138]) <> 12 then begin
+    else if result.case_value[138] <> 12 then begin
       pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
@@ -1320,71 +1320,71 @@ begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$extractu), 0, integer32(result.fields[0]), t33,
         find_well_known_literal_solution(0), t33);
-    if ord(result.space136[159]) = 1 then begin
+    if result.case_value[159] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 8, t33, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$beq), 0);
     end
-    else if ord(result.space136[159]) = 2 then begin
+    else if result.case_value[159] = 2 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 8, t33, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bne), 0);
     end
-    else if ord(result.space136[159]) = 3 then begin
+    else if result.case_value[159] = 3 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 4, t33, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$blo), 0);
     end
-    else if ord(result.space136[159]) = 4 then begin
+    else if result.case_value[159] = 4 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 4, t33, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bls), 0);
     end
-    else if ord(result.space136[159]) = 5 then begin
+    else if result.case_value[159] = 5 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 4, t33, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bhi), 0);
     end
-    else if ord(result.space136[159]) = 6 then begin
+    else if result.case_value[159] = 6 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 4, t33, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bhs), 0);
     end
-    else if ord(result.space136[159]) = 7 then begin
+    else if result.case_value[159] = 7 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 2, t33, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$blt), 0);
     end
-    else if ord(result.space136[159]) = 8 then begin
+    else if result.case_value[159] = 8 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 2, t33, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$ble), 0);
     end
-    else if ord(result.space136[159]) = 9 then begin
+    else if result.case_value[159] = 9 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 2, t33, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bgt), 0);
     end
-    else if ord(result.space136[159]) = 10 then begin
+    else if result.case_value[159] = 10 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 2, t33, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bge), 0);
     end
-    else if ord(result.space136[159]) = 11 then begin
+    else if result.case_value[159] = 11 then begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$jump), 0);
     end
-    else if ord(result.space136[159]) <> 12 then begin
+    else if result.case_value[159] <> 12 then begin
       pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
@@ -1438,14 +1438,14 @@ var
   t37: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t3 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
       t4 := subject^.children[1];
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
@@ -1454,8 +1454,8 @@ begin
     end;
     t7 := t4;
   end else begin
-    if ord(result.space136[137]) = 2 then begin
-      if ord(result.space136[139]) = 1 then begin
+    if result.case_value[137] = 2 then begin
+      if result.case_value[139] = 1 then begin
         t5 := subject^.children[1];
       end else begin
         debug_lir_$simple_instruction(result.inherited_attributes,
@@ -1468,8 +1468,8 @@ begin
     end;
     t7 := t6;
   end;
-  if ord(result.space136[140]) = 1 then begin
-    if ord(result.space136[141]) = 1 then begin
+  if result.case_value[140] = 1 then begin
+    if result.case_value[141] = 1 then begin
       t8 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 8,
@@ -1477,7 +1477,7 @@ begin
           t7, t8);
     end else begin
       t9 := create_solution_for_ip_reg;
-      if ord(result.space136[142]) = 1 then begin
+      if result.case_value[142] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1494,8 +1494,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[140]) = 2 then begin
-    if ord(result.space136[143]) = 1 then begin
+  else if result.case_value[140] = 2 then begin
+    if result.case_value[143] = 1 then begin
       t11 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 8,
@@ -1503,7 +1503,7 @@ begin
           t7, t11);
     end else begin
       t12 := create_solution_for_ip_reg;
-      if ord(result.space136[144]) = 1 then begin
+      if result.case_value[144] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1520,8 +1520,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[140]) = 3 then begin
-    if ord(result.space136[145]) = 1 then begin
+  else if result.case_value[140] = 3 then begin
+    if result.case_value[145] = 1 then begin
       t14 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 4,
@@ -1529,7 +1529,7 @@ begin
           t7, t14);
     end else begin
       t15 := create_solution_for_ip_reg;
-      if ord(result.space136[146]) = 1 then begin
+      if result.case_value[146] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1546,8 +1546,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[140]) = 4 then begin
-    if ord(result.space136[147]) = 1 then begin
+  else if result.case_value[140] = 4 then begin
+    if result.case_value[147] = 1 then begin
       t17 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 4,
@@ -1555,7 +1555,7 @@ begin
           t7, t17);
     end else begin
       t18 := create_solution_for_ip_reg;
-      if ord(result.space136[148]) = 1 then begin
+      if result.case_value[148] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1572,8 +1572,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[140]) = 5 then begin
-    if ord(result.space136[149]) = 1 then begin
+  else if result.case_value[140] = 5 then begin
+    if result.case_value[149] = 1 then begin
       t20 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 4,
@@ -1581,7 +1581,7 @@ begin
           t7, t20);
     end else begin
       t21 := create_solution_for_ip_reg;
-      if ord(result.space136[150]) = 1 then begin
+      if result.case_value[150] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1598,8 +1598,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[140]) = 6 then begin
-    if ord(result.space136[151]) = 1 then begin
+  else if result.case_value[140] = 6 then begin
+    if result.case_value[151] = 1 then begin
       t23 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 4,
@@ -1607,7 +1607,7 @@ begin
           t7, t23);
     end else begin
       t24 := create_solution_for_ip_reg;
-      if ord(result.space136[152]) = 1 then begin
+      if result.case_value[152] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1624,8 +1624,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[140]) = 7 then begin
-    if ord(result.space136[153]) = 1 then begin
+  else if result.case_value[140] = 7 then begin
+    if result.case_value[153] = 1 then begin
       t26 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 2,
@@ -1633,7 +1633,7 @@ begin
           t7, t26);
     end else begin
       t27 := create_solution_for_ip_reg;
-      if ord(result.space136[154]) = 1 then begin
+      if result.case_value[154] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1650,8 +1650,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[140]) = 8 then begin
-    if ord(result.space136[155]) = 1 then begin
+  else if result.case_value[140] = 8 then begin
+    if result.case_value[155] = 1 then begin
       t29 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 2,
@@ -1659,7 +1659,7 @@ begin
           t7, t29);
     end else begin
       t30 := create_solution_for_ip_reg;
-      if ord(result.space136[156]) = 1 then begin
+      if result.case_value[156] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1676,8 +1676,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[140]) = 9 then begin
-    if ord(result.space136[157]) = 1 then begin
+  else if result.case_value[140] = 9 then begin
+    if result.case_value[157] = 1 then begin
       t32 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 2,
@@ -1685,7 +1685,7 @@ begin
           t7, t32);
     end else begin
       t33 := create_solution_for_ip_reg;
-      if ord(result.space136[158]) = 1 then begin
+      if result.case_value[158] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1702,8 +1702,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[140]) = 10 then begin
-    if ord(result.space136[159]) = 1 then begin
+  else if result.case_value[140] = 10 then begin
+    if result.case_value[159] = 1 then begin
       t35 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 2,
@@ -1711,7 +1711,7 @@ begin
           t7, t35);
     end else begin
       t36 := create_solution_for_ip_reg;
-      if ord(result.space136[160]) = 1 then begin
+      if result.case_value[160] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1728,11 +1728,11 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[140]) = 11 then begin
+  else if result.case_value[140] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[140]) <> 12 then begin
+  else if result.case_value[140] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -1785,14 +1785,14 @@ var
   t37: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t3 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
       t4 := subject^.children[1];
     end else begin
       debug_lir_$field_instruction(result.inherited_attributes,
@@ -1802,8 +1802,8 @@ begin
     end;
     t7 := t4;
   end else begin
-    if ord(result.space136[137]) = 2 then begin
-      if ord(result.space136[139]) = 1 then begin
+    if result.case_value[137] = 2 then begin
+      if result.case_value[139] = 1 then begin
         t5 := subject^.children[1];
       end else begin
         debug_lir_$field_instruction(result.inherited_attributes,
@@ -1817,8 +1817,8 @@ begin
     end;
     t7 := t6;
   end;
-  if ord(result.space136[140]) = 1 then begin
-    if ord(result.space136[141]) = 1 then begin
+  if result.case_value[140] = 1 then begin
+    if result.case_value[141] = 1 then begin
       t8 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 8,
@@ -1826,7 +1826,7 @@ begin
           t7, t8);
     end else begin
       t9 := create_solution_for_ip_reg;
-      if ord(result.space136[142]) = 1 then begin
+      if result.case_value[142] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1843,8 +1843,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[140]) = 2 then begin
-    if ord(result.space136[143]) = 1 then begin
+  else if result.case_value[140] = 2 then begin
+    if result.case_value[143] = 1 then begin
       t11 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 8,
@@ -1852,7 +1852,7 @@ begin
           t7, t11);
     end else begin
       t12 := create_solution_for_ip_reg;
-      if ord(result.space136[144]) = 1 then begin
+      if result.case_value[144] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1869,8 +1869,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[140]) = 3 then begin
-    if ord(result.space136[145]) = 1 then begin
+  else if result.case_value[140] = 3 then begin
+    if result.case_value[145] = 1 then begin
       t14 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 4,
@@ -1878,7 +1878,7 @@ begin
           t7, t14);
     end else begin
       t15 := create_solution_for_ip_reg;
-      if ord(result.space136[146]) = 1 then begin
+      if result.case_value[146] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1895,8 +1895,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[140]) = 4 then begin
-    if ord(result.space136[147]) = 1 then begin
+  else if result.case_value[140] = 4 then begin
+    if result.case_value[147] = 1 then begin
       t17 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 4,
@@ -1904,7 +1904,7 @@ begin
           t7, t17);
     end else begin
       t18 := create_solution_for_ip_reg;
-      if ord(result.space136[148]) = 1 then begin
+      if result.case_value[148] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1921,8 +1921,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[140]) = 5 then begin
-    if ord(result.space136[149]) = 1 then begin
+  else if result.case_value[140] = 5 then begin
+    if result.case_value[149] = 1 then begin
       t20 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 4,
@@ -1930,7 +1930,7 @@ begin
           t7, t20);
     end else begin
       t21 := create_solution_for_ip_reg;
-      if ord(result.space136[150]) = 1 then begin
+      if result.case_value[150] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1947,8 +1947,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[140]) = 6 then begin
-    if ord(result.space136[151]) = 1 then begin
+  else if result.case_value[140] = 6 then begin
+    if result.case_value[151] = 1 then begin
       t23 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 4,
@@ -1956,7 +1956,7 @@ begin
           t7, t23);
     end else begin
       t24 := create_solution_for_ip_reg;
-      if ord(result.space136[152]) = 1 then begin
+      if result.case_value[152] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1973,8 +1973,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[140]) = 7 then begin
-    if ord(result.space136[153]) = 1 then begin
+  else if result.case_value[140] = 7 then begin
+    if result.case_value[153] = 1 then begin
       t26 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 2,
@@ -1982,7 +1982,7 @@ begin
           t7, t26);
     end else begin
       t27 := create_solution_for_ip_reg;
-      if ord(result.space136[154]) = 1 then begin
+      if result.case_value[154] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -1999,8 +1999,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[140]) = 8 then begin
-    if ord(result.space136[155]) = 1 then begin
+  else if result.case_value[140] = 8 then begin
+    if result.case_value[155] = 1 then begin
       t29 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 2,
@@ -2008,7 +2008,7 @@ begin
           t7, t29);
     end else begin
       t30 := create_solution_for_ip_reg;
-      if ord(result.space136[156]) = 1 then begin
+      if result.case_value[156] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -2025,8 +2025,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[140]) = 9 then begin
-    if ord(result.space136[157]) = 1 then begin
+  else if result.case_value[140] = 9 then begin
+    if result.case_value[157] = 1 then begin
       t32 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 2,
@@ -2034,7 +2034,7 @@ begin
           t7, t32);
     end else begin
       t33 := create_solution_for_ip_reg;
-      if ord(result.space136[158]) = 1 then begin
+      if result.case_value[158] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -2051,8 +2051,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[140]) = 10 then begin
-    if ord(result.space136[159]) = 1 then begin
+  else if result.case_value[140] = 10 then begin
+    if result.case_value[159] = 1 then begin
       t35 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 2,
@@ -2060,7 +2060,7 @@ begin
           t7, t35);
     end else begin
       t36 := create_solution_for_ip_reg;
-      if ord(result.space136[160]) = 1 then begin
+      if result.case_value[160] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value),
@@ -2077,11 +2077,11 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[140]) = 11 then begin
+  else if result.case_value[140] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[140]) <> 12 then begin
+  else if result.case_value[140] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -2139,15 +2139,15 @@ var
   t42: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t3 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
-      if ord(result.space136[139]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
+      if result.case_value[139] = 1 then begin
         t4 := subject^.children[1];
       end else begin
         debug_lir_$simple_instruction(result.inherited_attributes,
@@ -2156,8 +2156,8 @@ begin
       end;
       t7 := t4;
     end else begin
-      if ord(result.space136[138]) = 2 then begin
-        if ord(result.space136[140]) = 1 then begin
+      if result.case_value[138] = 2 then begin
+        if result.case_value[140] = 1 then begin
           t5 := subject^.children[1];
         end else begin
           debug_lir_$simple_instruction(result.inherited_attributes,
@@ -2172,8 +2172,8 @@ begin
     end;
     t12 := t7;
   end else begin
-    if ord(result.space136[141]) = 1 then begin
-      if ord(result.space136[142]) = 1 then begin
+    if result.case_value[141] = 1 then begin
+      if result.case_value[142] = 1 then begin
         t8 := subject^.children[1];
       end else begin
         debug_lir_$field_instruction(result.inherited_attributes,
@@ -2183,8 +2183,8 @@ begin
       end;
       t11 := t8;
     end else begin
-      if ord(result.space136[141]) = 2 then begin
-        if ord(result.space136[143]) = 1 then begin
+      if result.case_value[141] = 2 then begin
+        if result.case_value[143] = 1 then begin
           t9 := subject^.children[1];
         end else begin
           debug_lir_$field_instruction(result.inherited_attributes,
@@ -2200,8 +2200,8 @@ begin
     end;
     t12 := t11;
   end;
-  if ord(result.space136[144]) = 1 then begin
-    if ord(result.space136[145]) = 1 then begin
+  if result.case_value[144] = 1 then begin
+    if result.case_value[145] = 1 then begin
       t13 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 8,
@@ -2209,7 +2209,7 @@ begin
           t12, t13);
     end else begin
       t14 := create_solution_for_ip_reg;
-      if ord(result.space136[146]) = 1 then begin
+      if result.case_value[146] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -2226,8 +2226,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[144]) = 2 then begin
-    if ord(result.space136[147]) = 1 then begin
+  else if result.case_value[144] = 2 then begin
+    if result.case_value[147] = 1 then begin
       t16 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 8,
@@ -2235,7 +2235,7 @@ begin
           t12, t16);
     end else begin
       t17 := create_solution_for_ip_reg;
-      if ord(result.space136[148]) = 1 then begin
+      if result.case_value[148] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -2252,8 +2252,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[144]) = 3 then begin
-    if ord(result.space136[149]) = 1 then begin
+  else if result.case_value[144] = 3 then begin
+    if result.case_value[149] = 1 then begin
       t19 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 4,
@@ -2261,7 +2261,7 @@ begin
           t12, t19);
     end else begin
       t20 := create_solution_for_ip_reg;
-      if ord(result.space136[150]) = 1 then begin
+      if result.case_value[150] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -2278,8 +2278,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[144]) = 4 then begin
-    if ord(result.space136[151]) = 1 then begin
+  else if result.case_value[144] = 4 then begin
+    if result.case_value[151] = 1 then begin
       t22 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 4,
@@ -2287,7 +2287,7 @@ begin
           t12, t22);
     end else begin
       t23 := create_solution_for_ip_reg;
-      if ord(result.space136[152]) = 1 then begin
+      if result.case_value[152] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -2304,8 +2304,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[144]) = 5 then begin
-    if ord(result.space136[153]) = 1 then begin
+  else if result.case_value[144] = 5 then begin
+    if result.case_value[153] = 1 then begin
       t25 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 4,
@@ -2313,7 +2313,7 @@ begin
           t12, t25);
     end else begin
       t26 := create_solution_for_ip_reg;
-      if ord(result.space136[154]) = 1 then begin
+      if result.case_value[154] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -2330,8 +2330,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[144]) = 6 then begin
-    if ord(result.space136[155]) = 1 then begin
+  else if result.case_value[144] = 6 then begin
+    if result.case_value[155] = 1 then begin
       t28 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 4,
@@ -2339,7 +2339,7 @@ begin
           t12, t28);
     end else begin
       t29 := create_solution_for_ip_reg;
-      if ord(result.space136[156]) = 1 then begin
+      if result.case_value[156] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -2356,8 +2356,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[144]) = 7 then begin
-    if ord(result.space136[157]) = 1 then begin
+  else if result.case_value[144] = 7 then begin
+    if result.case_value[157] = 1 then begin
       t31 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 2,
@@ -2365,7 +2365,7 @@ begin
           t12, t31);
     end else begin
       t32 := create_solution_for_ip_reg;
-      if ord(result.space136[158]) = 1 then begin
+      if result.case_value[158] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -2382,8 +2382,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[144]) = 8 then begin
-    if ord(result.space136[159]) = 1 then begin
+  else if result.case_value[144] = 8 then begin
+    if result.case_value[159] = 1 then begin
       t34 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 2,
@@ -2391,7 +2391,7 @@ begin
           t12, t34);
     end else begin
       t35 := create_solution_for_ip_reg;
-      if ord(result.space136[160]) = 1 then begin
+      if result.case_value[160] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -2408,8 +2408,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[144]) = 9 then begin
-    if ord(result.space136[161]) = 1 then begin
+  else if result.case_value[144] = 9 then begin
+    if result.case_value[161] = 1 then begin
       t37 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 2,
@@ -2417,7 +2417,7 @@ begin
           t12, t37);
     end else begin
       t38 := create_solution_for_ip_reg;
-      if ord(result.space136[162]) = 1 then begin
+      if result.case_value[162] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -2434,8 +2434,8 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[144]) = 10 then begin
-    if ord(result.space136[163]) = 1 then begin
+  else if result.case_value[144] = 10 then begin
+    if result.case_value[163] = 1 then begin
       t40 := create_solution_for_ip_reg;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 2,
@@ -2443,7 +2443,7 @@ begin
           t12, t40);
     end else begin
       t41 := create_solution_for_ip_reg;
-      if ord(result.space136[164]) = 1 then begin
+      if result.case_value[164] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -2460,11 +2460,11 @@ begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[144]) = 11 then begin
+  else if result.case_value[144] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[144]) <> 12 then begin
+  else if result.case_value[144] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -2500,22 +2500,22 @@ var
 begin
   t1 := 31 - integer32(result.fields[1]);
   t2 := make_bit_mask_1(integer32(result.fields[1]), 0);
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t4 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t3 := lir_$new_label;
     t4 := integer32(t3);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$xor),
         0, subject^.children[1], subject^.children[2],
         create_solution_for_ip_reg);
     t15 := subject^.children[1]^.f76.bit_position_of_lsb;
     t16 := create_solution_for_ip_reg;
   end else begin
-    if ord(result.space136[137]) = 2 then begin
+    if result.case_value[137] = 2 then begin
       t5 := create_solution_for_ip_reg;
-      if ord(result.space136[138]) = 1 then begin
+      if result.case_value[138] = 1 then begin
         t6 := ip_reg_to_ip_reg_scaled(subject^.children[1],
             p2_locals_ptr_t(addr(result))^.w[177]);
         t8 := t6;
@@ -2533,7 +2533,7 @@ begin
       t14 := t5;
     end else begin
       t9 := create_solution_for_ip_reg;
-      if ord(result.space136[139]) = 1 then begin
+      if result.case_value[139] = 1 then begin
         t10 := ip_reg_to_ip_reg_scaled(subject^.children[2],
             p2_locals_ptr_t(addr(result))^.w[177]);
         t12 := t10;
@@ -2553,7 +2553,7 @@ begin
     t15 := t13;
     t16 := t14;
   end;
-  if ord(result.space136[140]) = 1 then begin
+  if result.case_value[140] = 1 then begin
     t17 := create_solution_for_ip_reg;
     t18 := create_solution_for_ip_reg;
     t19 := find_well_known_literal_solution(t15);
@@ -2570,71 +2570,71 @@ begin
         ord(opc$extractu), 0, integer32(result.fields[1]), t16,
         find_well_known_literal_solution(t15), t16);
   end;
-  if ord(result.space136[141]) = 1 then begin
+  if result.case_value[141] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t16, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[141]) = 2 then begin
+  else if result.case_value[141] = 2 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t16, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[141]) = 3 then begin
+  else if result.case_value[141] = 3 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t16, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[141]) = 4 then begin
+  else if result.case_value[141] = 4 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t16, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[141]) = 5 then begin
+  else if result.case_value[141] = 5 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t16, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[141]) = 6 then begin
+  else if result.case_value[141] = 6 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t16, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[141]) = 7 then begin
+  else if result.case_value[141] = 7 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t16, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[141]) = 8 then begin
+  else if result.case_value[141] = 8 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t16, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[141]) = 9 then begin
+  else if result.case_value[141] = 9 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t16, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[141]) = 10 then begin
+  else if result.case_value[141] = 10 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t16, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[141]) = 11 then begin
+  else if result.case_value[141] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[141]) <> 12 then begin
+  else if result.case_value[141] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -2652,88 +2652,88 @@ var
   t2: integer32;
   t3: isc_solution_ptr_t;
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t2 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t1 := lir_$new_label;
     t2 := integer32(t1);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, subject^.children[1], subject^.children[2],
           create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$beq), 0);
     end
-    else if ord(result.space136[138]) = 2 then begin
+    else if result.case_value[138] = 2 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, subject^.children[1], subject^.children[2],
           create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bne), 0);
     end
-    else if ord(result.space136[138]) = 3 then begin
+    else if result.case_value[138] = 3 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, subject^.children[1], subject^.children[2],
           create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$blo), 0);
     end
-    else if ord(result.space136[138]) = 4 then begin
+    else if result.case_value[138] = 4 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, subject^.children[1], subject^.children[2],
           create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bls), 0);
     end
-    else if ord(result.space136[138]) = 5 then begin
+    else if result.case_value[138] = 5 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, subject^.children[1], subject^.children[2],
           create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bhi), 0);
     end
-    else if ord(result.space136[138]) = 6 then begin
+    else if result.case_value[138] = 6 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, subject^.children[1], subject^.children[2],
           create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bhs), 0);
     end
-    else if ord(result.space136[138]) = 7 then begin
+    else if result.case_value[138] = 7 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, subject^.children[1], subject^.children[2],
           create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$blt), 0);
     end
-    else if ord(result.space136[138]) = 8 then begin
+    else if result.case_value[138] = 8 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, subject^.children[1], subject^.children[2],
           create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$ble), 0);
     end
-    else if ord(result.space136[138]) = 9 then begin
+    else if result.case_value[138] = 9 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, subject^.children[1], subject^.children[2],
           create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bgt), 0);
     end
-    else if ord(result.space136[138]) = 10 then begin
+    else if result.case_value[138] = 10 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, subject^.children[1], subject^.children[2],
           create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bge), 0);
     end
-    else if ord(result.space136[138]) = 11 then begin
+    else if result.case_value[138] = 11 then begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$jump), 0);
     end
-    else if ord(result.space136[138]) <> 12 then begin
+    else if result.case_value[138] <> 12 then begin
       pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
@@ -2744,71 +2744,71 @@ begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$extractu), 0, integer32(result.fields[0]), t3,
         find_well_known_literal_solution(0), t3);
-    if ord(result.space136[139]) = 1 then begin
+    if result.case_value[139] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 8, t3, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$beq), 0);
     end
-    else if ord(result.space136[139]) = 2 then begin
+    else if result.case_value[139] = 2 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 8, t3, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bne), 0);
     end
-    else if ord(result.space136[139]) = 3 then begin
+    else if result.case_value[139] = 3 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 4, t3, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$blo), 0);
     end
-    else if ord(result.space136[139]) = 4 then begin
+    else if result.case_value[139] = 4 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 4, t3, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bls), 0);
     end
-    else if ord(result.space136[139]) = 5 then begin
+    else if result.case_value[139] = 5 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 4, t3, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bhi), 0);
     end
-    else if ord(result.space136[139]) = 6 then begin
+    else if result.case_value[139] = 6 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 4, t3, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bhs), 0);
     end
-    else if ord(result.space136[139]) = 7 then begin
+    else if result.case_value[139] = 7 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 2, t3, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$blt), 0);
     end
-    else if ord(result.space136[139]) = 8 then begin
+    else if result.case_value[139] = 8 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 2, t3, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$ble), 0);
     end
-    else if ord(result.space136[139]) = 9 then begin
+    else if result.case_value[139] = 9 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 2, t3, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bgt), 0);
     end
-    else if ord(result.space136[139]) = 10 then begin
+    else if result.case_value[139] = 10 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 2, t3, create_solution_for_ip_reg, nil);
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$bge), 0);
     end
-    else if ord(result.space136[139]) = 11 then begin
+    else if result.case_value[139] = 11 then begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t2), ord(opc$jump), 0);
     end
-    else if ord(result.space136[139]) <> 12 then begin
+    else if result.case_value[139] <> 12 then begin
       pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
@@ -2848,15 +2848,15 @@ var
 begin
   t1 := create_solution_for_ip_reg;
   t2 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t4 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t3 := lir_$new_label;
     t4 := integer32(t3);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
-      if ord(result.space136[139]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
+      if result.case_value[139] = 1 then begin
         t5 := subject^.children[1];
       end else begin
         debug_lir_$simple_instruction(result.inherited_attributes,
@@ -2865,8 +2865,8 @@ begin
       end;
       t8 := t5;
     end else begin
-      if ord(result.space136[138]) = 2 then begin
-        if ord(result.space136[140]) = 1 then begin
+      if result.case_value[138] = 2 then begin
+        if result.case_value[140] = 1 then begin
           t6 := subject^.children[1];
         end else begin
           debug_lir_$simple_instruction(result.inherited_attributes,
@@ -2881,8 +2881,8 @@ begin
     end;
     t13 := t8;
   end else begin
-    if ord(result.space136[141]) = 1 then begin
-      if ord(result.space136[142]) = 1 then begin
+    if result.case_value[141] = 1 then begin
+      if result.case_value[142] = 1 then begin
         t9 := subject^.children[1];
       end else begin
         debug_lir_$field_instruction(result.inherited_attributes,
@@ -2892,8 +2892,8 @@ begin
       end;
       t12 := t9;
     end else begin
-      if ord(result.space136[141]) = 2 then begin
-        if ord(result.space136[143]) = 1 then begin
+      if result.case_value[141] = 2 then begin
+        if result.case_value[143] = 1 then begin
           t10 := subject^.children[1];
         end else begin
           debug_lir_$field_instruction(result.inherited_attributes,
@@ -2909,9 +2909,9 @@ begin
     end;
     t13 := t12;
   end;
-  if ord(result.space136[144]) = 1 then begin
-    if ord(result.space136[145]) = 1 then begin
-      if ord(result.space136[146]) = 1 then begin
+  if result.case_value[144] = 1 then begin
+    if result.case_value[145] = 1 then begin
+      if result.case_value[146] = 1 then begin
         t14 := subject^.children[2];
       end else begin
         debug_lir_$simple_instruction(result.inherited_attributes,
@@ -2920,8 +2920,8 @@ begin
       end;
       t17 := t14;
     end else begin
-      if ord(result.space136[145]) = 2 then begin
-        if ord(result.space136[147]) = 1 then begin
+      if result.case_value[145] = 2 then begin
+        if result.case_value[147] = 1 then begin
           t15 := subject^.children[2];
         end else begin
           debug_lir_$simple_instruction(result.inherited_attributes,
@@ -2936,8 +2936,8 @@ begin
     end;
     t22 := t17;
   end else begin
-    if ord(result.space136[148]) = 1 then begin
-      if ord(result.space136[149]) = 1 then begin
+    if result.case_value[148] = 1 then begin
+      if result.case_value[149] = 1 then begin
         t18 := subject^.children[2];
       end else begin
         debug_lir_$field_instruction(result.inherited_attributes,
@@ -2947,8 +2947,8 @@ begin
       end;
       t21 := t18;
     end else begin
-      if ord(result.space136[148]) = 2 then begin
-        if ord(result.space136[150]) = 1 then begin
+      if result.case_value[148] = 2 then begin
+        if result.case_value[150] = 1 then begin
           t19 := subject^.children[2];
         end else begin
           debug_lir_$field_instruction(result.inherited_attributes,
@@ -2964,71 +2964,71 @@ begin
     end;
     t22 := t21;
   end;
-  if ord(result.space136[151]) = 1 then begin
+  if result.case_value[151] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         8, t13, t22, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[151]) = 2 then begin
+  else if result.case_value[151] = 2 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         8, t13, t22, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[151]) = 3 then begin
+  else if result.case_value[151] = 3 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         4, t13, t22, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[151]) = 4 then begin
+  else if result.case_value[151] = 4 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         4, t13, t22, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[151]) = 5 then begin
+  else if result.case_value[151] = 5 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         4, t13, t22, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[151]) = 6 then begin
+  else if result.case_value[151] = 6 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         4, t13, t22, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[151]) = 7 then begin
+  else if result.case_value[151] = 7 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         2, t13, t22, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[151]) = 8 then begin
+  else if result.case_value[151] = 8 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         2, t13, t22, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[151]) = 9 then begin
+  else if result.case_value[151] = 9 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         2, t13, t22, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[151]) = 10 then begin
+  else if result.case_value[151] = 10 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         2, t13, t22, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[151]) = 11 then begin
+  else if result.case_value[151] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t4),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[151]) <> 12 then begin
+  else if result.case_value[151] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -3212,16 +3212,16 @@ begin
   end else begin
     t14 := 0;
   end;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t16 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t15 := lir_$new_label;
     t16 := integer32(t15);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
-      if ord(result.space136[139]) = 1 then begin
-        if ord(result.space136[140]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
+      if result.case_value[139] = 1 then begin
+        if result.case_value[140] = 1 then begin
           t17 := subject^.children[1];
         end else begin
           debug_lir_$simple_instruction(result.inherited_attributes,
@@ -3230,8 +3230,8 @@ begin
         end;
         t20 := t17;
       end else begin
-        if ord(result.space136[139]) = 2 then begin
-          if ord(result.space136[141]) = 1 then begin
+        if result.case_value[139] = 2 then begin
+          if result.case_value[141] = 1 then begin
             t18 := subject^.children[1];
           end else begin
             debug_lir_$simple_instruction(result.inherited_attributes,
@@ -3246,8 +3246,8 @@ begin
       end;
       t25 := t20;
     end else begin
-      if ord(result.space136[142]) = 1 then begin
-        if ord(result.space136[143]) = 1 then begin
+      if result.case_value[142] = 1 then begin
+        if result.case_value[143] = 1 then begin
           t21 := subject^.children[1];
         end else begin
           debug_lir_$field_instruction(result.inherited_attributes,
@@ -3257,8 +3257,8 @@ begin
         end;
         t24 := t21;
       end else begin
-        if ord(result.space136[142]) = 2 then begin
-          if ord(result.space136[144]) = 1 then begin
+        if result.case_value[142] = 2 then begin
+          if result.case_value[144] = 1 then begin
             t22 := subject^.children[1];
           end else begin
             debug_lir_$field_instruction(result.inherited_attributes,
@@ -3277,18 +3277,18 @@ begin
     t61 := t25;
   end else begin
     t26 := create_solution_for_ip_reg;
-    if ord(result.space136[145]) = 1 then begin
+    if result.case_value[145] = 1 then begin
       if t26^.object_with_name <> nil then begin
         t26^.object_with_name := t26^.object_with_name;
       end else begin
         t26^.object_with_name := subject^.children[1]^.object_with_name;
       end;
-      if ord(result.space136[146]) = 1 then begin
+      if result.case_value[146] = 1 then begin
         t27 := create_solution_for_ip_reg;
         t28 := create_solution_for_ip_reg;
         t29 := create_solution_for_ip_reg;
         t30 := create_solution_for_ip_reg;
-        if ord(result.space136[147]) = 1 then begin
+        if result.case_value[147] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + (t5 + t3 + t4),
@@ -3316,8 +3316,8 @@ begin
               subject^.children[1]^.bits_trusted);
         end else begin
           t31 := create_solution_for_ip_reg;
-          if ord(result.space136[148]) = 1 then begin
-            if ord(result.space136[149]) = 1 then begin
+          if result.case_value[148] = 1 then begin
+            if result.case_value[149] = 1 then begin
               if t31^.object_with_name <> nil then begin
                 t31^.object_with_name := t31^.object_with_name;
               end else begin
@@ -3334,7 +3334,7 @@ begin
                   subject^.children[1]^.base_register, t31);
             end;
           end
-          else if ord(result.space136[150]) = 1 then begin
+          else if result.case_value[150] = 1 then begin
             debug_lir_$simple_instruction(result.inherited_attributes,
                 ord(opc$move), 0,
                 find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -3376,7 +3376,7 @@ begin
         debug_lir_$field_instruction(result.inherited_attributes,
             ord(opc$insert), 0, 24, t29, find_well_known_literal_solution(8),
             t30);
-        if ord(result.space136[151]) = 1 then begin
+        if result.case_value[151] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
               isc_solution_ptr_t(isc_user_routines_330),
@@ -3388,11 +3388,11 @@ begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$adj_move), 0, nil, nil, nil);
       end
-      else if ord(result.space136[146]) = 2 then begin
+      else if result.case_value[146] = 2 then begin
         t33 := create_solution_for_ip_reg;
         t34 := create_solution_for_ip_reg;
         t35 := create_solution_for_ip_reg;
-        if ord(result.space136[152]) = 1 then begin
+        if result.case_value[152] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + (t5 + t3 + t4),
@@ -3414,8 +3414,8 @@ begin
               subject^.children[1]^.bits_trusted);
         end else begin
           t36 := create_solution_for_ip_reg;
-          if ord(result.space136[153]) = 1 then begin
-            if ord(result.space136[154]) = 1 then begin
+          if result.case_value[153] = 1 then begin
+            if result.case_value[154] = 1 then begin
               if t36^.object_with_name <> nil then begin
                 t36^.object_with_name := t36^.object_with_name;
               end else begin
@@ -3432,7 +3432,7 @@ begin
                   subject^.children[1]^.base_register, t36);
             end;
           end
-          else if ord(result.space136[155]) = 1 then begin
+          else if result.case_value[155] = 1 then begin
             debug_lir_$simple_instruction(result.inherited_attributes,
                 ord(opc$move), 0,
                 find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -3466,7 +3466,7 @@ begin
         debug_lir_$field_instruction(result.inherited_attributes,
             ord(opc$insert), 0, 16, t34, find_well_known_literal_solution(8),
             t35);
-        if ord(result.space136[156]) = 1 then begin
+        if result.case_value[156] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
               isc_solution_ptr_t(isc_user_routines_330),
@@ -3478,10 +3478,10 @@ begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$adj_move), 0, nil, nil, nil);
       end
-      else if ord(result.space136[146]) = 3 then begin
+      else if result.case_value[146] = 3 then begin
         t38 := create_solution_for_ip_reg;
         t39 := create_solution_for_ip_reg;
-        if ord(result.space136[157]) = 1 then begin
+        if result.case_value[157] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + (t5 + t3 + t4),
@@ -3497,8 +3497,8 @@ begin
               subject^.children[1]^.bits_trusted);
         end else begin
           t40 := create_solution_for_ip_reg;
-          if ord(result.space136[158]) = 1 then begin
-            if ord(result.space136[159]) = 1 then begin
+          if result.case_value[158] = 1 then begin
+            if result.case_value[159] = 1 then begin
               if t40^.object_with_name <> nil then begin
                 t40^.object_with_name := t40^.object_with_name;
               end else begin
@@ -3515,7 +3515,7 @@ begin
                   subject^.children[1]^.base_register, t40);
             end;
           end
-          else if ord(result.space136[160]) = 1 then begin
+          else if result.case_value[160] = 1 then begin
             debug_lir_$simple_instruction(result.inherited_attributes,
                 ord(opc$move), 0,
                 find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -3541,7 +3541,7 @@ begin
         debug_lir_$field_instruction(result.inherited_attributes,
             ord(opc$insert), 0, 8, t38, find_well_known_literal_solution(8),
             t39);
-        if ord(result.space136[161]) = 1 then begin
+        if result.case_value[161] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
               isc_solution_ptr_t(isc_user_routines_330),
@@ -3553,8 +3553,8 @@ begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$adj_move), 0, nil, nil, nil);
       end
-      else if ord(result.space136[146]) = 4 then begin
-        if ord(result.space136[162]) = 1 then begin
+      else if result.case_value[146] = 4 then begin
+        if result.case_value[162] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + (t5 + t3 + t4),
@@ -3564,8 +3564,8 @@ begin
               subject^.children[1]^.bits_trusted);
         end else begin
           t42 := create_solution_for_ip_reg;
-          if ord(result.space136[163]) = 1 then begin
-            if ord(result.space136[164]) = 1 then begin
+          if result.case_value[163] = 1 then begin
+            if result.case_value[164] = 1 then begin
               if t42^.object_with_name <> nil then begin
                 t42^.object_with_name := t42^.object_with_name;
               end else begin
@@ -3582,7 +3582,7 @@ begin
                   subject^.children[1]^.base_register, t42);
             end;
           end
-          else if ord(result.space136[165]) = 1 then begin
+          else if result.case_value[165] = 1 then begin
             debug_lir_$simple_instruction(result.inherited_attributes,
                 ord(opc$move), 0,
                 find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -3600,7 +3600,7 @@ begin
               subject^.children[1]^.il, 0, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
         end;
-        if ord(result.space136[166]) = 1 then begin
+        if result.case_value[166] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
               isc_solution_ptr_t(isc_user_routines_330),
@@ -3619,9 +3619,9 @@ begin
       end else begin
         t26^.object_with_name := subject^.children[1]^.object_with_name;
       end;
-      if ord(result.space136[167]) = 1 then begin
-        if ord(result.space136[168]) = 1 then begin
-          if ord(result.space136[169]) = 1 then begin
+      if result.case_value[167] = 1 then begin
+        if result.case_value[168] = 1 then begin
+          if result.case_value[169] = 1 then begin
             debug_lir_$load_instruction(result.inherited_attributes,
                 ord(opc$loadl),
                 integer32(p2_locals_ptr_t(addr(result))^.p2[90]) + (t8 + t6 + t7),
@@ -3632,8 +3632,8 @@ begin
                 subject^.children[1]^.bits_trusted);
           end else begin
             t44 := create_solution_for_ip_reg;
-            if ord(result.space136[170]) = 1 then begin
-              if ord(result.space136[171]) = 1 then begin
+            if result.case_value[170] = 1 then begin
+              if result.case_value[171] = 1 then begin
                 if t44^.object_with_name <> nil then begin
                   t44^.object_with_name := t44^.object_with_name;
                 end else begin
@@ -3650,7 +3650,7 @@ begin
                     subject^.children[1]^.base_register, t44);
               end;
             end
-            else if ord(result.space136[172]) = 1 then begin
+            else if result.case_value[172] = 1 then begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$move), 0,
                   find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -3669,7 +3669,7 @@ begin
                 subject^.children[1]^.bits_known,
                 subject^.children[1]^.bits_trusted);
           end;
-          if ord(result.space136[173]) = 1 then begin
+          if result.case_value[173] = 1 then begin
             debug_lir_$load_instruction(result.inherited_attributes,
                 ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
                 isc_solution_ptr_t(isc_user_routines_330),
@@ -3677,10 +3677,10 @@ begin
                 subject^.children[1]^.il, 0, 0, 0);
           end;
         end
-        else if ord(result.space136[168]) = 2 then begin
+        else if result.case_value[168] = 2 then begin
           t46 := create_solution_for_ip_reg;
           t47 := create_solution_for_ip_reg;
-          if ord(result.space136[174]) = 1 then begin
+          if result.case_value[174] = 1 then begin
             debug_lir_$load_instruction(result.inherited_attributes,
                 ord(opc$loadwu),
                 integer32(p2_locals_ptr_t(addr(result))^.p2[90]) + (t8 + t6 + t7),
@@ -3698,8 +3698,8 @@ begin
                 subject^.children[1]^.bits_trusted);
           end else begin
             t48 := create_solution_for_ip_reg;
-            if ord(result.space136[175]) = 1 then begin
-              if ord(result.space136[176]) = 1 then begin
+            if result.case_value[175] = 1 then begin
+              if result.case_value[176] = 1 then begin
                 if t48^.object_with_name <> nil then begin
                   t48^.object_with_name := t48^.object_with_name;
                 end else begin
@@ -3716,7 +3716,7 @@ begin
                     subject^.children[1]^.base_register, t48);
               end;
             end
-            else if ord(result.space136[177]) = 1 then begin
+            else if result.case_value[177] = 1 then begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$move), 0,
                   find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -3741,7 +3741,7 @@ begin
                 subject^.children[1]^.bits_known,
                 subject^.children[1]^.bits_trusted);
           end;
-          if ord(result.space136[178]) = 1 then begin
+          if result.case_value[178] = 1 then begin
             warning_unaligned_atomic_access(subject^.inherited_attributes^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited_attributes,
@@ -3752,20 +3752,20 @@ begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$adj_move), 0, nil, nil, nil);
         end;
-        if ord(result.space136[179]) <> 1 then begin
-          if ord(result.space136[180]) = 1 then begin
+        if result.case_value[179] <> 1 then begin
+          if result.case_value[180] = 1 then begin
             pattern_match_error(2, il_none, 0,
                 subject^.children[1]^.inherited_attributes^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$costly), 0, nil, nil, nil);
-          if ord(result.space136[181]) = 1 then begin
+          if result.case_value[181] = 1 then begin
             warning_unaligned_atomic_access(subject^.inherited_attributes^.pos.source_line_number);
           end;
         end;
       end
-      else if ord(result.space136[167]) = 2 then begin
-        if ord(result.space136[182]) = 1 then begin
+      else if result.case_value[167] = 2 then begin
+        if result.case_value[182] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadwu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[90]) + (t8 + t6 + t7),
@@ -3775,8 +3775,8 @@ begin
               subject^.children[1]^.bits_trusted);
         end else begin
           t50 := create_solution_for_ip_reg;
-          if ord(result.space136[183]) = 1 then begin
-            if ord(result.space136[184]) = 1 then begin
+          if result.case_value[183] = 1 then begin
+            if result.case_value[184] = 1 then begin
               if t50^.object_with_name <> nil then begin
                 t50^.object_with_name := t50^.object_with_name;
               end else begin
@@ -3793,7 +3793,7 @@ begin
                   subject^.children[1]^.base_register, t50);
             end;
           end
-          else if ord(result.space136[185]) = 1 then begin
+          else if result.case_value[185] = 1 then begin
             debug_lir_$simple_instruction(result.inherited_attributes,
                 ord(opc$move), 0,
                 find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -3811,27 +3811,27 @@ begin
               subject^.children[1]^.il, 0, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
         end;
-        if ord(result.space136[186]) = 1 then begin
+        if result.case_value[186] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
               isc_solution_ptr_t(isc_user_routines_330),
               isc_solution_ptr_t(isc_user_routines_31c),
               subject^.children[1]^.il, 0, 0, 0);
         end;
-        if ord(result.space136[187]) <> 1 then begin
-          if ord(result.space136[188]) = 1 then begin
+        if result.case_value[187] <> 1 then begin
+          if result.case_value[188] = 1 then begin
             pattern_match_error(3, il_none, 0,
                 subject^.children[1]^.inherited_attributes^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$costly), 0, nil, nil, nil);
-          if ord(result.space136[189]) = 1 then begin
+          if result.case_value[189] = 1 then begin
             warning_unaligned_atomic_access(subject^.inherited_attributes^.pos.source_line_number);
           end;
         end;
       end
-      else if ord(result.space136[167]) = 3 then begin
-        if ord(result.space136[190]) = 1 then begin
+      else if result.case_value[167] = 3 then begin
+        if result.case_value[190] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[90]) + (t8 + t6 + t7),
@@ -3841,8 +3841,8 @@ begin
               subject^.children[1]^.bits_trusted);
         end else begin
           t52 := create_solution_for_ip_reg;
-          if ord(result.space136[191]) = 1 then begin
-            if ord(result.space136[192]) = 1 then begin
+          if result.case_value[191] = 1 then begin
+            if result.case_value[192] = 1 then begin
               if t52^.object_with_name <> nil then begin
                 t52^.object_with_name := t52^.object_with_name;
               end else begin
@@ -3859,7 +3859,7 @@ begin
                   subject^.children[1]^.base_register, t52);
             end;
           end
-          else if ord(result.space136[193]) = 1 then begin
+          else if result.case_value[193] = 1 then begin
             debug_lir_$simple_instruction(result.inherited_attributes,
                 ord(opc$move), 0,
                 find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -3877,7 +3877,7 @@ begin
               subject^.children[1]^.il, 0, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
         end;
-        if ord(result.space136[194]) = 1 then begin
+        if result.case_value[194] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
               isc_solution_ptr_t(isc_user_routines_330),
@@ -3891,13 +3891,13 @@ begin
             subject^.inherited_attributes^.pos.source_line_number);
       end;
     end;
-    if ord(result.space136[195]) = 1 then begin
-      if ord(result.space136[196]) = 1 then begin
+    if result.case_value[195] = 1 then begin
+      if result.case_value[196] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$extend7), 0, t26, t1, nil);
         t55 := t1;
       end else begin
-        if ord(result.space136[196]) = 2 then begin
+        if result.case_value[196] = 2 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$extend15), 0, t26, t1, nil);
           t54 := t1;
@@ -3908,8 +3908,8 @@ begin
       end;
       t60 := t55;
     end else begin
-      if ord(result.space136[197]) = 1 then begin
-        if ord(result.space136[198]) = 1 then begin
+      if result.case_value[197] = 1 then begin
+        if result.case_value[198] = 1 then begin
           t56 := t26;
         end else begin
           debug_lir_$field_instruction(result.inherited_attributes,
@@ -3919,8 +3919,8 @@ begin
         end;
         t59 := t56;
       end else begin
-        if ord(result.space136[197]) = 2 then begin
-          if ord(result.space136[199]) = 1 then begin
+        if result.case_value[197] = 2 then begin
+          if result.case_value[199] = 1 then begin
             t57 := t26;
           end else begin
             debug_lir_$field_instruction(result.inherited_attributes,
@@ -3938,13 +3938,13 @@ begin
     end;
     t61 := t60;
   end;
-  if ord(result.space136[200]) = 1 then begin
-    if ord(result.space136[201]) = 1 then begin
+  if result.case_value[200] = 1 then begin
+    if result.case_value[201] = 1 then begin
       t71 := subject^.children[2];
     end else begin
-      if ord(result.space136[202]) = 1 then begin
-        if ord(result.space136[203]) = 1 then begin
-          if ord(result.space136[204]) = 1 then begin
+      if result.case_value[202] = 1 then begin
+        if result.case_value[203] = 1 then begin
+          if result.case_value[204] = 1 then begin
             t62 := subject^.children[2];
           end else begin
             debug_lir_$simple_instruction(result.inherited_attributes,
@@ -3953,8 +3953,8 @@ begin
           end;
           t65 := t62;
         end else begin
-          if ord(result.space136[203]) = 2 then begin
-            if ord(result.space136[205]) = 1 then begin
+          if result.case_value[203] = 2 then begin
+            if result.case_value[205] = 1 then begin
               t63 := subject^.children[2];
             end else begin
               debug_lir_$simple_instruction(result.inherited_attributes,
@@ -3969,8 +3969,8 @@ begin
         end;
         t70 := t65;
       end else begin
-        if ord(result.space136[206]) = 1 then begin
-          if ord(result.space136[207]) = 1 then begin
+        if result.case_value[206] = 1 then begin
+          if result.case_value[207] = 1 then begin
             t66 := subject^.children[2];
           end else begin
             debug_lir_$field_instruction(result.inherited_attributes,
@@ -3980,8 +3980,8 @@ begin
           end;
           t69 := t66;
         end else begin
-          if ord(result.space136[206]) = 2 then begin
-            if ord(result.space136[208]) = 1 then begin
+          if result.case_value[206] = 2 then begin
+            if result.case_value[208] = 1 then begin
               t67 := subject^.children[2];
             end else begin
               debug_lir_$field_instruction(result.inherited_attributes,
@@ -4002,18 +4002,18 @@ begin
     t107 := t71;
   end else begin
     t72 := create_solution_for_ip_reg;
-    if ord(result.space136[209]) = 1 then begin
+    if result.case_value[209] = 1 then begin
       if t72^.object_with_name <> nil then begin
         t72^.object_with_name := t72^.object_with_name;
       end else begin
         t72^.object_with_name := subject^.children[2]^.object_with_name;
       end;
-      if ord(result.space136[210]) = 1 then begin
+      if result.case_value[210] = 1 then begin
         t73 := create_solution_for_ip_reg;
         t74 := create_solution_for_ip_reg;
         t75 := create_solution_for_ip_reg;
         t76 := create_solution_for_ip_reg;
-        if ord(result.space136[211]) = 1 then begin
+        if result.case_value[211] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[91]) + (t9 + t11 + t10),
@@ -4041,8 +4041,8 @@ begin
               subject^.children[2]^.bits_trusted);
         end else begin
           t77 := create_solution_for_ip_reg;
-          if ord(result.space136[212]) = 1 then begin
-            if ord(result.space136[213]) = 1 then begin
+          if result.case_value[212] = 1 then begin
+            if result.case_value[213] = 1 then begin
               if t77^.object_with_name <> nil then begin
                 t77^.object_with_name := t77^.object_with_name;
               end else begin
@@ -4059,7 +4059,7 @@ begin
                   subject^.children[2]^.base_register, t77);
             end;
           end
-          else if ord(result.space136[214]) = 1 then begin
+          else if result.case_value[214] = 1 then begin
             debug_lir_$simple_instruction(result.inherited_attributes,
                 ord(opc$move), 0,
                 find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -4101,7 +4101,7 @@ begin
         debug_lir_$field_instruction(result.inherited_attributes,
             ord(opc$insert), 0, 24, t75, find_well_known_literal_solution(8),
             t76);
-        if ord(result.space136[215]) = 1 then begin
+        if result.case_value[215] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
               isc_solution_ptr_t(isc_user_routines_330),
@@ -4113,11 +4113,11 @@ begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$adj_move), 0, nil, nil, nil);
       end
-      else if ord(result.space136[210]) = 2 then begin
+      else if result.case_value[210] = 2 then begin
         t79 := create_solution_for_ip_reg;
         t80 := create_solution_for_ip_reg;
         t81 := create_solution_for_ip_reg;
-        if ord(result.space136[216]) = 1 then begin
+        if result.case_value[216] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[91]) + (t9 + t11 + t10),
@@ -4139,8 +4139,8 @@ begin
               subject^.children[2]^.bits_trusted);
         end else begin
           t82 := create_solution_for_ip_reg;
-          if ord(result.space136[217]) = 1 then begin
-            if ord(result.space136[218]) = 1 then begin
+          if result.case_value[217] = 1 then begin
+            if result.case_value[218] = 1 then begin
               if t82^.object_with_name <> nil then begin
                 t82^.object_with_name := t82^.object_with_name;
               end else begin
@@ -4157,7 +4157,7 @@ begin
                   subject^.children[2]^.base_register, t82);
             end;
           end
-          else if ord(result.space136[219]) = 1 then begin
+          else if result.case_value[219] = 1 then begin
             debug_lir_$simple_instruction(result.inherited_attributes,
                 ord(opc$move), 0,
                 find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -4191,7 +4191,7 @@ begin
         debug_lir_$field_instruction(result.inherited_attributes,
             ord(opc$insert), 0, 16, t80, find_well_known_literal_solution(8),
             t81);
-        if ord(result.space136[220]) = 1 then begin
+        if result.case_value[220] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
               isc_solution_ptr_t(isc_user_routines_330),
@@ -4203,10 +4203,10 @@ begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$adj_move), 0, nil, nil, nil);
       end
-      else if ord(result.space136[210]) = 3 then begin
+      else if result.case_value[210] = 3 then begin
         t84 := create_solution_for_ip_reg;
         t85 := create_solution_for_ip_reg;
-        if ord(result.space136[221]) = 1 then begin
+        if result.case_value[221] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[91]) + (t9 + t11 + t10),
@@ -4222,8 +4222,8 @@ begin
               subject^.children[2]^.bits_trusted);
         end else begin
           t86 := create_solution_for_ip_reg;
-          if ord(result.space136[222]) = 1 then begin
-            if ord(result.space136[223]) = 1 then begin
+          if result.case_value[222] = 1 then begin
+            if result.case_value[223] = 1 then begin
               if t86^.object_with_name <> nil then begin
                 t86^.object_with_name := t86^.object_with_name;
               end else begin
@@ -4240,7 +4240,7 @@ begin
                   subject^.children[2]^.base_register, t86);
             end;
           end
-          else if ord(result.space136[224]) = 1 then begin
+          else if result.case_value[224] = 1 then begin
             debug_lir_$simple_instruction(result.inherited_attributes,
                 ord(opc$move), 0,
                 find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -4266,7 +4266,7 @@ begin
         debug_lir_$field_instruction(result.inherited_attributes,
             ord(opc$insert), 0, 8, t84, find_well_known_literal_solution(8),
             t85);
-        if ord(result.space136[225]) = 1 then begin
+        if result.case_value[225] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
               isc_solution_ptr_t(isc_user_routines_330),
@@ -4278,8 +4278,8 @@ begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$adj_move), 0, nil, nil, nil);
       end
-      else if ord(result.space136[210]) = 4 then begin
-        if ord(result.space136[226]) = 1 then begin
+      else if result.case_value[210] = 4 then begin
+        if result.case_value[226] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[91]) + (t9 + t11 + t10),
@@ -4289,8 +4289,8 @@ begin
               subject^.children[2]^.bits_trusted);
         end else begin
           t88 := create_solution_for_ip_reg;
-          if ord(result.space136[227]) = 1 then begin
-            if ord(result.space136[228]) = 1 then begin
+          if result.case_value[227] = 1 then begin
+            if result.case_value[228] = 1 then begin
               if t88^.object_with_name <> nil then begin
                 t88^.object_with_name := t88^.object_with_name;
               end else begin
@@ -4307,7 +4307,7 @@ begin
                   subject^.children[2]^.base_register, t88);
             end;
           end
-          else if ord(result.space136[229]) = 1 then begin
+          else if result.case_value[229] = 1 then begin
             debug_lir_$simple_instruction(result.inherited_attributes,
                 ord(opc$move), 0,
                 find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -4325,7 +4325,7 @@ begin
               subject^.children[2]^.il, 0, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
         end;
-        if ord(result.space136[230]) = 1 then begin
+        if result.case_value[230] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
               isc_solution_ptr_t(isc_user_routines_330),
@@ -4344,9 +4344,9 @@ begin
       end else begin
         t72^.object_with_name := subject^.children[2]^.object_with_name;
       end;
-      if ord(result.space136[231]) = 1 then begin
-        if ord(result.space136[232]) = 1 then begin
-          if ord(result.space136[233]) = 1 then begin
+      if result.case_value[231] = 1 then begin
+        if result.case_value[232] = 1 then begin
+          if result.case_value[233] = 1 then begin
             debug_lir_$load_instruction(result.inherited_attributes,
                 ord(opc$loadl),
                 integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + (t12 + t13 + t14),
@@ -4357,8 +4357,8 @@ begin
                 subject^.children[2]^.bits_trusted);
           end else begin
             t90 := create_solution_for_ip_reg;
-            if ord(result.space136[234]) = 1 then begin
-              if ord(result.space136[235]) = 1 then begin
+            if result.case_value[234] = 1 then begin
+              if result.case_value[235] = 1 then begin
                 if t90^.object_with_name <> nil then begin
                   t90^.object_with_name := t90^.object_with_name;
                 end else begin
@@ -4375,7 +4375,7 @@ begin
                     subject^.children[2]^.base_register, t90);
               end;
             end
-            else if ord(result.space136[236]) = 1 then begin
+            else if result.case_value[236] = 1 then begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$move), 0,
                   find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -4394,7 +4394,7 @@ begin
                 subject^.children[2]^.bits_known,
                 subject^.children[2]^.bits_trusted);
           end;
-          if ord(result.space136[237]) = 1 then begin
+          if result.case_value[237] = 1 then begin
             debug_lir_$load_instruction(result.inherited_attributes,
                 ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
                 isc_solution_ptr_t(isc_user_routines_330),
@@ -4402,10 +4402,10 @@ begin
                 subject^.children[2]^.il, 0, 0, 0);
           end;
         end
-        else if ord(result.space136[232]) = 2 then begin
+        else if result.case_value[232] = 2 then begin
           t92 := create_solution_for_ip_reg;
           t93 := create_solution_for_ip_reg;
-          if ord(result.space136[238]) = 1 then begin
+          if result.case_value[238] = 1 then begin
             debug_lir_$load_instruction(result.inherited_attributes,
                 ord(opc$loadwu),
                 integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + (t12 + t13 + t14),
@@ -4423,8 +4423,8 @@ begin
                 subject^.children[2]^.bits_trusted);
           end else begin
             t94 := create_solution_for_ip_reg;
-            if ord(result.space136[239]) = 1 then begin
-              if ord(result.space136[240]) = 1 then begin
+            if result.case_value[239] = 1 then begin
+              if result.case_value[240] = 1 then begin
                 if t94^.object_with_name <> nil then begin
                   t94^.object_with_name := t94^.object_with_name;
                 end else begin
@@ -4441,7 +4441,7 @@ begin
                     subject^.children[2]^.base_register, t94);
               end;
             end
-            else if ord(result.space136[241]) = 1 then begin
+            else if result.case_value[241] = 1 then begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$move), 0,
                   find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -4466,7 +4466,7 @@ begin
                 subject^.children[2]^.bits_known,
                 subject^.children[2]^.bits_trusted);
           end;
-          if ord(result.space136[242]) = 1 then begin
+          if result.case_value[242] = 1 then begin
             warning_unaligned_atomic_access(subject^.inherited_attributes^.pos.source_line_number);
           end;
           debug_lir_$field_instruction(result.inherited_attributes,
@@ -4477,20 +4477,20 @@ begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$adj_move), 0, nil, nil, nil);
         end;
-        if ord(result.space136[243]) <> 1 then begin
-          if ord(result.space136[244]) = 1 then begin
+        if result.case_value[243] <> 1 then begin
+          if result.case_value[244] = 1 then begin
             pattern_match_error(2, il_none, 0,
                 subject^.children[2]^.inherited_attributes^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$costly), 0, nil, nil, nil);
-          if ord(result.space136[245]) = 1 then begin
+          if result.case_value[245] = 1 then begin
             warning_unaligned_atomic_access(subject^.inherited_attributes^.pos.source_line_number);
           end;
         end;
       end
-      else if ord(result.space136[231]) = 2 then begin
-        if ord(result.space136[246]) = 1 then begin
+      else if result.case_value[231] = 2 then begin
+        if result.case_value[246] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadwu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + (t12 + t13 + t14),
@@ -4500,8 +4500,8 @@ begin
               subject^.children[2]^.bits_trusted);
         end else begin
           t96 := create_solution_for_ip_reg;
-          if ord(result.space136[247]) = 1 then begin
-            if ord(result.space136[248]) = 1 then begin
+          if result.case_value[247] = 1 then begin
+            if result.case_value[248] = 1 then begin
               if t96^.object_with_name <> nil then begin
                 t96^.object_with_name := t96^.object_with_name;
               end else begin
@@ -4518,7 +4518,7 @@ begin
                   subject^.children[2]^.base_register, t96);
             end;
           end
-          else if ord(result.space136[249]) = 1 then begin
+          else if result.case_value[249] = 1 then begin
             debug_lir_$simple_instruction(result.inherited_attributes,
                 ord(opc$move), 0,
                 find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -4536,27 +4536,27 @@ begin
               subject^.children[2]^.il, 0, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
         end;
-        if ord(result.space136[250]) = 1 then begin
+        if result.case_value[250] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
               isc_solution_ptr_t(isc_user_routines_330),
               isc_solution_ptr_t(isc_user_routines_31c),
               subject^.children[2]^.il, 0, 0, 0);
         end;
-        if ord(result.space136[251]) <> 1 then begin
-          if ord(result.space136[252]) = 1 then begin
+        if result.case_value[251] <> 1 then begin
+          if result.case_value[252] = 1 then begin
             pattern_match_error(3, il_none, 0,
                 subject^.children[2]^.inherited_attributes^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$costly), 0, nil, nil, nil);
-          if ord(result.space136[253]) = 1 then begin
+          if result.case_value[253] = 1 then begin
             warning_unaligned_atomic_access(subject^.inherited_attributes^.pos.source_line_number);
           end;
         end;
       end
-      else if ord(result.space136[231]) = 3 then begin
-        if ord(result.space136[254]) = 1 then begin
+      else if result.case_value[231] = 3 then begin
+        if result.case_value[254] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + (t12 + t13 + t14),
@@ -4566,8 +4566,8 @@ begin
               subject^.children[2]^.bits_trusted);
         end else begin
           t98 := create_solution_for_ip_reg;
-          if ord(result.space136[255]) = 1 then begin
-            if ord(result.space136[256]) = 1 then begin
+          if result.case_value[255] = 1 then begin
+            if result.case_value[256] = 1 then begin
               if t98^.object_with_name <> nil then begin
                 t98^.object_with_name := t98^.object_with_name;
               end else begin
@@ -4584,7 +4584,7 @@ begin
                   subject^.children[2]^.base_register, t98);
             end;
           end
-          else if ord(result.space136[257]) = 1 then begin
+          else if result.case_value[257] = 1 then begin
             debug_lir_$simple_instruction(result.inherited_attributes,
                 ord(opc$move), 0,
                 find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -4602,7 +4602,7 @@ begin
               subject^.children[2]^.il, 0, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
         end;
-        if ord(result.space136[258]) = 1 then begin
+        if result.case_value[258] = 1 then begin
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
               isc_solution_ptr_t(isc_user_routines_330),
@@ -4616,13 +4616,13 @@ begin
             subject^.inherited_attributes^.pos.source_line_number);
       end;
     end;
-    if ord(result.space136[259]) = 1 then begin
-      if ord(result.space136[260]) = 1 then begin
+    if result.case_value[259] = 1 then begin
+      if result.case_value[260] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$extend7), 0, t72, t2, nil);
         t101 := t2;
       end else begin
-        if ord(result.space136[260]) = 2 then begin
+        if result.case_value[260] = 2 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$extend15), 0, t72, t2, nil);
           t100 := t2;
@@ -4633,8 +4633,8 @@ begin
       end;
       t106 := t101;
     end else begin
-      if ord(result.space136[261]) = 1 then begin
-        if ord(result.space136[262]) = 1 then begin
+      if result.case_value[261] = 1 then begin
+        if result.case_value[262] = 1 then begin
           t102 := t72;
         end else begin
           debug_lir_$field_instruction(result.inherited_attributes,
@@ -4644,8 +4644,8 @@ begin
         end;
         t105 := t102;
       end else begin
-        if ord(result.space136[261]) = 2 then begin
-          if ord(result.space136[263]) = 1 then begin
+        if result.case_value[261] = 2 then begin
+          if result.case_value[263] = 1 then begin
             t103 := t72;
           end else begin
             debug_lir_$field_instruction(result.inherited_attributes,
@@ -4663,71 +4663,71 @@ begin
     end;
     t107 := t106;
   end;
-  if ord(result.space136[264]) = 1 then begin
+  if result.case_value[264] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         8, t61, t107, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t16),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[264]) = 2 then begin
+  else if result.case_value[264] = 2 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         8, t61, t107, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t16),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[264]) = 3 then begin
+  else if result.case_value[264] = 3 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         4, t61, t107, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t16),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[264]) = 4 then begin
+  else if result.case_value[264] = 4 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         4, t61, t107, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t16),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[264]) = 5 then begin
+  else if result.case_value[264] = 5 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         4, t61, t107, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t16),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[264]) = 6 then begin
+  else if result.case_value[264] = 6 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         4, t61, t107, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t16),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[264]) = 7 then begin
+  else if result.case_value[264] = 7 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         2, t61, t107, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t16),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[264]) = 8 then begin
+  else if result.case_value[264] = 8 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         2, t61, t107, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t16),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[264]) = 9 then begin
+  else if result.case_value[264] = 9 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         2, t61, t107, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t16),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[264]) = 10 then begin
+  else if result.case_value[264] = 10 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         2, t61, t107, create_solution_for_ip_reg);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t16),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[264]) = 11 then begin
+  else if result.case_value[264] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t16),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[264]) <> 12 then begin
+  else if result.case_value[264] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -4798,16 +4798,16 @@ begin
   end else begin
     t12 := 0;
   end;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t14 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t13 := lir_$new_label;
     t14 := integer32(t13);
   end;
-  if ord(result.space136[137]) <> 1 then begin
+  if result.case_value[137] <> 1 then begin
     t15 := create_solution_for_ip_reg;
-    if ord(result.space136[138]) = 1 then begin
-      if ord(result.space136[139]) = 1 then begin
+    if result.case_value[138] = 1 then begin
+      if result.case_value[139] = 1 then begin
         if t15^.object_with_name <> nil then begin
           t15^.object_with_name := t15^.object_with_name;
         end else begin
@@ -4823,7 +4823,7 @@ begin
             subject^.children[1]^.base_register, t15);
       end;
     end
-    else if ord(result.space136[140]) = 1 then begin
+    else if result.case_value[140] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0,
           find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -4838,10 +4838,10 @@ begin
   end else begin
     t17 := nil;
   end;
-  if ord(result.space136[141]) <> 1 then begin
+  if result.case_value[141] <> 1 then begin
     t18 := create_solution_for_ip_reg;
-    if ord(result.space136[142]) = 1 then begin
-      if ord(result.space136[143]) = 1 then begin
+    if result.case_value[142] = 1 then begin
+      if result.case_value[143] = 1 then begin
         if t18^.object_with_name <> nil then begin
           t18^.object_with_name := t18^.object_with_name;
         end else begin
@@ -4857,7 +4857,7 @@ begin
             subject^.children[2]^.base_register, t18);
       end;
     end
-    else if ord(result.space136[144]) = 1 then begin
+    else if result.case_value[144] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0,
           find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -4872,7 +4872,7 @@ begin
   end else begin
     t20 := nil;
   end;
-  if ord(result.space136[145]) = 1 then begin
+  if result.case_value[145] = 1 then begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$extractu), 0, 8, subject^.children[1],
         find_well_known_literal_solution(16), t1);
@@ -4883,7 +4883,7 @@ begin
         subject^.children[1]^.il, 0, subject^.children[1]^.bits_known,
         subject^.children[1]^.bits_trusted);
   end;
-  if ord(result.space136[146]) = 1 then begin
+  if result.case_value[146] = 1 then begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$extractu), 0, 8, subject^.children[2],
         find_well_known_literal_solution(16), t2);
@@ -4898,77 +4898,77 @@ begin
       8, t1, t2, create_solution_for_ip_reg);
   debug_lir_$branch_instruction(result.inherited_attributes, t3,
       ord(opc$beq), 0);
-  if ord(result.space136[147]) = 1 then begin
-    if ord(result.space136[148]) <> 1 then begin
-      if ord(result.space136[148]) = 2 then begin
+  if result.case_value[147] = 1 then begin
+    if result.case_value[148] <> 1 then begin
+      if result.case_value[148] = 2 then begin
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t14), ord(opc$jump), 0);
       end else begin
-        if ord(result.space136[149]) = 1 then begin
+        if result.case_value[149] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 8, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$beq), 0);
         end
-        else if ord(result.space136[149]) = 2 then begin
+        else if result.case_value[149] = 2 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 8, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bne), 0);
         end
-        else if ord(result.space136[149]) = 3 then begin
+        else if result.case_value[149] = 3 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$blo), 0);
         end
-        else if ord(result.space136[149]) = 4 then begin
+        else if result.case_value[149] = 4 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bls), 0);
         end
-        else if ord(result.space136[149]) = 5 then begin
+        else if result.case_value[149] = 5 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bhi), 0);
         end
-        else if ord(result.space136[149]) = 6 then begin
+        else if result.case_value[149] = 6 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bhs), 0);
         end
-        else if ord(result.space136[149]) = 7 then begin
+        else if result.case_value[149] = 7 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$blt), 0);
         end
-        else if ord(result.space136[149]) = 8 then begin
+        else if result.case_value[149] = 8 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$ble), 0);
         end
-        else if ord(result.space136[149]) = 9 then begin
+        else if result.case_value[149] = 9 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bgt), 0);
         end
-        else if ord(result.space136[149]) = 10 then begin
+        else if result.case_value[149] = 10 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bge), 0);
         end
-        else if ord(result.space136[149]) = 11 then begin
+        else if result.case_value[149] = 11 then begin
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$jump), 0);
         end
-        else if ord(result.space136[149]) <> 12 then begin
+        else if result.case_value[149] <> 12 then begin
           pattern_match_error(11, subject^.il_kind, 0,
               subject^.inherited_attributes^.pos.source_line_number);
         end;
@@ -4980,79 +4980,79 @@ begin
           ord(opc$jump), 0);
     end;
   end
-  else if ord(result.space136[150]) = 1 then begin
+  else if result.case_value[150] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t14),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[150]) = 2 then begin
+  else if result.case_value[150] = 2 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, t5,
         ord(opc$jump), 0);
   end else begin
-    if ord(result.space136[151]) = 1 then begin
+    if result.case_value[151] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$beq), 0);
     end
-    else if ord(result.space136[151]) = 2 then begin
+    else if result.case_value[151] = 2 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bne), 0);
     end
-    else if ord(result.space136[151]) = 3 then begin
+    else if result.case_value[151] = 3 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$blo), 0);
     end
-    else if ord(result.space136[151]) = 4 then begin
+    else if result.case_value[151] = 4 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bls), 0);
     end
-    else if ord(result.space136[151]) = 5 then begin
+    else if result.case_value[151] = 5 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bhi), 0);
     end
-    else if ord(result.space136[151]) = 6 then begin
+    else if result.case_value[151] = 6 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bhs), 0);
     end
-    else if ord(result.space136[151]) = 7 then begin
+    else if result.case_value[151] = 7 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$blt), 0);
     end
-    else if ord(result.space136[151]) = 8 then begin
+    else if result.case_value[151] = 8 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$ble), 0);
     end
-    else if ord(result.space136[151]) = 9 then begin
+    else if result.case_value[151] = 9 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bgt), 0);
     end
-    else if ord(result.space136[151]) = 10 then begin
+    else if result.case_value[151] = 10 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bge), 0);
     end
-    else if ord(result.space136[151]) = 11 then begin
+    else if result.case_value[151] = 11 then begin
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$jump), 0);
     end
-    else if ord(result.space136[151]) <> 12 then begin
+    else if result.case_value[151] <> 12 then begin
       pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
@@ -5060,7 +5060,7 @@ begin
         ord(opc$jump), 0);
   end;
   debug_lir_$label(result.inherited_attributes, t3);
-  if ord(result.space136[152]) = 1 then begin
+  if result.case_value[152] = 1 then begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$extractu), 0, 8, subject^.children[1],
         find_well_known_literal_solution(8), t1);
@@ -5071,7 +5071,7 @@ begin
         subject^.children[1]^.il, 0, subject^.children[1]^.bits_known,
         subject^.children[1]^.bits_trusted);
   end;
-  if ord(result.space136[153]) = 1 then begin
+  if result.case_value[153] = 1 then begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$extractu), 0, 8, subject^.children[2],
         find_well_known_literal_solution(8), t2);
@@ -5086,77 +5086,77 @@ begin
       8, t1, t2, create_solution_for_ip_reg);
   debug_lir_$branch_instruction(result.inherited_attributes, t4,
       ord(opc$beq), 0);
-  if ord(result.space136[154]) = 1 then begin
-    if ord(result.space136[155]) <> 1 then begin
-      if ord(result.space136[155]) = 2 then begin
+  if result.case_value[154] = 1 then begin
+    if result.case_value[155] <> 1 then begin
+      if result.case_value[155] = 2 then begin
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t14), ord(opc$jump), 0);
       end else begin
-        if ord(result.space136[156]) = 1 then begin
+        if result.case_value[156] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 8, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$beq), 0);
         end
-        else if ord(result.space136[156]) = 2 then begin
+        else if result.case_value[156] = 2 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 8, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bne), 0);
         end
-        else if ord(result.space136[156]) = 3 then begin
+        else if result.case_value[156] = 3 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$blo), 0);
         end
-        else if ord(result.space136[156]) = 4 then begin
+        else if result.case_value[156] = 4 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bls), 0);
         end
-        else if ord(result.space136[156]) = 5 then begin
+        else if result.case_value[156] = 5 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bhi), 0);
         end
-        else if ord(result.space136[156]) = 6 then begin
+        else if result.case_value[156] = 6 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bhs), 0);
         end
-        else if ord(result.space136[156]) = 7 then begin
+        else if result.case_value[156] = 7 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$blt), 0);
         end
-        else if ord(result.space136[156]) = 8 then begin
+        else if result.case_value[156] = 8 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$ble), 0);
         end
-        else if ord(result.space136[156]) = 9 then begin
+        else if result.case_value[156] = 9 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bgt), 0);
         end
-        else if ord(result.space136[156]) = 10 then begin
+        else if result.case_value[156] = 10 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bge), 0);
         end
-        else if ord(result.space136[156]) = 11 then begin
+        else if result.case_value[156] = 11 then begin
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$jump), 0);
         end
-        else if ord(result.space136[156]) <> 12 then begin
+        else if result.case_value[156] <> 12 then begin
           pattern_match_error(11, subject^.il_kind, 0,
               subject^.inherited_attributes^.pos.source_line_number);
         end;
@@ -5168,79 +5168,79 @@ begin
           ord(opc$jump), 0);
     end;
   end
-  else if ord(result.space136[157]) = 1 then begin
+  else if result.case_value[157] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t14),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[157]) = 2 then begin
+  else if result.case_value[157] = 2 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, t5,
         ord(opc$jump), 0);
   end else begin
-    if ord(result.space136[158]) = 1 then begin
+    if result.case_value[158] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$beq), 0);
     end
-    else if ord(result.space136[158]) = 2 then begin
+    else if result.case_value[158] = 2 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bne), 0);
     end
-    else if ord(result.space136[158]) = 3 then begin
+    else if result.case_value[158] = 3 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$blo), 0);
     end
-    else if ord(result.space136[158]) = 4 then begin
+    else if result.case_value[158] = 4 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bls), 0);
     end
-    else if ord(result.space136[158]) = 5 then begin
+    else if result.case_value[158] = 5 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bhi), 0);
     end
-    else if ord(result.space136[158]) = 6 then begin
+    else if result.case_value[158] = 6 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bhs), 0);
     end
-    else if ord(result.space136[158]) = 7 then begin
+    else if result.case_value[158] = 7 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$blt), 0);
     end
-    else if ord(result.space136[158]) = 8 then begin
+    else if result.case_value[158] = 8 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$ble), 0);
     end
-    else if ord(result.space136[158]) = 9 then begin
+    else if result.case_value[158] = 9 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bgt), 0);
     end
-    else if ord(result.space136[158]) = 10 then begin
+    else if result.case_value[158] = 10 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bge), 0);
     end
-    else if ord(result.space136[158]) = 11 then begin
+    else if result.case_value[158] = 11 then begin
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$jump), 0);
     end
-    else if ord(result.space136[158]) <> 12 then begin
+    else if result.case_value[158] <> 12 then begin
       pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
@@ -5251,7 +5251,7 @@ begin
         ord(opc$jump), 0);
   end;
   debug_lir_$label(result.inherited_attributes, t4);
-  if ord(result.space136[159]) = 1 then begin
+  if result.case_value[159] = 1 then begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$extractu), 0, 8, subject^.children[1],
         find_well_known_literal_solution(0), t1);
@@ -5262,7 +5262,7 @@ begin
         subject^.children[1]^.il, 0, subject^.children[1]^.bits_known,
         subject^.children[1]^.bits_trusted);
   end;
-  if ord(result.space136[160]) = 1 then begin
+  if result.case_value[160] = 1 then begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$extractu), 0, 8, subject^.children[2],
         find_well_known_literal_solution(0), t2);
@@ -5277,77 +5277,77 @@ begin
       8, t1, t2, create_solution_for_ip_reg);
   debug_lir_$branch_instruction(result.inherited_attributes, t6,
       ord(opc$beq), 0);
-  if ord(result.space136[161]) = 1 then begin
-    if ord(result.space136[162]) <> 1 then begin
-      if ord(result.space136[162]) = 2 then begin
+  if result.case_value[161] = 1 then begin
+    if result.case_value[162] <> 1 then begin
+      if result.case_value[162] = 2 then begin
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t14), ord(opc$jump), 0);
       end else begin
-        if ord(result.space136[163]) = 1 then begin
+        if result.case_value[163] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 8, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$beq), 0);
         end
-        else if ord(result.space136[163]) = 2 then begin
+        else if result.case_value[163] = 2 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 8, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bne), 0);
         end
-        else if ord(result.space136[163]) = 3 then begin
+        else if result.case_value[163] = 3 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$blo), 0);
         end
-        else if ord(result.space136[163]) = 4 then begin
+        else if result.case_value[163] = 4 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bls), 0);
         end
-        else if ord(result.space136[163]) = 5 then begin
+        else if result.case_value[163] = 5 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bhi), 0);
         end
-        else if ord(result.space136[163]) = 6 then begin
+        else if result.case_value[163] = 6 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bhs), 0);
         end
-        else if ord(result.space136[163]) = 7 then begin
+        else if result.case_value[163] = 7 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$blt), 0);
         end
-        else if ord(result.space136[163]) = 8 then begin
+        else if result.case_value[163] = 8 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$ble), 0);
         end
-        else if ord(result.space136[163]) = 9 then begin
+        else if result.case_value[163] = 9 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bgt), 0);
         end
-        else if ord(result.space136[163]) = 10 then begin
+        else if result.case_value[163] = 10 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$bge), 0);
         end
-        else if ord(result.space136[163]) = 11 then begin
+        else if result.case_value[163] = 11 then begin
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t14), ord(opc$jump), 0);
         end
-        else if ord(result.space136[163]) <> 12 then begin
+        else if result.case_value[163] <> 12 then begin
           pattern_match_error(11, subject^.il_kind, 0,
               subject^.inherited_attributes^.pos.source_line_number);
         end;
@@ -5359,79 +5359,79 @@ begin
           ord(opc$jump), 0);
     end;
   end
-  else if ord(result.space136[164]) = 1 then begin
+  else if result.case_value[164] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t14),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[164]) = 2 then begin
+  else if result.case_value[164] = 2 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, t5,
         ord(opc$jump), 0);
   end else begin
-    if ord(result.space136[165]) = 1 then begin
+    if result.case_value[165] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$beq), 0);
     end
-    else if ord(result.space136[165]) = 2 then begin
+    else if result.case_value[165] = 2 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bne), 0);
     end
-    else if ord(result.space136[165]) = 3 then begin
+    else if result.case_value[165] = 3 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$blo), 0);
     end
-    else if ord(result.space136[165]) = 4 then begin
+    else if result.case_value[165] = 4 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bls), 0);
     end
-    else if ord(result.space136[165]) = 5 then begin
+    else if result.case_value[165] = 5 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bhi), 0);
     end
-    else if ord(result.space136[165]) = 6 then begin
+    else if result.case_value[165] = 6 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bhs), 0);
     end
-    else if ord(result.space136[165]) = 7 then begin
+    else if result.case_value[165] = 7 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$blt), 0);
     end
-    else if ord(result.space136[165]) = 8 then begin
+    else if result.case_value[165] = 8 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$ble), 0);
     end
-    else if ord(result.space136[165]) = 9 then begin
+    else if result.case_value[165] = 9 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bgt), 0);
     end
-    else if ord(result.space136[165]) = 10 then begin
+    else if result.case_value[165] = 10 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t1, t2, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$bge), 0);
     end
-    else if ord(result.space136[165]) = 11 then begin
+    else if result.case_value[165] = 11 then begin
       debug_lir_$branch_instruction(result.inherited_attributes, t5,
           ord(opc$jump), 0);
     end
-    else if ord(result.space136[165]) <> 12 then begin
+    else if result.case_value[165] <> 12 then begin
       pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
@@ -5439,13 +5439,13 @@ begin
         ord(opc$jump), 0);
   end;
   debug_lir_$label(result.inherited_attributes, t6);
-  if ord(result.space136[166]) = 1 then begin
-    if ord(result.space136[167]) = 1 then begin
+  if result.case_value[166] = 1 then begin
+    if result.case_value[167] = 1 then begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t14), ord(opc$jump), 0);
     end;
   end
-  else if ord(result.space136[168]) <> 1 then begin
+  else if result.case_value[168] <> 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t14),
         ord(opc$jump), 0);
   end;
@@ -5520,14 +5520,14 @@ begin
   t13 := create_solution_for_ip_reg;
   t14 := create_solution_for_ip_reg;
   t15 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t17 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t16 := lir_$new_label;
     t17 := integer32(t16);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
       if t11^.object_with_name <> nil then begin
         t11^.object_with_name := t11^.object_with_name;
       end else begin
@@ -5543,7 +5543,7 @@ begin
           subject^.children[1]^.base_register, t11);
     end;
   end
-  else if ord(result.space136[139]) = 1 then begin
+  else if result.case_value[139] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -5554,8 +5554,8 @@ begin
         0, t18, t18^.base_register, t11, t18^.il, 0, t18^.bits_known,
         t18^.bits_trusted);
   end;
-  if ord(result.space136[140]) = 1 then begin
-    if ord(result.space136[141]) = 1 then begin
+  if result.case_value[140] = 1 then begin
+    if result.case_value[141] = 1 then begin
       if t13^.object_with_name <> nil then begin
         t13^.object_with_name := t13^.object_with_name;
       end else begin
@@ -5571,7 +5571,7 @@ begin
           subject^.children[2]^.base_register, t13);
     end;
   end
-  else if ord(result.space136[142]) = 1 then begin
+  else if result.case_value[142] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -5582,7 +5582,7 @@ begin
         0, t19, t19^.base_register, t13, t19^.il, 0, t19^.bits_known,
         t19^.bits_trusted);
   end;
-  if ord(result.space136[143]) = 1 then begin
+  if result.case_value[143] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0, find_well_known_literal_solution(integer32(result.fields[0])),
         t15, nil);
@@ -5607,77 +5607,77 @@ begin
       8, t12, t14, create_solution_for_ip_reg);
   debug_lir_$branch_instruction(result.inherited_attributes, t2,
       ord(opc$beq), 0);
-  if ord(result.space136[144]) = 1 then begin
-    if ord(result.space136[145]) <> 1 then begin
-      if ord(result.space136[145]) = 2 then begin
+  if result.case_value[144] = 1 then begin
+    if result.case_value[145] <> 1 then begin
+      if result.case_value[145] = 2 then begin
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t17), ord(opc$jump), 0);
       end else begin
-        if ord(result.space136[146]) = 1 then begin
+        if result.case_value[146] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 8, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$beq), 0);
         end
-        else if ord(result.space136[146]) = 2 then begin
+        else if result.case_value[146] = 2 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 8, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$bne), 0);
         end
-        else if ord(result.space136[146]) = 3 then begin
+        else if result.case_value[146] = 3 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$blo), 0);
         end
-        else if ord(result.space136[146]) = 4 then begin
+        else if result.case_value[146] = 4 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$bls), 0);
         end
-        else if ord(result.space136[146]) = 5 then begin
+        else if result.case_value[146] = 5 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$bhi), 0);
         end
-        else if ord(result.space136[146]) = 6 then begin
+        else if result.case_value[146] = 6 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$bhs), 0);
         end
-        else if ord(result.space136[146]) = 7 then begin
+        else if result.case_value[146] = 7 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$blt), 0);
         end
-        else if ord(result.space136[146]) = 8 then begin
+        else if result.case_value[146] = 8 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$ble), 0);
         end
-        else if ord(result.space136[146]) = 9 then begin
+        else if result.case_value[146] = 9 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$bgt), 0);
         end
-        else if ord(result.space136[146]) = 10 then begin
+        else if result.case_value[146] = 10 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$bge), 0);
         end
-        else if ord(result.space136[146]) = 11 then begin
+        else if result.case_value[146] = 11 then begin
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$jump), 0);
         end
-        else if ord(result.space136[146]) <> 12 then begin
+        else if result.case_value[146] <> 12 then begin
           pattern_match_error(11, subject^.il_kind, 0,
               subject^.inherited_attributes^.pos.source_line_number);
         end;
@@ -5689,79 +5689,79 @@ begin
           ord(opc$jump), 0);
     end;
   end
-  else if ord(result.space136[147]) = 1 then begin
+  else if result.case_value[147] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t17),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[147]) = 2 then begin
+  else if result.case_value[147] = 2 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, t1,
         ord(opc$jump), 0);
   end else begin
-    if ord(result.space136[148]) = 1 then begin
+    if result.case_value[148] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$beq), 0);
     end
-    else if ord(result.space136[148]) = 2 then begin
+    else if result.case_value[148] = 2 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bne), 0);
     end
-    else if ord(result.space136[148]) = 3 then begin
+    else if result.case_value[148] = 3 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$blo), 0);
     end
-    else if ord(result.space136[148]) = 4 then begin
+    else if result.case_value[148] = 4 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bls), 0);
     end
-    else if ord(result.space136[148]) = 5 then begin
+    else if result.case_value[148] = 5 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bhi), 0);
     end
-    else if ord(result.space136[148]) = 6 then begin
+    else if result.case_value[148] = 6 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bhs), 0);
     end
-    else if ord(result.space136[148]) = 7 then begin
+    else if result.case_value[148] = 7 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$blt), 0);
     end
-    else if ord(result.space136[148]) = 8 then begin
+    else if result.case_value[148] = 8 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$ble), 0);
     end
-    else if ord(result.space136[148]) = 9 then begin
+    else if result.case_value[148] = 9 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bgt), 0);
     end
-    else if ord(result.space136[148]) = 10 then begin
+    else if result.case_value[148] = 10 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bge), 0);
     end
-    else if ord(result.space136[148]) = 11 then begin
+    else if result.case_value[148] = 11 then begin
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$jump), 0);
     end
-    else if ord(result.space136[148]) <> 12 then begin
+    else if result.case_value[148] <> 12 then begin
       pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
@@ -5776,13 +5776,13 @@ begin
   debug_lir_$branch_instruction(result.inherited_attributes, t3,
       ord(opc$bne), 0);
   debug_lir_$label(result.inherited_attributes, t4);
-  if ord(result.space136[149]) = 1 then begin
-    if ord(result.space136[150]) = 1 then begin
+  if result.case_value[149] = 1 then begin
+    if result.case_value[150] = 1 then begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t17), ord(opc$jump), 0);
     end;
   end
-  else if ord(result.space136[151]) <> 1 then begin
+  else if result.case_value[151] <> 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t17),
         ord(opc$jump), 0);
   end;
@@ -5881,7 +5881,7 @@ begin
   end else begin
     t11 := 0;
   end;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t13 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t12 := lir_$new_label;
@@ -5892,12 +5892,12 @@ begin
   end else begin
     t1^.object_with_name := subject^.children[1]^.object_with_name;
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     t14 := create_solution_for_ip_reg;
     t15 := create_solution_for_ip_reg;
     t16 := create_solution_for_ip_reg;
     t17 := create_solution_for_ip_reg;
-    if ord(result.space136[138]) = 1 then begin
+    if result.case_value[138] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
           t8 + t6 + t7 + integer32(p2_locals_ptr_t(addr(result))^.p2[95]),
@@ -5933,8 +5933,8 @@ begin
           subject^.children[1]^.bits_trusted);
     end else begin
       t18 := create_solution_for_ip_reg;
-      if ord(result.space136[139]) = 1 then begin
-        if ord(result.space136[140]) = 1 then begin
+      if result.case_value[139] = 1 then begin
+        if result.case_value[140] = 1 then begin
           if t18^.object_with_name <> nil then begin
             t18^.object_with_name := t18^.object_with_name;
           end else begin
@@ -5951,7 +5951,7 @@ begin
               subject^.children[1]^.base_register, t18);
         end;
       end
-      else if ord(result.space136[141]) = 1 then begin
+      else if result.case_value[141] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -6001,7 +6001,7 @@ begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$insert), 0, 24, t16, find_well_known_literal_solution(8),
         t17);
-    if ord(result.space136[142]) = 1 then begin
+    if result.case_value[142] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
           isc_solution_ptr_t(isc_user_routines_330),
@@ -6013,11 +6013,11 @@ begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         ord(opc$adj_move), 0, nil, nil, nil);
   end
-  else if ord(result.space136[137]) = 2 then begin
+  else if result.case_value[137] = 2 then begin
     t20 := create_solution_for_ip_reg;
     t21 := create_solution_for_ip_reg;
     t22 := create_solution_for_ip_reg;
-    if ord(result.space136[143]) = 1 then begin
+    if result.case_value[143] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
           t8 + t6 + t7 + integer32(p2_locals_ptr_t(addr(result))^.p2[95]),
@@ -6045,8 +6045,8 @@ begin
           subject^.children[1]^.bits_trusted);
     end else begin
       t23 := create_solution_for_ip_reg;
-      if ord(result.space136[144]) = 1 then begin
-        if ord(result.space136[145]) = 1 then begin
+      if result.case_value[144] = 1 then begin
+        if result.case_value[145] = 1 then begin
           if t23^.object_with_name <> nil then begin
             t23^.object_with_name := t23^.object_with_name;
           end else begin
@@ -6063,7 +6063,7 @@ begin
               subject^.children[1]^.base_register, t23);
         end;
       end
-      else if ord(result.space136[146]) = 1 then begin
+      else if result.case_value[146] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -6103,7 +6103,7 @@ begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$insert), 0, 16, t21, find_well_known_literal_solution(8),
         t22);
-    if ord(result.space136[147]) = 1 then begin
+    if result.case_value[147] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
           isc_solution_ptr_t(isc_user_routines_330),
@@ -6115,10 +6115,10 @@ begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         ord(opc$adj_move), 0, nil, nil, nil);
   end
-  else if ord(result.space136[137]) = 3 then begin
+  else if result.case_value[137] = 3 then begin
     t25 := create_solution_for_ip_reg;
     t26 := create_solution_for_ip_reg;
-    if ord(result.space136[148]) = 1 then begin
+    if result.case_value[148] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
           integer32(p2_locals_ptr_t(addr(result))^.p2[95]) + (t8 + t6 + t7),
@@ -6138,8 +6138,8 @@ begin
           subject^.children[1]^.bits_trusted);
     end else begin
       t27 := create_solution_for_ip_reg;
-      if ord(result.space136[149]) = 1 then begin
-        if ord(result.space136[150]) = 1 then begin
+      if result.case_value[149] = 1 then begin
+        if result.case_value[150] = 1 then begin
           if t27^.object_with_name <> nil then begin
             t27^.object_with_name := t27^.object_with_name;
           end else begin
@@ -6156,7 +6156,7 @@ begin
               subject^.children[1]^.base_register, t27);
         end;
       end
-      else if ord(result.space136[151]) = 1 then begin
+      else if result.case_value[151] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -6186,7 +6186,7 @@ begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$insert), 0, 8, t25, find_well_known_literal_solution(8),
         t26);
-    if ord(result.space136[152]) = 1 then begin
+    if result.case_value[152] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
           isc_solution_ptr_t(isc_user_routines_330),
@@ -6198,8 +6198,8 @@ begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         ord(opc$adj_move), 0, nil, nil, nil);
   end
-  else if ord(result.space136[137]) = 4 then begin
-    if ord(result.space136[153]) = 1 then begin
+  else if result.case_value[137] = 4 then begin
+    if result.case_value[153] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
           integer32(p2_locals_ptr_t(addr(result))^.p2[95]) + (t8 + t6 + t7),
@@ -6211,8 +6211,8 @@ begin
           subject^.children[1]^.bits_trusted);
     end else begin
       t29 := create_solution_for_ip_reg;
-      if ord(result.space136[154]) = 1 then begin
-        if ord(result.space136[155]) = 1 then begin
+      if result.case_value[154] = 1 then begin
+        if result.case_value[155] = 1 then begin
           if t29^.object_with_name <> nil then begin
             t29^.object_with_name := t29^.object_with_name;
           end else begin
@@ -6229,7 +6229,7 @@ begin
               subject^.children[1]^.base_register, t29);
         end;
       end
-      else if ord(result.space136[156]) = 1 then begin
+      else if result.case_value[156] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -6249,7 +6249,7 @@ begin
           subject^.children[1]^.bits_known,
           subject^.children[1]^.bits_trusted);
     end;
-    if ord(result.space136[157]) = 1 then begin
+    if result.case_value[157] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
           isc_solution_ptr_t(isc_user_routines_330),
@@ -6271,12 +6271,12 @@ begin
   end else begin
     t3^.object_with_name := subject^.children[3]^.object_with_name;
   end;
-  if ord(result.space136[158]) = 1 then begin
+  if result.case_value[158] = 1 then begin
     t31 := create_solution_for_ip_reg;
     t32 := create_solution_for_ip_reg;
     t33 := create_solution_for_ip_reg;
     t34 := create_solution_for_ip_reg;
-    if ord(result.space136[159]) = 1 then begin
+    if result.case_value[159] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
           integer32(p2_locals_ptr_t(addr(result))^.p2[96]) + (t11 + t9 + t10),
@@ -6312,8 +6312,8 @@ begin
           subject^.children[3]^.bits_trusted);
     end else begin
       t35 := create_solution_for_ip_reg;
-      if ord(result.space136[160]) = 1 then begin
-        if ord(result.space136[161]) = 1 then begin
+      if result.case_value[160] = 1 then begin
+        if result.case_value[161] = 1 then begin
           if t35^.object_with_name <> nil then begin
             t35^.object_with_name := t35^.object_with_name;
           end else begin
@@ -6330,7 +6330,7 @@ begin
               subject^.children[3]^.base_register, t35);
         end;
       end
-      else if ord(result.space136[162]) = 1 then begin
+      else if result.case_value[162] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[3]^.literal_32_bits_value),
@@ -6380,7 +6380,7 @@ begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$insert), 0, 24, t33, find_well_known_literal_solution(8),
         t34);
-    if ord(result.space136[163]) = 1 then begin
+    if result.case_value[163] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
           isc_solution_ptr_t(isc_user_routines_330),
@@ -6392,11 +6392,11 @@ begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         ord(opc$adj_move), 0, nil, nil, nil);
   end
-  else if ord(result.space136[158]) = 2 then begin
+  else if result.case_value[158] = 2 then begin
     t37 := create_solution_for_ip_reg;
     t38 := create_solution_for_ip_reg;
     t39 := create_solution_for_ip_reg;
-    if ord(result.space136[164]) = 1 then begin
+    if result.case_value[164] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
           integer32(p2_locals_ptr_t(addr(result))^.p2[96]) + (t11 + t9 + t10),
@@ -6424,8 +6424,8 @@ begin
           subject^.children[3]^.bits_trusted);
     end else begin
       t40 := create_solution_for_ip_reg;
-      if ord(result.space136[165]) = 1 then begin
-        if ord(result.space136[166]) = 1 then begin
+      if result.case_value[165] = 1 then begin
+        if result.case_value[166] = 1 then begin
           if t40^.object_with_name <> nil then begin
             t40^.object_with_name := t40^.object_with_name;
           end else begin
@@ -6442,7 +6442,7 @@ begin
               subject^.children[3]^.base_register, t40);
         end;
       end
-      else if ord(result.space136[167]) = 1 then begin
+      else if result.case_value[167] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[3]^.literal_32_bits_value),
@@ -6482,7 +6482,7 @@ begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$insert), 0, 16, t38, find_well_known_literal_solution(8),
         t39);
-    if ord(result.space136[168]) = 1 then begin
+    if result.case_value[168] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
           isc_solution_ptr_t(isc_user_routines_330),
@@ -6494,10 +6494,10 @@ begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         ord(opc$adj_move), 0, nil, nil, nil);
   end
-  else if ord(result.space136[158]) = 3 then begin
+  else if result.case_value[158] = 3 then begin
     t42 := create_solution_for_ip_reg;
     t43 := create_solution_for_ip_reg;
-    if ord(result.space136[169]) = 1 then begin
+    if result.case_value[169] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
           integer32(p2_locals_ptr_t(addr(result))^.p2[96]) + (t11 + t9 + t10),
@@ -6517,8 +6517,8 @@ begin
           subject^.children[3]^.bits_trusted);
     end else begin
       t44 := create_solution_for_ip_reg;
-      if ord(result.space136[170]) = 1 then begin
-        if ord(result.space136[171]) = 1 then begin
+      if result.case_value[170] = 1 then begin
+        if result.case_value[171] = 1 then begin
           if t44^.object_with_name <> nil then begin
             t44^.object_with_name := t44^.object_with_name;
           end else begin
@@ -6535,7 +6535,7 @@ begin
               subject^.children[3]^.base_register, t44);
         end;
       end
-      else if ord(result.space136[172]) = 1 then begin
+      else if result.case_value[172] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[3]^.literal_32_bits_value),
@@ -6565,7 +6565,7 @@ begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$insert), 0, 8, t42, find_well_known_literal_solution(8),
         t43);
-    if ord(result.space136[173]) = 1 then begin
+    if result.case_value[173] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
           isc_solution_ptr_t(isc_user_routines_330),
@@ -6577,8 +6577,8 @@ begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         ord(opc$adj_move), 0, nil, nil, nil);
   end
-  else if ord(result.space136[158]) = 4 then begin
-    if ord(result.space136[174]) = 1 then begin
+  else if result.case_value[158] = 4 then begin
+    if result.case_value[174] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
           integer32(p2_locals_ptr_t(addr(result))^.p2[96]) + (t11 + t9 + t10),
@@ -6590,8 +6590,8 @@ begin
           subject^.children[3]^.bits_trusted);
     end else begin
       t46 := create_solution_for_ip_reg;
-      if ord(result.space136[175]) = 1 then begin
-        if ord(result.space136[176]) = 1 then begin
+      if result.case_value[175] = 1 then begin
+        if result.case_value[176] = 1 then begin
           if t46^.object_with_name <> nil then begin
             t46^.object_with_name := t46^.object_with_name;
           end else begin
@@ -6608,7 +6608,7 @@ begin
               subject^.children[3]^.base_register, t46);
         end;
       end
-      else if ord(result.space136[177]) = 1 then begin
+      else if result.case_value[177] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(subject^.children[3]^.literal_32_bits_value),
@@ -6628,7 +6628,7 @@ begin
           subject^.children[3]^.bits_known,
           subject^.children[3]^.bits_trusted);
     end;
-    if ord(result.space136[178]) = 1 then begin
+    if result.case_value[178] = 1 then begin
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadl), 0, isc_solution_ptr_t(isc_user_routines_31c),
           isc_solution_ptr_t(isc_user_routines_330),
@@ -6647,71 +6647,71 @@ begin
       t4);
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$xor), 0,
       t2, t4, t5);
-  if ord(result.space136[179]) = 1 then begin
+  if result.case_value[179] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t5, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t13),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[179]) = 2 then begin
+  else if result.case_value[179] = 2 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t5, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t13),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[179]) = 3 then begin
+  else if result.case_value[179] = 3 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t5, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t13),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[179]) = 4 then begin
+  else if result.case_value[179] = 4 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t5, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t13),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[179]) = 5 then begin
+  else if result.case_value[179] = 5 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t5, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t13),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[179]) = 6 then begin
+  else if result.case_value[179] = 6 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t5, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t13),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[179]) = 7 then begin
+  else if result.case_value[179] = 7 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t5, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t13),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[179]) = 8 then begin
+  else if result.case_value[179] = 8 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t5, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t13),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[179]) = 9 then begin
+  else if result.case_value[179] = 9 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t5, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t13),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[179]) = 10 then begin
+  else if result.case_value[179] = 10 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t5, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t13),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[179]) = 11 then begin
+  else if result.case_value[179] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t13),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[179]) <> 12 then begin
+  else if result.case_value[179] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -6730,7 +6730,7 @@ var
   t3: integer32;
 begin
   t1 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t3 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t2 := lir_$new_label;
@@ -6740,71 +6740,71 @@ begin
       ord(opc$extractu), 0, 1, subject^.children[2],
       find_well_known_literal_solution(subject^.children[2]^.f76.bit_position_of_lsb + subject^.children[1]^.literal_32_bits_value),
       t1);
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[137]) = 2 then begin
+  else if result.case_value[137] = 2 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[137]) = 3 then begin
+  else if result.case_value[137] = 3 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[137]) = 4 then begin
+  else if result.case_value[137] = 4 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[137]) = 5 then begin
+  else if result.case_value[137] = 5 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[137]) = 6 then begin
+  else if result.case_value[137] = 6 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[137]) = 7 then begin
+  else if result.case_value[137] = 7 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[137]) = 8 then begin
+  else if result.case_value[137] = 8 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[137]) = 9 then begin
+  else if result.case_value[137] = 9 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[137]) = 10 then begin
+  else if result.case_value[137] = 10 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[137]) = 11 then begin
+  else if result.case_value[137] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[137]) <> 12 then begin
+  else if result.case_value[137] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -6823,7 +6823,7 @@ var
   t3: integer32;
 begin
   t1 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t3 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t2 := lir_$new_label;
@@ -6833,71 +6833,71 @@ begin
       ord(opc$extractu), 0, 1, subject^.children[2],
       find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
       t1);
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[137]) = 2 then begin
+  else if result.case_value[137] = 2 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[137]) = 3 then begin
+  else if result.case_value[137] = 3 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[137]) = 4 then begin
+  else if result.case_value[137] = 4 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[137]) = 5 then begin
+  else if result.case_value[137] = 5 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[137]) = 6 then begin
+  else if result.case_value[137] = 6 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[137]) = 7 then begin
+  else if result.case_value[137] = 7 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[137]) = 8 then begin
+  else if result.case_value[137] = 8 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[137]) = 9 then begin
+  else if result.case_value[137] = 9 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[137]) = 10 then begin
+  else if result.case_value[137] = 10 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[137]) = 11 then begin
+  else if result.case_value[137] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[137]) <> 12 then begin
+  else if result.case_value[137] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -6943,18 +6943,18 @@ begin
   t4 := create_solution_for_ip_reg;
   t5 := create_solution_for_ip_reg;
   t6 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t8 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t7 := lir_$new_label;
     t8 := integer32(t7);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     t9 := find_well_known_literal_solution(integer32(result.fields[0]));
     t12 := t9;
   end else begin
     t10 := create_solution_for_ip_reg;
-    if ord(result.space136[138]) = 1 then begin
+    if result.case_value[138] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0,
           find_well_known_literal_solution(integer32(result.fields[0])), t10,
@@ -6967,8 +6967,8 @@ begin
     end;
     t12 := t10;
   end;
-  if ord(result.space136[139]) = 1 then begin
-    if ord(result.space136[140]) = 1 then begin
+  if result.case_value[139] = 1 then begin
+    if result.case_value[140] = 1 then begin
       if t4^.object_with_name <> nil then begin
         t4^.object_with_name := t4^.object_with_name;
       end else begin
@@ -6984,7 +6984,7 @@ begin
           subject^.children[2]^.base_register, t4);
     end;
   end
-  else if ord(result.space136[141]) = 1 then begin
+  else if result.case_value[141] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -7003,71 +7003,71 @@ begin
       ord(opc$extractu), 0, 1, t5,
       find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value & 7),
       t6);
-  if ord(result.space136[142]) = 1 then begin
+  if result.case_value[142] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t6, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t8),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[142]) = 2 then begin
+  else if result.case_value[142] = 2 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t6, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t8),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[142]) = 3 then begin
+  else if result.case_value[142] = 3 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t6, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t8),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[142]) = 4 then begin
+  else if result.case_value[142] = 4 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t6, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t8),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[142]) = 5 then begin
+  else if result.case_value[142] = 5 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t6, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t8),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[142]) = 6 then begin
+  else if result.case_value[142] = 6 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t6, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t8),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[142]) = 7 then begin
+  else if result.case_value[142] = 7 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t6, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t8),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[142]) = 8 then begin
+  else if result.case_value[142] = 8 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t6, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t8),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[142]) = 9 then begin
+  else if result.case_value[142] = 9 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t6, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t8),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[142]) = 10 then begin
+  else if result.case_value[142] = 10 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t6, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t8),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[142]) = 11 then begin
+  else if result.case_value[142] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t8),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[142]) <> 12 then begin
+  else if result.case_value[142] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -7097,20 +7097,20 @@ begin
   t3 := create_solution_for_ip_reg;
   t4 := lir_$new_label;
   t5 := make_bit_mask_1(1, 0);
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t7 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t6 := lir_$new_label;
     t7 := integer32(t6);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4,
           find_well_known_literal_solution(integer32(p2_locals_ptr_t(addr(result))^.p2[88])),
           subject^.children[1], t2);
     end else begin
-      if ord(result.space136[139]) = 1 then begin
+      if result.case_value[139] = 1 then begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
             find_well_known_literal_solution(integer32(p2_locals_ptr_t(addr(result))^.p2[88])),
@@ -7126,7 +7126,7 @@ begin
     end;
     debug_lir_$branch_instruction(result.inherited_attributes, t4,
         ord(opc$bhs), 0);
-    if ord(result.space136[140]) = 1 then begin
+    if result.case_value[140] = 1 then begin
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$jump), 0);
     end else begin
@@ -7135,7 +7135,7 @@ begin
     end;
     debug_lir_$label(result.inherited_attributes, t4);
   end;
-  if ord(result.space136[141]) = 1 then begin
+  if result.case_value[141] = 1 then begin
     t9 := create_solution_for_ip_reg;
     t10 := create_solution_for_ip_reg;
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
@@ -7149,71 +7149,71 @@ begin
         ord(opc$extractu), 0, 1, subject^.children[2], subject^.children[1],
         t3);
   end;
-  if ord(result.space136[142]) = 1 then begin
+  if result.case_value[142] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t3, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t7),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[142]) = 2 then begin
+  else if result.case_value[142] = 2 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t3, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t7),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[142]) = 3 then begin
+  else if result.case_value[142] = 3 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t3, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t7),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[142]) = 4 then begin
+  else if result.case_value[142] = 4 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t3, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t7),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[142]) = 5 then begin
+  else if result.case_value[142] = 5 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t3, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t7),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[142]) = 6 then begin
+  else if result.case_value[142] = 6 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t3, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t7),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[142]) = 7 then begin
+  else if result.case_value[142] = 7 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t3, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t7),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[142]) = 8 then begin
+  else if result.case_value[142] = 8 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t3, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t7),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[142]) = 9 then begin
+  else if result.case_value[142] = 9 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t3, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t7),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[142]) = 10 then begin
+  else if result.case_value[142] = 10 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t3, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t7),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[142]) = 11 then begin
+  else if result.case_value[142] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t7),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[142]) <> 12 then begin
+  else if result.case_value[142] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -7265,19 +7265,19 @@ begin
   t7 := create_solution_for_ip_reg;
   t8 := lir_$new_label;
   t9 := make_bit_mask_1(1, 0);
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t11 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t10 := lir_$new_label;
     t11 := integer32(t10);
   end;
-  if ord(result.space136[138]) = 1 then begin
+  if result.case_value[138] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         4,
         find_well_known_literal_solution(integer32(p2_locals_ptr_t(addr(result))^.p2[88])),
         subject^.children[1], t5);
   end else begin
-    if ord(result.space136[139]) = 1 then begin
+    if result.case_value[139] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0,
           find_well_known_literal_solution(integer32(p2_locals_ptr_t(addr(result))^.p2[88])),
@@ -7291,10 +7291,10 @@ begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         4, t5, subject^.children[1], t5);
   end;
-  if ord(result.space136[140]) = 1 then begin
+  if result.case_value[140] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, t8,
         ord(opc$bhs), 0);
-    if ord(result.space136[141]) = 1 then begin
+    if result.case_value[141] = 1 then begin
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$jump), 0);
     end else begin
@@ -7305,8 +7305,8 @@ begin
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$lsr), 0,
       t5, find_well_known_literal_solution(3), t5);
-  if ord(result.space136[142]) = 1 then begin
-    if ord(result.space136[143]) = 1 then begin
+  if result.case_value[142] = 1 then begin
+    if result.case_value[143] = 1 then begin
       if t6^.object_with_name <> nil then begin
         t6^.object_with_name := t6^.object_with_name;
       end else begin
@@ -7322,7 +7322,7 @@ begin
           subject^.children[2]^.base_register, t6);
     end;
   end
-  else if ord(result.space136[144]) = 1 then begin
+  else if result.case_value[144] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -7339,7 +7339,7 @@ begin
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$and), 0,
       isc_solution_ptr_t(isc_literal_solutions[7]), subject^.children[1],
       t6);
-  if ord(result.space136[145]) = 1 then begin
+  if result.case_value[145] = 1 then begin
     t14 := create_solution_for_ip_reg;
     t15 := create_solution_for_ip_reg;
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
@@ -7352,71 +7352,71 @@ begin
     debug_lir_$field_instruction(result.inherited_attributes,
         ord(opc$extractu), 0, 1, t5, t6, t7);
   end;
-  if ord(result.space136[146]) = 1 then begin
+  if result.case_value[146] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t7, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t11),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[146]) = 2 then begin
+  else if result.case_value[146] = 2 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t7, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t11),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[146]) = 3 then begin
+  else if result.case_value[146] = 3 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t7, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t11),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[146]) = 4 then begin
+  else if result.case_value[146] = 4 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t7, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t11),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[146]) = 5 then begin
+  else if result.case_value[146] = 5 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t7, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t11),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[146]) = 6 then begin
+  else if result.case_value[146] = 6 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t7, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t11),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[146]) = 7 then begin
+  else if result.case_value[146] = 7 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t7, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t11),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[146]) = 8 then begin
+  else if result.case_value[146] = 8 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t7, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t11),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[146]) = 9 then begin
+  else if result.case_value[146] = 9 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t7, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t11),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[146]) = 10 then begin
+  else if result.case_value[146] = 10 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t7, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t11),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[146]) = 11 then begin
+  else if result.case_value[146] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t11),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[146]) <> 12 then begin
+  else if result.case_value[146] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -7441,20 +7441,20 @@ begin
   end else begin
     t1 := p2_node_ptr_t(subject^.il)^.w[14];
   end;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t3 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cmps),
         0, subject^.children[2], subject^.children[1], nil);
   end else begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$tsts),
         0, subject^.children[1], nil, nil);
   end;
-  if ord(result.space136[138]) <> 1 then begin
+  if result.case_value[138] <> 1 then begin
     t4 := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t1];
   end else begin
     t4 := t1;
@@ -7481,24 +7481,24 @@ begin
   end else begin
     t1 := p2_node_ptr_t(subject^.il)^.w[14];
   end;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     t3 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
   end;
-  if ord(result.space136[138]) = 1 then begin
+  if result.case_value[138] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cmpd),
         0, subject^.children[2], subject^.children[1], nil);
   end else begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$tstd),
         0, subject^.children[1], nil, nil);
   end;
-  if ord(result.space136[139]) <> 1 then begin
+  if result.case_value[139] <> 1 then begin
     t4 := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t1];
   end else begin
     t4 := t1;
@@ -7527,17 +7527,17 @@ begin
   t2 := low_half_of_fp_reg_pair(subject^.children[1]);
   t3 := high_half_of_fp_reg_pair(subject^.children[2]);
   t4 := low_half_of_fp_reg_pair(subject^.children[2]);
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     t6 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t5 := lir_$new_label;
     t6 := integer32(t5);
   end;
-  if ord(result.space136[138]) = 1 then begin
+  if result.case_value[138] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cmps),
         0, t3, t1, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t6),
@@ -7580,17 +7580,17 @@ begin
   t2 := low_half_of_fp_reg_quad(subject^.children[1]);
   t3 := high_half_of_fp_reg_quad(subject^.children[2]);
   t4 := low_half_of_fp_reg_quad(subject^.children[2]);
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     t6 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t5 := lir_$new_label;
     t6 := integer32(t5);
   end;
-  if ord(result.space136[138]) = 1 then begin
+  if result.case_value[138] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cmpd),
         0, t3, t1, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t6),
@@ -7678,14 +7678,14 @@ begin
   t12 := create_solution_for_ip_reg;
   t13 := create_solution_for_ip_reg;
   t14 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t16 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t15 := lir_$new_label;
     t16 := integer32(t15);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
       if t11^.object_with_name <> nil then begin
         t11^.object_with_name := t11^.object_with_name;
       end else begin
@@ -7701,7 +7701,7 @@ begin
           subject^.children[1]^.base_register, t11);
     end;
   end
-  else if ord(result.space136[139]) = 1 then begin
+  else if result.case_value[139] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -7712,8 +7712,8 @@ begin
         0, t17, t17^.base_register, t11, t17^.il, 0, t17^.bits_known,
         t17^.bits_trusted);
   end;
-  if ord(result.space136[140]) = 1 then begin
-    if ord(result.space136[141]) = 1 then begin
+  if result.case_value[140] = 1 then begin
+    if result.case_value[141] = 1 then begin
       if t13^.object_with_name <> nil then begin
         t13^.object_with_name := t13^.object_with_name;
       end else begin
@@ -7729,7 +7729,7 @@ begin
           subject^.children[2]^.base_register, t13);
     end;
   end
-  else if ord(result.space136[142]) = 1 then begin
+  else if result.case_value[142] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -7745,7 +7745,7 @@ begin
   debug_lir_$branch_instruction(result.inherited_attributes, t4,
       ord(opc$beq), 0);
   debug_lir_$label(result.inherited_attributes, t3);
-  if ord(result.space136[143]) = 1 then begin
+  if result.case_value[143] = 1 then begin
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadbu),
         t7 + t5 + t6 + 16#1000020,
         isc_solution_ptr_t(isc_literal_solutions[1]), t11, t12,
@@ -7757,7 +7757,7 @@ begin
         subject^.children[2]^.il, 0, subject^.children[2]^.bits_known,
         subject^.children[2]^.bits_trusted);
   end
-  else if ord(result.space136[143]) = 2 then begin
+  else if result.case_value[143] = 2 then begin
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadwu),
         t7 + t5 + t6 + 16#1000020,
         isc_solution_ptr_t(isc_literal_solutions[2]), t11, t12,
@@ -7784,77 +7784,77 @@ begin
       8, t12, t14, create_solution_for_ip_reg);
   debug_lir_$branch_instruction(result.inherited_attributes, t2,
       ord(opc$beq), 0);
-  if ord(result.space136[144]) = 1 then begin
-    if ord(result.space136[145]) <> 1 then begin
-      if ord(result.space136[145]) = 2 then begin
+  if result.case_value[144] = 1 then begin
+    if result.case_value[145] <> 1 then begin
+      if result.case_value[145] = 2 then begin
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t16), ord(opc$jump), 0);
       end else begin
-        if ord(result.space136[146]) = 1 then begin
+        if result.case_value[146] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 8, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t16), ord(opc$beq), 0);
         end
-        else if ord(result.space136[146]) = 2 then begin
+        else if result.case_value[146] = 2 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 8, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t16), ord(opc$bne), 0);
         end
-        else if ord(result.space136[146]) = 3 then begin
+        else if result.case_value[146] = 3 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t16), ord(opc$blo), 0);
         end
-        else if ord(result.space136[146]) = 4 then begin
+        else if result.case_value[146] = 4 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t16), ord(opc$bls), 0);
         end
-        else if ord(result.space136[146]) = 5 then begin
+        else if result.case_value[146] = 5 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t16), ord(opc$bhi), 0);
         end
-        else if ord(result.space136[146]) = 6 then begin
+        else if result.case_value[146] = 6 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t16), ord(opc$bhs), 0);
         end
-        else if ord(result.space136[146]) = 7 then begin
+        else if result.case_value[146] = 7 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t16), ord(opc$blt), 0);
         end
-        else if ord(result.space136[146]) = 8 then begin
+        else if result.case_value[146] = 8 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t16), ord(opc$ble), 0);
         end
-        else if ord(result.space136[146]) = 9 then begin
+        else if result.case_value[146] = 9 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t16), ord(opc$bgt), 0);
         end
-        else if ord(result.space136[146]) = 10 then begin
+        else if result.case_value[146] = 10 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t16), ord(opc$bge), 0);
         end
-        else if ord(result.space136[146]) = 11 then begin
+        else if result.case_value[146] = 11 then begin
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t16), ord(opc$jump), 0);
         end
-        else if ord(result.space136[146]) <> 12 then begin
+        else if result.case_value[146] <> 12 then begin
           pattern_match_error(11, subject^.il_kind, 0,
               subject^.inherited_attributes^.pos.source_line_number);
         end;
@@ -7866,79 +7866,79 @@ begin
           ord(opc$jump), 0);
     end;
   end
-  else if ord(result.space136[147]) = 1 then begin
+  else if result.case_value[147] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t16),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[147]) = 2 then begin
+  else if result.case_value[147] = 2 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, t1,
         ord(opc$jump), 0);
   end else begin
-    if ord(result.space136[148]) = 1 then begin
+    if result.case_value[148] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$beq), 0);
     end
-    else if ord(result.space136[148]) = 2 then begin
+    else if result.case_value[148] = 2 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bne), 0);
     end
-    else if ord(result.space136[148]) = 3 then begin
+    else if result.case_value[148] = 3 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$blo), 0);
     end
-    else if ord(result.space136[148]) = 4 then begin
+    else if result.case_value[148] = 4 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bls), 0);
     end
-    else if ord(result.space136[148]) = 5 then begin
+    else if result.case_value[148] = 5 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bhi), 0);
     end
-    else if ord(result.space136[148]) = 6 then begin
+    else if result.case_value[148] = 6 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bhs), 0);
     end
-    else if ord(result.space136[148]) = 7 then begin
+    else if result.case_value[148] = 7 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$blt), 0);
     end
-    else if ord(result.space136[148]) = 8 then begin
+    else if result.case_value[148] = 8 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$ble), 0);
     end
-    else if ord(result.space136[148]) = 9 then begin
+    else if result.case_value[148] = 9 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bgt), 0);
     end
-    else if ord(result.space136[148]) = 10 then begin
+    else if result.case_value[148] = 10 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bge), 0);
     end
-    else if ord(result.space136[148]) = 11 then begin
+    else if result.case_value[148] = 11 then begin
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$jump), 0);
     end
-    else if ord(result.space136[148]) <> 12 then begin
+    else if result.case_value[148] <> 12 then begin
       pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
@@ -7954,13 +7954,13 @@ begin
   debug_lir_$branch_instruction(result.inherited_attributes, t3,
       ord(opc$bne), 0);
   debug_lir_$label(result.inherited_attributes, t4);
-  if ord(result.space136[149]) = 1 then begin
-    if ord(result.space136[150]) = 1 then begin
+  if result.case_value[149] = 1 then begin
+    if result.case_value[150] = 1 then begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t16), ord(opc$jump), 0);
     end;
   end
-  else if ord(result.space136[151]) <> 1 then begin
+  else if result.case_value[151] <> 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t16),
         ord(opc$jump), 0);
   end;
@@ -8036,14 +8036,14 @@ begin
   t14 := create_solution_for_ip_reg;
   t15 := create_solution_for_ip_reg;
   t16 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t18 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t17 := lir_$new_label;
     t18 := integer32(t17);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
       if t13^.object_with_name <> nil then begin
         t13^.object_with_name := t13^.object_with_name;
       end else begin
@@ -8059,7 +8059,7 @@ begin
           subject^.children[1]^.base_register, t13);
     end;
   end
-  else if ord(result.space136[139]) = 1 then begin
+  else if result.case_value[139] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -8070,8 +8070,8 @@ begin
         0, t19, t19^.base_register, t13, t19^.il, 0, t19^.bits_known,
         t19^.bits_trusted);
   end;
-  if ord(result.space136[140]) = 1 then begin
-    if ord(result.space136[141]) = 1 then begin
+  if result.case_value[140] = 1 then begin
+    if result.case_value[141] = 1 then begin
       if t15^.object_with_name <> nil then begin
         t15^.object_with_name := t15^.object_with_name;
       end else begin
@@ -8087,7 +8087,7 @@ begin
           subject^.children[2]^.base_register, t15);
     end;
   end
-  else if ord(result.space136[142]) = 1 then begin
+  else if result.case_value[142] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -8107,7 +8107,7 @@ begin
   debug_lir_$branch_instruction(result.inherited_attributes, t3,
       ord(opc$ble), 0);
   debug_lir_$label(result.inherited_attributes, t2);
-  if ord(result.space136[143]) = 1 then begin
+  if result.case_value[143] = 1 then begin
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadbu),
         t7 + t8 + t9 + 16#1000020,
         isc_solution_ptr_t(isc_literal_solutions[1]), t13, t14,
@@ -8119,7 +8119,7 @@ begin
         subject^.children[2]^.il, 0, subject^.children[2]^.bits_known,
         subject^.children[2]^.bits_trusted);
   end
-  else if ord(result.space136[143]) = 2 then begin
+  else if result.case_value[143] = 2 then begin
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadwu),
         t7 + t8 + t9 + 16#1000020,
         isc_solution_ptr_t(isc_literal_solutions[2]), t13, t14,
@@ -8163,77 +8163,77 @@ begin
   debug_lir_$branch_instruction(result.inherited_attributes, t2,
       ord(opc$jump), 0);
   debug_lir_$label(result.inherited_attributes, t6);
-  if ord(result.space136[144]) = 1 then begin
-    if ord(result.space136[145]) <> 1 then begin
-      if ord(result.space136[145]) = 2 then begin
+  if result.case_value[144] = 1 then begin
+    if result.case_value[145] <> 1 then begin
+      if result.case_value[145] = 2 then begin
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t18), ord(opc$jump), 0);
       end else begin
-        if ord(result.space136[146]) = 1 then begin
+        if result.case_value[146] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 8, t14, t16, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t18), ord(opc$beq), 0);
         end
-        else if ord(result.space136[146]) = 2 then begin
+        else if result.case_value[146] = 2 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 8, t14, t16, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t18), ord(opc$bne), 0);
         end
-        else if ord(result.space136[146]) = 3 then begin
+        else if result.case_value[146] = 3 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t14, t16, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t18), ord(opc$blo), 0);
         end
-        else if ord(result.space136[146]) = 4 then begin
+        else if result.case_value[146] = 4 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t14, t16, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t18), ord(opc$bls), 0);
         end
-        else if ord(result.space136[146]) = 5 then begin
+        else if result.case_value[146] = 5 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t14, t16, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t18), ord(opc$bhi), 0);
         end
-        else if ord(result.space136[146]) = 6 then begin
+        else if result.case_value[146] = 6 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t14, t16, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t18), ord(opc$bhs), 0);
         end
-        else if ord(result.space136[146]) = 7 then begin
+        else if result.case_value[146] = 7 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t14, t16, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t18), ord(opc$blt), 0);
         end
-        else if ord(result.space136[146]) = 8 then begin
+        else if result.case_value[146] = 8 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t14, t16, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t18), ord(opc$ble), 0);
         end
-        else if ord(result.space136[146]) = 9 then begin
+        else if result.case_value[146] = 9 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t14, t16, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t18), ord(opc$bgt), 0);
         end
-        else if ord(result.space136[146]) = 10 then begin
+        else if result.case_value[146] = 10 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t14, t16, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t18), ord(opc$bge), 0);
         end
-        else if ord(result.space136[146]) = 11 then begin
+        else if result.case_value[146] = 11 then begin
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t18), ord(opc$jump), 0);
         end
-        else if ord(result.space136[146]) <> 12 then begin
+        else if result.case_value[146] <> 12 then begin
           pattern_match_error(11, subject^.il_kind, 0,
               subject^.inherited_attributes^.pos.source_line_number);
         end;
@@ -8245,79 +8245,79 @@ begin
           ord(opc$jump), 0);
     end;
   end
-  else if ord(result.space136[147]) = 1 then begin
+  else if result.case_value[147] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t18),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[147]) = 2 then begin
+  else if result.case_value[147] = 2 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, t1,
         ord(opc$jump), 0);
   end else begin
-    if ord(result.space136[148]) = 1 then begin
+    if result.case_value[148] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t14, t16, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$beq), 0);
     end
-    else if ord(result.space136[148]) = 2 then begin
+    else if result.case_value[148] = 2 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t14, t16, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bne), 0);
     end
-    else if ord(result.space136[148]) = 3 then begin
+    else if result.case_value[148] = 3 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t14, t16, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$blo), 0);
     end
-    else if ord(result.space136[148]) = 4 then begin
+    else if result.case_value[148] = 4 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t14, t16, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bls), 0);
     end
-    else if ord(result.space136[148]) = 5 then begin
+    else if result.case_value[148] = 5 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t14, t16, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bhi), 0);
     end
-    else if ord(result.space136[148]) = 6 then begin
+    else if result.case_value[148] = 6 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t14, t16, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bhs), 0);
     end
-    else if ord(result.space136[148]) = 7 then begin
+    else if result.case_value[148] = 7 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t14, t16, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$blt), 0);
     end
-    else if ord(result.space136[148]) = 8 then begin
+    else if result.case_value[148] = 8 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t14, t16, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$ble), 0);
     end
-    else if ord(result.space136[148]) = 9 then begin
+    else if result.case_value[148] = 9 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t14, t16, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bgt), 0);
     end
-    else if ord(result.space136[148]) = 10 then begin
+    else if result.case_value[148] = 10 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t14, t16, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bge), 0);
     end
-    else if ord(result.space136[148]) = 11 then begin
+    else if result.case_value[148] = 11 then begin
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$jump), 0);
     end
-    else if ord(result.space136[148]) <> 12 then begin
+    else if result.case_value[148] <> 12 then begin
       pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
@@ -8329,8 +8329,8 @@ begin
       2, subject^.children[4], create_solution_for_ip_reg, nil);
   debug_lir_$branch_instruction(result.inherited_attributes, t4,
       ord(opc$ble), 0);
-  if ord(result.space136[149]) = 1 then begin
-    if ord(result.space136[150]) <> 1 then begin
+  if result.case_value[149] = 1 then begin
+    if result.case_value[150] <> 1 then begin
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$jump), 0);
     end else begin
@@ -8338,7 +8338,7 @@ begin
           univ_ptr(t18), ord(opc$jump), 0);
     end;
   end
-  else if ord(result.space136[151]) = 1 then begin
+  else if result.case_value[151] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, t1,
         ord(opc$jump), 0);
   end else begin
@@ -8346,8 +8346,8 @@ begin
         ord(opc$jump), 0);
   end;
   debug_lir_$label(result.inherited_attributes, t3);
-  if ord(result.space136[152]) = 1 then begin
-    if ord(result.space136[153]) <> 1 then begin
+  if result.case_value[152] = 1 then begin
+    if result.case_value[153] <> 1 then begin
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$jump), 0);
     end else begin
@@ -8355,7 +8355,7 @@ begin
           univ_ptr(t18), ord(opc$jump), 0);
     end;
   end
-  else if ord(result.space136[154]) = 1 then begin
+  else if result.case_value[154] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, t1,
         ord(opc$jump), 0);
   end else begin
@@ -8363,8 +8363,8 @@ begin
         ord(opc$jump), 0);
   end;
   debug_lir_$label(result.inherited_attributes, t4);
-  if ord(result.space136[155]) = 1 then begin
-    if ord(result.space136[156]) <> 1 then begin
+  if result.case_value[155] = 1 then begin
+    if result.case_value[156] <> 1 then begin
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$jump), 0);
     end else begin
@@ -8372,7 +8372,7 @@ begin
           univ_ptr(t18), ord(opc$jump), 0);
     end;
   end
-  else if ord(result.space136[157]) = 1 then begin
+  else if result.case_value[157] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, t1,
         ord(opc$jump), 0);
   end else begin
@@ -8396,14 +8396,14 @@ var
   t4: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t3 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
   end;
   t4 := create_solution_for_ip_reg;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$xor),
         0, isc_solution_ptr_t(isc_literal_solutions[-1]),
         subject^.children[2], t4);
@@ -8414,71 +8414,71 @@ begin
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$and), 0,
       subject^.children[1], t4, t1);
-  if ord(result.space136[138]) = 1 then begin
+  if result.case_value[138] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[138]) = 2 then begin
+  else if result.case_value[138] = 2 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[138]) = 3 then begin
+  else if result.case_value[138] = 3 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[138]) = 4 then begin
+  else if result.case_value[138] = 4 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[138]) = 5 then begin
+  else if result.case_value[138] = 5 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[138]) = 6 then begin
+  else if result.case_value[138] = 6 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[138]) = 7 then begin
+  else if result.case_value[138] = 7 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[138]) = 8 then begin
+  else if result.case_value[138] = 8 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[138]) = 9 then begin
+  else if result.case_value[138] = 9 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[138]) = 10 then begin
+  else if result.case_value[138] = 10 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[138]) = 11 then begin
+  else if result.case_value[138] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[138]) <> 12 then begin
+  else if result.case_value[138] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -8498,14 +8498,14 @@ var
   t4: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t3 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t2 := lir_$new_label;
     t3 := integer32(t2);
   end;
   t4 := create_solution_for_ip_reg;
-  if ord(result.space136[137]) = 1 then begin
+  if result.case_value[137] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$xor),
         0, isc_solution_ptr_t(isc_literal_solutions[-1]),
         subject^.children[1], t4);
@@ -8516,71 +8516,71 @@ begin
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$and), 0,
       subject^.children[2], t4, t1);
-  if ord(result.space136[138]) = 1 then begin
+  if result.case_value[138] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$beq), 0);
   end
-  else if ord(result.space136[138]) = 2 then begin
+  else if result.case_value[138] = 2 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         8, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bne), 0);
   end
-  else if ord(result.space136[138]) = 3 then begin
+  else if result.case_value[138] = 3 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$blo), 0);
   end
-  else if ord(result.space136[138]) = 4 then begin
+  else if result.case_value[138] = 4 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bls), 0);
   end
-  else if ord(result.space136[138]) = 5 then begin
+  else if result.case_value[138] = 5 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bhi), 0);
   end
-  else if ord(result.space136[138]) = 6 then begin
+  else if result.case_value[138] = 6 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         4, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bhs), 0);
   end
-  else if ord(result.space136[138]) = 7 then begin
+  else if result.case_value[138] = 7 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$blt), 0);
   end
-  else if ord(result.space136[138]) = 8 then begin
+  else if result.case_value[138] = 8 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$ble), 0);
   end
-  else if ord(result.space136[138]) = 9 then begin
+  else if result.case_value[138] = 9 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bgt), 0);
   end
-  else if ord(result.space136[138]) = 10 then begin
+  else if result.case_value[138] = 10 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         2, t1, create_solution_for_ip_reg, nil);
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$bge), 0);
   end
-  else if ord(result.space136[138]) = 11 then begin
+  else if result.case_value[138] = 11 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[138]) <> 12 then begin
+  else if result.case_value[138] <> 12 then begin
     pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -8654,14 +8654,14 @@ begin
   t13 := create_solution_for_ip_reg;
   t14 := create_solution_for_ip_reg;
   t15 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t17 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t16 := lir_$new_label;
     t17 := integer32(t16);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
       if t11^.object_with_name <> nil then begin
         t11^.object_with_name := t11^.object_with_name;
       end else begin
@@ -8677,7 +8677,7 @@ begin
           subject^.children[1]^.base_register, t11);
     end;
   end
-  else if ord(result.space136[139]) = 1 then begin
+  else if result.case_value[139] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -8688,8 +8688,8 @@ begin
         0, t18, t18^.base_register, t11, t18^.il, 0, t18^.bits_known,
         t18^.bits_trusted);
   end;
-  if ord(result.space136[140]) = 1 then begin
-    if ord(result.space136[141]) = 1 then begin
+  if result.case_value[140] = 1 then begin
+    if result.case_value[141] = 1 then begin
       if t13^.object_with_name <> nil then begin
         t13^.object_with_name := t13^.object_with_name;
       end else begin
@@ -8705,7 +8705,7 @@ begin
           subject^.children[2]^.base_register, t13);
     end;
   end
-  else if ord(result.space136[142]) = 1 then begin
+  else if result.case_value[142] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -8716,7 +8716,7 @@ begin
         0, t19, t19^.base_register, t13, t19^.il, 0, t19^.bits_known,
         t19^.bits_trusted);
   end;
-  if ord(result.space136[143]) = 1 then begin
+  if result.case_value[143] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0, find_well_known_literal_solution(integer32(result.fields[0])),
         t15, nil);
@@ -8741,77 +8741,77 @@ begin
       8, t12, t14, create_solution_for_ip_reg);
   debug_lir_$branch_instruction(result.inherited_attributes, t2,
       ord(opc$beq), 0);
-  if ord(result.space136[144]) = 1 then begin
-    if ord(result.space136[145]) <> 1 then begin
-      if ord(result.space136[145]) = 2 then begin
+  if result.case_value[144] = 1 then begin
+    if result.case_value[145] <> 1 then begin
+      if result.case_value[145] = 2 then begin
         debug_lir_$branch_instruction(result.inherited_attributes,
             univ_ptr(t17), ord(opc$jump), 0);
       end else begin
-        if ord(result.space136[146]) = 1 then begin
+        if result.case_value[146] = 1 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 8, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$beq), 0);
         end
-        else if ord(result.space136[146]) = 2 then begin
+        else if result.case_value[146] = 2 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 8, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$bne), 0);
         end
-        else if ord(result.space136[146]) = 3 then begin
+        else if result.case_value[146] = 3 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$blo), 0);
         end
-        else if ord(result.space136[146]) = 4 then begin
+        else if result.case_value[146] = 4 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$bls), 0);
         end
-        else if ord(result.space136[146]) = 5 then begin
+        else if result.case_value[146] = 5 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$bhi), 0);
         end
-        else if ord(result.space136[146]) = 6 then begin
+        else if result.case_value[146] = 6 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$bhs), 0);
         end
-        else if ord(result.space136[146]) = 7 then begin
+        else if result.case_value[146] = 7 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$blt), 0);
         end
-        else if ord(result.space136[146]) = 8 then begin
+        else if result.case_value[146] = 8 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$ble), 0);
         end
-        else if ord(result.space136[146]) = 9 then begin
+        else if result.case_value[146] = 9 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$bgt), 0);
         end
-        else if ord(result.space136[146]) = 10 then begin
+        else if result.case_value[146] = 10 then begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$bge), 0);
         end
-        else if ord(result.space136[146]) = 11 then begin
+        else if result.case_value[146] = 11 then begin
           debug_lir_$branch_instruction(result.inherited_attributes,
               univ_ptr(t17), ord(opc$jump), 0);
         end
-        else if ord(result.space136[146]) <> 12 then begin
+        else if result.case_value[146] <> 12 then begin
           pattern_match_error(11, subject^.il_kind, 0,
               subject^.inherited_attributes^.pos.source_line_number);
         end;
@@ -8823,79 +8823,79 @@ begin
           ord(opc$jump), 0);
     end;
   end
-  else if ord(result.space136[147]) = 1 then begin
+  else if result.case_value[147] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t17),
         ord(opc$jump), 0);
   end
-  else if ord(result.space136[147]) = 2 then begin
+  else if result.case_value[147] = 2 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, t1,
         ord(opc$jump), 0);
   end else begin
-    if ord(result.space136[148]) = 1 then begin
+    if result.case_value[148] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$beq), 0);
     end
-    else if ord(result.space136[148]) = 2 then begin
+    else if result.case_value[148] = 2 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bne), 0);
     end
-    else if ord(result.space136[148]) = 3 then begin
+    else if result.case_value[148] = 3 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$blo), 0);
     end
-    else if ord(result.space136[148]) = 4 then begin
+    else if result.case_value[148] = 4 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bls), 0);
     end
-    else if ord(result.space136[148]) = 5 then begin
+    else if result.case_value[148] = 5 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bhi), 0);
     end
-    else if ord(result.space136[148]) = 6 then begin
+    else if result.case_value[148] = 6 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bhs), 0);
     end
-    else if ord(result.space136[148]) = 7 then begin
+    else if result.case_value[148] = 7 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$blt), 0);
     end
-    else if ord(result.space136[148]) = 8 then begin
+    else if result.case_value[148] = 8 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$ble), 0);
     end
-    else if ord(result.space136[148]) = 9 then begin
+    else if result.case_value[148] = 9 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bgt), 0);
     end
-    else if ord(result.space136[148]) = 10 then begin
+    else if result.case_value[148] = 10 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t14, create_solution_for_ip_reg);
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$bge), 0);
     end
-    else if ord(result.space136[148]) = 11 then begin
+    else if result.case_value[148] = 11 then begin
       debug_lir_$branch_instruction(result.inherited_attributes, t1,
           ord(opc$jump), 0);
     end
-    else if ord(result.space136[148]) <> 12 then begin
+    else if result.case_value[148] <> 12 then begin
       pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
@@ -8910,13 +8910,13 @@ begin
   debug_lir_$branch_instruction(result.inherited_attributes, t3,
       ord(opc$bne), 0);
   debug_lir_$label(result.inherited_attributes, t4);
-  if ord(result.space136[149]) = 1 then begin
-    if ord(result.space136[150]) = 1 then begin
+  if result.case_value[149] = 1 then begin
+    if result.case_value[150] = 1 then begin
       debug_lir_$branch_instruction(result.inherited_attributes,
           univ_ptr(t17), ord(opc$jump), 0);
     end;
   end
-  else if ord(result.space136[151]) <> 1 then begin
+  else if result.case_value[151] <> 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t17),
         ord(opc$jump), 0);
   end;
@@ -8994,14 +8994,14 @@ begin
   t14 := create_solution_for_ip_reg;
   t15 := create_solution_for_ip_reg;
   t16 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t18 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t17 := lir_$new_label;
     t18 := integer32(t17);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
       if t11^.object_with_name <> nil then begin
         t11^.object_with_name := t11^.object_with_name;
       end else begin
@@ -9017,7 +9017,7 @@ begin
           subject^.children[1]^.base_register, t11);
     end;
   end
-  else if ord(result.space136[139]) = 1 then begin
+  else if result.case_value[139] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -9028,8 +9028,8 @@ begin
         0, t19, t19^.base_register, t11, t19^.il, 0, t19^.bits_known,
         t19^.bits_trusted);
   end;
-  if ord(result.space136[140]) = 1 then begin
-    if ord(result.space136[141]) = 1 then begin
+  if result.case_value[140] = 1 then begin
+    if result.case_value[141] = 1 then begin
       if t13^.object_with_name <> nil then begin
         t13^.object_with_name := t13^.object_with_name;
       end else begin
@@ -9045,7 +9045,7 @@ begin
           subject^.children[2]^.base_register, t13);
     end;
   end
-  else if ord(result.space136[142]) = 1 then begin
+  else if result.case_value[142] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -9056,7 +9056,7 @@ begin
         0, t20, t20^.base_register, t13, t20^.il, 0, t20^.bits_known,
         t20^.bits_trusted);
   end;
-  if ord(result.space136[143]) = 1 then begin
+  if result.case_value[143] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0, find_well_known_literal_solution(integer32(result.fields[0])),
         t15, nil);
@@ -9078,7 +9078,7 @@ begin
       subject^.children[2]^.il, 0, subject^.children[2]^.bits_known,
       subject^.children[2]^.bits_trusted);
   t22 := create_solution_for_ip_reg;
-  if ord(result.space136[144]) = 1 then begin
+  if result.case_value[144] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$xor),
         0, isc_solution_ptr_t(isc_literal_solutions[-1]), t14, t22);
   end else begin
@@ -9091,7 +9091,7 @@ begin
       8, t16, create_solution_for_ip_reg, nil);
   debug_lir_$branch_instruction(result.inherited_attributes, t2,
       ord(opc$beq), 0);
-  if ord(result.space136[145]) = 1 then begin
+  if result.case_value[145] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, t1,
         ord(opc$jump), 0);
   end else begin
@@ -9106,7 +9106,7 @@ begin
   debug_lir_$branch_instruction(result.inherited_attributes, t3,
       ord(opc$bne), 0);
   debug_lir_$label(result.inherited_attributes, t4);
-  if ord(result.space136[146]) = 1 then begin
+  if result.case_value[146] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t18),
         ord(opc$jump), 0);
   end;
@@ -9184,14 +9184,14 @@ begin
   t14 := create_solution_for_ip_reg;
   t15 := create_solution_for_ip_reg;
   t16 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t18 := subject^.inherited_attributes^.conditional_target;
   end else begin
     t17 := lir_$new_label;
     t18 := integer32(t17);
   end;
-  if ord(result.space136[137]) = 1 then begin
-    if ord(result.space136[138]) = 1 then begin
+  if result.case_value[137] = 1 then begin
+    if result.case_value[138] = 1 then begin
       if t11^.object_with_name <> nil then begin
         t11^.object_with_name := t11^.object_with_name;
       end else begin
@@ -9207,7 +9207,7 @@ begin
           subject^.children[1]^.base_register, t11);
     end;
   end
-  else if ord(result.space136[139]) = 1 then begin
+  else if result.case_value[139] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
@@ -9218,8 +9218,8 @@ begin
         0, t19, t19^.base_register, t11, t19^.il, 0, t19^.bits_known,
         t19^.bits_trusted);
   end;
-  if ord(result.space136[140]) = 1 then begin
-    if ord(result.space136[141]) = 1 then begin
+  if result.case_value[140] = 1 then begin
+    if result.case_value[141] = 1 then begin
       if t13^.object_with_name <> nil then begin
         t13^.object_with_name := t13^.object_with_name;
       end else begin
@@ -9235,7 +9235,7 @@ begin
           subject^.children[2]^.base_register, t13);
     end;
   end
-  else if ord(result.space136[142]) = 1 then begin
+  else if result.case_value[142] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[2]^.literal_32_bits_value),
@@ -9246,7 +9246,7 @@ begin
         0, t20, t20^.base_register, t13, t20^.il, 0, t20^.bits_known,
         t20^.bits_trusted);
   end;
-  if ord(result.space136[143]) = 1 then begin
+  if result.case_value[143] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0, find_well_known_literal_solution(integer32(result.fields[0])),
         t15, nil);
@@ -9268,7 +9268,7 @@ begin
       subject^.children[2]^.il, 0, subject^.children[2]^.bits_known,
       subject^.children[2]^.bits_trusted);
   t22 := create_solution_for_ip_reg;
-  if ord(result.space136[144]) = 1 then begin
+  if result.case_value[144] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$xor),
         0, isc_solution_ptr_t(isc_literal_solutions[-1]), t12, t22);
   end else begin
@@ -9281,7 +9281,7 @@ begin
       8, t16, create_solution_for_ip_reg, nil);
   debug_lir_$branch_instruction(result.inherited_attributes, t2,
       ord(opc$beq), 0);
-  if ord(result.space136[145]) = 1 then begin
+  if result.case_value[145] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, t1,
         ord(opc$jump), 0);
   end else begin
@@ -9296,7 +9296,7 @@ begin
   debug_lir_$branch_instruction(result.inherited_attributes, t3,
       ord(opc$bne), 0);
   debug_lir_$label(result.inherited_attributes, t4);
-  if ord(result.space136[146]) = 1 then begin
+  if result.case_value[146] = 1 then begin
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t18),
         ord(opc$jump), 0);
   end;

@@ -77,20 +77,6 @@ type
     x: array [0..175] of integer;               { +0 }
     i: array [0..19] of integer32;              { +352 }
     end;
-  { The chain rules' cycle guard: a solution's seven already_ flags
-    (+342 .. +348, bytes isc_solution_fields.ins.pas leaves in space136),
-    under the image's names. }
-  p1_already_ptr_t = ^p1_already_t;
-  p1_already_t = record
-    x: array [0..170] of integer;               { +0 }
-    already_address_mode: boolean;              { +342 }
-    already_fp_reg: boolean;                    { +343 }
-    already_fp_reg_pair: boolean;               { +344 }
-    already_fp_reg_quad: boolean;               { +345 }
-    already_ip_reg: boolean;                    { +346 }
-    already_ip_reg_field: boolean;              { +347 }
-    already_processor_reg: boolean;             { +348 }
-    end;
 
 var
   { The cost tables, rule by rule (each rule's in the reverse of their order
@@ -408,215 +394,215 @@ begin
     end;
     t5 := make_bit_mask_1(16, 0);
     if subject.children[1]^.kind = solution$ip_reg then begin
-      solution^.space136[136] := chr(1);
+      solution^.case_value[136] := 1;
     end else begin
-      solution^.space136[136] := chr(2);
+      solution^.case_value[136] := 2;
       if subject.children[1]^.inherited_attributes^.fetch_precision = 32 then begin
-        solution^.space136[137] := chr(1);
+        solution^.case_value[137] := 1;
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[138] := chr(1);
-          solution^.space136[139] := chr(1);
+          solution^.case_value[138] := 1;
+          solution^.case_value[139] := 1;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-            solution^.space136[143] := chr(1);
+            solution^.case_value[143] := 1;
           end else begin
-            solution^.space136[143] := chr(2);
+            solution^.case_value[143] := 2;
           end;
         end
         else if not (subject.children[1]^.bits_trusted & 1 <> 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[138] := chr(3);
+          solution^.case_value[138] := 3;
         end else begin
-          solution^.space136[138] := chr(2);
+          solution^.case_value[138] := 2;
           if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
-            solution^.space136[144] := chr(2);
+            solution^.case_value[144] := 2;
             if subject.children[1]^.f76.uses_the_base_register then begin
-              solution^.space136[145] := chr(1);
+              solution^.case_value[145] := 1;
               if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
-                solution^.space136[146] := chr(2);
+                solution^.case_value[146] := 2;
               end else begin
-                solution^.space136[146] := chr(1);
+                solution^.case_value[146] := 1;
               end;
             end else begin
-              solution^.space136[145] := chr(2);
+              solution^.case_value[145] := 2;
               if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
-                solution^.space136[147] := chr(1);
+                solution^.case_value[147] := 1;
               end else begin
-                solution^.space136[147] := chr(2);
+                solution^.case_value[147] := 2;
               end;
             end;
           end else begin
-            solution^.space136[144] := chr(1);
+            solution^.case_value[144] := 1;
           end;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-            solution^.space136[148] := chr(1);
+            solution^.case_value[148] := 1;
           end else begin
-            solution^.space136[148] := chr(2);
+            solution^.case_value[148] := 2;
           end;
         end;
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 <> 0) and (subject.children[1]^.bits_known & 1 = 0) then begin
-          solution^.space136[149] := chr(1);
+          solution^.case_value[149] := 1;
         end else begin
-          solution^.space136[149] := chr(2);
+          solution^.case_value[149] := 2;
           if not subject.children[1]^.f76.embedded_strength_reduction_temporary then begin
-            solution^.space136[150] := chr(1);
+            solution^.case_value[150] := 1;
           end else begin
-            solution^.space136[150] := chr(2);
+            solution^.case_value[150] := 2;
           end;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-            solution^.space136[151] := chr(1);
+            solution^.case_value[151] := 1;
           end else begin
-            solution^.space136[151] := chr(2);
+            solution^.case_value[151] := 2;
           end;
         end;
       end
       else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-        solution^.space136[137] := chr(2);
-        solution^.space136[152] := chr(1);
+        solution^.case_value[137] := 2;
+        solution^.case_value[152] := 1;
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-          solution^.space136[156] := chr(1);
+          solution^.case_value[156] := 1;
         end else begin
-          solution^.space136[156] := chr(2);
+          solution^.case_value[156] := 2;
         end;
         if not (subject.children[1]^.bits_trusted & 1 <> 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[157] := chr(2);
+          solution^.case_value[157] := 2;
           if not subject.children[1]^.f76.embedded_strength_reduction_temporary then begin
-            solution^.space136[158] := chr(1);
+            solution^.case_value[158] := 1;
           end else begin
-            solution^.space136[158] := chr(2);
+            solution^.case_value[158] := 2;
           end;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-            solution^.space136[159] := chr(1);
+            solution^.case_value[159] := 1;
           end else begin
-            solution^.space136[159] := chr(2);
+            solution^.case_value[159] := 2;
           end;
         end else begin
-          solution^.space136[157] := chr(1);
+          solution^.case_value[157] := 1;
         end;
       end
       else if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-        solution^.space136[137] := chr(3);
-        solution^.space136[160] := chr(1);
+        solution^.case_value[137] := 3;
+        solution^.case_value[160] := 1;
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-          solution^.space136[164] := chr(1);
+          solution^.case_value[164] := 1;
         end else begin
-          solution^.space136[164] := chr(2);
+          solution^.case_value[164] := 2;
         end;
       end else begin
-        solution^.space136[137] := chr(4);
+        solution^.case_value[137] := 4;
       end;
     end;
     if subject.children[1]^.kind = solution$ip_reg then begin
-      solution^.space136[165] := chr(1);
+      solution^.case_value[165] := 1;
     end else begin
-      solution^.space136[165] := chr(2);
+      solution^.case_value[165] := 2;
       if subject.children[1]^.inherited_attributes^.fetch_precision = 32 then begin
-        solution^.space136[166] := chr(1);
+        solution^.case_value[166] := 1;
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[167] := chr(1);
-          solution^.space136[168] := chr(1);
+          solution^.case_value[167] := 1;
+          solution^.case_value[168] := 1;
           if t4 = 512 then begin
-            solution^.space136[172] := chr(1);
+            solution^.case_value[172] := 1;
           end else begin
-            solution^.space136[172] := chr(2);
+            solution^.case_value[172] := 2;
           end;
         end
         else if not (subject.children[1]^.bits_trusted & 1 <> 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[167] := chr(3);
+          solution^.case_value[167] := 3;
         end else begin
-          solution^.space136[167] := chr(2);
+          solution^.case_value[167] := 2;
           if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
-            solution^.space136[173] := chr(2);
+            solution^.case_value[173] := 2;
             if subject.children[1]^.f76.uses_the_base_register then begin
-              solution^.space136[174] := chr(1);
+              solution^.case_value[174] := 1;
               if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
-                solution^.space136[175] := chr(2);
+                solution^.case_value[175] := 2;
               end else begin
-                solution^.space136[175] := chr(1);
+                solution^.case_value[175] := 1;
               end;
             end else begin
-              solution^.space136[174] := chr(2);
+              solution^.case_value[174] := 2;
               if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
-                solution^.space136[176] := chr(1);
+                solution^.case_value[176] := 1;
               end else begin
-                solution^.space136[176] := chr(2);
+                solution^.case_value[176] := 2;
               end;
             end;
           end else begin
-            solution^.space136[173] := chr(1);
+            solution^.case_value[173] := 1;
           end;
           if t4 = 512 then begin
-            solution^.space136[177] := chr(1);
+            solution^.case_value[177] := 1;
           end else begin
-            solution^.space136[177] := chr(2);
+            solution^.case_value[177] := 2;
           end;
         end;
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 <> 0) and (subject.children[1]^.bits_known & 1 = 0) then begin
-          solution^.space136[178] := chr(1);
+          solution^.case_value[178] := 1;
         end else begin
-          solution^.space136[178] := chr(2);
+          solution^.case_value[178] := 2;
           if not subject.children[1]^.f76.embedded_strength_reduction_temporary then begin
-            solution^.space136[179] := chr(1);
+            solution^.case_value[179] := 1;
           end else begin
-            solution^.space136[179] := chr(2);
+            solution^.case_value[179] := 2;
           end;
           if t4 = 512 then begin
-            solution^.space136[180] := chr(1);
+            solution^.case_value[180] := 1;
           end else begin
-            solution^.space136[180] := chr(2);
+            solution^.case_value[180] := 2;
           end;
         end;
       end
       else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-        solution^.space136[166] := chr(2);
-        solution^.space136[181] := chr(1);
+        solution^.case_value[166] := 2;
+        solution^.case_value[181] := 1;
         if t4 = 512 then begin
-          solution^.space136[185] := chr(1);
+          solution^.case_value[185] := 1;
         end else begin
-          solution^.space136[185] := chr(2);
+          solution^.case_value[185] := 2;
         end;
         if not (subject.children[1]^.bits_trusted & 1 <> 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[186] := chr(2);
+          solution^.case_value[186] := 2;
           if not subject.children[1]^.f76.embedded_strength_reduction_temporary then begin
-            solution^.space136[187] := chr(1);
+            solution^.case_value[187] := 1;
           end else begin
-            solution^.space136[187] := chr(2);
+            solution^.case_value[187] := 2;
           end;
           if t4 = 512 then begin
-            solution^.space136[188] := chr(1);
+            solution^.case_value[188] := 1;
           end else begin
-            solution^.space136[188] := chr(2);
+            solution^.case_value[188] := 2;
           end;
         end else begin
-          solution^.space136[186] := chr(1);
+          solution^.case_value[186] := 1;
         end;
       end
       else if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-        solution^.space136[166] := chr(3);
-        solution^.space136[189] := chr(1);
+        solution^.case_value[166] := 3;
+        solution^.case_value[189] := 1;
         if t4 = 512 then begin
-          solution^.space136[193] := chr(1);
+          solution^.case_value[193] := 1;
         end else begin
-          solution^.space136[193] := chr(2);
+          solution^.case_value[193] := 2;
         end;
       end else begin
-        solution^.space136[166] := chr(4);
+        solution^.case_value[166] := 4;
       end;
     end;
-    solution^.code_bytes := cost_200_78[ord(solution^.space136[137])] + cost_200_77[ord(solution^.space136[138])] + cost_200_76[ord(solution^.space136[139])] + cost_200_75[ord(solution^.space136[141])] + cost_200_74[ord(solution^.space136[142])] + cost_200_73[ord(solution^.space136[143])] + cost_200_72[ord(solution^.space136[144])] + cost_200_71[ord(solution^.space136[146])] + cost_200_70[ord(solution^.space136[147])] + cost_200_69[ord(solution^.space136[149])] + cost_200_68[ord(solution^.space136[152])] + cost_200_67[ord(solution^.space136[154])] + cost_200_66[ord(solution^.space136[155])] + cost_200_65[ord(solution^.space136[156])] + cost_200_64[ord(solution^.space136[157])] + cost_200_63[ord(solution^.space136[160])] + cost_200_62[ord(solution^.space136[162])] + cost_200_61[ord(solution^.space136[163])] + cost_200_60[ord(solution^.space136[164])] + cost_200_59[ord(solution^.space136[166])] + cost_200_58[ord(solution^.space136[167])] + cost_200_57[ord(solution^.space136[168])] + cost_200_56[ord(solution^.space136[170])] + cost_200_55[ord(solution^.space136[171])] + cost_200_54[ord(solution^.space136[172])] + cost_200_53[ord(solution^.space136[173])] + cost_200_52[ord(solution^.space136[175])] + cost_200_51[ord(solution^.space136[176])] + cost_200_50[ord(solution^.space136[178])] + cost_200_49[ord(solution^.space136[181])] + cost_200_48[ord(solution^.space136[183])] + cost_200_47[ord(solution^.space136[184])] + cost_200_46[ord(solution^.space136[185])] + cost_200_45[ord(solution^.space136[186])] + cost_200_44[ord(solution^.space136[189])] + cost_200_43[ord(solution^.space136[191])] + cost_200_42[ord(solution^.space136[192])] + cost_200_41[ord(solution^.space136[193])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-    solution^.memory_references := cost_200_40[ord(solution^.space136[139])] + cost_200_39[ord(solution^.space136[142])] + cost_200_38[ord(solution^.space136[143])] + cost_200_37[ord(solution^.space136[144])] + cost_200_36[ord(solution^.space136[147])] + cost_200_35[ord(solution^.space136[152])] + cost_200_34[ord(solution^.space136[155])] + cost_200_33[ord(solution^.space136[156])] + cost_200_32[ord(solution^.space136[160])] + cost_200_31[ord(solution^.space136[163])] + cost_200_30[ord(solution^.space136[164])] + cost_200_29[ord(solution^.space136[168])] + cost_200_28[ord(solution^.space136[171])] + cost_200_27[ord(solution^.space136[172])] + cost_200_26[ord(solution^.space136[173])] + cost_200_25[ord(solution^.space136[176])] + cost_200_24[ord(solution^.space136[181])] + cost_200_23[ord(solution^.space136[184])] + cost_200_22[ord(solution^.space136[185])] + cost_200_21[ord(solution^.space136[189])] + cost_200_20[ord(solution^.space136[192])] + cost_200_19[ord(solution^.space136[193])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
-    solution^.delay := cost_200_18[ord(solution^.space136[139])] + cost_200_17[ord(solution^.space136[142])] + cost_200_16[ord(solution^.space136[143])] + cost_200_15[ord(solution^.space136[144])] + cost_200_14[ord(solution^.space136[147])] + cost_200_13[ord(solution^.space136[152])] + cost_200_12[ord(solution^.space136[155])] + cost_200_11[ord(solution^.space136[156])] + cost_200_10[ord(solution^.space136[160])] + cost_200_9[ord(solution^.space136[163])] + cost_200_8[ord(solution^.space136[164])] + cost_200_7[ord(solution^.space136[171])] + cost_200_6[ord(solution^.space136[172])] + cost_200_5[ord(solution^.space136[176])] + cost_200_4[ord(solution^.space136[184])] + cost_200_3[ord(solution^.space136[185])] + cost_200_2[ord(solution^.space136[192])] + cost_200_1[ord(solution^.space136[193])] + subject.children[1]^.delay + subject.children[2]^.delay;
+    solution^.code_bytes := cost_200_78[solution^.case_value[137]] + cost_200_77[solution^.case_value[138]] + cost_200_76[solution^.case_value[139]] + cost_200_75[solution^.case_value[141]] + cost_200_74[solution^.case_value[142]] + cost_200_73[solution^.case_value[143]] + cost_200_72[solution^.case_value[144]] + cost_200_71[solution^.case_value[146]] + cost_200_70[solution^.case_value[147]] + cost_200_69[solution^.case_value[149]] + cost_200_68[solution^.case_value[152]] + cost_200_67[solution^.case_value[154]] + cost_200_66[solution^.case_value[155]] + cost_200_65[solution^.case_value[156]] + cost_200_64[solution^.case_value[157]] + cost_200_63[solution^.case_value[160]] + cost_200_62[solution^.case_value[162]] + cost_200_61[solution^.case_value[163]] + cost_200_60[solution^.case_value[164]] + cost_200_59[solution^.case_value[166]] + cost_200_58[solution^.case_value[167]] + cost_200_57[solution^.case_value[168]] + cost_200_56[solution^.case_value[170]] + cost_200_55[solution^.case_value[171]] + cost_200_54[solution^.case_value[172]] + cost_200_53[solution^.case_value[173]] + cost_200_52[solution^.case_value[175]] + cost_200_51[solution^.case_value[176]] + cost_200_50[solution^.case_value[178]] + cost_200_49[solution^.case_value[181]] + cost_200_48[solution^.case_value[183]] + cost_200_47[solution^.case_value[184]] + cost_200_46[solution^.case_value[185]] + cost_200_45[solution^.case_value[186]] + cost_200_44[solution^.case_value[189]] + cost_200_43[solution^.case_value[191]] + cost_200_42[solution^.case_value[192]] + cost_200_41[solution^.case_value[193]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
+    solution^.memory_references := cost_200_40[solution^.case_value[139]] + cost_200_39[solution^.case_value[142]] + cost_200_38[solution^.case_value[143]] + cost_200_37[solution^.case_value[144]] + cost_200_36[solution^.case_value[147]] + cost_200_35[solution^.case_value[152]] + cost_200_34[solution^.case_value[155]] + cost_200_33[solution^.case_value[156]] + cost_200_32[solution^.case_value[160]] + cost_200_31[solution^.case_value[163]] + cost_200_30[solution^.case_value[164]] + cost_200_29[solution^.case_value[168]] + cost_200_28[solution^.case_value[171]] + cost_200_27[solution^.case_value[172]] + cost_200_26[solution^.case_value[173]] + cost_200_25[solution^.case_value[176]] + cost_200_24[solution^.case_value[181]] + cost_200_23[solution^.case_value[184]] + cost_200_22[solution^.case_value[185]] + cost_200_21[solution^.case_value[189]] + cost_200_20[solution^.case_value[192]] + cost_200_19[solution^.case_value[193]] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
+    solution^.delay := cost_200_18[solution^.case_value[139]] + cost_200_17[solution^.case_value[142]] + cost_200_16[solution^.case_value[143]] + cost_200_15[solution^.case_value[144]] + cost_200_14[solution^.case_value[147]] + cost_200_13[solution^.case_value[152]] + cost_200_12[solution^.case_value[155]] + cost_200_11[solution^.case_value[156]] + cost_200_10[solution^.case_value[160]] + cost_200_9[solution^.case_value[163]] + cost_200_8[solution^.case_value[164]] + cost_200_7[solution^.case_value[171]] + cost_200_6[solution^.case_value[172]] + cost_200_5[solution^.case_value[176]] + cost_200_4[solution^.case_value[184]] + cost_200_3[solution^.case_value[185]] + cost_200_2[solution^.case_value[192]] + cost_200_1[solution^.case_value[193]] + subject.children[1]^.delay + subject.children[2]^.delay;
     solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max + subject.children[2]^.ip_reg_max;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max + subject.children[2]^.fp_reg_max;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + subject.children[2]^.fp_reg_pair_max;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
     work := solution;
     result := solution;
   end;
@@ -652,56 +638,56 @@ begin
     solution^.before_transform := addr(subject);
     solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.il)^.p[12]);
     if subject.children[1]^.f76.uses_the_base_register then begin
-      solution^.space136[136] := chr(1);
+      solution^.case_value[136] := 1;
       if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
-        solution^.space136[137] := chr(2);
+        solution^.case_value[137] := 2;
       end else begin
-        solution^.space136[137] := chr(1);
+        solution^.case_value[137] := 1;
       end;
     end else begin
-      solution^.space136[136] := chr(2);
+      solution^.case_value[136] := 2;
       if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
-        solution^.space136[138] := chr(1);
+        solution^.case_value[138] := 1;
       end else begin
-        solution^.space136[138] := chr(2);
+        solution^.case_value[138] := 2;
       end;
     end;
     if subject.children[2]^.f76.uses_the_base_register then begin
-      solution^.space136[139] := chr(1);
+      solution^.case_value[139] := 1;
       if (subject.children[2]^.literal_32_bits_value <> 0) or subject.children[2]^.f76.uses_the_index_register or subject.children[2]^.f76.has_a_symbolic_displacement then begin
-        solution^.space136[140] := chr(2);
+        solution^.case_value[140] := 2;
       end else begin
-        solution^.space136[140] := chr(1);
+        solution^.case_value[140] := 1;
       end;
     end else begin
-      solution^.space136[139] := chr(2);
+      solution^.case_value[139] := 2;
       if lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$move), 1) then begin
-        solution^.space136[141] := chr(1);
+        solution^.case_value[141] := 1;
       end else begin
-        solution^.space136[141] := chr(2);
+        solution^.case_value[141] := 2;
       end;
     end;
     if lir_$can_encode_as_immediate_operand(integer32(solution^.fields[0]), ord(opc$move), 1) then begin
-      solution^.space136[142] := chr(1);
+      solution^.case_value[142] := 1;
     end else begin
-      solution^.space136[142] := chr(2);
+      solution^.case_value[142] := 2;
     end;
-    solution^.code_bytes := cost_201_11[ord(solution^.space136[137])] + cost_201_10[ord(solution^.space136[138])] + cost_201_9[ord(solution^.space136[140])] + cost_201_8[ord(solution^.space136[141])] + cost_201_7[ord(solution^.space136[142])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 28;
-    solution^.memory_references := cost_201_6[ord(solution^.space136[138])] + cost_201_5[ord(solution^.space136[141])] + cost_201_4[ord(solution^.space136[142])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references + 3;
-    solution^.delay := cost_201_3[ord(solution^.space136[138])] + cost_201_2[ord(solution^.space136[141])] + cost_201_1[ord(solution^.space136[142])] + subject.children[1]^.delay + subject.children[2]^.delay + 3;
+    solution^.code_bytes := cost_201_11[solution^.case_value[137]] + cost_201_10[solution^.case_value[138]] + cost_201_9[solution^.case_value[140]] + cost_201_8[solution^.case_value[141]] + cost_201_7[solution^.case_value[142]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 28;
+    solution^.memory_references := cost_201_6[solution^.case_value[138]] + cost_201_5[solution^.case_value[141]] + cost_201_4[solution^.case_value[142]] + subject.children[1]^.memory_references + subject.children[2]^.memory_references + 3;
+    solution^.delay := cost_201_3[solution^.case_value[138]] + cost_201_2[solution^.case_value[141]] + cost_201_1[solution^.case_value[142]] + subject.children[1]^.delay + subject.children[2]^.delay + 3;
     solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max + subject.children[2]^.ip_reg_max;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max + subject.children[2]^.fp_reg_max;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + subject.children[2]^.fp_reg_pair_max;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
     work := solution;
     result := solution;
   end;
@@ -750,220 +736,220 @@ begin
     end;
     t5 := make_bit_mask_1(16, 0);
     if subject.children[1]^.kind = solution$ip_reg then begin
-      solution^.space136[136] := chr(1);
+      solution^.case_value[136] := 1;
     end else begin
-      solution^.space136[136] := chr(2);
+      solution^.case_value[136] := 2;
       if subject.children[1]^.inherited_attributes^.fetch_precision = 32 then begin
-        solution^.space136[137] := chr(1);
+        solution^.case_value[137] := 1;
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[138] := chr(1);
-          solution^.space136[139] := chr(1);
+          solution^.case_value[138] := 1;
+          solution^.case_value[139] := 1;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-            solution^.space136[143] := chr(1);
+            solution^.case_value[143] := 1;
           end else begin
-            solution^.space136[143] := chr(2);
+            solution^.case_value[143] := 2;
           end;
         end
         else if not (subject.children[1]^.bits_trusted & 1 <> 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[138] := chr(3);
+          solution^.case_value[138] := 3;
         end else begin
-          solution^.space136[138] := chr(2);
+          solution^.case_value[138] := 2;
           if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
-            solution^.space136[144] := chr(2);
+            solution^.case_value[144] := 2;
             if subject.children[1]^.f76.uses_the_base_register then begin
-              solution^.space136[145] := chr(1);
+              solution^.case_value[145] := 1;
               if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
-                solution^.space136[146] := chr(2);
+                solution^.case_value[146] := 2;
               end else begin
-                solution^.space136[146] := chr(1);
+                solution^.case_value[146] := 1;
               end;
             end else begin
-              solution^.space136[145] := chr(2);
+              solution^.case_value[145] := 2;
               if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
-                solution^.space136[147] := chr(1);
+                solution^.case_value[147] := 1;
               end else begin
-                solution^.space136[147] := chr(2);
+                solution^.case_value[147] := 2;
               end;
             end;
           end else begin
-            solution^.space136[144] := chr(1);
+            solution^.case_value[144] := 1;
           end;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-            solution^.space136[148] := chr(1);
+            solution^.case_value[148] := 1;
           end else begin
-            solution^.space136[148] := chr(2);
+            solution^.case_value[148] := 2;
           end;
         end;
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 <> 0) and (subject.children[1]^.bits_known & 1 = 0) then begin
-          solution^.space136[149] := chr(1);
+          solution^.case_value[149] := 1;
         end else begin
-          solution^.space136[149] := chr(2);
+          solution^.case_value[149] := 2;
           if not subject.children[1]^.f76.embedded_strength_reduction_temporary then begin
-            solution^.space136[150] := chr(1);
+            solution^.case_value[150] := 1;
           end else begin
-            solution^.space136[150] := chr(2);
+            solution^.case_value[150] := 2;
           end;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-            solution^.space136[151] := chr(1);
+            solution^.case_value[151] := 1;
           end else begin
-            solution^.space136[151] := chr(2);
+            solution^.case_value[151] := 2;
           end;
         end;
       end
       else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-        solution^.space136[137] := chr(2);
-        solution^.space136[152] := chr(1);
+        solution^.case_value[137] := 2;
+        solution^.case_value[152] := 1;
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-          solution^.space136[156] := chr(1);
+          solution^.case_value[156] := 1;
         end else begin
-          solution^.space136[156] := chr(2);
+          solution^.case_value[156] := 2;
         end;
         if not (subject.children[1]^.bits_trusted & 1 <> 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[157] := chr(2);
+          solution^.case_value[157] := 2;
           if not subject.children[1]^.f76.embedded_strength_reduction_temporary then begin
-            solution^.space136[158] := chr(1);
+            solution^.case_value[158] := 1;
           end else begin
-            solution^.space136[158] := chr(2);
+            solution^.case_value[158] := 2;
           end;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-            solution^.space136[159] := chr(1);
+            solution^.case_value[159] := 1;
           end else begin
-            solution^.space136[159] := chr(2);
+            solution^.case_value[159] := 2;
           end;
         end else begin
-          solution^.space136[157] := chr(1);
+          solution^.case_value[157] := 1;
         end;
       end
       else if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-        solution^.space136[137] := chr(3);
-        solution^.space136[160] := chr(1);
+        solution^.case_value[137] := 3;
+        solution^.case_value[160] := 1;
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-          solution^.space136[164] := chr(1);
+          solution^.case_value[164] := 1;
         end else begin
-          solution^.space136[164] := chr(2);
+          solution^.case_value[164] := 2;
         end;
       end else begin
-        solution^.space136[137] := chr(4);
+        solution^.case_value[137] := 4;
       end;
     end;
     if lir_$can_encode_as_immediate_operand((-1), ord(opc$xor), 1) then begin
-      solution^.space136[165] := chr(1);
+      solution^.case_value[165] := 1;
     end else begin
-      solution^.space136[165] := chr(2);
+      solution^.case_value[165] := 2;
     end;
     if subject.children[1]^.kind = solution$ip_reg then begin
-      solution^.space136[166] := chr(1);
+      solution^.case_value[166] := 1;
     end else begin
-      solution^.space136[166] := chr(2);
+      solution^.case_value[166] := 2;
       if subject.children[1]^.inherited_attributes^.fetch_precision = 32 then begin
-        solution^.space136[167] := chr(1);
+        solution^.case_value[167] := 1;
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[168] := chr(1);
-          solution^.space136[169] := chr(1);
+          solution^.case_value[168] := 1;
+          solution^.case_value[169] := 1;
           if t4 = 512 then begin
-            solution^.space136[173] := chr(1);
+            solution^.case_value[173] := 1;
           end else begin
-            solution^.space136[173] := chr(2);
+            solution^.case_value[173] := 2;
           end;
         end
         else if not (subject.children[1]^.bits_trusted & 1 <> 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[168] := chr(3);
+          solution^.case_value[168] := 3;
         end else begin
-          solution^.space136[168] := chr(2);
+          solution^.case_value[168] := 2;
           if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
-            solution^.space136[174] := chr(2);
+            solution^.case_value[174] := 2;
             if subject.children[1]^.f76.uses_the_base_register then begin
-              solution^.space136[175] := chr(1);
+              solution^.case_value[175] := 1;
               if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
-                solution^.space136[176] := chr(2);
+                solution^.case_value[176] := 2;
               end else begin
-                solution^.space136[176] := chr(1);
+                solution^.case_value[176] := 1;
               end;
             end else begin
-              solution^.space136[175] := chr(2);
+              solution^.case_value[175] := 2;
               if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
-                solution^.space136[177] := chr(1);
+                solution^.case_value[177] := 1;
               end else begin
-                solution^.space136[177] := chr(2);
+                solution^.case_value[177] := 2;
               end;
             end;
           end else begin
-            solution^.space136[174] := chr(1);
+            solution^.case_value[174] := 1;
           end;
           if t4 = 512 then begin
-            solution^.space136[178] := chr(1);
+            solution^.case_value[178] := 1;
           end else begin
-            solution^.space136[178] := chr(2);
+            solution^.case_value[178] := 2;
           end;
         end;
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 <> 0) and (subject.children[1]^.bits_known & 1 = 0) then begin
-          solution^.space136[179] := chr(1);
+          solution^.case_value[179] := 1;
         end else begin
-          solution^.space136[179] := chr(2);
+          solution^.case_value[179] := 2;
           if not subject.children[1]^.f76.embedded_strength_reduction_temporary then begin
-            solution^.space136[180] := chr(1);
+            solution^.case_value[180] := 1;
           end else begin
-            solution^.space136[180] := chr(2);
+            solution^.case_value[180] := 2;
           end;
           if t4 = 512 then begin
-            solution^.space136[181] := chr(1);
+            solution^.case_value[181] := 1;
           end else begin
-            solution^.space136[181] := chr(2);
+            solution^.case_value[181] := 2;
           end;
         end;
       end
       else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-        solution^.space136[167] := chr(2);
-        solution^.space136[182] := chr(1);
+        solution^.case_value[167] := 2;
+        solution^.case_value[182] := 1;
         if t4 = 512 then begin
-          solution^.space136[186] := chr(1);
+          solution^.case_value[186] := 1;
         end else begin
-          solution^.space136[186] := chr(2);
+          solution^.case_value[186] := 2;
         end;
         if not (subject.children[1]^.bits_trusted & 1 <> 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[187] := chr(2);
+          solution^.case_value[187] := 2;
           if not subject.children[1]^.f76.embedded_strength_reduction_temporary then begin
-            solution^.space136[188] := chr(1);
+            solution^.case_value[188] := 1;
           end else begin
-            solution^.space136[188] := chr(2);
+            solution^.case_value[188] := 2;
           end;
           if t4 = 512 then begin
-            solution^.space136[189] := chr(1);
+            solution^.case_value[189] := 1;
           end else begin
-            solution^.space136[189] := chr(2);
+            solution^.case_value[189] := 2;
           end;
         end else begin
-          solution^.space136[187] := chr(1);
+          solution^.case_value[187] := 1;
         end;
       end
       else if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-        solution^.space136[167] := chr(3);
-        solution^.space136[190] := chr(1);
+        solution^.case_value[167] := 3;
+        solution^.case_value[190] := 1;
         if t4 = 512 then begin
-          solution^.space136[194] := chr(1);
+          solution^.case_value[194] := 1;
         end else begin
-          solution^.space136[194] := chr(2);
+          solution^.case_value[194] := 2;
         end;
       end else begin
-        solution^.space136[167] := chr(4);
+        solution^.case_value[167] := 4;
       end;
     end;
-    solution^.code_bytes := cost_202_79[ord(solution^.space136[137])] + cost_202_78[ord(solution^.space136[138])] + cost_202_77[ord(solution^.space136[139])] + cost_202_76[ord(solution^.space136[141])] + cost_202_75[ord(solution^.space136[142])] + cost_202_74[ord(solution^.space136[143])] + cost_202_73[ord(solution^.space136[144])] + cost_202_72[ord(solution^.space136[146])] + cost_202_71[ord(solution^.space136[147])] + cost_202_70[ord(solution^.space136[149])] + cost_202_69[ord(solution^.space136[152])] + cost_202_68[ord(solution^.space136[154])] + cost_202_67[ord(solution^.space136[155])] + cost_202_66[ord(solution^.space136[156])] + cost_202_65[ord(solution^.space136[157])] + cost_202_64[ord(solution^.space136[160])] + cost_202_63[ord(solution^.space136[162])] + cost_202_62[ord(solution^.space136[163])] + cost_202_61[ord(solution^.space136[164])] + cost_202_60[ord(solution^.space136[165])] + cost_202_59[ord(solution^.space136[167])] + cost_202_58[ord(solution^.space136[168])] + cost_202_57[ord(solution^.space136[169])] + cost_202_56[ord(solution^.space136[171])] + cost_202_55[ord(solution^.space136[172])] + cost_202_54[ord(solution^.space136[173])] + cost_202_53[ord(solution^.space136[174])] + cost_202_52[ord(solution^.space136[176])] + cost_202_51[ord(solution^.space136[177])] + cost_202_50[ord(solution^.space136[179])] + cost_202_49[ord(solution^.space136[182])] + cost_202_48[ord(solution^.space136[184])] + cost_202_47[ord(solution^.space136[185])] + cost_202_46[ord(solution^.space136[186])] + cost_202_45[ord(solution^.space136[187])] + cost_202_44[ord(solution^.space136[190])] + cost_202_43[ord(solution^.space136[192])] + cost_202_42[ord(solution^.space136[193])] + cost_202_41[ord(solution^.space136[194])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-    solution^.memory_references := cost_202_40[ord(solution^.space136[139])] + cost_202_39[ord(solution^.space136[142])] + cost_202_38[ord(solution^.space136[143])] + cost_202_37[ord(solution^.space136[144])] + cost_202_36[ord(solution^.space136[147])] + cost_202_35[ord(solution^.space136[152])] + cost_202_34[ord(solution^.space136[155])] + cost_202_33[ord(solution^.space136[156])] + cost_202_32[ord(solution^.space136[160])] + cost_202_31[ord(solution^.space136[163])] + cost_202_30[ord(solution^.space136[164])] + cost_202_29[ord(solution^.space136[169])] + cost_202_28[ord(solution^.space136[172])] + cost_202_27[ord(solution^.space136[173])] + cost_202_26[ord(solution^.space136[174])] + cost_202_25[ord(solution^.space136[177])] + cost_202_24[ord(solution^.space136[182])] + cost_202_23[ord(solution^.space136[185])] + cost_202_22[ord(solution^.space136[186])] + cost_202_21[ord(solution^.space136[190])] + cost_202_20[ord(solution^.space136[193])] + cost_202_19[ord(solution^.space136[194])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
-    solution^.delay := cost_202_18[ord(solution^.space136[139])] + cost_202_17[ord(solution^.space136[142])] + cost_202_16[ord(solution^.space136[143])] + cost_202_15[ord(solution^.space136[144])] + cost_202_14[ord(solution^.space136[147])] + cost_202_13[ord(solution^.space136[152])] + cost_202_12[ord(solution^.space136[155])] + cost_202_11[ord(solution^.space136[156])] + cost_202_10[ord(solution^.space136[160])] + cost_202_9[ord(solution^.space136[163])] + cost_202_8[ord(solution^.space136[164])] + cost_202_7[ord(solution^.space136[172])] + cost_202_6[ord(solution^.space136[173])] + cost_202_5[ord(solution^.space136[177])] + cost_202_4[ord(solution^.space136[185])] + cost_202_3[ord(solution^.space136[186])] + cost_202_2[ord(solution^.space136[193])] + cost_202_1[ord(solution^.space136[194])] + subject.children[1]^.delay + subject.children[2]^.delay;
+    solution^.code_bytes := cost_202_79[solution^.case_value[137]] + cost_202_78[solution^.case_value[138]] + cost_202_77[solution^.case_value[139]] + cost_202_76[solution^.case_value[141]] + cost_202_75[solution^.case_value[142]] + cost_202_74[solution^.case_value[143]] + cost_202_73[solution^.case_value[144]] + cost_202_72[solution^.case_value[146]] + cost_202_71[solution^.case_value[147]] + cost_202_70[solution^.case_value[149]] + cost_202_69[solution^.case_value[152]] + cost_202_68[solution^.case_value[154]] + cost_202_67[solution^.case_value[155]] + cost_202_66[solution^.case_value[156]] + cost_202_65[solution^.case_value[157]] + cost_202_64[solution^.case_value[160]] + cost_202_63[solution^.case_value[162]] + cost_202_62[solution^.case_value[163]] + cost_202_61[solution^.case_value[164]] + cost_202_60[solution^.case_value[165]] + cost_202_59[solution^.case_value[167]] + cost_202_58[solution^.case_value[168]] + cost_202_57[solution^.case_value[169]] + cost_202_56[solution^.case_value[171]] + cost_202_55[solution^.case_value[172]] + cost_202_54[solution^.case_value[173]] + cost_202_53[solution^.case_value[174]] + cost_202_52[solution^.case_value[176]] + cost_202_51[solution^.case_value[177]] + cost_202_50[solution^.case_value[179]] + cost_202_49[solution^.case_value[182]] + cost_202_48[solution^.case_value[184]] + cost_202_47[solution^.case_value[185]] + cost_202_46[solution^.case_value[186]] + cost_202_45[solution^.case_value[187]] + cost_202_44[solution^.case_value[190]] + cost_202_43[solution^.case_value[192]] + cost_202_42[solution^.case_value[193]] + cost_202_41[solution^.case_value[194]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
+    solution^.memory_references := cost_202_40[solution^.case_value[139]] + cost_202_39[solution^.case_value[142]] + cost_202_38[solution^.case_value[143]] + cost_202_37[solution^.case_value[144]] + cost_202_36[solution^.case_value[147]] + cost_202_35[solution^.case_value[152]] + cost_202_34[solution^.case_value[155]] + cost_202_33[solution^.case_value[156]] + cost_202_32[solution^.case_value[160]] + cost_202_31[solution^.case_value[163]] + cost_202_30[solution^.case_value[164]] + cost_202_29[solution^.case_value[169]] + cost_202_28[solution^.case_value[172]] + cost_202_27[solution^.case_value[173]] + cost_202_26[solution^.case_value[174]] + cost_202_25[solution^.case_value[177]] + cost_202_24[solution^.case_value[182]] + cost_202_23[solution^.case_value[185]] + cost_202_22[solution^.case_value[186]] + cost_202_21[solution^.case_value[190]] + cost_202_20[solution^.case_value[193]] + cost_202_19[solution^.case_value[194]] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
+    solution^.delay := cost_202_18[solution^.case_value[139]] + cost_202_17[solution^.case_value[142]] + cost_202_16[solution^.case_value[143]] + cost_202_15[solution^.case_value[144]] + cost_202_14[solution^.case_value[147]] + cost_202_13[solution^.case_value[152]] + cost_202_12[solution^.case_value[155]] + cost_202_11[solution^.case_value[156]] + cost_202_10[solution^.case_value[160]] + cost_202_9[solution^.case_value[163]] + cost_202_8[solution^.case_value[164]] + cost_202_7[solution^.case_value[172]] + cost_202_6[solution^.case_value[173]] + cost_202_5[solution^.case_value[177]] + cost_202_4[solution^.case_value[185]] + cost_202_3[solution^.case_value[186]] + cost_202_2[solution^.case_value[193]] + cost_202_1[solution^.case_value[194]] + subject.children[1]^.delay + subject.children[2]^.delay;
     solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max + subject.children[2]^.ip_reg_max;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max + subject.children[2]^.fp_reg_max;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + subject.children[2]^.fp_reg_pair_max;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
     work := solution;
     result := solution;
   end;
@@ -999,61 +985,61 @@ begin
     solution^.before_transform := addr(subject);
     solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.il)^.p[12]);
     if subject.children[1]^.f76.uses_the_base_register then begin
-      solution^.space136[136] := chr(1);
+      solution^.case_value[136] := 1;
       if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
-        solution^.space136[137] := chr(2);
+        solution^.case_value[137] := 2;
       end else begin
-        solution^.space136[137] := chr(1);
+        solution^.case_value[137] := 1;
       end;
     end else begin
-      solution^.space136[136] := chr(2);
+      solution^.case_value[136] := 2;
       if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
-        solution^.space136[138] := chr(1);
+        solution^.case_value[138] := 1;
       end else begin
-        solution^.space136[138] := chr(2);
+        solution^.case_value[138] := 2;
       end;
     end;
     if subject.children[2]^.f76.uses_the_base_register then begin
-      solution^.space136[139] := chr(1);
+      solution^.case_value[139] := 1;
       if (subject.children[2]^.literal_32_bits_value <> 0) or subject.children[2]^.f76.uses_the_index_register or subject.children[2]^.f76.has_a_symbolic_displacement then begin
-        solution^.space136[140] := chr(2);
+        solution^.case_value[140] := 2;
       end else begin
-        solution^.space136[140] := chr(1);
+        solution^.case_value[140] := 1;
       end;
     end else begin
-      solution^.space136[139] := chr(2);
+      solution^.case_value[139] := 2;
       if lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$move), 1) then begin
-        solution^.space136[141] := chr(1);
+        solution^.case_value[141] := 1;
       end else begin
-        solution^.space136[141] := chr(2);
+        solution^.case_value[141] := 2;
       end;
     end;
     if lir_$can_encode_as_immediate_operand(integer32(solution^.fields[0]), ord(opc$move), 1) then begin
-      solution^.space136[142] := chr(1);
+      solution^.case_value[142] := 1;
     end else begin
-      solution^.space136[142] := chr(2);
+      solution^.case_value[142] := 2;
     end;
     if lir_$can_encode_as_immediate_operand((-1), ord(opc$xor), 1) then begin
-      solution^.space136[143] := chr(1);
+      solution^.case_value[143] := 1;
     end else begin
-      solution^.space136[143] := chr(2);
+      solution^.case_value[143] := 2;
     end;
-    solution^.code_bytes := cost_203_12[ord(solution^.space136[137])] + cost_203_11[ord(solution^.space136[138])] + cost_203_10[ord(solution^.space136[140])] + cost_203_9[ord(solution^.space136[141])] + cost_203_8[ord(solution^.space136[142])] + cost_203_7[ord(solution^.space136[143])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 28;
-    solution^.memory_references := cost_203_6[ord(solution^.space136[138])] + cost_203_5[ord(solution^.space136[141])] + cost_203_4[ord(solution^.space136[142])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references + 3;
-    solution^.delay := cost_203_3[ord(solution^.space136[138])] + subject.children[1]^.delay + cost_203_2[ord(solution^.space136[141])] + cost_203_1[ord(solution^.space136[142])] + subject.children[2]^.delay + 3;
+    solution^.code_bytes := cost_203_12[solution^.case_value[137]] + cost_203_11[solution^.case_value[138]] + cost_203_10[solution^.case_value[140]] + cost_203_9[solution^.case_value[141]] + cost_203_8[solution^.case_value[142]] + cost_203_7[solution^.case_value[143]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 28;
+    solution^.memory_references := cost_203_6[solution^.case_value[138]] + cost_203_5[solution^.case_value[141]] + cost_203_4[solution^.case_value[142]] + subject.children[1]^.memory_references + subject.children[2]^.memory_references + 3;
+    solution^.delay := cost_203_3[solution^.case_value[138]] + subject.children[1]^.delay + cost_203_2[solution^.case_value[141]] + cost_203_1[solution^.case_value[142]] + subject.children[2]^.delay + 3;
     solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max + subject.children[2]^.ip_reg_max;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max + subject.children[2]^.fp_reg_max;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + subject.children[2]^.fp_reg_pair_max;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
     work := solution;
     result := solution;
   end;
@@ -1102,215 +1088,215 @@ begin
     end;
     t5 := make_bit_mask_1(16, 0);
     if subject.children[1]^.kind = solution$ip_reg then begin
-      solution^.space136[136] := chr(1);
+      solution^.case_value[136] := 1;
     end else begin
-      solution^.space136[136] := chr(2);
+      solution^.case_value[136] := 2;
       if subject.children[1]^.inherited_attributes^.fetch_precision = 32 then begin
-        solution^.space136[137] := chr(1);
+        solution^.case_value[137] := 1;
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[138] := chr(1);
-          solution^.space136[139] := chr(1);
+          solution^.case_value[138] := 1;
+          solution^.case_value[139] := 1;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-            solution^.space136[143] := chr(1);
+            solution^.case_value[143] := 1;
           end else begin
-            solution^.space136[143] := chr(2);
+            solution^.case_value[143] := 2;
           end;
         end
         else if not (subject.children[1]^.bits_trusted & 1 <> 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[138] := chr(3);
+          solution^.case_value[138] := 3;
         end else begin
-          solution^.space136[138] := chr(2);
+          solution^.case_value[138] := 2;
           if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
-            solution^.space136[144] := chr(2);
+            solution^.case_value[144] := 2;
             if subject.children[1]^.f76.uses_the_base_register then begin
-              solution^.space136[145] := chr(1);
+              solution^.case_value[145] := 1;
               if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
-                solution^.space136[146] := chr(2);
+                solution^.case_value[146] := 2;
               end else begin
-                solution^.space136[146] := chr(1);
+                solution^.case_value[146] := 1;
               end;
             end else begin
-              solution^.space136[145] := chr(2);
+              solution^.case_value[145] := 2;
               if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
-                solution^.space136[147] := chr(1);
+                solution^.case_value[147] := 1;
               end else begin
-                solution^.space136[147] := chr(2);
+                solution^.case_value[147] := 2;
               end;
             end;
           end else begin
-            solution^.space136[144] := chr(1);
+            solution^.case_value[144] := 1;
           end;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-            solution^.space136[148] := chr(1);
+            solution^.case_value[148] := 1;
           end else begin
-            solution^.space136[148] := chr(2);
+            solution^.case_value[148] := 2;
           end;
         end;
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 <> 0) and (subject.children[1]^.bits_known & 1 = 0) then begin
-          solution^.space136[149] := chr(1);
+          solution^.case_value[149] := 1;
         end else begin
-          solution^.space136[149] := chr(2);
+          solution^.case_value[149] := 2;
           if not subject.children[1]^.f76.embedded_strength_reduction_temporary then begin
-            solution^.space136[150] := chr(1);
+            solution^.case_value[150] := 1;
           end else begin
-            solution^.space136[150] := chr(2);
+            solution^.case_value[150] := 2;
           end;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-            solution^.space136[151] := chr(1);
+            solution^.case_value[151] := 1;
           end else begin
-            solution^.space136[151] := chr(2);
+            solution^.case_value[151] := 2;
           end;
         end;
       end
       else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-        solution^.space136[137] := chr(2);
-        solution^.space136[152] := chr(1);
+        solution^.case_value[137] := 2;
+        solution^.case_value[152] := 1;
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-          solution^.space136[156] := chr(1);
+          solution^.case_value[156] := 1;
         end else begin
-          solution^.space136[156] := chr(2);
+          solution^.case_value[156] := 2;
         end;
         if not (subject.children[1]^.bits_trusted & 1 <> 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[157] := chr(2);
+          solution^.case_value[157] := 2;
           if not subject.children[1]^.f76.embedded_strength_reduction_temporary then begin
-            solution^.space136[158] := chr(1);
+            solution^.case_value[158] := 1;
           end else begin
-            solution^.space136[158] := chr(2);
+            solution^.case_value[158] := 2;
           end;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-            solution^.space136[159] := chr(1);
+            solution^.case_value[159] := 1;
           end else begin
-            solution^.space136[159] := chr(2);
+            solution^.case_value[159] := 2;
           end;
         end else begin
-          solution^.space136[157] := chr(1);
+          solution^.case_value[157] := 1;
         end;
       end
       else if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-        solution^.space136[137] := chr(3);
-        solution^.space136[160] := chr(1);
+        solution^.case_value[137] := 3;
+        solution^.case_value[160] := 1;
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 256 then begin
-          solution^.space136[164] := chr(1);
+          solution^.case_value[164] := 1;
         end else begin
-          solution^.space136[164] := chr(2);
+          solution^.case_value[164] := 2;
         end;
       end else begin
-        solution^.space136[137] := chr(4);
+        solution^.case_value[137] := 4;
       end;
     end;
     if subject.children[1]^.kind = solution$ip_reg then begin
-      solution^.space136[165] := chr(1);
+      solution^.case_value[165] := 1;
     end else begin
-      solution^.space136[165] := chr(2);
+      solution^.case_value[165] := 2;
       if subject.children[1]^.inherited_attributes^.fetch_precision = 32 then begin
-        solution^.space136[166] := chr(1);
+        solution^.case_value[166] := 1;
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 = 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[167] := chr(1);
-          solution^.space136[168] := chr(1);
+          solution^.case_value[167] := 1;
+          solution^.case_value[168] := 1;
           if t4 = 512 then begin
-            solution^.space136[172] := chr(1);
+            solution^.case_value[172] := 1;
           end else begin
-            solution^.space136[172] := chr(2);
+            solution^.case_value[172] := 2;
           end;
         end
         else if not (subject.children[1]^.bits_trusted & 1 <> 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[167] := chr(3);
+          solution^.case_value[167] := 3;
         end else begin
-          solution^.space136[167] := chr(2);
+          solution^.case_value[167] := 2;
           if not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value + 3, ord(opc$loadl), 1) and not subject.children[1]^.f76.has_a_symbolic_displacement or subject.children[1]^.f76.uses_the_index_register then begin
-            solution^.space136[173] := chr(2);
+            solution^.case_value[173] := 2;
             if subject.children[1]^.f76.uses_the_base_register then begin
-              solution^.space136[174] := chr(1);
+              solution^.case_value[174] := 1;
               if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
-                solution^.space136[175] := chr(2);
+                solution^.case_value[175] := 2;
               end else begin
-                solution^.space136[175] := chr(1);
+                solution^.case_value[175] := 1;
               end;
             end else begin
-              solution^.space136[174] := chr(2);
+              solution^.case_value[174] := 2;
               if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
-                solution^.space136[176] := chr(1);
+                solution^.case_value[176] := 1;
               end else begin
-                solution^.space136[176] := chr(2);
+                solution^.case_value[176] := 2;
               end;
             end;
           end else begin
-            solution^.space136[173] := chr(1);
+            solution^.case_value[173] := 1;
           end;
           if t4 = 512 then begin
-            solution^.space136[177] := chr(1);
+            solution^.case_value[177] := 1;
           end else begin
-            solution^.space136[177] := chr(2);
+            solution^.case_value[177] := 2;
           end;
         end;
         if (subject.children[1]^.bits_trusted & 3 = 3) and (subject.children[1]^.bits_known & 3 = 0) or (subject.children[1]^.bits_trusted & 1 <> 0) and (subject.children[1]^.bits_known & 1 = 0) then begin
-          solution^.space136[178] := chr(1);
+          solution^.case_value[178] := 1;
         end else begin
-          solution^.space136[178] := chr(2);
+          solution^.case_value[178] := 2;
           if not subject.children[1]^.f76.embedded_strength_reduction_temporary then begin
-            solution^.space136[179] := chr(1);
+            solution^.case_value[179] := 1;
           end else begin
-            solution^.space136[179] := chr(2);
+            solution^.case_value[179] := 2;
           end;
           if t4 = 512 then begin
-            solution^.space136[180] := chr(1);
+            solution^.case_value[180] := 1;
           end else begin
-            solution^.space136[180] := chr(2);
+            solution^.case_value[180] := 2;
           end;
         end;
       end
       else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-        solution^.space136[166] := chr(2);
-        solution^.space136[181] := chr(1);
+        solution^.case_value[166] := 2;
+        solution^.case_value[181] := 1;
         if t4 = 512 then begin
-          solution^.space136[185] := chr(1);
+          solution^.case_value[185] := 1;
         end else begin
-          solution^.space136[185] := chr(2);
+          solution^.case_value[185] := 2;
         end;
         if not (subject.children[1]^.bits_trusted & 1 <> 0) or (subject.children[1]^.bits_known & 1 <> 0) then begin
-          solution^.space136[186] := chr(2);
+          solution^.case_value[186] := 2;
           if not subject.children[1]^.f76.embedded_strength_reduction_temporary then begin
-            solution^.space136[187] := chr(1);
+            solution^.case_value[187] := 1;
           end else begin
-            solution^.space136[187] := chr(2);
+            solution^.case_value[187] := 2;
           end;
           if t4 = 512 then begin
-            solution^.space136[188] := chr(1);
+            solution^.case_value[188] := 1;
           end else begin
-            solution^.space136[188] := chr(2);
+            solution^.case_value[188] := 2;
           end;
         end else begin
-          solution^.space136[186] := chr(1);
+          solution^.case_value[186] := 1;
         end;
       end
       else if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-        solution^.space136[166] := chr(3);
-        solution^.space136[189] := chr(1);
+        solution^.case_value[166] := 3;
+        solution^.case_value[189] := 1;
         if t4 = 512 then begin
-          solution^.space136[193] := chr(1);
+          solution^.case_value[193] := 1;
         end else begin
-          solution^.space136[193] := chr(2);
+          solution^.case_value[193] := 2;
         end;
       end else begin
-        solution^.space136[166] := chr(4);
+        solution^.case_value[166] := 4;
       end;
     end;
-    solution^.code_bytes := cost_204_78[ord(solution^.space136[137])] + cost_204_77[ord(solution^.space136[138])] + cost_204_76[ord(solution^.space136[139])] + cost_204_75[ord(solution^.space136[141])] + cost_204_74[ord(solution^.space136[142])] + cost_204_73[ord(solution^.space136[143])] + cost_204_72[ord(solution^.space136[144])] + cost_204_71[ord(solution^.space136[146])] + cost_204_70[ord(solution^.space136[147])] + cost_204_69[ord(solution^.space136[149])] + cost_204_68[ord(solution^.space136[152])] + cost_204_67[ord(solution^.space136[154])] + cost_204_66[ord(solution^.space136[155])] + cost_204_65[ord(solution^.space136[156])] + cost_204_64[ord(solution^.space136[157])] + cost_204_63[ord(solution^.space136[160])] + cost_204_62[ord(solution^.space136[162])] + cost_204_61[ord(solution^.space136[163])] + cost_204_60[ord(solution^.space136[164])] + cost_204_59[ord(solution^.space136[166])] + cost_204_58[ord(solution^.space136[167])] + cost_204_57[ord(solution^.space136[168])] + cost_204_56[ord(solution^.space136[170])] + cost_204_55[ord(solution^.space136[171])] + cost_204_54[ord(solution^.space136[172])] + cost_204_53[ord(solution^.space136[173])] + cost_204_52[ord(solution^.space136[175])] + cost_204_51[ord(solution^.space136[176])] + cost_204_50[ord(solution^.space136[178])] + cost_204_49[ord(solution^.space136[181])] + cost_204_48[ord(solution^.space136[183])] + cost_204_47[ord(solution^.space136[184])] + cost_204_46[ord(solution^.space136[185])] + cost_204_45[ord(solution^.space136[186])] + cost_204_44[ord(solution^.space136[189])] + cost_204_43[ord(solution^.space136[191])] + cost_204_42[ord(solution^.space136[192])] + cost_204_41[ord(solution^.space136[193])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-    solution^.memory_references := cost_204_40[ord(solution^.space136[139])] + cost_204_39[ord(solution^.space136[142])] + cost_204_38[ord(solution^.space136[143])] + cost_204_37[ord(solution^.space136[144])] + cost_204_36[ord(solution^.space136[147])] + cost_204_35[ord(solution^.space136[152])] + cost_204_34[ord(solution^.space136[155])] + cost_204_33[ord(solution^.space136[156])] + cost_204_32[ord(solution^.space136[160])] + cost_204_31[ord(solution^.space136[163])] + cost_204_30[ord(solution^.space136[164])] + cost_204_29[ord(solution^.space136[168])] + cost_204_28[ord(solution^.space136[171])] + cost_204_27[ord(solution^.space136[172])] + cost_204_26[ord(solution^.space136[173])] + cost_204_25[ord(solution^.space136[176])] + cost_204_24[ord(solution^.space136[181])] + cost_204_23[ord(solution^.space136[184])] + cost_204_22[ord(solution^.space136[185])] + cost_204_21[ord(solution^.space136[189])] + cost_204_20[ord(solution^.space136[192])] + cost_204_19[ord(solution^.space136[193])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
-    solution^.delay := cost_204_18[ord(solution^.space136[139])] + cost_204_17[ord(solution^.space136[142])] + cost_204_16[ord(solution^.space136[143])] + cost_204_15[ord(solution^.space136[144])] + cost_204_14[ord(solution^.space136[147])] + cost_204_13[ord(solution^.space136[152])] + cost_204_12[ord(solution^.space136[155])] + cost_204_11[ord(solution^.space136[156])] + cost_204_10[ord(solution^.space136[160])] + cost_204_9[ord(solution^.space136[163])] + cost_204_8[ord(solution^.space136[164])] + cost_204_7[ord(solution^.space136[171])] + cost_204_6[ord(solution^.space136[172])] + cost_204_5[ord(solution^.space136[176])] + cost_204_4[ord(solution^.space136[184])] + cost_204_3[ord(solution^.space136[185])] + cost_204_2[ord(solution^.space136[192])] + cost_204_1[ord(solution^.space136[193])] + subject.children[1]^.delay + subject.children[2]^.delay;
+    solution^.code_bytes := cost_204_78[solution^.case_value[137]] + cost_204_77[solution^.case_value[138]] + cost_204_76[solution^.case_value[139]] + cost_204_75[solution^.case_value[141]] + cost_204_74[solution^.case_value[142]] + cost_204_73[solution^.case_value[143]] + cost_204_72[solution^.case_value[144]] + cost_204_71[solution^.case_value[146]] + cost_204_70[solution^.case_value[147]] + cost_204_69[solution^.case_value[149]] + cost_204_68[solution^.case_value[152]] + cost_204_67[solution^.case_value[154]] + cost_204_66[solution^.case_value[155]] + cost_204_65[solution^.case_value[156]] + cost_204_64[solution^.case_value[157]] + cost_204_63[solution^.case_value[160]] + cost_204_62[solution^.case_value[162]] + cost_204_61[solution^.case_value[163]] + cost_204_60[solution^.case_value[164]] + cost_204_59[solution^.case_value[166]] + cost_204_58[solution^.case_value[167]] + cost_204_57[solution^.case_value[168]] + cost_204_56[solution^.case_value[170]] + cost_204_55[solution^.case_value[171]] + cost_204_54[solution^.case_value[172]] + cost_204_53[solution^.case_value[173]] + cost_204_52[solution^.case_value[175]] + cost_204_51[solution^.case_value[176]] + cost_204_50[solution^.case_value[178]] + cost_204_49[solution^.case_value[181]] + cost_204_48[solution^.case_value[183]] + cost_204_47[solution^.case_value[184]] + cost_204_46[solution^.case_value[185]] + cost_204_45[solution^.case_value[186]] + cost_204_44[solution^.case_value[189]] + cost_204_43[solution^.case_value[191]] + cost_204_42[solution^.case_value[192]] + cost_204_41[solution^.case_value[193]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
+    solution^.memory_references := cost_204_40[solution^.case_value[139]] + cost_204_39[solution^.case_value[142]] + cost_204_38[solution^.case_value[143]] + cost_204_37[solution^.case_value[144]] + cost_204_36[solution^.case_value[147]] + cost_204_35[solution^.case_value[152]] + cost_204_34[solution^.case_value[155]] + cost_204_33[solution^.case_value[156]] + cost_204_32[solution^.case_value[160]] + cost_204_31[solution^.case_value[163]] + cost_204_30[solution^.case_value[164]] + cost_204_29[solution^.case_value[168]] + cost_204_28[solution^.case_value[171]] + cost_204_27[solution^.case_value[172]] + cost_204_26[solution^.case_value[173]] + cost_204_25[solution^.case_value[176]] + cost_204_24[solution^.case_value[181]] + cost_204_23[solution^.case_value[184]] + cost_204_22[solution^.case_value[185]] + cost_204_21[solution^.case_value[189]] + cost_204_20[solution^.case_value[192]] + cost_204_19[solution^.case_value[193]] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
+    solution^.delay := cost_204_18[solution^.case_value[139]] + cost_204_17[solution^.case_value[142]] + cost_204_16[solution^.case_value[143]] + cost_204_15[solution^.case_value[144]] + cost_204_14[solution^.case_value[147]] + cost_204_13[solution^.case_value[152]] + cost_204_12[solution^.case_value[155]] + cost_204_11[solution^.case_value[156]] + cost_204_10[solution^.case_value[160]] + cost_204_9[solution^.case_value[163]] + cost_204_8[solution^.case_value[164]] + cost_204_7[solution^.case_value[171]] + cost_204_6[solution^.case_value[172]] + cost_204_5[solution^.case_value[176]] + cost_204_4[solution^.case_value[184]] + cost_204_3[solution^.case_value[185]] + cost_204_2[solution^.case_value[192]] + cost_204_1[solution^.case_value[193]] + subject.children[1]^.delay + subject.children[2]^.delay;
     solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max + subject.children[2]^.ip_reg_max;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max + subject.children[2]^.fp_reg_max;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + subject.children[2]^.fp_reg_pair_max;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
     work := solution;
     result := solution;
   end;
@@ -1346,56 +1332,56 @@ begin
     solution^.before_transform := addr(subject);
     solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.il)^.p[12]);
     if subject.children[1]^.f76.uses_the_base_register then begin
-      solution^.space136[136] := chr(1);
+      solution^.case_value[136] := 1;
       if (subject.children[1]^.literal_32_bits_value <> 0) or subject.children[1]^.f76.uses_the_index_register or subject.children[1]^.f76.has_a_symbolic_displacement then begin
-        solution^.space136[137] := chr(2);
+        solution^.case_value[137] := 2;
       end else begin
-        solution^.space136[137] := chr(1);
+        solution^.case_value[137] := 1;
       end;
     end else begin
-      solution^.space136[136] := chr(2);
+      solution^.case_value[136] := 2;
       if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
-        solution^.space136[138] := chr(1);
+        solution^.case_value[138] := 1;
       end else begin
-        solution^.space136[138] := chr(2);
+        solution^.case_value[138] := 2;
       end;
     end;
     if subject.children[2]^.f76.uses_the_base_register then begin
-      solution^.space136[139] := chr(1);
+      solution^.case_value[139] := 1;
       if (subject.children[2]^.literal_32_bits_value <> 0) or subject.children[2]^.f76.uses_the_index_register or subject.children[2]^.f76.has_a_symbolic_displacement then begin
-        solution^.space136[140] := chr(2);
+        solution^.case_value[140] := 2;
       end else begin
-        solution^.space136[140] := chr(1);
+        solution^.case_value[140] := 1;
       end;
     end else begin
-      solution^.space136[139] := chr(2);
+      solution^.case_value[139] := 2;
       if lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$move), 1) then begin
-        solution^.space136[141] := chr(1);
+        solution^.case_value[141] := 1;
       end else begin
-        solution^.space136[141] := chr(2);
+        solution^.case_value[141] := 2;
       end;
     end;
     if lir_$can_encode_as_immediate_operand(integer32(solution^.fields[0]), ord(opc$move), 1) then begin
-      solution^.space136[142] := chr(1);
+      solution^.case_value[142] := 1;
     end else begin
-      solution^.space136[142] := chr(2);
+      solution^.case_value[142] := 2;
     end;
-    solution^.code_bytes := cost_205_11[ord(solution^.space136[137])] + cost_205_10[ord(solution^.space136[138])] + cost_205_9[ord(solution^.space136[140])] + cost_205_8[ord(solution^.space136[141])] + cost_205_7[ord(solution^.space136[142])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 28;
-    solution^.memory_references := cost_205_6[ord(solution^.space136[138])] + cost_205_5[ord(solution^.space136[141])] + cost_205_4[ord(solution^.space136[142])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references + 3;
-    solution^.delay := cost_205_3[ord(solution^.space136[138])] + cost_205_2[ord(solution^.space136[141])] + cost_205_1[ord(solution^.space136[142])] + subject.children[1]^.delay + subject.children[2]^.delay + 3;
+    solution^.code_bytes := cost_205_11[solution^.case_value[137]] + cost_205_10[solution^.case_value[138]] + cost_205_9[solution^.case_value[140]] + cost_205_8[solution^.case_value[141]] + cost_205_7[solution^.case_value[142]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 28;
+    solution^.memory_references := cost_205_6[solution^.case_value[138]] + cost_205_5[solution^.case_value[141]] + cost_205_4[solution^.case_value[142]] + subject.children[1]^.memory_references + subject.children[2]^.memory_references + 3;
+    solution^.delay := cost_205_3[solution^.case_value[138]] + cost_205_2[solution^.case_value[141]] + cost_205_1[solution^.case_value[142]] + subject.children[1]^.delay + subject.children[2]^.delay + 3;
     solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max + subject.children[2]^.ip_reg_max;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max + subject.children[2]^.fp_reg_max;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + subject.children[2]^.fp_reg_pair_max;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
     work := solution;
     result := solution;
   end;

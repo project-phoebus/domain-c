@@ -102,7 +102,7 @@ type
       3: (l: array [0..779] of integer32);
     end;
   { A rule's own fields where the insert has none of their size: words
-    and longwords below +352 (the insert has bytes there, space136),
+    and longwords below +352 (the insert has bytes there, case_value),
     bytes and longwords at an offset 4k + 2 from +352 (the insert has
     pointers at 4k): a view of the whole solution by offset / 2, offset
     / 4 (and (offset - 2) / 4) and offset. }
@@ -114,20 +114,6 @@ type
       3: (c: array [0..431] of 0..255);
       4: (w0: integer;
           p2: array [0..106] of isc_solution_ptr_t);
-    end;
-  { The chain rules' cycle guard: a solution's seven already_ flags
-    (+342 .. +348, bytes isc_solution_fields.ins.pas leaves in space136),
-    under the image's names. }
-  p1_already_ptr_t = ^p1_already_t;
-  p1_already_t = record
-    x: array [0..170] of integer;               { +0 }
-    already_address_mode: boolean;              { +342 }
-    already_fp_reg: boolean;                    { +343 }
-    already_fp_reg_pair: boolean;               { +344 }
-    already_fp_reg_quad: boolean;               { +345 }
-    already_ip_reg: boolean;                    { +346 }
-    already_ip_reg_field: boolean;              { +347 }
-    already_processor_reg: boolean;             { +348 }
     end;
 
 var
@@ -169,7 +155,7 @@ begin
       write('Pattern 35 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -201,14 +187,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -233,7 +219,7 @@ begin
       write('Pattern 36 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+    if subject.already_ip_reg_field then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -267,14 +253,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg_field := true;
       work := solution;
       result := solution;
     end;
@@ -298,7 +284,7 @@ begin
       write('Pattern 37 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -329,14 +315,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -358,7 +344,7 @@ begin
       write('Pattern 38 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
+    if subject.already_fp_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -389,14 +375,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg := true;
       work := solution;
       result := solution;
     end;
@@ -418,7 +404,7 @@ begin
       write('Pattern 39 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg_pair then begin
+    if subject.already_fp_reg_pair then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -430,9 +416,9 @@ begin
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       if not isc_user_routines_358 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
       end;
       solution^.code_bytes := 0;
       solution^.memory_references := 0;
@@ -454,14 +440,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg_pair := true;
       work := solution;
       result := solution;
     end;
@@ -483,7 +469,7 @@ begin
       write('Pattern 40 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg_quad then begin
+    if subject.already_fp_reg_quad then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -495,9 +481,9 @@ begin
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       if not isc_user_routines_358 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
       end;
       solution^.code_bytes := 0;
       solution^.memory_references := 0;
@@ -519,14 +505,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg_quad := true;
       work := solution;
       result := solution;
     end;
@@ -550,7 +536,7 @@ begin
       write('Pattern 41 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
+    if subject.already_address_mode then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -581,14 +567,14 @@ begin
       solution^.f76.uses_the_base_register := true;
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_address_mode := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_address_mode := true;
       work := solution;
       result := solution;
     end;
@@ -613,7 +599,7 @@ begin
       write('Pattern 42 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
+    if subject.already_address_mode then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -627,18 +613,18 @@ begin
           ord(opc$loadl), 1);
       p2_locals_ptr_t(addr(solution^))^.c[352] := 255 * ord(t2);
       if t2 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[3]), ord(opc$move), 1) then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
         end else begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
         end;
       end;
-      solution^.code_bytes := cost_42_3[ord(solution^.space136[137])];
-      solution^.memory_references := cost_42_2[ord(solution^.space136[137])];
-      solution^.delay := cost_42_1[ord(solution^.space136[137])];
+      solution^.code_bytes := cost_42_3[solution^.case_value[137]];
+      solution^.memory_references := cost_42_2[solution^.case_value[137]];
+      solution^.delay := cost_42_1[solution^.case_value[137]];
       solution^.bits_known := 0;
       if number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[3])) > 3 then begin
         t3 := 3;
@@ -673,14 +659,14 @@ begin
       end else begin
         solution^.f76.uses_the_index_register := true;
       end;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_address_mode := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_address_mode := true;
       work := solution;
       result := solution;
     end;
@@ -705,7 +691,7 @@ begin
       write('Pattern 43 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+    if subject.already_ip_reg_field then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -739,14 +725,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg_field := true;
       work := solution;
       result := solution;
     end;
@@ -768,7 +754,7 @@ begin
       write('Pattern 44 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -796,14 +782,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -826,7 +812,7 @@ begin
       write('Pattern 45 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
+    if subject.already_address_mode then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -854,14 +840,14 @@ begin
       solution^.f76.uses_the_base_register := true;
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_address_mode := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_address_mode := true;
       work := solution;
       result := solution;
     end;
@@ -885,7 +871,7 @@ begin
       write('Pattern 46 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
+    if subject.already_address_mode then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -899,18 +885,18 @@ begin
           ord(opc$loadl), 1);
       p2_locals_ptr_t(addr(solution^))^.c[352] := 255 * ord(t2);
       if t2 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[3]), ord(opc$move), 1) then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
         end else begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
         end;
       end;
-      solution^.code_bytes := cost_46_3[ord(solution^.space136[137])];
-      solution^.memory_references := cost_46_2[ord(solution^.space136[137])];
-      solution^.delay := cost_46_1[ord(solution^.space136[137])];
+      solution^.code_bytes := cost_46_3[solution^.case_value[137]];
+      solution^.memory_references := cost_46_2[solution^.case_value[137]];
+      solution^.delay := cost_46_1[solution^.case_value[137]];
       solution^.bits_known := 0;
       if number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[3])) > 3 then begin
         t3 := 3;
@@ -942,14 +928,14 @@ begin
       end else begin
         solution^.f76.uses_the_index_register := true;
       end;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_address_mode := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_address_mode := true;
       work := solution;
       result := solution;
     end;
@@ -971,7 +957,7 @@ begin
       write('Pattern 47 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -992,14 +978,14 @@ begin
       solution^.f76.physical_register_number := get_live_range_register(lr_ptr_t(solution^.fields[0]));
       solution^.f76.physical_register_is_no_modify := get_live_range_no_modify(lr_ptr_t(solution^.fields[0]));
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1021,7 +1007,7 @@ begin
       write('Pattern 48 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
+    if subject.already_address_mode then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1045,14 +1031,14 @@ begin
       solution^.f76.uses_the_base_register := true;
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_address_mode := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_address_mode := true;
       work := solution;
       result := solution;
     end;
@@ -1076,7 +1062,7 @@ begin
       write('Pattern 49 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
+    if subject.already_address_mode then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1090,18 +1076,18 @@ begin
           ord(opc$loadl), 1);
       p2_locals_ptr_t(addr(solution^))^.c[352] := 255 * ord(t2);
       if t2 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[14]), ord(opc$move), 1) then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
         end else begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
         end;
       end;
-      solution^.code_bytes := cost_49_3[ord(solution^.space136[137])];
-      solution^.memory_references := cost_49_2[ord(solution^.space136[137])];
-      solution^.delay := cost_49_1[ord(solution^.space136[137])];
+      solution^.code_bytes := cost_49_3[solution^.case_value[137]];
+      solution^.memory_references := cost_49_2[solution^.case_value[137]];
+      solution^.delay := cost_49_1[solution^.case_value[137]];
       solution^.bits_known := 0;
       t3 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[14]));
       solution^.bits_trusted := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + t3];
@@ -1129,14 +1115,14 @@ begin
         solution^.f76.uses_the_displacement := false;
       end;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_address_mode := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_address_mode := true;
       work := solution;
       result := solution;
     end;
@@ -1161,7 +1147,7 @@ begin
       write('Pattern 50 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1193,14 +1179,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1222,7 +1208,7 @@ begin
       write('Pattern 51 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+    if subject.already_ip_reg_field then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1255,14 +1241,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg_field := true;
       work := solution;
       result := solution;
     end;
@@ -1284,7 +1270,7 @@ begin
       write('Pattern 52 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1315,14 +1301,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1344,7 +1330,7 @@ begin
       write('Pattern 53 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
+    if subject.already_fp_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1375,14 +1361,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1404,7 +1390,7 @@ begin
       write('Pattern 54 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg_pair then begin
+    if subject.already_fp_reg_pair then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1416,9 +1402,9 @@ begin
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
       if not isc_user_routines_358 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
       end;
       solution^.code_bytes := 0;
       solution^.memory_references := 0;
@@ -1440,14 +1426,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg_pair := true;
       work := solution;
       result := solution;
     end;
@@ -1470,7 +1456,7 @@ begin
       write('Pattern 55 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
+    if subject.already_address_mode then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1500,14 +1486,14 @@ begin
       solution^.f76.uses_the_base_register := true;
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_address_mode := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_address_mode := true;
       work := solution;
       result := solution;
     end;
@@ -1531,7 +1517,7 @@ begin
       write('Pattern 56 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
+    if subject.already_address_mode then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1545,18 +1531,18 @@ begin
           ord(opc$loadl), 1);
       p2_locals_ptr_t(addr(solution^))^.c[352] := 255 * ord(t2);
       if t2 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[14]), ord(opc$move), 1) then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
         end else begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
         end;
       end;
-      solution^.code_bytes := cost_56_3[ord(solution^.space136[137])];
-      solution^.memory_references := cost_56_2[ord(solution^.space136[137])];
-      solution^.delay := cost_56_1[ord(solution^.space136[137])];
+      solution^.code_bytes := cost_56_3[solution^.case_value[137]];
+      solution^.memory_references := cost_56_2[solution^.case_value[137]];
+      solution^.delay := cost_56_1[solution^.case_value[137]];
       solution^.bits_known := 0;
       if number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[14])) > 3 then begin
         t3 := 3;
@@ -1590,14 +1576,14 @@ begin
       end else begin
         solution^.f76.uses_the_index_register := true;
       end;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_address_mode := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_address_mode := true;
       work := solution;
       result := solution;
     end;
@@ -1619,7 +1605,7 @@ begin
       write('Pattern 57 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1650,14 +1636,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1680,7 +1666,7 @@ begin
       write('Pattern 58 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
+    if subject.already_address_mode then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1708,14 +1694,14 @@ begin
       solution^.f76.uses_the_base_register := true;
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_address_mode := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_address_mode := true;
       work := solution;
       result := solution;
     end;
@@ -1739,7 +1725,7 @@ begin
       write('Pattern 59 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_address_mode then begin
+    if subject.already_address_mode then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1753,18 +1739,18 @@ begin
           ord(opc$loadl), 1);
       p2_locals_ptr_t(addr(solution^))^.c[352] := 255 * ord(t2);
       if t2 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[14]), ord(opc$move), 1) then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
         end else begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
         end;
       end;
-      solution^.code_bytes := cost_59_3[ord(solution^.space136[137])];
-      solution^.memory_references := cost_59_2[ord(solution^.space136[137])];
-      solution^.delay := cost_59_1[ord(solution^.space136[137])];
+      solution^.code_bytes := cost_59_3[solution^.case_value[137]];
+      solution^.memory_references := cost_59_2[solution^.case_value[137]];
+      solution^.delay := cost_59_1[solution^.case_value[137]];
       solution^.bits_known := 0;
       if number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[14])) > 3 then begin
         t3 := 3;
@@ -1796,14 +1782,14 @@ begin
       end else begin
         solution^.f76.uses_the_index_register := true;
       end;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_address_mode := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_address_mode := true;
       work := solution;
       result := solution;
     end;
@@ -1825,7 +1811,7 @@ begin
       write('Pattern 60 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1856,14 +1842,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1885,7 +1871,7 @@ begin
       write('Pattern 61 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
+    if subject.already_fp_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1916,14 +1902,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1945,7 +1931,7 @@ begin
       write('Pattern 62 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg_pair then begin
+    if subject.already_fp_reg_pair then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1957,9 +1943,9 @@ begin
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.il)^.w[29]]);
       if not isc_user_routines_358 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
       end;
       solution^.code_bytes := 0;
       solution^.memory_references := 0;
@@ -1981,14 +1967,14 @@ begin
       solution^.f76.physical_register_user_declared := get_live_range_serialize(lr_ptr_t(solution^.fields[0]));
       solution^.f76.uses_the_displacement := true;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg_pair := true;
       work := solution;
       result := solution;
     end;

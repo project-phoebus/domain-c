@@ -167,10 +167,10 @@ var
   t3: isc_solution_ptr_t;
   i1: integer32;
 begin
-  if ord(result.space136[136]) <> 1 then begin
+  if result.case_value[136] <> 1 then begin
     t1 := create_solution_for_ip_reg;
-    if ord(result.space136[137]) = 1 then begin
-      if ord(result.space136[138]) = 1 then begin
+    if result.case_value[137] = 1 then begin
+      if result.case_value[138] = 1 then begin
         if t1^.object_with_name <> nil then begin
           t1^.object_with_name := t1^.object_with_name;
         end else begin
@@ -186,7 +186,7 @@ begin
             result.fields[0]^.base_register, t1);
       end;
     end
-    else if ord(result.space136[139]) = 1 then begin
+    else if result.case_value[139] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0,
           find_well_known_literal_solution(result.fields[0]^.literal_32_bits_value),
@@ -202,7 +202,7 @@ begin
     t3^.base_register := t1;
     result.fields[0] := t3;
   end;
-  if ord(result.space136[140]) = 1 then begin
+  if result.case_value[140] = 1 then begin
     result.fields[0]^.f76.uses_the_displacement := true;
     result.fields[0]^.f76.has_a_symbolic_displacement := false;
     result.fields[0]^.literal_32_bits_value := 0;

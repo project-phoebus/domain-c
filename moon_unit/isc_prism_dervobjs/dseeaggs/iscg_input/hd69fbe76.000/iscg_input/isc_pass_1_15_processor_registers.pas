@@ -98,7 +98,7 @@ type
     i: array [0..19] of integer32;              { +352 }
     end;
   { A rule's own fields where the insert has none of their size: words
-    and longwords below +352 (the insert has bytes there, space136),
+    and longwords below +352 (the insert has bytes there, case_value),
     bytes and longwords at an offset 4k + 2 from +352 (the insert has
     pointers at 4k): a view of the whole solution by offset / 2, offset
     / 4 (and (offset - 2) / 4) and offset. }
@@ -110,20 +110,6 @@ type
       3: (c: array [0..431] of 0..255);
       4: (w0: integer;
           p2: array [0..106] of isc_solution_ptr_t);
-    end;
-  { The chain rules' cycle guard: a solution's seven already_ flags
-    (+342 .. +348, bytes isc_solution_fields.ins.pas leaves in space136),
-    under the image's names. }
-  p1_already_ptr_t = ^p1_already_t;
-  p1_already_t = record
-    x: array [0..170] of integer;               { +0 }
-    already_address_mode: boolean;              { +342 }
-    already_fp_reg: boolean;                    { +343 }
-    already_fp_reg_pair: boolean;               { +344 }
-    already_fp_reg_quad: boolean;               { +345 }
-    already_ip_reg: boolean;                    { +346 }
-    already_ip_reg_field: boolean;              { +347 }
-    already_processor_reg: boolean;             { +348 }
     end;
 
 var
@@ -169,7 +155,7 @@ begin
       write('Pattern 241 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_processor_reg then begin
+    if subject.already_processor_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -247,14 +233,14 @@ begin
       solution^.f76.is_physical := integer32(p2_node_ptr_t(subject.il)^.p[1]) & 16#80000 <> 0;
       solution^.f76.is_volatile := integer32(p2_node_ptr_t(subject.il)^.p[1]) & 16#10000 <> 0;
       solution^.f76.uses_the_base_register := true;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_processor_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_processor_reg := true;
       work := solution;
       result := solution;
     end;
@@ -278,7 +264,7 @@ begin
       write('Pattern 242 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_processor_reg then begin
+    if subject.already_processor_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -355,14 +341,14 @@ begin
       solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
       solution^.f76.is_physical := integer32(p2_node_ptr_t(subject.il)^.p[1]) & 16#80000 <> 0;
       solution^.f76.is_volatile := integer32(p2_node_ptr_t(subject.il)^.p[1]) & 16#10000 <> 0;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_processor_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_processor_reg := true;
       work := solution;
       result := solution;
     end;
@@ -386,7 +372,7 @@ begin
       write('Pattern 243 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_processor_reg then begin
+    if subject.already_processor_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -464,14 +450,14 @@ begin
       solution^.f76.is_physical := integer32(p2_node_ptr_t(subject.il)^.p[1]) & 16#80000 <> 0;
       solution^.f76.is_volatile := integer32(p2_node_ptr_t(subject.il)^.p[1]) & 16#10000 <> 0;
       solution^.f76.uses_the_base_register := true;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_processor_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_processor_reg := true;
       work := solution;
       result := solution;
     end;
@@ -495,7 +481,7 @@ begin
       write('Pattern 244 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_processor_reg then begin
+    if subject.already_processor_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -572,14 +558,14 @@ begin
       solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
       solution^.f76.is_physical := integer32(p2_node_ptr_t(subject.il)^.p[1]) & 16#80000 <> 0;
       solution^.f76.is_volatile := integer32(p2_node_ptr_t(subject.il)^.p[1]) & 16#10000 <> 0;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_processor_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_processor_reg := true;
       work := solution;
       result := solution;
     end;
@@ -602,7 +588,7 @@ begin
       write('Pattern 245 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_processor_reg then begin
+    if subject.already_processor_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -671,14 +657,14 @@ begin
       solution^.f76.is_volatile := integer32(p2_node_ptr_t(subject.il)^.p[1]) & 16#10000 <> 0;
       solution^.literal_32_bits_value := subject.children[1]^.literal_32_bits_value + integer32(p2_node_ptr_t(subject.il)^.p[8]);
       solution^.f76.uses_the_displacement := true;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_processor_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_processor_reg := true;
       work := solution;
       result := solution;
     end;
@@ -701,7 +687,7 @@ begin
       write('Pattern 246 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_processor_reg then begin
+    if subject.already_processor_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -712,23 +698,23 @@ begin
       solution^.which_transform := 246;
       solution^.before_transform := addr(subject);
       if not lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[8]), ord(opc$add), 1) or not subject.children[1]^.f76.uses_the_base_register then begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[8]), ord(opc$move), 1) then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
         end else begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
         end;
         if subject.children[1]^.f76.uses_the_base_register then begin
-          solution^.space136[138] := chr(1);
+          solution^.case_value[138] := 1;
         end else begin
-          solution^.space136[138] := chr(2);
+          solution^.case_value[138] := 2;
         end;
       end else begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end;
-      solution^.code_bytes := cost_246_5[ord(solution^.space136[136])] + cost_246_4[ord(solution^.space136[137])] + cost_246_3[ord(solution^.space136[138])] + subject.children[1]^.code_bytes;
-      solution^.memory_references := cost_246_2[ord(solution^.space136[137])] + subject.children[1]^.memory_references;
-      solution^.delay := cost_246_1[ord(solution^.space136[137])] + subject.children[1]^.delay;
+      solution^.code_bytes := cost_246_5[solution^.case_value[136]] + cost_246_4[solution^.case_value[137]] + cost_246_3[solution^.case_value[138]] + subject.children[1]^.code_bytes;
+      solution^.memory_references := cost_246_2[solution^.case_value[137]] + subject.children[1]^.memory_references;
+      solution^.delay := cost_246_1[solution^.case_value[137]] + subject.children[1]^.delay;
       solution^.advancing_displacement := subject.children[1]^.advancing_displacement;
       solution^.f76.all_zeroes_or_all_ones := subject.children[1]^.f76.all_zeroes_or_all_ones;
       solution^.f76.arg_block_location := subject.children[1]^.f76.arg_block_location;
@@ -784,14 +770,14 @@ begin
       solution^.f76.is_physical := integer32(p2_node_ptr_t(subject.il)^.p[1]) & 16#80000 <> 0;
       solution^.f76.is_volatile := integer32(p2_node_ptr_t(subject.il)^.p[1]) & 16#10000 <> 0;
       solution^.f76.uses_the_base_register := true;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_processor_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_processor_reg := true;
       work := solution;
       result := solution;
     end;
@@ -829,46 +815,46 @@ begin
     t4 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[0], 0);
     t5 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[0], 0);
     if subject.children[1]^.inherited_attributes^.required_precision = 32 then begin
-      solution^.space136[136] := chr(1);
+      solution^.case_value[136] := 1;
     end else begin
-      solution^.space136[136] := chr(2);
+      solution^.case_value[136] := 2;
       if subject.children[2]^.f76.bit_position_of_lsb = p1_int_fields_ptr_t(addr(solution^))^.i[1] then begin
-        solution^.space136[137] := chr(1);
+        solution^.case_value[137] := 1;
       end else begin
-        solution^.space136[137] := chr(2);
+        solution^.case_value[137] := 2;
         if subject.children[2]^.kind = solution$literal_32_bits then begin
-          solution^.space136[138] := chr(1);
+          solution^.case_value[138] := 1;
           if lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$insert), 1) then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
             if lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$move), 1) then begin
-              solution^.space136[140] := chr(1);
+              solution^.case_value[140] := 1;
             end else begin
-              solution^.space136[140] := chr(2);
+              solution^.case_value[140] := 2;
             end;
           end;
         end else begin
-          solution^.space136[138] := chr(2);
+          solution^.case_value[138] := 2;
         end;
       end;
     end;
-    solution^.code_bytes := cost_247_7[ord(solution^.space136[136])] + cost_247_6[ord(solution^.space136[137])] + cost_247_5[ord(solution^.space136[138])] + cost_247_4[ord(solution^.space136[140])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-    solution^.memory_references := cost_247_3[ord(solution^.space136[140])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
-    solution^.delay := cost_247_2[ord(solution^.space136[136])] + cost_247_1[ord(solution^.space136[140])] + subject.children[1]^.delay + subject.children[2]^.delay;
+    solution^.code_bytes := cost_247_7[solution^.case_value[136]] + cost_247_6[solution^.case_value[137]] + cost_247_5[solution^.case_value[138]] + cost_247_4[solution^.case_value[140]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
+    solution^.memory_references := cost_247_3[solution^.case_value[140]] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
+    solution^.delay := cost_247_2[solution^.case_value[136]] + cost_247_1[solution^.case_value[140]] + subject.children[1]^.delay + subject.children[2]^.delay;
     solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max + subject.children[2]^.ip_reg_max;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max + subject.children[2]^.fp_reg_max;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + subject.children[2]^.fp_reg_pair_max;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
     work := solution;
     result := solution;
   end;
@@ -902,46 +888,46 @@ begin
     t3 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[0], 0);
     t4 := make_bit_mask_1(p1_int_fields_ptr_t(addr(solution^))^.i[0], 0);
     if subject.children[1]^.inherited_attributes^.required_precision = 32 then begin
-      solution^.space136[136] := chr(1);
+      solution^.case_value[136] := 1;
     end else begin
-      solution^.space136[136] := chr(2);
+      solution^.case_value[136] := 2;
       if subject.children[2]^.f76.bit_position_of_lsb = p1_int_fields_ptr_t(addr(solution^))^.i[1] then begin
-        solution^.space136[137] := chr(1);
+        solution^.case_value[137] := 1;
       end else begin
-        solution^.space136[137] := chr(2);
+        solution^.case_value[137] := 2;
         if subject.children[2]^.kind = solution$literal_32_bits then begin
-          solution^.space136[138] := chr(1);
+          solution^.case_value[138] := 1;
           if lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$insert), 1) then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
             if lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$move), 1) then begin
-              solution^.space136[140] := chr(1);
+              solution^.case_value[140] := 1;
             end else begin
-              solution^.space136[140] := chr(2);
+              solution^.case_value[140] := 2;
             end;
           end;
         end else begin
-          solution^.space136[138] := chr(2);
+          solution^.case_value[138] := 2;
         end;
       end;
     end;
-    solution^.code_bytes := cost_248_7[ord(solution^.space136[136])] + cost_248_6[ord(solution^.space136[137])] + cost_248_5[ord(solution^.space136[138])] + cost_248_4[ord(solution^.space136[140])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
-    solution^.memory_references := cost_248_3[ord(solution^.space136[140])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
-    solution^.delay := cost_248_2[ord(solution^.space136[136])] + cost_248_1[ord(solution^.space136[140])] + subject.children[1]^.delay + subject.children[2]^.delay;
+    solution^.code_bytes := cost_248_7[solution^.case_value[136]] + cost_248_6[solution^.case_value[137]] + cost_248_5[solution^.case_value[138]] + cost_248_4[solution^.case_value[140]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
+    solution^.memory_references := cost_248_3[solution^.case_value[140]] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
+    solution^.delay := cost_248_2[solution^.case_value[136]] + cost_248_1[solution^.case_value[140]] + subject.children[1]^.delay + subject.children[2]^.delay;
     solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max + subject.children[2]^.ip_reg_max;
     solution^.fp_reg_max := subject.children[1]^.fp_reg_max + subject.children[2]^.fp_reg_max;
     solution^.fp_reg_pair_max := subject.children[1]^.fp_reg_pair_max + subject.children[2]^.fp_reg_pair_max;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
     work := solution;
     result := solution;
   end;
@@ -964,7 +950,7 @@ begin
       write('Pattern 249 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_processor_reg then begin
+    if subject.already_processor_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -979,18 +965,18 @@ begin
           ord(opc$mfpr), 1);
       p2_locals_ptr_t(addr(solution^))^.c[356] := 255 * ord(t2);
       if t2 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if lir_$can_encode_as_immediate_operand(integer32(solution^.fields[0]), ord(opc$move), 1) then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
         end else begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
         end;
       end;
-      solution^.code_bytes := cost_249_3[ord(solution^.space136[137])];
-      solution^.memory_references := cost_249_2[ord(solution^.space136[137])];
-      solution^.delay := cost_249_1[ord(solution^.space136[137])];
+      solution^.code_bytes := cost_249_3[solution^.case_value[137]];
+      solution^.memory_references := cost_249_2[solution^.case_value[137]];
+      solution^.delay := cost_249_1[solution^.case_value[137]];
       solution^.bits_known := integer32(solution^.fields[0]);
       t3 := number_of_rightmost_zeroes(integer32(solution^.fields[0]));
       solution^.bits_trusted := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[682 + t3];
@@ -1027,14 +1013,14 @@ begin
         solution^.f76.uses_the_displacement := false;
       end;
       solution^.f76.uses_the_index_register := false;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_processor_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_processor_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1056,7 +1042,7 @@ begin
       write('Pattern 250 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+    if subject.already_ip_reg_field then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1127,14 +1113,14 @@ begin
       solution^.ip_reg_max := subject.ip_reg_max + 1;
       solution^.ip_reg_result := 1;
       solution^.literal_32_bits_value := 0;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg_field := true;
       work := solution;
       result := solution;
     end;
@@ -1219,14 +1205,14 @@ begin
     solution^.bits_known := subject.bits_known & (-4);
     solution^.literal_32_bits_value := subject.literal_32_bits_value - t2;
     solution^.n_bytes_to_back_up := t2;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-    p1_already_ptr_t(solution)^.already_processor_reg := true;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
+    solution^.already_processor_reg := true;
     work := solution;
     result := solution;
   end;
@@ -1310,14 +1296,14 @@ begin
     solution^.ip_reg_result := 1;
     solution^.n_bytes_to_back_up := p2_locals_ptr_t(addr(solution^))^.w[177];
     solution^.f76.uses_the_base_register := true;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-    p1_already_ptr_t(solution)^.already_processor_reg := true;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
+    solution^.already_processor_reg := true;
     work := solution;
     result := solution;
   end;

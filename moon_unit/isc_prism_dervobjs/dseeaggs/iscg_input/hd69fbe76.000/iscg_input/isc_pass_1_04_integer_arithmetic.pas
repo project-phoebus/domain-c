@@ -133,20 +133,6 @@ type
     x: array [0..175] of integer;               { +0 }
     i: array [0..19] of integer32;              { +352 }
     end;
-  { The chain rules' cycle guard: a solution's seven already_ flags
-    (+342 .. +348, bytes isc_solution_fields.ins.pas leaves in space136),
-    under the image's names. }
-  p1_already_ptr_t = ^p1_already_t;
-  p1_already_t = record
-    x: array [0..170] of integer;               { +0 }
-    already_address_mode: boolean;              { +342 }
-    already_fp_reg: boolean;                    { +343 }
-    already_fp_reg_pair: boolean;               { +344 }
-    already_fp_reg_quad: boolean;               { +345 }
-    already_ip_reg: boolean;                    { +346 }
-    already_ip_reg_field: boolean;              { +347 }
-    already_processor_reg: boolean;             { +348 }
-    end;
 
 var
   { The cost tables, rule by rule (each rule's in the reverse of their order
@@ -390,7 +376,7 @@ begin
       write('Pattern 253 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+    if subject.already_ip_reg_field then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -426,14 +412,14 @@ begin
         solution^.ip_reg_max := t4;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg_field := true;
       work := solution;
       result := solution;
     end;
@@ -458,7 +444,7 @@ begin
       write('Pattern 254 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -492,14 +478,14 @@ begin
         solution^.ip_reg_max := t3;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -524,7 +510,7 @@ begin
       write('Pattern 255 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -535,71 +521,71 @@ begin
       solution^.which_transform := 255;
       solution^.before_transform := addr(subject);
       if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
         if isc_tool_generated_readonly_tables.opcode_rr[subject.il_kind] = 79 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
         end
         else if isc_tool_generated_readonly_tables.opcode_rr[subject.il_kind] = 81 then begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
         end
         else if isc_tool_generated_readonly_tables.opcode_rr[subject.il_kind] = 83 then begin
-          solution^.space136[137] := chr(3);
+          solution^.case_value[137] := 3;
         end else begin
-          solution^.space136[137] := chr(4);
+          solution^.case_value[137] := 4;
         end;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[138] := chr(1);
+          solution^.case_value[138] := 1;
           if subject.children[1]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
         end
         else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[138] := chr(2);
+          solution^.case_value[138] := 2;
           if subject.children[1]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[140] := chr(1);
+            solution^.case_value[140] := 1;
           end else begin
-            solution^.space136[140] := chr(2);
+            solution^.case_value[140] := 2;
           end;
         end else begin
-          solution^.space136[138] := chr(3);
+          solution^.case_value[138] := 3;
         end;
         if subject.children[2]^.kind = solution$literal_32_bits then begin
-          solution^.space136[141] := chr(1);
+          solution^.case_value[141] := 1;
         end else begin
-          solution^.space136[141] := chr(2);
+          solution^.case_value[141] := 2;
           if subject.children[2]^.inherited_attributes^.fetch_precision = 8 then begin
-            solution^.space136[142] := chr(1);
+            solution^.case_value[142] := 1;
             if subject.children[2]^.f76.bit_7_was_sign_extended then begin
-              solution^.space136[143] := chr(1);
+              solution^.case_value[143] := 1;
             end else begin
-              solution^.space136[143] := chr(2);
+              solution^.case_value[143] := 2;
             end;
           end
           else if subject.children[2]^.inherited_attributes^.fetch_precision = 16 then begin
-            solution^.space136[142] := chr(2);
+            solution^.case_value[142] := 2;
             if subject.children[2]^.f76.bit_15_was_sign_extended then begin
-              solution^.space136[144] := chr(1);
+              solution^.case_value[144] := 1;
             end else begin
-              solution^.space136[144] := chr(2);
+              solution^.case_value[144] := 2;
             end;
           end else begin
-            solution^.space136[142] := chr(3);
+            solution^.case_value[142] := 3;
           end;
         end;
         if subject.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[145] := chr(1);
+          solution^.case_value[145] := 1;
         end
         else if subject.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[145] := chr(2);
+          solution^.case_value[145] := 2;
         end else begin
-          solution^.space136[145] := chr(3);
+          solution^.case_value[145] := 3;
         end;
       end;
-      solution^.code_bytes := cost_255_5[ord(solution^.space136[139])] + cost_255_7[ord(solution^.space136[136])] + cost_255_6[ord(solution^.space136[137])] + cost_255_4[ord(solution^.space136[140])] + cost_255_3[ord(solution^.space136[143])] + cost_255_2[ord(solution^.space136[144])] + cost_255_1[ord(solution^.space136[145])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
+      solution^.code_bytes := cost_255_5[solution^.case_value[139]] + cost_255_7[solution^.case_value[136]] + cost_255_6[solution^.case_value[137]] + cost_255_4[solution^.case_value[140]] + cost_255_3[solution^.case_value[143]] + cost_255_2[solution^.case_value[144]] + cost_255_1[solution^.case_value[145]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.bits_known := bits_known_function(subject.il_kind,
@@ -623,14 +609,14 @@ begin
         solution^.ip_reg_max := t3;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -655,7 +641,7 @@ begin
       write('Pattern 256 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -689,14 +675,14 @@ begin
         solution^.ip_reg_max := t3;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -721,7 +707,7 @@ begin
       write('Pattern 257 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -755,14 +741,14 @@ begin
         solution^.ip_reg_max := t3;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -812,7 +798,7 @@ begin
       write('Pattern 258 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+    if subject.already_ip_reg_field then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -825,18 +811,18 @@ begin
       t8 := abs(subject.children[1]^.f76.bit_position_of_lsb - subject.children[2]^.f76.bit_position_of_lsb);
       solution^.fields[0] := isc_solution_ptr_t(t8);
       if subject.children[1]^.f76.bit_position_of_lsb = subject.children[2]^.f76.bit_position_of_lsb then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end
       else if (subject.children[2]^.f76.bit_position_of_lsb - subject.children[1]^.f76.bit_position_of_lsb <= 0) or (subject.children[2]^.f76.bit_position_of_lsb - subject.children[1]^.f76.bit_position_of_lsb > 3) then begin
         if subject.children[1]^.f76.bit_position_of_lsb > subject.children[2]^.f76.bit_position_of_lsb then begin
-          solution^.space136[136] := chr(3);
+          solution^.case_value[136] := 3;
         end else begin
-          solution^.space136[136] := chr(4);
+          solution^.case_value[136] := 4;
         end;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
       end;
-      solution^.code_bytes := cost_258_1[ord(solution^.space136[136])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
+      solution^.code_bytes := cost_258_1[solution^.case_value[136]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.f76.bit_position_of_lsb := subject.children[2]^.f76.bit_position_of_lsb;
@@ -862,14 +848,14 @@ begin
         solution^.ip_reg_max := t10;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg_field := true;
       work := solution;
       result := solution;
     end;
@@ -919,7 +905,7 @@ begin
       write('Pattern 259 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+    if subject.already_ip_reg_field then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -932,18 +918,18 @@ begin
       t8 := abs(subject.children[1]^.f76.bit_position_of_lsb - subject.children[2]^.f76.bit_position_of_lsb);
       solution^.fields[0] := isc_solution_ptr_t(t8);
       if subject.children[1]^.f76.bit_position_of_lsb = subject.children[2]^.f76.bit_position_of_lsb then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end
       else if (subject.children[1]^.f76.bit_position_of_lsb - subject.children[2]^.f76.bit_position_of_lsb <= 0) or (subject.children[1]^.f76.bit_position_of_lsb - subject.children[2]^.f76.bit_position_of_lsb > 3) then begin
         if subject.children[2]^.f76.bit_position_of_lsb > subject.children[1]^.f76.bit_position_of_lsb then begin
-          solution^.space136[136] := chr(3);
+          solution^.case_value[136] := 3;
         end else begin
-          solution^.space136[136] := chr(4);
+          solution^.case_value[136] := 4;
         end;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
       end;
-      solution^.code_bytes := cost_259_1[ord(solution^.space136[136])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
+      solution^.code_bytes := cost_259_1[solution^.case_value[136]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
@@ -969,14 +955,14 @@ begin
         solution^.ip_reg_max := t10;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg_field := true;
       work := solution;
       result := solution;
     end;
@@ -1001,7 +987,7 @@ begin
       write('Pattern 260 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
+    if subject.already_fp_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1034,14 +1020,14 @@ begin
         solution^.fp_reg_max := t3;
       end;
       solution^.fp_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1063,7 +1049,7 @@ begin
       write('Pattern 261 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1075,36 +1061,36 @@ begin
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[12]];
       if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
         if subject.children[1]^.f76.bit_7_was_sign_extended then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
         end else begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
         end;
       end
       else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if subject.children[1]^.f76.bit_15_was_sign_extended then begin
-          solution^.space136[138] := chr(1);
+          solution^.case_value[138] := 1;
         end else begin
-          solution^.space136[138] := chr(2);
+          solution^.case_value[138] := 2;
         end;
       end else begin
-        solution^.space136[136] := chr(3);
+        solution^.case_value[136] := 3;
       end;
-      solution^.code_bytes := cost_261_2[ord(solution^.space136[137])] + cost_261_1[ord(solution^.space136[138])] + subject.children[1]^.code_bytes + 20;
+      solution^.code_bytes := cost_261_2[solution^.case_value[137]] + cost_261_1[solution^.case_value[138]] + subject.children[1]^.code_bytes + 20;
       solution^.memory_references := subject.children[1]^.memory_references;
       solution^.delay := subject.children[1]^.delay + 2;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max + 1;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1126,7 +1112,7 @@ begin
       write('Pattern 262 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1143,54 +1129,54 @@ begin
         solution^.fields[1] := nil;
       end;
       if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
         if subject.children[1]^.f76.bit_7_was_sign_extended then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
         end else begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
         end;
       end
       else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if subject.children[1]^.f76.bit_15_was_sign_extended then begin
-          solution^.space136[138] := chr(1);
+          solution^.case_value[138] := 1;
         end else begin
-          solution^.space136[138] := chr(2);
+          solution^.case_value[138] := 2;
         end;
       end else begin
-        solution^.space136[136] := chr(3);
+        solution^.case_value[136] := 3;
       end;
       if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
-        solution^.space136[139] := chr(1);
+        solution^.case_value[139] := 1;
       end
       else if p2_node_ptr_t(subject.il)^.w[12] = 2 then begin
-        solution^.space136[139] := chr(2);
+        solution^.case_value[139] := 2;
       end else begin
-        solution^.space136[139] := chr(3);
+        solution^.case_value[139] := 3;
         if lir_$can_encode_as_immediate_operand(-solution^.fields[1]^.literal_32_bits_value, ord(opc$add), 1) then begin
-          solution^.space136[140] := chr(1);
+          solution^.case_value[140] := 1;
         end else begin
-          solution^.space136[140] := chr(2);
+          solution^.case_value[140] := 2;
           if lir_$can_encode_as_immediate_operand(solution^.fields[1]^.literal_32_bits_value, ord(opc$move), 1) then begin
-            solution^.space136[141] := chr(1);
+            solution^.case_value[141] := 1;
           end else begin
-            solution^.space136[141] := chr(2);
+            solution^.case_value[141] := 2;
           end;
         end;
       end;
-      solution^.code_bytes := cost_262_7[ord(solution^.space136[137])] + cost_262_6[ord(solution^.space136[138])] + cost_262_5[ord(solution^.space136[139])] + cost_262_4[ord(solution^.space136[140])] + cost_262_3[ord(solution^.space136[141])] + subject.children[1]^.code_bytes + 16;
-      solution^.memory_references := cost_262_2[ord(solution^.space136[141])] + subject.children[1]^.memory_references;
-      solution^.delay := cost_262_1[ord(solution^.space136[141])] + subject.children[1]^.delay + 2;
+      solution^.code_bytes := cost_262_7[solution^.case_value[137]] + cost_262_6[solution^.case_value[138]] + cost_262_5[solution^.case_value[139]] + cost_262_4[solution^.case_value[140]] + cost_262_3[solution^.case_value[141]] + subject.children[1]^.code_bytes + 16;
+      solution^.memory_references := cost_262_2[solution^.case_value[141]] + subject.children[1]^.memory_references;
+      solution^.delay := cost_262_1[solution^.case_value[141]] + subject.children[1]^.delay + 2;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max + 1;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1212,7 +1198,7 @@ begin
     write('Pattern 263 matched the semantics.');
     writeln;
   end;
-  if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+  if subject.already_ip_reg then begin
     if isc_user_routines_354 then begin
       write('Infinite cycle prevented by NOT adding this to the work list.');
       writeln;
@@ -1225,14 +1211,14 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg := true;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
+    solution^.already_ip_reg := true;
     work := solution;
     result := solution;
   end;
@@ -1253,7 +1239,7 @@ begin
     write('Pattern 264 matched the semantics.');
     writeln;
   end;
-  if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+  if subject.already_ip_reg then begin
     if isc_user_routines_354 then begin
       write('Infinite cycle prevented by NOT adding this to the work list.');
       writeln;
@@ -1266,14 +1252,14 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg := true;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
+    solution^.already_ip_reg := true;
     work := solution;
     result := solution;
   end;
@@ -1294,7 +1280,7 @@ begin
     write('Pattern 265 matched the semantics.');
     writeln;
   end;
-  if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+  if subject.already_ip_reg then begin
     if isc_user_routines_354 then begin
       write('Infinite cycle prevented by NOT adding this to the work list.');
       writeln;
@@ -1307,14 +1293,14 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg := true;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
+    solution^.already_ip_reg := true;
     work := solution;
     result := solution;
   end;
@@ -1335,7 +1321,7 @@ begin
     write('Pattern 266 matched the semantics.');
     writeln;
   end;
-  if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+  if subject.already_ip_reg then begin
     if isc_user_routines_354 then begin
       write('Infinite cycle prevented by NOT adding this to the work list.');
       writeln;
@@ -1348,14 +1334,14 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg := true;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
+    solution^.already_ip_reg := true;
     work := solution;
     result := solution;
   end;
@@ -1442,13 +1428,13 @@ begin
     solution^.evaluation_order := 1;
     solution^.ip_reg_result := 1;
     solution^.f76.scale := t2;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
     work := solution;
     result := solution;
   end;
@@ -1535,13 +1521,13 @@ begin
     solution^.evaluation_order := 2;
     solution^.ip_reg_result := 1;
     solution^.f76.scale := t2;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
     work := solution;
     result := solution;
   end;
@@ -1569,7 +1555,7 @@ begin
       write('Pattern 269 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1592,14 +1578,14 @@ begin
       solution^.evaluation_order := 1;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1628,7 +1614,7 @@ begin
       write('Pattern 270 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1642,37 +1628,37 @@ begin
       solution^.fields[0] := isc_solution_ptr_t(t4);
       t5 := make_bit_mask_1(t4, 0);
       if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
           if subject.children[1]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[138] := chr(1);
+            solution^.case_value[138] := 1;
           end else begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
           end;
         end
         else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
           if subject.children[1]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
         end else begin
-          solution^.space136[137] := chr(3);
+          solution^.case_value[137] := 3;
         end;
         if subject.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[140] := chr(1);
+          solution^.case_value[140] := 1;
         end
         else if subject.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[140] := chr(2);
+          solution^.case_value[140] := 2;
         end else begin
-          solution^.space136[140] := chr(3);
+          solution^.case_value[140] := 3;
         end;
       end;
-      solution^.code_bytes := cost_270_4[ord(solution^.space136[136])] + cost_270_3[ord(solution^.space136[138])] + cost_270_2[ord(solution^.space136[139])] + cost_270_1[ord(solution^.space136[140])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
+      solution^.code_bytes := cost_270_4[solution^.case_value[136]] + cost_270_3[solution^.case_value[138]] + cost_270_2[solution^.case_value[139]] + cost_270_1[solution^.case_value[140]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.bits_known := lshft(subject.children[1]^.bits_known,
@@ -1682,14 +1668,14 @@ begin
       solution^.evaluation_order := 1;
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1718,7 +1704,7 @@ begin
       write('Pattern 271 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1741,14 +1727,14 @@ begin
       solution^.evaluation_order := 2;
       solution^.ip_reg_max := subject.children[2]^.ip_reg_max;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1777,7 +1763,7 @@ begin
       write('Pattern 272 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1791,37 +1777,37 @@ begin
       solution^.fields[0] := isc_solution_ptr_t(t4);
       t5 := make_bit_mask_1(t4, 0);
       if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if subject.children[2]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
           if subject.children[2]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[138] := chr(1);
+            solution^.case_value[138] := 1;
           end else begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
           end;
         end
         else if subject.children[2]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
           if subject.children[2]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
         end else begin
-          solution^.space136[137] := chr(3);
+          solution^.case_value[137] := 3;
         end;
         if subject.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[140] := chr(1);
+          solution^.case_value[140] := 1;
         end
         else if subject.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[140] := chr(2);
+          solution^.case_value[140] := 2;
         end else begin
-          solution^.space136[140] := chr(3);
+          solution^.case_value[140] := 3;
         end;
       end;
-      solution^.code_bytes := cost_272_4[ord(solution^.space136[136])] + cost_272_3[ord(solution^.space136[138])] + cost_272_2[ord(solution^.space136[139])] + cost_272_1[ord(solution^.space136[140])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
+      solution^.code_bytes := cost_272_4[solution^.case_value[136]] + cost_272_3[solution^.case_value[138]] + cost_272_2[solution^.case_value[139]] + cost_272_1[solution^.case_value[140]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.bits_known := lshft(subject.children[2]^.bits_known,
@@ -1831,14 +1817,14 @@ begin
       solution^.evaluation_order := 2;
       solution^.ip_reg_max := subject.children[2]^.ip_reg_max;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1863,7 +1849,7 @@ begin
       write('Pattern 273 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
+    if subject.already_fp_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1874,26 +1860,26 @@ begin
       solution^.which_transform := 273;
       solution^.before_transform := addr(subject);
       if p2_node_ptr_t(subject.il)^.b[30] & 128 = 0 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
         end else begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
           if subject.inherited_attributes^.fetch_precision = 8 then begin
-            solution^.space136[138] := chr(1);
+            solution^.case_value[138] := 1;
           end
           else if subject.inherited_attributes^.fetch_precision = 16 then begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
           end else begin
-            solution^.space136[138] := chr(3);
+            solution^.case_value[138] := 3;
           end;
         end;
       end;
-      solution^.code_bytes := cost_273_5[ord(solution^.space136[136])] + cost_273_4[ord(solution^.space136[137])] + cost_273_3[ord(solution^.space136[138])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
+      solution^.code_bytes := cost_273_5[solution^.case_value[136]] + cost_273_4[solution^.case_value[137]] + cost_273_3[solution^.case_value[138]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
-      solution^.delay := cost_273_2[ord(solution^.space136[136])] + cost_273_1[ord(solution^.space136[137])] + subject.children[1]^.delay + subject.children[2]^.delay;
+      solution^.delay := cost_273_2[solution^.case_value[136]] + cost_273_1[solution^.case_value[137]] + subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_max, subject.children[2]^.fp_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -1909,14 +1895,14 @@ begin
         solution^.fp_reg_max := t3;
       end;
       solution^.fp_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg := true;
       work := solution;
       result := solution;
     end;
@@ -1941,7 +1927,7 @@ begin
       write('Pattern 274 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
+    if subject.already_fp_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -1957,94 +1943,94 @@ begin
         solution^.fields[0] := nil;
       end;
       if subject.children[1]^.kind = solution$ip_reg then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
         if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
           if subject.children[1]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[138] := chr(1);
+            solution^.case_value[138] := 1;
           end else begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
           end;
         end
         else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
           if subject.children[1]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
         end else begin
-          solution^.space136[137] := chr(3);
+          solution^.case_value[137] := 3;
         end;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
       end;
       if subject.children[2]^.kind = solution$ip_reg then begin
-        solution^.space136[140] := chr(1);
+        solution^.case_value[140] := 1;
         if subject.children[2]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[141] := chr(1);
+          solution^.case_value[141] := 1;
           if subject.children[2]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[142] := chr(1);
+            solution^.case_value[142] := 1;
           end else begin
-            solution^.space136[142] := chr(2);
+            solution^.case_value[142] := 2;
           end;
         end
         else if subject.children[2]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[141] := chr(2);
+          solution^.case_value[141] := 2;
           if subject.children[2]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[143] := chr(1);
+            solution^.case_value[143] := 1;
           end else begin
-            solution^.space136[143] := chr(2);
+            solution^.case_value[143] := 2;
           end;
         end else begin
-          solution^.space136[141] := chr(3);
+          solution^.case_value[141] := 3;
         end;
       end else begin
-        solution^.space136[140] := chr(2);
+        solution^.case_value[140] := 2;
       end;
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
-        solution^.space136[144] := chr(1);
+        solution^.case_value[144] := 1;
       end else begin
-        solution^.space136[144] := chr(2);
+        solution^.case_value[144] := 2;
       end;
       if (p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or (subject.inherited_attributes^.fetch_precision = 32) then begin
-        solution^.space136[145] := chr(2);
+        solution^.case_value[145] := 2;
       end else begin
-        solution^.space136[145] := chr(1);
+        solution^.case_value[145] := 1;
         if subject.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[146] := chr(1);
+          solution^.case_value[146] := 1;
           if lir_$can_encode_as_immediate_operand(-solution^.fields[0]^.literal_32_bits_value, ord(opc$add), 1) then begin
-            solution^.space136[147] := chr(1);
+            solution^.case_value[147] := 1;
           end else begin
-            solution^.space136[147] := chr(2);
+            solution^.case_value[147] := 2;
             if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
-              solution^.space136[148] := chr(1);
+              solution^.case_value[148] := 1;
             end else begin
-              solution^.space136[148] := chr(2);
+              solution^.case_value[148] := 2;
             end;
           end;
         end else begin
-          solution^.space136[146] := chr(2);
+          solution^.case_value[146] := 2;
           if lir_$can_encode_as_immediate_operand((-16#8000), ord(opc$move), 1) then begin
-            solution^.space136[149] := chr(1);
+            solution^.case_value[149] := 1;
           end else begin
-            solution^.space136[149] := chr(2);
+            solution^.case_value[149] := 2;
           end;
         end;
         if lir_$can_encode_as_immediate_operand(-isc_solution_ptr_t(isc_literal_solutions[(-1)])^.literal_32_bits_value, ord(opc$add), 1) then begin
-          solution^.space136[150] := chr(1);
+          solution^.case_value[150] := 1;
         end else begin
-          solution^.space136[150] := chr(2);
+          solution^.case_value[150] := 2;
           if lir_$can_encode_as_immediate_operand(isc_solution_ptr_t(isc_literal_solutions[(-1)])^.literal_32_bits_value, ord(opc$move), 1) then begin
-            solution^.space136[151] := chr(1);
+            solution^.case_value[151] := 1;
           end else begin
-            solution^.space136[151] := chr(2);
+            solution^.case_value[151] := 2;
           end;
         end;
       end;
-      solution^.code_bytes := cost_274_22[ord(solution^.space136[136])] + cost_274_21[ord(solution^.space136[138])] + cost_274_20[ord(solution^.space136[139])] + cost_274_19[ord(solution^.space136[140])] + cost_274_18[ord(solution^.space136[142])] + cost_274_17[ord(solution^.space136[143])] + cost_274_16[ord(solution^.space136[145])] + cost_274_15[ord(solution^.space136[146])] + cost_274_14[ord(solution^.space136[147])] + cost_274_13[ord(solution^.space136[148])] + cost_274_12[ord(solution^.space136[149])] + cost_274_11[ord(solution^.space136[150])] + cost_274_10[ord(solution^.space136[151])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 108;
-      solution^.memory_references := cost_274_9[ord(solution^.space136[148])] + cost_274_8[ord(solution^.space136[149])] + cost_274_7[ord(solution^.space136[151])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
-      solution^.delay := cost_274_6[ord(solution^.space136[136])] + cost_274_5[ord(solution^.space136[140])] + cost_274_4[ord(solution^.space136[145])] + cost_274_3[ord(solution^.space136[148])] + cost_274_2[ord(solution^.space136[149])] + cost_274_1[ord(solution^.space136[151])] + subject.children[1]^.delay + subject.children[2]^.delay + 35;
+      solution^.code_bytes := cost_274_22[solution^.case_value[136]] + cost_274_21[solution^.case_value[138]] + cost_274_20[solution^.case_value[139]] + cost_274_19[solution^.case_value[140]] + cost_274_18[solution^.case_value[142]] + cost_274_17[solution^.case_value[143]] + cost_274_16[solution^.case_value[145]] + cost_274_15[solution^.case_value[146]] + cost_274_14[solution^.case_value[147]] + cost_274_13[solution^.case_value[148]] + cost_274_12[solution^.case_value[149]] + cost_274_11[solution^.case_value[150]] + cost_274_10[solution^.case_value[151]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 108;
+      solution^.memory_references := cost_274_9[solution^.case_value[148]] + cost_274_8[solution^.case_value[149]] + cost_274_7[solution^.case_value[151]] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
+      solution^.delay := cost_274_6[solution^.case_value[136]] + cost_274_5[solution^.case_value[140]] + cost_274_4[solution^.case_value[145]] + cost_274_3[solution^.case_value[148]] + cost_274_2[solution^.case_value[149]] + cost_274_1[solution^.case_value[151]] + subject.children[1]^.delay + subject.children[2]^.delay + 35;
       solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
       solution^.bits_trusted := bits_trusted_function(subject.il_kind,
@@ -2067,14 +2053,14 @@ begin
       solution^.ip_reg_result := 0;
       solution^.fp_reg_max := 1;
       solution^.fp_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg := true;
       work := solution;
       result := solution;
     end;
@@ -2099,7 +2085,7 @@ begin
       write('Pattern 275 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
+    if subject.already_fp_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -2115,94 +2101,94 @@ begin
         solution^.fields[0] := nil;
       end;
       if subject.children[1]^.kind = solution$ip_reg then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
         if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
           if subject.children[1]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[138] := chr(1);
+            solution^.case_value[138] := 1;
           end else begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
           end;
         end
         else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
           if subject.children[1]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
         end else begin
-          solution^.space136[137] := chr(3);
+          solution^.case_value[137] := 3;
         end;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
       end;
       if subject.children[2]^.kind = solution$ip_reg then begin
-        solution^.space136[140] := chr(1);
+        solution^.case_value[140] := 1;
         if subject.children[2]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[141] := chr(1);
+          solution^.case_value[141] := 1;
           if subject.children[2]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[142] := chr(1);
+            solution^.case_value[142] := 1;
           end else begin
-            solution^.space136[142] := chr(2);
+            solution^.case_value[142] := 2;
           end;
         end
         else if subject.children[2]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[141] := chr(2);
+          solution^.case_value[141] := 2;
           if subject.children[2]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[143] := chr(1);
+            solution^.case_value[143] := 1;
           end else begin
-            solution^.space136[143] := chr(2);
+            solution^.case_value[143] := 2;
           end;
         end else begin
-          solution^.space136[141] := chr(3);
+          solution^.case_value[141] := 3;
         end;
       end else begin
-        solution^.space136[140] := chr(2);
+        solution^.case_value[140] := 2;
       end;
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
-        solution^.space136[144] := chr(1);
+        solution^.case_value[144] := 1;
       end else begin
-        solution^.space136[144] := chr(2);
+        solution^.case_value[144] := 2;
       end;
       if (p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or (subject.inherited_attributes^.fetch_precision = 32) then begin
-        solution^.space136[145] := chr(2);
+        solution^.case_value[145] := 2;
       end else begin
-        solution^.space136[145] := chr(1);
+        solution^.case_value[145] := 1;
         if subject.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[146] := chr(1);
+          solution^.case_value[146] := 1;
           if lir_$can_encode_as_immediate_operand(-solution^.fields[0]^.literal_32_bits_value, ord(opc$add), 1) then begin
-            solution^.space136[147] := chr(1);
+            solution^.case_value[147] := 1;
           end else begin
-            solution^.space136[147] := chr(2);
+            solution^.case_value[147] := 2;
             if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
-              solution^.space136[148] := chr(1);
+              solution^.case_value[148] := 1;
             end else begin
-              solution^.space136[148] := chr(2);
+              solution^.case_value[148] := 2;
             end;
           end;
         end else begin
-          solution^.space136[146] := chr(2);
+          solution^.case_value[146] := 2;
           if lir_$can_encode_as_immediate_operand((-16#8000), ord(opc$move), 1) then begin
-            solution^.space136[149] := chr(1);
+            solution^.case_value[149] := 1;
           end else begin
-            solution^.space136[149] := chr(2);
+            solution^.case_value[149] := 2;
           end;
         end;
         if lir_$can_encode_as_immediate_operand(-isc_solution_ptr_t(isc_literal_solutions[(-1)])^.literal_32_bits_value, ord(opc$add), 1) then begin
-          solution^.space136[150] := chr(1);
+          solution^.case_value[150] := 1;
         end else begin
-          solution^.space136[150] := chr(2);
+          solution^.case_value[150] := 2;
           if lir_$can_encode_as_immediate_operand(isc_solution_ptr_t(isc_literal_solutions[(-1)])^.literal_32_bits_value, ord(opc$move), 1) then begin
-            solution^.space136[151] := chr(1);
+            solution^.case_value[151] := 1;
           end else begin
-            solution^.space136[151] := chr(2);
+            solution^.case_value[151] := 2;
           end;
         end;
       end;
-      solution^.code_bytes := cost_275_22[ord(solution^.space136[136])] + cost_275_21[ord(solution^.space136[138])] + cost_275_20[ord(solution^.space136[139])] + cost_275_19[ord(solution^.space136[140])] + cost_275_18[ord(solution^.space136[142])] + cost_275_17[ord(solution^.space136[143])] + cost_275_16[ord(solution^.space136[145])] + cost_275_15[ord(solution^.space136[146])] + cost_275_14[ord(solution^.space136[147])] + cost_275_13[ord(solution^.space136[148])] + cost_275_12[ord(solution^.space136[149])] + cost_275_11[ord(solution^.space136[150])] + cost_275_10[ord(solution^.space136[151])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 24;
-      solution^.memory_references := cost_275_9[ord(solution^.space136[148])] + cost_275_8[ord(solution^.space136[149])] + cost_275_7[ord(solution^.space136[151])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
-      solution^.delay := cost_275_6[ord(solution^.space136[136])] + cost_275_5[ord(solution^.space136[140])] + cost_275_4[ord(solution^.space136[145])] + cost_275_3[ord(solution^.space136[148])] + cost_275_2[ord(solution^.space136[149])] + cost_275_1[ord(solution^.space136[151])] + subject.children[1]^.delay + subject.children[2]^.delay + 19;
+      solution^.code_bytes := cost_275_22[solution^.case_value[136]] + cost_275_21[solution^.case_value[138]] + cost_275_20[solution^.case_value[139]] + cost_275_19[solution^.case_value[140]] + cost_275_18[solution^.case_value[142]] + cost_275_17[solution^.case_value[143]] + cost_275_16[solution^.case_value[145]] + cost_275_15[solution^.case_value[146]] + cost_275_14[solution^.case_value[147]] + cost_275_13[solution^.case_value[148]] + cost_275_12[solution^.case_value[149]] + cost_275_11[solution^.case_value[150]] + cost_275_10[solution^.case_value[151]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 24;
+      solution^.memory_references := cost_275_9[solution^.case_value[148]] + cost_275_8[solution^.case_value[149]] + cost_275_7[solution^.case_value[151]] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
+      solution^.delay := cost_275_6[solution^.case_value[136]] + cost_275_5[solution^.case_value[140]] + cost_275_4[solution^.case_value[145]] + cost_275_3[solution^.case_value[148]] + cost_275_2[solution^.case_value[149]] + cost_275_1[solution^.case_value[151]] + subject.children[1]^.delay + subject.children[2]^.delay + 19;
       solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
       solution^.bits_trusted := bits_trusted_function(subject.il_kind,
@@ -2223,14 +2209,14 @@ begin
         solution^.fp_reg_max := t3;
       end;
       solution^.fp_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg := true;
       work := solution;
       result := solution;
     end;
@@ -2252,7 +2238,7 @@ begin
     write('Pattern 276 matched the semantics.');
     writeln;
   end;
-  if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+  if subject.already_ip_reg then begin
     if isc_user_routines_354 then begin
       write('Infinite cycle prevented by NOT adding this to the work list.');
       writeln;
@@ -2265,14 +2251,14 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg := true;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
+    solution^.already_ip_reg := true;
     work := solution;
     result := solution;
   end;
@@ -2293,7 +2279,7 @@ begin
     write('Pattern 277 matched the semantics.');
     writeln;
   end;
-  if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+  if subject.already_ip_reg then begin
     if isc_user_routines_354 then begin
       write('Infinite cycle prevented by NOT adding this to the work list.');
       writeln;
@@ -2306,14 +2292,14 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg := true;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
+    solution^.already_ip_reg := true;
     work := solution;
     result := solution;
   end;
@@ -2341,7 +2327,7 @@ begin
       write('Pattern 278 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -2357,98 +2343,98 @@ begin
       t4 := make_bit_mask_1(8, 0);
       t5 := make_bit_mask_1(16, 0);
       if p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
           if subject.children[1]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[138] := chr(1);
+            solution^.case_value[138] := 1;
           end else begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
           end;
         end
         else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
           if subject.children[1]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
         end else begin
-          solution^.space136[137] := chr(3);
+          solution^.case_value[137] := 3;
         end;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
-          solution^.space136[140] := chr(1);
+          solution^.case_value[140] := 1;
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 24, 0) then begin
-            solution^.space136[141] := chr(1);
+            solution^.case_value[141] := 1;
           end else begin
-            solution^.space136[141] := chr(2);
+            solution^.case_value[141] := 2;
           end;
         end
         else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
-          solution^.space136[140] := chr(2);
+          solution^.case_value[140] := 2;
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 16, 16, 0) then begin
-            solution^.space136[142] := chr(1);
+            solution^.case_value[142] := 1;
           end else begin
-            solution^.space136[142] := chr(2);
+            solution^.case_value[142] := 2;
           end;
         end else begin
-          solution^.space136[140] := chr(3);
+          solution^.case_value[140] := 3;
         end;
       end;
       if (subject.children[2]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[2]^.f76.physical_register or (subject.children[2]^.kind <> solution$ip_reg) then begin
-        solution^.space136[143] := chr(2);
+        solution^.case_value[143] := 2;
         if p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0 then begin
-          solution^.space136[144] := chr(1);
+          solution^.case_value[144] := 1;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
-            solution^.space136[145] := chr(1);
+            solution^.case_value[145] := 1;
             if subject.children[2]^.f76.bit_7_was_sign_extended then begin
-              solution^.space136[146] := chr(1);
+              solution^.case_value[146] := 1;
             end else begin
-              solution^.space136[146] := chr(2);
+              solution^.case_value[146] := 2;
             end;
           end
           else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
-            solution^.space136[145] := chr(2);
+            solution^.case_value[145] := 2;
             if subject.children[2]^.f76.bit_15_was_sign_extended then begin
-              solution^.space136[147] := chr(1);
+              solution^.case_value[147] := 1;
             end else begin
-              solution^.space136[147] := chr(2);
+              solution^.case_value[147] := 2;
             end;
           end else begin
-            solution^.space136[145] := chr(3);
+            solution^.case_value[145] := 3;
           end;
         end else begin
-          solution^.space136[144] := chr(2);
+          solution^.case_value[144] := 2;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
-            solution^.space136[148] := chr(1);
+            solution^.case_value[148] := 1;
             if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 8, 24, 0) then begin
-              solution^.space136[149] := chr(1);
+              solution^.case_value[149] := 1;
             end else begin
-              solution^.space136[149] := chr(2);
+              solution^.case_value[149] := 2;
             end;
           end
           else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
-            solution^.space136[148] := chr(2);
+            solution^.case_value[148] := 2;
             if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 16, 16, 0) then begin
-              solution^.space136[150] := chr(1);
+              solution^.case_value[150] := 1;
             end else begin
-              solution^.space136[150] := chr(2);
+              solution^.case_value[150] := 2;
             end;
           end else begin
-            solution^.space136[148] := chr(3);
+            solution^.case_value[148] := 3;
           end;
         end;
       end else begin
-        solution^.space136[143] := chr(1);
+        solution^.case_value[143] := 1;
       end;
       if (subject.children[2]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[2]^.f76.physical_register or (subject.children[2]^.kind <> solution$ip_reg) then begin
-        solution^.space136[151] := chr(2);
+        solution^.case_value[151] := 2;
       end else begin
-        solution^.space136[151] := chr(1);
+        solution^.case_value[151] := 1;
       end;
-      solution^.code_bytes := cost_278_9[ord(solution^.space136[138])] + cost_278_8[ord(solution^.space136[139])] + cost_278_7[ord(solution^.space136[141])] + cost_278_6[ord(solution^.space136[142])] + cost_278_5[ord(solution^.space136[146])] + cost_278_4[ord(solution^.space136[147])] + cost_278_3[ord(solution^.space136[149])] + cost_278_2[ord(solution^.space136[150])] + cost_278_1[ord(solution^.space136[151])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 16;
+      solution^.code_bytes := cost_278_9[solution^.case_value[138]] + cost_278_8[solution^.case_value[139]] + cost_278_7[solution^.case_value[141]] + cost_278_6[solution^.case_value[142]] + cost_278_5[solution^.case_value[146]] + cost_278_4[solution^.case_value[147]] + cost_278_3[solution^.case_value[149]] + cost_278_2[solution^.case_value[150]] + cost_278_1[solution^.case_value[151]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 16;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 2;
       solution^.evaluation_order := evaluation_order_function(subject.il_kind,
@@ -2466,14 +2452,14 @@ begin
         solution^.ip_reg_max := t7;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -2502,7 +2488,7 @@ begin
       write('Pattern 279 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -2518,98 +2504,98 @@ begin
       t4 := make_bit_mask_1(8, 0);
       t5 := make_bit_mask_1(16, 0);
       if p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
           if subject.children[1]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[138] := chr(1);
+            solution^.case_value[138] := 1;
           end else begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
           end;
         end
         else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
           if subject.children[1]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
         end else begin
-          solution^.space136[137] := chr(3);
+          solution^.case_value[137] := 3;
         end;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
-          solution^.space136[140] := chr(1);
+          solution^.case_value[140] := 1;
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 24, 0) then begin
-            solution^.space136[141] := chr(1);
+            solution^.case_value[141] := 1;
           end else begin
-            solution^.space136[141] := chr(2);
+            solution^.case_value[141] := 2;
           end;
         end
         else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
-          solution^.space136[140] := chr(2);
+          solution^.case_value[140] := 2;
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 16, 16, 0) then begin
-            solution^.space136[142] := chr(1);
+            solution^.case_value[142] := 1;
           end else begin
-            solution^.space136[142] := chr(2);
+            solution^.case_value[142] := 2;
           end;
         end else begin
-          solution^.space136[140] := chr(3);
+          solution^.case_value[140] := 3;
         end;
       end;
       if (subject.children[2]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[2]^.f76.physical_register or (subject.children[2]^.kind <> solution$ip_reg) then begin
-        solution^.space136[143] := chr(2);
+        solution^.case_value[143] := 2;
         if p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0 then begin
-          solution^.space136[144] := chr(1);
+          solution^.case_value[144] := 1;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
-            solution^.space136[145] := chr(1);
+            solution^.case_value[145] := 1;
             if subject.children[2]^.f76.bit_7_was_sign_extended then begin
-              solution^.space136[146] := chr(1);
+              solution^.case_value[146] := 1;
             end else begin
-              solution^.space136[146] := chr(2);
+              solution^.case_value[146] := 2;
             end;
           end
           else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
-            solution^.space136[145] := chr(2);
+            solution^.case_value[145] := 2;
             if subject.children[2]^.f76.bit_15_was_sign_extended then begin
-              solution^.space136[147] := chr(1);
+              solution^.case_value[147] := 1;
             end else begin
-              solution^.space136[147] := chr(2);
+              solution^.case_value[147] := 2;
             end;
           end else begin
-            solution^.space136[145] := chr(3);
+            solution^.case_value[145] := 3;
           end;
         end else begin
-          solution^.space136[144] := chr(2);
+          solution^.case_value[144] := 2;
           if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 8 then begin
-            solution^.space136[148] := chr(1);
+            solution^.case_value[148] := 1;
             if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 8, 24, 0) then begin
-              solution^.space136[149] := chr(1);
+              solution^.case_value[149] := 1;
             end else begin
-              solution^.space136[149] := chr(2);
+              solution^.case_value[149] := 2;
             end;
           end
           else if p1_int_fields_ptr_t(addr(solution^))^.i[0] = 16 then begin
-            solution^.space136[148] := chr(2);
+            solution^.case_value[148] := 2;
             if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 16, 16, 0) then begin
-              solution^.space136[150] := chr(1);
+              solution^.case_value[150] := 1;
             end else begin
-              solution^.space136[150] := chr(2);
+              solution^.case_value[150] := 2;
             end;
           end else begin
-            solution^.space136[148] := chr(3);
+            solution^.case_value[148] := 3;
           end;
         end;
       end else begin
-        solution^.space136[143] := chr(1);
+        solution^.case_value[143] := 1;
       end;
       if (subject.children[2]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[2]^.f76.physical_register or (subject.children[2]^.kind <> solution$ip_reg) then begin
-        solution^.space136[151] := chr(2);
+        solution^.case_value[151] := 2;
       end else begin
-        solution^.space136[151] := chr(1);
+        solution^.case_value[151] := 1;
       end;
-      solution^.code_bytes := cost_279_9[ord(solution^.space136[138])] + cost_279_8[ord(solution^.space136[139])] + cost_279_7[ord(solution^.space136[141])] + cost_279_6[ord(solution^.space136[142])] + cost_279_5[ord(solution^.space136[146])] + cost_279_4[ord(solution^.space136[147])] + cost_279_3[ord(solution^.space136[149])] + cost_279_2[ord(solution^.space136[150])] + cost_279_1[ord(solution^.space136[151])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 16;
+      solution^.code_bytes := cost_279_9[solution^.case_value[138]] + cost_279_8[solution^.case_value[139]] + cost_279_7[solution^.case_value[141]] + cost_279_6[solution^.case_value[142]] + cost_279_5[solution^.case_value[146]] + cost_279_4[solution^.case_value[147]] + cost_279_3[solution^.case_value[149]] + cost_279_2[solution^.case_value[150]] + cost_279_1[solution^.case_value[151]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 16;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 2;
       solution^.evaluation_order := evaluation_order_function(subject.il_kind,
@@ -2627,14 +2613,14 @@ begin
         solution^.ip_reg_max := t7;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -2656,7 +2642,7 @@ begin
     write('Pattern 280 matched the semantics.');
     writeln;
   end;
-  if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+  if subject.already_ip_reg then begin
     if isc_user_routines_354 then begin
       write('Infinite cycle prevented by NOT adding this to the work list.');
       writeln;
@@ -2669,14 +2655,14 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg := true;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
+    solution^.already_ip_reg := true;
     work := solution;
     result := solution;
   end;
@@ -2697,7 +2683,7 @@ begin
     write('Pattern 281 matched the semantics.');
     writeln;
   end;
-  if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+  if subject.already_ip_reg then begin
     if isc_user_routines_354 then begin
       write('Infinite cycle prevented by NOT adding this to the work list.');
       writeln;
@@ -2710,14 +2696,14 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-    p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-    p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-    p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-    p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-    p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-    p1_already_ptr_t(solution)^.already_ip_reg := true;
+    solution^.already_address_mode := subject.already_address_mode;
+    solution^.already_fp_reg := subject.already_fp_reg;
+    solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+    solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+    solution^.already_ip_reg := subject.already_ip_reg;
+    solution^.already_ip_reg_field := subject.already_ip_reg_field;
+    solution^.already_processor_reg := subject.already_processor_reg;
+    solution^.already_ip_reg := true;
     work := solution;
     result := solution;
   end;
@@ -2739,7 +2725,7 @@ begin
       write('Pattern 282 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+    if subject.already_ip_reg_field then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -2807,14 +2793,14 @@ begin
           subject.children[1]^.bits_trusted, 0);
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max + 1;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg_field := true;
       work := solution;
       result := solution;
     end;
@@ -2837,7 +2823,7 @@ begin
       write('Pattern 283 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+    if subject.already_ip_reg_field then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -2905,14 +2891,14 @@ begin
           subject.children[1]^.bits_trusted, 0);
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max + 1;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg_field := true;
       work := solution;
       result := solution;
     end;
@@ -2934,7 +2920,7 @@ begin
       write('Pattern 284 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -2953,14 +2939,14 @@ begin
           subject.children[1]^.bits_trusted, 0);
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max + 1;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -2982,7 +2968,7 @@ begin
       write('Pattern 285 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -2993,37 +2979,37 @@ begin
       solution^.which_transform := 285;
       solution^.before_transform := addr(subject);
       if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
           if subject.children[1]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[138] := chr(1);
+            solution^.case_value[138] := 1;
           end else begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
           end;
         end
         else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
           if subject.children[1]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
         end else begin
-          solution^.space136[137] := chr(3);
+          solution^.case_value[137] := 3;
         end;
         if subject.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[140] := chr(1);
+          solution^.case_value[140] := 1;
         end
         else if subject.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[140] := chr(2);
+          solution^.case_value[140] := 2;
         end else begin
-          solution^.space136[140] := chr(3);
+          solution^.case_value[140] := 3;
         end;
       end;
-      solution^.code_bytes := cost_285_4[ord(solution^.space136[136])] + cost_285_3[ord(solution^.space136[138])] + cost_285_2[ord(solution^.space136[139])] + cost_285_1[ord(solution^.space136[140])] + subject.children[1]^.code_bytes;
+      solution^.code_bytes := cost_285_4[solution^.case_value[136]] + cost_285_3[solution^.case_value[138]] + cost_285_2[solution^.case_value[139]] + cost_285_1[solution^.case_value[140]] + subject.children[1]^.code_bytes;
       solution^.memory_references := subject.children[1]^.memory_references;
       solution^.delay := subject.children[1]^.delay;
       solution^.bits_known := bits_known_function(subject.il_kind,
@@ -3032,14 +3018,14 @@ begin
           subject.children[1]^.bits_trusted, 0);
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max + 1;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -3061,7 +3047,7 @@ begin
       write('Pattern 286 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
+    if subject.already_fp_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -3080,14 +3066,14 @@ begin
           subject.children[1]^.bits_trusted, 0);
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max + 1;
       solution^.fp_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg := true;
       work := solution;
       result := solution;
     end;
@@ -3120,7 +3106,7 @@ begin
         write('Pattern 287 matched the semantics.');
         writeln;
       end;
-      if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+      if subject.already_ip_reg then begin
         if isc_user_routines_354 then begin
           write('Infinite cycle prevented by NOT adding this to the work list.');
           writeln;
@@ -3137,11 +3123,11 @@ begin
         t6 := make_bit_mask_1(1, 0);
         t7 := make_bit_mask_1(1, 0);
         if t4 = 13 then begin
-          solution^.space136[136] := chr(1);
+          solution^.case_value[136] := 1;
         end else begin
-          solution^.space136[136] := chr(2);
+          solution^.case_value[136] := 2;
         end;
-        solution^.code_bytes := cost_287_1[ord(solution^.space136[136])] + subject.children[1]^.code_bytes;
+        solution^.code_bytes := cost_287_1[solution^.case_value[136]] + subject.children[1]^.code_bytes;
         solution^.memory_references := subject.children[1]^.memory_references;
         solution^.delay := subject.children[1]^.delay;
         solution^.bits_known := 0;
@@ -3163,14 +3149,14 @@ begin
           solution^.ip_reg_max := t9;
         end;
         solution^.ip_reg_result := 1;
-        p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-        p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-        p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-        p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-        p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-        p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-        p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-        p1_already_ptr_t(solution)^.already_ip_reg := true;
+        solution^.already_address_mode := subject.already_address_mode;
+        solution^.already_fp_reg := subject.already_fp_reg;
+        solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+        solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+        solution^.already_ip_reg := subject.already_ip_reg;
+        solution^.already_ip_reg_field := subject.already_ip_reg_field;
+        solution^.already_processor_reg := subject.already_processor_reg;
+        solution^.already_ip_reg := true;
         work := solution;
         result := solution;
       end;
@@ -3202,7 +3188,7 @@ begin
       write('Pattern 288 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -3216,31 +3202,31 @@ begin
       solution^.fields[0] := isc_solution_ptr_t(t4);
       t5 := make_bit_mask_1(t4, 0);
       if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
         if subject.children[1]^.f76.bit_7_was_sign_extended then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
         end else begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
         end;
       end
       else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if subject.children[1]^.f76.bit_15_was_sign_extended then begin
-          solution^.space136[138] := chr(1);
+          solution^.case_value[138] := 1;
         end else begin
-          solution^.space136[138] := chr(2);
+          solution^.case_value[138] := 2;
         end;
       end else begin
-        solution^.space136[136] := chr(3);
+        solution^.case_value[136] := 3;
       end;
       if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 0, log_2(subject.children[2]^.literal_32_bits_value), 0) then begin
-        solution^.space136[139] := chr(1);
+        solution^.case_value[139] := 1;
       end else begin
-        solution^.space136[139] := chr(2);
+        solution^.case_value[139] := 2;
       end;
-      solution^.code_bytes := cost_288_4[ord(solution^.space136[137])] + cost_288_3[ord(solution^.space136[138])] + cost_288_2[ord(solution^.space136[139])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
+      solution^.code_bytes := cost_288_4[solution^.case_value[137]] + cost_288_3[solution^.case_value[138]] + cost_288_2[solution^.case_value[139]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
-      solution^.delay := cost_288_1[ord(solution^.space136[139])] + subject.children[1]^.delay + subject.children[2]^.delay;
+      solution^.delay := cost_288_1[solution^.case_value[139]] + subject.children[1]^.delay + subject.children[2]^.delay;
       t6 := validate_shift_count(integer32(solution^.fields[0]));
       solution^.bits_known := rshft(subject.children[1]^.bits_known, t6);
       t7 := validate_shift_count(integer32(solution^.fields[0]));
@@ -3250,14 +3236,14 @@ begin
           2);
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max + 1;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -3282,7 +3268,7 @@ begin
       write('Pattern 289 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -3293,24 +3279,24 @@ begin
       solution^.which_transform := 289;
       solution^.before_transform := addr(subject);
       if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
         if subject.children[1]^.f76.bit_7_was_sign_extended then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
         end else begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
         end;
       end
       else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if subject.children[1]^.f76.bit_15_was_sign_extended then begin
-          solution^.space136[138] := chr(1);
+          solution^.case_value[138] := 1;
         end else begin
-          solution^.space136[138] := chr(2);
+          solution^.case_value[138] := 2;
         end;
       end else begin
-        solution^.space136[136] := chr(3);
+        solution^.case_value[136] := 3;
       end;
-      solution^.code_bytes := cost_289_2[ord(solution^.space136[137])] + cost_289_1[ord(solution^.space136[138])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
+      solution^.code_bytes := cost_289_2[solution^.case_value[137]] + cost_289_1[solution^.case_value[138]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       t2 := validate_shift_count(1);
@@ -3322,14 +3308,14 @@ begin
           2);
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max + 1;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -3356,7 +3342,7 @@ begin
       write('Pattern 290 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
+    if subject.already_fp_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -3372,71 +3358,71 @@ begin
         solution^.fields[0] := nil;
       end;
       if subject.children[2]^.kind = solution$ip_reg then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
         if subject.children[2]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
           if subject.children[2]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[138] := chr(1);
+            solution^.case_value[138] := 1;
           end else begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
           end;
         end
         else if subject.children[2]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
           if subject.children[2]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
         end else begin
-          solution^.space136[137] := chr(3);
+          solution^.case_value[137] := 3;
         end;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
       end;
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
-        solution^.space136[140] := chr(1);
+        solution^.case_value[140] := 1;
       end else begin
-        solution^.space136[140] := chr(2);
+        solution^.case_value[140] := 2;
       end;
       if (p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or (subject.inherited_attributes^.fetch_precision = 32) then begin
-        solution^.space136[141] := chr(2);
+        solution^.case_value[141] := 2;
       end else begin
-        solution^.space136[141] := chr(1);
+        solution^.case_value[141] := 1;
         if subject.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[142] := chr(1);
+          solution^.case_value[142] := 1;
           if lir_$can_encode_as_immediate_operand(-solution^.fields[0]^.literal_32_bits_value, ord(opc$add), 1) then begin
-            solution^.space136[143] := chr(1);
+            solution^.case_value[143] := 1;
           end else begin
-            solution^.space136[143] := chr(2);
+            solution^.case_value[143] := 2;
             if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
-              solution^.space136[144] := chr(1);
+              solution^.case_value[144] := 1;
             end else begin
-              solution^.space136[144] := chr(2);
+              solution^.case_value[144] := 2;
             end;
           end;
         end else begin
-          solution^.space136[142] := chr(2);
+          solution^.case_value[142] := 2;
           if lir_$can_encode_as_immediate_operand((-16#8000), ord(opc$move), 1) then begin
-            solution^.space136[145] := chr(1);
+            solution^.case_value[145] := 1;
           end else begin
-            solution^.space136[145] := chr(2);
+            solution^.case_value[145] := 2;
           end;
         end;
         if lir_$can_encode_as_immediate_operand(-isc_solution_ptr_t(isc_literal_solutions[(-1)])^.literal_32_bits_value, ord(opc$add), 1) then begin
-          solution^.space136[146] := chr(1);
+          solution^.case_value[146] := 1;
         end else begin
-          solution^.space136[146] := chr(2);
+          solution^.case_value[146] := 2;
           if lir_$can_encode_as_immediate_operand(isc_solution_ptr_t(isc_literal_solutions[(-1)])^.literal_32_bits_value, ord(opc$move), 1) then begin
-            solution^.space136[147] := chr(1);
+            solution^.case_value[147] := 1;
           end else begin
-            solution^.space136[147] := chr(2);
+            solution^.case_value[147] := 2;
           end;
         end;
       end;
-      solution^.code_bytes := cost_290_18[ord(solution^.space136[136])] + cost_290_17[ord(solution^.space136[138])] + cost_290_16[ord(solution^.space136[139])] + cost_290_15[ord(solution^.space136[141])] + cost_290_14[ord(solution^.space136[142])] + cost_290_13[ord(solution^.space136[143])] + cost_290_12[ord(solution^.space136[144])] + cost_290_11[ord(solution^.space136[145])] + cost_290_10[ord(solution^.space136[146])] + cost_290_9[ord(solution^.space136[147])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 16;
-      solution^.memory_references := cost_290_8[ord(solution^.space136[144])] + cost_290_7[ord(solution^.space136[145])] + cost_290_6[ord(solution^.space136[147])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
-      solution^.delay := cost_290_5[ord(solution^.space136[136])] + cost_290_4[ord(solution^.space136[141])] + cost_290_3[ord(solution^.space136[144])] + cost_290_2[ord(solution^.space136[145])] + cost_290_1[ord(solution^.space136[147])] + subject.children[1]^.delay + subject.children[2]^.delay + 15;
+      solution^.code_bytes := cost_290_18[solution^.case_value[136]] + cost_290_17[solution^.case_value[138]] + cost_290_16[solution^.case_value[139]] + cost_290_15[solution^.case_value[141]] + cost_290_14[solution^.case_value[142]] + cost_290_13[solution^.case_value[143]] + cost_290_12[solution^.case_value[144]] + cost_290_11[solution^.case_value[145]] + cost_290_10[solution^.case_value[146]] + cost_290_9[solution^.case_value[147]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 16;
+      solution^.memory_references := cost_290_8[solution^.case_value[144]] + cost_290_7[solution^.case_value[145]] + cost_290_6[solution^.case_value[147]] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
+      solution^.delay := cost_290_5[solution^.case_value[136]] + cost_290_4[solution^.case_value[141]] + cost_290_3[solution^.case_value[144]] + cost_290_2[solution^.case_value[145]] + cost_290_1[solution^.case_value[147]] + subject.children[1]^.delay + subject.children[2]^.delay + 15;
       solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
       solution^.bits_trusted := bits_trusted_function(subject.il_kind,
@@ -3469,14 +3455,14 @@ begin
         solution^.ip_reg_max := t5;
       end;
       solution^.ip_reg_result := 0;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg := true;
       work := solution;
       result := solution;
     end;
@@ -3506,7 +3492,7 @@ begin
       write('Pattern 291 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+    if subject.already_ip_reg_field then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -3591,14 +3577,14 @@ begin
         solution^.ip_reg_max := t6;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg_field := true;
       work := solution;
       result := solution;
     end;
@@ -3623,7 +3609,7 @@ begin
       write('Pattern 292 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
+    if subject.already_fp_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -3639,99 +3625,99 @@ begin
         solution^.fields[0] := nil;
       end;
       if subject.children[1]^.kind = solution$ip_reg then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
         if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
           if subject.children[1]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[138] := chr(1);
+            solution^.case_value[138] := 1;
           end else begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
           end;
         end
         else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
           if subject.children[1]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
         end else begin
-          solution^.space136[137] := chr(3);
+          solution^.case_value[137] := 3;
         end;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
       end;
       if subject.children[2]^.kind = solution$ip_reg then begin
-        solution^.space136[140] := chr(1);
+        solution^.case_value[140] := 1;
         if subject.children[2]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[141] := chr(1);
+          solution^.case_value[141] := 1;
           if subject.children[2]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[142] := chr(1);
+            solution^.case_value[142] := 1;
           end else begin
-            solution^.space136[142] := chr(2);
+            solution^.case_value[142] := 2;
           end;
         end
         else if subject.children[2]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[141] := chr(2);
+          solution^.case_value[141] := 2;
           if subject.children[2]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[143] := chr(1);
+            solution^.case_value[143] := 1;
           end else begin
-            solution^.space136[143] := chr(2);
+            solution^.case_value[143] := 2;
           end;
         end else begin
-          solution^.space136[141] := chr(3);
+          solution^.case_value[141] := 3;
         end;
       end else begin
-        solution^.space136[140] := chr(2);
+        solution^.case_value[140] := 2;
       end;
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
-        solution^.space136[144] := chr(1);
+        solution^.case_value[144] := 1;
       end else begin
-        solution^.space136[144] := chr(2);
+        solution^.case_value[144] := 2;
       end;
       if (p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or (subject.inherited_attributes^.fetch_precision = 32) then begin
-        solution^.space136[145] := chr(2);
+        solution^.case_value[145] := 2;
       end else begin
-        solution^.space136[145] := chr(1);
+        solution^.case_value[145] := 1;
         if subject.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[146] := chr(1);
+          solution^.case_value[146] := 1;
           if lir_$can_encode_as_immediate_operand(-solution^.fields[0]^.literal_32_bits_value, ord(opc$add), 1) then begin
-            solution^.space136[147] := chr(1);
+            solution^.case_value[147] := 1;
           end else begin
-            solution^.space136[147] := chr(2);
+            solution^.case_value[147] := 2;
             if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
-              solution^.space136[148] := chr(1);
+              solution^.case_value[148] := 1;
             end else begin
-              solution^.space136[148] := chr(2);
+              solution^.case_value[148] := 2;
             end;
           end;
         end else begin
-          solution^.space136[146] := chr(2);
+          solution^.case_value[146] := 2;
           if lir_$can_encode_as_immediate_operand((-16#8000), ord(opc$move), 1) then begin
-            solution^.space136[149] := chr(1);
+            solution^.case_value[149] := 1;
           end else begin
-            solution^.space136[149] := chr(2);
+            solution^.case_value[149] := 2;
           end;
         end;
         if lir_$can_encode_as_immediate_operand(-isc_solution_ptr_t(isc_literal_solutions[(-1)])^.literal_32_bits_value, ord(opc$add), 1) then begin
-          solution^.space136[150] := chr(1);
+          solution^.case_value[150] := 1;
         end else begin
-          solution^.space136[150] := chr(2);
+          solution^.case_value[150] := 2;
           if lir_$can_encode_as_immediate_operand(isc_solution_ptr_t(isc_literal_solutions[(-1)])^.literal_32_bits_value, ord(opc$move), 1) then begin
-            solution^.space136[151] := chr(1);
+            solution^.case_value[151] := 1;
           end else begin
-            solution^.space136[151] := chr(2);
+            solution^.case_value[151] := 2;
           end;
         end;
       end;
       if cargs_$options.b27c_1 then begin
-        solution^.space136[152] := chr(1);
+        solution^.case_value[152] := 1;
       end else begin
-        solution^.space136[152] := chr(2);
+        solution^.case_value[152] := 2;
       end;
-      solution^.code_bytes := cost_292_24[ord(solution^.space136[136])] + cost_292_23[ord(solution^.space136[138])] + cost_292_22[ord(solution^.space136[139])] + cost_292_21[ord(solution^.space136[140])] + cost_292_20[ord(solution^.space136[142])] + cost_292_19[ord(solution^.space136[143])] + cost_292_18[ord(solution^.space136[145])] + cost_292_17[ord(solution^.space136[146])] + cost_292_16[ord(solution^.space136[147])] + cost_292_15[ord(solution^.space136[148])] + cost_292_14[ord(solution^.space136[149])] + cost_292_13[ord(solution^.space136[150])] + cost_292_12[ord(solution^.space136[151])] + cost_292_11[ord(solution^.space136[152])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 20;
-      solution^.memory_references := cost_292_10[ord(solution^.space136[148])] + cost_292_9[ord(solution^.space136[149])] + cost_292_8[ord(solution^.space136[151])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
-      solution^.delay := cost_292_7[ord(solution^.space136[136])] + cost_292_6[ord(solution^.space136[140])] + cost_292_5[ord(solution^.space136[145])] + cost_292_4[ord(solution^.space136[148])] + cost_292_3[ord(solution^.space136[149])] + cost_292_2[ord(solution^.space136[151])] + cost_292_1[ord(solution^.space136[152])] + subject.children[1]^.delay + subject.children[2]^.delay + 17;
+      solution^.code_bytes := cost_292_24[solution^.case_value[136]] + cost_292_23[solution^.case_value[138]] + cost_292_22[solution^.case_value[139]] + cost_292_21[solution^.case_value[140]] + cost_292_20[solution^.case_value[142]] + cost_292_19[solution^.case_value[143]] + cost_292_18[solution^.case_value[145]] + cost_292_17[solution^.case_value[146]] + cost_292_16[solution^.case_value[147]] + cost_292_15[solution^.case_value[148]] + cost_292_14[solution^.case_value[149]] + cost_292_13[solution^.case_value[150]] + cost_292_12[solution^.case_value[151]] + cost_292_11[solution^.case_value[152]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 20;
+      solution^.memory_references := cost_292_10[solution^.case_value[148]] + cost_292_9[solution^.case_value[149]] + cost_292_8[solution^.case_value[151]] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
+      solution^.delay := cost_292_7[solution^.case_value[136]] + cost_292_6[solution^.case_value[140]] + cost_292_5[solution^.case_value[145]] + cost_292_4[solution^.case_value[148]] + cost_292_3[solution^.case_value[149]] + cost_292_2[solution^.case_value[151]] + cost_292_1[solution^.case_value[152]] + subject.children[1]^.delay + subject.children[2]^.delay + 17;
       solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
       solution^.bits_trusted := bits_trusted_function(subject.il_kind,
@@ -3752,14 +3738,14 @@ begin
         solution^.fp_reg_max := t3;
       end;
       solution^.fp_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg := true;
       work := solution;
       result := solution;
     end;
@@ -3786,7 +3772,7 @@ begin
       write('Pattern 293 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+    if subject.already_ip_reg_field then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -3822,14 +3808,14 @@ begin
         solution^.ip_reg_max := t4;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg_field := true;
       work := solution;
       result := solution;
     end;
@@ -3854,7 +3840,7 @@ begin
       write('Pattern 294 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -3888,14 +3874,14 @@ begin
         solution^.ip_reg_max := t3;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -3920,7 +3906,7 @@ begin
       write('Pattern 295 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -3931,37 +3917,37 @@ begin
       solution^.which_transform := 295;
       solution^.before_transform := addr(subject);
       if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if subject.children[2]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
           if subject.children[2]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[138] := chr(1);
+            solution^.case_value[138] := 1;
           end else begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
           end;
         end
         else if subject.children[2]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
           if subject.children[2]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
         end else begin
-          solution^.space136[137] := chr(3);
+          solution^.case_value[137] := 3;
         end;
         if subject.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[140] := chr(1);
+          solution^.case_value[140] := 1;
         end
         else if subject.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[140] := chr(2);
+          solution^.case_value[140] := 2;
         end else begin
-          solution^.space136[140] := chr(3);
+          solution^.case_value[140] := 3;
         end;
       end;
-      solution^.code_bytes := cost_295_3[ord(solution^.space136[138])] + cost_295_4[ord(solution^.space136[136])] + cost_295_2[ord(solution^.space136[139])] + cost_295_1[ord(solution^.space136[140])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
+      solution^.code_bytes := cost_295_3[solution^.case_value[138]] + cost_295_4[solution^.case_value[136]] + cost_295_2[solution^.case_value[139]] + cost_295_1[solution^.case_value[140]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.bits_known := bits_known_function(subject.il_kind,
@@ -3985,14 +3971,14 @@ begin
         solution^.ip_reg_max := t3;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -4017,7 +4003,7 @@ begin
       write('Pattern 296 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -4051,14 +4037,14 @@ begin
         solution^.ip_reg_max := t3;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -4083,7 +4069,7 @@ begin
       write('Pattern 297 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -4094,37 +4080,37 @@ begin
       solution^.which_transform := 297;
       solution^.before_transform := addr(subject);
       if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
         if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
           if subject.children[1]^.f76.bit_7_was_sign_extended then begin
-            solution^.space136[138] := chr(1);
+            solution^.case_value[138] := 1;
           end else begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
           end;
         end
         else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
           if subject.children[1]^.f76.bit_15_was_sign_extended then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
         end else begin
-          solution^.space136[137] := chr(3);
+          solution^.case_value[137] := 3;
         end;
         if subject.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[140] := chr(1);
+          solution^.case_value[140] := 1;
         end
         else if subject.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[140] := chr(2);
+          solution^.case_value[140] := 2;
         end else begin
-          solution^.space136[140] := chr(3);
+          solution^.case_value[140] := 3;
         end;
       end;
-      solution^.code_bytes := cost_297_4[ord(solution^.space136[136])] + cost_297_3[ord(solution^.space136[138])] + cost_297_2[ord(solution^.space136[139])] + cost_297_1[ord(solution^.space136[140])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
+      solution^.code_bytes := cost_297_4[solution^.case_value[136]] + cost_297_3[solution^.case_value[138]] + cost_297_2[solution^.case_value[139]] + cost_297_1[solution^.case_value[140]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.bits_known := bits_known_function(subject.il_kind,
@@ -4148,14 +4134,14 @@ begin
         solution^.ip_reg_max := t3;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -4182,7 +4168,7 @@ begin
       write('Pattern 298 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+    if subject.already_ip_reg_field then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -4218,14 +4204,14 @@ begin
         solution^.ip_reg_max := t4;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg_field := true;
       work := solution;
       result := solution;
     end;
@@ -4257,7 +4243,7 @@ begin
       write('Pattern 299 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+    if subject.already_ip_reg_field then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -4345,14 +4331,14 @@ begin
         solution^.ip_reg_max := t8;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg_field := true;
       work := solution;
       result := solution;
     end;
@@ -4381,7 +4367,7 @@ begin
       write('Pattern 300 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg then begin
+    if subject.already_ip_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -4404,14 +4390,14 @@ begin
           2);
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max + 1;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg := true;
       work := solution;
       result := solution;
     end;
@@ -4445,7 +4431,7 @@ begin
       write('Pattern 301 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
+    if subject.already_fp_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -4465,94 +4451,94 @@ begin
         solution^.fields[0] := nil;
       end;
       if subject.children[1]^.kind = solution$ip_reg then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
         if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 24, 0) then begin
-            solution^.space136[138] := chr(1);
+            solution^.case_value[138] := 1;
           end else begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
           end;
         end
         else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 16, 16, 0) then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
         end else begin
-          solution^.space136[137] := chr(3);
+          solution^.case_value[137] := 3;
         end;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
       end;
       if subject.children[2]^.kind = solution$ip_reg then begin
-        solution^.space136[140] := chr(1);
+        solution^.case_value[140] := 1;
         if subject.children[2]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[141] := chr(1);
+          solution^.case_value[141] := 1;
           if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 8, 24, 0) then begin
-            solution^.space136[142] := chr(1);
+            solution^.case_value[142] := 1;
           end else begin
-            solution^.space136[142] := chr(2);
+            solution^.case_value[142] := 2;
           end;
         end
         else if subject.children[2]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[141] := chr(2);
+          solution^.case_value[141] := 2;
           if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 16, 16, 0) then begin
-            solution^.space136[143] := chr(1);
+            solution^.case_value[143] := 1;
           end else begin
-            solution^.space136[143] := chr(2);
+            solution^.case_value[143] := 2;
           end;
         end else begin
-          solution^.space136[141] := chr(3);
+          solution^.case_value[141] := 3;
         end;
       end else begin
-        solution^.space136[140] := chr(2);
+        solution^.case_value[140] := 2;
       end;
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
-        solution^.space136[144] := chr(1);
+        solution^.case_value[144] := 1;
       end else begin
-        solution^.space136[144] := chr(2);
+        solution^.case_value[144] := 2;
       end;
       if (p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or (subject.inherited_attributes^.fetch_precision = 32) then begin
-        solution^.space136[145] := chr(2);
+        solution^.case_value[145] := 2;
       end else begin
-        solution^.space136[145] := chr(1);
+        solution^.case_value[145] := 1;
         if subject.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[146] := chr(1);
+          solution^.case_value[146] := 1;
           if lir_$can_encode_as_immediate_operand(-solution^.fields[0]^.literal_32_bits_value, ord(opc$add), 1) then begin
-            solution^.space136[147] := chr(1);
+            solution^.case_value[147] := 1;
           end else begin
-            solution^.space136[147] := chr(2);
+            solution^.case_value[147] := 2;
             if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
-              solution^.space136[148] := chr(1);
+              solution^.case_value[148] := 1;
             end else begin
-              solution^.space136[148] := chr(2);
+              solution^.case_value[148] := 2;
             end;
           end;
         end else begin
-          solution^.space136[146] := chr(2);
+          solution^.case_value[146] := 2;
           if lir_$can_encode_as_immediate_operand((-16#8000), ord(opc$move), 1) then begin
-            solution^.space136[149] := chr(1);
+            solution^.case_value[149] := 1;
           end else begin
-            solution^.space136[149] := chr(2);
+            solution^.case_value[149] := 2;
           end;
         end;
         if lir_$can_encode_as_immediate_operand(-isc_solution_ptr_t(isc_literal_solutions[(-1)])^.literal_32_bits_value, ord(opc$add), 1) then begin
-          solution^.space136[150] := chr(1);
+          solution^.case_value[150] := 1;
         end else begin
-          solution^.space136[150] := chr(2);
+          solution^.case_value[150] := 2;
           if lir_$can_encode_as_immediate_operand(isc_solution_ptr_t(isc_literal_solutions[(-1)])^.literal_32_bits_value, ord(opc$move), 1) then begin
-            solution^.space136[151] := chr(1);
+            solution^.case_value[151] := 1;
           end else begin
-            solution^.space136[151] := chr(2);
+            solution^.case_value[151] := 2;
           end;
         end;
       end;
-      solution^.code_bytes := cost_301_22[ord(solution^.space136[136])] + cost_301_21[ord(solution^.space136[138])] + cost_301_20[ord(solution^.space136[139])] + cost_301_19[ord(solution^.space136[140])] + cost_301_18[ord(solution^.space136[142])] + cost_301_17[ord(solution^.space136[143])] + cost_301_16[ord(solution^.space136[145])] + cost_301_15[ord(solution^.space136[146])] + cost_301_14[ord(solution^.space136[147])] + cost_301_13[ord(solution^.space136[148])] + cost_301_12[ord(solution^.space136[149])] + cost_301_11[ord(solution^.space136[150])] + cost_301_10[ord(solution^.space136[151])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 16;
-      solution^.memory_references := cost_301_9[ord(solution^.space136[148])] + cost_301_8[ord(solution^.space136[149])] + cost_301_7[ord(solution^.space136[151])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
-      solution^.delay := cost_301_6[ord(solution^.space136[136])] + cost_301_5[ord(solution^.space136[140])] + cost_301_4[ord(solution^.space136[145])] + cost_301_3[ord(solution^.space136[148])] + cost_301_2[ord(solution^.space136[149])] + cost_301_1[ord(solution^.space136[151])] + subject.children[1]^.delay + subject.children[2]^.delay + 15;
+      solution^.code_bytes := cost_301_22[solution^.case_value[136]] + cost_301_21[solution^.case_value[138]] + cost_301_20[solution^.case_value[139]] + cost_301_19[solution^.case_value[140]] + cost_301_18[solution^.case_value[142]] + cost_301_17[solution^.case_value[143]] + cost_301_16[solution^.case_value[145]] + cost_301_15[solution^.case_value[146]] + cost_301_14[solution^.case_value[147]] + cost_301_13[solution^.case_value[148]] + cost_301_12[solution^.case_value[149]] + cost_301_11[solution^.case_value[150]] + cost_301_10[solution^.case_value[151]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 16;
+      solution^.memory_references := cost_301_9[solution^.case_value[148]] + cost_301_8[solution^.case_value[149]] + cost_301_7[solution^.case_value[151]] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
+      solution^.delay := cost_301_6[solution^.case_value[136]] + cost_301_5[solution^.case_value[140]] + cost_301_4[solution^.case_value[145]] + cost_301_3[solution^.case_value[148]] + cost_301_2[solution^.case_value[149]] + cost_301_1[solution^.case_value[151]] + subject.children[1]^.delay + subject.children[2]^.delay + 15;
       solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
       solution^.bits_trusted := bits_trusted_function(subject.il_kind,
@@ -4585,14 +4571,14 @@ begin
         solution^.ip_reg_max := t10;
       end;
       solution^.ip_reg_result := 0;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg := true;
       work := solution;
       result := solution;
     end;
@@ -4629,7 +4615,7 @@ begin
       write('Pattern 302 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
+    if subject.already_fp_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -4644,90 +4630,90 @@ begin
       t4 := make_bit_mask_1(8, 0);
       t5 := make_bit_mask_1(16, 0);
       if not isc_user_routines_358 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
       end;
       if subject.children[1]^.kind = solution$ip_reg then begin
-        solution^.space136[137] := chr(1);
+        solution^.case_value[137] := 1;
         if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[138] := chr(1);
+          solution^.case_value[138] := 1;
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 24, 0) then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
           t7 := verify_bits(subject.children[1]^.bits_known,
               subject.children[1]^.bits_trusted, 8, 24, 0);
         end else begin
           if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
             if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 16, 16, 0) then begin
-              solution^.space136[140] := chr(1);
+              solution^.case_value[140] := 1;
             end else begin
-              solution^.space136[140] := chr(2);
+              solution^.case_value[140] := 2;
             end;
             t6 := verify_bits(subject.children[1]^.bits_known,
                 subject.children[1]^.bits_trusted, 16, 16, 0);
           end else begin
-            solution^.space136[138] := chr(3);
+            solution^.case_value[138] := 3;
           end;
           t7 := t6;
         end;
         t8 := t7;
       end else begin
-        solution^.space136[137] := chr(2);
+        solution^.case_value[137] := 2;
       end;
       if subject.children[2]^.kind = solution$ip_reg then begin
-        solution^.space136[141] := chr(1);
+        solution^.case_value[141] := 1;
         if subject.children[2]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[142] := chr(1);
+          solution^.case_value[142] := 1;
           if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 8, 24, 0) then begin
-            solution^.space136[143] := chr(1);
+            solution^.case_value[143] := 1;
           end else begin
-            solution^.space136[143] := chr(2);
+            solution^.case_value[143] := 2;
           end;
           t10 := verify_bits(subject.children[2]^.bits_known,
               subject.children[2]^.bits_trusted, 8, 24, 0);
         end else begin
           if subject.children[2]^.inherited_attributes^.fetch_precision = 16 then begin
-            solution^.space136[142] := chr(2);
+            solution^.case_value[142] := 2;
             if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 16, 16, 0) then begin
-              solution^.space136[144] := chr(1);
+              solution^.case_value[144] := 1;
             end else begin
-              solution^.space136[144] := chr(2);
+              solution^.case_value[144] := 2;
             end;
             t9 := verify_bits(subject.children[2]^.bits_known,
                 subject.children[2]^.bits_trusted, 16, 16, 0);
           end else begin
-            solution^.space136[142] := chr(3);
+            solution^.case_value[142] := 3;
             t9 := t8;
           end;
           t10 := t9;
         end;
         t11 := t10;
       end else begin
-        solution^.space136[141] := chr(2);
+        solution^.case_value[141] := 2;
         t11 := t8;
       end;
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
-        solution^.space136[145] := chr(1);
+        solution^.case_value[145] := 1;
       end else begin
-        solution^.space136[145] := chr(2);
+        solution^.case_value[145] := 2;
       end;
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
-        solution^.space136[146] := chr(1);
+        solution^.case_value[146] := 1;
       end else begin
-        solution^.space136[146] := chr(2);
+        solution^.case_value[146] := 2;
       end;
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
-        solution^.space136[147] := chr(1);
+        solution^.case_value[147] := 1;
       end else begin
-        solution^.space136[147] := chr(2);
+        solution^.case_value[147] := 2;
       end;
-      solution^.code_bytes := cost_302_8[ord(solution^.space136[137])] + cost_302_7[ord(solution^.space136[139])] + cost_302_6[ord(solution^.space136[140])] + cost_302_5[ord(solution^.space136[141])] + cost_302_4[ord(solution^.space136[143])] + cost_302_3[ord(solution^.space136[144])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 92;
+      solution^.code_bytes := cost_302_8[solution^.case_value[137]] + cost_302_7[solution^.case_value[139]] + cost_302_6[solution^.case_value[140]] + cost_302_5[solution^.case_value[141]] + cost_302_4[solution^.case_value[143]] + cost_302_3[solution^.case_value[144]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 92;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + 4;
-      solution^.delay := cost_302_2[ord(solution^.space136[137])] + cost_302_1[ord(solution^.space136[141])] + subject.children[1]^.delay + subject.children[2]^.delay + 35;
+      solution^.delay := cost_302_2[solution^.case_value[137]] + cost_302_1[solution^.case_value[141]] + subject.children[1]^.delay + subject.children[2]^.delay + 35;
       solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
       solution^.bits_trusted := bits_trusted_function(subject.il_kind,
@@ -4760,14 +4746,14 @@ begin
         solution^.ip_reg_max := t15;
       end;
       solution^.ip_reg_result := 0;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg := true;
       work := solution;
       result := solution;
     end;
@@ -4797,7 +4783,7 @@ begin
       write('Pattern 303 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_ip_reg_field then begin
+    if subject.already_ip_reg_field then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -4882,14 +4868,14 @@ begin
         solution^.ip_reg_max := t6;
       end;
       solution^.ip_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_ip_reg_field := true;
       work := solution;
       result := solution;
     end;
@@ -4921,7 +4907,7 @@ begin
       write('Pattern 304 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
+    if subject.already_fp_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -4941,99 +4927,99 @@ begin
         solution^.fields[0] := nil;
       end;
       if subject.children[1]^.kind = solution$ip_reg then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
         if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[137] := chr(1);
+          solution^.case_value[137] := 1;
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 24, 0) then begin
-            solution^.space136[138] := chr(1);
+            solution^.case_value[138] := 1;
           end else begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
           end;
         end
         else if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[137] := chr(2);
+          solution^.case_value[137] := 2;
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 16, 16, 0) then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
         end else begin
-          solution^.space136[137] := chr(3);
+          solution^.case_value[137] := 3;
         end;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
       end;
       if subject.children[2]^.kind = solution$ip_reg then begin
-        solution^.space136[140] := chr(1);
+        solution^.case_value[140] := 1;
         if subject.children[2]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[141] := chr(1);
+          solution^.case_value[141] := 1;
           if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 8, 24, 0) then begin
-            solution^.space136[142] := chr(1);
+            solution^.case_value[142] := 1;
           end else begin
-            solution^.space136[142] := chr(2);
+            solution^.case_value[142] := 2;
           end;
         end
         else if subject.children[2]^.inherited_attributes^.fetch_precision = 16 then begin
-          solution^.space136[141] := chr(2);
+          solution^.case_value[141] := 2;
           if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 16, 16, 0) then begin
-            solution^.space136[143] := chr(1);
+            solution^.case_value[143] := 1;
           end else begin
-            solution^.space136[143] := chr(2);
+            solution^.case_value[143] := 2;
           end;
         end else begin
-          solution^.space136[141] := chr(3);
+          solution^.case_value[141] := 3;
         end;
       end else begin
-        solution^.space136[140] := chr(2);
+        solution^.case_value[140] := 2;
       end;
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
-        solution^.space136[144] := chr(1);
+        solution^.case_value[144] := 1;
       end else begin
-        solution^.space136[144] := chr(2);
+        solution^.case_value[144] := 2;
       end;
       if (p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or (subject.inherited_attributes^.fetch_precision = 32) then begin
-        solution^.space136[145] := chr(2);
+        solution^.case_value[145] := 2;
       end else begin
-        solution^.space136[145] := chr(1);
+        solution^.case_value[145] := 1;
         if subject.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[146] := chr(1);
+          solution^.case_value[146] := 1;
           if lir_$can_encode_as_immediate_operand(-solution^.fields[0]^.literal_32_bits_value, ord(opc$add), 1) then begin
-            solution^.space136[147] := chr(1);
+            solution^.case_value[147] := 1;
           end else begin
-            solution^.space136[147] := chr(2);
+            solution^.case_value[147] := 2;
             if lir_$can_encode_as_immediate_operand(solution^.fields[0]^.literal_32_bits_value, ord(opc$move), 1) then begin
-              solution^.space136[148] := chr(1);
+              solution^.case_value[148] := 1;
             end else begin
-              solution^.space136[148] := chr(2);
+              solution^.case_value[148] := 2;
             end;
           end;
         end else begin
-          solution^.space136[146] := chr(2);
+          solution^.case_value[146] := 2;
           if lir_$can_encode_as_immediate_operand((-16#8000), ord(opc$move), 1) then begin
-            solution^.space136[149] := chr(1);
+            solution^.case_value[149] := 1;
           end else begin
-            solution^.space136[149] := chr(2);
+            solution^.case_value[149] := 2;
           end;
         end;
         if lir_$can_encode_as_immediate_operand(-isc_solution_ptr_t(isc_literal_solutions[(-1)])^.literal_32_bits_value, ord(opc$add), 1) then begin
-          solution^.space136[150] := chr(1);
+          solution^.case_value[150] := 1;
         end else begin
-          solution^.space136[150] := chr(2);
+          solution^.case_value[150] := 2;
           if lir_$can_encode_as_immediate_operand(isc_solution_ptr_t(isc_literal_solutions[(-1)])^.literal_32_bits_value, ord(opc$move), 1) then begin
-            solution^.space136[151] := chr(1);
+            solution^.case_value[151] := 1;
           end else begin
-            solution^.space136[151] := chr(2);
+            solution^.case_value[151] := 2;
           end;
         end;
       end;
       if cargs_$options.b27c_1 then begin
-        solution^.space136[152] := chr(1);
+        solution^.case_value[152] := 1;
       end else begin
-        solution^.space136[152] := chr(2);
+        solution^.case_value[152] := 2;
       end;
-      solution^.code_bytes := cost_304_24[ord(solution^.space136[136])] + cost_304_23[ord(solution^.space136[138])] + cost_304_22[ord(solution^.space136[139])] + cost_304_21[ord(solution^.space136[140])] + cost_304_20[ord(solution^.space136[142])] + cost_304_19[ord(solution^.space136[143])] + cost_304_18[ord(solution^.space136[145])] + cost_304_17[ord(solution^.space136[146])] + cost_304_16[ord(solution^.space136[147])] + cost_304_15[ord(solution^.space136[148])] + cost_304_14[ord(solution^.space136[149])] + cost_304_13[ord(solution^.space136[150])] + cost_304_12[ord(solution^.space136[151])] + cost_304_11[ord(solution^.space136[152])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 20;
-      solution^.memory_references := cost_304_10[ord(solution^.space136[148])] + cost_304_9[ord(solution^.space136[149])] + cost_304_8[ord(solution^.space136[151])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
-      solution^.delay := cost_304_7[ord(solution^.space136[136])] + cost_304_6[ord(solution^.space136[140])] + cost_304_5[ord(solution^.space136[145])] + cost_304_4[ord(solution^.space136[148])] + cost_304_3[ord(solution^.space136[149])] + cost_304_2[ord(solution^.space136[151])] + cost_304_1[ord(solution^.space136[152])] + subject.children[1]^.delay + subject.children[2]^.delay + 17;
+      solution^.code_bytes := cost_304_24[solution^.case_value[136]] + cost_304_23[solution^.case_value[138]] + cost_304_22[solution^.case_value[139]] + cost_304_21[solution^.case_value[140]] + cost_304_20[solution^.case_value[142]] + cost_304_19[solution^.case_value[143]] + cost_304_18[solution^.case_value[145]] + cost_304_17[solution^.case_value[146]] + cost_304_16[solution^.case_value[147]] + cost_304_15[solution^.case_value[148]] + cost_304_14[solution^.case_value[149]] + cost_304_13[solution^.case_value[150]] + cost_304_12[solution^.case_value[151]] + cost_304_11[solution^.case_value[152]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 20;
+      solution^.memory_references := cost_304_10[solution^.case_value[148]] + cost_304_9[solution^.case_value[149]] + cost_304_8[solution^.case_value[151]] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
+      solution^.delay := cost_304_7[solution^.case_value[136]] + cost_304_6[solution^.case_value[140]] + cost_304_5[solution^.case_value[145]] + cost_304_4[solution^.case_value[148]] + cost_304_3[solution^.case_value[149]] + cost_304_2[solution^.case_value[151]] + cost_304_1[solution^.case_value[152]] + subject.children[1]^.delay + subject.children[2]^.delay + 17;
       solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
       solution^.bits_trusted := bits_trusted_function(subject.il_kind,
@@ -5054,14 +5040,14 @@ begin
         solution^.fp_reg_max := t8;
       end;
       solution^.fp_reg_result := 1;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg := true;
       work := solution;
       result := solution;
     end;
@@ -5098,7 +5084,7 @@ begin
       write('Pattern 305 matched the semantics.');
       writeln;
     end;
-    if p1_already_ptr_t(addr(subject))^.already_fp_reg then begin
+    if subject.already_fp_reg then begin
       if isc_user_routines_354 then begin
         write('Infinite cycle prevented by NOT adding this to the work list.');
         writeln;
@@ -5113,95 +5099,95 @@ begin
       t4 := make_bit_mask_1(8, 0);
       t5 := make_bit_mask_1(16, 0);
       if not isc_user_routines_358 then begin
-        solution^.space136[136] := chr(1);
+        solution^.case_value[136] := 1;
       end else begin
-        solution^.space136[136] := chr(2);
+        solution^.case_value[136] := 2;
       end;
       if subject.children[1]^.kind = solution$ip_reg then begin
-        solution^.space136[137] := chr(1);
+        solution^.case_value[137] := 1;
         if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[138] := chr(1);
+          solution^.case_value[138] := 1;
           if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 24, 0) then begin
-            solution^.space136[139] := chr(1);
+            solution^.case_value[139] := 1;
           end else begin
-            solution^.space136[139] := chr(2);
+            solution^.case_value[139] := 2;
           end;
           t7 := verify_bits(subject.children[1]^.bits_known,
               subject.children[1]^.bits_trusted, 8, 24, 0);
         end else begin
           if subject.children[1]^.inherited_attributes^.fetch_precision = 16 then begin
-            solution^.space136[138] := chr(2);
+            solution^.case_value[138] := 2;
             if verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 16, 16, 0) then begin
-              solution^.space136[140] := chr(1);
+              solution^.case_value[140] := 1;
             end else begin
-              solution^.space136[140] := chr(2);
+              solution^.case_value[140] := 2;
             end;
             t6 := verify_bits(subject.children[1]^.bits_known,
                 subject.children[1]^.bits_trusted, 16, 16, 0);
           end else begin
-            solution^.space136[138] := chr(3);
+            solution^.case_value[138] := 3;
           end;
           t7 := t6;
         end;
         t8 := t7;
       end else begin
-        solution^.space136[137] := chr(2);
+        solution^.case_value[137] := 2;
       end;
       if subject.children[2]^.kind = solution$ip_reg then begin
-        solution^.space136[141] := chr(1);
+        solution^.case_value[141] := 1;
         if subject.children[2]^.inherited_attributes^.fetch_precision = 8 then begin
-          solution^.space136[142] := chr(1);
+          solution^.case_value[142] := 1;
           if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 8, 24, 0) then begin
-            solution^.space136[143] := chr(1);
+            solution^.case_value[143] := 1;
           end else begin
-            solution^.space136[143] := chr(2);
+            solution^.case_value[143] := 2;
           end;
           t10 := verify_bits(subject.children[2]^.bits_known,
               subject.children[2]^.bits_trusted, 8, 24, 0);
         end else begin
           if subject.children[2]^.inherited_attributes^.fetch_precision = 16 then begin
-            solution^.space136[142] := chr(2);
+            solution^.case_value[142] := 2;
             if verify_bits(subject.children[2]^.bits_known, subject.children[2]^.bits_trusted, 16, 16, 0) then begin
-              solution^.space136[144] := chr(1);
+              solution^.case_value[144] := 1;
             end else begin
-              solution^.space136[144] := chr(2);
+              solution^.case_value[144] := 2;
             end;
             t9 := verify_bits(subject.children[2]^.bits_known,
                 subject.children[2]^.bits_trusted, 16, 16, 0);
           end else begin
-            solution^.space136[142] := chr(3);
+            solution^.case_value[142] := 3;
             t9 := t8;
           end;
           t10 := t9;
         end;
         t11 := t10;
       end else begin
-        solution^.space136[141] := chr(2);
+        solution^.case_value[141] := 2;
         t11 := t8;
       end;
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
-        solution^.space136[145] := chr(1);
+        solution^.case_value[145] := 1;
       end else begin
-        solution^.space136[145] := chr(2);
+        solution^.case_value[145] := 2;
       end;
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
-        solution^.space136[146] := chr(1);
+        solution^.case_value[146] := 1;
       end else begin
-        solution^.space136[146] := chr(2);
+        solution^.case_value[146] := 2;
       end;
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
-        solution^.space136[147] := chr(1);
+        solution^.case_value[147] := 1;
       end else begin
-        solution^.space136[147] := chr(2);
+        solution^.case_value[147] := 2;
       end;
       if cargs_$options.b27c_1 then begin
-        solution^.space136[148] := chr(1);
+        solution^.case_value[148] := 1;
       end else begin
-        solution^.space136[148] := chr(2);
+        solution^.case_value[148] := 2;
       end;
-      solution^.code_bytes := cost_305_10[ord(solution^.space136[137])] + cost_305_9[ord(solution^.space136[139])] + cost_305_8[ord(solution^.space136[140])] + cost_305_7[ord(solution^.space136[141])] + cost_305_6[ord(solution^.space136[143])] + cost_305_5[ord(solution^.space136[144])] + cost_305_4[ord(solution^.space136[148])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 96;
+      solution^.code_bytes := cost_305_10[solution^.case_value[137]] + cost_305_9[solution^.case_value[139]] + cost_305_8[solution^.case_value[140]] + cost_305_7[solution^.case_value[141]] + cost_305_6[solution^.case_value[143]] + cost_305_5[solution^.case_value[144]] + cost_305_4[solution^.case_value[148]] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 96;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + 4;
-      solution^.delay := cost_305_3[ord(solution^.space136[137])] + cost_305_2[ord(solution^.space136[141])] + cost_305_1[ord(solution^.space136[148])] + subject.children[1]^.delay + subject.children[2]^.delay + 37;
+      solution^.delay := cost_305_3[solution^.case_value[137]] + cost_305_2[solution^.case_value[141]] + cost_305_1[solution^.case_value[148]] + subject.children[1]^.delay + subject.children[2]^.delay + 37;
       solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
       solution^.bits_trusted := bits_trusted_function(subject.il_kind,
@@ -5234,14 +5220,14 @@ begin
         solution^.ip_reg_max := t15;
       end;
       solution^.ip_reg_result := 0;
-      p1_already_ptr_t(solution)^.already_address_mode := p1_already_ptr_t(addr(subject))^.already_address_mode;
-      p1_already_ptr_t(solution)^.already_fp_reg := p1_already_ptr_t(addr(subject))^.already_fp_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg_pair := p1_already_ptr_t(addr(subject))^.already_fp_reg_pair;
-      p1_already_ptr_t(solution)^.already_fp_reg_quad := p1_already_ptr_t(addr(subject))^.already_fp_reg_quad;
-      p1_already_ptr_t(solution)^.already_ip_reg := p1_already_ptr_t(addr(subject))^.already_ip_reg;
-      p1_already_ptr_t(solution)^.already_ip_reg_field := p1_already_ptr_t(addr(subject))^.already_ip_reg_field;
-      p1_already_ptr_t(solution)^.already_processor_reg := p1_already_ptr_t(addr(subject))^.already_processor_reg;
-      p1_already_ptr_t(solution)^.already_fp_reg := true;
+      solution^.already_address_mode := subject.already_address_mode;
+      solution^.already_fp_reg := subject.already_fp_reg;
+      solution^.already_fp_reg_pair := subject.already_fp_reg_pair;
+      solution^.already_fp_reg_quad := subject.already_fp_reg_quad;
+      solution^.already_ip_reg := subject.already_ip_reg;
+      solution^.already_ip_reg_field := subject.already_ip_reg_field;
+      solution^.already_processor_reg := subject.already_processor_reg;
+      solution^.already_fp_reg := true;
       work := solution;
       result := solution;
     end;

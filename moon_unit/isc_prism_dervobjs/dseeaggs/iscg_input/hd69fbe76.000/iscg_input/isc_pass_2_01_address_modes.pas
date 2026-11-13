@@ -198,7 +198,7 @@ var
   t2: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[8])),

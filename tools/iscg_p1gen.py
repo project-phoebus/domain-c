@@ -177,21 +177,6 @@ NEAR_TYPES = '''  { The last table below 32 KB in a module that passes it: round
   p1_near_last_byte_costs_t = packed array [0..19] of 0..255;
   p1_near_last_word_costs_t = array [0..17] of integer;'''
 
-ALREADY_VIEW = '''  { The chain rules' cycle guard: a solution's seven already_ flags
-    (+342 .. +348, bytes isc_solution_fields.ins.pas leaves in space136),
-    under the image's names. }
-  p1_already_ptr_t = ^p1_already_t;
-  p1_already_t = record
-    x: array [0..170] of integer;               { +0 }
-    already_address_mode: boolean;              { +342 }
-    already_fp_reg: boolean;                    { +343 }
-    already_fp_reg_pair: boolean;               { +344 }
-    already_fp_reg_quad: boolean;               { +345 }
-    already_ip_reg: boolean;                    { +346 }
-    already_ip_reg_field: boolean;              { +347 }
-    already_processor_reg: boolean;             { +348 }
-    end;'''
-
 INT_FIELDS_VIEW = '''  { A rule's own longwords (+352 ..) that hold integers
     (isc_solution_fields.ins.pas declares pointers there). }
   p1_int_fields_ptr_t = ^p1_int_fields_t;
@@ -335,7 +320,7 @@ def routine(r, t, headings, tables):
     else:
         i3 = i2
         if f['guard']:
-            inner.append(i2 + 'if p1_already_ptr_t(addr(subject))^.%s then begin' % f['guard'])
+            inner.append(i2 + 'if subject.%s then begin' % f['guard'])
             inner.extend(trace_lines(
                 'Infinite cycle prevented by NOT adding this to the work list.', i2 + '  '))
             inner.append(i2 + 'end')
@@ -347,10 +332,9 @@ def routine(r, t, headings, tables):
         inner.append(i3 + 'solution^.before_transform := addr(subject);')
         inner.extend(em.stmts(c.body, i3))
         for a in L1.ALREADY:
-            inner.extend(em.lines(i3, 'p1_already_ptr_t(solution)^.%s := '
-                                      'p1_already_ptr_t(addr(subject))^.%s;' % (a, a)))
+            inner.extend(em.lines(i3, 'solution^.%s := subject.%s;' % (a, a)))
         if f['guard'] or f.get('mark'):
-            inner.append(i3 + 'p1_already_ptr_t(solution)^.%s := true;' % (
+            inner.append(i3 + 'solution^.%s := true;' % (
                 f['guard'] or f['mark']))
         inner.append(i3 + 'work := solution;')
         inner.append(i3 + 'result := solution;')
@@ -449,12 +433,12 @@ def gen_module(rules, sec, headings, includes, gen_note, pattern_text, wrap_word
         views.append(INT_FIELDS_VIEW)
     if 'p2_locals_ptr_t' in text:
         views.append(P2G.LOCALS_VIEW)
-    views.append(ALREADY_VIEW)
     if layout:
         views.insert(0, TYPES)
-    out.append('type')
-    out.extend(views)
-    out.append('')
+    if views:
+        out.append('type')
+        out.extend(views)
+        out.append('')
     if 'lir_3c60' in text or 'lir_3d60' in text:
         out.append(P2G.LIR_TABS)
         out.append('')

@@ -59,6 +59,15 @@ type
     kinds prints one). }
   solution$set_t = set of solution$t;
 
+  { The rules' own byte locals (+136 .. +341: case_value, which
+    dump_solution prints through case_index_array_to_string, passing
+    its address).  Declared here, not with its printer in
+    isc_routine_externs.ins.pas: that insert is opened after this one
+    in every unit that opens both, and isc_solution_t needs the type
+    (Pascal has no forward declaration of a non-pointer type): the type
+    moved here, the printer's heading stayed (docs/questions.md 313). }
+  isc_case_index_array_t = array [136..341] of 0..255;
+
   { A solution as the ISC reads it (432 bytes; see above).  The
     fields carry the image's names (dump_solution prints each attribute
     after its name, docs/questions.md 267; the generator's attribute
@@ -168,12 +177,20 @@ type
       b2, b1, b0: boolean;
       end;
     children: array [1..5] of isc_solution_ptr_t;  { +116 }
-    space136: array [136..351] of char; { +136: the rules' own byte
-                                          locals (case_value +136,
-                                          already_address_mode ..
-                                          already_processor_reg +342
-                                          .. +348: isc_debug's
-                                          ds_solution_t) }
+    case_value: isc_case_index_array_t; { +136: the rules' own byte
+                                          locals (each rule's
+                                          alternatives' numbers:
+                                          docs/iscg-design.md 2.6) }
+    already_address_mode: boolean;      { +342: the chain rules' cycle
+                                          guard, one per register kind
+                                          (`Infinite cycle prevented') }
+    already_fp_reg: boolean;            { +343 }
+    already_fp_reg_pair: boolean;       { +344 }
+    already_fp_reg_quad: boolean;       { +345 }
+    already_ip_reg: boolean;            { +346 }
+    already_ip_reg_field: boolean;      { +347 }
+    already_processor_reg: boolean;     { +348 }
+    x349: array [349..351] of char;     { +349 }
     fields: array [0..19] of isc_solution_ptr_t;   { +352: the
                                           rule's own fields, laid out
                                           per rule (preserve_solution

@@ -105,6 +105,13 @@ def enum_name(cls, v):
     return il_t_names()[v]
 
 
+# the rules' locals the insert names (docs/questions.md 313): +136 ..
+# +341 the bytes of case_value, +342 .. +348 the chain rules' cycle
+# guard, one flag per register kind
+ALREADY = ['already_address_mode', 'already_fp_reg', 'already_fp_reg_pair',
+           'already_fp_reg_quad', 'already_ip_reg', 'already_ip_reg_field',
+           'already_processor_reg']
+
 # (offset, size) -> (insert path, class) for the whole longwords, words,
 # bytes
 SOL_FIELDS = {
@@ -739,8 +746,12 @@ class Emitter:
         m = re.match(r'([cwls])(\d+)$', s)
         if m and not s in ATTRS:
             kind, off = m.group(1), int(m.group(2))
-            if kind == 'c' and 136 <= off < 352:
-                return '%s.space136[%d]' % (r, off), 'char'
+            if kind == 'c' and 136 <= off < 342:
+                # the rules' byte locals: the insert's case_value
+                return '%s.case_value[%d]' % (r, off), 'u8'
+            if kind == 'c' and 342 <= off <= 348:
+                # the chain rules' cycle guard (docs/questions.md 313)
+                return '%s.%s' % (r, ALREADY[off - 342]), 'bool'
             if kind == 'l' and off >= 352 and off % 4 == 0:
                 return '%s.fields[%d]' % (r, (off - 352) // 4), 'isp'
             if kind == 's' and (off, 4) in SOL_FIELDS:

@@ -1138,10 +1138,10 @@ temps.
 **The modules**: the generator writes the skeleton around each clause
 (the trace as `write(...); writeln;', gap 4's rewrite line per module in
 cc_gap_rewrites.txt), the views the bodies need (p2's node, flags and
-locals views; p1_already_t for the guard's flags at +342..+348,
-p1_int_fields_t, p1_snode_t, p1_readonly_t), the tables, one routine
-per rule.  Similarity (cc.a88k, non-identical routines): 0.34 (21) ..
-0.51 (08), 0.53 .. 0.75 modulo registers.  Gap 25 (dpc runs out of
+locals views; p1_already_t for the guard's flags at +342..+348 until
+question 313 named them in the insert, p1_int_fields_t, p1_snode_t,
+p1_readonly_t), the tables, one routine per rule.  Similarity (cc.a88k,
+non-identical routines): 0.34 (21) .. 0.51 (08), 0.53 .. 0.75 modulo registers.  Gap 25 (dpc runs out of
 registers; the check compiles them empty): 02's 153, 157, 158, 169, 170;
 09's 445, 450, 474; 10's 423; 14's 384; 25's 120, 121.  tools/cc_typecheck.sh
 reports only gap 4's message.

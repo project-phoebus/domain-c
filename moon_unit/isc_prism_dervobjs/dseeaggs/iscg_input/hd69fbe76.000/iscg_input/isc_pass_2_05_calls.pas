@@ -158,7 +158,7 @@ procedure transform_347_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
@@ -178,8 +178,8 @@ procedure transform_348_pass_2(var self: isc_solution_t;
 var
   t1: isc_solution_ptr_t;
 begin
-  if ord(result.space136[136]) = 1 then begin
-    if ord(result.space136[137]) = 1 then begin
+  if result.case_value[136] = 1 then begin
+    if result.case_value[137] = 1 then begin
       if solution^.object_with_name <> nil then begin
         solution^.object_with_name := solution^.object_with_name;
       end else begin
@@ -196,7 +196,7 @@ begin
           subject^.children[1]^.base_register, solution);
     end;
   end
-  else if ord(result.space136[138]) = 1 then begin
+  else if result.case_value[138] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(subject^.children[1]^.literal_32_bits_value),
