@@ -305,7 +305,7 @@ begin
         node^.xl[8] := f
       else begin
         node^.xl[8] := f ! 16#01000000;
-        if ((f & 16#100) <> 0) and (node^.xw[36] = 2)
+        if ((f & 16#100) <> 0) and (node^.vr_vat = dynm_vat)
            and ((f & 16#400) = 0) then begin
           node^.xp[19] := rtn^.l12;
           rtn^.l12 := node;
@@ -472,7 +472,7 @@ begin
   if node = nil then
     return;
   if (node^.kind = var_name) and (node^.xp[1] <> nil) then begin
-    if node^.xw[36] <> 5 then
+    if node^.vr_vat <> param_vat then
       goto 10;
     add_arrow(s);
     goto 10;
@@ -612,7 +612,7 @@ var
 begin
   node := nd;
   if node^.kind = var_name then
-    vat := node^.xw[36]
+    vat := ord(node^.vr_vat)
   else if node^.kind = fortran_symbol then
     vat := (ord(node^.xc[11]) & 16#F0) div 16
   else
@@ -730,7 +730,7 @@ var
 begin
   node := nd;
   if node^.kind = var_name then begin
-    if node^.xw[36] = 5 then
+    if node^.vr_vat = param_vat then
       sym_$allocation_size_in_bytes := 4
     else if var_$strength_reduction in node^.vr_attr then
       sym_$allocation_size_in_bytes := 4
@@ -805,9 +805,9 @@ begin
   end;
   off := (mask + blk^.xl[5] - 1) & ~mask;
   if node^.kind = var_name then begin
-    if node^.xw[36] = 1 then
+    if node^.vr_vat = static_vat then
       return;
-    node^.xw[36] := 1;
+    node^.vr_vat := static_vat;
     node^.xl[14] := off;
   end
   else if node^.kind = fortran_symbol then begin

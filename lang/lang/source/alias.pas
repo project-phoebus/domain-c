@@ -596,41 +596,41 @@ begin
             end;
           end;
         end;
-        case n^.xw[36] of
-          9:
+        case n^.vr_vat of
+          based_vat:
             ok := false;
-          0:
+          local_vat:
             d.class := alias_never_invalidated;
-          2: begin
+          dynm_vat: begin
             if alias_bits_t(n^.xl[8]) * [0, 8, 12] <> [] then
               d.class := alias_dynamic
             else
               d.class := alias_unaliased_dynamic;
             d.uplevel := il_180 <> n^.xp[5];
           end;
-          3, 4, 8, 11:
+          extern_vat, externdef_vat, xextrndef_vat, absolute_vat:
             d.class := alias_external;
-          5:
+          param_vat:
             d.class := alias_dynamic_param_ptr;
-          10: begin
+          sect_vat: begin
             d.class := alias_common_block;
             d.base := n^.xp[20];
             d.sym := n;
             d.disp := n^.xl[14];
           end;
-          1:
+          static_vat:
             if alias_bits_t(n^.xl[8]) * [0, 8, 12, 17] <> [] then
               d.class := alias_static
             else
               d.class := alias_unaliased_static;
-          6: begin
+          xdynm_vat: begin
             if alias_bits_t(n^.xl[8]) * [0, 8, 12, 17] <> [] then
               d.class := alias_xdynamic
             else
               d.class := alias_unaliased_xdynamic;
             d.uplevel := il_180 <> n^.xp[5];
           end;
-          7:
+          xstatic_vat:
             if alias_bits_t(n^.xl[8]) * [0, 8, 12, 17] <> [] then
               d.class := alias_xstatic
             else

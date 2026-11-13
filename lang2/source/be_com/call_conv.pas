@@ -98,25 +98,10 @@ type
                                           in bits (languages 1, 5) }
     unused_320: array [320..331] of char;    { +320 }
     preset: call_conv_$preset_t;        { +332: c_blk_t's ropts }
-    unused_374: packed record           { +374 }
-      b374_7: boolean;
-      b374_6: boolean;                  { .6 }
-      b374_5_0: 0..63;
-      b375: 0..255;
-      b376_7, b376_6: boolean;          { +376 }
-      b376_5: boolean;                  { .5: asynchronous }
-      b376_4: boolean;                  { .4 (db_adjusted) }
-      b376_3, b376_2, b376_1: boolean;
-      cls: 0..3;                        { .0 to +377.7 }
-      conv: 0..7;                       { +377 .6..4: the language }
-      b377_3_0: 0..15;
-      made: boolean;                    { +378 .7 }
-      b378_6: boolean;                  { .6: has a static link }
-      b378_5_0: 0..63;
-      b379_7: boolean;                  { +379 }
-      b379_6: boolean;                  { .6 }
-      b379_5_0: 0..63;
-      end;
+    blk_atts: il_$blk_atts_t;           { +374: the attributes: call
+                                          the language, abnorm
+                                          asynchronous, pass_display a
+                                          static link }
     unused_380: array [380..391] of char;    { +380 }
     params: c_parlist_ptr_t;            { +392: the prototype's types
                                           (+2 the count, +4k the k-th) }
@@ -202,9 +187,9 @@ begin
   case t^.kind of
     function_blk: begin
       b := cc_blk_ptr_t(t);
-      if b^.unused_374.conv in [1, 3, 5] then begin
+      if b^.blk_atts.call in [call_pas, call_c, call_ada] then begin
         type_exp(b^.result, addr(te));
-        if b^.unused_374.conv in [1, 5] then
+        if b^.blk_atts.call in [call_pas, call_ada] then
           te.size := rshft(b^.bits316 + 7, 3);
         size := te.size;
         rlen := get_rlen(te);
@@ -388,7 +373,7 @@ function ftn_alt_rtn(
     in n: il_$node_ptr_t): boolean;
 begin
   ftn_alt_rtn := (n^.kind = procedure_blk)
-                 and (cc_blk_ptr_t(n)^.unused_374.conv = 2)
+                 and (cc_blk_ptr_t(n)^.blk_atts.call = call_ftn)
                  and (cc_blk_ptr_t(n)^.ret_var <> nil);
 end;
 
@@ -719,7 +704,7 @@ begin
     blk := entry_blk_check(node);
     heap := addr(lir_3f78);
     b := cc_blk_ptr_t(node);
-    conv := b^.unused_374.conv;
+    conv := b^.blk_atts.call;
     if conv in [1, 5] then
       preset := addr(b^.preset)
     else if (conv = 3) and (15 in cargs_$options.flags_286) then
@@ -727,7 +712,7 @@ begin
     else
       preset := addr(preset_1);
     if conv = 3 then
-      nested := (b^.lev.level > 0) and not b^.unused_374.b376_4
+      nested := (b^.lev.level > 0) and not b^.blk_atts.save_db
     else
       nested := b^.lev.level > 0;
     if conv in [1, 3, 5] then begin
@@ -760,7 +745,7 @@ begin
        or (callee^.kind = procedure_blk) then begin
       blk := entry_blk_check(node^.xp[10]);
       opr := blk^.parms;
-      conv := blk^.unused_374.conv;
+      conv := blk^.blk_atts.call;
       if conv in [1, 5] then
         preset := addr(blk^.preset)
       else
@@ -769,7 +754,7 @@ begin
       nested := lvl > 0;
       if conv in [1, 5] then begin
         vats := addr(blk^.vats);
-        if blk^.unused_374.b378_6 then begin
+        if blk^.blk_atts.pass_display then begin
           cur := cc_blk_ptr_t(il_180);
           if lvl > cur^.lev.level then
             link := il_node_153
@@ -786,7 +771,7 @@ begin
           opr := il_$node_ptr_t(blk);
           nfixed := node^.xw[13] & 16#FFFF;
         end;
-        if blk^.unused_374.b378_6 then begin
+        if blk^.blk_atts.pass_display then begin
           cur := cc_blk_ptr_t(il_180);
           if lvl > cur^.lev.level then
             link := il_node_153
@@ -838,7 +823,7 @@ begin
       t := callee^.xp[4];
       if (t^.kind = function_blk) or (t^.kind = procedure_blk) then begin
         blk := cc_blk_ptr_t(t);
-        nested := (blk^.lev.level > 0) and not blk^.unused_374.b376_4;
+        nested := (blk^.lev.level > 0) and not blk^.blk_atts.save_db;
       end
       else
         blk := cc_blk_ptr_t(link);
@@ -898,22 +883,22 @@ begin
   props^.b29 := 10 in preset^.flags;
   if nested then
     if blk <> nil then
-      blk^.unused_374.b379_6 := blk^.unused_374.b379_6
-                                or blk^.unused_374.b376_4;
+      blk^.blk_atts.local_call_different_db :=
+          blk^.blk_atts.local_call_different_db or blk^.blk_atts.save_db;
   if not nested then
     props^.w16 := 2
   else if blk = nil then
     props^.w16 := 21
-  else if blk^.unused_374.b379_6 then
+  else if blk^.blk_atts.local_call_different_db then
     props^.w16 := 2
   else
     props^.w16 := 21;
   if blk <> nil then begin
-    props^.b27 := blk^.unused_374.cls = 0;
+    props^.b27 := blk^.blk_atts.bat = local_bat;
     if not props^.b27 then
       props^.uplevel_dynamic_storage_untouched := true;
     props^.data_sect := blk^.data_sect;
-    props^.b30 := blk^.unused_374.made;
+    props^.b30 := blk^.blk_atts.sb_display;
   end
   else begin
     props^.b27 := false;
@@ -932,7 +917,7 @@ begin
     end;
   end
   else begin
-    props^.async := blk^.unused_374.b376_5;
+    props^.async := blk^.blk_atts.abnorm;
     t := blk^.name.id;
     props^.cleanup := pfm_cleanup_check(t^.idnt_name, t^.idnt_len);
   end;
@@ -1134,7 +1119,7 @@ begin
         else
           d^.by_value := false;
       end
-      else if (blk <> nil) and (blk^.unused_374.conv = 2) then begin
+      else if (blk <> nil) and (blk^.blk_atts.call = call_ftn) then begin
         d^.by_value := rshft(ord(il_$node_ptr_t(d^.sym)^.xc[11]) & 16#F0, 4)
                        = 2;
         if d^.by_value then begin
@@ -1146,7 +1131,7 @@ begin
         else
           d^.f22.mode := 1;
       end
-      else if (blk <> nil) and (blk^.unused_374.conv = 3) then begin
+      else if (blk <> nil) and (blk^.blk_atts.call = call_c) then begin
         d^.by_value := true;
         d^.f22.mode := 0;
         step := (d^.size + 3) div 4 * 4;
@@ -1169,7 +1154,8 @@ begin
                   d^.size := step;
                 end;
               end
-              else if (a^.kind = var_name) and (a^.xw[36] = 5) then begin
+              else if (a^.kind = var_name) and
+                      (a^.vr_vat = param_vat) then begin
                 d^.f16.rlen := rlen_addr;
                 d^.size := step;
               end
@@ -1211,7 +1197,7 @@ begin
   end;
   if (opr^.kind = procedure_blk) or (opr^.kind = entry_blk)
       or (opr^.kind = function_blk) then
-    is4 := cc_blk_ptr_t(opr)^.unused_374.conv = 4
+    is4 := cc_blk_ptr_t(opr)^.blk_atts.call = call_c_std
   else
     is4 := false;
   if is4 or (opr^.kind = fortran_symbol) or (opr^.kind = ptr_node) then begin
@@ -1324,7 +1310,7 @@ begin
     end;
   if (node^.kind = procedure_blk) or (node^.kind = entry_blk)
       or (node^.kind = function_blk) then
-    if cc_blk_ptr_t(node)^.unused_374.conv = 3 then begin
+    if cc_blk_ptr_t(node)^.blk_atts.call = call_c then begin
       proto := true;
       pt := get_proto(node);
     end;
@@ -1493,7 +1479,7 @@ begin
     props^.args[j].b25 := false;
   b := cc_blk_ptr_t(node);
   if ((node^.kind = function_blk) or (node^.kind = procedure_blk))
-     and b^.unused_374.b374_6 then
+     and b^.blk_atts.addr_fparam then
     if (b^.params = nil)
        or (b^.params^.types[b^.params^.count]^.kind = label_ob) then begin
       hi := 4;

@@ -2329,11 +2329,11 @@ begin
     common_block_name:
       get_reloc_symndx := p^.xw[16];
     var_name:
-      if p^.xw[36] in [1, 7] then
+      if p^.vr_vat in [static_vat, xstatic_vat] then
         get_reloc_symndx := p^.xp[5]^.xp[48]^.xw[22]
       else begin
         get_reloc_symndx := p^.xw[38];
-        if (p^.xw[38] = 0) and (p^.xw[36] = 10) then
+        if (p^.xw[38] = 0) and (p^.vr_vat = sect_vat) then
           get_reloc_symndx := p^.xp[20]^.xw[16];
       end;
     fortran_symbol:

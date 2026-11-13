@@ -824,7 +824,7 @@ begin
   t := rr^.node;
   if t^.kind = var_name then begin
     vn := t^.xw[37];
-    if t^.xw[36] = 5 then
+    if t^.vr_vat = param_vat then
       rr^.rlen := rlen_addr
     else
       rr^.rlen := get_rlen(opt_var_types^[vn]);

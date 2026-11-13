@@ -373,7 +373,7 @@ begin
     xfer^.quad := true;
   if cand and xfer^.prolog then begin
     sym := arg^.sym;
-    if (sym^.kind = var_name) and ((sym^.xw[36] = 5)
+    if (sym^.kind = var_name) and ((sym^.vr_vat = param_vat)
                                    or (arg^.f22.mode = 2)) then begin
       sol := nil;
       r := arg^.f22.reg;
@@ -421,7 +421,7 @@ begin
   xfer^.opc := lm_move_by_loc[arg^.f18.loc];
   sym := arg^.sym;
   if sym^.kind = var_name then begin
-    vat := sym^.xw[36];
+    vat := ord(sym^.vr_vat);
     if vat = 5 then
       n := 32
     else
@@ -1410,7 +1410,7 @@ begin
     v := p^.v;
     if v^.kind <> var_name then
       bug_check('LIR_MAIN_\BY_BRANCH_PROLOGS_FOR_HANDLER -- exception not identified by a var_name%$');
-    vat := v^.xw[36];
+    vat := ord(v^.vr_vat);
     if vat in [3, 7, 8] then begin
       off := 0;
       if vat = 3 then

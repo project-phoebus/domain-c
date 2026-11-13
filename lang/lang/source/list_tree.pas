@@ -85,17 +85,19 @@
   from these dumps (docs/questions.md 326).  The node kinds are
   il.ins.pas's il_$kind_t; this unit has no table of their names.
 
-  The views are laid out as dpc lays records out: a packed record is
-  rounded to a word and a set of 0..7 takes a word, so the node's first
-  two bytes are one packed record (kind at +2), a basic block's flags
-  a packed record of booleans (depth at +2) and xs a packed array of
-  byte sets; laid out otherwise, every field after them was read 2
-  bytes off (docs/questions.md 330).
+  The one-byte flags are `[byte]' (language reference 3.15.5): Rev 8.89
+  gives a set of 0..7 a word (3.9.3) and a packed record at least 16
+  bits (3.10.7), as dpc does, so the node's flags (a packed record of
+  booleans), a basic block's (a set) and xs's elements (sets) take a
+  byte only so; without it every field after them is read 2 bytes off
+  (kind at +4, depth at +4: docs/questions.md 330).
 
   dpc gaps (docs/dpc-gaps.md): 8 (`in' on the kind and operator
   sets, every one), 9 (sanity_check_walk_spine declared forward), 29
   (print_top_node's variables used), 48 (print_top_node's `in' on an
-  assignment operator against a longword set).
+  assignment operator against a longword set), 49 (the rewritten flag,
+  bit 7 of the `[byte]' packed record, read as a word: the image's
+  `tst.b').
 
   Not known from the original: every name but the routines'; the
   module's variables and the locals; the node views' field names.
@@ -146,7 +148,7 @@ type
   lt_word_t = 0..65535;
 
   { A byte of flags tested bit by bit. }
-  lt_bits_t = set of 0..7;
+  lt_bits_t = [byte] set of 0..7;
 
   lt_ptr_t = ^lt_node_t;
 
@@ -178,23 +180,27 @@ type
     w6: integer;                        { +6 }
   end;
 
+  { A basic block's flags (+0), bit n element n, as print_basic_block
+    names them (' Abnormal ', ' Loop Head ', ' Preheader', ' CLEANUP  ',
+    with bb_ before them: the block's preheader is a field); 3..6 are
+    not printed. }
+  lt_bb_flag_t = (
+    bb_abnormal,                        { 0 }
+    bb_loop_head,                       { 1 }
+    bb_preheader,                       { 2 }
+    bb_3, bb_4, bb_5, bb_6,
+    bb_cleanup);                        { 7 }
+
   { A basic block (il_11c's entries). }
   lt_bb_ptr_t = ^lt_bb_t;
   lt_bbs_t = array [1..100000] of lt_bb_ptr_t;
   lt_bbs_ptr_t = ^lt_bbs_t;
   lt_bb_t = record
-    flags: packed record                { +0 (a set of 0..7 would take
-                                          a word in dpc and put depth
-                                          at +4: the image reads it at
-                                          +2, print_basic_block 0x08573C) }
-      cleanup: boolean;                 { .7 }
-      f6, f5, f4, f3: boolean;
-      preheader: boolean;               { .2 }
-      loop_head: boolean;               { .1 }
-      abnormal: boolean;                { .0 }
-      b1: 0..255;                       { +1 }
-    end;
-    depth: integer;                     { +2: the loop depth }
+    flags: [byte] set of lt_bb_flag_t;  { +0 }
+    b1: char;                           { +1 }
+    depth: integer;                     { +2: the loop depth (the image
+                                          reads it at +2,
+                                          print_basic_block 0x08573C) }
     dom: lt_bb_ptr_t;                   { +4: the dominator }
     x8: integer32;                      { +8 }
     index: lt_bb_ptr_t;                 { +12: the loop index's }
@@ -232,17 +238,15 @@ type
   lt_ptr_array_t = array [1..64] of lt_ptr_t;
 
   { A node as this unit reads it.  The kinds' variants by offset (xp, xl,
-    xw, xc as il.ins.pas's) where no named one is declared.  +1 is in
-    the flags' packed record: dpc rounds a packed record to a word, and
-    the flags alone with b1 after them put kind at +4 (the image reads
-    it at +2: print_routine_block `move.w (2,A3),D0', cc.m68k
-    0x08258A). }
+    xw, xc as il.ins.pas's) where no named one is declared.  The flags
+    are a byte (kind at +2: print_routine_block `move.w (2,A3),D0',
+    cc.m68k 0x08258A). }
   lt_node_t = record
-    flags: packed record                { +0 }
+    flags: [byte] packed record         { +0 }
       rewritten: boolean;               { .7 }
       f6, f5, f4, f3, f2, f1, f0: boolean;
-      b1: 0..255;                       { +1 }
     end;
+    b1: char;                           { +1 }
     kind: il_$kind_t;                   { +2 }
     case integer of
       { A tree node (137, 138, 143; 164, 171, 175, 189, 190, 219, 220,
@@ -372,9 +376,23 @@ type
            hd_w68: integer;             { +68 }
            hd_count: 0..65535);         { +70: a handler's (223)
                                           exceptions, from +76 }
-      { A label (144): its class's byte. }
+      { A label (144): its class's byte and its booleans (il.ins.pas's
+        label variant). }
       20: (lb_x4: array [1..17] of integer32;       { +4 }
-           lb_atts: il_$label_atts_t);  { +72 }
+           lb_atts: il_$label_atts_t;   { +72 }
+           abnormal: boolean;           { +74 }
+           nlgoto: boolean;             { +75 }
+           assigned_goto_target: boolean;   { +76 }
+           well_behaved: boolean);      { +77 }
+      { An identifier (il.ins.pas's idnt_len, idnt_name): a variable's
+        name. }
+      21: (idnt_x4: array [1..3] of integer32;      { +4 }
+           idnt_len: integer;           { +16 }
+           idnt_name: array [1..4096] of char);     { +18 }
+      { A record constant (176 rec_const_ob), as print_tree_ref names
+        its fields ('linkp=', ',size='). }
+      22: (linkp: integer32;            { +4 }
+           size: integer32);            { +8 }
       { A block's register assignments (178), per register 0..23. }
       17: (ra: array [0..23] of lt_ra_t);           { +4 }
       9: (xp: array [1..94] of lt_ptr_t);           { +4 }
@@ -386,9 +404,7 @@ type
       13: (xw: array [2..189] of integer);          { +4 }
       14: (xc: array [4..379] of char);             { +4 }
       15: (xb: array [4..379] of -128..127);        { +4 }
-      16: (xs: packed array [4..379] of lt_bits_t); { +4: bytes (an
-                                          unpacked array's elements are
-                                          words in dpc) }
+      16: (xs: array [4..379] of lt_bits_t);        { +4 }
   end;
 
   { The line's sizes' letters (+0x130 of the data), by +8 of a register
@@ -1131,9 +1147,9 @@ begin
       rec_const_ob: begin
         print_string('REC_CONST ', 10);
         print_string('linkp=', 6);
-        print_hex(t^.xl[1], 8);
+        print_hex(t^.linkp, 8);
         print_string(',size=', 6);
-        print_integer(t^.xl[2], 6, false);
+        print_integer(t^.size, 6, false);
         return;
       end;
       blockdata_blk, entry_blk, program_blk, function_blk, procedure_blk,
@@ -1610,8 +1626,8 @@ begin
       bytes := sz_fsym(il_$node_ptr_t(v));
   end
   else begin
-    print_string(v^.vr_name^.xc[18], v^.vr_name^.xw[8]);
-    print_string(blanks, 18 - v^.vr_name^.xw[8]);
+    print_string(v^.vr_name^.idnt_name, v^.vr_name^.idnt_len);
+    print_string(blanks, 18 - v^.vr_name^.idnt_len);
     type_exp(v^.vr_type, addr(te));
     bytes := te.size;
   end;
@@ -2277,14 +2293,14 @@ begin
       print_bool(t^.lb_atts.def);
       print_string(',fwrd=', 6);
       print_bool(t^.lb_atts.fwrd);
-      if 7 in t^.xs[74] then
-        if 7 in t^.xs[77] then
+      if t^.abnormal then
+        if t^.well_behaved then
           print_string(',abnormal(well_behaved)', 23)
         else
           print_string(',abnormal', 9);
-      if 7 in t^.xs[75] then
+      if t^.nlgoto then
         print_string(',NLGoTo', 7);
-      if 7 in t^.xs[76] then
+      if t^.assigned_goto_target then
         print_string(',assigned_goto_target', 21);
       print_string(') serial=', 9);
       print_integer(t^.st_serial, 6, false);
@@ -2847,12 +2863,12 @@ begin
     print_integer(b^.index^.num, 4, true)
   else
     print_integer(0, 4, true);
-  if b^.flags.preheader then print_string(' Preheader', 10);
-  if b^.flags.loop_head then print_string(' Loop Head ', 11);
-  if b^.flags.abnormal then print_string(' Abnormal ', 10);
-  if b^.flags.cleanup then print_string(' CLEANUP  ', 10);
+  if bb_preheader in b^.flags then print_string(' Preheader', 10);
+  if bb_loop_head in b^.flags then print_string(' Loop Head ', 11);
+  if bb_abnormal in b^.flags then print_string(' Abnormal ', 10);
+  if bb_cleanup in b^.flags then print_string(' CLEANUP  ', 10);
   fresh_ln(0);
-  if b^.flags.loop_head then begin
+  if bb_loop_head in b^.flags then begin
     print_string(' PreHeader ', 11);
     if b^.preheader <> nil then
       print_integer(b^.preheader^.num, 4, true)

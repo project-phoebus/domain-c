@@ -76,7 +76,7 @@ var
 begin
   if (n = nil) or else (n^.kind <> assign_node) then
     bug_check('IL_UTILS_$\PACK_AOP_TO_MEM --- node^.kind is not an assign_node.%.');
-  if n^.xw[38] <> 10 then
+  if n^.asg_op <> pack_aop then
     bug_check('IL_UTILS_$\PACK_AOP_TO_MEM --- node^.assign_node.op <> pack_aop.%.');
   if (ord(n^.xc[58]) & 16#40) <> 0 then
     return;
@@ -139,10 +139,10 @@ begin
   end;
   val := val ! lshft(r^.xp[11]^.xl[2], bits - (n^.xw[28] + width));
   case r^.tr_op of
-    add_top: n^.xw[38] := 1;
-    sub_top: n^.xw[38] := 2;
-    and_top: n^.xw[38] := 3;
-    or_top: n^.xw[38] := 4;
+    add_top: n^.asg_op := add_to_aop;
+    sub_top: n^.asg_op := sub_from_aop;
+    and_top: n^.asg_op := and_to_aop;
+    or_top: n^.asg_op := or_to_aop;
     otherwise
       ;
   end;
@@ -247,7 +247,7 @@ begin
     bug_check('IL_UTILS_$\AOP_TO_MEM --- node^.kind is not an assign_node.%.');
   if n^.xp[17]^.kind <> tree_node then
     return;
-  if n^.xw[38] = 11 then begin
+  if n^.asg_op = fp_aop then begin
     if cargs_$options.cpu * [2, 4, 8, 9, 10] = [] then
       return;
     if not ((n^.xw[26] = 7) or (n^.xw[26] = 6)) then
@@ -262,7 +262,7 @@ begin
   r := aop_pattern_search(n, e, slot^, x, y);
   if r = nil then
     return;
-  if n^.xw[38] = 6 then
+  if n^.asg_op = agg_aop then
     if e^.tr_op in [add_top, sub_top, not_top, and_top, or_top,
                     eor_top] then begin
       if n^.xl[12] > 4 then
@@ -270,57 +270,57 @@ begin
       n^.xw[26] := n^.xw[25];
     end;
   case e^.tr_op of
-    add_top: n^.xw[38] := 1;
-    sub_top: n^.xw[38] := 2;
+    add_top: n^.asg_op := add_to_aop;
+    sub_top: n^.asg_op := sub_from_aop;
     neg_top: begin
       x := smcontk(integer_ob, 0);
-      n^.xw[38] := 14;
+      n^.asg_op := neg_to_aop;
     end;
     not_top: begin
       x := smcontk(integer_ob, 0);
-      n^.xw[38] := 13;
+      n^.asg_op := not_to_aop;
     end;
-    and_top: n^.xw[38] := 3;
-    or_top: n^.xw[38] := 4;
+    and_top: n^.asg_op := and_to_aop;
+    or_top: n^.asg_op := or_to_aop;
     set_and_top:
       if n^.xl[12] > 4 then
-        n^.xw[38] := 7
+        n^.asg_op := set_and_to_aop
       else begin
         n^.xw[26] := n^.xw[25];
-        n^.xw[38] := 3;
+        n^.asg_op := and_to_aop;
       end;
     set_or_top:
       if n^.xl[12] > 4 then
-        n^.xw[38] := 8
+        n^.asg_op := set_or_to_aop
       else begin
         n^.xw[26] := n^.xw[25];
-        n^.xw[38] := 4;
+        n^.asg_op := or_to_aop;
       end;
     set_diff_top:
       if n^.xl[12] > 4 then
-        n^.xw[38] := 9
+        n^.asg_op := set_diff_from_aop
       else begin
-        n^.xw[38] := 3;
+        n^.asg_op := and_to_aop;
         n^.xw[26] := n^.xw[25];
         tmp := x;
         x := buildtreenode(not_top, n^.xl[12], tmp, 1);
         x^.xw[8] := 0;
       end;
     lshf_top: begin
-      n^.xw[38] := 15;
+      n^.asg_op := lshft_to_aop;
       n^.xw[27] := y^^.xw[13];
       n^.xw[28] := y^^.xw[14];
     end;
     rshf_top: begin
-      n^.xw[38] := 16;
+      n^.asg_op := rshft_to_aop;
       n^.xw[27] := y^^.xw[13];
       n^.xw[28] := y^^.xw[14];
     end;
-    f_add_top: n^.xw[38] := 19;
-    f_sub_top: n^.xw[38] := 20;
-    f_mul_top: n^.xw[38] := 21;
-    f_div_top: n^.xw[38] := 22;
-    eor_top: n^.xw[38] := 5;
+    f_add_top: n^.asg_op := f_add_to_aop;
+    f_sub_top: n^.asg_op := f_sub_from_aop;
+    f_mul_top: n^.asg_op := f_mul_to_aop;
+    f_div_top: n^.asg_op := f_div_by_aop;
+    eor_top: n^.asg_op := eor_to_aop;
     otherwise
       return;
   end;
@@ -404,7 +404,8 @@ begin
   if (n = nil) or else (n^.kind <> assign_node) then
     bug_check('IL_UTILS_$\IMPLICIT_ATOMICNESS  --- node^.kind is not an assign_node.%.');
   l := n^.xp[16];
-  if (phase_atm in getphase(l)) and ((n^.xw[38] = 12) or (n^.xw[38] = 10)) then
+  if (phase_atm in getphase(l)) and ((n^.asg_op = field_aop) or
+                                     (n^.asg_op = pack_aop)) then
     implicit_atomicness := true
   else
     implicit_atomicness := false;
@@ -427,7 +428,7 @@ end;
 
 procedure commit_top_$convert_aops_to__aop_to_mem;
 var
-  op: integer;
+  op: il_$aop_t;
   user: boolean;
   l: il_$node_ptr_t;
 begin
@@ -435,13 +436,14 @@ begin
     bug_check('IL_UTILS_$CONVERT_AOPS_TO__AOP_TO_MEM --- node^.kind is not an assign_node.%.');
   if t^.st_flags.stmt_eliminated then
     return;
-  op := t^.xw[38];
-  if op in [26, 31, 32, 33, 34] then
+  op := t^.asg_op;
+  if op in [isc_mul_to_aop, isc_agg_aop..isc_fill_aop] then
     bug_check('IL_UTILS_$CONVERT_AOPS_TO__AOP_TO_MEM --- isc_aop???%.');
   if not (phase_proc_reg in getphase(t^.xp[16])) then
-    if op in [0, 6, 10, 11] then
-      if not (op in [1..5, 7..9, 13..24]) then begin
-        if (op = 10) or (op = 6) then begin
+    if op in [scalar_aop, agg_aop, pack_aop, fp_aop] then
+      if not (op in [add_to_aop..eor_to_aop, set_and_to_aop..set_diff_from_aop,
+                     not_to_aop..div_by_aop]) then begin
+        if (op = pack_aop) or (op = agg_aop) then begin
           l := t^.xp[17];
           case l^.kind of
             var_name: l^.xc[33] := chr(ord(l^.xc[33]) ! 16#20);
@@ -450,14 +452,16 @@ begin
               ;
           end;
         end;
-        if op = 10 then
+        if op = pack_aop then
           pack_aop_to_mem(t)
         else
           aop_to_mem(t);
       end;
   user := user_atomicness(t);
   if implicit_atomicness(t) or
-     (user and not (t^.xw[38] in [1..5, 7..9, 13..24])) then
+     (user and not (t^.asg_op in [add_to_aop..eor_to_aop,
+                                  set_and_to_aop..set_diff_from_aop,
+                                  not_to_aop..div_by_aop])) then
     cgerr(30, il_utils_$src_line(t),
         token_$make_string_token('Compiler may not guarantee atomic behavior.'));
 end;

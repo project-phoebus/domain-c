@@ -890,7 +890,7 @@ begin
       r := r + a;
     end;
     var_name:
-      if n^.xw[36] in [6..8, 10] then
+      if n^.vr_vat in [xdynm_vat..xextrndef_vat, sect_vat] then
         r := [27];
     fortran_symbol:
       r := registers_consumed_by_fortran_symbol(n);
@@ -932,10 +932,11 @@ end;
   preserved_by_statement -- not a top-level node%$'; the kinds by a
   compare chain (144, 148, 140, 139, 142, 150, 151, then 233, 231,
   215, 214, 223, 225, 224, 228, 227, 191, 188 to the end, as is every
-  other kind); the label's flags `tst.b; bmi'; 140's store consumption
-  computed before whole is tested and its three trees' passed to the
-  overlap from frame longwords (-16 the result, -12, -24, -20); the
-  removals `not.l; and.l' (one tail for 142 and 151). }
+  other kind); the label's abnormal `or else' nlgoto (`tst.b; bmi',
+  `tst.b; bpl', 0x0ED236); 140's store consumption computed before
+  whole is tested and its three trees' passed to the overlap from
+  frame longwords (-16 the result, -12, -24, -20); the removals
+  `not.l; and.l' (one tail for 142 and 151). }
 
 function registers_preserved_by_statement(
     s: g_opt_stmt_ptr_t;
@@ -953,8 +954,8 @@ begin
     bug_check('reg_save\registers_preserved_by_statement -- not a top-level node%$');
   case s^.kind of
     label_node:
-      if (ord(il_$node_ptr_t(s)^.xc[74]) >= 128) or
-         (ord(il_$node_ptr_t(s)^.xc[75]) >= 128) then
+      if il_$node_ptr_t(s)^.abnormal or else
+         il_$node_ptr_t(s)^.nlgoto then
         r := [24..31];
     block_entry_node:
       if s^.x48^.kind <> inner_blk then

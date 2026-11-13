@@ -441,7 +441,7 @@ begin
         goto in_section;
       end;
     end;
-    if (sym^.kind = var_name) and (sym^.xw[36] = 3) then begin
+    if (sym^.kind = var_name) and (sym^.vr_vat = extern_vat) then begin
       flags := 2 ! opt;
       if objutil_$inlib_lookup_symbol(name, sym^.xp[1]^.idnt_len, flags,
                                       info) then begin
@@ -617,7 +617,7 @@ begin
     v^.xp[1] := t;
     v^.xp[5] := blk;
     v^.xp[7] := runbackend_0c;
-    v^.xw[36] := 2;
+    v^.vr_vat := dynm_vat;
     v^.vr_attr := [var_$temporary, var_$allocated];
     v^.xl[9] := 32;
     v^.xw[22] := 2;

@@ -123,7 +123,7 @@ begin
       if s^.asg_rhs^.kind = ptr_node then begin
         v := s^.asg_rhs^.xp[6];
         if v^.kind = var_name then
-          if v^.xw[36] = 5 then
+          if v^.vr_vat = param_vat then
             opt_livevar_$formal_value_param_copy := true;
       end;
 end;
@@ -592,14 +592,16 @@ begin
         n := vi^.node;
         keep := false;
         if n^.kind = var_name then begin
-          if n^.xw[36] = 5 then
+          if n^.vr_vat = param_vat then
             keep := true
           else if n^.vr_attr * [var_$volatile, var_$uplevel,
                                 var_$address_exposed,
                                 var_$nooptimize] <> [] then
             keep := true
           else begin
-            if n^.xw[36] in [1, 3, 4, 7, 8, 10, 11] then
+            if n^.vr_vat in [static_vat, extern_vat, externdef_vat,
+                             xstatic_vat, xextrndef_vat, sect_vat,
+                             absolute_vat] then
               if (il_180^.kind <> program_blk) or
                  ((ord(n^.xc[35]) & 16#40) <> 0) then
                 keep := true;
@@ -892,7 +894,7 @@ begin
             return;
         if (opt_4009c[opt_region]^.vars^[v]^.flags & 4) <> 0 then
           ff := ff ! 4;
-        if n^.xw[36] = 5 then
+        if n^.vr_vat = param_vat then
           ff := ff ! 1;
         addvaruse(v, ff);
       end;
@@ -1151,7 +1153,7 @@ begin
           end;
         end;
         use_def_ob: begin
-          if (s^.x48^.kind = var_name) and (s^.x48^.xw[36] = 5) then
+          if (s^.x48^.kind = var_name) and (s^.x48^.vr_vat = param_vat) then
             f := 1
           else
             f := 34;

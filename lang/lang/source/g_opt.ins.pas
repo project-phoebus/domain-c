@@ -231,7 +231,9 @@ type
     count: integer;                     { +8 }
   end;
 
-  { A basic block (il_11c^[num]).  flags (+0, bit 7 first): visited
+  { A basic block (il_11c^[num]; list_tree's lt_bb_t).  flags (+0, bit
+    7 first; `[byte]': a packed record is at least 16 bits, language
+    reference 3.10.7, docs/questions.md 330): visited
     (.5) by dfs, last (.4) the last block of a straight run, run (.3)
     the first block of one, latch (.2) the loop header's dominator
     is one of its predecessors, header (.1) a loop's header, skip
@@ -245,7 +247,7 @@ type
   g_opt_blocks_t = array [1..16383] of g_opt_block_ptr_t;
   g_opt_blocks_ptr_t = ^g_opt_blocks_t;
   g_opt_block_t = record
-    flags: packed record                { +0 }
+    flags: [byte] packed record         { +0 }
       b7, b6: boolean;
       visited: boolean;                 { .5 }
       last: boolean;                    { .4 }
@@ -253,8 +255,8 @@ type
       latch: boolean;                   { .2 }
       header: boolean;                  { .1 }
       skip: boolean;                    { .0 }
-      b1: 0..255;                       { +1 }
     end;
+    b1: char;                           { +1 }
     depth: integer;                     { +2: loops around it }
     dom: g_opt_block_ptr_t;             { +4 }
     first: g_opt_num_t;                 { +8 }

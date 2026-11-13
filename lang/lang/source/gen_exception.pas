@@ -341,7 +341,8 @@ begin
               if v^.kind <> var_name then
                 ass_$precondition_fail(
                     'GEN_EXCEPTION_$WRITE_FRAME_AND_HANDLER_RECORDS -- not a var_name%$');
-              if not (v^.xw[36] in [1, 4, 7, 8]) then
+              if not (v^.vr_vat in [static_vat, externdef_vat, xstatic_vat,
+                                    xextrndef_vat]) then
                 ass_$precondition_fail(
                     'GEN_EXCEPTION_$WRITE_FRAME_AND_HANDLER_RECORDS -- not a static var_name%$');
               if v^.xp[5]^.xp[48] <> il_110 then
@@ -366,7 +367,8 @@ begin
               if v^.kind <> var_name then
                 ass_$precondition_fail(
                     'GEN_EXCEPTION_$WRITE_FRAME_AND_HANDLER_RECORDS -- not a var_name%$');
-              if not (v^.xw[36] in [1, 4, 7, 8]) then
+              if not (v^.vr_vat in [static_vat, externdef_vat, xstatic_vat,
+                                    xextrndef_vat]) then
                 ass_$precondition_fail(
                     'GEN_EXCEPTION_$WRITE_FRAME_AND_HANDLER_RECORDS -- not a static var_name%$');
               if v^.xp[5]^.xp[48] <> il_110 then

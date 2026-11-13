@@ -1535,7 +1535,7 @@ begin
         v := v^.xp[12];
     if language = 1 then
       if v^.kind = var_name then
-        if v^.xw[36] = 10 then
+        if v^.vr_vat = sect_vat then
           size := 92;
   end;
   n := gspace(size);
@@ -1555,9 +1555,9 @@ begin
     n^.xw[22] := v^.xw[17];
     n^.xw[24] := v^.xw[18];
     if e^.caller^.kind = program_blk then
-      n^.xw[36] := 1
+      n^.vr_vat := static_vat
     else
-      n^.xw[36] := 2;
+      n^.vr_vat := dynm_vat;
   end;
   if n^.kind = var_name then
     if n^.xp[7] <> nil then
@@ -1735,7 +1735,7 @@ begin
       end;
   end
   else begin
-    v^.xw[36] := class;
+    v^.vr_vat := il_$vat_t(class);
     v^.xl[14] := offset;
     v^.xc[33] := chr(ord(v^.xc[33]) ! 4);
   end;
@@ -1863,11 +1863,11 @@ procedure process_parameters(
     end;
     if (s^.xw[26] = 6) or (s^.xw[26] = 7) or (s^.xw[26] = 12) or
        (s^.xw[26] = 8) then
-      s^.xw[38] := 11
+      s^.asg_op := fp_aop
     else if s^.xw[26] = 11 then
-      s^.xw[38] := 6
+      s^.asg_op := agg_aop
     else
-      s^.xw[38] := 0;
+      s^.asg_op := scalar_aop;
     assign := s;
   end;
 
@@ -2108,9 +2108,9 @@ begin
           if a^.kind = var_name then begin
             v := copy_var(e, f);
             put_on_bct(e, caller_blk, v);
-            v^.xw[36] := a^.xw[36];
-            if v^.xw[36] = 10 then
-              v^.xw[36] := 2;
+            v^.vr_vat := a^.vr_vat;
+            if v^.vr_vat = sect_vat then
+              v^.vr_vat := dynm_vat;
             v^.xl[14] := a^.xl[14];
             v^.xl[8] := (f^.xl[8] & 16#803FFFFF) ! a^.xl[8];
           end;
@@ -2124,7 +2124,7 @@ begin
     if f^.kind = fortran_symbol then
       cls := rshft(ord(f^.xc[11]) & 16#F0, 4)
     else
-      cls := f^.xw[36];
+      cls := ord(f^.vr_vat);
     if (p <> nil) and (p^.xw[22] = 0) then begin
       if m = 1 then
         fl := [1]
@@ -2173,7 +2173,7 @@ begin
     if f^.kind = fortran_symbol then
       cls := rshft(ord(f^.xc[11]) & 16#F0, 4)
     else
-      cls := f^.xw[36];
+      cls := ord(f^.vr_vat);
     if cls = 5 then
       fl := [2]
     else
@@ -2377,11 +2377,11 @@ begin
           put_hash_info(e, v, nv, [3], empty_info);
         end
         else if (nv = nil) and (v^.kind = var_name) then
-          if v^.xw[36] in [1, 2, 6, 7] then
+          if v^.vr_vat in [static_vat, dynm_vat, xdynm_vat, xstatic_vat] then
             if not (var_$display_ptr in v^.vr_attr) then begin
               nv := copy_var(e, v);
               put_on_bct(e, cb, nv);
-              if v^.xw[36] in [2, 6] then
+              if v^.vr_vat in [dynm_vat, xdynm_vat] then
                 allocate_local_var(e, nv);
               put_hash_info(e, v, nv, [3], empty_info);
             end;
@@ -2729,7 +2729,7 @@ var
           boff := b.v^.xl[3];
         end
         else begin
-          cls := b.v^.xw[36];
+          cls := ord(b.v^.vr_vat);
           boff := b.v^.xl[14];
         end;
       end
@@ -2745,7 +2745,7 @@ var
               (n^.xp[1] = e^.caller^.xp[74]) then begin
         aoff := a.v^.xl[14];
         boff := b.v^.xl[14];
-        cls := b.v^.xw[36];
+        cls := ord(b.v^.vr_vat);
       end
       else if (n^.kind = tree_node) and (n^.tr_op = addr_top) and
               (n^.xp[10]^.kind = fortran_symbol) then begin
@@ -2756,7 +2756,7 @@ var
       else if (n^.kind = tree_node) and (n^.tr_op = addr_top) and
               (n^.xp[10]^.kind = var_name) then begin
         boff := b.v^.xl[14];
-        cls := b.v^.xw[36];
+        cls := ord(b.v^.vr_vat);
         rebase := false;
       end
       else
@@ -2893,7 +2893,7 @@ var
       if sub.v^.kind = fortran_symbol then
         cls := rshft(ord(sub.v^.xc[11]) & 16#F0, 4)
       else
-        cls := sub.v^.xw[36];
+        cls := ord(sub.v^.vr_vat);
       get_hash_info(e, base, val, flags, info);
       if (flags * [0, 1, 2]) <> [] then
         ctx.subst := true;
@@ -2946,7 +2946,7 @@ var
               (base^.xp[6]^.kind = var_name) and
               (var_$display_ptr in base^.xp[6]^.vr_attr) and
               (ctx.sdn <> nil) and (ctx.sdn^.xp[8]^.kind = var_name) and
-              (ctx.sdn^.xp[8]^.xw[36] in [2, 5]) and
+              (ctx.sdn^.xp[8]^.vr_vat in [dynm_vat, param_vat]) and
               (ctx.sdn^.xp[8]^.xl[14] > 0) and
               (base^.xp[6]^.xp[1] = e^.caller^.xp[74]) then begin
         t := ctx.sdn^.xp[8];

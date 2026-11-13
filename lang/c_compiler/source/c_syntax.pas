@@ -3379,7 +3379,7 @@ end;
 
 { body - a function's body: an opening brace, its declarations, the dynamic
   initializers (cdef_dynm_inits) evaluated after body_s, for main
-  returning an integral type `main = 0' first (its block's main_int
+  returning an integral type `main = 0' first (its block's noinline
   set), the statements and body_e at the closing brace.
 
   0x06508E, 0x1FA bytes, link #-100: il_d0 kept in D2 around the
@@ -3435,7 +3435,7 @@ begin
   il_d0 := line;
   if (cdef_50^.kind = function_blk) and (cdef_50^.name.id = id_main) then begin
     type_exp(cdef_50^.result, addr(te));
-    cdef_50^.bits.main_int := true;
+    cdef_50^.bits.noinline := true;
     if te.base^.kind = integer_type then begin
       top := cexs_23bc;
       body_opr(0, addr(id_main));

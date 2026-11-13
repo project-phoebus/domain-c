@@ -1873,7 +1873,8 @@ begin
   else if node^.kind in [tree_node, gen_tree_node, cmp_tree_node, dindex_node,
                          ptr_node, disp_node, cs_node, cc_call, pf_call,
                          cse_use_ob, sym_disp_node] then
-    is_device := ((node^.xl[1] & 8) <> 0) or ((node^.xl[1] & 16#10) <> 0)
+    is_device := (phase_devrd in add_node_$phase_t(node^.xl[1])) or
+                 (phase_devwt in add_node_$phase_t(node^.xl[1]))
   else if node^.kind = fortran_symbol then
     is_device := (var_$dev_read in node^.fs_attr) or
                  (var_$dev_write in node^.fs_attr)
@@ -4056,7 +4057,7 @@ begin
       end;
       assign_node: begin
         write('<assign_node = ');
-        write(il_$aop_t(n^.xw[38]));
+        write(n^.asg_op);
         write('>');
       end;
       at_lib_dsc: begin

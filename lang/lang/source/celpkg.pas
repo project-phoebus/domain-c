@@ -99,7 +99,7 @@ begin
   else begin
     lab^.xp[20] := il_$node_ptr_t(cell);
     lab^.lab_atts.def := true;
-    if ord(lab^.xc[74]) >= 16#80 then
+    if lab^.abnormal then
       cell^.ads2.f5 := cell^.ads2.f5 ! 1;
   end;
   getlabcell := cell;

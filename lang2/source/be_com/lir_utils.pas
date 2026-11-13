@@ -1453,7 +1453,7 @@ begin
       node := lr^.memory_home;
       if node <> nil then begin
         if node^.kind = var_name then begin
-          vat := node^.xw[36];
+          vat := ord(node^.vr_vat);
           f := node^.xl[8];
         end
         else if node^.kind = fortran_symbol then begin
