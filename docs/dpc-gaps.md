@@ -82,11 +82,23 @@ when this tree is merged).
   function's result in D0; a double result still refused): fixed in
   ece74d5.**  99 rules removed (cg_tree's gap 25 ones with them).
 - **Gap 4 (write and writeln to the standard output): fixed in
-  498d8b1.**  41 rules removed; kept for isc_main (read/readln), isc_debug
-  (a routine over 32 KB once its writes stay, gap 46) and, for now,
-  isc_pattern_matcher and isc_pass_1_04, _09, _10, whose data check
-  differs with the writes compiled (the pas_$output cell, the action
-  table), being looked into.
+  498d8b1.**  45 rules removed; kept for isc_main (read/readln) and
+  isc_debug (a routine over 32 KB once its writes stay, gap 46).
+  isc_pattern_matcher and isc_pass_1_04, _09, _10 kept theirs a while
+  because their data check differed with the writes compiled.  The
+  cause was the checker's: a module whose trace strings lie past a
+  16-bit pc-relative reach of their use (dpc pools a string once, after
+  its first user: pass-1 04, 09 and 10 share `Infinite cycle prevented
+  ...' over more than 32 KB) gets dpc's header cells (a far
+  constant's address, `.long .LcN', read below A5), which dpc puts at
+  the start of its .moddata, before .Ldata, and the code loads A5 as
+  `lea (.Ldata).l,%a5' (the section plus 4, or 0x28 for the pattern
+  matcher's ten).  tools/cc_datacheck.py took the section's +0 as A5.
+  It now takes the header's size from that relocation and compares
+  from .Ldata on, the header left out (the image's cell at -4 is the
+  loader's pas_$output address; the image keeps each routine's strings
+  right after it, `pea (d16,pc)', e.g. cc.a88k 0x10A0BE).  The other pass-1 modules have no far constant, so no
+  header.
 - Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
   spiller finds values to spill but runs out of virtual register
   numbers (240 per class) adding the reloads, and the colouring's
