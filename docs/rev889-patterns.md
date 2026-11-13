@@ -1453,3 +1453,23 @@ cc.m68k unless marked.
     and copies it to a four-byte local read as a longword.  Rule 177
     (0x16ACF6) is item 148 again: `btst D2,(81,A0)' with D2 the 5
     loaded for a kind compare (bit 5 of +81).
+203. **pas_$write's arguments: only the fields the kind reads.**  (All
+    3,816 sites in cc.a88k; scan in the lead's scratchpad, lead/wr3.py.)
+    The callee sees fmt @0, file @2, the value's address @6, then @10,
+    @12, the names @14 and a slot @18; Rev 8.89 pushes only as far up as
+    the last field the kind uses (format words: item 170).  A character
+    array pushes its length word @10 (`move.w #34; pea; file; #16#33',
+    isc_pass_1_04 0x10A0BA, `lea (12,SP)'), and with `:w' the width @12
+    above it (16#73, mu_$dump 0x597A2); the integer kinds push only the
+    width word @10 (0x0BEA14, `:1'), with no digits word; a char pushes nothing
+    above the value but has its @10 word reserved, by `subq.l #2,SP'
+    (mu_$dump 0x59892) or, more often, by the word a previous call's
+    `lea (10,SP)' left behind after a 12-byte push (0x098906, then
+    `pea "."; file; #16#112' and `lea (12,SP)' at 0x09891C).  Only the
+    enumerations push the whole heading: `pea names; move.l
+    #(w<<16 | digits); pea value', 20 bytes with the @18 slot taken the
+    same way (0x0BDDAE..0x0BDDC8; `subq.l #2' first at 0x20B5B0).  dpc
+    always passes the whole heading (`subq.l #2; clr.l' names, `move.l
+    #16#220000'): the same result, extra fields (domain-pascal-j714,
+    held with the Rev 8.89 form work).  Every integer site here has an
+    explicit width, so the form without one is not seen.
