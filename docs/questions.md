@@ -3479,6 +3479,29 @@ answered by this policy and needs no reply.
    integer and the enumerations, a longword otherwise), so a 0..65535
    parameter needs a class of its own there first, and re-extraction
    checked.  Worth doing?
+   **The lifter's class done; legal not retyped (translator RN9,
+   2026-11-12).**  The generator's heading reader
+   (iscg_p2lang.read_headings) collects the type names the inserts
+   declare as 0..65535 and type_class makes them class u16, which
+   iscg_p2lift.param_size counts as a word and the generated text
+   passes and assigns as it is (a parameter's type must be a type
+   name: dpc refuses `legal: 0..65535', ref 5.1, so a retype needs a
+   named type).  The only such name the ISC's inserts declare now is
+   mrh's mrh_$chunk_t (mrh_$initialize, mrh_$alloc, which the
+   generated text calls only in its fixed routines); iscg_gen.py
+   --check passes and re-extraction into a copy of the rules
+   reproduces them.  Tried: an isc_types.ins.pas `isc_eval_orders_t =
+   0..65535' for legal, number_of_one_bits(legal) (generator check and
+   re-extraction still clean, the 60 other ISC objects identical).
+   dpc's evaluation_order_function then passed legal as the image does
+   (`clr.l D3; move.w D2,D3; move.l D3,-(SP)', 0x2124CC, where `legal &
+   16#FFFF' gives `ext.l; andi.l #0xFFFF') but widened it before each
+   of the three bit tests (`clr.l; move.w; btst #1', where the image
+   and the integer legal test the word: `btst #1,D4', 0x2124A6,
+   0x2124B4, 0x2124BA): docs/dpc-gaps.md 51 (dpc's beads
+   domain-pascal-kqa2, -9js).  Something else changed, so the heading
+   keeps integer; retype it (with that named type) once dpc tests a
+   0..65535's bit in the word.
 343. Translator RN8, after 331: **the generated ISC's tree class is
    tr_rlen.**  iscg_pass1.node_ref writes a node's word at +24 as
    isc_node_t's tr_rlen (the 122 reads and writes of xw[12] in

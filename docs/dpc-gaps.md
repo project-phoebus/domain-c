@@ -1374,3 +1374,31 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
     dpc: `move.b (5,A0),D0; ...; tst.l (A0); sne D1; ...; or.b D1,D0;
     move.b D0,(5,A0)', h `move.b (5,A0),D0; or.b (12,A6),D0; move.b
     D0,(5,A0)'.
+51. **A one-bit `&' test of a 0..65535 word: widened first.**  dpc
+    widens an unsigned word to a longword before testing one of its
+    bits with an integer mask, `clr.l D1; move.w D0,D1; btst #1,D1',
+    and says so (best effort: "an unsigned word with an integer mask:
+    `clr.l; move.w; btst` is not seen in compiled code", beads
+    domain-pascal-kqa2, domain-pascal-9js).  A site for those beads:
+    evaluation_order_function (cc.a88k 0x212450) zero-extends its
+    legal for number_of_one_bits (`clr.l D5; move.w D4,D5', 0x2124CC,
+    the widening of a 0..65535) but tests its bits in the word, `btst
+    #1,D4' and `btst #0,D4; ...; btst #1,D4' (0x2124A6, 0x2124B4,
+    0x2124BA), so if legal was a 0..65535, as the widening says, Rev
+    8.89 tests such a word's bit without widening it (docs/questions.md
+    342).  Retyping legal moved the call's argument to the image's
+    form and the three tests away from it, so it is not retyped.  It
+    compiles (no rewrite); the code differs.  Reproducer:
+
+       module g51;
+       type
+         w_t = 0..65535;
+       var cnt: integer;
+       procedure f(legal: w_t); options(val_param);
+       begin
+         if (legal & 2) <> 0 then cnt := 2;
+       end;
+
+    Rev 8.89 (by evaluation_order_function): `move.w (8,A6),D0; btst
+    #1,D0'; dpc: `move.w (8,A6),D0; clr.l D1; move.w D0,D1; btst
+    #1,D1' (an integer legal gives the image's form).
