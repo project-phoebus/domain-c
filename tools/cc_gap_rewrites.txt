@@ -59,10 +59,7 @@ lang/c_compiler/source/c_expr_sem.pas	s/((?:\w+(?:\[[^\]]*\])?\.)*\w+)\^\.kind i
 lang/c_compiler/source/c_expr_sem.pas	s/((?:\w+(?:\[[^\]]*\])?\.)*\w+)\^\.kind in \[122, 123, 129, 134, 136\]/(($1^.kind = 122) or ($1^.kind = 123) or ($1^.kind = 129) or ($1^.kind = 134) or ($1^.kind = 136)) { gap 8 }/g
 lang/c_compiler/source/c_expr_sem.pas	s/\bop in \[18, 27, 28, 32, 37\.\.42, 51\.\.61, 65\]/((op = 18) or (op = 27) or (op = 28) or (op = 32) or ((op >= 37) and (op <= 42)) or ((op >= 51) and (op <= 61)) or (op = 65)) { gap 8 }/g
 lang/c_compiler/source/c_expr_sem.pas	s/\bop in \[18, 27, 28, 44, 65\]/((op = 18) or (op = 27) or (op = 28) or (op = 44) or (op = 65)) { gap 8 }/g
-# gap 25 (c_expr_sem): a routine needing more virtual registers than dpc numbers (expr_op's cases from
 # subtraction on left out of the check by a conditional variable that is not set)
-lang/c_compiler/source/c_expr_sem.pas	s/^(    \{ Subtraction\. \})$/%var gap25;\n%if gap25 %then { gap 25 }\n$1/
-lang/c_compiler/source/c_expr_sem.pas	s/^(    \{ The other operators: the common end)/%endif { gap 25 }\n$1/
 # gap 19 (kfold): a function returning real (the single taken as a longword, for the check)
 lang/lang/source/kfold.pas	s/^(\s*)line: integer\): real; options\(val_param\);/$1line: integer): integer32; options(val_param); { gap 19 }/
 lang/lang/source/kfold.pas	s/^(\s*)(res|r): real;/$1$2: integer32; { gap 19 }/
@@ -78,9 +75,6 @@ lang/lang/source/kfold.pas	s/^(\s*)dd := t\^\.opnd\[1\]\^\.dcx_(re|im);/${1}{ ga
 # gap 7 and 25 (kfold): the real operators and the others after them left out of the check (a conditional variable not set)
 lang/lang/source/kfold.pas	s/^(  \{ The real operators\. \})$/%var gap7k;\n%if gap7k %then { gap 7 }\n$1/
 lang/lang/source/kfold.pas	s/^(  \{ The result, normalized to the node's class\. \})$/%endif { gap 7 }\n$1/
-# gap 25 (kfold): kfold_$general exceeds the virtual registers: its integer operators left out of the check too
-lang/lang/source/kfold.pas	s/^(    \{ The integer and set constants' operators\. \})$/%var gap25k;\n%if gap25k %then { gap 25 }\n$1/
-lang/lang/source/kfold.pas	s/^(    \{ Not all constants: identities with a constant operand\. \})$/%endif { gap 25 }\n$1/
 # gap 4 (outbin): write and writeln (dropped, for the check)
 lang/lang/source/outbin.pas	s/^(\s*)write(ln)?\b.*;\s*$/${1}dbcod_on := dbcod_on; { gap 4 }\n/
 # gap 19 (outbin): a function returning real (the single taken as a longword, for the check)
@@ -88,8 +82,6 @@ lang/lang/source/outbin.pas	s/^(\s*)line: integer\): real; options\(val_param\);
 lang/lang/source/outbin.pas	s/\bv\.r := dbl_to_real/v.l := dbl_to_real { gap 19 }/
 # gap 26 (outbin): substr (the length compared instead, for the check)
 lang/lang/source/outbin.pas	s/:= substr\(fpx_chars_ptr_t\(addr\(s\^\.str_chars\)\)\^, 1, s\^\.str_len\) = 'CommandCIR';/:= s^.str_len = 10; { gap 26 }/
-# gap 25 (outbin): a routine needing more registers than dpc has (wr_instr's listing case dropped, for the check)
-lang/lang/source/outbin.pas	$s=1 if /^      case c\^\.kind of$/; if ($s) { $e = /^      end;$/; $_ = $e ? "      { gap 25 }\n" : ""; $s = 0 if $e; }
 # gap 20 (c_syntax): set expressions passed to in parameters (the first operand passed, for the check)
 lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{([(]|,\s+)(\w+)((?:\s*\+\s*(?:\w+|\[[^\]]*\]))+)(?=\s*[,)])}{$1$2}g
 # gap 7 (c_syntax): a real compared with 0.0 (its high longword compared with 0, for the check)
@@ -99,8 +91,6 @@ lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s#\n(  legal_specs: )#\n 
 # gap 7 (c_syntax): an integer converted to a double, a real truncated (dropped; the high longword taken, for the check)
 lang/c_compiler/source/c_syntax.pas	s/^(\s*)(?:tmp := n\^\.int_value|r := n\^\.real_value|r := tmp)(;?)$/${1}kind := kind${2} { gap 7 }/
 lang/c_compiler/source/c_syntax.pas	s/^(\s*)v := trunc\(orig\^\.real_value\);/${1}v := orig^.bits[1]; { gap 7 }/
-# gap 28 (cg_call): gen_call's values exceed dpc's registers (the registers' and aliases' loop after the call dropped)
-lang/lang/source/cg_call.pas	if ((/^  \{ The registers and objects the call may change\. \}/ .. /^  \{ The result.s register\. \}/) && !/The result.s register/) { $_ = "  { gap 28 }\n" }
 # gap 4 (add_node): writeln (dropped, for the check)
 lang/lang/source/add_node.pas	s/^(\s*)writeln\('Compiler internal warning.*,$/$1; { gap 4 }/
 lang/lang/source/add_node.pas	s/^\s*an_kind_t\(.*\), '\) is not top-level\.'\);$//
@@ -113,11 +103,6 @@ lang/lang/source/add_node.pas	s/^(\s*)a := rr;$/${1}{ gap 7 }/
 # gap 7 (add_node): the real operators left out of the check (a conditional variable not set)
 lang/lang/source/add_node.pas	s/^(    \{ The real constants\. \})$/    v1 := 0; { gap 7 }\n%var gap7a;\n%if gap7a %then { gap 7 }\n$1/
 lang/lang/source/add_node.pas	s/^(    \{ The end of the real operators\. \})$/%endif { gap 7 }\n$1/
-# gap 25 (add_node): add_tn exceeds the virtual registers: its constant folding left out of the check (a conditional variable not set)
-lang/lang/source/add_node.pas	s/^(  \{ Constant folding\. \})$/%var gap25a;\n%if gap25a %then { gap 25 }\n$1/
-lang/lang/source/add_node.pas	s/^(  \{ Calls entered in the routine's references\. \})$/%endif { gap 25 }\n$1/
-lang/lang/source/add_node.pas	s/^(  \{ Constants moved out of trees of the same operator\. \})$/%var gap25b;\n%if gap25b %then { gap 25 }\n$1/
-lang/lang/source/add_node.pas	s/^(  \{ The registers, and the operands swapped for the costlier first\. \})$/%endif { gap 25 }\n$1/
 # gap 7 (cg_misc): a real constant in a comparison (the double tested by its longwords, for the check)
 lang/lang/source/cg_misc.pas	s/n\^\.real_value <> 0\.0/(n^.bits[1] <> 0) or (n^.bits[2] <> 0) { gap 7 }/
 # gap 7 (opt_general): real arithmetic in is_scale_candidate (the bits tested instead, for the check)
@@ -140,16 +125,6 @@ lang/lang/source/opt_loop.pas	s/if t\^\.real_value = 0\.0 then/if t^.xl[3] = 0 t
 lang/lang/source/opt_vector.pas	s/if r\^\.real_value = 0\.0 then/if r^.xl[3] = 0 then { gap 7 }/
 # gap 7 (cg_assign): real arithmetic (count * 2 <= body * 1.5 compared in integers, for the check)
 lang/lang/source/cg_assign.pas	s/if count \* 2 <= \(cg_asn_\$block_move_body_size\(count\) \* 2 \+ 8\) \* 1\.5 then/if count * 4 <= (cg_asn_\$block_move_body_size(count) * 2 + 8) * 3 then { gap 7 }/
-# gap 25 (cg_assign): assign_proc exceeds the virtual registers: its constant masks (and, or, exclusive or in memory), unary operators and shifts left out of the check (a conditional variable not set)
-lang/lang/source/cg_assign.pas	s/^(    \{ Constant masks: and, or, exclusive or\. \})$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
-lang/lang/source/cg_assign.pas	s/^(    \{ Aggregates, sets, bit fields, the floating operators\. \})$/%endif { gap 25 }\n$1/
-# gap 25 (cg_assign): and the register path's record of the register's new contents
-lang/lang/source/cg_assign.pas	s/^(  \{ The register.s new contents\. \})$/%var gap25d;\n%if gap25d %then { gap 25 }\n$1/
-lang/lang/source/cg_assign.pas	s/^(  \{ In memory\. \})$/%endif { gap 25 }\n$1/
-# gap 25 (cg_assign): and the floating store through a floating register
-lang/lang/source/cg_assign.pas	s/^(  \{ Through a floating register when one holds either side\. \})$/%var gap25e;\n%if gap25e %then { gap 25 }\n$1/
-lang/lang/source/cg_assign.pas	s/^(  \{ Else moved, or through the floating stack or the FPA\. \})$/%endif { gap 25 }\n$1/
-lang/lang/source/cg_assign.pas	s/^(\s+)not \((\d) in getphase\(([^()]*)\)\) then$/$1(($2 in getphase($3)) = false) then { gap 24 }/
 # gap 7 (cg_tree): real constants and arithmetic (adjust_before_round's rounding of a constant left out, the constants 0.0 and 0.5 passed as the node's value, for the check)
 lang/lang/source/cg_tree.pas	s/^(\s+)if d >= 0\.0 then$/$1if n^.kind = 89 then { gap 7 }/
 lang/lang/source/cg_tree.pas	s/^(\s+)d := d [+-] 0\.5(;?)$/$1n := n$2 { gap 7 }/
@@ -165,14 +140,6 @@ lang/lang/source/cg_tree.pas	s/^(    \{ Floating addition \(34\))/%var gap25g;\n
 lang/lang/source/cg_tree.pas	s/^(    \{ The library's routines 14 and 15 \(43)/%endif { gap 25 }\n$1/
 # gap 7 (cg_tree): f_compare_proc's comparisons of a constant with 0.0 (its first longword compared with 0, for the check)
 lang/lang/source/cg_tree.pas	s/\(n\^\.opnd\[2\]\^\.real_value = 0\.0\)/(n^.opnd[2]^.xl[3] = 0) { gap 7 }/
-# gap 25 (reg_cost_68k): compute_costs exceeds the virtual registers: the constants' classes left out of the check (a conditional variable not set)
-lang/lang/source/reg_cost_68k.pas	s/^(      \{ The constants' classes\. \})$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
-lang/lang/source/reg_cost_68k.pas	s/^(      \{ No register for a variable of no cost\. \})$/%endif { gap 25 }\n$1/
-lang/lang/source/reg_cost_68k.pas	s/^(            \{ The class of register\. \})$/%var gap25d;\n%if gap25d %then { gap 25 }\n$1/
-lang/lang/source/reg_cost_68k.pas	s/^(            \{ A cse parent's uses and its assignment at s\. \})$/%endif { gap 25 }\n$1/
-# gap 25 (opt_reachdef): evalforeffect exceeds the virtual registers: a call's operands (operators 16, 15) left out of the check
-lang/lang/source/opt_reachdef.pas	s/^(        16, 15: begin)$/%var gap25r;\n%if gap25r %then { gap 25 }\n$1/
-lang/lang/source/opt_reachdef.pas	s/^(        11: begin)$/%endif { gap 25 }\n$1/
 # gap 4 (reg_alloc): dump_lifetimes' writeln (dropped, for the check)
 lang/lang/source/reg_alloc.pas	s/^(\s*)writeln;\s*$/$1; { gap 4 }/
 # gap 21 (reg_color_68k): nested routines passed to walkconflicts (a routine pointer, nil, for the check) [still needed with dpc 78f475b]
@@ -205,28 +172,12 @@ lang/lang/source/final.pas	s/^(\s*)v\.d := n\^\.real_value;$/$1v.l[1] := n^.bits
 lang/lang/source/final.pas	s/\(v\.s \* \[0\.\.28\] = \[\]\)/((v.l[2] \& 16#1FFFFFFF) = 0) { gap 31 }/
 # gap 7 (lst): real := double (the single literal left unset, for the check)
 lang2/source/be_com/lst.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
-# gap 28 (lst): lst_$display_code_cell's values exceed dpc's registers (the classic form's registers' column dropped, for the check)
-lang2/source/be_com/lst.pas	if ((/^      \{ The registers' column of the classic form\. \}/ .. /^      \{ The numbered label\. \}/) && !/The numbered label/) { $_ = "      { gap 28 }\n" }
 # gap 7 (bin): real := double (the single literal left unset, for the check)
 lang2/source/be_com/bin.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
 # gap 32 (backend.ins.pas, translator PB2): an initialized overlay section named as its variable (the sections the .init files define renamed, for the check)
 lang2/source/be_com/backend.ins.pas	s/^var \((instruction_mnemonic|instruction_mnemonic_length|instruction_assembly|operand_string|operand_string_length|of_string|of_string_length|instruction_attributes|operand_forms_mask|amse_premod_immed_low|amse_premod_immed_high|amse_postmod_immed_low|amse_postmod_immed_high)\)/var (${1}_s) { gap 32 }/
-# gap 25 (asm, translator PB2): asm_$process_routine exceeds dpc's virtual registers (pass 1's literals and instruction kinds, pass 2's immediate forms left out of the check)
-lang2/source/be_com/asm.pas	s/^(  \{ Its literals\. \})$/%var gap25b;\n%if gap25b %then { gap 25 }\n$1/
-lang2/source/be_com/asm.pas	s/^(2:)$/%endif { gap 25 }\n$1/
-lang2/source/be_com/asm.pas	s/^(                case form of)$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
-lang2/source/be_com/asm.pas	s/^(                \{ The forms done\. \})$/%endif { gap 25 }\n$1/
 # gap 4 (dmp): write of an IL node kind (dropped, for the check)
 lang2/source/be_com/dmp.pas	s/^(\s*)write\(.*\);\s*$/${1}dmp_3c0 := dmp_3c0; { gap 4 }\n/
-# gap 25 (call_conv, translator PA3): at_call_conv exceeds dpc's virtual registers (part 3, the descriptors by the parameters' kind, part 4's aggregates split over registers and part 5, the formals, left out of the check)
-lang2/source/be_com/call_conv.pas	s/^(  if opr = nil then)$/%var gap25a;\n%if gap25a %then { gap 25 }\n$1/
-lang2/source/be_com/call_conv.pas	s/^(60:)$/%endif { gap 25 }\n$1/
-lang2/source/be_com/call_conv.pas	s/^(  \{ 5\. The b25 flags, the variable arguments. registers, the formals.)$/%var gap25c;\n%if gap25c %then { gap 25 }\n$1/
-lang2/source/be_com/call_conv.pas	s/^(  props\^\.args_size := offs;)$/%endif { gap 25 }\n$1/
-lang2/source/be_com/call_conv.pas	s/^(        \{ An aggregate by value: its longwords in the integer registers)$/%var gap25b;\n%if gap25b %then { gap 25 }\n$1/
-lang2/source/be_com/call_conv.pas	s/^(        \{ The aggregate done\. \})$/%endif { gap 25 }\n$1/
-# gap 22 (cg_call): ord of a boolean (0, for the check) [kept with dpc ca0dd28: without it the routine meets gap 28, more values live than registers]
-lang/lang/source/cg_call.pas	s/ord\(pass_len\)/0 { gap 22 }/
 # gap 7 (lir_utils, translator PA4): a real constant passed to dpcontk (nil, for the check)
 lang2/source/be_com/lir_utils.pas	s/dpcontk\(0\.0\)/nil { gap 7 }/
 # gap 21 (lir_utils, translator PA4): fix_store_through_lrs's nested new_db_lts passed to flesh_out_new_load_or_store (a module-level stand-in, for the check) [still needed with dpc ca0dd28]
@@ -258,13 +209,6 @@ lang2/source/be_com/oli.pas	s/(dp|rl)contk\(0\.0\)/smcontk(81, 0) { gap 7 }/
 lang2/source/be_com/ra.pas	s/^(\s*)([\w^.\[\]]+)\.r := [^;{]*(;?)(\s*\{.*\})?$/$1$2.i := 0$3 { gap 7 }/
 lang2/source/be_com/ra.pas	s/(\w[\w^.\[\]]*)\.r (<|>|<=|>=|=|<>) (\w[\w^.\[\]]*)\.r\b/$1.i $2 $3.i/g
 lang2/source/be_com/ra.pas	s/(\w[\w^.\[\]]*)\.r (<|>|<=|>=|=|<>) 1\.0\b/$1.i $2 16#3F800000 { gap 7 }/g
-# gap 28 (ra, translator PB6): ra_$build_conflict_graph's values outlive dpc's registers: a write's conflicts, its going live and a call's clobbers left out of the check (a conditional variable not set)
-lang2/source/be_com/ra.pas	s/^(          \{ The write's conflicts\. \})$/%var gap28w;\n%if gap28w %then { gap 28 }\n$1/
-lang2/source/be_com/ra.pas	s/^(          \{ Its live range goes live\. \})$/%endif { gap 28 }\n$1/
-lang2/source/be_com/ra.pas	s/^(          \{ \(out of the pipe first\) \})$/%if gap28w %then { gap 28 }\n$1/
-lang2/source/be_com/ra.pas	s/^(          \{ It may die at once\. \})$/%endif { gap 28 }\n$1/
-lang2/source/be_com/ra.pas	s/^(        \{ The clobbers of a call or SVC\. \})$/%if gap28w %then { gap 28 }\n$1/
-lang2/source/be_com/ra.pas	s/^(        \{ Ready for the next instruction\. \})$/%endif { gap 28 }\n$1/
 # gap 4 (konst, translator PB6): writeln (dropped, for the check)
 lang2/source/be_com/konst.pas	s/^(\s*)writeln\(.*\);\s*$/${1}; { gap 4 }/
 # gap 7 (konst, translator PB6): a double literal converted to a single (left unset, for the check)
@@ -275,11 +219,6 @@ lang2/source/be_com/ra.pas	s/\.r < 1\.0e-4/.i < 16#38D1B717 { gap 7 }/
 lang2/source/isc/isc_call_handling.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
 # gap 4 (isc_cse_handling): write and writeln (dropped, for the check)
 lang2/source/isc/isc_cse_handling.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
-# gap 25, 28 (rewrite): rewrite_$routine_call exceeds the virtual registers and then the spill slots: its arguments' value selection (the widening through the variables' marks and copies) and its FORTRAN I/O marking left out of the check (conditional variables not set)
-lang2/source/isc/rewrite.pas	s/^(    \{ a byte or halfword passed to op 86's routine: widened \})$/%var gap25r;\n%if gap25r %then { gap 25 }\n$1/
-lang2/source/isc/rewrite.pas	s/^(    \{ the copy into the home or temporary, and back \})$/%endif { gap 25 }\n$1/
-lang2/source/isc/rewrite.pas	s/^(  \{ FORTRAN I\/O \})$/%var gap25s;\n%if gap25s %then { gap 25 }\n$1/
-lang2/source/isc/rewrite.pas	s/^(  \{ a statement: an EVAL_NODE \})$/%endif { gap 25 }\n$1/
 # gap 4 (isc_to_lir): write and writeln (dropped, for the check; also after `then')
 lang2/source/isc/isc_to_lir.pas	s/\bwrite(ln)?(\(.*\))?;\s*$/; { gap 4 }\n/
 # gap 4 (isc_main): write, writeln, read and readln (a self-assignment of the trace flag instead, for the check)
@@ -301,9 +240,6 @@ moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pa
 # gap 32 (isc.pvt.pas and isc_types.ins.pas, translator GB): the sections isc_vars defines, named as their variables (renamed, for the check)
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc.pvt.pas	s/^var \((isc_tool_generated_readonly_tables)\)/var (${1}_s) { gap 32 }/
 lang2/source/isc/isc_types.ins.pas	s/^var \((isc_readonly_tables)\)/var (${1}_s) { gap 32 }/
-# gap 25 (isc_pattern_matcher, translator GB): pattern_matcher (0x7944 bytes, 683 tries) exhausts dpc's virtual registers; the check leaves out the IL operators' arms from and_to_aop on (more values live at once than dpc has registers, docs/dpc-gaps.md 25) (a conditional variable that is not set)
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pattern_matcher.pas	s/^(        il_and_to_aop: begin)$/%var gap25pm;\n%if gap25pm %then { gap 25 }\n$1/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pattern_matcher.pas	s/^(        otherwise)$/%endif { gap 25 }\n$1/
 # gap 4 (isc_pass_1_main): write and writeln (dropped, for the check)
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_main.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_01_address_modes.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
@@ -340,35 +276,3 @@ moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pa
 # gap 7 (isc_pass_1_07, translator GF): rule 9's real comparison with 0.0 (the high longword compared with 0) and rule 10's real := double (dropped: the bits cleared), for the check
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_07_constants.pas	s/(il_\$node_ptr_t\([\w.^]+\)\^)\.real_value = 0\.0/$1.bits[1] = 0 { gap 7 }/
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_07_constants.pas	s/^(\s*)(\w+)\.value := il_\$node_ptr_t\([\w.^]+\)\^\.real_value;/$1$2.bits := 0; { gap 7 }/
-# gap 25 (the generated pass-2 modules, translator GC): actions of some hundred calls and temporaries exhaust dpc's registers; the check compiles them with an empty body (the heading kept)
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_02_assignments.pas	if (/^procedure transform_153_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_02_assignments.pas	if (/^procedure transform_157_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_02_assignments.pas	if (/^procedure transform_169_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_02_assignments.pas	if (/^procedure transform_170_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_09_addresses_and_fields.pas	if (/^procedure transform_445_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_09_addresses_and_fields.pas	if (/^procedure transform_448_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_09_addresses_and_fields.pas	if (/^procedure transform_450_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_09_addresses_and_fields.pas	if (/^procedure transform_474_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_14_chains.pas	if (/^procedure transform_384_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_24_operator_assignments.pas	if (/^procedure transform_178_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_24_operator_assignments.pas	if (/^procedure transform_180_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_24_operator_assignments.pas	if (/^procedure transform_181_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_24_operator_assignments.pas	if (/^procedure transform_186_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_25_compares.pas	if (/^procedure transform_120_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_25_compares.pas	if (/^procedure transform_123_pass_2\(/ .. /^end;$/) { if (/^(procedure|    subject: |    solution: )/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_09_addresses_and_fields.pas	if (/^procedure transform_445_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_09_addresses_and_fields.pas	if (/^procedure transform_450_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_09_addresses_and_fields.pas	if (/^procedure transform_474_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_10_extends.pas	if (/^procedure transform_423_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_14_chains.pas	if (/^procedure transform_384_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_24_operator_assignments.pas	if (/^procedure transform_177_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_24_operator_assignments.pas	if (/^procedure transform_180_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_24_operator_assignments.pas	if (/^procedure transform_181_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_24_operator_assignments.pas	if (/^procedure transform_186_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_02_assignments.pas	if (/^procedure transform_153_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_02_assignments.pas	if (/^procedure transform_157_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_02_assignments.pas	if (/^procedure transform_158_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_02_assignments.pas	if (/^procedure transform_169_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_02_assignments.pas	if (/^procedure transform_170_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_25_compares.pas	if (/^procedure transform_120_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_25_compares.pas	if (/^procedure transform_121_pass_1\(/ .. /^end;$/) { if (/^(procedure|    inh: |    options)/) {} elsif (/^end;$/) { $_ = "begin { gap 25 }\nend;\n" } else { $_ = "" } }

@@ -72,6 +72,11 @@ when this tree is merged).
   the gap 44 data cases (cargs, prfpkg, list_tree's line) now match; ass's
   program_name, which differed (the image ends the text with one NUL,
   the rest unset), matches since dpc 6d33696.
+- **Gaps 25 and 28 (virtual register numbers, the spiller's limit):
+  fixed in a5890fd** (16-bit register numbers).  78 rules removed;
+  kept only for cg_tree (its region holds real arithmetic, gap 7) and
+  lir_utils / ra_utils (nested routines as arguments, the trampoline,
+  on hold).
 - Gap 28 is gap 25 in another form (domain-pascal's diagnosis): the
   spiller finds values to spill but runs out of virtual register
   numbers (240 per class) adding the reloads, and the colouring's
@@ -81,7 +86,7 @@ when this tree is merged).
   purpose (the image cannot tell it from `repeat ... until false'):
   write such loops with a label.
 - All compile best effort (a warning; `--strict' still refuses).  Their
-  rewrites are gone from tools/cc_gap_rewrites.txt (298 rules removed in all);
+  rewrites are gone from tools/cc_gap_rewrites.txt (376 rules removed in all);
   the full gate is clean without them.
 - Gaps 4 (write/writeln) and 7 (real arithmetic) are not being worked
   on in dpc for now (the domain-pascal owner's choice).
