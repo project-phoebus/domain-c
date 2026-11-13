@@ -60,7 +60,7 @@ begin
     write('Pattern 1 matched the semantics.');
     writeln;
   end;
-  solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+  solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
   solution^.which_transform := 1;
   solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;

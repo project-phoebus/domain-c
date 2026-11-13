@@ -326,7 +326,7 @@ def routine(r, t, headings, tables):
             inner.append(i2 + 'end')
             inner.append(i2 + 'else begin')
             i3 = i2 + '  '
-        inner.append(i3 + 'solution := new_solution(isc_heap, ord(solution$%s), 0, inh, il, 0);'
+        inner.append(i3 + 'solution := new_solution(isc_heap, solution$%s, 0, inh, il, il_none);'
                      % t['kind'])
         inner.append(i3 + 'solution^.which_transform := %d;' % r)
         inner.append(i3 + 'solution^.before_transform := addr(subject);')

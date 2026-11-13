@@ -1927,7 +1927,7 @@ begin
       write('Pattern 173 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 173;
     solution^.before_transform := addr(subject);
     if subject.children[1]^.f76.bit_position_of_lsb = subject.children[2]^.f76.bit_position_of_lsb then begin
@@ -1983,7 +1983,7 @@ begin
       write('Pattern 174 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 174;
     solution^.before_transform := addr(subject);
     t3 := validate_shift_count(subject.children[1]^.f76.bit_position_of_lsb);
@@ -2045,7 +2045,7 @@ begin
       write('Pattern 175 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 175;
     solution^.before_transform := addr(subject);
     t3 := make_bit_mask_1(subject.children[1]^.f76.field_precision, 0);
@@ -2316,7 +2316,7 @@ begin
       write('Pattern 176 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 176;
     solution^.before_transform := addr(subject);
     t4 := make_bit_mask_1(subject.children[1]^.f76.field_precision, 0);
@@ -2586,7 +2586,7 @@ begin
       write('Pattern 177 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 177;
     solution^.before_transform := addr(subject);
     if subject.children[1]^.kind <> solution$address_mode then begin
@@ -3038,7 +3038,7 @@ begin
       write('Pattern 178 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 178;
     solution^.before_transform := addr(subject);
     if subject.children[1]^.f76.is_atomic then begin
@@ -3265,7 +3265,7 @@ begin
       write('Pattern 179 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 179;
     solution^.before_transform := addr(subject);
     solution^.fields[0] := create_solution_for_fp_reg;
@@ -3482,7 +3482,7 @@ begin
       write('Pattern 180 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 180;
     solution^.before_transform := addr(subject);
     if subject.children[1]^.f76.is_atomic then begin
@@ -4022,7 +4022,7 @@ begin
       write('Pattern 181 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 181;
     solution^.before_transform := addr(subject);
     solution^.fields[0] := create_solution_for_fp_reg_pair;
@@ -4487,7 +4487,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 182;
       solution^.before_transform := addr(subject);
       if subject.children[1]^.f76.is_atomic then begin
@@ -4762,7 +4762,7 @@ begin
       write('Pattern 183 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 183;
     solution^.before_transform := addr(subject);
     t2 := validate_shift_count(subject.children[1]^.f76.field_precision);
@@ -4848,7 +4848,7 @@ begin
       write('Pattern 184 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 184;
     solution^.before_transform := addr(subject);
     p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[2]^.literal_32_bits_value;
@@ -5150,7 +5150,7 @@ begin
       write('Pattern 185 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 185;
     solution^.before_transform := addr(subject);
     t7 := make_bit_mask_1(subject.children[1]^.f76.field_precision, 0);
@@ -5429,7 +5429,7 @@ begin
       write('Pattern 186 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 186;
     solution^.before_transform := addr(subject);
     t3 := make_bit_mask_1(subject.children[1]^.f76.field_precision, 0);
@@ -5788,7 +5788,7 @@ begin
       write('Pattern 187 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 187;
     solution^.before_transform := addr(subject);
     t2 := make_bit_mask_1(subject.children[1]^.f76.field_precision, 0);
@@ -5848,7 +5848,7 @@ begin
       write('Pattern 188 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 188;
     solution^.before_transform := addr(subject);
     t6 := make_bit_mask_1(subject.children[1]^.f76.field_precision, 0);
@@ -6116,7 +6116,7 @@ begin
       write('Pattern 189 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 189;
     solution^.before_transform := addr(subject);
     t3 := make_bit_mask_1(subject.children[1]^.f76.field_precision, 0);
@@ -6359,7 +6359,7 @@ begin
       write('Pattern 190 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 190;
     solution^.before_transform := addr(subject);
     t3 := make_bit_mask_1(subject.children[1]^.f76.field_precision, 0);
@@ -6622,7 +6622,7 @@ begin
     write('Pattern 191 matched the semantics.');
     writeln;
   end;
-  solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+  solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
   solution^.which_transform := 191;
   solution^.before_transform := addr(subject);
   solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
@@ -6663,7 +6663,7 @@ begin
       write('Pattern 192 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 192;
     solution^.before_transform := addr(subject);
     t3 := make_bit_mask_1(subject.children[1]^.f76.field_precision, 0);
@@ -6927,7 +6927,7 @@ begin
       write('Pattern 193 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 193;
     solution^.before_transform := addr(subject);
     t3 := make_bit_mask_1(subject.children[1]^.f76.field_precision, 0);
@@ -7189,7 +7189,7 @@ begin
       write('Pattern 194 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 194;
     solution^.before_transform := addr(subject);
     t2 := make_bit_mask_1(subject.children[1]^.f76.field_precision, 0);
@@ -7243,7 +7243,7 @@ begin
       write('Pattern 195 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 195;
     solution^.before_transform := addr(subject);
     if subject.children[1]^.f76.is_atomic then begin
@@ -7517,7 +7517,7 @@ begin
       write('Pattern 196 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 196;
     solution^.before_transform := addr(subject);
     t2 := validate_shift_count(32 - subject.children[1]^.f76.field_precision);
@@ -7598,7 +7598,7 @@ begin
       write('Pattern 197 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 197;
     solution^.before_transform := addr(subject);
     p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[2]^.literal_32_bits_value;
@@ -7886,7 +7886,7 @@ begin
       write('Pattern 198 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 198;
     solution^.before_transform := addr(subject);
     t3 := make_bit_mask_1(subject.children[1]^.f76.field_precision, 0);
@@ -8159,7 +8159,7 @@ begin
       write('Pattern 199 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 199;
     solution^.before_transform := addr(subject);
     t3 := make_bit_mask_1(subject.children[1]^.f76.field_precision, 0);

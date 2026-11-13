@@ -373,7 +373,7 @@ begin
       write('Pattern 200 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 200;
     solution^.before_transform := addr(subject);
     if subject.children[1]^.f76.is_atomic then begin
@@ -633,7 +633,7 @@ begin
       write('Pattern 201 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 201;
     solution^.before_transform := addr(subject);
     solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.il)^.p[12]);
@@ -715,7 +715,7 @@ begin
       write('Pattern 202 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 202;
     solution^.before_transform := addr(subject);
     if subject.children[1]^.f76.is_atomic then begin
@@ -980,7 +980,7 @@ begin
       write('Pattern 203 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 203;
     solution^.before_transform := addr(subject);
     solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.il)^.p[12]);
@@ -1067,7 +1067,7 @@ begin
       write('Pattern 204 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 204;
     solution^.before_transform := addr(subject);
     if subject.children[1]^.f76.is_atomic then begin
@@ -1327,7 +1327,7 @@ begin
       write('Pattern 205 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 205;
     solution^.before_transform := addr(subject);
     solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.il)^.p[12]);

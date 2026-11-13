@@ -188,8 +188,8 @@ begin
     writeln(tl_rule);
     writeln;
   end;
-  isc_user_routines_324 := new_solution(isc_user_routines_20c, 17, 0, nil,
-                                        nil, 0);
+  isc_user_routines_324 := new_solution(isc_user_routines_20c, solution$sc_reg, 0, nil,
+                                        nil, il_none);
 end;
 
 { end_compilation - traced under sw3.

@@ -327,22 +327,26 @@ end;
 
 function local_create_soln_for_ip_reg;
 begin
-  local_create_soln_for_ip_reg := new_solution(heap, 11, 0, nil, nil, 0);
+  local_create_soln_for_ip_reg := new_solution(heap, solution$ip_reg, 0, nil,
+                                               nil, il_none);
 end;
 
 function local_create_soln_for_fp_reg;
 begin
-  local_create_soln_for_fp_reg := new_solution(heap, 8, 0, nil, nil, 0);
+  local_create_soln_for_fp_reg := new_solution(heap, solution$fp_reg, 0, nil,
+                                               nil, il_none);
 end;
 
 function local_create_soln_for_fp_reg_pair;
 begin
-  local_create_soln_for_fp_reg_pair := new_solution(heap, 9, 0, nil, nil, 0);
+  local_create_soln_for_fp_reg_pair := new_solution(heap, solution$fp_reg_pair, 0, nil,
+                                                    nil, il_none);
 end;
 
 function local_create_soln_for_fp_reg_quad;
 begin
-  local_create_soln_for_fp_reg_quad := new_solution(heap, 10, 0, nil, nil, 0);
+  local_create_soln_for_fp_reg_quad := new_solution(heap, solution$fp_reg_quad, 0, nil,
+                                                    nil, il_none);
 end;
 
 { local_initialize_symbol - a symbol's home solution made (once): the
@@ -1310,8 +1314,8 @@ begin
     bits_trusted_of_symbol := bits_trusted_of_fortran_symbol(sym, x);
 end;
 
-{ get_kind_of_home_solution - the kind of sym's home solution (0 when
-  sym is not a register candidate).
+{ get_kind_of_home_solution - the kind of sym's home solution
+  (solution$none when sym is not a register candidate).
 
   0x21217C, 0x32 bytes: sym 8; a word in D0. }
 
@@ -1319,9 +1323,9 @@ function get_kind_of_home_solution;
 begin
   if isc_$is_a_register_candidate(sym) then
     get_kind_of_home_solution :=
-        ord(isc_solution_ptr_t(isc_$get_home_solution(sym))^.kind)
+        isc_solution_ptr_t(isc_$get_home_solution(sym))^.kind
   else
-    get_kind_of_home_solution := 0;
+    get_kind_of_home_solution := solution$none;
 end;
 
 { il_node_has_float_value - whether node is a real constant (88, 89;
@@ -2064,7 +2068,8 @@ var
   s: isc_solution_ptr_t;
 begin
   c := smcontk(integer_ob, v);
-  s := new_solution(isc_user_routines_20c, 14, 0, nil, c, 78);
+  s := new_solution(isc_user_routines_20c, solution$literal_32_bits, 0, nil, c,
+                    il_integer_ob);
   s^.bits_known := v;
   s^.bits_trusted := -1;
   s^.literal_32_bits_value := v;
@@ -2330,7 +2335,7 @@ var
 begin
   inh := new_inherited_attributes(isc_heap, sym);
   inh^.fetch_precision := precision;
-  s := new_solution(isc_heap, 5, 0, inh, sym, 176);
+  s := new_solution(isc_heap, solution$address_mode, 0, inh, sym, il_var_name);
   s^.bits_known := known;
   s^.bits_trusted := trusted;
   s^.f76.has_a_symbolic_displacement := true;
@@ -2363,7 +2368,7 @@ begin
   c := rlcontk(d);
   inh := new_inherited_attributes(isc_heap, c);
   inh^.fetch_precision := 32;
-  s := new_solution(isc_heap, 5, 0, inh, c, 93);
+  s := new_solution(isc_heap, solution$address_mode, 0, inh, c, il_real_ob);
   s^.bits_known := 0;
   s^.bits_trusted := 3;
   s^.f76.has_a_symbolic_displacement := true;
@@ -2393,7 +2398,7 @@ begin
   c := dpcontk(t);
   inh := new_inherited_attributes(isc_heap, c);
   inh^.fetch_precision := 64;
-  s := new_solution(isc_heap, 5, 0, inh, c, 70);
+  s := new_solution(isc_heap, solution$address_mode, 0, inh, c, il_dpreal_ob);
   s^.bits_known := 0;
   s^.bits_trusted := 7;
   s^.f76.has_a_symbolic_displacement := true;
@@ -2421,7 +2426,7 @@ var
 begin
   c := smcontk(integer_ob, v);
   inh := new_inherited_attributes(isc_heap, c);
-  s := new_solution(isc_heap, 5, 0, inh, c, 78);
+  s := new_solution(isc_heap, solution$address_mode, 0, inh, c, il_integer_ob);
   s^.bits_known := 0;
   s^.bits_trusted := 3;
   s^.bits_known_of_fetched_value := v;
@@ -2482,7 +2487,8 @@ end;
 
 function create_solution_for_address_mode;
 begin
-  create_solution_for_address_mode := new_solution(isc_heap, 5, 0, nil, nil, 0);
+  create_solution_for_address_mode := new_solution(isc_heap, solution$address_mode, 0, nil,
+                                                   nil, il_none);
 end;
 
 { create_solution_for_case_jump_base - a case jump's base (kind 1),
@@ -2494,28 +2500,30 @@ function create_solution_for_case_jump_base;
 var
   s: isc_solution_ptr_t;
 begin
-  s := new_solution(isc_heap, 1, 0, nil, nil, 0);
+  s := new_solution(isc_heap, solution$case_jump_base, 0, nil, nil, il_none);
   s^.l12 := node^.xl[13];
   create_solution_for_case_jump_base := s;
 end;
 
 function create_solution_for_ip_reg;
 begin
-  create_solution_for_ip_reg := new_solution(isc_heap, 11, 0, nil, nil, 0);
+  create_solution_for_ip_reg := new_solution(isc_heap, solution$ip_reg, 0, nil,
+                                             nil, il_none);
 end;
 
 function create_solution_for_ip_reg_scaled;
 var
   s: isc_solution_ptr_t;
 begin
-  s := new_solution(isc_heap, 13, 0, nil, nil, 0);
+  s := new_solution(isc_heap, solution$ip_reg_scaled, 0, nil, nil, il_none);
   s^.f76.scale := 0;
   create_solution_for_ip_reg_scaled := s;
 end;
 
 function create_solution_for_fp_reg;
 begin
-  create_solution_for_fp_reg := new_solution(isc_heap, 8, 0, nil, nil, 0);
+  create_solution_for_fp_reg := new_solution(isc_heap, solution$fp_reg, 0, nil,
+                                             nil, il_none);
 end;
 
 { create_solution_for_fp_reg_physical - a floating register's solution
@@ -2528,7 +2536,7 @@ function create_solution_for_fp_reg_physical;
 var
   s: isc_solution_ptr_t;
 begin
-  s := new_solution(isc_heap, 8, 0, nil, nil, 0);
+  s := new_solution(isc_heap, solution$fp_reg, 0, nil, nil, il_none);
   s^.live_range := lir_3f90[r];
   s^.f76.physical_register := s^.live_range^.f2.physical_register;
   s^.f76.physical_register_is_no_modify := s^.live_range^.f2.physical_register_is_no_modify;
@@ -2539,7 +2547,8 @@ end;
 
 function create_solution_for_fp_reg_pair;
 begin
-  create_solution_for_fp_reg_pair := new_solution(isc_heap, 9, 0, nil, nil, 0);
+  create_solution_for_fp_reg_pair := new_solution(isc_heap, solution$fp_reg_pair, 0, nil,
+                                                  nil, il_none);
 end;
 
 { create_solution_for_fp_reg_pair_physical - likewise a pair's (kind
@@ -2551,7 +2560,7 @@ function create_solution_for_fp_reg_pair_physical;
 var
   s: isc_solution_ptr_t;
 begin
-  s := new_solution(isc_heap, 9, 0, nil, nil, 0);
+  s := new_solution(isc_heap, solution$fp_reg_pair, 0, nil, nil, il_none);
   s^.live_range := lir_3f90[r];
   s^.f76.physical_register := s^.live_range^.f2.physical_register;
   s^.f76.physical_register_is_no_modify := s^.live_range^.f2.physical_register_is_no_modify;
@@ -2562,7 +2571,8 @@ end;
 
 function create_solution_for_fp_reg_quad;
 begin
-  create_solution_for_fp_reg_quad := new_solution(isc_heap, 10, 0, nil, nil, 0);
+  create_solution_for_fp_reg_quad := new_solution(isc_heap, solution$fp_reg_quad, 0, nil,
+                                                  nil, il_none);
 end;
 
 { create_solution_for_literal_32_bits - a literal solution (kind 14) of
@@ -2574,7 +2584,7 @@ function create_solution_for_literal_32_bits;
 var
   s: isc_solution_ptr_t;
 begin
-  s := new_solution(isc_heap, 14, 0, nil, nil, 0);
+  s := new_solution(isc_heap, solution$literal_32_bits, 0, nil, nil, il_none);
   s^.literal_32_bits_value := v;
   create_solution_for_literal_32_bits := s;
 end;
@@ -3918,21 +3928,21 @@ begin
   end;
 end;
 
-{ solution_kind_of_symbol - the kind of sym's home solution (0 when sym
-  is not a register candidate or has none).
+{ solution_kind_of_symbol - the kind of sym's home solution
+  (solution$none when sym is not a register candidate or has none).
 
   0x216E8A, 0x3E bytes: sym 8; a word in D0. }
 
 function solution_kind_of_symbol;
 var
-  k: integer;
+  k: solution$t;
   h: isc_solution_ptr_t;
 begin
-  k := 0;
+  k := solution$none;
   if isc_$is_a_register_candidate(sym) then begin
     h := isc_solution_ptr_t(isc_$get_home_solution(sym));
     if h <> nil then
-      k := ord(h^.kind);
+      k := h^.kind;
   end;
   solution_kind_of_symbol := k;
 end;

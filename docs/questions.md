@@ -2847,6 +2847,24 @@ answered by this policy and needs no reply.
    readonly_tables' result_kind table holds integers.  The words would
    be the same as solution$t and il$t; retype the headings (and the
    generator's calls) to the enumerations?
+   **Done (RN6, 2026-11-12):** new_solution takes kind: solution$t and
+   il_kind: il$t; solution_kind_of_cse, solution_kind_of_symbol and
+   get_kind_of_home_solution return a solution$t (solution$none where
+   they gave 0); result_kind is an array of solution$t; the operator
+   routines' var il_kind (p1_operator_t), pass_1's local and
+   cross_product_to_solutions_of_parent's parameter are il$t.  The
+   generator writes the names (solution$ip_reg, il_add_to_aop, il_none
+   for the 0 every action passes) without ord(), and a pass-1 action's
+   compare of a kind function's result with a number is the element's
+   name (iscg_p2lang's coerce, from the heading's class); the
+   hand-written callers (isc_main, isc_to_lir, isc_user_routines) name
+   theirs too (il_integer_ob, il_real_ob, il_dpreal_ob, il_var_name for
+   78, 93, 70, 176).  dpc's code is unchanged in all 277 objects
+   (pass_1's `move.l #16#160002' too: dpc still pushes kind and
+   nchildren as one longword), the rule file is unchanged and
+   re-extraction reproduces it.  il_kind_function still returns an
+   integer: it gives the node's il_$kind_t (ord(node^.kind)), not an
+   il$t, and pass 1 compares it with 117 (label_name).
 320. Translator RN2: **backend.ins.pas's solution_t keeps integers.**
    The LIR's view of the solution (solution_t) has kind an integer
    (+108), base_register, index_register and false_label integer32:

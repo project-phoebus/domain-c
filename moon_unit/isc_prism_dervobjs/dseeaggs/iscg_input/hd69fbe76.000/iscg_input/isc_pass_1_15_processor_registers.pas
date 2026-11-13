@@ -162,7 +162,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$processor_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$processor_reg, 0, inh, il, il_none);
       solution^.which_transform := 241;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
@@ -271,7 +271,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$processor_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$processor_reg, 0, inh, il, il_none);
       solution^.which_transform := 242;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -379,7 +379,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$processor_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$processor_reg, 0, inh, il, il_none);
       solution^.which_transform := 243;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -488,7 +488,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$processor_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$processor_reg, 0, inh, il, il_none);
       solution^.which_transform := 244;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -595,7 +595,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$processor_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$processor_reg, 0, inh, il, il_none);
       solution^.which_transform := 245;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes;
@@ -694,7 +694,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$processor_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$processor_reg, 0, inh, il, il_none);
       solution^.which_transform := 246;
       solution^.before_transform := addr(subject);
       if not lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[8]), ord(opc$add), 1) or not subject.children[1]^.f76.uses_the_base_register then begin
@@ -806,7 +806,7 @@ begin
       write('Pattern 247 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 247;
     solution^.before_transform := addr(subject);
     p1_int_fields_ptr_t(addr(solution^))^.i[0] := p2_node_ptr_t(subject.il)^.w[28];
@@ -879,7 +879,7 @@ begin
       write('Pattern 248 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$void), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$void, 0, inh, il, il_none);
     solution^.which_transform := 248;
     solution^.before_transform := addr(subject);
     p1_int_fields_ptr_t(addr(solution^))^.i[0] := available_precision_function(subject.children[2]);
@@ -957,7 +957,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$processor_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$processor_reg, 0, inh, il, il_none);
       solution^.which_transform := 249;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.il)^.p[14]);
@@ -1049,7 +1049,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 250;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.code_bytes + 4;
@@ -1143,7 +1143,7 @@ begin
       write('Pattern 251 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$processor_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$processor_reg, 0, inh, il, il_none);
     solution^.which_transform := 251;
     solution^.before_transform := addr(subject);
     t2 := subject.bits_known & 3;
@@ -1233,7 +1233,7 @@ begin
       write('Pattern 252 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$processor_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$processor_reg, 0, inh, il, il_none);
     solution^.which_transform := 252;
     solution^.before_transform := addr(subject);
     p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.bits_known & 3;

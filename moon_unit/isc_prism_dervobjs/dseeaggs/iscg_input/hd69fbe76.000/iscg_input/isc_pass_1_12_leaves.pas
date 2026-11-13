@@ -111,7 +111,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 13;
       solution^.before_transform := addr(subject);
       t2 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[3]));
@@ -175,7 +175,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 14;
       solution^.before_transform := addr(subject);
       t2 := get_uparrow_dot_kind(isc_node_ptr_t(p2_node_ptr_t(subject.il)^.p[2]));
@@ -243,7 +243,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 15;
       solution^.before_transform := addr(subject);
       t2 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[3]));
@@ -305,7 +305,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 16;
       solution^.before_transform := addr(subject);
       t2 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[3]));
@@ -408,7 +408,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 17;
       solution^.before_transform := addr(subject);
       t2 := number_of_rightmost_zeroes(integer32(p2_node_ptr_t(subject.il)^.p[3]));
@@ -507,7 +507,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 18;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes;
@@ -559,7 +559,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 19;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -610,7 +610,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 20;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
@@ -668,7 +668,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
     solution^.which_transform := 21;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -701,7 +701,7 @@ begin
     write('Pattern 22 matched the semantics.');
     writeln;
   end;
-  solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
+  solution := new_solution(isc_heap, solution$literal_32_bits, 0, inh, il, il_none);
   solution^.which_transform := 22;
   solution^.before_transform := addr(subject);
   solution^.code_bytes := 4;
@@ -735,7 +735,7 @@ begin
     write('Pattern 23 matched the semantics.');
     writeln;
   end;
-  solution := new_solution(isc_heap, ord(solution$local_routine), 0, inh, il, 0);
+  solution := new_solution(isc_heap, solution$local_routine, 0, inh, il, il_none);
   solution^.which_transform := 23;
   solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;
@@ -773,7 +773,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
     solution^.which_transform := 24;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -813,7 +813,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 25;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -862,7 +862,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 26;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -911,7 +911,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 27;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -955,7 +955,7 @@ begin
       write('Pattern 28 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$local_routine), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$local_routine, 0, inh, il, il_none);
     solution^.which_transform := 28;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -995,7 +995,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 29;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -1044,7 +1044,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
     solution^.which_transform := 30;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -1085,7 +1085,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 31;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(lir_4090[p2_node_ptr_t(subject.il)^.w[3]]);
@@ -1134,7 +1134,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 32;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.il)^.w[3]]);
@@ -1183,7 +1183,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 33;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.il)^.w[3]]);
@@ -1236,7 +1236,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 34;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
