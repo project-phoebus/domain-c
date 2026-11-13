@@ -3122,6 +3122,10 @@ answered by this policy and needs no reply.
    (0x20,A0),D0; btst #14,D0').  So the variable-attribute tests
    (0x0E4540, 0x0E501E, 0x0E5046, 0x0A8C92) are probably written that
    way; to do.)
+   **Done (translator RN7, 2026-11-12):** the four tests are integer
+   one-bit tests of the named fields, `(integer32(x^.vr_attr) & c) <>
+   0' (fs_attr for reachingdefinitions' Fortran test, 0x0E501E): dpc's
+   code is unchanged, the image's `move.l; btst'.
 330. Translator RN5: **list_tree's views were laid out 2 bytes off**
    (found comparing print_routine_block with the image; fixed).  dpc
    rounds a packed record to a word and gives a set of 0..7 a word, so
@@ -3151,6 +3155,29 @@ answered by this policy and needs no reply.
    outer record for the set).  Not a dpc layout difference: the
    original likely had `[byte]' on the field; to do: restore the first
    declarations with `[byte]'.)
+   **Done (translator RN7, 2026-11-12):** list_tree's lt_node_t flags
+   are `[byte] packed record' (rewritten, f6 .. f0) and b1: char; a
+   basic block's (lt_bb_t) `[byte] set of lt_bb_flag_t' (bb_abnormal
+   0, bb_loop_head 1, bb_preheader 2, bb_3 .. bb_6, bb_cleanup 7: the
+   dump's names with bb_ before them, the block's preheader being a
+   field) and b1: char; lt_bits_t is `[byte] set of 0..7' and xs an
+   array of them.  dpc's code is RN5's but for print_basic_block's
+   CLEANUP test, `tst.b (A2)' as the image (0x0857C2) where the
+   packed record gave `tst.w'; the rewritten tests stay `tst.w' where
+   the image has `tst.b' (dpc gap 49, either form).  g_opt.ins.pas's
+   g_opt_block_t (the same basic block) has `[byte]' flags and b1
+   apart; code identical.  Looked at and left: gen_unwind's,
+   debug_sym_dmp's and dst.ins.pas's sets of 0..7 are fields of packed
+   records (a set of 0..7 there is a byte without `[byte]'); the
+   descriptor's flags at +10 (add_node_$desc_t, kfold's kf_desc_t,
+   c_desc_t, g_opt's and list_tree's views: 8 booleans and a byte b11)
+   stay a 16-bit packed record, since the code generator reads +10 as
+   a word with masks (cg_tree, cg_assign: `desc.flags & 16#4000'); the
+   other packed records ending in a byte (backend.ins.pas's
+   b20_7..b21, lir's, sym's and lir_main's b11, ra's, iv's, mmt's,
+   rewrite's, kfold's h4 and bits, c_objtype's) hold fields of their
+   own or are 16-bit words of flags, with nothing showing a byte
+   merged in to keep the next field's offset.
 331. Translator RN5: **what question 326 leaves** (besides RN6's (d),
    (e)).  A label's byte booleans at +74..+77 (abnormal,
    'abnormal(well_behaved)' at +77, nlgoto, assigned_goto_target) are
@@ -3172,6 +3199,45 @@ answered by this policy and needs no reply.
    save_db, x376_0 bat, conv call, made (+378 .7) sb_display, and
    call_conv's b376_5 (asynchronous) abnorm, b378_6 (a static link)
    pass_display: rename them to il_$blk_atts_t's (or make them one)?
+   **Done (translator RN7, 2026-11-12), but the generated ISC's xw[12]
+   (RN8's):** il.ins.pas's label variant has abnormal (+74), nlgoto
+   (+75), assigned_goto_target (+76) and well_behaved (+77), booleans
+   (list_tree's lt_node_t the same); cg_top, cg_addr, celpkg,
+   opt_main, reg_save, il_utils and list_tree read and set them by
+   name: `tst.b; bmi/bpl', `move.b' as opt_main's results, `not.b',
+   `st', the image's forms (rev889-patterns 205), where the bytes
+   compared with 0 or 128 gave `clr.w; move.b; cmpi.w #0x80' or `tst.b;
+   sne'; cg_top's label_proc and reg_save's tests are `or else'
+   (rev889-patterns 204).  A variable's allocation is vr_vat (+72,
+   il_$vat_t) in 27 units (129 reads and writes, the numbers named;
+   the class integers that also hold a Fortran symbol's class take
+   ord(); opt_main's assert_defined_on_entry's k an il_$vat_t): code
+   identical.  An assignment's operator is asg_op (+76, il_$aop_t,
+   il.ins.pas's assignment variant: g_opt.ins.pas's name) in
+   commit_top_node (convert_aops_to__aop_to_mem's op an il_$aop_t: its
+   three `in' tests now check the operator against 31 as the image
+   does, 0x076022, 0x076032, 0x0760A8), opt_inline and
+   isc_user_routines (`pea (76,A2)' for the write, as the image,
+   0x2182A0).  c_stmt_sem's add_ldfn and pop_lbl take an
+   il_$label_class_t (lbl_else .. lbl_factor at the 20 calls), il_c6
+   is one, and c_objtype's lkind (the store is no longer masked, as
+   the image's 0x05C230).  list_tree: idnt_len and idnt_name for
+   print_variable's name, a record constant's linkp and size (the
+   dump's names); +292 of an inner block is left (question 337).  The
+   phase: is_device tests phase_devrd and phase_devwt in
+   add_node_$phase_t(node^.xl[1]) (`btst #3,(7,A0)', the image's
+   0x212D92, where the masks gave `move.l; btst'); il_utils, which
+   opens neither globals.ins.pas nor add_node.ins.pas, reads the
+   phase through a view of its own (iu_node_t, phase a set of 0..31)
+   with the bits' sets as constants (iu_equiv_phase, iu_unique_phase),
+   code identical.  c_objtype's c_blk_t's bits take il_$blk_atts_t's
+   names (addr_fparam, noinline, save_db, bat, call, sb_display, and
+   need_fp_fcw for add_node's b376_7, visible for c_expr_sem's b374_3,
+   local_name_only for c_expr_syn's b376_3, the unused ones too); it
+   stays its own record, the routine options (opts, +374.7 to +376.3)
+   overlaying it and bat being assigned from integers.  call_conv's
+   view is an il_$blk_atts_t (blk_atts; the conventions call_pas ..
+   call_ada by name).  Code identical.
 332. Translator RN5: **the assembly comparison** (every unit compiled as
    the gate compiles it, main eec0632 against the branch, dpc b9d77de
    stable: 207 of 277 objects identical, the other 70 all in units
@@ -3236,3 +3302,28 @@ answered by this policy and needs no reply.
    evaluation_order_function compares its n1 and n2 signed (`ble',
    0x2124C2) although the callers pass the unsigned maxima: retype the
    accessors' results?
+336. Translator RN7 (2026-11-12): **two of the original's field names
+   in messages.**  commit_top_node's pack_aop_to_mem reports
+   'node^.assign_node.op <> pack_aop' and lir_main's
+   by_branch_prologs_for_handler 'exception has unexpected .vat': the
+   original's node record had, it seems, a record per kind named after
+   the kind (node^.assign_node.op; the allocation's field vat), so an
+   assignment's operator was op, as a tree's operator presumably was.
+   il.ins.pas names them asg_op (+76, g_opt.ins.pas's name) and vr_vat
+   (+72), its kind prefixes standing for the kind's record.  Make
+   il_$node_t's variants records named after the kinds (node^.
+   assign_node.op, node^.var_name.vat, ...)?  That is a re-layout of
+   every view of the node, not a renaming.
+337. Translator RN7: **an inner block's +292.**  print_tree_ref prints
+   an inner block (172) as 'ib' when its longword at +292 is set (or,
+   through the nil pointer, of kind error_ob: the slip kept), else
+   'inner_blk ' and that node (print_object_ptr).  No other unit reads
+   it; a routine block's +292..+295 are bytes (c_blk_t's b292, nparms,
+   level, b295).  Left as xp[73]: what is it?
+338. Translator RN7: **the C front end's label view.**  c_objtype.ins.pas
+   c_top_t's label variant names +72 lab_bits (placed .7, pending .6,
+   lkind .5..1, which add_ldfn sets from il_c6, now an
+   il_$label_class_t) and +74, +75 lab_74 (body_e: a label symbol's
+   used) and lab_75: il.ins.pas's lab_atts (def, fwrd, class) and
+   abnormal, nlgoto.  Rename them to il.ins.pas's names (or make lab_bits
+   an il_$label_atts_t)?

@@ -1302,3 +1302,37 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
     #0x1f; bhi; ...; move.l #0x5f84006,D2; btst D1,D2'), best effort
     with a warning; refused when the element contains a call.  The ten
     sites' rules are dropped; the six units pass the gate.
+
+49. **A `[byte]' packed record's first boolean read as a word.**
+    list_tree's node flags are `[byte] packed record rewritten, f6 ..
+    f0: boolean end' followed by a byte (docs/questions.md 330: Rev
+    8.89 gives a packed record at least 16 bits, the image's one-byte
+    records take `[byte]', reference 3.15.5).  The image tests
+    rewritten (bit 7) with `tst.b (A2); bpl' (print_tree_ref 0x07FA44,
+    print_tree_exp 0x07FDF6, print_top_node 0x0838EE); dpc reads the
+    word, `tst.w (A0); bpl', two bytes of a one-byte field (the same
+    as for a 16-bit packed record of the 8 booleans and the byte, the
+    form the views had before).  The other bits (`btst #6,(A0)') and
+    stores (`bset #7,(A0)') are bytes; so is bit 7 of a `[byte] set of
+    0..7' (`tst.b (A2)', print_basic_block 0x0857C2, as the image).
+    It compiles (no rewrite); the code differs.  Reproducer:
+
+       module g49;
+       type
+         fl_t = packed record
+           rewritten: boolean;
+           f6, f5, f4, f3, f2, f1, f0: boolean;
+         end;
+         n_t = record
+           flags: [byte] fl_t;
+           b1: char;
+           kind: integer;
+         end;
+         p_t = ^n_t;
+       var cnt: integer;
+       procedure f(p: p_t);
+       begin
+         if p^.flags.rewritten then cnt := 1;
+       end;
+
+    Rev 8.89: `tst.b (A0); bpl'; dpc: `tst.w (A0); bpl'.

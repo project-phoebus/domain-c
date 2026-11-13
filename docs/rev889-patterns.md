@@ -1473,3 +1473,33 @@ cc.m68k unless marked.
     #16#220000'): the same result, extra fields (domain-pascal-j714,
     held with the Rev 8.89 form work).  Every integer site here has an
     explicit width, so the form without one is not seen.
+204. **`or else' by branches, `or' whole.**  A condition of booleans
+    joined by `or' is evaluated whole (`move.b (75,A0),D1; or.b
+    (74,A0),D1; bpl', opt_main's make_new_postorder_node_list
+    0x0E06C4; `or.b (74,A3),D0; bmi', 0x0DCF1C), one written `or else'
+    by branches: `tst.b (74,A0); bmi; btst #6,(72,A0); bne' (cg_top's
+    label_proc 0x0FE17C, the label's abnormal or else not fwrd),
+    `tst.l (64,A0); beq; tst.b (74,A0); bpl' (0x0FE1C0), `tst.b
+    (74,A2); bmi; tst.b (75,A2); bpl' (reg_save's
+    registers_preserved_by_statement 0x0ED236).  dpc compiles both as
+    the image does.
+205. **A byte boolean read as such.**  A label's booleans (+74..+77)
+    are tested `tst.b; bmi/bpl' (cg_addr's address 0x0F21A4, celpkg's
+    getlabcell 0x0B64EC), moved as a function's result (`move.b
+    (74,A2),D0', opt_main's assert_is_abnormal_label 0x0DB7A0), negated
+    with `not.b' (assert_is_unsafe_abnormal_label 0x0DB80A) and set
+    with `st' (cg_top's codegen 0x0FEC8A): a `boolean' field, not a
+    byte compared with 0 or 128.
+206. **An enumeration `in' a longword set: the element checked
+    against 31.**  commit_top_$convert_aops_to__aop_to_mem tests an
+    assignment's operator (il_$aop_t, 38 values) in sets of 0..31 as
+    `moveq #31,D0; cmp.w D2,D0; bcs; move.l #0xC41,D1; btst D2,D1'
+    (cc.m68k 0x076022, 0x076032, 0x0760A8): the check an integer
+    element does not get, so the operator was held as the enumeration
+    (dpc: `cmpi.w #0x1f; bhi'; docs/dpc-gaps.md 48).  A 12-value
+    enumeration (il_$vat_t) in a set of a word has no check (`move.w
+    (72,A2),D0; move.w #0xD9A,D1; btst D0,D1', opt_main's
+    assert_defined_on_entry 0x0DEB42).  An enumeration stored into a
+    packed field of 5 bits is not masked (c_stmt_sem's add_ldfn `move.b
+    il_c6+1,D1; add.b D1,D1; or.b', 0x05C230: il_c6 an
+    il_$label_class_t), where a 0..31 integer is (`andi.b #0x3E').
