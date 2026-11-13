@@ -3398,6 +3398,13 @@ answered by this policy and needs no reply.
    used) and lab_75: il.ins.pas's lab_atts (def, fwrd, class) and
    abnormal, nlgoto.  Rename them to il.ins.pas's names (or make lab_bits
    an il_$label_atts_t)?
+   **Done (translator RN9, 2026-11-12):** c_top_t's label variant takes
+   il.ins.pas's names: lab_atts, an il_$label_atts_t at +72 (def, fwrd,
+   class: c_stmt_sem's add_ldfn sets def false, fwrd true and class
+   il_c6, and clears fwrd where a branch reaches the label), abnormal
+   (+74, body_e's), nlgoto (+75), assigned_goto_target (+76) and
+   well_behaved (+77; lab_unused_78 the word after).  dpc's code is
+   unchanged in all 41 objects of the 21 units that open c_objtype.ins.pas.
 339. Translator RN8 (2026-11-12), after 333: **kfold's F_MATH fold
    left numeric.**  kfold_$general folds an F_MATH tree by desc.w6 with
    bodies that disagree with print_math's names for four functions: 12
