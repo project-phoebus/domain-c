@@ -1685,7 +1685,7 @@ begin
     4, 6: begin
       if u.x <> 0 then begin
         n := il_$node_ptr_t(u.x);
-        if not ((n^.kind = gen_tree_node) and (n^.xw[18] = 13)) then
+        if not ((n^.kind = gen_tree_node) and (n^.tr_op = index_top)) then
           prtobj(s, n);
       end
       else if u.y <> 0 then

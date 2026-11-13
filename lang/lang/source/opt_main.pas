@@ -3263,7 +3263,7 @@ begin
     if (v^.xw[36] = 5) and (t^.kind = param_name) then
       if (ord(te.c[25]) & 16#40) <> 0 then
         return;
-    if (v^.xl[8] & 320) <> 0 then
+    if v^.vr_attr * [var_$initialized, var_$uplevel] <> [] then
       return;
     k := v^.xw[36];
     if k in [1, 3, 4, 7, 8, 10, 11] then
@@ -3538,7 +3538,8 @@ begin
     while (k <= om_nvars) and (v <> nil) and (om_nvars > 0) do begin
       ok := false;
       if v^.kind = var_name then
-        if (v^.xl[8] & 16#201101) = 0 then
+        if v^.vr_attr * [var_$volatile, var_$uplevel, var_$address_exposed,
+                         var_$nooptimize] = [] then
           type_exp(v, addr(te));
       case il_utl_$classify_variable(v, te, r, next) of
         4, 5, 6: begin

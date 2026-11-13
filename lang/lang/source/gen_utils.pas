@@ -618,7 +618,7 @@ begin
     v^.xp[5] := blk;
     v^.xp[7] := runbackend_0c;
     v^.xw[36] := 2;
-    v^.xl[8] := 16#44000;
+    v^.vr_attr := [var_$temporary, var_$allocated];
     v^.xl[9] := 32;
     v^.xw[22] := 2;
   end;

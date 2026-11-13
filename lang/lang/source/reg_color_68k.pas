@@ -682,15 +682,15 @@ begin
           paint(x, pickcolor(x));
           t := x^.node;
           if t^.kind = cse_parent_ob then
-            t^.xp[1]^.xw[12] := 4
+            t^.xp[1]^.tr_rlen := rlen_long
           else if t^.kind = fortran_symbol then begin
-            if (t^.xl[6] & 16#20000) <> 0 then
+            if var_$strength_reduction in t^.fs_attr then
               t^.xc[10] := chr((ord(t^.xc[10]) & 16#F0) ! 3);
           end
           else if t^.kind = tree_node then
-            t^.xw[12] := 4
+            t^.tr_rlen := rlen_long
           else if t^.kind = cse_use_ob then
-            t^.xp[5]^.xw[12] := 4;
+            t^.xp[5]^.tr_rlen := rlen_long;
           x^.rlen := rlen_long;
         end;
       end;

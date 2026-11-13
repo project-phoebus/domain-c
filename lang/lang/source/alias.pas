@@ -244,12 +244,12 @@ var
   t: alias_$desc_t;                     { -32 }
 begin
   if ((p^.kind = gen_tree_node) or (p^.kind = tree_node)) and
-      ((p^.xw[18] = 2) or (p^.xw[18] = 1)) and then
+      ((p^.tr_op = sub_top) or (p^.tr_op = add_top)) and then
       (p^.xp[11]^.kind in [blogical_ob..char_ob, char16_ob,
                            binteger_ob]) then begin
     ok := get_alias_desc(p^.xp[10], d);
     d.disp := p^.xp[11]^.int_value;
-    if p^.xw[18] = 2 then
+    if p^.tr_op = sub_top then
       d.disp := -d.disp;
   end
   else begin
@@ -547,22 +547,28 @@ begin
       end;
     end;
     gen_tree_node, tree_node:
-      if n^.xw[18] = 26 then begin
+      if n^.tr_op = addr_top then begin
         ok := get_alias_desc(n^.xp[10], d);
         if d.class = alias_ref_thru_param_ptr then
           d.class := alias_dynamic_param_ptr
         else
           d.levels := d.levels - 1;
       end
-      else if n^.xw[18] = 13 then begin
+      else if n^.tr_op = index_top then begin
         ok := get_alias_desc(n^.xp[10], d);
         d.inexact := true;
       end
-      else if ((n^.xw[18] = 0) or (n^.xw[18] = 63) or (n^.xw[18] = 17)) and
+      else if ((n^.tr_op = nop_top) or (n^.tr_op = align_top)
+               or (n^.tr_op = value_top)) and
           (n^.xw[19] > 0) then
         ok := get_alias_desc(n^.xp[10], d)
-      else if n^.xw[18] in [1..12, 14, 16, 18, 23..31, 33..41, 43..53, 56,
-          57, 59..62, 64..66, 68..71, 74..84, 86, 87] then
+      else if n^.tr_op in [add_top..compare_top, unpack_top, func_call_top,
+          extend_top, set_compare_top..isc_func_call_top,
+          isc_mul_top..f_math_top, expon_top..cc_logand_ptop, cc_comma_ptop,
+          cc_lognot_ptop, signed_div_top..unsigned_mod_top,
+          isc_addr_top..cache_top, strcmp_top..isc_select,
+          isc_signed_rem_top..bit_field_cmp_top, ada_expon_top,
+          f_ada_expon_top] then
         d.class := alias_never_invalidated
       else
         ok := false;
@@ -1279,7 +1285,7 @@ begin
           else
             a := a^.xp[5];
         if ((a^.kind = tree_node) or (a^.kind = gen_tree_node))
-            and (a^.xw[18] = 26) then begin
+            and (a^.tr_op = addr_top) then begin
           alias_$basic_alias_desc(a^.xp[10], t);
           t.inexact := true;
           if alias_$related(d, t) then

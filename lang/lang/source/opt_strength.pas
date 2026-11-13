@@ -602,12 +602,12 @@ var
   t: sr_temp_ptr_t;
 begin
   if new^.kind = fortran_symbol then begin
-    if (new^.xl[6] & 16#20000) = 0 then
+    if not (var_$strength_reduction in new^.fs_attr) then
       return;
     t := sr_temp_ptr_t(new^.xp2[11]);
   end
   else if new^.kind = var_name then begin
-    if (new^.xl[8] & 16#20000) = 0 then
+    if not (var_$strength_reduction in new^.vr_attr) then
       return;
     t := sr_temp_ptr_t(new^.xp[13]);
   end
@@ -637,12 +637,12 @@ begin
   if (n = nil) or (o = nil) then
     return;
   if n^.kind = fortran_symbol then begin
-    if (n^.xl[6] & 16#20000) = 0 then
+    if not (var_$strength_reduction in n^.fs_attr) then
       return;
     t := sr_temp_ptr_t(n^.xp2[11]);
   end
   else if n^.kind = var_name then begin
-    if (n^.xl[8] & 16#20000) = 0 then
+    if not (var_$strength_reduction in n^.vr_attr) then
       return;
     t := sr_temp_ptr_t(n^.xp[13]);
   end
@@ -685,12 +685,12 @@ begin
     return;
   case temp^.kind of
     var_name: begin
-      if (temp^.xl[8] & 16#20000) = 0 then
+      if not (var_$strength_reduction in temp^.vr_attr) then
         return;
       s := sr_temp_ptr_t(temp^.xp[13])^.asg;
     end;
     fortran_symbol: begin
-      if (temp^.xl[6] & 16#20000) = 0 then
+      if not (var_$strength_reduction in temp^.fs_attr) then
         return;
       s := sr_temp_ptr_t(temp^.xp2[11])^.asg;
     end;
@@ -1148,11 +1148,11 @@ begin
                   n := s2^.asg_lhs;
                   t := nil;
                   if n^.kind = var_name then begin
-                    if (n^.xl[8] & 16#20000) <> 0 then
+                    if var_$strength_reduction in n^.vr_attr then
                       t := sr_temp_ptr_t(n^.xp[13]);
                   end
                   else if n^.kind = fortran_symbol then
-                    if (n^.xl[6] & 16#20000) <> 0 then
+                    if var_$strength_reduction in n^.fs_attr then
                       t := sr_temp_ptr_t(n^.xp2[11]);
                   if t <> nil then
                     if (t^.tree^.owner^.block^.serial = cur_loop^.serial) and
@@ -2860,7 +2860,7 @@ begin
     n^.xp[5] := il_180;
     n^.xp[7] := typ;
     n^.xw[36] := 2;
-    n^.xl[8] := 16#24000;
+    n^.vr_attr := [var_$temporary, var_$strength_reduction];
     n^.xp[13] := il_$node_ptr_t(t);
     n^.xw[39] := -1;
     n^.xl[15] := 0;
@@ -2877,7 +2877,7 @@ begin
     n^.xw[34] := -1;
     n^.xp[10] := il_180;
     n^.xp2[11] := il_$node_ptr_t(t);
-    n^.xl[6] := 16#24000;
+    n^.fs_attr := [var_$temporary, var_$strength_reduction];
     opt_str_$make_name(name, ntemps);
     strings_$memmove(n^.xc[72], name.body, name.length);
     n^.xw[35] := name.length;
@@ -3028,10 +3028,10 @@ begin
     cc_call:
       found := false;
     var_name:
-      if (t^.xl[8] & 16#100000) <> 0 then
+      if var_$induction in t^.vr_attr then
         found := true;
     fortran_symbol:
-      if (t^.xl[6] & 16#100000) <> 0 then
+      if var_$induction in t^.fs_attr then
         found := true;
     otherwise
   end;
@@ -3624,7 +3624,8 @@ begin
                               opt_str_$product_of(x^.op, s^.asg_rhs, x^.opnd[2],
                                 s^.asg_rlen, s^.asg_rlen, x^.w28,
                                 x^.dflags.signed, nil));
-                            if (s^.asg_lhs^.xl[6] & 16#20000) <> 0 then
+                            if var_$strength_reduction in
+                                s^.asg_lhs^.fs_attr then
                               if ((s^.asg_rhs^.kind in [blogical_ob..char_ob,
                                   char16_ob, binteger_ob]) and
                                   ((s^.asg_rhs^.int_value > 32767) or
@@ -3647,7 +3648,8 @@ begin
                               opt_str_$product_of(x^.op, s^.asg_rhs, x^.opnd[2],
                                 s^.asg_rlen, s^.asg_rlen, x^.w28,
                                 x^.dflags.signed, nil));
-                            if (s^.asg_lhs^.xl[6] & 16#20000) <> 0 then
+                            if var_$strength_reduction in
+                                s^.asg_lhs^.fs_attr then
                               if ((s^.asg_rhs^.kind in [blogical_ob..char_ob,
                                   char16_ob, binteger_ob]) and
                                   ((s^.asg_rhs^.int_value > 32767) or
@@ -3747,13 +3749,13 @@ begin
                       if (iv^.kind = fortran_symbol)
                           or (iv^.kind = var_name) then begin
                         if iv^.kind = fortran_symbol then begin
-                          if (iv^.xl[6] & 16#100000) = 0 then
+                          if not (var_$induction in iv^.fs_attr) then
                             goto 60;
                           if iv^.xw[8] = 0 then
                             goto 60;
                         end;
                         if iv^.kind = var_name then begin
-                          if (iv^.xl[8] & 16#100000) = 0 then
+                          if not (var_$induction in iv^.vr_attr) then
                             goto 60;
                           if iv^.xw[37] = 0 then
                             goto 60;
@@ -3836,9 +3838,10 @@ begin
               goto 90;
             w := g_opt_tree_ptr_t(iv)^.opnd[1];
             if (w^.kind = fortran_symbol)
-                and ((w^.xl[6] & 16#100000) <> 0) then
+                and (var_$induction in w^.fs_attr) then
               iv := w
-            else if (w^.kind = var_name) and ((w^.xl[8] & 16#100000) <> 0) then
+            else if (w^.kind = var_name) and
+                    (var_$induction in w^.vr_attr) then
               iv := w;
           end;
         if not ((iv^.kind = fortran_symbol) or (iv^.kind = var_name)) then
@@ -3851,7 +3854,7 @@ begin
           n := iv^.xw[37];
           if n = 0 then
             goto 90;
-          if (iv^.xl[8] & 16#100000) = 0 then
+          if not (var_$induction in iv^.vr_attr) then
             goto 90;
           temp := create_sr_temp_var(iv^.xp[7], h);
           sr_temp_ptr_t(temp^.xp[13])^.tree := x;
@@ -3869,7 +3872,7 @@ begin
           n := iv^.xw[8];
           if n = 0 then
             goto 90;
-          if (iv^.xl[6] & 16#100000) = 0 then
+          if not (var_$induction in iv^.fs_attr) then
             goto 90;
           temp := create_sr_temp_var(nil, h);
           if x^.rlen = rlen_long then
@@ -3900,11 +3903,11 @@ begin
             goto 90;
           if (y^.kind = tree_node) and (y^.op = extend_top)
               and (y^.opnd[1]^.kind = var_name) and
-             ((y^.opnd[1]^.xl[8] & 16#100000) <> 0) then
+             (var_$induction in y^.opnd[1]^.vr_attr) then
             iv := y^.opnd[1]
           else if (y^.kind = tree_node) and (y^.op = extend_top) and
                   (y^.opnd[1]^.kind = fortran_symbol) and
-                  ((y^.opnd[1]^.xl[6] & 16#100000) <> 0) then
+                  (var_$induction in y^.opnd[1]^.fs_attr) then
             iv := y^.opnd[1]
           else begin
             if not (y^.kind in [blogical_ob..complex_ob, char_string_ob,
@@ -3942,7 +3945,7 @@ begin
         if iv^.kind = var_name then begin
           if iv^.xw[37] <= 0 then
             goto 90;
-          if (iv^.xl[8] & 16#100000) = 0 then
+          if not (var_$induction in iv^.vr_attr) then
             goto 90;
           temp := create_sr_temp_var(iv^.xp[7], h);
           sr_temp_ptr_t(temp^.xp[13])^.tree := x;
@@ -3959,7 +3962,7 @@ begin
           n := iv^.xw[8];
           if n <= 0 then
             goto 90;
-          if (iv^.xl[6] & 16#100000) = 0 then
+          if not (var_$induction in iv^.fs_attr) then
             goto 90;
           temp := create_sr_temp_var(nil, h);
           if x^.rlen = rlen_long then
@@ -4018,13 +4021,16 @@ begin
     if n <> nil then
       if n^.kind = var_name then begin
         if (n^.xw[36] = 5) or (n^.xw[37] = 0) or
-           ((n^.xl[8] & 16#201101) <> 0) then begin
+           (n^.vr_attr * [var_$volatile, var_$uplevel, var_$address_exposed,
+                          var_$nooptimize] <> []) then begin
           one := [v];
           excluded := excluded + one;
         end;
       end
       else if n^.kind = fortran_symbol then
-        if (n^.xw[8] = 0) or ((n^.xl[6] & 16#201101) <> 0) then begin
+        if (n^.xw[8] = 0) or (n^.fs_attr * [var_$volatile, var_$uplevel,
+                                            var_$address_exposed,
+                                            var_$nooptimize] <> []) then begin
           one := [v];
           excluded := excluded + one;
         end;

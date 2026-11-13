@@ -185,7 +185,7 @@ begin
         d.size := delay_378[runbackend_18[ord(v^.xc[10]) & 15]]
       else if (v^.kind = tree_node) or (v^.kind = cmp_tree_node)
           or (v^.kind = gen_tree_node) then
-        d.size := delay_378[v^.xw[12]];
+        d.size := delay_378[v^.tr_rlen];
     end;
   end
   else begin
@@ -567,7 +567,7 @@ begin
     pass_len := false;
     if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
       if pass_char_len_diff(desig) and not lib then
-        if (n^.xw[13] <> 0) and (n^.xw[12] = 9) then
+        if (n^.xw[13] <> 0) and (n^.tr_rlen = rlen_cs) then
           pass_len := true;
 
     for i := last downto first do begin
@@ -613,7 +613,7 @@ begin
           entry_blk, function_blk, procedure_blk: begin
             if rshft(ord(desig^.xc[377]) & 16#70, 4) = 4 then
               b := true
-            else if n^.xw[12] = 9 then begin
+            else if n^.tr_rlen = rlen_cs then begin
               if i = first then
                 cls := 11
               else
@@ -711,7 +711,8 @@ begin
           end
           else begin
             moved := false;
-            if (arg^.kind = var_name) and ((arg^.xl[8] & 16#20000) <> 0) and
+            if (arg^.kind = var_name)
+                and (var_$strength_reduction in arg^.vr_attr) and
                 (arg^.xp[14] = nil) and (cls >= 7) then begin
               w := call_link_ptr_t(arg^.xp[13]^.xp[2])^.p^.xw[26];
               if chk_assign(arg, w) <> 31 then begin
@@ -731,7 +732,7 @@ begin
                 v := arg^.xp[5]
               else
                 v := arg;
-              w := v^.xw[12];
+              w := v^.tr_rlen;
               r := peek(arg, w);
               nint := false;
               if (r <> 31) and (v^.kind = gen_tree_node) then begin
@@ -781,7 +782,7 @@ begin
   { The result's temporary. }
   result_temp := false;
   if n <> nil then
-    if (n^.xw[12] >= 7) and (n^.xw[12] <> 9) then begin
+    if (n^.tr_rlen >= rlen_r8) and (n^.tr_rlen <> rlen_cs) then begin
       get_temp(n, false);
       n^.kind := gen_tree_node;
       address(n, 0, op1);
@@ -1024,7 +1025,7 @@ begin
   { The result's register. }
   if n <> nil then begin
     cg_tree_ptr_t(n)^.opnd[1] := saved;
-    w := n^.xw[12];
+    w := n^.tr_rlen;
     if w <= 6 then
       if (w = 5) and (cg_tree_ptr_t(n)^.opnd[1]^.kind = cc_call) then begin
         t := cg_tree_ptr_t(n)^.opnd[1]^.xp[4];
@@ -1034,20 +1035,20 @@ begin
             v := v^.xp[6];
           if v^.kind = cc_func_returning_type then begin
             if (v^.xw[3] & 16#200) = 0 then begin
-              setresult(0, n, n^.xw[12]);
-              cg_addr_regs[0].size := n^.xw[12];
+              setresult(0, n, n^.tr_rlen);
+              cg_addr_regs[0].size := n^.tr_rlen;
             end
             else
-              setresult(8, n, n^.xw[12]);
+              setresult(8, n, n^.tr_rlen);
           end
           else
-            setresult(0, n, n^.xw[12]);
+            setresult(0, n, n^.tr_rlen);
         end
         else if (t^.kind = function_blk)
             or (t^.kind = procedure_blk) then begin
           if (ord(t^.xc[375]) & 16) = 0 then begin
             setresult(0, n, w);
-            cg_addr_regs[0].size := n^.xw[12];
+            cg_addr_regs[0].size := n^.tr_rlen;
           end
           else
             setresult(8, n, w);
@@ -1057,7 +1058,7 @@ begin
       end
       else begin
         atts := get_atts(cg_tree_ptr_t(n)^.opnd[1]);
-        if n^.xw[12] = 5 then begin
+        if n^.tr_rlen = rlen_addr then begin
           if ((atts & 16#200) <> 0) or ((atts & 16#80) = 0) then
             setresult(8, n, 5)
           else
@@ -1067,10 +1068,10 @@ begin
           address_reg(8, op2);
           address_reg(0, op4);
           emit(0, 4, op4, op2, 0);
-          setresult(0, n, n^.xw[12]);
+          setresult(0, n, n^.tr_rlen);
         end
         else
-          setresult(0, n, n^.xw[12]);
+          setresult(0, n, n^.tr_rlen);
       end;
   end;
 end;

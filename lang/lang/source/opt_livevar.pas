@@ -594,7 +594,9 @@ begin
         if n^.kind = var_name then begin
           if n^.xw[36] = 5 then
             keep := true
-          else if (n^.xl[8] & 16#201101) <> 0 then
+          else if n^.vr_attr * [var_$volatile, var_$uplevel,
+                                var_$address_exposed,
+                                var_$nooptimize] <> [] then
             keep := true
           else begin
             if n^.xw[36] in [1, 3, 4, 7, 8, 10, 11] then
@@ -611,7 +613,9 @@ begin
         else if n^.kind = fortran_symbol then begin
           if rshft(ord(n^.xc[44]) & 16#F0, 4) = 3 then begin
             f := rshft(ord(n^.xc[11]) & 16#F0, 4);
-            if (f = 5) or ((n^.xl[6] & 16#201101) <> 0) or
+            if (f = 5) or (n^.fs_attr * [var_$volatile, var_$uplevel,
+                                         var_$address_exposed,
+                                         var_$nooptimize] <> []) or
                ((ord(n^.xc[44]) & 16#04) <> 0) then
               keep := true
             else if f in [1, 3, 4, 7, 8, 10, 11] then
@@ -873,7 +877,8 @@ begin
         add_constant(c, opt_4009c[lv_cur]^.block);
       end;
       if v <> 0 then begin
-        if (n^.xl[8] & 16#201001) <> 0 then
+        if n^.vr_attr * [var_$volatile, var_$address_exposed,
+                         var_$nooptimize] <> [] then
           if not odd(ff) then
             return;
         if (opt_4009c[opt_region]^.vars^[v]^.flags & 4) <> 0 then
@@ -925,7 +930,8 @@ begin
         if s^.hdr.kills then begin
           n := opt_4009c[opt_region]^.vars^[v]^.node;
           if n^.kind = var_name then
-            if (n^.xl[8] & 16#201101) <> 0 then
+            if n^.vr_attr * [var_$volatile, var_$uplevel,
+                             var_$address_exposed, var_$nooptimize] <> [] then
               opt_not_killed^[k] := opt_not_killed^[k] - [v];
         end;
       end;

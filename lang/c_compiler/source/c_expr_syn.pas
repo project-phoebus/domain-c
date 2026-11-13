@@ -1060,7 +1060,7 @@ begin
           error1(92, c_field_ptr_t(sym)^.line, c_field_ptr_t(sym)^.name);
         if (item^.kind = char_string_ob) and then (node^.kind = tree_node)
             and then
-           (node^.xw[18] = 26) and then (node^.xp[10]^.kind = var_name)
+           (node^.tr_op = addr_top) and then (node^.xp[10]^.kind = var_name)
                and then
            (c_sym_ptr_t(node^.xp[10])^.name = id_string_constant) then begin
           if csyn_60[csyn_202] = 4 then

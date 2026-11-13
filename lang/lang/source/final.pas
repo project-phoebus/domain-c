@@ -2325,7 +2325,7 @@ begin
     else if a^.kind = gen_tree_node then begin
       if a = b then
         r := true
-      else if (a^.xw[18] = b^.xw[18]) and (a^.xl[5] = b^.xl[5]) and
+      else if (a^.tr_op = b^.tr_op) and (a^.xl[5] = b^.xl[5]) and
               (a^.xl[6] = b^.xl[6]) and (a^.xl[7] = b^.xl[7]) and
               (a^.xl[8] = b^.xl[8]) then begin
         r := true;

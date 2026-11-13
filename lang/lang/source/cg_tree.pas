@@ -4606,7 +4606,7 @@ begin
       tree_walk(p^.xp[4]);
     cse_parent_ob: begin
       t := p^.xp[1];
-      size := t^.xw[12];
+      size := t^.tr_rlen;
       r := chk_assign(p^.xp[1], size);
       if t^.kind = gen_tree_node then begin
         if r = 31 then
@@ -4632,7 +4632,7 @@ begin
     end;
     cse_use_ob: begin
       t := p^.xp[5];
-      size := t^.xw[12];
+      size := t^.tr_rlen;
       r := chk_assign(t, size);
       if t^.kind = gen_tree_node then begin
         if r <> 31 then

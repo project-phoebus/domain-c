@@ -466,7 +466,7 @@ begin
         if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 3 then
           rr^.flags := rr^.flags + [0];
     if rr^.node^.kind = fortran_symbol then
-      if (rr^.node^.xl[6] & 16#200000) <> 0 then
+      if var_$nooptimize in rr^.node^.fs_attr then
         rr^.flags := rr^.flags + [0];
     if v <> 0 then
       if reg_cost_$wasteful_param_load(rr) then

@@ -89,7 +89,8 @@ begin
     t := v^.xp[7];
     if t^.kind = procedure_blk then
       res := 3
-    else if ((v^.xl[8] & 16#201001) <> 0) or (v^.xw[36] = 4) then
+    else if (v^.vr_attr * [var_$volatile, var_$address_exposed,
+                           var_$nooptimize] <> []) or (v^.xw[36] = 4) then
       res := 2
     else begin
       is5 := (v^.xw[36] = 5) and (t^.kind = param_name);
@@ -124,7 +125,8 @@ begin
     else if ((ord(blk^.xc[376]) & 8) <> 0) and (blk^.kind <> inner_blk) then
       res := 9
     else if (k = 3) and ((ord(v^.xc[10]) & 15) = 7) then begin
-      if (v^.xl[6] & 16#201001) = 0 then
+      if v^.fs_attr * [var_$volatile, var_$address_exposed,
+                       var_$nooptimize] = [] then
         res := 12
       else
         res := 7;
@@ -139,7 +141,8 @@ begin
         res := 7
       else if (v^.xl[7] <> 0) or (v^.xl2[14] <> 0) then
         res := 7
-      else if (v^.xl[6] & 16#201001) <> 0 then
+      else if v^.fs_attr * [var_$volatile, var_$address_exposed,
+                            var_$nooptimize] <> [] then
         res := 7
       else if (n in [1, 3, 4, 7, 8, 10, 11]) and
               ((ord(blk^.xc[379]) & 16#10) = 0) then
@@ -191,7 +194,9 @@ begin
   while b <> nil do begin
     v := b^.xp[4];
     while (v <> nil) and (n < 255) do begin
-      if (v^.kind = var_name) and ((v^.xl[8] & 16#201001) = 0) and
+      if (v^.kind = var_name) and
+         (v^.vr_attr * [var_$volatile, var_$address_exposed,
+                        var_$nooptimize] = []) and
          not ((v^.xw[36] = 5) and (v^.xp[7]^.kind = param_name)) then
         type_exp(v, addr(info));
       case il_utl_$classify_variable(v, info, b, next) of
@@ -307,7 +312,7 @@ begin
           for i := 1 to p^.xw[19] do begin
             on_spine := false;
             if kept_spine <> nil then
-              on_spine := il_utils_$tree_node_operand_is_spine(il_$top_t(p^.xw[18]), i);
+              on_spine := il_utils_$tree_node_operand_is_spine(p^.tr_op, i);
             if on_spine then
               il_utils_$set_uc_walk_spine(p^.xp[9 + i], kept_spine)
             else
@@ -421,13 +426,13 @@ begin
   slot := new;
   il_utils_$adjust_uc(old, n);
   if new^.kind = fortran_symbol then begin
-    if (new^.xl[6] & 16#20000) <> 0 then
+    if var_$strength_reduction in new^.fs_attr then
       info := sr_info_ptr_t(new^.xp2[11]^.xp[1])
     else
       info := nil;
   end
   else if new^.kind = var_name then begin
-    if (new^.xl[8] & 16#20000) <> 0 then
+    if var_$strength_reduction in new^.vr_attr then
       info := sr_info_ptr_t(new^.xp[13]^.xp[1])
     else
       info := nil;
@@ -467,9 +472,11 @@ function il_utils_$is_strength_reduction_temp(
     t: il_$node_ptr_t): boolean;
 begin
   if t^.kind = fortran_symbol then
-    il_utils_$is_strength_reduction_temp := (t^.xl[6] & 16#20000) <> 0
+    il_utils_$is_strength_reduction_temp := var_$strength_reduction in
+        t^.fs_attr
   else if t^.kind = var_name then
-    il_utils_$is_strength_reduction_temp := (t^.xl[8] & 16#20000) <> 0
+    il_utils_$is_strength_reduction_temp := var_$strength_reduction in
+        t^.vr_attr
   else
     il_utils_$is_strength_reduction_temp := false;
 end;
@@ -646,7 +653,7 @@ function il_utils_$trees_equivalent(
     b: il_$node_ptr_t): integer;
 var
   i: integer;
-  op: integer;
+  op: il_$top_t;
 begin
   il_utils_$trees_equivalent := 4;
   if a = b then begin
@@ -657,8 +664,8 @@ begin
     return;
   case a^.kind of
     tree_node, gen_tree_node, cmp_tree_node: begin
-      op := a^.xw[18];
-      if op <> b^.xw[18] then
+      op := a^.tr_op;
+      if op <> b^.tr_op then
         return;
       for i := 5 to 8 do
         if a^.xl[i] <> b^.xl[i] then
@@ -667,15 +674,19 @@ begin
         return;
       if (a^.xl[1] & 16#9001F) <> 0 then
         return;
-      if op in [0..10, 13, 14, 17, 18, 27..29, 33..39, 41..46, 49..53,
-                57, 59..62, 74..77, 86] then begin
+      if op in [nop_top..or_top, index_top, unpack_top, value_top, extend_top,
+                lshf_top..abs_top, isc_mul_top..f_extend_top,
+                f_math_top..min_top, alshf_top..cc_logand_ptop,
+                cc_lognot_ptop, signed_div_top..unsigned_mod_top,
+                isc_signed_rem_top..isc_unsigned_mod_top, ada_expon_top]
+          then begin
         for i := 1 to a^.xw[19] do
           if il_utils_$trees_equivalent(a^.xp[9 + i], b^.xp[9 + i]) <> 0
           then
             return;
         il_utils_$trees_equivalent := 0;
       end
-      else if (op = 48) or (op = 26) then
+      else if (op = chk_top) or (op = addr_top) then
         il_utils_$trees_equivalent :=
           il_utils_$trees_equivalent(a^.xp[10], b^.xp[10]);
     end;

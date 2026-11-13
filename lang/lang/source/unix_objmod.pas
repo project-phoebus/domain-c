@@ -1260,7 +1260,7 @@ var
                 reloc_absolute_addr_con:
                   emit_abs_addr_con(t, 0); { forward }
                 tree_node:
-                  if t^.xw[18] = 26 then
+                  if t^.tr_op = addr_top then
                     emit_tree_node_const(t)
                   else
                     cgerr_no_source(20, integer32(idntk(id_ob, 'rec_const',
@@ -1357,7 +1357,7 @@ var
           if not find_global_id(t^.xp[1], id, univ_ptr(blk)) then
             cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)))
           else if (11 in cargs_$options.flags_286) and
-                  ((t^.xl[8] & 16#10000) <> 0) then
+                  (var_$bss in t^.vr_attr) then
             value := value + t^.xl[14];
         end
         else if (t^.xw[36] = 7) or (t^.xw[36] = 8) then begin
@@ -1524,7 +1524,7 @@ var
         end
         else if (t^.kind = var_name) and (t^.xw[36] = 3) and
                 (11 in cargs_$options.flags_286) and
-                ((t^.xl[8] & 16#10000) <> 0) then
+                (var_$bss in t^.vr_attr) then
           value := value + t^.xl[14];
         t := p^.xp[2];
         if (t^.kind = var_name) and (t^.xw[36] = 10) then begin
@@ -2186,7 +2186,7 @@ var
                   else
                     cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
                   if (11 in cargs_$options.flags_286) and
-                     ((q^.target^.xl[8] & 16#10000) <> 0) then begin
+                     (var_$bss in q^.target^.vr_attr) then begin
                     p := putobj(q^.vaddr, 4);
                     p^ := p^ + q^.target^.xl[14];
                   end;
@@ -2844,7 +2844,7 @@ var
             emit_addr_con(c, 0)
           else if c^.kind = reloc_absolute_addr_con then
             emit_abs_addr_con(c, 0)
-          else if (c^.kind = tree_node) and (c^.xw[18] = 26) then
+          else if (c^.kind = tree_node) and (c^.tr_op = addr_top) then
             emit_tree_node_const(c)
           else
             cgerr(20, line, idntk(id_ob, 'initial_value', 13));

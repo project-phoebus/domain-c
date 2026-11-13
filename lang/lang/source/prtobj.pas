@@ -361,7 +361,7 @@ begin
       add_kind_if_full('(alloc_temp)');
     end;
     gen_tree_node, cmp_tree_node:
-      if (n^.xw[18] = 16) and (n^.xw[12] = 9) then
+      if (n^.tr_op = func_call_top) and (n^.tr_rlen = rlen_cs) then
         prtobj(line^, n^.xp[11])
       else begin
         prtcatc(line^, 'T');

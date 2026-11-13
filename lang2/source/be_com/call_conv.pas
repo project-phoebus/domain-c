@@ -225,7 +225,7 @@ begin
       size := te.size;
     end;
     tree_node, gen_tree_node, cmp_tree_node: begin
-      rlen := t^.xw[12];
+      rlen := t^.tr_rlen;
       size := t^.xl[5];
     end;
     addr_con: begin
@@ -549,7 +549,7 @@ begin
         11: mode := 3;
       end;
       if (n^.kind = tree_node) or (n^.kind = gen_tree_node) then
-        if (n^.xw[18] = 15) or (n^.xw[18] = 16) then begin
+        if (n^.tr_op = call_top) or (n^.tr_op = func_call_top) then begin
           a := n^.xp[10 + d.num];
           get_rlen_and_size(a, rl, sz);
           ftn_param_vat_check(n^.xp[10 + d.num], rl, sz);
@@ -740,9 +740,9 @@ begin
     goto 100;
   end
   else if (node^.kind = tree_node) or (node^.kind = gen_tree_node) then begin
-    if (node^.xw[18] <> 15) and (node^.xw[18] <> 16) then
+    if (node^.tr_op <> call_top) and (node^.tr_op <> func_call_top) then
       goto 90;
-    if node^.xw[18] = 16 then begin
+    if node^.tr_op = func_call_top then begin
       get_rlen_and_size(node, rlen, sz);
       rsize := sz;
       if rlen = rlen_cs then
@@ -1159,7 +1159,8 @@ begin
         if not d^.by_value then begin
           type_exp(opr, addr(te));
           if ((node^.kind = gen_tree_node) or (node^.kind = tree_node))
-             and ((node^.xw[18] = 16) or (node^.xw[18] = 15)) then
+             and ((node^.tr_op = func_call_top) or
+                  (node^.tr_op = call_top)) then
             if ord(opr^.xc[46]) >= 128 then begin
               a := node^.xp[10 + d^.num];
               if a^.kind = integer_ob then begin

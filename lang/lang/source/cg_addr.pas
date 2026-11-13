@@ -188,11 +188,11 @@ begin
     end
     else if n^.kind = var_name then begin
       n^.xw[37] := r;
-      n^.xl[8] := n^.xl[8] ! 16#1000000;
+      n^.vr_attr := n^.vr_attr + [var_$wasbound];
     end
     else if n^.kind = fortran_symbol then begin
       n^.xw[8] := r;
-      n^.xl[6] := n^.xl[6] ! 16#1000000;
+      n^.fs_attr := n^.fs_attr + [var_$wasbound];
     end
     else if n^.kind = cse_parent_ob then begin
       forceobjcache(n^.xp[1], r);
@@ -226,14 +226,15 @@ begin
       n^.xw[5] := r;
       n^.xw[3] := n^.xw[3] ! 16#400;
     end
-    else if (n^.kind = var_name) and ((n^.xl[8] & 16#1000000) = 0) then begin
+    else if (n^.kind = var_name)
+        and not (var_$wasbound in n^.vr_attr) then begin
       n^.xw[37] := r;
-      n^.xl[8] := n^.xl[8] ! 16#1000000;
+      n^.vr_attr := n^.vr_attr + [var_$wasbound];
     end
     else if (n^.kind = fortran_symbol)
-        and ((n^.xl[6] & 16#1000000) = 0) then begin
+        and (not (var_$wasbound in n^.fs_attr)) then begin
       n^.xw[8] := r;
-      n^.xl[6] := n^.xl[6] ! 16#1000000;
+      n^.fs_attr := n^.fs_attr + [var_$wasbound];
     end
     else if (n^.kind = cse_parent_ob)
         and ((n^.xp[1]^.xw[3] & 16#400) = 0) then begin
@@ -274,10 +275,10 @@ begin
                       cse_use_ob, sym_disp_node]) and
           ((n^.xw[3] & 16#400) <> 0) then
         r := n^.xw[5]
-      else if (n^.kind = var_name) and ((n^.xl[8] & 16#1000000) <> 0) then
+      else if (n^.kind = var_name) and (var_$wasbound in n^.vr_attr) then
         r := n^.xw[37]
       else if (n^.kind = fortran_symbol)
-          and ((n^.xl[6] & 16#1000000) <> 0) then
+          and (var_$wasbound in n^.fs_attr) then
         r := n^.xw[8]
       else
         r := 31;

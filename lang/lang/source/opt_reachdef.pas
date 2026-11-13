@@ -1099,10 +1099,12 @@ var
     if value^[v] = nil then
       return;
     if t^.kind = var_name then
-      if (t^.xl[8] & 16#201101) <> 0 then
+      if t^.vr_attr * [var_$volatile, var_$uplevel, var_$address_exposed,
+                       var_$nooptimize] <> [] then
         return;
     if t^.kind = fortran_symbol then
-      if (t^.xl[6] & 16#201101) <> 0 then
+      if t^.fs_attr * [var_$volatile, var_$uplevel, var_$address_exposed,
+                       var_$nooptimize] <> [] then
         return;
     bn := opt_4009c[cur]^.block^.num;
     if (t^.kind = fortran_symbol) or (t^.kind = var_name) then
@@ -1664,6 +1666,10 @@ var
                                   if ftn_data_init(s^.x48) then
                                     next;
                             var_name:
+                              { by mask: the image loads the longword,
+                                `move.l (32,A4),D1; btst #6,D1' (cc.m68k
+                                0x0E4540), where var_$initialized in
+                                vr_attr is a btst of the byte }
                               if (s^.x48^.xl[8] & 16#40) <> 0 then
                                 if ftn_data_init(s^.x48) then
                                   next;
@@ -1775,12 +1781,12 @@ begin
                       if s^.arg_call = nil then begin
                         n := s^.x48;
                         if n^.kind = fortran_symbol then
-                          mark := ((n^.xl[6] & 16#800000) <> 0) or
+                          mark := (var_$display_ptr in n^.fs_attr) or
                                   (n^.xp[7] <> nil) or
                                   (rshft(ord(n^.xc[11]) & 16#F0, 4) <> 1)
                         else if n^.kind = var_name then
                           mark := (n^.xw[36] <> 1) or
-                                  ((n^.xl[8] & 16#800000) <> 0)
+                                  (var_$display_ptr in n^.vr_attr)
                         else
                           mark := false;
                       end;
@@ -1917,9 +1923,14 @@ begin
                   next;
               conv := rshft(ord(il_180^.xc[377]) & 16#70, 4);
               if conv = 2 then
+                { by mask, as the variable's below (`move.l (24,A3),D0;
+                  btst #14,D0', 0x0E501E) }
                 if (d^.vars^[v]^.node^.xl[6] & 16#4000) <> 0 then
                   next;
               if conv <> 2 then
+                { by mask: `move.l (32,A4),D0; btst #14,D0' (cc.m68k
+                  0x0E5046), where var_$temporary in vr_attr loads the
+                  word at +34 }
                 if (d^.vars^[v]^.node^.xl[8] & 16#4000) <> 0 then
                   next;
               if (d^.vars^[v]^.ud = nil) and
@@ -1935,13 +1946,15 @@ begin
                   next;
                 end;
                 if n^.kind = var_name then begin
-                  if (n^.xl[8] & 16#201001) = 0 then
+                  if n^.vr_attr * [var_$volatile, var_$address_exposed,
+                                   var_$nooptimize] = [] then
                     if not d^.hdr.b7 then
                       if not statement_contained_by_unreachable_basic_block(d) then
                         cgerr(21, il_d0, d^.vars^[v]^.node);
                 end
                 else if n^.kind = fortran_symbol then begin
-                  if (n^.xl[6] & 16#201001) = 0 then
+                  if n^.fs_attr * [var_$volatile, var_$address_exposed,
+                                   var_$nooptimize] = [] then
                     if not d^.hdr.b7 then
                       if not statement_contained_by_unreachable_basic_block(d) then
                         cgerr(21, il_d0, d^.vars^[v]^.node);
@@ -1968,10 +1981,12 @@ begin
                 if n^.xp[1] = il_180^.xp[74] then
                   next;
               if n^.kind = var_name then
-                if (n^.xl[8] & 16#201001) <> 0 then
+                if n^.vr_attr * [var_$volatile, var_$address_exposed,
+                                 var_$nooptimize] <> [] then
                   next;
               if n^.kind = fortran_symbol then begin
-                if (n^.xl[6] & 16#201001) <> 0 then
+                if n^.fs_attr * [var_$volatile, var_$address_exposed,
+                                 var_$nooptimize] <> [] then
                   next;
                 if (ord(n^.xc[44]) & 4) <> 0 then
                   next;

@@ -1792,19 +1792,23 @@ begin
                   cg_addr_regs[r].obj2 := nil;
           if cg_addr_regs[r].obj <> nil then
             if cg_addr_regs[r].obj^.kind = var_name then
-              if (cg_addr_regs[r].obj^.xl[8] & 9) <> 0 then
+              if cg_addr_regs[r].obj^.vr_attr * [var_$volatile,
+                                                 var_$dev_read] <> [] then
                 cg_addr_regs[r].obj := nil;
           if cg_addr_regs[r].obj2 <> nil then
             if cg_addr_regs[r].obj2^.kind = var_name then
-              if (cg_addr_regs[r].obj2^.xl[8] & 17) <> 0 then
+              if cg_addr_regs[r].obj2^.vr_attr * [var_$volatile,
+                                                  var_$dev_write] <> [] then
                 cg_addr_regs[r].obj2 := nil;
           if cg_addr_regs[r].obj <> nil then
             if cg_addr_regs[r].obj^.kind = fortran_symbol then
-              if (cg_addr_regs[r].obj^.xl[6] & 9) <> 0 then
+              if cg_addr_regs[r].obj^.fs_attr * [var_$volatile,
+                                                 var_$dev_read] <> [] then
                 cg_addr_regs[r].obj := nil;
           if cg_addr_regs[r].obj2 <> nil then
             if cg_addr_regs[r].obj2^.kind = fortran_symbol then
-              if (cg_addr_regs[r].obj2^.xl[6] & 17) <> 0 then
+              if cg_addr_regs[r].obj2^.fs_attr * [var_$volatile,
+                                                  var_$dev_write] <> [] then
                 cg_addr_regs[r].obj2 := nil;
           if cg_addr_locks[r] <> 0 then begin
             cgerr(4, cg_line, nil);

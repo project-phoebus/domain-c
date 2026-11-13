@@ -453,7 +453,7 @@ begin
     while (v <> nil) and (n <> 0) do begin
       if (v^.kind = var_name) and
          ((v^.xw[36] = 4) or (v^.xw[36] = 8) or
-          ((v^.xw[36] = 3) and ((v^.xl[8] & 16#10000) <> 0))) then begin
+          ((v^.xw[36] = 3) and (var_$bss in v^.vr_attr))) then begin
         count_global_sym(v);
         n := n - 1;
       end
@@ -493,7 +493,8 @@ begin
   while r <> nil do begin
     if not ((r^.xp[2]^.kind = var_name) and (r^.xp[2]^.xw[36] = 3)) then
       cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
-    if (r^.xp[2]^.kind = var_name) and ((r^.xp[2]^.xl[8] & 16#10000) = 0) then
+    if (r^.xp[2]^.kind = var_name)
+        and not (var_$bss in r^.xp[2]^.vr_attr) then
       count_global_sym(r^.xp[2]);
     r := r^.xp[1];
   end;
@@ -505,7 +506,7 @@ begin
         (v^.kind = function_blk)) and ((v^.xw[188] & 384) div 128 = 2) then
       count_global_sym(v)
     else if (v^.kind = var_name) and (v^.xw[36] = 3) and
-            ((v^.xl[8] & 16#10000) = 0) then
+            (not (var_$bss in v^.vr_attr)) then
       count_global_sym(v)
     else if v^.kind = fortran_symbol then
       count_global_sym(v);
@@ -518,7 +519,7 @@ begin
         count_global_sym(r);
     end
     else if r^.kind = var_name then
-      if (r^.xw[36] = 3) and ((r^.xl[8] & 16#10000) = 0) then
+      if (r^.xw[36] = 3) and (not (var_$bss in r^.vr_attr)) then
         count_global_sym(r);
     r := r^.xp[1];
   end;
@@ -930,7 +931,7 @@ var
           end;
           3: begin
             map^.n_scnum := 0;
-            if (p^.xl[8] & 16#10000) <> 0 then begin
+            if var_$bss in p^.vr_attr then begin
               type_exp(p, addr(te));
               map^.n_value := te.size;
             end;
@@ -1177,7 +1178,7 @@ begin
     while (v <> nil) and (n <> 0) do begin
       if (v^.kind = var_name) and
          ((v^.xw[36] = 4) or (v^.xw[36] = 8) or
-          ((v^.xw[36] = 3) and ((v^.xl[8] & 16#10000) <> 0))) then begin
+          ((v^.xw[36] = 3) and (var_$bss in v^.vr_attr))) then begin
         put_global_sym(v, true);
         n := n - 1;
       end;
@@ -1208,7 +1209,8 @@ begin
   while r <> nil do begin
     if not ((r^.xp[2]^.kind = var_name) and (r^.xp[2]^.xw[36] = 3)) then
       cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
-    if (r^.xp[2]^.kind = var_name) and ((r^.xp[2]^.xl[8] & 16#10000) = 0) then
+    if (r^.xp[2]^.kind = var_name)
+        and not (var_$bss in r^.xp[2]^.vr_attr) then
       put_global_sym(r^.xp[2], false);
     r := r^.xp[1];
   end;
@@ -1220,7 +1222,7 @@ begin
         (v^.kind = function_blk)) and ((v^.xw[188] & 384) div 128 = 2) then
       put_global_sym(v, false)
     else if (v^.kind = var_name) and (v^.xw[36] = 3) and
-            ((v^.xl[8] & 16#10000) = 0) then
+            (not (var_$bss in v^.vr_attr)) then
       put_global_sym(v, false)
     else if v^.kind = fortran_symbol then
       put_global_sym(v, false);
@@ -1237,7 +1239,7 @@ begin
             put_global_sym(v, false);
         end
         else if v^.kind = var_name then
-          if (v^.xw[36] = 3) and ((v^.xl[8] & 16#10000) = 0) then
+          if (v^.xw[36] = 3) and (not (var_$bss in v^.vr_attr)) then
             put_global_sym(v, false);
       end;
       refs := refs^.next;

@@ -662,7 +662,7 @@ begin
         next := n^.xp[3];
       cmp_tree_node, tree_node: begin
         d.size := n^.xl[5];
-        d.rlen := n^.xw[12];
+        d.rlen := n^.tr_rlen;
         if d.size = 8 then
           if d.rlen = rlen_agg then
             d.rlen := rlen_r8;
@@ -791,7 +791,7 @@ procedure inline_$mark_reference_params(
         cs_node:
           get_referenced_symbol := get_referenced_symbol(t^.xp[5]);
         tree_node:
-          if t^.xw[18] = 26 then
+          if t^.tr_op = addr_top then
             get_referenced_symbol := get_referenced_symbol(t^.xp[10])
           else
             get_referenced_symbol := nil;
@@ -810,7 +810,7 @@ var
 begin
   if not ((t^.kind = cmp_tree_node) or (t^.kind = tree_node)) then
     return;
-  if not ((t^.xw[18] = 16) or (t^.xw[18] = 15)) then
+  if not ((t^.tr_op = func_call_top) or (t^.tr_op = call_top)) then
     return;
   n := t^.xw[19];
   r := t^.xp[10];
@@ -1113,7 +1113,7 @@ procedure coerce(
         return;
     n := t;
     if n^.kind = tree_node then
-      if (n^.xw[18] = 39) or (n^.xw[18] = 18) then
+      if (n^.tr_op = f_extend_top) or (n^.tr_op = extend_top) then
         if n^.xw[13] = want then begin
           t := n^.xp[10];
           return;
@@ -1421,8 +1421,9 @@ begin
     end;
     done := false;
     if a^.kind = tree_node then
-      if (a^.xw[18] = 12) or (a^.xw[18] = 23) or (a^.xw[18] = 40) or
-         (a^.xw[18] = 24) then
+      if (a^.tr_op = compare_top) or (a^.tr_op = set_compare_top)
+          or (a^.tr_op = f_compare_top) or
+         (a^.tr_op = agg_compare_top) then
         done := true;
     if not done then
       if d1.rlen <> d2.rlen then begin
@@ -1754,7 +1755,7 @@ var
   x: il_$node_ptr_t;
   y: il_$node_ptr_t;
 begin
-  if (t^.kind <> tree_node) or (t^.xw[18] <> 26) then
+  if (t^.kind <> tree_node) or (t^.tr_op <> addr_top) then
     cgerr_no_source(28, integer32(token_$make_string_token(
       'set_address_exposed --- top is not addr_top.')));
   x := t^.xp[10];
@@ -1787,7 +1788,7 @@ var
 begin
   r := t;
   if r^.kind = tree_node then
-    if r^.xw[18] = 63 then
+    if r^.tr_op = align_top then
       r := r^.xp[10];
   inliner_actual := r;
 end;
@@ -1856,8 +1857,8 @@ procedure process_parameters(
       end;
       if not done then
         if (rhs^.kind = cmp_tree_node) or (rhs^.kind = tree_node) then
-          if rhs^.xw[12] <> d.rlen then
-            coerce(e, s^.xp[17], rhs^.xw[12], d.rlen,
+          if rhs^.tr_rlen <> d.rlen then
+            coerce(e, s^.xp[17], rhs^.tr_rlen, d.rlen,
                    (ord(rhs^.xc[30]) & 64) <> 0);
     end;
     if (s^.xw[26] = 6) or (s^.xw[26] = 7) or (s^.xw[26] = 12) or
@@ -2029,7 +2030,7 @@ begin
         val := v;
         put_on_il_stream(assign(e, v, a, k));
         if a^.kind = tree_node then
-          if a^.xw[18] = 26 then
+          if a^.tr_op = addr_top then
             set_address_exposed(a);
       end;
       3: begin
@@ -2077,7 +2078,7 @@ begin
           c := pv;
         end;
         if adr^.kind = tree_node then
-          if adr^.xw[18] = 26 then
+          if adr^.tr_op = addr_top then
             set_address_exposed(adr);
         sub := 1;
         val := pv;
@@ -2149,7 +2150,7 @@ begin
       end;
     end
     else if sub = 1 then begin
-      if (val^.kind = tree_node) and (val^.xw[18] = 26) then
+      if (val^.kind = tree_node) and (val^.tr_op = addr_top) then
         val := val^.xp[10]
       else begin
         val := add_pn(val, c, 2, 0);
@@ -2336,7 +2337,7 @@ begin
           else if v^.kind = fortran_symbol then begin
             k := rshft(ord(v^.xc[11]) & 16#F0, 4);
             if k in [1, 2, 6, 7] then
-              if (v^.xl[6] & 16#800000) = 0 then begin
+              if not (var_$display_ptr in v^.fs_attr) then begin
                 nv := copy_var(e, v);
                 put_on_bct(e, cb, nv);
                 if v^.xp[7] <> nil then begin
@@ -2377,7 +2378,7 @@ begin
         end
         else if (nv = nil) and (v^.kind = var_name) then
           if v^.xw[36] in [1, 2, 6, 7] then
-            if (v^.xl[8] & 16#800000) = 0 then begin
+            if not (var_$display_ptr in v^.vr_attr) then begin
               nv := copy_var(e, v);
               put_on_bct(e, cb, nv);
               if v^.xw[36] in [2, 6] then
@@ -2576,7 +2577,7 @@ var
         s := n;
         if val <> nil then begin
           s := val;
-          if (s^.kind = tree_node) and (s^.xw[18] = 26) then
+          if (s^.kind = tree_node) and (s^.tr_op = addr_top) then
             s := s^.xp[10];
           if s^.kind = reloc_absolute_addr_con then
             s := s^.xp[3];
@@ -2732,26 +2733,27 @@ var
           boff := b.v^.xl[14];
         end;
       end
-      else if (n^.kind = fortran_symbol) and ((n^.xl[6] & 16#800000) <> 0) and
+      else if (n^.kind = fortran_symbol) and
+              (var_$display_ptr in n^.fs_attr) and
               (oi_level_ptr_t(e^.caller)^.level <
                oi_level_ptr_t(e^.callee)^.level) then begin
         boff := b.v^.xl[3];
         cls := rshft(ord(b.v^.xc[11]) & 16#F0, 4);
         aoff := a.v^.xl[3];
       end
-      else if (n^.kind = var_name) and ((n^.xl[8] & 16#800000) <> 0) and
+      else if (n^.kind = var_name) and (var_$display_ptr in n^.vr_attr) and
               (n^.xp[1] = e^.caller^.xp[74]) then begin
         aoff := a.v^.xl[14];
         boff := b.v^.xl[14];
         cls := b.v^.xw[36];
       end
-      else if (n^.kind = tree_node) and (n^.xw[18] = 26) and
+      else if (n^.kind = tree_node) and (n^.tr_op = addr_top) and
               (n^.xp[10]^.kind = fortran_symbol) then begin
         cls := rshft(ord(b.v^.xc[11]) & 16#F0, 4);
         boff := b.v^.xl[3];
         rebase := false;
       end
-      else if (n^.kind = tree_node) and (n^.xw[18] = 26) and
+      else if (n^.kind = tree_node) and (n^.tr_op = addr_top) and
               (n^.xp[10]^.kind = var_name) then begin
         boff := b.v^.xl[14];
         cls := b.v^.xw[36];
@@ -2897,7 +2899,7 @@ var
         ctx.subst := true;
       done := false;
       if (t^.kind = ptr_node) and (base^.kind = fortran_symbol) and
-         ((base^.xl[6] & 16#800000) <> 0) and
+         (var_$display_ptr in base^.fs_attr) and
          (oi_level_ptr_t(e^.caller)^.level <
           oi_level_ptr_t(e^.callee)^.level) then begin
         if ctx.sdn = nil then begin
@@ -2913,7 +2915,7 @@ var
         done := true;
       end
       else if (t^.kind = ptr_node) and (base^.kind = var_name) and
-              ((base^.xl[8] & 16#800000) <> 0) and
+              (var_$display_ptr in base^.vr_attr) and
               (base^.xp[1] = e^.caller^.xp[74]) then begin
         if ctx.sdn = nil then begin
           d := disp_offset(ctx.dnode) - off;
@@ -2929,7 +2931,7 @@ var
       end
       else if (t^.kind = ptr_node) and (base^.kind = ptr_node) and
               (base^.xp[6]^.kind = fortran_symbol) and
-              ((base^.xp[6]^.xl[6] & 16#800000) <> 0) and
+              (var_$display_ptr in base^.xp[6]^.fs_attr) and
               (ctx.sdn <> nil) and (ctx.sdn^.xp[8]^.kind = fortran_symbol) and
               (integer(rshft(ord(ctx.sdn^.xp[8]^.xc[11]) & 16#F0, 4)) in [2, 5]) and
               (ctx.sdn^.xp[8]^.xl[3] > 0) and
@@ -2942,7 +2944,7 @@ var
       end
       else if (t^.kind = ptr_node) and (base^.kind = ptr_node) and
               (base^.xp[6]^.kind = var_name) and
-              ((base^.xp[6]^.xl[8] & 16#800000) <> 0) and
+              (var_$display_ptr in base^.xp[6]^.vr_attr) and
               (ctx.sdn <> nil) and (ctx.sdn^.xp[8]^.kind = var_name) and
               (ctx.sdn^.xp[8]^.xw[36] in [2, 5]) and
               (ctx.sdn^.xp[8]^.xl[14] > 0) and
@@ -2953,7 +2955,7 @@ var
         done := true;
       end
       else if (t^.kind = ptr_node) and (t^.xp[6]^.kind = tree_node) and
-              (t^.xp[6]^.xw[18] = 13) and
+              (t^.xp[6]^.tr_op = index_top) and
               (t^.xp[6]^.xp[10]^.kind = sb_register) and (cls in [1,
                   7]) then begin
         p := t;
@@ -3051,7 +3053,7 @@ begin
     end;
     assign_node:
       if (orig^.xp[16]^.kind = fortran_symbol) and
-         ((orig^.xp[16]^.xl[6] & 16#800000) <> 0) then
+         (var_$display_ptr in orig^.xp[16]^.fs_attr) then
         t := nil
       else if (t^.xp[17]^.kind = display_register) and
               not inline_$is_fortran_asf(e^.caller) then begin
@@ -3124,7 +3126,7 @@ begin
       t := n;
       if ctx.subst then
         t^.xw[8] := ctx.uses;
-      if (t^.xw[18] = 16) or (t^.xw[18] = 15) then begin
+      if (t^.tr_op = func_call_top) or (t^.tr_op = call_top) then begin
         ctx.call := t;
         process_operand(e, x, t^.xp[10], ctx, r);
         ctx.call := nil;
@@ -3132,7 +3134,7 @@ begin
           process_operand(e, x, t^.xp[9 + i], ctx, r);
         inline_$mark_reference_params(t, cur_stmt);
       end
-      else if t^.xw[18] = 13 then begin
+      else if t^.tr_op = index_top then begin
         if ctx.base = nil then
           ctx.base := orig;
         get_sym_ind_info(e, x, ctx, raw, sub);
@@ -3159,7 +3161,7 @@ begin
         t^.xw[8] := ctx.uses;
       process_opr_ind(e, x, t, t^.xp[6], t^.xp[7], ctx, r, orig);
       if (t^.kind = ptr_node) and (t^.xp[6]^.kind = tree_node) and
-         (t^.xp[6]^.xw[18] = 26) then
+         (t^.xp[6]^.tr_op = addr_top) then
         t := t^.xp[6]^.xp[10];
       if r.node = orig then
         apply_disp(e, orig, ctx, r, t)
@@ -3214,7 +3216,8 @@ begin
       process_operand(e, x, t^.xp[8], ctx, r);
       if t^.xp[8]^.kind = ptr_node then
         t^.xp[8] := t^.xp[8]^.xp[6]
-      else if (t^.xp[8]^.kind = tree_node) and (t^.xp[8]^.xw[18] = 26) then
+      else if (t^.xp[8]^.kind = tree_node) and
+              (t^.xp[8]^.tr_op = addr_top) then
         t^.xp[8] := t^.xp[8]^.xp[10];
       process_opr_ind(e, x, t, t^.xp[6], t^.xp[7], ctx, r, orig);
       if t^.xp[8] = nil then

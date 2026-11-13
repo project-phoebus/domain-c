@@ -324,7 +324,8 @@ var
     k := v^.kind;
     if (k = fortran_symbol) or (k = var_name) then
       if (k = var_name) and (v^.xp[7]^.kind <> procedure_blk) and
-         ((v^.xl[8] & 16#201001) = 0) then begin
+         (v^.vr_attr * [var_$volatile, var_$address_exposed,
+                        var_$nooptimize] = []) then begin
         type_exp(v, addr(te));
         if ((v^.xw[36] = 5) and (v^.xp[7]^.kind = param_name))
             or te.flags.ranged or
@@ -353,7 +354,8 @@ var
                 begin
                   f := rshft(ord(v^.xc[11]) & 16#F0, 4);
                   if not (f in [3, 4, 8]) then
-                    if (v^.xl[6] & 16#201001) = 0 then
+                    if v^.fs_attr * [var_$volatile, var_$address_exposed,
+                                     var_$nooptimize] = [] then
                       var_is_ok := false;
                 end;
       end;
@@ -395,10 +397,10 @@ var
       return;
     lhs := t^.asg_lhs;
     if lhs^.kind = fortran_symbol then
-      if (lhs^.xl[6] & 16#200000) <> 0 then
+      if var_$nooptimize in lhs^.fs_attr then
         return;
     if lhs^.kind = var_name then
-      if (lhs^.xl[8] & 16#200000) <> 0 then
+      if var_$nooptimize in lhs^.vr_attr then
         return;
     if (getphase(t^.asg_rhs) + getphase(t^.asg_lhs)) * [phase_vol, phase_volexpr] <> [] then
       return;

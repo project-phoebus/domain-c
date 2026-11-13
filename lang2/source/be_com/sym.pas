@@ -269,7 +269,7 @@ begin
               end;
             if (f & 16#100) <> 0 then
               if ((ord(node^.xc[11]) & 16#F0) div 16 = 2)
-                 or ((node^.xl[6] & 16#40000000) <> 0) then begin
+                 or (var_$local_copy in node^.fs_attr) then begin
                 sym_n66_ptr_t(node)^.next66 := rtn^.l12;
                 rtn^.l12 := node;
               end;
@@ -732,7 +732,7 @@ begin
   if node^.kind = var_name then begin
     if node^.xw[36] = 5 then
       sym_$allocation_size_in_bytes := 4
-    else if (node^.xl[8] & 16#20000) <> 0 then
+    else if var_$strength_reduction in node^.vr_attr then
       sym_$allocation_size_in_bytes := 4
     else begin
       a := lshft(1, node^.xw[22]) - 1;
@@ -743,7 +743,7 @@ begin
   else if node^.kind = fortran_symbol then begin
     if (ord(node^.xc[11]) & 16#F0) div 16 = 5 then
       sym_$allocation_size_in_bytes := 4
-    else if (node^.xl[6] & 16#20000) <> 0 then
+    else if var_$strength_reduction in node^.fs_attr then
       sym_$allocation_size_in_bytes := 4
     else if node^.xp[7] = nil then
       sym_$allocation_size_in_bytes := sz_fsym(node)

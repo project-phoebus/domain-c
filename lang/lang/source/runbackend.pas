@@ -154,7 +154,8 @@ function assert_is_a_call_node(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if assert_is_a_tree_node(n) then
-    assert_is_a_call_node := (n^.xw[18] = 16) or (n^.xw[18] = 15)
+    assert_is_a_call_node := (n^.tr_op = func_call_top)
+        or (n^.tr_op = call_top)
   else
     assert_is_a_call_node := false;
 end;
@@ -417,7 +418,7 @@ begin
         callee^.xp[63] := il_$node_ptr_t(e);
       end;
   end;
-  if call^.xw[18] = 16 then begin
+  if call^.tr_op = func_call_top then begin
     s := e^.sites;
     while s <> nil do begin
       if s^.site = addr(call) then
@@ -542,7 +543,7 @@ begin
                  ptr_node, disp_node, cs_node, sym_disp_node] then begin
     if n^.xw[9] = -3 then begin
       if n^.kind = tree_node then
-        if n^.xw[18] = 16 then
+        if n^.tr_op = func_call_top then
           analyze_call_site_for_call_graph(t);
       return;
     end;
@@ -556,11 +557,13 @@ begin
     il_180^.xw[136] := il_180^.xw[136] + 1;
   case n^.kind of
     tree_node, gen_tree_node, cmp_tree_node: begin
-      if (n^.xw[18] = 16) or (n^.xw[18] = 15) then
+      if (n^.tr_op = func_call_top) or (n^.tr_op = call_top) then
         first := 2
       else
         first := 1;
-      if n^.xw[18] in [2, 4, 5, 6, 11, 15, 16, 21, 35, 37] then
+      if n^.tr_op in [sub_top, div_top, divide_top, mod_top, bit_test_top,
+                      call_top, func_call_top, set_diff_top, f_sub_top,
+                      f_div_top] then
         for i := n^.xw[19] downto first do
           build_call_graph_walk_il(n^.xp[9 + i])
       else
@@ -859,8 +862,8 @@ begin
       t^.xw[8] := 0;
       for i := t^.xw[19] downto 1 do
         normalize_il(t^.xp[9 + i], fold);
-      if t^.xw[18] = 41 then begin
-        size := t^.xw[12];
+      if t^.tr_op = f_math_top then begin
+        size := t^.tr_rlen;
         case t^.xw[13] of
           10, 11, 21:
             ;
