@@ -365,8 +365,8 @@ procedure transform_253_pass_1(var subject: isc_solution_t; il: univ_ptr;
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: integer32;
-  t3: integer;
-  t4: integer;
+  t3: 0..65535;
+  t4: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -434,8 +434,8 @@ procedure transform_254_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -500,8 +500,8 @@ procedure transform_255_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -631,8 +631,8 @@ procedure transform_256_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -697,8 +697,8 @@ procedure transform_257_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -770,8 +770,8 @@ var
   t5: boolean;
   t6: boolean;
   t8: integer32;
-  t9: integer;
-  t10: integer;
+  t9: 0..65535;
+  t10: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -877,8 +877,8 @@ var
   t5: boolean;
   t6: boolean;
   t8: integer32;
-  t9: integer;
-  t10: integer;
+  t9: 0..65535;
+  t10: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -977,8 +977,8 @@ procedure transform_260_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -1839,8 +1839,8 @@ procedure transform_273_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -1917,8 +1917,8 @@ procedure transform_274_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -2075,8 +2075,8 @@ procedure transform_275_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -2317,8 +2317,8 @@ var
   t3: integer32;
   t4: integer32;
   t5: integer32;
-  t6: integer;
-  t7: integer;
+  t6: 0..65535;
+  t7: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -2478,8 +2478,8 @@ var
   t3: integer32;
   t4: integer32;
   t5: integer32;
-  t6: integer;
-  t7: integer;
+  t6: 0..65535;
+  t7: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3094,8 +3094,8 @@ var
   t5: integer32;
   t6: integer32;
   t7: integer32;
-  t8: integer;
-  t9: integer;
+  t8: 0..65535;
+  t9: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3330,10 +3330,10 @@ procedure transform_290_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
-  t4: integer;
-  t5: integer;
+  t2: 0..65535;
+  t3: 0..65535;
+  t4: 0..65535;
+  t5: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3480,8 +3480,8 @@ var
   t1: boolean;
   t2: integer32;
   t4: integer32;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3599,8 +3599,8 @@ procedure transform_292_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3761,8 +3761,8 @@ procedure transform_293_pass_1(var subject: isc_solution_t; il: univ_ptr;
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: integer32;
-  t3: integer;
-  t4: integer;
+  t3: 0..65535;
+  t4: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3830,8 +3830,8 @@ procedure transform_294_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3896,8 +3896,8 @@ procedure transform_295_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3993,8 +3993,8 @@ procedure transform_296_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4059,8 +4059,8 @@ procedure transform_297_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4157,8 +4157,8 @@ procedure transform_298_pass_1(var subject: isc_solution_t; il: univ_ptr;
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: integer32;
-  t3: integer;
-  t4: integer;
+  t3: 0..65535;
+  t4: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4231,8 +4231,8 @@ var
   t4: integer32;
   t5: integer32;
   t6: integer32;
-  t7: integer;
-  t8: integer;
+  t7: 0..65535;
+  t8: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4417,10 +4417,10 @@ var
   t4: integer32;
   t5: integer32;
   t6: integer32;
-  t7: integer;
-  t8: integer;
-  t9: integer;
-  t10: integer;
+  t7: 0..65535;
+  t8: 0..65535;
+  t9: 0..65535;
+  t10: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4603,10 +4603,10 @@ var
   t9: boolean;
   t10: boolean;
   t11: boolean;
-  t12: integer;
-  t13: integer;
-  t14: integer;
-  t15: integer;
+  t12: 0..65535;
+  t13: 0..65535;
+  t14: 0..65535;
+  t15: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4771,8 +4771,8 @@ var
   t1: boolean;
   t2: integer32;
   t4: integer32;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4895,8 +4895,8 @@ var
   t4: integer32;
   t5: integer32;
   t6: integer32;
-  t7: integer;
-  t8: integer;
+  t7: 0..65535;
+  t8: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -5072,10 +5072,10 @@ var
   t9: boolean;
   t10: boolean;
   t11: boolean;
-  t12: integer;
-  t13: integer;
-  t14: integer;
-  t15: integer;
+  t12: 0..65535;
+  t13: 0..65535;
+  t14: 0..65535;
+  t15: 0..65535;
 begin
   result := nil;
   work := nil;

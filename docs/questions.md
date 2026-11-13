@@ -2884,6 +2884,45 @@ answered by this policy and needs no reply.
    one answer ds_solution_t could be folded into isc_solution_t (its
    remaining differences, +86 as a word and its pointer types, are
    views).
+   **Done (RN6, 2026-11-12): unsigned, but for which_transform.**  The
+   image's ISC (cc.a88k 0x0B9F24 .. 0x21DC44) loads these words into a
+   data register 690 times and never sign-extends one; the evidence:
+   (a) the register maxima and results are compared unsigned, as the
+   unsigned code_bytes, delay and memory_references beside them:
+   clearly_dominates `cmp.w; bhi' for +64, +62, +60, +58, +70, +72
+   (0x2126D8 .. 0x212712), and the pass-1 actions' max idiom (`t2 <-
+   $1.fp_reg_max; t2 = $2.fp_reg_max; t2 u<= $2.fp_reg_max' in the
+   rule file, 144 times) `cmp.w; bhi' (rule 306 0x107BB4, rule 64
+   0x0F115A; ip_reg_max 110 such compares, fp_reg_max 18,
+   fp_reg_pair_max 13, fp_reg_quad_max 9), no signed branch on any of
+   them; (b) n_bytes_to_back_up is zero-extended for `* 8' (`clr.l D0;
+   move.w (74,A2),D0; lsl.l #3': rules 248 and 250, 0x14E80E,
+   0x14E8DC, 0x14EE48); (c) pass_2 writes evaluation_order as an
+   unsigned word (16#0A28, 0x18C70C), and dump_solution writes all of
+   bytes .. n_bytes_to_back_up, evaluation_order and which_transform
+   with 16#0A68 (0..65535, as code_bytes; 0x0D67B2 .. 0x0D7BA8).
+   bytes and fp_reg_quad_result are only copied and printed (no compare
+   or widening): typed with their neighbours.  which_transform is the
+   exception: pass_2 indexes the pass-2 actions by it with `move.w
+   (112,A2),D2; ...; ext.l D0; lsl.l #2' (0x18C770 .. 0x18C786) and
+   preserve_solution with a word index (`tst.b (-1,A5,D0.w)', 0x0D9530),
+   a signed integer's code (an unsigned word is widened `clr.l; move.w'
+   by Rev 8.89: (b), list_tree 0x080572), against dump_solution's
+   unsigned print: mixed, so it stays integer.  isc_solution_t's bytes
+   .. n_bytes_to_back_up and evaluation_order are 0..65535 now; the
+   generator's classes follow (iscg_p2lang SOL_FIELDS u16) and a
+   rule's integer temporaries that only take those words (the max
+   idiom's t2, t3 ...) are declared 0..65535 (iscg_p2lang.word_temps:
+   the rule file gives only `integer', the width).  dpc's code changes
+   in 13 units, each toward the image: 144 `bgt' to `bhi' (the max
+   idiom), clearly_dominates' six `sle' to `sls', six `ext.l' to `clr.l'
+   for n_bytes_to_back_up * 8 (isc_pass_1_15), pass_2's write 16#0A20
+   to 16#0A28 (as 0x18C70C), and ten `ext.l' to `clr.l' widening a
+   word temporary into a longword temporary the lifter keeps but no
+   code reads (rule 64's t6 and its like in isc_pass_1_01: no image
+   counterpart).  The rule file is unchanged and re-extraction
+   reproduces it.  ds_solution_t is not folded in: it still differs in
+   which_transform (0..65535 there), +86 and its pointer types.
 322. Translator RN4 (2026-11-12), the dumps' names (question 92):
    **the identifiers are the run time's, not list_tree's strings, where
    the image has a name table.**  cc.a88k's ISC printers write the tree

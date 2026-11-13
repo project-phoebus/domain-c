@@ -928,12 +928,13 @@ type
     isc_solution_fields.ins.pas's isc_solution_t's (docs/questions.md
     267) and, since questions 312 and 313, its types for kind, il_kind,
     base_register, index_register and false_label and the rules' byte
-    locals (case_value, the already_ flags).  This view differs only in
-    the words it prints unsigned (bytes .. n_bytes_to_back_up,
-    evaluation_order, which_transform: 0..65535 where isc_solution_t has
-    integer), +86 as one word,
-    before_transform and children as its own pointers and the rules'
-    pointer locals as univ_ptr; so it stays (docs/questions.md 313). }
+    locals (case_value, the already_ flags) and, since question 321,
+    its unsigned words (bytes .. n_bytes_to_back_up, evaluation_order).
+    This view differs only in which_transform (printed unsigned,
+    16#0A68 at 0x0D631C and 0x0D7BA8, where pass_2 sign-extends it:
+    isc_solution_t keeps integer), +86 as one word, before_transform and
+    children as its own pointers and the rules' pointer locals as
+    univ_ptr; so it stays (docs/questions.md 313, 321). }
   ds_solution_ptr_t = ^ds_solution_t;
   ds_solution_t = record
     object_with_name: univ_ptr;     { +0 }

@@ -122,17 +122,17 @@ SOL_FIELDS = {
     (36, 4): ('bits_trusted', 'i32'), (40, 4): ('bits_known_of_fetched_value', 'i32'),
     (44, 4): ('bits_trusted_of_fetched_value', 'i32'), (48, 4): ('literal_32_bits_value', 'i32'),
     (52, 4): ('pass_1_size', 'i32'),
-    (56, 2): ('bytes', 'i16'), (58, 2): ('fp_reg_max', 'i16'), (60, 2): ('fp_reg_result', 'i16'),
-    (62, 2): ('fp_reg_pair_max', 'i16'), (64, 2): ('fp_reg_pair_result', 'i16'),
-    (66, 2): ('fp_reg_quad_max', 'i16'), (68, 2): ('fp_reg_quad_result', 'i16'),
-    (70, 2): ('ip_reg_max', 'i16'), (72, 2): ('ip_reg_result', 'i16'),
-    (74, 2): ('n_bytes_to_back_up', 'i16'),
+    (56, 2): ('bytes', 'u16'), (58, 2): ('fp_reg_max', 'u16'), (60, 2): ('fp_reg_result', 'u16'),
+    (62, 2): ('fp_reg_pair_max', 'u16'), (64, 2): ('fp_reg_pair_result', 'u16'),
+    (66, 2): ('fp_reg_quad_max', 'u16'), (68, 2): ('fp_reg_quad_result', 'u16'),
+    (70, 2): ('ip_reg_max', 'u16'), (72, 2): ('ip_reg_result', 'u16'),
+    (74, 2): ('n_bytes_to_back_up', 'u16'),
     (76, 1): ('f76.bit_position_of_lsb', 'u8'), (77, 1): ('f76.field_precision', 'u8'),
     (78, 1): ('f76.physical_register_number', 'u8'), (79, 1): ('f76.scale', 'u8'),
     (80, 1): ('f76.slevel_attribute', 'u8'), (85, 1): ('f76.b85', 'u8'),
     (86, 1): ('f76.b86', 'u8'), (87, 1): ('f76.b87', 'u8'),
     (88, 4): ('before_transform', 'isp'), (92, 2): ('code_bytes', 'u16'), (94, 2): ('delay', 'u16'),
-    (96, 2): ('evaluation_order', 'i16'), (98, 2): ('il_kind', IL_T), (100, 4): ('il', 'up'),
+    (96, 2): ('evaluation_order', 'u16'), (98, 2): ('il_kind', IL_T), (100, 4): ('il', 'up'),
     (104, 4): ('inherited_attributes', 'inh'), (108, 2): ('kind', SOLUTION_T),
     (110, 2): ('memory_references', 'u16'), (112, 2): ('which_transform', 'i16'),
     (114, 1): ('f114.number_of_children', 'u8'),
@@ -1157,8 +1157,59 @@ class Emitter:
             elif s[0] == 'for' and s[1] not in self.temps:
                 self.temps[s[1]] = 'i32'
                 decl.append('  %s: integer32;' % s[1])
+        declare_word_temps(self, stmts, decl)
         body = self.stmts(stmts, '  ')
         return (['var'] + decl if decl else []), body
+
+
+def word_temps(em, stmts):
+    """The rule's integer temporaries that hold one of the solution's
+    unsigned words (u16: docs/questions.md 321): every value given them
+    is such a field or such a temporary, one at least a field.  The
+    register maxima's idiom (t2 <- $1.fp_reg_max; `t2 = $2.fp_reg_max',
+    `t2 u<= $2.fp_reg_max') is `cmp.w; bhi' in the image (rule 306's
+    pass 1, cc.a88k 0x107BB0): the temporaries are words of the fields'
+    type, 0..65535 (the rule file's `integer' gives only the width)."""
+    sets = {}
+    for s in walk(stmts):
+        if s[0] == 'set' and s[1][0] == 'path' and not s[1][2] and \
+                em.temps.get(s[1][1]) == 'i16':
+            sets.setdefault(s[1][1], []).append(s[2])
+    out = set()
+    changed = True
+    while changed:
+        changed = False
+        for t, values in sets.items():
+            if t in out:
+                continue
+            ok = True
+            for e in values:
+                if e[0] == 'path' and not e[2] and e[1] in sets:
+                    ok = ok and e[1] in out
+                    continue
+                if e[0] != 'path':
+                    ok = False
+                    break
+                try:
+                    _, c = em.path(e)
+                except LangError:
+                    ok = False
+                    break
+                if c != 'u16':
+                    ok = False
+                    break
+            if ok:
+                out.add(t)
+                changed = True
+    return out
+
+
+def declare_word_temps(em, stmts, decls):
+    """word_temps made u16 and their declarations 0..65535."""
+    for t in word_temps(em, stmts):
+        em.temps[t] = 'u16'
+        old = '  %s: integer;' % t
+        decls[decls.index(old)] = '  %s: 0..65535;' % t
 
 
 def walk(stmts):

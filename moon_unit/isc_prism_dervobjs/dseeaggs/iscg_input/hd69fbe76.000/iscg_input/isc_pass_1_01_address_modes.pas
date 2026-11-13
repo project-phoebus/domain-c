@@ -187,8 +187,8 @@ var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: integer32;
   t3: integer;
-  t4: integer;
-  t5: integer;
+  t4: 0..65535;
+  t5: 0..65535;
   t6: integer32;
   t7: integer32;
 begin
@@ -276,8 +276,8 @@ procedure transform_65_pass_1(var subject: isc_solution_t; il: univ_ptr;
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t2: integer;
-  t3: integer;
-  t4: integer;
+  t3: 0..65535;
+  t4: 0..65535;
   t5: integer32;
 begin
   result := nil;
@@ -361,8 +361,8 @@ procedure transform_66_pass_1(var subject: isc_solution_t; il: univ_ptr;
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t2: integer;
-  t3: integer;
-  t4: integer;
+  t3: 0..65535;
+  t4: 0..65535;
   t5: integer32;
 begin
   result := nil;
@@ -446,8 +446,8 @@ procedure transform_67_pass_1(var subject: isc_solution_t; il: univ_ptr;
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t2: integer;
-  t3: integer;
-  t4: integer;
+  t3: 0..65535;
+  t4: 0..65535;
   t5: integer32;
 begin
   result := nil;
@@ -531,8 +531,8 @@ procedure transform_68_pass_1(var subject: isc_solution_t; il: univ_ptr;
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t2: integer;
-  t3: integer;
-  t4: integer;
+  t3: 0..65535;
+  t4: 0..65535;
   t5: integer32;
 begin
   result := nil;

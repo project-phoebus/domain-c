@@ -103,8 +103,8 @@ var
   t1: boolean;
   t2: boolean;
   t3: boolean;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -285,8 +285,8 @@ var
   t1: boolean;
   t2: boolean;
   t3: boolean;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
