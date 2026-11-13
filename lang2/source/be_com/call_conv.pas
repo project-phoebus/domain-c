@@ -67,7 +67,7 @@ type
   cc_blk_ptr_t = ^cc_blk_t;
   cc_blk_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     unused_4: array [4..11] of char;    { +4 }
     parms: il_$node_ptr_t;              { +12: c_blk_t's old_parms }
     unused_16: array [16..27] of char;  { +16 }
@@ -200,7 +200,7 @@ begin
   rlen := 0;
   size := 0;
   case t^.kind of
-    108: begin
+    function_blk: begin
       b := cc_blk_ptr_t(t);
       if b^.unused_374.conv in [1, 3, 5] then begin
         type_exp(b^.result, addr(te));
@@ -210,7 +210,7 @@ begin
         rlen := get_rlen(te);
       end;
     end;
-    110: begin
+    fortran_symbol: begin
       rlen := runbackend_18[ord(t^.xc[10]) & 15];
       if (ord(t^.xc[10]) & 15) <> 7 then
         size := class_size[rlen] & 16#FFFF
@@ -219,32 +219,32 @@ begin
       else
         size := t^.xw[4];
     end;
-    109, 121: begin
+    var_name, param_name: begin
       type_exp(t, addr(te));
       rlen := get_rlen(te);
       size := te.size;
     end;
-    137, 138, 143: begin
+    tree_node, gen_tree_node, cmp_tree_node: begin
       rlen := t^.xw[12];
       size := t^.xl[5];
     end;
-    163: begin
+    addr_con: begin
       rlen := 5;
       size := 4;
     end;
-    189:
+    cse_use_ob:
       get_rlen_and_size(t^.xp[5], rlen, size);
-    190:
+    cse_parent_ob:
       get_rlen_and_size(t^.xp[1], rlen, size);
-    77, 86, 87, 200: begin
+    blogical_ob, ubinteger_ob, char_ob, binteger_ob: begin
       rlen := 1;
       size := 1;
     end;
-    79, 82, 85: begin
+    llogical_ob, linteger_ob, ulinteger_ob: begin
       rlen := 4;
       size := 4;
     end;
-    81, 84:
+    integer_ob, uinteger_ob:
       if cargs_$options.i_star_2 then begin
         rlen := 2;
         size := 2;
@@ -253,43 +253,43 @@ begin
         rlen := 4;
         size := 4;
       end;
-    78, 80, 83: begin
+    slogical_ob, sinteger_ob, usinteger_ob: begin
       rlen := 2;
       size := 2;
     end;
-    88: begin
+    real_ob: begin
       rlen := 6;
       size := 4;
     end;
-    89: begin
+    dpreal_ob: begin
       rlen := 7;
       size := 8;
     end;
-    90: begin
+    complex_ob: begin
       rlen := 8;
       size := 8;
     end;
-    198: begin
+    dpcomplex_ob: begin
       rlen := 12;
       size := 16;
     end;
-    91, 92, 156: begin
+    varying_ob, char_string_ob, set_con_ob: begin
       rlen := 11;
       size := t^.xw[8] & 16#FFFF;
     end;
-    164: begin
+    cs_node: begin
       rlen := 9;
       n := t^.xp[6];
-      if n^.kind = 81 then
+      if n^.kind = integer_ob then
         size := n^.int_value
       else
         size := 0;
     end;
-    165: begin
+    cs_temp: begin
       rlen := 9;
       size := t^.xw[11];
     end;
-    147: begin
+    disp_node: begin
       get_rlen_and_size(t^.xp[6], rlen, size);
       if t^.xl[8] <> 0 then begin
         if size <= 4 then begin
@@ -387,7 +387,7 @@ end;
 function ftn_alt_rtn(
     in n: il_$node_ptr_t): boolean;
 begin
-  ftn_alt_rtn := (n^.kind = 107)
+  ftn_alt_rtn := (n^.kind = procedure_blk)
                  and (cc_blk_ptr_t(n)^.unused_374.conv = 2)
                  and (cc_blk_ptr_t(n)^.ret_var <> nil);
 end;
@@ -401,7 +401,7 @@ procedure ftn_param_vat_check(
     var rlen: integer;
     var size: integer32);
 begin
-  if n^.kind = 110 then
+  if n^.kind = fortran_symbol then
     if rshft(ord(n^.xc[11]) & 16#F0, 4) = 5 then begin
       rlen := 5;
       size := 4;
@@ -415,7 +415,7 @@ function entry_blk_check(
     in n: il_$node_ptr_t): cc_blk_ptr_t;
 begin
   if n <> nil then
-    if n^.kind = 167 then begin
+    if n^.kind = entry_blk then begin
       entry_blk_check := cc_blk_ptr_t(n)^.blk148;
       return;
     end;
@@ -437,27 +437,27 @@ begin
   t := n;
 10:
   case t^.kind of
-    107, 108:
+    procedure_blk, function_blk:
       get_proto := cc_blk_ptr_t(t)^.params;
-    234:
+    cc_func_returning_type:
       get_proto := c_parlist_ptr_t(t^.xp[3]);
-    130, 132: begin
+    ptr_type, record_type: begin
       t := t^.xp[1];
       goto 10;
     end;
-    118, 147, 109: begin
+    type_name, disp_node, var_name: begin
       t := t^.xp[7];
       goto 10;
     end;
-    119, 121: begin
+    field_name, param_name: begin
       t := t^.xp[4];
       goto 10;
     end;
-    146: begin
+    ptr_node: begin
       t := t^.xp[6];
       goto 10;
     end;
-    163:
+    addr_con:
       if ord(t^.xc[20]) = 2 then begin
         t := t^.xp[2];
         goto 10;
@@ -548,7 +548,7 @@ begin
         10: mode := 1;
         11: mode := 3;
       end;
-      if (n^.kind = 137) or (n^.kind = 138) then
+      if (n^.kind = tree_node) or (n^.kind = gen_tree_node) then
         if (n^.xw[18] = 15) or (n^.xw[18] = 16) then begin
           a := n^.xp[10 + d.num];
           get_rlen_and_size(a, rl, sz);
@@ -676,7 +676,7 @@ begin
   vats := nil;
 
   { 1. What is called. }
-  if node^.kind = 159 then begin
+  if node^.kind = lib_dsc then begin
     opr := node;
     has_result := false;
     pas := lib_dsc_name_cmp(opr, pas_set_build, 14);
@@ -693,18 +693,18 @@ begin
     preset := addr(preset_3);
     goto 100;
   end
-  else if node^.kind = 208 then begin
+  else if node^.kind = at_lib_dsc then begin
     opr := node;
     n := ord(node^.xc[80]);
     has_result := false;
     preset := addr(node^.xp[1]);
     goto 100;
   end
-  else if (node^.kind = 105) or (node^.kind = 107)
-          or (node^.kind = 167) or (node^.kind = 108) then begin
-    if (node^.kind = 108)
-       or ((node^.kind = 167)
-           and (cc_blk_ptr_t(node)^.blk148^.kind = 108)) then begin
+  else if (node^.kind = program_blk) or (node^.kind = procedure_blk)
+          or (node^.kind = entry_blk) or (node^.kind = function_blk) then begin
+    if (node^.kind = function_blk)
+       or ((node^.kind = entry_blk)
+           and (cc_blk_ptr_t(node)^.blk148^.kind = function_blk)) then begin
       has_result := true;
       get_rlen_and_size(node, rlen, sz);
       rsize := sz;
@@ -739,7 +739,7 @@ begin
     cgerr(28, 0, strtk('call_conv cannot handle call', 31));
     goto 100;
   end
-  else if (node^.kind = 137) or (node^.kind = 138) then begin
+  else if (node^.kind = tree_node) or (node^.kind = gen_tree_node) then begin
     if (node^.xw[18] <> 15) and (node^.xw[18] <> 16) then
       goto 90;
     if node^.xw[18] = 16 then begin
@@ -756,8 +756,8 @@ begin
     if has_result then
       n := n + 1;
     callee := node^.xp[10];
-    if (callee^.kind = 167) or (callee^.kind = 108)
-       or (callee^.kind = 107) then begin
+    if (callee^.kind = entry_blk) or (callee^.kind = function_blk)
+       or (callee^.kind = procedure_blk) then begin
       blk := entry_blk_check(node^.xp[10]);
       opr := blk^.parms;
       conv := blk^.unused_374.conv;
@@ -802,7 +802,7 @@ begin
       cgerr(28, 0, strtk('call_conv cannot handle call', 31));
       goto 100;
     end
-    else if callee^.kind = 175 then begin
+    else if callee^.kind = pf_call then begin
       t := callee^.xp[5];
       opr := t^.xp[1];
       preset := addr(t^.xp[8]);
@@ -810,7 +810,7 @@ begin
       vats := addr(t^.xp[20]);
       goto 100;
     end
-    else if callee^.kind = 159 then begin
+    else if callee^.kind = lib_dsc then begin
       opr := callee;
       if lib_dsc_name_cmp(callee, ftn_stop, 9) then
         preset := addr(preset_2)
@@ -818,25 +818,25 @@ begin
         preset := addr(preset_3);
       goto 100;
     end
-    else if callee^.kind = 208 then begin
+    else if callee^.kind = at_lib_dsc then begin
       opr := callee;
       preset := addr(callee^.xp[1]);
       goto 100;
     end
-    else if callee^.kind = 110 then begin
+    else if callee^.kind = fortran_symbol then begin
       opr := callee;
       preset := addr(preset_1);
-      if callee^.kind = 110 then
+      if callee^.kind = fortran_symbol then
         blk := entry_blk_check(callee^.xp[10])
       else
         blk := cc_blk_ptr_t(link);
       nfixed := node^.xw[13] & 16#FFFF;
       goto 100;
     end
-    else if callee^.kind = 171 then begin
+    else if callee^.kind = cc_call then begin
       opr := callee;
       t := callee^.xp[4];
-      if (t^.kind = 108) or (t^.kind = 107) then begin
+      if (t^.kind = function_blk) or (t^.kind = procedure_blk) then begin
         blk := cc_blk_ptr_t(t);
         nested := (blk^.lev.level > 0) and not blk^.unused_374.b376_4;
       end
@@ -850,7 +850,7 @@ begin
       preset := addr(preset_1);
       goto 100;
     end
-    else if callee^.kind = 146 then begin
+    else if callee^.kind = ptr_node then begin
       opr := callee;
       preset := addr(preset_1);
       goto 100;
@@ -873,7 +873,7 @@ begin
   props^.link := link;
   props^.w12 := 3;
   props^.needs_db := true;
-  if node^.kind = 208 then begin
+  if node^.kind = at_lib_dsc then begin
     props^.w24 := ord(node^.xc[47]);
     if props^.w24 > 127 then
       props^.w24 := props^.w24 - 256;
@@ -923,9 +923,9 @@ begin
   if blk = nil then begin
     props^.async := 8 in preset^.flags;
     props^.cleanup := false;
-    if node^.kind = 137 then begin
+    if node^.kind = tree_node then begin
       t := node^.xp[10];
-      if t^.kind = 110 then begin
+      if t^.kind = fortran_symbol then begin
         props^.cleanup := pfm_cleanup_check(t^.xc[72], t^.xw[35]);
         props^.async := props^.cleanup;
       end;
@@ -986,12 +986,12 @@ begin
     d^.by_value := true;
     d^.f22.mode := 0;
     d^.f22.reg := 0;
-    if node^.kind = 108 then
+    if node^.kind = function_blk then
       d^.sym := cc_blk_ptr_t(node)^.ret_var
     else if ftn_alt_rtn(node) then
       d^.sym := cc_blk_ptr_t(node)^.ret_var
-    else if (node^.kind = 167)
-            and (cc_blk_ptr_t(node)^.blk148^.kind = 108) then
+    else if (node^.kind = entry_blk)
+            and (cc_blk_ptr_t(node)^.blk148^.kind = function_blk) then
       d^.sym := cc_blk_ptr_t(node)^.ret_var
     else
       d^.sym := nil;
@@ -1018,7 +1018,7 @@ begin
   end;
   if opr = nil then
     goto 60;
-  if opr^.kind = 159 then begin
+  if opr^.kind = lib_dsc then begin
     { A run-time library routine's: by its argument codes. }
     r := ord(has_result);
     k3 := 1;
@@ -1029,7 +1029,7 @@ begin
       d^.w6 := 0;
       d^.offset := offs;
       d^.sym := nil;
-      if (node^.kind = 137) and (n - (node^.xw[13] & 16#FFFF) < k) then
+      if (node^.kind = tree_node) and (n - (node^.xw[13] & 16#FFFF) < k) then
         code := 8
       else begin
         if (opr^.xw[5] & 16#FFFF) < k3 then begin
@@ -1045,7 +1045,7 @@ begin
     end;
     goto 60;
   end;
-  if opr^.kind = 208 then begin
+  if opr^.kind = at_lib_dsc then begin
     { Explicit conventions: the entries' places and registers. }
     for k := 1 to n do begin
       d := addr(props^.args[k]);
@@ -1064,10 +1064,10 @@ begin
     offs := 24;
     goto 60;
   end;
-  if (opr^.kind = 121)
-     or ((opr^.kind = 168) and (blk^.lev.level > 0)) then begin
+  if (opr^.kind = param_name)
+     or ((opr^.kind = param_list) and (blk^.lev.level > 0)) then begin
     { The parameters (121, chained) or a prototype's entries (168). }
-    if (opr^.kind = 168) and (rlen = 9) then begin
+    if (opr^.kind = param_list) and (rlen = 9) then begin
       d := addr(props^.args[1]);
       d^.f18.loc := 4;
       d^.num := 1;
@@ -1076,8 +1076,8 @@ begin
       d^.by_value := false;
       d^.f22.mode := 3;
       d^.f16.rlen := 9;
-      if (node^.kind = 105) or (node^.kind = 107)
-         or (node^.kind = 167) or (node^.kind = 108) then begin
+      if (node^.kind = program_blk) or (node^.kind = procedure_blk)
+         or (node^.kind = entry_blk) or (node^.kind = function_blk) then begin
         d^.sym := unset396;
         get_rlen_and_size(unset396, rl, sz);
       end
@@ -1093,7 +1093,7 @@ begin
     for k := 1 + r to n do begin
       d := addr(props^.args[k]);
       d^.f20.kind := 0;
-      if opr^.kind = 121 then
+      if opr^.kind = param_name then
         get_rlen_and_size(opr, rl, sz)
       else
         get_rlen_and_size(opr^.xp[3 * (k - ord((rlen = 9) or has_result))],
@@ -1105,12 +1105,12 @@ begin
       d^.num := k - ord(has_result);
       d^.w6 := 0;
       step := 4;
-      if (node^.kind = 108) or (node^.kind = 107) then
+      if (node^.kind = function_blk) or (node^.kind = procedure_blk) then
         d^.sym := blk_fnd_name(c_parm_ptr_t(opr)^.pname, false, false,
                                c_blk_ptr_t(node))
       else
         d^.sym := nil;
-      if (opr^.kind = 121)
+      if (opr^.kind = param_name)
          and (((ord(opr^.xc[27]) & 16#40) <> 0)
               or (ord(opr^.xc[27]) >= 128)) then begin
         { A parameter declared in a register. }
@@ -1158,17 +1158,17 @@ begin
         d^.by_value := (vats^[d^.num] & 16#FFFF) <= 6;
         if not d^.by_value then begin
           type_exp(opr, addr(te));
-          if ((node^.kind = 138) or (node^.kind = 137))
+          if ((node^.kind = gen_tree_node) or (node^.kind = tree_node))
              and ((node^.xw[18] = 16) or (node^.xw[18] = 15)) then
             if ord(opr^.xc[46]) >= 128 then begin
               a := node^.xp[10 + d^.num];
-              if a^.kind = 81 then begin
+              if a^.kind = integer_ob then begin
                 if (d^.f16.rlen <> 2) and (d^.f16.rlen <> 1) then begin
                   d^.f16.rlen := 4;
                   d^.size := step;
                 end;
               end
-              else if (a^.kind = 109) and (a^.xw[36] = 5) then begin
+              else if (a^.kind = var_name) and (a^.xw[36] = 5) then begin
                 d^.f16.rlen := 5;
                 d^.size := step;
               end
@@ -1180,7 +1180,7 @@ begin
                 end;
               end;
             end
-            else if te.base^.kind = 196 then begin
+            else if te.base^.kind = varying_type then begin
               get_rlen_and_size(node^.xp[10 + d^.num], rl, sz);
               if rl <> 0 then
                 d^.size := sz;
@@ -1202,17 +1202,18 @@ begin
           end;
       end;
       offs := offs + step;
-      if opr^.kind = 121 then
+      if opr^.kind = param_name then
         opr := opr^.xp[1];
     end;
     { The parameters done. }
     goto 60;
   end;
-  if (opr^.kind = 107) or (opr^.kind = 167) or (opr^.kind = 108) then
+  if (opr^.kind = procedure_blk) or (opr^.kind = entry_blk)
+      or (opr^.kind = function_blk) then
     is4 := cc_blk_ptr_t(opr)^.unused_374.conv = 4
   else
     is4 := false;
-  if is4 or (opr^.kind = 110) or (opr^.kind = 146) then begin
+  if is4 or (opr^.kind = fortran_symbol) or (opr^.kind = ptr_node) then begin
     { FORTRAN's: by reference, the strings by descriptor after the
       fixed arguments. }
     r := ord(has_result);
@@ -1232,7 +1233,7 @@ begin
         get_rlen_and_size(node^.xp[10 + d^.num], rl, sz);
         ftn_param_vat_check(node^.xp[10 + d^.num], rl, sz);
         a := node^.xp[10 + d^.num];
-        if a^.kind = 81 then
+        if a^.kind = integer_ob then
           if a^.int_value = 0 then begin
             rl := 4;
             sz := 4;
@@ -1268,7 +1269,7 @@ begin
     end;
     goto 60;
   end;
-  if opr^.kind = 171 then begin
+  if opr^.kind = cc_call then begin
     { Through a pointer: the callee's prototype, else the pointer's
       entries (a word size at +16, a byte class at +19, 4 each). }
     r := ord(has_result);
@@ -1286,7 +1287,7 @@ begin
       if blk <> nil then
         if blk^.params <> nil then
           if k - r <= blk^.params^.count then
-            if blk^.params^.types[j]^.kind <> 31 then
+            if blk^.params^.types[j]^.kind <> label_ob then
               typed := true;
       if typed then begin
         type_exp(blk^.params^.types[j], addr(te));
@@ -1316,11 +1317,12 @@ begin
     end;
   proto := false;
   if opr <> nil then
-    if opr^.kind = 171 then begin
+    if opr^.kind = cc_call then begin
       proto := true;
       pt := get_proto(opr^.xp[4]);
     end;
-  if (node^.kind = 107) or (node^.kind = 167) or (node^.kind = 108) then
+  if (node^.kind = procedure_blk) or (node^.kind = entry_blk)
+      or (node^.kind = function_blk) then
     if cc_blk_ptr_t(node)^.unused_374.conv = 3 then begin
       proto := true;
       pt := get_proto(node);
@@ -1337,7 +1339,7 @@ begin
         typed := false;
         if pt <> nil then
           if pt^.count >= d^.num then
-            if pt^.types[d^.num]^.kind <> 31 then
+            if pt^.types[d^.num]^.kind <> label_ob then
               typed := true;
         if typed and (d^.f16.rlen = 6) then begin
           if nfp <= 19 then begin
@@ -1348,7 +1350,8 @@ begin
           next;
         end;
         if (d^.f16.rlen = 7)
-           and (typed or (node^.kind = 108) or (node^.kind = 107)) then begin
+           and (typed or (node^.kind = function_blk)
+                or (node^.kind = procedure_blk)) then begin
           if odd(nfp) then
             nfp := nfp + 1;
           if nfp <= 19 then begin
@@ -1488,10 +1491,10 @@ begin
   for j := 1 to props^.nargs do
     props^.args[j].b25 := false;
   b := cc_blk_ptr_t(node);
-  if ((node^.kind = 108) or (node^.kind = 107))
+  if ((node^.kind = function_blk) or (node^.kind = procedure_blk))
      and b^.unused_374.b374_6 then
     if (b^.params = nil)
-       or (b^.params^.types[b^.params^.count]^.kind = 31) then begin
+       or (b^.params^.types[b^.params^.count]^.kind = label_ob) then begin
       hi := 4;
       for j := 1 to props^.nargs do begin
         d := addr(props^.args[j]);
@@ -1548,12 +1551,12 @@ begin
     t := d^.sym;
     if t <> nil then
       if not (has_result and (j = 1) and (d^.f22.mode = 0)) then begin
-        if t^.kind = 109 then begin
+        if t^.kind = var_name then begin
           c_sym_ptr_t(t)^.var_offset := d^.offset + 16;
           c_sym_ptr_t(t)^.var_flags := c_sym_ptr_t(t)^.var_flags + [10];
           vat := ord(c_sym_ptr_t(t)^.var_vat);
         end
-        else if t^.kind = 110 then begin
+        else if t^.kind = fortran_symbol then begin
           t^.xl[3] := d^.offset + 16;
           t^.xc[26] := chr(ord(t^.xc[26]) ! 4);
           vat := rshft(ord(t^.xc[11]) & 16#F0, 4);

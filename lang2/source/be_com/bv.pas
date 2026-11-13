@@ -563,14 +563,14 @@ begin
   if lr^.id = 0 then begin
     rtn^.l192 := rtn^.l192 + 1;
     if rtn^.l192 > 65535 then
-      cgerr_no_source(24, integer32(idntk(76, 'too many complex IDs', 20)));
+      cgerr_no_source(24, integer32(idntk(id_ob, 'too many complex IDs', 20)));
     if rtn^.l192 >= lir_main_c80 then begin
       n := lir_main_c80 + lir_main_c80;
       if n > 2147483647 then
         n := 2147483647;
       if rtn^.l192 >= n then
         cgerr_no_source(24,
-          integer32(idntk(76, 'too many complex live ranges', 28)));
+          integer32(idntk(id_ob, 'too many complex live ranges', 28)));
       bv_$enlarge_complex_id_to_lr_map(rtn, n);
       if lir_main_c78 <> nil then begin
         words := rshft(n + 32, 5);

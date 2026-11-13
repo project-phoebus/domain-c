@@ -29,7 +29,14 @@ const
     the bytes after the table) and keeps in lex_tokens[k]; an
     identifier a reserved word has not claimed is class 76 (idntk(76,
     ...)), constants and strings have their node kinds.  The names are
-    the spellings. }
+    the spellings.  The classes are the ordinals of IL node kinds
+    (il.ins.pas's il_$kind_t): the C front end reuses the Pascal front
+    end's token kinds, the punctuation's for the same punctuation
+    (end_ob 0 for the closing brace, sub_ob 60 and bus_ob 50 for the
+    brackets, up_to_ob 49 for `..'), the reserved words' for C's, id_ob
+    76, integer_ob 81 .. ulinteger_ob 85, char_string_ob 92 and
+    char32_string_ob 93.  The parser keeps a class as an integer
+    (token_kind, lex_tokens, its follow sets), so these stay numbers. }
   ctk_rbrace = 0;           ctk_if = 1;               ctk_switch = 2;
   ctk_lbrace = 3;           ctk_else = 4;             ctk_do = 5;
   ctk_enum = 6;             ctk_7 = 7;                ctk_void = 8;

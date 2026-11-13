@@ -172,7 +172,7 @@ end;
 function map_cse_use_ob_to_cse_parent_ob(
     node: isc_node_ptr_t): isc_node_ptr_t; options(val_param);
 begin
-  if node^.kind <> 189 then begin
+  if node^.kind <> cse_use_ob then begin
     bug_check('ISC: map_cse_use_ob_to_cse_parent_ob: il is not a cse_use_ob.%$');
     map_cse_use_ob_to_cse_parent_ob := nil;
   end
@@ -191,7 +191,7 @@ function solution_kind_of_cse(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -227,7 +227,7 @@ var
   sols: solution_list_ptr_t;
   s: isc_solution_ptr_t;
 begin
-  if tree^.kind <> 138 then begin
+  if tree^.kind <> gen_tree_node then begin
     inh2 := new_inherited_attributes(isc_heap, tree);
     inh2^ := inh^;
     inh2^.f38.arith := ord(arithmetic_from_il_node(tree));
@@ -248,7 +248,7 @@ begin
     else begin
       s := preserve_solution(s);
       parent^.cp_chosen_solution := s;
-      tree^.kind := 138;
+      tree^.kind := gen_tree_node;
     end;
   end;
 end;
@@ -633,7 +633,7 @@ var
   s: isc_solution_ptr_t;
   parent: isc_node_ptr_t;
 begin
-  if tree^.kind <> 138 then begin
+  if tree^.kind <> gen_tree_node then begin
     inh2 := new_inherited_attributes(isc_heap, tree);
     inh2^ := inh^;
     inh2^.f38.arith := ord(arithmetic_from_il_node(tree));
@@ -655,7 +655,7 @@ begin
       parent := map_cse_use_ob_to_cse_parent_ob(use);
       s := preserve_solution(s);
       parent^.cp_chosen_solution := s;
-      tree^.kind := 138;
+      tree^.kind := gen_tree_node;
     end;
   end;
 end;
@@ -670,7 +670,7 @@ function pass_1_cse_use_bits_known(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -691,7 +691,7 @@ function pass_1_cse_use_bits_trusted(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -712,7 +712,7 @@ function pass_1_cse_use_code_bytes(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -732,7 +732,7 @@ function pass_1_cse_use_delay(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -752,7 +752,7 @@ function pass_1_cse_use_disp(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -773,7 +773,7 @@ function pass_1_cse_use_embedded_sr_temp(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -794,7 +794,7 @@ function pass_1_cse_use_eval_order(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -815,7 +815,7 @@ function pass_1_cse_use_lit_value(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -836,7 +836,7 @@ function pass_1_cse_use_ip_reg_max(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -857,7 +857,7 @@ function pass_1_cse_use_ip_reg_result(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -878,7 +878,7 @@ function pass_1_cse_use_fp_reg_max(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -899,7 +899,7 @@ function pass_1_cse_use_fp_reg_result(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -920,7 +920,7 @@ function pass_1_cse_use_fp_reg_pair_max(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -941,7 +941,7 @@ function pass_1_cse_use_fp_reg_pair_result(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -962,7 +962,7 @@ function pass_1_cse_use_fp_reg_quad_max(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -983,7 +983,7 @@ function pass_1_cse_use_fp_reg_quad_result(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -1004,7 +1004,7 @@ function pass_1_cse_use_memory_refs(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -1025,7 +1025,7 @@ function pass_1_cse_use_has_sym_disp(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -1046,7 +1046,7 @@ function pass_1_cse_use_uses_disp(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -1067,7 +1067,7 @@ function pass_1_cse_use_uses_index_reg(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -1271,7 +1271,7 @@ function pass_2_cse_use_base_reg(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -1292,7 +1292,7 @@ function pass_2_cse_use_index_reg(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -1313,7 +1313,7 @@ function pass_2_cse_use_obj_w_name(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -1334,7 +1334,7 @@ function pass_2_cse_use_home_solution(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin
@@ -1354,7 +1354,7 @@ function pass_2_cse_use_live_range(
 var
   s: isc_solution_ptr_t;
 begin
-  if node^.kind = 189 then
+  if node^.kind = cse_use_ob then
     node := map_cse_use_ob_to_cse_parent_ob(node);
   s := node^.cp_chosen_solution;
   if s = nil then begin

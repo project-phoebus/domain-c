@@ -95,7 +95,7 @@ type
   at_stmt_ptr_t = ^at_stmt_t;
   at_stmt_t = record
     space0: array [0..1] of char;
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     prev: at_stmt_ptr_t;                { +4 }
     next: at_stmt_ptr_t;                { +8 }
     space12: array [12..19] of char;
@@ -140,7 +140,7 @@ type
   at_node_ptr_t = ^at_node_t;
   at_node_t = record
     space0: array [0..1] of char;
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     space4: array [4..123] of char;
     rtn: rtn_ptr_t;                     { +124 }
     conv: call_conv_$ptr_t;             { +128 }
@@ -447,9 +447,9 @@ begin
   closed := 1;
   p := at_stmt_ptr_t(il_d4);
   while p <> nil do begin
-    if (p^.kind = 148) and (p^.blk^.kind = 172) then
+    if (p^.kind = block_entry_node) and (p^.blk^.kind = inner_blk) then
       opened := opened + 1
-    else if (p^.kind = 149) and (p^.blk^.kind = 172) then
+    else if (p^.kind = blk_end_node) and (p^.blk^.kind = inner_blk) then
       closed := closed + 1;
     p := p^.next;
   end;
@@ -476,8 +476,9 @@ begin
   stack^[0] := 0;
   p := at_stmt_ptr_t(il_d4);
   while p <> nil do begin
-    if ((p^.kind = 149) or (p^.kind = 148)) and (p^.blk^.kind = 172) then begin
-      if p^.kind = 148 then begin
+    if ((p^.kind = blk_end_node) or (p^.kind = block_entry_node))
+        and (p^.blk^.kind = inner_blk) then begin
+      if p^.kind = block_entry_node then begin
         blkno := blkno + 1;
         blks^[blkno] := p^.blk;
         cur := blkno;
@@ -572,7 +573,7 @@ begin
     nd^.conv := conv;
     nd^.w268 := 0;
   end;
-  if nd^.kind <> 167 then
+  if nd^.kind <> entry_blk then
     blk := nd
   else begin
     blk := nd^.blk;

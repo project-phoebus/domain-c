@@ -136,7 +136,7 @@ var
   first: instr_ptr_t;
   b: bb_ptr_t;
 begin
-  if node^.kind <> 144 then
+  if node^.kind <> label_node then
     bug_check('SYM_\ATTACH_LABEL -- unexpected kind on top-level spine%$');
   lab := sym_label_ptr_t(node^.xp[20]);
   if lab = nil then begin
@@ -216,7 +216,7 @@ var
   lab: sym_label_ptr_t;
 begin
   case node^.kind of
-    110: begin
+    fortran_symbol: begin
       if (ord(node^.xc[44]) & 16#F0) div 16 <> 1 then
         node^.xp[10] := rtn^.node;
       case (ord(node^.xc[44]) & 16#F0) div 16 of
@@ -277,7 +277,7 @@ begin
         end;
         6: begin
           ln := node^.xp[12];
-          if ln^.kind = 144 then begin
+          if ln^.kind = label_node then begin
             lab := attach_label(node, ln);
             if not lab^.f10.required then
               if (ord(node^.xc[45]) & 64) <> 0 then begin
@@ -299,7 +299,7 @@ begin
       end;
       sym_$initialize_this_local_symbol := node^.xp[1];
     end;
-    109: begin
+    var_name: begin
       f := node^.xl[8] & 16#D1F3FFFF;
       if (f & 16#01000000) <> 0 then
         node^.xl[8] := f
@@ -315,7 +315,7 @@ begin
       end;
       sym_$initialize_this_local_symbol := node^.xp[4];
     end;
-    117: begin
+    label_name: begin
       lab := attach_label(node, node^.xp[7]);
       if (ord(node^.xc[37]) & 64) <> 0 then
         if not lab^.f10.required then begin
@@ -357,7 +357,7 @@ begin
     while s <> nil do
       s := sym_$initialize_this_local_symbol(rtn, s);
     blk := blk^.xp[1];
-  until (blk = nil) or else (blk^.kind <> 172);
+  until (blk = nil) or else (blk^.kind <> inner_blk);
 end;
 
 { sym_$backend_label_for_case_jump - node's label (no symbol), its
@@ -403,7 +403,8 @@ begin
     s^.length := 0;
   if node^.xp[2] <> nil then
     sym_$fully_qualified_routine_name(buf, node^.xp[2], false);
-  if (node^.kind = 107) or top or (node^.kind = 108) then begin
+  if (node^.kind = procedure_blk) or top
+      or (node^.kind = function_blk) then begin
     n := s^.length;
     if n <> 0 then begin
       n := n + 1;
@@ -470,13 +471,13 @@ begin
   sym_$append_symbol_print_name := false;
   if node = nil then
     return;
-  if (node^.kind = 109) and (node^.xp[1] <> nil) then begin
+  if (node^.kind = var_name) and (node^.xp[1] <> nil) then begin
     if node^.xw[36] <> 5 then
       goto 10;
     add_arrow(s);
     goto 10;
   end
-  else if node^.kind = 110 then begin
+  else if node^.kind = fortran_symbol then begin
     if not ((ord(node^.xc[44]) & 16#F0) div 16 in [1, 3]) then
       goto 10;
     if (ord(node^.xc[11]) & 16#F0) div 16 <> 5 then
@@ -484,20 +485,21 @@ begin
     add_arrow(s);
     goto 10;
   end
-  else if node^.kind = 163 then
-    if node^.xp[2]^.kind = 144 then begin
+  else if node^.kind = addr_con then
+    if node^.xp[2]^.kind = label_node then begin
       add_arrow(s);
       node := node^.xp[2]^.xp[16];
       goto 10;
     end;
-  if node^.kind = 117 then
+  if node^.kind = label_name then
     if node^.xp[1] <> nil then
       goto 10;
-  if node^.kind in [105..108, 167] then
+  if node^.kind in [program_blk..function_blk, entry_blk] then
     if node^.xp[74] <> nil then
       goto 10;
-  if node^.kind = 163 then
-    if node^.xp[2]^.kind in [214, 215] then begin
+  if node^.kind = addr_con then
+    if node^.xp[2]^.kind in [case_node_range_check,
+                             case_node_no_range_check] then begin
       add_arrow(s);
       prtcats(s^, '<displacement table>', 20);
       goto 20;
@@ -557,11 +559,13 @@ function sym_$has_print_name(
 begin
   if node = nil then
     sym_$has_print_name := false
-  else if node^.kind in [138, 143, 144, 152, 165, 214, 215] then
+  else if node^.kind in [gen_tree_node, cmp_tree_node, label_node, alloc_temp,
+                         cs_temp, case_node_range_check,
+                         case_node_no_range_check] then
     sym_$has_print_name := false
-  else if (node^.kind = 109) or (node^.kind = 117) then
+  else if (node^.kind = var_name) or (node^.kind = label_name) then
     sym_$has_print_name := node^.xp[1] <> nil
-  else if node^.kind = 110 then
+  else if node^.kind = fortran_symbol then
     sym_$has_print_name := node^.xw[35] <> 0
   else
     sym_$has_print_name := true;
@@ -582,14 +586,14 @@ begin
   r := nil;
   if node <> nil then
     case node^.kind of
-      109:
+      var_name:
         if node^.xp[1] <> nil then
           if node^.xp[1]^.xw[8] <> 0 then
             r := node;
-      110:
+      fortran_symbol:
         if node^.xw[35] <> 0 then
           r := node;
-      163:
+      addr_con:
         r := node;
       otherwise
         ;
@@ -607,9 +611,9 @@ var
   vat: integer;
 begin
   node := nd;
-  if node^.kind = 109 then
+  if node^.kind = var_name then
     vat := node^.xw[36]
-  else if node^.kind = 110 then
+  else if node^.kind = fortran_symbol then
     vat := (ord(node^.xc[11]) & 16#F0) div 16
   else
     vat := 2;
@@ -625,9 +629,9 @@ var
   node: il_$node_ptr_t;
 begin
   node := nd;
-  if node^.kind = 109 then
+  if node^.kind = var_name then
     sym_$has_displacement := true
-  else if node^.kind = 110 then
+  else if node^.kind = fortran_symbol then
     sym_$has_displacement := true
   else
     sym_$has_displacement := false;
@@ -675,13 +679,13 @@ var
   c: cell_ptr_t;
 begin
   node := p;
-  if node^.kind = 109 then
+  if node^.kind = var_name then
     sym_$displacement := node^.xl[14]
-  else if node^.kind = 110 then
+  else if node^.kind = fortran_symbol then
     sym_$displacement := node^.xl[3]
-  else if node^.kind = 163 then
+  else if node^.kind = addr_con then
     sym_$displacement := node^.xl[4]
-  else if node^.kind = 144 then begin
+  else if node^.kind = label_node then begin
     c := cell_ptr_t(node^.xp[15]);
     if not c^.h.b3_7 then
       bug_check('SYM_$DISPLACEMENT -- label is not marked required%$');
@@ -689,9 +693,10 @@ begin
       bug_check('SYM_$DISPLACEMENT -- label is not on the list of code cells%$');
     sym_$displacement := c^.l8;
   end
-  else if (node^.kind = 214) or (node^.kind = 215) then
+  else if (node^.kind = case_node_range_check)
+      or (node^.kind = case_node_no_range_check) then
     sym_$displacement := cell_ptr_t(node^.xp[13])^.l8
-  else if node^.kind = 223 then begin
+  else if node^.kind = exception_handler_entry then begin
     c := cell_ptr_t(node^.xp[13]);
     if c = nil then
       bug_check('SYM_$DISPLACEMENT -- handler has no asynchronous entry label%$');
@@ -724,7 +729,7 @@ var
   e: integer32;
 begin
   node := nd;
-  if node^.kind = 109 then begin
+  if node^.kind = var_name then begin
     if node^.xw[36] = 5 then
       sym_$allocation_size_in_bytes := 4
     else if (node^.xl[8] & 16#20000) <> 0 then
@@ -735,7 +740,7 @@ begin
         (rshft(node^.xl[9] + 7, 3) + a) & ~a;
     end;
   end
-  else if node^.kind = 110 then begin
+  else if node^.kind = fortran_symbol then begin
     if (ord(node^.xc[11]) & 16#F0) div 16 = 5 then
       sym_$allocation_size_in_bytes := 4
     else if (node^.xl[6] & 16#20000) <> 0 then
@@ -793,19 +798,19 @@ begin
   else
     mask := 7;
   blk := il_180^.xp[48];
-  if node^.kind = 109 then begin
+  if node^.kind = var_name then begin
     m := lshft(1, node^.xw[22]) - 1;
     if mask < m then
       mask := m;
   end;
   off := (mask + blk^.xl[5] - 1) & ~mask;
-  if node^.kind = 109 then begin
+  if node^.kind = var_name then begin
     if node^.xw[36] = 1 then
       return;
     node^.xw[36] := 1;
     node^.xl[14] := off;
   end
-  else if node^.kind = 110 then begin
+  else if node^.kind = fortran_symbol then begin
     if (ord(node^.xc[11]) & 16#F0) div 16 = 1 then
       return;
     node^.xc[11] := chr((ord(node^.xc[11]) & 15) ! 16#10);
@@ -854,42 +859,44 @@ function sym_$reformat_literal(
     nd: univ_ptr): univ_ptr;
 var
   node: il_$node_ptr_t;
-  k: integer;
+  k: il_$kind_t;
   l: lit_ptr_t;
   lk: integer;
 begin
   node := nd;
   k := node^.kind;
-  if (k = 87) or (k = 79) or (k = 77) or (k = 78) or (k = 85) or (k = 86)
-     or (k = 83) or (k = 84) or (k = 82) or (k = 200) or (k = 80)
-     or (k = 81) then begin
+  if (k = char_ob) or (k = llogical_ob) or (k = blogical_ob)
+      or (k = slogical_ob) or (k = ulinteger_ob) or (k = ubinteger_ob)
+     or (k = usinteger_ob) or (k = uinteger_ob) or (k = linteger_ob)
+         or (k = binteger_ob) or (k = sinteger_ob)
+     or (k = integer_ob) then begin
     pas_$new(l, 12);
-    if k = 81 then lk := 0
-    else if k = 80 then lk := 1
-    else if k = 200 then lk := 2
-    else if k = 82 then lk := 3
-    else if k = 84 then lk := 4
-    else if k = 83 then lk := 5
-    else if k = 86 then lk := 6
-    else if k = 85 then lk := 7
-    else if k = 78 then lk := 8
-    else if k = 77 then lk := 9
-    else if k = 79 then lk := 10
-    else if k = 87 then lk := 11;
+    if k = integer_ob then lk := 0
+    else if k = sinteger_ob then lk := 1
+    else if k = binteger_ob then lk := 2
+    else if k = linteger_ob then lk := 3
+    else if k = uinteger_ob then lk := 4
+    else if k = usinteger_ob then lk := 5
+    else if k = ubinteger_ob then lk := 6
+    else if k = ulinteger_ob then lk := 7
+    else if k = slogical_ob then lk := 8
+    else if k = blogical_ob then lk := 9
+    else if k = llogical_ob then lk := 10
+    else if k = char_ob then lk := 11;
     l^.value := node^.xl[2];
   end
-  else if (k = 88) or (k = 89) or (k = 90) then begin
+  else if (k = real_ob) or (k = dpreal_ob) or (k = complex_ob) then begin
     pas_$new(l, 16);
-    if k = 88 then
+    if k = real_ob then
       lk := 12
-    else if k = 89 then
+    else if k = dpreal_ob then
       lk := 13
     else
       lk := 14;
     l^.value := node^.xl[3];
     l^.l12 := node^.xl[4];
   end
-  else if k = 198 then begin
+  else if k = dpcomplex_ob then begin
     pas_$new(l, 24);
     lk := 15;
     l^.value := node^.xl[3];
@@ -897,15 +904,15 @@ begin
     l^.l16 := node^.xl[5];
     l^.l20 := node^.xl[6];
   end
-  else if k = 92 then begin
+  else if k = char_string_ob then begin
     l := make_properly_sized_copy(node);
     lk := 19;
   end
-  else if k = 156 then begin
+  else if k = set_con_ob then begin
     l := make_properly_sized_copy(node);
     lk := 20;
   end
-  else if k = 212 then begin
+  else if k = namelist_constant_ob then begin
     pas_$new(l, 6);
     lk := 16;
   end

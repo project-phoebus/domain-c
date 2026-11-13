@@ -85,7 +85,7 @@ var
 begin
   m := n;
   if m <> nil then
-    if (m^.kind = 147) and (m^.xl[8] = 0) then
+    if (m^.kind = disp_node) and (m^.xl[8] = 0) then
       if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
         m := m^.xp[6];
   skip_zero_disps := m;
@@ -246,8 +246,8 @@ begin
       if (size <= 6) and (node <> nil) and (op <> 63) and (op <> 67) and
           (op <> 159) then begin
         if size = 6 then begin
-          if not ((node^.kind = 190) or (node^.kind = 189) or
-                  (node^.kind = 138) or (node^.kind = 88)) then
+          if not ((node^.kind = cse_parent_ob) or (node^.kind = cse_use_ob) or
+                  (node^.kind = gen_tree_node) or (node^.kind = real_ob)) then
             by_value := true;
         end
         else
@@ -290,8 +290,9 @@ begin
         end;
       end;
       if node <> nil then begin
-        if (node^.kind = 88) or (node^.kind = 89) or (node^.kind = 198) or
-            (node^.kind = 90) then
+        if (node^.kind = real_ob) or (node^.kind = dpreal_ob)
+            or (node^.kind = dpcomplex_ob) or
+            (node^.kind = complex_ob) then
           op := op + 1
         else begin
           if by_value then begin
@@ -300,8 +301,8 @@ begin
           end
           else begin
             if ((2 in cargs_$options.cpu) or (4 in cargs_$options.cpu)) and
-                ((node^.kind = 109) or (node^.kind = 110) or
-                 (node^.kind = 147) or (node^.kind = 146)) and
+                ((node^.kind = var_name) or (node^.kind = fortran_symbol) or
+                 (node^.kind = disp_node) or (node^.kind = ptr_node)) and
                 (chk_assign(node, size) in [16..23]) and
                 (peek(node, size) in [16..23]) then begin
               address(node, size, v);
@@ -335,8 +336,9 @@ begin
 
   n := fops[1].node;
   if n <> nil then
-    if (n^.kind = 88) or (n^.kind = 89) or (n^.kind = 198) or
-        (n^.kind = 90) then begin
+    if (n^.kind = real_ob) or (n^.kind = dpreal_ob) or (n^.kind = dpcomplex_ob)
+        or
+        (n^.kind = complex_ob) then begin
       address(n, 0, a);
       emit(39, fops[1].size, a, cg_null_ads, 0);
       release(a);
@@ -346,14 +348,14 @@ begin
     with fops[i] do begin
       emit(36, 2, cg_null_ads, cg_null_ads, op);
       if node <> nil then begin
-        if (node^.kind = 88) or (node^.kind = 89) or
-            (node^.kind = 198) or (node^.kind = 90) then begin
+        if (node^.kind = real_ob) or (node^.kind = dpreal_ob) or
+            (node^.kind = dpcomplex_ob) or (node^.kind = complex_ob) then begin
           address(node, 0, a);
           emit(39, size, a, cg_null_ads, 0);
           release(a);
         end
         else if (op in [63..65, 67..69]) and (node <> nil) and
-            (node^.kind <> 152) then begin
+            (node^.kind <> alloc_temp) then begin
           a.x := integer32(node);
           invalidate(a, delay_378[size]);
         end;
@@ -416,13 +418,13 @@ var
 begin
   m := skip_zero_disps(n);
   if ((op = 77) or (op = 75)) and (size <= 4) and (m <> nil) then
-    if (m^.kind = 138) or (m^.kind = 137) then
+    if (m^.kind = gen_tree_node) or (m^.kind = tree_node) then
       if (cg_tree_ptr_t(m)^.op = 41) and
           (cg_tree_ptr_t(m)^.desc.w6 = 11) then
         if (fops[cg_fp_count].op = 130) or (fops[cg_fp_count].op = 129)
             then
           return;
-  if (m <> nil) and (op = 63) and (m^.kind = 152) and (cg_fp_count <> 0)
+  if (m <> nil) and (op = 63) and (m^.kind = alloc_temp) and (cg_fp_count <> 0)
       then begin
     cg_fp_$push_fop(op, size, m);
     return;
@@ -470,7 +472,7 @@ begin
       return;
   if m <> nil then begin
     if size = 7 then begin
-      if (m^.kind = 152) and (op = 63) then
+      if (m^.kind = alloc_temp) and (op = 63) then
         address(m, 0, t)
       else begin
         load_address(m, t);
@@ -513,7 +515,7 @@ begin
     if size = 7 then begin
       r.y := r.y + 1;
       if op = 63 then begin
-        if (m^.kind = 152) and (op = 63) then begin
+        if (m^.kind = alloc_temp) and (op = 63) then begin
           cg_tree_1b4^.xw[8] := 1;
           cg_tree_1b4^.xp[6] := m;
           cg_tree_1b4^.xp[7] := m;
@@ -525,7 +527,7 @@ begin
       else
         emit(0, 4, r, t, 0);
     end;
-    if (size <> 7) or ((m^.kind = 152) and (op = 63)) then
+    if (size <> 7) or ((m^.kind = alloc_temp) and (op = 63)) then
       release(t)
     else
       unlock(t);
@@ -559,14 +561,14 @@ begin
     cg_fp_result := v
   else if 1 in cargs_$options.cpu then
     cg_fp_last_store := v;
-  if v^.kind = 190 then
+  if v^.kind = cse_parent_ob then
     v := v^.xp[1]
-  else if v^.kind = 189 then
+  else if v^.kind = cse_use_ob then
     v := v^.xp[5];
   if v^.xw[9] < 0 then
     if at_backend_506 then begin
-      v^.kind := 138;
-      if t^.kind = 152 then
+      v^.kind := gen_tree_node;
+      if t^.kind = alloc_temp then
         stack_fp(63, v^.xw[12], t)
       else begin
         get_temp(v, false);
@@ -621,13 +623,13 @@ begin
     end;
   end;
   m := skip_zero_disps(t^.opnd[k]);
-  if m^.kind = 152 then
+  if m^.kind = alloc_temp then
     m := m^.xp[4];
   if not check_use(cg_fp_result, m) then
     stack_fp(1, rlen1, m);
   if t^.count = 1 then
     stack_fp(op, rlen, nil)
-  else if t^.opnd[3 - k]^.kind = 152 then
+  else if t^.opnd[3 - k]^.kind = alloc_temp then
     stack_fp(op, rlen, t^.opnd[3 - k]^.xp[4])
   else
     stack_fp(op, rlen, t^.opnd[3 - k]);

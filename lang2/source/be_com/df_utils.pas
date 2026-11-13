@@ -221,7 +221,7 @@ end;
 function memory_home_is_initialized_fsym(
     sym: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
-  if (sym <> nil) and then (sym^.kind = 110)
+  if (sym <> nil) and then (sym^.kind = fortran_symbol)
      and then (rshft(ord(sym^.xc[44]) & 16#F0, 4) = 3) then
     memory_home_is_initialized_fsym := (ord(sym^.xc[44]) & 8) <> 0
   else

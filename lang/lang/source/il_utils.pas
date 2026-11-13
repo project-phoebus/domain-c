@@ -85,22 +85,23 @@ var
   k, n: integer;
   res: integer;
 begin
-  if v^.kind = 109 then begin
+  if v^.kind = var_name then begin
     t := v^.xp[7];
-    if t^.kind = 107 then
+    if t^.kind = procedure_blk then
       res := 3
     else if ((v^.xl[8] & 16#201001) <> 0) or (v^.xw[36] = 4) then
       res := 2
     else begin
-      is5 := (v^.xw[36] = 5) and (t^.kind = 121);
+      is5 := (v^.xw[36] = 5) and (t^.kind = param_name);
       if is5 or ((ord(info.c[25]) & 16#40) <> 0) then
         wanted := true
       else
-        wanted := (info.tp^.kind = 134) or (info.tp^.kind = 130) or
-                  (info.tp^.kind = 123);
+        wanted := (info.tp^.kind = set_type) or (info.tp^.kind = ptr_type) or
+                  (info.tp^.kind = real_type);
       if not wanted then
         res := 1
-      else if (blk^.kind <> 105) and ((ord(blk^.xc[379]) & 16#10) = 0) and
+      else if (blk^.kind <> program_blk) and ((ord(blk^.xc[379]) & 16#10) = 0)
+          and
               (v^.xw[36] in [1, 3, 4, 7, 8, 10, 11]) then
         res := 1
       else if v^.xw[36] in [1, 3, 4, 7, 8, 10, 11] then
@@ -112,7 +113,7 @@ begin
     end;
     next := v^.xp[4];
   end
-  else if v^.kind = 110 then begin
+  else if v^.kind = fortran_symbol then begin
     k := rshft(ord(v^.xc[44]) & 16#F0, 4);
     if k = 6 then begin
       if (ord(v^.xc[45]) & 16#10) <> 0 then
@@ -120,7 +121,7 @@ begin
       else
         res := 11;
     end
-    else if ((ord(blk^.xc[376]) & 8) <> 0) and (blk^.kind <> 172) then
+    else if ((ord(blk^.xc[376]) & 8) <> 0) and (blk^.kind <> inner_blk) then
       res := 9
     else if (k = 3) and ((ord(v^.xc[10]) & 15) = 7) then begin
       if (v^.xl[6] & 16#201001) = 0 then
@@ -190,8 +191,8 @@ begin
   while b <> nil do begin
     v := b^.xp[4];
     while (v <> nil) and (n < 255) do begin
-      if (v^.kind = 109) and ((v^.xl[8] & 16#201001) = 0) and
-         not ((v^.xw[36] = 5) and (v^.xp[7]^.kind = 121)) then
+      if (v^.kind = var_name) and ((v^.xl[8] & 16#201001) = 0) and
+         not ((v^.xw[36] = 5) and (v^.xp[7]^.kind = param_name)) then
         type_exp(v, addr(info));
       case il_utl_$classify_variable(v, info, b, next) of
         1:
@@ -228,7 +229,7 @@ begin
       end;
       v := next;
     end;
-    if (b^.xp[1] <> nil) and (b^.xp[1]^.kind = 172) then
+    if (b^.xp[1] <> nil) and (b^.xp[1]^.kind = inner_blk) then
       b := b^.xp[1]
     else
       b := nil;
@@ -267,26 +268,28 @@ begin
   p := t;
   while p <> nil do
     case p^.kind of
-      140, 227: begin
+      assign_node, insert_bit_field: begin
         il_utils_$adjust_uc(p^.xp[16], delta);
         il_utils_$adjust_uc(p^.xp[17], delta);
         il_utils_$adjust_uc(p^.xp[18], delta);
         return;
       end;
-      139: begin
+      eval_node: begin
         for i := p^.xw[25] downto 1 do
           il_utils_$adjust_uc(p^.xp[12 + i], delta);
         return;
       end;
-      150, 151, 214, 215, 224, 225: begin
+      nlbranch_node, return_node, case_node_range_check,
+          case_node_no_range_check, raise_exception,
+          release_dynamic_space: begin
         il_utils_$adjust_uc(p^.xp[12], delta);
         return;
       end;
-      142: begin
+      cbranch_node: begin
         il_utils_$adjust_uc(p^.xp[14], delta);
         return;
       end;
-      228: begin
+      bit_field_assign: begin
         il_utils_$adjust_uc(p^.xp[12], delta);
         il_utils_$adjust_uc(p^.xp[13], delta);
         il_utils_$adjust_uc(p^.xp[14], delta);
@@ -294,7 +297,7 @@ begin
         il_utils_$adjust_uc(p^.xp[16], delta);
         return;
       end;
-      137, 138, 143: begin
+      tree_node, gen_tree_node, cmp_tree_node: begin
         p^.xw[8] := p^.xw[8] + delta;
         if p^.xw[8] = 0 then begin
           for i := 1 to p^.xw[19] do
@@ -313,7 +316,7 @@ begin
         end;
         return;
       end;
-      164: begin
+      cs_node: begin
         p^.xw[8] := p^.xw[8] + delta;
         if p^.xw[8] = 0 then begin
           il_utils_$adjust_uc(p^.xp[5], -1);
@@ -325,18 +328,18 @@ begin
         end;
         return;
       end;
-      145, 146, 147, 205: begin
+      dindex_node, ptr_node, disp_node, sym_disp_node: begin
         p^.xw[8] := p^.xw[8] + delta;
         il_utils_$adjust_uc(p^.xp[6], delta);
-        if p^.kind = 145 then
+        if p^.kind = dindex_node then
           il_utils_$adjust_uc(p^.xp[9], delta);
         return;
       end;
-      175, 171:
+      pf_call, cc_call:
         p := p^.xp[4];
-      190, 219, 220, 232:
+      cse_parent_ob, isc_fetch, isc_convert, isc_share:
         p := p^.xp[1];
-      189:
+      cse_use_ob:
         p := p^.xp[5];
       otherwise
         return;
@@ -379,7 +382,7 @@ begin
     q := q^.xp[2];
     if t = nil then
       exit;
-    if (t^.kind = 149) and (t^.xp[12] = spine) then
+    if (t^.kind = blk_end_node) and (t^.xp[12] = spine) then
       exit;
   end;
   kept_spine := nil;
@@ -407,7 +410,9 @@ var
   n: integer;
   info: sr_info_ptr_t;
 begin
-  if old^.kind in [137, 138, 143, 145, 146, 147, 164, 171, 175, 189, 205]
+  if old^.kind in [tree_node, gen_tree_node, cmp_tree_node, dindex_node,
+                   ptr_node, disp_node, cs_node, cc_call, pf_call, cse_use_ob,
+                   sym_disp_node]
   then
     n := old^.xw[8]
   else
@@ -415,13 +420,13 @@ begin
   il_utils_$adjust_uc(old, -n);
   slot := new;
   il_utils_$adjust_uc(old, n);
-  if new^.kind = 110 then begin
+  if new^.kind = fortran_symbol then begin
     if (new^.xl[6] & 16#20000) <> 0 then
       info := sr_info_ptr_t(new^.xp2[11]^.xp[1])
     else
       info := nil;
   end
-  else if new^.kind = 109 then begin
+  else if new^.kind = var_name then begin
     if (new^.xl[8] & 16#20000) <> 0 then
       info := sr_info_ptr_t(new^.xp[13]^.xp[1])
     else
@@ -461,9 +466,9 @@ end;
 function il_utils_$is_strength_reduction_temp(
     t: il_$node_ptr_t): boolean;
 begin
-  if t^.kind = 110 then
+  if t^.kind = fortran_symbol then
     il_utils_$is_strength_reduction_temp := (t^.xl[6] & 16#20000) <> 0
-  else if t^.kind = 109 then
+  else if t^.kind = var_name then
     il_utils_$is_strength_reduction_temp := (t^.xl[8] & 16#20000) <> 0
   else
     il_utils_$is_strength_reduction_temp := false;
@@ -519,32 +524,32 @@ var
   begin
     if (found = nil) and (t <> nil) then
       case t^.kind of
-        139:
+        eval_node:
           for i := t^.xw[25] downto 1 do
             search_point(t, t^.xp[12 + i]);
-        142:
+        cbranch_node:
           search_point(t, t^.xp[14]);
-        140: begin
+        assign_node: begin
           search_point(t, t^.xp[17]);
           search_point(t, t^.xp[18]);
           search_point(t, t^.xp[16]);
         end;
-        151, 188:
+        return_node, use_def_ob:
           search_point(t, t^.xp[12]);
-        143, 137:
+        cmp_tree_node, tree_node:
           for i := 1 to t^.xw[19] do
             search_point(t, t^.xp[9 + i]);
-        147, 146, 205:
+        disp_node, ptr_node, sym_disp_node:
           search_point(t, t^.xp[6]);
-        145: begin
+        dindex_node: begin
           search_point(t, t^.xp[6]);
           search_point(t, t^.xp[9]);
         end;
-        164: begin
+        cs_node: begin
           search_point(t, t^.xp[5]);
           search_point(t, t^.xp[6]);
         end;
-        175, 171:
+        pf_call, cc_call:
           search_point(t, t^.xp[4]);
         otherwise
       end;
@@ -573,8 +578,14 @@ var
   p: il_$node_ptr_t;
 begin
   if (t = nil) or
-     not (t^.kind in [139, 140, 141, 142, 144, 148, 149, 150, 151, 188,
-                      191, 214, 215, 223, 224, 225, 227, 228, 231, 233]) then
+     not (t^.kind in [eval_node, assign_node, branch_node, cbranch_node,
+                      label_node, block_entry_node, blk_end_node,
+                      nlbranch_node, return_node, use_def_ob,
+                      reg_list_ob, case_node_range_check,
+                          case_node_no_range_check, exception_handler_entry,
+                          raise_exception, release_dynamic_space,
+                          insert_bit_field, bit_field_assign, spine_mark,
+                          pa_mmu_bip]) then
     bug_check('il_utils_$source_generated_top_level_node -- NIL or non-top level node%$');
   p := t;
   while (p <> nil) and (p^.xw[10] = spos_$null_position) do
@@ -598,8 +609,14 @@ var
 begin
   p := t;
   if (p = nil) or
-     not (p^.kind in [139, 140, 141, 142, 144, 148, 149, 150, 151, 188,
-                      191, 214, 215, 223, 224, 225, 227, 228, 231, 233]) then
+     not (p^.kind in [eval_node, assign_node, branch_node, cbranch_node,
+                      label_node, block_entry_node, blk_end_node,
+                      nlbranch_node, return_node, use_def_ob,
+                      reg_list_ob, case_node_range_check,
+                          case_node_no_range_check, exception_handler_entry,
+                          raise_exception, release_dynamic_space,
+                          insert_bit_field, bit_field_assign, spine_mark,
+                          pa_mmu_bip]) then
     bug_check('IL_UTILS_$\SRC_LINE --- tp^.kind is not a top_level node.%.');
   while (p <> nil) and (p^.xw[10] = spos_$null_position) do
     p := p^.xp[1];
@@ -639,7 +656,7 @@ begin
   if a^.kind <> b^.kind then
     return;
   case a^.kind of
-    137, 138, 143: begin
+    tree_node, gen_tree_node, cmp_tree_node: begin
       op := a^.xw[18];
       if op <> b^.xw[18] then
         return;
@@ -662,7 +679,7 @@ begin
         il_utils_$trees_equivalent :=
           il_utils_$trees_equivalent(a^.xp[10], b^.xp[10]);
     end;
-    145:
+    dindex_node:
       if (a^.xw[21] = b^.xw[21]) and (a^.xw[20] = b^.xw[20]) and
          (a^.xl[8] = b^.xl[8]) and (a^.xc[22] = b^.xc[22]) and
          (a^.xc[23] = b^.xc[23]) and
@@ -670,16 +687,16 @@ begin
         if il_utils_$trees_equivalent(a^.xp[6], b^.xp[6]) = 0 then
           if il_utils_$trees_equivalent(a^.xp[9], b^.xp[9]) = 0 then
             il_utils_$trees_equivalent := 0;
-    147:
+    disp_node:
       if (a^.xl[8] = b^.xl[8]) and
          ((a^.xl[1] & 16#1B611F) = (b^.xl[1] & 16#1B611F)) then
         if il_utils_$trees_equivalent(a^.xp[6], b^.xp[6]) = 0 then
           il_utils_$trees_equivalent := 0;
-    205:
+    sym_disp_node:
       if il_utils_$trees_equivalent(a^.xp[6], b^.xp[6]) = 0 then
         if il_utils_$trees_equivalent(a^.xp[8], b^.xp[8]) = 0 then
           il_utils_$trees_equivalent := 0;
-    146:
+    ptr_node:
       if a^.xp[7] = b^.xp[7] then
         if il_utils_$trees_equivalent(a^.xp[6], b^.xp[6]) = 0 then
           if il_utils_$trees_equivalent(a^.xp[7], b^.xp[7]) = 0 then

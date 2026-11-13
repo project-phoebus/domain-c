@@ -142,7 +142,7 @@ var
     b: builtin_t;
   begin
     ft := gspace(58);
-    ft^.kind := 234;
+    ft^.kind := cc_func_returning_type;
     case kind of
       0: ft^.fn_result := double_type;
       1: ft^.fn_result := def_ptr(char_ptype, nil);
@@ -161,7 +161,7 @@ var
     decl.name := il_178;
     decl.line := 0;
     decl.flags := [];
-    def_blk_skeleton(108, fname, 2, decl, nil, params, false,
+    def_blk_skeleton(function_blk, fname, 2, decl, nil, params, false,
                      3, 0, nil);
     b.sym := blk_fnd_name(fname, false, false, c_blk_ptr_t(il_180));
     b.ftype := ft;
@@ -202,39 +202,39 @@ begin
   len^.count := 1;
   len^.types[1] := ccp;
   builtins[0] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_fabs', 13), dbl1, 0, 16#20);
+      idntk(id_ob, '_builtin_fabs', 13), dbl1, 0, 16#20);
   builtins[1] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_sin', 12), dbl1, 0, 16#29);
+      idntk(id_ob, '_builtin_sin', 12), dbl1, 0, 16#29);
   builtins[2] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_cos', 12), dbl1, 0, 16#26);
+      idntk(id_ob, '_builtin_cos', 12), dbl1, 0, 16#26);
   builtins[3] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_tan', 12), dbl1, 0, 16#35);
+      idntk(id_ob, '_builtin_tan', 12), dbl1, 0, 16#35);
   builtins[4] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_log', 12), dbl1, 0, 16#34);
+      idntk(id_ob, '_builtin_log', 12), dbl1, 0, 16#34);
   builtins[5] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_exp', 12), dbl1, 0, 16#27);
+      idntk(id_ob, '_builtin_exp', 12), dbl1, 0, 16#27);
   builtins[6] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_atan', 13), dbl1, 0, 16#25);
+      idntk(id_ob, '_builtin_atan', 13), dbl1, 0, 16#25);
   builtins[7] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_atan2', 14), dbl2, 0, 16#33);
+      idntk(id_ob, '_builtin_atan2', 14), dbl2, 0, 16#33);
   builtins[8] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_pow', 12), dbl2, 0, 16#36);
+      idntk(id_ob, '_builtin_pow', 12), dbl2, 0, 16#36);
   builtins[9] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_sqrt', 13), dbl1, 0, 16#2A);
+      idntk(id_ob, '_builtin_sqrt', 13), dbl1, 0, 16#2A);
   builtins[10] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_strncpy', 16), ncpy, 1, 16#3C);
+      idntk(id_ob, '_builtin_strncpy', 16), ncpy, 1, 16#3C);
   builtins[11] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_strcpy', 15), cpy, 1, 16#3B);
+      idntk(id_ob, '_builtin_strcpy', 15), cpy, 1, 16#3B);
   builtins[12] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_strcmp', 15), cmp, 2, 16#39);
+      idntk(id_ob, '_builtin_strcmp', 15), cmp, 2, 16#39);
   builtins[13] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_strncmp', 16), ncmp, 2, 16#3A);
+      idntk(id_ob, '_builtin_strncmp', 16), ncmp, 2, 16#3A);
   builtins[14] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_strlen', 15), len, 3, 16#3D);
+      idntk(id_ob, '_builtin_strlen', 15), len, 3, 16#3D);
   builtins[15] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_strcat', 15), cpy, 1, 16#37);
+      idntk(id_ob, '_builtin_strcat', 15), cpy, 1, 16#37);
   builtins[16] := alloc_builtins(
-      idntk(ctk_identifier, '_builtin_strncat', 16), ncpy, 1, 16#38);
+      idntk(id_ob, '_builtin_strncat', 16), ncpy, 1, 16#38);
 end;
 
 { error - diagnostic code (the current token its argument), then skip
@@ -339,7 +339,7 @@ end;
 procedure cast_int_const(
     widen: boolean); options(val_param); internal;
 var
-  k: integer;
+  k: il_$kind_t;
   v: integer32;
   t: c_type_ptr_t;
   n: il_$node_ptr_t;
@@ -349,31 +349,31 @@ begin
     t := typ.base;
     n := node;
     signed := t^.signed;
-    if n^.kind in [77..87, 101, 200] then
-      if (t^.kind = 122) or (t^.kind = 129) then begin
+    if n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
+      if (t^.kind = integer_type) or (t^.kind = enum_type) then begin
         v := n^.int_value;
         if typ.size = 1 then begin
           if widen and (csyn_60[csyn_202] <> 4) then begin
             if signed then
-              k := 80
+              k := sinteger_ob
             else
-              k := 83;
+              k := usinteger_ob;
           end
           else if signed then
-            k := 87
+            k := char_ob
           else
-            k := 86;
+            k := ubinteger_ob;
         end
         else if typ.size = 4 then begin
           if signed then
-            k := 82
+            k := linteger_ob
           else
-            k := 85;
+            k := ulinteger_ob;
         end
         else if signed then
-          k := 80
+          k := sinteger_ob
         else
-          k := 83;
+          k := usinteger_ob;
         if signed then begin
           if typ.size = 1 then begin
             if (v & 16#80) <> 0 then
@@ -423,8 +423,10 @@ begin
   bad := false;
   with cexs_stack[cexs_23bc] do begin
     if not addr_op and
-       ((typ.base^.kind = 131) or (typ.base^.kind = 127)) then begin
-      if (node^.kind = 146) and then (node^.xp[6]^.kind = 109) and then
+       ((typ.base^.kind = array_type)
+        or (typ.base^.kind = char_array_type)) then begin
+      if (node^.kind = ptr_node) and then (node^.xp[6]^.kind = var_name)
+          and then
          (c_sym_ptr_t(node^.xp[6])^.var_vat = vat_param) then begin
         node := node^.xp[6];
         type_exp(def_ptr(typ.base^.arr_elem, nil), addr(typ));
@@ -432,9 +434,11 @@ begin
       else
         bad := true;
     end
-    else if (typ.base^.kind = 234) or (typ.base^.kind = 108) then
+    else if (typ.base^.kind = cc_func_returning_type)
+        or (typ.base^.kind = function_blk) then
       bad := true
-    else if not (node^.kind in [73, 109, 145, 146, 147, 205]) then
+    else if not (node^.kind in [error_ob, var_name, dindex_node, ptr_node,
+                                disp_node, sym_disp_node]) then
       bad := true;
   end;
   not_an_lvalue := bad;
@@ -599,11 +603,11 @@ begin
   csyn_60[csyn_202] := 3;
   with cexs_stack[cexs_23bc] do begin
     t := typ.base;
-    if t^.kind = 108 then begin
+    if t^.kind = function_blk then begin
       csyn_60[csyn_202] := c_blk_ptr_t(t)^.bits.conv;
       params := c_blk_ptr_t(t)^.params;
     end
-    else if t^.kind = 234 then begin
+    else if t^.kind = cc_func_returning_type then begin
       csyn_60[csyn_202] := t^.fn_conv;
       params := t^.fn_params;
       no_proto := params = nil;
@@ -626,20 +630,21 @@ begin
         expr_op(22, addr(fname), 1);
         if cargs_$options.type_opt and (params <> nil) and then
            (argno <= params^.count) and then
-           (params^.types[argno]^.kind <> 31) then begin
+           (params^.types[argno]^.kind <> label_ob) then begin
           conv := false;
           pt := params^.types[argno];
           with cexs_stack[cexs_23bc] do
-            if (pt^.kind = 130) and pt^.ptr_reference then begin
+            if (pt^.kind = ptr_type) and pt^.ptr_reference then begin
               type_exp(pt^.ptr_to, addr(tt));
               tt.flags.b25_5 := 19 in pt^.ptr_attr.bits;
               tt.flags.b25_4 := 0 in pt^.ptr_attr.bits;
-              if node^.kind in [109, 145, 146, 147, 205] then
+              if node^.kind in [var_name, dindex_node, ptr_node, disp_node,
+                                sym_disp_node] then
                 ok := check_types(typ.base, tt.base, true)
               else
                 ok := coerce(tt, cexs_23bc, true);
               if not ok then
-                error2(83, fname.line, smcontk(81, argno),
+                error2(83, fname.line, smcontk(integer_ob, argno),
                        cexs_stack[cexs_23bc - argno].sym);
               cast_int_const(false);
               fname.id := lex_tokens[ctk_amp];
@@ -653,14 +658,14 @@ begin
           adjust_parm(conv);
         nargs := nargs + 1;
         t := cexs_stack[cexs_23bc].typ.base;
-        if t^.kind = 108 then
+        if t^.kind = function_blk then
           type_exp(c_blk_ptr_t(t)^.result, addr(tt))
-        else if t^.kind = 234 then
+        else if t^.kind = cc_func_returning_type then
           type_exp(t^.fn_result, addr(tt))
         else
           type_exp(t, addr(tt));
-        if tt.base^.kind = 210 then
-          error1(207, lex_line, smcontk(81, nargs));
+        if tt.base^.kind = void_type then
+          error1(207, lex_line, smcontk(integer_ob, nargs));
         if token_kind in [24, 34, 42, 61, 63, 65, 67, 68, 69, 76..89, 92, 93, 101, 200] then begin
           if token_kind = ctk_comma then
             get
@@ -797,12 +802,12 @@ begin
         decl.dtype := int_type;
         decl.name := nm.id;
         decl.line := nm.line;
-        def_blk_skeleton(108, nm, 2, decl, nil, nil, false,
+        def_blk_skeleton(function_blk, nm, 2, decl, nil, nil, false,
                          3, 0, nil);
       end
       else begin
         cb := c_blk_ptr_t(c_sym_ptr_t(fsym)^.var_type);
-        if (cb^.kind = 108) and cb^.bits.b376_3 and
+        if (cb^.kind = function_blk) and cb^.bits.b376_3 and
            not cb^.bits.db_adjusted and
            (cb^.data_sect <> c_blk_ptr_t(il_180)^.data_sect) then begin
           cb^.bits.db_adjusted := true;
@@ -816,7 +821,7 @@ begin
     end;
     body_opr(1, addr(nm));
     with cexs_stack[cexs_23bc] do
-      if cargs_$options.type_opt and (typ.base^.kind = 130) and
+      if cargs_$options.type_opt and (typ.base^.kind = ptr_type) and
          typ.base^.ptr_reference then
         body_opr(3, addr(nm));
     goto 20;
@@ -824,7 +829,7 @@ begin
 10:
   eval_expr(s + [ctk_rparen]);
   with cexs_stack[cexs_23bc] do
-    if ((node^.kind = 143) or (node^.kind = 137)) and
+    if ((node^.kind = cmp_tree_node) or (node^.kind = tree_node)) and
        cargs_$options.ansi then
       node^.xw[2] := node^.xw[2] ! 16#2000;
   if token_kind = ctk_rparen then
@@ -842,12 +847,13 @@ begin
       end;
       ctk_arrow: begin
         with cexs_stack[cexs_23bc] do
-          if (typ.base^.kind = 131) or (typ.base^.kind = 127) then begin
+          if (typ.base^.kind = array_type)
+              or (typ.base^.kind = char_array_type) then begin
             body_opr(5, addr(nm));
             amp.id := lex_tokens[ctk_amp];
             expr_op(17, addr(amp), 1);
             t := typ.base;
-            if t^.kind <> 130 then begin
+            if t^.kind <> ptr_type then begin
               error2(62, lex_line, sym, t);
               typ.base := c_type_ptr_t(il_178);
             end
@@ -866,9 +872,9 @@ begin
       end;
       ctk_lparen: begin
         with cexs_stack[cexs_23bc] do begin
-          if typ.base^.kind = 130 then begin
+          if typ.base^.kind = ptr_type then begin
             type_exp(typ.base^.ptr_to, addr(tt));
-            if tt.base^.kind = 234 then begin
+            if tt.base^.kind = cc_func_returning_type then begin
               body_opr(5, addr(nm));
               item := il_$node_ptr_t(typ.base^.ptr_to);
               node := add_pn(node, item, typ.base^.ptr_attr.align, 0);
@@ -876,12 +882,13 @@ begin
               type_exp(item, addr(typ));
             end;
           end;
-          if (typ.base^.kind <> 108) and (typ.base^.kind <> 234) then begin
+          if (typ.base^.kind <> function_blk)
+              and (typ.base^.kind <> cc_func_returning_type) then begin
             error2(67, line, sym, typ.base);
             typ.base := c_type_ptr_t(il_178);
           end;
           func_call_stat(s, name, builtin, code);
-          if cargs_$options.type_opt and (typ.base^.kind = 130) and
+          if cargs_$options.type_opt and (typ.base^.kind = ptr_type) and
              typ.base^.ptr_reference then
             body_opr(3, addr(nm));
         end;
@@ -892,11 +899,11 @@ begin
                    ctk_identifier, 77..89, ctk_string, ctk_wstring, 101];
         get;
         with cexs_stack[cexs_23bc] do
-          if typ.base^.kind = 122 then begin
+          if typ.base^.kind = integer_type then begin
             int_index := true;
             mode := 5;
           end
-          else if typ.base^.kind = 130 then begin
+          else if typ.base^.kind = ptr_type then begin
             mode := 5;
             op := 8;
           end
@@ -908,7 +915,7 @@ begin
         eval_expr(s2);
         if int_index then begin
           with cexs_stack[cexs_23bc] do
-            if typ.base^.kind = 130 then begin
+            if typ.base^.kind = ptr_type then begin
               mode := 5;
               op := 8;
             end
@@ -934,7 +941,7 @@ begin
   end;
   body_opr(5, addr(nm));
   with cexs_stack[cexs_23bc] do
-    if cargs_$options.type_opt and (typ.base^.kind = 130) and
+    if cargs_$options.type_opt and (typ.base^.kind = ptr_type) and
        typ.base^.ptr_reference then begin
       item := il_$node_ptr_t(typ.base^.ptr_to);
       node := add_pn(node, item, typ.base^.ptr_attr.align, 0);
@@ -995,7 +1002,8 @@ var
   tt: type_exp_t;
   tn: c_decl_t;
   is_type, paren: boolean;
-  op, k: integer;
+  op: integer;
+  k: il_$kind_t;
   tok, x, old_sym: il_$node_ptr_t;
   incr, size: integer32;
   t: c_type_ptr_t;
@@ -1012,17 +1020,18 @@ begin
       check(116, follow);
       with cexs_stack[cexs_23bc] do begin
         k := typ.base^.kind;
-        if (k = 108) or (k = 127) or (k = 234) or (k = 131) then begin
+        if (k = function_blk) or (k = char_array_type)
+            or (k = cc_func_returning_type) or (k = array_type) then begin
           name.id := lex_tokens[ctk_amp];
           expr_op(17, addr(name), 1);
         end;
         t := typ.base;
-        if t^.kind <> 130 then begin
+        if t^.kind <> ptr_type then begin
           error2(62, lex_line, sym, t);
           typ.base := c_type_ptr_t(il_178);
           return;
         end;
-        if t^.ptr_to^.kind = 76 then
+        if t^.ptr_to^.kind = id_ob then
           error1(293, lex_line, t^.ptr_to)
         else if def_incomplete_su(t^.ptr_to, tag) then
           error1(293, lex_line, tag^.body.name.id);
@@ -1035,7 +1044,7 @@ begin
         type_exp(item, addr(typ));
         typ.bytes := (t^.ptr_attr.size_bits + 7) div 8;
         if flag_61 and (disp >= 0) and (disp < typ.size) and then
-           (sym^.kind = 109) then
+           (sym^.kind = var_name) then
           c_sym_ptr_t(sym)^.var_flags := c_sym_ptr_t(sym)^.var_flags + [22];
       end;
     end;
@@ -1047,10 +1056,12 @@ begin
       unary_expr(s, lab, ctx);
       check(116, s);
       with cexs_stack[cexs_23bc] do begin
-        if sym^.kind = 120 then
+        if sym^.kind = pfield_name then
           error1(92, c_field_ptr_t(sym)^.line, c_field_ptr_t(sym)^.name);
-        if (item^.kind = 92) and then (node^.kind = 137) and then
-           (node^.xw[18] = 26) and then (node^.xp[10]^.kind = 109) and then
+        if (item^.kind = char_string_ob) and then (node^.kind = tree_node)
+            and then
+           (node^.xw[18] = 26) and then (node^.xp[10]^.kind = var_name)
+               and then
            (c_sym_ptr_t(node^.xp[10])^.name = id_string_constant) then begin
           if csyn_60[csyn_202] = 4 then
             return;
@@ -1058,19 +1069,21 @@ begin
           return;
         end;
         type_exp(typ.base, addr(tt));
-        if ((tt.base^.kind = 131) or (tt.base^.kind = 127)) and
+        if ((tt.base^.kind = array_type) or (tt.base^.kind = char_array_type))
+            and
            (csyn_60[csyn_202] <> 4) then begin
           error0(206, line);
           return;
         end;
-        if node^.kind = 109 then begin
+        if node^.kind = var_name then begin
           regs := c_blk_ptr_t(il_180)^.reg_vars;
           if regs <> nil then begin
             q := regs;
             while q <> nil do begin
               if q^.rvar = node then begin
                 type_exp(c_sym_ptr_t(node)^.var_type, addr(tt));
-                if not ((tt.base^.kind = 131) or (tt.base^.kind = 127)) then
+                if not ((tt.base^.kind = array_type)
+                        or (tt.base^.kind = char_array_type)) then
                   error1(131, line, node);
                 exit;
               end;
@@ -1078,9 +1091,11 @@ begin
             end;
           end;
         end;
-        if (node^.kind = 109) and (10 in c_sym_ptr_t(node)^.var_flags) then
+        if (node^.kind = var_name)
+            and (10 in c_sym_ptr_t(node)^.var_flags) then
           cdef_50^.bits.b374_6 := true;
-        if (typ.base^.kind <> 234) and (typ.base^.kind <> 108) then
+        if (typ.base^.kind <> cc_func_returning_type)
+            and (typ.base^.kind <> function_blk) then
           if not_an_lvalue(true) then
             error2(40, lex_line, sym, name.id);
       end;
@@ -1136,13 +1151,13 @@ begin
         tok := lex_token;
         c_type_name(follow, tn, is_type);
         if is_type then begin
-          if c_type_ptr_t(tn.dtype)^.kind = 73 then
+          if c_type_ptr_t(tn.dtype)^.kind = error_ob then
             error0(175, lex_line);
           type_exp(tn.dtype, addr(tt));
           push_con(tt.bytes);
           if tt.bytes = 0 then
             error1(75, lex_line, tok);
-          if tt.base^.kind = 234 then
+          if tt.base^.kind = cc_func_returning_type then
             error0(158, lex_line);
           return;
         end;
@@ -1156,34 +1171,38 @@ begin
         check(116, follow);
       end;
       with cexs_stack[cexs_23bc] do begin
-        if (typ.base^.kind = 234) or (typ.base^.kind = 108) then
+        if (typ.base^.kind = cc_func_returning_type)
+            or (typ.base^.kind = function_blk) then
           error0(158, lex_line);
         size := typ.bytes;
         k := node^.kind;
-        if k in [80..86, 200] then
-          if (typ.base^.kind = 129) and then (typ.base^.enum_int^.len = 2) then
+        if k in [sinteger_ob..ubinteger_ob, binteger_ob] then
+          if (typ.base^.kind = enum_type)
+              and then (typ.base^.enum_int^.len = 2) then
             size := 2
           else
             size := 4;
-        if ((typ.base^.kind = 131) or (typ.base^.kind = 127)) and
-           (k = 146) and then (node^.xp[6]^.kind = 109) and then
+        if ((typ.base^.kind = array_type)
+            or (typ.base^.kind = char_array_type)) and
+           (k = ptr_node) and then (node^.xp[6]^.kind = var_name) and then
            (c_sym_ptr_t(node^.xp[6])^.var_vat = vat_param) then
           size := 4;
         if (typ.bytes = 0) and
-           ((typ.base^.kind = 131) or (typ.base^.kind = 127)) and then
-           (item^.kind = 109) then begin
+           ((typ.base^.kind = array_type)
+            or (typ.base^.kind = char_array_type)) and then
+           (item^.kind = var_name) then begin
           if c_sym_ptr_t(item)^.var_vat = vat_sect then
             size := c_sym_ptr_t(item)^.var_sect^.xl[5]
           else if (c_sym_ptr_t(item)^.var_vat = vat_stat) and then
-                  (c_sym_ptr_t(item)^.var_sect^.kind = 81) then
+                  (c_sym_ptr_t(item)^.var_sect^.kind = integer_ob) then
             size := c_sym_ptr_t(item)^.var_sect^.int_value;
         end;
-        if item^.kind = 92 then
+        if item^.kind = char_string_ob then
           size := item^.str_len;
-        node := smcontk(81, size);
+        node := smcontk(integer_ob, size);
         type_exp(int_type, addr(typ));
         old_sym := sym;
-        if sym^.kind = 120 then
+        if sym^.kind = pfield_name then
           sym := node;
         if size = 0 then
           error1(75, lex_line, old_sym);
@@ -1204,14 +1223,14 @@ begin
       tt.flags.b25_5 := 19 in tn.flags;
       tt.flags.b25_4 := 0 in tn.flags;
       if cargs_$options.type_opt and
-         (c_type_ptr_t(tn.dtype)^.kind = 130) and
+         (c_type_ptr_t(tn.dtype)^.kind = ptr_type) and
          c_type_ptr_t(tn.dtype)^.ptr_reference then begin
         if not_an_lvalue(true) then
           error2(40, lex_line, cexs_stack[cexs_23bc].sym, name.id);
         expr_op(17, addr(name), 1);
       end;
       with cexs_stack[cexs_23bc] do begin
-        if tt.base^.kind = 210 then begin
+        if tt.base^.kind = void_type then begin
           typ := tt;
           return;
         end;
@@ -1220,7 +1239,7 @@ begin
         else
           error1(76, lex_line, sym);
         cast_int_const(true);
-        if cargs_$options.type_opt and (typ.base^.kind = 130) and
+        if cargs_$options.type_opt and (typ.base^.kind = ptr_type) and
            typ.base^.ptr_reference then begin
           item := il_$node_ptr_t(typ.base^.ptr_to);
           node := add_pn(node, item, typ.base^.ptr_attr.align, 0);
@@ -1252,11 +1271,11 @@ begin
     error2(40, lex_line, cexs_stack[cexs_23bc].sym, name.id);
   incr := 1;
   with cexs_stack[cexs_23bc] do begin
-    if node^.kind = 130 then begin
+    if node^.kind = ptr_type then begin
       type_exp(node^.xp[1], addr(typ));
       incr := typ.size;
     end;
-    if typ.base^.kind = 123 then
+    if typ.base^.kind = real_type then
       push_fcon(1.0)
     else
       push_con(incr);

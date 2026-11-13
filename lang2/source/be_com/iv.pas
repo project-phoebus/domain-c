@@ -2083,7 +2083,8 @@ begin
           i^.opnds[pos].h.count := shift;
       end;
       if e^.kind = iv_load then begin
-        discard(sym_$reformat_literal_operand(smcontk(82, e^.value), 4, 0,
+        discard(sym_$reformat_literal_operand(smcontk(linteger_ob, e^.value),
+                                              4, 0,
                                               addr(i^.opnds[1])));
         opnd_bytes_ptr_t(addr(i^.opnds[1]))^.rrp := 16;
         i^.opnds[1].h.kind := operand$displacement_literal_pool;
@@ -2211,7 +2212,8 @@ begin
         end;
       end;
       if e^.kind = iv_load then begin
-        discard(sym_$reformat_literal_operand(smcontk(82, e^.value), 4, 0,
+        discard(sym_$reformat_literal_operand(smcontk(linteger_ob, e^.value),
+                                              4, 0,
                                               addr(i^.opnds[1])));
         opnd_bytes_ptr_t(addr(i^.opnds[1]))^.rrp := 16;
         i^.opnds[1].h.kind := operand$displacement_literal_pool;

@@ -221,7 +221,7 @@ type
       f6, f5, f4, f3, f2, f1, f0: boolean;
     end;
     b1: char;                           { +1 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     case integer of
       { A tree node (137, 138, 143; 164, 171, 175, 189, 190, 219, 220,
         232 as listed). }
@@ -1025,7 +1025,14 @@ begin
     print_object_ptr(t, true);
     return;
   end;
-  if (t^.kind in [137..140, 142..143, 145..148, 164, 171, 175, 189..190, 205, 214..215, 219..220, 223..225, 227..228, 231..233]) and (il_120 <> nil) and not cargs_$options.na then begin
+  if (t^.kind in [tree_node..assign_node, cbranch_node..cmp_tree_node,
+                  dindex_node..block_entry_node, cs_node, cc_call, pf_call,
+                  cse_use_ob..cse_parent_ob, sym_disp_node,
+                  case_node_range_check..case_node_no_range_check,
+                  isc_fetch..isc_convert,
+                  exception_handler_entry..release_dynamic_space,
+                  insert_bit_field..bit_field_assign, spine_mark..pa_mmu_bip])
+                  and (il_120 <> nil) and not cargs_$options.na then begin
     if lt_nodes_ptr_t(il_120)^[last_node + 1] = t then begin
       print_string('Node', 4);
       print_integer(last_node + 1, 5, true);
@@ -1056,43 +1063,47 @@ begin
   end;
   if t^.flags.rewritten then
     print_2_chars('R', '-');
-  if t^.kind in [139..142, 148..151, 214..215, 223..225, 227..228, 231, 233] then
+  if t^.kind in [eval_node..cbranch_node, block_entry_node..return_node,
+                 case_node_range_check..case_node_no_range_check,
+                 exception_handler_entry..release_dynamic_space,
+                 insert_bit_field..bit_field_assign, spine_mark,
+                 pa_mmu_bip] then
     print_char('s')
-  else if t^.kind in [219, 232, 220] then
+  else if t^.kind in [isc_fetch, isc_share, isc_convert] then
     print_char('a')
   else
     case t^.kind of
-      221, 114, 166, 113: print_char('f');
-      137: print_char('t');
-      138: print_char('g');
-      143: print_char('c');
-      146: print_char('p');
-      147: print_char('d');
-      205: print_char('m');
-      145: print_char('i');
-      164: print_string('cs', 2);
-      171: print_string('cc', 2);
-      175: print_string('pf', 2);
-      190: print_string('cse', 3);
-      189: print_string('use', 3);
-      222: print_char('e');
-      172:
-        if (t^.xp[73] <> nil) or (t^.xp[73]^.kind = 73) then
+      fdata_default_seq, fdata_clist, fdata_do, fdata_nlist: print_char('f');
+      tree_node: print_char('t');
+      gen_tree_node: print_char('g');
+      cmp_tree_node: print_char('c');
+      ptr_node: print_char('p');
+      disp_node: print_char('d');
+      sym_disp_node: print_char('m');
+      dindex_node: print_char('i');
+      cs_node: print_string('cs', 2);
+      cc_call: print_string('cc', 2);
+      pf_call: print_string('pf', 2);
+      cse_parent_ob: print_string('cse', 3);
+      cse_use_ob: print_string('use', 3);
+      exception_frame: print_char('e');
+      inner_blk:
+        if (t^.xp[73] <> nil) or (t^.xp[73]^.kind = error_ob) then
           print_string('ib', 2)
         else begin
           print_string('inner_blk ', 10);
           print_object_ptr(t^.xp[73], true);
           return;
         end;
-      144: begin
+      label_node: begin
         print_char(':');
         print_object_ptr(t, true);
         print_2_chars(' ', ' ');
         return;
       end;
-      188: print_string('udf', 3);
-      191: print_string('reg', 3);
-      176: begin
+      use_def_ob: print_string('udf', 3);
+      reg_list_ob: print_string('reg', 3);
+      rec_const_ob: begin
         print_string('REC_CONST ', 10);
         print_string('linkp=', 6);
         print_hex(t^.xl[1], 8);
@@ -1100,7 +1111,8 @@ begin
         print_integer(t^.xl[2], 6, false);
         return;
       end;
-      209, 167, 105, 108, 107, 106: begin
+      blockdata_blk, entry_blk, program_blk, function_blk, procedure_blk,
+          module_blk: begin
         print_object_ptr(t, true);
         return;
       end;
@@ -1186,17 +1198,20 @@ begin
     print_string('*** NIL ***', 11);
     return;
   end;
-  if t^.kind in [137..138, 143, 145..147, 164, 171, 175, 189..190, 205, 219..220, 232] then begin
+  if t^.kind in [tree_node..gen_tree_node, cmp_tree_node,
+                 dindex_node..disp_node, cs_node, cc_call, pf_call,
+                 cse_use_ob..cse_parent_ob, sym_disp_node,
+                 isc_fetch..isc_convert, isc_share] then begin
     print_tree_ref(t, true);
     print_2_chars(':', ' ');
     if t^.flags.rewritten then
       print_string('REWRITTEN ', 10);
     case t^.kind of
-      143, 138, 137: begin
+      cmp_tree_node, gen_tree_node, tree_node: begin
         case t^.kind of
-          137: ;
-          138: print_string('gen_', 4);
-          143: print_string('cmp_', 4);
+          tree_node: ;
+          gen_tree_node: print_string('gen_', 4);
+          cmp_tree_node: print_string('cmp_', 4);
         end;
         u1 := 0;
         u2 := 0;
@@ -1243,44 +1258,44 @@ begin
           84: begin
             print_string('BIT_FIELD_CMP', 13);
             u1 := 3;
-            if (t^.kind = 143) or (t^.aux.opmod2 <> 0) then u2 := 7;
+            if (t^.kind = cmp_tree_node) or (t^.aux.opmod2 <> 0) then u2 := 7;
           end;
           12: begin
             print_string('COMPARE', 7);
             u1 := 3;
-            if (t^.kind = 143) or (t^.aux.opmod2 <> 0) then u2 := 7;
+            if (t^.kind = cmp_tree_node) or (t^.aux.opmod2 <> 0) then u2 := 7;
           end;
           40: begin
             print_string('F_COMPARE', 9);
             u1 := 3;
-            if (t^.kind = 143) or (t^.aux.opmod2 <> 0) then u2 := 7;
+            if (t^.kind = cmp_tree_node) or (t^.aux.opmod2 <> 0) then u2 := 7;
           end;
           23: begin
             print_string('SET_CMP', 7);
             u1 := 3;
-            if (t^.kind = 143) or (t^.aux.opmod2 <> 0) then u2 := 7;
+            if (t^.kind = cmp_tree_node) or (t^.aux.opmod2 <> 0) then u2 := 7;
           end;
           24: begin
             print_string('AGG_CMP', 7);
             u1 := 3;
-            if (t^.kind = 143) or (t^.aux.opmod2 <> 0) then u2 := 7;
+            if (t^.kind = cmp_tree_node) or (t^.aux.opmod2 <> 0) then u2 := 7;
           end;
           78: begin
             print_string('ISC_AGG_CMP', 11);
             u1 := 3;
-            if (t^.kind = 143) or (t^.aux.opmod2 <> 0) then u2 := 7;
+            if (t^.kind = cmp_tree_node) or (t^.aux.opmod2 <> 0) then u2 := 7;
           end;
           79: begin
             print_string('ISC_AGG_LEX_CMP', 15);
             u1 := 3;
-            if (t^.kind = 143) or (t^.aux.opmod2 <> 0) then u2 := 7;
+            if (t^.kind = cmp_tree_node) or (t^.aux.opmod2 <> 0) then u2 := 7;
           end;
           70: print_string('STRNCMP', 7);
           68: print_string('STRCMP', 6);
           69: print_string('STRLEN', 6);
           11: begin
             print_string('BIT_TEST', 8);
-            if t^.kind = 143 then u2 := 7;
+            if t^.kind = cmp_tree_node then u2 := 7;
             if t^.count = 2 then u1 := 2 else u1 := 4;
           end;
           25: begin
@@ -1404,16 +1419,16 @@ begin
             end;
         end;
       end;
-      145, 205, 147, 146: begin
-        if t^.kind = 146 then
+      dindex_node, sym_disp_node, disp_node, ptr_node: begin
+        if t^.kind = ptr_node then
           print_string('PTR', 3)
-        else if t^.kind = 147 then begin
+        else if t^.kind = disp_node then begin
           print_string('DISP(', 5);
           print_integer(t^.disp, 10, false);
           print_char(')');
           goto 2;
         end
-        else if t^.kind = 205 then begin
+        else if t^.kind = sym_disp_node then begin
           print_string('SYM_DISP(', 9);
           print_object_ptr(univ_ptr(t^.disp), true);
           print_char(')');
@@ -1439,7 +1454,7 @@ begin
         print_uc_and_phase(t^.rf_uses, t^.rf_phase);
         print_char(' ');
         print_tree_ref(t^.base, false);
-        if t^.kind = 145 then begin
+        if t^.kind = dindex_node then begin
           print_char(',');
           if t^.index_len = 4 then
             print_string('long ', 5)
@@ -1454,20 +1469,20 @@ begin
         print_string(', ind=', 6);
         print_tree_ref(t^.ind, false);
         print_tree_exp(t^.base, n + 2);
-        if t^.kind = 145 then
+        if t^.kind = dindex_node then
           print_tree_exp(t^.index, n + 2);
       end;
-      171: begin
+      cc_call: begin
         print_string('CC_CALL ', 8);
         print_tree_ref(t^.xp[4], false);
         print_tree_exp(t^.xp[4], n + 2);
       end;
-      175: begin
+      pf_call: begin
         print_string('PF_CALL ', 8);
         print_tree_ref(t^.xp[4], false);
         print_tree_exp(t^.xp[4], n + 2);
       end;
-      164: begin
+      cs_node: begin
         print_string('CHARSTR(', 8);
         print_integer(t^.xw[15], 5, false);
         print_char(')');
@@ -1479,21 +1494,21 @@ begin
         print_tree_exp(t^.xp[5], n + 2);
         print_tree_exp(t^.xp[6], n + 2);
       end;
-      190: begin
+      cse_parent_ob: begin
         print_string('CSE_PARENT ', 11);
         print_tree_ref(t^.xp[1], false);
         print_tree_exp(t^.xp[1], n + 2);
       end;
-      189: begin
+      cse_use_ob: begin
         print_string('CSE_USE ', 8);
         print_string('Parent ', 7);
         print_tree_ref(t^.xp[4], true);
       end;
-      232, 220, 219: begin
+      isc_share, isc_convert, isc_fetch: begin
         case t^.kind of
-          219: print_string('ISC_FETCH', 9);
-          220: print_string('ISC_CONVT', 9);
-          232: print_string('ISC_SHARE', 9);
+          isc_fetch: print_string('ISC_FETCH', 9);
+          isc_convert: print_string('ISC_CONVT', 9);
+          isc_share: print_string('ISC_SHARE', 9);
         end;
         print_string(' (size=', 7);
         print_integer(t^.is_size, 10, false);
@@ -1529,7 +1544,7 @@ end;
   node) is a table of 12, on the data class (+10 bits 3..0) of 14 with
   'd_cls=' n for the others, on the kind of symbol (+44 bits 7..4) of
   9; the type's kind a compare chain in the labels' order ('typ^.knd = '
-  n for the others).  The kinds' names are the image's (an_kind_t's
+  n for the others).  The kinds' names are the image's (il_$kind_t's
   CHAR_TYPE and VOID_TYPE are 'char_type' and 'void_type', some cut to
   16 characters).  The attributes are the variable node's set at +32
   (tested as bytes, words and longwords in turn).  The names' padding
@@ -1549,9 +1564,9 @@ var
   vn: lt_ptr_t;
 begin
   fresh_ln(n);
-  if v^.kind = 110 then
+  if v^.kind = fortran_symbol then
     vn := lt_ptr_t(varn_from_fortran_symbol(il_$node_ptr_t(v), il_$node_ptr_t(blk), false))
-  else if v^.kind = 109 then
+  else if v^.kind = var_name then
     vn := v
   else begin
     print_object_ptr(v, true);
@@ -1561,7 +1576,7 @@ begin
   print_char(' ');
   print_hex(integer32(v), 8);
   print_string(blanks, 2);
-  if v^.kind = 110 then begin
+  if v^.kind = fortran_symbol then begin
     print_string(v^.fs_name, v^.fs_len);
     print_string(blanks, 18 - v^.fs_len);
     if (v^.fs_flags.d_cls = 7) and v^.fs_flags.b7 then
@@ -1595,7 +1610,7 @@ begin
   print_string('  Bytes:', 8);
   print_integer(bytes, 4, true);
   print_string(blanks, 2);
-  if v^.kind = 110 then begin
+  if v^.kind = fortran_symbol then begin
     case v^.fs_flags.d_cls of
       0: print_string('none       ', 11);
       1: print_string('xbinteger  ', 11);
@@ -1663,33 +1678,33 @@ begin
   end
   else
     case te.base^.kind of
-      122: print_string('integer_type    ', 16);
-      123: print_string('real_type       ', 16);
-      124: print_string('bool_type       ', 16);
-      125: print_string('char_type       ', 16);
-      126: print_string('char_string_con_', 16);
-      127: print_string('char_array_type ', 16);
-      128: print_string('subr_type       ', 16);
-      129: print_string('enum_type       ', 16);
-      130: print_string('ptr_type        ', 16);
-      131: print_string('array_type      ', 16);
-      132: print_string('record_type     ', 16);
-      133: print_string('file_type       ', 16);
-      134: print_string('set_type        ', 16);
-      135: print_string('univ_ptr_type   ', 16);
-      136: print_string('null_set_type   ', 16);
-      173: print_string('proc__type      ', 16);
-      174: print_string('func__type      ', 16);
-      177: print_string('offset_type     ', 16);
-      196: print_string('varying_type    ', 16);
-      197: print_string('parray_type     ', 16);
-      206: print_string('dynamic_array_ty', 16);
-      210: print_string('void_type       ', 16);
-      217: print_string('char16_type     ', 16);
-      218: print_string('char16_array_typ', 16);
+      integer_type: print_string('integer_type    ', 16);
+      real_type: print_string('real_type       ', 16);
+      bool_type: print_string('bool_type       ', 16);
+      char_type: print_string('char_type       ', 16);
+      char_string_con_type: print_string('char_string_con_', 16);
+      char_array_type: print_string('char_array_type ', 16);
+      subr_type: print_string('subr_type       ', 16);
+      enum_type: print_string('enum_type       ', 16);
+      ptr_type: print_string('ptr_type        ', 16);
+      array_type: print_string('array_type      ', 16);
+      record_type: print_string('record_type     ', 16);
+      file_type: print_string('file_type       ', 16);
+      set_type: print_string('set_type        ', 16);
+      univ_ptr_type: print_string('univ_ptr_type   ', 16);
+      null_set_type: print_string('null_set_type   ', 16);
+      proc__type: print_string('proc__type      ', 16);
+      func__type: print_string('func__type      ', 16);
+      offset_type: print_string('offset_type     ', 16);
+      varying_type: print_string('varying_type    ', 16);
+      parray_type: print_string('parray_type     ', 16);
+      dynamic_array_type: print_string('dynamic_array_ty', 16);
+      void_type: print_string('void_type       ', 16);
+      char16_type: print_string('char16_type     ', 16);
+      char16_array_type: print_string('char16_array_typ', 16);
       otherwise begin
         print_string('typ^.knd = ', 11);
-        print_integer(te.base^.kind, 4, true);
+        print_integer(ord(te.base^.kind), 4, true);
         print_char(' ');
       end;
     end;
@@ -1756,7 +1771,7 @@ begin
   print_char('X');
   print_hex(integer32(f), 8);
   print_string(blanks, 2);
-  if (f = nil) or (f^.kind <> 222) then begin
+  if (f = nil) or (f^.kind <> exception_frame) then begin
     next := nil;
     print_string('**not an exception frame**', 26);
   end
@@ -1776,7 +1791,7 @@ begin
     h := f^.xp[7];
     while h <> nil do begin
       print_tree_ref(h, true);
-      if (h^.kind = 223) and (h^.xw[35] <> 0) then
+      if (h^.kind = exception_handler_entry) and (h^.xw[35] <> 0) then
         h := h^.xp[18]
       else begin
         print_string('<<Not an explicit handler**', 27);
@@ -1849,13 +1864,13 @@ begin
   fresh_ln(n);
   print_hex(integer32(b), 8);
   case b^.kind of
-    105: print_string('  program_blk   ', 16);
-    106: print_string('  module_blk    ', 16);
-    107: print_string('  procedure_blk ', 16);
-    108: print_string('  function_blk  ', 16);
-    209: print_string('  blockdata_blk ', 16);
-    167: print_string('  entry_blk     ', 16);
-    172: print_string('  inner_blk     ', 16);
+    program_blk: print_string('  program_blk   ', 16);
+    module_blk: print_string('  module_blk    ', 16);
+    procedure_blk: print_string('  procedure_blk ', 16);
+    function_blk: print_string('  function_blk  ', 16);
+    blockdata_blk: print_string('  blockdata_blk ', 16);
+    entry_blk: print_string('  entry_blk     ', 16);
+    inner_blk: print_string('  inner_blk     ', 16);
     otherwise
   end;
   print_string(b^.bk_name^.xc[18], b^.bk_name^.xw[8]);
@@ -1945,12 +1960,12 @@ begin
   fresh_ln(m);
   v := b^.xp[4];
   while v <> nil do
-    if (v^.kind = 110) or (v^.kind = 109) then begin
-      if v^.kind = 110 then begin
+    if (v^.kind = fortran_symbol) or (v^.kind = var_name) then begin
+      if v^.kind = fortran_symbol then begin
         print_variable(v, b, n + 6);
         v := v^.xp[1];
       end
-      else if v^.kind = 109 then begin
+      else if v^.kind = var_name then begin
         print_variable(v, b, n + 6);
         v := v^.xp[4];
       end;
@@ -1964,11 +1979,11 @@ begin
   while v <> nil do
     v := print_exception_frame(v, b, n + 6);
   v := b^.xp[1];
-  if (b^.kind <> 172) and (v <> nil) and (v^.kind = 172) then begin
+  if (b^.kind <> inner_blk) and (v <> nil) and (v^.kind = inner_blk) then begin
     fresh_ln(m);
     print_string('Inner blocks:', 13);
     fresh_ln(0);
-    while (v <> nil) and (v^.kind = 172) do begin
+    while (v <> nil) and (v^.kind = inner_blk) do begin
       fresh_ln(n + 6);
       print_routine_block(v, n + 6, false);
       v := v^.xp[1];
@@ -1991,7 +2006,8 @@ begin
       print_char(' ');
       if e^.callee = nil then
         print_string('NIL', 3)
-      else if e^.callee^.kind in [105..108, 172, 209] then begin
+      else if e^.callee^.kind in [program_blk..function_blk, inner_blk,
+                                  blockdata_blk] then begin
         print_string(e^.callee^.bk_name^.xc[18], e^.callee^.bk_name^.xw[8]);
         print_string(blanks, 18 - e^.callee^.bk_name^.xw[8]);
         if (e^.entry <> nil) and (e^.entry <> e^.callee) then begin
@@ -2121,14 +2137,15 @@ var
 begin
   fresh_ln(n);
   printed := false;
-  if (t^.kind <> 191) and (rshft(t^.xl2[10] & 16#FFFF00, 8) <> 0) then
+  if (t^.kind <> reg_list_ob) and (rshft(t^.xl2[10] & 16#FFFF00, 8) <> 0) then
     w126 := rshft(t^.xl2[10] & 16#FFFF00, 8);
-  if (il_180 <> nil) and (il_180^.kind <> 167) and (il_11c <> nil) and
+  if (il_180 <> nil) and (il_180^.kind <> entry_blk) and (il_11c <> nil) and
       (t^.st_vars <> nil) and (rshft(t^.xl2[10] & 16#FFFF00, 8) <> 0) then begin
     print_string('STMT_INDEX ', 11);
     print_integer(w126, 5, true);
     print_char(' ');
-    if (t^.st_used <> nil) and (t^.st_used^ <> []) and (t^.kind <> 191) then begin
+    if (t^.st_used <> nil) and (t^.st_used^ <> [])
+        and (t^.kind <> reg_list_ob) then begin
       printed := true;
       print_string('Vars used : ', 12);
       for i := 1 to il_180^.xw[145] do
@@ -2141,7 +2158,7 @@ begin
         end;
       fresh_ln(n);
     end;
-    if (ord(t^.st_def) <> 0) and (t^.kind <> 191) then begin
+    if (ord(t^.st_def) <> 0) and (t^.kind <> reg_list_ob) then begin
       if printed then
         print_string('                Vars defined : ', 31)
       else
@@ -2201,7 +2218,7 @@ begin
   if t^.flags.rewritten then
     print_string('REWRITTEN ', 10);
   case t^.kind of
-    144: begin
+    label_node: begin
       case rshft(ord(t^.xc[72]) & 62, 1) of
         0: print_string('ELSE', 4);
         1: print_string('ENDIF', 5);
@@ -2249,15 +2266,15 @@ begin
       print_string(',addr=', 6);
       print_integer(t^.xl[14], 10, false);
     end;
-    148: begin
-      if not (t^.xp[12]^.kind in [167, 172]) then
+    block_entry_node: begin
+      if not (t^.xp[12]^.kind in [entry_blk, inner_blk]) then
         il_180 := il_$node_ptr_t(t^.xp[12]);
       print_string('BLOCK_ENTRY ', 12);
       print_tree_ref(t^.xp[12], true);
       fresh_ln(n);
       print_routine_block(t^.xp[12], n + 4, true);
     end;
-    140: begin
+    assign_node: begin
       u1 := 0;
       u2 := 0;
       case t^.st_aop of
@@ -2334,13 +2351,13 @@ begin
           fresh_ln(2);
           print_string('Strength reduction temp:', 24);
           print_variable(t^.st_dst, il_180, 4);
-          if t^.st_dst^.kind = 109 then
+          if t^.st_dst^.kind = var_name then
             print_tree_exp(lt_pp_t(t^.st_dst^.xp[13])^, 6)
           else
             print_tree_exp(lt_pp_t(t^.st_dst^.xp2[11])^, 6);
         end;
     end;
-    139: begin
+    eval_node: begin
       print_string('EVAL ', 5);
       for i := 1 to t^.st_count do begin
         print_tree_ref(t^.xp[12 + i], false);
@@ -2350,11 +2367,11 @@ begin
       for i := 1 to t^.st_count do
         print_tree_exp(t^.xp[12 + i], n + 2);
     end;
-    141: begin
+    branch_node: begin
       print_string('BRANCH ', 7);
       print_tree_ref(t^.xp[12], false);
     end;
-    142: begin
+    cbranch_node: begin
       if 7 in t^.xs[60] then
         print_string('TBRANCH ', 8)
       else
@@ -2364,12 +2381,12 @@ begin
       print_tree_ref(t^.xp[14], false);
       print_tree_exp(t^.xp[14], n + 2);
     end;
-    150: begin
+    nlbranch_node: begin
       print_string('NLBRANCH ', 9);
       print_tree_ref(t^.xp[12], false);
       print_tree_exp(t^.xp[12], n + 2);
     end;
-    151: begin
+    return_node: begin
       print_string('RETURN ', 7);
       if t^.xp[12] <> nil then begin
         print_string('rlen=', 5);
@@ -2381,7 +2398,7 @@ begin
         print_tree_exp(t^.xp[12], n + 2);
       end;
     end;
-    188: begin
+    use_def_ob: begin
       print_string('entity=', 7);
       print_object_ptr(t^.xp[12], true);
       print_string(', parmnum=', 10);
@@ -2396,7 +2413,7 @@ begin
         print_tree_ref(t^.xp[14], false);
       end;
     end;
-    191: begin
+    reg_list_ob: begin
       m := n + 2;
       r := addr(t^.xp[13]);
       for k := 1 to t^.xw[25] do begin
@@ -2424,27 +2441,33 @@ begin
         end;
         e := r^[k].entity;
         if e <> nil then
-          if (e^.kind = 110) or (e^.kind = 109) then begin
-            if e^.kind = 109 then
+          if (e^.kind = fortran_symbol) or (e^.kind = var_name) then begin
+            if e^.kind = var_name then
               for i := 1 to e^.vr_name^.xw[8] do
                 print_char(e^.vr_name^.xc[17 + i])
             else
               for i := 1 to e^.fs_len do
                 print_char(e^.fs_name[i]);
           end
-          else if (e <> nil) and (e^.kind in [137..138, 143, 145..147, 190]) then begin
-            if e^.kind in [138, 137] then
+          else if (e <> nil) and (e^.kind in [tree_node..gen_tree_node,
+                                              cmp_tree_node,
+                                              dindex_node..disp_node,
+                                              cse_parent_ob]) then begin
+            if e^.kind in [gen_tree_node, tree_node] then
               print_string('addr over ', 10);
             print_string('Node', 4);
-            if e^.kind = 190 then
+            if e^.kind = cse_parent_ob then
               num := e^.xw[8]
-            else if e^.kind in [137..138, 143, 145..147] then
+            else if e^.kind in [tree_node..gen_tree_node, cmp_tree_node,
+                                dindex_node..disp_node] then
               num := e^.cse_parent;
-            if (num = 0) and (e^.kind = 137) and (e^.op = 26) then
+            if (num = 0) and (e^.kind = tree_node) and (e^.op = 26) then
               num := e^.opnd[1]^.cse_parent;
             print_integer(num, 5, false);
           end
-          else if (e <> nil) and (e^.kind in [88, 89, 195, 163]) then
+          else if (e <> nil) and (e^.kind in [real_ob, dpreal_ob,
+                                              reloc_absolute_addr_con,
+                                              addr_con]) then
             print_object_ptr(e, true);
         if (r^[k].flags * [0..2, 5, 7]) <> [] then begin
           print_char(',');
@@ -2456,13 +2479,13 @@ begin
         end;
       end;
     end;
-    149: begin
+    blk_end_node: begin
       print_string('BLOCK_END ', 10);
       print_tree_ref(t^.xp[12], false);
-      if t^.xp[12]^.kind <> 172 then
+      if t^.xp[12]^.kind <> inner_blk then
         il_180 := nil;
     end;
-    223: begin
+    exception_handler_entry: begin
       if t^.xw[35] = 0 then
         print_string('OTHERS ', 7)
       else
@@ -2479,19 +2502,19 @@ begin
         print_char(')');
       end;
     end;
-    224: begin
+    raise_exception: begin
       print_string('RAISE_EXCEPTION ', 16);
       print_tree_ref(t^.xp[12], false);
       print_string(' exc_var=', 9);
       print_tree_ref(t^.xp[13], false);
       print_tree_exp(t^.xp[12], n + 2);
     end;
-    225: begin
+    release_dynamic_space: begin
       print_string('RELEASE_DYNAMIC_SPACE ', 22);
       print_tree_ref(t^.xp[12], false);
       print_tree_exp(t^.xp[12], n + 2);
     end;
-    227: begin
+    insert_bit_field: begin
       print_string('INSERT_BIT_FIELD ', 17);
       s.length := 0;
       print_known_aux(s, t^.st_aux, 18, 18, false, false);
@@ -2508,7 +2531,7 @@ begin
       print_tree_exp(t^.xp[17], n + 2);
       print_tree_exp(t^.xp[18], n + 2);
     end;
-    228: begin
+    bit_field_assign: begin
       print_string('BIT_FIELD_ASSIGN ', 17);
       print_tree_ref(t^.xp[12], false);
       print_string(' + bit_offset( ', 15);
@@ -2525,15 +2548,15 @@ begin
       print_tree_exp(t^.xp[15], n + 2);
       print_tree_exp(t^.xp[16], n + 2);
     end;
-    215, 214: begin
-      if t^.kind = 214 then
+    case_node_no_range_check, case_node_range_check: begin
+      if t^.kind = case_node_range_check then
         print_string('CASE_NODE_RANGE_CHECK ', 22)
       else
         print_string('CASE_NODE_NO_RANGE_CHECK ', 25);
       print_string('table_disp( ', 12);
       print_tree_ref(t^.xp[12], false);
       print_string(' )', 2);
-      if t^.kind = 214 then begin
+      if t^.kind = case_node_range_check then begin
         print_string(' table( ', 8);
         print_tree_ref(t^.xp[14], false);
         print_string(' ) range_check_code( ', 21);
@@ -2543,17 +2566,17 @@ begin
         print_string(' )', 2);
       end;
       print_tree_exp(t^.xp[12], n + 2);
-      if t^.kind = 214 then
+      if t^.kind = case_node_range_check then
         print_tree_exp(t^.xp[14], n + 2);
     end;
-    231: begin
+    spine_mark: begin
       print_string('SPINE_MARK ', 11);
       print_string(' next= ', 7);
       print_tree_ref(t^.xp[12], false);
       print_string(' prev= ', 7);
       print_tree_ref(t^.xp[13], false);
     end;
-    233: begin
+    pa_mmu_bip: begin
       print_string('PA_MMU_BIP', 10);
       case t^.xw[27] of
         0: print_string('(flush_dc_va) ', 14);
@@ -2622,7 +2645,7 @@ begin
   print_tree_ref(d, true);
   print_char(':');
   case d^.kind of
-    113: begin
+    fdata_nlist: begin
       print_string('FDATA_NLIST ', 12);
       print_object_ptr(d^.xp[2], true);
       print_string(', const_offset=', 15);
@@ -2641,7 +2664,7 @@ begin
         print_string(', size=', 7);
         print_integer(d^.xl[5], 10, false);
         if d^.xp[4] <> nil then
-          if d^.xp[4]^.kind = 114 then begin
+          if d^.xp[4]^.kind = fdata_clist then begin
             p := d^.xp[4];
             repeat
               print_data_node(p, n + 2, false);
@@ -2652,7 +2675,7 @@ begin
             print_tree_exp(d^.xp[4], n + 2);
       end;
     end;
-    221: begin
+    fdata_default_seq: begin
       print_string('FDATA_DEFAULT_SEQ ', 18);
       print_object_ptr(d^.xp[2], true);
       print_char(',');
@@ -2663,7 +2686,7 @@ begin
       print_tree_ref(d^.xp[4], false);
       print_char(',');
       print_integer(d^.xl[5], 10, false);
-      if d^.xp[4]^.kind = 114 then begin
+      if d^.xp[4]^.kind = fdata_clist then begin
         p := d^.xp[4];
         repeat
           print_data_node(p, n + 2, false);
@@ -2673,7 +2696,7 @@ begin
       else
         print_tree_exp(d^.xp[4], n + 2);
     end;
-    166: begin
+    fdata_do: begin
       print_string('FDATA_DO ', 9);
       print_object_ptr(d^.xp[4], true);
       print_string('= initial:', 10);
@@ -2691,7 +2714,7 @@ begin
         p := p^.xp[1];
       end;
     end;
-    114: begin
+    fdata_clist: begin
       print_string('FDATA_CLIST repeat_count:', 25);
       print_integer(d^.xl[3], 10, false);
       print_string(' constant:', 10);
@@ -2718,11 +2741,13 @@ var
 begin
   begins_inline_block := false;
   q := p;
-  if (q <> nil) and (q^.kind = 144) then begin
+  if (q <> nil) and (q^.kind = label_node) then begin
     q := q^.xp[2];
-    while (q <> nil) and ((q^.kind = 148) or (q^.kind = 191)) do begin
-      if q^.kind = 148 then begin
-        if (q^.xp[12]^.kind = 172) and (2 in q^.xp[12]^.bk_atts[374]) then
+    while (q <> nil) and ((q^.kind = block_entry_node)
+                          or (q^.kind = reg_list_ob)) do begin
+      if q^.kind = block_entry_node then begin
+        if (q^.xp[12]^.kind = inner_blk)
+            and (2 in q^.xp[12]^.bk_atts[374]) then
           begins_inline_block := true;
         return;
       end;
@@ -2750,7 +2775,8 @@ begin
       line := t^.st_ln;
       advance_listing_to_line(t^.st_ln);
     end;
-  if (t^.kind = 149) and (t^.xp[12]^.kind = 172) and (2 in t^.xp[12]^.bk_atts[374]) then
+  if (t^.kind = blk_end_node) and (t^.xp[12]^.kind = inner_blk)
+      and (2 in t^.xp[12]^.bk_atts[374]) then
     inline_depth := inline_depth - 1;
   print_top_node(t, 0);
   print_ln(0);
@@ -2825,7 +2851,7 @@ begin
     end;
     fresh_ln(0);
   end;
-  if (b^.regs <> nil) and (b^.regs^.kind = 178) then begin
+  if (b^.regs <> nil) and (b^.regs^.kind = reg_assign_ob) then begin
     print_string(' Register Assignments: ', 23);
     fresh_ln(0);
     for r := 0 to 23 do
@@ -2835,14 +2861,15 @@ begin
         print_string(':  ', 3);
         print_string(size_letters[b^.regs^.ra[r].size], 2);
         x := b^.regs^.ra[r].node;
-        if x^.kind in [137..138, 143, 145..147] then begin
+        if x^.kind in [tree_node..gen_tree_node, cmp_tree_node,
+                       dindex_node..disp_node] then begin
           num := x^.cse_parent;
-          if (num = 0) and (x^.kind = 137) and (x^.op = 26) then
+          if (num = 0) and (x^.kind = tree_node) and (x^.op = 26) then
             num := x^.opnd[1]^.cse_parent;
           print_string('Node', 4);
           print_integer(num, 5, true);
         end
-        else if x^.kind = 189 then begin
+        else if x^.kind = cse_use_ob then begin
           w := x^.cse_parent;
           print_string('Node', 4);
           print_integer(w, 5, true);
@@ -2894,7 +2921,7 @@ begin
   else
     il_180 := nil;
   t := lt_ptr_t(il_d4);
-  if (t <> nil) and (t^.kind = 144) then
+  if (t <> nil) and (t^.kind = label_node) then
     while (t <> nil) and (il_11c <> nil) do begin
       if not (6 in cargs_$options.cpu) then begin
         b := t^.xp[2]^.xp[12];
@@ -2982,9 +3009,15 @@ begin
   fresh_ln(0);
   if t = nil then
     print_object_ptr(t, true)
-  else if t^.kind in [139..142, 144, 148..151, 188, 191, 214..215, 223..225, 227..228, 231, 233] then
+  else if t^.kind in [eval_node..cbranch_node, label_node,
+                      block_entry_node..return_node, use_def_ob, reg_list_ob,
+                      case_node_range_check..case_node_no_range_check,
+                      exception_handler_entry..release_dynamic_space,
+                      insert_bit_field..bit_field_assign, spine_mark,
+                      pa_mmu_bip] then
     print_top_node(lt_ptr_t(t), 0)
-  else if t^.kind in [113, 114, 221, 166] then
+  else if t^.kind in [fdata_nlist, fdata_clist, fdata_default_seq,
+                      fdata_do] then
     print_data_node(lt_ptr_t(t), 0, true)
   else begin
     print_tree_ref(lt_ptr_t(t), true);
@@ -3044,18 +3077,29 @@ var
     end;
     v := il_180^.xp[74]^.xw[8];
     vfmt_$write('Routine: %A%$', il_180^.xp[74]^.xc[18], v);
-    if (t^.kind in [137..138, 143, 145..147, 164, 171, 175, 189, 205]) and (t^.cse_parent <> 0) then begin
+    if (t^.kind in [tree_node..gen_tree_node, cmp_tree_node,
+                    dindex_node..disp_node, cs_node, cc_call, pf_call,
+                    cse_use_ob, sym_disp_node])
+                    and (t^.cse_parent <> 0) then begin
       v := t^.cse_parent;
       vfmt_$write('    Node Number: %8LD%$', v);
     end;
-    if (t^.kind in [137..138, 143, 145..147, 164, 171, 175, 189, 205]) and (t^.xp[3] <> nil) then begin
+    if (t^.kind in [tree_node..gen_tree_node, cmp_tree_node,
+                    dindex_node..disp_node, cs_node, cc_call, pf_call,
+                    cse_use_ob, sym_disp_node])
+                    and (t^.xp[3] <> nil) then begin
       x := t^.xp[3]^.xl2[10];
       v := rshft(lshft(x, 8), 16);
       if v > 32767 then
         v := v - 65536;
       vfmt_$write('    STMT INDEX: %8LD%$', v);
     end
-    else if t^.kind in [139..142, 144, 148..151, 188, 191, 214..215, 223..225, 227..228, 231, 233] then begin
+    else if t^.kind in [eval_node..cbranch_node, label_node,
+                        block_entry_node..return_node, use_def_ob, reg_list_ob,
+                        case_node_range_check..case_node_no_range_check,
+                        exception_handler_entry..release_dynamic_space,
+                        insert_bit_field..bit_field_assign, spine_mark,
+                        pa_mmu_bip] then begin
       x := t^.xl2[10];
       v := rshft(lshft(x, 8), 16);
       if v > 32767 then
@@ -3116,7 +3160,7 @@ var
     if t = nil then
       return;
     case t^.kind of
-      143, 138, 137: begin
+      cmp_tree_node, gen_tree_node, tree_node: begin
         if mode < 0 then
           t^.w18 := 0
         else if mode = 0 then
@@ -3132,7 +3176,7 @@ var
         if mode > 0 then
           t^.w18 := -1;
       end;
-      145, 205, 147, 146: begin
+      dindex_node, sym_disp_node, disp_node, ptr_node: begin
         if mode < 0 then
           t^.rf_w18 := 0
         else if mode = 0 then
@@ -3140,7 +3184,7 @@ var
         else if (t^.rf_w18 >= 0) and (t^.rf_w18 <> t^.rf_uses) then
           sanity_check_bad_uc(t, t^.rf_uses, t^.rf_w18);
         sanity_check_walk(mode, t^.base);
-        if t^.kind = 145 then begin
+        if t^.kind = dindex_node then begin
           sanity_check_walk(mode, t^.index);
           if t^.disp <> 0 then begin
             vfmt_$write('sanity_check( %15A ):  DINDEX_NODE has non-0 .DISP%.', name, len);
@@ -3154,9 +3198,9 @@ var
         if mode > 0 then
           t^.rf_w18 := -1;
       end;
-      171, 175:
+      cc_call, pf_call:
         sanity_check_walk(mode, t^.xp[4]);
-      164: begin
+      cs_node: begin
         if mode < 0 then
           t^.w18 := 0
         else if mode = 0 then
@@ -3170,11 +3214,11 @@ var
         if mode > 0 then
           t^.w18 := -1;
       end;
-      190:
+      cse_parent_ob:
         sanity_check_walk(mode, t^.xp[1]);
-      189:
+      cse_use_ob:
         sanity_check_walk(mode, t^.xp[5]);
-      232, 220, 219:
+      isc_share, isc_convert, isc_fetch:
         sanity_check_walk(mode, t^.xp[1]);
       otherwise
     end;
@@ -3208,38 +3252,40 @@ var
           fresh_ln(0);
         end;
       case p^.kind of
-        233, 231, 223, 149, 191, 188, 150, 141, 144: ;
-        148:
-          if (p^.kind = 108) or (p^.kind = 107) then
+        pa_mmu_bip, spine_mark, exception_handler_entry, blk_end_node,
+            reg_list_ob, use_def_ob, nlbranch_node, branch_node, label_node: ;
+        block_entry_node:
+          if (p^.kind = function_blk) or (p^.kind = procedure_blk) then
             il_180 := il_$node_ptr_t(p);
-        140: begin
+        assign_node: begin
           sanity_check_walk(mode, p^.st_dst);
           sanity_check_walk(mode, p^.st_src);
           sanity_check_walk(mode, p^.st_len);
         end;
-        139:
+        eval_node:
           for i := 1 to p^.xw[25] do
             sanity_check_walk(mode, p^.xp[12 + i]);
-        142: begin
+        cbranch_node: begin
           sanity_check_walk(mode, p^.xp[12]);
           sanity_check_walk(mode, p^.xp[14]);
         end;
-        151: sanity_check_walk(mode, p^.xp[12]);
-        224: sanity_check_walk(mode, p^.xp[12]);
-        225: sanity_check_walk(mode, p^.xp[12]);
-        227: begin
+        return_node: sanity_check_walk(mode, p^.xp[12]);
+        raise_exception: sanity_check_walk(mode, p^.xp[12]);
+        release_dynamic_space: sanity_check_walk(mode, p^.xp[12]);
+        insert_bit_field: begin
           sanity_check_walk(mode, p^.xp[16]);
           sanity_check_walk(mode, p^.xp[17]);
           sanity_check_walk(mode, p^.xp[18]);
         end;
-        228: begin
+        bit_field_assign: begin
           sanity_check_walk(mode, p^.xp[12]);
           sanity_check_walk(mode, p^.xp[13]);
           sanity_check_walk(mode, p^.xp[14]);
           sanity_check_walk(mode, p^.xp[15]);
           sanity_check_walk(mode, p^.xp[16]);
         end;
-        215, 214: sanity_check_walk(mode, p^.xp[12]);
+        case_node_no_range_check,
+            case_node_range_check: sanity_check_walk(mode, p^.xp[12]);
         otherwise
       end;
       p := p^.xp[2];

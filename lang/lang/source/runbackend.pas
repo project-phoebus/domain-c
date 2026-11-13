@@ -141,7 +141,7 @@ function assert_is_a_tree_node(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if n <> nil then
-    assert_is_a_tree_node := (n^.kind = 143) or (n^.kind = 137)
+    assert_is_a_tree_node := (n^.kind = cmp_tree_node) or (n^.kind = tree_node)
   else
     assert_is_a_tree_node := false;
 end;
@@ -168,8 +168,9 @@ function assert_is_a_callable_block(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if n <> nil then
-    assert_is_a_callable_block := (n^.kind = 167) or (n^.kind = 108) or
-        (n^.kind = 107) or (n^.kind = 105)
+    assert_is_a_callable_block := (n^.kind = entry_blk)
+        or (n^.kind = function_blk) or
+        (n^.kind = procedure_blk) or (n^.kind = program_blk)
   else
     assert_is_a_callable_block := false;
 end;
@@ -184,7 +185,7 @@ function assert_is_fortran_array(
 begin
   if n = nil then
     assert_is_fortran_array := false
-  else if n^.kind <> 110 then
+  else if n^.kind <> fortran_symbol then
     assert_is_fortran_array := false
   else
     assert_is_fortran_array := n^.xp[8] <> nil;
@@ -210,9 +211,9 @@ var
 begin
   if n <> nil then begin
     case n^.kind of
-      171:
+      cc_call:
         n := n^.xp[4];
-      110:
+      fortran_symbol:
         if rshft(ord(n^.xc[44]) & 16#F0, 4) = 1 then begin
           if n^.xp[10] = nil then begin
             blk := n;
@@ -228,7 +229,7 @@ begin
           routine_reference_class := 5;
           return;
         end;
-      146, 175: begin
+      ptr_node, pf_call: begin
         blk := nil;
         ref := nil;
         routine_reference_class := 3;
@@ -237,14 +238,15 @@ begin
       otherwise
         ;
     end;
-    if (n^.kind = 105) or (n^.kind = 108) or (n^.kind = 107) then
+    if (n^.kind = program_blk) or (n^.kind = function_blk)
+        or (n^.kind = procedure_blk) then
       b := n
-    else if n^.kind = 167 then
+    else if n^.kind = entry_blk then
       b := n^.xp[37]
     else begin
-      if n^.kind = 159 then
+      if n^.kind = lib_dsc then
         class := 1
-      else if n^.kind = 209 then
+      else if n^.kind = blockdata_blk then
         class := 4
       else begin
         blk := nil;
@@ -257,7 +259,7 @@ begin
       routine_reference_class := class;
       return;
     end;
-    if (b^.xp[25] <> nil) and then (b^.xp[25]^.kind = 144) then
+    if (b^.xp[25] <> nil) and then (b^.xp[25]^.kind = label_node) then
       class := 0
     else
       class := 2;
@@ -289,11 +291,11 @@ var
   k: integer;
   is_routine: boolean;
 begin
-  if n^.kind = 195 then begin
+  if n^.kind = reloc_absolute_addr_con then begin
     k := n^.xw[10];
     target := n^.xp[3];
   end
-  else if n^.kind = 163 then begin
+  else if n^.kind = addr_con then begin
     k := ord(n^.xc[20]);
     target := n^.xp[2];
   end
@@ -366,7 +368,8 @@ var
   e: rb_edge_ptr_t;
 begin
   if callee <> nil then
-    if callee^.kind in [105, 106, 107, 108, 172, 209] then
+    if callee^.kind in [program_blk, module_blk, procedure_blk, function_blk,
+                        inner_blk, blockdata_blk] then
       callee^.xw[132] := callee^.xw[132] + 1;
   e := gspace(36);
   if caller^.xp[62] = nil then
@@ -408,7 +411,8 @@ begin
     e^.call := call;
     e^.stmt := cur_stmt;
     if callee <> nil then
-      if callee^.kind in [105, 106, 107, 108, 172, 209] then begin
+      if callee^.kind in [program_blk, module_blk, procedure_blk, function_blk,
+                          inner_blk, blockdata_blk] then begin
         e^.callee_next := rb_edge_ptr_t(callee^.xp[63]);
         callee^.xp[63] := il_$node_ptr_t(e);
       end;
@@ -452,10 +456,10 @@ begin
   if call^.xw[19] > 1 then
     if call^.xw[19] - 1 = ord(callee^.xc[293]) then
       if callee^.xp[3] <> nil then
-        if callee^.xp[3]^.kind = 168 then
+        if callee^.xp[3]^.kind = param_list then
           for i := 2 to call^.xw[19] do begin
             a := call^.xp[9 + i];
-            if a^.kind = 110 then
+            if a^.kind = fortran_symbol then
               if not assert_is_fortran_array(a) then
                 if assert_is_fortran_array(callee^.xp[3]^.xp[3 * i - 3]) then begin
                   callee^.xc[375] := chr(ord(callee^.xc[375]) ! 16#40);
@@ -534,9 +538,10 @@ begin
   n := t;
   if n = nil then
     return;
-  if n^.kind in [137, 138, 143, 145, 146, 147, 164, 205] then begin
+  if n^.kind in [tree_node, gen_tree_node, cmp_tree_node, dindex_node,
+                 ptr_node, disp_node, cs_node, sym_disp_node] then begin
     if n^.xw[9] = -3 then begin
-      if n^.kind = 137 then
+      if n^.kind = tree_node then
         if n^.xw[18] = 16 then
           analyze_call_site_for_call_graph(t);
       return;
@@ -544,11 +549,13 @@ begin
     n^.xw[9] := -3;
     il_180^.xw[136] := il_180^.xw[136] + 1;
   end
-  else if n^.kind in [137, 138, 143, 145, 146, 147, 164, 171, 175, 189,
-                      205] then
+  else if n^.kind in [tree_node, gen_tree_node, cmp_tree_node, dindex_node,
+                      ptr_node, disp_node, cs_node, cc_call, pf_call,
+                      cse_use_ob,
+                      sym_disp_node] then
     il_180^.xw[136] := il_180^.xw[136] + 1;
   case n^.kind of
-    137, 138, 143: begin
+    tree_node, gen_tree_node, cmp_tree_node: begin
       if (n^.xw[18] = 16) or (n^.xw[18] = 15) then
         first := 2
       else
@@ -562,64 +569,64 @@ begin
       if first = 2 then
         analyze_call_site_for_call_graph(t);
     end;
-    139:
+    eval_node:
       for i := n^.xw[25] downto 1 do
         build_call_graph_walk_il(n^.xp[i + 12]);
-    140, 227: begin
+    assign_node, insert_bit_field: begin
       build_call_graph_walk_il(n^.xp[16]);
       build_call_graph_walk_il(n^.xp[17]);
       build_call_graph_walk_il(n^.xp[18]);
     end;
-    142:
+    cbranch_node:
       build_call_graph_walk_il(n^.xp[14]);
-    145: begin
+    dindex_node: begin
       build_call_graph_walk_il(n^.xp[6]);
       build_call_graph_walk_il(n^.xp[9]);
     end;
-    146, 147, 205:
+    ptr_node, disp_node, sym_disp_node:
       build_call_graph_walk_il(n^.xp[6]);
-    148:
+    block_entry_node:
       ref_stmt := n^.xp[12];
-    149:
+    blk_end_node:
       ref_stmt := n^.xp[12]^.xp[2];
-    150, 151, 224, 225:
+    nlbranch_node, return_node, raise_exception, release_dynamic_space:
       build_call_graph_walk_il(n^.xp[12]);
-    163:
+    addr_con:
       if ord(n^.xc[20]) in [4, 5, 6, 9] then
         if is_routine_reference_addr_con(n) then
           build_call_graph_walk_block(n^.xp[2]);
-    164: begin
+    cs_node: begin
       build_call_graph_walk_il(n^.xp[5]);
       build_call_graph_walk_il(n^.xp[6]);
     end;
-    165: begin
+    cs_temp: begin
       if n^.xp[2] = nil then
         bug_check('\\runbackend\build_call_graph_walk_il -- cs_temp has NIL .cs_temp.bp%$');
       if n^.xw[11] = 0 then
         bug_check('\\runbackend\build_call_graph_walk_il -- cs_temp has 0 .cs_temp.size%$');
     end;
-    171, 175:
+    cc_call, pf_call:
       build_call_graph_walk_il(n^.xp[4]);
-    195:
+    reloc_absolute_addr_con:
       if n^.xw[10] in [4, 5, 6, 9] then
         if is_routine_reference_addr_con(n) then
           build_call_graph_walk_block(n^.xp[3]);
-    219, 220, 232:
+    isc_fetch, isc_convert, isc_share:
       build_call_graph_walk_il(n^.xp[1]);
-    228: begin
+    bit_field_assign: begin
       build_call_graph_walk_il(n^.xp[12]);
       build_call_graph_walk_il(n^.xp[13]);
       build_call_graph_walk_il(n^.xp[14]);
       build_call_graph_walk_il(n^.xp[15]);
       build_call_graph_walk_il(n^.xp[16]);
     end;
-    109: begin
+    var_name: begin
       if n^.xp[5] = nil then
         bug_check('\\runbackend\build_call_graph_walk_il -- var_name has NIL .varn.n.bp%$');
       if n^.xl[9] = 0 then
         bug_check('\\runbackend\build_call_graph_walk_il -- var_name has 0 .varn.vattr_vals.size%$');
     end;
-    110:
+    fortran_symbol:
       if n^.xp[10] = nil then
         if rshft(ord(n^.xc[44]) & 16#F0, 4) = 3 then
           bug_check('\\runbackend\build_call_graph_walk_il -- fortran_symbol has NIL .fsym.ecr.blk_ptr%$');
@@ -651,7 +658,7 @@ begin
     if (ord(b^.xc[379]) & 2) = 0 then begin
       b^.xc[379] := chr(ord(b^.xc[379]) ! 2);
       if b^.xp[25] <> nil then
-        if b^.xp[25]^.kind = 144 then begin
+        if b^.xp[25]^.kind = label_node then begin
           saved_block := il_180;
           saved_ref_stmt := ref_stmt;
           saved_stmt := cur_stmt;
@@ -662,7 +669,8 @@ begin
             cur_stmt := s;
             build_call_graph_walk_il(cur_stmt);
             s := s^.xp[2];
-          until (s = nil) or else ((s^.kind = 149) and (s^.xp[12] = b));
+          until (s = nil) or else ((s^.kind = blk_end_node)
+                                   and (s^.xp[12] = b));
           il_180 := saved_block;
           ref_stmt := saved_ref_stmt;
           cur_stmt := saved_stmt;
@@ -686,7 +694,8 @@ begin
   while b <> nil do begin
     b^.xc[379] := chr(ord(b^.xc[379]) & 16#FD);
     b^.xw[132] := 0;
-    if (b^.kind = 105) or (b^.kind = 108) or (b^.kind = 107) then
+    if (b^.kind = program_blk) or (b^.kind = function_blk)
+        or (b^.kind = procedure_blk) then
       if rb_level_ptr_t(b)^.level = 0 then
         if ord(b^.xc[371]) < 128 then
           b^.xc[374] := chr(ord(b^.xc[374]) ! 8);
@@ -713,7 +722,8 @@ function assert_is_inlineable_utility_routine_in_include_file(
 begin
   if b = nil then
     assert_is_inlineable_utility_routine_in_include_file := false
-  else if ((b^.kind = 105) or (b^.kind = 108) or (b^.kind = 107)) and
+  else if ((b^.kind = program_blk) or (b^.kind = function_blk)
+           or (b^.kind = procedure_blk)) and
           ((ord(b^.xc[375]) & 16#20) <> 0) then
     assert_is_inlineable_utility_routine_in_include_file :=
         not spos_$line_is_in_main_source_file(b^.xw[150])
@@ -744,7 +754,8 @@ var
 begin
   b := il_184;
   while b <> nil do begin
-    if not (((b^.kind = 108) or (b^.kind = 107) or (b^.kind = 105)) and
+    if not (((b^.kind = function_blk) or (b^.kind = procedure_blk)
+             or (b^.kind = program_blk)) and
             (b^.xw[132] <= 0) and ((ord(b^.xc[374]) & 8) = 0)) then
       b := b^.xp[1]
     else begin
@@ -761,7 +772,7 @@ begin
       until (n = nil) or else
             (rb_level_ptr_t(n)^.level < rb_level_ptr_t(b)^.level) or
             ((rb_level_ptr_t(n)^.level = rb_level_ptr_t(b)^.level) and
-             (n^.kind <> 167));
+             (n^.kind <> entry_blk));
       first := b^.xp[25];
       prev_stmt := first^.xp[1];
       next_stmt := b^.xp[26]^.xp[2];
@@ -789,10 +800,12 @@ function assert_is_useless_disp(
 begin
   if d = nil then
     assert_is_useless_disp := false
-  else if (d^.kind = 147) and (d^.xl[8] = 0) then begin
+  else if (d^.kind = disp_node) and (d^.xl[8] = 0) then begin
     if (d^.xl[1] & 16#19001F) <> 0 then
-      assert_is_useless_disp := d^.xp[6]^.kind in [77..90, 92, 93, 101, 156,
-                                                   176, 198, 200]
+      assert_is_useless_disp := d^.xp[6]^.kind in [blogical_ob..complex_ob,
+          char_string_ob, char32_string_ob, char16_ob, set_con_ob,
+                                                   rec_const_ob, dpcomplex_ob,
+                                                       binteger_ob]
     else
       assert_is_useless_disp := true;
   end
@@ -833,12 +846,16 @@ var
 begin
   if t = nil then
     return;
-  if t^.kind in [139..142, 144, 148..151, 188, 191, 214, 215, 223..225,
-                 227, 228, 231, 233] then
+  if t^.kind in [eval_node..cbranch_node, label_node,
+                 block_entry_node..return_node, use_def_ob, reg_list_ob,
+                 case_node_range_check, case_node_no_range_check,
+                 exception_handler_entry..release_dynamic_space,
+                 insert_bit_field, bit_field_assign, spine_mark,
+                     pa_mmu_bip] then
     if t^.xw[10] <> 0 then
       last_line := t^.xw[10];
   case t^.kind of
-    137, 138, 143: begin
+    tree_node, gen_tree_node, cmp_tree_node: begin
       t^.xw[8] := 0;
       for i := t^.xw[19] downto 1 do
         normalize_il(t^.xp[9 + i], fold);
@@ -859,10 +876,10 @@ begin
         end;
       end;
     end;
-    139:
+    eval_node:
       for i := t^.xw[25] downto 1 do
         normalize_il(t^.xp[i + 12], fold);
-    140: begin
+    assign_node: begin
       if not (8 in cargs_$options.opt_on) then
         if 0 in getphase(t^.xp[16]) then begin
           q := t^.xp[17];
@@ -876,22 +893,22 @@ begin
       normalize_il(t^.xp[17], fold);
       normalize_il(t^.xp[18], fold);
     end;
-    142:
+    cbranch_node:
       normalize_il(t^.xp[14], fold);
-    145: begin
+    dindex_node: begin
       t^.xw[8] := 0;
       normalize_il(t^.xp[6], fold);
       normalize_il(t^.xp[9], fold);
     end;
-    146: begin
+    ptr_node: begin
       t^.xw[8] := 0;
       normalize_il(t^.xp[6], fold);
     end;
-    147: begin
+    disp_node: begin
       t^.xw[8] := 0;
       normalize_il(t^.xp[6], fold);
       d := t^.xp[6];
-      if d^.kind = 147 then begin
+      if d^.kind = disp_node then begin
         t^.xl[8] := t^.xl[8] + d^.xl[8];
         t^.xl[1] := t^.xl[1] ! (d^.xl[1] & 16#19001F);
         t^.xp[6] := d^.xp[6];
@@ -904,29 +921,29 @@ begin
         if assert_is_useless_disp(t) then
           t := t^.xp[6];
     end;
-    150, 151, 224, 225:
+    nlbranch_node, return_node, raise_exception, release_dynamic_space:
       normalize_il(t^.xp[12], fold);
-    164: begin
+    cs_node: begin
       t^.xw[8] := 0;
       normalize_il(t^.xp[5], fold);
       normalize_il(t^.xp[6], fold);
     end;
-    165: begin
+    cs_temp: begin
       if t^.xp[2] = nil then
         bug_check('\\runbackend\normalize_il -- cs_temp has NIL .cs_temp.bp%$');
       if t^.xw[11] = 0 then
         bug_check('\\runbackend\normalize_il -- cs_temp has 0 .cs_temp.size%$');
     end;
-    171, 175:
+    cc_call, pf_call:
       normalize_il(t^.xp[4], fold);
-    189:
+    cse_use_ob:
       normalize_il(t^.xp[5], fold);
-    190, 219, 220, 232:
+    cse_parent_ob, isc_fetch, isc_convert, isc_share:
       normalize_il(t^.xp[1], fold);
-    205: begin
+    sym_disp_node: begin
       t^.xw[8] := 0;
       d := t^.xp[6];
-      if d^.kind = 147 then
+      if d^.kind = disp_node then
         if d^.xl[8] = 0 then
           t^.xp[6] := d^.xp[6]
         else
@@ -934,18 +951,18 @@ begin
       if not fold then
         normalize_il(t^.xp[6], fold)
       else begin
-        t^.kind := 147;
+        t^.kind := disp_node;
         d := t^.xp[8];
         case d^.kind of
-          109: t^.xp[8] := d^.xp[14];
-          110: t^.xp[8] := d^.xp[3];
-          163: t^.xp[8] := d^.xp[4];
+          var_name: t^.xp[8] := d^.xp[14];
+          fortran_symbol: t^.xp[8] := d^.xp[3];
+          addr_con: t^.xp[8] := d^.xp[4];
           otherwise
             cgerr(28, 0, nil);
         end;
         normalize_il(t^.xp[6], fold);
         d := t^.xp[6];
-        if d^.kind = 147 then begin
+        if d^.kind = disp_node then begin
           t^.xl[8] := t^.xl[8] + d^.xl[8];
           t^.xl[1] := t^.xl[1] ! (d^.xl[1] & 16#19001F);
           t^.xp[6] := d^.xp[6];
@@ -959,25 +976,25 @@ begin
             t := t^.xp[6];
       end;
     end;
-    227: begin
+    insert_bit_field: begin
       normalize_il(t^.xp[16], fold);
       normalize_il(t^.xp[17], fold);
       normalize_il(t^.xp[18], fold);
     end;
-    228: begin
+    bit_field_assign: begin
       normalize_il(t^.xp[12], fold);
       normalize_il(t^.xp[13], fold);
       normalize_il(t^.xp[14], fold);
       normalize_il(t^.xp[15], fold);
       normalize_il(t^.xp[16], fold);
     end;
-    109: begin
+    var_name: begin
       if t^.xp[5] = nil then
         bug_check('\\runbackend\normalize_il -- var_name has NIL .varn.n.bp%$');
       if t^.xl[9] = 0 then
         bug_check('\\runbackend\normalize_il -- var_name has 0 .varn.vattr_vals.size%$');
     end;
-    110:
+    fortran_symbol:
       if t^.xp[10] = nil then
         if rshft(ord(t^.xc[44]) & 16#F0, 4) = 3 then
           bug_check('\\runbackend\normalize_il -- fortran_symbol has NIL .fsym.ecr.blk_ptr%$');
@@ -1021,7 +1038,7 @@ begin
     repeat
       n := n + 1;
       last := last^.xp[2];
-    until (last^.kind = 149) and (last^.xp[12] = b);
+    until (last^.kind = blk_end_node) and (last^.xp[12] = b);
     runbackend_16 := n;
     saved_next := last^.xp[2];
     last^.xp[2] := nil;
@@ -1032,14 +1049,15 @@ begin
     repeat
       normalize_il(s, flag);
       s := s^.xp[2];
-    until (s = nil) or else ((s^.kind = 149) and (s^.xp[12] = b));
+    until (s = nil) or else ((s^.kind = blk_end_node) and (s^.xp[12] = b));
     il_utils_$set_uc_walk_spine(b^.xp[25], b);
     g_opt;
     perfstop(6);
     if lex_errors <> 0 then
       at_backend_506 := false;
     if not (((ord(b^.xc[374]) & 2) <> 0) and ((ord(b^.xc[374]) & 8) = 0) and
-            (b^.xw[132] = 0) and ((b^.kind = 108) or (b^.kind = 107))) then
+            (b^.xw[132] = 0) and ((b^.kind = function_blk)
+                                  or (b^.kind = procedure_blk))) then
       if cargs_$options.tree = 0 then begin
         if (cargs_$debug_switches['X'] & 7) <> 0 then
           codegen
@@ -1063,7 +1081,8 @@ begin
         repeat
           b^.xc[379] := chr(ord(b^.xc[379]) ! 4);
           b := b^.xp[1];
-        until (b = nil) or else ((b^.kind <> 172) and (b^.kind <> 167));
+        until (b = nil) or else ((b^.kind <> inner_blk)
+                                 and (b^.kind <> entry_blk));
       end;
     last^.xp[2] := saved_next;
   end;
@@ -1088,7 +1107,8 @@ begin
   e := rb_edge_ptr_t(b^.xp[61]);
   while e <> nil do begin
     if e^.callee <> nil then
-      if e^.callee^.kind in [105, 106, 107, 108, 172, 209] then
+      if e^.callee^.kind in [program_blk, module_blk, procedure_blk,
+                             function_blk, inner_blk, blockdata_blk] then
         if (ord(e^.callee^.xc[379]) & 2) = 0 then begin
           is_routine := routine_reference_class(e^.callee, blk, ref) = 0;
           if is_routine then
@@ -1119,7 +1139,8 @@ begin
     e := rb_edge_ptr_t(b^.xp[61]);
     while e <> nil do begin
       if e^.callee <> nil then
-        if e^.callee^.kind in [105, 106, 107, 108, 172, 209] then
+        if e^.callee^.kind in [program_blk, module_blk, procedure_blk,
+                               function_blk, inner_blk, blockdata_blk] then
           if rshft(e^.callee^.xw[188] & 16#180, 7) = 0 then
             if (b^.xp[48] = e^.callee^.xp[48]) and then
                at_backend_$can_load_module_db(b) then begin
@@ -1132,7 +1153,7 @@ begin
             end;
       e := e^.caller_next;
     end;
-    if b^.kind = 167 then
+    if b^.kind = entry_blk then
       at_backend_$initialize_ftn_entry(b);
     if ord(b^.xc[376]) >= 128 then
       fcw_seen := true;
@@ -1169,7 +1190,7 @@ begin
       v := f^.xp[12]
     else
       v := blk_fnd_name(f^.xp[2], false, false, c_blk_ptr_t(blk));
-    if v^.kind = 109 then
+    if v^.kind = var_name then
       v^.xl[14] := v^.xl[14] + 4;
     f := f^.xp[1];
   end;
@@ -1259,7 +1280,7 @@ begin
     if (cargs_$options.cpu * [2, 4, 8, 9, 10] <> []) and fcw_seen then begin
       b := il_184;
       while b <> nil do begin
-        if b^.kind = 167 then
+        if b^.kind = entry_blk then
           fcw := ord(b^.xp[37]^.xc[376]) >= 128
         else
           fcw := ord(b^.xc[376]) >= 128;

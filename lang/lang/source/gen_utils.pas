@@ -169,7 +169,7 @@ begin
     p := p^.xp[1];
   end;
   p := gspace(22);
-  p^.kind := 195;
+  p^.kind := reloc_absolute_addr_con;
   p^.xp[1] := il_130;
   il_130 := p;
   p^.xp[2] := nil;
@@ -203,7 +203,7 @@ function check_for_addr_con(
     sect: il_$node_ptr_t): il_$node_ptr_t;
 var
   p, q: il_$node_ptr_t;
-  k, sk: integer;
+  k, sk: il_$kind_t;
   related: boolean;
   len1, len2: integer32;
   buf1, buf2: array [1..4096] of char;
@@ -211,7 +211,7 @@ var
 begin
   p := sect^.xp[3];
   while p <> nil do begin
-    if p^.kind <> 163 then
+    if p^.kind <> addr_con then
       p := p^.xp[29]
     else begin
       if (p^.xl[3] = value) and (sym = p^.xp[2]) and
@@ -222,38 +222,40 @@ begin
       q := p^.xp[2];
       k := q^.kind;
       sk := sym^.kind;
-      related := ((k = 159) or (k = 110) or (k = 109)) and (sk = 159);
+      related := ((k = lib_dsc) or (k = fortran_symbol) or (k = var_name))
+          and (sk = lib_dsc);
       if not related then
-        related := (k = 159) and ((sk = 109) or (sk = 159) or (sk = 110));
+        related := (k = lib_dsc) and ((sk = var_name) or (sk = lib_dsc)
+                                      or (sk = fortran_symbol));
       if related and (p^.xl[3] = value) and
          ((kind = 8) or (ord(p^.xc[20]) = kind)) then begin
-        if sk = 109 then begin
+        if sk = var_name then begin
           len1 := sym^.xp[1]^.idnt_len;
           for i := 1 to len1 do
             buf1[i] := sym^.xp[1]^.idnt_name[i];
         end
-        else if sk = 110 then begin
+        else if sk = fortran_symbol then begin
           len1 := sym^.xw[35];
           for i := 1 to len1 do
             buf1[i] := sym^.xc[71 + i];
         end
-        else if sk = 159 then begin
+        else if sk = lib_dsc then begin
           len1 := sym^.xw[4];
           for i := 0 to len1 - 1 do
             buf1[i + 1] := sym^.xc[12 + 2 * sym^.xw[5] + i];
         end;
         q := p^.xp[2];
-        if q^.kind = 109 then begin
+        if q^.kind = var_name then begin
           len2 := q^.xp[1]^.idnt_len;
           for i := 1 to len2 do
             buf2[i] := q^.xp[1]^.idnt_name[i];
         end
-        else if q^.kind = 110 then begin
+        else if q^.kind = fortran_symbol then begin
           len2 := q^.xw[35];
           for i := 1 to len2 do
             buf2[i] := q^.xc[71 + i];
         end
-        else if q^.kind = 159 then begin
+        else if q^.kind = lib_dsc then begin
           len2 := q^.xw[4];
           for i := 0 to len2 - 1 do
             buf2[i + 1] := q^.xc[12 + 2 * q^.xw[5] + i];
@@ -374,12 +376,12 @@ begin
   debug_sym_dmp_1090 := false;
   if not no_inlib and (7 in cargs_$options.flags_286) then begin
     case sym^.kind of
-      109, 111:
+      var_name, common_block_name:
         change_name_lower_case(sym^.xp[1], name);
-      107, 108:
+      procedure_blk, function_blk:
         change_name_lower_case(sym^.xp[74], name);
-      110: begin
-        t := idntk(76, sym^.xc[72], sym^.xw[35]);
+      fortran_symbol: begin
+        t := idntk(id_ob, sym^.xc[72], sym^.xw[35]);
         change_name_lower_case(t, name);
       end;
       otherwise
@@ -388,7 +390,7 @@ begin
       opt := 1
     else
       opt := 0;
-    if sym^.kind = 109 then begin
+    if sym^.kind = var_name then begin
       if compare_bytes(name, sym^.xp[1]^.idnt_len, 'stext', 5) = 0 then
         goto in_section;
       if compare_bytes(name, sym^.xp[1]^.idnt_len, 'end', 3) = 0 then
@@ -398,13 +400,13 @@ begin
       if compare_bytes(name, sym^.xp[1]^.idnt_len, 'edata', 5) = 0 then
         goto in_section;
     end;
-    if sym^.kind = 110 then begin
+    if sym^.kind = fortran_symbol then begin
       if compare_bytes(name, sym^.xw[35], 'etext', 5) = 0 then
         goto in_section;
       if compare_bytes(name, sym^.xw[35], 'stext', 5) = 0 then
         goto in_section;
     end;
-    if sym^.kind = 111 then begin
+    if sym^.kind = common_block_name then begin
       flags := 2 ! opt;
       if objutil_$inlib_lookup_section(name, sym^.xp[1]^.idnt_len,
                                        sym^.xl[5], flags) then begin
@@ -413,7 +415,8 @@ begin
         goto in_section;
       end;
     end;
-    if (kind = 4) and ((sym^.kind = 108) or (sym^.kind = 107)) and
+    if (kind = 4) and ((sym^.kind = function_blk)
+                       or (sym^.kind = procedure_blk)) and
        (rshft(sym^.xw[188] & 384, 7) = 2) then begin
       flags := 4 ! opt;
       if objutil_$inlib_lookup_symbol(name, sym^.xp[74]^.idnt_len, flags,
@@ -422,7 +425,7 @@ begin
         goto in_section;
       end;
     end;
-    if (kind = 4) and (sym^.kind = 110) then begin
+    if (kind = 4) and (sym^.kind = fortran_symbol) then begin
       flags := 4 ! opt;
       if objutil_$inlib_lookup_symbol(name, sym^.xw[35], flags, info) then
       begin
@@ -430,7 +433,7 @@ begin
         goto in_section;
       end;
     end;
-    if (kind = 4) and (sym^.kind = 110) then begin
+    if (kind = 4) and (sym^.kind = fortran_symbol) then begin
       flags := 2 ! opt;
       if objutil_$inlib_lookup_symbol(name, sym^.xw[35], flags, info) then
       begin
@@ -438,7 +441,7 @@ begin
         goto in_section;
       end;
     end;
-    if (sym^.kind = 109) and (sym^.xw[36] = 3) then begin
+    if (sym^.kind = var_name) and (sym^.xw[36] = 3) then begin
       flags := 2 ! opt;
       if objutil_$inlib_lookup_symbol(name, sym^.xp[1]^.idnt_len, flags,
                                       info) then begin
@@ -484,7 +487,7 @@ var
 begin
   p := sect^.xp[3];
   while p <> nil do begin
-    if p^.kind <> 163 then
+    if p^.kind <> addr_con then
       p := p^.xp[29]
     else begin
       if (sym = p^.xp[2]) and (ord(p^.xc[20]) = kind) and
@@ -496,7 +499,7 @@ begin
     end;
   end;
   t := gspace(28);
-  t^.kind := 163;
+  t^.kind := addr_con;
   t^.xc[20] := chr(kind);
   t^.xp[1] := sect^.xp[3];
   t^.xp[2] := sym;
@@ -512,7 +515,7 @@ begin
   if sect^.xl[4] < target_properties.p_60 then
     cgerr_no_source(11, integer32(sym));
   if kind = 12 then
-    if sym^.kind in [77..87, 101, 200] then
+    if sym^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
       cgerr_no_source(26, integer32(sym));
   sect^.xp[3] := t;
   get_proc_addr_con := t;
@@ -532,7 +535,7 @@ begin
   while s <> nil do begin
     p := s^.xp[3];
     while p <> nil do
-      if p^.kind = 163 then begin
+      if p^.kind = addr_con then begin
         if p = ac then begin
           find_ac_dsect := s;
           return;
@@ -601,7 +604,7 @@ begin
     t := gspace(28)
   else
     t := gspace(24);
-  t^.kind := 163;
+  t^.kind := addr_con;
   t^.xc[20] := chr(0);
   t^.xp[2] := blk;
   t^.xl[3] := value;
@@ -610,7 +613,7 @@ begin
   if target_properties.p_7f then begin
     v := gspace(84);
     t^.xp[6] := v;
-    v^.kind := 109;
+    v^.kind := var_name;
     v^.xp[1] := t;
     v^.xp[5] := blk;
     v^.xp[7] := runbackend_0c;
@@ -719,11 +722,11 @@ begin
   s := check_section_name(name);
   if s = nil then
     t := nil
-  else if s^.kind = 182 then
+  else if s^.kind = procedure_section then
     t := s
-  else if s^.kind = 76 then begin
+  else if s^.kind = id_ob then begin
     t := gspace(92);
-    t^.kind := 182;
+    t^.kind := procedure_section;
     t^.xp[2] := s;
     t^.xp[1] := il_10c;
     t^.xl[3] := 0;
@@ -749,11 +752,11 @@ begin
   s := check_section_name(name);
   if s = nil then
     t := nil
-  else if s^.kind = 183 then
+  else if s^.kind = data_section then
     t := s
-  else if s^.kind = 76 then begin
+  else if s^.kind = id_ob then begin
     t := gspace(52);
-    t^.kind := 183;
+    t^.kind := data_section;
     t^.xp[2] := s;
     t^.xp[1] := il_110;
     t^.xl[3] := 0;
@@ -800,12 +803,12 @@ var
     s: il_$node_ptr_t;
   begin
     case t^.kind of
-      108, 107:
+      function_blk, procedure_blk:
         get_id_name := t^.xp[74];
-      159:
-        get_id_name := idntk(76, t^.xc[12 + 2 * t^.xw[5]], t^.xw[4]);
-      110:
-        get_id_name := idntk(76, t^.xc[72], t^.xw[35]);
+      lib_dsc:
+        get_id_name := idntk(id_ob, t^.xc[12 + 2 * t^.xw[5]], t^.xw[4]);
+      fortran_symbol:
+        get_id_name := idntk(id_ob, t^.xc[72], t^.xw[35]);
       otherwise begin
         s := strtk('Unknown transfer vector reference', 33);
         cgerr_no_source(28, integer32(s));
@@ -824,14 +827,16 @@ begin
     n := get_id_name(p^.xp[2]);
     m := get_id_name(sym);
     if m = n then begin
-      if (p^.xp[2]^.kind = 159) and ((sym^.kind = 108) or (sym^.kind = 107))
+      if (p^.xp[2]^.kind = lib_dsc) and ((sym^.kind = function_blk)
+                                         or (sym^.kind = procedure_blk))
       then begin
         p^.xp[2] := sym;
         get_transfer_vector := p;
         return;
       end;
       rb := il_184;
-      if (rshft(ord(rb^.xc[377]) & 16#70, 4) <> 6) or (sym^.kind = 159) then
+      if (rshft(ord(rb^.xc[377]) & 16#70, 4) <> 6)
+          or (sym^.kind = lib_dsc) then
       begin
         get_transfer_vector := p;
         return;
@@ -840,7 +845,7 @@ begin
     p := p^.xp[1];
   end;
   p := gspace(20);
-  p^.kind := 192;
+  p^.kind := transfer_vector;
   p^.xp[1] := il_128;
   p^.xp[2] := sym;
   p^.xl[3] := 0;
@@ -867,7 +872,7 @@ begin
     p := p^.xp[1];
   end;
   p := gspace(14);
-  p^.kind := 194;
+  p^.kind := external_ref;
   p^.xp[1] := il_12c;
   p^.xp[2] := sym;
   p^.xw[6] := 0;
@@ -894,13 +899,13 @@ begin
   if not (kind in [1..6, 8..11]) then
     cgerr_no_source(26, integer32(sym));
   t := gspace(24);
-  t^.kind := 163;
+  t^.kind := addr_con;
   t^.xc[20] := chr(kind);
   t^.xp[1] := sect^.xp[3];
   sect^.xp[3] := t;
   t^.xp[2] := sym;
   t^.xl[3] := value;
-  if (kind = 11) and (sym^.kind = 92) then
+  if (kind = 11) and (sym^.kind = char_string_ob) then
     sect^.xl[4] := sect^.xl[4] - ((sym^.str_len + 3) & 16#FFFFFFFC)
   else
     sect^.xl[4] := sect^.xl[4] - 4;

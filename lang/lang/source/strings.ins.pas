@@ -60,6 +60,6 @@ procedure strings_$memcpy(
 { IDNTK - the identifier entry of the len characters s, created with kind
   when there is none.  0x0989D6. }
 function idntk(
-    kind: integer;
+    kind: il_$kind_t;
     in s: univ strings_$bytes_t;
     len: integer): il_$node_ptr_t; options(val_param); extern;

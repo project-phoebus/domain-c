@@ -160,7 +160,7 @@ type
   lex_block_ptr_t = ^lex_block_t;
   lex_block_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     unused_4: array [1..46] of integer32;  { +4..+187 }
     code_sect: il_$node_ptr_t;          { +188: a module's code section
                                           (+8 its name) }
@@ -413,7 +413,7 @@ end;
     (error1(8)); a lone `=' leaves get at once.  `..' not followed by
     `.' gives no token (both dots are dropped).  Another character is
     lex_tokens[ctk_other_char] with the character in its name.
-  At the end (0x055F20) token_kind := lex_token^.kind; at the end of
+  At the end (0x055F20) token_kind := ord(lex_token^.kind); at the end of
   the source an open character constant or string is reported
   (error0(3)), an open comment (error0(1)), and an alignment pushed
   and not popped (error0 of cerr_code_map[80], 0x040D72).
@@ -505,7 +505,8 @@ var
       b: lex_block_ptr_t;
     begin
       b := lex_block_ptr_t(il_180);
-      if (b = nil) or else not ((b^.kind = 108) or (b^.kind = 107)) then
+      if (b = nil) or else not ((b^.kind = function_blk)
+                                or (b^.kind = procedure_blk)) then
         error0(156, lex_line)
       else
         b^.ecb.bits := b^.ecb.bits ! lshft(1, bit);
@@ -789,7 +790,7 @@ var
       mod_name.line := lex_line;
       b := lex_block_ptr_t(cdef_outer_block);
       if b <> nil then
-        if b^.kind = 106 then
+        if b^.kind = module_blk then
           b^.mod_name := mod_name;
       if more_data_on_line then begin
         get;
@@ -914,7 +915,7 @@ var
           error1(188, lex_line, lex_token);
           goto 9;
         end;
-        if dsect^.kind = 111 then begin
+        if dsect^.kind = common_block_name then begin
           error1(194, lex_line, lex_token);
           goto 9;
         end;
@@ -1469,7 +1470,7 @@ var
       end;
       lex_pos := lex_pos - 1;
       if cargs_$options.xansi and (v > 255) then
-        error1(288, lex_line, smcontk(81, v));
+        error1(288, lex_line, smcontk(integer_ob, v));
       get_backslash_char := chr(v);
     end
     else
@@ -1494,7 +1495,7 @@ var
             end;
           until done;
           if cargs_$options.xansi and (v > 255) then
-            error1(288, lex_line, smcontk(81, v));
+            error1(288, lex_line, smcontk(integer_ob, v));
           get_backslash_char := chr(v);
         end;
         't': get_backslash_char := chr(9);
@@ -1595,7 +1596,7 @@ var
       n := p^.str_len;
     end;
     lex_token := strtk(wide_buf, n * 4);
-    lex_token^.kind := ctk_wstring;
+    lex_token^.kind := char32_string_ob;
   end;
 
   { get_char_const - a character constant (up to four characters) to
@@ -1639,7 +1640,7 @@ var
     if ch <> '''' then
       error0(3, lex_line);
     quote_state := 0;
-    lex_token := smcontk(ctk_int_con, v);
+    lex_token := smcontk(integer_ob, v);
   end;
 
   { get_wchar_const - a wide character constant: kind 85.
@@ -1649,7 +1650,7 @@ var
   procedure get_wchar_const;
   begin
     get_char_const;
-    lex_token := smcontk(ctk_unsigned_con, lex_token^.int_value);
+    lex_token := smcontk(ulinteger_ob, lex_token^.int_value);
   end;
 
   { peekchar - the next character without taking it (chr(0) past the
@@ -1727,7 +1728,7 @@ var
       c := lex_text.body[lex_pos];
       lex_pos := lex_pos + 1;
     until not (c in ['a'..'z', 'A'..'Z', '0'..'9', '_', '$']);
-    lex_token := idntk(ctk_identifier, buf, n);
+    lex_token := idntk(id_ob, buf, n);
     lex_pos := lex_pos - 1;
     if clipped then
       error1(197, lex_line, lex_token);
@@ -1760,7 +1761,7 @@ var
   var
     ndigits: integer;
     base: integer;
-    kind: integer;
+    kind: il_$kind_t;
     r: record case integer of
       1: (d: double);
       2: (w: array [1..4] of integer);
@@ -1890,27 +1891,27 @@ var
         lex_token := dpcontk(r.d);
     end
     else begin
-      kind := ctk_int_con;
+      kind := integer_ob;
       if (ch = 'L') or (ch = 'l') then begin
         get_character;
-        kind := ctk_long_con;
+        kind := linteger_ob;
         if (ch = 'U') or (ch = 'u') then begin
           get_character;
-          kind := ctk_unsigned_con;
+          kind := ulinteger_ob;
         end;
       end
       else if (ch = 'U') or (ch = 'u') then begin
         get_character;
-        kind := ctk_unsigned_con;
+        kind := ulinteger_ob;
         if (ch = 'L') or (ch = 'l') then begin
           get_character;
-          kind := ctk_unsigned_con;
+          kind := ulinteger_ob;
         end;
       end;
       if value > 32767 then
-        kind := ctk_long_con;
+        kind := linteger_ob;
       if cargs_$options.xansi and (value < 0) then
-        kind := ctk_unsigned_con;
+        kind := ulinteger_ob;
       lex_token := smcontk(kind, value);
     end;
     lex_pos := lex_pos - 1;
@@ -2193,10 +2194,10 @@ begin { get }
         else begin
           get;
           if (token_kind = ctk_identifier) and
-             (lex_token = idntk(ctk_identifier, 'attribute', 9)) then
+             (lex_token = idntk(id_ob, 'attribute', 9)) then
             lex_token := addr(kw_attribute)
           else if (token_kind = ctk_identifier) and
-                  (lex_token = idntk(ctk_identifier, 'options', 7)) then
+                  (lex_token = idntk(id_ob, 'options', 7)) then
             lex_token := addr(kw_options)
           else begin
             parse_directive;
@@ -2216,7 +2217,7 @@ begin { get }
   2:
   until lex_token <> nil;
 99:
-  token_kind := lex_token^.kind;
+  token_kind := ord(lex_token^.kind);
   if token_kind = ctk_eof then begin
     if (quote_state = 1) or (quote_state = 2) then
       error0(3, lex_line)
@@ -2238,7 +2239,7 @@ procedure clex_$unget(
 begin
   unget_kind := token_kind;
   unget_token := lex_token;
-  token_kind := kind;
+  token_kind := ord(kind);
   lex_token := tok;
 end;
 
@@ -2263,7 +2264,8 @@ var
   i, m: integer;
   t: il_$node_ptr_t;
 begin
-  if (s2 = nil) or else not ((s2^.kind = ctk_wstring) or (s2^.kind = ctk_string)) then begin
+  if (s2 = nil) or else not ((s2^.kind = char32_string_ob)
+                             or (s2^.kind = char_string_ob)) then begin
     error0(287, lex_line);
     clex_$catstring := s1;
     return;
@@ -2272,7 +2274,8 @@ begin
     clex_$catstring := s2;
     return;
   end;
-  if not ((s1^.kind = ctk_wstring) or (s1^.kind = ctk_string)) then begin
+  if not ((s1^.kind = char32_string_ob)
+          or (s1^.kind = char_string_ob)) then begin
     error0(287, lex_line);
     clex_$catstring := s2;
     return;

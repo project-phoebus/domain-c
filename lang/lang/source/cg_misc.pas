@@ -122,7 +122,7 @@ begin
         name := ' (BYTE)         ';
       prtcats(line, name, 8);
       prtobj(line, cg_addr_regs[r].obj);
-      if cg_addr_regs[r].obj^.kind = 138 then begin
+      if cg_addr_regs[r].obj^.kind = gen_tree_node then begin
         prtcats(line, ' UC=', 4);
         prtint(line, cg_addr_regs[r].obj^.xw[8], 3, false);
       end;
@@ -230,19 +230,19 @@ begin
     r := odd(d.disp) or d.inexact;
     if d.base <> nil then
       case d.base^.kind of
-        109: begin
+        var_name: begin
           if (d.base^.xw[36] = 3) or (d.base^.xw[36] = 5) then
             r := true;
         end;
-        118: begin
+        type_name: begin
           repeat
             d.base := d.base^.xp[7];
-          until d.base^.kind <> 118;
-          if d.base^.kind <> 132 then
+          until d.base^.kind <> type_name;
+          if d.base^.kind <> record_type then
             r := true;
         end;
-        92, 111: ;
-        110: begin
+        char_string_ob, common_block_name: ;
+        fortran_symbol: begin
           if rshft(ord(d.base^.xc[11]) & 16#F0, 4) = 5 then
             r := true
           else if odd(ord(d.base^.xc[15])) then
@@ -261,7 +261,7 @@ end;
 function zero_check(
     n: il_$node_ptr_t): boolean; options(val_param);
 begin
-  if n^.kind in [77..87, 101, 200] then
+  if n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
     zero_check := n^.xl[2] = 0
   else
     zero_check := false;
@@ -311,7 +311,7 @@ begin
   emit(0, 2, r, a, 0);
   a.f1 := f1;
   a.y := y;
-  address(smcontk(81, 2), 0, lab);
+  address(smcontk(integer_ob, 2), 0, lab);
   emit(1, 2, r, lab, 0);
   unlock(lab);
   shift(r, 2, 2, 2);
@@ -335,7 +335,7 @@ begin
     size := 4
   else
     size := 2;
-  k := smcontk(81, count);
+  k := smcontk(integer_ob, count);
   load_modifiable(k, size, r);
   kill_register(r.f2);
   address(templabel, 0, lab);
@@ -355,7 +355,7 @@ begin
   if count <= 65535 then
     emit(28, 2, lab, r, 1)
   else begin
-    address(smcontk(81, 1), 4, t);
+    address(smcontk(integer_ob, 1), 4, t);
     emit(2, 4, r, t, 0);
     emit(20, 5, lab, cg_null_ads, 10);
     release(t);
@@ -403,7 +403,7 @@ var
 begin
   if count <> 0 then begin
     if (count = 1) and (a.f1 <> 1) and (size = 2) then begin
-      address(smcontk(81, 1), 0, t);
+      address(smcontk(integer_ob, 1), 0, t);
       emit(13, size, a, t, how);
       unlock(t);
     end
@@ -436,14 +436,14 @@ begin
       end
       else begin
         if count > 8 then begin
-          address(smcontk(81, 8), 0, t);
+          address(smcontk(integer_ob, 8), 0, t);
           emit(13, size, a, t, how);
           count := count - 8;
         end;
         if (count = 1) and ((how = 3) or (how = 1)) then
           emit(1, size, a, a, 0)
         else if count <> 0 then begin
-          address(smcontk(81, count), 0, t);
+          address(smcontk(integer_ob, count), 0, t);
           emit(13, size, a, t, how);
         end;
       end;
@@ -481,7 +481,7 @@ var
   k: integer;
 begin
   case n^.kind of
-    92: begin
+    char_string_ob: begin
       v.c[0] := n^.str_chars[1];
       for i := 2 to n^.str_len do
         if n^.str_chars[i] <> v.c[0] then
@@ -490,7 +490,7 @@ begin
         goto replicate;
       a := cg_zero_ads;
     end;
-    156, 212: begin
+    set_con_ob, namelist_constant_ob: begin
       if (n^.set_len = 4) or (n^.set_len = 2) or (n^.set_len = 1) then
         address(n, n^.set_len, a)
       else begin
@@ -508,7 +508,7 @@ begin
         a := cg_zero_ads;
       end;
     end;
-    89: begin
+    dpreal_ob: begin
       if n^.real_value <> 0.0 then
         goto general;
       a := cg_zero_ads;
@@ -521,7 +521,7 @@ replicate:
   v.c[1] := v.c[0];
   v.c[2] := v.c[0];
   v.c[3] := v.c[0];
-  load_operand(smcontk(81, v.l), 4, a);
+  load_operand(smcontk(integer_ob, v.l), 4, a);
   return;
 general:
   load_address(n, a);
@@ -556,7 +556,7 @@ var
 begin
   save := cg_addr_next_areg;
   cg_addr_next_areg := 8;
-  address(smcontk(81, value), 4, v);
+  address(smcontk(integer_ob, value), 4, v);
   if len <= 8 then begin
     address(n, 0, d);
     while len >= 4 do begin

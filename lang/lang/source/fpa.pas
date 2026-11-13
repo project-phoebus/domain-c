@@ -235,7 +235,7 @@ begin
   end
   else if size >= 7 then begin
     if t.f1 = 3 then begin
-      t.x := integer32(smcontk(81, il_$node_ptr_t(b.x)^.xl[4]));
+      t.x := integer32(smcontk(integer_ob, il_$node_ptr_t(b.x)^.xl[4]));
       t.f6 := 2;
       t.y := 0;
     end
@@ -254,7 +254,7 @@ begin
     end;
     t := b;
     if t.f1 = 3 then
-      t.x := integer32(smcontk(81, il_$node_ptr_t(b.x)^.xl[3]));
+      t.x := integer32(smcontk(integer_ob, il_$node_ptr_t(b.x)^.xl[3]));
   end;
   fpa_reg.y := ra_fpreg(a.f2) + fpa_ops[op];
   case op of
@@ -355,7 +355,7 @@ begin
     fpa_reg.f3 := 31;
     fpa_reg.f6 := 1;
     if t.f1 = 3 then begin
-      t.x := integer32(smcontk(81, il_$node_ptr_t(b.x)^.xl[3]));
+      t.x := integer32(smcontk(integer_ob, il_$node_ptr_t(b.x)^.xl[3]));
       t.f6 := 2;
       t.y := 0;
     end;
@@ -367,7 +367,7 @@ begin
     fpa_reg.f6 := 1;
     u := t;
     if t.f1 = 3 then
-      u.x := integer32(smcontk(81, il_$node_ptr_t(b.x)^.xl[4]))
+      u.x := integer32(smcontk(integer_ob, il_$node_ptr_t(b.x)^.xl[4]))
     else
       u.y := t.y + 4;
     emit(eop, size, fpa_reg, u, 0);
@@ -732,7 +732,7 @@ var
   o: integer;
 begin
   get_register(nil, 2, fpa_dreg);
-  address(smcontk(81, 2), 0, k);
+  address(smcontk(integer_ob, 2), 0, k);
   case cc of
     6, 7: begin
       if size = 6 then
@@ -996,9 +996,9 @@ begin
   if (size = 12) or (size = 8) then
     if op in [10, 19, 28, 37, 46, 55, 86] then begin
       if size = 8 then
-        address(smcontk(81, 8), 0, c)
+        address(smcontk(integer_ob, 8), 0, c)
       else
-        address(smcontk(81, 16), 0, c);
+        address(smcontk(integer_ob, 16), 0, c);
       address_reg(15, sp);
       emit(1, 2, sp, c, 0);
     end;
@@ -1031,15 +1031,15 @@ begin
     s.y := 0;
     d.y := ra_fpreg(d.f2) + fpa_ops[493];
     if part = 0 then
-      s.x := integer32(smcontk(81, il_$node_ptr_t(s.x)^.xl[3]))
+      s.x := integer32(smcontk(integer_ob, il_$node_ptr_t(s.x)^.xl[3]))
     else
-      s.x := integer32(smcontk(81, il_$node_ptr_t(s.x)^.xl[5]));
+      s.x := integer32(smcontk(integer_ob, il_$node_ptr_t(s.x)^.xl[5]));
     emit_assign(6, d, s);
     d.y := ra_fpreg(d.f2) + fpa_ops[494];
     if part = 0 then
-      s.x := integer32(smcontk(81, il_$node_ptr_t(s.x)^.xl[4]))
+      s.x := integer32(smcontk(integer_ob, il_$node_ptr_t(s.x)^.xl[4]))
     else
-      s.x := integer32(smcontk(81, il_$node_ptr_t(s.x)^.xl[6]));
+      s.x := integer32(smcontk(integer_ob, il_$node_ptr_t(s.x)^.xl[6]));
     emit_assign(6, d, s);
   end
   else if s.f1 = 13 then
@@ -1107,9 +1107,9 @@ begin
       release(v);
       if n = nil then
         cg_addr_regs[x].obj2 := n
-      else if n^.kind = 190 then
+      else if n^.kind = cse_parent_ob then
         cg_addr_regs[x].obj2 := n^.xp[1]
-      else if n^.kind = 189 then
+      else if n^.kind = cse_use_ob then
         cg_addr_regs[x].obj2 := n^.xp[5]
       else
         cg_addr_regs[x].obj2 := n;
@@ -1130,7 +1130,7 @@ begin
         c := v;
         c.f6 := 2;
         c.y := 0;
-        c.x := integer32(smcontk(81, il_$node_ptr_t(v.x)^.xl[3]));
+        c.x := integer32(smcontk(integer_ob, il_$node_ptr_t(v.x)^.xl[3]));
         emit_assign(sz, u, c);
       end
       else
@@ -1140,7 +1140,7 @@ begin
     address_reg(17, r2);
     if size = 8 then
       if v.f1 = 3 then begin
-        c.x := integer32(smcontk(81, il_$node_ptr_t(v.x)^.xl[4]));
+        c.x := integer32(smcontk(integer_ob, il_$node_ptr_t(v.x)^.xl[4]));
         emit_assign(sz, r2, c);
       end
       else begin
@@ -1161,9 +1161,9 @@ begin
         c := u;
         c.f6 := 2;
         c.y := 0;
-        c.x := integer32(smcontk(81, il_$node_ptr_t(u.x)^.xl[3]));
+        c.x := integer32(smcontk(integer_ob, il_$node_ptr_t(u.x)^.xl[3]));
         emit(0, 4, v, c, 0);
-        c.x := integer32(smcontk(81, il_$node_ptr_t(u.x)^.xl[4]));
+        c.x := integer32(smcontk(integer_ob, il_$node_ptr_t(u.x)^.xl[4]));
         emit(0, 4, v, c, 0);
       end
       else begin
@@ -1176,13 +1176,13 @@ begin
       c := u;
       c.f6 := 2;
       c.y := 0;
-      c.x := integer32(smcontk(81, il_$node_ptr_t(u.x)^.xl[4]));
+      c.x := integer32(smcontk(integer_ob, il_$node_ptr_t(u.x)^.xl[4]));
       emit(0, 4, v, c, 0);
-      c.x := integer32(smcontk(81, il_$node_ptr_t(u.x)^.xl[3]));
+      c.x := integer32(smcontk(integer_ob, il_$node_ptr_t(u.x)^.xl[3]));
       emit(0, 4, v, c, 0);
-      c.x := integer32(smcontk(81, il_$node_ptr_t(u.x)^.xl[6]));
+      c.x := integer32(smcontk(integer_ob, il_$node_ptr_t(u.x)^.xl[6]));
       emit(0, 4, v, c, 0);
-      c.x := integer32(smcontk(81, il_$node_ptr_t(u.x)^.xl[5]));
+      c.x := integer32(smcontk(integer_ob, il_$node_ptr_t(u.x)^.xl[5]));
       emit(0, 4, v, c, 0);
     end
     else begin
@@ -1303,13 +1303,13 @@ var
   m: il_$node_ptr_t;
 begin
   m := n;
-  if m^.kind = 190 then
+  if m^.kind = cse_parent_ob then
     m := m^.xp[1]
-  else if m^.kind = 189 then
+  else if m^.kind = cse_use_ob then
     m := m^.xp[5];
   if (cg_tree_ptr_t(m)^.w18 < 0) and at_backend_506 then begin
-    m^.kind := 138;
-    if t^.kind = 152 then
+    m^.kind := gen_tree_node;
+    if t^.kind = alloc_temp then
       push_fpa_opr(t, 63, cg_tree_ptr_t(m)^.desc.rlen, 16)
     else begin
       get_temp(m, false);

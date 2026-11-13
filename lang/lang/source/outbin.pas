@@ -457,7 +457,7 @@ begin
       (c^.ads1.f1 = 3) and (c^.ads1.f6 = 1) and (c^.ads2.f1 = 12) and
       ((c^.ads2.f5 & 5) <> 0) and (c^.ads2.x <> 0) then begin
     s := il_$node_ptr_t(c^.ads2.x);
-    if s^.kind = 92 then begin
+    if s^.kind = char_string_ob then begin
       assert_is_an_fpx_command_instr := substr(fpx_chars_ptr_t(addr(s^.str_chars))^, 1, s^.str_len) = 'CommandCIR';
       return;
     end;
@@ -559,7 +559,7 @@ end;
 function assert_is_inlined_block(
     b: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
-  if (b <> nil) and (b^.kind = 172) then
+  if (b <> nil) and (b^.kind = inner_blk) then
     assert_is_inlined_block := (ord(b^.xc[374]) & 4) <> 0
   else
     assert_is_inlined_block := false;
@@ -978,7 +978,7 @@ begin
         prtcats(s, ': ', 2);
         if rs^.regs[r].node <> nil then begin
           case rs^.regs[r].node^.kind of
-            138, 145, 146, 147: begin
+            gen_tree_node, dindex_node, ptr_node, disp_node: begin
               prtcats(s, 'CSE ', 4);
               prtint(s, rs^.regs[r].node^.xw[5], 5, false);
             end;
@@ -1121,7 +1121,7 @@ begin
       uobj_lnno_list^.next := l;
       uobj_lnno_list := uobj_lnno_list^.next;
     end;
-    if blk^.kind <> 172 then
+    if blk^.kind <> inner_blk then
       il_180 := blk;
   end;
 end;
@@ -1272,7 +1272,8 @@ begin
     return;
   end;
   n := il_$node_ptr_t(u.x);
-  if (n^.kind = 144) and (rshft(ord(n^.xc[72]) & 16#3E, 1) = 13) then begin
+  if (n^.kind = label_node) and (rshft(ord(n^.xc[72]) & 16#3E,
+                                       1) = 13) then begin
     c := codegen_$cell_ptr_t(n^.xp[20])^.prev;
     if c^.kind = block_start_instyp then
       if c^.blk^.xp[74] <> nil then begin
@@ -1302,7 +1303,7 @@ var
   off: integer;
 begin
   prtcatc(s, '{');
-  if p^.kind = 140 then begin
+  if p^.kind = assign_node then begin
     if (p^.xw[27] >= 8) and (p^.xw[27] + p^.xw[28] <= 16) and
         (size <> 1) then
       off := p^.xw[27] - 8
@@ -1312,7 +1313,7 @@ begin
     prtcatc(s, ':');
     prtint(s, p^.xw[28], 5, false);
   end
-  else if p^.kind = 138 then begin
+  else if p^.kind = gen_tree_node then begin
     if (p^.xw[13] >= 8) and (p^.xw[13] + p^.xw[14] <= 16) then
       off := p^.xw[13] - 8
     else
@@ -1376,7 +1377,7 @@ procedure dump_bit_field(
 var
   off: integer;
 begin
-  if p^.kind = 140 then begin
+  if p^.kind = assign_node then begin
     if (p^.xw[27] >= 8) and (p^.xw[27] + p^.xw[28] <= 16) and
         (size <> 1) then
       off := p^.xw[27] - 8
@@ -1385,7 +1386,7 @@ begin
     writeln('                field  offset = ', off);
     write('                field  width  = ', p^.xw[28]);
   end
-  else if p^.kind = 138 then begin
+  else if p^.kind = gen_tree_node then begin
     if (p^.xw[13] >= 8) and (p^.xw[13] + p^.xw[14] <= 16) then
       off := p^.xw[13] - 8
     else
@@ -1656,9 +1657,10 @@ begin
       end
       else begin
         n := il_$node_ptr_t(u.x);
-        if ((n^.kind = 138) or (n^.kind = 143)) and (n^.xp[10] <> nil)
+        if ((n^.kind = gen_tree_node) or (n^.kind = cmp_tree_node))
+            and (n^.xp[10] <> nil)
             then begin
-          if n^.xp[10]^.kind = 152 then
+          if n^.xp[10]^.kind = alloc_temp then
             prtcats(s, 'T$', 2)
           else
             prtcats(s, 'F$', 2);
@@ -1683,7 +1685,7 @@ begin
     4, 6: begin
       if u.x <> 0 then begin
         n := il_$node_ptr_t(u.x);
-        if not ((n^.kind = 138) and (n^.xw[18] = 13)) then
+        if not ((n^.kind = gen_tree_node) and (n^.xw[18] = 13)) then
           prtobj(s, n);
       end
       else if u.y <> 0 then
@@ -1895,7 +1897,8 @@ begin
         else if c^.op = 216 then begin
           prtcatc(s, '{');
           k := il_$node_ptr_t(c^.ads1.x);
-          if (k <> nil) and (k^.kind in [77..87, 101, 200]) then
+          if (k <> nil) and (k^.kind in [blogical_ob..char_ob, char16_ob,
+                                         binteger_ob]) then
             prtint(s, k^.int_value, 5, false)
           else
             prtcats(s, regs[c^.ads1.f2], 2);
@@ -2148,7 +2151,7 @@ begin
       if c^.size = 2 then begin
         d.l := br_distance(c^.ads2) - 2;
         if abs(d.low) > 254 then
-          cgerr(10, cur_line, smcontk(81, c^.addr))
+          cgerr(10, cur_line, smcontk(integer_ob, c^.addr))
         else if d.l = 0 then begin
           w := 16#4E71;
           c^.kind := align_instyp;
@@ -2282,7 +2285,7 @@ var
 begin
   if nrelocs <> 0 then begin
     r := gspace(212);
-    r^.kind := 193;
+    r^.kind := proc_reloc;
     r^.xp[1] := nil;
     r^.xw[5] := nrelocs;
     for i := 1 to nrelocs do begin
@@ -2316,17 +2319,17 @@ var
   i: integer;
 begin
   case p^.kind of
-    167, 108, 107:
+    entry_blk, function_blk, procedure_blk:
       get_reloc_symndx := p^.xw[133];
-    192:
+    transfer_vector:
       get_reloc_symndx := uobj_5d6c.l;
-    194:
+    external_ref:
       get_reloc_symndx := get_reloc_symndx(p^.xp[2], 0);
-    183:
+    data_section:
       get_reloc_symndx := p^.xw[22];
-    111:
+    common_block_name:
       get_reloc_symndx := p^.xw[16];
-    109:
+    var_name:
       if p^.xw[36] in [1, 7] then
         get_reloc_symndx := p^.xp[5]^.xp[48]^.xw[22]
       else begin
@@ -2334,22 +2337,22 @@ begin
         if (p^.xw[38] = 0) and (p^.xw[36] = 10) then
           get_reloc_symndx := p^.xp[20]^.xw[16];
       end;
-    110:
+    fortran_symbol:
       get_reloc_symndx := p^.xw[33];
-    159:
+    lib_dsc:
       for i := 1 to uobj_global_name_count.low do
         if uobj_global_names[i].name = p then begin
           get_reloc_symndx := uobj_global_names[i].symndx;
           return;
         end;
-    195:
+    reloc_absolute_addr_con:
       get_reloc_symndx := get_reloc_symndx(p^.xp[3], 0);
-    163:
-      if p^.xp[2]^.kind = 144 then
+    addr_con:
+      if p^.xp[2]^.kind = label_node then
         get_reloc_symndx := get_reloc_symndx(p^.xp[2], p^.xp[6]^.xw[32])
       else
         get_reloc_symndx := get_reloc_symndx(p^.xp[2], 0);
-    144:
+    label_node:
       get_reloc_symndx := n;
     otherwise
       cgerr_no_source(28,
@@ -2439,19 +2442,20 @@ var
     off: unix_objmod_$count_t;
   begin
     off.l := offset;
-    while not (p^.kind in [107..111, 167, 183, 192, 194]) do
+    while not (p^.kind in [procedure_blk..common_block_name, entry_blk,
+                           data_section, transfer_vector, external_ref]) do
       case p^.kind of
-        147: p := p^.xp[6];
-        146: p := p^.xp[6];
-        164: p := p^.xp[5];
-        195: begin
+        disp_node: p := p^.xp[6];
+        ptr_node: p := p^.xp[6];
+        cs_node: p := p^.xp[5];
+        reloc_absolute_addr_con: begin
           if p^.xw[10] = 1 then
             exit;
           off.l := off.l + p^.xl[4];
           p := p^.xp[3];
         end;
         otherwise
-          cgerr_no_source(20, integer32(idntk(76, 'CASE ', 5)));
+          cgerr_no_source(20, integer32(idntk(id_ob, 'CASE ', 5)));
       end;
     add_proc_reloc(obj_off + direct_base, sect, get_reloc_symndx(p, 0),
         p);
@@ -2740,9 +2744,11 @@ var
         12: begin
           n := il_$node_ptr_t(a.x);
           case n^.kind of
-            81, 79, 78, 77, 87, 85, 84, 83, 86, 80, 82, 200:
+            integer_ob, llogical_ob, slogical_ob, blogical_ob, char_ob,
+                ulinteger_ob, uinteger_ob, usinteger_ob, ubinteger_ob,
+                sinteger_ob, linteger_ob, binteger_ob:
               x := n^.int_value;
-            109:
+            var_name:
               x := 0;
             otherwise
               x := 0;
@@ -2760,33 +2766,33 @@ var
         3: begin
           n := il_$node_ptr_t(a.x);
           case a.f6 of
-            0: if n^.kind = 92 then begin
+            0: if n^.kind = char_string_ob then begin
                 v.c[1] := chr(0);
                 v.c[2] := n^.str_chars[1];
                 write_proc(v.high);
               end
               else
                 write_proc(ord(n^.xc[11]));
-            1: if n^.kind = 92 then begin
+            1: if n^.kind = char_string_ob then begin
                 for i := 1 to 2 do
                   v.c[i] := n^.str_chars[i];
                 write_proc(v.high);
               end
               else
                 write_proc(n^.xw[5]);
-            2: if n^.kind = 88 then begin
+            2: if n^.kind = real_ob then begin
                 d.l[1] := 0;
                 v.r := dbl_to_real(n, cur_line);
                 write_proc(v.high);
                 write_proc(v.low);
               end
-              else if n^.kind = 92 then begin
+              else if n^.kind = char_string_ob then begin
                 for i := 1 to 4 do
                   v.c[i] := n^.str_chars[i];
                 write_proc(v.high);
                 write_proc(v.low);
               end
-              else if n^.kind = 195 then
+              else if n^.kind = reloc_absolute_addr_con then
                 reloc_proc_addr(n, 0)
               else begin
                 v.l := n^.int_value;
@@ -2851,7 +2857,7 @@ var
           stmt_no.l := 0;
           cur_line := ln;
         end;
-        if c^.blk^.kind <> 172 then begin
+        if c^.blk^.kind <> inner_blk then begin
           range := gen_debug_$range_open(0, c^.blk^.xw[133],
               emit_108.e110.l - sect_base);
           entry_pending := false;
@@ -2896,7 +2902,7 @@ var
     procedure coff_lines_proc_end;
     begin
       if (cargs_$options.db <> 0) and (il_d4 <> nil) then begin
-        if return_pending and (c^.blk^.kind <> 172) then begin
+        if return_pending and (c^.blk^.kind <> inner_blk) then begin
           if range_depth = 0 then
             gen_debug_$lines_return
           else
@@ -2906,7 +2912,7 @@ var
         end;
         c^.blk^.xl[40] := obj_off - c^.blk^.xl[40];
         stmt_open := false;
-        if c^.blk^.kind <> 172 then begin
+        if c^.blk^.kind <> inner_blk then begin
           in_routine := false;
           if scope_open and not scope_closed then
             end_unwind_scope(il_180, emit_108.e110.l - sect_base, scope);
@@ -3003,13 +3009,13 @@ var
   begin
     saved := nil;
     if (c^.kind = m020_dest2_instyp) or (c^.kind = m020_src2_instyp) then
-      if (c^.ads2.x <> 0) and (il_$node_ptr_t(c^.ads2.x)^.kind = 140)
+      if (c^.ads2.x <> 0) and (il_$node_ptr_t(c^.ads2.x)^.kind = assign_node)
           then begin
         saved := il_$node_ptr_t(c^.ads2.x);
         c^.ads2.x := saved^.xl[16];
       end
       else if (c^.ads1.x <> 0) and
-          (il_$node_ptr_t(c^.ads1.x)^.kind = 138) then begin
+          (il_$node_ptr_t(c^.ads1.x)^.kind = gen_tree_node) then begin
         saved := il_$node_ptr_t(c^.ads1.x);
         c^.ads1.x := saved^.xl[10];
       end;
@@ -3020,7 +3026,7 @@ var
     if (c^.kind = line_no_instyp) or (c^.kind = block_end_instyp) or
         (c^.kind = block_start_instyp) then begin
       if not lines_pending then
-        if (c^.kind = line_no_instyp) or (c^.blk^.kind <> 172) then
+        if (c^.kind = line_no_instyp) or (c^.blk^.kind <> inner_blk) then
           coff_lines_instruction;
       if (c^.kind = line_no_instyp) and (c^.line = cur_line) and
           (not at_block_start or (first_line = c^.line)) and
@@ -3109,7 +3115,7 @@ var
               list_depth := list_depth + 1;
         if list_depth = 0 then
           advance_listing_to_line(list_line);
-        if (c^.kind = block_end_instyp) and (c^.blk^.kind = 172) and
+        if (c^.kind = block_end_instyp) and (c^.blk^.kind = inner_blk) and
             ((ord(c^.blk^.xc[374]) & 4) <> 0) then
           list_depth := list_depth - 1;
         error_listing_0c := false;
@@ -3122,11 +3128,11 @@ var
           end;
       end;
       if c^.kind = block_start_instyp then begin
-        if (c^.blk^.kind <> 172) and (c^.blk^.kind <> 167) then
+        if (c^.blk^.kind <> inner_blk) and (c^.blk^.kind <> entry_blk) then
           ln_begin(c^.blk, sect, c^.blk^.xw[133]);
       end
       else if c^.kind = block_end_instyp then begin
-        if c^.blk^.kind <> 172 then begin
+        if c^.blk^.kind <> inner_blk then begin
           ln_end(c^.blk);
           for i := 0 to 31 do
             shown[i] := nil;
@@ -3151,7 +3157,7 @@ var
     end;
     if c^.kind = def_lbl_instyp then begin
       if emit_108.e110.l - sect_base <> c^.addr then
-        cgerr(16, cur_line, smcontk(81, c^.addr));
+        cgerr(16, cur_line, smcontk(integer_ob, c^.addr));
       if c^.ads2.x <> 0 then
         il_$node_ptr_t(c^.ads2.x)^.xl[14] := emit_108.e110.l - sect_base;
       if cargs_$options.exp then begin
@@ -3165,20 +3171,20 @@ var
     if c^.kind = inline_instyp then begin
       n := il_$node_ptr_t(c^.ads2.x);
       case n^.kind of
-        88: define_constant(n, 3);
-        89: define_constant(n, 4);
-        90: define_constant(n, 5);
-        198: define_constant(n, 9);
-        157: case n^.xw[10] of
+        real_ob: define_constant(n, 3);
+        dpreal_ob: define_constant(n, 4);
+        complex_ob: define_constant(n, 5);
+        dpcomplex_ob: define_constant(n, 9);
+        def_const_ob: case n^.xw[10] of
           1: define_constant(n, 0);
           2: define_constant(n, 1);
           4: define_constant(n, 2);
           otherwise
             cgerr(3, cur_line, nil);
         end;
-        92: define_constant(n, 6);
-        156, 212: define_constant(n, 7);
-        195: define_constant(n, 8);
+        char_string_ob: define_constant(n, 6);
+        set_con_ob, namelist_constant_ob: define_constant(n, 7);
+        reloc_absolute_addr_con: define_constant(n, 8);
         otherwise
           cgerr(3, cur_line, nil);
       end;
@@ -3387,7 +3393,8 @@ var
       end;
       m020_dest1_instyp: begin
         n := il_$node_ptr_t(c^.ads1.x);
-        if (n <> nil) and (n^.kind in [77..87, 101, 200]) then
+        if (n <> nil) and (n^.kind in [blogical_ob..char_ob, char16_ob,
+                                       binteger_ob]) then
           write_proc(lshft(n^.int_value, 6) + 1)
         else
           write_proc(lshft(c^.ads1.f2, 6) + 2049);
@@ -3435,7 +3442,8 @@ var
             prtcatc(line, '{');
             n := il_$node_ptr_t(c^.ads1.x);
             if n <> nil then
-              if (n^.kind in [77..87, 101, 200]) then
+              if (n^.kind in [blogical_ob..char_ob, char16_ob,
+                              binteger_ob]) then
                 prtint(line, n^.int_value, 5, false)
               else
                 prtcats(line, regs[c^.ads1.f2], 2);
@@ -3550,7 +3558,7 @@ var
     end;
   9:
     if saved <> nil then
-      if saved^.kind = 140 then
+      if saved^.kind = assign_node then
         c^.ads2.x := integer32(saved)
       else
         c^.ads1.x := integer32(saved);
@@ -3572,7 +3580,7 @@ var
       prtobj(line, s^.xp[2]);
       prttab(line, 40);
       prtcats(line, ' DFSECT', 7);
-      if s^.kind = 182 then begin
+      if s^.kind = procedure_section then begin
         prttab(line, 50);
         prtcats(line, ' readonly,instruction', 21);
       end;
@@ -3582,7 +3590,7 @@ var
       prtcats(line, 'SECT', 4);
       prttab(line, 50);
       prtobj(line, s^.xp[2]);
-      if s^.kind = 183 then begin
+      if s^.kind = data_section then begin
         prtcats(line, '  ', 2);
         prtint(line, s^.xl[5] + s^.xl[6], 8, false);
       end;
@@ -3612,7 +3620,7 @@ var
         outbin_$firstln := c^.line;
         return;
       end
-      else if (c^.kind = block_start_instyp) and (c^.blk^.kind <> 172)
+      else if (c^.kind = block_start_instyp) and (c^.blk^.kind <> inner_blk)
           then begin
         outbin_$firstln := c^.line;
         return;
@@ -3804,7 +3812,7 @@ begin
       init_proc_reloc(cur_sect);
       c := codegen_$cell_ptr_t(cur_sect^.xp[12]);
       while c <> codegen_$cell_ptr_t(cur_sect^.xp[5]) do begin
-        if (c^.kind = block_start_instyp) and (c^.blk^.kind <> 172) then
+        if (c^.kind = block_start_instyp) and (c^.blk^.kind <> inner_blk) then
             begin
           il_180 := c^.blk;
           code_sect := c^.blk^.xp[48];
@@ -3825,7 +3833,7 @@ begin
           wr_section(cur_sect);
         end;
         c := c^.next;
-        if (c^.kind = block_start_instyp) and (c^.blk^.kind <> 172) then
+        if (c^.kind = block_start_instyp) and (c^.blk^.kind <> inner_blk) then
           exit;
       end;
       cur_sect^.xp[12] := il_$node_ptr_t(c);

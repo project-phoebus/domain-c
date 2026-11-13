@@ -410,7 +410,7 @@ var
       st := opt_4009c[s];
       if st^.hdr.deleted then
         next;
-      if (r^.node = nil) or (r^.node^.kind <> 190) then
+      if (r^.node = nil) or (r^.node^.kind <> cse_parent_ob) then
         if not test_stmt(r, s * 2) then
           next;
       free := all * st^.regs;
@@ -463,7 +463,7 @@ var
     procedure checkout(
         var x: reg_range_t);
     begin
-      if x.node^.kind = 146 then
+      if x.node^.kind = ptr_node then
         if x.node^.xp[6] = q^.node then
           if x.reg = 31 then begin
             x.flags := x.flags + [0];
@@ -597,7 +597,7 @@ begin
         x^.flags := x^.flags + [6];
     end;
   end;
-  if il_180^.kind = 108 then
+  if il_180^.kind = function_blk then
     for i := 1 to n do begin
       x := addr(r^[i]);
       if x^.node = il_180^.xp[24] then
@@ -681,15 +681,15 @@ begin
         else begin
           paint(x, pickcolor(x));
           t := x^.node;
-          if t^.kind = 190 then
+          if t^.kind = cse_parent_ob then
             t^.xp[1]^.xw[12] := 4
-          else if t^.kind = 110 then begin
+          else if t^.kind = fortran_symbol then begin
             if (t^.xl[6] & 16#20000) <> 0 then
               t^.xc[10] := chr((ord(t^.xc[10]) & 16#F0) ! 3);
           end
-          else if t^.kind = 137 then
+          else if t^.kind = tree_node then
             t^.xw[12] := 4
-          else if t^.kind = 189 then
+          else if t^.kind = cse_use_ob then
             t^.xp[5]^.xw[12] := 4;
           x^.rlen := 4;
         end;

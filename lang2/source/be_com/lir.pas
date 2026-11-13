@@ -658,7 +658,7 @@ type
   node_v_ptr_t = ^node_v_t;
   node_v_t = record
     w0: integer;                        { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     l4: integer32;                      { +4 }
     space8: array [8..23] of char;      { +8 }
     l24: integer32;                     { +24 }
@@ -671,12 +671,14 @@ begin
   n := node;
   if n = nil then
     is_volatile_location := true
-  else if n^.kind in [137, 138, 143, 145, 146, 147, 164, 171, 175, 189,
-                      205] then
+  else if n^.kind in [tree_node, gen_tree_node, cmp_tree_node, dindex_node,
+                      ptr_node, disp_node, cs_node, cc_call, pf_call,
+                      cse_use_ob,
+                      sym_disp_node] then
     is_volatile_location := (n^.l4 & 16#10019) <> 0
-  else if n^.kind = 109 then
+  else if n^.kind = var_name then
     is_volatile_location := (n^.l32 & 27) <> 0
-  else if n^.kind = 110 then
+  else if n^.kind = fortran_symbol then
     is_volatile_location := (n^.l24 & 27) <> 0
   else
     is_volatile_location := false;
@@ -695,7 +697,7 @@ type
   stmt_v_ptr_t = ^stmt_v_t;
   stmt_v_t = record
     w0: integer;                        { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     space4: array [4..11] of char;      { +4 }
     l12: integer32;                     { +12 }
     space16: array [16..19] of char;    { +16 }
@@ -709,8 +711,13 @@ var
 begin
   p := attrs;
   s := true_il(attrs);
-  if s^.kind in [139, 140, 141, 142, 144, 148, 149, 150, 151, 188, 191,
-                 214, 215, 223, 224, 225, 227, 228, 231, 233] then begin
+  if s^.kind in [eval_node, assign_node, branch_node, cbranch_node, label_node,
+                 block_entry_node, blk_end_node, nlbranch_node, return_node,
+                 use_def_ob, reg_list_ob,
+                 case_node_range_check, case_node_no_range_check,
+                     exception_handler_entry, raise_exception,
+                     release_dynamic_space, insert_bit_field, bit_field_assign,
+                     spine_mark, pa_mmu_bip] then begin
     p^.l4 := s^.l12;
     p^.w34 := rshft(s^.l42 & 16#FFFF00, 8);
     p^.w32 := s^.w20;
@@ -1027,7 +1034,7 @@ begin
   bb := mrh_$alloc_fixed(lir_f20);
   lir_41e0^.nbbs := lir_41e0^.nbbs + 1;
   if lir_41e0^.nbbs > 65535 then
-    cgerr_no_source(24, integer32(idntk(76, 'too many basic blocks', 21)));
+    cgerr_no_source(24, integer32(idntk(id_ob, 'too many basic blocks', 21)));
   lir_41e0^.l188 := lir_41e0^.l188 + 1;
   bb^.num := lir_41e0^.l188;
   bb^.f14.kind := 0;
@@ -1294,7 +1301,7 @@ begin
     r^.lrs_last := lr;
     r^.l200 := r^.l200 + 1;
     if r^.l200 > 65535 then
-      cgerr_no_source(24, integer32(idntk(76, 'too many LRs', 12)));
+      cgerr_no_source(24, integer32(idntk(id_ob, 'too many LRs', 12)));
     lr^.num := r^.l200;
     lr^.f2.b3_3 := true;
   end;
@@ -1535,7 +1542,8 @@ begin
       lr^.f2.b3_4 := true;
       lir_41e0^.l192 := lir_41e0^.l192 + 1;
       if lir_41e0^.l192 > 65535 then
-        cgerr_no_source(24, integer32(idntk(76, 'too many complex IDs', 20)));
+        cgerr_no_source(24, integer32(idntk(id_ob, 'too many complex IDs',
+                                            20)));
     end;
     if rrp * [rrp$fp_reg, rrp$ip_reg] <> [] then
       s := mrh_$alloc_fixed(lir_3c00)
@@ -1589,7 +1597,7 @@ begin
     lir_41e0^.lrs_last := lr;
     lir_41e0^.l200 := lir_41e0^.l200 + 1;
     if lir_41e0^.l200 > 65535 then
-      cgerr_no_source(24, integer32(idntk(76, 'too many LRs', 12)));
+      cgerr_no_source(24, integer32(idntk(id_ob, 'too many LRs', 12)));
     lr^.num := lir_41e0^.l200;
     lr^.f2.b3_3 := true;
   end;
@@ -1663,7 +1671,7 @@ type
   node_v_ptr_t = ^node_v_t;
   node_v_t = record
     w0: integer;                        { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     w4: integer;                        { +4 }
     w6: integer;                        { +6 }
     space8: array [8..10] of char;      { +8 }
@@ -1854,7 +1862,7 @@ begin
       end
       else begin
         nd := sol^.node;
-        if nd^.kind = 109 then begin
+        if nd^.kind = var_name then begin
           if nd^.w72 in [1, 3, 4, 7, 8, 10, 11] then begin
             disp := disp + nd^.l56;
             action := build_action[14, form.form].v;
@@ -1866,7 +1874,7 @@ begin
             flags := flags ! 16#10000000;
           nd^.l32 := flags;
         end
-        else if nd^.kind = 110 then begin
+        else if nd^.kind = fortran_symbol then begin
           if rshft(ord(nd^.b11) & 16#F0, 4) in [1, 3, 4, 7, 8, 10, 11] then begin
             disp := disp + nd^.l12;
             action := build_action[14, form.form].v;
@@ -1911,9 +1919,15 @@ begin
       nd := sol^.node;
       if nd = nil then
         nd := sol^.sym
-      else if not (nd^.kind in [77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
-                                89, 90, 92, 93, 101, 109, 110, 156, 163, 176,
-                                198, 200]) then
+      else if not (nd^.kind in [blogical_ob, slogical_ob, llogical_ob,
+                                sinteger_ob, integer_ob, linteger_ob,
+                                usinteger_ob, uinteger_ob, ulinteger_ob,
+                                ubinteger_ob, char_ob, real_ob,
+                                dpreal_ob, complex_ob, char_string_ob,
+                                    char32_string_ob, char16_ob, var_name,
+                                    fortran_symbol, set_con_ob, addr_con,
+                                    rec_const_ob,
+                                dpcomplex_ob, binteger_ob]) then
         nd := sol^.sym;
       op^.link := sym_$object_with_immediate_disp(nd);
       op^.value := disp;
@@ -1988,7 +2002,7 @@ begin
         goto 30;
       nd := sol^.sym;
       if nd <> nil then
-        if nd^.kind = 203 then
+        if nd^.kind = physical_register_ob then
           if ((build_arg_loc[action].v = nd^.w4) and (sol^.f78.reg = nd^.w6))
              or ((nd^.w6 = (sol^.f78.reg & 16#FE)) and (action = 27)
                  and (nd^.w4 = 2)) then begin
@@ -2771,7 +2785,7 @@ type
 var
   p: plab_ptr_t;
 begin
-  if handler^.kind <> 223 then
+  if handler^.kind <> exception_handler_entry then
     bug_check('LIR_ \PROLOG_LABEL_FOR_SPECIFIC_EXCEPTION -- handler argument has wrong .kind%$');
   p := univ_ptr(handler^.xp[14]);
   while p <> nil do begin
@@ -3304,14 +3318,14 @@ var
   lab: lir_label_ptr_t;
 begin
   node := node_p;
-  if not ((node^.kind = 137) and (node^.xw[18] = 67)
+  if not ((node^.kind = tree_node) and (node^.xw[18] = 67)
           and (node^.xw[19] <= 3)) then
     bug_check('LIR_$BEGIN_FORTRAN_IO_SEQUENCE -- bad argument.%$');
   cnt := 0;
   for k := 0 to node^.xw[19] - 2 do begin
     e := node^.xp[11 + k];
     if e <> nil then begin
-      if (e^.kind <> 110) or (rshft(ord(e^.xc[44]) & 16#F0, 4) <> 6)
+      if (e^.kind <> fortran_symbol) or (rshft(ord(e^.xc[44]) & 16#F0, 4) <> 6)
          or ((ord(e^.xc[45]) & 16#10) <> 0) then
         bug_check('LIR_$BEGIN_FORTRAN_IO_SEQUENCE -- unexpected symbol.%$');
       cnt := cnt + 1;
@@ -3532,10 +3546,10 @@ begin
   if ser then begin
     arg := call^.xp[11];
     while arg <> nil do begin
-      if arg^.kind <> 140 then
+      if arg^.kind <> assign_node then
         bug_check('LIR_$EMIT_CALL_OR_SVC -- input spine has a non-assign_node.%$');
       loc := arg^.xp[16];
-      if loc^.kind = 203 then begin
+      if loc^.kind = physical_register_ob then begin
         sol := call_or_svc_argument_register(loc^.xw[3], loc^.xw[2], true, n,
                                              regs^);
         lir_$build_operand(addr(instr^.opnds[n.l]), sol, lir_419c);
@@ -3557,9 +3571,9 @@ begin
     arg := call^.xp[12];
     while arg <> nil do begin
       loc := arg^.xp[17];
-      if arg^.kind <> 140 then
+      if arg^.kind <> assign_node then
         bug_check('LIR_$EMIT_CALL_OR_SVC -- output spine has a non-assign_node.%$');
-      if loc^.kind = 203 then begin
+      if loc^.kind = physical_register_ob then begin
         sol := call_or_svc_argument_register(loc^.xw[3], loc^.xw[2], false, n,
                                              regs^);
         lir_$build_operand(addr(instr^.opnds[n.l]), sol, lir_4190);

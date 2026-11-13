@@ -64,7 +64,7 @@ type
   cg_tree_ptr_t = ^cg_tree_t;
   cg_tree_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     unused_4: integer32;                { +4 }
     unused_8: integer32;                { +8 }
     unused_12: integer32;               { +12 }
@@ -159,7 +159,7 @@ type
   cg_state_ptr_t = ^cg_state_t;
   cg_state_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     b4: char;                           { +4 }
     b5: char;                           { +5 }
     b6: char;                           { +6 }

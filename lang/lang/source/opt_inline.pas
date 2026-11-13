@@ -280,7 +280,7 @@ define
 function inline_$is_fortran_asf(
     b: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
-  if (language = 2) and (b^.kind = 108) then
+  if (language = 2) and (b^.kind = function_blk) then
     inline_$is_fortran_asf := (ord(b^.xc[376]) & 8) <> 0
   else
     inline_$is_fortran_asf := false;
@@ -296,8 +296,9 @@ function assert_is_nonleaf_lvalue(
     t: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if t <> nil then
-    assert_is_nonleaf_lvalue := (t^.kind = 205) or (t^.kind = 147) or
-                                (t^.kind = 146) or (t^.kind = 145)
+    assert_is_nonleaf_lvalue := (t^.kind = sym_disp_node)
+        or (t^.kind = disp_node) or
+                                (t^.kind = ptr_node) or (t^.kind = dindex_node)
   else
     assert_is_nonleaf_lvalue := false;
 end;
@@ -310,8 +311,9 @@ function assert_is_a_routine_block(
     b: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if b <> nil then
-    assert_is_a_routine_block := (b^.kind = 108) or (b^.kind = 107) or
-                                 (b^.kind = 105)
+    assert_is_a_routine_block := (b^.kind = function_blk)
+        or (b^.kind = procedure_blk) or
+                                 (b^.kind = program_blk)
   else
     assert_is_a_routine_block := false;
 end;
@@ -324,7 +326,7 @@ function assert_is_void_type(
     t: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if t <> nil then
-    assert_is_void_type := t^.kind = 210
+    assert_is_void_type := t^.kind = void_type
   else
     assert_is_void_type := false;
 end;
@@ -343,7 +345,7 @@ begin
   else if assert_is_void_type(b^.xp[7]) then
     assert_routine_returns_void := true
   else if (b^.xp[24] = nil) and (b^.xp[7] <> nil) then begin
-    if b^.xp[7]^.kind = 118 then
+    if b^.xp[7]^.kind = type_name then
       assert_routine_returns_void := assert_is_void_type(b^.xp[7]^.xp[7])
     else
       assert_routine_returns_void := false;
@@ -389,7 +391,8 @@ begin
   n := b^.xp[1];
   done := false;
   while (n <> nil) and not done do begin
-    if ((n^.kind = 108) or (n^.kind = 107)) and (n^.xw[132] = 0) and
+    if ((n^.kind = function_blk) or (n^.kind = procedure_blk))
+        and (n^.xw[132] = 0) and
        ((ord(n^.xc[374]) & 8) = 0) then begin
       lev := oi_level_ptr_t(n)^.level;
       repeat
@@ -399,7 +402,7 @@ begin
         else if oi_level_ptr_t(n)^.level < lev then
           lev := -1000
         else if oi_level_ptr_t(n)^.level = lev then
-          if n^.kind <> 167 then
+          if n^.kind <> entry_blk then
             lev := -1000;
       until lev = -1000;
     end
@@ -463,31 +466,31 @@ var
 begin
   r := nil;
   case n^.kind of
-    109:
+    var_name:
       r := n;
-    163: begin
+    addr_con: begin
       x := n^.xp[2];
-      if x^.kind = 111 then
+      if x^.kind = common_block_name then
         name := x^.xp[1]
-      else if x^.kind = 109 then
+      else if x^.kind = var_name then
         r := x
       else
         cgerr_no_source(28, integer32(strtk('unexpected IL encountered', 25)));
     end;
-    195: begin
+    reloc_absolute_addr_con: begin
       x := n^.xp[3];
-      if x^.kind = 111 then
+      if x^.kind = common_block_name then
         name := x^.xp[1]
-      else if x^.kind = 107 then
+      else if x^.kind = procedure_blk then
         name := x^.xp[74]
-      else if x^.kind = 109 then
+      else if x^.kind = var_name then
         r := x
       else
         cgerr_no_source(28, integer32(strtk('unexpected IL encountered', 25)));
     end;
-    121:
+    param_name:
       name := n^.xp[2];
-    76:
+    id_ob:
       name := n;
     otherwise
       cgerr_no_source(28, integer32(strtk('unexpected IL encountered', 25)));
@@ -496,7 +499,7 @@ begin
     while blk <> nil do begin
       v := blk^.xp[4];
       while v <> nil do begin
-        if (v^.kind = 109) and (v^.xp[1] = name) then begin
+        if (v^.kind = var_name) and (v^.xp[1] = name) then begin
           find_varn := v;
           return;
         end;
@@ -531,11 +534,11 @@ begin
   while n <> nil do begin
     next := nil;
     case n^.kind of
-      121, 109, 118: begin
+      param_name, var_name, type_name: begin
         type_exp(n, addr(te));
         d.size := te.size;
         case te.base^.kind of
-          122:
+          integer_type:
             if te.size = 1 then
               d.rlen := 1
             else if te.size = 2 then
@@ -544,51 +547,51 @@ begin
               d.rlen := 4
             else
               d.rlen := 11;
-          123:
+          real_type:
             if d.size = 4 then
               d.rlen := 6
             else
               d.rlen := 7;
-          124:
+          bool_type:
             d.rlen := 1;
-          125:
+          char_type:
             if d.size = 1 then
               d.rlen := 1
             else
               d.rlen := 9;
-          126:
+          char_string_con_type:
             d.rlen := 9;
-          127:
+          char_array_type:
             d.rlen := 11;
-          128, 129:
+          subr_type, enum_type:
             d.rlen := d.size;
-          130, 135:
+          ptr_type, univ_ptr_type:
             d.rlen := d.size;
-          131:
+          array_type:
             d.rlen := 11;
-          132:
+          record_type:
             if d.size <= 4 then
               d.rlen := d.size
             else if d.size = 8 then
               d.rlen := 7
             else
               d.rlen := 11;
-          136, 134:
+          null_set_type, set_type:
             if d.size <= 4 then
               d.rlen := d.size
             else if d.size = 8 then
               d.rlen := 7
             else
               d.rlen := 11;
-          196:
+          varying_type:
             d.rlen := 11;
-          177:
+          offset_type:
             d.rlen := d.size;
           otherwise
             d.size := -1;
         end;
       end;
-      110:
+      fortran_symbol:
         case ord(n^.xc[10]) & 15 of
           1, 8: begin
             d.size := 1;
@@ -634,7 +637,7 @@ begin
           otherwise
             ;
         end;
-      122: begin
+      integer_type: begin
         d.rlen := n^.xw[2];
         if d.rlen = 1 then
           d.size := 1
@@ -643,7 +646,7 @@ begin
         else if d.rlen = 4 then
           d.size := 4;
       end;
-      111:
+      common_block_name:
         if n^.xp[3] <> nil then
           next := n^.xp[3]
         else begin
@@ -655,34 +658,34 @@ begin
           else
             d.rlen := 11;
         end;
-      195:
+      reloc_absolute_addr_con:
         next := n^.xp[3];
-      143, 137: begin
+      cmp_tree_node, tree_node: begin
         d.size := n^.xl[5];
         d.rlen := n^.xw[12];
         if d.size = 8 then
           if d.rlen = 11 then
             d.rlen := 7;
       end;
-      146, 145, 147, 205:
+      ptr_node, dindex_node, disp_node, sym_disp_node:
         next := n^.xp[7];
-      164: begin
+      cs_node: begin
         d.size := n^.xw[15];
         d.rlen := 1;
       end;
-      77, 200, 87: begin
+      blogical_ob, binteger_ob, char_ob: begin
         d.size := 1;
         d.rlen := 1;
       end;
-      78, 80: begin
+      slogical_ob, sinteger_ob: begin
         d.size := 2;
         d.rlen := 2;
       end;
-      79, 82: begin
+      llogical_ob, linteger_ob: begin
         d.size := 4;
         d.rlen := 4;
       end;
-      81:
+      integer_ob:
         if cargs_$options.i_star_2 then begin
           d.size := 2;
           d.rlen := 2;
@@ -691,19 +694,19 @@ begin
           d.size := 4;
           d.rlen := 4;
         end;
-      88: begin
+      real_ob: begin
         d.size := 4;
         d.rlen := 6;
       end;
-      89: begin
+      dpreal_ob: begin
         d.size := 8;
         d.rlen := 7;
       end;
-      90: begin
+      complex_ob: begin
         d.size := 8;
         d.rlen := 8;
       end;
-      198: begin
+      dpcomplex_ob: begin
         d.size := 16;
         d.rlen := 12;
       end;
@@ -753,40 +756,41 @@ procedure inline_$mark_reference_params(
       get_referenced_symbol := nil
     else
       case t^.kind of
-        110, 109: begin
+        fortran_symbol, var_name: begin
           r := t;
           get_referenced_symbol := r;
         end;
-        145, 147: begin
+        dindex_node, disp_node: begin
           if t^.xp[7] <> nil then begin
             r := t^.xp[7];
-            if (r^.kind = 110) or (r^.kind = 109) then begin
+            if (r^.kind = fortran_symbol) or (r^.kind = var_name) then begin
               get_referenced_symbol := r;
               return;
             end;
           end;
           get_referenced_symbol := get_referenced_symbol(t^.xp[6]);
         end;
-        146: begin
+        ptr_node: begin
           r := nil;
           if t^.xp[7] <> nil then
-            if (t^.xp[7]^.kind = 110) or (t^.xp[7]^.kind = 109) then
+            if (t^.xp[7]^.kind = fortran_symbol)
+                or (t^.xp[7]^.kind = var_name) then
               r := t^.xp[7];
           get_referenced_symbol := r;
         end;
-        205: begin
+        sym_disp_node: begin
           if t^.xp[8] <> nil then begin
             r := t^.xp[8];
-            if (r^.kind = 110) or (r^.kind = 109) then begin
+            if (r^.kind = fortran_symbol) or (r^.kind = var_name) then begin
               get_referenced_symbol := r;
               return;
             end;
           end;
           get_referenced_symbol := get_referenced_symbol(t^.xp[6]);
         end;
-        164:
+        cs_node:
           get_referenced_symbol := get_referenced_symbol(t^.xp[5]);
-        137:
+        tree_node:
           if t^.xw[18] = 26 then
             get_referenced_symbol := get_referenced_symbol(t^.xp[10])
           else
@@ -804,47 +808,49 @@ var
   j: integer;
   cls: integer;
 begin
-  if not ((t^.kind = 143) or (t^.kind = 137)) then
+  if not ((t^.kind = cmp_tree_node) or (t^.kind = tree_node)) then
     return;
   if not ((t^.xw[18] = 16) or (t^.xw[18] = 15)) then
     return;
   n := t^.xw[19];
   r := t^.xp[10];
-  if (r^.kind = 147) or (r^.kind = 146) then
+  if (r^.kind = disp_node) or (r^.kind = ptr_node) then
     r := r^.xp[7];
-  if r^.kind = 175 then
+  if r^.kind = pf_call then
     r := r^.xp[5];
-  if (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2) and (r^.kind <> 159) then begin
+  if (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2)
+      and (r^.kind <> lib_dsc) then begin
     for j := 1 to n - 1 do begin
       v := get_referenced_symbol(t^.xp[10 + j]);
       if v <> nil then
-        if v^.kind = 109 then begin
+        if v^.kind = var_name then begin
           v^.xc[34] := chr(ord(v^.xc[34]) ! 32);
           s^.xc[42] := chr(ord(s^.xc[42]) ! 64);
         end
-        else if v^.kind = 110 then begin
+        else if v^.kind = fortran_symbol then begin
           v^.xc[26] := chr(ord(v^.xc[26]) ! 32);
           s^.xc[42] := chr(ord(s^.xc[42]) ! 64);
         end;
     end;
     return;
   end;
-  if not (r^.kind in [107, 108, 159, 167, 171, 173, 174]) then
+  if not (r^.kind in [procedure_blk, function_blk, lib_dsc, entry_blk, cc_call,
+                      proc__type, func__type]) then
     return;
   k := 1;
   for j := 1 to n - 1 do begin
     case r^.kind of
-      159: begin
+      lib_dsc: begin
         cls := ord(r^.xc[11 + 2 * k]) & 15;
         if ord(r^.xc[10 + 2 * k]) < 128 then
           k := k + 1;
       end;
-      167, 108, 107:
+      entry_blk, function_blk, procedure_blk:
         if rshft(ord(r^.xc[377]) & 16#70, 4) = 4 then
           cls := 9
         else
           cls := r^.xw[197 + j];
-      174, 173:
+      func__type, proc__type:
         cls := r^.xw[39 + j];
       otherwise
         cls := 9;
@@ -852,14 +858,14 @@ begin
     if (cls & 16#FFFF) > 6 then begin
       v := get_referenced_symbol(t^.xp[10 + j]);
       if v <> nil then
-        if v^.kind = 109 then begin
+        if v^.kind = var_name then begin
           v^.xc[34] := chr(ord(v^.xc[34]) ! 32);
-          if r^.kind <> 159 then
+          if r^.kind <> lib_dsc then
             s^.xc[42] := chr(ord(s^.xc[42]) ! 64);
         end
-        else if v^.kind = 110 then begin
+        else if v^.kind = fortran_symbol then begin
           v^.xc[26] := chr(ord(v^.xc[26]) ! 32);
-          if r^.kind <> 159 then
+          if r^.kind <> lib_dsc then
             s^.xc[42] := chr(ord(s^.xc[42]) ! 64);
         end;
     end;
@@ -880,11 +886,11 @@ var
   r: il_$node_ptr_t;
   v: il_$node_ptr_t;
 begin
-  if b^.kind = 107 then
+  if b^.kind = procedure_blk then
     r := b^.xp[24]
-  else if (b^.kind = 108) and assert_routine_returns_void(b) then
+  else if (b^.kind = function_blk) and assert_routine_returns_void(b) then
     r := nil
-  else if b^.kind = 108 then begin
+  else if b^.kind = function_blk then begin
     r := b^.xp[24];
     if r = nil then begin
       v := b^.xp[4];
@@ -1106,7 +1112,7 @@ procedure coerce(
       if (have = 5) or (have = 4) then
         return;
     n := t;
-    if n^.kind = 137 then
+    if n^.kind = tree_node then
       if (n^.xw[18] = 39) or (n^.xw[18] = 18) then
         if n^.xw[13] = want then begin
           t := n^.xp[10];
@@ -1198,10 +1204,10 @@ procedure start_il_stream(
     var x: oi_call_t); options(val_param); internal;
 begin
   stream_head := gspace(56);
-  stream_head^.kind := 139;
+  stream_head^.kind := eval_node;
   stream_head^.xw[25] := 1;
   stream_head^.xp[13] := gspace(12);
-  stream_head^.xp[13]^.kind := 81;
+  stream_head^.xp[13]^.kind := integer_ob;
   stream_head^.xl[10] := (stream_head^.xl[10] & 16#FF0000FF) ! 16#800000;
   stream_head^.xw[10] := x.line;
   stream_tail := stream_head;
@@ -1259,7 +1265,7 @@ begin
   if x.result <> nil then begin
     if inline_$is_fortran_asf(e^.callee) then begin
       s := stream_tail;
-      while s^.kind <> 140 do
+      while s^.kind <> assign_node do
         s := s^.xp[1];
       v := s^.xp[17];
       stream_head^.xp[1] := e^.stmt^.xp[1];
@@ -1287,7 +1293,7 @@ begin
       val := v;
       coerce(e, val, d1.rlen, d2.rlen, (ord(e^.call^.xc[30]) & 64) <> 0);
       v := val;
-      if v^.kind = 137 then
+      if v^.kind = tree_node then
         v^.xw[8] := e^.call^.xw[8];
     end;
     l := e^.sites;
@@ -1344,13 +1350,13 @@ var
   p: il_$node_ptr_t;
 begin
   r := t;
-  if (r^.kind = 147) or (r^.kind = 146) then begin
-    while (r^.kind = 147) or (r^.kind = 146) do begin
-      if r^.kind = 147 then
+  if (r^.kind = disp_node) or (r^.kind = ptr_node) then begin
+    while (r^.kind = disp_node) or (r^.kind = ptr_node) do begin
+      if r^.kind = disp_node then
         r := r^.xp[6];
-      if r^.kind = 146 then begin
+      if r^.kind = ptr_node then begin
         p := r^.xp[6];
-        if (p^.kind = 195) or (p^.kind = 163) then
+        if (p^.kind = reloc_absolute_addr_con) or (p^.kind = addr_con) then
           r := r^.xp[7]
         else
           r := p;
@@ -1414,7 +1420,7 @@ begin
       return;
     end;
     done := false;
-    if a^.kind = 137 then
+    if a^.kind = tree_node then
       if (a^.xw[18] = 12) or (a^.xw[18] = 23) or (a^.xw[18] = 40) or
          (a^.xw[18] = 24) then
         done := true;
@@ -1429,13 +1435,17 @@ begin
       pass_method := 3;
       return;
     end;
-  if a^.kind in [77..82, 87..90, 137, 143, 198, 200] then
+  if a^.kind in [blogical_ob..linteger_ob, char_ob..complex_ob, tree_node,
+                 cmp_tree_node, dpcomplex_ob, binteger_ob] then
     r := 0
-  else if a^.kind in [83..86, 92, 93, 101, 156, 176] then
+  else if a^.kind in [usinteger_ob..ubinteger_ob, char_string_ob,
+                      char32_string_ob, char16_ob, set_con_ob,
+                      rec_const_ob] then
     r := 3
   else begin
     x := actual_actual(a, ind);
-    if x^.kind in [109, 110, 111, 163, 195] then
+    if x^.kind in [var_name, fortran_symbol, common_block_name, addr_con,
+                   reloc_absolute_addr_con] then
       r := 2
     else
       r := 3;
@@ -1455,7 +1465,7 @@ procedure put_on_bct(
     b: il_$node_ptr_t;
     v: il_$node_ptr_t); options(val_param); internal;
 begin
-  if v^.kind = 110 then begin
+  if v^.kind = fortran_symbol then begin
     v^.xp[1] := nil;
     if rshft(ord(v^.xc[44]) & 16#F0, 4) <> 1 then
       v^.xp[10] := e^.caller;
@@ -1466,7 +1476,7 @@ begin
   end;
   if b^.xp[5] = nil then
     b^.xp[4] := v
-  else if b^.xp[5]^.kind = 110 then
+  else if b^.xp[5]^.kind = fortran_symbol then
     b^.xp[5]^.xp[1] := v
   else
     b^.xp[5]^.xp[4] := v;
@@ -1519,21 +1529,21 @@ begin
   end
   else begin
     size := 84;
-    if v^.kind = 121 then
+    if v^.kind = param_name then
       if v^.xp[12] <> nil then
         v := v^.xp[12];
     if language = 1 then
-      if v^.kind = 109 then
+      if v^.kind = var_name then
         if v^.xw[36] = 10 then
           size := 92;
   end;
   n := gspace(size);
-  if (v^.kind = 110) or (v^.kind = 109) then begin
+  if (v^.kind = fortran_symbol) or (v^.kind = var_name) then begin
     len := size;
     lib_$data_move(v, n, len);
   end
-  else if v^.kind = 121 then begin
-    n^.kind := 109;
+  else if v^.kind = param_name then begin
+    n^.kind := var_name;
     n^.xp[7] := v^.xp[4];
     n^.xp[8] := v^.xp[5];
     n^.xp[1] := v^.xp[2];
@@ -1543,14 +1553,14 @@ begin
     n^.xw[23] := v^.xw[16];
     n^.xw[22] := v^.xw[17];
     n^.xw[24] := v^.xw[18];
-    if e^.caller^.kind = 105 then
+    if e^.caller^.kind = program_blk then
       n^.xw[36] := 1
     else
       n^.xw[36] := 2;
   end;
-  if n^.kind = 109 then
+  if n^.kind = var_name then
     if n^.xp[7] <> nil then
-      if n^.xp[7]^.kind = 121 then
+      if n^.xp[7]^.kind = param_name then
         n^.xp[7] := n^.xp[7]^.xp[4];
   copy_var := n;
 end;
@@ -1682,7 +1692,7 @@ begin
         'Bad rlen encountered in \\opt_inline\allocate_local_var', 66)));
   end;
   if language = 2 then begin
-    if e^.caller^.kind = 105 then
+    if e^.caller^.kind = program_blk then
       if (v^.xw[13] & 16#4000) = 0 then
         static := true;
     size := sz_fsym(v);
@@ -1699,7 +1709,7 @@ begin
       end;
   end
   else begin
-    if e^.caller^.kind = 105 then
+    if e^.caller^.kind = program_blk then
       if (v^.xw[17] & 16#4000) = 0 then
         static := true;
     size := d.size;
@@ -1744,20 +1754,20 @@ var
   x: il_$node_ptr_t;
   y: il_$node_ptr_t;
 begin
-  if (t^.kind <> 137) or (t^.xw[18] <> 26) then
+  if (t^.kind <> tree_node) or (t^.xw[18] <> 26) then
     cgerr_no_source(28, integer32(token_$make_string_token(
       'set_address_exposed --- top is not addr_top.')));
   x := t^.xp[10];
   case x^.kind of
-    110:
+    fortran_symbol:
       x^.xc[26] := chr(ord(x^.xc[26]) ! 16);
-    109:
+    var_name:
       x^.xc[34] := chr(ord(x^.xc[34]) ! 16);
-    145, 146, 205, 147: begin
+    dindex_node, ptr_node, sym_disp_node, disp_node: begin
       y := x^.xp[7];
-      if y^.kind = 110 then
+      if y^.kind = fortran_symbol then
         y^.xc[26] := chr(ord(y^.xc[26]) ! 16)
-      else if y^.kind = 109 then
+      else if y^.kind = var_name then
         y^.xc[34] := chr(ord(y^.xc[34]) ! 16);
     end;
     otherwise
@@ -1776,7 +1786,7 @@ var
   r: il_$node_ptr_t;
 begin
   r := t;
-  if r^.kind = 137 then
+  if r^.kind = tree_node then
     if r^.xw[18] = 63 then
       r := r^.xp[10];
   inliner_actual := r;
@@ -1829,7 +1839,7 @@ procedure process_parameters(
   begin
     e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
     s := gspace(80);
-    s^.kind := 140;
+    s^.kind := assign_node;
     s^.xp[17] := rhs;
     s^.xp[16] := lhs;
     get_size_rlen(lhs, d);
@@ -1845,7 +1855,7 @@ procedure process_parameters(
         end;
       end;
       if not done then
-        if (rhs^.kind = 143) or (rhs^.kind = 137) then
+        if (rhs^.kind = cmp_tree_node) or (rhs^.kind = tree_node) then
           if rhs^.xw[12] <> d.rlen then
             coerce(e, s^.xp[17], rhs^.xw[12], d.rlen,
                    (ord(rhs^.xc[30]) & 64) <> 0);
@@ -1920,7 +1930,7 @@ procedure process_parameters(
       else
         size := 83;
       v := gspace(size);
-      v^.kind := 110;
+      v^.kind := fortran_symbol;
       v^.xc[10] := chr(ord(v^.xc[10]) ! 32);
       v^.xc[10] := chr((ord(v^.xc[10]) & 16#F0) ! 3);
       v^.xc[44] := chr((ord(v^.xc[44]) & 15) ! 16#30);
@@ -1934,23 +1944,23 @@ procedure process_parameters(
     end
     else begin
       v := gspace(84);
-      v^.kind := 109;
+      v^.kind := var_name;
       v^.xp[1] := gspace(29);
-      v^.xp[1]^.kind := 76;
+      v^.xp[1]^.kind := id_ob;
       n := v^.xp[1];
       assign_name(addr(f^.xp[1]^.xc[18]), f^.xp[1]^.xw[8],
                   oi_chars_ptr_t(addr(n^.xc[18])), n^.xw[8]);
       t := gspace(36);
       v^.xp[7] := t;
       v^.xl[9] := 32;
-      t^.kind := 130;
+      t^.kind := ptr_type;
       t^.xl[3] := 32;
       t^.xw[10] := 2;
       t^.xw[11] := 2;
       t^.xw[12] := -1;
       t^.xp[1] := gspace(60);
       n := t^.xp[1];
-      n^.kind := 118;
+      n^.kind := type_name;
       n^.xp[1] := v^.xp[1];
       n^.xp[5] := e^.caller;
       n^.xp[7] := f^.xp[7]^.xp[4];
@@ -2018,13 +2028,13 @@ begin
         allocate_local_var(e, v);
         val := v;
         put_on_il_stream(assign(e, v, a, k));
-        if a^.kind = 137 then
+        if a^.kind = tree_node then
           if a^.xw[18] = 26 then
             set_address_exposed(a);
       end;
       3: begin
         if language = 2 then begin
-          if (a^.kind = 146) and (a^.xp[6]^.kind = 110) then
+          if (a^.kind = ptr_node) and (a^.xp[6]^.kind = fortran_symbol) then
             adr := a^.xp[6]
           else begin
             d.d.size := 4;
@@ -2044,17 +2054,18 @@ begin
           c^.xp2[14] := pv;
         end
         else begin
-          if (a^.kind = 146) and (a^.xp[6]^.kind = 109) then
+          if (a^.kind = ptr_node) and (a^.xp[6]^.kind = var_name) then
             adr := a^.xp[6]
-          else if (a^.kind = 195) or (a^.kind = 163) then
+          else if (a^.kind = reloc_absolute_addr_con)
+              or (a^.kind = addr_con) then
             adr := a
           else begin
-            if (language = 1) and (a^.kind = 81) then begin
+            if (language = 1) and (a^.kind = integer_ob) then begin
               get_size_rlen(f, d3);
               if d3.rlen = 1 then
-                a := smcontk(200, a^.xl[2])
+                a := smcontk(binteger_ob, a^.xl[2])
               else if d3.rlen = 2 then
-                a := smcontk(80, a^.xl[2]);
+                a := smcontk(sinteger_ob, a^.xl[2]);
             end;
             ops2 := a;
             d.d.size := 4;
@@ -2065,7 +2076,7 @@ begin
           put_on_il_stream(assign(e, pv, adr, 0));
           c := pv;
         end;
-        if adr^.kind = 137 then
+        if adr^.kind = tree_node then
           if adr^.xw[18] = 26 then
             set_address_exposed(adr);
         sub := 1;
@@ -2076,7 +2087,7 @@ begin
         val := a;
         if language = 2 then begin
           a := actual_actual(a, ind);
-          if a^.kind = 110 then begin
+          if a^.kind = fortran_symbol then begin
             v := copy_var(e, f);
             put_on_bct(e, caller_blk, v);
             v^.xc[11] := chr((ord(v^.xc[11]) & 16#FD) ! (ord(a^.xc[11]) & 2));
@@ -2091,9 +2102,9 @@ begin
         end
         else begin
           a := actual_actual(a, ind);
-          if (a^.kind = 195) or (a^.kind = 163) then
+          if (a^.kind = reloc_absolute_addr_con) or (a^.kind = addr_con) then
             a := find_varn(e^.scope, a);
-          if a^.kind = 109 then begin
+          if a^.kind = var_name then begin
             v := copy_var(e, f);
             put_on_bct(e, caller_blk, v);
             v^.xw[36] := a^.xw[36];
@@ -2109,7 +2120,7 @@ begin
       otherwise
         ;
     end;
-    if f^.kind = 110 then
+    if f^.kind = fortran_symbol then
       cls := rshft(ord(f^.xc[11]) & 16#F0, 4)
     else
       cls := f^.xw[36];
@@ -2126,7 +2137,7 @@ begin
     if (fl * [1, 2]) <> [] then
       sub := sub - 1;
     if sub = -1 then begin
-      if val^.kind = 146 then
+      if val^.kind = ptr_node then
         val := val^.xp[6]
       else begin
         d.d.size := 4;
@@ -2138,7 +2149,7 @@ begin
       end;
     end
     else if sub = 1 then begin
-      if (val^.kind = 137) and (val^.xw[18] = 26) then
+      if (val^.kind = tree_node) and (val^.xw[18] = 26) then
         val := val^.xp[10]
       else begin
         val := add_pn(val, c, 2, 0);
@@ -2155,10 +2166,10 @@ begin
   if f <> nil then begin
     v := copy_var(e, f);
     put_on_bct(e, e^.scope, v);
-    if v^.kind = 110 then
+    if v^.kind = fortran_symbol then
       v^.xc[44] := chr((ord(v^.xc[44]) & 15) ! 16#30);
     allocate_local_var(e, v);
-    if f^.kind = 110 then
+    if f^.kind = fortran_symbol then
       cls := rshft(ord(f^.xc[11]) & 16#F0, 4)
     else
       cls := f^.xw[36];
@@ -2312,7 +2323,8 @@ begin
       end
       else if language = 2 then begin
         if nv = nil then
-          if (v^.kind = 110) and (rshft(ord(v^.xc[44]) & 16#F0, 4) = 6) then begin
+          if (v^.kind = fortran_symbol) and (rshft(ord(v^.xc[44]) & 16#F0,
+              4) = 6) then begin
             get_hash_info(e, v^.xp[12], x, fl, info);
             if x <> nil then begin
               nv := copy_var(e, v);
@@ -2321,7 +2333,7 @@ begin
               put_hash_info(e, v, nv, [], empty_info);
             end;
           end
-          else if v^.kind = 110 then begin
+          else if v^.kind = fortran_symbol then begin
             k := rshft(ord(v^.xc[11]) & 16#F0, 4);
             if k in [1, 2, 6, 7] then
               if (v^.xl[6] & 16#800000) = 0 then begin
@@ -2358,12 +2370,12 @@ begin
         v := v^.xp[1];
       end
       else begin
-        if v^.kind = 116 then begin
+        if v^.kind = const_name then begin
           nv := copy_const(cb, v);
           put_on_bct(e, cb, nv);
           put_hash_info(e, v, nv, [3], empty_info);
         end
-        else if (nv = nil) and (v^.kind = 109) then
+        else if (nv = nil) and (v^.kind = var_name) then
           if v^.xw[36] in [1, 2, 6, 7] then
             if (v^.xl[8] & 16#800000) = 0 then begin
               nv := copy_var(e, v);
@@ -2409,14 +2421,14 @@ var
 begin
   s := e^.callee^.xp[25];
   repeat
-    if s^.kind = 144 then begin
+    if s^.kind = label_node then begin
       e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
       n := gspace(84);
       lib_$data_move(s, n, 84);
       put_hash_info(e, s, n, [], empty_info);
     end;
     s := s^.xp[2];
-  until (s^.kind = 149) and (s^.xp[12] = e^.callee);
+  until (s^.kind = blk_end_node) and (s^.xp[12] = e^.callee);
 end;
 
 { process_operand - statement or tree t of the callee, for edge e,
@@ -2564,13 +2576,13 @@ var
         s := n;
         if val <> nil then begin
           s := val;
-          if (s^.kind = 137) and (s^.xw[18] = 26) then
+          if (s^.kind = tree_node) and (s^.xw[18] = 26) then
             s := s^.xp[10];
-          if s^.kind = 195 then
+          if s^.kind = reloc_absolute_addr_con then
             s := s^.xp[3];
-          if s^.kind = 147 then
+          if s^.kind = disp_node then
             s := s^.xp[7]
-          else if s^.kind = 146 then
+          else if s^.kind = ptr_node then
             s := s^.xp[7];
         end;
       end;
@@ -2581,7 +2593,7 @@ var
     raw.sym := ctx.sym;
     raw.v := ctx.v;
     if raw.v <> nil then begin
-      if raw.v^.kind = 76 then begin
+      if raw.v^.kind = id_ob then begin
         v := find_varn(x.blk, raw.v);
         if v <> nil then
           raw.v := v;
@@ -2701,17 +2713,17 @@ var
     rebase: boolean;
   begin
     if (a.v <> nil) and (b.v <> nil) and
-       ((a.v^.kind = 110) or (a.v^.kind = 109)) and
-       ((b.v^.kind = 110) or (b.v^.kind = 109)) then begin
+       ((a.v^.kind = fortran_symbol) or (a.v^.kind = var_name)) and
+       ((b.v^.kind = fortran_symbol) or (b.v^.kind = var_name)) then begin
       n := t;
       found := true;
       rebase := true;
-      if (n^.kind = 153) or (n^.kind = 211) then begin
-        if a.v^.kind = 110 then
+      if (n^.kind = sb_register) or (n^.kind = ap_register) then begin
+        if a.v^.kind = fortran_symbol then
           aoff := a.v^.xl[3]
         else
           aoff := a.v^.xl[14];
-        if b.v^.kind = 110 then begin
+        if b.v^.kind = fortran_symbol then begin
           cls := rshft(ord(b.v^.xc[11]) & 16#F0, 4);
           boff := b.v^.xl[3];
         end
@@ -2720,27 +2732,27 @@ var
           boff := b.v^.xl[14];
         end;
       end
-      else if (n^.kind = 110) and ((n^.xl[6] & 16#800000) <> 0) and
+      else if (n^.kind = fortran_symbol) and ((n^.xl[6] & 16#800000) <> 0) and
               (oi_level_ptr_t(e^.caller)^.level <
                oi_level_ptr_t(e^.callee)^.level) then begin
         boff := b.v^.xl[3];
         cls := rshft(ord(b.v^.xc[11]) & 16#F0, 4);
         aoff := a.v^.xl[3];
       end
-      else if (n^.kind = 109) and ((n^.xl[8] & 16#800000) <> 0) and
+      else if (n^.kind = var_name) and ((n^.xl[8] & 16#800000) <> 0) and
               (n^.xp[1] = e^.caller^.xp[74]) then begin
         aoff := a.v^.xl[14];
         boff := b.v^.xl[14];
         cls := b.v^.xw[36];
       end
-      else if (n^.kind = 137) and (n^.xw[18] = 26) and
-              (n^.xp[10]^.kind = 110) then begin
+      else if (n^.kind = tree_node) and (n^.xw[18] = 26) and
+              (n^.xp[10]^.kind = fortran_symbol) then begin
         cls := rshft(ord(b.v^.xc[11]) & 16#F0, 4);
         boff := b.v^.xl[3];
         rebase := false;
       end
-      else if (n^.kind = 137) and (n^.xw[18] = 26) and
-              (n^.xp[10]^.kind = 109) then begin
+      else if (n^.kind = tree_node) and (n^.xw[18] = 26) and
+              (n^.xp[10]^.kind = var_name) then begin
         boff := b.v^.xl[14];
         cls := b.v^.xw[36];
         rebase := false;
@@ -2839,27 +2851,27 @@ var
     if info.ind <> nil then
       sym := info.ind;
     case t^.kind of
-      205: begin
+      sym_disp_node: begin
         ctx.sym := t^.xp[7];
         ctx.v := t^.xp[8];
         ctx.kind := 205;
       end;
-      147:
-        if t^.xp[7]^.kind <> 122 then begin
+      disp_node:
+        if t^.xp[7]^.kind <> integer_type then begin
           ctx.sym := t^.xp[7];
           ctx.v := t^.xp[7];
           ctx.kind := 147;
         end;
-      146:
+      ptr_node:
         if ctx.kind <> 205 then
-          if t^.xp[7]^.kind <> 122 then begin
+          if t^.xp[7]^.kind <> integer_type then begin
             ctx.sym := t^.xp[7];
             ctx.v := t^.xp[7];
             ctx.kind := 146;
           end;
-      145:
+      dindex_node:
         if not ((ctx.kind = 205) or (ctx.kind = 146)) then
-          if t^.xp[7]^.kind <> 122 then begin
+          if t^.xp[7]^.kind <> integer_type then begin
             ctx.sym := t^.xp[7];
             ctx.v := t^.xp[7];
             ctx.kind := 145;
@@ -2870,13 +2882,13 @@ var
     sym0 := sym;
     get_sym_ind_info(e, x, ctx, raw, sub);
     if (raw.v <> nil) and (sub.v <> nil) and
-       ((raw.v^.kind = 110) or (raw.v^.kind = 109)) and
-       ((sub.v^.kind = 110) or (sub.v^.kind = 109)) then begin
-      if raw.v^.kind = 110 then
+       ((raw.v^.kind = fortran_symbol) or (raw.v^.kind = var_name)) and
+       ((sub.v^.kind = fortran_symbol) or (sub.v^.kind = var_name)) then begin
+      if raw.v^.kind = fortran_symbol then
         off := raw.v^.xl[3]
       else
         off := raw.v^.xl[14];
-      if sub.v^.kind = 110 then
+      if sub.v^.kind = fortran_symbol then
         cls := rshft(ord(sub.v^.xc[11]) & 16#F0, 4)
       else
         cls := sub.v^.xw[36];
@@ -2884,7 +2896,7 @@ var
       if (flags * [0, 1, 2]) <> [] then
         ctx.subst := true;
       done := false;
-      if (t^.kind = 146) and (base^.kind = 110) and
+      if (t^.kind = ptr_node) and (base^.kind = fortran_symbol) and
          ((base^.xl[6] & 16#800000) <> 0) and
          (oi_level_ptr_t(e^.caller)^.level <
           oi_level_ptr_t(e^.callee)^.level) then begin
@@ -2900,7 +2912,7 @@ var
         process_operand(e, x, t, ctx, r);
         done := true;
       end
-      else if (t^.kind = 146) and (base^.kind = 109) and
+      else if (t^.kind = ptr_node) and (base^.kind = var_name) and
               ((base^.xl[8] & 16#800000) <> 0) and
               (base^.xp[1] = e^.caller^.xp[74]) then begin
         if ctx.sdn = nil then begin
@@ -2915,10 +2927,10 @@ var
         process_operand(e, x, t, ctx, r);
         done := true;
       end
-      else if (t^.kind = 146) and (base^.kind = 146) and
-              (base^.xp[6]^.kind = 110) and
+      else if (t^.kind = ptr_node) and (base^.kind = ptr_node) and
+              (base^.xp[6]^.kind = fortran_symbol) and
               ((base^.xp[6]^.xl[6] & 16#800000) <> 0) and
-              (ctx.sdn <> nil) and (ctx.sdn^.xp[8]^.kind = 110) and
+              (ctx.sdn <> nil) and (ctx.sdn^.xp[8]^.kind = fortran_symbol) and
               (integer(rshft(ord(ctx.sdn^.xp[8]^.xc[11]) & 16#F0, 4)) in [2, 5]) and
               (ctx.sdn^.xp[8]^.xl[3] > 0) and
               (oi_level_ptr_t(e^.caller)^.level <
@@ -2928,10 +2940,10 @@ var
         process_operand(e, x, t, ctx, r);
         done := true;
       end
-      else if (t^.kind = 146) and (base^.kind = 146) and
-              (base^.xp[6]^.kind = 109) and
+      else if (t^.kind = ptr_node) and (base^.kind = ptr_node) and
+              (base^.xp[6]^.kind = var_name) and
               ((base^.xp[6]^.xl[8] & 16#800000) <> 0) and
-              (ctx.sdn <> nil) and (ctx.sdn^.xp[8]^.kind = 109) and
+              (ctx.sdn <> nil) and (ctx.sdn^.xp[8]^.kind = var_name) and
               (ctx.sdn^.xp[8]^.xw[36] in [2, 5]) and
               (ctx.sdn^.xp[8]^.xl[14] > 0) and
               (base^.xp[6]^.xp[1] = e^.caller^.xp[74]) then begin
@@ -2940,14 +2952,15 @@ var
         process_operand(e, x, t, ctx, r);
         done := true;
       end
-      else if (t^.kind = 146) and (t^.xp[6]^.kind = 137) and
+      else if (t^.kind = ptr_node) and (t^.xp[6]^.kind = tree_node) and
               (t^.xp[6]^.xw[18] = 13) and
-              (t^.xp[6]^.xp[10]^.kind = 153) and (cls in [1, 7]) then begin
+              (t^.xp[6]^.xp[10]^.kind = sb_register) and (cls in [1,
+                  7]) then begin
         p := t;
         w := p^.xp[6];
         n := gspace(44);
         lib_$data_move(p, n, 32);
-        n^.kind := 145;
+        n^.kind := dindex_node;
         n^.xp[6] := w^.xp[10];
         n^.xp[9] := w^.xp[11];
         n^.xp[7] := sym0;
@@ -2956,15 +2969,15 @@ var
         process_operand(e, x, t, ctx, r);
         done := true;
       end
-      else if t^.kind = 145 then
+      else if t^.kind = dindex_node then
         process_index_opr(e, x, base, ctx, r, raw, sub)
       else
         process_operand(e, x, base, ctx, r);
       if not done then
-        if (sym0^.kind = 110) or (sym0^.kind = 109) then
+        if (sym0^.kind = fortran_symbol) or (sym0^.kind = var_name) then
           sym := sub.sym
-        else if (sym0^.kind = 76) and (sub.sym <> nil) and
-                (sub.sym^.kind = 109) then
+        else if (sym0^.kind = id_ob) and (sub.sym <> nil) and
+                (sub.sym^.kind = var_name) then
           sym := sub.sym^.xp[1]
         else begin
           sym := sym0;
@@ -2981,21 +2994,21 @@ begin
   if t = nil then
     return;
   if ctx.call <> nil then
-    if (t^.kind = 108) or (t^.kind = 107) then
+    if (t^.kind = function_blk) or (t^.kind = procedure_blk) then
       return;
   if not ctx.subst then
     case t^.kind of
-      143, 137:
+      cmp_tree_node, tree_node:
         ctx.uses := t^.xw[8];
-      146:
+      ptr_node:
         ctx.uses := t^.xw[8];
-      147:
+      disp_node:
         ctx.uses := t^.xw[8];
-      205:
+      sym_disp_node:
         ctx.uses := t^.xw[8];
-      145:
+      dindex_node:
         ctx.uses := t^.xw[8];
-      164:
+      cs_node:
         ctx.uses := t^.xw[8];
       otherwise
         ;
@@ -3013,8 +3026,8 @@ begin
     orig := t;
   end;
   case t^.kind of
-    148: begin
-      if orig^.xp[12]^.kind = 172 then
+    block_entry_node: begin
+      if orig^.xp[12]^.kind = inner_blk then
         orig^.xp[12]^.xp[19] := x.blk
       else
         orig^.xp[12]^.xp[19] := nil;
@@ -3025,7 +3038,7 @@ begin
       t := n;
       get_hash_info(e, orig^.xp[12], n^.xp[12], flags2, info);
     end;
-    149: begin
+    blk_end_node: begin
       if x.blk^.xp[19] <> nil then
         x.blk := x.blk^.xp[19]
       else
@@ -3036,11 +3049,11 @@ begin
       t := n;
       get_hash_info(e, orig^.xp[12], n^.xp[12], flags2, info);
     end;
-    140:
-      if (orig^.xp[16]^.kind = 110) and
+    assign_node:
+      if (orig^.xp[16]^.kind = fortran_symbol) and
          ((orig^.xp[16]^.xl[6] & 16#800000) <> 0) then
         t := nil
-      else if (t^.xp[17]^.kind = 155) and
+      else if (t^.xp[17]^.kind = display_register) and
               not inline_$is_fortran_asf(e^.caller) then begin
         put_hash_info(e, t^.xp[16], il_node_153, [], empty_info);
         t := nil;
@@ -3055,9 +3068,9 @@ begin
         process_operand(e, x, t^.xp[17], ctx, r);
         process_operand(e, x, t^.xp[18], ctx, r);
       end;
-    144:
+    label_node:
       get_hash_info(e, orig, t, flags2, info);
-    139: begin
+    eval_node: begin
       e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
       if t^.xw[25] = 0 then
         size := 92
@@ -3070,7 +3083,7 @@ begin
       for i := t^.xw[25] downto 1 do
         process_operand(e, x, t^.xp[12 + i], ctx, r);
     end;
-    141: begin
+    branch_node: begin
       e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
       n := gspace(56);
       lib_$data_move(orig, n, 56);
@@ -3080,7 +3093,7 @@ begin
       if val2 <> nil then
         t^.xp[12] := val2;
     end;
-    142: begin
+    cbranch_node: begin
       e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
       n := gspace(64);
       lib_$data_move(t, n, 64);
@@ -3091,7 +3104,7 @@ begin
       if val2 <> nil then
         t^.xp[12] := val2;
     end;
-    150: begin
+    nlbranch_node: begin
       e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
       n := gspace(52);
       lib_$data_move(t, n, 52);
@@ -3099,11 +3112,11 @@ begin
       cur_stmt := n;
       process_operand(e, x, t^.xp[12], ctx, r);
     end;
-    151: begin
+    return_node: begin
       t := nil;
       return;
     end;
-    137, 143: begin
+    tree_node, cmp_tree_node: begin
       e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
       size := orig^.xw[19] * 4 + 40;
       n := gspace(size);
@@ -3137,7 +3150,7 @@ begin
       if ctx.base = orig then
         ctx.base := nil;
     end;
-    146: begin
+    ptr_node: begin
       e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
       n := gspace(32);
       lib_$data_move(t, n, 32);
@@ -3145,7 +3158,7 @@ begin
       if ctx.subst then
         t^.xw[8] := ctx.uses;
       process_opr_ind(e, x, t, t^.xp[6], t^.xp[7], ctx, r, orig);
-      if (t^.kind = 146) and (t^.xp[6]^.kind = 137) and
+      if (t^.kind = ptr_node) and (t^.xp[6]^.kind = tree_node) and
          (t^.xp[6]^.xw[18] = 26) then
         t := t^.xp[6]^.xp[10];
       if r.node = orig then
@@ -3153,7 +3166,7 @@ begin
       else
         put_hash_info(e, orig, t, [], empty_info);
     end;
-    145: begin
+    dindex_node: begin
       e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
       n := gspace(44);
       lib_$data_move(t, n, 44);
@@ -3171,8 +3184,8 @@ begin
       if ctx.base = orig then
         ctx.base := nil;
     end;
-    147: begin
-      while t^.xp[6]^.kind = 147 do begin
+    disp_node: begin
+      while t^.xp[6]^.kind = disp_node do begin
         t^.xl[8] := t^.xl[8] + t^.xp[6]^.xl[8];
         t^.xp[6] := t^.xp[6]^.xp[6];
       end;
@@ -3190,7 +3203,7 @@ begin
         nil_out_dispinfo(r);
       end;
     end;
-    205: begin
+    sym_disp_node: begin
       e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
       n := gspace(36);
       lib_$data_move(t, n, 36);
@@ -3199,16 +3212,16 @@ begin
       if ctx.subst then
         t^.xw[8] := ctx.uses;
       process_operand(e, x, t^.xp[8], ctx, r);
-      if t^.xp[8]^.kind = 146 then
+      if t^.xp[8]^.kind = ptr_node then
         t^.xp[8] := t^.xp[8]^.xp[6]
-      else if (t^.xp[8]^.kind = 137) and (t^.xp[8]^.xw[18] = 26) then
+      else if (t^.xp[8]^.kind = tree_node) and (t^.xp[8]^.xw[18] = 26) then
         t^.xp[8] := t^.xp[8]^.xp[10];
       process_opr_ind(e, x, t, t^.xp[6], t^.xp[7], ctx, r, orig);
       if t^.xp[8] = nil then
         t := t^.xp[6];
       put_hash_info(e, orig, t, [], empty_info);
     end;
-    175: begin
+    pf_call: begin
       e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
       n := gspace(24);
       lib_$data_move(t, n, 24);
@@ -3216,7 +3229,7 @@ begin
       process_operand(e, x, t^.xp[4], ctx, r);
       process_operand(e, x, t^.xp[5], ctx, r);
     end;
-    171: begin
+    cc_call: begin
       e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
       size := (ctx.call^.xw[19] - 1) * 4 + 20;
       n := gspace(size);
@@ -3224,7 +3237,7 @@ begin
       t := n;
       process_operand(e, x, t^.xp[4], ctx, r);
     end;
-    164: begin
+    cs_node: begin
       e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
       n := gspace(32);
       lib_$data_move(t, n, 32);
@@ -3235,7 +3248,7 @@ begin
       process_operand(e, x, t^.xp[6], ctx, r);
       put_hash_info(e, orig, t, [], empty_info);
     end;
-    165: begin
+    cs_temp: begin
       e^.caller^.xw[136] := e^.caller^.xw[136] + 1;
       n := gspace(28);
       lib_$data_move(t, n, 28);
@@ -3287,7 +3300,7 @@ begin
     process_operand(e, x, t, ctx, info);
     if t <> nil then
       put_on_il_stream(t);
-    if (s^.kind = 149) and (s^.xp[12] = e^.callee) then
+    if (s^.kind = blk_end_node) and (s^.xp[12] = e^.callee) then
       exit;
     s := s^.xp[2];
   until false;
@@ -3332,7 +3345,7 @@ begin
   e^.callee^.xc[374] := chr(ord(e^.callee^.xc[374]) ! 2);
   cal := e^.callee;
   caller_blk := gspace(396);
-  caller_blk^.kind := 172;
+  caller_blk^.kind := inner_blk;
   caller_blk^.xp[74] := cal^.xp[74];
   caller_blk^.xp[23] := cal^.xp[23];
   caller_blk^.xl2[93] := (caller_blk^.xl2[93] & 16#7FF) ! 16#04000800;
@@ -3391,7 +3404,7 @@ begin
   if (e^.scope^.xp[4] <> nil) and (e^.scope^.xp[5] = nil) then begin
     v := e^.scope^.xp[4];
     repeat
-      if v^.kind = 110 then
+      if v^.kind = fortran_symbol then
         w := v^.xp[1]
       else
         w := v^.xp[4];
@@ -3474,7 +3487,7 @@ begin
     end;
   b := next_contained_block(cal, cal);
   while b <> nil do begin
-    if (b^.kind = 107) or (b^.kind = 108) then begin
+    if (b^.kind = procedure_blk) or (b^.kind = function_blk) then begin
       call_status := 40;
       return;
     end;
@@ -3498,7 +3511,7 @@ begin
     case m of
       0: begin
         if language = 2 then
-          if f^.kind = 110 then
+          if f^.kind = fortran_symbol then
             if (ord(f^.xc[10]) & 15) = 7 then
               if ord(f^.xc[10]) >= 128 then begin
                 call_status := 35;
@@ -3550,7 +3563,7 @@ begin
     call_status := 39;
     return;
   end;
-  if b^.kind = 105 then begin
+  if b^.kind = program_blk then begin
     if size + b^.xp[48]^.xl[5] + cal^.xl[44] - cal^.xl[28] > 24576 then begin
       call_status := 39;
       return;
@@ -3572,7 +3585,8 @@ begin
       found := (v^.xw[13] & 16#100) <> 0;
       v := v^.xp[1];
     end
-    else if (v^.kind = 109) and (v^.xp[7]^.kind <> 107) then begin
+    else if (v^.kind = var_name)
+        and (v^.xp[7]^.kind <> procedure_blk) then begin
       found := (v^.xw[17] & 16#100) <> 0;
       v := v^.xp[4];
     end
@@ -3665,7 +3679,8 @@ var
 begin
   if b = nil then
     return;
-  if not ((b^.kind = 107) or (b^.kind = 108) or (b^.kind = 105)) then
+  if not ((b^.kind = procedure_blk) or (b^.kind = function_blk)
+          or (b^.kind = program_blk)) then
     return;
   if odd(ord(b^.xc[374])) then
     return;
@@ -3677,7 +3692,8 @@ begin
     x.line := current_ln(ed^.stmt);
     st := 0;
     if ed^.callee <> nil then
-      if ed^.callee^.kind in [105..108, 172, 209] then begin
+      if ed^.callee^.kind in [program_blk..function_blk, inner_blk,
+                              blockdata_blk] then begin
         c := ed^.callee;
         if (ord(c^.xc[379]) & 2) <> 0 then begin
           if ((ord(c^.xc[375]) & 32) <> 0) or cargs_$options.force_inline then
@@ -3772,11 +3788,12 @@ var
 begin
   r := false;
   if t <> nil then
-    if (t^.kind = 205) or (t^.kind = 147) or (t^.kind = 146) or
-       (t^.kind = 145) then
+    if (t^.kind = sym_disp_node) or (t^.kind = disp_node)
+        or (t^.kind = ptr_node) or
+       (t^.kind = dindex_node) then
       if alias_$ind_for_captured_lvalue(t) = nil then begin
         if t^.xp[7] <> nil then
-          r := (t^.xp[7]^.kind = 120) or (t^.xp[7]^.kind = 119);
+          r := (t^.xp[7]^.kind = pfield_name) or (t^.xp[7]^.kind = field_name);
       end
       else
         r := false;
@@ -3805,7 +3822,7 @@ begin
     assert_contains_symbolically_opaque_addressing := false;
     return;
   end;
-  if (t^.kind = 110) or (t^.kind = 109) then begin
+  if (t^.kind = fortran_symbol) or (t^.kind = var_name) then begin
     assert_contains_symbolically_opaque_addressing := false;
     return;
   end;
@@ -3820,24 +3837,24 @@ begin
     inside := true;
   end;
   case t^.kind of
-    137, 143:
+    tree_node, cmp_tree_node:
       for k := 1 to t^.xw[19] do
         if assert_contains_symbolically_opaque_addressing(t^.xp[9 + k], inside) then begin
           assert_contains_symbolically_opaque_addressing := true;
           return;
         end;
-    146, 147, 205:
+    ptr_node, disp_node, sym_disp_node:
       r := assert_contains_symbolically_opaque_addressing(t^.xp[6], inside);
-    145: begin
+    dindex_node: begin
       r := assert_contains_symbolically_opaque_addressing(t^.xp[6], inside);
       if not r then
         r := assert_contains_symbolically_opaque_addressing(t^.xp[9], inside);
     end;
-    175:
+    pf_call:
       r := assert_contains_symbolically_opaque_addressing(t^.xp[4], inside);
-    171:
+    cc_call:
       r := assert_contains_symbolically_opaque_addressing(t^.xp[4], inside);
-    164: begin
+    cs_node: begin
       r := assert_contains_symbolically_opaque_addressing(t^.xp[5], inside);
       if not r then
         r := assert_contains_symbolically_opaque_addressing(t^.xp[6], inside);
@@ -3865,25 +3882,25 @@ var
 begin
   r := false;
   case s^.kind of
-    139:
+    eval_node:
       for k := 1 to s^.xw[25] do
         if assert_contains_symbolically_opaque_addressing(s^.xp[12 + k], false) then begin
           assert_statement_contains_symbolically_opaque_addressing := true;
           return;
         end;
-    140: begin
+    assign_node: begin
       r := assert_contains_symbolically_opaque_addressing(s^.xp[17], r);
       if not r then
         r := assert_contains_symbolically_opaque_addressing(s^.xp[16], r);
       if not r then
         r := assert_contains_symbolically_opaque_addressing(s^.xp[18], r);
     end;
-    142: begin
+    cbranch_node: begin
       r := assert_contains_symbolically_opaque_addressing(s^.xp[12], r);
       if not r then
         r := assert_contains_symbolically_opaque_addressing(s^.xp[14], r);
     end;
-    141, 150, 151:
+    branch_node, nlbranch_node, return_node:
       r := assert_contains_symbolically_opaque_addressing(s^.xp[12], r);
     otherwise
       ;
@@ -3948,7 +3965,7 @@ begin
   callee_status := 27;
   if b = nil then
     return;
-  if not ((b^.kind = 108) or (b^.kind = 107)) then
+  if not ((b^.kind = function_blk) or (b^.kind = procedure_blk)) then
     return;
   if (ord(b^.xc[375]) & 64) <> 0 then
     return;
@@ -3985,9 +4002,9 @@ begin
     if oi_level_ptr_t(n)^.level < oi_level_ptr_t(b)^.level then
       n := nil
     else if (oi_level_ptr_t(n)^.level = oi_level_ptr_t(b)^.level) and
-            (n^.kind <> 167) then
+            (n^.kind <> entry_blk) then
       n := nil
-    else if n^.kind = 167 then begin
+    else if n^.kind = entry_blk then begin
       callee_status := 42;
       return;
     end
@@ -4007,13 +4024,13 @@ begin
     v := b^.xp[4];
     while v <> nil do begin
       type_exp(v, addr(te));
-      if te.base^.kind = 133 then begin
+      if te.base^.kind = file_type then begin
         callee_status := 44;
         return;
       end;
-      if v^.kind = 109 then
-        if v^.xp[7]^.kind = 118 then
-          if v^.xp[7]^.xp[7]^.kind = 132 then
+      if v^.kind = var_name then
+        if v^.xp[7]^.kind = type_name then
+          if v^.xp[7]^.xp[7]^.kind = record_type then
             if ord(v^.xp[7]^.xp[7]^.xc[34]) >= 128 then begin
               callee_status := 45;
               return;
@@ -4023,7 +4040,7 @@ begin
     v := b^.xp[3];
     while v <> nil do begin
       type_exp(v, addr(te));
-      if te.base^.kind = 133 then begin
+      if te.base^.kind = file_type then begin
         callee_status := 44;
         return;
       end;
@@ -4038,7 +4055,7 @@ begin
       f := oi_ftab_ptr_t(b^.xp[3])^[k].sym
     else
       f := find_varn(b, p);
-    if f^.kind = 110 then begin
+    if f^.kind = fortran_symbol then begin
       if rshft(ord(f^.xc[44]) & 16#F0, 4) = 1 then begin
         callee_status := 41;
         return;
@@ -4050,8 +4067,9 @@ begin
             return;
           end;
     end
-    else if f^.xp[7]^.kind = 121 then
-      if (f^.xp[7]^.xp[4]^.kind = 174) or (f^.xp[7]^.xp[4]^.kind = 173) then begin
+    else if f^.xp[7]^.kind = param_name then
+      if (f^.xp[7]^.xp[4]^.kind = func__type)
+          or (f^.xp[7]^.xp[4]^.kind = proc__type) then begin
         callee_status := 41;
         return;
       end;
@@ -4068,7 +4086,7 @@ begin
     return;
   v := function_return(b);
   if v <> nil then
-    if v^.kind = 110 then
+    if v^.kind = fortran_symbol then
       if (ord(v^.xc[10]) & 15) = 7 then
         if ord(v^.xc[10]) >= 128 then
           return;
@@ -4099,8 +4117,8 @@ var
 begin
   any := false;
   if il_d4 <> nil then
-    if il_d4^.kind = 144 then
-      if il_d4^.xp[2]^.kind = 148 then begin
+    if il_d4^.kind = label_node then
+      if il_d4^.xp[2]^.kind = block_entry_node then begin
         b := il_d4^.xp[2]^.xp[12];
         language := rshft(ord(b^.xc[377]) & 16#70, 4);
         if language in [1..4] then
@@ -4163,7 +4181,8 @@ begin
   b := il_184;
   while b <> nil do begin
     ed := oi_edge_ptr_t(b^.xp[61]);
-    if (b^.kind = 105) or (b^.kind = 108) or (b^.kind = 107) then begin
+    if (b^.kind = program_blk) or (b^.kind = function_blk)
+        or (b^.kind = procedure_blk) then begin
       if ed = nil then begin
         if (ord(b^.xc[379]) & 32) = 0 then
           b^.xc[379] := chr(ord(b^.xc[379]) ! 16)
@@ -4178,7 +4197,7 @@ begin
             b^.xc[379] := chr(ord(b^.xc[379]) ! 8);
           ed := ed^.caller_next;
         end;
-      if b^.kind = 105 then begin
+      if b^.kind = program_blk then begin
         b^.xc[379] := chr(ord(b^.xc[379]) ! 16);
         b^.xc[379] := chr(ord(b^.xc[379]) & 16#F7);
       end;
@@ -4191,7 +4210,8 @@ begin
     done := true;
     b := il_184;
     while b <> nil do begin
-      if (b^.kind = 105) or (b^.kind = 108) or (b^.kind = 107) then begin
+      if (b^.kind = program_blk) or (b^.kind = function_blk)
+          or (b^.kind = procedure_blk) then begin
         if (ord(b^.xc[379]) & 32) = 0 then begin
           all := true;
           ed := oi_edge_ptr_t(b^.xp[61]);
@@ -4221,7 +4241,7 @@ begin
         end;
         r := b;
       end;
-      if b^.kind = 172 then
+      if b^.kind = inner_blk then
         if (ord(r^.xc[379]) & 16) <> 0 then
           b^.xc[379] := chr(ord(b^.xc[379]) ! 16);
       b := b^.xp[1];

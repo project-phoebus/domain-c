@@ -348,7 +348,7 @@ type
   dmp_node_ptr_t = ^dmp_node_t;
   dmp_node_t = record
     w0: integer;
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     l4: univ_ptr;                       { +4 }
     space8: array [8..10] of char;
     b11: char;                          { +11 }
@@ -864,9 +864,9 @@ var
   name: dmp_name9_t;
 begin
   if n <> nil then begin
-    if n^.kind = 109 then
+    if n^.kind = var_name then
       vat := n^.vat
-    else if n^.kind = 110 then
+    else if n^.kind = fortran_symbol then
       vat := (ord(n^.b11) & 16#F0) div 16
     else
       bug_check('DMP: PRINT_MEMORY_HOME -- LR has unexpected kind for memory home%$');
@@ -1151,7 +1151,7 @@ begin
           if op^.link = nil then
             vfmt_$write('<nil object>%$')
           else if not sym_$display_symbol_print_name(op^.link) then
-            write('<object.kind= ', il_$kind_t(dmp_node_ptr_t(op^.link)^.kind), '>');
+            write('<object.kind= ', dmp_node_ptr_t(op^.link)^.kind, '>');
         end;
         if op^.value <> 0 then
           vfmt_$write('%PLD%$', op^.value);
@@ -1582,9 +1582,11 @@ begin
   dmp_line.body[5] := '=';
   dmp_line.body[6] := ' ';
   if sym <> nil then begin
-    if (sym^.kind = 109) and (sym^.l4 = nil) then
+    if (sym^.kind = var_name) and (sym^.l4 = nil) then
       goto 9;
-    if not (sym^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200]) then
+    if not (sym^.kind in [blogical_ob..complex_ob, char_string_ob,
+                          char32_string_ob, char16_ob, set_con_ob,
+                          rec_const_ob, dpcomplex_ob, binteger_ob]) then
       dmp_line.length := 4;
     if not sym_$append_symbol_print_name(addr(dmp_line), sym) then
       prtobj(dmp_line, sym);

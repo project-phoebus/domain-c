@@ -144,7 +144,7 @@ begin
             ;
         end;
         if access <> 'X' then begin
-          bans_cmd.x := integer32(smcontk(81, genfpinst(p)));
+          bans_cmd.x := integer32(smcontk(integer_ob, genfpinst(p)));
           p^.kind := 1;
           p^.op := 1;
           p^.ads1 := bans_cmd;
@@ -170,22 +170,22 @@ begin
               if bans_opnd.f1 = 3 then begin
                 k := il_$node_ptr_t(bans_opnd.x);
                 case k^.kind of
-                  198:
+                  dpcomplex_ob:
                     if bans_opnd.y = 8 then begin
                       u.y := 0;
-                      u.x := integer32(smcontk(81, k^.xl[6]));
+                      u.x := integer32(smcontk(integer_ob, k^.xl[6]));
                     end
                     else
-                      u.x := integer32(smcontk(81, k^.xl[4]));
-                  90:
+                      u.x := integer32(smcontk(integer_ob, k^.xl[4]));
+                  complex_ob:
                     if bans_opnd.y = 4 then begin
                       u.y := 0;
-                      u.x := integer32(smcontk(81, k^.xl[4]));
+                      u.x := integer32(smcontk(integer_ob, k^.xl[4]));
                     end
                     else
-                      u.x := integer32(smcontk(81, k^.xl[3]));
-                  89:
-                    u.x := integer32(smcontk(81, k^.xl[4]));
+                      u.x := integer32(smcontk(integer_ob, k^.xl[3]));
+                  dpreal_ob:
+                    u.x := integer32(smcontk(integer_ob, k^.xl[4]));
                   otherwise
                     ;
                 end;
@@ -196,13 +196,13 @@ begin
                 if bans_opnd.f1 = 3 then begin
                   k := il_$node_ptr_t(bans_opnd.x);
                   case k^.kind of
-                    198:
+                    dpcomplex_ob:
                       if bans_opnd.y = 8 then
-                        u.x := integer32(smcontk(81, k^.xl[5]))
+                        u.x := integer32(smcontk(integer_ob, k^.xl[5]))
                       else
-                        u.x := integer32(smcontk(81, k^.xl[3]));
-                    89:
-                      u.x := integer32(smcontk(81, k^.xl[3]));
+                        u.x := integer32(smcontk(integer_ob, k^.xl[3]));
+                    dpreal_ob:
+                      u.x := integer32(smcontk(integer_ob, k^.xl[3]));
                     otherwise
                       ;
                   end;
@@ -217,7 +217,7 @@ begin
             end;
             2: begin
               unpack_ads(bans_opnd, u);
-              bans_imm8.x := integer32(smcontk(81, 8));
+              bans_imm8.x := integer32(smcontk(integer_ob, 8));
               bans_areg.f2 := u.f2;
               q := fnl_slct(2, 4, 0, bans_areg, bans_imm8);
               after(c^.prev, q);
@@ -241,7 +241,7 @@ begin
             end;
             4: begin
               unpack_ads(bans_opnd, u);
-              bans_imm8.x := integer32(smcontk(81, 8));
+              bans_imm8.x := integer32(smcontk(integer_ob, 8));
               bans_areg.f2 := u.f2;
               q := fnl_slct(2, 4, 0, bans_areg, bans_imm8);
               after(c^.prev, q);

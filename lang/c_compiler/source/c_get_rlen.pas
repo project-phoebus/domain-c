@@ -37,13 +37,13 @@ function get_rlen(
     in t: type_exp_t): integer;
 begin
   case t.base^.kind of
-    210:
+    void_type:
       get_rlen := 0;
-    135, 130:
+    univ_ptr_type, ptr_type:
       get_rlen := 5;
-    123:
+    real_type:
       get_rlen := t.base^.len;
-    126, 127:
+    char_string_con_type, char_array_type:
       get_rlen := 9;
     otherwise
       if t.size = 1 then

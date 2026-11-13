@@ -317,19 +317,20 @@ var
     end;
   var
     te: texp_t;
-    k: integer;
+    k: il_$kind_t;
     f: integer;
   begin
     var_is_ok := true;
     k := v^.kind;
-    if (k = 110) or (k = 109) then
-      if (k = 109) and (v^.xp[7]^.kind <> 107) and
+    if (k = fortran_symbol) or (k = var_name) then
+      if (k = var_name) and (v^.xp[7]^.kind <> procedure_blk) and
          ((v^.xl[8] & 16#201001) = 0) then begin
         type_exp(v, addr(te));
-        if ((v^.xw[36] = 5) and (v^.xp[7]^.kind = 121)) or te.flags.ranged or
-           (te.base^.kind = 123) or (te.base^.kind = 134) or
-           (te.base^.kind = 130) then begin
-          if (v^.xw[36] = 1) and (il_180^.kind = 105) then
+        if ((v^.xw[36] = 5) and (v^.xp[7]^.kind = param_name))
+            or te.flags.ranged or
+           (te.base^.kind = real_type) or (te.base^.kind = set_type) or
+           (te.base^.kind = ptr_type) then begin
+          if (v^.xw[36] = 1) and (il_180^.kind = program_blk) then
             var_is_ok := false
           else if v^.xw[36] in [1, 3, 4, 7, 8] then
             var_is_ok := true
@@ -339,7 +340,7 @@ var
         else
           var_is_ok := true;
       end
-      else if k = 110 then begin
+      else if k = fortran_symbol then begin
         f := rshft(ord(v^.xc[44]) & 16#F0, 4);
         if (f = 3) or
            (((ord(v^.xc[44]) & 16#08) <> 0) and (f = 1) and
@@ -381,7 +382,7 @@ var
     rhs: il_$node_ptr_t;
   begin
     ok_node := false;
-    if t^.kind <> 140 then
+    if t^.kind <> assign_node then
       return;
     if il_utils_$is_strength_reduction_temp(t^.asg_lhs) then
       return;
@@ -393,23 +394,24 @@ var
        (18 in cargs_$options.opt_on) then
       return;
     lhs := t^.asg_lhs;
-    if lhs^.kind = 110 then
+    if lhs^.kind = fortran_symbol then
       if (lhs^.xl[6] & 16#200000) <> 0 then
         return;
-    if lhs^.kind = 109 then
+    if lhs^.kind = var_name then
       if (lhs^.xl[8] & 16#200000) <> 0 then
         return;
     if (getphase(t^.asg_rhs) + getphase(t^.asg_lhs)) * [1, 2] <> [] then
       return;
     if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
-      if (t^.asg_rhs^.kind = 164) or (t^.asg_rhs^.kind = 92) then
+      if (t^.asg_rhs^.kind = cs_node)
+          or (t^.asg_rhs^.kind = char_string_ob) then
         return;
     rhs := t^.asg_rhs;
-    if (rhs^.kind = 110) or (rhs^.kind = 109) then
+    if (rhs^.kind = fortran_symbol) or (rhs^.kind = var_name) then
       if not var_is_ok(rhs) then
         return;
     lhs := t^.asg_lhs;
-    if (lhs^.kind = 110) or (lhs^.kind = 109) then
+    if (lhs^.kind = fortran_symbol) or (lhs^.kind = var_name) then
       if not var_is_ok(lhs) then
         return;
     if t^.asg_op = 0 then
@@ -430,7 +432,8 @@ var
       if (t^.asg_op = 14) or (t^.asg_op = 13) then
         ok_node := true
       else if t^.asg_op in [0..5, 10, 15] then
-        if t^.asg_rhs^.kind in [77..87, 101, 200] then
+        if t^.asg_rhs^.kind in [blogical_ob..char_ob, char16_ob,
+                                binteger_ob] then
           ok_node := true;
   end;
 
@@ -459,12 +462,12 @@ var
   begin
     at_offset := 0;
     da := 0;
-    while a^.kind = 147 do begin
+    while a^.kind = disp_node do begin
       da := da + a^.xl[8];
       a := a^.xp[6];
     end;
     db := 0;
-    while b^.kind = 147 do begin
+    while b^.kind = disp_node do begin
       db := db + b^.xl[8];
       b := b^.xp[6];
     end;
@@ -472,7 +475,7 @@ var
       return;
     if a <> b then
       case a^.kind of
-        145:
+        dindex_node:
           if (a^.xp[6] = b^.xp[6]) and (a^.xp[9] = b^.xp[9]) and
              (a^.xw[20] = b^.xw[20]) then begin
             da := da + a^.xl[8];
@@ -480,7 +483,7 @@ var
           end
           else
             return;
-        146: begin
+        ptr_node: begin
           f := rshft(ord(il_180^.xc[377]) & 16#70, 4);
           if (a^.xp[6] <> b^.xp[6]) or (a^.xp[7] <> b^.xp[7]) or
              (f in [3, 4]) then
@@ -506,20 +509,22 @@ begin
   if not (8 in cargs_$options.opt_on) then
     return;
   cur := start;
-  while (cur^.prev^.kind = 140) or (cur^.prev^.kind = 188) do
+  while (cur^.prev^.kind = assign_node) or (cur^.prev^.kind = use_def_ob) do
     cur := cur^.prev;
 10:
-  while cur^.kind = 188 do
+  while cur^.kind = use_def_ob do
     cur := cur^.next;
   if not ok_node(cur, false) then begin
     cur := cur^.next;
     if cur = nil then
       return;
-    if (cur^.kind = 140) or (cur^.kind = 188) then
+    if (cur^.kind = assign_node) or (cur^.kind = use_def_ob) then
       goto 10;
     return;
   end;
-  if cur^.asg_rhs^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200] then
+  if cur^.asg_rhs^.kind in [blogical_ob..complex_ob, char_string_ob,
+                            char32_string_ob, char16_ob, set_con_ob,
+                            rec_const_ob, dpcomplex_ob, binteger_ob] then
     src := nil
   else
     src := cur^.asg_rhs;
@@ -532,14 +537,16 @@ begin
   prev := cur;
   size_a := size;
 20:
-  while t^.kind = 188 do
+  while t^.kind = use_def_ob do
     t := t^.next;
   both := (prev^.asg_op = 0) and
-          (prev^.asg_rhs^.kind in [77..87, 101, 200]);
-  if t^.kind = 140 then begin
+          (prev^.asg_rhs^.kind in [blogical_ob..char_ob, char16_ob,
+                                   binteger_ob]);
+  if t^.kind = assign_node then begin
     if t^.asg_rhs = nil then
       both := false
-    else if not (t^.asg_rhs^.kind in [77..87, 101, 200]) then
+    else if not (t^.asg_rhs^.kind in [blogical_ob..char_ob, char16_ob,
+                                      binteger_ob]) then
       both := false;
   end
   else
@@ -574,7 +581,9 @@ begin
   else if k <> dir then
     goto 30;
   if src = nil then begin
-    if not (t^.asg_rhs^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200]) then
+    if not (t^.asg_rhs^.kind in [blogical_ob..complex_ob, char_string_ob,
+                                 char32_string_ob, char16_ob, set_con_ob,
+                                 rec_const_ob, dpcomplex_ob, binteger_ob]) then
       goto 30;
     if size + tsize > 2048 then
       goto 30;
@@ -624,36 +633,38 @@ begin
       for j := 1 to n do begin
         x := p^.asg_rhs;
         case x^.kind of
-          156, 212:
+          set_con_ob, namelist_constant_ob:
             for i := 1 to x^.set_len div 2 do
               cpword(x^.set_words[i]);
-          92: begin
+          char_string_ob: begin
             for i := 1 to x^.str_len do
               cpbyte(x^.str_chars[i]);
             if p^.asg_op = 6 then
               for i := x^.str_len + 1 to p^.asg_size do
                 cpbyte(' ');
           end;
-          87, 79, 78, 77, 85, 84, 83, 86, 82, 80, 200, 81:
+          char_ob, llogical_ob, slogical_ob, blogical_ob, ulinteger_ob,
+              uinteger_ob, usinteger_ob, ubinteger_ob, linteger_ob,
+              sinteger_ob, binteger_ob, integer_ob:
             if p^.asg_rlen = 1 then
               cpbyte(x^.xc[11])
             else if p^.asg_rlen = 2 then
               cpword(x^.xw[5])
             else
               cplong(x^.int_value);
-          89: begin
+          dpreal_ob: begin
             cplong(x^.bits[1]);
             cplong(x^.bits[2]);
           end;
-          88: begin
+          real_ob: begin
             rv.r := dbl_to_real(x, p^.line);
             cplong(rv.l);
           end;
-          90: begin
+          complex_ob: begin
             cplong(x^.pair_a);
             cplong(x^.pair_b);
           end;
-          198: begin
+          dpcomplex_ob: begin
             cplong(x^.bits[1]);
             cplong(x^.bits[2]);
             cplong(x^.bits[3]);
@@ -663,11 +674,11 @@ begin
         end;
         repeat
           p := p^.next;
-        until p^.kind <> 188;
+        until p^.kind <> use_def_ob;
       end;
       if (buflen = 4) or (buflen = 2) then
         if isnum then
-          x := smcontk(81, buf.l)
+          x := smcontk(integer_ob, buf.l)
         else
           x := strtk(buf.c, buflen)
       else if isnum then
@@ -691,15 +702,15 @@ begin
     end;
     q := cur^.next;
     for j := 1 to n - 1 do begin
-      while q^.kind = 188 do
+      while q^.kind = use_def_ob do
         q := q^.next;
       adjust_uc(q^.asg_rhs, -1);
       adjust_uc(q^.asg_lhs, -1);
       q^.hdr.deleted := true;
       q := q^.next;
     end;
-    if t^.prev^.kind = 188 then
-      while t^.prev^.kind = 188 do
+    if t^.prev^.kind = use_def_ob then
+      while t^.prev^.kind = use_def_ob do
         t := t^.prev;
     cur^.next := t;
     t^.prev := cur;

@@ -94,7 +94,7 @@ type
   alias_sig_ptr_t = ^alias_sig_t;
   alias_sig_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     unused_4: integer32;                { +4 }
     unused_8: integer;                  { +8 }
     count: integer;                     { +10 }
@@ -196,9 +196,9 @@ function is_display_ptr(
 begin
   if n = nil then
     is_display_ptr := false
-  else if (n^.kind = 109) and (23 in alias_bits_t(n^.xl[8])) then
+  else if (n^.kind = var_name) and (23 in alias_bits_t(n^.xl[8])) then
     is_display_ptr := true
-  else if (n^.kind = 110) and (23 in alias_bits_t(n^.xl[6])) then
+  else if (n^.kind = fortran_symbol) and (23 in alias_bits_t(n^.xl[6])) then
     is_display_ptr := true
   else
     is_display_ptr := false;
@@ -243,9 +243,10 @@ var
   k: integer;
   t: alias_$desc_t;                     { -32 }
 begin
-  if ((p^.kind = 138) or (p^.kind = 137)) and
+  if ((p^.kind = gen_tree_node) or (p^.kind = tree_node)) and
       ((p^.xw[18] = 2) or (p^.xw[18] = 1)) and then
-      (p^.xp[11]^.kind in [77..87, 101, 200]) then begin
+      (p^.xp[11]^.kind in [blogical_ob..char_ob, char16_ob,
+                           binteger_ob]) then begin
     ok := get_alias_desc(p^.xp[10], d);
     d.disp := p^.xp[11]^.int_value;
     if p^.xw[18] = 2 then
@@ -259,8 +260,9 @@ begin
   if d.class = alias_dynamic_param_ptr then
     d.class := alias_ref_thru_param_ptr
   else if (d.base <> nil) and then
-      ((d.base^.kind = 195) or (d.base^.kind = 163)) then begin
-    if d.base^.kind = 163 then begin
+      ((d.base^.kind = reloc_absolute_addr_con)
+       or (d.base^.kind = addr_con)) then begin
+    if d.base^.kind = addr_con then begin
       k := ord(d.base^.xc[20]);
       d.disp := d.disp + d.base^.xl[3];
       d.base := d.base^.xp[2];
@@ -285,10 +287,10 @@ begin
     end;
   end
   else if (d.class = alias_never_invalidated) and (d.base <> nil) and then
-      ((d.base^.kind = 154) or (d.base^.kind = 153)) then
+      ((d.base^.kind = db_register) or (d.base^.kind = sb_register)) then
     deref := true
   else if is_display_ptr(d.base) and (sym <> nil) and then
-      ((sym^.kind = 110) or (sym^.kind = 109)) then begin
+      ((sym^.kind = fortran_symbol) or (sym^.kind = var_name)) then begin
     ok := get_alias_desc(sym, d);
     d.uplevel := true;
   end
@@ -298,13 +300,14 @@ begin
     return;
   end;
   if deref or (d.class in [alias_xdb_relative, alias_xsf_relative]) then begin
-    if (sym <> nil) and then ((sym^.kind = 110) or (sym^.kind = 109)) then begin
+    if (sym <> nil) and then ((sym^.kind = fortran_symbol)
+                              or (sym^.kind = var_name)) then begin
       t := d;
       if get_alias_desc(sym, t) then begin
         d := t;
-        if sym^.kind = 109 then
+        if sym^.kind = var_name then
           d.disp := d.disp - sym^.xl[14]
-        else if sym^.kind = 110 then
+        else if sym^.kind = fortran_symbol then
           d.disp := d.disp - sym^.xl[3]
         else
           bug_check('\\alias_\alias_ptr_node -- dead beef!!!%.');
@@ -337,8 +340,8 @@ var
 begin
   if (sym <> nil) and (d.levels >= 0) and (d.base <> nil) then
     if (d.class in [alias_common_block, alias_xdb_relative,
-        alias_xsf_relative]) or (d.base^.kind = 154) or
-        (d.base^.kind = 153) then
+        alias_xsf_relative]) or (d.base^.kind = db_register) or
+        (d.base^.kind = sb_register) then
       if alias_$get_alias_desc(sym, d.size, t) then
         if d.class = alias_common_block then
           d.sym := t.sym
@@ -414,17 +417,20 @@ begin
   ok := true;
   if getphase(n) * [3, 4] <> [] then
     d.phase_34 := true;
-  if (n^.kind in [137, 138, 143, 145, 146, 147, 164, 171, 175, 189, 205]) and
+  if (n^.kind in [tree_node, gen_tree_node, cmp_tree_node, dindex_node,
+                  ptr_node, disp_node, cs_node, cc_call, pf_call, cse_use_ob,
+                  sym_disp_node]) and
       (23 in alias_bits_t(n^.xl[1])) then begin
     get_alias_desc := get_alias_desc(n^.xp[10], d);
     return;
   end;
   case n^.kind of
-    153, 195, 107, 159, 108, 154, 208, 211, 163: begin
+    sb_register, reloc_absolute_addr_con, procedure_blk, lib_dsc, function_blk,
+        db_register, at_lib_dsc, ap_register, addr_con: begin
       d.class := alias_never_invalidated;
       d.base := n;
     end;
-    152:
+    alloc_temp:
       if n^.xp[4] <> nil then
         ok := get_alias_desc(n^.xp[4], d)
       else begin
@@ -433,44 +439,44 @@ begin
         d.size := n^.xl[2];
         d.class := alias_unaliased_dynamic;
       end;
-    204: begin
+    argument_block_location_ob: begin
       d.class := alias_argument_block;
       d.base := il_180;
       d.disp := n^.xl[1];
     end;
-    111: begin
+    common_block_name: begin
       d.class := alias_common_block;
       d.base := n;
     end;
-    164:
+    cs_node:
       ok := get_alias_desc(n^.xp[5], d);
-    165: begin
+    cs_temp: begin
       d.class := alias_unaliased_dynamic;
       d.base := n;
     end;
-    190:
+    cse_parent_ob:
       ok := get_alias_desc(n^.xp[1], d);
-    189:
+    cse_use_ob:
       ok := get_alias_desc(n^.xp[5], d);
-    181: begin
+    dead_temp: begin
       d.class := alias_unaliased_dynamic;
       d.base := n;
     end;
-    145: begin
+    dindex_node: begin
       ok := alias_ptr_node(n^.xp[6], d, n^.xp[7]);
       d.disp := d.disp + n^.xl[8];
       x := n^.xp[9];
-      if not (x^.kind in [77..87, 101, 200]) then
+      if not (x^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) then
         d.inexact := true
       else
         d.disp := d.disp + lshft(x^.int_value, n^.xw[20]);
     end;
-    147: begin
+    disp_node: begin
       ok := get_alias_desc(n^.xp[6], d);
       check_the_ind(n^.xp[7], d);
       d.disp := d.disp + n^.xl[8];
     end;
-    110: begin
+    fortran_symbol: begin
       m := [];
       if n^.xp[7] = nil then
         top := n
@@ -499,20 +505,21 @@ begin
       if (top <> n) and (d.class <> alias_common_block) then
         d.disp := d.disp + n^.xl[3] - top^.xl[3];
     end;
-    146:
+    ptr_node:
       ok := alias_ptr_node(n^.xp[6], d, n^.xp[7]);
-    205: begin
+    sym_disp_node: begin
       x := n^.xp[6];
       off := 0;
-      while x^.kind = 147 do begin
+      while x^.kind = disp_node do begin
         off := off + x^.xl[8];
         x := x^.xp[6];
       end;
-      if x^.kind = 146 then
+      if x^.kind = ptr_node then
         y := x^.xp[6]
-      else if x^.kind = 145 then begin
+      else if x^.kind = dindex_node then begin
         y := x^.xp[6];
-        if not (x^.xp[9]^.kind in [77..87, 101, 200]) then
+        if not (x^.xp[9]^.kind in [blogical_ob..char_ob, char16_ob,
+                                   binteger_ob]) then
           d.inexact := true
         else
           off := off + lshft(x^.xp[9]^.int_value, x^.xw[20]);
@@ -522,11 +529,13 @@ begin
         get_alias_desc := false;
         return;
       end;
-      if not ((n^.xp[8]^.kind = 110) or (n^.xp[8]^.kind = 109)) then begin
+      if not ((n^.xp[8]^.kind = fortran_symbol)
+              or (n^.xp[8]^.kind = var_name)) then begin
         d.inexact := true;
         ok := false;
       end
-      else if (y^.kind = 153) or (y^.kind = 211) or (y^.kind = 154) or
+      else if (y^.kind = sb_register) or (y^.kind = ap_register)
+          or (y^.kind = db_register) or
           is_display_ptr(y) then begin
         ok := get_alias_desc(n^.xp[8], d);
         d.disp := d.disp + off;
@@ -537,7 +546,7 @@ begin
         d.disp := d.disp + off;
       end;
     end;
-    138, 137:
+    gen_tree_node, tree_node:
       if n^.xw[18] = 26 then begin
         ok := get_alias_desc(n^.xp[10], d);
         if d.class = alias_ref_thru_param_ptr then
@@ -557,12 +566,12 @@ begin
         d.class := alias_never_invalidated
       else
         ok := false;
-    109: begin
+    var_name: begin
       d.base := n;
       d.disp := 0;
       d.levels := 0;
       d.f19_3 := 13 in alias_bits_t(n^.xl[8]);
-      if (n^.xp[7] <> nil) and then (n^.xp[7]^.kind = 121) and
+      if (n^.xp[7] <> nil) and then (n^.xp[7]^.kind = param_name) and
           (n^.xp[7]^.xw[22] = 2) and
           (alias_bits_t(n^.xl[8]) * [0, 8, 12, 17] = []) and
           (not (25 in alias_bits_t(n^.xl[8])) or
@@ -571,7 +580,7 @@ begin
       else begin
         if 17 in alias_bits_t(n^.xl[8]) then begin
           x := n^.xp[13]^.xp[3];
-          if (x^.xp[17]^.kind = 137) and (x^.xw[26] = 5) then begin
+          if (x^.xp[17]^.kind = tree_node) and (x^.xw[26] = 5) then begin
             t := d;
             if get_alias_desc(x^.xp[17], t) then begin
               d := t;
@@ -626,7 +635,7 @@ begin
           end;
         end;
         if (n^.xp[5] <> nil) and (d.class in [3..6]) and then
-            (n^.xp[5]^.kind = 105) then begin
+            (n^.xp[5]^.kind = program_blk) then begin
           case d.class of
             3: d.class := alias_dynamic;
             5: d.class := alias_xdynamic;
@@ -638,7 +647,9 @@ begin
       end;
     end;
     otherwise
-      if n^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200] then begin
+      if n^.kind in [blogical_ob..complex_ob, char_string_ob, char32_string_ob,
+                     char16_ob, set_con_ob, rec_const_ob, dpcomplex_ob,
+                     binteger_ob] then begin
         d.class := alias_never_invalidated;
         d.base := n;
         get_alias_desc := ok;
@@ -647,7 +658,9 @@ begin
       else
         ok := false;
   end;
-  if (n^.kind in [137, 138, 143, 145, 146, 147, 164, 171, 175, 189, 205]) and
+  if (n^.kind in [tree_node, gen_tree_node, cmp_tree_node, dindex_node,
+                  ptr_node, disp_node, cs_node, cc_call, pf_call, cse_use_ob,
+                  sym_disp_node]) and
       (17 in alias_bits_t(n^.xl[1])) then begin
     d.class := alias_never_invalidated;
     d.levels := 0;
@@ -704,7 +717,8 @@ begin
     else if d.levels > 0 then begin
       d.class := alias_random_pointer;
       if (d.base <> nil) and then
-          ((d.base^.kind = 154) or (d.base^.kind = 153)) then begin
+          ((d.base^.kind = db_register)
+           or (d.base^.kind = sb_register)) then begin
         d.inexact := true;
         d.valid := false;
         build_alias_desc := false;
@@ -743,9 +757,10 @@ begin
     v := d.sym
   else
     v := d.base;
-  if (v <> nil) and then ((v^.kind = 110) or (v^.kind = 109)) and
+  if (v <> nil) and then ((v^.kind = fortran_symbol) or (v^.kind = var_name))
+      and
       not d.inexact then begin
-    if v^.kind = 109 then
+    if v^.kind = var_name then
       sz := v^.xl[9] div 8
     else if not (15 in alias_bits_t(v^.xl[2])) and
         (((rshft(v^.xl[11], 28) = 3) and (v^.xl[8] = 0)) or
@@ -823,7 +838,8 @@ end;
 function assert_is_fortran_external_routine_parameter(
     p: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
-  if (p <> nil) and then (p^.kind = 110) and (1 in alias_bits_t(p^.xl[2])) and
+  if (p <> nil) and then (p^.kind = fortran_symbol)
+      and (1 in alias_bits_t(p^.xl[2])) and
       (rshft(p^.xl[11], 28) = 1) then
     assert_is_fortran_external_routine_parameter := p^.xl[10] = 0
   else
@@ -851,19 +867,19 @@ var
   ra: il_$node_ptr_t;
   rb: il_$node_ptr_t;
 begin
-  if a.base^.kind = 109 then
+  if a.base^.kind = var_name then
     ra := a.base^.xp[5]
-  else if a.base^.kind = 110 then
+  else if a.base^.kind = fortran_symbol then
     ra := a.base^.xp[10]
   else
     bug_check('\\alias_\formal_may_alias_actual -- unknown kind for formal parameter%.');
-  if b.base^.kind = 109 then
+  if b.base^.kind = var_name then
     rb := b.base^.xp[5]
-  else if b.base^.kind = 110 then
+  else if b.base^.kind = fortran_symbol then
     rb := b.base^.xp[10]
-  else if b.base^.kind = 165 then
+  else if b.base^.kind = cs_temp then
     rb := b.base^.xp[2]
-  else if b.base^.kind = 152 then
+  else if b.base^.kind = alloc_temp then
     rb := il_180
   else
     bug_check('\\alias_\formal_may_alias_actual -- unknown actual kind parameter%.');
@@ -967,9 +983,9 @@ begin
       else if x^.inexact or y^.inexact then
         alias_$relationship := 1
       else begin
-        if y^.sym^.kind = 110 then
+        if y^.sym^.kind = fortran_symbol then
           off := y^.sym^.xl[3]
-        else if y^.sym^.kind = 109 then
+        else if y^.sym^.kind = var_name then
           off := y^.sym^.xl[14]
         else
           bug_check('ALIAS_$RELATIONSHIP -- expected variable in SYM field%$');
@@ -1168,21 +1184,22 @@ begin
   end;
   alias_$related_call := true;
   f := n^.xp[10];
-  if not (d.class in [7..11, 15, 16]) and (f^.kind <> 159) then
-    if not (d.class in [3..11, 14..16]) or (il_180^.kind <> 105) then
+  if not (d.class in [7..11, 15, 16]) and (f^.kind <> lib_dsc) then
+    if not (d.class in [3..11, 14..16]) or (il_180^.kind <> program_blk) then
       return;
-  while f^.kind = 175 do
+  while f^.kind = pf_call do
     f := f^.xp[5];
   all_args := false;
   case f^.kind of
-    108, 107: begin
+    function_blk, procedure_blk: begin
       if alias_blk_ptr_t(f)^.b376_5 then
         return;
       if alias_blk_ptr_t(f)^.level >= 0 then begin
         v := d.base;
-        if v^.kind = 109 then begin
+        if v^.kind = var_name then begin
           if (8 in alias_bits_t(v^.xl[8])) or
-              ((d.class in [3..11, 14..16]) and (il_180^.kind <> 105)) then begin
+              ((d.class in [3..11, 14..16])
+               and (il_180^.kind <> program_blk)) then begin
             r := f^.xp[2];
             while r <> nil do begin
               if v^.xp[5] = r then
@@ -1191,13 +1208,14 @@ begin
             end;
           end;
         end
-        else if (alias_blk_ptr_t(f)^.level > 0) and (v^.kind = 110) and
+        else if (alias_blk_ptr_t(f)^.level > 0) and (v^.kind = fortran_symbol)
+            and
             (8 in alias_bits_t(v^.xl[6])) then
           return;
       end;
       p := f^.xp[3];
       for i := 0 to n^.xw[19] - n^.xw[13] - 2 do begin
-        if (p = nil) or else (p^.kind <> 121) then begin
+        if (p = nil) or else (p^.kind <> param_name) then begin
           all_args := true;
           exit;
         end;
@@ -1210,12 +1228,12 @@ begin
         p := p^.xp[1];
       end;
     end;
-    174, 173: begin
+    func__type, proc__type: begin
       if 5 in alias_bits_t(f^.xl[19]) then
         return;
       p := f^.xp[1];
       for i := 0 to n^.xw[19] - n^.xw[13] - 2 do begin
-        if (p = nil) or else (p^.kind <> 121) then begin
+        if (p = nil) or else (p^.kind <> param_name) then begin
           all_args := true;
           exit;
         end;
@@ -1228,7 +1246,7 @@ begin
         p := p^.xp[1];
       end;
     end;
-    159: begin
+    lib_dsc: begin
       j := 0;
       for i := 0 to n^.xw[19] - n^.xw[13] - 2 do begin
         j := j + 1;
@@ -1248,19 +1266,20 @@ begin
         end;
       end;
     end;
-    171: begin
+    cc_call: begin
       r := f^.xp[4];
-      if ((r^.kind = 108) or (r^.kind = 107)) and
+      if ((r^.kind = function_blk) or (r^.kind = procedure_blk)) and
           alias_blk_ptr_t(r)^.b376_5 then
         return;
       for i := 0 to n^.xw[19] - n^.xw[13] - 2 do begin
         a := n^.xp[11 + i];
-        while (a^.kind = 190) or (a^.kind = 189) do
-          if a^.kind = 190 then
+        while (a^.kind = cse_parent_ob) or (a^.kind = cse_use_ob) do
+          if a^.kind = cse_parent_ob then
             a := a^.xp[1]
           else
             a := a^.xp[5];
-        if ((a^.kind = 137) or (a^.kind = 138)) and (a^.xw[18] = 26) then begin
+        if ((a^.kind = tree_node) or (a^.kind = gen_tree_node))
+            and (a^.xw[18] = 26) then begin
           alias_$basic_alias_desc(a^.xp[10], t);
           t.inexact := true;
           if alias_$related(d, t) then

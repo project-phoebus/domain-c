@@ -607,8 +607,8 @@ begin
     t^.xp[7] := m;
     if name = nil then
       case m^.kind of
-        109: name := m^.xp[1];
-        110: name := idntk(76, m^.xc[72], m^.xw[35]);
+        var_name: name := m^.xp[1];
+        fortran_symbol: name := idntk(id_ob, m^.xc[72], m^.xw[35]);
         otherwise
           name := nil;
       end;
@@ -655,7 +655,7 @@ begin
   if m = nil then
     goto 10;
   sz := sym_$allocation_size_in_bytes(m);
-  if m^.kind = 109 then begin
+  if m^.kind = var_name then begin
     if lr^.mate <> nil then
       if sz < 8 then
         goto 10;
@@ -670,9 +670,9 @@ begin
     if m^.xw[22] < 2 then
       m^.xw[22] := 2;
   end
-  else if m^.kind = 110 then begin
+  else if m^.kind = fortran_symbol then begin
     if ((lr^.mate <> nil) and (sz < 8)) or (sz < 4) then begin
-      name := idntk(76, m^.xc[72], m^.xw[35]);
+      name := idntk(id_ob, m^.xc[72], m^.xw[35]);
       goto 10;
     end;
     f := m^.xl[6];
@@ -812,7 +812,7 @@ begin
     if lts2 <> nil then
       home := dpcontk(0.0)
     else begin
-      home := smcontk(81, 0);
+      home := smcontk(integer_ob, 0);
       lir_main_250.w56 := 4;
     end;
     lir_main_250.disp := 0;
@@ -1083,7 +1083,7 @@ begin
           node := lr^.node20;
           if node = nil then
             next;
-          if node^.kind <> 110 then
+          if node^.kind <> fortran_symbol then
             next;
           if node = il_180^.xp[24] then
             next;
@@ -1452,11 +1452,11 @@ begin
     while lr <> nil do begin
       node := lr^.memory_home;
       if node <> nil then begin
-        if node^.kind = 109 then begin
+        if node^.kind = var_name then begin
           vat := node^.xw[36];
           f := node^.xl[8];
         end
-        else if node^.kind = 110 then begin
+        else if node^.kind = fortran_symbol then begin
           vat := (ord(node^.xc[11]) & 16#F0) div 16;
           f := node^.xl[6];
         end

@@ -690,7 +690,7 @@ begin
       ins := e^.target^.first;
       if ins^.opnds[1].h.kind <> operand$symbol_definition then
         bug_check('FG_UTILS_$reorder_start_bb_successor_list --- ENTRY instruction is no longer first within basic block%$');
-      if il_$node_ptr_t(ins^.opnds[1].link)^.kind <> 167 then begin
+      if il_$node_ptr_t(ins^.opnds[1].link)^.kind <> entry_blk then begin
         if prev = nil then
           bb^.succs := e^.next_succ
         else

@@ -560,7 +560,7 @@ begin
     sol := choose_one_solution(l);
     solution_list$append(list, sol);
     case n^.kind of
-      140:
+      assign_node:
         case n^.as_op of
           0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 19, 20, 21,
           22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36:
@@ -569,7 +569,10 @@ begin
             bug_check('ISC: source line %wd: apply_pass_1_and_choose_to_list: An object inside a visit list did not have a next.%$',
                       inh^.pos);
         end;
-      228, 149, 148, 141, 214, 215, 142, 139, 227, 144, 150, 224, 225, 151:
+      bit_field_assign, blk_end_node, block_entry_node, branch_node,
+          case_node_range_check, case_node_no_range_check, cbranch_node,
+          eval_node, insert_bit_field, label_node, nlbranch_node,
+          raise_exception, release_dynamic_space, return_node:
         n := n^.xp[2];
       otherwise
         bug_check('ISC: source line %wd: apply_pass_1_and_choose_to_list: An object inside a visit list did not have a next.%$',
@@ -641,7 +644,7 @@ begin
     inh^.pos.stmt := rshft(s^.st_l42 & 16#FFFF00, 8);
     isc_$process_statement(s, inh);
     mrh_$release_all(isc_heap);
-    done := s^.kind = 149;
+    done := s^.kind = blk_end_node;
     if not done then
       s := s^.xp[2];
   until done;

@@ -279,7 +279,7 @@ type
   il_$node_ptr_t = ^il_$node_t;
   il_$node_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     case integer of
       { An identifier, entered by idntk (strings.pas). }
       1: (idnt_next: il_$node_ptr_t;    { +4: the hash chain }

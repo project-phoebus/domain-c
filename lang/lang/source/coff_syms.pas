@@ -148,7 +148,7 @@ begin
         q := b^.e[i].node;
         match := q = p;
         if not match then
-          if q^.kind = 110 then
+          if q^.kind = fortran_symbol then
             match := strings_$compare_bytes_nocase(q^.xc[72], q^.xw[35],
                                                    p^.xc[72], p^.xw[35]) = 0;
         if match then begin
@@ -280,21 +280,21 @@ var
     if p = nil then
       return;
     case p^.kind of
-      109:
+      var_name:
         if ((ord(il_184^.xc[377]) & 16#70) div 16 = 6) and
            ((p^.xw[12] & 16#200) <> 0) then
           p^.xw[38] := find_extern(true, modify_m2_native_external_name(addr(p)))
         else
           p^.xw[38] := find_extern(true, p^.xp[1]);
-      167, 105, 107, 108:
+      entry_blk, program_blk, procedure_blk, function_blk:
         if (ord(il_184^.xc[377]) & 16#70) div 16 = 6 then
           p^.xw[133] := find_extern(true, modify_m2_native_external_name(addr(p)))
         else
           p^.xw[133] := find_extern(true, p^.xp[74]);
-      110:
+      fortran_symbol:
         p^.xw[33] := find_extern(true, p);
-      159: begin
-        id := idntk(76, p^.xc[12 + 2 * p^.xw[5]], p^.xw[4]);
+      lib_dsc: begin
+        id := idntk(id_ob, p^.xc[12 + 2 * p^.xw[5]], p^.xw[4]);
         uobj_global_name_count.l := uobj_global_name_count.l + 1;
         if uobj_global_name_count.l > 256 then
           cgerr_no_source(24, integer32(strtk('LIB_DSC_TBL OVERFLOW', 20)));
@@ -303,8 +303,8 @@ var
           find_extern(true, id);
         uobj_global_names[uobj_global_name_count.low].ident := id;
       end;
-      208: begin
-        id := idntk(76, p^.xc[50], ord(p^.xc[49]));
+      at_lib_dsc: begin
+        id := idntk(id_ob, p^.xc[50], ord(p^.xc[49]));
         uobj_local_name_count.l := uobj_local_name_count.l + 1;
         if uobj_local_name_count.l > 256 then
           cgerr_no_source(24, integer32(strtk('AT_LIB_DSC_TBL OVERFLOW', 23)));
@@ -313,7 +313,7 @@ var
           find_extern(true, id);
         uobj_local_names[uobj_local_name_count.low].ident := id;
       end;
-      111:
+      common_block_name:
         p^.xw[16] := find_extern(true, p^.xp[1]);
       otherwise
         cgerr_no_source(28, integer32(strtk(
@@ -364,8 +364,9 @@ begin
   next_sym := 2;
   r := il_184;
   while r <> nil do begin
-    if (r^.kind = 105) or (r^.kind = 107) or (r^.kind = 167) or
-       (r^.kind = 108) then begin
+    if (r^.kind = program_blk) or (r^.kind = procedure_blk)
+        or (r^.kind = entry_blk) or
+       (r^.kind = function_blk) then begin
       r^.xw[133] := next_sym;
       next_sym := next_sym + 2;
       if r^.xl[76] <> 0 then
@@ -427,10 +428,10 @@ begin
   if (ord(il_184^.xc[377]) & 16#70) div 16 = 3 then begin
     r := il_184;
     while r <> nil do begin
-      if (r^.kind = 105) or (r^.kind = 106) then begin
+      if (r^.kind = program_blk) or (r^.kind = module_blk) then begin
         v := r^.xp[4];
         while v <> nil do begin
-          if (v^.kind = 109) and ((v^.xw[36] = 1) or (v^.xw[36] = 7)) then
+          if (v^.kind = var_name) and ((v^.xw[36] = 1) or (v^.xw[36] = 7)) then
             count_global_sym(v);
           v := v^.xp[4];
         end;
@@ -450,13 +451,13 @@ begin
   while (r <> nil) and (n <> 0) do begin
     v := r^.xp[4];
     while (v <> nil) and (n <> 0) do begin
-      if (v^.kind = 109) and
+      if (v^.kind = var_name) and
          ((v^.xw[36] = 4) or (v^.xw[36] = 8) or
           ((v^.xw[36] = 3) and ((v^.xl[8] & 16#10000) <> 0))) then begin
         count_global_sym(v);
         n := n - 1;
       end
-      else if (v^.kind = 109) and (v^.xw[36] = 10) and
+      else if (v^.kind = var_name) and (v^.xw[36] = 10) and
               ((ord(il_184^.xc[377]) & 16#70) div 16 = 3) then
         v^.xw[38] := v^.xp[20]^.xw[16];
       v := v^.xp[4];
@@ -467,12 +468,13 @@ begin
   while r <> nil do begin
     a := r^.xp[3];
     while a <> nil do
-      if a^.kind <> 163 then
+      if a^.kind <> addr_con then
         a := a^.xp[29]
       else begin
         if ord(a^.xc[20]) = 2 then
           count_global_sym(a^.xp[2])
-        else if (ord(a^.xc[20]) = 4) and (a^.xp[2]^.kind = 110) then begin
+        else if (ord(a^.xc[20]) = 4)
+            and (a^.xp[2]^.kind = fortran_symbol) then begin
           v := a^.xp[2];
           if ((ord(v^.xc[44]) & 16#F0) div 16 = 1) and (v^.xp[10] <> nil) then
             a^.xp[2] := v^.xp[10]
@@ -489,32 +491,33 @@ begin
   count_tvs;
   r := il_12c;
   while r <> nil do begin
-    if not ((r^.xp[2]^.kind = 109) and (r^.xp[2]^.xw[36] = 3)) then
-      cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)));
-    if (r^.xp[2]^.kind = 109) and ((r^.xp[2]^.xl[8] & 16#10000) = 0) then
+    if not ((r^.xp[2]^.kind = var_name) and (r^.xp[2]^.xw[36] = 3)) then
+      cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
+    if (r^.xp[2]^.kind = var_name) and ((r^.xp[2]^.xl[8] & 16#10000) = 0) then
       count_global_sym(r^.xp[2]);
     r := r^.xp[1];
   end;
   r := il_130;
   while r <> nil do begin
     v := r^.xp[3];
-    if ((v^.kind = 105) or (v^.kind = 107) or (v^.kind = 167) or
-        (v^.kind = 108)) and ((v^.xw[188] & 384) div 128 = 2) then
+    if ((v^.kind = program_blk) or (v^.kind = procedure_blk)
+        or (v^.kind = entry_blk) or
+        (v^.kind = function_blk)) and ((v^.xw[188] & 384) div 128 = 2) then
       count_global_sym(v)
-    else if (v^.kind = 109) and (v^.xw[36] = 3) and
+    else if (v^.kind = var_name) and (v^.xw[36] = 3) and
             ((v^.xl[8] & 16#10000) = 0) then
       count_global_sym(v)
-    else if v^.kind = 110 then
+    else if v^.kind = fortran_symbol then
       count_global_sym(v);
     r := r^.xp[1];
   end;
   r := il_10c;
   while r <> nil do begin
-    if (r^.kind = 108) or (r^.kind = 107) then begin
+    if (r^.kind = function_blk) or (r^.kind = procedure_blk) then begin
       if (r^.xw[188] & 384) div 128 = 2 then
         count_global_sym(r);
     end
-    else if r^.kind = 109 then
+    else if r^.kind = var_name then
       if (r^.xw[36] = 3) and ((r^.xl[8] & 16#10000) = 0) then
         count_global_sym(r);
     r := r^.xp[1];
@@ -574,10 +577,11 @@ var
     t: integer;
   begin
     t := 0;
-    if p^.kind = 109 then
+    if p^.kind = var_name then
       t := get_coff_type(p^.xp[7])
     else begin
-      if p^.kind in [105, 107, 108, 159, 167, 208, 234] then
+      if p^.kind in [program_blk, procedure_blk, function_blk, lib_dsc,
+                     entry_blk, at_lib_dsc, cc_func_returning_type] then
         t := 32;
       t := t ! 4;
     end;
@@ -749,31 +753,33 @@ var
     found: boolean;
   begin
     r := 1;
-    if p^.kind in [105, 107, 108, 109, 110, 111, 159, 167, 208] then begin
+    if p^.kind in [program_blk, procedure_blk, function_blk, var_name,
+                   fortran_symbol, common_block_name, lib_dsc, entry_blk,
+                   at_lib_dsc] then begin
       case p^.kind of
-        109:
+        var_name:
           if ((ord(il_184^.xc[377]) & 16#70) div 16 = 6) and
              ((p^.xw[12] & 16#200) <> 0) then
             r := find_extern(false, modify_m2_native_external_name(addr(p)))
           else
             r := find_extern(false, p^.xp[1]);
-        167, 105, 107, 108:
+        entry_blk, program_blk, procedure_blk, function_blk:
           if (ord(il_184^.xc[377]) & 16#70) div 16 = 6 then
             r := find_extern(false, modify_m2_native_external_name(addr(p)))
           else
             r := find_extern(false, p^.xp[74]);
-        110:
+        fortran_symbol:
           r := find_extern(false, p);
-        111:
+        common_block_name:
           r := find_extern(false, p^.xp[1]);
-        159: begin
+        lib_dsc: begin
           uobj_global_name_count.l := uobj_global_name_count.l + 1;
           if uobj_global_name_count.l > 256 then
             cgerr_no_source(24, integer32(strtk('LIB_DSC_TBL OVERFLOW', 20)));
           r := find_extern(false,
                            uobj_global_names[uobj_global_name_count.low].ident);
         end;
-        208: begin
+        at_lib_dsc: begin
           uobj_local_name_count.l := uobj_local_name_count.l + 1;
           if uobj_local_name_count.l > 256 then
             cgerr_no_source(24, integer32(strtk('AT_LIB_DSC_TBL OVERFLOW', 23)));
@@ -787,15 +793,16 @@ var
     pos := pos + size;
     map := putobj(pos, size);
     if defined then begin
-      if (p^.kind = 105) or (p^.kind = 107) or (p^.kind = 167) or
-         (p^.kind = 108) then
+      if (p^.kind = program_blk) or (p^.kind = procedure_blk)
+          or (p^.kind = entry_blk) or
+         (p^.kind = function_blk) then
         sec := get_section_no(p^.xw[133])
-      else if p^.kind = 111 then begin
+      else if p^.kind = common_block_name then begin
         sec := p^.xw[17];
         map^.n_scnum := sec;
       end
       else begin
-        if p^.kind = 110 then
+        if p^.kind = fortran_symbol then
           s := il_184
         else
           s := p^.xp[5];
@@ -814,9 +821,9 @@ var
     map^.n_sclass := chr(2);
     map^.n_numaux := chr(0);
     case p^.kind of
-      167, 108, 107, 105:
+      entry_blk, function_blk, procedure_blk, program_blk:
         if not cargs_$options.u then begin
-          id := idntk(76, p^.xp[74]^.idnt_name, p^.xp[74]^.idnt_len);
+          id := idntk(id_ob, p^.xp[74]^.idnt_name, p^.xp[74]^.idnt_len);
           map_name(id^.idnt_name, id^.idnt_len);
           put_name(id);
         end
@@ -832,11 +839,11 @@ var
                (p^.xp[74]^.idnt_name[1] <> '_') then
               add_underscore := true;
           if add_underscore then begin
-            id := idntk(76, p^.xp[74]^.idnt_name, p^.xp[74]^.idnt_len + 1);
+            id := idntk(id_ob, p^.xp[74]^.idnt_name, p^.xp[74]^.idnt_len + 1);
             id^.idnt_name[id^.idnt_len] := '_';
           end
           else
-            id := idntk(76, p^.xp[74]^.idnt_name, p^.xp[74]^.idnt_len);
+            id := idntk(id_ob, p^.xp[74]^.idnt_name, p^.xp[74]^.idnt_len);
           put_name(id);
           add_underscore := false;
         end
@@ -844,29 +851,29 @@ var
           put_name(modify_m2_native_external_name(addr(p)))
         else
           put_name(p^.xp[74]);
-      159: begin
+      lib_dsc: begin
         if not cargs_$options.u then begin
-          id := idntk(76, p^.xc[12 + 2 * p^.xw[5]], p^.xw[4]);
+          id := idntk(id_ob, p^.xc[12 + 2 * p^.xw[5]], p^.xw[4]);
           map_name(id^.idnt_name, id^.idnt_len);
           put_name(id);
         end
         else
-          put_name(idntk(76, p^.xc[12 + 2 * p^.xw[5]], p^.xw[4]));
+          put_name(idntk(id_ob, p^.xc[12 + 2 * p^.xw[5]], p^.xw[4]));
         map^.n_scnum := 0;
       end;
-      208: begin
+      at_lib_dsc: begin
         if not cargs_$options.u then begin
-          id := idntk(76, p^.xc[50], ord(p^.xc[49]));
+          id := idntk(id_ob, p^.xc[50], ord(p^.xc[49]));
           map_name(id^.idnt_name, id^.idnt_len);
           put_name(id);
         end
         else
-          put_name(idntk(76, p^.xc[50], ord(p^.xc[49])));
+          put_name(idntk(id_ob, p^.xc[50], ord(p^.xc[49])));
         map^.n_scnum := 0;
       end;
-      110: begin
+      fortran_symbol: begin
         if not cargs_$options.uc then
-          id := idntk(76, p^.xc[72], p^.xw[35])
+          id := idntk(id_ob, p^.xc[72], p^.xw[35])
         else begin
           found := false;
           for j := 1 to p^.xw[35] do
@@ -880,11 +887,11 @@ var
           if (p^.xw[13] & 16#4000) <> 0 then
             add_underscore := false;
           if add_underscore then begin
-            id := idntk(76, p^.xc[72], p^.xw[35] + 1);
+            id := idntk(id_ob, p^.xc[72], p^.xw[35] + 1);
             id^.idnt_name[id^.idnt_len] := '_';
           end
           else
-            id := idntk(76, p^.xc[72], p^.xw[35]);
+            id := idntk(id_ob, p^.xc[72], p^.xw[35]);
           add_underscore := false;
         end;
         if not cargs_$options.u then
@@ -897,9 +904,9 @@ var
         else if (ord(p^.xc[11]) & 16#F0) div 16 = 1 then
           map^.n_value := map^.n_value - il_184^.xp[48]^.xl[4];
       end;
-      109: begin
+      var_name: begin
         if not cargs_$options.u then begin
-          id := idntk(76, p^.xp[1]^.idnt_name, p^.xp[1]^.idnt_len);
+          id := idntk(id_ob, p^.xp[1]^.idnt_name, p^.xp[1]^.idnt_len);
           map_name(id^.idnt_name, id^.idnt_len);
           put_name(id);
         end
@@ -942,9 +949,9 @@ var
             ;
         end;
       end;
-      111:
+      common_block_name:
         if not cargs_$options.u then begin
-          id := idntk(76, p^.xp[1]^.idnt_name, p^.xp[1]^.idnt_len);
+          id := idntk(id_ob, p^.xp[1]^.idnt_name, p^.xp[1]^.idnt_len);
           map_name(id^.idnt_name, id^.idnt_len);
           put_name(id);
         end
@@ -1028,7 +1035,7 @@ var
     pos := pos + size;
     map := putobj(pos, 18);
     if not cargs_$options.u then begin
-      n := idntk(76, name^.idnt_name, name^.idnt_len);
+      n := idntk(id_ob, name^.idnt_name, name^.idnt_len);
       map_name(n^.idnt_name, n^.idnt_len);
     end
     else if (ord(il_184^.xc[377]) & 16#70) div 16 = 6 then
@@ -1048,7 +1055,7 @@ var
           flag := true;
     end;
     if flag then begin
-      n := idntk(76, n^.idnt_name, n^.idnt_len + 1);
+      n := idntk(id_ob, n^.idnt_name, n^.idnt_len + 1);
       n^.idnt_name[n^.idnt_len] := '_';
     end;
     put_name(n);
@@ -1100,8 +1107,9 @@ begin
   freeobj(map);
   r := il_184;
   while r <> nil do begin
-    if (r^.kind = 105) or (r^.kind = 107) or (r^.kind = 167) or
-       (r^.kind = 108) then begin
+    if (r^.kind = program_blk) or (r^.kind = procedure_blk)
+        or (r^.kind = entry_blk) or
+       (r^.kind = function_blk) then begin
       put_func_def(r, r^.xp[74]);
       if r^.xp[76] <> nil then
         put_func_def(r, r^.xp[76]);
@@ -1144,10 +1152,10 @@ begin
   if (ord(il_184^.xc[377]) & 16#70) div 16 = 3 then begin
     r := il_184;
     while r <> nil do begin
-      if (r^.kind = 105) or (r^.kind = 106) then begin
+      if (r^.kind = program_blk) or (r^.kind = module_blk) then begin
         v := r^.xp[4];
         while v <> nil do begin
-          if (v^.kind = 109) and ((v^.xw[36] = 1) or (v^.xw[36] = 7)) then
+          if (v^.kind = var_name) and ((v^.xw[36] = 1) or (v^.xw[36] = 7)) then
             put_global_sym(v, true);
           v := v^.xp[4];
         end;
@@ -1167,7 +1175,7 @@ begin
   while (r <> nil) and (n <> 0) do begin
     v := r^.xp[4];
     while (v <> nil) and (n <> 0) do begin
-      if (v^.kind = 109) and
+      if (v^.kind = var_name) and
          ((v^.xw[36] = 4) or (v^.xw[36] = 8) or
           ((v^.xw[36] = 3) and ((v^.xl[8] & 16#10000) <> 0))) then begin
         put_global_sym(v, true);
@@ -1181,13 +1189,13 @@ begin
   while r <> nil do begin
     a := r^.xp[3];
     while a <> nil do
-      if a^.kind <> 163 then
+      if a^.kind <> addr_con then
         a := a^.xp[29]
       else begin
         form := ord(a^.xc[20]);
         undefined := form = 2;
         if not undefined and (form = 4) then
-          undefined := (a^.xp[2]^.kind = 110) or
+          undefined := (a^.xp[2]^.kind = fortran_symbol) or
                        ((a^.xp[2]^.xw[188] & 384) div 128 = 2);
         if undefined then
           put_global_sym(a^.xp[2], false);
@@ -1198,22 +1206,23 @@ begin
   put_tvs;
   r := il_12c;
   while r <> nil do begin
-    if not ((r^.xp[2]^.kind = 109) and (r^.xp[2]^.xw[36] = 3)) then
-      cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)));
-    if (r^.xp[2]^.kind = 109) and ((r^.xp[2]^.xl[8] & 16#10000) = 0) then
+    if not ((r^.xp[2]^.kind = var_name) and (r^.xp[2]^.xw[36] = 3)) then
+      cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
+    if (r^.xp[2]^.kind = var_name) and ((r^.xp[2]^.xl[8] & 16#10000) = 0) then
       put_global_sym(r^.xp[2], false);
     r := r^.xp[1];
   end;
   r := il_130;
   while r <> nil do begin
     v := r^.xp[3];
-    if ((v^.kind = 105) or (v^.kind = 107) or (v^.kind = 167) or
-        (v^.kind = 108)) and ((v^.xw[188] & 384) div 128 = 2) then
+    if ((v^.kind = program_blk) or (v^.kind = procedure_blk)
+        or (v^.kind = entry_blk) or
+        (v^.kind = function_blk)) and ((v^.xw[188] & 384) div 128 = 2) then
       put_global_sym(v, false)
-    else if (v^.kind = 109) and (v^.xw[36] = 3) and
+    else if (v^.kind = var_name) and (v^.xw[36] = 3) and
             ((v^.xl[8] & 16#10000) = 0) then
       put_global_sym(v, false)
-    else if v^.kind = 110 then
+    else if v^.kind = fortran_symbol then
       put_global_sym(v, false);
     r := r^.xp[1];
   end;
@@ -1223,11 +1232,11 @@ begin
     while refs <> nil do begin
       for i := 1 to refs^.count do begin
         v := refs^.e[i].node;
-        if (v^.kind = 108) or (v^.kind = 107) then begin
+        if (v^.kind = function_blk) or (v^.kind = procedure_blk) then begin
           if (v^.xw[188] & 384) div 128 = 2 then
             put_global_sym(v, false);
         end
-        else if v^.kind = 109 then
+        else if v^.kind = var_name then
           if (v^.xw[36] = 3) and ((v^.xl[8] & 16#10000) = 0) then
             put_global_sym(v, false);
       end;

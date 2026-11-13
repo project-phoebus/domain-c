@@ -206,7 +206,7 @@ begin
   p := n;
   repeat
     p := p^.xp[2];
-  until p^.kind <> 191;
+  until p^.kind <> reg_list_ob;
   skip_reg_list := p;
 end;
 
@@ -255,9 +255,9 @@ begin
     s := s^.next;
   end;
   cg_misc_label := create_temp_label;
-  address(smcontk(81, 0), 0, cg_zero_ads);
+  address(smcontk(integer_ob, 0), 0, cg_zero_ads);
   cg_tree_1b4 := gspace(36);
-  cg_tree_1b4^.kind := 147;
+  cg_tree_1b4^.kind := disp_node;
   cg_tree_1b4^.xp[6] := nil;
   cg_tree_1b4^.xp[7] := nil;
   cg_tree_1b4^.xp[1] := nil;
@@ -276,7 +276,7 @@ begin
     cg_top_save[i].load := false;
   end;
   cg_addr_2ac := gspace(4);
-  cg_addr_2ac^.kind := 181;
+  cg_addr_2ac^.kind := dead_temp;
   cg_code_bytes := 0;
 end;
 
@@ -357,11 +357,11 @@ var
   begin
     repeat
       case n^.kind of
-        152: n := n^.xp[4];
-        190: n := n^.xp[1];
-        138, 143, 137: begin
-          if n^.kind = 138 then
-            n^.kind := 137;
+        alloc_temp: n := n^.xp[4];
+        cse_parent_ob: n := n^.xp[1];
+        gen_tree_node, cmp_tree_node, tree_node: begin
+          if n^.kind = gen_tree_node then
+            n^.kind := tree_node;
           for i := 1 to cg_tree_ptr_t(n)^.count do
             initialize_node(cg_tree_ptr_t(n)^.opnd[i]);
           if cg_pass = 1 then begin
@@ -376,11 +376,11 @@ var
           end;
           exit;
         end;
-        144: begin
+        label_node: begin
           n^.xl[20] := 0;
           exit;
         end;
-        147, 146: begin
+        disp_node, ptr_node: begin
           if cg_pass = 1 then begin
             cg_tree_ptr_t(n)^.w18 := cg_tree_ptr_t(n)^.uses;
             n^.xw[5] := 31;
@@ -393,7 +393,7 @@ var
           end;
           n := n^.xp[6];
         end;
-        145: begin
+        dindex_node: begin
           initialize_node(n^.xp[6]);
           if cg_pass = 1 then begin
             cg_tree_ptr_t(n)^.w18 := cg_tree_ptr_t(n)^.uses;
@@ -407,7 +407,7 @@ var
           end;
           n := n^.xp[9];
         end;
-        164: begin
+        cs_node: begin
           initialize_node(n^.xp[5]);
           if cg_pass = 1 then begin
             cg_tree_ptr_t(n)^.w18 := cg_tree_ptr_t(n)^.uses;
@@ -421,14 +421,14 @@ var
           end;
           n := n^.xp[6];
         end;
-        171: n := n^.xp[4];
-        175: n := n^.xp[4];
-        109: begin
+        cc_call: n := n^.xp[4];
+        pf_call: n := n^.xp[4];
+        var_name: begin
           if cg_pass = 1 then
             n^.xc[32] := chr(ord(n^.xc[32]) & 16#FE);
           exit;
         end;
-        110: begin
+        fortran_symbol: begin
           if cg_pass = 1 then
             n^.xc[24] := chr(ord(n^.xc[24]) & 16#FE);
           exit;
@@ -467,40 +467,55 @@ var
   begin
     t := cg_top_118;
     repeat
-      if t^.kind = 149 then
-        if t^.xp[12]^.kind <> 172 then
+      if t^.kind = blk_end_node then
+        if t^.xp[12]^.kind <> inner_blk then
           exit;
       case t^.kind of
-        139:
+        eval_node:
           for i := 1 to t^.xw[25] do
-            if t^.xp[12 + i]^.kind in [109, 110, 137, 138, 143, 144, 145,
-                146, 147, 152, 164, 171, 175, 190] then
+            if t^.xp[12 + i]^.kind in [var_name, fortran_symbol, tree_node,
+                                       gen_tree_node, cmp_tree_node,
+                                       label_node, dindex_node,
+                ptr_node, disp_node, alloc_temp, cs_node, cc_call, pf_call,
+                    cse_parent_ob] then
               initialize_node(t^.xp[12 + i]);
-        140: begin
-          if t^.xp[17]^.kind in [109, 110, 137, 138, 143, 144, 145, 146,
-              147, 152, 164, 171, 175, 190] then
+        assign_node: begin
+          if t^.xp[17]^.kind in [var_name, fortran_symbol, tree_node,
+                                 gen_tree_node, cmp_tree_node, label_node,
+                                 dindex_node, ptr_node,
+              disp_node, alloc_temp, cs_node, cc_call, pf_call,
+                  cse_parent_ob] then
             initialize_node(t^.xp[17]);
-          if t^.xp[16]^.kind in [109, 110, 137, 138, 143, 144, 145, 146,
-              147, 152, 164, 171, 175, 190] then
+          if t^.xp[16]^.kind in [var_name, fortran_symbol, tree_node,
+                                 gen_tree_node, cmp_tree_node, label_node,
+                                 dindex_node, ptr_node,
+              disp_node, alloc_temp, cs_node, cc_call, pf_call,
+                  cse_parent_ob] then
             initialize_node(t^.xp[16]);
           if t^.xp[18] <> nil then
-            if t^.xp[18]^.kind in [109, 110, 137, 138, 143, 144, 145, 146,
-                147, 152, 164, 171, 175, 190] then
+            if t^.xp[18]^.kind in [var_name, fortran_symbol, tree_node,
+                                   gen_tree_node, cmp_tree_node, label_node,
+                                   dindex_node, ptr_node,
+                disp_node, alloc_temp, cs_node, cc_call, pf_call,
+                    cse_parent_ob] then
               initialize_node(t^.xp[18]);
         end;
-        142:
-          if t^.xp[14]^.kind in [109, 110, 137, 138, 143, 144, 145, 146,
-              147, 152, 164, 171, 175, 190] then
+        cbranch_node:
+          if t^.xp[14]^.kind in [var_name, fortran_symbol, tree_node,
+                                 gen_tree_node, cmp_tree_node, label_node,
+                                 dindex_node, ptr_node,
+              disp_node, alloc_temp, cs_node, cc_call, pf_call,
+                  cse_parent_ob] then
             initialize_node(t^.xp[14]);
-        144: begin
+        label_node: begin
           if t^.xp[16] <> nil then
             cg_state_ptr_t(t^.xp[16])^.b7 := false;
           if cg_pass = 1 then
             t^.xp[17] := nil;
         end;
-        148: begin
+        block_entry_node: begin
           b := t^.xp[12];
-          if (b^.kind <> 167) and (b^.kind <> 172) then begin
+          if (b^.kind <> entry_blk) and (b^.kind <> inner_blk) then begin
             il_180 := b;
             if cg_pass = 1 then begin
               cg_blk_regs_ptr_t(b)^.saved := [];
@@ -534,9 +549,11 @@ var
             end;
           end;
         end;
-        150:
-          if t^.xp[12]^.kind in [109, 110, 137, 138, 143, 145, 146, 147,
-              152, 164, 171, 175, 190] then
+        nlbranch_node:
+          if t^.xp[12]^.kind in [var_name, fortran_symbol, tree_node,
+                                 gen_tree_node, cmp_tree_node, dindex_node,
+                                 ptr_node, disp_node,
+              alloc_temp, cs_node, cc_call, pf_call, cse_parent_ob] then
             initialize_node(t^.xp[12]);
         otherwise ;
       end;
@@ -629,7 +646,7 @@ var
       if l^.ents[i].flags * [3, 5] <> [] then begin
         obj := l^.ents[i].obj;
         size := l^.ents[i].size;
-        if obj^.kind = 190 then
+        if obj^.kind = cse_parent_ob then
           obj := obj^.xp[1];
         if cg_addr_cache[reg].obj = obj then begin
           if 3 in l^.ents[i].flags then begin
@@ -659,11 +676,11 @@ var
       if l^.ents[i].flags * [0, 1] <> [] then begin
         obj := l^.ents[i].obj;
         size := l^.ents[i].size;
-        if obj^.kind = 190 then
+        if obj^.kind = cse_parent_ob then
           obj := obj^.xp[1];
         if 1 in l^.ents[i].flags then
           keep := false
-        else if (nx^.kind = 140) and (nx^.xp[16] = obj) then
+        else if (nx^.kind = assign_node) and (nx^.xp[16] = obj) then
           keep := true
         else
           keep := false;
@@ -717,8 +734,8 @@ var
     p := n;
     if p <> nil then
       case p^.kind of
-        190: p := p^.xp[1];
-        189: p := p^.xp[5];
+        cse_parent_ob: p := p^.xp[1];
+        cse_use_ob: p := p^.xp[5];
         otherwise ;
       end;
     csetotree := p;
@@ -771,11 +788,11 @@ var
   begin
     if cur = nil then
       return;
-    if cur^.kind = 139 then
+    if cur^.kind = eval_node then
       if cur^.xw[25] = 0 then
         return;
     s := csetotree(cur^.xp[13]);
-    if s^.kind <> 138 then
+    if s^.kind <> gen_tree_node then
       return;
     if cg_tree_ptr_t(s)^.uses < 4 then
       return;
@@ -785,12 +802,12 @@ var
     hi := -2147483647 - 1;
     nx := skip_reg_list(cur);
     for i := 1 to cg_tree_ptr_t(s)^.uses do begin
-      if nx^.kind <> 142 then
+      if nx^.kind <> cbranch_node then
         return;
       if ord(nx^.xc[60]) < 128 then     { the sense false }
         return;
       c := nx^.xp[14];
-      if c^.kind <> 143 then
+      if c^.kind <> cmp_tree_node then
         return;
       if csetotree(cg_tree_ptr_t(c)^.opnd[1]) = s then begin
         q := cg_tree_ptr_t(c)^.opnd[1];
@@ -817,10 +834,10 @@ var
     q := cur;
     repeat
       q := q^.xp[2];
-      if q^.kind = 191 then
+      if q^.kind = reg_list_ob then
         reg_list_proc(q);
     until q^.xp[2] = nx;
-    is_goto := nx^.kind = 141;
+    is_goto := nx^.kind = branch_node;
     if is_goto then begin
       deflab := nx^.xp[12];
       nx := skip_reg_list(nx);
@@ -912,9 +929,10 @@ var
     cc: integer;
   begin
     cg_fp_1000 := nil;
-    if b.cond^.kind <> 143 then begin
+    if b.cond^.kind <> cmp_tree_node then begin
       tree_walk(b.cond);
-      if b.cond^.kind in [77..87, 101, 200] then begin
+      if b.cond^.kind in [blogical_ob..char_ob, char16_ob,
+                          binteger_ob] then begin
         address(b.target, 0, t);
         if (ord(b.cond^.xc[11]) >= 128) = b.sense then begin
           emit(21, 5, t, cg_null_ads, 0);
@@ -960,8 +978,8 @@ var
     end;
     if (8 in cargs_$options.cpu) and ((cg_tree_ptr_t(b.cond)^.desc.w6 = 12) or
         (cg_tree_ptr_t(b.cond)^.desc.w6 = 8)) then
-      if (b.cond^.kind = 137) or (b.cond^.kind = 143) or
-          (b.cond^.kind = 138) then
+      if (b.cond^.kind = tree_node) or (b.cond^.kind = cmp_tree_node) or
+          (b.cond^.kind = gen_tree_node) then
         if cc = 4 then
           cc := 6
         else
@@ -1026,7 +1044,7 @@ var
     p: il_$node_ptr_t;
     g: il_$node_ptr_t;
   begin
-    if e.blk^.kind = 172 then begin
+    if e.blk^.kind = inner_blk then begin
       if at_backend_506 then begin
         address(e.blk, 0, a);
         emit_line_eop(cg_null_ads, a, e.line);
@@ -1034,7 +1052,7 @@ var
       return;
     end;
     cg_top_124 := nil;
-    if e.blk^.kind <> 167 then begin
+    if e.blk^.kind <> entry_blk then begin
       il_180 := e.blk;
       cg_addr_free_temps := nil;
       cg_top_13a := 0;
@@ -1049,7 +1067,7 @@ var
         b^.tail := last;
       end;
     end;
-    if (e.next^.kind = 151) and (e.next^.xp[12] = il_180^.xp[24]) and
+    if (e.next^.kind = return_node) and (e.next^.xp[12] = il_180^.xp[24]) and
         (cargs_$options.db <> 3) and at_backend_506 then begin
       emit_line_eop(cg_null_ads, cg_null_ads, e.next^.xw[10]);
       b := top_sect_ptr_t(il_180^.xp[47]);
@@ -1113,7 +1131,7 @@ var
         il_180^.xl[44] := (il_180^.xl[44] & (-4)) + 4;
       if not (3 in cargs_$options.cpu) then begin
         address_reg(15, sp_a);
-        address(smcontk(81, il_180^.xl[44]), 0, kc);
+        address(smcontk(integer_ob, il_180^.xl[44]), 0, kc);
         emit(2, 5, sp_a, kc, 0);
         unlock(sp_a);
       end;
@@ -1136,7 +1154,7 @@ var
           bit := lshft(bit, 1);
         end;
         if n > 0 then begin
-          address(smcontk(81, mask), 0, kc);
+          address(smcontk(integer_ob, mask), 0, kc);
           kc.f6 := 0;
           emit(68, 7, cg_push_ads, kc, 0);
         end;
@@ -1181,7 +1199,7 @@ var
             end;
         end
         else begin
-          address(smcontk(81, mask), 0, kc);
+          address(smcontk(integer_ob, mask), 0, kc);
           kc.f6 := 1;
           emit(35, 4, cg_push_ads, kc, 0);
         end;
@@ -1244,7 +1262,7 @@ var
             emit(0, 5, ra, sp_a, 0);
             prev := 0;
           end;
-          address(smcontk(81, p^.xl[3] - prev), 0, kc);
+          address(smcontk(integer_ob, p^.xl[3] - prev), 0, kc);
           emit(1, 5, ra, kc, 0);
           emit(0, 5, a, ra, 0);
           prev := p^.xl[3];
@@ -1453,7 +1471,8 @@ var
             address_reg(9, a96);
             address_reg(14, cg_top_f8);
             emit(0, 5, a96, cg_top_f8, 0);
-            address(smcontk(81, cg_blk_regs_ptr_t(il_180)^.fp_save_off), 0,
+            address(smcontk(integer_ob,
+                            cg_blk_regs_ptr_t(il_180)^.fp_save_off), 0,
                 cg_top_f8);
             emit(1, 5, a96, cg_top_f8, 0);
             a96.f1 := 2;
@@ -1463,7 +1482,7 @@ var
             a96.f1 := 2;
             a96.y := cg_blk_regs_ptr_t(il_180)^.fp_save_off;
           end;
-          address(smcontk(81, mask), 0, k48);
+          address(smcontk(integer_ob, mask), 0, k48);
           k48.f6 := 0;
           emit(68, 7, k48, a96, 0);
         end;
@@ -1473,7 +1492,8 @@ var
           address_reg(9, a96);
           address_reg(14, cg_top_f8);
           emit(0, 5, a96, cg_top_f8, 0);
-          address(smcontk(81, cg_blk_regs_ptr_t(il_180)^.fp_save_off), 0,
+          address(smcontk(integer_ob, cg_blk_regs_ptr_t(il_180)^.fp_save_off),
+                  0,
               cg_top_f8);
           emit(1, 5, a96, cg_top_f8, 0);
           a96.f1 := 2;
@@ -1517,7 +1537,7 @@ var
           address_reg(9, a96);
           address_reg(14, cg_top_f8);
           emit(0, 5, a96, cg_top_f8, 0);
-          address(smcontk(81, cg_blk_regs_ptr_t(il_180)^.save_off), 0,
+          address(smcontk(integer_ob, cg_blk_regs_ptr_t(il_180)^.save_off), 0,
               cg_top_f8);
           emit(1, 5, a96, cg_top_f8, 0);
           a96.f1 := 2;
@@ -1536,7 +1556,7 @@ var
             end;
         end
         else begin
-          address(smcontk(81, mask), 0, k48);
+          address(smcontk(integer_ob, mask), 0, k48);
           k48.f6 := 1;
           emit(34, 4, k48, a96, 0);
         end;
@@ -1547,7 +1567,7 @@ var
     if (ord(il_180^.xc[376]) >= 128) and
         (cargs_$options.cpu * [2, 4, 8, 9, 10] <> []) then begin
       address_reg(15, cg_top_f8);
-      address(smcontk(81, 4), 0, a96);
+      address(smcontk(integer_ob, 4), 0, a96);
       emit(1, 5, cg_top_f8, a96, 0);
     end;
     emit(27, 5, cg_null_ads, cg_null_ads, 0);
@@ -1588,7 +1608,8 @@ var
     if (ord(lab^.xc[74]) >= 128) or not odd(rshft(ord(lab^.xc[72]), 6)) then
       cg_top_13a := cg_top_13a + 1;
     if lab^.xp[1] <> nil then
-      if not ((lab^.xp[1]^.kind = 150) or (lab^.xp[1]^.kind = 141)) then
+      if not ((lab^.xp[1]^.kind = nlbranch_node)
+              or (lab^.xp[1]^.kind = branch_node)) then
         merge_state(cg_stmt);
     if (lab^.xp[16] = nil) or (ord(lab^.xc[74]) >= 128) then begin
       cg_addr_$init_regs(false);
@@ -1619,7 +1640,7 @@ var
       if cg_pass = 1 then begin
         if fp then begin
           lab^.xp[17] := gspace(396);
-          lab^.xp[17]^.kind := 180;
+          lab^.xp[17]^.kind := ext_state_save;
           c := cg_state_ptr_t(lab^.xp[17]);
           c^.b4 := s^.b4;
           c^.b5 := s^.b5;
@@ -1634,7 +1655,7 @@ var
         end
         else begin
           lab^.xp[17] := gspace(264);
-          lab^.xp[17]^.kind := 161;
+          lab^.xp[17]^.kind := state_save;
           c := cg_state_ptr_t(lab^.xp[17]);
           c^.b4 := s^.b4;
           c^.b5 := s^.b5;
@@ -1713,10 +1734,12 @@ var
   procedure emit_a_line_eop;
   begin
     if at_backend_506 and (spos_$null_position <> cg_top_138) then
-      if (cg_stmt^.kind <> 148) or (cg_stmt^.xp[12]^.kind = 172) then
-        if (cg_stmt^.kind <> 149) or (cg_stmt^.xp[12]^.kind = 172) then
-          if (cg_stmt^.xp[2]^.kind <> 148) or
-              (cg_stmt^.xp[2]^.xp[12]^.kind = 172) then
+      if (cg_stmt^.kind <> block_entry_node)
+          or (cg_stmt^.xp[12]^.kind = inner_blk) then
+        if (cg_stmt^.kind <> blk_end_node)
+            or (cg_stmt^.xp[12]^.kind = inner_blk) then
+          if (cg_stmt^.xp[2]^.kind <> block_entry_node) or
+              (cg_stmt^.xp[2]^.xp[12]^.kind = inner_blk) then
             emit_line_eop(cg_null_ads, cg_null_ads, cg_top_138);
   end;
 
@@ -1748,35 +1771,39 @@ begin
       repeat
         for r := 0 to 23 do begin
           if cg_addr_regs[r].obj <> nil then
-            if cg_addr_regs[r].obj^.kind in [137, 138, 143, 145, 146, 147,
-                164, 171, 175, 189, 205] then
+            if cg_addr_regs[r].obj^.kind in [tree_node, gen_tree_node,
+                                             cmp_tree_node, dindex_node,
+                                             ptr_node, disp_node,
+                cs_node, cc_call, pf_call, cse_use_ob, sym_disp_node] then
               if (cg_addr_regs[r].obj^.xl[1] & 14) <> 0 then
-                if not (((cg_addr_regs[r].obj^.kind = 138) or
-                    (cg_addr_regs[r].obj^.kind = 137)) and
+                if not (((cg_addr_regs[r].obj^.kind = gen_tree_node) or
+                    (cg_addr_regs[r].obj^.kind = tree_node)) and
                     (cg_tree_ptr_t(cg_addr_regs[r].obj)^.op = 17)) then
                   cg_addr_regs[r].obj := nil;
           if cg_addr_regs[r].obj2 <> nil then
-            if cg_addr_regs[r].obj2^.kind in [137, 138, 143, 145, 146, 147,
-                164, 171, 175, 189, 205] then
+            if cg_addr_regs[r].obj2^.kind in [tree_node, gen_tree_node,
+                                              cmp_tree_node, dindex_node,
+                                              ptr_node, disp_node,
+                cs_node, cc_call, pf_call, cse_use_ob, sym_disp_node] then
               if (cg_addr_regs[r].obj2^.xl[1] & 22) <> 0 then
-                if not (((cg_addr_regs[r].obj2^.kind = 138) or
-                    (cg_addr_regs[r].obj2^.kind = 137)) and
+                if not (((cg_addr_regs[r].obj2^.kind = gen_tree_node) or
+                    (cg_addr_regs[r].obj2^.kind = tree_node)) and
                     (cg_tree_ptr_t(cg_addr_regs[r].obj2)^.op = 17)) then
                   cg_addr_regs[r].obj2 := nil;
           if cg_addr_regs[r].obj <> nil then
-            if cg_addr_regs[r].obj^.kind = 109 then
+            if cg_addr_regs[r].obj^.kind = var_name then
               if (cg_addr_regs[r].obj^.xl[8] & 9) <> 0 then
                 cg_addr_regs[r].obj := nil;
           if cg_addr_regs[r].obj2 <> nil then
-            if cg_addr_regs[r].obj2^.kind = 109 then
+            if cg_addr_regs[r].obj2^.kind = var_name then
               if (cg_addr_regs[r].obj2^.xl[8] & 17) <> 0 then
                 cg_addr_regs[r].obj2 := nil;
           if cg_addr_regs[r].obj <> nil then
-            if cg_addr_regs[r].obj^.kind = 110 then
+            if cg_addr_regs[r].obj^.kind = fortran_symbol then
               if (cg_addr_regs[r].obj^.xl[6] & 9) <> 0 then
                 cg_addr_regs[r].obj := nil;
           if cg_addr_regs[r].obj2 <> nil then
-            if cg_addr_regs[r].obj2^.kind = 110 then
+            if cg_addr_regs[r].obj2^.kind = fortran_symbol then
               if (cg_addr_regs[r].obj2^.xl[6] & 17) <> 0 then
                 cg_addr_regs[r].obj2 := nil;
           if cg_addr_locks[r] <> 0 then begin
@@ -1799,19 +1826,19 @@ begin
         if odd(rshft(ord(cg_stmt^.xc[42]), 1)) and (il_11c <> nil) then
           basicblock;
         case cg_stmt^.kind of
-          191: reg_list_proc(cg_stmt);
-          140: assign_proc(cg_stmt^.xp[1]);
-          139: begin
-            if (cg_stmt^.xp[2]^.kind = 149) and
-                (cg_stmt^.xp[2]^.xp[12]^.kind <> 172) and
+          reg_list_ob: reg_list_proc(cg_stmt);
+          assign_node: assign_proc(cg_stmt^.xp[1]);
+          eval_node: begin
+            if (cg_stmt^.xp[2]^.kind = blk_end_node) and
+                (cg_stmt^.xp[2]^.xp[12]^.kind <> inner_blk) and
                 (cg_stmt^.xw[25] <> 0) and
-                (cg_stmt^.xp[13]^.kind = 137) and
+                (cg_stmt^.xp[13]^.kind = tree_node) and
                 (cg_tree_ptr_t(cg_stmt^.xp[13])^.op = 15) and
-                (cg_tree_ptr_t(cg_stmt^.xp[13])^.opnd[1]^.kind = 159) then
+                (cg_tree_ptr_t(cg_stmt^.xp[13])^.opnd[1]^.kind = lib_dsc) then
               emit_terminating_line_no(cg_top_138);
             for k := 1 to cg_stmt^.xw[25] do
-              if cg_stmt^.xp[12 + k]^.kind <> 189 then begin
-                if cg_stmt^.xp[12 + k]^.kind = 137 then begin
+              if cg_stmt^.xp[12 + k]^.kind <> cse_use_ob then begin
+                if cg_stmt^.xp[12 + k]^.kind = tree_node then begin
                   tree_walk(cg_stmt^.xp[12 + k]);
                   if cg_tree_ptr_t(cg_stmt^.xp[12 + k])^.op = 26 then begin
                     size := cg_tree_ptr_t(cg_stmt^.xp[12 + k])^.desc.rlen;
@@ -1841,19 +1868,19 @@ begin
                 release(cg_top_f8);
               end;
             nxt := skip_reg_list(cg_stmt);
-            if (nxt^.kind = 142) and (cg_stmt^.xw[25] <> 0) then
+            if (nxt^.kind = cbranch_node) and (cg_stmt^.xw[25] <> 0) then
               case_proc(cg_stmt);
           end;
-          148: block_entry_proc(cg_stmt^.xp[1]);
-          141: begin
+          block_entry_node: block_entry_proc(cg_stmt^.xp[1]);
+          branch_node: begin
             merge_state(cg_stmt^.xp[12]);
             address(cg_stmt^.xp[12], 0, cg_top_f8);
             if cg_stmt^.xp[12] <> cg_stmt^.xp[2] then
               emit(21, 5, cg_top_f8, cg_null_ads, 0);
           end;
-          150: begin
+          nlbranch_node: begin
             il_180^.xc[375] := chr(ord(il_180^.xc[375]) ! 8);
-            if cg_stmt^.xp[12]^.kind <> 117 then begin
+            if cg_stmt^.xp[12]^.kind <> label_name then begin
               cg_addr_$merge_state_of_assigned_goto_targets(cg_stmt);
               load_operand(cg_stmt^.xp[12], 5, cg_top_f8);
               cg_top_f8.f1 := 2;
@@ -1862,9 +1889,10 @@ begin
             end
             else begin
               lab := cg_stmt^.xp[12]^.xp[7];
-              if lab^.kind = 144 then
+              if lab^.kind = label_node then
                 lab^.xc[75] := chr(255);
-              while (lab^.kind <> 148) or (lab^.xp[12]^.kind = 172) do
+              while (lab^.kind <> block_entry_node)
+                  or (lab^.xp[12]^.kind = inner_blk) do
                 lab := lab^.xp[1];
               if lab^.xp[12]^.xp[47] <> il_180^.xp[47] then
                 cgerr(25, cg_line, cg_stmt^.xp[12]);
@@ -1880,10 +1908,10 @@ begin
               gen_call(nil, std_lib_rtns[17]);
             end;
           end;
-          142: cbranch_proc(cg_stmt^.xp[1]);
-          144: label_proc(cg_stmt);
-          149: begin
-            if cg_stmt^.xp[12]^.kind = 172 then begin
+          cbranch_node: cbranch_proc(cg_stmt^.xp[1]);
+          label_node: label_proc(cg_stmt);
+          blk_end_node: begin
+            if cg_stmt^.xp[12]^.kind = inner_blk then begin
               if at_backend_506 then begin
                 address(cg_stmt^.xp[12], 0, cg_top_f8);
                 emit_line_eop(cg_top_f8, cg_null_ads, cg_top_138);
@@ -1914,8 +1942,8 @@ begin
               exit;
             end;
           end;
-          151: return_proc(cg_stmt^.xp[1], cg_top_138);
-          188: ;
+          return_node: return_proc(cg_stmt^.xp[1], cg_top_138);
+          use_def_ob: ;
           otherwise
             cgerr(1, cg_line, cg_stmt);
         end;

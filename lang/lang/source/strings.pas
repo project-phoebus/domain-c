@@ -197,7 +197,7 @@ end;
     byte (`seq D5; tst.b D5') before testing it. }
 
 function idntk(
-    kind: integer;
+    kind: il_$kind_t;
     in s: univ strings_$bytes_t;
     len: integer): il_$node_ptr_t;
 var

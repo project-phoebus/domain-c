@@ -135,7 +135,7 @@ type
   dbg_flags_t = set of 0..31;
   dbg_sym_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     case integer of
       1: (v_space4: array [4..27] of char;
           var_of: dbg_sym_ptr_t;        { +28 }
@@ -378,23 +378,23 @@ begin
     s := nil;
   if s <> nil then
     if v <> nil then
-      if s^.kind = 109 then begin
+      if s^.kind = var_name then begin
         if 29 in s^.vflags then
           if (s = v) or (s^.var_of = v) then begin
             is_spill_instruction := true;
             sym := s;
             var_sym := v;
             slot := s^.vslot;
-            if v^.kind = 109 then begin
+            if v^.kind = var_name then begin
               if not (29 in v^.vflags) then
                 v^.vslot := s^.vslot;
             end
-            else if v^.kind = 110 then
+            else if v^.kind = fortran_symbol then
               if not (29 in v^.fflags) then
                 v^.fslot := s^.vslot;
           end;
       end
-      else if s^.kind = 110 then
+      else if s^.kind = fortran_symbol then
         if s = v then
           if 29 in s^.fflags then begin
             is_spill_instruction := true;
@@ -419,7 +419,7 @@ begin
     underlying_spill_location := nil
   else begin
     v := lr^.node20;
-    if v^.kind = 109 then
+    if v^.kind = var_name then
       underlying_spill_location := v^.vspills
     else
       underlying_spill_location := v^.fspills;
@@ -475,9 +475,9 @@ begin
     interesting_variable := false
   else begin
     v := lr^.node20;
-    if v^.kind = 109 then
+    if v^.kind = var_name then
       interesting_variable := not (14 in v^.vflags)
-    else if v^.kind = 110 then
+    else if v^.kind = fortran_symbol then
       interesting_variable := true
     else
       interesting_variable := false;
@@ -754,9 +754,9 @@ begin
     dbg_lr_ptr_t(lr)^.nranges := 0;
     if lr^.node20 <> nil then begin
       v := lr^.node20;
-      if v^.kind = 109 then
+      if v^.kind = var_name then
         v^.vlast_bb := nil
-      else if v^.kind = 110 then
+      else if v^.kind = fortran_symbol then
         v^.flast_bb := nil;
       if lr^.mate <> nil then
         if lr^.mate^.node20 = nil then
@@ -782,12 +782,12 @@ begin
             rec^.sym := sym;
             rec^.var_sym := var_sym;
             rec^.slot := slot;
-            if var_sym^.kind = 109 then begin
+            if var_sym^.kind = var_name then begin
               rec^.next := var_sym^.vspills;
               var_sym^.vspills := rec;
               var_sym^.vlast_bb := nil;
             end
-            else if var_sym^.kind = 110 then begin
+            else if var_sym^.kind = fortran_symbol then begin
               rec^.next := var_sym^.fspills;
               var_sym^.fspills := rec;
               var_sym^.flast_bb := nil;
@@ -1088,7 +1088,8 @@ begin
                 if i^.opnds[j].h.write or i^.opnds[j].h.modify then begin
                   v := lr_ptr_t(i^.opnds[j].ptr)^.node20;
                   if v <> nil then
-                    if (v^.kind = 110) or (v^.kind = 109) then begin
+                    if (v^.kind = fortran_symbol)
+                        or (v^.kind = var_name) then begin
                       kf := k;
                       jf := j;
                       goto 10;
@@ -1177,7 +1178,7 @@ begin
       while lr <> nil do begin
         if lr^.node20 <> nil then begin
           v := lr^.node20;
-          if (v^.kind = 110) or (v^.kind = 109) then begin
+          if (v^.kind = fortran_symbol) or (v^.kind = var_name) then begin
             if rrp$fp_reg in lr^.rrp then
               kind := 2
             else
@@ -1225,9 +1226,9 @@ begin
                 ord(instr^.opnds[1].h.kind));
           end;
           v := sym^.var_of;
-          if v^.kind = 109 then
+          if v^.kind = var_name then
             v^.vlast_bb := bb
-          else if v^.kind = 110 then
+          else if v^.kind = fortran_symbol then
             v^.flast_bb := bb;
           spilled := true;
         end;
@@ -1239,9 +1240,9 @@ begin
             lr := ptr;
             if lr^.node20 <> nil then begin
               v := lr^.node20;
-              if v^.kind = 109 then
+              if v^.kind = var_name then
                 v^.vlast_bb := bb
-              else if v^.kind = 110 then
+              else if v^.kind = fortran_symbol then
                 v^.flast_bb := bb;
             end;
             if h.write or h.modify then
@@ -1256,7 +1257,8 @@ begin
                 lr := ptr;
                 if lr^.node20 <> nil then begin
                   v := lr^.node20;
-                  if (v^.kind = 110) or (v^.kind = 109) then begin
+                  if (v^.kind = fortran_symbol)
+                      or (v^.kind = var_name) then begin
                     clobbered := false;
                     if last_call <> nil then begin
                       c := addr(last_call^.opnds[last_call^.h.nopnds + 1]);
@@ -1326,8 +1328,8 @@ begin
       while lr <> nil do begin
         if lr^.node20 <> nil then begin
           v := lr^.node20;
-          if (v^.kind = 110) or (v^.kind = 109) then begin
-            if v^.kind = 109 then
+          if (v^.kind = fortran_symbol) or (v^.kind = var_name) then begin
+            if v^.kind = var_name then
               lb := v^.vlast_bb
             else
               lb := v^.flast_bb;
@@ -1347,7 +1349,7 @@ begin
       s := spill_find_next(rtn, addr(bb^.avail_in^[dl_lr_words]), 0);
       while s <> 0 do begin
         v := dl_spills^[s].var_sym;
-        if v^.kind = 109 then
+        if v^.kind = var_name then
           lb := v^.vlast_bb
         else
           lb := v^.flast_bb;
@@ -1441,7 +1443,7 @@ var
       ranges := ranges^.next;
     end;
     rec^.count := count;
-    if sym^.kind = 109 then begin
+    if sym^.kind = var_name then begin
       rec^.next := sym^.vdbg;
       sym^.vdbg := rec;
     end
@@ -1476,7 +1478,7 @@ begin
       else
         r^.f12.kind := 2;
       v := lr^.node20;
-      if v^.kind = 109 then
+      if v^.kind = var_name then
         c := v^.vclass
       else
         c := v^.f10.fclass;
@@ -1492,7 +1494,7 @@ begin
       if r <> nil then begin
         r^.slot_sym := rec^.sym;
         v := rec^.sym;
-        if v^.kind = 109 then
+        if v^.kind = var_name then
           c := v^.vclass
         else
           c := v^.f10.fclass;
@@ -1545,7 +1547,7 @@ begin
            not conv^.args[k].flag then
           if conv^.args[k].w0 = 0 then begin
             v := conv^.args[k].sym;
-            if v^.kind <> 110 then begin
+            if v^.kind <> fortran_symbol then begin
               off := v^.voffset;
               c := v^.vclass;
             end
@@ -1564,7 +1566,7 @@ begin
             r^.count := 1;
             r^.ranges[1].start := start;
             r^.ranges[1].stop := stop;
-            if conv^.args[k].sym^.kind <> 110 then
+            if conv^.args[k].sym^.kind <> fortran_symbol then
               conv^.args[k].sym^.vdbg := r
             else
               conv^.args[k].sym^.fdbg := r;
@@ -1615,7 +1617,7 @@ begin
     for i := 1 to rtn^.spills do begin
       v := dl_spills^[i].var_sym;
       if v <> nil then
-        if v^.kind = 109 then
+        if v^.kind = var_name then
           v^.vspills := nil
         else
           v^.fspills := nil;

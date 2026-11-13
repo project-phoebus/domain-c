@@ -71,7 +71,7 @@ var
   line: ^prtsub_$line_t;
   n: il_$node_ptr_t;
   p: il_$node_ptr_t;
-  kind: integer;
+  kind: il_$kind_t;
   c: char;
   w: integer;
   len: integer;
@@ -127,7 +127,7 @@ begin
     prtcats(line^, '<NIL>', 5);
     return;
   end;
-  if cargs_$options.addr and (n^.kind <> 76) then begin
+  if cargs_$options.addr and (n^.kind <> id_ob) then begin
     prthex(line^, integer32(n), 8);
     prtcatc(line^, ':');
   end;
@@ -136,8 +136,9 @@ begin
     return;
   end;
   kind := n^.kind;
-  if (kind <= 76) or (kind in [91, 94, 102..104]) then begin
-    if kind = 75 then begin
+  if (kind <= id_ob) or (kind in [varying_ob, nil_ob,
+                                  const_cob..signed_cob]) then begin
+    if kind = badchar_ob then begin
       prtcats(line^, 'BAD CHAR: ', 10);
       c := n^.xc[18];
       if (c >= ' ') and (c <= '~') then begin
@@ -156,51 +157,51 @@ begin
     return;
   end;
   case kind of
-    82: begin
+    linteger_ob: begin
       prtint(line^, n^.xl[2], 10, false);
       add_kind_if_full('(long)');
     end;
-    85: begin
+    ulinteger_ob: begin
       prtint(line^, n^.xl[2], 10, false);
       add_kind_if_full('(uns long)');
     end;
-    80: begin
+    sinteger_ob: begin
       prtint(line^, n^.xl[2], 10, false);
       add_kind_if_full('(short)');
     end;
-    83: begin
+    usinteger_ob: begin
       prtint(line^, n^.xl[2], 10, false);
       add_kind_if_full('(uns short)');
     end;
-    81: begin
+    integer_ob: begin
       prtint(line^, n^.xl[2], 10, false);
       add_kind_if_full('(integer)');
     end;
-    84: begin
+    uinteger_ob: begin
       prtint(line^, n^.xl[2], 10, false);
       add_kind_if_full('(uns integer)');
     end;
-    200: begin
+    binteger_ob: begin
       prtint(line^, n^.xl[2], 10, false);
       add_kind_if_full('(byte)');
     end;
-    86: begin
+    ubinteger_ob: begin
       prtint(line^, n^.xl[2], 10, false);
       add_kind_if_full('(uns byte)');
     end;
-    77: begin
+    blogical_ob: begin
       prt_logical(n^.xl[2]);
       add_kind_if_full('(byte logical)');
     end;
-    78: begin
+    slogical_ob: begin
       prt_logical(n^.xl[2]);
       add_kind_if_full('(word logical)');
     end;
-    79: begin
+    llogical_ob: begin
       prt_logical(n^.xl[2]);
       add_kind_if_full('(long logical)');
     end;
-    87: begin
+    char_ob: begin
       w := n^.xw[5];
       if (w < 32) or (w > 126) then begin
         prtcats(line^, 'CHAR <', 6);
@@ -214,7 +215,7 @@ begin
       end;
       add_kind_if_full('(char)');
     end;
-    92: begin
+    char_string_ob: begin
       quote := '"';
       len := n^.str_len;
       if n^.str_chars[len] = chr(0) then
@@ -223,17 +224,17 @@ begin
       prtcats(line^, n^.str_chars, len);
       prtcatc(line^, quote);
     end;
-    88: begin
+    real_ob: begin
       lib_$cv_dfp_out(buf, n^.real_value, 2, 14, 7, 4, 1, false);
       prtcats(line^, buf, 14);
       add_kind_if_full('(real)');
     end;
-    89: begin
+    dpreal_ob: begin
       lib_$cv_dfp_out(buf, n^.real_value, 2, 23, 16, 4, 1, false);
       prtcats(line^, buf, 23);
       add_kind_if_full('(dp real)');
     end;
-    90: begin
+    complex_ob: begin
       prtcatc(line^, '(');
       lib_$cv_sfp_out(buf, prtobj_real_ptr_t(addr(n^.pair_a))^,
                       2, 14, 7, 4, 1, false);
@@ -245,7 +246,7 @@ begin
       prtcatc(line^, ')');
       add_kind_if_full('(complex)');
     end;
-    198: begin
+    dpcomplex_ob: begin
       prtcatc(line^, '(');
       lib_$cv_dfp_out(buf, n^.dcx_re, 2, 23, 16, 4, 1, false);
       prtcats(line^, buf, 14);
@@ -255,33 +256,33 @@ begin
       prtcatc(line^, ')');
       add_kind_if_full('(dp complex)');
     end;
-    184:
+    inline_constant:
       prtobj(line^, n^.xp[2]^.xp[10]);
-    212:
+    namelist_constant_ob:
       prtcats(line^, '<namelist descriptor>', 21);
-    156:
+    set_con_ob:
       prtcats(line^, '<set constant>', 14);
-    110: begin
+    fortran_symbol: begin
       prtcats(line^, n^.xc[72], n^.xw[35]);
       add_kind_if_full('(fsym)');
     end;
-    111: begin
+    common_block_name: begin
       prtobj(line^, n^.xp[1]);
       add_kind_if_full('(common)');
     end;
-    116: begin
+    const_name: begin
       prtobj(line^, n^.xp[1]);
       add_kind_if_full('(const name)');
     end;
-    118: begin
+    type_name: begin
       prtobj(line^, n^.xp[1]);
       add_kind_if_full('(type name)');
     end;
-    117: begin
+    label_name: begin
       prtobj(line^, n^.xp[1]);
       add_kind_if_full('(label)');
     end;
-    109:
+    var_name:
       if n^.xp[1] <> nil then begin
         prtobj(line^, n^.xp[1]);
         add_kind_if_full('(varn)');
@@ -293,98 +294,98 @@ begin
         prtint(line^, n^.xl[9], 6, false);
         prtcats(line^, ' bits>', 6);
       end;
-    119: begin
+    field_name: begin
       prtobj(line^, n^.xp[2]);
       add_kind_if_full('(pfield)');
     end;
-    120: begin
+    pfield_name: begin
       prtobj(line^, n^.xp[2]);
       add_kind_if_full('(field)');
     end;
-    107: begin
+    procedure_blk: begin
       prtobj(line^, n^.xp[74]);
       add_kind_if_full('(proc)');
     end;
-    108: begin
+    function_blk: begin
       prtobj(line^, n^.xp[74]);
       add_kind_if_full('(func)');
     end;
-    172: begin
+    inner_blk: begin
       prtobj(line^, n^.xp[74]);
       add_kind_if_full('(inner_blk)');
     end;
-    106: begin
+    module_blk: begin
       prtobj(line^, n^.xp[74]);
       add_kind_if_full('(module)');
     end;
-    105: begin
+    program_blk: begin
       prtobj(line^, n^.xp[74]);
       add_kind_if_full('(program)');
     end;
-    167: begin
+    entry_blk: begin
       prtobj(line^, n^.xp[74]);
       add_kind_if_full('(fortran alternate entry)');
     end;
-    209: begin
+    blockdata_blk: begin
       prtobj(line^, n^.xp[74]);
       add_kind_if_full('(blkdata)');
     end;
-    145, 146, 147: begin
-      w := n^.xp[6]^.kind;
+    dindex_node, ptr_node, disp_node: begin
+      w := ord(n^.xp[6]^.kind);
       if (w = 138) or (w = 147) or (w = 146) then
         prtcatc(line^, '~');
       if n^.xp[7] <> nil then begin
         p := n^.xp[7];
-        w := p^.kind;
+        w := ord(p^.kind);
         if (w = 122) or (w = 174) or (w = 173) then
           prtcats(line^, '<*>', 3)
         else if w >= 76 then
           prtobj(line^, p);
       end;
     end;
-    164: begin
+    cs_node: begin
       t := n^.xp[5];
       prtcatc(line^, '~');
       prtobj(line^, t);
       add_kind_if_full('(cs_node)');
     end;
-    157: begin
+    def_const_ob: begin
       prtcatc(line^, '=');
       prtint(line^, n^.xl[4], 10, false);
       add_kind_if_full('(def_const)');
     end;
-    152: begin
+    alloc_temp: begin
       prtcatc(line^, 'T');
       prtcatc(line^, '$');
       prtint(line^, n^.xl[1], 5, true);
       add_kind_if_full('(alloc_temp)');
     end;
-    138, 143:
+    gen_tree_node, cmp_tree_node:
       if (n^.xw[18] = 16) and (n^.xw[12] = 9) then
         prtobj(line^, n^.xp[11])
       else begin
         prtcatc(line^, 'T');
         prtcatc(line^, '$');
         p := n^.xp[10];
-        if p^.kind = 152 then
+        if p^.kind = alloc_temp then
           prtint(line^, p^.xl[1], 5, true)
         else
           prtint(line^, integer32(p), 6, true);
       end;
-    144: begin
+    label_node: begin
       prtcatc(line^, chr((ord(n^.xc[72]) div 2) mod 32 + ord('A')));
       prtcatc(line^, '$');
       prtint(line^, n^.xw[24], 4, true);
     end;
-    159: begin
+    lib_dsc: begin
       prtcats(line^, n^.xc[12 + 2 * n^.xw[5]], n^.xw[4]);
       add_kind_if_full('(lib_dsc)');
     end;
-    208: begin
+    at_lib_dsc: begin
       prtcats(line^, n^.xc[50], ord(n^.xc[49]));
       add_kind_if_full('(at_lib_dsc)');
     end;
-    163: begin
+    addr_con: begin
       prtcats(line^, '->', 2);
       d := n^.xl[3];
       if n^.xc[20] = chr(0) then
@@ -402,7 +403,7 @@ begin
       end;
       add_kind_if_full('(addr_con)');
     end;
-    195: begin
+    reloc_absolute_addr_con: begin
       prtcats(line^, '->', 2);
       prtobj(line^, n^.xp[3]);
       d := n^.xl[4];
@@ -413,14 +414,14 @@ begin
       end;
       add_kind_if_full('(reloc_abs_addr_con)');
     end;
-    165: begin
+    cs_temp: begin
       prtcats(line^, 'CS$', 3);
       prtint(line^, integer32(n), 6, true);
       add_kind_if_full('(cs_temp)');
     end;
-    210:
+    void_type:
       prtcats(line^, '<void>', 6);
-    122: begin
+    integer_type: begin
       prtcatc(line^, '<');
       if ord(n^.xc[6]) < 128 then
         prtcats(line^, 'unsigned ', 9);
@@ -438,12 +439,12 @@ begin
       end;
       prtcatc(line^, '>');
     end;
-    123:
+    real_type:
       if n^.xw[2] = 6 then
         prtcats(line^, '<float>', 7)
       else
         prtcats(line^, '<double>', 8);
-    129: begin
+    enum_type: begin
       p := n^.xp[5];
       if p^.xw[2] = 4 then
         prtcats(line^, '<enum>', 6)
@@ -452,53 +453,53 @@ begin
       else if p^.xw[2] = 1 then
         prtcats(line^, '<char enum>', 11);
     end;
-    130: begin
+    ptr_type: begin
       prtcats(line^, '<pointer to ', 12);
       prtobj_$prtobj_full(line^, n^.xp[1], full);
       prtcatc(line^, '>');
     end;
-    127, 131: begin
+    char_array_type, array_type: begin
       prtcats(line^, '<array of ', 10);
       prtobj_$prtobj_full(line^, n^.xp[1], full);
       prtcatc(line^, '>');
     end;
-    132:
+    record_type:
       prtcats(line^, '<record/struct type>', 20);
-    234: begin
+    cc_func_returning_type: begin
       prtcats(line^, '<function returning ', 20);
       prtobj_$prtobj_full(line^, n^.xp[2], full);
       prtcatc(line^, '>');
     end;
-    73:
+    error_ob:
       prtcats(line^, 'erroneous entity', 16);
-    154:
+    db_register:
       prtcats(line^, '<DB_REGISTER>', 13);
-    226:
+    exception_register:
       prtcats(line^, '<EXCEPTION_REGISTER>', 20);
-    153:
+    sb_register:
       prtcats(line^, '<SF/SB_REGISTER>', 16);
-    155:
+    display_register:
       prtcats(line^, '<SL/DISPLAY_REGISTER>', 21);
-    211:
+    ap_register:
       prtcats(line^, '<AP(ARGUMENT)_REGISTER>', 23);
-    182, 183: begin
+    procedure_section, data_section: begin
       prtcatc(line^, '|');
       prtobj(line^, n^.xp[2]);
       prtcatc(line^, '|');
     end;
-    192: begin
+    transfer_vector: begin
       prtcats(line^, '<transfer vector> ', 18);
       prtobj(line^, n^.xp[2]);
     end;
-    194: begin
+    external_ref: begin
       prtcats(line^, '<external reference> ', 21);
       prtobj(line^, n^.xp[2]);
     end;
-    204: begin
+    argument_block_location_ob: begin
       prtcats(line^, '<ARGUMENT_BLOCK_LOCATION>+', 26);
       prtint(line^, n^.xl[1], 10, false);
     end;
-    203: begin
+    physical_register_ob: begin
       case n^.xw[2] of
         0: prtcatc(line^, '.');
         1: prtcats(line^, '.FS', 3);
@@ -517,7 +518,7 @@ begin
     end;
     otherwise begin
       prtcats(line^, '<KIND ', 6);
-      prtint(line^, kind, 10, false);
+      prtint(line^, ord(kind), 10, false);
       prtcatc(line^, '>');
     end;
   end;

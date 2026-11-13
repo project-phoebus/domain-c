@@ -135,7 +135,7 @@ var
     v: integer32;
     e: il_$node_ptr_t;
   begin
-    if t^.kind = 129 then begin
+    if t^.kind = enum_type then begin
       v := c^.int_value;
       for i := 1 to t^.enum_count do begin
         e := t^.enum_list^[i];
@@ -258,32 +258,32 @@ var
     f: c_field_ptr_t;
     e: il_$node_ptr_t;
   begin
-    if t^.kind = 121 then
+    if t^.kind = param_name then
       t := t^.wrap_type;
     case t^.kind of
-      122:
+      integer_type:
         if t^.len = 1 then
           print_10('char', 4)
         else if t^.len = 2 then
           print_10('short int', 9)
         else
           print_10('long int', 8);
-      123:
+      real_type:
         if t^.len = 6 then
           print_10('float', 5)
         else
           print_10('double', 6);
-      234: begin
+      cc_func_returning_type: begin
         print_10('func ret ', 9);
         print_type(t^.fn_result, indent);
       end;
-      128: begin
+      subr_type: begin
         print_con(t^.sub_base, t^.sub_low);
         prtcatc(line, '.');
         prtcatc(line, '.');
         print_con(t^.sub_base, t^.sub_high);
       end;
-      129: begin
+      enum_type: begin
         if t^.enum_int = short_type then
           print_10('short enum ', 11)
         else
@@ -311,25 +311,25 @@ var
               prtcatc(line, ',');
           end;
       end;
-      130: begin
+      ptr_type: begin
         print_10('ptr to ', 7);
         print_attr([], t^.ptr_attr);
         print_type(t^.ptr_to, indent);
       end;
-      127, 131: begin
+      char_array_type, array_type: begin
         print_10('array[', 6);
         print_type(t^.arr_index, indent);
         print_10('] of ', 5);
         print_attr([], t^.arr_attr);
         print_type(t^.arr_elem, indent);
       end;
-      134: begin
+      set_type: begin
         print_10('set of ', 7);
         print_type(t^.set_base, indent);
       end;
-      118:
+      type_name:
         prtobj(line, t^.tn_name);
-      132: begin
+      record_type: begin
         print_10('struct/union(', 13);
         prtint(line, t^.su_size, 10, false);
         prtcatc(line, ')');
@@ -359,7 +359,7 @@ var
               until line.length >= col;
               prtcatc(line, '(');
               prtint(line, f^.offset, 10, false);
-              if f^.kind = 120 then begin
+              if f^.kind = pfield_name then begin
                 prtcatc(line, ',');
                 prtint(line, f^.bits.width, 2, false);
                 prtcatc(line, ',');
@@ -379,9 +379,9 @@ var
           end;
         end;
       end;
-      107:
+      procedure_blk:
         print_10('procedure', 9);
-      108:
+      function_blk:
         print_10('function', 8);
       otherwise
         prtobj(line, t);
@@ -409,22 +409,22 @@ var
     p: il_$node_ptr_t;
   begin
     line.length := 0;
-    if b^.kind <> 172 then begin
+    if b^.kind <> inner_blk then begin
       prtint(line, b^.xw[144], 3, true);
       prtcatc(line, ' ');
       prtobj(line, b^.xp[74]);
       prtcatc(line, ' ');
       case b^.kind of
-        105: print_10('program', 7);
-        106: print_10('module', 6);
-        107: print_10('procedure', 9);
-        108: print_10('function', 8);
+        program_blk: print_10('program', 7);
+        module_blk: print_10('module', 6);
+        procedure_blk: print_10('procedure', 9);
+        function_blk: print_10('function', 8);
       end;
       prtcatc(line, '(');
-      if b^.kind <> 106 then begin
+      if b^.kind <> module_blk then begin
         print_10('Proc = ', 7);
         p := b^.xp[25];
-        if p^.kind = 144 then
+        if p^.kind = label_node then
           prthex(line, p^.xl[14], 6)
         else
           print_10('------', 6);
@@ -523,14 +523,14 @@ var
     while line.length < 16 do
       prtcatc(line, ' ');
     case r^.kind of
-      109: begin
+      var_name: begin
         prtcats(line, ',       varn', 12);
         print_vat(c_sym_ptr_t(r)^.var_vat);
       end;
-      111: prtcats(line, ',     comblk', 12);
-      107, 108: prtcats(line, ',  proc/func', 12);
-      183: prtcats(line, ',      dsect', 12);
-      182: prtcats(line, ',      psect', 12);
+      common_block_name: prtcats(line, ',     comblk', 12);
+      procedure_blk, function_blk: prtcats(line, ',  proc/func', 12);
+      data_section: prtcats(line, ',      dsect', 12);
+      procedure_section: prtcats(line, ',      psect', 12);
     end;
   end;
 
@@ -610,7 +610,7 @@ var
     while a <> nil do begin
       p := a^.xp[3];
       while p <> nil do
-        if p^.kind = 163 then begin
+        if p^.kind = addr_con then begin
           line.length := 0;
           prtcats(line, '   ', 4);
           print_ac_ref(p^.xp[2]);
@@ -654,14 +654,14 @@ begin
     sym := c_sym_ptr_t(ids^.xp[2]);
     while sym <> nil do begin
       blk := sym^.block;
-      if sym^.kind = 109 then begin
+      if sym^.kind = var_name then begin
         if (14 in sym^.var_flags) or else
            (sym^.name = id_end_of_for) or else
            (sym^.name = id_end_of_while) or else
            (sym^.name = id_at) or else
            (sym^.name = id_string_constant) or else
-           (sym^.var_type^.kind = 108) or else
-           (sym^.var_type^.kind = 107) or else
+           (sym^.var_type^.kind = function_blk) or else
+           (sym^.var_type^.kind = procedure_blk) or else
            ((not spos_$line_is_in_main_source_file(sym^.line)) and
             (sym^.var_vat = vat_ext)) or else
            (blk = nil) or else (blk = il_184) or else (blk = il_178) then
@@ -669,7 +669,7 @@ begin
         else begin
           show := true;
           blk := sym^.block;
-          while blk^.kind = 172 do
+          while blk^.kind = inner_blk do
             blk := blk^.xp[2];
         end;
       end
@@ -688,7 +688,7 @@ begin
           prtcatc(line, ' ');
         until line.length >= 12;
         case sym^.kind of
-          109: begin
+          var_name: begin
             print_10('var(', 4);
             if sym^.var_vat = vat_ext then
               print_10('extern', 6)
@@ -723,13 +723,13 @@ begin
             print_attr(sym^.var_flags, sym^.var_attr);
             print_type(sym^.var_type, 2);
           end;
-          116: begin
+          const_name: begin
             print_10('const=', 6);
             print_con(sym^.con_type, sym^.con_value);
           end;
-          117: begin
+          label_name: begin
             print_10('label(', 6);
-            if sym^.lab_node^.kind <> 144 then
+            if sym^.lab_node^.kind <> label_node then
               print_10('------', 6)
             else begin
               prthex(line, sym^.lab_node^.xl[14], 6);
@@ -738,7 +738,7 @@ begin
             end;
             prtcatc(line, ')');
           end;
-          118: begin
+          type_name: begin
             print_10('typedef= ', 9);
             tattr_to_vattr(vattr, sym^.td_attr);
             print_attr(sym^.td_flags, vattr);

@@ -4150,7 +4150,7 @@ transform 398  ip_reg <- literal_32_bits
       t1 <- address_mode_for_integer32_value(result.l352);
       emit load(opc$loadl, 0, t1, t1.base_register, solution, t1.il, 0, t1.bits_known, t1.bits_trusted);
     end;
-    result.object_with_name <- smcontk(81, result.l352);
+    result.object_with_name <- smcontk(integer_ob, result.l352);
   end;
 end;
 
