@@ -78,11 +78,19 @@
   allocation and attributes (print_variable; il_$vat_t, il_$var_attr_t),
   the calling conventions (print_routine_block; call_unk .. call_ada)
   and the assignment operators (print_top_node; il_$aop_t, 'ORD(AOP)='
-  for another).  Not named here: a block's allocation (il_$bat_t: its
-  `case' is on a longword shift), the block's attributes, the label
-  classes and the statement's flags (bit fields read by mask).  The
-  node kinds are il.ins.pas's il_$kind_t; this unit has no table of
-  their names.
+  for another); a block's attributes, allocation and calling
+  convention (il_$blk_atts_t), the label classes (il_$label_class_t,
+  'ord(class)=' for another; il_$label_atts_t) and a statement's flags
+  (il_$stmt_flags_t) are il.ins.pas's records, which take their names
+  from these dumps (docs/questions.md 326).  The node kinds are
+  il.ins.pas's il_$kind_t; this unit has no table of their names.
+
+  The views are laid out as dpc lays records out: a packed record is
+  rounded to a word and a set of 0..7 takes a word, so the node's first
+  two bytes are one packed record (kind at +2), a basic block's flags
+  a packed record of booleans (depth at +2) and xs a packed array of
+  byte sets; laid out otherwise, every field after them was read 2
+  bytes off (docs/questions.md 330).
 
   dpc gaps (docs/dpc-gaps.md): 8 (`in' on the kind and operator
   sets, every one), 9 (sanity_check_walk_spine declared forward), 29
@@ -175,9 +183,17 @@ type
   lt_bbs_t = array [1..100000] of lt_bb_ptr_t;
   lt_bbs_ptr_t = ^lt_bbs_t;
   lt_bb_t = record
-    flags: lt_bits_t;                   { +0: 0 abnormal, 1 loop head,
-                                          2 preheader, 7 cleanup }
-    b1: char;                           { +1 }
+    flags: packed record                { +0 (a set of 0..7 would take
+                                          a word in dpc and put depth
+                                          at +4: the image reads it at
+                                          +2, print_basic_block 0x08573C) }
+      cleanup: boolean;                 { .7 }
+      f6, f5, f4, f3: boolean;
+      preheader: boolean;               { .2 }
+      loop_head: boolean;               { .1 }
+      abnormal: boolean;                { .0 }
+      b1: 0..255;                       { +1 }
+    end;
     depth: integer;                     { +2: the loop depth }
     dom: lt_bb_ptr_t;                   { +4: the dominator }
     x8: integer32;                      { +8 }
@@ -216,13 +232,17 @@ type
   lt_ptr_array_t = array [1..64] of lt_ptr_t;
 
   { A node as this unit reads it.  The kinds' variants by offset (xp, xl,
-    xw, xc as il.ins.pas's) where no named one is declared. }
+    xw, xc as il.ins.pas's) where no named one is declared.  +1 is in
+    the flags' packed record: dpc rounds a packed record to a word, and
+    the flags alone with b1 after them put kind at +4 (the image reads
+    it at +2: print_routine_block `move.w (2,A3),D0', cc.m68k
+    0x08258A). }
   lt_node_t = record
     flags: packed record                { +0 }
       rewritten: boolean;               { .7 }
       f6, f5, f4, f3, f2, f1, f0: boolean;
+      b1: 0..255;                       { +1 }
     end;
-    b1: char;                           { +1 }
     kind: il_$kind_t;                   { +2 }
     case integer of
       { A tree node (137, 138, 143; 164, 171, 175, 189, 190, 219, 220,
@@ -317,8 +337,7 @@ type
           bk_w368: integer;             { +368 }
           bk_w370: integer;             { +370 }
           bk_w372: integer;             { +372 }
-          bk_atts: array [374..379] of lt_bits_t);  { +374: the
-                                          attributes, by byte }
+          bk_atts: il_$blk_atts_t);    { +374: the attributes }
       { A top-level node (a statement: 139..142, 144, 148..151, 188,
         191, 214, 215, 223..225, 227, 228, 231, 233). }
       8: (st_prev: lt_ptr_t;            { +4 }
@@ -332,10 +351,9 @@ type
           st_used: lt_used_ptr_t;       { +34: the variables used }
           st_def: char;                 { +38: the variable defined }
           st_b39: char;                 { +39 }
-          st_b40: char;                 { +40 }
-          st_b41: char;                 { +41: flags }
-          st_b42: char;                 { +42: flags }
-          st_b43: char;                 { +43: the statement index }
+          st_flags: il_$stmt_flags_t;   { +40: the flags at +41, +42;
+                                          +43 the statement index's
+                                          high byte }
           st_b44: char;                 { +44 }
           st_lvl: char;                 { +45 }
           st_w46: integer;              { +46 }
@@ -354,6 +372,9 @@ type
            hd_w68: integer;             { +68 }
            hd_count: 0..65535);         { +70: a handler's (223)
                                           exceptions, from +76 }
+      { A label (144): its class's byte. }
+      20: (lb_x4: array [1..17] of integer32;       { +4 }
+           lb_atts: il_$label_atts_t);  { +72 }
       { A block's register assignments (178), per register 0..23. }
       17: (ra: array [0..23] of lt_ra_t);           { +4 }
       9: (xp: array [1..94] of lt_ptr_t);           { +4 }
@@ -365,7 +386,9 @@ type
       13: (xw: array [2..189] of integer);          { +4 }
       14: (xc: array [4..379] of char);             { +4 }
       15: (xb: array [4..379] of -128..127);        { +4 }
-      16: (xs: array [4..379] of lt_bits_t);        { +4 }
+      16: (xs: packed array [4..379] of lt_bits_t); { +4: bytes (an
+                                          unpacked array's elements are
+                                          words in dpc) }
   end;
 
   { The line's sizes' letters (+0x130 of the data), by +8 of a register
@@ -1902,14 +1925,14 @@ begin
   print_string('      slevel = ', 15);
   print_integer(b^.xb[294], 3, false);
   fresh_ln(m);
-  case rshft(b^.xw[188] & 16#180, 7) of
-    0: print_string('local_bat   ', 12);
-    1: print_string('forward_bat ', 12);
-    2: print_string('extern_bat  ', 12);
-    3: print_string('param_bat   ', 12);
+  case b^.bk_atts.bat of
+    local_bat: print_string('local_bat   ', 12);
+    forward_bat: print_string('forward_bat ', 12);
+    extern_bat: print_string('extern_bat  ', 12);
+    param_bat: print_string('param_bat   ', 12);
     otherwise
   end;
-  case rshft(ord(b^.xc[377]) & 16#70, 4) of
+  case b^.bk_atts.call of
     call_unk: print_string('call_unk   ', 11);
     call_pas: print_string('call_pas   ', 11);
     call_ftn: print_string('call_ftn   ', 11);
@@ -1919,46 +1942,46 @@ begin
     otherwise
   end;
   print_string('    blk_atts: ', 14);
-  if 3 in b^.bk_atts[376] then print_string('local_name_only ', 16);
-  if 4 in b^.bk_atts[376] then print_string('save_db ', 8);
-  if 5 in b^.bk_atts[376] then print_string('abnorm ', 7);
-  if 6 in b^.bk_atts[376] then print_string('NLGoTo ', 7);
-  if 7 in b^.bk_atts[376] then print_string('Need_FP_FCW ', 12);
-  if 0 in b^.bk_atts[375] then print_string('NoSave_Regs ', 12);
-  if 1 in b^.bk_atts[375] then print_string('NoReturn ', 9);
-  if 2 in b^.bk_atts[375] then print_string('D0_Ptr_Ret ', 11);
-  if 3 in b^.bk_atts[375] then print_string('use_db ', 7);
-  if 4 in b^.bk_atts[375] then print_string('a0_ptr_ret ', 12);
-  if 5 in b^.bk_atts[375] then print_string('inline ', 7);
-  if 6 in b^.bk_atts[375] then print_string('noinline ', 9);
-  if 7 in b^.bk_atts[375] then print_string('inlineable ', 11);
-  if 0 in b^.bk_atts[374] then print_string('expanded ', 9);
-  if 1 in b^.bk_atts[374] then print_string('inlined ', 8);
-  if 2 in b^.bk_atts[374] then print_string('inline_block ', 13);
-  if 3 in b^.bk_atts[374] then print_string('visible ', 8);
-  if 4 in b^.bk_atts[374] then print_string('no_fp ', 6);
-  if 5 in b^.bk_atts[374] then print_string('resident_proc ', 14);
-  if 6 in b^.bk_atts[374] then print_string('addr_fparam ', 12);
-  if 7 in b^.bk_atts[374] then print_string('assigned_goto ', 14);
+  if b^.bk_atts.local_name_only then print_string('local_name_only ', 16);
+  if b^.bk_atts.save_db then print_string('save_db ', 8);
+  if b^.bk_atts.abnorm then print_string('abnorm ', 7);
+  if b^.bk_atts.nlgoto then print_string('NLGoTo ', 7);
+  if b^.bk_atts.need_fp_fcw then print_string('Need_FP_FCW ', 12);
+  if b^.bk_atts.nosave_regs then print_string('NoSave_Regs ', 12);
+  if b^.bk_atts.noreturn then print_string('NoReturn ', 9);
+  if b^.bk_atts.d0_ptr_ret then print_string('D0_Ptr_Ret ', 11);
+  if b^.bk_atts.use_db then print_string('use_db ', 7);
+  if b^.bk_atts.a0_ptr_ret then print_string('a0_ptr_ret ', 12);
+  if b^.bk_atts.inline then print_string('inline ', 7);
+  if b^.bk_atts.noinline then print_string('noinline ', 9);
+  if b^.bk_atts.inlineable then print_string('inlineable ', 11);
+  if b^.bk_atts.expanded then print_string('expanded ', 9);
+  if b^.bk_atts.inlined then print_string('inlined ', 8);
+  if b^.bk_atts.inline_block then print_string('inline_block ', 13);
+  if b^.bk_atts.visible then print_string('visible ', 8);
+  if b^.bk_atts.no_fp then print_string('no_fp ', 6);
+  if b^.bk_atts.resident_proc then print_string('resident_proc ', 14);
+  if b^.bk_atts.addr_fparam then print_string('addr_fparam ', 12);
+  if b^.bk_atts.assigned_goto then print_string('assigned_goto ', 14);
   fresh_ln(m);
-  if 3 in b^.bk_atts[377] then print_string('func_assign ', 12);
-  if 2 in b^.bk_atts[377] then print_string('variable_arg_list ', 18);
-  if 1 in b^.bk_atts[377] then print_string('val_param_flag ', 15);
-  if 0 in b^.bk_atts[377] then print_string('fasn ', 5);
-  if 7 in b^.bk_atts[378] then print_string('sb_display ', 11);
-  if 6 in b^.bk_atts[378] then print_string('pass_display ', 13);
-  if 5 in b^.bk_atts[378] then print_string('save_static_link_in_frame ', 26);
-  if 4 in b^.bk_atts[378] then print_string('must_have_own_frame ', 20);
-  if 3 in b^.bk_atts[378] then print_string('sb_12_in_use ', 13);
-  if 1 in b^.bk_atts[378] then print_string('returns_dynamic_results ', 24);
-  if 0 in b^.bk_atts[378] then print_string('respect_storage_error ', 22);
-  if 7 in b^.bk_atts[379] then print_string('local_call_same_db ', 19);
-  if 6 in b^.bk_atts[379] then print_string('local_call_different_db ', 24);
-  if 5 in b^.bk_atts[379] then print_string('calls_extern_non_lib_routine ', 29);
-  if 4 in b^.bk_atts[379] then print_string('never_entered_recursively ', 26);
-  if 2 in b^.bk_atts[379] then print_string('coded ', 6);
-  if 1 in b^.bk_atts[379] then print_string('visited_depth_first ', 20);
-  if 0 in b^.bk_atts[379] then print_string('visited_set_local_call_bits ', 28);
+  if b^.bk_atts.func_assign then print_string('func_assign ', 12);
+  if b^.bk_atts.variable_arg_list then print_string('variable_arg_list ', 18);
+  if b^.bk_atts.val_param_flag then print_string('val_param_flag ', 15);
+  if b^.bk_atts.fasn then print_string('fasn ', 5);
+  if b^.bk_atts.sb_display then print_string('sb_display ', 11);
+  if b^.bk_atts.pass_display then print_string('pass_display ', 13);
+  if b^.bk_atts.save_static_link_in_frame then print_string('save_static_link_in_frame ', 26);
+  if b^.bk_atts.must_have_own_frame then print_string('must_have_own_frame ', 20);
+  if b^.bk_atts.sb_12_in_use then print_string('sb_12_in_use ', 13);
+  if b^.bk_atts.returns_dynamic_results then print_string('returns_dynamic_results ', 24);
+  if b^.bk_atts.respect_storage_error then print_string('respect_storage_error ', 22);
+  if b^.bk_atts.local_call_same_db then print_string('local_call_same_db ', 19);
+  if b^.bk_atts.local_call_different_db then print_string('local_call_different_db ', 24);
+  if b^.bk_atts.calls_extern_non_lib_routine then print_string('calls_extern_non_lib_routine ', 29);
+  if b^.bk_atts.never_entered_recursively then print_string('never_entered_recursively ', 26);
+  if b^.bk_atts.coded then print_string('coded ', 6);
+  if b^.bk_atts.visited_depth_first then print_string('visited_depth_first ', 20);
+  if b^.bk_atts.visited_set_local_call_bits then print_string('visited_set_local_call_bits ', 28);
   fresh_ln(m);
   v := b^.xp[4];
   while v <> nil do
@@ -2152,7 +2175,7 @@ begin
       print_string('Vars used : ', 12);
       for i := 1 to il_180^.xw[145] do
         if (t^.st_vars <> nil) and (t^.st_vars^[i] <> nil) and (i in t^.st_used^) then begin
-          if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+          if il_180^.blk_atts.call = call_ftn then
             print_string(t^.st_vars^[i]^^.fs_name, t^.st_vars^[i]^^.fs_len)
           else
             print_string(t^.st_vars^[i]^^.vr_name^.xc[18], t^.st_vars^[i]^^.vr_name^.xw[8]);
@@ -2171,21 +2194,21 @@ begin
     end;
   end;
   fresh_ln(n);
-  if 0 in t^.xs[42] then print_string('begins_proc ', 12);
-  if 1 in t^.xs[42] then print_string('begins_basic_block ', 19);
-  if 2 in t^.xs[42] then print_string('ends_proc ', 10);
-  if 3 in t^.xs[42] then print_string('ends_basic_block ', 17);
-  if 5 in t^.xs[42] then print_string('contains_call_w_simple_p ', 25);
-  if 4 in t^.xs[42] then print_string('contains_user_call ', 19);
-  if 7 in t^.xs[42] then print_string('constant_assign ', 16);
-  if 0 in t^.xs[41] then print_string('stmt_eliminated ', 16);
-  if 1 in t^.xs[41] then print_string('contains_cse ', 13);
-  if 2 in t^.xs[41] then print_string('defsubtracted ', 14);
-  if 3 in t^.xs[41] then print_string('loophascalls ', 13);
-  if 4 in t^.xs[41] then print_string('contains_fp_expr ', 17);
-  if 5 in t^.xs[41] then print_string('compiler_generated_stmt ', 24);
-  if 7 in t^.xs[41] then print_string('inliner_generated_stmt ', 23);
-  if 6 in t^.xs[41] then print_string('pascal_for_loop ', 16);
+  if t^.st_flags.begins_proc then print_string('begins_proc ', 12);
+  if t^.st_flags.begins_basic_block then print_string('begins_basic_block ', 19);
+  if t^.st_flags.ends_proc then print_string('ends_proc ', 10);
+  if t^.st_flags.ends_basic_block then print_string('ends_basic_block ', 17);
+  if t^.st_flags.contains_call_w_simple_p then print_string('contains_call_w_simple_p ', 25);
+  if t^.st_flags.contains_user_call then print_string('contains_user_call ', 19);
+  if t^.st_flags.constant_assign then print_string('constant_assign ', 16);
+  if t^.st_flags.stmt_eliminated then print_string('stmt_eliminated ', 16);
+  if t^.st_flags.contains_cse then print_string('contains_cse ', 13);
+  if t^.st_flags.defsubtracted then print_string('defsubtracted ', 14);
+  if t^.st_flags.loophascalls then print_string('loophascalls ', 13);
+  if t^.st_flags.contains_fp_expr then print_string('contains_fp_expr ', 17);
+  if t^.st_flags.compiler_generated_stmt then print_string('compiler_generated_stmt ', 24);
+  if t^.st_flags.inliner_generated_stmt then print_string('inliner_generated_stmt ', 23);
+  if t^.st_flags.pascal_for_loop then print_string('pascal_for_loop ', 16);
   if rshft(t^.xl[10] & 16#FFFF00, 8) <> 0 then
     fresh_ln(n);
   print_tree_ref(t, true);
@@ -2221,39 +2244,39 @@ begin
     print_string('REWRITTEN ', 10);
   case t^.kind of
     label_node: begin
-      case rshft(ord(t^.xc[72]) & 62, 1) of
-        0: print_string('ELSE', 4);
-        1: print_string('ENDIF', 5);
-        2: print_string('WHILE START', 11);
-        3: print_string('WHILE NEXT', 10);
-        4: print_string('WHILE EXIT', 10);
-        5: print_string('REPEAT START', 12);
-        6: print_string('REPEAT NEXT', 11);
-        7: print_string('REPEAT EXIT', 11);
-        8: print_string('FOR START', 9);
-        9: print_string('FOR NEXT', 8);
-        10: print_string('FOR EXIT', 8);
-        11: print_string('User', 4);
-        12: print_string('RETURN', 6);
-        13: print_string('PROC', 4);
-        14: print_string('TEMP', 4);
-        15: print_string('CASE STMT', 9);
-        16: print_string('CASE ENDTE', 10);
-        17: print_string('FACTOR', 6);
-        18: print_string('PAR_REGION', 10);
-        19: print_string('PAR_CRITICAL', 12);
-        20: print_string('PAR_ORDERED', 11);
-        21: print_string('PAR_ONE_PROC', 12);
+      case t^.lb_atts.class of
+        lbl_else: print_string('ELSE', 4);
+        lbl_endif: print_string('ENDIF', 5);
+        lbl_while_start: print_string('WHILE START', 11);
+        lbl_while_next: print_string('WHILE NEXT', 10);
+        lbl_while_exit: print_string('WHILE EXIT', 10);
+        lbl_repeat_start: print_string('REPEAT START', 12);
+        lbl_repeat_next: print_string('REPEAT NEXT', 11);
+        lbl_repeat_exit: print_string('REPEAT EXIT', 11);
+        lbl_for_start: print_string('FOR START', 9);
+        lbl_for_next: print_string('FOR NEXT', 8);
+        lbl_for_exit: print_string('FOR EXIT', 8);
+        lbl_user: print_string('User', 4);
+        lbl_return: print_string('RETURN', 6);
+        lbl_proc: print_string('PROC', 4);
+        lbl_temp: print_string('TEMP', 4);
+        lbl_case_stmt: print_string('CASE STMT', 9);
+        lbl_case_endte: print_string('CASE ENDTE', 10);
+        lbl_factor: print_string('FACTOR', 6);
+        lbl_par_region: print_string('PAR_REGION', 10);
+        lbl_par_critical: print_string('PAR_CRITICAL', 12);
+        lbl_par_ordered: print_string('PAR_ORDERED', 11);
+        lbl_par_one_proc: print_string('PAR_ONE_PROC', 12);
         otherwise begin
           print_string('ord(class)', 10);
           print_char('=');
-          print_integer(rshft(ord(t^.xc[72]) & 62, 1), 4, false);
+          print_integer(ord(t^.lb_atts.class), 4, false);
         end;
       end;
       print_string(' LABEL(def=', 11);
-      print_bool(7 in t^.xs[72]);
+      print_bool(t^.lb_atts.def);
       print_string(',fwrd=', 6);
-      print_bool(6 in t^.xs[72]);
+      print_bool(t^.lb_atts.fwrd);
       if 7 in t^.xs[74] then
         if 7 in t^.xs[77] then
           print_string(',abnormal(well_behaved)', 23)
@@ -2749,7 +2772,7 @@ begin
                           or (q^.kind = reg_list_ob)) do begin
       if q^.kind = block_entry_node then begin
         if (q^.xp[12]^.kind = inner_blk)
-            and (2 in q^.xp[12]^.bk_atts[374]) then
+            and (q^.xp[12]^.bk_atts.inline_block) then
           begins_inline_block := true;
         return;
       end;
@@ -2778,7 +2801,7 @@ begin
       advance_listing_to_line(t^.st_ln);
     end;
   if (t^.kind = blk_end_node) and (t^.xp[12]^.kind = inner_blk)
-      and (2 in t^.xp[12]^.bk_atts[374]) then
+      and (t^.xp[12]^.bk_atts.inline_block) then
     inline_depth := inline_depth - 1;
   print_top_node(t, 0);
   print_ln(0);
@@ -2824,12 +2847,12 @@ begin
     print_integer(b^.index^.num, 4, true)
   else
     print_integer(0, 4, true);
-  if 2 in b^.flags then print_string(' Preheader', 10);
-  if 1 in b^.flags then print_string(' Loop Head ', 11);
-  if 0 in b^.flags then print_string(' Abnormal ', 10);
-  if 7 in b^.flags then print_string(' CLEANUP  ', 10);
+  if b^.flags.preheader then print_string(' Preheader', 10);
+  if b^.flags.loop_head then print_string(' Loop Head ', 11);
+  if b^.flags.abnormal then print_string(' Abnormal ', 10);
+  if b^.flags.cleanup then print_string(' CLEANUP  ', 10);
   fresh_ln(0);
-  if 1 in b^.flags then begin
+  if b^.flags.loop_head then begin
     print_string(' PreHeader ', 11);
     if b^.preheader <> nil then
       print_integer(b^.preheader^.num, 4, true)
