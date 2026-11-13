@@ -4275,18 +4275,18 @@ end;
   proper_subtree il_entry_blk, no children: a routine's block (its
   address) is rewritten as an address constant (a node of kind 146
   over make_new_addr_con of the block in il_180's section: kind 2 when
-  the block's two bits at +376 (16#180 of the word) are not zero, else
-  kind 6 unless it is the current routine's own, +188 against il_180's)
-  and that node's solutions; the current routine's own block with the
-  bits clear has none.
+  the block's allocation (bat, +376 bits 8..7 of the word) is not
+  local_bat, else kind 6 unless it is the current routine's own, +188
+  against il_180's) and that node's solutions; the current routine's
+  own local block has none.
 
-  0x0E4058, 0x228 bytes: D0 the bits (`and.w #384', `lsr.w #7'), tested
-  again after the comparison (`tst.w d0'); each branch has its own
-  trace, the make_new_addr_con call and the rest shared (Rev 8.89
+  0x0E4058, 0x228 bytes: D0 the allocation (`and.w #384', `lsr.w #7'),
+  tested again after the comparison (`tst.w d0'); each branch has its
+  own trace, the make_new_addr_con call and the rest shared (Rev 8.89
   cross-jumping); A2 il.
 
-  Not known from the original: the bits' name; how the conditions were
-  written. }
+  Not known from the original: the local's name; how the conditions
+  were written. }
 
 procedure isc_entry_blk(
     il: univ_ptr;
@@ -4300,7 +4300,7 @@ procedure isc_entry_blk(
     var solutions_made: boolean;
     var no_solutions: boolean); options(val_param);
 var
-  bits: integer;
+  bat: il_$bat_t;
   n1, n2: univ_ptr;
   inh_1: inherited_attributes_ptr_t;
 begin
@@ -4308,9 +4308,9 @@ begin
   no_solutions := false;
   il_kind := ord(il_entry_blk);
   number_of_children := 0;
-  bits := rshft(isc_node_ptr_t(il)^.xw[188] & 384, 7);
-  if (bits <> 0) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
-    if bits <> 0 then begin
+  bat := isc_node_ptr_t(il)^.bk_atts.bat;
+  if (bat <> local_bat) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
+    if bat <> local_bat then begin
       if isc_user_routines_356 or isc_user_routines_354 then begin
         write('*********************');
         writeln;
@@ -4511,18 +4511,18 @@ end;
   proper_subtree il_function_blk, no children: a routine's block (its
   address) is rewritten as an address constant (a node of kind 146
   over make_new_addr_con of the block in il_180's section: kind 2 when
-  the block's two bits at +376 (16#180 of the word) are not zero, else
-  kind 6 unless it is the current routine's own, +188 against il_180's)
-  and that node's solutions; the current routine's own block with the
-  bits clear has none.
+  the block's allocation (bat, +376 bits 8..7 of the word) is not
+  local_bat, else kind 6 unless it is the current routine's own, +188
+  against il_180's) and that node's solutions; the current routine's
+  own local block has none.
 
-  0x0E463C, 0x228 bytes: D0 the bits (`and.w #384', `lsr.w #7'), tested
-  again after the comparison (`tst.w d0'); each branch has its own
-  trace, the make_new_addr_con call and the rest shared (Rev 8.89
+  0x0E463C, 0x228 bytes: D0 the allocation (`and.w #384', `lsr.w #7'),
+  tested again after the comparison (`tst.w d0'); each branch has its
+  own trace, the make_new_addr_con call and the rest shared (Rev 8.89
   cross-jumping); A2 il.
 
-  Not known from the original: the bits' name; how the conditions were
-  written. }
+  Not known from the original: the local's name; how the conditions
+  were written. }
 
 procedure isc_function_blk(
     il: univ_ptr;
@@ -4536,7 +4536,7 @@ procedure isc_function_blk(
     var solutions_made: boolean;
     var no_solutions: boolean); options(val_param);
 var
-  bits: integer;
+  bat: il_$bat_t;
   n1, n2: univ_ptr;
   inh_1: inherited_attributes_ptr_t;
 begin
@@ -4544,9 +4544,9 @@ begin
   no_solutions := false;
   il_kind := ord(il_function_blk);
   number_of_children := 0;
-  bits := rshft(isc_node_ptr_t(il)^.xw[188] & 384, 7);
-  if (bits <> 0) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
-    if bits <> 0 then begin
+  bat := isc_node_ptr_t(il)^.bk_atts.bat;
+  if (bat <> local_bat) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
+    if bat <> local_bat then begin
       if isc_user_routines_356 or isc_user_routines_354 then begin
         write('*********************');
         writeln;
@@ -5017,18 +5017,18 @@ end;
   proper_subtree il_procedure_blk, no children: a routine's block (its
   address) is rewritten as an address constant (a node of kind 146
   over make_new_addr_con of the block in il_180's section: kind 2 when
-  the block's two bits at +376 (16#180 of the word) are not zero, else
-  kind 6 unless it is the current routine's own, +188 against il_180's)
-  and that node's solutions; the current routine's own block with the
-  bits clear has none.
+  the block's allocation (bat, +376 bits 8..7 of the word) is not
+  local_bat, else kind 6 unless it is the current routine's own, +188
+  against il_180's) and that node's solutions; the current routine's
+  own local block has none.
 
-  0x0E5276, 0x228 bytes: D0 the bits (`and.w #384', `lsr.w #7'), tested
-  again after the comparison (`tst.w d0'); each branch has its own
-  trace, the make_new_addr_con call and the rest shared (Rev 8.89
+  0x0E5276, 0x228 bytes: D0 the allocation (`and.w #384', `lsr.w #7'),
+  tested again after the comparison (`tst.w d0'); each branch has its
+  own trace, the make_new_addr_con call and the rest shared (Rev 8.89
   cross-jumping); A2 il.
 
-  Not known from the original: the bits' name; how the conditions were
-  written. }
+  Not known from the original: the local's name; how the conditions
+  were written. }
 
 procedure isc_procedure_blk(
     il: univ_ptr;
@@ -5042,7 +5042,7 @@ procedure isc_procedure_blk(
     var solutions_made: boolean;
     var no_solutions: boolean); options(val_param);
 var
-  bits: integer;
+  bat: il_$bat_t;
   n1, n2: univ_ptr;
   inh_1: inherited_attributes_ptr_t;
 begin
@@ -5050,9 +5050,9 @@ begin
   no_solutions := false;
   il_kind := ord(il_procedure_blk);
   number_of_children := 0;
-  bits := rshft(isc_node_ptr_t(il)^.xw[188] & 384, 7);
-  if (bits <> 0) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
-    if bits <> 0 then begin
+  bat := isc_node_ptr_t(il)^.bk_atts.bat;
+  if (bat <> local_bat) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
+    if bat <> local_bat then begin
       if isc_user_routines_356 or isc_user_routines_354 then begin
         write('*********************');
         writeln;

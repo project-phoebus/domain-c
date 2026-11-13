@@ -577,7 +577,7 @@ begin
   end
   else
     b := preh;
-  if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then
+  if il_180^.blk_atts.call <> call_ftn then
     if (n^.kind = disp_node) or (n^.kind = ptr_node) then begin
       if opt_loop_hoist^[g_opt_tree_ptr_t(n)^.stmt] = 0 then
         return;
@@ -643,13 +643,13 @@ begin
         or (n^.xp[6]^.kind = addr_con) then
       if n^.xp[7] <> nil then
         if n^.xp[7]^.kind = common_block_name then
-          if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then
+          if il_180^.blk_atts.call <> call_ftn then
             return;
   if n^.kind = tree_node then
     b := g_opt_blocks_ptr_t(il_11c)^[opt_loop_hoist^[g_opt_tree_ptr_t(n)^.stmt]]
   else
     b := preh;
-  if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then
+  if il_180^.blk_atts.call <> call_ftn then
     if (n^.kind = disp_node) or (n^.kind = ptr_node) then
       b := g_opt_blocks_ptr_t(il_11c)^[opt_loop_hoist^[g_opt_tree_ptr_t(n)^.stmt]];
   if not b^.flags.latch then
@@ -775,7 +775,8 @@ begin
         if (hh <> 0) and (hh <> h) then begin
           hb := g_opt_blocks_ptr_t(il_11c)^[preh^.num + 1];
           if not ((hb^.first_stmt^.kind = label_node) and
-                  (rshft(ord(il_$node_ptr_t(hb^.first_stmt)^.xc[72]) & 16#3E, 1) = 2) and
+                  (il_$node_ptr_t(hb^.first_stmt)^.lab_atts.class =
+                   lbl_while_start) and
                   (t^.kind = tree_node) and
                   (g_opt_tree_ptr_t(t)^.op in [div_top..mod_top, f_div_top, f_math_top])) then begin
             if notalreadymoved(t) then
@@ -796,7 +797,7 @@ begin
     end;
 
     ptr_node, disp_node: begin
-      lang := rshft(ord(il_180^.xc[377]) & 16#70, 4);
+      lang := il_180^.blk_atts.call;
       if (18 in cargs_$options.opt_on) and (lang = 2) then begin
         hh := opt_loop_hoist^[g_opt_tree_ptr_t(t)^.stmt];
         if (hh <> 0) and (hh <> h) then begin
@@ -817,7 +818,7 @@ begin
             add_constant(t, opt_4009c[cur_r]^.block);
           end;
           h2 := opt_loop_hoist^[g_opt_tree_ptr_t(t)^.stmt];
-          lang := rshft(ord(il_180^.xc[377]) & 16#70, 4);
+          lang := il_180^.blk_atts.call;
           if lang = 2 then begin
             x := t^.xp[6];
             if (x^.kind = reloc_absolute_addr_con) or (x^.kind = addr_con)
@@ -846,8 +847,8 @@ begin
         { Not to be hoisted: a constant reference. }
         if (g_opt_tree_ptr_t(t)^.flags * [phase_volexpr, phase_devrd, phase_devwt, phase_sd_eff]) <> [] then
           return;
-        if (lang <> 2) or ((ord(il_180^.xc[376]) & 16#08) <> 0) or
-           preh^.first_stmt^.hdr.b3 or (hh <> 0) then begin
+        if (lang <> 2) or il_180^.blk_atts.local_name_only or
+           preh^.first_stmt^.hdr.loophascalls or (hh <> 0) then begin
           moveinvariants(t^.xp[6], h2);
           return;
         end;
@@ -1054,7 +1055,7 @@ var
   last: g_opt_num_t;
   r: g_opt_num_t;
   leave: boolean;
-  cls: integer;
+  cls: il_$label_class_t;
 begin
   if cargs_$options.opt_on * [16, 17, 18] = [] then
     return;
@@ -1075,7 +1076,7 @@ begin
     if not dom(p, g_opt_blocks_ptr_t(il_11c)^[h]) then
       next;
     if b^.first_stmt^.kind = label_node then
-      if rshft(ord(il_$node_ptr_t(b^.first_stmt)^.xc[72]) & 16#3E, 1) = 11 then
+      if il_$node_ptr_t(b^.first_stmt)^.lab_atts.class = lbl_user then
         next;
     preh := b^.preheader;
     if preh^.first_stmt^.kind <> eval_node then
@@ -1100,15 +1101,15 @@ begin
                 or (t^.kind = cbranch_node) then
               case t^.kind of
                 cbranch_node: begin
-                  cls := rshft(ord(t^.br_target^.xc[72]) & 16#3E, 1);
-                  if cls in [11, 13] then
+                  cls := t^.br_target^.lab_atts.class;
+                  if cls in [lbl_user, lbl_proc] then
                     if opt_4009c[g_opt_stmt_ptr_t(t^.br_target)^.hdr.region]^.block^.serial <>
                        l^.serial then
                       leave := true;
                 end;
                 branch_node: begin
-                  cls := rshft(ord(t^.br_target^.xc[72]) & 16#3E, 1);
-                  if cls in [11, 13] then
+                  cls := t^.br_target^.lab_atts.class;
+                  if cls in [lbl_user, lbl_proc] then
                     if t^.block^.serial <> l^.serial then
                       leave := true;
                 end;
@@ -1116,7 +1117,7 @@ begin
                   leave := true;
               end;
           if leave then begin
-            preh^.first_stmt^.hdr.b3 := true;
+            preh^.first_stmt^.hdr.loophascalls := true;
             ok := false;
             exit;
           end;
@@ -1128,7 +1129,7 @@ begin
       if ok then
         for k := opt_first_block to opt_last_block do
           if g_opt_blocks_ptr_t(il_11c)^[k]^.flags.skip then begin
-            preh^.first_stmt^.hdr.b3 := true;
+            preh^.first_stmt^.hdr.loophascalls := true;
             exit;
           end;
     end;
@@ -1195,7 +1196,7 @@ var
   l: g_opt_block_ptr_t;
   j: integer;
   x: il_$node_ptr_t;
-  cls: integer;
+  cls: il_$label_class_t;
 
   { walkt - the constants of tree t: an operator's operands (only the
     first of a scaling by a power of two; for operator 41 of a double
@@ -1289,8 +1290,8 @@ begin
       next;
     if b^.first_stmt^.kind <> label_node then
       next;
-    cls := rshft(ord(il_$node_ptr_t(b^.first_stmt)^.xc[72]) & 16#3E, 1);
-    if not (cls in [2, 5, 8]) then
+    cls := il_$node_ptr_t(b^.first_stmt)^.lab_atts.class;
+    if not (cls in [lbl_while_start, lbl_repeat_start, lbl_for_start]) then
       next;
     l := select_loop(h);
     preh := l^.preheader;

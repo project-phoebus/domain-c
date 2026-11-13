@@ -580,7 +580,7 @@ begin
   fga_$optimize_ap_read_in_return(rtn);
   if rtn^.f226.asynchronous_return then
     fga_$compute_asynchronous_paths(rtn);
-  handlers := ((ord(il_180^.xc[379]) & 16#10) <> 0) or lir_main_c8c;
+  handlers := il_180^.blk_atts.never_entered_recursively or lir_main_c8c;
   added := false;
   if handlers then begin
     bb := rtn^.bbs;

@@ -367,7 +367,7 @@ begin
     end;
   end;
 
-  zero_init := (((ord(il_180^.xc[379]) & 16#10) <> 0) or lir_main_c8c)
+  zero_init := (il_180^.blk_atts.never_entered_recursively or lir_main_c8c)
                and (2 in cargs_$options.flags_286);
   lr := rtn^.lrs;
   while lr <> nil do begin

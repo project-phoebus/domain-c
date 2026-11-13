@@ -815,7 +815,7 @@ begin
         s^.next := n^.next;
         n^.next^.prev := s;
         if n^.hdr.region <> 0 then
-          n^.hdr.deleted := true;
+          n^.hdr.stmt_eliminated := true;
       end;
     s := s^.next;
   end;
@@ -825,7 +825,7 @@ begin
     n^.prev^.next := n^.next;
     n^.next^.prev := n^.prev;
     if n^.hdr.region <> 0 then
-      n^.hdr.deleted := true;
+      n^.hdr.stmt_eliminated := true;
     p := p^.next;
   end;
 end;
@@ -2277,7 +2277,7 @@ begin
   else if op = scalar_aop then
     if opt_4009c[reg]^.block^.serial = cur_loop^.serial then
       while (opt_4009c[reg]^.block^.serial = cur_loop^.serial) or
-            opt_4009c[reg]^.hdr.deleted do
+            opt_4009c[reg]^.hdr.stmt_eliminated do
         reg := reg - 1;
   n := gspace(80);
   if n = nil then
@@ -2295,22 +2295,22 @@ begin
     n^.vars^[k] := nil;
   n^.cses := nil;
   n^.regs := [0..12, 16..30];
-  n^.hdr.b7 := false;
-  n^.hdr.b6 := false;
-  n^.hdr.b5 := false;
-  n^.hdr.b4 := false;
-  n^.hdr.b3 := false;
-  n^.hdr.counted := false;
-  n^.hdr.no_prune := false;
-  n^.hdr.deleted := false;
-  n^.hdr.b42_7 := false;
+  n^.hdr.inliner_generated_stmt := false;
+  n^.hdr.pascal_for_loop := false;
+  n^.hdr.compiler_generated_stmt := false;
+  n^.hdr.contains_fp_expr := false;
+  n^.hdr.loophascalls := false;
+  n^.hdr.defsubtracted := false;
+  n^.hdr.contains_cse := false;
+  n^.hdr.stmt_eliminated := false;
+  n^.hdr.constant_assign := false;
   n^.hdr.b42_6 := false;
-  n^.hdr.kills := false;
-  n^.hdr.b42_4 := false;
-  n^.hdr.last := false;
-  n^.hdr.b42_2 := false;
-  n^.hdr.first := false;
-  n^.hdr.entry := false;
+  n^.hdr.contains_call_w_simple_p := false;
+  n^.hdr.contains_user_call := false;
+  n^.hdr.ends_basic_block := false;
+  n^.hdr.ends_proc := false;
+  n^.hdr.begins_basic_block := false;
+  n^.hdr.begins_proc := false;
   n^.asg_x := nil;
   n^.asg_op := op;
   if op = scalar_aop then begin
@@ -2375,10 +2375,10 @@ begin
           if s^.eval_opnd[1]^.kind = integer_ob then
             if opt_4009c[reg]^.block^.flags.latch then begin
               head_ptr_t(addr(n^.prev))^ := head_ptr_t(addr(s^.prev))^;
-              if n^.hdr.first then
+              if n^.hdr.begins_basic_block then
                 opt_4009c[reg]^.block^.first_stmt := n;
               opt_4009c[reg] := n;
-              if opt_4009c[reg]^.next^.hdr.first then
+              if opt_4009c[reg]^.next^.hdr.begins_basic_block then
                 opt_4009c[reg]^.block^.last_stmt := n;
               n^.prev^.next := n;
               n^.next^.prev := n;
@@ -2611,7 +2611,7 @@ begin
         else
           add_assign(opt_4009c[lastreg]^.next, temp, iv, nil, factor, op, d);
         op := add_to_aop;
-        e^.hdr.no_prune := true;
+        e^.hdr.contains_cse := true;
         for k := 1 to h^.npreds do
           if h^.pred[k]^.serial = h^.serial then
             exit;
@@ -2755,7 +2755,7 @@ begin
     k := p^.hdr.region;
     repeat
       x := opt_4009c[k];
-      if not x^.hdr.deleted then
+      if not x^.hdr.stmt_eliminated then
         if x^.hdr.vnum = v then
           if x^.kind = assign_node then begin
             if x^.vset <> nil then
@@ -2854,7 +2854,7 @@ begin
   t^.incs := nil;
   t^.asg := nil;
   t^.header := h;
-  if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then begin
+  if il_180^.blk_atts.call <> call_ftn then begin
     n := gspace(84);
     n^.kind := var_name;
     n^.xp[5] := il_180;
@@ -3850,7 +3850,7 @@ begin
           if x^.op = lshf_top then
             if not ((x^.w28 = 4) or (x^.w28 = 2)) then
               goto 90;
-        if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then begin
+        if il_180^.blk_atts.call <> call_ftn then begin
           n := iv^.xw[37];
           if n = 0 then
             goto 90;
@@ -4087,21 +4087,21 @@ begin
   s := g_opt_stmt_ptr_t(il_d4);
   blk := nil;
   while s <> nil do begin
-    if s^.hdr.first then
+    if s^.hdr.begins_basic_block then
       if s^.block <> nil then
         blk := s^.block;
     if s^.kind = assign_node then
       if s^.block = nil then
-        if not s^.hdr.first then
+        if not s^.hdr.begins_basic_block then
           if new_block(s) then begin
-            s^.hdr.first := true;
+            s^.hdr.begins_basic_block := true;
             s2 := s^.next;
             while s2^.block = nil do
               s2 := s2^.next;
-            if s2^.hdr.first then
+            if s2^.hdr.begins_basic_block then
               if not new_block(s2) then begin
                 s^.block := s2^.block;
-                s2^.hdr.first := false;
+                s2^.hdr.begins_basic_block := false;
                 blk := s^.block;
                 blk^.first_stmt := s;
               end;

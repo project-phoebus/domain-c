@@ -4325,7 +4325,7 @@ begin
         inst := 12
       else
         inst := 15;
-      m := rshft(ord(il_180^.xc[377]) & 16#70, 4);
+      m := il_180^.blk_atts.call;
       if ((m = 1) or (m = 6)) and ((n^.desc.flags & 16#4000) = 0) then
         if inst = 12 then
           inst := 2

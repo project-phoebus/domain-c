@@ -1331,7 +1331,7 @@ begin { kfold_$general }
     if ((res^.kind = sinteger_ob) or (res^.kind = integer_ob)
         or (res^.kind = binteger_ob) or
         (res^.kind = linteger_ob)) and (t^.desc.rlen = rlen_byte) and
-       (rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 3) then
+       (il_180^.blk_atts.call <> call_c) then
       res := strtk(res^.xc[11], 1)
     else begin
       kind := res^.kind;

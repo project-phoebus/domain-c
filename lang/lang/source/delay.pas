@@ -102,6 +102,9 @@ type
       { A variable (109): its attributes at +32. }
       5: (va_unused: array [1..7] of integer32;  { +4 }
           vattr: il_$var_attrs_t);      { +32 }
+      { A routine's block (107, 108): its attributes at +374. }
+      6: (bk_unused: array [4..373] of char;        { +4 }
+          blk_atts: il_$blk_atts_t);    { +374 }
       { By offset. }
       9: (xp: array [1..120] of il_$node_ptr_t);    { +4 }
       13: (xw: array [2..240] of integer);          { +4 }
@@ -750,8 +753,8 @@ begin
       m := c - 1;
   end
   else if (f^.kind = function_blk) or (f^.kind = procedure_blk) then
-    if (rshft(ord(f^.xc[377]) & 16#70, 4) = 1) or
-       (rshft(ord(f^.xc[377]) & 16#70, 4) = 6) then
+    if (f^.blk_atts.call = call_pas) or
+       (f^.blk_atts.call = 6) then
       if ord(f^.xc[293]) >= i - 1 then begin
         p := dl_ptr_t(f^.xp[3]);
         for q := 3 to i do
@@ -777,7 +780,7 @@ begin
           m := m - 1;
         end;
         entry_blk, function_blk, procedure_blk:
-          if rshft(ord(f^.xc[377]) & 16#70, 4) = 4 then
+          if f^.blk_atts.call = call_c_std then
             k := -1
           else if dl_ptr_t(n)^.desc.rlen = rlen_cs then
             if j = 2 then
@@ -798,7 +801,7 @@ begin
         integer_ob:
           if ((f^.kind = procedure_blk) or (f^.kind = entry_blk)
               or (f^.kind = function_blk)) and
-             (rshft(ord(f^.xc[377]) & 16#70, 4) = 4) then
+             (f^.blk_atts.call = call_c_std) then
             k := 8
           else if cargs_$options.i_star_2 then
             k := 8

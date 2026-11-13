@@ -101,8 +101,8 @@ begin
                   (info.tp^.kind = real_type);
       if not wanted then
         res := 1
-      else if (blk^.kind <> program_blk) and ((ord(blk^.xc[379]) & 16#10) = 0)
-          and
+      else if (blk^.kind <> program_blk) and
+              not blk^.blk_atts.never_entered_recursively and
               (v^.xw[36] in [1, 3, 4, 7, 8, 10, 11]) then
         res := 1
       else if v^.xw[36] in [1, 3, 4, 7, 8, 10, 11] then
@@ -122,7 +122,7 @@ begin
       else
         res := 11;
     end
-    else if ((ord(blk^.xc[376]) & 8) <> 0) and (blk^.kind <> inner_blk) then
+    else if blk^.blk_atts.local_name_only and (blk^.kind <> inner_blk) then
       res := 9
     else if (k = 3) and ((ord(v^.xc[10]) & 15) = 7) then begin
       if v^.fs_attr * [var_$volatile, var_$address_exposed,
@@ -145,7 +145,7 @@ begin
                             var_$nooptimize] <> [] then
         res := 7
       else if (n in [1, 3, 4, 7, 8, 10, 11]) and
-              ((ord(blk^.xc[379]) & 16#10) = 0) then
+              (not blk^.blk_atts.never_entered_recursively) then
         res := 7
       else if n in [1, 3, 4, 7, 8, 10, 11] then
         res := 13

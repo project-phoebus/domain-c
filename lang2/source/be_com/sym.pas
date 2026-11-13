@@ -230,7 +230,7 @@ begin
             b3 := (ord(node^.xc[44]) & 8) <> 0;
             if ((f & 16#2000) = 0) and (node^.xl[7] = 0) and not b3 then
               if ((ord(node^.xc[44]) & 4) <> 0)
-                 or (((ord(il_180^.xc[379]) & 16#10) <> 0)
+                 or (il_180^.blk_atts.never_entered_recursively
                      and ((ord(node^.xc[11]) & 16#F0) div 16 = 1)) then begin
                 node^.xc[44] := chr(ord(node^.xc[44]) ! 4);
                 vat := (ord(node^.xc[11]) & 16#F0) div 16;

@@ -1081,7 +1081,7 @@ begin
             if (p^.xp[6]^.kind = reloc_absolute_addr_con)
                 or (p^.xp[6]^.kind = addr_con) then
               if 18 in cargs_$options.opt_on then
-                if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+                if il_180^.blk_atts.call = call_ftn then
                   skip := p^.xp[7]^.kind = common_block_name;
         if not skip then begin
           found := i;

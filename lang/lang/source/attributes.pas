@@ -704,7 +704,7 @@ begin
         end;
         if node^.kind = procedure_blk then
           return;
-        if rshft(node^.xw[188] & 16#180, 7) = 2 then
+        if node^.blk_atts.bat = extern_bat then
           mask := [0..9]
         else
           mask := [0..5, 8, 9];

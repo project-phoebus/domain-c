@@ -560,7 +560,7 @@ function assert_is_inlined_block(
     b: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if (b <> nil) and (b^.kind = inner_blk) then
-    assert_is_inlined_block := (ord(b^.xc[374]) & 4) <> 0
+    assert_is_inlined_block := b^.blk_atts.inline_block
   else
     assert_is_inlined_block := false;
 end;
@@ -1211,7 +1211,7 @@ begin
     ln_p2^.words[ln_i2] := emit_108.e110.low - blk^.xw[117];
     ln_p1^.words[ln_i1] := ln_total.low - blk^.xw[119];
     if (ord(blk^.xc[293]) <> 0) and
-        (rshft(ord(blk^.xc[377]) & 16#70, 4) <> 3) then begin
+        (blk^.blk_atts.call <> call_c) then begin
       put_ln_index(3);
       put_ln_index(ord(blk^.xc[293]) * 2);
       for i := 1 to ord(blk^.xc[293]) do begin
@@ -1272,8 +1272,7 @@ begin
     return;
   end;
   n := il_$node_ptr_t(u.x);
-  if (n^.kind = label_node) and (rshft(ord(n^.xc[72]) & 16#3E,
-                                       1) = 13) then begin
+  if (n^.kind = label_node) and (n^.lab_atts.class = lbl_proc) then begin
     c := codegen_$cell_ptr_t(n^.xp[20])^.prev;
     if c^.kind = block_start_instyp then
       if c^.blk^.xp[74] <> nil then begin
@@ -2869,7 +2868,7 @@ var
           at_block_start := true;
           scope_open := false;
           scope_closed := false;
-          linkage := rshft(ord(c^.blk^.xc[377]) & 16#70, 4);
+          linkage := c^.blk^.blk_atts.call;
           if linkage in [2, 3] then
             first_line := c^.blk^.xw[150]
           else
@@ -3069,7 +3068,7 @@ var
         coff_lines_proc_start;
       end
       else if c^.kind = block_end_instyp then begin
-        if (ord(c^.blk^.xc[374]) & 4) <> 0 then
+        if c^.blk^.blk_atts.inline_block then
           in_inline_end := true;
         coff_lines_proc_end;
       end
@@ -3116,7 +3115,7 @@ var
         if list_depth = 0 then
           advance_listing_to_line(list_line);
         if (c^.kind = block_end_instyp) and (c^.blk^.kind = inner_blk) and
-            ((ord(c^.blk^.xc[374]) & 4) <> 0) then
+            c^.blk^.blk_atts.inline_block then
           list_depth := list_depth - 1;
         error_listing_0c := false;
         if cg_top_130 <> nil then
@@ -3212,7 +3211,7 @@ var
     coff_lines_instruction;
     t := nil;
     if (c^.kind = a_instyp) and (c^.op = 12) and fardisp(c^.ads1) then begin
-      if (ord(il_180^.xc[375]) & 8) = 0 then
+      if not il_180^.blk_atts.use_db then
         cgerr_no_source(28, integer32(strtk('DB not valid ', 13)));
       c^.op := 5;
       t := get_proc_addr_con(6, il_$node_ptr_t(c^.ads1.x),
@@ -3220,7 +3219,7 @@ var
     end
     else if (c^.kind = dest1_instyp) and (c^.op = 13) and
         fardisp(c^.ads2) then begin
-      if (ord(il_180^.xc[375]) & 8) = 0 then
+      if not il_180^.blk_atts.use_db then
         cgerr_no_source(28, integer32(strtk('DB not valid ', 13)));
       c^.kind := move_instyp;
       c^.op := 2;

@@ -281,7 +281,7 @@ function inline_$is_fortran_asf(
     b: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if (language = 2) and (b^.kind = function_blk) then
-    inline_$is_fortran_asf := (ord(b^.xc[376]) & 8) <> 0
+    inline_$is_fortran_asf := b^.blk_atts.local_name_only
   else
     inline_$is_fortran_asf := false;
 end;
@@ -393,7 +393,7 @@ begin
   while (n <> nil) and not done do begin
     if ((n^.kind = function_blk) or (n^.kind = procedure_blk))
         and (n^.xw[132] = 0) and
-       ((ord(n^.xc[374]) & 8) = 0) then begin
+       (not n^.blk_atts.visible) then begin
       lev := oi_level_ptr_t(n)^.level;
       repeat
         n := n^.xp[1];
@@ -818,18 +818,18 @@ begin
     r := r^.xp[7];
   if r^.kind = pf_call then
     r := r^.xp[5];
-  if (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2)
+  if (il_180^.blk_atts.call = call_ftn)
       and (r^.kind <> lib_dsc) then begin
     for j := 1 to n - 1 do begin
       v := get_referenced_symbol(t^.xp[10 + j]);
       if v <> nil then
         if v^.kind = var_name then begin
           v^.xc[34] := chr(ord(v^.xc[34]) ! 32);
-          s^.xc[42] := chr(ord(s^.xc[42]) ! 64);
+          s^.st_flags.b42_6 := true;
         end
         else if v^.kind = fortran_symbol then begin
           v^.xc[26] := chr(ord(v^.xc[26]) ! 32);
-          s^.xc[42] := chr(ord(s^.xc[42]) ! 64);
+          s^.st_flags.b42_6 := true;
         end;
     end;
     return;
@@ -846,7 +846,7 @@ begin
           k := k + 1;
       end;
       entry_blk, function_blk, procedure_blk:
-        if rshft(ord(r^.xc[377]) & 16#70, 4) = 4 then
+        if r^.blk_atts.call = call_c_std then
           cls := 9
         else
           cls := r^.xw[197 + j];
@@ -861,12 +861,12 @@ begin
         if v^.kind = var_name then begin
           v^.xc[34] := chr(ord(v^.xc[34]) ! 32);
           if r^.kind <> lib_dsc then
-            s^.xc[42] := chr(ord(s^.xc[42]) ! 64);
+            s^.st_flags.b42_6 := true;
         end
         else if v^.kind = fortran_symbol then begin
           v^.xc[26] := chr(ord(v^.xc[26]) ! 32);
           if r^.kind <> lib_dsc then
-            s^.xc[42] := chr(ord(s^.xc[42]) ! 64);
+            s^.st_flags.b42_6 := true;
         end;
     end;
   end;
@@ -1332,7 +1332,7 @@ begin
   s^.xp[1] := stream_tail;
   stream_tail^.xp[2] := s;
   stream_tail := s;
-  stream_tail^.xc[41] := chr(ord(stream_tail^.xc[41]) ! 128);
+  stream_tail^.st_flags.inliner_generated_stmt := true;
 end;
 
 { actual_actual - the object an actual t refers to through
@@ -3345,7 +3345,7 @@ var
   info: oi_info_t;
 begin
   e^.callee^.xw[132] := e^.callee^.xw[132] - 1;
-  e^.callee^.xc[374] := chr(ord(e^.callee^.xc[374]) ! 2);
+  e^.callee^.blk_atts.inlined := true;
   cal := e^.callee;
   caller_blk := gspace(396);
   caller_blk^.kind := inner_blk;
@@ -3355,7 +3355,7 @@ begin
   caller_blk^.xw[188] := caller_blk^.xw[188] & 16#FE7F;
   caller_blk^.xc[377] := chr((ord(caller_blk^.xc[377]) & 16#8F) !
                              (ord(cal^.xc[377]) & 16#70));
-  caller_blk^.xc[378] := chr(ord(caller_blk^.xc[378]) ! 128);
+  caller_blk^.blk_atts.sb_display := true;
   caller_blk^.xp[47] := cal^.xp[47];
   caller_blk^.xp[48] := cal^.xp[48];
   oi_level_ptr_t(caller_blk)^.level := oi_level_ptr_t(cal)^.level;
@@ -3416,8 +3416,8 @@ begin
     until w = nil;
     e^.scope^.xp[5] := v;
   end;
-  if ord(e^.callee^.xc[376]) >= 128 then
-    e^.caller^.xc[376] := chr(ord(e^.caller^.xc[376]) ! 128);
+  if e^.callee^.blk_atts.need_fp_fcw then
+    e^.caller^.blk_atts.need_fp_fcw := true;
 end;
 
 { cleanup_expansion - block b's storage after expansions: the data
@@ -3479,12 +3479,12 @@ var
   found: boolean;
 begin
   cal := e^.callee;
-  if ord(cal^.xc[375]) < 128 then begin
+  if not cal^.blk_atts.inlineable then begin
     call_status := 27;
     return;
   end;
   if e^.caller^.xp[47] <> cal^.xp[47] then
-    if (ord(cal^.xc[375]) & 32) = 0 then begin
+    if not cal^.blk_atts.inline then begin
       call_status := 43;
       return;
     end;
@@ -3576,7 +3576,7 @@ begin
     call_status := 39;
     return;
   end;
-  if ((ord(cal^.xc[375]) & 32) = 0) and not cargs_$options.force_inline then
+  if (not cal^.blk_atts.inline) and not cargs_$options.force_inline then
     if (cal^.xw[136] & 16#FFFF) > 100 then begin
       call_status := 39;
       return;
@@ -3584,7 +3584,7 @@ begin
   v := cal^.xp[4];
   found := false;
   while (v <> nil) and not found do
-    if rshft(ord(e^.callee^.xc[377]) & 16#70, 4) = 2 then begin
+    if e^.callee^.blk_atts.call = call_ftn then begin
       found := (v^.xw[13] & 16#100) <> 0;
       v := v^.xp[1];
     end
@@ -3685,10 +3685,10 @@ begin
   if not ((b^.kind = procedure_blk) or (b^.kind = function_blk)
           or (b^.kind = program_blk)) then
     return;
-  if odd(ord(b^.xc[374])) then
+  if b^.blk_atts.expanded then
     return;
-  b^.xc[374] := chr(ord(b^.xc[374]) ! 1);
-  b^.xc[379] := chr(ord(b^.xc[379]) ! 2);
+  b^.blk_atts.expanded := true;
+  b^.blk_atts.visited_depth_first := true;
   expanded := false;
   ed := oi_edge_ptr_t(b^.xp[61]);
   while ed <> nil do begin
@@ -3698,9 +3698,9 @@ begin
       if ed^.callee^.kind in [program_blk..function_blk, inner_blk,
                               blockdata_blk] then begin
         c := ed^.callee;
-        if (ord(c^.xc[379]) & 2) <> 0 then begin
-          if ((ord(c^.xc[375]) & 32) <> 0) or cargs_$options.force_inline then
-            if ord(c^.xc[375]) >= 128 then
+        if c^.blk_atts.visited_depth_first then begin
+          if c^.blk_atts.inline or cargs_$options.force_inline then
+            if c^.blk_atts.inlineable then
               if x.line <> 0 then
                 cgerr(38, x.line, c^.xp[74]);
         end
@@ -3723,8 +3723,8 @@ begin
           end
           else if st <> 27 then begin
             c := ed^.callee;
-            if ((ord(c^.xc[375]) & 32) <> 0) or cargs_$options.force_inline then
-              if ord(c^.xc[375]) >= 128 then
+            if c^.blk_atts.inline or cargs_$options.force_inline then
+              if c^.blk_atts.inlineable then
                 if x.line <> 0 then
                   cgerr(st, x.line, c^.xp[74]);
           end;
@@ -3738,7 +3738,7 @@ begin
     cleanup_expansion(b);
     cleanup_hash(b, 1);
   end;
-  b^.xc[379] := chr(ord(b^.xc[379]) & 16#FD);
+  b^.blk_atts.visited_depth_first := false;
 end;
 
 { check_call_sites_and_expand - the heap set up ('opt_inline'), the
@@ -3763,14 +3763,14 @@ begin
   end;
   b := il_184;
   while b <> nil do begin
-    b^.xc[379] := chr(ord(b^.xc[379]) & 16#FD);
+    b^.blk_atts.visited_depth_first := false;
     b^.xw[145] := il_utl_$count_vars(b);
     b := b^.xp[1];
   end;
   nil_out_dispinfo(empty_info);
   b := il_184;
   while b <> nil do begin
-    if (ord(b^.xc[374]) & 8) <> 0 then
+    if b^.blk_atts.visible then
       dfs_walk(b);
     b := b^.xp[1];
   end;
@@ -3970,7 +3970,7 @@ begin
     return;
   if not ((b^.kind = function_blk) or (b^.kind = procedure_blk)) then
     return;
-  if (ord(b^.xc[375]) & 64) <> 0 then
+  if b^.blk_atts.noinline then
     return;
   if inline_$is_fortran_asf(b) then begin
     if not (25 in cargs_$options.opt_on) then
@@ -3979,7 +3979,7 @@ begin
   else begin
     if not (24 in cargs_$options.opt_on) then
       return;
-    if (ord(b^.xc[375]) & 32) = 0 then
+    if not b^.blk_atts.inline then
       if not (26 in cargs_$options.opt_on) then
         return;
   end;
@@ -3997,7 +3997,7 @@ begin
   if b^.xp[48]^.xl[5] > 24576 then
     if not (3 in cargs_$options.cpu) then
       return;
-  if ((ord(b^.xc[375]) & 32) = 0) and not cargs_$options.force_inline then
+  if (not b^.blk_atts.inline) and not cargs_$options.force_inline then
     if (b^.xw[136] & 16#FFFF) > 100 then
       return;
   n := b^.xp[1];
@@ -4085,7 +4085,7 @@ begin
       p := p^.xp[1];
   end;
   callee_status := 36;
-  if (ord(b^.xc[374]) & 32) <> 0 then
+  if b^.blk_atts.resident_proc then
     return;
   v := function_return(b);
   if v <> nil then
@@ -4123,18 +4123,18 @@ begin
     if il_d4^.kind = label_node then
       if il_d4^.xp[2]^.kind = block_entry_node then begin
         b := il_d4^.xp[2]^.xp[12];
-        language := rshft(ord(b^.xc[377]) & 16#70, 4);
+        language := b^.blk_atts.call;
         if language in [1..4] then
           if (cargs_$options.opt_on * [24..26]) <> [] then begin
             b := il_184;
             while b <> nil do begin
               status := callee_status(b);
               if status = 63 then begin
-                b^.xc[375] := chr(ord(b^.xc[375]) ! 128);
+                b^.blk_atts.inlineable := true;
                 any := true;
               end
               else if status <> 27 then
-                if ((ord(b^.xc[375]) & 32) <> 0) or cargs_$options.force_inline then
+                if b^.blk_atts.inline or cargs_$options.force_inline then
                   if b^.xw[150] <> 0 then begin
                     if inline_$is_fortran_asf(b) then
                       report := 25 in cargs_$options.opt_on
@@ -4187,26 +4187,26 @@ begin
     if (b^.kind = program_blk) or (b^.kind = function_blk)
         or (b^.kind = procedure_blk) then begin
       if ed = nil then begin
-        if (ord(b^.xc[379]) & 32) = 0 then
-          b^.xc[379] := chr(ord(b^.xc[379]) ! 16)
+        if not b^.blk_atts.calls_extern_non_lib_routine then
+          b^.blk_atts.never_entered_recursively := true
         else
-          b^.xc[379] := chr(ord(b^.xc[379]) & 16#EF);
-        b^.xc[379] := chr(ord(b^.xc[379]) & 16#F7);
+          b^.blk_atts.never_entered_recursively := false;
+        b^.blk_atts.b379_3 := false;
       end
       else
         while ed <> nil do begin
           inline_$mark_reference_params(ed^.call, ed^.stmt);
           if ed^.callee = b then
-            b^.xc[379] := chr(ord(b^.xc[379]) ! 8);
+            b^.blk_atts.b379_3 := true;
           ed := ed^.caller_next;
         end;
       if b^.kind = program_blk then begin
-        b^.xc[379] := chr(ord(b^.xc[379]) ! 16);
-        b^.xc[379] := chr(ord(b^.xc[379]) & 16#F7);
+        b^.blk_atts.never_entered_recursively := true;
+        b^.blk_atts.b379_3 := false;
       end;
     end;
     if target_properties.p_10 = 0 then
-      b^.xc[378] := chr(ord(b^.xc[378]) ! 16);
+      b^.blk_atts.must_have_own_frame := true;
     b := b^.xp[1];
   end;
   repeat
@@ -4215,38 +4215,38 @@ begin
     while b <> nil do begin
       if (b^.kind = program_blk) or (b^.kind = function_blk)
           or (b^.kind = procedure_blk) then begin
-        if (ord(b^.xc[379]) & 32) = 0 then begin
+        if not b^.blk_atts.calls_extern_non_lib_routine then begin
           all := true;
           ed := oi_edge_ptr_t(b^.xp[61]);
           while ed <> nil do begin
             if all and (ed^.callee <> nil) then
-              all := (ord(ed^.callee^.xc[379]) & 16) <> 0
+              all := ed^.callee^.blk_atts.never_entered_recursively
             else
               all := false;
             ed := ed^.caller_next;
           end;
-          if all and ((ord(b^.xc[379]) & 16) = 0) then begin
-            b^.xc[379] := chr(ord(b^.xc[379]) ! 16);
+          if all and (not b^.blk_atts.never_entered_recursively) then begin
+            b^.blk_atts.never_entered_recursively := true;
             done := false;
           end;
         end;
-        if (ord(b^.xc[374]) & 8) = 0 then begin
+        if not b^.blk_atts.visible then begin
           all := true;
           ed := oi_edge_ptr_t(b^.xp[63]);
           while ed <> nil do begin
-            all := all and ((ord(ed^.caller^.xc[379]) & 16) <> 0);
+            all := all and ed^.caller^.blk_atts.never_entered_recursively;
             ed := ed^.callee_next;
           end;
-          if all and ((ord(b^.xc[379]) & 16) = 0) then begin
-            b^.xc[379] := chr(ord(b^.xc[379]) ! 16);
+          if all and (not b^.blk_atts.never_entered_recursively) then begin
+            b^.blk_atts.never_entered_recursively := true;
             done := false;
           end;
         end;
         r := b;
       end;
       if b^.kind = inner_blk then
-        if (ord(r^.xc[379]) & 16) <> 0 then
-          b^.xc[379] := chr(ord(b^.xc[379]) ! 16);
+        if r^.blk_atts.never_entered_recursively then
+          b^.blk_atts.never_entered_recursively := true;
       b := b^.xp[1];
     end;
   until done;

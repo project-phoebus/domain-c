@@ -710,13 +710,13 @@ var
 begin
   lir_$reinitialize(rtn);
   isc_user_routines_358 := not ((13 in cargs_$options.flags_286)
-                                or ((ord(il_180^.xc[374]) & 16#10) <> 0));
+                                or il_180^.blk_atts.no_fp);
   lir_main_c8b := false;
   lm_second_entry := nil;
   blk := rtn^.node;
   lm_nconvs := 1;
   lm_convs[1] := call_conv_$ptr_t(blk^.xp[32]);
-  if ((ord(blk^.xc[377]) & 16#70) div 16 = 2)
+  if (blk^.blk_atts.call = call_ftn)
      and not ((ord(blk^.xc[294]) > 0) and (ord(blk^.xc[294]) < 128)) then begin
     ent_reg := nil;
     ent_mem := nil;
@@ -2114,9 +2114,9 @@ begin
     r2 := r2 - 2;
   until r < 0;
   blk := rtn^.node;
-  sl := ((ord(blk^.xc[378]) & 16#20) <> 0) and not conv^.b30;
+  sl := blk^.blk_atts.save_static_link_in_frame and not conv^.b30;
   nregs := nregs + ord(sl);
-  nregs := nregs + ord((ord(blk^.xc[378]) & 8) <> 0);
+  nregs := nregs + ord(blk^.blk_atts.sb_12_in_use);
   if npairs <> 0 then begin
     if nsingles = 0 then
       nregs := nregs + (nregs & 1)
@@ -2153,7 +2153,7 @@ begin
   if rtn^.f226.needs_frame then begin
     if not sl then
       rtn^.w222 := pick_register(rtn, conv^.w14);
-    if (ord(blk^.xc[378]) & 8) = 0 then
+    if not blk^.blk_atts.sb_12_in_use then
       rtn^.w224 := pick_register(rtn, conv^.w14);
     if rtn^.f226.quad_aligned or (npairs <> 0) then begin
       if rtn^.w222 >= 0 then

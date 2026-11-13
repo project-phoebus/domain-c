@@ -281,13 +281,13 @@ var
       return;
     case p^.kind of
       var_name:
-        if ((ord(il_184^.xc[377]) & 16#70) div 16 = 6) and
+        if (il_184^.blk_atts.call = 6) and
            ((p^.xw[12] & 16#200) <> 0) then
           p^.xw[38] := find_extern(true, modify_m2_native_external_name(addr(p)))
         else
           p^.xw[38] := find_extern(true, p^.xp[1]);
       entry_blk, program_blk, procedure_blk, function_blk:
-        if (ord(il_184^.xc[377]) & 16#70) div 16 = 6 then
+        if il_184^.blk_atts.call = 6 then
           p^.xw[133] := find_extern(true, modify_m2_native_external_name(addr(p)))
         else
           p^.xw[133] := find_extern(true, p^.xp[74]);
@@ -425,7 +425,7 @@ begin
     uobj_5d34 := next_sym;
     next_sym := next_sym + 2;
   end;
-  if (ord(il_184^.xc[377]) & 16#70) div 16 = 3 then begin
+  if il_184^.blk_atts.call = call_c then begin
     r := il_184;
     while r <> nil do begin
       if (r^.kind = program_blk) or (r^.kind = module_blk) then begin
@@ -439,7 +439,7 @@ begin
       r := r^.xp[1];
     end;
   end;
-  if (ord(il_184^.xc[377]) & 16#70) div 16 = 3 then begin
+  if il_184^.blk_atts.call = call_c then begin
     r := il_118;
     while r <> nil do begin
       count_global_sym(r);
@@ -458,7 +458,7 @@ begin
         n := n - 1;
       end
       else if (v^.kind = var_name) and (v^.xw[36] = 10) and
-              ((ord(il_184^.xc[377]) & 16#70) div 16 = 3) then
+              (il_184^.blk_atts.call = call_c) then
         v^.xw[38] := v^.xp[20]^.xw[16];
       v := v^.xp[4];
     end;
@@ -482,7 +482,7 @@ begin
             count_global_sym(v);
         end
         else if (ord(a^.xc[20]) = 4) and
-                ((a^.xp[2]^.xw[188] & 384) div 128 = 2) then
+                (a^.xp[2]^.blk_atts.bat = extern_bat) then
           count_global_sym(a^.xp[2]);
         a := a^.xp[1];
       end;
@@ -503,7 +503,7 @@ begin
     v := r^.xp[3];
     if ((v^.kind = program_blk) or (v^.kind = procedure_blk)
         or (v^.kind = entry_blk) or
-        (v^.kind = function_blk)) and ((v^.xw[188] & 384) div 128 = 2) then
+        (v^.kind = function_blk)) and (v^.blk_atts.bat = extern_bat) then
       count_global_sym(v)
     else if (v^.kind = var_name) and (v^.xw[36] = 3) and
             (not (var_$bss in v^.vr_attr)) then
@@ -515,7 +515,7 @@ begin
   r := il_10c;
   while r <> nil do begin
     if (r^.kind = function_blk) or (r^.kind = procedure_blk) then begin
-      if (r^.xw[188] & 384) div 128 = 2 then
+      if r^.blk_atts.bat = extern_bat then
         count_global_sym(r);
     end
     else if r^.kind = var_name then
@@ -759,13 +759,13 @@ var
                    at_lib_dsc] then begin
       case p^.kind of
         var_name:
-          if ((ord(il_184^.xc[377]) & 16#70) div 16 = 6) and
+          if (il_184^.blk_atts.call = 6) and
              ((p^.xw[12] & 16#200) <> 0) then
             r := find_extern(false, modify_m2_native_external_name(addr(p)))
           else
             r := find_extern(false, p^.xp[1]);
         entry_blk, program_blk, procedure_blk, function_blk:
-          if (ord(il_184^.xc[377]) & 16#70) div 16 = 6 then
+          if il_184^.blk_atts.call = 6 then
             r := find_extern(false, modify_m2_native_external_name(addr(p)))
           else
             r := find_extern(false, p^.xp[74]);
@@ -848,7 +848,7 @@ var
           put_name(id);
           add_underscore := false;
         end
-        else if (ord(il_184^.xc[377]) & 16#70) div 16 = 6 then
+        else if il_184^.blk_atts.call = 6 then
           put_name(modify_m2_native_external_name(addr(p)))
         else
           put_name(p^.xp[74]);
@@ -911,7 +911,7 @@ var
           map_name(id^.idnt_name, id^.idnt_len);
           put_name(id);
         end
-        else if ((ord(il_184^.xc[377]) & 16#70) div 16 = 6) and
+        else if (il_184^.blk_atts.call = 6) and
                 ((p^.xw[12] & 16#200) <> 0) then
           put_name(modify_m2_native_external_name(addr(p)))
         else
@@ -1039,7 +1039,7 @@ var
       n := idntk(id_ob, name^.idnt_name, name^.idnt_len);
       map_name(n^.idnt_name, n^.idnt_len);
     end
-    else if (ord(il_184^.xc[377]) & 16#70) div 16 = 6 then
+    else if il_184^.blk_atts.call = 6 then
       n := modify_m2_native_external_name(addr(p))
     else
       n := name;
@@ -1066,7 +1066,7 @@ var
       map^.n_scnum := p^.xp[47]^.xw[33]
     else
       map^.n_scnum := p^.xp[48]^.xw[23];
-    if (ord(p^.xc[376]) & 8) <> 0 then
+    if p^.blk_atts.local_name_only then
       map^.n_sclass := chr(3)
     else
       map^.n_sclass := chr(2);
@@ -1150,7 +1150,7 @@ begin
       put_sect_sym(uobj_symbols_sect, strtk('.symbols', 8));
     put_sect_sym(uobj_blocks_sect, strtk('.blocks', 7));
   end;
-  if (ord(il_184^.xc[377]) & 16#70) div 16 = 3 then begin
+  if il_184^.blk_atts.call = call_c then begin
     r := il_184;
     while r <> nil do begin
       if (r^.kind = program_blk) or (r^.kind = module_blk) then begin
@@ -1164,7 +1164,7 @@ begin
       r := r^.xp[1];
     end;
   end;
-  if (ord(il_184^.xc[377]) & 16#70) div 16 = 3 then begin
+  if il_184^.blk_atts.call = call_c then begin
     r := il_118;
     while r <> nil do begin
       put_global_sym(r, true);
@@ -1197,7 +1197,7 @@ begin
         undefined := form = 2;
         if not undefined and (form = 4) then
           undefined := (a^.xp[2]^.kind = fortran_symbol) or
-                       ((a^.xp[2]^.xw[188] & 384) div 128 = 2);
+                       (a^.xp[2]^.blk_atts.bat = extern_bat);
         if undefined then
           put_global_sym(a^.xp[2], false);
         a := a^.xp[1];
@@ -1219,7 +1219,7 @@ begin
     v := r^.xp[3];
     if ((v^.kind = program_blk) or (v^.kind = procedure_blk)
         or (v^.kind = entry_blk) or
-        (v^.kind = function_blk)) and ((v^.xw[188] & 384) div 128 = 2) then
+        (v^.kind = function_blk)) and (v^.blk_atts.bat = extern_bat) then
       put_global_sym(v, false)
     else if (v^.kind = var_name) and (v^.xw[36] = 3) and
             (not (var_$bss in v^.vr_attr)) then
@@ -1235,7 +1235,7 @@ begin
       for i := 1 to refs^.count do begin
         v := refs^.e[i].node;
         if (v^.kind = function_blk) or (v^.kind = procedure_blk) then begin
-          if (v^.xw[188] & 384) div 128 = 2 then
+          if v^.blk_atts.bat = extern_bat then
             put_global_sym(v, false);
         end
         else if v^.kind = var_name then

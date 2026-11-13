@@ -107,19 +107,16 @@ type
           cu_parent: isc_node_ptr_t;    { +16 }
           cu_tree: isc_node_ptr_t);     { +20 }
       { A routine (107 PROCEDURE_BLK, 108 FUNCTION_BLK): slevel (+294, a
-        byte) its nesting level, atts (+376) attributes (bit 6: il_180's
-        tested by the calls). }
+        byte) its nesting level, bk_atts (+374) its attributes
+        (il.ins.pas's il_$blk_atts_t: il_180's nlgoto tested by the
+        calls, a block's bat by isc_pass_1_main's isc_<blk>). }
       8: (bk_x4: array [4..293] of char;            { +4 }
           bk_f294: packed record        { +294 }
             slevel: -128..127;
             b295: 0..255;
             end;
-          bk_x296: array [296..375] of char;        { +296 }
-          bk_atts: packed record        { +376 }
-            b7: boolean;
-            b6: boolean;                { .6 }
-            b5_0: 0..63;
-            end);
+          bk_x296: array [296..373] of char;        { +296 }
+          bk_atts: il_$blk_atts_t);     { +374 }
       { A variable (109 VAR_NAME; translator PD2, isc_user_routines):
         p4 (+4) its initializer (local_initialize_var_name tests for a
         163 ADDR_CON there) or, for the ISC's well-known registers'

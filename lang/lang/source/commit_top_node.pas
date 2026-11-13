@@ -433,7 +433,7 @@ var
 begin
   if (t = nil) or else (t^.kind <> assign_node) then
     bug_check('IL_UTILS_$CONVERT_AOPS_TO__AOP_TO_MEM --- node^.kind is not an assign_node.%.');
-  if (ord(t^.xc[41]) & 1) <> 0 then
+  if t^.st_flags.stmt_eliminated then
     return;
   op := t^.xw[38];
   if op in [26, 31, 32, 33, 34] then

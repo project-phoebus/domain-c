@@ -577,7 +577,7 @@ begin
           if instruction_attributes[i^.opc].class = class$call then begin
             cv := sc_clob_ptr_t(integer32(i) + 44 + 12 * i^.h.nopnds)^.conv;
             if (cv = nil) or
-               (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 5) or
+               (il_180^.blk_atts.call = call_ada) or
                not cv^.uplevel_dynamic_storage_untouched then begin
               rtn^.f226.no_arg_block_read := false;
               rtn^.f226.no_arg_block_write := false;

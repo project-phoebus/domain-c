@@ -162,7 +162,7 @@ var
 begin
   if node^.cl_call = nil then begin
     if (get_slevel(node^.cl_routine) > isc_node_ptr_t(il_180)^.bk_f294.slevel)
-       and isc_node_ptr_t(il_180)^.bk_atts.b6 then
+       and isc_node_ptr_t(il_180)^.bk_atts.nlgoto then
       nonlocal := request$may_cause_non_local_return
     else
       nonlocal := 0;
@@ -290,7 +290,7 @@ begin
   else
     r_ftn_io := 0;
   if (get_slevel(node^.cl_routine) > isc_node_ptr_t(il_180)^.bk_f294.slevel)
-     and isc_node_ptr_t(il_180)^.bk_atts.b6 then
+     and isc_node_ptr_t(il_180)^.bk_atts.nlgoto then
     r_nonlocal := request$may_cause_non_local_return
   else
     r_nonlocal := 0;

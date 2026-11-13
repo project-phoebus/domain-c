@@ -101,7 +101,7 @@ begin
               if r^.uses <= 1 then
                 reg_cost_$wasteful_param_load := true
               else if r^.uses <= 4 then
-                if (ord(il_180^.xc[379]) & 8) <> 0 then
+                if il_180^.blk_atts.b379_3 then
                   reg_cost_$wasteful_param_load := true;
       end;
 end;
@@ -278,7 +278,7 @@ begin
                 if test_stmt(rr, 2 * s) then begin
                   rr^.uses := rr^.uses + st^.vars^[v]^.count;
                   uses := uses + st^.vars^[v]^.count;
-                  if not st^.hdr.last then
+                  if not st^.hdr.ends_basic_block then
                     if not test_stmt(rr, 2 * s + 1) then
                       if assigned then
                         loads := loads + 1;
@@ -315,7 +315,7 @@ begin
             if touched then begin
               if il_180^.kind = function_blk then
                 if rr^.node = il_180^.xp[24] then begin
-                  lang := rshft(ord(il_180^.xc[377]) & 16#70, 4);
+                  lang := il_180^.blk_atts.call;
                   if lang = 3 then begin
                     x := opt_4009c[opt_region];
                     x^.vars^[v]^.flags := x^.vars^[v]^.flags & ~1;
@@ -463,7 +463,7 @@ begin
       reg_cost_$compute_max_loop_depth(rr, v);
     if v <> 0 then
       if only_calls then
-        if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 3 then
+        if il_180^.blk_atts.call <> call_c then
           rr^.flags := rr^.flags + [0];
     if rr^.node^.kind = fortran_symbol then
       if var_$nooptimize in rr^.node^.fs_attr then
@@ -530,7 +530,7 @@ begin
           rr^.flags := rr^.flags + [0];
       if (rr^.node^.kind = dindex_node) or (rr^.node^.kind = disp_node) or
          (rr^.node^.kind = ptr_node) then begin
-        lang := rshft(ord(il_180^.xc[377]) & 16#70, 4);
+        lang := il_180^.blk_atts.call;
         if has_skip or not (18 in cargs_$options.opt_on) or (lang <> 2) or
            (rr^.node^.kind = dindex_node) then
           rr^.flags := rr^.flags + [2]
@@ -550,17 +550,18 @@ begin
                ((t^.xp[6]^.xp[6]^.kind = cse_parent_ob) or
                 (t^.xp[6]^.xp[6]^.kind = tree_node)) then
               rr^.flags := rr^.flags + [2]
-            else if (cls in [1, 2, 3]) and not opt_4009c[rr^.first]^.hdr.b3 then
+            else if (cls in [1, 2, 3]) and
+                    not opt_4009c[rr^.first]^.hdr.loophascalls then
               rr^.flags := rr^.flags + [3]
             else if (cargs_$options.cpu * [2, 4, 8, 9, 10] <> []) and
-                    not opt_4009c[rr^.first]^.hdr.b3 then
+                    not opt_4009c[rr^.first]^.hdr.loophascalls then
               rr^.flags := rr^.flags + [4]
             else
               rr^.flags := rr^.flags + [2];
           end
           else if (t^.kind = ptr_node) and (t2^.kind = common_block_name) and
                   (t2^.xp[3]^.xl[8] = 0) and (t2^.xp[3]^.xl[7] = 0) and
-                  not opt_4009c[rr^.first]^.hdr.b3 then begin
+                  not opt_4009c[rr^.first]^.hdr.loophascalls then begin
             t3 := t2^.xp[3];
             if (t^.xp[6]^.kind = cse_parent_ob)
                 or (t^.xp[6]^.kind = tree_node) then

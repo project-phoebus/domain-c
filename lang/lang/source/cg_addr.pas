@@ -2125,7 +2125,7 @@ begin
     program_blk, module_blk:
       a.f1 := 7;
     procedure_blk, function_blk, entry_blk, inner_blk:
-      if rshft(n^.xw[188] & 16#180, 7) = 3 then begin
+      if n^.blk_atts.bat = param_bat then begin
         a.f1 := 2;
         a.f2 := 14;
         a.y := n^.xl[27];
@@ -2708,7 +2708,7 @@ var
   end;
 
 begin
-  if (cg_pass = 1) and odd(rshft(ord(lab^.xc[72]), 6)) and (lab^.xp[17] <> nil) then
+  if (cg_pass = 1) and lab^.lab_atts.fwrd and (lab^.xp[17] <> nil) then
     cgerr(15, cg_line, lab);
   if lab^.xp[16] = nil then begin
     if runbackend_08 = nil then begin

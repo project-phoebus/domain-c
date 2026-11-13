@@ -583,7 +583,7 @@ var
     a := il_184;
     a := a^.xp[1];
     while a <> nil do begin
-      if (a^.xw[188] & 16#180) = 0 then begin
+      if a^.blk_atts.bat = local_bat then begin
         p := a^.xp[45];
         while p <> nil do begin
           line.length := 0;
@@ -641,7 +641,7 @@ begin
   b := il_184;
   b := b^.xp[1];
   while b <> nil do begin
-    if (b^.xw[188] & 16#180) = 0 then begin
+    if b^.blk_atts.bat = local_bat then begin
       n := n + 1;
       b^.xw[144] := n;
       print_block(b);

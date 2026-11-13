@@ -750,7 +750,7 @@ var
       if opt_var_types^[v].base^.kind = real_type then begin
         if cargs_$options.cpu * [2, 4, 8..10] = [] then
           return;
-        if (ord(il_180^.xc[376]) & 16#80) = 0 then
+        if not il_180^.blk_atts.need_fp_fcw then
           return;
       end;
       if (opt_4009c[opt_region]^.vars^[v]^.flags & 8) <> 0 then
@@ -785,7 +785,7 @@ var
       if (cls <> 5) and (sz in [4, 5]) then begin
         if cargs_$options.cpu * [2, 4, 8..10] = [] then
           return;
-        if (ord(il_180^.xc[376]) & 16#80) = 0 then
+        if not il_180^.blk_atts.need_fp_fcw then
           return;
       end;
       if cls = 7 then
@@ -809,14 +809,14 @@ var
       ch := e^.du;
       while ch <> nil do begin
         st := ch^.stmt;
-        if st^.hdr.b4 then begin
+        if st^.hdr.contains_fp_expr then begin
           defined_var := true;
           return;
         end;
         if (st^.kind = use_def_ob) or (st^.kind = assign_node) then begin
           if st^.kind = assign_node then
             if st^.asg_rhs <> e^.node then
-              if st^.hdr.b4 then begin
+              if st^.hdr.contains_fp_expr then begin
                 defined_var := true;
                 return;
               end;
@@ -1029,7 +1029,7 @@ begin
                              'final edition', 13);
             insert_reg_stmts(reg_ranges, reg_nranges);
             editregassign(reg_ranges, reg_nranges);
-            if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then
+            if il_180^.blk_atts.call <> call_ftn then
               alloc_comp_vars(reg_ranges, reg_nranges)
             else
               alloc_ftn_vars(reg_ranges, reg_nranges);

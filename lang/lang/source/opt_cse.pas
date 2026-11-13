@@ -179,7 +179,7 @@ begin
   if g_opt_cse_ptr_t(s^.cses) <> nil then
     p^.p_next := g_opt_cse_ptr_t(s^.cses);
   s^.cses := il_$node_ptr_t(p);
-  s^.hdr.no_prune := true;
+  s^.hdr.contains_cse := true;
   make_cse_parent := il_$node_ptr_t(p);
 end;
 
@@ -1036,7 +1036,7 @@ begin
               stop := true;
               goto 20;
             end;
-            if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+            if il_180^.blk_atts.call = call_ftn then
               if (xs^.asg_lhs^.kind = disp_node)
                   or (xs^.asg_lhs^.kind = fortran_symbol) then
                 if (opnds[m]^.kind = disp_node)

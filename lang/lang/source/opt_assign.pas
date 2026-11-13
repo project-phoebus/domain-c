@@ -390,9 +390,9 @@ var
       return;
     if t^.asg_op in [strcat_aop..strncpy_aop] then
       return;
-    if t^.hdr.no_prune or t^.hdr.deleted then
+    if t^.hdr.contains_cse or t^.hdr.stmt_eliminated then
       return;
-    if (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2) and
+    if (il_180^.blk_atts.call = call_ftn) and
        (18 in cargs_$options.opt_on) then
       return;
     lhs := t^.asg_lhs;
@@ -404,7 +404,7 @@ var
         return;
     if (getphase(t^.asg_rhs) + getphase(t^.asg_lhs)) * [phase_vol, phase_volexpr] <> [] then
       return;
-    if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+    if il_180^.blk_atts.call = call_ftn then
       if (t^.asg_rhs^.kind = cs_node)
           or (t^.asg_rhs^.kind = char_string_ob) then
         return;
@@ -486,7 +486,7 @@ var
           else
             return;
         ptr_node: begin
-          f := rshft(ord(il_180^.xc[377]) & 16#70, 4);
+          f := il_180^.blk_atts.call;
           if (a^.xp[6] <> b^.xp[6]) or (a^.xp[7] <> b^.xp[7]) or
              (f in [3, 4]) then
             return;
@@ -564,7 +564,7 @@ begin
       if at_offset(prev^.asg_lhs, size_a, t^.asg_lhs, tsize, diff) = 2 then begin
         merge_assignments(prev, t, diff);
         adjust_uc(t^.asg_lhs, -1);
-        t^.hdr.deleted := true;
+        t^.hdr.stmt_eliminated := true;
         t^.prev^.next := t^.next;
         t^.next^.prev := t^.prev;
         t := t^.next;
@@ -708,7 +708,7 @@ begin
         q := q^.next;
       adjust_uc(q^.asg_rhs, -1);
       adjust_uc(q^.asg_lhs, -1);
-      q^.hdr.deleted := true;
+      q^.hdr.stmt_eliminated := true;
       q := q^.next;
     end;
     if t^.prev^.kind = use_def_ob then

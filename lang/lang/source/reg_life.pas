@@ -182,7 +182,7 @@ begin
           (v in opt_not_killed^[sb^.num])) then
         find_paths(r, v, sb^.num, s);
     end;
-  if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+  if il_180^.blk_atts.call = call_ftn then
     if blk^.nsucc = 0 then
       if blk^.last_stmt <> nil then
         if blk^.last_stmt^.kind = nlbranch_node then
@@ -233,7 +233,7 @@ begin
   while k <> p2 do begin
     if odd(k) then begin
       st := opt_4009c[s];
-      if st^.hdr.last then begin
+      if st^.hdr.ends_basic_block then begin
         if st^.kind = blk_end_node then
           if st^.x48^.kind <> inner_blk then
             exit;
@@ -1115,7 +1115,7 @@ begin
     ls := l^.last_stmt;
     if ls^.kind = cbranch_node then
       if ls^.br_target^.kind = label_node then
-        if rshft(ord(ls^.br_target^.xc[72]) & 16#3E, 1) = 8 then
+        if ls^.br_target^.lab_atts.class = lbl_for_start then
           if ls^.next <> nil then
             if ls^.next^.kind = eval_node then
               if ls^.next^.eval_count = 0 then
@@ -1135,9 +1135,9 @@ begin
     ls := l^.last_stmt;
     if ls^.kind = cbranch_node then
       if ls^.br_target^.kind = label_node then
-        if rshft(ord(ls^.br_target^.xc[72]) & 16#3E, 1) = 2 then
+        if ls^.br_target^.lab_atts.class = lbl_while_start then
           if ls^.next^.kind = label_node then
-            if rshft(ord(il_$node_ptr_t(ls^.next)^.xc[72]) & 16#3E, 1) = 4 then
+            if il_$node_ptr_t(ls^.next)^.lab_atts.class = lbl_while_exit then
               if ls^.next = g_opt_blocks_ptr_t(il_11c)^[l^.num + 1]^.first_stmt then
                 if not assert_block_on_list(rr, l^.num + 1) then begin
                   add_block(rr, l^.num + 1);
