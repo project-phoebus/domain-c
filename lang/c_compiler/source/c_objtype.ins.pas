@@ -825,7 +825,9 @@ type
           br_unused_52: integer32;      { +52 }
           br_cond: il_$node_ptr_t;      { +56 }
           br_sense: boolean);           { +60 }
-      { 144 (84 bytes). }
+      { 144 (84 bytes): +72 .. +77 take il.ins.pas's label variant's
+        names (lab_atts, abnormal, nlgoto, assigned_goto_target,
+        well_behaved). }
       4: (lab_num: integer;             { +48: il_146's count for its
                                           kind }
           lab_w50: integer;             { +50 }
@@ -834,18 +836,16 @@ type
           lab_unused_60: integer32;     { +60 }
           lab_64: integer32;            { +64 }
           lab_unused_68: integer32;     { +68 }
-          lab_bits: packed record       { +72 }
-            placed: boolean;            { .7 }
-            pending: boolean;           { .6: cleared once a branch
-                                          reaches it }
-            lkind: il_$label_class_t;   { .5..1: add_ldfn's kind }
-            b0: boolean;
-            b73: 0..255;
-          end;
-          lab_74: boolean;              { +74: body_e (a label symbol's
+          lab_atts: il_$label_atts_t;   { +72: def (.7), fwrd (.6:
+                                          cleared once a branch reaches
+                                          it), class (.5..1: add_ldfn's
+                                          kind) }
+          abnormal: boolean;            { +74: body_e (a label symbol's
                                           used) }
-          lab_75: boolean;              { +75 }
-          lab_unused_76: integer32;     { +76 }
+          nlgoto: boolean;              { +75 }
+          assigned_goto_target: boolean;  { +76 }
+          well_behaved: boolean;        { +77 }
+          lab_unused_78: integer;       { +78 }
           lab_80: integer32);           { +80 }
       { 148, 149: the block. }
       5: (blk: il_$node_ptr_t);         { +48 }

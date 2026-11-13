@@ -264,8 +264,19 @@ def strip_comments(text):
     return ''.join(out)
 
 
+# the type names the inserts declare as 0..65535 (read_headings: mrh's
+# mrh_$chunk_t, for one): an unsigned word, class u16, a word on the
+# stack (iscg_p2lift.param_size) that the generated text passes and
+# assigns as it is; for a heading that takes one (docs/questions.md 342,
+# evaluation_order_function's legal, a candidate)
+U16_TYPES = set()
+U16_TYPE = re.compile(r'^\s*([\w$]+)\s*=\s*0\s*\.\.\s*65535\s*;', re.M)
+
+
 def type_class(t):
     t = t.strip().lower()
+    if t in U16_TYPES:
+        return 'u16'
     for k, v in PASCAL_TYPE.items():
         if v == t and k not in ('u16', 'u8'):
             return k
@@ -293,11 +304,15 @@ def read_headings(include_text):
     None, 'val_param': bool, 'variable': bool}} from the inserts the
     INCLUDES text opens (the tree's)."""
     out = {}
+    texts = []
     for path in re.findall(r"%include '([^']+)'", include_text):
         p = os.path.join(ROOT, path.lstrip('/'))
         if not os.path.exists(p):
             continue
-        text = strip_comments(open(p, encoding='latin-1').read())
+        texts.append(strip_comments(open(p, encoding='latin-1').read()))
+    for text in texts:
+        U16_TYPES.update(n.lower() for n in U16_TYPE.findall(text))
+    for text in texts:
         for m in HEADING.finditer(text):
             name = m.group(2).lower()
             params = []

@@ -1340,3 +1340,65 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
     Fixed in dpc 9e4f837 (stable, 2026-11-12): a `[byte]' packed
     record's bit 7 is `tst.b'; list_tree's five tests of it now read
     `tst.b (An)' as the image does.
+50. **`x := x or e' for a boolean in memory: or'd in place.**  il_utils'
+    il_utl_$count_vars ors two bits of a variable's +44 into a label's
+    nlgoto and abnormal: `btst #0,(44,A2); sne D0; or.b D0,(75,A0)'
+    (cc.m68k 0x07DC84, again for +74 at 0x07DC90), the right operand
+    computed and or'd into the byte in memory, which is `q^.nlgoto :=
+    q^.nlgoto or (...)' (docs/questions.md 331).  dpc loads the
+    boolean first, ors in a register and stores it back: `move.b
+    (75,A0),D0; ...; sne D1; or.b D1,D0; move.b D0,(75,A0)'.  It
+    compiles (no rewrite); the code differs.  (dpc does the same for
+    an integer field, `q^.w := q^.w + p^.w': `move.l (A0),D0; add.l
+    (A1),D0; move.l D0,(A0)'; the image has 202 `add.w/add.l Dn,(d,An)'
+    in cc.m68k, not looked at one by one.)  Reproducer:
+
+       module g50;
+       type
+         n_t = record
+           w: integer32;
+           b0, b1: boolean;
+           c: char;
+         end;
+         p_t = ^n_t;
+       procedure f(p, q: p_t); options(val_param);
+       begin
+         q^.b1 := q^.b1 or (p^.w <> 0);
+       end;
+       procedure h(q: p_t; x: boolean); options(val_param);
+       begin
+         q^.b1 := q^.b1 or x;
+       end;
+
+    Rev 8.89 (by count_vars): f `tst.l (A0); sne D0; or.b D0,(5,A1)';
+    dpc: `move.b (5,A0),D0; ...; tst.l (A0); sne D1; ...; or.b D1,D0;
+    move.b D0,(5,A0)', h `move.b (5,A0),D0; or.b (12,A6),D0; move.b
+    D0,(5,A0)'.
+51. **A one-bit `&' test of a 0..65535 word: widened first.**  dpc
+    widens an unsigned word to a longword before testing one of its
+    bits with an integer mask, `clr.l D1; move.w D0,D1; btst #1,D1',
+    and says so (best effort: "an unsigned word with an integer mask:
+    `clr.l; move.w; btst` is not seen in compiled code", beads
+    domain-pascal-kqa2, domain-pascal-9js).  A site for those beads:
+    evaluation_order_function (cc.a88k 0x212450) zero-extends its
+    legal for number_of_one_bits (`clr.l D5; move.w D4,D5', 0x2124CC,
+    the widening of a 0..65535) but tests its bits in the word, `btst
+    #1,D4' and `btst #0,D4; ...; btst #1,D4' (0x2124A6, 0x2124B4,
+    0x2124BA), so if legal was a 0..65535, as the widening says, Rev
+    8.89 tests such a word's bit without widening it (docs/questions.md
+    342).  Retyping legal moved the call's argument to the image's
+    form and the three tests away from it, so it is not retyped.  It
+    compiles (no rewrite); the code differs.  Reproducer:
+
+       module g51;
+       type
+         w_t = 0..65535;
+       var cnt: integer;
+       procedure f(legal: w_t); options(val_param);
+       begin
+         if (legal & 2) <> 0 then cnt := 2;
+       end;
+
+    Rev 8.89 (by evaluation_order_function): `move.w (8,A6),D0; btst
+    #1,D0'; dpc: `move.w (8,A6),D0; clr.l D1; move.w D0,D1; btst
+    #1,D1' (an integer legal gives the image's form).

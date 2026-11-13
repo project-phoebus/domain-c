@@ -3238,6 +3238,20 @@ answered by this policy and needs no reply.
    overlaying it and bat being assigned from integers.  call_conv's
    view is an il_$blk_atts_t (blk_atts; the conventions call_pas ..
    call_ada by name).  Code identical.
+   **RN7's two remaining deviations done (translator RN9,
+   2026-11-12):** il_utils' il_utl_$count_vars ors the bits into the
+   label's booleans, `q^.nlgoto := q^.nlgoto or ((ord(v^.xc[44]) & 1) <>
+   0)' (and abnormal), the image's `btst; sne D0; or.b D0,(75,A0)'
+   (0x07DC84, 0x07DC90) where setting them true gave `beq; st': dpc
+   gives `move.b (75,A0),D0; ...; sne D1; or.b D1,D0; move.b
+   D0,(75,A0)', not or'ing in place (docs/dpc-gaps.md 50); the longer
+   arm makes one earlier arm's branch to the end `bra.w' (the image's
+   `bra.s').  opt_main's make_new_postorder_node_list tests the unused
+   label with `and then' (kind, not abnormal, class lbl_user, +50 zero):
+   dpc now branches at each test as the image does (`cmpi.w #144;
+   bne.w; tst.b (74,A0); bmi.w; moveq #62; and.b (72,A0); lsr.w #1;
+   cmpi.w #11; bne.w; tst.w (50,A0); bne.w', 0x0E05CE..0x0E0600), the
+   same instructions, where the whole `and' gave `seq; not.b; and.b'.
 332. Translator RN5: **the assembly comparison** (every unit compiled as
    the gate compiles it, main eec0632 against the branch, dpc b9d77de
    stable: 207 of 277 objects identical, the other 70 all in units
@@ -3391,6 +3405,19 @@ answered by this policy and needs no reply.
    'inner_blk ' and that node (print_object_ptr).  No other unit reads
    it; a routine block's +292..+295 are bytes (c_blk_t's b292, nparms,
    level, b295).  Left as xp[73]: what is it?
+   **Done (translator RN9, 2026-11-12):** the field is at +296, not
+   +292: the image reads `tst.l (296,A2)', `movea.l (296,A2),A1', `move.l
+   (296,A2),-(SP)' (cc.m68k 0x07FC0E, 0x07FC14, 0x07FC3E; cc.a88k
+   0x0815EE, 0x0815F4, 0x08161E), where xp[73] (xp[1] at +4) gave dpc's
+   (0x124,A0): a translation slip, the header comment's +296 being
+   right.  +296 is the block's identifier: list_tree's own block view
+   names it bk_name (print_routine_block prints a routine's name from it,
+   bk_name^.xc[18], xw[8]), as the front end's c_blk_t has the name
+   (c_name_t's id) at +296 and c_syntax makes an inner block with
+   def_blk_skeleton(inner_blk, nm, ...).  print_tree_ref now reads
+   t^.bk_name; dpc's three accesses moved to (0x128,A0), the image's
+   offset, and nothing else changed.  No dump string names it beyond
+   'inner_blk ' and 'ib' (the reading through nil is kept).
 338. Translator RN7: **the C front end's label view.**  c_objtype.ins.pas
    c_top_t's label variant names +72 lab_bits (placed .7, pending .6,
    lkind .5..1, which add_ldfn sets from il_c6, now an
@@ -3398,6 +3425,13 @@ answered by this policy and needs no reply.
    used) and lab_75: il.ins.pas's lab_atts (def, fwrd, class) and
    abnormal, nlgoto.  Rename them to il.ins.pas's names (or make lab_bits
    an il_$label_atts_t)?
+   **Done (translator RN9, 2026-11-12):** c_top_t's label variant takes
+   il.ins.pas's names: lab_atts, an il_$label_atts_t at +72 (def, fwrd,
+   class: c_stmt_sem's add_ldfn sets def false, fwrd true and class
+   il_c6, and clears fwrd where a branch reaches the label), abnormal
+   (+74, body_e's), nlgoto (+75), assigned_goto_target (+76) and
+   well_behaved (+77; lab_unused_78 the word after).  dpc's code is
+   unchanged in all 41 objects of the 21 units that open c_objtype.ins.pas.
 339. Translator RN8 (2026-11-12), after 333: **kfold's F_MATH fold
    left numeric.**  kfold_$general folds an F_MATH tree by desc.w6 with
    bodies that disagree with print_math's names for four functions: 12
@@ -3445,6 +3479,29 @@ answered by this policy and needs no reply.
    integer and the enumerations, a longword otherwise), so a 0..65535
    parameter needs a class of its own there first, and re-extraction
    checked.  Worth doing?
+   **The lifter's class done; legal not retyped (translator RN9,
+   2026-11-12).**  The generator's heading reader
+   (iscg_p2lang.read_headings) collects the type names the inserts
+   declare as 0..65535 and type_class makes them class u16, which
+   iscg_p2lift.param_size counts as a word and the generated text
+   passes and assigns as it is (a parameter's type must be a type
+   name: dpc refuses `legal: 0..65535', ref 5.1, so a retype needs a
+   named type).  The only such name the ISC's inserts declare now is
+   mrh's mrh_$chunk_t (mrh_$initialize, mrh_$alloc, which the
+   generated text calls only in its fixed routines); iscg_gen.py
+   --check passes and re-extraction into a copy of the rules
+   reproduces them.  Tried: an isc_types.ins.pas `isc_eval_orders_t =
+   0..65535' for legal, number_of_one_bits(legal) (generator check and
+   re-extraction still clean, the 60 other ISC objects identical).
+   dpc's evaluation_order_function then passed legal as the image does
+   (`clr.l D3; move.w D2,D3; move.l D3,-(SP)', 0x2124CC, where `legal &
+   16#FFFF' gives `ext.l; andi.l #0xFFFF') but widened it before each
+   of the three bit tests (`clr.l; move.w; btst #1', where the image
+   and the integer legal test the word: `btst #1,D4', 0x2124A6,
+   0x2124B4, 0x2124BA): docs/dpc-gaps.md 51 (dpc's beads
+   domain-pascal-kqa2, -9js).  Something else changed, so the heading
+   keeps integer; retype it (with that named type) once dpc tests a
+   0..65535's bit in the word.
 343. Translator RN8, after 331: **the generated ISC's tree class is
    tr_rlen.**  iscg_pass1.node_ref writes a node's word at +24 as
    isc_node_t's tr_rlen (the 122 reads and writes of xw[12] in

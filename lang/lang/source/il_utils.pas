@@ -201,12 +201,14 @@ end;
   +74; 4..6 count +74 unless it is -3 and set it -3; 7 clears +16 unless
   it is -3; 8, 9 clear +16; 11 or's +44 bits 0 and 1 into the booleans
   +75 and +74 of the node at +48 (unless it is nil or il_178, `cmpa.l
-  0x169DE8'); 12 sets +25 bit 5 and clears +16; 13..15 count +16 unless
-  it is -3 and set it -3.
+  0x169DE8'), the label's nlgoto and abnormal (`btst #0,(44,A2); sne
+  D0; or.b D0,(75,A0)', 0x07DC84: `x := x or (...)', which dpc compiles
+  `move.b (75,A0),D0; ...; sne D1; or.b D1,D0; move.b D0,(75,A0)',
+  docs/dpc-gaps.md 50); 12 sets +25 bit 5 and clears +16; 13..15 count
+  +16 unless it is -3 and set it -3.
 
   Not known from the original:
-  - the locals' names; the or into the booleans is written as setting
-    them to true (the image or's 0 or 16#FF, `sne'). }
+  - the locals' names. }
 
 function il_utl_$count_vars(
     blk: il_$node_ptr_t): integer;
@@ -241,10 +243,8 @@ begin
         11: begin
           q := v^.xp[12];
           if (q <> il_178) and (q <> nil) then begin
-            if (ord(v^.xc[44]) & 1) <> 0 then
-              q^.nlgoto := true;
-            if (ord(v^.xc[44]) & 2) <> 0 then
-              q^.abnormal := true;
+            q^.nlgoto := q^.nlgoto or ((ord(v^.xc[44]) & 1) <> 0);
+            q^.abnormal := q^.abnormal or ((ord(v^.xc[44]) & 2) <> 0);
           end;
         end;
         12: begin

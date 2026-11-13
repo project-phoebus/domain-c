@@ -257,7 +257,7 @@ end;
   (unless forced, inside a switch body (csyn_1e8^.active), or -DBA):
   the branch reversed.  Otherwise a label placed right after another
   joins it (il_c8 its chain); with forced (or in a switch body) a
-  label node (144, 84 bytes) is made at once (lkind kind, its number
+  label node (144, 84 bytes) is made at once (class kind, its number
   from il_146[kind]), else it stays pending (il_c0, def_def_label).
   Then the branches waiting on the chain (141, 142, 150) are pointed at
   the label, and
@@ -325,17 +325,17 @@ begin
       n := gspace(84);
       n^.kind := label_node;
       with c_top_ptr_t(n)^ do begin
-        lab_bits.placed := false;
-        lab_bits.pending := true;
-        lab_bits.lkind := il_c6;
+        lab_atts.def := false;
+        lab_atts.fwrd := true;
+        lab_atts.class := il_c6;
         lab_num := il_146[ord(il_c6)];
         il_146[ord(il_c6)] := lab_num + 1;
         lab_addr := -1;
         lab_64 := 0;
         lab_80 := 0;
         lab_w50 := 0;
-        lab_74 := false;
-        lab_75 := false;
+        abnormal := false;
+        nlgoto := false;
       end;
       link_top(n);
     end
@@ -400,7 +400,7 @@ begin
         c_top_ptr_t(p)^.br_target := lab;
         p := q;
       end;
-      c_top_ptr_t(lab)^.lab_bits.pending := false;
+      c_top_ptr_t(lab)^.lab_atts.fwrd := false;
     end
     else if lab <> il_178 then begin
       p := lab;
@@ -417,7 +417,7 @@ begin
   n^.kind := branch_node;
   c_top_ptr_t(n)^.br_target := lab;
   if lab^.kind = label_node then
-    c_top_ptr_t(lab)^.lab_bits.pending := false
+    c_top_ptr_t(lab)^.lab_atts.fwrd := false
   else
     lab := n;
   link_top(n);
@@ -509,7 +509,7 @@ begin
         adjust_uc(n, 1);
         delay_$shrink_top_level_node(n);
         if lab^.kind = label_node then
-          c_top_ptr_t(lab)^.lab_bits.pending := false
+          c_top_ptr_t(lab)^.lab_atts.fwrd := false
         else
           lab := n;
         link_top(n);
@@ -1273,7 +1273,7 @@ begin
     if l^.kind <> label_node then
       error1(97, p^.line, p^.name)
     else if p^.lab_bits.used then
-      c_top_ptr_t(l)^.lab_74 := true;
+      c_top_ptr_t(l)^.abnormal := true;
     p := c_sym_ptr_t(p^.blk_next);
   end;
   with c_blk_ptr_t(il_180)^ do begin

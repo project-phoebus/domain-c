@@ -4357,9 +4357,11 @@ var
 
     0x0E04B0, 0x820 bytes: nested; the parent's frame in A2 (the
     state listed at g_opt); the successor count in D2 and the
-    predecessor count in D5; the label's word at +41..+42 rewritten
-    as one field (`andi.w #-3; ori.w #256'); its own frame word -36 a
-    temporary of the copy loop. }
+    predecessor count in D5; the unused label's test by branches (`and
+    then': `cmpi.w #144,(2,A0); bne.w; tst.b (74,A0); bmi.w', the
+    class, `tst.w (50,A0); bne.w', 0x0E05CE..0x0E0600); the label's
+    word at +41..+42 rewritten as one field (`andi.w #-3; ori.w
+    #256'); its own frame word -36 a temporary of the copy loop. }
 
   procedure make_new_postorder_node_list(
       na: integer32;
@@ -4402,8 +4404,8 @@ var
                 else if p^.x48^.kind = inner_blk then
                   npred := 1;
           if (cur^.kind = label_node)
-              and not il_$node_ptr_t(cur)^.abnormal and
-             (il_$node_ptr_t(cur)^.lab_atts.class = lbl_user) and
+              and then not il_$node_ptr_t(cur)^.abnormal and then
+             (il_$node_ptr_t(cur)^.lab_atts.class = lbl_user) and then
              (il_$node_ptr_t(cur)^.xw[25] = 0) then begin
             t := cur;
             tmp := cur^.prev;

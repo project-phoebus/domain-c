@@ -1660,6 +1660,9 @@ WORD_CLASSES = ('i16', 'u16', 'u8', 'bool', 'char')
 
 
 def param_size(h, p):
+    """The bytes a parameter takes on the stack: 4 by reference, else 2
+    for a word class (integer, 0..65535 -- type_class's u16 --, a byte or
+    boolean or char, an enumeration) and 4 for the rest."""
     name, mode, cls, univ = p
     if mode != 'value' or not h['val_param']:
         return 4
