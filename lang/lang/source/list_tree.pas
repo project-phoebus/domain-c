@@ -1386,7 +1386,7 @@ begin
           illegal_top: print_string('ILLEGAL', 7);
           otherwise begin
             print_string('<ORD(TOP)=', 10);
-            print_integer(ord(t^.op), 2, true);
+            print_integer(lt_word_t(t^.op), 2, true);  { zero-extended: `clr.l' (0x080572) }
             print_char('>');
           end;
         end;
@@ -2321,7 +2321,7 @@ begin
         illegal_aop: print_string('ILLEGAL', 7);
         otherwise begin
           print_string('ORD(AOP)=', 9);
-          print_integer(ord(t^.st_aop), 4, false);
+          print_integer(lt_word_t(t^.st_aop), 4, false);  { `clr.l' (0x083F02) }
         end;
       end;
       print_string(' ASSIGN', 7);

@@ -2492,8 +2492,9 @@ var
   l: g_opt_block_ptr_t;
   rhs: g_opt_tree_ptr_t;
   val, nv: il_$node_ptr_t;
-  reg, lastreg, cr, k, j: integer;
+  reg, lastreg, cr: integer;
   op, op2: il_$aop_t;
+  k, j: integer;
   single, done, ok, found, f, a: boolean;
 
   { not_on_ud_chain - no definition on v's use-def chain at region
