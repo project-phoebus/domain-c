@@ -5,54 +5,26 @@
 lang/common/source/diag.pas	s/^(\s*)line_prefix := prefix;/$1line_prefix.length := prefix.length; { gap 1 }/
 # gap 4: write and writeln (dropped, for the check)
 lang/c_compiler/source/c_macro_utl.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
-# gap 6: a real passed to an in double parameter (pass an unset double local, for the check)
-lang/common/source/token.pas	s/^    r: real\): token_\$t;$/    r: real): token_\$t;\nvar\n  r_gap6: double; { gap 6 }/
-lang/common/source/token.pas	s/rlcontk\(r\);/rlcontk(r_gap6); { gap 6 }/
-# gap 7: real arithmetic (drop the reciprocal, store 0 for the conversions)
-lang/lang/source/token.pas	s/^(\s*)r := 1\.0 \/ t\^\.real_value;/${1}{ gap 7 }/
-lang/lang/source/token.pas	s/floating_token\(r, t\^\.kind\)/floating_token(t^.real_value, t^.kind)/
-lang/lang/source/token.pas	s/^(\s*)s([ab])\.r := ([ab]);/$1s$2.i := 0; { gap 7 }/
 # gap 10: ordering arrays of char (compare the lengths instead)
 lang/lang/source/sortidntk.pas	s/\^\.idnt_name ([<>]) pivot\^\.idnt_name/^.idnt_len $1 pivot^.idnt_len { gap 10 }/g
 lang/bind/source/objio.pas	s/^(\s*)writeln\(.*\);\s*$/$1; { gap 4 }\n/
 # gap 4 (prfpkg): write and writeln (dropped, for the check)
 lang/lang/source/prfpkg.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
-# gap 7 (prfpkg): real arithmetic (the hundredths printed as 0)
-lang/lang/source/prfpkg.pas	s/^(\s*)seconds := d;/${1}{ gap 7 }/
-lang/lang/source/prfpkg.pas	s/prtint\(s, trunc\(\(seconds - trunc\(seconds\)\) \* 100\.0\), 2, true\)/prtint(s, 0, 2, true) { gap 7 }/
-lang/lang/source/prfpkg.pas	s/^(\s*)if last_mrh = mrh_bytes then begin$/${1}if last_mrh = mrh_bytes then begin cpu_seconds := 0; { gap 4 }/
 # gap 4 (celpkg): writeln (dropped, for the check)
 lang/lang/source/celpkg.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
 # gap 4 (gen_exception): writeln (dropped, for the check)
 lang/lang/source/gen_exception.pas	s/^(\s*)writeln\b.*;\s*$/$1; { gap 4 }\n/
-# gap 7 (c_lex_pp): real constants in a comparison (the single-range flag tested instead, for the check)
-lang/c_compiler/source/c_lex_pp.pas	s/^(\s*)if \(lex_token\^\.real_value > 3\.402823466e38\) or$/$1if not lex_token^.real_single_range { gap 7 }/
-lang/c_compiler/source/c_lex_pp.pas	s/^\s*\(lex_token\^\.real_value < -3\.402823466e38\) then$/ then/
 # gap 14: a non-local goto (an assignment instead, for the check)
 lang/c_compiler/source/c_lex_pp.pas	s/goto 99;  \{ non-local \}/ch := chr(0); { gap 14 }/
 # gap 16: ptoc and ctop (dropped, for the check)
 lang/c_compiler/source/c_main.pas	s/^(\s*)(ptoc|ctop)\((\w+)\);/${1}{ gap 16 }/
 # gap 1 (c_main): whole varying assignment (the length only, for the check)
 lang/c_compiler/source/c_main.pas	s/^(\s*)arg := tmp;/${1}arg.length := tmp.length; { gap 1 }/
-# gap 19 (unix_objmod): a function returning real (the single taken as a longword, for the check)
-lang/lang/source/unix_objmod.pas	s/^(\s*)line: integer\): real; options\(val_param\); extern;/$1line: integer): integer32; options(val_param); extern; { gap 19 }/
-lang/lang/source/unix_objmod.pas	s/^(\s*)single: real;/$1single: integer32; { gap 19 }/
-# gap 7 (c_expr_syn): a real constant passed (the integer increment pushed instead, for the check)
-lang/c_compiler/source/c_expr_syn.pas	s/^(\s*)push_fcon\(1\.0\)$/${1}push_con(incr) { gap 7 }/
 # gap 20: a set expression passed by address (the set variable passed instead, for the check)
 lang/c_compiler/source/c_expr_syn.pas	s/^(\s*)check\(102, follow \+ \[ctk_lparen\]\);/${1}check(102, follow); { gap 20 }/
 lang/c_compiler/source/c_expr_syn.pas	s/^(\s*)eval_expr\(s \+ \[ctk_rparen\]\);/${1}eval_expr(s); { gap 20 }/
-# gap 7 (c_stmt_sem): real constants passed (an integer constant node instead, for the check)
-lang/c_compiler/source/c_stmt_sem.pas	s/(dp|rl)contk\(([01])\.0\)/smcontk(81, $2) { gap 7 }/
 # gap 21 (debug_sym_dmp): nested routines passed as routine parameters (nil, for the check) [still needed with dpc 78f475b]
 lang/lang/source/debug_sym_dmp.pas	s/spos_\$apply_over_(marked_)?source_files\((add_file_table_entry|write_string_for_file_table_entry|add_unit_table_entry|add_file_entry)\);/spos_\$apply_over_$1source_files(nil); { gap 21 }/
-# gap 7 (c_expr_sem): real conversions (dropped, for the check)
-lang/c_compiler/source/c_expr_sem.pas	s/^(\s*)r := node\^\.(int|real)_value;/${1}{ gap 7 }/
-lang/c_compiler/source/c_expr_sem.pas	s/^(\s*)d := r;/${1}{ gap 6 }/
-# gap 7 (c_expr_sem): real constants in comparisons (the stack depth tested instead, for the check)
-lang/c_compiler/source/c_expr_sem.pas	s/if \(r > -100\.0\) and \(r < 100\.0\) then/if cexs_23bc > 2 then { gap 7 }/
-lang/c_compiler/source/c_expr_sem.pas	s/^(\s*)r := value;/${1}{ gap 7 }/
-lang/c_compiler/source/c_expr_sem.pas	s/push_fcon\(0\.0\)/push_con(0) { gap 7 }/
 # gap 14 (c_expr_sem): non-local gotos (an assignment instead, for the check)
 lang/c_compiler/source/c_expr_sem.pas	s/goto 99;  \{ non-local \}/cexs_23be := false; { gap 14 }/
 lang/c_compiler/source/c_expr_sem.pas	s/((?:\w+(?:\[[^\]]*\])?\.)*\w+)\^\.kind in \[77\.\.87, 101, 200\]/((($1^.kind >= 77) and ($1^.kind <= 87)) or ($1^.kind = 101) or ($1^.kind = 200)) { gap 8 }/g
@@ -60,86 +32,19 @@ lang/c_compiler/source/c_expr_sem.pas	s/((?:\w+(?:\[[^\]]*\])?\.)*\w+)\^\.kind i
 lang/c_compiler/source/c_expr_sem.pas	s/\bop in \[18, 27, 28, 32, 37\.\.42, 51\.\.61, 65\]/((op = 18) or (op = 27) or (op = 28) or (op = 32) or ((op >= 37) and (op <= 42)) or ((op >= 51) and (op <= 61)) or (op = 65)) { gap 8 }/g
 lang/c_compiler/source/c_expr_sem.pas	s/\bop in \[18, 27, 28, 44, 65\]/((op = 18) or (op = 27) or (op = 28) or (op = 44) or (op = 65)) { gap 8 }/g
 # subtraction on left out of the check by a conditional variable that is not set)
-# gap 19 (kfold): a function returning real (the single taken as a longword, for the check)
-lang/lang/source/kfold.pas	s/^(\s*)line: integer\): real; options\(val_param\);/$1line: integer): integer32; options(val_param); { gap 19 }/
-lang/lang/source/kfold.pas	s/^(\s*)(res|r): real;/$1$2: integer32; { gap 19 }/
-lang/lang/source/kfold.pas	s/^(\s*)res := 0\.0;/$1res := 0; { gap 19 }/
-# gap 7 (kfold): real conversions and constants (dropped or zero, for the check)
-lang/lang/source/kfold.pas	s/^(\s*)r := n\^\.real_value;/${1}{ gap 7 }/
-lang/lang/source/kfold.pas	s/^(\s*)v1 := trunc\(x\^\.real_value\)$/$1v1 := 0 { gap 7 }/
-lang/lang/source/kfold.pas	s/^(\s*)else if x\^\.real_value <= 2147483647\.0 then/$1else if v1 = 0 then { gap 7 }/
-lang/lang/source/kfold.pas	s/^(\s*)v1 := trunc\(x\^\.real_value - 2147483647\.0 - 1\.0\) - 16#80000000;/$1v1 := 0; { gap 7 }/
-lang/lang/source/kfold.pas	s/^(\s*)if sgn then r := v1 else if v1 < 0 then r := v1 \+ 4294967296\.0 else r := v1;/${1}{ gap 7 }/
-lang/lang/source/kfold.pas	s/^(\s*)a := r;/${1}{ gap 7 }/
-lang/lang/source/kfold.pas	s/^(\s*)dd := t\^\.opnd\[1\]\^\.dcx_(re|im);/${1}{ gap 7 }/
-# gap 7 and 25 (kfold): the real operators and the others after them left out of the check (a conditional variable not set)
-lang/lang/source/kfold.pas	s/^(  \{ The real operators\. \})$/%var gap7k;\n%if gap7k %then { gap 7 }\n$1/
-lang/lang/source/kfold.pas	s/^(  \{ The result, normalized to the node's class\. \})$/%endif { gap 7 }\n$1/
 # gap 4 (outbin): write and writeln (dropped, for the check)
 lang/lang/source/outbin.pas	s/^(\s*)write(ln)?\b.*;\s*$/${1}dbcod_on := dbcod_on; { gap 4 }\n/
-# gap 19 (outbin): a function returning real (the single taken as a longword, for the check)
-lang/lang/source/outbin.pas	s/^(\s*)line: integer\): real; options\(val_param\); extern;/$1line: integer): integer32; options(val_param); extern; { gap 19 }/
-lang/lang/source/outbin.pas	s/\bv\.r := dbl_to_real/v.l := dbl_to_real { gap 19 }/
 # gap 26 (outbin): substr (the length compared instead, for the check)
 lang/lang/source/outbin.pas	s/:= substr\(fpx_chars_ptr_t\(addr\(s\^\.str_chars\)\)\^, 1, s\^\.str_len\) = 'CommandCIR';/:= s^.str_len = 10; { gap 26 }/
 # gap 20 (c_syntax): set expressions passed to in parameters (the first operand passed, for the check)
 lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s{([(]|,\s+)(\w+)((?:\s*\+\s*(?:\w+|\[[^\]]*\]))+)(?=\s*[,)])}{$1$2}g
-# gap 7 (c_syntax): a real compared with 0.0 (its high longword compared with 0, for the check)
-lang/c_compiler/source/c_syntax.pas	s/cx\.value\^\.real_value <> 0\.0/cx.value^.bits[1] <> 0 { gap 7 }/
 # gap 27 (c_syntax): set constants passed to in parameters (a module variable gap25_s passed, for the check)
 lang/c_compiler/source/c_syntax.pas	BEGIN { undef $/ } s#\n(  legal_specs: )#\n  gap25_s: c_tokset_t;\n$1#; s#(\(|, +)\[[^\]\[]*\](?=\s*[,)])#${1}gap25_s#g
-# gap 7 (c_syntax): an integer converted to a double, a real truncated (dropped; the high longword taken, for the check)
-lang/c_compiler/source/c_syntax.pas	s/^(\s*)(?:tmp := n\^\.int_value|r := n\^\.real_value|r := tmp)(;?)$/${1}kind := kind${2} { gap 7 }/
-lang/c_compiler/source/c_syntax.pas	s/^(\s*)v := trunc\(orig\^\.real_value\);/${1}v := orig^.bits[1]; { gap 7 }/
 # gap 4 (add_node): writeln (dropped, for the check)
 lang/lang/source/add_node.pas	s/^(\s*)writeln\('Compiler internal warning.*,$/$1; { gap 4 }/
 lang/lang/source/add_node.pas	s/^\s*an_kind_t\(.*\), '\) is not top-level\.'\);$//
-# gap 7 (add_node): real conversions and constants (dropped or zero, for the check)
-lang/lang/source/add_node.pas	s/^(\s*)v1 := trunc\(node\^\.real_value\)$/$1v1 := 0/
-lang/lang/source/add_node.pas	s/^(\s*)else if node\^\.real_value <= 2147483647\.0 then/$1else if v1 = 0 then { gap 7 }/
-lang/lang/source/add_node.pas	s/^(\s*)v1 := trunc\(node\^\.real_value - 2147483647\.0 - 1\.0\) - 16#80000000;/$1v1 := 0; { gap 7 }/
-lang/lang/source/add_node.pas	s/^(\s*)if d\.flags\.signed then rr := v1 else if v1 < 0 then rr := v1 \+ 4294967296\.0 else rr := v1;/${1}{ gap 7 }/
-lang/lang/source/add_node.pas	s/^(\s*)a := rr;$/${1}{ gap 7 }/
-# gap 7 (add_node): the real operators left out of the check (a conditional variable not set)
-lang/lang/source/add_node.pas	s/^(    \{ The real constants\. \})$/    v1 := 0; { gap 7 }\n%var gap7a;\n%if gap7a %then { gap 7 }\n$1/
-lang/lang/source/add_node.pas	s/^(    \{ The end of the real operators\. \})$/%endif { gap 7 }\n$1/
-# gap 7 (cg_misc): a real constant in a comparison (the double tested by its longwords, for the check)
-lang/lang/source/cg_misc.pas	s/n\^\.real_value <> 0\.0/(n^.bits[1] <> 0) or (n^.bits[2] <> 0) { gap 7 }/
-# gap 7 (opt_general): real arithmetic in is_scale_candidate (the bits tested instead, for the check)
-lang/lang/source/opt_general.pas	s/^(\s*)a := abs\(x\.d\);/${1}{ gap 7 }/
-lang/lang/source/opt_general.pas	s/if a >= 5\.0e-307 then/if x.hi >= 0 then { gap 7 }/
-lang/lang/source/opt_general.pas	s/if a <= 4\.0e307 then/if x.lo >= 0 then { gap 7 }/
-lang/lang/source/opt_general.pas	s/^(\s*)r := 1\.0 \/ x\.d;/${1}{ gap 7 }/
-lang/lang/source/opt_general.pas	s/^(\s*)x\.d := r;/${1}x.lo := 0; { gap 7 }/
-lang/lang/source/opt_general.pas	s/^(\s*)x\.d := c\^\.real_value;/${1}x.hi := c^.bits[1]; x.lo := c^.bits[2]; { gap 7 }/
-# gap 19 (opt_assign): a function returning a single real (the line stored instead, for the check)
-lang/lang/source/opt_assign.pas	s/^(\s*)rv\.r := dbl_to_real\(x, p\^\.line\);/$1rv.l := p^.line; { gap 19 }/
 # gap 29 (list_tree): in on a 32-byte set with a longword element (the range test only, for the check)
 lang/lang/source/list_tree.pas	s/\(i in t\^\.st_used\^\)/(i <= 255) { gap 29 }/
-# gap 7 (cg_addr): a real constant in a comparison (the double tested by its longwords, for the check)
-lang/lang/source/cg_addr.pas	s/(\w+)\^\.real_value = 0\.0/(($1^.bits[1] = 0) and ($1^.bits[2] = 0)) { gap 7 }/g
-# gap 7 (opt_loop): walkt's real constants (nil and the high longword tested, for the check)
-lang/lang/source/opt_loop.pas	s/walkt\(rlcontk\((0\.5|1\.0)\)\);/walkt(nil); { gap 7 }/
-lang/lang/source/opt_loop.pas	s/if t\^\.real_value = 0\.0 then/if t^.xl[3] = 0 then { gap 7 }/
-# gap 7 (opt_vector): a real constant compared with 0.0 (the high longword tested, for the check)
-lang/lang/source/opt_vector.pas	s/if r\^\.real_value = 0\.0 then/if r^.xl[3] = 0 then { gap 7 }/
-# gap 7 (cg_assign): real arithmetic (count * 2 <= body * 1.5 compared in integers, for the check)
-lang/lang/source/cg_assign.pas	s/if count \* 2 <= \(cg_asn_\$block_move_body_size\(count\) \* 2 \+ 8\) \* 1\.5 then/if count * 4 <= (cg_asn_\$block_move_body_size(count) * 2 + 8) * 3 then { gap 7 }/
-# gap 7 (cg_tree): real constants and arithmetic (adjust_before_round's rounding of a constant left out, the constants 0.0 and 0.5 passed as the node's value, for the check)
-lang/lang/source/cg_tree.pas	s/^(\s+)if d >= 0\.0 then$/$1if n^.kind = 89 then { gap 7 }/
-lang/lang/source/cg_tree.pas	s/^(\s+)d := d [+-] 0\.5(;?)$/$1n := n$2 { gap 7 }/
-lang/lang/source/cg_tree.pas	s/rlcontk\(0\.[05]\)/rlcontk(n^.real_value) { gap 7 }/g
-lang/lang/source/cg_tree.pas	s/^(\s+)d := n\^\.real_value;$/${1}{ gap 7 }/
-# gap 7 (cg_tree): generate's scales (the reciprocal left out, the sign tested by the high longword, for the check)
-lang/lang/source/cg_tree.pas	s/^(\s+)dv\.d := 1\.0 \/ dv\.d;$/${1}{ gap 7 }/
-lang/lang/source/cg_tree.pas	s/^(\s+)dv\.d := n\^\.opnd\[2\]\^\.real_value;$/${1}dv.hi := n^.opnd[2]^.xl[3]; dv.lo := n^.opnd[2]^.xl[4]; { gap 7 }/
-lang/lang/source/cg_tree.pas	s/(rlcontk|dpcontk)\(1\.0 \/ dv\.d\)/$1(dv.d) { gap 7 }/
-lang/lang/source/cg_tree.pas	s/^(\s+)if dv\.d < 0\.0 then$/$1if dv.hi < 0 then { gap 7 }/
-# gap 25 (cg_tree): generate exceeds the virtual registers: its floating operators' arms left out of the check (a conditional variable not set)
-lang/lang/source/cg_tree.pas	s/^(    \{ Floating addition \(34\))/%var gap25g;\n%if gap25g %then { gap 25 }\n$1/
-lang/lang/source/cg_tree.pas	s/^(    \{ The library's routines 14 and 15 \(43)/%endif { gap 25 }\n$1/
-# gap 7 (cg_tree): f_compare_proc's comparisons of a constant with 0.0 (its first longword compared with 0, for the check)
-lang/lang/source/cg_tree.pas	s/\(n\^\.opnd\[2\]\^\.real_value = 0\.0\)/(n^.opnd[2]^.xl[3] = 0) { gap 7 }/
 # gap 4 (reg_alloc): dump_lifetimes' writeln (dropped, for the check)
 lang/lang/source/reg_alloc.pas	s/^(\s*)writeln;\s*$/$1; { gap 4 }/
 # gap 21 (reg_color_68k): nested routines passed to walkconflicts (a routine pointer, nil, for the check) [still needed with dpc 78f475b]
@@ -148,38 +53,18 @@ lang/lang/source/reg_color_68k.pas	s/^(\s*)p\(reg_ranges\^\[c\^\.num\]\);/$1p^(r
 lang/lang/source/reg_color_68k.pas	s/walkconflicts\((checkout|targetfunctionresult|computecommonregs|setcommonregs), /walkconflicts(nil, /
 # gap 26 (final): substr (the length compared instead, for the check)
 lang/lang/source/final.pas	s/^(\s*)substr\(fn_chars_ptr_t\(addr\(n\^\.xc\[12\]\)\)\^, 1, 7\) = 'fp040_\$'/$1n^.xw[4] = 7 { gap 26 }/
-# gap 7 (emit, translator HH): a real constant compared with 0.0 (the double tested by its longwords, for the check)
-lang/lang/source/emit.pas	s/n\^\.real_value = 0\.0/(n^.bits[1] = 0) and (n^.bits[2] = 0) { gap 7 }/
-# gap 7 (fpa, translator HH): the real constants -1.0 and 0.0 passed to rlcontk and dpcontk (an integer constant node instead, for the check)
-lang/lang/source/fpa.pas	s/address\((rl|dp)contk\((-1|0)\.0\), 0, k\)/address(smcontk(81, $2), 0, k) { gap 7 }/
 # gap 4 (opt_main): realloc_postorder_node_list's writeln (dropped, for the check)
 lang/lang/source/opt_main.pas	s/^(\s*)writeln\(.*\);\s*$/$1; { gap 4 }\n/
-# gap 7 (opt_main): realloc_postorder_node_list's trunc(old * 1.05) (old + old div 20, for the check)
-lang/lang/source/opt_main.pas	s/trunc\(old \* 1\.05\)/old + old div 20 { gap 7 }/
 # gap 29 (opt_main): recompute_usedef_for_uplevel_addressing's and reviseuses' guarded tests of a word in a 32-byte set (the range test only, for the check)
 lang/lang/source/opt_main.pas	s/if (n|v) in s\^\.vset\^ then( begin)?$/if $1 <= 255 then$2 { gap 29 }/
-# gap 7 (opt_main): convert_exponentiation's real exponent (trunc, compared back; the longword at +12 and no test, for the check)
-lang/lang/source/opt_main.pas	s/n := trunc\(e\^\.real_value\);/n := e^.xl[3]; { gap 7 }/
-lang/lang/source/opt_main.pas	s/if n <> e\^\.real_value then/if n <> n then { gap 7 }/
 # gap 29 (opt_main): make_new_postorder_node_list's guarded test of a word in a 32-byte set (the range test only, for the check)
 lang/lang/source/opt_main.pas	s/\(k in e\^\.vset\^\)/(k <= 255) { gap 29 }/
-# gap 7 (final): floatop's real constant, trunc and real compare (the longwords used, for the check)
-lang/lang/source/final.pas	s/^(\s*)if \(n\^\.real_value = 0\.0\) or$/$1if (n^.bits[1] = 0) or { gap 7 }/
-lang/lang/source/final.pas	s/^(\s*)iv := trunc\(v\.d\);$/$1iv := v.l[1]; { gap 7 }/
-lang/lang/source/final.pas	s/^(\s*)if iv <> v\.d then$/$1if iv <> v.l[1] then { gap 7 }/
-lang/lang/source/final.pas	s/^(\s*)v\.d := n\^\.real_value;$/$1v.l[1] := n^.bits[1]; v.l[2] := n^.bits[2]; { gap 7 }/
 # gap 31 (final): an 8-byte set expression compared with [] (the low longword masked, for the check)
 lang/lang/source/final.pas	s/\(v\.s \* \[0\.\.28\] = \[\]\)/((v.l[2] \& 16#1FFFFFFF) = 0) { gap 31 }/
-# gap 7 (lst): real := double (the single literal left unset, for the check)
-lang2/source/be_com/lst.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
-# gap 7 (bin): real := double (the single literal left unset, for the check)
-lang2/source/be_com/bin.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
 # gap 32 (backend.ins.pas, translator PB2): an initialized overlay section named as its variable (the sections the .init files define renamed, for the check)
 lang2/source/be_com/backend.ins.pas	s/^var \((instruction_mnemonic|instruction_mnemonic_length|instruction_assembly|operand_string|operand_string_length|of_string|of_string_length|instruction_attributes|operand_forms_mask|amse_premod_immed_low|amse_premod_immed_high|amse_postmod_immed_low|amse_postmod_immed_high)\)/var (${1}_s) { gap 32 }/
 # gap 4 (dmp): write of an IL node kind (dropped, for the check)
 lang2/source/be_com/dmp.pas	s/^(\s*)write\(.*\);\s*$/${1}dmp_3c0 := dmp_3c0; { gap 4 }\n/
-# gap 7 (lir_utils, translator PA4): a real constant passed to dpcontk (nil, for the check)
-lang2/source/be_com/lir_utils.pas	s/dpcontk\(0\.0\)/nil { gap 7 }/
 # gap 21 (lir_utils, translator PA4): fix_store_through_lrs's nested new_db_lts passed to flesh_out_new_load_or_store (a module-level stand-in, for the check) [still needed with dpc ca0dd28]
 lang2/source/be_com/lir_utils.pas	s/^procedure lir_utils_\$fix_store_through_lrs\($/function lir_utils_gap21: lts_ptr_t; begin lir_utils_gap21 := nil; end; { gap 21 }\nprocedure lir_utils_\$fix_store_through_lrs(/
 lang2/source/be_com/lir_utils.pas	s/^(\s*)new_db_lts\);/$1lir_utils_gap21); { gap 21 }/
@@ -188,12 +73,6 @@ lang2/source/be_com/lir.pvt.pas	s/^var \(spill_instr_forms\)/var (spill_instr_fo
 # gap 25 (lir_utils, translator PA4): fix_store_through_lrs exceeds dpc's virtual registers (the stores after a written store-through register left out of the check)
 lang2/source/be_com/lir_utils.pas	s/^(        \{ The stores after the instruction\. \})$/%var gap25a;\n%if gap25a %then { gap 25 }\n$1/
 lang2/source/be_com/lir_utils.pas	s/^(        \{ The stores done\. \})$/%endif { gap 25 }\n$1/
-# gap 7 (ra_utils, translator PB5): real constants stored as spill costs (their bits), the FPP's round(x * 0.9 / 0.75 / 0.6) as integer arithmetic (for the check)
-lang2/source/be_com/ra_utils.pas	s/cost\.r := 0\.0;/cost.i := 0; { gap 7 }/
-lang2/source/be_com/ra_utils.pas	s/cost\.r := 1\.0;/cost.i := 16#3F800000; { gap 7 }/
-lang2/source/be_com/ra_utils.pas	s/round\((\w+) \* 0\.9\)/($1 * 9) div 10 { gap 7 }/
-lang2/source/be_com/ra_utils.pas	s/round\((\w+) \* 0\.75\)/($1 * 3) div 4 { gap 7 }/
-lang2/source/be_com/ra_utils.pas	s/round\((\w+) \* 0\.6\)/($1 * 3) div 5 { gap 7 }/
 # gap 21 (ra_utils, translator PB5): add_spill_code's nested new_db_lts passed to flesh_out_new_load_or_store (a module-level stand-in, for the check) [still needed with dpc ca0dd28]
 lang2/source/be_com/ra_utils.pas	s/^procedure ra_utils_\$add_spill_code;$/function ra_utils_gap21: lts_ptr_t; begin ra_utils_gap21 := nil; end; { gap 21 }\nprocedure ra_utils_\$add_spill_code;/
 lang2/source/be_com/ra_utils.pas	s/dbref, tmp88, new_db_lts\);/dbref, tmp88, ra_utils_gap21); { gap 21 }/
@@ -203,18 +82,8 @@ lang2/source/be_com/ra_utils.pas	s/^(            \{ A new live range for the rel
 # gap 28 (ra_utils, translator PB5): add_spill_code's values outlive dpc's registers: the store's later readers' linking left out of the check (a conditional variable not set)
 lang2/source/be_com/ra_utils.pas	s/^(          \{ The later readers linked to the stored register\. \})$/%var gap28w;\n%if gap28w %then { gap 28 }\n$1/
 lang2/source/be_com/ra_utils.pas	s/^(          \{ A TST made of the writing move reads no register\. \})$/%endif { gap 28 }\n$1/
-# gap 7 (oli): the real constant 0.0 passed (an integer constant node instead, for the check)
-lang2/source/be_com/oli.pas	s/(dp|rl)contk\(0\.0\)/smcontk(81, 0) { gap 7 }/
-# gap 7 (ra, translator PB6): the spill costs' real arithmetic (single reals: each assignment stores 0, each comparison compares the bits, for the check)
-lang2/source/be_com/ra.pas	s/^(\s*)([\w^.\[\]]+)\.r := [^;{]*(;?)(\s*\{.*\})?$/$1$2.i := 0$3 { gap 7 }/
-lang2/source/be_com/ra.pas	s/(\w[\w^.\[\]]*)\.r (<|>|<=|>=|=|<>) (\w[\w^.\[\]]*)\.r\b/$1.i $2 $3.i/g
-lang2/source/be_com/ra.pas	s/(\w[\w^.\[\]]*)\.r (<|>|<=|>=|=|<>) 1\.0\b/$1.i $2 16#3F800000 { gap 7 }/g
 # gap 4 (konst, translator PB6): writeln (dropped, for the check)
 lang2/source/be_com/konst.pas	s/^(\s*)writeln\(.*\);\s*$/${1}; { gap 4 }/
-# gap 7 (konst, translator PB6): a double literal converted to a single (left unset, for the check)
-lang2/source/be_com/konst.pas	s/^(\s*)r := lit\^\.d;/${1}{ gap 7 }/
-# gap 7 (ra, translator PB6): a single-real comparison with a constant (the bits compared, for the check)
-lang2/source/be_com/ra.pas	s/\.r < 1\.0e-4/.i < 16#38D1B717 { gap 7 }/
 # gap 4 (isc_call_handling): write and writeln (dropped, for the check)
 lang2/source/isc/isc_call_handling.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\n/
 # gap 4 (isc_cse_handling): write and writeln (dropped, for the check)
@@ -223,11 +92,6 @@ lang2/source/isc/isc_cse_handling.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1; { gap 4 }\
 lang2/source/isc/isc_to_lir.pas	s/\bwrite(ln)?(\(.*\))?;\s*$/; { gap 4 }\n/
 # gap 4 (isc_main): write, writeln, read and readln (a self-assignment of the trace flag instead, for the check)
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_main.pas	s/\b(write|read)(ln)?(\(.*\))?;\s*$/isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-# gap 6 (isc_user_routines): a single real assigned to a double (dropped, for the check)
-lang2/source/isc/isc_user_routines.pas	s/^  d := v;(\s*\{ fpp_\$eslv: dpc gap 6 \})$/  ;$1/
-# gap 7 (isc_user_routines): a real constant in a comparison (the double tested by its longwords, for the check)
-lang2/source/isc/isc_user_routines.pas	s/il_\$node_ptr_t\(node\)\^\.real_value = 0\.0;/(il_\$node_ptr_t(node)^.bits[1] = 0) and (il_\$node_ptr_t(node)^.bits[2] = 0); { gap 7 }/
-lang2/source/isc/isc_user_routines.pas	s/^  t := d;(\s*\{ a double copied: dpc gap 7 \})$/  ;$1/
 # gap 4 (isc_user_routines): write and writeln (a self-assignment of the trace flag instead, for the check: a trace block may hold nothing else)
 lang2/source/isc/isc_user_routines.pas	s/\bwrite(ln)?(\(.*\))?;\s*$/isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
 # gap 4 (lir, translator PA7): lir_$build_operand's dump of a physical register's attributes (writeln to output: dropped, for the check)
@@ -267,12 +131,5 @@ moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pa
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_23_aggregate_assignments.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_24_operator_assignments.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_25_compares.pas	s/^(\s*)write(ln)?\b.*;\s*$/$1isc_user_routines_354 := isc_user_routines_354; { gap 4 }\n/
-# gap 7 (the generated pass-2 modules, translator GC): a real constant (address_mode_for_double_value's double, 8 bytes after the action in the image) passed to an in double parameter; the check drops the call
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_03_single_float.pas	s/address_mode_for_(single|double)_value\(-?[0-9][0-9.eE+-]*\)/nil { gap 7 }/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_04_integer_arithmetic.pas	s/address_mode_for_(single|double)_value\(-?[0-9][0-9.eE+-]*\)/nil { gap 7 }/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_06_double_float.pas	s/address_mode_for_(single|double)_value\(-?[0-9][0-9.eE+-]*\)/nil { gap 7 }/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_10_extends.pas	s/address_mode_for_(single|double)_value\(-?[0-9][0-9.eE+-]*\)/nil { gap 7 }/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_2_24_operator_assignments.pas	s/address_mode_for_(single|double)_value\(-?[0-9][0-9.eE+-]*\)/nil { gap 7 }/
-# gap 7 (isc_pass_1_07, translator GF): rule 9's real comparison with 0.0 (the high longword compared with 0) and rule 10's real := double (dropped: the bits cleared), for the check
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_07_constants.pas	s/(il_\$node_ptr_t\([\w.^]+\)\^)\.real_value = 0\.0/$1.bits[1] = 0 { gap 7 }/
-moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_pass_1_07_constants.pas	s/^(\s*)(\w+)\.value := il_\$node_ptr_t\([\w.^]+\)\^\.real_value;/$1$2.bits := 0; { gap 7 }/
+# gap 4 (prfpkg): an if whose then part only writes (an assignment, so the then part is not empty once the writes are dropped)
+lang/lang/source/prfpkg.pas	s/^(\s*)if last_mrh = mrh_bytes then begin$/${1}if last_mrh = mrh_bytes then begin cpu_seconds := 0; { gap 4 }/
