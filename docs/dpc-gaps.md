@@ -1336,3 +1336,7 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
        end;
 
     Rev 8.89: `tst.b (A0); bpl'; dpc: `tst.w (A0); bpl'.
+
+    Fixed in dpc 9e4f837 (stable, 2026-11-12): a `[byte]' packed
+    record's bit 7 is `tst.b'; list_tree's five tests of it now read
+    `tst.b (An)' as the image does.
