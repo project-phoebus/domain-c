@@ -1037,7 +1037,7 @@ operator isc_namelist_constant_ob il namelist_constant_ob children 0 image 16#0E
   endif;
 end;
 operator isc_nlbranch_node il nlbranch_node children 1 image 16#0E4F6E;
-  if (il_kind_function(il.p48) = 117);
+  if (il_kind_function(il.p48) = label_name);
     trace rewrite;
     let n2 <- rewrite_$routine_call(il, 0, inh);
     child solutions n2 copy_all

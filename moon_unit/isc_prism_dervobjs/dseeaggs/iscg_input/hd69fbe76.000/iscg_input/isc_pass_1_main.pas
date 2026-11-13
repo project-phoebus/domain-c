@@ -4919,7 +4919,7 @@ begin
   no_solutions := false;
   il_kind := il_nlbranch_node;
   number_of_children := 1;
-  if (il_kind_function(isc_node_ptr_t(il)^.xp[12]) = 117) then begin
+  if (il_kind_function(isc_node_ptr_t(il)^.xp[12]) = label_name) then begin
     if isc_user_routines_356 or isc_user_routines_354 then begin
       write('*********************');
       writeln;

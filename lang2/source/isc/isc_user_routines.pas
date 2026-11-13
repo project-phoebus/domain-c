@@ -2977,11 +2977,12 @@ end;
 { il_kind_function - node's kind (what the pattern matcher dispatches
   on).
 
-  0x2144CE, 0x1C bytes: node 8; a word in D0. }
+  0x2144CE, 0x1C bytes: node 8; a word in D0 (an il_$kind_t: pass 1
+  compares it with label_name, `cmpi.w #117', 0x0E4FBE). }
 
 function il_kind_function;
 begin
-  il_kind_function := ord(node^.kind);
+  il_kind_function := node^.kind;
 end;
 
 { make_expression_temporary - a new temporary variable (kind 109, from

@@ -1194,13 +1194,15 @@ def format_operator(d, lifted, positions, unions, ils, kinds, op_name):
     return '\n'.join(L)
 
 
-_KIND_REL = re.compile(r'(\.w2) (=|<>|<|>|<=|>=) (\d+)\b')
+# a node's kind: its word at +2 (`.w2'), or what il_kind_function returns
+# (isc_routine_externs.ins.pas: an il_$kind_t, docs/questions.md 335 (a))
+_KIND_REL = re.compile(r'(\.w2|\bil_kind_function\([^()]*\)) (=|<>|<|>|<=|>=) (\d+)\b')
 
 
 def kind_names(text, value=False):
-    """A lifted node's kind (its word at +2, `.w2') by name (il.ins.pas's
-    il_$kind_t): in the relations of a condition's text, or the whole
-    text when value (a stored kind)."""
+    """A lifted node's kind (its word at +2, `.w2', or il_kind_function's
+    result) by name (il.ins.pas's il_$kind_t): in the relations of a
+    condition's text, or the whole text when value (a stored kind)."""
     global _IL_KIND_NAMES
     if _IL_KIND_NAMES is None:
         import os
