@@ -2854,6 +2854,11 @@ answered by this policy and needs no reply.
    that read solution_t without the ISC (sym, lir_utils' callers) do
    not open.  Move solution$t (and il$t?) into backend.ins.pas so both
    views share the types, or keep the LIR's view numeric?
+   (Lead, 2026-11-12: keep the LIR's view numeric.  Each unit's
+   include list is the original's, taken from the binary, and the
+   units that read solution_t without the ISC's inserts could not have
+   seen solution$t either; moving the type would invent an insert
+   layout the binaries do not show.)
 321. Translator RN2: **signed or unsigned words in the solution.**
    isc_solution_t's bytes .. n_bytes_to_back_up, evaluation_order and
    which_transform are integer, ds_solution_t's 0..65535 (dump_solution
