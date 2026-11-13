@@ -2708,8 +2708,8 @@ begin
       goto 98;
     end;
     20: begin                           { displacement_stack_frame }
-      if (il_$node_ptr_t(sc_int_slot^.opnds[k].link)^.kind <> 109) or
-         (il_$node_ptr_t(i^.opnds[k].link)^.kind <> 109) or
+      if (il_$node_ptr_t(sc_int_slot^.opnds[k].link)^.kind <> var_name) or
+         (il_$node_ptr_t(i^.opnds[k].link)^.kind <> var_name) or
          (i^.opnds[k].link <> sc_int_slot^.opnds[k].link) then
         goto 99;
       d := i^.opnds[k].value - sc_int_slot^.opnds[k].value;

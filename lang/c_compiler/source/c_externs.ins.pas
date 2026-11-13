@@ -79,7 +79,7 @@ procedure get; extern;
   0x056230); c_expr_syn's primary_expr and c_syntax's array_dim_init
   pass a node's kind and the node. }
 procedure clex_$unget(
-    kind: integer;
+    kind: il_$kind_t;
     tok: il_$node_ptr_t); options(val_param); extern;
 
 { CLEX_$CATSTRING - the string of s1's characters (less its final NUL)
@@ -317,7 +317,7 @@ function def_arr(
   c_expr_syn, c_stmt_sem and c_syntax pass the name and the declaration
   by address. }
 procedure def_blk_skeleton(
-    kind: integer;
+    kind: il_$kind_t;
     in name: c_name_t;
     cls: integer;
     in decl: c_decl_t;

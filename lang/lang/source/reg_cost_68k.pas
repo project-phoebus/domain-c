@@ -95,9 +95,9 @@ begin
     if r^.defs <= 1 then
       if r^.node <> nil then begin
         t := r^.node;
-        if (t^.kind = 110) or (t^.kind = 109) then
-          if (t^.kind <> 109) or ((t^.xw[17] & 16#400) <> 0) then
-            if (t^.kind <> 110) or ((t^.xw[13] & 16#400) <> 0) then
+        if (t^.kind = fortran_symbol) or (t^.kind = var_name) then
+          if (t^.kind <> var_name) or ((t^.xw[17] & 16#400) <> 0) then
+            if (t^.kind <> fortran_symbol) or ((t^.xw[13] & 16#400) <> 0) then
               if r^.uses <= 1 then
                 reg_cost_$wasteful_param_load := true
               else if r^.uses <= 4 then
@@ -189,28 +189,33 @@ begin
     b := rr^.blocks;
     len := 0;
     t := rr^.node;
-    only_calls := not (t^.kind in [88..89, 145..147, 163, 190, 195]);
+    only_calls := not (t^.kind in [real_ob..dpreal_ob, dindex_node..disp_node,
+                                   addr_con, cse_parent_ob,
+                                   reloc_absolute_addr_con]);
     if il_utils_$is_strength_reduction_temp(t) then
       only_calls := false;
     assigned := false;
-    if t^.kind = 109 then begin
+    if t^.kind = var_name then begin
       cls := t^.xw[36];
-      if (cls = 2) or ((cls = 1) and (il_180^.kind = 105)) or (cls = 5) then
+      if (cls = 2) or ((cls = 1) and (il_180^.kind = program_blk))
+          or (cls = 5) then
         assigned := false
       else
         for s := rr^.first to rr^.last do
-          if (opt_4009c[s]^.hdr.vnum = v) and (opt_4009c[s]^.kind <> 188) then begin
+          if (opt_4009c[s]^.hdr.vnum = v)
+              and (opt_4009c[s]^.kind <> use_def_ob) then begin
             assigned := true;
             exit;
           end;
     end
-    else if t^.kind = 110 then begin
+    else if t^.kind = fortran_symbol then begin
       cls := rshft(ord(t^.xc[11]) & 16#F0, 4);
-      if (cls in [0, 2]) or ((cls = 1) and (il_180^.kind = 105)) then
+      if (cls in [0, 2]) or ((cls = 1) and (il_180^.kind = program_blk)) then
         assigned := false
       else
         for s := rr^.first to rr^.last do
-          if (opt_4009c[s]^.hdr.vnum = v) and (opt_4009c[s]^.kind <> 188) then begin
+          if (opt_4009c[s]^.hdr.vnum = v)
+              and (opt_4009c[s]^.kind <> use_def_ob) then begin
             assigned := true;
             exit;
           end;
@@ -257,9 +262,10 @@ begin
             touched := false;
             st := opt_4009c[s];
             if st^.block^.flags.latch then
-              if (rr^.node^.kind = 110) or (rr^.node^.kind = 109) then
+              if (rr^.node^.kind = fortran_symbol)
+                  or (rr^.node^.kind = var_name) then
                 if il_utils_$is_strength_reduction_temp(rr^.node) then
-                  if (st^.kind = 140) and (st^.asg_op = 0) and
+                  if (st^.kind = assign_node) and (st^.asg_op = 0) and
                      (st^.asg_rlen = 5) and (st^.asg_lhs = rr^.node) then
                     rr^.flags := rr^.flags + [2];
             if not test_stmt(rr, 2 * s) then
@@ -276,11 +282,12 @@ begin
                     if not test_stmt(rr, 2 * s + 1) then
                       if assigned then
                         loads := loads + 1;
-                  if (st^.vars^[v]^.count = 0) and (st^.kind = 142) then begin
+                  if (st^.vars^[v]^.count = 0)
+                      and (st^.kind = cbranch_node) then begin
                     rr^.uses := rr^.uses + 2;
                     uses := uses + 2;
                   end;
-                  if st^.kind <> 188 then
+                  if st^.kind <> use_def_ob then
                     only_calls := false;
                   touched := true;
                 end;
@@ -293,19 +300,20 @@ begin
                   defs := defs + 1;
                   if not test_stmt(rr, 2 * s) and (st^.vars^[v]^.du <> nil) and
                      (((st^.vset <> nil) and (v in st^.vset^)) or
-                      (st^.kind = 188)) then
+                      (st^.kind = use_def_ob)) then
                     loads := loads + 1
-                  else if (st^.kind = 188) and (st^.vars^[v]^.du <> nil) then
+                  else if (st^.kind = use_def_ob)
+                      and (st^.vars^[v]^.du <> nil) then
                     if test_stmt(rr, 2 * s) then
                       loads := loads + 1;
-                  if st^.kind <> 188 then
+                  if st^.kind <> use_def_ob then
                     rr^.flags := rr^.flags + [8];
                   touched := true;
                 end;
 
             { The class of register. }
             if touched then begin
-              if il_180^.kind = 108 then
+              if il_180^.kind = function_blk then
                 if rr^.node = il_180^.xp[24] then begin
                   lang := rshft(ord(il_180^.xc[377]) & 16#70, 4);
                   if lang = 3 then begin
@@ -314,7 +322,7 @@ begin
                     rr^.flags := rr^.flags + [3];
                     rr^.prefer := rr^.prefer + [0];
                   end
-                  else if opt_4009c[runbackend_16 - 1]^.kind = 151 then begin
+                  else if opt_4009c[runbackend_16 - 1]^.kind = return_node then begin
                     if opt_4009c[runbackend_16 - 1]^.asg_rlen = 5 then begin
                       rr^.flags := rr^.flags + [2];
                       rr^.prefer := rr^.prefer + [8];
@@ -330,11 +338,11 @@ begin
               if ((st^.vars^[v]^.flags & 1) <> 0) or
                  ((opt_4009c[opt_region]^.vars^[v]^.flags & 1) <> 0) then
                 rr^.flags := rr^.flags + [2]
-              else if rr^.node^.kind = 109 then begin
+              else if rr^.node^.kind = var_name then begin
                 if (v <> 0) and (opt_var_types^[v].base <> nil) then begin
-                  if opt_var_types^[v].base^.kind = 123 then
+                  if opt_var_types^[v].base^.kind = real_type then
                     rr^.flags := rr^.flags + [4]
-                  else if opt_var_types^[v].base^.kind = 130 then
+                  else if opt_var_types^[v].base^.kind = ptr_type then
                     rr^.flags := rr^.flags + [2]
                   else
                     rr^.flags := rr^.flags + [3];
@@ -342,7 +350,7 @@ begin
                 else
                   rr^.flags := rr^.flags + [3];
               end
-              else if rr^.node^.kind = 110 then begin
+              else if rr^.node^.kind = fortran_symbol then begin
                 if rshft(ord(rr^.node^.xc[11]) & 16#F0, 4) = 5 then
                   rr^.flags := rr^.flags + [2]
                 else if (ord(rr^.node^.xc[10]) & 15) in [4, 5] then begin
@@ -360,12 +368,12 @@ begin
                 if rr^.flags * [3, 4] <> [] then
                   if v <> 0 then
                     if opt_var_types^[v].base <> nil then
-                      if opt_var_types^[v].base^.kind = 130 then
+                      if opt_var_types^[v].base^.kind = ptr_type then
                         rr^.flags := rr^.flags - [3, 4];
             end;
 
             { A cse parent's uses and its assignment at s. }
-            if rr^.node^.kind = 190 then begin
+            if rr^.node^.kind = cse_parent_ob then begin
               u := g_opt_cse_ptr_t(rr^.node)^.p_uses;
               while u <> nil do begin
                 if u^.u_ent^.hdr.region = s then begin
@@ -383,9 +391,11 @@ begin
 
             { A constant's uses: its count among the block's constants. }
             if uses = 0 then
-              if (rr^.node^.kind in [88..89, 145..147, 163, 195]) or
-                 ((v = 0) and ((rr^.node^.kind = 110) or
-                               (rr^.node^.kind = 109))) then begin
+              if (rr^.node^.kind in [real_ob..dpreal_ob,
+                                     dindex_node..disp_node, addr_con,
+                                     reloc_absolute_addr_con]) or
+                 ((v = 0) and ((rr^.node^.kind = fortran_symbol) or
+                               (rr^.node^.kind = var_name))) then begin
                 rr^.defs := 1;
                 c := st^.block^.consts;
                 if c <> nil then begin
@@ -393,8 +403,10 @@ begin
                     t2 := c^.node;
                     if t2 = rr^.node then
                       exit;
-                    if t2^.kind in [137..138, 143, 145..147, 164, 171, 175,
-                                    189, 205] then
+                    if t2^.kind in [tree_node..gen_tree_node, cmp_tree_node,
+                                    dindex_node..disp_node, cs_node, cc_call,
+                                    pf_call,
+                                    cse_use_ob, sym_disp_node] then
                       if 6 in g_opt_tree_ptr_t(t2)^.flags then
                         if g_opt_nodes_ptr_t(il_120)^[g_opt_tree_ptr_t(t2)^.stmt] =
                            rr^.node then
@@ -406,10 +418,12 @@ begin
                     rr^.uses := rr^.uses + c^.count;
                     if st^.block^.flags.latch then
                       defs := defs + 1
-                    else if (rr^.node^.kind = 110) or (rr^.node^.kind = 109) then begin
+                    else if (rr^.node^.kind = fortran_symbol)
+                        or (rr^.node^.kind = var_name) then begin
                       x := g_opt_blocks_ptr_t(il_11c)^[bn]^.first_stmt;
                       repeat
-                        if (x^.kind = 140) and (x^.asg_lhs = rr^.node) then
+                        if (x^.kind = assign_node)
+                            and (x^.asg_lhs = rr^.node) then
                           defs := defs + 1;
                         if g_opt_blocks_ptr_t(il_11c)^[bn]^.last_stmt = x then
                           exit;
@@ -451,13 +465,13 @@ begin
       if only_calls then
         if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 3 then
           rr^.flags := rr^.flags + [0];
-    if rr^.node^.kind = 110 then
+    if rr^.node^.kind = fortran_symbol then
       if (rr^.node^.xl[6] & 16#200000) <> 0 then
         rr^.flags := rr^.flags + [0];
     if v <> 0 then
       if reg_cost_$wasteful_param_load(rr) then
         rr^.flags := rr^.flags + [0];
-    if (rr^.node^.kind = 110) or (rr^.node^.kind = 109) then
+    if (rr^.node^.kind = fortran_symbol) or (rr^.node^.kind = var_name) then
       if (v <> 0) and (4 in rr^.flags) and (rr^.cost < 10) and
          (rr^.defs = 1) and (rr^.uses <= 2) then
         rr^.flags := rr^.flags + [0];
@@ -469,7 +483,7 @@ begin
       { A strength reduction temporary's class. }
       if il_utils_$is_strength_reduction_temp(rr^.node) then
         if not (2 in rr^.flags) then
-          if rr^.node^.kind = 109 then
+          if rr^.node^.kind = var_name then
             rr^.flags := [3]
           else begin
             cls := ord(rr^.node^.xc[10]) & 15;
@@ -486,9 +500,9 @@ begin
                       abs(len + 1);
 
       { A cse parent's class: its tree's register class. }
-      if rr^.node^.kind = 190 then begin
+      if rr^.node^.kind = cse_parent_ob then begin
         t2 := g_opt_cse_ptr_t(rr^.node)^.p_tree;
-        if (t2^.kind = 137) or (t2^.kind = 143) then begin
+        if (t2^.kind = tree_node) or (t2^.kind = cmp_tree_node) then begin
           cls := g_opt_tree_ptr_t(t2)^.rlen;
           if (cls = 6) or (cls = 8) or (cls = 7) then begin
             if cargs_$options.cpu * [2, 4, 8, 9, 10] <> [] then
@@ -506,32 +520,35 @@ begin
       end;
 
       { The constants' classes. }
-      if (rr^.node^.kind = 195) or (rr^.node^.kind = 163) then
+      if (rr^.node^.kind = reloc_absolute_addr_con)
+          or (rr^.node^.kind = addr_con) then
         rr^.flags := rr^.flags + [2];
-      if (rr^.node^.kind = 89) or (rr^.node^.kind = 88) then
+      if (rr^.node^.kind = dpreal_ob) or (rr^.node^.kind = real_ob) then
         if cargs_$options.cpu * [2, 4, 8, 9, 10] <> [] then
           rr^.flags := rr^.flags + [4]
         else
           rr^.flags := rr^.flags + [0];
-      if (rr^.node^.kind = 145) or (rr^.node^.kind = 147) or
-         (rr^.node^.kind = 146) then begin
+      if (rr^.node^.kind = dindex_node) or (rr^.node^.kind = disp_node) or
+         (rr^.node^.kind = ptr_node) then begin
         lang := rshft(ord(il_180^.xc[377]) & 16#70, 4);
         if has_skip or not (18 in cargs_$options.opt_on) or (lang <> 2) or
-           (rr^.node^.kind = 145) then
+           (rr^.node^.kind = dindex_node) then
           rr^.flags := rr^.flags + [2]
         else begin
           t := rr^.node;
           t2 := t^.xp[7];
-          if (t2 <> nil) and (t2^.kind = 110) and (t^.xp[6] <> nil) and
-             ((t^.xp[6]^.kind = 146) or (t^.xp[6]^.kind = 195) or
-              (t^.xp[6]^.kind = 163)) and
+          if (t2 <> nil) and (t2^.kind = fortran_symbol) and (t^.xp[6] <> nil)
+              and
+             ((t^.xp[6]^.kind = ptr_node)
+              or (t^.xp[6]^.kind = reloc_absolute_addr_con) or
+              (t^.xp[6]^.kind = addr_con)) and
              (rshft(ord(t2^.xc[44]) & 16#F0, 4) = 3) and
              (t2^.xl[7] = 0) and (t2^.xl[8] = 0) and (t2^.xl2[14] <> 0) and
              ((ord(t2^.xc[10]) & 15) in [1..5]) then begin
             cls := ord(t2^.xc[10]) & 15;
-            if (t^.xp[6]^.kind = 146) and
-               ((t^.xp[6]^.xp[6]^.kind = 190) or
-                (t^.xp[6]^.xp[6]^.kind = 137)) then
+            if (t^.xp[6]^.kind = ptr_node) and
+               ((t^.xp[6]^.xp[6]^.kind = cse_parent_ob) or
+                (t^.xp[6]^.xp[6]^.kind = tree_node)) then
               rr^.flags := rr^.flags + [2]
             else if (cls in [1, 2, 3]) and not opt_4009c[rr^.first]^.hdr.b3 then
               rr^.flags := rr^.flags + [3]
@@ -541,16 +558,17 @@ begin
             else
               rr^.flags := rr^.flags + [2];
           end
-          else if (t^.kind = 146) and (t2^.kind = 111) and
+          else if (t^.kind = ptr_node) and (t2^.kind = common_block_name) and
                   (t2^.xp[3]^.xl[8] = 0) and (t2^.xp[3]^.xl[7] = 0) and
                   not opt_4009c[rr^.first]^.hdr.b3 then begin
             t3 := t2^.xp[3];
-            if (t^.xp[6]^.kind = 190) or (t^.xp[6]^.kind = 137) then
+            if (t^.xp[6]^.kind = cse_parent_ob)
+                or (t^.xp[6]^.kind = tree_node) then
               rr^.flags := rr^.flags + [2]
-            else if (t3^.kind = 110) and
+            else if (t3^.kind = fortran_symbol) and
                     ((ord(t3^.xc[10]) & 15) in [1, 2, 3]) then
               rr^.flags := rr^.flags + [3]
-            else if (t3^.kind = 110) and
+            else if (t3^.kind = fortran_symbol) and
                     ((ord(t3^.xc[10]) & 15) in [4, 5]) and
                     (cargs_$options.cpu * [2, 4, 8, 9, 10] <> []) then
               rr^.flags := rr^.flags + [4]
@@ -562,7 +580,7 @@ begin
         end;
       end;
       { No register for a variable of no cost. }
-      if (rr^.node^.kind = 110) or (rr^.node^.kind = 109) then
+      if (rr^.node^.kind = fortran_symbol) or (rr^.node^.kind = var_name) then
         if (rr^.priority = 0) and (rr^.cost = 0) then
           rr^.flags := rr^.flags + [0];
     end;

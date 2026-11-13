@@ -84,7 +84,7 @@ procedure add_node_$dispose_top_level(
   longer than its kind's size, its header cleared.  0x0A1190, cc.a88k
   0x0A2B70; 1 call site (opt_main); result in A0. }
 function add_node_$new_top_level(
-    kind: integer;
+    kind: il_$kind_t;
     extra: integer32): il_$node_ptr_t; options(val_param); extern;
 
 { ADD_DISP_NODE - the displacement node (147) disp bytes from base for

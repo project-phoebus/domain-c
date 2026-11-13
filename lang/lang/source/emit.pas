@@ -146,9 +146,9 @@ end;
 function tst_imd(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
-  if n^.kind in [77..88, 101, 200] then
+  if n^.kind in [blogical_ob..real_ob, char16_ob, binteger_ob] then
     tst_imd := true
-  else if n^.kind = 92 then
+  else if n^.kind = char_string_ob then
     tst_imd := (n^.str_len = 1) or (n^.str_len = 2) or (n^.str_len = 4)
   else
     tst_imd := false;
@@ -191,7 +191,7 @@ begin
     2:
       if a.f1 = 3 then begin
         n := il_$node_ptr_t(a.x);
-        if n^.kind in [77..87, 101, 200] then begin
+        if n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
           v := n^.int_value;
           chk_op_restr := (v >= -128) and (v <= 127);
         end
@@ -212,9 +212,9 @@ begin
     4:
       if a.f1 = 3 then begin
         n := il_$node_ptr_t(a.x);
-        if n^.kind in [77..87, 101, 200] then
+        if n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
           chk_op_restr := n^.int_value = 0
-        else if (n^.kind = 88) or (n^.kind = 89) then
+        else if (n^.kind = real_ob) or (n^.kind = dpreal_ob) then
           chk_op_restr := n^.real_value = 0.0
         else
           chk_op_restr := false;
@@ -224,7 +224,7 @@ begin
     15:
       if a.f1 = 3 then begin
         n := il_$node_ptr_t(a.x);
-        if n^.kind in [77..87, 101, 200] then
+        if n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
           chk_op_restr := n^.int_value = 1
         else
           chk_op_restr := false;
@@ -236,7 +236,7 @@ begin
     6:
       if a.f1 = 3 then begin
         n := il_$node_ptr_t(a.x);
-        if n^.kind in [77..87, 101, 200] then begin
+        if n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
           v := n^.int_value;
           chk_op_restr := (v >= 1) and (v <= 8);
         end
@@ -322,7 +322,7 @@ begin
     p := p^.xp[1];
   end;
   q := gspace(22);
-  q^.kind := 157;
+  q^.kind := def_const_ob;
   q^.xw[10] := size;
   q^.xl[4] := n^.int_value;
   q^.xl[2] := 0;
@@ -363,12 +363,13 @@ procedure chk_imd(
     code: integer;
     size: integer); options(val_param); internal;
 var
-  k: integer;
+  k: il_$kind_t;
 begin
   if a.f1 = 3 then begin
     if tst_imd(il_$node_ptr_t(a.x)) or
-       ((il_$node_ptr_t(a.x)^.kind = 89) and (size = 7)) or
-       ((il_$node_ptr_t(a.x)^.kind = 195) and (size = 4)) then
+       ((il_$node_ptr_t(a.x)^.kind = dpreal_ob) and (size = 7)) or
+       ((il_$node_ptr_t(a.x)^.kind = reloc_absolute_addr_con)
+        and (size = 4)) then
       case code of
         2, 4, 6, 15:
           a.f6 := 0;
@@ -392,7 +393,7 @@ begin
         12, 14: begin
           a.f6 := 3;
           k := il_$node_ptr_t(a.x)^.kind;
-          if k in [77..87, 101, 200] then
+          if k in [blogical_ob..char_ob, char16_ob, binteger_ob] then
             a.x := integer32(defer_constant(il_$node_ptr_t(a.x), size));
         end;
         otherwise
@@ -511,15 +512,15 @@ begin
     28: begin
       k := il_$node_ptr_t(c^.ads2.x);
       case k^.kind of
-        88:
+        real_ob:
           n := 4;
-        89:
+        dpreal_ob:
           n := 8;
-        90:
+        complex_ob:
           n := 8;
-        198:
+        dpcomplex_ob:
           n := 16;
-        157:
+        def_const_ob:
           case k^.xw[10] of
             1:
               n := 2;
@@ -530,9 +531,9 @@ begin
             otherwise
               cgerr(3, emit_line, nil);
           end;
-        92, 156, 212:
+        char_string_ob, set_con_ob, namelist_constant_ob:
           n := (k^.str_len + 1) & (-2);
-        195:
+        reloc_absolute_addr_con:
           n := 4;
         otherwise
           cgerr(3, emit_line, nil);

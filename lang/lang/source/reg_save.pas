@@ -91,8 +91,13 @@ function assert_is_top_level_object(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if n <> nil then
-    assert_is_top_level_object := n^.kind in [139..142, 144, 148..151, 188,
-      191, 214..215, 223..225, 227..228, 231, 233]
+    assert_is_top_level_object := n^.kind in [eval_node..cbranch_node,
+                                              label_node,
+                                              block_entry_node..return_node,
+                                              use_def_ob,
+      reg_list_ob, case_node_range_check..case_node_no_range_check,
+          exception_handler_entry..release_dynamic_space,
+          insert_bit_field..bit_field_assign, spine_mark, pa_mmu_bip]
   else
     assert_is_top_level_object := false;
 end;
@@ -106,7 +111,7 @@ function assert_is_fortran_routine(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if n <> nil then
-    if n^.kind = 110 then begin
+    if n^.kind = fortran_symbol then begin
       assert_is_fortran_routine := rshft(ord(n^.xc[44]) & 16#F0, 4) = 1;
       return;
     end;
@@ -122,7 +127,7 @@ function assert_is_ptr_over_fortran_routine(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if n <> nil then
-    if n^.kind = 146 then begin
+    if n^.kind = ptr_node then begin
       assert_is_ptr_over_fortran_routine := assert_is_fortran_routine(n^.xp[6]);
       return;
     end;
@@ -138,7 +143,7 @@ function assert_is_tree_node(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if n <> nil then
-    assert_is_tree_node := (n^.kind = 143) or (n^.kind = 137)
+    assert_is_tree_node := (n^.kind = cmp_tree_node) or (n^.kind = tree_node)
   else
     assert_is_tree_node := false;
 end;
@@ -288,7 +293,7 @@ var
 begin
   ok := false;
   if n <> nil then
-    ok := (n^.kind = 108) or (n^.kind = 107);
+    ok := (n^.kind = function_blk) or (n^.kind = procedure_blk);
   if not ok then
     bug_check('reg_save\registers_consumed_by_routine_block -- not a procedure_blk or function_blk%$');
   if (rshft(n^.xw[188] & 16#180, 7) = 2) and (ord(n^.xc[294]) = 254) and
@@ -316,7 +321,7 @@ var
 begin
   ok := false;
   if n <> nil then
-    ok := (n^.kind = 174) or (n^.kind = 173);
+    ok := (n^.kind = func__type) or (n^.kind = proc__type);
   if not ok then
     bug_check('reg_save\registers_consumed_by_routine_type -- not a proc__type or func__type%$');
   if not cargs_$options.xrs or ((ord(n^.xc[78]) & 1) <> 0) then
@@ -339,7 +344,7 @@ function registers_consumed_by_pf_call(
 var
   t: il_$node_ptr_t;
 begin
-  if (n = nil) or (n^.kind <> 175) then
+  if (n = nil) or (n^.kind <> pf_call) then
     bug_check('reg_save\registers_consumed_by_pf_call -- not a pf_call%$');
   if not cargs_$options.xrs then begin
     registers_consumed_by_pf_call := [0..23];
@@ -365,10 +370,11 @@ end;
 function registers_consumed_by_cc_call(
     n: il_$node_ptr_t): reg_save_$regs_t; options(val_param); internal;
 begin
-  if (n = nil) or (n^.kind <> 171) then
+  if (n = nil) or (n^.kind <> cc_call) then
     bug_check('reg_save\registers_consumed_by_cc_call -- not a cc_call%$');
   if n^.xp[4] <> nil then
-    if (n^.xp[4]^.kind = 108) or (n^.xp[4]^.kind = 107) then begin
+    if (n^.xp[4]^.kind = function_blk)
+        or (n^.xp[4]^.kind = procedure_blk) then begin
       registers_consumed_by_cc_call := registers_consumed_by_object(n^.xp[4]);
       return;
     end;
@@ -484,8 +490,10 @@ begin
     25: begin
       r := [24, 25];
       if t^.count > 2 then
-        if not ((t^.opnd[2]^.kind in [77..87, 101, 200]) and
-                (t^.opnd[3]^.kind in [77..87, 101, 200])) then
+        if not ((t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                                      binteger_ob]) and
+                (t^.opnd[3]^.kind in [blogical_ob..char_ob, char16_ob,
+                                      binteger_ob])) then
           r := [24..26];
     end;
     7, 8:
@@ -507,7 +515,8 @@ begin
         r := [24];
     14: begin
       r := [24, 25, 27, 28];
-      if not (t^.opnd[2]^.kind in [77..87, 101, 200]) then
+      if not (t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                                   binteger_ob]) then
         r := [24..28];
     end;
     0, 29, 45, 46, 48, 63, 72:
@@ -538,18 +547,23 @@ begin
              (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = 2) then
             r := r + [27];
       end
-      else if t^.opnd[1]^.kind in [109..110, 145..147, 163..164, 195,
-                                   205] then
+      else if t^.opnd[1]^.kind in [var_name..fortran_symbol,
+                                   dindex_node..disp_node, addr_con..cs_node,
+                                   reloc_absolute_addr_con,
+                                   sym_disp_node] then
         r := r + [24, 27]
-      else if t^.opnd[1]^.kind in [77..90, 92..93, 101, 156, 176, 198,
-                                   200] then
+      else if t^.opnd[1]^.kind in [blogical_ob..complex_ob,
+                                   char_string_ob..char32_string_ob, char16_ob,
+                                   set_con_ob, rec_const_ob, dpcomplex_ob,
+                                   binteger_ob] then
         r := r + [24]
       else
         r := r + [24, 25, 27, 28];
     end;
     27, 28, 44, 49, 50: begin
       r := [24];
-      if not (t^.opnd[2]^.kind in [77..87, 101, 200]) then
+      if not (t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                                   binteger_ob]) then
         r := [24, 25];
     end;
     23, 24, 73:
@@ -557,13 +571,15 @@ begin
     22:
       r := [24, 27, 28];
     11:
-      if not (t^.opnd[1]^.kind in [77..87, 101, 200]) then
+      if not (t^.opnd[1]^.kind in [blogical_ob..char_ob, char16_ob,
+                                   binteger_ob]) then
         if 3 in cargs_$options.cpu then
           r := [24, 25]
         else
           r := [24..28];
     15, 16: begin
-      if not (t^.opnd[1]^.kind in [107..108, 110, 159, 171, 173..175]) then
+      if not (t^.opnd[1]^.kind in [procedure_blk..function_blk, fortran_symbol,
+                                   lib_dsc, cc_call, proc__type..pf_call]) then
         if cargs_$options.xrs then
           r := [0, 1, 8, 9, 16, 17]
         else
@@ -571,8 +587,9 @@ begin
       if not (7 in cargs_$options.flags_286) or
          cg_call_$is_proc_var_call(t^.opnd[1]) then
         r := r + [8];
-      if (t^.opnd[1]^.kind = 107) or (t^.opnd[1]^.kind = 167) or
-         (t^.opnd[1]^.kind = 108) then
+      if (t^.opnd[1]^.kind = procedure_blk) or (t^.opnd[1]^.kind = entry_blk)
+          or
+         (t^.opnd[1]^.kind = function_blk) then
         if (ord(t^.opnd[1]^.xc[378]) & 16#40) <> 0 then
           r := r + [9];
     end;
@@ -663,7 +680,7 @@ var
   rem: integer32;
   r: reg_save_$regs_t;
 begin
-  if (s = nil) or (s^.kind <> 140) or (s^.asg_op <> 6) then
+  if (s = nil) or (s^.kind <> assign_node) or (s^.asg_op <> 6) then
     bug_check('reg_save\registers_consumed_by_agg_aop -- not an agg_aop assign%$');
   unit := 4;
   if s^.asg_flags.chars then
@@ -677,12 +694,19 @@ begin
   n := size div unit - 1;
   if (n < 0) or ((n = 1) and (rem = 0)) or ((n = 0) and (rem <= 2)) then begin
     r := [];
-    if not (s^.asg_rhs^.kind in [77..90, 92..93, 101, 156, 176, 198, 200]) then
+    if not (s^.asg_rhs^.kind in [blogical_ob..complex_ob,
+                                 char_string_ob..char32_string_ob, char16_ob,
+                                 set_con_ob, rec_const_ob, dpcomplex_ob,
+                                 binteger_ob]) then
       r := [24, 27];
-    if (s^.asg_lhs^.kind <> 110) and (s^.asg_lhs^.kind <> 109) then
+    if (s^.asg_lhs^.kind <> fortran_symbol)
+        and (s^.asg_lhs^.kind <> var_name) then
       r := r + [25, 28];
   end
-  else if s^.asg_rhs^.kind in [77..90, 92..93, 101, 156, 176, 198, 200] then
+  else if s^.asg_rhs^.kind in [blogical_ob..complex_ob,
+                               char_string_ob..char32_string_ob, char16_ob,
+                               set_con_ob, rec_const_ob, dpcomplex_ob,
+                               binteger_ob] then
     r := [24, 25, 27, 28]
   else begin
     r := [27, 28];
@@ -716,7 +740,7 @@ function registers_consumed_by_assign_operator(
 var
   r: reg_save_$regs_t;
 begin
-  if (s = nil) or (s^.kind <> 140) then
+  if (s = nil) or (s^.kind <> assign_node) then
     bug_check('reg_save\registers_consumed_by_assign_operator -- not an assign node%$');
   r := [];
   case s^.asg_op of
@@ -733,7 +757,10 @@ begin
     6:
       r := registers_consumed_by_agg_aop(s);
     25:
-      if s^.asg_rhs^.kind in [77..90, 92..93, 101, 156, 176, 198, 200] then
+      if s^.asg_rhs^.kind in [blogical_ob..complex_ob,
+                              char_string_ob..char32_string_ob, char16_ob,
+                              set_con_ob, rec_const_ob, dpcomplex_ob,
+                              binteger_ob] then
         r := [24, 25, 27, 28]
       else
         r := [24, 27, 28];
@@ -752,7 +779,10 @@ begin
     12:
       r := [24, 25];
     otherwise begin
-      if not (s^.asg_rhs^.kind in [77..90, 92..93, 101, 156, 176, 198, 200]) then
+      if not (s^.asg_rhs^.kind in [blogical_ob..complex_ob,
+                                   char_string_ob..char32_string_ob, char16_ob,
+                                   set_con_ob, rec_const_ob, dpcomplex_ob,
+                                   binteger_ob]) then
         r := [24];
       if s^.asg_rlen > 6 then
         if s^.asg_rlen = 7 then
@@ -818,17 +848,19 @@ begin
   if n = nil then
     bug_check('reg_save\registers_consumed_by_object -- NIL object%$');
   r := [];
-  if n^.kind in [77..90, 92..93, 101, 153..154, 156, 163, 176, 195, 198,
-                 200] then begin
+  if n^.kind in [blogical_ob..complex_ob, char_string_ob..char32_string_ob,
+                 char16_ob, sb_register..db_register, set_con_ob, addr_con,
+                 rec_const_ob, reloc_absolute_addr_con, dpcomplex_ob,
+                 binteger_ob] then begin
     registers_consumed_by_object := r;
     return;
   end;
   case n^.kind of
-    159:
+    lib_dsc:
       r := [0..31] - reg_save_$regs_t(n^.xl[1]);
-    155:
+    display_register:
       r := [9];
-    164: begin
+    cs_node: begin
       a := r;
       b := a;
       if n^.xp[5] <> nil then
@@ -837,15 +869,15 @@ begin
         b := registers_consumed_by_object(n^.xp[6]);
       r := b + a + [24, 25, 27, 28];
     end;
-    108, 107:
+    function_blk, procedure_blk:
       r := registers_consumed_by_routine_block(n);
-    174, 173:
+    func__type, proc__type:
       r := registers_consumed_by_routine_type(n);
-    175:
+    pf_call:
       r := registers_consumed_by_pf_call(n);
-    171:
+    cc_call:
       r := registers_consumed_by_cc_call(n);
-    137, 143: begin
+    tree_node, cmp_tree_node: begin
       r := registers_consumed_by_tree_operator(n);
       a := [];
       for i := 1 to cg_tree_ptr_t(n)^.count do begin
@@ -857,27 +889,27 @@ begin
       end;
       r := r + a;
     end;
-    109:
+    var_name:
       if n^.xw[36] in [6..8, 10] then
         r := [27];
-    110:
+    fortran_symbol:
       r := registers_consumed_by_fortran_symbol(n);
-    146: begin
+    ptr_node: begin
       if assert_is_ptr_over_fortran_routine(n) then
         r := [0, 1, 8, 9, 16, 17]
       else
         r := [27];
       r := r + registers_consumed_by_object(n^.xp[6]);
     end;
-    145: begin
+    dindex_node: begin
       r := registers_consumed_by_object(n^.xp[9]) + [24, 27];
       r := r + registers_consumed_by_object(n^.xp[6]);
     end;
-    147:
+    disp_node:
       r := registers_consumed_by_object(n^.xp[6]);
-    205:
+    sym_disp_node:
       r := registers_consumed_by_object(n^.xp[6]);
-    190:
+    cse_parent_ob:
       r := registers_consumed_by_object(n^.xp[1]);
     otherwise
       r := [24, 25, 27, 28];
@@ -920,14 +952,14 @@ begin
   if not assert_is_top_level_object(il_$node_ptr_t(s)) then
     bug_check('reg_save\registers_preserved_by_statement -- not a top-level node%$');
   case s^.kind of
-    144:
+    label_node:
       if (ord(il_$node_ptr_t(s)^.xc[74]) >= 128) or
          (ord(il_$node_ptr_t(s)^.xc[75]) >= 128) then
         r := [24..31];
-    148:
-      if s^.x48^.kind <> 172 then
+    block_entry_node:
+      if s^.x48^.kind <> inner_blk then
         r := [0..31] - [8, 27];
-    140: begin
+    assign_node: begin
       c := registers_consumed_by_assign_operator(s);
       if whole then begin
         a := registers_consumed_by_object(s^.asg_rhs);
@@ -942,22 +974,24 @@ begin
         r := [0..31] - c;
       end;
     end;
-    139:
+    eval_node:
       if whole then
         for i := 1 to s^.eval_count do
           if s^.eval_opnd[i] <> nil then
             r := r - registers_consumed_by_object(s^.eval_opnd[i]);
-    142:
+    cbranch_node:
       if s^.br_cond <> nil then
         r := r - registers_consumed_by_object(s^.br_cond);
-    150:
-      if s^.br_target^.kind <> 117 then
+    nlbranch_node:
+      if s^.br_target^.kind <> label_name then
         r := [0..31] - [27];
-    151:
+    return_node:
       if whole then
         if s^.x48 <> nil then
           r := r - registers_consumed_by_object(s^.x48);
-    233, 231, 215, 214, 223, 225, 224, 228, 227, 191, 188:
+    pa_mmu_bip, spine_mark, case_node_no_range_check, case_node_range_check,
+        exception_handler_entry, release_dynamic_space, raise_exception,
+        bit_field_assign, insert_bit_field, reg_list_ob, use_def_ob:
       ;
     otherwise
       ;

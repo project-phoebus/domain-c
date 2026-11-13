@@ -70,7 +70,7 @@ type
   dl_ptr_t = ^dl_node_t;
   dl_node_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     case integer of
       { A tree node (137 TREE_NODE, 138, 143). }
       1: (phase: add_node_$phase_t;     { +4 }
@@ -191,7 +191,7 @@ function delay_$value_guaranteed_between;
 var
   v, ulo, uhi: linteger;
 begin
-  if n^.kind in [77..87, 101, 200] then
+  if n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
     if sgn then
       delay_$value_guaranteed_between :=
           (hi >= dl_ptr_t(n)^.int_value) and (lo <= dl_ptr_t(n)^.int_value)
@@ -224,14 +224,17 @@ var
   t: dl_ptr_t;
 begin
   t := dl_ptr_t(n);
-  if t^.kind in [77..87, 101, 200] then
+  if t^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
     leaf := n
   else
     case t^.kind of
-      190: delay_$find_size_and_signed(t^.xp[1], narrow, leaf, size, sgn);
-      189: delay_$find_size_and_signed(t^.xp[5], narrow, leaf, size, sgn);
-      152: delay_$find_size_and_signed(t^.xp[4], narrow, leaf, size, sgn);
-      138, 137: begin
+      cse_parent_ob: delay_$find_size_and_signed(t^.xp[1], narrow, leaf, size,
+                                                 sgn);
+      cse_use_ob: delay_$find_size_and_signed(t^.xp[5], narrow, leaf, size,
+                                              sgn);
+      alloc_temp: delay_$find_size_and_signed(t^.xp[4], narrow, leaf, size,
+                                              sgn);
+      gen_tree_node, tree_node: begin
         leaf := n;
         if t^.op = 18 then begin
           if narrow then begin
@@ -504,7 +507,8 @@ begin { delay_$divide_attributes }
     b58 := div_strategies[k].b67;
     strategy := k;
     if op = 4 then
-      if opnd[2]^.kind in [77..87, 101, 200] then begin
+      if opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                           binteger_ob] then begin
         v := dl_ptr_t(opnd[2])^.int_value;
         if v > 0 then
           if ((v - 1) & v) = 0 then begin
@@ -560,7 +564,7 @@ begin
                                w34, w38, w42, w46, shift, b54, b58, w62,
                                w66, w70);
       o := dl_ptr_t(t^.opnd[1]);
-      if o^.kind = 137 then
+      if o^.kind = tree_node then
         if (o^.op = 0) or (o^.op = 18) or (o^.op = 17) then begin
           o^.desc.size := lsize;
           o^.desc.rlen := lsize;
@@ -568,7 +572,7 @@ begin
           t^.desc.w6 := lsize;
         end;
       o := dl_ptr_t(t^.opnd[2]);
-      if o^.kind = 137 then
+      if o^.kind = tree_node then
         if (o^.op = 0) or (o^.op = 18) or (o^.op = 17) then begin
           o^.desc.size := rsize;
           o^.desc.rlen := rsize;
@@ -585,7 +589,7 @@ begin
         w := 4;
       o := dl_ptr_t(t^.opnd[1]);
       if w > t^.desc.w6 then
-        if o^.kind = 137 then
+        if o^.kind = tree_node then
           if (o^.op = 0) or (o^.op = 18) or (o^.op = 17) then begin
             o^.desc.size := w;
             o^.desc.rlen := w;
@@ -594,7 +598,7 @@ begin
           end;
       o := dl_ptr_t(t^.opnd[2]);
       if t^.desc.w8 < w then
-        if o^.kind = 137 then
+        if o^.kind = tree_node then
           if (o^.op = 0) or (o^.op = 18) or (o^.op = 17) then begin
             o^.desc.size := w;
             o^.desc.rlen := w;
@@ -605,7 +609,7 @@ begin
     end;
     18: begin
       o := dl_ptr_t(t^.opnd[1]);
-      if o^.kind = 137 then begin
+      if o^.kind = tree_node then begin
         if (o^.op = 6) or (o^.op = 4) then begin
           delay_$divide_attributes(il_$node_ptr_t(o), true, strategy, w18,
                                    lsize, w26, rsize, w34, w38, w42, w46,
@@ -643,7 +647,7 @@ function delay_$splice;
 var
   x: dl_ptr_t;
 begin
-  if (n^.kind = 138) or (n^.kind = 137) then begin
+  if (n^.kind = gen_tree_node) or (n^.kind = tree_node) then begin
     sgn := dl_ptr_t(n)^.desc.flags.signed;
     srcsize := dl_ptr_t(n)^.desc.rlen;
   end;
@@ -652,7 +656,7 @@ begin
     return;
   end;
   x := gspace(44);
-  x^.kind := 137;
+  x^.kind := tree_node;
   x^.op := 18;
   x^.desc.rlen := size;
   x^.desc.w6 := srcsize;
@@ -663,7 +667,9 @@ begin
   x^.uses := 0;
   x^.count := 1;
   x^.opnd[1] := n;
-  if n^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205] then
+  if n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                 dindex_node..disp_node, cs_node, cc_call, pf_call, cse_use_ob,
+                 sym_disp_node] then
     x^.phase := dl_ptr_t(n)^.phase - [5, 8]
   else
     x^.phase := [];
@@ -710,17 +716,17 @@ begin
   f := dl_ptr_t(dl_ptr_t(n)^.opnd[1]);
   c := dl_ptr_t(n)^.count;
   case f^.kind of
-    205, 147, 146: f := dl_ptr_t(f^.sym);
-    171, 108, 107: ;
-    175: f := dl_ptr_t(f^.xp[5]);
+    sym_disp_node, disp_node, ptr_node: f := dl_ptr_t(f^.sym);
+    cc_call, function_blk, procedure_blk: ;
+    pf_call: f := dl_ptr_t(f^.xp[5]);
     otherwise ;
   end;
-  if f^.kind = 171 then begin
+  if f^.kind = cc_call then begin
     o := dl_ptr_t(dl_ptr_t(n)^.opnd[i]);
     case o^.kind of
-      143, 137: paramrlen := o^.desc.rlen;
-      145, 205, 147, 146: paramrlen := 0;
-      89: paramrlen := 7;
+      cmp_tree_node, tree_node: paramrlen := o^.desc.rlen;
+      dindex_node, sym_disp_node, disp_node, ptr_node: paramrlen := 0;
+      dpreal_ob: paramrlen := 7;
       otherwise begin
         w := f^.xw[6 + 2 * i];
         if odd(w) then
@@ -737,13 +743,13 @@ begin
     end;
     return;
   end;
-  if f^.kind = 159 then begin
+  if f^.kind = lib_dsc then begin
     if c - 1 > f^.xw[5] then
       m := f^.xw[5]
     else
       m := c - 1;
   end
-  else if (f^.kind = 108) or (f^.kind = 107) then
+  else if (f^.kind = function_blk) or (f^.kind = procedure_blk) then
     if (rshft(ord(f^.xc[377]) & 16#70, 4) = 1) or
        (rshft(ord(f^.xc[377]) & 16#70, 4) = 6) then
       if ord(f^.xc[293]) >= i - 1 then begin
@@ -763,14 +769,14 @@ begin
       k := 8
     else
       case f^.kind of
-        159: begin
+        lib_dsc: begin
           if m < j - 1 then
             if ord(f^.xc[10 + 2 * m]) < 128 then
               m := f^.xw[5];
           k := ord(f^.xc[11 + 2 * m]) & 15;
           m := m - 1;
         end;
-        167, 108, 107:
+        entry_blk, function_blk, procedure_blk:
           if rshft(ord(f^.xc[377]) & 16#70, 4) = 4 then
             k := -1
           else if dl_ptr_t(n)^.desc.rlen = 9 then
@@ -780,24 +786,25 @@ begin
               k := f^.xw[195 + j]
           else
             k := f^.xw[196 + j];
-        174, 173: k := f^.xw[38 + j];
+        func__type, proc__type: k := f^.xw[38 + j];
         otherwise
           k := -1;
       end;
     if k = -1 then
       case o^.kind of
-        86, 87, 200: k := 7;
-        80, 83: k := 8;
-        82, 85: k := 9;
-        81:
-          if ((f^.kind = 107) or (f^.kind = 167) or (f^.kind = 108)) and
+        ubinteger_ob, char_ob, binteger_ob: k := 7;
+        sinteger_ob, usinteger_ob: k := 8;
+        linteger_ob, ulinteger_ob: k := 9;
+        integer_ob:
+          if ((f^.kind = procedure_blk) or (f^.kind = entry_blk)
+              or (f^.kind = function_blk)) and
              (rshft(ord(f^.xc[377]) & 16#70, 4) = 4) then
             k := 8
           else if cargs_$options.i_star_2 then
             k := 8
           else
             k := 9;
-        137: k := -2;
+        tree_node: k := -2;
         otherwise
           k := 9;
       end;
@@ -808,7 +815,7 @@ begin
     end
     else begin
       c := type_class[k];
-      if (k >= 6) and (o^.kind <> 146) and (c >= 6) then
+      if (k >= 6) and (o^.kind <> ptr_node) and (c >= 6) then
         c := 5;
     end;
     j := j - 1;
@@ -876,7 +883,7 @@ var
 begin { delay_sets }
   res := want;
   x := dl_ptr_t(t);
-  if x^.kind = 156 then begin
+  if x^.kind = set_con_ob then begin
     res := n;
     if doit then
       if x^.set_len <> n then begin
@@ -886,10 +893,11 @@ begin { delay_sets }
       end;
   end
   else if (n < want) and
-          ((x^.kind = 109) or (x^.kind = 147) or (x^.kind = 146)) then begin
-    if x^.kind = 109 then
+          ((x^.kind = var_name) or (x^.kind = disp_node)
+           or (x^.kind = ptr_node)) then begin
+    if x^.kind = var_name then
       ok := not (0 in x^.vattr)
-    else if x^.kind = 147 then
+    else if x^.kind = disp_node then
       ok := not (1 in x^.rf_phase)
     else
       ok := not (1 in x^.rf_phase) and not (2 in x^.rf_phase);
@@ -897,7 +905,7 @@ begin { delay_sets }
       res := n;
       if doit then begin
         il_utils_$adjust_uc(t, -1);
-        if t^.kind <> 147 then
+        if t^.kind <> disp_node then
           t := add_dn(t, t, want - n)
         else
           t := add_dn(t, dl_ptr_t(t)^.sym, want - n);
@@ -905,7 +913,7 @@ begin { delay_sets }
       end;
     end;
   end
-  else if x^.kind = 137 then
+  else if x^.kind = tree_node then
     if x^.op in [19..22, 72, 73] then begin
       sz := x^.desc.size;
       case x^.op of
@@ -971,7 +979,9 @@ var
   m: integer;
   r: integer;                           { D4 }
 begin
-  if o^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205] then
+  if o^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                 dindex_node..disp_node, cs_node, cc_call, pf_call, cse_use_ob,
+                 sym_disp_node] then
     if dl_ptr_t(o)^.uses > 1 then
       return;
   sz := w;
@@ -986,9 +996,9 @@ begin
   r := delay(o, w, m, doit);
   if not doit then
     return;
-  if (r = w) and (size = r) and (o^.kind = 137) then
+  if (r = w) and (size = r) and (o^.kind = tree_node) then
     return;
-  if (o^.kind = 137) and (dl_ptr_t(o)^.op = 18) and
+  if (o^.kind = tree_node) and (dl_ptr_t(o)^.op = 18) and
      (dl_ptr_t(o)^.desc.w6 <= dl_ptr_t(o)^.desc.rlen) and
      (dl_ptr_t(o)^.desc.w6 <= size) then begin
     dl_ptr_t(o)^.desc.rlen := size;
@@ -1025,14 +1035,14 @@ var
   function is_indexer(
       n: il_$node_ptr_t): boolean; options(val_param);
   begin
-    is_indexer := (n^.kind = 145) or
-                  ((n^.kind = 137) and (dl_ptr_t(n)^.op = 13));
+    is_indexer := (n^.kind = dindex_node) or
+                  ((n^.kind = tree_node) and (dl_ptr_t(n)^.op = 13));
   end;
 
 begin { delay_$propagate_index_long }
   if is_indexer(n) then
     if 8 in getphase(n) then
-      if n^.kind = 145 then begin
+      if n^.kind = dindex_node then begin
         if is_indexer(dl_ptr_t(n)^.base) then
           dl_ptr_t(dl_ptr_t(n)^.base)^.phase :=
               dl_ptr_t(dl_ptr_t(n)^.base)^.phase + [8];
@@ -1040,7 +1050,7 @@ begin { delay_$propagate_index_long }
           dl_ptr_t(dl_ptr_t(n)^.index)^.phase :=
               dl_ptr_t(dl_ptr_t(n)^.index)^.phase + [8];
       end
-      else if n^.kind = 137 then
+      else if n^.kind = tree_node then
         if dl_ptr_t(n)^.op = 13 then
           for i := 1 to dl_ptr_t(n)^.count do
             if is_indexer(dl_ptr_t(n)^.opnd[i]) then
@@ -1163,8 +1173,9 @@ begin
     end;
     12: begin
       o := dl_ptr_t(n^.opnd[1]);
-      if (o^.kind = 137) and (o^.op = 14) and
-         (o^.opnd[2]^.kind in [77..87, 101, 200]) then
+      if (o^.kind = tree_node) and (o^.op = 14) and
+         (o^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                               binteger_ob]) then
         if (dl_ptr_t(o^.opnd[2])^.int_value mod 8 = 0) and
            (o^.desc.w8 = 8) and
            ((o^.desc.flags.signed = ((n^.desc.w8 >= 0) and
@@ -1173,8 +1184,9 @@ begin
             (n^.desc.w8 = 7) or (n^.desc.w8 = 6)) then
           if delay(n^.opnd[1], n^.desc.w6, 1, false) = 1 then begin
             o := dl_ptr_t(n^.opnd[2]);
-            if (o^.kind = 137) and (o^.op = 14) and
-               (o^.opnd[2]^.kind in [77..87, 101, 200]) and
+            if (o^.kind = tree_node) and (o^.op = 14) and
+               (o^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                                     binteger_ob]) and
                (dl_ptr_t(o^.opnd[2])^.int_value mod 8 = 0) and
                (o^.desc.w8 = 8) and
                (o^.desc.flags.signed =
@@ -1186,7 +1198,8 @@ begin
                   goto 99;
                 end;
             end
-            else if o^.kind in [77..87, 101, 200] then
+            else if o^.kind in [blogical_ob..char_ob, char16_ob,
+                                binteger_ob] then
               if dl_ptr_t(n^.opnd[1])^.desc.flags.signed then begin
                 if (o^.int_value >= -128) and (o^.int_value <= 127) then
                 begin
@@ -1210,7 +1223,9 @@ begin
       x := delay(n^.opnd[1], n^.desc.rlen, x, doit);
       if x = 5 then
         x := 4;
-      if n^.opnd[2]^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200] then
+      if n^.opnd[2]^.kind in [blogical_ob..complex_ob, char_string_ob,
+                              char32_string_ob, char16_ob, set_con_ob,
+                              rec_const_ob, dpcomplex_ob, binteger_ob] then
         if doit then
           n^.desc.w8 := delay(n^.opnd[2], x, x, true)
         else
@@ -1229,7 +1244,7 @@ begin
         x := delay(n^.opnd[1], n^.desc.rlen, maxw, false);
         o := dl_ptr_t(n^.opnd[1]);
         if (x >= maxw) and (x < n^.desc.rlen) and (n^.op = 28) and
-           (o^.kind = 137) and (o^.op = 18) and (x >= o^.desc.w6) and
+           (o^.kind = tree_node) and (o^.op = 18) and (x >= o^.desc.w6) and
            not o^.desc.flags.signed then begin
           res := x;
           if doit then begin
@@ -1244,7 +1259,9 @@ begin
       if doit then
         n^.desc.w6 := delay(n^.opnd[1], n^.desc.rlen, n^.desc.rlen, doit);
 30:
-      if n^.opnd[2]^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200] then
+      if n^.opnd[2]^.kind in [blogical_ob..complex_ob, char_string_ob,
+                              char32_string_ob, char16_ob, set_con_ob,
+                              rec_const_ob, dpcomplex_ob, binteger_ob] then
         if doit then
           n^.desc.w8 := delay(n^.opnd[2], n^.desc.w6, n^.desc.w6, true)
         else
@@ -1286,14 +1303,15 @@ begin
       for i := 2 to n^.count do begin
         w := paramrlen(t, i, sg);
         o := dl_ptr_t(n^.opnd[i]);
-        if o^.kind = 137 then begin
+        if o^.kind = tree_node then begin
           w := o^.desc.rlen;
           sg := true;
           if o^.op = 63 then
             o^.desc.w8 := 1;
         end
-        else if (o^.kind = 146) or (o^.kind = 205) or (o^.kind = 147) or
-                (o^.kind = 145) then
+        else if (o^.kind = ptr_node) or (o^.kind = sym_disp_node)
+            or (o^.kind = disp_node) or
+                (o^.kind = dindex_node) then
           if not sg then begin
             w := 5;
             sg := true;
@@ -1349,7 +1367,7 @@ begin
     26: begin
       w := n^.desc.rlen;
       o := dl_ptr_t(n^.opnd[1]);
-      if (o^.kind = 143) or (o^.kind = 137) then begin
+      if (o^.kind = cmp_tree_node) or (o^.kind = tree_node) then begin
         w := o^.desc.rlen;
         if o^.op = 63 then
           o^.desc.w8 := 1;
@@ -1362,7 +1380,10 @@ begin
       discard(delay(n^.opnd[1], 5, 5, true));
       if 8 in n^.phase then
         w := n^.desc.w6
-      else if not (n^.opnd[2]^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205]) then
+      else if not (n^.opnd[2]^.kind in [tree_node, gen_tree_node,
+                                        cmp_tree_node, dindex_node..disp_node,
+                                        cs_node, cc_call, pf_call, cse_use_ob,
+                                        sym_disp_node]) then
         w := n^.desc.w6
       else if 8 in (getphase(n^.opnd[1]) + getphase(n^.opnd[2])) then
         w := n^.desc.w6
@@ -1376,7 +1397,8 @@ begin
     3: begin
       b := delay(n^.opnd[1], n^.desc.w6, maxw, false);
       o := dl_ptr_t(n^.opnd[2]);
-      if (o^.kind in [77..87, 101, 200]) and (n^.desc.w8 = 4) then begin
+      if (o^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+          and (n^.desc.w8 = 4) then begin
         if n^.desc.flags.signed then begin
           if (o^.int_value <= 32767) and (o^.int_value >= -32768) then
             n^.desc.w8 := 2;
@@ -1490,7 +1512,8 @@ begin
       discard(delay(n^.opnd[1], n^.desc.w6, n^.desc.w6, doit));
       if n^.xw[11] > 4 then
         discard(delay(n^.opnd[2], 5, 5, doit))
-      else if n^.opnd[1]^.kind in [77..87, 101, 200] then begin
+      else if n^.opnd[1]^.kind in [blogical_ob..char_ob, char16_ob,
+                                   binteger_ob] then begin
         v := dl_ptr_t(n^.opnd[1])^.int_value;
         if (v >= 0) and (v <= 7) then
           w := 1
@@ -1512,13 +1535,15 @@ begin
     14: begin
       discard(delay(n^.opnd[1], n^.desc.rlen, n^.desc.rlen, true));
       if (3 in cargs_$options.cpu) and
-         not (n^.opnd[2]^.kind in [77..87, 101, 200]) then
+         not (n^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                                   binteger_ob]) then
         w := 4
       else
         w := 1;
       discard(delay(n^.opnd[2], w, w, true));
       o := dl_ptr_t(n^.opnd[2]);
-      if (o^.kind in [77..87, 101, 200]) and (o^.int_value mod 8 = 0) and
+      if (o^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+          and (o^.int_value mod 8 = 0) and
          (n^.desc.w8 = 8) then begin
         if maxw = 1 then begin
           if doit then begin
@@ -1536,7 +1561,7 @@ begin
       end
       else begin
         w := n^.desc.rlen;
-        if o^.kind in [77..87, 101, 200] then begin
+        if o^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
           if maxw = 1 then begin
             if n^.desc.w6 <= 8 then
               w := maxw;
@@ -1555,7 +1580,7 @@ begin
     39: begin
       o := dl_ptr_t(n^.opnd[1]);
       if (n^.desc.w6 = 4) and not n^.desc.flags.signed and
-         (o^.kind = 137) and (o^.op = 18) and
+         (o^.kind = tree_node) and (o^.op = 18) and
          (o^.desc.rlen > o^.desc.w6) and not o^.desc.flags.signed then
         n^.desc.flags.signed := true;
       discard(delay(n^.opnd[1], n^.desc.w6, n^.desc.w6, doit));
@@ -1618,16 +1643,18 @@ var
   w: integer;
   ph: add_node_$phase_t;
   sg: boolean;                          { -48 }
-  k: integer;                           { -40 }
+  k: il_$kind_t;                        { -40 }
 begin
   res := want;
   n := dl_ptr_t(t);
-  if n^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205] then begin
+  if n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                 dindex_node..disp_node, cs_node, cc_call, pf_call, cse_use_ob,
+                 sym_disp_node] then begin
     if 1 in n^.phase then
       maxw := want;
-    if (9 in n^.phase) and (n^.kind <> 146) and (n^.kind <> 147) and
-       (n^.kind <> 205) then begin
-      if n^.kind = 145 then begin
+    if (9 in n^.phase) and (n^.kind <> ptr_node) and (n^.kind <> disp_node) and
+       (n^.kind <> sym_disp_node) then begin
+      if n^.kind = dindex_node then begin
         delay := want;
         return;
       end;
@@ -1659,19 +1686,19 @@ begin
     end;
   end;
   case n^.kind of
-    137, 143: begin
+    tree_node, cmp_tree_node: begin
       if n^.uses > 1 then begin
         delay := res;
         return;
       end;
       res := delay_$shrink_tree_node(t, want, maxw, doit);
     end;
-    147, 205, 146: begin
+    disp_node, sym_disp_node, ptr_node: begin
       if n^.uses > 1 then begin
         delay := res;
         return;
       end;
-      if (n^.kind = 147) and (n^.base^.kind = 137) then
+      if (n^.kind = disp_node) and (n^.base^.kind = tree_node) then
         discard(delay(n^.base, dl_ptr_t(n^.base)^.desc.rlen,
               dl_ptr_t(n^.base)^.desc.rlen, doit))
       else
@@ -1680,7 +1707,7 @@ begin
          not (2 in n^.rf_phase) then begin
         if doit then begin
           il_utils_$adjust_uc(t, -1);
-          if n^.kind = 146 then
+          if n^.kind = ptr_node then
             t := add_dn(t, t, want - maxw)
           else
             t := add_dn(t, n^.sym, want - maxw);
@@ -1689,7 +1716,7 @@ begin
         res := maxw;
       end;
     end;
-    109:
+    var_name:
       if (want > maxw) and (want < 5) and not (0 in n^.vattr) then begin
         if doit then begin
           il_utils_$adjust_uc(t, -1);
@@ -1698,7 +1725,7 @@ begin
         end;
         res := maxw;
       end;
-    145: begin
+    dindex_node: begin
       if n^.uses > 1 then begin
         delay := res;
         return;
@@ -1709,7 +1736,9 @@ begin
       else begin
         ph := getphase(n^.index) + getphase(n^.base);
         if (8 in ph) or
-           not (n^.index^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205]) then
+           not (n^.index^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                                   dindex_node..disp_node, cs_node, cc_call,
+                                   pf_call, cse_use_ob, sym_disp_node]) then
           w := n^.len
         else
           w := 2;
@@ -1719,28 +1748,31 @@ begin
         n^.len := w;
       discard(delay(n^.base, 4, 4, doit));
     end;
-    80, 81, 82, 83, 84, 85, 86, 200:
+    sinteger_ob, integer_ob, linteger_ob, usinteger_ob, uinteger_ob,
+        ulinteger_ob, ubinteger_ob, binteger_ob:
       if (maxw = 1) or (maxw = 4) or (maxw = 2) then begin
         res := maxw;
         if doit then begin
-          if (n^.kind = 80) or (n^.kind = 200) or (n^.kind = 82) then begin
+          if (n^.kind = sinteger_ob) or (n^.kind = binteger_ob)
+              or (n^.kind = linteger_ob) then begin
             sg := true;
             if maxw = 1 then
-              k := 200
+              k := binteger_ob
             else if maxw = 2 then
-              k := 80
+              k := sinteger_ob
             else
-              k := 82;
+              k := linteger_ob;
           end
-          else if (n^.kind = 83) or (n^.kind = 84) or (n^.kind = 86) or
-                  (n^.kind = 85) then begin
+          else if (n^.kind = usinteger_ob) or (n^.kind = uinteger_ob)
+              or (n^.kind = ubinteger_ob) or
+                  (n^.kind = ulinteger_ob) then begin
             sg := false;
             if maxw = 1 then
-              k := 86
+              k := ubinteger_ob
             else if maxw = 2 then
-              k := 83
+              k := usinteger_ob
             else
-              k := 85;
+              k := ulinteger_ob;
           end
           else begin
             if maxw = 1 then
@@ -1749,7 +1781,7 @@ begin
               sg := (n^.int_value < 0) or (n^.int_value > 65535)
             else
               sg := true;
-            k := 81;
+            k := integer_ob;
           end;
           t := smcontk(k, dfetch(n^.int_value, maxw, sg));
         end;
@@ -1764,7 +1796,9 @@ begin
     res := want;
   if (res = 4) and (maxw <> 4) then
     res := want;
-  if t^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205] then
+  if t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                 dindex_node..disp_node, cs_node, cc_call, pf_call, cse_use_ob,
+                 sym_disp_node] then
     if doit then begin
       dl_ptr_t(t)^.regs := res;
       dl_ptr_t(t)^.phase := dl_ptr_t(t)^.phase + [9];
@@ -1790,21 +1824,22 @@ var
 begin
   if 6 in cargs_$options.opt_on then
     case n^.kind of
-      140: begin
+      assign_node: begin
         discard(delay(n^.xp[16], n^.xw[26], n^.xw[26], true));
         discard(delay(n^.xp[17], n^.xw[26], n^.xw[26], true));
       end;
-      139:
+      eval_node:
         for i := 1 to n^.xw[25] do
-          if (n^.xp[12 + i]^.kind = 137) or (n^.xp[12 + i]^.kind = 143) then
+          if (n^.xp[12 + i]^.kind = tree_node)
+              or (n^.xp[12 + i]^.kind = cmp_tree_node) then
           begin
             w := dl_ptr_t(n^.xp[12 + i])^.desc.rlen;
             discard(delay(n^.xp[12 + i], w, w, true));
           end
           else
             discard(delay(n^.xp[12 + i], 4, 4, false));
-      142: discard(delay(n^.xp[14], 1, 1, true));
-      151:
+      cbranch_node: discard(delay(n^.xp[14], 1, 1, true));
+      return_node:
         if n^.xp[12] <> nil then
           discard(delay(n^.xp[12], n^.xw[26], n^.xw[26], true));
       otherwise ;

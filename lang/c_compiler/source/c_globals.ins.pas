@@ -29,7 +29,14 @@ const
     the bytes after the table) and keeps in lex_tokens[k]; an
     identifier a reserved word has not claimed is class 76 (idntk(76,
     ...)), constants and strings have their node kinds.  The names are
-    the spellings. }
+    the spellings.  The classes are the ordinals of IL node kinds
+    (il.ins.pas's il_$kind_t): the C front end reuses the Pascal front
+    end's token kinds, the punctuation's for the same punctuation
+    (end_ob 0 for the closing brace, sub_ob 60 and bus_ob 50 for the
+    brackets, up_to_ob 49 for `..'), the reserved words' for C's, id_ob
+    76, integer_ob 81 .. ulinteger_ob 85, char_string_ob 92 and
+    char32_string_ob 93.  The parser keeps a class as an integer
+    (token_kind, lex_tokens, its follow sets), so these stay numbers. }
   ctk_rbrace = 0;           ctk_if = 1;               ctk_switch = 2;
   ctk_lbrace = 3;           ctk_else = 4;             ctk_do = 5;
   ctk_enum = 6;             ctk_7 = 7;                ctk_void = 8;
@@ -188,7 +195,7 @@ var
                                           attr_check_align (`movea.l
                                           #0x140440' and k * 64 less
                                           60 or 12) }
-  char_type: extern c_type_ptr_t;       { +0x2390: signed, 1 }
+  char_ptype: extern c_type_ptr_t;      { +0x2390: signed, 1 }
   short_type: extern c_type_ptr_t;      { +0x2394: signed, 2 (cc also
                                           stores it in runbackend_10) }
   int_type: extern c_type_ptr_t;        { +0x2398: signed, 4 (and in
@@ -199,7 +206,7 @@ var
   uint_type: extern c_type_ptr_t;       { +0x23A4: unsigned, 4 }
   float_type: extern c_type_ptr_t;      { +0x23A8: floating, 6 }
   double_type: extern c_type_ptr_t;     { +0x23AC: floating, 7 }
-  void_type: extern c_type_ptr_t;       { +0x23B0: kind 210 }
+  void_ptype: extern c_type_ptr_t;      { +0x23B0: kind 210 }
   cexs_23b4: extern c_type_ptr_t;       { +0x23B4: uint_type's node
                                           again (c_expr_syn, c_main) }
   cexs_23b8: extern c_type_ptr_t;       { +0x23B8: kind 136 (c_main) }

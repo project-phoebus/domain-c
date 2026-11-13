@@ -361,7 +361,7 @@ var
   scnhdr_base: integer32;               { +0x5C70 }
   first_sym: integer32;                 { +0x5C74 }
   data_sym: integer32;                  { +0x5C78 }
-  data_section: il_$node_ptr_t;         { +0x5C7C: the section whose
+  data_section_node: il_$node_ptr_t;    { +0x5C7C: the section whose
                                           data are emitted }
   sect_cursor: il_$node_ptr_t;          { +0x5C80 }
   nrels: unix_objmod_$count_t;          { +0x5C88 }
@@ -469,7 +469,7 @@ end;
 function has_ecb(
     p: il_$node_ptr_t): boolean; options(val_param);
 begin
-  if p^.kind = 167 then
+  if p^.kind = entry_blk then
     p := p^.xp[37];
   if 7 in cargs_$options.flags_286 then
     has_ecb := false
@@ -529,41 +529,42 @@ var
   q: il_$node_ptr_t;
 begin
   case p^.kind of
-    167, 108, 107:
+    entry_blk, function_blk, procedure_blk:
       r := p^.xw[133];
-    192, 194:
+    transfer_vector, external_ref:
       r := get_reloc_symndx(p^.xp[2], 0);
-    183:
+    data_section:
       r := p^.xw[22];
-    182:
+    procedure_section:
       r := p^.xw[32];
-    111:
+    common_block_name:
       r := p^.xw[16];
-    109:
+    var_name:
       if p^.xw[36] in [1, 7] then
         r := p^.xp[5]^.xp[48]^.xw[22]
       else
         r := p^.xw[38];
-    110:
+    fortran_symbol:
       r := p^.xw[33];
-    159:
+    lib_dsc:
       for global_index := 1 to uobj_global_name_count.l do begin
         q := uobj_global_names[global_index].name;
         if strl_$eq(p^.xc[12 + 2 * p^.xw[5]], p^.xw[4],
                     q^.xc[12 + 2 * q^.xw[5]], q^.xw[4]) then
           r := uobj_global_names[global_index].symndx;
       end;
-    208:
+    at_lib_dsc:
       for global_index := 1 to uobj_local_name_count.l do
         if uobj_local_names[global_index].name = p then
           r := uobj_local_names[global_index].symndx;
-    184:
+    inline_constant:
       r := p^.xp[1]^.xw[32];
-    215, 214, 144:
+    case_node_no_range_check, case_node_range_check, label_node:
       r := dflt;
-    163: begin
+    addr_con: begin
       q := p^.xp[2];
-      if (q^.kind = 144) or (q^.kind = 214) or (q^.kind = 215) then
+      if (q^.kind = label_node) or (q^.kind = case_node_range_check)
+          or (q^.kind = case_node_no_range_check) then
         r := get_reloc_symndx(q, p^.xp[6]^.xw[32])
       else
         r := get_reloc_symndx(q, 0);
@@ -647,7 +648,7 @@ begin
     nreloc_5d50 := nreloc_5d50 + 1
   else if sect = sect_5d94 then
     nreloc_5d4c := nreloc_5d4c + 1
-  else if sect^.kind = 182 then
+  else if sect^.kind = procedure_section then
     sect^.xl[17] := sect^.xl[17] + 1;
 end;
 
@@ -924,7 +925,7 @@ var
   found: boolean;
   target: integer;
 begin
-  n := idntk(76, id^.idnt_name, id^.idnt_len);
+  n := idntk(id_ob, id^.idnt_name, id^.idnt_len);
   if not cargs_$options.u then
     for i := 1 to n^.idnt_len do begin
       c := id^.idnt_name[i];
@@ -1076,15 +1077,16 @@ var
   begin
     sum := 0;
     t := p^.xp[10];
-    while t^.kind = 147 do begin
+    while t^.kind = disp_node do begin
       sum := sum + t^.xl[8];
       t := t^.xp[6];
     end;
-    if (t^.kind = 146) and (t^.xp[6]^.kind = 163) then
+    if (t^.kind = ptr_node) and (t^.xp[6]^.kind = addr_con) then
       emit_addr_con(t^.xp[6], sum) { forward }
-    else if (t^.kind = 146) and (t^.xp[6]^.kind = 195) then
+    else if (t^.kind = ptr_node)
+        and (t^.xp[6]^.kind = reloc_absolute_addr_con) then
       emit_abs_addr_con(t^.xp[6], sum) { forward }
-    else if t^.kind = 109 then begin
+    else if t^.kind = var_name then begin
       v := t;
       s := v^.xp[5]^.xp[48];
       if (v^.xw[36] = 7) or (v^.xw[36] = 8) then begin
@@ -1096,7 +1098,7 @@ var
         emit_32(value);
       end
       else begin
-        cgerr_no_source(20, integer32(idntk(76, 'var_name', 8)));
+        cgerr_no_source(20, integer32(idntk(id_ob, 'var_name', 8)));
         return;
       end;
       sect := s;
@@ -1106,15 +1108,15 @@ var
         off := uobj_obj_pos + data_count + 6;
       store_fixup_info(sect, off, value);
       sym := get_reloc_symndx(v, 0);
-      store_rel_info(data_section, off, sym);
+      store_rel_info(data_section_node, off, sym);
       nrelocs_5c58 := nrelocs_5c58 + 1;
     end
-    else if t^.kind = 163 then begin
+    else if t^.kind = addr_con then begin
       s := il_110;
       while s <> nil do begin
         a := s^.xp[3];
         while a <> nil do
-          if a^.kind = 163 then begin
+          if a^.kind = addr_con then begin
             if a = t then
               goto found;
             a := a^.xp[1];
@@ -1123,7 +1125,7 @@ var
             a := a^.xp[29];
         s := s^.xp[1];
       end;
-      cgerr_no_source(20, integer32(idntk(76, 'addr_con', 8)));
+      cgerr_no_source(20, integer32(idntk(id_ob, 'addr_con', 8)));
     found:
       value := sum + t^.xl[4] - s^.xl[4];
       emit_32(value);
@@ -1134,11 +1136,11 @@ var
         off := uobj_obj_pos + data_count + 6;
       store_fixup_info(sect, off, value);
       sym := s^.xw[22];
-      store_rel_info(data_section, off, sym);
+      store_rel_info(data_section_node, off, sym);
       nrelocs_5c58 := nrelocs_5c58 + 1;
     end
     else
-      cgerr_no_source(20, integer32(idntk(76, 'tree_node', 9)));
+      cgerr_no_source(20, integer32(idntk(id_ob, 'tree_node', 9)));
   end;
 
   { emit_data - len bytes, repeat times.
@@ -1212,37 +1214,37 @@ var
     l: unix_objmod_$long_bytes_t;
   begin
     case p^.kind of
-      92:
+      char_string_ob:
         emit_data(p^.str_chars, p^.str_len, repeat_count);
-      77: begin
+      blogical_ob: begin
         b := p^.xc[11];
         emit_data(b, 1, repeat_count);
       end;
-      200: begin
+      binteger_ob: begin
         b := p^.xc[11];
         emit_data(b, 1, repeat_count);
       end;
-      78, 80, 81: begin
+      slogical_ob, sinteger_ob, integer_ob: begin
         w := p^.xw[5];
         emit_data(w, 2, repeat_count);
       end;
-      79, 82:
+      llogical_ob, linteger_ob:
         emit_data(p^.xl[2], 4, repeat_count);
-      88: begin
+      real_ob: begin
         single := dbl_to_real(p, line);
         emit_data(single, 4, repeat_count);
       end;
-      90, 89:
+      complex_ob, dpreal_ob:
         emit_data(p^.xl[3], 8, repeat_count);
-      198:
+      dpcomplex_ob:
         emit_data(p^.xl[3], 16, repeat_count);
-      87: begin
+      char_ob: begin
         l.l := p^.xl[2];
         emit_data(l.c[4], 1, repeat_count);
       end;
-      156, 212:
+      set_con_ob, namelist_constant_ob:
         emit_data(p^.set_words, p^.set_len, repeat_count);
-      176:
+      rec_const_ob:
         if p^.xp[1] = nil then
           emit_data(p^.xl[3], p^.xl[2], repeat_count)
         else
@@ -1253,17 +1255,18 @@ var
               emit_data(p^.xc[12 + pos], c^.offset - pos, 1);
               t := c^.node;
               case t^.kind of
-                163:
+                addr_con:
                   emit_addr_con(t, 0); { forward }
-                195:
+                reloc_absolute_addr_con:
                   emit_abs_addr_con(t, 0); { forward }
-                137:
+                tree_node:
                   if t^.xw[18] = 26 then
                     emit_tree_node_const(t)
                   else
-                    cgerr_no_source(20, integer32(idntk(76, 'rec_const', 9)));
+                    cgerr_no_source(20, integer32(idntk(id_ob, 'rec_const',
+                        9)));
                 otherwise
-                  cgerr_no_source(20, integer32(idntk(76, 'rec_const', 9)));
+                  cgerr_no_source(20, integer32(idntk(id_ob, 'rec_const', 9)));
               end;
               pos := c^.offset + c^.len;
               c := c^.next;
@@ -1271,14 +1274,14 @@ var
             if pos < p^.xl[2] then
               emit_data(p^.xc[12 + pos], p^.xl[2] - pos, 1);
           end;
-      195:
+      reloc_absolute_addr_con:
         for r := 1 to repeat_count do
           emit_abs_addr_con(p, 0); { forward }
-      163:
+      addr_con:
         for r := 1 to repeat_count do
           emit_addr_con(p, 0); { forward }
       otherwise
-        cgerr(20, line, idntk(76, 'emit_constant', 13));
+        cgerr(20, line, idntk(id_ob, 'emit_constant', 13));
     end;
   end;
 
@@ -1347,12 +1350,12 @@ var
     blk := 0;
     t := p^.xp[3];
     case t^.kind of
-      109:
+      var_name:
         if t^.xw[36] = 3 then begin
           if (ord(il_$node_ptr_t(il_184)^.xc[377]) & 16#70) div 16 = 6 then
             blk := t^.xl[5];
           if not find_global_id(t^.xp[1], id, univ_ptr(blk)) then
-            cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)))
+            cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)))
           else if (11 in cargs_$options.flags_286) and
                   ((t^.xl[8] & 16#10000) <> 0) then
             value := value + t^.xl[14];
@@ -1387,10 +1390,10 @@ var
           store_fixup_info(t^.xp[20], off, v);
         end
         else
-          cgerr_no_source(20, integer32(idntk(76, 'var_name', 8)));
-      194:
+          cgerr_no_source(20, integer32(idntk(id_ob, 'var_name', 8)));
+      external_ref:
         ;
-      111: begin
+      common_block_name: begin
         v := value;
         if direct then
           off := uobj_direct_index + uobj_direct_base
@@ -1398,7 +1401,7 @@ var
           off := uobj_obj_pos + data_count + 10;
         store_fixup_info(p^.xp[3], off, v);
       end;
-      108, 107: begin
+      function_blk, procedure_blk: begin
         k := (t^.xw[188] & 384) div 128;
         if k = 0 then begin
           value := value + t^.xp[25]^.xl[14];
@@ -1413,12 +1416,12 @@ var
           if (ord(il_$node_ptr_t(il_184)^.xc[377]) & 16#70) div 16 = 6 then
             blk := t^.xl[2];
           if not find_global_id(t^.xp[74], id, univ_ptr(blk)) then
-            cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)));
+            cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
         end
         else
-          cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)));
+          cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
       end;
-      183: begin
+      data_section: begin
         value := value - t^.xl[4];
         if p^.xw[10] = 1 then
           value := value + t^.xl[5];
@@ -1430,7 +1433,7 @@ var
         store_fixup_info(p^.xp[3], off, v);
       end;
       otherwise
-        cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)));
+        cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
     end;
     v := value;
     emit_32(v);
@@ -1439,7 +1442,7 @@ var
       off := uobj_direct_index + uobj_direct_base - 4
     else
       off := uobj_obj_pos + data_count + 6;
-    store_rel_info(data_section, off, sym);
+    store_rel_info(data_section_node, off, sym);
     nrelocs_5c58 := nrelocs_5c58 + 1;
   end;
   { emit_addr_con - the longword (or other form) of address constant p
@@ -1485,7 +1488,8 @@ var
     k: integer32;
   begin
     t := p^.xp[2];
-    if (t^.kind = 144) or (t^.kind = 214) or (t^.kind = 215) or
+    if (t^.kind = label_node) or (t^.kind = case_node_range_check)
+        or (t^.kind = case_node_no_range_check) or
        (ord(p^.xc[20]) = 12) then
       sym := p^.xp[6]^.xw[32]
     else if (ord(p^.xc[20]) = 8) or (ord(p^.xc[20]) = 11) then
@@ -1506,7 +1510,7 @@ var
       end;
       2: begin
         t := p^.xp[2];
-        if (t^.kind = 109) and (t^.xw[36] = 4) then begin
+        if (t^.kind = var_name) and (t^.xw[36] = 4) then begin
           value := value + t^.xl[14];
           s := t^.xp[5]^.xp[48];
           value := value - s^.xl[4];
@@ -1518,12 +1522,12 @@ var
             off := uobj_obj_pos + data_count + 10;
           store_fixup_info(p^.xp[2]^.xp[5]^.xp[48], off, v);
         end
-        else if (t^.kind = 109) and (t^.xw[36] = 3) and
+        else if (t^.kind = var_name) and (t^.xw[36] = 3) and
                 (11 in cargs_$options.flags_286) and
                 ((t^.xl[8] & 16#10000) <> 0) then
           value := value + t^.xl[14];
         t := p^.xp[2];
-        if (t^.kind = 109) and (t^.xw[36] = 10) then begin
+        if (t^.kind = var_name) and (t^.xw[36] = 10) then begin
           v := value;
           if direct then
             off := uobj_direct_index + uobj_direct_base
@@ -1542,7 +1546,8 @@ var
       end;
       4: begin
         t := p^.xp[2];
-        if ((t^.kind = 167) or (t^.kind = 108) or (t^.kind = 107)) and
+        if ((t^.kind = entry_blk) or (t^.kind = function_blk)
+            or (t^.kind = procedure_blk)) and
            ((t^.xw[188] & 384) div 128 = 0) then
           if has_ecb(t) then begin
             t := p^.xp[2];
@@ -1588,7 +1593,7 @@ var
         end;
       6: begin
         t := p^.xp[2];
-        if (t^.kind = 107) or (t^.kind = 108) then begin
+        if (t^.kind = procedure_blk) or (t^.kind = function_blk) then begin
           value := t^.xp[25]^.xl[14];
           sym := t^.xp[47]^.xw[32];
           v := value;
@@ -1599,12 +1604,13 @@ var
           store_fixup_info(t^.xp[47], off, v);
         end
         else begin
-          if (t^.kind = 144) or (t^.kind = 214) or (t^.kind = 215) then
+          if (t^.kind = label_node) or (t^.kind = case_node_range_check)
+              or (t^.kind = case_node_no_range_check) then
             if target_properties.p_7f then
               value := sym_$displacement(t)
             else
               value := t^.xl[14]
-          else if t^.kind = 184 then
+          else if t^.kind = inline_constant then
             value := t^.xp[2]^.xl[3]
           else
             cgerr(7, il_d0, t);
@@ -1625,7 +1631,7 @@ var
         else
           off := uobj_obj_pos + data_count + 6;
         store_fixup_info(p^.xp[6], off, v);
-        store_rel_info(data_section, off, sym);
+        store_rel_info(data_section_node, off, sym);
         nrelocs_5c58 := nrelocs_5c58 + 1;
         emit_16(0);
         return;
@@ -1645,7 +1651,7 @@ var
       end;
       11: begin
         t := p^.xp[2];
-        if t^.kind = 87 then begin
+        if t^.kind = char_ob then begin
           emit_8(t^.xc[11]);
           emit_8(chr(0));
           emit_16(0);
@@ -1671,7 +1677,7 @@ var
         store_fixup_info(p^.xp[6], off, v);
       end;
       otherwise
-        cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)));
+        cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
     end;
     v := value;
     emit_32(v);
@@ -1679,7 +1685,7 @@ var
       off := uobj_direct_index + uobj_direct_base - 4
     else
       off := uobj_obj_pos + data_count + 6;
-    store_rel_info(data_section, off, sym);
+    store_rel_info(data_section_node, off, sym);
     nrelocs_5c58 := nrelocs_5c58 + 1;
   end;
   { emit_ecb - the entry control block of routine r (in section sect)
@@ -1737,7 +1743,7 @@ var
         emit_16(16#185E);
         w := -4 - r^.xw[55];
         emit_16(w);
-        if r^.kind = 167 then
+        if r^.kind = entry_blk then
           size := r^.xp[37]^.xl[44] - r^.xp[37]^.xl[28]
         else
           size := r^.xl[44] - r^.xl[28];
@@ -1781,7 +1787,7 @@ var
           off := uobj_obj_pos + data_count + 6;
         store_fixup_info(r^.xp[47], off, start);
         sym := r^.xp[47]^.xw[32];
-        store_rel_info(data_section, off, sym);
+        store_rel_info(data_section_node, off, sym);
         nrelocs_5c58 := nrelocs_5c58 + 1;
       end;
       0: begin
@@ -1797,7 +1803,7 @@ var
             off := uobj_obj_pos + data_count + 6;
           store_fixup_info(r^.xp[48], off, v);
           sym := sect^.xw[22];
-          store_rel_info(data_section, off, sym);
+          store_rel_info(data_section_node, off, sym);
           nrelocs_5c58 := nrelocs_5c58 + 1;
         end;
         emit_16(16#4EF9);
@@ -1808,7 +1814,7 @@ var
           off := uobj_obj_pos + data_count + 6;
         store_fixup_info(r^.xp[47], off, r^.xp[25]^.xl[14]);
         sym := r^.xp[47]^.xw[32];
-        store_rel_info(data_section, off, sym);
+        store_rel_info(data_section_node, off, sym);
         nrelocs_5c58 := nrelocs_5c58 + 1;
         if (ord(r^.xc[294]) > 0) and (ord(r^.xc[294]) <= 127) and
            ((ord(r^.xc[376]) & 16) = 0) then begin
@@ -1831,7 +1837,7 @@ var
           off := uobj_obj_pos + data_count + 6;
         store_fixup_info(r^.xp[47], off, start);
         sym := r^.xp[47]^.xw[32];
-        store_rel_info(data_section, off, sym);
+        store_rel_info(data_section_node, off, sym);
         nrelocs_5c58 := nrelocs_5c58 + 1;
         emit_32(0);
         v := -r^.xp[48]^.xl[4];
@@ -1841,7 +1847,7 @@ var
           off := uobj_obj_pos + data_count + 6;
         store_fixup_info(r^.xp[48], off, v);
         sym := r^.xp[48]^.xw[22];
-        store_rel_info(data_section, off, sym);
+        store_rel_info(data_section_node, off, sym);
         nrelocs_5c58 := nrelocs_5c58 + 1;
       end;
       otherwise
@@ -1877,7 +1883,7 @@ var
   begin
     blk := 0;
     case p^.kind of
-      109:
+      var_name:
         if p^.xw[36] = 4 then begin
           create_global_reference := p^.xp[5]^.xp[48]^.xw[20];
           return;
@@ -1891,7 +1897,7 @@ var
           if (ord(il_$node_ptr_t(il_184)^.xc[377]) & 16#70) div 16 = 6 then
             blk := p^.xl[5];
         end;
-      167, 108, 107:
+      entry_blk, function_blk, procedure_blk:
         if (p^.xw[188] & 384) div 128 = 0 then begin
           create_global_reference := 0;
           return;
@@ -1901,14 +1907,14 @@ var
           if (ord(il_$node_ptr_t(il_184)^.xc[377]) & 16#70) div 16 = 6 then
             blk := p^.xl[2];
         end;
-      110:
-        name := idntk(76, p^.xc[72], p^.xw[35]);
-      159:
-        name := idntk(76, p^.xc[12 + 2 * p^.xw[5]], p^.xw[4]);
-      208:
-        name := idntk(76, p^.xc[50], ord(p^.xc[49]));
+      fortran_symbol:
+        name := idntk(id_ob, p^.xc[72], p^.xw[35]);
+      lib_dsc:
+        name := idntk(id_ob, p^.xc[12 + 2 * p^.xw[5]], p^.xw[4]);
+      at_lib_dsc:
+        name := idntk(id_ob, p^.xc[50], ord(p^.xc[49]));
       otherwise
-        cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)));
+        cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
     end;
     if find_global_id(name, id, univ_ptr(blk)) then begin
       create_global_reference := id;
@@ -2045,9 +2051,9 @@ var
     k: integer;
   begin
     case p^.kind of
-      109:
+      var_name:
         get_section_id := p^.xp[5]^.xp[48]^.xw[23];
-      110: begin
+      fortran_symbol: begin
         k := (ord(p^.xc[44]) & 16#F0) div 16;
         if k = 1 then
           get_section_id := p^.xp[10]^.xp[48]^.xw[23]
@@ -2057,13 +2063,13 @@ var
           else
             get_section_id := il_$node_ptr_t(il_110)^.xw[23];
       end;
-      183:
+      data_section:
         get_section_id := p^.xw[23];
-      194:
+      external_ref:
         get_section_id := get_section_id(p^.xp[2]);
-      108, 107:
+      function_blk, procedure_blk:
         get_section_id := p^.xp[47]^.xw[33];
-      111:
+      common_block_name:
         get_section_id := p^.xw[17];
       otherwise
         ;
@@ -2094,11 +2100,11 @@ var
       b := putobj(fixup_tail^.offset, 4);
       s := fixup_tail^.sect;
       case s^.kind of
-        183:
+        data_section:
           v := fixup_tail^.value + s^.xl[9];
-        182:
+        procedure_section:
           v := fixup_tail^.value + s^.xl[14];
-        111:
+        common_block_name:
           v := fixup_tail^.value + s^.xl[11];
         otherwise
           ;
@@ -2161,14 +2167,14 @@ var
         if q^.target <> nil then begin
           t := q^.target;
           case t^.kind of
-            192:
+            transfer_vector:
               if not only_externals then begin
                 p := putobj(q^.vaddr, 4);
                 p^ := q^.target^.xl[3] + data_5c54;
                 freeobj(p);
                 patched := true;
               end;
-            109:
+            var_name:
               if t^.xw[36] = 3 then begin
                 if only_externals then
                   k2 := create_global_reference(t)
@@ -2178,7 +2184,7 @@ var
                   if find_global_id(t^.xp[1], id, univ_ptr(blk)) then
                     patched := true
                   else
-                    cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)));
+                    cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
                   if (11 in cargs_$options.flags_286) and
                      ((q^.target^.xl[8] & 16#10000) <> 0) then begin
                     p := putobj(q^.vaddr, 4);
@@ -2214,17 +2220,17 @@ var
                 end;
               end
               else if not only_externals then
-                cgerr_no_source(20, integer32(idntk(76, 'var_name', 8)));
-            110: begin
+                cgerr_no_source(20, integer32(idntk(id_ob, 'var_name', 8)));
+            fortran_symbol: begin
               k := (ord(t^.xc[44]) & 16#F0) div 16;
               if k = 1 then begin
                 if only_externals then
                   k2 := create_global_reference(t)
-                else if find_global_id(idntk(76, t^.xc[72], t^.xw[35]), id,
+                else if find_global_id(idntk(id_ob, t^.xc[72], t^.xw[35]), id,
                                        univ_ptr(blk)) then
                   patched := true
                 else
-                  cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)));
+                  cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
               end
               else begin
                 k2 := (ord(t^.xc[11]) & 16#F0) div 16;
@@ -2254,20 +2260,20 @@ var
                   end;
                 end
                 else if not only_externals then
-                  cgerr_no_source(20, integer32(idntk(76, 'fortran_', 8)));
+                  cgerr_no_source(20, integer32(idntk(id_ob, 'fortran_', 8)));
               end;
             end;
-            194:
+            external_ref:
               if not only_externals then
                 patched := true;
-            111:
+            common_block_name:
               if not only_externals then begin
                 p := putobj(q^.vaddr, 4);
                 p^ := p^ + get_load_addr(q^.target^.xw[17]);
                 freeobj(p);
                 patched := true;
               end;
-            167, 108, 107: begin
+            entry_blk, function_blk, procedure_blk: begin
               k := (t^.xw[188] & 384) div 128;
               if (k = 0) and not only_externals then begin
                 p := putobj(q^.vaddr, 4);
@@ -2285,13 +2291,13 @@ var
                   if find_global_id(t^.xp[74], id, univ_ptr(blk)) then
                     patched := true
                   else
-                    cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)));
+                    cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
                 end;
               end
               else if not only_externals then
-                cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)));
+                cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
             end;
-            183:
+            data_section:
               if not only_externals then begin
                 p := putobj(q^.vaddr, 4);
                 p^ := get_load_addr(q^.target^.xw[23]) + p^ -
@@ -2299,7 +2305,7 @@ var
                 freeobj(p);
                 patched := true;
               end;
-            195:
+            reloc_absolute_addr_con:
               if t^.xw[10] = 1 then begin
                 if not only_externals then begin
                   s := t^.xp[3];
@@ -2311,10 +2317,10 @@ var
                 end;
               end
               else if not only_externals then
-                cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)));
+                cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
             otherwise
               if not only_externals then
-                cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)));
+                cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
           end;
         end;
       end;
@@ -2566,12 +2572,12 @@ var
             while (i < j) and
                   ((a^[i].disp < a^[last].disp) or
                    ((a^[i].disp = a^[last].disp) and
-                    (a^[i].elem^.kind = 221))) do
+                    (a^[i].elem^.kind = fdata_default_seq))) do
               i := i + 1;
             while (i < j) and
                   ((a^[j].disp > a^[last].disp) or
                    ((a^[j].disp = a^[last].disp) and
-                    (a^[j].elem^.kind <> 221))) do
+                    (a^[j].elem^.kind <> fdata_default_seq))) do
               j := j - 1;
             if i < j then begin
               temp := a^[i];
@@ -2582,7 +2588,7 @@ var
           if i < last then
             if (a^[i].disp > a^[last].disp) or
                ((a^[i].disp = a^[last].disp) and
-                (a^[last].elem^.kind = 221)) then begin
+                (a^[last].elem^.kind = fdata_default_seq)) then begin
               temp := a^[i];
               a^[i] := a^[last];
               a^[last] := temp;
@@ -2616,7 +2622,7 @@ var
         begin
           d := 0;
           t := e^.xp[2];
-          if t^.kind = 110 then begin
+          if t^.kind = fortran_symbol then begin
             if t^.xp2[14] <> nil then
               d := e^.xl[3] + t^.xl[3]
             else begin
@@ -2678,7 +2684,7 @@ var
           d: integer32;
         begin
           adjust_head_and_tail(e);
-          if e^.xp[4]^.kind = 114 then
+          if e^.xp[4]^.kind = fdata_clist then
             d := e^.xl[5] - e^.xl[5] div e^.xp[4]^.xl[3]
           else
             d := 0;
@@ -2705,7 +2711,7 @@ var
           n := n + 1;
           if sorted then begin
             i := ddisp(q);
-            if (i < d) or (q^.kind = 221) then
+            if (i < d) or (q^.kind = fdata_default_seq) then
               sorted := false;
             d := i;
           end;
@@ -2730,15 +2736,15 @@ var
         range_end := pos;
         while i <= n do begin
           q := a^[i].elem;
-          if (q^.kind = 221) and (range = nil) then begin
+          if (q^.kind = fdata_default_seq) and (range = nil) then begin
             range := a^[i].elem;
             pos := q^.xl[3];
             range_end := q^.xl[6];
             i := i + 1;
           end
-          else if (pos <> q^.xl[3]) or (q^.kind = 221) then begin
+          else if (pos <> q^.xl[3]) or (q^.kind = fdata_default_seq) then begin
             f := gspace32(24);
-            f^.kind := 113;
+            f^.kind := fdata_nlist;
             f^.xp[1] := nil;
             f^.xl[2] := range^.xl[2];
             f^.xl[3] := pos;
@@ -2756,13 +2762,13 @@ var
         end;
         if range <> nil then begin
           f := gspace32(24);
-          f^.kind := 113;
+          f^.kind := fdata_nlist;
           f^.xp[1] := nil;
           f^.xl[2] := range^.xl[2];
           f^.xl[3] := pos;
           if pos <> range^.xl[6] then begin
             repeat_node := gspace(16);
-            repeat_node^.kind := 114;
+            repeat_node^.kind := fdata_clist;
             repeat_node^.xl[1] := 0;
             repeat_node^.xl[3] := (range^.xl[6] - pos) div range^.xl[5] + 1;
             repeat_node^.xp[2] := range^.xp[4];
@@ -2784,11 +2790,12 @@ var
     begin
       e := sort_data_init_thread;
       while e <> nil do begin
-        if e^.kind = 221 then
-          cgerr_no_source(28, integer32(idntk(76, 'ELSE clause failure', 19)));
+        if e^.kind = fdata_default_seq then
+          cgerr_no_source(28, integer32(idntk(id_ob, 'ELSE clause failure',
+                                              19)));
         t := e^.xp[2];
         k := -1;
-        if t^.kind = 110 then begin
+        if t^.kind = fortran_symbol then begin
           if t^.xp2[14] <> nil then
             init_data(t^.xp2[14]^.xw[13], e^.xl[3] + t^.xl[3])
           else begin
@@ -2819,26 +2826,28 @@ var
         end;
         if k <> -2 then begin
           line := spos_$null_position;
-          if e^.xp[2]^.kind = 109 then
+          if e^.xp[2]^.kind = var_name then
             line := e^.xp[2]^.xw[4];
           c := e^.xp[4];
-          if c^.kind = 114 then begin
+          if c^.kind = fdata_clist then begin
             clist := c;
             repeat
               emit_constant(clist^.xp[2], clist^.xl[3], line);
               clist := clist^.xp[1];
             until clist = nil;
           end
-          else if c^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200] then
+          else if c^.kind in [blogical_ob..complex_ob, char_string_ob,
+                              char32_string_ob, char16_ob, set_con_ob,
+                              rec_const_ob, dpcomplex_ob, binteger_ob] then
             emit_constant(c, 1, line)
-          else if c^.kind = 163 then
+          else if c^.kind = addr_con then
             emit_addr_con(c, 0)
-          else if c^.kind = 195 then
+          else if c^.kind = reloc_absolute_addr_con then
             emit_abs_addr_con(c, 0)
-          else if (c^.kind = 137) and (c^.xw[18] = 26) then
+          else if (c^.kind = tree_node) and (c^.xw[18] = 26) then
             emit_tree_node_const(c)
           else
-            cgerr(20, line, idntk(76, 'initial_value', 13));
+            cgerr(20, line, idntk(id_ob, 'initial_value', 13));
         end;
         e := e^.xp[1];
       end;
@@ -2895,7 +2904,7 @@ var
           init_data(p^.xw[20], 0);
           ecb_cursor := p^.xp[3];
           if target_properties.p_7f and (ecb_cursor <> nil) then begin
-            if ecb_cursor^.kind = 163 then
+            if ecb_cursor^.kind = addr_con then
               n := (ecb_cursor^.xl[4] - p^.xl[4]) div 2
             else
               n := (ecb_cursor^.xl[27] - p^.xl[4]) div 2;
@@ -2903,7 +2912,7 @@ var
               emit_16(0);
           end;
           while ecb_cursor <> nil do
-            if ecb_cursor^.kind = 163 then begin
+            if ecb_cursor^.kind = addr_con then begin
               emit_addr_con(ecb_cursor, 0);
               ecb_cursor := ecb_cursor^.xp[1];
             end
@@ -3311,7 +3320,7 @@ var
     m^.kind_size := 16#00020008;
     m^.module_name_offset := temp_string_count + 4;
     r := il_184;
-    if r^.kind = 106 then
+    if r^.kind = module_blk then
       if (ord(r^.xc[377]) & 16#70) div 16 = 3 then
         r := il_17c
       else
@@ -3678,7 +3687,7 @@ var
       uobj_pad_from := 0;
       ndirectives := 0;
       data_count := 0;
-      data_section := sect_cursor;
+      data_section_node := sect_cursor;
       if not cargs_$options.compress and cargs_$options.ncompress then
         data_sections(sect_cursor, 0, true, true)
       else
@@ -3696,7 +3705,7 @@ var
       uobj_pad_from := 0;
       ndirectives := 0;
       data_count := 0;
-      data_section := sect_cursor;
+      data_section_node := sect_cursor;
       data_sections(sect_cursor, 2, cargs_$options.ncompress, true);
       sect_cursor := sect_cursor^.xp[2];
     end;
@@ -3739,8 +3748,8 @@ var
       sect_cursor := il_110;
       while sect_cursor <> nil do begin
         if block_sect = nil then begin
-          block_sect := idntk(76, '.rwdi', 5);
-          data_section := block_sect;
+          block_sect := idntk(id_ob, '.rwdi', 5);
+          data_section_node := block_sect;
         end;
         compressed := true;
         uobj_pad_from := 0;
@@ -3755,8 +3764,8 @@ var
       sect_cursor := il_118;
       while sect_cursor <> nil do begin
         if block_sect = nil then begin
-          block_sect := idntk(76, '.rwdi', 5);
-          data_section := block_sect;
+          block_sect := idntk(id_ob, '.rwdi', 5);
+          data_section_node := block_sect;
         end;
         compressed := true;
         uobj_pad_from := 0;
@@ -3846,7 +3855,7 @@ var
           scnhdr_map := putobj(uobj_scnhdr_pos, 40);
           uobj_nsects := uobj_nsects + 1;
           s^.xw[17] := uobj_nsects;
-          if idntk(76, '.symbols', 8) = s^.xp[1] then begin
+          if idntk(id_ob, '.symbols', 8) = s^.xp[1] then begin
             is_main := false;
             main_symbols := s;
             uobj_symbols_sect := uobj_nsects;
@@ -4134,7 +4143,7 @@ begin
       cgerr_no_source(28, integer32(strtk(
         'tbld.exception_processor_ptr is required to be set.', 51)));
     exc_text := gspace32(92);
-    exc_text^.kind := 182;
+    exc_text^.kind := procedure_section;
     exc_data := il_110;
     exc_tuple := add_exception_addr_con_tuple(il_10c, il_110, exc_text);
     exc_handler := gen_utils_$alloc_new_addr_con(2, il_$node_ptr_t(il_138),
@@ -4168,7 +4177,7 @@ begin
   patched := false;
   uobj_nsyms := 1;
   fixup_head := nil;
-  data_section := nil;
+  data_section_node := nil;
   uobj_sym_sect := nil;
   main_symbols := nil;
   if cargs_$options.db <> 0 then
@@ -4216,7 +4225,7 @@ begin
   while data_cursor <> nil do begin
     ecb_cursor := data_cursor^.xp[3];
     while ecb_cursor <> nil do
-      if ecb_cursor^.kind <> 163 then
+      if ecb_cursor^.kind <> addr_con then
         ecb_cursor := ecb_cursor^.xp[29]
       else begin
         if (ord(ecb_cursor^.xc[20]) = 2) or (ord(ecb_cursor^.xc[20]) = 4) then
@@ -4234,18 +4243,19 @@ begin
   end;
   ecb_cursor := il_12c;
   while ecb_cursor <> nil do begin
-    if not ((ecb_cursor^.xp[2]^.kind = 109) and
+    if not ((ecb_cursor^.xp[2]^.kind = var_name) and
             (ecb_cursor^.xp[2]^.xw[36] = 3)) then
-      cgerr_no_source(20, integer32(idntk(76, 'CASE', 4)));
+      cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
     ecb_cursor^.xw[6] := create_global_reference(ecb_cursor^.xp[2]);
     ecb_cursor := ecb_cursor^.xp[1];
   end;
   ecb_cursor := il_130;
   while ecb_cursor <> nil do begin
     t := ecb_cursor^.xp[3];
-    if (((t^.kind = 105) or (t^.kind = 107) or (t^.kind = 167) or
-         (t^.kind = 108)) and ((t^.xw[188] & 384) div 128 = 2)) or
-       ((t^.kind = 109) and (t^.xw[36] = 3)) then
+    if (((t^.kind = program_blk) or (t^.kind = procedure_blk)
+         or (t^.kind = entry_blk) or
+         (t^.kind = function_blk)) and ((t^.xw[188] & 384) div 128 = 2)) or
+       ((t^.kind = var_name) and (t^.xw[36] = 3)) then
       k := create_global_reference(t);
     ecb_cursor := ecb_cursor^.xp[1];
   end;
@@ -4282,13 +4292,13 @@ begin
   a := putobj(aouthdr_pos, 44);
   obj_map_5d18 := a;
   main_routine := il_184;
-  if main_routine^.kind = 106 then
+  if main_routine^.kind = module_blk then
     if (ord(main_routine^.xc[377]) & 16#70) div 16 = 3 then
       main_routine := il_17c
     else
       main_routine := il_$node_ptr_t(il_184)^.xp[1];
   no_entry := false;
-  if main_routine^.kind = 105 then begin
+  if main_routine^.kind = program_blk then begin
     if not has_ecb(main_routine) then
       a^.entry := main_routine^.xp[25]^.xl[14] + main_routine^.xp[47]^.xl[14]
     else

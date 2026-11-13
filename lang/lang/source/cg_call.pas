@@ -84,7 +84,8 @@ var
 function cg_call_$is_a_nint(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
-  cg_call_$is_a_nint := ((n^.kind = 138) or (n^.kind = 137)) and
+  cg_call_$is_a_nint := ((n^.kind = gen_tree_node) or (n^.kind = tree_node))
+      and
       (cg_tree_ptr_t(n)^.op = 41) and (cg_tree_ptr_t(n)^.desc.w6 = 11);
 end;
 
@@ -101,16 +102,17 @@ var
 begin
   r := false;
   case n^.kind of
-    147, 146: r := true;
-    108, 107: begin
+    disp_node, ptr_node: r := true;
+    function_blk, procedure_blk: begin
       if rshft(n^.xw[188] & 16#180, 7) = 3 then
         r := true;
     end;
-    171: begin
-      if not (n^.xp[4]^.kind in [107..108, 110, 159, 167]) then
+    cc_call: begin
+      if not (n^.xp[4]^.kind in [procedure_blk..function_blk, fortran_symbol,
+                                 lib_dsc, entry_blk]) then
         r := true;
     end;
-    175: r := true;
+    pf_call: r := true;
     otherwise ;
   end;
   cg_call_$is_proc_var_call := r;
@@ -125,11 +127,11 @@ end;
 function get_atts(
     n: il_$node_ptr_t): integer32; options(val_param); internal;
 begin
-  if (n^.kind = 108) or (n^.kind = 107) then
+  if (n^.kind = function_blk) or (n^.kind = procedure_blk) then
     get_atts := rshft(n^.xl2[93], 11)
-  else if (n^.kind = 174) or (n^.kind = 173) then
+  else if (n^.kind = func__type) or (n^.kind = proc__type) then
     get_atts := rshft(n^.xl[19] & 16#FFFFF8, 3)
-  else if n^.kind = 175 then
+  else if n^.kind = pf_call then
     get_atts := get_atts(n^.xp[5])
   else
     get_atts := 0;
@@ -149,7 +151,7 @@ var
 begin
   r := (rshft(n^.xl2[93], 11) & lshft(1, k)) <> 0;
   if not r then
-    if n^.kind = 167 then
+    if n^.kind = entry_blk then
       if n^.xp[37] <> nil then
         r := (rshft(n^.xp[37]^.xl2[93], 11) & lshft(1, k)) <> 0;
   cg_call_$att_in_any_entry := r;
@@ -174,14 +176,15 @@ begin
   if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then begin
     if d.class = 1 then begin
       if d.sym <> nil then
-        if d.sym^.kind = 110 then
+        if d.sym^.kind = fortran_symbol then
           d.size := delay_378[runbackend_18[ord(d.sym^.xc[10]) & 15]];
     end
     else if d.base <> nil then begin
       v := d.base;
-      if v^.kind = 110 then
+      if v^.kind = fortran_symbol then
         d.size := delay_378[runbackend_18[ord(v^.xc[10]) & 15]]
-      else if (v^.kind = 137) or (v^.kind = 143) or (v^.kind = 138) then
+      else if (v^.kind = tree_node) or (v^.kind = cmp_tree_node)
+          or (v^.kind = gen_tree_node) then
         d.size := delay_378[v^.xw[12]];
     end;
   end
@@ -202,7 +205,10 @@ function cg_call_$obj_is_modifiable_by_param(
 begin
   if n <> nil then
     cg_call_$obj_is_modifiable_by_param :=
-        not (n^.kind in [77..90, 92..93, 101, 137..138, 143, 156, 176, 198, 200])
+        not (n^.kind in [blogical_ob..complex_ob,
+                         char_string_ob..char32_string_ob, char16_ob,
+                         tree_node..gen_tree_node, cmp_tree_node, set_con_ob,
+                         rec_const_ob, dpcomplex_ob, binteger_ob])
   else
     cg_call_$obj_is_modifiable_by_param := false;
 end;
@@ -353,12 +359,12 @@ var
         w := 2
       else
         w := 4;
-      if arg^.kind in [77..87, 101, 200] then begin
+      if arg^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
         address(arg, 0, op1);
         anyconst(arg^.xl[2], w, op1);
         emit(0, w, push, op1, 0);
       end
-      else if (arg^.kind = 137) and ((cg_tree_ptr_t(arg)^.op = 26) or
+      else if (arg^.kind = tree_node) and ((cg_tree_ptr_t(arg)^.op = 26) or
           (cg_tree_ptr_t(arg)^.op = 0)) and (arg^.xw[8] = 1) then begin
         tree_walk(cg_tree_ptr_t(arg)^.opnd[1]);
         if cg_fp_count <> 0 then
@@ -379,9 +385,9 @@ var
           w24 := w;
           if op1.f1 = 3 then
             case il_$node_ptr_t(op1.x)^.kind of
-              86, 200, 87: w24 := 1;
-              83, 80: w24 := 2;
-              85, 82: w24 := 4;
+              ubinteger_ob, binteger_ob, char_ob: w24 := 1;
+              usinteger_ob, sinteger_ob: w24 := 2;
+              ulinteger_ob, linteger_ob: w24 := 4;
               otherwise ;
             end;
           emit(23, w24, op1, cg_null_ads, 0);
@@ -420,7 +426,7 @@ var
             emit(0, 7, push, op1, 0);
           return;
         end;
-      if arg^.kind <> 89 then begin
+      if arg^.kind <> dpreal_ob then begin
         cg_tree_1b4^.xw[8] := 1;
         cg_tree_1b4^.xp[6] := arg;
         cg_tree_1b4^.xp[7] := arg;
@@ -456,10 +462,10 @@ var
           emit(0, 2, push, op1, 0);
       end
       else begin
-        address(smcontk(81, arg^.xl[4]), 4, op1);
+        address(smcontk(integer_ob, arg^.xl[4]), 4, op1);
         emit(0, 4, push, op1, 0);
         unlock(op1);
-        address(smcontk(81, arg^.xl[3]), 4, op1);
+        address(smcontk(integer_ob, arg^.xl[3]), 4, op1);
         emit(0, 4, push, op1, 0);
       end;
     end;
@@ -481,7 +487,7 @@ var
   begin
     if 5 in cargs_$options.flags_286 then
       if not lib then
-        if callee^.kind <> 159 then begin
+        if callee^.kind <> lib_dsc then begin
           if result_temp then
             anyconst(-(cg_tree_ptr_t(n)^.count - n^.xw[13] - 1), 2, c)
           else
@@ -510,7 +516,7 @@ begin
     last := cg_tree_ptr_t(n)^.count;
     lib := false;
   end;
-  if callee^.kind = 110 then
+  if callee^.kind = fortran_symbol then
     if not ((rshft(ord(callee^.xc[45]) & 16#38, 3) = 1) and
             (rshft(ord(callee^.xc[45]) & 6, 1) = 0)) then
       if callee^.xp[10] <> nil then
@@ -521,21 +527,21 @@ begin
   address_reg(15, push);
   push.f1 := 9;
   procvar := cg_call_$is_proc_var_call(callee);
-  if (callee^.kind = 147) or (callee^.kind = 146) then
+  if (callee^.kind = disp_node) or (callee^.kind = ptr_node) then
     desig := callee^.xp[7]
-  else if callee^.kind = 175 then begin
+  else if callee^.kind = pf_call then begin
     desig := callee^.xp[5];
     callee := callee^.xp[4];
   end;
   if at_backend_506 and (n <> nil) then
-    if (n^.kind = 137) and (ord(n^.xc[7]) >= 128) then begin
+    if (n^.kind = tree_node) and (ord(n^.xc[7]) >= 128) then begin
       address_reg(15, op1);
-      address(smcontk(81, 2), 0, op2);
+      address(smcontk(integer_ob, 2), 0, op2);
       emit(2, 4, op1, op2, 0);
       pushed := 2;
     end;
 
-  if desig^.kind = 171 then begin
+  if desig^.kind = cc_call then begin
     for i := last downto first do begin
       arg := cg_tree_ptr_t(n)^.opnd[i];
       size := cg_words_ptr_t(desig)^[10 + 2 * (i - first)];
@@ -548,15 +554,15 @@ begin
   end
   else begin
     params := nil;
-    if desig^.kind = 159 then begin
+    if desig^.kind = lib_dsc then begin
       if last - first + 1 > desig^.xw[5] then
         nparams := desig^.xw[5]
       else
         nparams := last - first + 1;
     end
-    else if (desig^.kind = 108) or (desig^.kind = 107) then
+    else if (desig^.kind = function_blk) or (desig^.kind = procedure_blk) then
       params := desig^.xp[3]
-    else if (desig^.kind = 174) or (desig^.kind = 173) then
+    else if (desig^.kind = func__type) or (desig^.kind = proc__type) then
       params := desig^.xp[1];
     pass_len := false;
     if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
@@ -575,9 +581,9 @@ begin
       end
       else
         arg := cg_tree_ptr_t(n)^.opnd[i];
-      if arg^.kind = 195 then begin
+      if arg^.kind = reloc_absolute_addr_con then begin
         v := arg^.xp[3];
-        if v^.kind = 110 then
+        if v^.kind = fortran_symbol then
           if rshft(ord(v^.xc[44]) & 16#F0, 4) = 1 then
             if v^.xp[10] <> nil then
               arg^.xp[3] := v^.xp[10];
@@ -596,7 +602,7 @@ begin
       end
       else
         case desig^.kind of
-          159: begin
+          lib_dsc: begin
             k := i - first + 1;
             if nparams < k then
               if ord(desig^.xc[10 + 2 * nparams]) < 128 then
@@ -604,7 +610,7 @@ begin
             cls := ord(desig^.xc[11 + 2 * nparams]) & 15;
             nparams := nparams - 1;
           end;
-          167, 108, 107: begin
+          entry_blk, function_blk, procedure_blk: begin
             if rshft(ord(desig^.xc[377]) & 16#70, 4) = 4 then
               b := true
             else if n^.xw[12] = 9 then begin
@@ -616,16 +622,17 @@ begin
             else
               cls := cg_words_ptr_t(desig)^[198 + i - first];
           end;
-          174, 173: cls := cg_words_ptr_t(desig)^[40 + i - first];
+          func__type,
+              proc__type: cls := cg_words_ptr_t(desig)^[40 + i - first];
           otherwise b := true;
         end;
       if b then
         case arg^.kind of
-          77, 86, 200, 87: cls := 7;
-          78, 83, 80: cls := 8;
-          84, 81: begin
-            if ((desig^.kind = 107) or (desig^.kind = 167) or
-                (desig^.kind = 108)) and
+          blogical_ob, ubinteger_ob, binteger_ob, char_ob: cls := 7;
+          slogical_ob, usinteger_ob, sinteger_ob: cls := 8;
+          uinteger_ob, integer_ob: begin
+            if ((desig^.kind = procedure_blk) or (desig^.kind = entry_blk) or
+                (desig^.kind = function_blk)) and
                 (rshft(ord(desig^.xc[377]) & 16#70, 4) = 4) then
               cls := 8
             else if cargs_$options.i_star_2 then
@@ -639,7 +646,7 @@ begin
       { The argument pushed. }
       done := false;
       if not lib and (cls <> 6) then begin
-        if (arg^.kind = 137) and ((cg_tree_ptr_t(arg)^.op = 26) or
+        if (arg^.kind = tree_node) and ((cg_tree_ptr_t(arg)^.op = 26) or
             (cg_tree_ptr_t(arg)^.op = 0)) and (arg^.xw[8] = 1) and
             (cls < 6) then begin
           tree_walk(cg_tree_ptr_t(arg)^.opnd[1]);
@@ -688,7 +695,7 @@ begin
             cg_addr_locks[op1.f2] := cg_addr_locks[op1.f2] + 1;
             emit(0, 4, push, op1, 0);
           end
-          else if arg^.kind = 146 then begin
+          else if arg^.kind = ptr_node then begin
             if peek(arg^.xp[6], 4) <> 31 then begin
               address(arg^.xp[6], 4, op1);
               fault_free_assign(5, push, op1);
@@ -704,7 +711,7 @@ begin
           end
           else begin
             moved := false;
-            if (arg^.kind = 109) and ((arg^.xl[8] & 16#20000) <> 0) and
+            if (arg^.kind = var_name) and ((arg^.xl[8] & 16#20000) <> 0) and
                 (arg^.xp[14] = nil) and (cls >= 7) then begin
               w := call_link_ptr_t(arg^.xp[13]^.xp[2])^.p^.xw[26];
               if chk_assign(arg, w) <> 31 then begin
@@ -718,20 +725,20 @@ begin
               end;
             end;
             if not moved then begin
-              if arg^.kind = 190 then
+              if arg^.kind = cse_parent_ob then
                 v := arg^.xp[1]
-              else if arg^.kind = 189 then
+              else if arg^.kind = cse_use_ob then
                 v := arg^.xp[5]
               else
                 v := arg;
               w := v^.xw[12];
               r := peek(arg, w);
               nint := false;
-              if (r <> 31) and (v^.kind = 138) then begin
+              if (r <> 31) and (v^.kind = gen_tree_node) then begin
                 nint := cg_call_$is_a_nint(v);
                 if not nint then
                   if cg_tree_ptr_t(v)^.op = 18 then
-                    if cg_tree_ptr_t(v)^.opnd[1]^.kind = 138 then
+                    if cg_tree_ptr_t(v)^.opnd[1]^.kind = gen_tree_node then
                       nint := cg_call_$is_a_nint(cg_tree_ptr_t(v)^.opnd[1]);
               end;
               if nint then begin
@@ -744,7 +751,7 @@ begin
               else begin
                 address(arg, 0, op1);
                 regs := cg_addr_$operand_in_reg_any_rlen(arg);
-                if (arg^.kind = 147) and (regs <> 0) then
+                if (arg^.kind = disp_node) and (regs <> 0) then
                   for r := 0 to 31 do
                     if (regs & lshft(1, r)) <> 0 then begin
                       if regs <> lshft(1, r) then
@@ -776,7 +783,7 @@ begin
   if n <> nil then
     if (n^.xw[12] >= 7) and (n^.xw[12] <> 9) then begin
       get_temp(n, false);
-      n^.kind := 138;
+      n^.kind := gen_tree_node;
       address(n, 0, op1);
       emit(23, 4, op1, cg_null_ads, 0);
       pushed := pushed + 4;
@@ -784,14 +791,14 @@ begin
     end;
   if not cargs_$options.xrs or odd(ord(il_180^.xc[375])) then
     keep := true;
-  if (callee^.kind = 108) or (callee^.kind = 107) then
+  if (callee^.kind = function_blk) or (callee^.kind = procedure_blk) then
     if odd(ord(callee^.xc[375])) then
       keep := true;
   if n <> nil then begin
     v := cg_tree_ptr_t(n)^.opnd[1];
-    if v^.kind = 175 then begin
+    if v^.kind = pf_call then begin
       t := v^.xp[5];
-      if (t^.kind = 174) or (t^.kind = 173) then
+      if (t^.kind = func__type) or (t^.kind = proc__type) then
         if (t^.xw[35] & 16#200) <> 0 then
           keep := true;
     end;
@@ -800,7 +807,7 @@ begin
     setobjcache(callee, 8);
   tree_walk(callee);
   for i := last downto first do
-    if (desig^.kind <> 171) or
+    if (desig^.kind <> cc_call) or
         (cg_words_ptr_t(desig)^[10 + 2 * (i - first)] = 4) then
       if not copied then begin
         address_reg(14, op1);
@@ -829,8 +836,8 @@ begin
       release(areg);
     called := true;
   end
-  else if (callee^.kind = 107) or (callee^.kind = 167) or
-      (callee^.kind = 108) then begin
+  else if (callee^.kind = procedure_blk) or (callee^.kind = entry_blk) or
+      (callee^.kind = function_blk) then begin
     if rshft(callee^.xw[188] & 16#180, 7) = 0 then
       if not cg_call_$att_in_any_entry(1, callee) then begin
         if (callee^.xw[189] & 4) <> 0 then begin
@@ -953,7 +960,7 @@ begin
 
   { The arguments popped. }
   if (4 in cargs_$options.flags_286) and (n <> nil) then
-    if (n^.kind = 137) and (cg_pass = 1) then begin
+    if (n^.kind = tree_node) and (cg_pass = 1) then begin
       if (pushed & 3) <> 0 then
         n^.xc[7] := chr(ord(n^.xc[7]) ! 16#80)
       else
@@ -961,13 +968,13 @@ begin
     end;
   if pushed <> 0 then begin
     address_reg(15, op1);
-    address(smcontk(81, pushed), 0, areg);
+    address(smcontk(integer_ob, pushed), 0, areg);
     emit(1, 2, op1, areg, 0);
   end;
 
   { The registers and objects the call may change. }
   regs := integer32(reg_save(desig));
-  if desig^.kind <> 159 then
+  if desig^.kind <> lib_dsc then
     cg_fp_last_op := 147;
   if n <> nil then begin
     saved := cg_tree_ptr_t(n)^.opnd[1];
@@ -1019,13 +1026,13 @@ begin
     cg_tree_ptr_t(n)^.opnd[1] := saved;
     w := n^.xw[12];
     if w <= 6 then
-      if (w = 5) and (cg_tree_ptr_t(n)^.opnd[1]^.kind = 171) then begin
+      if (w = 5) and (cg_tree_ptr_t(n)^.opnd[1]^.kind = cc_call) then begin
         t := cg_tree_ptr_t(n)^.opnd[1]^.xp[4];
-        if t^.kind = 146 then begin
+        if t^.kind = ptr_node then begin
           v := t^.xp[6];
-          while (v^.kind = 146) or (v^.kind = 147) do
+          while (v^.kind = ptr_node) or (v^.kind = disp_node) do
             v := v^.xp[6];
-          if v^.kind = 234 then begin
+          if v^.kind = cc_func_returning_type then begin
             if (v^.xw[3] & 16#200) = 0 then begin
               setresult(0, n, n^.xw[12]);
               cg_addr_regs[0].size := n^.xw[12];
@@ -1036,7 +1043,8 @@ begin
           else
             setresult(0, n, n^.xw[12]);
         end
-        else if (t^.kind = 108) or (t^.kind = 107) then begin
+        else if (t^.kind = function_blk)
+            or (t^.kind = procedure_blk) then begin
           if (ord(t^.xc[375]) & 16) = 0 then begin
             setresult(0, n, w);
             cg_addr_regs[0].size := n^.xw[12];

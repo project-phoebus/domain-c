@@ -102,7 +102,7 @@ type
   kf_tree_ptr_t = ^kf_tree_t;
   kf_tree_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     h4: packed record                   { +4 }
       b4_7_1: 0..127;
       reported: boolean;                { .0 (bit 24 of the longword):
@@ -238,7 +238,7 @@ function assert_is_tree(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if n <> nil then
-    assert_is_tree := n^.kind = 137
+    assert_is_tree := n^.kind = tree_node
   else
     assert_is_tree := false;
 end;
@@ -259,7 +259,8 @@ function assert_is_integer_constant(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if n <> nil then
-    assert_is_integer_constant := n^.kind in [80..86, 200]
+    assert_is_integer_constant := n^.kind in [sinteger_ob..ubinteger_ob,
+                                              binteger_ob]
   else
     assert_is_integer_constant := false;
 end;
@@ -406,8 +407,8 @@ var
   status: status_$t;                    { -512 }
   v1: integer32;                        { -528 }
   s1: il_$node_ptr_t;                   { -544 }
-  kind: integer;                        { -558 }
-  k1, k2: integer;                      { -562, -560 }
+  kind: il_$kind_t;                     { -558 }
+  k1, k2: il_$kind_t;                   { -562, -560 }
   sgn: boolean;                         { -572 }
   r: double;                            { -672 }
   r2: double;                           { -680 }
@@ -443,7 +444,7 @@ var
 begin
   k := 0;
   w := 0;
-  if s^.kind in [80..86, 200] then begin
+  if s^.kind in [sinteger_ob..ubinteger_ob, binteger_ob] then begin
     if s^.xp[3] <> nil then
       w := rshft(s^.xp[3]^.xl2[10] & 16#FFFF00, 8);
   end
@@ -470,24 +471,24 @@ begin { kfold_$general }
   if not cargs_$options.xansi and not (2 in cargs_$options.opt_on) then
     goto 90;
   x := n;
-  if x^.kind = 145 then
+  if x^.kind = dindex_node then
     goto 90;
 
   { A string's character of constant index. }
-  if x^.kind = 164 then begin
+  if x^.kind = cs_node then begin
     y := x^.xp[6];
-    if not (y^.kind in [77..87, 101, 200]) then
+    if not (y^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) then
       goto 90;
     o := x^.xp[5];
-    if o^.kind = 92 then
+    if o^.kind = char_string_ob then
       n := strtk(o^.xc[18], y^.xw[5])
-    else if (o^.kind = 87) or (o^.kind = 81) then
+    else if (o^.kind = char_ob) or (o^.kind = integer_ob) then
       n := strtk(o^.xc[11], y^.xw[5])
-    else if o^.kind = 200 then
+    else if o^.kind = binteger_ob then
       n := strtk(o^.xc[8], y^.xw[5]);
     goto 90;
   end;
-  if (x^.kind <> 137) and (x^.kind <> 143) then
+  if (x^.kind <> tree_node) and (x^.kind <> cmp_tree_node) then
     goto 90;
   t := kf_tree_ptr_t(x);
 
@@ -496,11 +497,13 @@ begin { kfold_$general }
   if not (t^.op in [15, 16, 17, 26, 47]) then
     for i := 1 to t^.count do begin
       o := t^.opnd[i];
-      if (o^.kind = 92) and (o^.str_len = 1) then
-        t^.opnd[i] := smcontk(81, ord(o^.str_chars[1]));
+      if (o^.kind = char_string_ob) and (o^.str_len = 1) then
+        t^.opnd[i] := smcontk(integer_ob, ord(o^.str_chars[1]));
     end;
   if t^.op in [1, 3, 9, 10, 19, 20, 34, 36, 44, 45, 46] then
-    if t^.opnd[1]^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200] then begin
+    if t^.opnd[1]^.kind in [blogical_ob..complex_ob, char_string_ob,
+                            char32_string_ob, char16_ob, set_con_ob,
+                            rec_const_ob, dpcomplex_ob, binteger_ob] then begin
       s1 := t^.opnd[1];
       t^.opnd[1] := t^.opnd[2];
       t^.opnd[2] := s1;
@@ -514,7 +517,7 @@ begin { kfold_$general }
   if t^.op in [1..4, 6..10, 12, 19..21, 27..29, 39, 44..46, 49..53, 57] then begin
     { The real part of a double complex constant. }
     if (t^.op = 39) and (t^.desc.rlen = 7) and (t^.desc.w6 = 12) and
-       (t^.count = 1) and (t^.opnd[1]^.kind = 198) then begin
+       (t^.count = 1) and (t^.opnd[1]^.kind = dpcomplex_ob) then begin
       dd := t^.opnd[1]^.dcx_re;
       res := dpcontk(dd);
       goto 80;
@@ -522,11 +525,13 @@ begin { kfold_$general }
 
     { Address arithmetic: an address plus or minus a constant. }
     if (t^.op = 2) or (t^.op = 1) then
-      if t^.opnd[2]^.kind in [77..87, 101, 200] then begin
+      if t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                              binteger_ob] then begin
         x := t^.opnd[1];
         y := t^.opnd[2];
-        if addr_ok and (x^.kind = 137) and (kf_tree_ptr_t(x)^.op = 26) and
-           (y^.kind in [80..86, 200]) and
+        if addr_ok and (x^.kind = tree_node) and (kf_tree_ptr_t(x)^.op = 26)
+            and
+           (y^.kind in [sinteger_ob..ubinteger_ob, binteger_ob]) and
            (y^.int_value <= target_properties.p_5c) and
            (y^.int_value >= target_properties.p_60) then begin
           if (1 < kf_tree_ptr_t(x)^.uses) or (1 < t^.uses) then begin
@@ -540,7 +545,7 @@ begin { kfold_$general }
           if t^.op = 2 then
             v1 := -v1;
           o := kf_tree_ptr_t(x)^.opnd[1];
-          if (o^.kind = 147) and (kf_tree_ptr_t(o)^.uses <= 1) then begin
+          if (o^.kind = disp_node) and (kf_tree_ptr_t(o)^.uses <= 1) then begin
             o^.xl[8] := o^.xl[8] + v1;
             res := x;
             goto 80;
@@ -551,7 +556,7 @@ begin { kfold_$general }
             adjust_uc(kf_tree_ptr_t(x)^.opnd[1], 1);
           goto 80;
         end;
-        if x^.kind = 163 then begin
+        if x^.kind = addr_con then begin
           v1 := y^.int_value;
           if t^.op = 2 then
             v1 := -v1;
@@ -566,7 +571,9 @@ begin { kfold_$general }
             goto 80;
           end;
         end;
-        if (x^.kind = 195) and (y^.kind in [80..86, 200]) then begin
+        if (x^.kind = reloc_absolute_addr_con)
+            and (y^.kind in [sinteger_ob..ubinteger_ob,
+                             binteger_ob]) then begin
           v1 := y^.int_value;
           if t^.op = 2 then
             v1 := -v1;
@@ -579,7 +586,7 @@ begin { kfold_$general }
             t^.op := 2
           else
             t^.op := 1;
-          t^.opnd[2] := smcontk(81, -y^.int_value);
+          t^.opnd[2] := smcontk(integer_ob, -y^.int_value);
         end;
       end;
 
@@ -587,8 +594,9 @@ begin { kfold_$general }
     if t^.op = 1 then begin
       x := t^.opnd[1];
       y := t^.opnd[2];
-      if (x^.kind = 137) and (t^.desc.rlen >= 0) and (t^.desc.rlen <= 4) and
-         (kf_tree_ptr_t(x)^.op = 27) and (y^.kind = 137) and
+      if (x^.kind = tree_node) and (t^.desc.rlen >= 0) and (t^.desc.rlen <= 4)
+          and
+         (kf_tree_ptr_t(x)^.op = 27) and (y^.kind = tree_node) and
          (kf_tree_ptr_t(y)^.op = 27) and
          (kf_tree_ptr_t(x)^.opnd[2] = kf_tree_ptr_t(y)^.opnd[2]) and
          (kf_tree_ptr_t(x)^.opnd[1] <> kf_tree_ptr_t(y)^.opnd[1]) then begin
@@ -614,7 +622,7 @@ begin { kfold_$general }
     end;
 
     if assert_and_over_left_shift_produces_zero(il_$node_ptr_t(t)) then begin
-      res := smcontk(81, 0);
+      res := smcontk(integer_ob, 0);
       goto 80;
     end;
     if assert_is_shift_with_negative_count(n) then begin
@@ -625,12 +633,12 @@ begin { kfold_$general }
     { A conversion to an integer of a constant. }
     if (t^.op = 39) and (t^.desc.rlen >= 0) and (t^.desc.rlen <= 4) then begin
       x := t^.opnd[1];
-      if x^.kind in [77..87, 101, 200] then begin
-        res := smcontk(81, dfetch(x^.int_value, t^.desc.rlen,
+      if x^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
+        res := smcontk(integer_ob, dfetch(x^.int_value, t^.desc.rlen,
                                   t^.desc.flags.signed));
         goto 80;
       end;
-      if (x^.kind <> 89) and (x^.kind <> 88) then
+      if (x^.kind <> dpreal_ob) and (x^.kind <> real_ob) then
         goto 90;
       status := pfm_$cleanup(crec);
       if status.all <> pfm_$cleanup_set then
@@ -638,7 +646,7 @@ begin { kfold_$general }
           pfm_$enable;
           cgerr(49, il_d0, t^.opnd[1]);
           v1 := 0;
-          res := smcontk(81, v1);
+          res := smcontk(integer_ob, v1);
           goto 80;
         end
         else
@@ -651,14 +659,16 @@ begin { kfold_$general }
       else
         v1 := trunc(x^.real_value - 2147483647.0 - 1.0) - 16#80000000;
       pfm_$rls_cleanup(crec, status);
-      res := smcontk(81, dfetch(v1, t^.desc.rlen, t^.desc.flags.signed));
+      res := smcontk(integer_ob, dfetch(v1, t^.desc.rlen,
+                                        t^.desc.flags.signed));
       goto 80;
     end;
 
     { Between the real classes. }
     if (t^.op = 39) and ((t^.desc.rlen = 7) or (t^.desc.rlen = 6)) and
        ((t^.desc.w6 = 7) or (t^.desc.w6 = 6)) and
-       ((t^.opnd[1]^.kind = 89) or (t^.opnd[1]^.kind = 88)) then begin
+       ((t^.opnd[1]^.kind = dpreal_ob)
+        or (t^.opnd[1]^.kind = real_ob)) then begin
       if t^.desc.rlen = t^.desc.w6 then begin
         res := t^.opnd[1];
         goto 80;
@@ -671,11 +681,11 @@ begin { kfold_$general }
     end;
 
     { The integer and set constants' operators. }
-    k2 := 81;
-    k1 := 81;
+    k2 := integer_ob;
+    k1 := integer_ob;
     for i := 1 to t^.count do begin
       o := t^.opnd[i];
-      if o^.kind in [77..87, 101, 200] then
+      if o^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
         if i = 1 then begin
           v1 := o^.int_value;
           k1 := o^.kind;
@@ -684,7 +694,7 @@ begin { kfold_$general }
           v2 := o^.int_value;
           k2 := o^.kind;
         end
-      else if o^.kind = 156 then
+      else if o^.kind = set_con_ob then
         if i = 1 then
           s1 := o
         else
@@ -768,9 +778,12 @@ begin { kfold_$general }
         else
           v1 := 1;
       51:
-        if (t^.opnd[1]^.kind in [77..87, 101, 200]) and
-           (t^.opnd[2]^.kind in [77..87, 101, 200]) and
-           (t^.opnd[3]^.kind in [77..87, 101, 200]) then
+        if (t^.opnd[1]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+            and
+           (t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+               and
+           (t^.opnd[3]^.kind in [blogical_ob..char_ob, char16_ob,
+                                 binteger_ob]) then
           if t^.opnd[1]^.int_value <> 0 then
             v1 := t^.opnd[2]^.int_value
           else
@@ -836,13 +849,13 @@ begin { kfold_$general }
     if k2 > k1 then
       k1 := k2;
     if (v1 < -32768) or (v1 > 32767) then
-      k1 := 82;
+      k1 := linteger_ob;
     res := smcontk(k1, v1);
     goto 80;
 
     { Not all constants: identities with a constant operand. }
 70:
-    if (t^.op = 21) and (t^.opnd[2]^.kind = 156) then begin
+    if (t^.op = 21) and (t^.opnd[2]^.kind = set_con_ob) then begin
       t^.op := 19;
       for i := 1 to t^.opnd[2]^.set_len div 2 do
         words[i] := ~t^.opnd[2]^.set_words[i];
@@ -853,14 +866,16 @@ begin { kfold_$general }
     if t^.op = 12 then begin
       i := t^.desc.w8;
       if (i = 2) or (i = 3) or (i = 5) or (i = 4) then
-        if (t^.opnd[2]^.kind in [77..87, 101, 200]) and
+        if (t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+            and
            (t^.opnd[2]^.int_value = 0) then begin
           if i = 3 then
             t^.desc.w8 := 7
           else if i = 2 then
             t^.desc.w8 := 6;
         end
-        else if (t^.opnd[1]^.kind in [77..87, 101, 200]) and
+        else if (t^.opnd[1]^.kind in [blogical_ob..char_ob, char16_ob,
+                                      binteger_ob]) and
                 (t^.opnd[1]^.int_value = 0) then begin
           if i = 4 then
             t^.desc.w8 := 7
@@ -869,7 +884,7 @@ begin { kfold_$general }
         end;
     end;
     l := t^.opnd[t^.count];
-    if not (l^.kind in [77..87, 101, 200]) then
+    if not (l^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) then
       goto 90;
     v1 := l^.int_value;
     case t^.op of
@@ -888,7 +903,7 @@ begin { kfold_$general }
         end;
         if (v1 <> 0) or t^.bits.b12 then
           goto 90;
-        res := smcontk(81, 0);
+        res := smcontk(integer_ob, 0);
         goto 80;
       end;
       4: begin
@@ -914,7 +929,7 @@ begin { kfold_$general }
         end
         else
           goto 90;
-        res := smcontk(81, 0);
+        res := smcontk(integer_ob, 0);
         goto 80;
       end;
       9: begin
@@ -954,18 +969,19 @@ begin { kfold_$general }
   { The real operators. }
   if t^.op in [34..38, 40..42] then begin
     if (t^.op = 41) and (t^.desc.rlen = 7) and (t^.desc.w6 = 15) and
-       (t^.count = 1) and (t^.opnd[1]^.kind = 198) then begin
+       (t^.count = 1) and (t^.opnd[1]^.kind = dpcomplex_ob) then begin
       dd := t^.opnd[1]^.dcx_im;
       res := dpcontk(dd);
       goto 80;
     end;
     for i := 1 to t^.count do begin
       o := t^.opnd[i];
-      if (o^.kind <> 89) and (o^.kind <> 88) then
-        if (t^.op <> 42) or not (o^.kind in [77..87, 101, 200]) or
+      if (o^.kind <> dpreal_ob) and (o^.kind <> real_ob) then
+        if (t^.op <> 42) or not (o^.kind in [blogical_ob..char_ob, char16_ob,
+                                             binteger_ob]) or
            (i <> t^.count) then
           goto 60;
-      if o^.kind in [77..87, 101, 200] then begin
+      if o^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
         r := o^.int_value;
         b := r;
       end
@@ -1082,7 +1098,8 @@ begin { kfold_$general }
         end;
       42: begin
         if a = 0.0 then begin
-          if t^.opnd[2]^.kind in [77..87, 101, 200] then begin
+          if t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                                  binteger_ob] then begin
             e := trunc(b);
             r8i4_expon(r2, a, e);
           end
@@ -1093,7 +1110,8 @@ begin { kfold_$general }
         else begin
           c := ln(abs(a)) * b;
           if a < 0.0 then
-            if not (t^.opnd[2]^.kind in [77..87, 101, 200]) then
+            if not (t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                                         binteger_ob]) then
               if trunc(b) <> b then begin
                 report_failure_once(n, 58);
                 goto 50;
@@ -1108,7 +1126,8 @@ begin { kfold_$general }
             report_failure_once(n, 57);
             goto 50;
           end;
-          if t^.opnd[2]^.kind in [77..87, 101, 200] then begin
+          if t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                                  binteger_ob] then begin
             e := trunc(b);
             r8i4_expon(r2, a, e);
           end
@@ -1122,7 +1141,7 @@ begin { kfold_$general }
     end;
     if (t^.op = 40) or
        ((t^.op = 41) and ((t^.desc.w6 = 11) or (t^.desc.w6 = 10))) then
-      res := smcontk(81, v1)
+      res := smcontk(integer_ob, v1)
     else if t^.desc.rlen = 7 then
       res := dpcontk(a)
     else
@@ -1136,7 +1155,7 @@ begin { kfold_$general }
     { Not all constants: identities with a real constant. }
 60:
     l := t^.opnd[t^.count];
-    if (l^.kind <> 89) and (l^.kind <> 88) then
+    if (l^.kind <> dpreal_ob) and (l^.kind <> real_ob) then
       goto 90;
     a := l^.real_value;
     case t^.op of
@@ -1166,17 +1185,19 @@ begin { kfold_$general }
 
   { A bit range [lo..hi] as a mask, or-ed in. }
   if t^.op = 25 then begin
-    if not (t^.opnd[2]^.kind in [77..87, 101, 200]) then
+    if not (t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                                 binteger_ob]) then
       goto 90;
     v1 := t^.opnd[2]^.int_value;
     if t^.count = 2 then
       hi := v1
     else begin
-      if not (t^.opnd[3]^.kind in [77..87, 101, 200]) then
+      if not (t^.opnd[3]^.kind in [blogical_ob..char_ob, char16_ob,
+                                   binteger_ob]) then
         goto 90;
       hi := t^.opnd[3]^.int_value;
     end;
-    t^.opnd[2] := smcontk(81, lshft(1, hi + 1) - lshft(1, v1));
+    t^.opnd[2] := smcontk(integer_ob, lshft(1, hi + 1) - lshft(1, v1));
     t^.op := 10;
     t^.count := 2;
     t^.desc.rlen := t^.desc.size;
@@ -1186,7 +1207,8 @@ begin { kfold_$general }
 
   { A bit test of a constant bit number. }
   if t^.op = 11 then begin
-    if not (t^.opnd[1]^.kind in [77..87, 101, 200]) then
+    if not (t^.opnd[1]^.kind in [blogical_ob..char_ob, char16_ob,
+                                 binteger_ob]) then
       goto 90;
     e := t^.opnd[1]^.int_value;
     if (3 in cargs_$options.cpu) and (t^.desc.size <> 4000) and
@@ -1197,55 +1219,56 @@ begin { kfold_$general }
       t^.desc.w8 := -t^.desc.w8;
     if (t^.desc.size * 8 - 1 < e) or (e < 0) then begin
       if t^.desc.w8 = 7 then
-        res := smcontk(81, 255)
+        res := smcontk(integer_ob, 255)
       else
-        res := smcontk(81, 0);
+        res := smcontk(integer_ob, 0);
       goto 80;
     end;
     o := t^.opnd[2];
-    if o^.kind = 156 then begin
+    if o^.kind = set_con_ob then begin
       v1 := o^.set_len div 2 - e div 16;
       m := lshft(1, e mod 16) & o^.set_words[v1];
     end
-    else if o^.kind in [77..87, 101, 200] then
+    else if o^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
       m := lshft(1, e) & o^.int_value
     else
       goto 90;
     if (m <> 0) = (t^.desc.w8 = 6) then
-      res := smcontk(81, 255)
+      res := smcontk(integer_ob, 255)
     else
-      res := smcontk(81, 0);
+      res := smcontk(integer_ob, 0);
     goto 80;
   end;
 
   { An address of a dereference or of an indexed node. }
   if t^.op = 26 then begin
     x := t^.opnd[1];
-    if x^.kind = 146 then begin
+    if x^.kind = ptr_node then begin
       res := x^.xp[6];
       goto 80;
     end;
-    if (x^.kind <> 145) and (x^.kind <> 147) then
+    if (x^.kind <> dindex_node) and (x^.kind <> disp_node) then
       goto 90;
     if not addr_ok then
       goto 90;
     v2 := 0;
-    while x^.kind = 147 do begin
+    while x^.kind = disp_node do begin
       v2 := v2 + x^.xl[8];
       x := x^.xp[6];
     end;
-    if x^.kind <> 145 then
+    if x^.kind <> dindex_node then
       goto 90;
     if x^.xl[8] <> 0 then
       bug_check('kfold: dindex.disp <> 0%.');
     y := x^.xp[8];
-    if y^.kind in [77..87, 101, 200] then begin
+    if y^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
       if (v2 = 0) and (y^.int_value = 0) then begin
         res := x^.xp[6];
         goto 80;
       end;
       ops[1] := x^.xp[6];
-      ops[2] := smcontk(81, lshft(dfetch(y^.int_value, x^.xw[21], true),
+      ops[2] := smcontk(integer_ob, lshft(dfetch(y^.int_value, x^.xw[21],
+                                                 true),
                                   x^.xw[20]) + v2);
       res := buildtreenode(13, sum_desc, ops, 2);
       kf_tree_ptr_t(res)^.uses := 0;
@@ -1264,7 +1287,8 @@ begin { kfold_$general }
   end;
 
   if t^.op = 13 then
-    if t^.opnd[2]^.kind in [77..87, 101, 200] then begin
+    if t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                            binteger_ob] then begin
       if t^.opnd[2]^.int_value <> 0 then
         goto 90;
       res := t^.opnd[1];
@@ -1274,7 +1298,8 @@ begin { kfold_$general }
   { An integral conversion of a constant. }
   if t^.op <> 18 then
     goto 90;
-  if not (t^.opnd[1]^.kind in [77..87, 101, 200]) then
+  if not (t^.opnd[1]^.kind in [blogical_ob..char_ob, char16_ob,
+                               binteger_ob]) then
     goto 90;
   v1 := t^.opnd[1]^.int_value;
   if t^.desc.flags.signed then begin
@@ -1292,30 +1317,31 @@ begin { kfold_$general }
   else if t^.desc.w6 <> 4 then
     goto 90;
   case t^.desc.rlen of
-    1: if t^.desc.flags.signed then kind := 200 else kind := 86;
-    2: if t^.desc.flags.signed then kind := 80 else kind := 83;
-    4: if t^.desc.flags.signed then kind := 82 else kind := 85;
+    1: if t^.desc.flags.signed then kind := binteger_ob else kind := ubinteger_ob;
+    2: if t^.desc.flags.signed then kind := sinteger_ob else kind := usinteger_ob;
+    4: if t^.desc.flags.signed then kind := linteger_ob else kind := ulinteger_ob;
     otherwise
-      if t^.desc.flags.signed then kind := 81 else kind := 84;
+      if t^.desc.flags.signed then kind := integer_ob else kind := uinteger_ob;
   end;
   res := smcontk(kind, v1);
 
   { The result, normalized to the node's class. }
 80:
-  if res^.kind in [77..87, 101, 200] then
-    if ((res^.kind = 80) or (res^.kind = 81) or (res^.kind = 200) or
-        (res^.kind = 82)) and (t^.desc.rlen = 1) and
+  if res^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
+    if ((res^.kind = sinteger_ob) or (res^.kind = integer_ob)
+        or (res^.kind = binteger_ob) or
+        (res^.kind = linteger_ob)) and (t^.desc.rlen = 1) and
        (rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 3) then
       res := strtk(res^.xc[11], 1)
     else begin
       kind := res^.kind;
-      if kind = 81 then
+      if kind = integer_ob then
         case t^.desc.rlen of
-          1: if t^.desc.flags.signed then kind := 200 else kind := 86;
-          2: if t^.desc.flags.signed then kind := 80 else kind := 83;
-          4: if t^.desc.flags.signed then kind := 82 else kind := 85;
+          1: if t^.desc.flags.signed then kind := binteger_ob else kind := ubinteger_ob;
+          2: if t^.desc.flags.signed then kind := sinteger_ob else kind := usinteger_ob;
+          4: if t^.desc.flags.signed then kind := linteger_ob else kind := ulinteger_ob;
           otherwise
-            if t^.desc.flags.signed then kind := 81 else kind := 84;
+            if t^.desc.flags.signed then kind := integer_ob else kind := uinteger_ob;
         end;
       res := smcontk(kind, dfetch(res^.int_value, t^.desc.rlen,
                                   t^.desc.flags.signed));
@@ -1324,10 +1350,13 @@ begin { kfold_$general }
     adjust_uc(n, -1);
     adjust_uc(res, 1);
   end;
-  if (res^.kind in [80..86, 200]) and (stmt <> nil) then begin
+  if (res^.kind in [sinteger_ob..ubinteger_ob, binteger_ob])
+      and (stmt <> nil) then begin
     x := kf_nodes_ptr_t(il_120)^[res^.xw[5]];
-    if (x^.kind = 143) or (x^.kind = 137) or (x^.kind = 145) or
-       (x^.kind = 147) or (x^.kind = 205) or (x^.kind = 146) then
+    if (x^.kind = cmp_tree_node) or (x^.kind = tree_node)
+        or (x^.kind = dindex_node) or
+       (x^.kind = disp_node) or (x^.kind = sym_disp_node)
+           or (x^.kind = ptr_node) then
       if kf_tree_ptr_t(x)^.uses = 0 then
         res^.xw[5] := node_number(stmt);
   end;

@@ -159,7 +159,7 @@
   The traces (isc_user_routines_354 or _356 set) write with Pascal
   `write': dpc gap 4 (docs/dpc-gaps.md 4).  An enumerated value is
   written with its type's name table (PAS_$WRITE code 3941, width 1):
-  the IL node kinds (an_kind_t, as add_node declares them), the tree
+  the IL node kinds (il.ins.pas's il_$kind_t), the tree
   and assignment operators (ur_top_t, ur_aop_t) and il$t.
 
   Not known from the original: the parameters' and locals' names (the
@@ -188,56 +188,6 @@ module isc_user_routines;
 %include 'lang2/source/isc/isc_var_externs.ins.pas';
 
 type
-  { The IL node kinds, as the image names them (the name table after
-    alignment_from_sr_info, 0x20F27A: add_node.pas's an_kind_t). }
-  an_kind_t = (
-    end_ob, if_ob, then_ob, begin_ob, else_ob, do_ob, with_ob, in_ob,
-    of_ob, while_ob, case_ob, repeat_ob, until_ob, procedure_ob, var_ob,
-    for_ob, array_ob, record_ob, set_ob, to_ob, downto_ob, mod_ob, or_ob,
-    and_ob, not_ob, div_ob, const_ob, type_ob, function_ob, program_ob,
-    packed_ob, label_ob, goto_ob, file_ob, forward_ob, static_ob,
-    external_ob, define_ob, module_ob, val_param_ob, exit_ob, next_ob,
-    internal_ob, return_ob, otherwise_ob, cast_ob, univ_ob, implies_ob,
-    out_ob, up_to_ob, bus_ob, period_ob, becomes_ob, colon_ob, le_ob,
-    ne_ob, lt_ob, eq_ob, ge_ob, gt_ob, sub_ob, open_ob, close_ob,
-    comma_ob, semicolon_ob, star_ob, slash_ob, plus_ob, minus_ob,
-    ampersand_ob, excl_ob, arrow_ob, eom_ob, error_ob, tilde_ob,
-    badchar_ob, id_ob, blogical_ob, slogical_ob, llogical_ob,
-    sinteger_ob, integer_ob, linteger_ob, usinteger_ob, uinteger_ob,
-    ulinteger_ob, ubinteger_ob, char_ob, real_ob, dpreal_ob, complex_ob,
-    varying_ob, char_string_ob, char32_string_ob, nil_ob, starstar_ob,
-    routine_option_ob, attribute_ob, begin_critical_ob,
-    end_critical_ob, library_ob, char16_ob, const_cob, volatile_cob,
-    signed_cob, program_blk, module_blk, procedure_blk, function_blk,
-    var_name, fortran_symbol, common_block_name, fdim_info, fdata_nlist,
-    fdata_clist, equiv_stmt, const_name, label_name, type_name,
-    field_name, pfield_name, param_name, integer_type, real_type,
-    bool_type, kind_char_type, char_string_con_type, char_array_type,
-    subr_type, enum_type, ptr_type, array_type, record_type, file_type,
-    set_type, univ_ptr_type, null_set_type, tree_node, gen_tree_node,
-    eval_node, assign_node, branch_node, cbranch_node, cmp_tree_node,
-    label_node, dindex_node, ptr_node, disp_node, block_entry_node,
-    blk_end_node, nlbranch_node, return_node, alloc_temp, sb_register,
-    db_register, display_register, set_con_ob, def_const_ob, std_func,
-    lib_dsc, ref_list, state_save, lnum_entry, addr_con, cs_node,
-    cs_temp, fdata_do, entry_blk, param_list, ftn_xref, ptr_hdr,
-    cc_call, inner_blk, proc__type, func__type, pf_call, rec_const_ob,
-    offset_type, reg_assign_ob, actparam, ext_state_save, dead_temp,
-    procedure_section, data_section, inline_constant, namelist_id_ob,
-    lnref_ob, variant_ob, use_def_ob, cse_use_ob, cse_parent_ob,
-    reg_list_ob, transfer_vector, proc_reloc, external_ref,
-    reloc_absolute_addr_con, varying_type, parray_type, dpcomplex_ob,
-    m68k_unpacked, binteger_ob, routine_option_name, attribute_name,
-    physical_register_ob, argument_block_location_ob, sym_disp_node,
-    dynamic_array_type, dope_vector, at_lib_dsc, blockdata_blk,
-    kind_void_type, ap_register, namelist_constant_ob, undefined_object,
-    case_node_range_check, case_node_no_range_check, defaulted_info,
-    char16_type, char16_array_type, isc_fetch, isc_convert,
-    fdata_default_seq, exception_frame, exception_handler_entry,
-    raise_exception, release_dynamic_space, exception_register,
-    insert_bit_field, bit_field_assign, lb_register, virt_var_name,
-    spine_mark, isc_share, pa_mmu_bip, cc_func_returning_type,
-    indexed_reference, union_ob);
 
   { The tree operators (a tree node's +36; the name table at
     0x20FD9A, 90 names). }
@@ -503,18 +453,21 @@ begin
     if cand or (vat = 5) then
       is_cand := true
     else if not b34 then begin
-      big_struct := (typ^.base^.kind = 132) and typ^.base^.ty_f35.b7;
-      is_struct := (vat in [1, 7]) and ((typ^.base^.kind = 131) or big_struct);
+      big_struct := (typ^.base^.kind = record_type) and typ^.base^.ty_f35.b7;
+      is_struct := (vat in [1, 7]) and ((typ^.base^.kind = array_type)
+                                        or big_struct);
       if (vat in [2, 6])
-         or ((vat in [1, 7]) and (isc_node_ptr_t(il_180)^.kind = 105)) then
+         or ((vat in [1, 7])
+             and (isc_node_ptr_t(il_180)^.kind = program_blk)) then
         if not big_struct and not is_struct and not b38 then
           if (((attr & 16#4000) <> 0) or (cargs_$options.db <> 3))
              and (cargs_$options.db <> 3) then
             if bits > 0 then
               if (bits <= 32)
-                 or (isc_user_routines_358 and (typ^.base^.kind = 123)
+                 or (isc_user_routines_358 and (typ^.base^.kind = real_type)
                      and ((bits = 64) or (bits = 128))) then
-                if (typ^.base^.kind <> 133) and (typ^.base^.kind <> 127) then
+                if (typ^.base^.kind <> file_type)
+                    and (typ^.base^.kind <> char_array_type) then
                   if ((attr & 16#10400041) = 0)
                      or (b40 and ((attr & 16#10400040) = 0)) then
                     if not ((((attr & 16#40) <> 0) or (2 in cargs_$options.flags_286))
@@ -534,7 +487,7 @@ begin
       sol := nil
     else begin
       if b36 then begin
-        if (vat = 5) or (typ^.base^.kind <> 123) then
+        if (vat = 5) or (typ^.base^.kind <> real_type) then
           sol := local_create_soln_for_ip_reg(isc_user_routines_20c)
         else if bits = 32 then
           sol := local_create_soln_for_fp_reg(isc_user_routines_20c)
@@ -547,7 +500,7 @@ begin
       end
       else if vat = 5 then
         sol := local_create_soln_for_ip_reg(isc_preserve_heap)
-      else if typ^.base^.kind <> 123 then
+      else if typ^.base^.kind <> real_type then
         sol := local_create_soln_for_ip_reg(isc_preserve_heap)
       else if bits = 32 then
         sol := local_create_soln_for_fp_reg(isc_preserve_heap)
@@ -678,12 +631,12 @@ begin
   if (attr & 16#02000000) = 0 then begin
     addr_taken := false;
     type_exp(sym, addr(t));
-    if (sym^.vn_type^.kind = 121) and (sym^.vn_type^.vn_align = 2) then
+    if (sym^.vn_type^.kind = param_name) and (sym^.vn_type^.vn_align = 2) then
       param := true
     else
       param := false;
     if sym^.vn_p4 <> nil then
-      if (sym^.vn_p4^.kind = 163) and ((sym^.vn_attr & 16#100) = 0) then
+      if (sym^.vn_p4^.kind = addr_con) and ((sym^.vn_attr & 16#100) = 0) then
         cand := true;
     sym^.vn_attr := local_initialize_symbol(attr, sym^.vn_l40, sym^.vn_reg,
         addr(t), sym^.vn_bits, sym^.vn_vat, 0, cand, addr_taken, b36,
@@ -698,7 +651,7 @@ end;
 
 procedure initialize_well_known_symbol;
 begin
-  if sym^.kind = 109 then
+  if sym^.kind = var_name then
     local_initialize_var_name(sym, cand, true)
   else
     local_initialize_fortran_symbol(sym, cand, true);
@@ -870,7 +823,7 @@ begin
           write(':');
           writeln;
           write('      kind = ');
-          write(an_kind_t(n^.kind):1);
+          write(n^.kind:1);
           write('.');
           writeln;
           write('      op   = ');
@@ -987,8 +940,10 @@ begin
   end
   else
     case il^.kind of
-      77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 200: a := 2;
-      156, 212, 92:
+      blogical_ob, slogical_ob, llogical_ob, sinteger_ob, integer_ob,
+          linteger_ob, usinteger_ob, uinteger_ob, ulinteger_ob, ubinteger_ob,
+          char_ob, binteger_ob: a := 2;
+      set_con_ob, namelist_constant_ob, char_string_ob:
         if il_$node_ptr_t(il)^.set_len <= 1 then
           a := 0
         else if il_$node_ptr_t(il)^.set_len <= 2 then
@@ -997,29 +952,29 @@ begin
           a := 3
         else
           a := 7;
-      163: a := 2;
-      131: a := il_$node_ptr_t(il)^.xw[12];
-      111: a := 3;
-      90: a := 3;
-      198: a := 3;
-      89: a := 3;
-      119: a := il_$node_ptr_t(il)^.xw[16];
-      174: a := il_$node_ptr_t(il)^.xw[11];
-      122:
+      addr_con: a := 2;
+      array_type: a := il_$node_ptr_t(il)^.xw[12];
+      common_block_name: a := 3;
+      complex_ob: a := 3;
+      dpcomplex_ob: a := 3;
+      dpreal_ob: a := 3;
+      field_name: a := il_$node_ptr_t(il)^.xw[16];
+      func__type: a := il_$node_ptr_t(il)^.xw[11];
+      integer_type:
         case il_$node_ptr_t(il)^.xw[2] of
           1: a := 0;
           2: a := 1;
           4: a := 2;
           otherwise a := 0;
         end;
-      121: a := il_$node_ptr_t(il)^.xw[17];
-      197: a := il_$node_ptr_t(il)^.xw[12];
-      120: a := il_$node_ptr_t(il)^.xw[16];
-      173: a := il_$node_ptr_t(il)^.xw[11];
-      88: a := 2;
-      132: a := il_$node_ptr_t(il)^.xw[10];
-      118: a := il_$node_ptr_t(il)^.xw[25];
-      109:
+      param_name: a := il_$node_ptr_t(il)^.xw[17];
+      parray_type: a := il_$node_ptr_t(il)^.xw[12];
+      pfield_name: a := il_$node_ptr_t(il)^.xw[16];
+      proc__type: a := il_$node_ptr_t(il)^.xw[11];
+      real_ob: a := 2;
+      record_type: a := il_$node_ptr_t(il)^.xw[10];
+      type_name: a := il_$node_ptr_t(il)^.xw[25];
+      var_name:
         if il^.vn_vat = 5 then
           a := 2
         else begin
@@ -1037,7 +992,7 @@ begin
           else
             a := il^.vn_align;
         end;
-      110:
+      fortran_symbol:
         if il^.fs_f10.sto = 5 then
           a := 2
         else
@@ -1046,7 +1001,7 @@ begin
         write('*******************************************************');
         writeln;
         write('ISC: The illegal IL node kind is: ');
-        write(an_kind_t(il^.kind):1);
+        write(il^.kind:1);
         write('.');
         writeln;
         write('*******************************************************');
@@ -1088,7 +1043,7 @@ var
   r: boolean;
   i: integer32;
 begin
-  if node^.kind = 156 then begin
+  if node^.kind = set_con_ob then begin
     r := true;
     for i := 1 to (node^.set_len + 1) div 2 do
       if node^.set_words[i] <> 0 then
@@ -1387,7 +1342,7 @@ end;
 
 function bits_trusted_of_symbol;
 begin
-  if sym^.kind = 109 then
+  if sym^.kind = var_name then
     bits_trusted_of_symbol := bits_trusted_of_var_name(sym, x)
   else
     bits_trusted_of_symbol := bits_trusted_of_fortran_symbol(sym, x);
@@ -1416,7 +1371,7 @@ function il_node_has_float_value;
 begin
   if node = nil then
     il_node_has_float_value := false
-  else if (node^.kind = 88) or (node^.kind = 89) then
+  else if (node^.kind = real_ob) or (node^.kind = dpreal_ob) then
     il_node_has_float_value := true
   else
     il_node_has_float_value := false;
@@ -1435,9 +1390,11 @@ begin
     il_node_has_integer_value := false
   else
     case node^.kind of
-      77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 200:
+      blogical_ob, slogical_ob, llogical_ob, sinteger_ob, integer_ob,
+          linteger_ob, usinteger_ob, uinteger_ob, ulinteger_ob, ubinteger_ob,
+          binteger_ob:
         il_node_has_integer_value := true;
-      87: il_node_has_integer_value := true;
+      char_ob: il_node_has_integer_value := true;
       otherwise il_node_has_integer_value := false;
     end;
 end;
@@ -1450,9 +1407,11 @@ end;
 function il_node_to_integer_value;
 begin
   case node^.kind of
-    77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 200:
+    blogical_ob, slogical_ob, llogical_ob, sinteger_ob, integer_ob,
+        linteger_ob, usinteger_ob, uinteger_ob, ulinteger_ob, ubinteger_ob,
+        binteger_ob:
       il_node_to_integer_value := il_$node_ptr_t(node)^.int_value;
-    87: il_node_to_integer_value := il_$node_ptr_t(node)^.int_value;
+    char_ob: il_node_to_integer_value := il_$node_ptr_t(node)^.int_value;
     otherwise il_node_to_integer_value := 0;
   end;
 end;
@@ -1464,7 +1423,7 @@ end;
 
 function assert_kind_is_label_node;
 begin
-  if node^.kind <> 144 then
+  if node^.kind <> label_node then
     if isc_user_routines_356 or isc_user_routines_354 then begin
       write('ISC: assert_kind_is_label_node: il^.fsym.ecr.lbl_root^.kind <> label_node.');
       writeln;
@@ -1858,7 +1817,9 @@ end;
 function il_node_is_literal_sequence_of_ones;
 begin
   case node^.kind of
-    77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 200:
+    blogical_ob, slogical_ob, llogical_ob, sinteger_ob, integer_ob,
+        linteger_ob, usinteger_ob, uinteger_ob, ulinteger_ob, ubinteger_ob,
+        char_ob, binteger_ob:
       il_node_is_literal_sequence_of_ones :=
           is_sequence_of_ones(il_$node_ptr_t(node)^.int_value);
     otherwise il_node_is_literal_sequence_of_ones := false;
@@ -1875,10 +1836,12 @@ end;
 function il_node_is_literal_sequence_of_zeroes;
 begin
   case node^.kind of
-    77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 200:
+    blogical_ob, slogical_ob, llogical_ob, sinteger_ob, integer_ob,
+        linteger_ob, usinteger_ob, uinteger_ob, ulinteger_ob, ubinteger_ob,
+        char_ob, binteger_ob:
       il_node_is_literal_sequence_of_zeroes :=
           is_sequence_of_zeroes(il_$node_ptr_t(node)^.int_value);
-    88, 89:
+    real_ob, dpreal_ob:
       il_node_is_literal_sequence_of_zeroes := il_$node_ptr_t(node)^.real_value = 0.0;
     otherwise il_node_is_literal_sequence_of_zeroes := false;
   end;
@@ -1941,11 +1904,13 @@ function is_device;
 begin
   if node = nil then
     is_device := false
-  else if node^.kind in [137, 138, 143, 145, 146, 147, 164, 171, 175, 189, 205] then
+  else if node^.kind in [tree_node, gen_tree_node, cmp_tree_node, dindex_node,
+                         ptr_node, disp_node, cs_node, cc_call, pf_call,
+                         cse_use_ob, sym_disp_node] then
     is_device := ((node^.xl[1] & 8) <> 0) or ((node^.xl[1] & 16#10) <> 0)
-  else if node^.kind = 110 then
+  else if node^.kind = fortran_symbol then
     is_device := ((node^.xl[6] & 8) <> 0) or ((node^.xl[6] & 16#10) <> 0)
-  else if node^.kind = 109 then
+  else if node^.kind = var_name then
     is_device := ((node^.xl[8] & 8) <> 0) or ((node^.xl[8] & 16#10) <> 0)
   else
     is_device := false;
@@ -1997,7 +1962,7 @@ end;
 
 function get_uparrow_dot_kind;
 begin
-  get_uparrow_dot_kind := node^.kind;
+  get_uparrow_dot_kind := ord(node^.kind);
 end;
 
 { not_permissible_function - the register kinds a tree node of an
@@ -2013,7 +1978,8 @@ var
   r: solution$set_t;
 begin
   r := [];
-  if (node^.kind = 137) and (node^.tr_op in [1, 2, 7, 8, 9, 10, 44]) then begin
+  if (node^.kind = tree_node) and (node^.tr_op in [1, 2, 7, 8, 9, 10,
+      44]) then begin
     if not (solution$ip_reg in permissible) then
       r := [solution$ip_reg];
     if not (solution$fp_reg in permissible) then
@@ -2135,7 +2101,7 @@ var
   c: il_$node_ptr_t;
   s: isc_solution_ptr_t;
 begin
-  c := smcontk(81, v);
+  c := smcontk(integer_ob, v);
   s := new_solution(isc_user_routines_20c, 14, 0, nil, c, 78);
   s^.bits_known := v;
   s^.bits_trusted := -1;
@@ -2166,7 +2132,7 @@ end;
 
 procedure initialize_symbol;
 begin
-  if sym^.kind = 109 then
+  if sym^.kind = var_name then
     local_initialize_var_name(sym, false, false)
   else
     local_initialize_fortran_symbol(sym, false, false);
@@ -2174,7 +2140,7 @@ end;
 
 procedure isc_$initialize_symbol;
 begin
-  if sym^.kind = 109 then
+  if sym^.kind = var_name then
     local_initialize_var_name(sym, false, false)
   else
     local_initialize_fortran_symbol(sym, false, false);
@@ -2187,7 +2153,7 @@ end;
 
 procedure isc_$initialize_parameter;
 begin
-  if sym^.kind = 109 then
+  if sym^.kind = var_name then
     local_initialize_var_name(sym, cand, false)
   else
     local_initialize_fortran_symbol(sym, cand, false);
@@ -2208,11 +2174,11 @@ var
   home: isc_solution_ptr_t;
 begin
   s := sym;
-  if s^.kind = 109 then begin
+  if s^.kind = var_name then begin
     isc_$initialize_symbol(s);
     r := (s^.vn_attr & 16#04000000) <> 0;
   end
-  else if s^.kind = 110 then begin
+  else if s^.kind = fortran_symbol then begin
     isc_$initialize_symbol(s);
     r := (s^.fs_attr & 16#04000000) <> 0;
   end
@@ -2491,7 +2457,7 @@ var
   inh: inherited_attributes_ptr_t;
   s: isc_solution_ptr_t;
 begin
-  c := smcontk(81, v);
+  c := smcontk(integer_ob, v);
   inh := new_inherited_attributes(isc_heap, c);
   s := new_solution(isc_heap, 5, 0, inh, c, 78);
   s^.bits_known := 0;
@@ -2702,16 +2668,16 @@ var
   h: isc_solution_ptr_t;
 begin
   s := sym;
-  if s^.kind = 109 then begin
+  if s^.kind = var_name then begin
     isc_$initialize_symbol(s);
     h := s^.vn_home;
   end
-  else if s^.kind = 110 then begin
+  else if s^.kind = fortran_symbol then begin
     isc_$initialize_symbol(s);
     h := s^.fs_home;
   end
-  else if (s^.kind = 190) or (s^.kind = 189) then begin
-    if s^.kind = 189 then
+  else if (s^.kind = cse_parent_ob) or (s^.kind = cse_use_ob) then begin
+    if s^.kind = cse_use_ob then
       s := map_cse_use_ob_to_cse_parent_ob(s);
     h := s^.cp_chosen_solution;
     if h = nil then
@@ -2743,9 +2709,9 @@ begin
   else
     b := bits;
   s := sym;
-  if s^.kind = 189 then
+  if s^.kind = cse_use_ob then
     s := map_cse_use_ob_to_cse_parent_ob(s);
-  if (s^.kind = 190) and (s^.cp_chosen_solution = nil) then begin
+  if (s^.kind = cse_parent_ob) and (s^.cp_chosen_solution = nil) then begin
     isc_$get_memory_home := make_expression_temporary(kind, b);
     return;
   end;
@@ -2758,7 +2724,7 @@ begin
     end;
     isc_$get_memory_home := lr^.memory_home;
   end
-  else if ((s^.kind = 109) or (s^.kind = 110)) and (bits >= 32)
+  else if ((s^.kind = var_name) or (s^.kind = fortran_symbol)) and (bits >= 32)
           and not (20 in getphase(s)) then
     isc_$get_memory_home := s
   else
@@ -2786,7 +2752,7 @@ var
 begin
   n := node;
   case n^.kind of
-    109, 110, 189, 190: begin
+    var_name, fortran_symbol, cse_use_ob, cse_parent_ob: begin
       h := isc_solution_ptr_t(isc_$get_home_solution(n));
       if h = nil then
         lr := nil
@@ -2807,11 +2773,11 @@ begin
         end;
       end;
     end;
-    203, 137:
+    physical_register_ob, tree_node:
       if n^.tr_op <> 31 then
         lr := nil
       else begin
-        if n^.kind = 137 then begin
+        if n^.kind = tree_node then begin
           cls := rshft(il_$node_ptr_t(n)^.xw[5], 8) & 16#FF;
           num := il_$node_ptr_t(n)^.xw[5] & 16#FF;
         end
@@ -2825,12 +2791,12 @@ begin
           otherwise lr := nil;
         end;
       end;
-    211: lr := isc_solution_ptr_t(isc_user_routines_33c)^.live_range;
-    154: lr := isc_solution_ptr_t(isc_user_routines_338)^.live_range;
-    155: lr := isc_solution_ptr_t(isc_user_routines_32c)^.live_range;
-    229: lr := isc_solution_ptr_t(isc_user_routines_334)^.live_range;
-    153: lr := isc_solution_ptr_t(isc_user_routines_340)^.live_range;
-    226: lr := isc_solution_ptr_t(isc_user_routines_328)^.live_range;
+    ap_register: lr := isc_solution_ptr_t(isc_user_routines_33c)^.live_range;
+    db_register: lr := isc_solution_ptr_t(isc_user_routines_338)^.live_range;
+    display_register: lr := isc_solution_ptr_t(isc_user_routines_32c)^.live_range;
+    lb_register: lr := isc_solution_ptr_t(isc_user_routines_334)^.live_range;
+    sb_register: lr := isc_solution_ptr_t(isc_user_routines_340)^.live_range;
+    exception_register: lr := isc_solution_ptr_t(isc_user_routines_328)^.live_range;
     otherwise lr := nil;
   end;
   isc_$get_il_live_range := lr;
@@ -2887,7 +2853,8 @@ var
   h: isc_solution_ptr_t;
   lr: lr_ptr_t;
 begin
-  if (node^.kind = 110) or (node^.kind = 189) or (node^.kind = 190) then begin
+  if (node^.kind = fortran_symbol) or (node^.kind = cse_use_ob)
+      or (node^.kind = cse_parent_ob) then begin
     h := isc_solution_ptr_t(isc_$get_home_solution(node));
     lr := h^.live_range_of_imaginary_part;
     if lr = nil then begin
@@ -2933,7 +2900,7 @@ begin
   else
     len := 3;
   id := mrh_$alloc(isc_user_routines_20c, 22);
-  id^.kind := 76;
+  id^.kind := id_ob;
   id^.idnt_next := nil;
   id^.idnt_unused_8 := 0;
   id^.idnt_len := len;
@@ -2941,7 +2908,7 @@ begin
   id^.idnt_name[2] := name[2];
   id^.idnt_name[3] := name[3];
   v := mrh_$alloc(isc_user_routines_20c, 84);
-  v^.kind := 109;
+  v^.kind := var_name;
   v^.vn_p4 := isc_node_ptr_t(id);
   v^.vn_type := isc_user_routines_34c;
   v^.vn_vat := 2;
@@ -2972,7 +2939,7 @@ begin
   else
     len := 3;
   id := mrh_$alloc(isc_user_routines_20c, 22);
-  id^.kind := 76;
+  id^.kind := id_ob;
   id^.idnt_next := nil;
   id^.idnt_unused_8 := 0;
   id^.idnt_len := len;
@@ -2980,7 +2947,7 @@ begin
   id^.idnt_name[2] := name[2];
   id^.idnt_name[3] := name[3];
   v := mrh_$alloc(isc_user_routines_20c, 84);
-  v^.kind := 109;
+  v^.kind := var_name;
   v^.vn_p4 := isc_node_ptr_t(id);
   v^.vn_type := isc_user_routines_348;
   v^.vn_vat := 2;
@@ -3011,7 +2978,7 @@ begin
   else
     len := 3;
   id := mrh_$alloc(isc_user_routines_20c, 22);
-  id^.kind := 76;
+  id^.kind := id_ob;
   id^.idnt_next := nil;
   id^.idnt_unused_8 := 0;
   id^.idnt_len := len;
@@ -3019,7 +2986,7 @@ begin
   id^.idnt_name[2] := name[2];
   id^.idnt_name[3] := name[3];
   v := mrh_$alloc(isc_user_routines_20c, 84);
-  v^.kind := 109;
+  v^.kind := var_name;
   v^.vn_p4 := isc_node_ptr_t(id);
   v^.vn_type := isc_user_routines_344;
   v^.vn_vat := 2;
@@ -3040,7 +3007,7 @@ end;
 
 function il_kind_function;
 begin
-  il_kind_function := node^.kind;
+  il_kind_function := ord(node^.kind);
 end;
 
 { make_expression_temporary - a new temporary variable (kind 109, from
@@ -3067,7 +3034,7 @@ begin
   else
     t := isc_user_routines_344;
   v := mrh_$alloc(isc_user_routines_20c, 84);
-  v^.kind := 109;
+  v^.kind := var_name;
   v^.vn_p4 := nil;
   v^.vn_block := il_180;
   v^.vn_type := t;
@@ -3252,15 +3219,15 @@ begin
     r := false
   else if sym = dest then
     r := false
-  else if sym^.kind = 110 then begin
+  else if sym^.kind = fortran_symbol then begin
     r := true;
     n := isc_node_ptr_t(il_180)^.xp[1];
     repeat
       done := false;
       if n = nil then
         done := true
-      else if not ((n^.kind = 108) and (n^.bk_f294.slevel > 0)) then
-        if n^.kind <> 167 then
+      else if not ((n^.kind = function_blk) and (n^.bk_f294.slevel > 0)) then
+        if n^.kind <> entry_blk then
           done := true
         else if n^.xp[24] = sym then begin
           r := false;
@@ -3288,21 +3255,23 @@ var
   r: integer;
 begin
   case t^.kind of
-    131, 133, 177, 197, 134, 128: r := rlen_code_from_type_node(t^.xp[1]);
-    234: r := rlen_code_from_type_node(t^.xp[2]);
-    121: r := rlen_code_from_type_node(t^.xp[4]);
-    118: r := rlen_code_from_type_node(t^.xp[7]);
-    124, 125: r := 1;
-    129: r := 2;
-    122: r := 4;
-    130, 135: r := 5;
-    123: r := 7;
-    210, 132, 196, 126, 127, 136: r := 0;
+    array_type, file_type, offset_type, parray_type, set_type,
+        subr_type: r := rlen_code_from_type_node(t^.xp[1]);
+    cc_func_returning_type: r := rlen_code_from_type_node(t^.xp[2]);
+    param_name: r := rlen_code_from_type_node(t^.xp[4]);
+    type_name: r := rlen_code_from_type_node(t^.xp[7]);
+    bool_type, char_type: r := 1;
+    enum_type: r := 2;
+    integer_type: r := 4;
+    ptr_type, univ_ptr_type: r := 5;
+    real_type: r := 7;
+    void_type, record_type, varying_type, char_string_con_type,
+        char_array_type, null_set_type: r := 0;
     otherwise begin
       write('*******************************************************');
       writeln;
       write('ISC: The illegal IL node kind is: ');
-      write(an_kind_t(t^.kind):1);
+      write(t^.kind:1);
       write('.');
       writeln;
       write('*******************************************************');
@@ -3339,23 +3308,25 @@ var
 begin
   n := node;
   case n^.kind of
-    140: a := isc_readonly_tables.rlen_w[n^.xw[26]];
-    143: a := isc_readonly_tables.rlen_w[n^.xw[12]];
-    190: a := ord(arithmetic_from_il_node(n^.xp[1]));
-    189: a := ord(arithmetic_from_il_node(n^.xp[5]));
-    145: a := isc_readonly_tables.rlen_w[n^.xw[21]];
-    151: a := isc_readonly_tables.rlen_w[n^.xw[26]];
-    138, 137: a := isc_readonly_tables.rlen_w[n^.xw[12]];
-    146, 147: a := 3;
-    156, 176, 92: a := 3;
-    78, 83, 80, 79, 85, 82, 84, 81, 87, 77, 86, 200: a := 1;
-    88, 89, 198, 90: a := 2;
-    109:
+    assign_node: a := isc_readonly_tables.rlen_w[n^.xw[26]];
+    cmp_tree_node: a := isc_readonly_tables.rlen_w[n^.xw[12]];
+    cse_parent_ob: a := ord(arithmetic_from_il_node(n^.xp[1]));
+    cse_use_ob: a := ord(arithmetic_from_il_node(n^.xp[5]));
+    dindex_node: a := isc_readonly_tables.rlen_w[n^.xw[21]];
+    return_node: a := isc_readonly_tables.rlen_w[n^.xw[26]];
+    gen_tree_node, tree_node: a := isc_readonly_tables.rlen_w[n^.xw[12]];
+    ptr_node, disp_node: a := 3;
+    set_con_ob, rec_const_ob, char_string_ob: a := 3;
+    slogical_ob, usinteger_ob, sinteger_ob, llogical_ob, ulinteger_ob,
+        linteger_ob, uinteger_ob, integer_ob, char_ob, blogical_ob,
+        ubinteger_ob, binteger_ob: a := 1;
+    real_ob, dpreal_ob, dpcomplex_ob, complex_ob: a := 2;
+    var_name:
       if n^.vn_vat = 5 then
         a := 3
       else
         a := isc_readonly_tables.rlen_w[rlen_code_from_type_node(n^.vn_type)];
-    110:
+    fortran_symbol:
       case n^.fs_f10.cls of
         1, 2, 3, 7, 8, 9, 10: a := 1;
         4, 5: a := 2;
@@ -3366,7 +3337,7 @@ begin
   if (a <> 2) and (a <> 1) and (a <> 3) then
     if isc_user_routines_356 or isc_user_routines_354 then begin
       write('ISC: arithmetic_from_il_node: il node kind ');
-      write(an_kind_t(n^.kind):1);
+      write(n^.kind:1);
       write(' has arithmetic ');
       write(arith$t(a):1);
       write('.');
@@ -3394,31 +3365,32 @@ var
 begin
   n := node;
   case n^.kind of
-    140: p := isc_$precision_from_rlen_and_size(n^.xw[26], n^.xl[12]);
-    143: p := isc_$precision_from_rlen_and_size(n^.xw[12], n^.xl[5]);
-    190: p := precision_from_il_node(n^.xp[1]);
-    189: p := precision_from_il_node(n^.xp[5]);
-    145: p := isc_$precision_from_rlen_and_size(n^.xw[21], -1);
-    151: p := isc_$precision_from_rlen_and_size(n^.xw[26], -1);
-    138, 137: p := isc_$precision_from_rlen_and_size(n^.xw[12], n^.xl[5]);
-    147: p := precision_from_il_node(n^.xp[6]) - n^.xl[8] * 8;
-    146: p := precision_from_il_node(n^.xp[6]);
-    92: p := (il_$node_ptr_t(n)^.str_len * 8) & 16#FFFF;
-    176: p := n^.xl[2] * 8;
-    156: p := (il_$node_ptr_t(n)^.set_len * 8) & 16#FFFF;
-    200, 86, 77, 87: p := 8;
-    80, 83, 78: p := 16;
-    81, 84, 82, 85, 79: p := 32;
-    90: p := 64;
-    198: p := 128;
-    89: p := 64;
-    88: p := 32;
-    109:
+    assign_node: p := isc_$precision_from_rlen_and_size(n^.xw[26], n^.xl[12]);
+    cmp_tree_node: p := isc_$precision_from_rlen_and_size(n^.xw[12], n^.xl[5]);
+    cse_parent_ob: p := precision_from_il_node(n^.xp[1]);
+    cse_use_ob: p := precision_from_il_node(n^.xp[5]);
+    dindex_node: p := isc_$precision_from_rlen_and_size(n^.xw[21], -1);
+    return_node: p := isc_$precision_from_rlen_and_size(n^.xw[26], -1);
+    gen_tree_node, tree_node: p := isc_$precision_from_rlen_and_size(n^.xw[12],
+        n^.xl[5]);
+    disp_node: p := precision_from_il_node(n^.xp[6]) - n^.xl[8] * 8;
+    ptr_node: p := precision_from_il_node(n^.xp[6]);
+    char_string_ob: p := (il_$node_ptr_t(n)^.str_len * 8) & 16#FFFF;
+    rec_const_ob: p := n^.xl[2] * 8;
+    set_con_ob: p := (il_$node_ptr_t(n)^.set_len * 8) & 16#FFFF;
+    binteger_ob, ubinteger_ob, blogical_ob, char_ob: p := 8;
+    sinteger_ob, usinteger_ob, slogical_ob: p := 16;
+    integer_ob, uinteger_ob, linteger_ob, ulinteger_ob, llogical_ob: p := 32;
+    complex_ob: p := 64;
+    dpcomplex_ob: p := 128;
+    dpreal_ob: p := 64;
+    real_ob: p := 32;
+    var_name:
       if n^.vn_vat = 5 then
         p := 32
       else
         p := n^.vn_bits;
-    110:
+    fortran_symbol:
       if (n^.fs_f10.cls = 7) and n^.fs_f10.b7 then
         p := -1
       else
@@ -3428,7 +3400,7 @@ begin
   if p = -1 then
     if isc_user_routines_356 or isc_user_routines_354 then begin
       write('ISC: precision_from_il_node: il node kind ');
-      write(an_kind_t(n^.kind):1);
+      write(n^.kind:1);
       write(' has precision ');
       write(p:1);
       write('.');
@@ -3750,7 +3722,7 @@ end;
 
 function side_effect_symbol_fill_in_size;
 begin
-  if sym^.kind = 109 then
+  if sym^.kind = var_name then
     side_effect_symbol_fill_in_size := side_effect_var_name_fill_in_size(sym, size)
   else
     side_effect_symbol_fill_in_size := side_effect_fortran_symbol_fill_in_size(sym, size);
@@ -3784,7 +3756,7 @@ function invertible_in_sp;
 begin
   if node = nil then
     invertible_in_sp := false
-  else if node^.kind = 89 then
+  else if node^.kind = dpreal_ob then
     invertible_in_sp := node^.real_single_exact;
 end;
 
@@ -3792,7 +3764,7 @@ function invertible_in_dp;
 begin
   if node = nil then
     invertible_in_dp := false
-  else if node^.kind = 89 then
+  else if node^.kind = dpreal_ob then
     invertible_in_dp := node^.real_single_range;
 end;
 
@@ -3868,17 +3840,20 @@ function expression_has_side_effects;
 var
   r: boolean;
 begin
-  if (node^.kind = 147) or (node^.kind = 205) or (node^.kind = 146) then
+  if (node^.kind = disp_node) or (node^.kind = sym_disp_node)
+      or (node^.kind = ptr_node) then
     r := expression_has_side_effects(node^.xp[6])
-  else if node^.kind = 145 then begin
+  else if node^.kind = dindex_node then begin
     r := expression_has_side_effects(node^.xp[6]);
     r := expression_has_side_effects(node^.xp[9]) or r;
   end
-  else if node^.kind in [137, 138, 143, 145, 146, 147, 164, 171, 175, 189, 205] then
+  else if node^.kind in [tree_node, gen_tree_node, cmp_tree_node, dindex_node,
+                         ptr_node, disp_node, cs_node, cc_call, pf_call,
+                         cse_use_ob, sym_disp_node] then
     r := true
-  else if node^.kind = 110 then
+  else if node^.kind = fortran_symbol then
     r := true
-  else if node^.kind = 109 then
+  else if node^.kind = var_name then
     r := true
   else
     r := true;
@@ -3948,7 +3923,7 @@ var
   t: isc_node_ptr_t;
 begin
   t := mrh_$alloc(isc_heap, 44);
-  t^.kind := 137;
+  t^.kind := tree_node;
   t^.tr_op := 17;
   t^.tr_opmod1 := 0;
   t^.tr_opmod2 := 0;
@@ -4094,23 +4069,23 @@ begin
   end
   else
     case n^.kind of
-      163: begin
+      addr_con: begin
         write('<addr_con = ');
         write(il_node_to_string(n^.xp[2]));
         write('>');
       end;
-      211: write('<ap_register>');
-      204: begin
+      ap_register: write('<ap_register>');
+      argument_block_location_ob: begin
         write('<arg_blk_locn = ');
         write(n^.xl[1]:1);
         write('>');
       end;
-      140: begin
+      assign_node: begin
         write('<assign_node = ');
         write(ur_aop_t(n^.xw[38]));
         write('>');
       end;
-      208: begin
+      at_lib_dsc: begin
         write('<at_lib_dsc = ');
         write('"');
         for i := 1 to ord(n^.xc[49]) do
@@ -4118,21 +4093,23 @@ begin
         write('"');
         write('>');
       end;
-      200, 77, 87, 81, 82, 79, 80, 78, 86, 84, 85, 83:
+      binteger_ob, blogical_ob, char_ob, integer_ob, linteger_ob, llogical_ob,
+          sinteger_ob, slogical_ob, ubinteger_ob, uinteger_ob, ulinteger_ob,
+          usinteger_ob:
         write(n^.int_value:1);
-      149: write('<blk_end_node>');
-      148: write('<block_entry_node>');
-      209: begin
+      blk_end_node: write('<blk_end_node>');
+      block_entry_node: write('<block_entry_node>');
+      blockdata_blk: begin
         write('<blockdata_blk = ');
         write(il_node_to_string(n^.xp[74]));
         write('>');
       end;
-      141: write('<branch_node>');
-      214: write('<case_node_range_check>');
-      215: write('<case_node_no_range_check>');
-      142: write('<cbranch_node>');
-      171: write('<cc_call>');
-      92: begin
+      branch_node: write('<branch_node>');
+      case_node_range_check: write('<case_node_range_check>');
+      case_node_no_range_check: write('<case_node_no_range_check>');
+      cbranch_node: write('<cbranch_node>');
+      cc_call: write('<cc_call>');
+      char_string_ob: begin
         write('<char_string_ob = ');
         write('"');
         for i := 1 to n^.str_len do
@@ -4140,39 +4117,39 @@ begin
         write('"');
         write('>');
       end;
-      143: begin
+      cmp_tree_node: begin
         write('<cmp_tree_node = ');
         write(ur_top_t(n^.xw[18]));
         write('>');
       end;
-      111: begin
+      common_block_name: begin
         write('<common_block_name = ');
         write(il_node_to_string(n^.xp[1]));
         write('>');
       end;
-      90: write('<complex_ob>');
-      164: write('<cs_node>');
-      165: write('<cs_temp>');
-      190: write('<cse_parent_ob>');
-      189: write('<cse_use_ob>');
-      183: begin
+      complex_ob: write('<complex_ob>');
+      cs_node: write('<cs_node>');
+      cs_temp: write('<cs_temp>');
+      cse_parent_ob: write('<cse_parent_ob>');
+      cse_use_ob: write('<cse_use_ob>');
+      data_section: begin
         write('<data section = ');
         write(il_node_to_string(n^.xp[2]));
         write('>');
       end;
-      154: write('<db_register>');
-      145: write('<dindex_node>');
-      147: begin
+      db_register: write('<db_register>');
+      dindex_node: write('<dindex_node>');
+      disp_node: begin
         write('<disp = ');
         write(n^.xl[8]:1);
         write('>');
       end;
-      155: write('<display_register>');
-      198: write('<dpcomplex_ob>');
-      89, 88: write(n^.real_value:1);
-      167: write('<entry_blk>');
-      139: write('<eval_node>');
-      110:
+      display_register: write('<display_register>');
+      dpcomplex_ob: write('<dpcomplex_ob>');
+      dpreal_ob, real_ob: write(n^.real_value:1);
+      entry_blk: write('<entry_blk>');
+      eval_node: write('<eval_node>');
+      fortran_symbol:
         if n^.xw[35] = 0 then begin
           write('<anonymous fortran_symbol #');
           write(n^.xw[8]:1);
@@ -4188,25 +4165,25 @@ begin
           write('"');
           write('>');
         end;
-      108: begin
+      function_blk: begin
         write('<function_blk = ');
         write(il_node_to_string(n^.xp[74]));
         write('>');
       end;
-      76: begin
+      id_ob: begin
         write('"');
         for i := 1 to n^.idnt_len do
           write(n^.idnt_name[i]);
         write('"');
       end;
-      172: begin
+      inner_blk: begin
         write('<inner_blk = ');
         write(il_node_to_string(n^.xp[74]));
         write('>');
       end;
-      144: write('<label_node>');
-      229: write('<lb_register>');
-      159: begin
+      label_node: write('<label_node>');
+      lb_register: write('<lb_register>');
+      lib_dsc: begin
         write('<lib_dsc = ');
         write('"');
         for i := 1 to n^.xw[4] do
@@ -4214,15 +4191,15 @@ begin
         write('"');
         write('>');
       end;
-      106: begin
+      module_blk: begin
         write('<module_blk = ');
         write(il_node_to_string(n^.xp[74]));
         write('>');
       end;
-      212: write('<namelist_constant_ob>');
-      150: write('<nlbranch_node>');
-      175: write('<pf_call>');
-      203: begin
+      namelist_constant_ob: write('<namelist_constant_ob>');
+      nlbranch_node: write('<nlbranch_node>');
+      pf_call: write('<pf_call>');
+      physical_register_ob: begin
         case n^.xw[2] of
           0: write('R');
           1: write('S');
@@ -4231,32 +4208,32 @@ begin
         end;
         write(n^.xw[3]:1);
       end;
-      107: begin
+      procedure_blk: begin
         write('<procedure_blk = ');
         write(il_node_to_string(n^.xp[74]));
         write('>');
       end;
-      105: begin
+      program_blk: begin
         write('<program_blk = ');
         write(il_node_to_string(n^.xp[74]));
         write('>');
       end;
-      146: write('<ptr_node>');
-      151: write('<return_node>');
-      153: write('<sb_register>');
-      156: write('<set_con_ob>');
-      205: begin
+      ptr_node: write('<ptr_node>');
+      return_node: write('<return_node>');
+      sb_register: write('<sb_register>');
+      set_con_ob: write('<set_con_ob>');
+      sym_disp_node: begin
         write('<sym_disp = ');
         write(il_node_to_string(n^.xp[8]));
         write('>');
       end;
-      137: begin
+      tree_node: begin
         write(ur_top_t(n^.xw[18]):1);
         write('(');
         write(')');
       end;
-      188: write('<use_def_ob>');
-      109:
+      use_def_ob: write('<use_def_ob>');
+      var_name:
         if n^.xp[1] = nil then begin
           write('<anonymous variable #');
           write(n^.xw[37]:1);
@@ -4266,70 +4243,70 @@ begin
         end
         else
           r := il_node_to_string(n^.xp[1]);
-      131: begin
+      array_type: begin
         write('array[');
         write(il_node_to_string(n^.xp[2]));
         write('] of ');
         write(il_node_to_string(n^.xp[1]));
       end;
-      124: write('bool');
-      234: begin
+      bool_type: write('bool');
+      cc_func_returning_type: begin
         write('function_returning(');
         write(il_node_to_string(n^.xp[2]));
         write(')');
       end;
-      127: write('char_array');
-      126: write('char_string_con');
-      125: write('char');
-      206: begin
+      char_array_type: write('char_array');
+      char_string_con_type: write('char_string_con');
+      char_type: write('char');
+      dynamic_array_type: begin
         write('dynamic ');
         write('array[');
         write(il_node_to_string(n^.xp[2]));
         write('] of ');
         write(il_node_to_string(n^.xp[1]));
       end;
-      129: begin
+      enum_type: begin
         write('enum(');
         write(n^.xw[3]:1);
         write(')');
       end;
-      133: begin
+      file_type: begin
         write('file(');
         write(il_node_to_string(n^.xp[1]));
         write(')');
       end;
-      174: begin
+      func__type: begin
         write('function_returning(');
         write(il_node_to_string(n^.xp[2]));
         write(')');
       end;
-      122: begin
+      integer_type: begin
         write('integer(rlen = ');
         write(n^.xw[2]:1);
         write(', signed = ');
         write((n^.xc[6] <> chr(0)):1);
         write(')');
       end;
-      136: write('null_set');
-      177: write('offset');
-      197: write('parray');
-      173: write('procedure');
-      130: begin
+      null_set_type: write('null_set');
+      offset_type: write('offset');
+      parray_type: write('parray');
+      proc__type: write('procedure');
+      ptr_type: begin
         write('ptr(');
         write(il_node_to_string(n^.xp[1]));
         write(')');
       end;
-      123: begin
+      real_type: begin
         write('real(rlen = ');
         write(n^.xw[2]:1);
         write(')');
       end;
-      132: begin
+      record_type: begin
         write('record(..., size = ');
         write(n^.xl[2]:1);
         write(')');
       end;
-      134: begin
+      set_type: begin
         write('set(elements = ');
         write(n^.xw[6]:1);
         write(', size = ');
@@ -4337,7 +4314,7 @@ begin
         write(') of ');
         write(il_node_to_string(n^.xp[1]));
       end;
-      128: begin
+      subr_type: begin
         write('subrange [');
         write(il_node_to_string(n^.xp[2]));
         write('..');
@@ -4345,22 +4322,22 @@ begin
         write('] of ');
         write(il_node_to_string(n^.xp[1]));
       end;
-      118: begin
+      type_name: begin
         write('type_name == ');
         write(il_node_to_string(n^.xp[7]));
       end;
-      135: write('univ_ptr');
-      196: begin
+      univ_ptr_type: write('univ_ptr');
+      varying_type: begin
         write('varying[');
         write(n^.xl[2]:1);
         write(']');
       end;
-      210: write('void');
+      void_type: write('void');
       otherwise begin
         write('<il node: address = ');
         write(integer32(n):1);
         write(', kind = ');
-        write(an_kind_t(n^.kind):1);
+        write(n^.kind:1);
         write('>');
       end;
     end;

@@ -294,7 +294,7 @@ begin
         s2 := s2^.next;
   p1 := (s1^.hdr.region - opt_region + 1) * 2;
   p2 := (s2^.hdr.region - opt_region + 1) * 2 + 1;
-  if vars^[k].node^.kind = 109 then
+  if vars^[k].node^.kind = var_name then
     v := vars^[k].node^.xw[37]
   else
     v := vars^[k].node^.xw[8];
@@ -393,9 +393,9 @@ var
   function index_of(t: il_$node_ptr_t): integer;
   begin
     index_of := -1;
-    if t^.kind = 109 then
+    if t^.kind = var_name then
       index_of := t^.xw[39]
-    else if t^.kind = 110 then
+    else if t^.kind = fortran_symbol then
       index_of := t^.xw[34];
   end;
 
@@ -407,7 +407,7 @@ begin
     last := b^.last_stmt^.next;
     done := false;
     while (s^.prev <> nil) and not done do
-      if s^.prev^.kind = 191 then
+      if s^.prev^.kind = reg_list_ob then
         s := s^.prev
       else
         done := true;
@@ -424,7 +424,7 @@ begin
         end;
     vb := vecs^[b^.num - opt_first_block];
     repeat
-      if s^.kind = 191 then begin
+      if s^.kind = reg_list_ob then begin
         for j := 1 to s^.act_count do begin
           v := index_of(s^.acts[j].node);
           if v > 0 then begin
@@ -442,8 +442,9 @@ begin
           end;
         end;
       end
-      else if (s^.kind = 188) or (opt_4009c[s^.hdr.region]^.hdr.vnum <> 0) then begin
-        if s^.kind = 188 then
+      else if (s^.kind = use_def_ob)
+          or (opt_4009c[s^.hdr.region]^.hdr.vnum <> 0) then begin
+        if s^.kind = use_def_ob then
           t := s^.x48
         else
           t := opt_4009c[s^.hdr.region]^.vars^[opt_4009c[s^.hdr.region]^.hdr.vnum]^.node;
@@ -455,7 +456,7 @@ begin
             bit_range_set(v, false, vars^[v].stmt, s^.prev);
             vars^[v].stmt := nil;
           end;
-          if (vars^[v].reg = 31) or (s^.kind = 188) then begin
+          if (vars^[v].reg = 31) or (s^.kind = use_def_ob) then begin
             bit_set(vb.v[3], v);
             vars^[v].stmt := s;
           end;
@@ -660,7 +661,7 @@ var
       if s2 > last then
         s2 := last;
       s2w := s2;
-      if t^.kind = 109 then
+      if t^.kind = var_name then
         q := rv_lr_ptr_t(t^.xp[17])
       else
         q := rv_lr_ptr_t(t^.xp2[13]);
@@ -678,7 +679,7 @@ var
           found := true;
         end;
       if not found then begin
-        if t^.kind = 109 then
+        if t^.kind = var_name then
           q := rv_lr_ptr_t(t^.xp[17])
         else
           q := rv_lr_ptr_t(t^.xp2[13]);
@@ -704,7 +705,7 @@ var
           nq^.start.line := ln1;
           nq^.stop.cnt := cnt2;
           nq^.stop.line := ln2;
-          if t^.kind = 109 then begin
+          if t^.kind = var_name then begin
             nq^.next := rv_lr_ptr_t(t^.xp[17]);
             t^.xp[17] := il_$node_ptr_t(nq);
             cls5 := t^.xw[36] = 5;
@@ -784,7 +785,7 @@ var
     x: integer;
   begin
     t := rr.node;
-    if t^.kind = 109 then begin
+    if t^.kind = var_name then begin
       if (t^.xw[37] <= 0) or ((t^.xw[17] & 16#4000) <> 0) then begin
         is_reg_candidate := false;
         return;
@@ -810,10 +811,10 @@ var
     also := false;
     if rr.reg <> 31 then
       if rr.defs <= 1 then
-        if opt_4009c[rr.first]^.kind = 188 then begin
+        if opt_4009c[rr.first]^.kind = use_def_ob then begin
           s := opt_4009c[rr.first]^.prev;
           found := 0;
-          while (found = 0) and (s^.kind = 191) do begin
+          while (found = 0) and (s^.kind = reg_list_ob) do begin
             j := s^.act_count;
             while (found = 0) and (j >= 1) do
               if s^.acts[j].node = rr.node then
@@ -839,7 +840,7 @@ var
     if first then begin
       x := fill_avail_heap(rv_words_ptr_t(rr.live), vnum, reg);
       if x <> 0 then
-        if t^.kind = 109 then begin
+        if t^.kind = var_name then begin
           t^.xc[32] := chr(ord(t^.xc[32]) ! 4);
           t^.xw[39] := x;
         end
@@ -878,7 +879,7 @@ var
     if il_180^.xp[24] <> nil then begin
       k := runbackend_16;
       while opt_region <= k do begin
-        if opt_4009c[k]^.kind = 151 then
+        if opt_4009c[k]^.kind = return_node then
           exit;
         k := k - 1;
       end;
@@ -898,7 +899,7 @@ var
           else
             reg := 0;
           f := il_180^.xp[24];
-          if f^.kind = 109 then begin
+          if f^.kind = var_name then begin
             if f^.xw[37] <= 0 then begin
               f^.xw[37] := il_180^.xw[145] + 1;
               nparams := nparams + 1;
@@ -953,7 +954,8 @@ begin
   for k := 0 to 2 * sz - 1 do
     membits^[k] := 0;
   for k := 1 to n do
-    if (r^[k].node^.kind = 110) or (r^[k].node^.kind = 109) then
+    if (r^[k].node^.kind = fortran_symbol)
+        or (r^[k].node^.kind = var_name) then
       ok := is_reg_candidate(r^[k], true);
   if need then
     ok := is_reg_candidate(lr, true);
@@ -962,8 +964,9 @@ begin
     if vars = nil then
       cgerr_no_source(9, 0);
     for k := 1 to n do
-      if (r^[k].node^.kind = 110) or (r^[k].node^.kind = 109) then begin
-        if r^[k].node^.kind = 109 then
+      if (r^[k].node^.kind = fortran_symbol)
+          or (r^[k].node^.kind = var_name) then begin
+        if r^[k].node^.kind = var_name then
           v := r^[k].node^.xw[39]
         else
           v := r^[k].node^.xw[34];
@@ -971,7 +974,7 @@ begin
           vars^[v].node := r^[k].node;
       end;
     if need then begin
-      if lr.node^.kind = 109 then
+      if lr.node^.kind = var_name then
         v := lr.node^.xw[39]
       else
         v := lr.node^.xw[34];
@@ -980,7 +983,8 @@ begin
     end;
     calculate_memory_ranges;
     for k := 1 to n do
-      if (r^[k].node^.kind = 110) or (r^[k].node^.kind = 109) then
+      if (r^[k].node^.kind = fortran_symbol)
+          or (r^[k].node^.kind = var_name) then
         if is_reg_candidate(r^[k], false) then
           if r^[k].reg <> 31 then
             get_range(rv_words_ptr_t(r^[k].live), r^[k].node, r^[k].reg);
@@ -988,7 +992,7 @@ begin
       if is_reg_candidate(lr, false) then
         get_range(rv_words_ptr_t(lr.live), lr.node, lr.reg);
     for k := 1 to nvars do begin
-      if vars^[k].node^.kind = 109 then
+      if vars^[k].node^.kind = var_name then
         v := vars^[k].node^.xw[37]
       else
         v := vars^[k].node^.xw[8];

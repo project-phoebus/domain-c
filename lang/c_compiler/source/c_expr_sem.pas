@@ -105,7 +105,7 @@ module c_expr_sem;
 
 define
   cexs_stack;                           { +0x390 (c_globals.ins.pas) }
-  char_type;                            { +0x2390 }
+  char_ptype;                           { +0x2390 }
   short_type;                           { +0x2394 }
   int_type;                             { +0x2398 }
   uchar_type;                           { +0x239C }
@@ -113,7 +113,7 @@ define
   uint_type;                            { +0x23A4 }
   float_type;                           { +0x23A8 }
   double_type;                          { +0x23AC }
-  void_type;                            { +0x23B0 }
+  void_ptype;                           { +0x23B0 }
   cexs_23b4;                            { +0x23B4 }
   cexs_23b8;                            { +0x23B8 }
   cexs_23bc;                            { +0x23BC }
@@ -121,7 +121,7 @@ define
 type
   { An operand class: a set of type node kinds (30 bytes, `btst' with
     the byte index (239 - kind) div 8). }
-  kind_set_t = set of 0..239;
+  kind_set_t = set of il_$kind_t;
 
   { The bytes of a c_desc_t (init_aux clears them one by one). }
   desc_bytes_t = array [1..16] of char;
@@ -170,17 +170,20 @@ var
                                           unsigned short (no reference
                                           in the unit) }
   exp_class: array [1..11] of kind_set_t := [
-    [73, 122..123, 126, 129..130, 132, 134, 136],
-    [73, 122..123, 126, 129..130, 134, 136],
-    [73, 122..123, 126, 129..130],
-    [73, 122, 129],
-    [73, 134],
-    [73, 122..123, 129],
-    [73, 122, 129],
-    [73, 122..123, 129..130],
-    [73, 122..123, 129, 134, 136],
-    [73, 122..123, 129..130],
-    [73, 123]];
+    [error_ob, integer_type..real_type, char_string_con_type,
+     enum_type..ptr_type, record_type, set_type, null_set_type],
+    [error_ob, integer_type..real_type, char_string_con_type,
+     enum_type..ptr_type, set_type, null_set_type],
+    [error_ob, integer_type..real_type, char_string_con_type,
+     enum_type..ptr_type],
+    [error_ob, integer_type, enum_type],
+    [error_ob, set_type],
+    [error_ob, integer_type..real_type, enum_type],
+    [error_ob, integer_type, enum_type],
+    [error_ob, integer_type..real_type, enum_type..ptr_type],
+    [error_ob, integer_type..real_type, enum_type, set_type, null_set_type],
+    [error_ob, integer_type..real_type, enum_type..ptr_type],
+    [error_ob, real_type]];
                                         { +0x28: the operand classes
                                           (op_tab's left and right): 73
                                           and the type kinds allowed }
@@ -233,7 +236,7 @@ var
 procedure init_exp_tbl;
 begin
   if cargs_$options.ansi then
-    exp_class[1] := exp_class[1] - [132];
+    exp_class[1] := exp_class[1] - [record_type];
 end;
 
 { init_aux - d is the descriptor of a value of type t: its size,
@@ -258,12 +261,12 @@ begin
   for i := 1 to 16 do
     b^[i] := chr(0);
   d.rlen := get_rlen(t);
-  d.flags.b2 := t.base^.kind = 127;
+  d.flags.b2 := t.base^.kind = char_array_type;
   with t.base^ do
-    if kind = 122 then
-      d.flags.b6 := (kind = 127) or (t.base = double_type) or
+    if kind = integer_type then
+      d.flags.b6 := (kind = char_array_type) or (t.base = double_type) or
                     (t.base = float_type) or (t.base = int_type) or
-                    (t.base = char_type) or (t.base = short_type);
+                    (t.base = char_ptype) or (t.base = short_type);
   d.size := t.size;
 end;
 
@@ -286,14 +289,14 @@ begin
   with cexs_stack[k] do begin
     size := typ.size;
     case typ.base^.kind of
-      123: get_oc := 5;
-      127: get_oc := 4;
-      131, 132:
+      real_type: get_oc := 5;
+      char_array_type: get_oc := 4;
+      array_type, record_type:
         if size <= 4 then
           get_oc := 3
         else
           get_oc := 4;
-      134, 136:
+      set_type, null_set_type:
         if size <= 4 then
           get_oc := 1
         else
@@ -329,14 +332,14 @@ begin
   with cexs_stack[k] do
     if (len > typ.size) or ((len <> typ.size) and (mode = 1)) then begin
       t := typ.base;
-      if t^.kind = 122 then
+      if t^.kind = integer_type then
         sgn := t^.signed
-      else if t^.kind = 129 then
+      else if t^.kind = enum_type then
         sgn := t^.enum_int^.signed
       else
         sgn := true;
       if len = 1 then
-        if sgn then t := char_type else t := uchar_type
+        if sgn then t := char_ptype else t := uchar_type
       else if len = 2 then
         if sgn then t := short_type else t := ushort_type
       else
@@ -348,7 +351,8 @@ begin
       typ.base := saved.base;
       typ.flags.b25_5 := saved.flags.b25_5;
       typ.flags.b25_4 := saved.flags.b25_4;
-      if (node^.kind = 80) or (node^.kind = 82) or (node^.kind = 81) then begin
+      if (node^.kind = sinteger_ob) or (node^.kind = linteger_ob)
+          or (node^.kind = integer_ob) then begin
         typ.low := saved.low;
         typ.high := saved.high;
       end;
@@ -380,8 +384,9 @@ var
   sgn: boolean;
 begin
   with cexs_stack[k] do
-    if (typ.base^.kind = 122) or (typ.base^.kind = 129) then
-      if (node^.kind = 80) or (node^.kind = 82) or (node^.kind = 81) then begin
+    if (typ.base^.kind = integer_type) or (typ.base^.kind = enum_type) then
+      if (node^.kind = sinteger_ob) or (node^.kind = linteger_ob)
+          or (node^.kind = integer_ob) then begin
         r := node^.int_value;
         if t^.len = 6 then
           node := rlcontk(r)
@@ -391,7 +396,7 @@ begin
       end
       else begin
         len := 2;
-        if typ.base^.kind = 129 then
+        if typ.base^.kind = enum_type then
           sgn := typ.base^.enum_int^.signed
         else
           sgn := typ.base^.signed;
@@ -457,13 +462,13 @@ var
 procedure common_enum_code;
 begin
   with cexs_stack[top] do begin
-    if not (node^.kind in [80..86, 200]) then begin
+    if not (node^.kind in [sinteger_ob..ubinteger_ob, binteger_ob]) then begin
       desc.w6 := typ.size;
-      if typ.base^.kind = 129 then
+      if typ.base^.kind = enum_type then
         desc.flags.b6 := typ.base^.enum_int^.signed
-      else if typ.base^.kind = 122 then
+      else if typ.base^.kind = integer_type then
         desc.flags.b6 := typ.base^.signed
-      else if typ.base^.kind = 130 then
+      else if typ.base^.kind = ptr_type then
         desc.flags.b6 := false;
       op := 18;
     end;
@@ -485,10 +490,10 @@ end;
 procedure common_integer_code;
 begin
   with cexs_stack[top] do begin
-    if not (node^.kind in [80..86, 200]) then begin
+    if not (node^.kind in [sinteger_ob..ubinteger_ob, binteger_ob]) then begin
       sgn := typ.base^.signed;
       case t.size of
-        1: if sgn then type_exp(char_type, addr(tt))
+        1: if sgn then type_exp(char_ptype, addr(tt))
            else type_exp(uchar_type, addr(tt));
         2: if sgn then type_exp(short_type, addr(tt))
            else type_exp(ushort_type, addr(tt));
@@ -521,15 +526,15 @@ begin
     if desc.rlen = 5 then
       desc.rlen := 4;
     if typ.size <> t.size then
-      if node^.kind in [80..86, 200] then
+      if node^.kind in [sinteger_ob..ubinteger_ob, binteger_ob] then
         typ.size := t.size
       else begin
         desc.w6 := typ.size;
-        if typ.base^.kind = 129 then
+        if typ.base^.kind = enum_type then
           desc.flags.b6 := typ.base^.enum_int^.signed
-        else if typ.base^.kind = 122 then
+        else if typ.base^.kind = integer_type then
           desc.flags.b6 := typ.base^.signed
-        else if typ.base^.kind = 130 then
+        else if typ.base^.kind = ptr_type then
           desc.flags.b6 := false;
         op := 18;
       end;
@@ -556,7 +561,7 @@ begin
     if (6 in cargs_$options.cpu) <> cargs_$options.alnchk then
       if t.base^.ptr_attr.align > typ.base^.ptr_attr.align then begin
         p := def_drop_tnames(typ.base^.ptr_to);
-        if (p = char_type) or (p = uchar_type) or (p^.kind = 210) then
+        if (p = char_ptype) or (p = uchar_type) or (p^.kind = void_type) then
           error1(249, line, sym)
         else
           error1(242, line, sym);
@@ -625,7 +630,7 @@ var
   subsys: integer;
 begin
   with cexs_stack[top] do begin
-    if node^.kind = 89 then begin
+    if node^.kind = dpreal_ob then begin
       overflow := false;
       status := pfm_$cleanup(crec);
       if status.all <> pfm_$cleanup_set then begin
@@ -652,7 +657,7 @@ begin
         ok := true;
       end;
     end
-    else if node^.kind = 88 then
+    else if node^.kind = real_ob then
       node := dpcontk(node^.real_value)
     else begin
       op := 39;
@@ -675,12 +680,12 @@ begin { coerce }
       ok := t.base = typ.base;
       if ok then
         case t.base^.kind of
-          122: begin
+          integer_type: begin
             if typ.size <> t.size then
               common_integer_code;
             typ := t;
           end;
-          129: begin
+          enum_type: begin
             if typ.size <> t.size then
               common_enum_code;
             typ := t;
@@ -689,9 +694,9 @@ begin { coerce }
         end
       else
         case t.base^.kind of
-          122:
+          integer_type:
             case typ.base^.kind of
-              122: begin
+              integer_type: begin
                 sgn := typ.base^.signed;
                 tsgn := t.base^.signed;
                 if typ.size <> t.size then
@@ -707,49 +712,49 @@ begin { coerce }
                   else
                     typ.base := uchar_type;
               end;
-              123: real_to_integer_or_enum;
-              129: begin
+              real_type: real_to_integer_or_enum;
+              enum_type: begin
                 if typ.size <> t.size then
                   common_enum_code
                 else
                   ok := true;
                 typ := t;
               end;
-              130: pointer_and_integer_or_enum;
+              ptr_type: pointer_and_integer_or_enum;
               otherwise ;
             end;
-          123:
+          real_type:
             case typ.base^.kind of
-              129: begin
+              enum_type: begin
                 cexs_23be := true;
                 float_operand(top, t.base);
                 op := 0;
                 typ := t;
                 ok := true;
               end;
-              122: begin
+              integer_type: begin
                 float_operand(top, t.base);
                 op := 0;
                 typ := t;
                 ok := true;
               end;
-              123: real_to_real;
+              real_type: real_to_real;
               otherwise ;
             end;
-          129:
+          enum_type:
             case typ.base^.kind of
-              122: begin
+              integer_type: begin
                 if typ.size <> t.size then
                   common_enum_code
                 else
                   ok := true;
                 typ := t;
               end;
-              123: begin
+              real_type: begin
                 cexs_23be := true;
                 real_to_integer_or_enum;
               end;
-              129: begin
+              enum_type: begin
                 cexs_23be := true;
                 if typ.size <> t.size then
                   common_enum_code
@@ -757,20 +762,20 @@ begin { coerce }
                   ok := true;
                 typ := t;
               end;
-              130: begin
+              ptr_type: begin
                 cexs_23be := true;
                 pointer_and_integer_or_enum;
               end;
               otherwise ;
             end;
-          130:
+          ptr_type:
             case typ.base^.kind of
-              129: begin
+              enum_type: begin
                 cexs_23be := true;
                 pointer_and_integer_or_enum;
               end;
-              122: pointer_and_integer_or_enum;
-              130: pointer_to_pointer;
+              integer_type: pointer_and_integer_or_enum;
+              ptr_type: pointer_to_pointer;
               otherwise ;
             end;
           otherwise ;
@@ -828,7 +833,7 @@ var
 begin
   attr_check_align(cexs_23bc);
   with cexs_stack[cexs_23bc] do begin
-    if bits.var_pending and (node^.kind = 109) then begin
+    if bits.var_pending and (node^.kind = var_name) then begin
       bits.var_pending := false;
       v := c_sym_ptr_t(node);
       case v^.var_vat of
@@ -878,7 +883,7 @@ begin
       if (offset > 32700) or (index <> nil) or (offset < -32700) then begin
         n := node;
         v := c_sym_ptr_t(n);
-        if (n^.kind = 109) and (v^.var_vat <> vat_abs) then begin
+        if (n^.kind = var_name) and (v^.var_vat <> vat_abs) then begin
           if v^.var_vat = vat_dynm then begin
             if 6 in cargs_$options.cpu then begin
               base := n;
@@ -901,11 +906,11 @@ begin
             node := il_node_154;
           end;
         end
-        else if n^.kind = 146 then begin
+        else if n^.kind = ptr_node then begin
           hit := c_tree_ptr_t(n)^.bits.post;
           node := n^.xp[6];
         end
-        else if n^.kind = 145 then
+        else if n^.kind = dindex_node then
           fold := true
         else begin
           init_aux(desc, typ);
@@ -918,7 +923,7 @@ begin
       end
       else begin
         n := node;
-        if n^.kind = 145 then
+        if n^.kind = dindex_node then
           if not (3 in cargs_$options.cpu) then
             fold := (offset + n^.xl[8] <= -128) or
                     (offset + n^.xl[8] >= 96);
@@ -953,7 +958,9 @@ begin
 
     if index <> nil then begin
       n := index;
-      if (n^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205]) and
+      if (n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                      dindex_node..disp_node, cs_node, cc_call, pf_call,
+                      cse_use_ob, sym_disp_node]) and
          c_tree_ptr_t(n)^.bits.post then
         hit := true;
       if (mode = 2) and
@@ -980,7 +987,9 @@ begin
         add_tn(13, desc, cexs_23bc - 1, cexs_23bc);
       end;
       if hit and
-         (node^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205])
+         (node^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                         dindex_node..disp_node, cs_node, cc_call, pf_call,
+                         cse_use_ob, sym_disp_node])
       then
         c_tree_ptr_t(node)^.bits.post := true;
       index := nil;
@@ -994,7 +1003,7 @@ begin
         desc.w6 := 4;
         desc.size := 0;
         cexs_23bc := cexs_23bc + 1;
-        cexs_stack[cexs_23bc].node := smcontk(81, offset);
+        cexs_stack[cexs_23bc].node := smcontk(integer_ob, offset);
         add_tn(13, desc, cexs_23bc - 1, cexs_23bc);
         c_tree_ptr_t(cexs_stack[cexs_23bc].node)^.bits.post := true;
         offset := 0;
@@ -1009,9 +1018,10 @@ begin
       end;
       if (offset <> 0) or bits.force_disp then begin
         n := node;
-        if (n^.kind = 146) and
-           ((n^.xp[6]^.kind = 82) or (n^.xp[6]^.kind = 81)) then
-          n^.xp[6] := smcontk(81, n^.xp[6]^.int_value + offset)
+        if (n^.kind = ptr_node) and
+           ((n^.xp[6]^.kind = linteger_ob)
+            or (n^.xp[6]^.kind = integer_ob)) then
+          n^.xp[6] := smcontk(integer_ob, n^.xp[6]^.int_value + offset)
         else
           node := add_dn(n, sym, offset);
         offset := 0;
@@ -1040,7 +1050,7 @@ var
   f: c_field_ptr_t;
   p: c_type_ptr_t;
   r: c_sym_ptr_t;
-  k2: integer;
+  k2: il_$kind_t;
   deref_int: boolean;
   fold: boolean;
   ok: boolean;
@@ -1138,9 +1148,9 @@ begin
       cands[count].offset := sum;
     end;
     u := g^.ftype;
-    while u^.kind = 118 do
+    while u^.kind = type_name do
       u := c_sym_ptr_t(u)^.td_type;
-    if u^.kind = 132 then
+    if u^.kind = record_type then
       find_field_partial(g, u);
     g := g^.next;
   end;
@@ -1159,9 +1169,9 @@ begin { find_field_member }
     m := t^.su_fields;
     while m <> nil do begin
       s := m^.ftype;
-      while s^.kind = 118 do
+      while s^.kind = type_name do
         s := c_sym_ptr_t(s)^.td_type;
-      if s^.kind = 132 then
+      if s^.kind = record_type then
         find_field_partial(m, s);
       m := m^.next;
     end;
@@ -1204,7 +1214,7 @@ type
   exp_ptr_t = ^exp_t;
   exp_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     next: exp_ptr_t;                    { +4 }
     stype: c_type_ptr_t;                { +8 }
   end;
@@ -1222,7 +1232,7 @@ begin
   while b <> nil do begin
     e := exp_ptr_t(b^.tags);  { the block's tags (c_tag_t: +4 next, +8 the type) }
     while e <> nil do begin
-      if e^.kind <> 6 then begin
+      if e^.kind <> with_ob then begin
         g := find_field_member(e^.stype, o);
         if g <> c_field_ptr_t(il_178) then
           if res = nil then begin
@@ -1298,7 +1308,7 @@ procedure stack_operand(
     con: boolean); options(val_param);
 var
   tt: c_type_ptr_t;                     { -8 }
-  k: integer;
+  k: il_$kind_t;
   v: integer32;
 begin
   if n <> il_178 then
@@ -1309,7 +1319,9 @@ begin
   with cexs_stack[cexs_23bc] do begin
     node := n;
     item := n;
-    if n^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200] then
+    if n^.kind in [blogical_ob..complex_ob, char_string_ob, char32_string_ob,
+                   char16_ob, set_con_ob, rec_const_ob, dpcomplex_ob,
+                   binteger_ob] then
       sym := name^.id
     else
       sym := n;
@@ -1330,29 +1342,30 @@ begin
     flag_61 := false;
     type_exp(tt, addr(typ));
     k := typ.base^.kind;
-    if (k = 107) or (k = 108) then begin
+    if (k = procedure_blk) or (k = function_blk) then begin
       bits.b56 := 0;
       bits.var_pending := false;
     end
     else begin
       if con and typ.flags.ranged then
-        if (k <> 122) or (typ.base^.signed and (k = 122)) then begin
+        if (k <> integer_type) or (typ.base^.signed
+                                   and (k = integer_type)) then begin
           typ.low := n^.int_value;
           typ.high := typ.low;
           v := typ.low;
           if (v >= -128) and (v <= 127) then begin
             typ.size := 1;
-            if typ.base^.kind <> 129 then
-              typ.base := char_type;
+            if typ.base^.kind <> enum_type then
+              typ.base := char_ptype;
           end
           else if (v >= -32768) and (v <= 32767) then begin
             typ.size := 2;
-            if typ.base^.kind <> 129 then
+            if typ.base^.kind <> enum_type then
               typ.base := short_type;
           end;
           typ.bytes := typ.size;
         end;
-      if node^.kind = 109 then
+      if node^.kind = var_name then
         disp := typ.size;
     end;
   end;
@@ -1361,7 +1374,7 @@ end;
 begin { body_opr }
   case mode of
     0, 1, 11:
-      if (mode = 0) and (cdef_50^.kind = 108) and
+      if (mode = 0) and (cdef_50^.kind = function_blk) and
          (cdef_50^.name.id = name^.id) then begin
         r := cdef_50^.ret_var;
         if r <> nil then
@@ -1375,7 +1388,7 @@ begin { body_opr }
           s := name^.id
         else
           s := fnd_name(name, false, true);
-        if s^.kind = 116 then
+        if s^.kind = const_name then
           if mode = 0 then begin
             error1(52, name^.line, name^.id);
             stack_operand(il_178, c_type_ptr_t(il_178), false);
@@ -1383,7 +1396,7 @@ begin { body_opr }
           else
             stack_operand(c_sym_ptr_t(s)^.con_value,
                           c_sym_ptr_t(s)^.con_type, true)
-        else if s^.kind = 109 then
+        else if s^.kind = var_name then
           stack_operand(s, c_type_ptr_t(s), false)
         else begin
           if mode = 0 then
@@ -1401,7 +1414,8 @@ begin { body_opr }
     2:
       with cexs_stack[cexs_23bc] do begin
         k2 := typ.base^.kind;
-        if (k2 <> 122) and (k2 <> 131) and (k2 <> 127) then begin
+        if (k2 <> integer_type) and (k2 <> array_type)
+            and (k2 <> char_array_type) then begin
           error2(61, line, sym, typ.base);
           typ.base := c_type_ptr_t(il_178);
         end;
@@ -1410,8 +1424,8 @@ begin { body_opr }
       with cexs_stack[cexs_23bc] do begin
         deref_int := false;
         ok := true;
-        if typ.base^.kind <> 130 then
-          if (token_kind = ctk_arrow) and (typ.base^.kind = 122) and
+        if typ.base^.kind <> ptr_type then
+          if (token_kind = ctk_arrow) and (typ.base^.kind = integer_type) and
              (typ.base^.len = 4) then
             deref_int := true
           else begin
@@ -1447,7 +1461,7 @@ begin { body_opr }
       with cexs_stack[cexs_23bc] do begin
         fold := false;
         ok := false;
-        if typ.base^.kind <> 132 then begin
+        if typ.base^.kind <> record_type then begin
           if cargs_$options.xansi then begin
             error2(64, name^.line, name^.id, sym);
             typ.base := c_type_ptr_t(il_178);
@@ -1493,7 +1507,7 @@ begin { body_opr }
           offset := offset + o;
           select_field(f);
           n := node;
-          if (n^.kind = 137) and (c_tree_ptr_t(n)^.op = 16) and
+          if (n^.kind = tree_node) and (c_tree_ptr_t(n)^.op = 16) and
              (offset = 0) and not bits.is_addr then
             fold := true;
           if fold then
@@ -1505,7 +1519,7 @@ begin { body_opr }
     6: begin
       t := double_type;
       if name^.id <> nil then
-        if name^.id^.kind = 88 then
+        if name^.id^.kind = real_ob then
           t := float_type;
       stack_operand(name^.id, t, true);
     end;
@@ -1515,7 +1529,7 @@ begin { body_opr }
       cexs_stack[cexs_23bc].bits.b57_4 := false;
     end;
     8:
-      if name^.id^.kind = 85 then
+      if name^.id^.kind = ulinteger_ob then
         stack_operand(name^.id, uint_type, true)
       else
         stack_operand(name^.id, int_type, true);
@@ -1564,32 +1578,32 @@ begin
   ta := cexs_stack[a].typ.base;
   tb := cexs_stack[b].typ.base;
   if cexs_stack[a].node <> cexs_stack[b].node then begin
-    if (ta^.kind = 122) and not ta^.signed then
+    if (ta^.kind = integer_type) and not ta^.signed then
       ua := true
-    else if ta^.kind = 129 then
+    else if ta^.kind = enum_type then
       ua := not ta^.enum_int^.signed
     else
       ua := false;
-    if (ta^.kind = 122) and (ta^.len = 4) then
+    if (ta^.kind = integer_type) and (ta^.len = 4) then
       la := true
-    else if ta^.kind = 129 then
+    else if ta^.kind = enum_type then
       la := ta^.enum_int^.len = 4
     else
       la := false;
-    pa := ta^.kind = 130;
-    if (tb^.kind = 122) and not tb^.signed then
+    pa := ta^.kind = ptr_type;
+    if (tb^.kind = integer_type) and not tb^.signed then
       ub := true
-    else if tb^.kind = 129 then
+    else if tb^.kind = enum_type then
       ub := not tb^.enum_int^.signed
     else
       ub := false;
-    if (tb^.kind = 122) and (tb^.len = 4) then
+    if (tb^.kind = integer_type) and (tb^.len = 4) then
       lb := true
-    else if tb^.kind = 129 then
+    else if tb^.kind = enum_type then
       lb := tb^.enum_int^.len = 4
     else
       lb := false;
-    pb := tb^.kind = 130;
+    pb := tb^.kind = ptr_type;
     both4 := (ua and la) or (ub and lb);
     pa := pa or pb;
     if (ua <> ub) and cargs_$options.xansi then
@@ -1614,7 +1628,7 @@ procedure push_con;
 var
   nm: c_name_t;                         { -8 }
 begin
-  nm.id := smcontk(81, v);
+  nm.id := smcontk(integer_ob, v);
   nm.line := lex_line;
   body_opr(8, addr(nm));
 end;
@@ -1756,7 +1770,7 @@ var
 procedure boolean_result;
 begin
   with cexs_stack[bas] do begin
-    typ.base := char_type;
+    typ.base := char_ptype;
     typ.low := 0;
     typ.high := 1;
     typ.size := 1;
@@ -1784,15 +1798,18 @@ var
   z: il_$node_ptr_t;
 begin
   with cexs_stack[ia] do begin
-    if (typ.base^.kind = 130) or (cexs_stack[ib].typ.base^.kind = 130) then
-      if (cexs_stack[ib].typ.base^.kind = 129) or (typ.base^.kind = 129) or
-         (typ.base^.kind = 122) or
-         (cexs_stack[ib].typ.base^.kind = 122) then begin
-        if typ.base^.kind = 130 then
+    if (typ.base^.kind = ptr_type)
+        or (cexs_stack[ib].typ.base^.kind = ptr_type) then
+      if (cexs_stack[ib].typ.base^.kind = enum_type)
+          or (typ.base^.kind = enum_type) or
+         (typ.base^.kind = integer_type) or
+         (cexs_stack[ib].typ.base^.kind = integer_type) then begin
+        if typ.base^.kind = ptr_type then
           z := cexs_stack[ib].node
         else
           z := node;
-        if not (z^.kind in [80..86, 200]) or (z^.int_value <> 0) then
+        if not (z^.kind in [sinteger_ob..ubinteger_ob, binteger_ob])
+            or (z^.int_value <> 0) then
           error3(78, name^.line, sym, cexs_stack[ib].sym, name^.id);
       end;
     lo := cexs_stack[ib].typ.low;
@@ -1805,10 +1822,11 @@ begin
       error3(205, name^.line, sym, cexs_stack[ib].sym, name^.id);
       cexs_23be := false;
     end;
-    if ((node^.kind = 80) or (node^.kind = 82) or (node^.kind = 81)) and
-       not ((cexs_stack[ib].node^.kind = 82) or
-            (cexs_stack[ib].node^.kind = 81) or
-            (cexs_stack[ib].node^.kind = 80)) then begin
+    if ((node^.kind = sinteger_ob) or (node^.kind = linteger_ob)
+        or (node^.kind = integer_ob)) and
+       not ((cexs_stack[ib].node^.kind = linteger_ob) or
+            (cexs_stack[ib].node^.kind = integer_ob) or
+            (cexs_stack[ib].node^.kind = sinteger_ob)) then begin
       if lo < typ.low then begin
         typ.low := lo;
         cexs_stack[ib].typ.low := lo;
@@ -1835,7 +1853,7 @@ end;
 procedure double_coerce;
 var
   lo, hi: integer32;                    { -12, -8 }
-  ka, kb: integer;
+  ka, kb: il_$kind_t;
 
 { fixup_bounds - after a conversion, a constant first operand and a
   second that is not keep the saved (wider) bounds.
@@ -1849,8 +1867,9 @@ var
 procedure fixup_bounds;
 begin
   with cexs_stack[ia] do
-    if (node^.kind in [80..86, 200]) and
-       not (cexs_stack[ib].node^.kind in [80..86, 200]) then begin
+    if (node^.kind in [sinteger_ob..ubinteger_ob, binteger_ob]) and
+       not (cexs_stack[ib].node^.kind in [sinteger_ob..ubinteger_ob,
+                                          binteger_ob]) then begin
       if lo < typ.low then begin
         typ.low := lo;
         cexs_stack[ib].typ.low := lo;
@@ -1906,7 +1925,7 @@ var
 begin
   with cexs_stack[ia] do begin
     if len = 1 then
-      if sgn then bt := char_type else bt := uchar_type
+      if sgn then bt := char_ptype else bt := uchar_type
     else if len = 2 then
       if sgn then bt := short_type else bt := ushort_type
     else
@@ -1916,7 +1935,7 @@ begin
     discard(coerce(tt, ia, true));
     typ.flags.b25_5 := saved.flags.b25_5;
     typ.flags.b25_4 := saved.flags.b25_4;
-    if node^.kind in [80..86, 200] then begin
+    if node^.kind in [sinteger_ob..ubinteger_ob, binteger_ob] then begin
       typ.low := saved.low;
       typ.high := saved.high;
     end;
@@ -1950,19 +1969,19 @@ begin
   with cexs_stack[ia] do begin
     pta := typ.base;
     ptb := cexs_stack[ib].typ.base;
-    sa := ((pta^.kind = 122) and pta^.signed) or
-          ((pta^.kind = 129) and pta^.enum_int^.signed);
-    if (pta^.kind = 122) and (pta^.len = 4) then
+    sa := ((pta^.kind = integer_type) and pta^.signed) or
+          ((pta^.kind = enum_type) and pta^.enum_int^.signed);
+    if (pta^.kind = integer_type) and (pta^.len = 4) then
       la := true
-    else if pta^.kind = 129 then
+    else if pta^.kind = enum_type then
       la := pta^.enum_int^.len = 4
     else
       la := false;
-    sb := ((ptb^.kind = 122) and ptb^.signed) or
-          ((ptb^.kind = 129) and ptb^.enum_int^.signed);
-    if (ptb^.kind = 122) and (ptb^.len = 4) then
+    sb := ((ptb^.kind = integer_type) and ptb^.signed) or
+          ((ptb^.kind = enum_type) and ptb^.enum_int^.signed);
+    if (ptb^.kind = integer_type) and (ptb^.len = 4) then
       lb := true
-    else if ptb^.kind = 129 then
+    else if ptb^.kind = enum_type then
       lb := ptb^.enum_int^.len = 4
     else
       lb := false;
@@ -2002,22 +2021,24 @@ end;
 begin { double_coerce }
   ka := cexs_stack[ia].typ.base^.kind;
   kb := cexs_stack[ib].typ.base^.kind;
-  if (ka = 129) or (ka = 122) then begin
-    if (kb = 129) or (kb = 122) then begin
+  if (ka = enum_type) or (ka = integer_type) then begin
+    if (kb = enum_type) or (kb = integer_type) then begin
       if cargs_$options.xansi then begin
         value_preserve;
         return;
       end;
     end
-    else if kb = 130 then
-      if not (cexs_stack[ia].node^.kind in [80..86, 200]) or
+    else if kb = ptr_type then
+      if not (cexs_stack[ia].node^.kind in [sinteger_ob..ubinteger_ob,
+                                            binteger_ob]) or
          (cexs_stack[ia].node^.int_value <> 0) then
         error3(78, name^.line, cexs_stack[ia].sym, cexs_stack[ib].sym,
                name^.id);
   end
-  else if ka = 130 then begin
-    if (kb = 129) or (kb = 122) then
-      if not (cexs_stack[ib].node^.kind in [80..86, 200]) or
+  else if ka = ptr_type then begin
+    if (kb = enum_type) or (kb = integer_type) then
+      if not (cexs_stack[ib].node^.kind in [sinteger_ob..ubinteger_ob,
+                                            binteger_ob]) or
          (cexs_stack[ib].node^.int_value <> 0) then
         error3(78, name^.line, cexs_stack[ia].sym, cexs_stack[ib].sym,
                name^.id);
@@ -2064,7 +2085,7 @@ procedure mult_div_mod_sign(
 begin
   with cexs_stack[k] do
     if typ.size = 1 then
-      if sgn then typ.base := char_type else typ.base := uchar_type
+      if sgn then typ.base := char_ptype else typ.base := uchar_type
     else if typ.size = 2 then
       if sgn then typ.base := short_type else typ.base := ushort_type
     else
@@ -2098,10 +2119,11 @@ begin
     adjust_uc(cexs_stack[cexs_23bc].node, -1);
   end;
   with cexs_stack[cexs_23bc] do
-    if (node^.kind = 92) and (node^.str_len = 1) then
-      node := smcontk(81, ord(node^.str_chars[1]));
+    if (node^.kind = char_string_ob) and (node^.str_len = 1) then
+      node := smcontk(integer_ob, ord(node^.str_chars[1]));
   n := cexs_stack[cexs_23bc].node;
-  if (n^.kind = 80) or (n^.kind = 82) or (n^.kind = 81) then begin
+  if (n^.kind = sinteger_ob) or (n^.kind = linteger_ob)
+      or (n^.kind = integer_ob) then begin
     v := n^.int_value;
     if v >= 0 then
       neg := r
@@ -2168,7 +2190,7 @@ procedure de_ref(
     k: integer); options(val_param);
 begin
   with cexs_stack[k] do
-    if typ.base^.kind = 130 then begin
+    if typ.base^.kind = ptr_type then begin
       item := il_$node_ptr_t(typ.base^.ptr_to);
       node := add_pn(node, item, typ.base^.ptr_attr.align, 0);
       attr_set_align_dsc(il_$node_ptr_t(typ.base), addr(typ));
@@ -2186,7 +2208,7 @@ begin { build_builtin_tree }
   if (op = 55) or (op = 56) or (op = 60) or (op = 59) then begin
     cexs_stack[first] := cexs_stack[k];
     opc := 28;
-    if (op = 59) and (cexs_stack[k + 1].item^.kind = 92) then begin
+    if (op = 59) and (cexs_stack[k + 1].item^.kind = char_string_ob) then begin
       opc := 6;
       sz := cexs_stack[last].item^.str_len;
       szc := 11;
@@ -2207,7 +2229,7 @@ begin { build_builtin_tree }
       opc := 27
     else if op = 56 then
       opc := 29;
-    if cexs_stack[k].node^.kind = 137 then
+    if cexs_stack[k].node^.kind = tree_node then
       c_tree_ptr_t(cexs_stack[k].node)^.w18 := opc;
     swap_top;
     nm2.id := lex_tokens[ctk_comma];
@@ -2328,17 +2350,17 @@ var
   tt: type_exp_t;                       { -40 }
 begin
   s := nil;
-  if n^.kind = 137 then begin
+  if n^.kind = tree_node then begin
     if c_tree_ptr_t(n)^.op = 26 then
       get_number_of_elements(c_tree_ptr_t(n)^.opnd[1], count, s, true)
     else
       count := 2147483647;
   end
-  else if n^.kind = 109 then begin
+  else if n^.kind = var_name then begin
     type_exp(c_sym_ptr_t(n)^.var_type, addr(tt));
-    if (size <= 0) or (tt.base^.kind = 127) or
-       ((tt.base^.kind = 130) and not under_addr) or
-       (tt.base^.kind = 131) then
+    if (size <= 0) or (tt.base^.kind = char_array_type) or
+       ((tt.base^.kind = ptr_type) and not under_addr) or
+       (tt.base^.kind = array_type) then
       count := 2147483647
     else
       count := tt.bytes div size;
@@ -2366,11 +2388,12 @@ begin { expr_op }
 
   { Arrays and functions to pointers. }
   if not ((op = 19) or (op = 17)) then
-    if not (((cexs_stack[bas].typ.base^.kind = 131) or
-             (cexs_stack[bas].typ.base^.kind = 127)) and (op = 65)) then
+    if not (((cexs_stack[bas].typ.base^.kind = array_type) or
+             (cexs_stack[bas].typ.base^.kind = char_array_type))
+                 and (op = 65)) then
       for i := bas to cexs_23bc do begin
-        if ((cexs_stack[i].typ.base^.kind = 131) or
-            (cexs_stack[i].typ.base^.kind = 127)) and
+        if ((cexs_stack[i].typ.base^.kind = array_type) or
+            (cexs_stack[i].typ.base^.kind = char_array_type)) and
            (csyn_60[csyn_202] <> 4) and not ((i = bas) and inset) then
           with cexs_stack[i] do begin
             p := def_ptr(typ.base^.arr_elem, nil);
@@ -2383,8 +2406,8 @@ begin { expr_op }
             init_aux(desc, typ);
             add_tn(26, desc, i, i);
           end;
-        if ((cexs_stack[i].typ.base^.kind = 234) or
-            (cexs_stack[i].typ.base^.kind = 108)) and
+        if ((cexs_stack[i].typ.base^.kind = cc_func_returning_type) or
+            (cexs_stack[i].typ.base^.kind = function_blk)) and
            not ((i = bas) and inset) then begin
           save := cexs_23bc;
           cexs_23bc := i;
@@ -2402,7 +2425,7 @@ begin { expr_op }
   for i := first to cexs_23bc do
     with cexs_stack[i] do
       if sym <> nil then
-        if (sym^.kind = 120) and not bf_done then begin
+        if (sym^.kind = pfield_name) and not bf_done then begin
           bf_done := true;
           init_aux(desc, typ);
           f := c_field_ptr_t(sym);
@@ -2461,9 +2484,11 @@ begin { expr_op }
   ta := cexs_stack[ia].typ.base;
   tb := cexs_stack[ib].typ.base;
   if (nargs > 1) and not (op in [18, 27, 28, 44, 65]) then
-    if (((tb^.kind = 129) or (tb^.kind = 122)) and (ta^.kind = 123)) or
-       ((tb^.kind = 123) and ((ta^.kind = 129) or (ta^.kind = 122))) then begin
-      if ta^.kind = 123 then
+    if (((tb^.kind = enum_type) or (tb^.kind = integer_type))
+        and (ta^.kind = real_type)) or
+       ((tb^.kind = real_type) and ((ta^.kind = enum_type)
+                                    or (ta^.kind = integer_type))) then begin
+      if ta^.kind = real_type then
         ft := ta
       else
         ft := tb;
@@ -2474,28 +2499,28 @@ begin { expr_op }
     end;
 
   if not (((op = 50) or (op = 49) or (op = 8) or (op = 9)) and
-          ((ta^.kind = 130) or (tb^.kind = 130)) and
+          ((ta^.kind = ptr_type) or (tb^.kind = ptr_type)) and
           (get_oc(ia) = 0)) then begin
     { The wider or constant operand second. }
     swapped := false;
     if (nargs > 1) and not (op in [18, 27, 28, 44, 65]) then
-      if cexs_stack[ia].typ.base^.kind in [122, 123, 129, 134, 136] then begin
+      if cexs_stack[ia].typ.base^.kind in [integer_type, real_type, enum_type, set_type, null_set_type] then begin
         m := cexs_stack[ib].typ.size - cexs_stack[ia].typ.size;
         if m = 0 then begin
-          sa := ((cexs_stack[ia].typ.base^.kind = 122) and
+          sa := ((cexs_stack[ia].typ.base^.kind = integer_type) and
                  cexs_stack[ia].typ.base^.signed) or
-                ((cexs_stack[ia].typ.base^.kind = 129) and
+                ((cexs_stack[ia].typ.base^.kind = enum_type) and
                  cexs_stack[ia].typ.base^.enum_int^.signed);
-          sb := ((cexs_stack[ib].typ.base^.kind = 122) and
+          sb := ((cexs_stack[ib].typ.base^.kind = integer_type) and
                  not cexs_stack[ib].typ.base^.signed) or
-                ((cexs_stack[ib].typ.base^.kind = 129) and
+                ((cexs_stack[ib].typ.base^.kind = enum_type) and
                  not cexs_stack[ib].typ.base^.enum_int^.signed);
           if sa and sb and (op <> 30) then
             swapped := true;
         end;
-        if (m > 0) and (cexs_stack[ib].node^.kind <> 89) then
+        if (m > 0) and (cexs_stack[ib].node^.kind <> dpreal_ob) then
           swapped := true
-        else if (m < 0) and (cexs_stack[ia].node^.kind = 89) then
+        else if (m < 0) and (cexs_stack[ia].node^.kind = dpreal_ob) then
           swapped := true;
       end;
     if swapped then begin
@@ -2559,29 +2584,30 @@ begin { expr_op }
     8, 49:
       case oc of
         0:
-          if (ta^.kind = 130) or (tb^.kind = 130) then begin
-            if (ta^.kind = 130) and (tb^.kind = 130) then begin
+          if (ta^.kind = ptr_type) or (tb^.kind = ptr_type) then begin
+            if (ta^.kind = ptr_type) and (tb^.kind = ptr_type) then begin
               error2(124, name^.line, cexs_stack[ia].sym, cexs_stack[ib].sym);
               goto 99;
             end;
-            if ta^.kind <> 130 then begin
+            if ta^.kind <> ptr_type then begin
               swap_top;
               ta := cexs_stack[ia].typ.base;
               tb := cexs_stack[ib].typ.base;
               init_aux(desc, cexs_stack[ia].typ);
             end;
-            if (tb^.kind <> 122) and (tb^.kind <> 129) then begin
+            if (tb^.kind <> integer_type)
+                and (tb^.kind <> enum_type) then begin
               error1(125, name^.line, cexs_stack[ib].sym);
               goto 99;
             end;
             p := ta^.ptr_to;
-            while p^.kind = 118 do
+            while p^.kind = type_name do
               p := c_sym_ptr_t(p)^.td_type;
-            if p^.kind = 234 then begin
+            if p^.kind = cc_func_returning_type then begin
               error1(120, name^.line, cexs_stack[ia].sym);
               goto 99;
             end;
-            if p^.kind = 210 then begin
+            if p^.kind = void_type then begin
               error1(250, name^.line, cexs_stack[ia].sym);
               goto 99;
             end;
@@ -2589,7 +2615,7 @@ begin { expr_op }
             if esz = 0 then
               error1(286, name^.line, cexs_stack[ia].sym)
             else if esz > 1 then
-              if (cexs_stack[ib].node^.kind in [77..87, 101, 200]) and
+              if (cexs_stack[ib].node^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) and
                  (cexs_stack[ib].node^.int_value = 1) then begin
                 cexs_23bc := cexs_23bc - 1;
                 push_con(esz);
@@ -2599,7 +2625,8 @@ begin { expr_op }
                 expr_op(11, name, 2);
               end;
             adjust_length(ib, 1, 4);
-            if (cexs_stack[ib].node^.kind in [80..86, 200]) and (esz > 0) then
+            if (cexs_stack[ib].node^.kind in [sinteger_ob..ubinteger_ob,
+                                              binteger_ob]) and (esz > 0) then
               check_for_out_of_bounds(ia,
                   cexs_stack[ib].node^.int_value div esz, esz);
           end
@@ -2646,21 +2673,21 @@ begin { expr_op }
     9, 50:
       case oc of
         0:
-          if (ta^.kind = 130) or (tb^.kind = 130) then begin
-            if ta^.kind = 130 then begin
+          if (ta^.kind = ptr_type) or (tb^.kind = ptr_type) then begin
+            if ta^.kind = ptr_type then begin
               p := ta^.ptr_to;
-              while p^.kind = 118 do
+              while p^.kind = type_name do
                 p := c_sym_ptr_t(p)^.td_type;
-              if p^.kind = 234 then begin
+              if p^.kind = cc_func_returning_type then begin
                 error1(120, name^.line, cexs_stack[ia].sym);
                 goto 99;
               end;
-              if p^.kind = 210 then begin
+              if p^.kind = void_type then begin
                 error1(250, name^.line, cexs_stack[ia].sym);
                 goto 99;
               end;
             end;
-            if (ta^.kind = 130) and (tb^.kind = 130) then begin
+            if (ta^.kind = ptr_type) and (tb^.kind = ptr_type) then begin
               discard(coerce(cexs_stack[ia].typ, ib, true));
               x196 := (ta^.ptr_attr.size_bits + 7) div 8;
               if x196 = 0 then
@@ -2676,7 +2703,8 @@ begin { expr_op }
               init_aux(desc, cexs_stack[ia].typ);
             end
             else begin
-              if not ((ta^.kind = 130) and (tb^.kind = 122)) then begin
+              if not ((ta^.kind = ptr_type)
+                      and (tb^.kind = integer_type)) then begin
                 error2(127, name^.line, cexs_stack[ia].sym,
                        cexs_stack[ib].sym);
                 goto 99;
@@ -2754,7 +2782,8 @@ begin { expr_op }
       end;
       case oc of
         0: begin
-          if cexs_stack[bas].node^.kind in [80..86, 200] then
+          if cexs_stack[bas].node^.kind in [sinteger_ob..ubinteger_ob,
+                                            binteger_ob] then
             swap_top;
           desc.flags.b6 := result_signedness(
               cexs_stack[bas].typ.base^.signed, cexs_stack[bas].typ.size,
@@ -2882,12 +2911,13 @@ begin { expr_op }
     { Remainder: by a power of two, a mask. }
     14: begin
       n := cexs_stack[bas + 1].node;
-      if (n^.kind = 80) or (n^.kind = 82) or (n^.kind = 81) then begin
+      if (n^.kind = sinteger_ob) or (n^.kind = linteger_ob)
+          or (n^.kind = integer_ob) then begin
         v := n^.int_value;
         if (cexs_stack[bas].typ.low >= 0) and (v > 0) and
            (((v - 1) & v) = 0) then begin
           w := v - 1;
-          cexs_stack[bas + 1].node := smcontk(81, w);
+          cexs_stack[bas + 1].node := smcontk(integer_ob, w);
           cexs_stack[bas + 1].typ.high := w;
           cexs_stack[bas + 1].typ.low := w;
           expr_op(33, name, 2);
@@ -2932,7 +2962,7 @@ begin { expr_op }
     17: begin
       tnop := 26;
       with cexs_stack[bas] do begin
-        if node^.kind = 109 then begin
+        if node^.kind = var_name then begin
           c_sym_ptr_t(node)^.var_flags := c_sym_ptr_t(node)^.var_flags + [21];
           if typ.flags.ranged then
             flag_61 := true;
@@ -2940,13 +2970,13 @@ begin { expr_op }
         p := typ.base;
         q5 := typ.flags.b25_5;
         q4 := typ.flags.b25_4;
-        if (p^.kind = 131) or (p^.kind = 127) then begin
+        if (p^.kind = array_type) or (p^.kind = char_array_type) then begin
           ft := typ.base^.arr_elem;
           q5 := q5 or (19 in typ.base^.arr_attr.bits);
           q4 := q4 or (0 in typ.base^.arr_attr.bits);
           type_exp(ft, addr(typ));
         end
-        else if p^.kind = 108 then begin
+        else if p^.kind = function_blk then begin
           blk := c_blk_ptr_t(p);
           sa := blk^.bits.db_adjusted;
           blk^.bits.b374_3 := true;
@@ -2983,7 +3013,7 @@ begin { expr_op }
     18, 32, 37, 38, 39, 40, 41, 42, 51, 52, 53, 54, 55, 56, 57, 58, 59,
     60, 61:
       with cexs_stack[bas] do begin
-        if typ.base^.kind = 234 then begin
+        if typ.base^.kind = cc_func_returning_type then begin
           isfn := true;
           pl := typ.base^.fn_params;
           conv := typ.base^.fn_conv;
@@ -3002,11 +3032,11 @@ begin { expr_op }
           rt := c_blk_ptr_t(node)^.result;
         end;
         if cargs_$options.type_opt and (pl <> nil) then begin
-          if pl^.types[pl^.count]^.kind = 31 then begin
+          if pl^.types[pl^.count]^.kind = label_ob then begin
             maxn := 32767;
             minn := pl^.count - 1;
           end
-          else if pl^.types[pl^.count]^.kind = 210 then begin
+          else if pl^.types[pl^.count]^.kind = void_type then begin
             minn := 0;
             maxn := 0;
           end
@@ -3023,31 +3053,34 @@ begin { expr_op }
             j := 1;
             for m := 1 to pl^.count do begin
               p := pl^.types[j];
-              if (p^.kind = 31) or (p^.kind = 210) then
+              if (p^.kind = label_ob) or (p^.kind = void_type) then
                 goto 97;
               type_exp(p, addr(it));
               type_exp(cexs_stack[k].typ.base, addr(at));
               diff := it.base^.kind <> at.base^.kind;
-              if p^.kind = 123 then
+              if p^.kind = real_type then
                 float_operand(k, p);
-              if (((at.base^.kind = 122) or (at.base^.kind = 129)) and
-                  (it.base^.kind = 130)) or
-                 ((at.base^.kind = 130) and
-                  ((it.base^.kind = 122) or (it.base^.kind = 129))) then
-                if (it.base^.kind = 130) and (at.base^.kind = 122) and
-                   ((cexs_stack[k].node^.kind = 80) or
-                    (cexs_stack[k].node^.kind = 82) or
-                    (cexs_stack[k].node^.kind = 81)) and
+              if (((at.base^.kind = integer_type)
+                   or (at.base^.kind = enum_type)) and
+                  (it.base^.kind = ptr_type)) or
+                 ((at.base^.kind = ptr_type) and
+                  ((it.base^.kind = integer_type)
+                   or (it.base^.kind = enum_type))) then
+                if (it.base^.kind = ptr_type)
+                    and (at.base^.kind = integer_type) and
+                   ((cexs_stack[k].node^.kind = sinteger_ob) or
+                    (cexs_stack[k].node^.kind = linteger_ob) or
+                    (cexs_stack[k].node^.kind = integer_ob)) and
                    (cexs_stack[k].node^.int_value = 0) then
                   diff := false
                 else
-                  error1(221, line, smcontk(81, j));
+                  error1(221, line, smcontk(integer_ob, j));
               if coerce(it, k, true) then begin
                 if diff then
-                  error2(216, line, smcontk(81, j), sym);
+                  error2(216, line, smcontk(integer_ob, j), sym);
               end
               else
-                error2(83, line, smcontk(81, j), sym);
+                error2(83, line, smcontk(integer_ob, j), sym);
               k := k + 1;
               j := j + 1;
             end;
@@ -3072,7 +3105,7 @@ begin { expr_op }
         cexs_23bc := bas;
         t := cexs_stack[cexs_23bc].node;
         n := gspace((c_tree_ptr_t(t)^.count - 1) * 4 + 20);
-        n^.kind := 171;
+        n^.kind := cc_call;
         n^.xw[2] := 0;
         n^.xw[3] := 0;
         n^.xp[4] := c_tree_ptr_t(t)^.opnd[1];
@@ -3089,15 +3122,15 @@ begin { expr_op }
     { Subscript. }
     19:
       with cexs_stack[bas] do begin
-        if (typ.base^.kind <> 130) and (typ.base^.kind <> 131) and
-           (typ.base^.kind <> 127) then begin
+        if (typ.base^.kind <> ptr_type) and (typ.base^.kind <> array_type) and
+           (typ.base^.kind <> char_array_type) then begin
           error1(65, name^.line, sym);
           typ.base := c_type_ptr_t(il_178);
           goto 98;
         end;
-        if typ.base^.kind = 130 then begin
+        if typ.base^.kind = ptr_type then begin
           type_exp(typ.base^.ptr_to, addr(it));
-          if it.base^.kind = 234 then begin
+          if it.base^.kind = cc_func_returning_type then begin
             error1(120, name^.line, sym);
             goto 99;
           end;
@@ -3113,20 +3146,21 @@ begin { expr_op }
         if esz = 0 then
           error1(286, name^.line, sym);
         unb := cargs_$options.indexl;
-        if unb or (it.high < 1) or (typ.base^.kind = 130) then begin
+        if unb or (it.high < 1) or (typ.base^.kind = ptr_type) then begin
           unb := true;
           it.high := 2147483647;
           it.size := 4;
         end;
-        if (cexs_stack[bas + 1].typ.base^.kind <> 122) and
-           (cexs_stack[bas + 1].typ.base^.kind <> 129) then
+        if (cexs_stack[bas + 1].typ.base^.kind <> integer_type) and
+           (cexs_stack[bas + 1].typ.base^.kind <> enum_type) then
           error2(71, name^.line, cexs_stack[bas + 1].sym, sym);
         offset := offset - it.low * esz;
         n := cexs_stack[bas + 1].node;
-        if n^.kind = 137 then
+        if n^.kind = tree_node then
           if (c_tree_ptr_t(n)^.op = 2) or (c_tree_ptr_t(n)^.op = 1) then begin
             c := c_tree_ptr_t(n)^.opnd[2];
-            if (c^.kind = 80) or (c^.kind = 82) or (c^.kind = 81) then begin
+            if (c^.kind = sinteger_ob) or (c^.kind = linteger_ob)
+                or (c^.kind = integer_ob) then begin
               v := c^.int_value;
               if c_tree_ptr_t(n)^.op = 2 then
                 v := -v;
@@ -3140,7 +3174,7 @@ begin { expr_op }
         cc_walk_it(cexs_stack[bas + 1].node, addr(call_kfold), false);
         adjust_uc(cexs_stack[bas + 1].node, -1);
         n := cexs_stack[bas + 1].node;
-        if n^.kind in [77..87, 101, 200] then begin
+        if n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
           offset := offset + n^.int_value * esz;
           check_for_out_of_bounds(bas, n^.int_value, esz);
           if it.high <> 2147483647 then
@@ -3150,7 +3184,7 @@ begin { expr_op }
         end
         else begin
           if esz > 1 then begin
-            if cexs_stack[bas + 1].typ.base^.kind = 129 then
+            if cexs_stack[bas + 1].typ.base^.kind = enum_type then
               cexs_stack[bas + 1].typ.base :=
                   cexs_stack[bas + 1].typ.base^.enum_int;
             push_con(esz);
@@ -3168,9 +3202,13 @@ begin { expr_op }
           w := (it.high - it.low) * esz;
           n := cexs_stack[cexs_23bc].node;
           if (w > 32767) or (w < 0) or unb then
-            if n^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205] then
+            if n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                           dindex_node..disp_node, cs_node, cc_call, pf_call,
+                           cse_use_ob, sym_disp_node] then
               c_tree_ptr_t(n)^.bits.post := true
-            else if d5n^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205] then
+            else if d5n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                                  dindex_node..disp_node, cs_node, cc_call,
+                                  pf_call, cse_use_ob, sym_disp_node] then
               c_tree_ptr_t(d5n)^.bits.post := true;
           index := d5n;
           if long then
@@ -3178,7 +3216,7 @@ begin { expr_op }
         end;
         tnop := 0;
         p := typ.base;
-        if p^.kind = 130 then begin
+        if p^.kind = ptr_type then begin
           type_exp(p^.ptr_to, addr(typ));
           typ.bytes := (p^.ptr_attr.size_bits + 7) div 8;
           attr_set_align_dsc(il_$node_ptr_t(p), addr(typ));
@@ -3199,7 +3237,7 @@ begin { expr_op }
     { Unary plus. }
     20:
       with cexs_stack[cexs_23bc] do
-        if typ.base^.kind = 122 then begin
+        if typ.base^.kind = integer_type then begin
           adjust_length(cexs_23bc, 1, 4);
           init_aux(desc, cexs_stack[cexs_23bc].typ);
         end;
@@ -3207,9 +3245,9 @@ begin { expr_op }
     { Unary minus. }
     21:
       with cexs_stack[cexs_23bc] do
-        if typ.base^.kind = 123 then
+        if typ.base^.kind = real_type then
           tnop := 38
-        else if typ.base^.kind = 122 then
+        else if typ.base^.kind = integer_type then
           if typ.base^.signed then begin
             w := typ.high;
             v := typ.low;
@@ -3225,21 +3263,21 @@ begin { expr_op }
 
     { Conditional: the result the wider of the two values' types. }
     24: begin
-      if tb^.kind = 130 then begin
+      if tb^.kind = ptr_type then begin
         k := ia;
         ia := ib;
         ib := k;
       end;
-      if (ta^.kind = 122) and (tb^.kind = 122) then
+      if (ta^.kind = integer_type) and (tb^.kind = integer_type) then
         if csyn_60[csyn_202] = 4 then begin
           n := cexs_stack[ia].node;
-          if n^.kind = 82 then
+          if n^.kind = linteger_ob then
             type_exp(int_type, addr(cexs_stack[ia].typ))
-          else if (n^.kind = 81) or (n^.kind = 80) then
+          else if (n^.kind = integer_ob) or (n^.kind = sinteger_ob) then
             type_exp(short_type, addr(cexs_stack[ia].typ));
         end
-        else if (cexs_stack[ia].node^.kind = 81) or
-                (cexs_stack[ib].node^.kind = 81) then begin
+        else if (cexs_stack[ia].node^.kind = integer_ob) or
+                (cexs_stack[ib].node^.kind = integer_ob) then begin
           adjust_length(ia, 1, 4);
           adjust_length(ib, 1, 4);
         end;
@@ -3280,7 +3318,7 @@ begin { expr_op }
         tnop := 54;
       if (op <> 65) and cexs_stack[ia].typ.flags.b25_5 then
         error1(277, cexs_stack[ia].line, cexs_stack[ia].sym);
-      if cexs_stack[ia].typ.base^.kind = 123 then
+      if cexs_stack[ia].typ.base^.kind = real_type then
         float_operand(ib, cexs_stack[ia].typ.base);
       if name^.id^.idnt_name[1] <> '=' then begin
         case name^.id^.idnt_name[1] of
@@ -3303,15 +3341,15 @@ begin { expr_op }
       end;
       sa := false;
       with cexs_stack[ib] do
-        if typ.base^.kind = 210 then
+        if typ.base^.kind = void_type then
           error1(37, il_d0, sym)
-        else if (node^.kind = 137) and
+        else if (node^.kind = tree_node) and
                 ((c_tree_ptr_t(node)^.op = 52) or
                  (c_tree_ptr_t(node)^.op = 57) or
                  (c_tree_ptr_t(node)^.op = 53)) then
           sa := false
         else begin
-          if (typ.base^.kind = 122) and not typ.base^.signed and
+          if (typ.base^.kind = integer_type) and not typ.base^.signed and
              (typ.size <> cexs_stack[ia].typ.size) and
              (cexs_stack[ia].typ.size <= 4) then
             adjust_length(ib, 1, cexs_stack[ia].typ.size);
@@ -3330,7 +3368,7 @@ begin { expr_op }
         otherwise begin
           x260 := 0;
           if cexs_stack[ia].sym <> nil then
-            if cexs_stack[ia].sym^.kind = 120 then begin
+            if cexs_stack[ia].sym^.kind = pfield_name then begin
               f := c_field_ptr_t(cexs_stack[ia].sym);
               if f^.bits.width + f^.bits.at > 16 then begin
                 k := 32;
@@ -3346,7 +3384,8 @@ begin { expr_op }
               cexs_stack[ia].typ.size := m;
               n := cexs_stack[ib].node;
               x260 := 10;
-              if (n^.kind = 80) or (n^.kind = 82) or (n^.kind = 81) then begin
+              if (n^.kind = sinteger_ob) or (n^.kind = linteger_ob)
+                  or (n^.kind = integer_ob) then begin
                 v := lshft(1, f^.bits.at) - 1;
                 if (n^.int_value & v) = 0 then begin
                   x260 := 3;
@@ -3354,12 +3393,14 @@ begin { expr_op }
                     w := 65535
                   else
                     w := -1;
-                  n := smcontk(81, ~lshft(v, k - f^.bits.width - f^.bits.at)
+                  n := smcontk(integer_ob, ~lshft(v,
+                                                  k - f^.bits.width - f^.bits.at)
                                    & w);
                 end
                 else if (n^.int_value & v) = v then begin
                   x260 := 4;
-                  n := smcontk(81, lshft(v, k - f^.bits.width - f^.bits.at));
+                  n := smcontk(integer_ob, lshft(v,
+                                                 k - f^.bits.width - f^.bits.at));
                 end;
               end;
               if x260 = 10 then begin
@@ -3380,7 +3421,8 @@ begin { expr_op }
           adjust_length(bas, 1, 4);
         init_aux(desc, typ);
         desc.w6 := typ.size;
-        if cexs_stack[bas + 1].node^.kind in [80..86, 200] then
+        if cexs_stack[bas + 1].node^.kind in [sinteger_ob..ubinteger_ob,
+                                              binteger_ob] then
           desc.w8 := desc.w6
         else
           desc.w8 := cexs_stack[bas + 1].typ.size;
@@ -3392,16 +3434,18 @@ begin { expr_op }
         typ.low := -2147483647;
         typ.high := 2147483647;
         n := cexs_stack[bas + 1].node;
-        if n^.kind in [80..86, 200] then
+        if n^.kind in [sinteger_ob..ubinteger_ob, binteger_ob] then
           if n^.int_value < 0 then
-            error1(94, cexs_stack[bas + 1].line, smcontk(81, n^.int_value));
+            error1(94, cexs_stack[bas + 1].line, smcontk(integer_ob,
+                n^.int_value));
       end;
 
     { Shift assignments. }
     31, 43:
       with cexs_stack[bas] do begin
         desc.w6 := typ.size;
-        if cexs_stack[bas + 1].node^.kind in [80..86, 200] then
+        if cexs_stack[bas + 1].node^.kind in [sinteger_ob..ubinteger_ob,
+                                              binteger_ob] then
           desc.w8 := cexs_stack[bas + 1].typ.size
         else
           desc.w8 := desc.w6;
@@ -3422,7 +3466,7 @@ begin { expr_op }
     { Complement. }
     46:
       with cexs_stack[cexs_23bc] do
-        if typ.base^.kind = 122 then begin
+        if typ.base^.kind = integer_type then begin
           if cargs_$options.xansi then
             if (typ.size = 1) or (typ.size = 2) then begin
               type_exp(int_type, addr(it));
@@ -3434,7 +3478,7 @@ begin { expr_op }
               typ.low := 0;
             end;
         end
-        else if typ.base^.kind = 129 then
+        else if typ.base^.kind = enum_type then
           if cargs_$options.xansi then begin
             type_exp(int_type, addr(it));
             discard(coerce(it, cexs_23bc, true));
@@ -3448,11 +3492,11 @@ begin { expr_op }
 98:
   if tnop <> 0 then
     add_tn(tnop, desc, bas, cexs_23bc);
-  if (cexs_stack[bas].node^.kind = 137) and (tnop = 51) then
+  if (cexs_stack[bas].node^.kind = tree_node) and (tnop = 51) then
     cexs_stack[bas].node^.xl[1] := 0;
   cexs_23bc := bas;
   if x260 >= 0 then
-    if cexs_stack[cexs_23bc].node^.kind = 137 then
+    if cexs_stack[cexs_23bc].node^.kind = tree_node then
       c_tree_ptr_t(cexs_stack[cexs_23bc].node)^.w18 := x260;
   goto 96;
 
@@ -3463,7 +3507,8 @@ begin { expr_op }
 96:
   if res_bool then begin
     n := cexs_stack[cexs_23bc].node;
-    if not ((n^.kind = 82) or (n^.kind = 81) or (n^.kind = 80)) then begin
+    if not ((n^.kind = linteger_ob) or (n^.kind = integer_ob)
+            or (n^.kind = sinteger_ob)) then begin
       push_con(7);
       expr_op(43, name, 2);
       adjust_length(cexs_23bc, 1, 4);
@@ -3492,19 +3537,20 @@ var
   tt: type_exp_t;                       { -32 }
 begin
   with cexs_stack[cexs_23bc] do
-    if typ.base^.kind = 122 then begin
+    if typ.base^.kind = integer_type then begin
       if conv then
         adjust_length(cexs_23bc, 1, 4);
     end
-    else if typ.base^.kind = 123 then begin
+    else if typ.base^.kind = real_type then begin
       if conv and (typ.size <> 8) then begin
         type_exp(double_type, addr(tt));
         discard(coerce(tt, cexs_23bc, true));
       end;
     end
-    else if typ.base^.kind = 129 then
+    else if typ.base^.kind = enum_type then
       if conv and (typ.size <> 4) then
-        if (node^.kind = 80) or (node^.kind = 82) or (node^.kind = 81) then
+        if (node^.kind = sinteger_ob) or (node^.kind = linteger_ob)
+            or (node^.kind = integer_ob) then
           typ.size := 4
         else
           adjust_length(cexs_23bc, 1, 4);
@@ -3535,15 +3581,15 @@ var
 begin
   r := nil;
   n := cexs_stack[cexs_23bc].node;
-  if (n^.kind = 137) and (c_tree_ptr_t(n)^.op = 18) then begin
+  if (n^.kind = tree_node) and (c_tree_ptr_t(n)^.op = 18) then begin
     m := c_tree_ptr_t(n)^.opnd[1];
-    if m^.kind = 137 then
+    if m^.kind = tree_node then
       if (c_tree_ptr_t(m)^.op = 50) or (c_tree_ptr_t(m)^.op = 28) then begin
         x := c_tree_ptr_t(m)^.opnd[1];
         y := c_tree_ptr_t(m)^.opnd[2];
-        if x^.kind = 81 then
+        if x^.kind = integer_ob then
           c := x
-        else if y^.kind = 81 then
+        else if y^.kind = integer_ob then
           c := y
         else
           c := nil;
@@ -3551,7 +3597,7 @@ begin
           if c^.int_value = 7 then begin
             if c = x then
               x := y;
-            if x^.kind = 137 then
+            if x^.kind = tree_node then
               if (c_tree_ptr_t(x)^.op = 12) or (c_tree_ptr_t(x)^.op = 23) or
                  (c_tree_ptr_t(x)^.op = 40) or (c_tree_ptr_t(x)^.op = 24) then
                 r := x;
@@ -3564,7 +3610,7 @@ begin
     nm.id := il_178;
     expr_op(22, addr(nm), 1);
     init_aux(desc, cexs_stack[cexs_23bc].typ);
-    if cexs_stack[cexs_23bc].typ.base^.kind = 123 then begin
+    if cexs_stack[cexs_23bc].typ.base^.kind = real_type then begin
       push_fcon(0.0);
       op := 40;
     end
@@ -3574,10 +3620,11 @@ begin
     end;
     with cexs_stack[cexs_23bc - 1] do begin
       pt := typ.base;
-      if pt^.kind = 132 then
+      if pt^.kind = record_type then
         error3(70, line, sym, cexs_stack[cexs_23bc].sym, lex_tokens[ctk_ne])
-      else if ((pt^.kind = 108) and (c_blk_ptr_t(pt)^.result^.kind = 210)) or
-              (pt^.kind = 210) then
+      else if ((pt^.kind = function_blk)
+               and (c_blk_ptr_t(pt)^.result^.kind = void_type)) or
+              (pt^.kind = void_type) then
         error0(251, lex_line);
     end;
     desc.w6 := desc.rlen;
@@ -3585,7 +3632,7 @@ begin
     desc.rlen := 1;
     add_tn(op, desc, cexs_23bc - 1, cexs_23bc);
     with cexs_stack[cexs_23bc] do begin
-      typ.base := char_type;
+      typ.base := char_ptype;
       typ.low := 0;
       typ.high := 1;
       typ.size := 1;
@@ -3627,7 +3674,7 @@ begin
     discard(blk_fnd_name(q^.name, true, false, b));
     q := q^.next;
   end;
-  if b^.result^.kind <> 210 then begin
+  if b^.result^.kind <> void_type then begin
     type_exp(b^.result, addr(tt));
     big := get_rlen(tt) > 6;
     if big then

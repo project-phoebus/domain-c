@@ -49,7 +49,7 @@ procedure target_properties$begin_compilation(
     target: integer);
 begin
   target_properties := target_table[target];
-  target_properties.p_ac := addr(at_lib_dsc[16#1284]);
+  target_properties.p_ac := addr(at_lib_dsc_bytes[16#1284]);
 end;
 
 { target_properties$kernel_mode_code - describe kernel-mode code.

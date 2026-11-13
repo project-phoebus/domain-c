@@ -51,10 +51,7 @@
   the run time's name table for the enumeration follows the routine
   (cc.m68k 0x0A06A6: 237 names, END_OB 0 .. UNION_OB 236; 137
   TREE_NODE, 145 DINDEX_NODE, 146 PTR_NODE, 147 DISP_NODE, 205
-  SYM_DISP_NODE, ...).  The enumeration is declared here as an_kind_t
-  for those writes (CHAR_TYPE and VOID_TYPE as kind_char_type and
-  kind_void_type: c_globals.ins.pas has cells of those names);
-  elsewhere the kinds are numbers, as in the other units
+  SYM_DISP_NODE, ...).  The enumeration is il.ins.pas's il_$kind_t
   (docs/questions.md 78).  The nodes are read through the unit's
   an_node_t, the expression stack through c_objtype's c_exp_t.
 
@@ -63,8 +60,7 @@
   (make_temp, make_char_temp), 15 (add_disp_node), 25 (add_tn).
 
   Not known from the original: every name of the module's variables
-  and locals, an_node_t's, the enumeration type's (its constants are
-  the image's); the meaning of the operator codes.
+  and locals, an_node_t's; the meaning of the operator codes.
 }
 module add_node;
 
@@ -84,57 +80,6 @@ module add_node;
 %include 'lang/common/source/std.ins.pas';
 
 type
-  { The IL node kinds, as the image names them (the enumeration's name
-    table after add_node_$dispose_top_level). }
-  an_kind_t = (
-    end_ob, if_ob, then_ob, begin_ob, else_ob, do_ob, with_ob, in_ob,
-    of_ob, while_ob, case_ob, repeat_ob, until_ob, procedure_ob, var_ob,
-    for_ob, array_ob, record_ob, set_ob, to_ob, downto_ob, mod_ob, or_ob,
-    and_ob, not_ob, div_ob, const_ob, type_ob, function_ob, program_ob,
-    packed_ob, label_ob, goto_ob, file_ob, forward_ob, static_ob,
-    external_ob, define_ob, module_ob, val_param_ob, exit_ob, next_ob,
-    internal_ob, return_ob, otherwise_ob, cast_ob, univ_ob, implies_ob,
-    out_ob, up_to_ob, bus_ob, period_ob, becomes_ob, colon_ob, le_ob,
-    ne_ob, lt_ob, eq_ob, ge_ob, gt_ob, sub_ob, open_ob, close_ob,
-    comma_ob, semicolon_ob, star_ob, slash_ob, plus_ob, minus_ob,
-    ampersand_ob, excl_ob, arrow_ob, eom_ob, error_ob, tilde_ob,
-    badchar_ob, id_ob, blogical_ob, slogical_ob, llogical_ob,
-    sinteger_ob, integer_ob, linteger_ob, usinteger_ob, uinteger_ob,
-    ulinteger_ob, ubinteger_ob, char_ob, real_ob, dpreal_ob, complex_ob,
-    varying_ob, char_string_ob, char32_string_ob, nil_ob, starstar_ob,
-    routine_option_ob, attribute_ob, begin_critical_ob,
-    end_critical_ob, library_ob, char16_ob, const_cob, volatile_cob,
-    signed_cob, program_blk, module_blk, procedure_blk, function_blk,
-    var_name, fortran_symbol, common_block_name, fdim_info, fdata_nlist,
-    fdata_clist, equiv_stmt, const_name, label_name, type_name,
-    field_name, pfield_name, param_name, integer_type, real_type,
-    bool_type, kind_char_type, char_string_con_type, char_array_type,
-    subr_type, enum_type, ptr_type, array_type, record_type, file_type,
-    set_type, univ_ptr_type, null_set_type, tree_node, gen_tree_node,
-    eval_node, assign_node, branch_node, cbranch_node, cmp_tree_node,
-    label_node, dindex_node, ptr_node, disp_node, block_entry_node,
-    blk_end_node, nlbranch_node, return_node, alloc_temp, sb_register,
-    db_register, display_register, set_con_ob, def_const_ob, std_func,
-    lib_dsc, ref_list, state_save, lnum_entry, addr_con, cs_node,
-    cs_temp, fdata_do, entry_blk, param_list, ftn_xref, ptr_hdr,
-    cc_call, inner_blk, proc__type, func__type, pf_call, rec_const_ob,
-    offset_type, reg_assign_ob, actparam, ext_state_save, dead_temp,
-    procedure_section, data_section, inline_constant, namelist_id_ob,
-    lnref_ob, variant_ob, use_def_ob, cse_use_ob, cse_parent_ob,
-    reg_list_ob, transfer_vector, proc_reloc, external_ref,
-    reloc_absolute_addr_con, varying_type, parray_type, dpcomplex_ob,
-    m68k_unpacked, binteger_ob, routine_option_name, attribute_name,
-    physical_register_ob, argument_block_location_ob, sym_disp_node,
-    dynamic_array_type, dope_vector, at_lib_dsc, blockdata_blk,
-    kind_void_type, ap_register, namelist_constant_ob, undefined_object,
-    case_node_range_check, case_node_no_range_check, defaulted_info,
-    char16_type, char16_array_type, isc_fetch, isc_convert,
-    fdata_default_seq, exception_frame, exception_handler_entry,
-    raise_exception, release_dynamic_space, exception_register,
-    insert_bit_field, bit_field_assign, lb_register, virt_var_name,
-    spine_mark, isc_share, pa_mmu_bip, cc_func_returning_type,
-    indexed_reference, union_ob);
-
   { The 12 bytes from +4 copy_tree copies whole. }
   an_hdr_t = array [1..3] of integer32;
 
@@ -142,7 +87,7 @@ type
   an_ptr_t = ^an_node_t;
   an_node_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     case integer of
       { A tree node (137 TREE_NODE, 138, 143 CMP_TREE_NODE). }
       1: (phase: add_node_$phase_t;     { +4 }
@@ -325,7 +270,7 @@ end;
   - the names. }
 
 function add_top_node(
-    in kind: integer;
+    in kind: il_$kind_t;
     in size: integer): il_$node_ptr_t;
 var
   n: il_$node_ptr_t;
@@ -405,15 +350,18 @@ begin
   t := n;
   if t = nil then
     getphase := []
-  else if t^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205] then
+  else if t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                      dindex_node..disp_node, cs_node, cc_call, pf_call,
+                      cse_use_ob, sym_disp_node] then
     getphase := t^.phase
   else
     case t^.kind of
-      109: getphase := phasefromvatt(t^.at_32);
-      118: getphase := phasefromvatt(t^.at_36);
-      121: getphase := getphase(t^.at_node);
-      119, 120: getphase := getphase(t^.at_node) + phasefromvatt(t^.at_20);
-      110: getphase := phasefromvatt(t^.at_24);
+      var_name: getphase := phasefromvatt(t^.at_32);
+      type_name: getphase := phasefromvatt(t^.at_36);
+      param_name: getphase := getphase(t^.at_node);
+      field_name,
+          pfield_name: getphase := getphase(t^.at_node) + phasefromvatt(t^.at_20);
+      fortran_symbol: getphase := phasefromvatt(t^.at_24);
       otherwise
         getphase := [];
     end;
@@ -446,66 +394,66 @@ begin
     return;
   walker^(n);
   case n^.kind of
-    148: walk_it(n^.xp[12], walker);
-    144: begin
+    block_entry_node: walk_it(n^.xp[12], walker);
+    label_node: begin
       walk_it(n^.xp[16], walker);
       walk_it(n^.xp[17], walker);
     end;
-    150: walk_it(n^.xp[12], walker);
-    141: walk_it(n^.xp[12], walker);
-    142: begin
+    nlbranch_node: walk_it(n^.xp[12], walker);
+    branch_node: walk_it(n^.xp[12], walker);
+    cbranch_node: begin
       walk_it(n^.xp[12], walker);
       walk_it(n^.xp[14], walker);
     end;
-    224: walk_it(n^.xp[12], walker);
-    225: walk_it(n^.xp[12], walker);
-    151: walk_it(n^.xp[12], walker);
-    233: walk_it(n^.xp[12], walker);
-    139:
+    raise_exception: walk_it(n^.xp[12], walker);
+    release_dynamic_space: walk_it(n^.xp[12], walker);
+    return_node: walk_it(n^.xp[12], walker);
+    pa_mmu_bip: walk_it(n^.xp[12], walker);
+    eval_node:
       for i := 1 to c_top_ptr_t(n)^.eval_count do
         walk_it(n^.xp[12 + i], walker);
-    140: begin
+    assign_node: begin
       walk_it(n^.xp[16], walker);
       walk_it(n^.xp[17], walker);
     end;
-    227: begin
+    insert_bit_field: begin
       walk_it(n^.xp[16], walker);
       walk_it(n^.xp[17], walker);
       walk_it(n^.xp[18], walker);
     end;
-    228: begin
+    bit_field_assign: begin
       walk_it(n^.xp[12], walker);
       walk_it(n^.xp[13], walker);
       walk_it(n^.xp[14], walker);
       walk_it(n^.xp[15], walker);
       walk_it(n^.xp[16], walker);
     end;
-    137, 138, 143:
+    tree_node, gen_tree_node, cmp_tree_node:
       for i := 1 to an_ptr_t(n)^.count do
         walk_it(n^.xp[9 + i], walker);
-    164: begin
+    cs_node: begin
       walk_it(n^.xp[5], walker);
       walk_it(n^.xp[6], walker);
     end;
-    175: begin
+    pf_call: begin
       walk_it(n^.xp[4], walker);
       walk_it(n^.xp[5], walker);
     end;
-    171: walk_it(n^.xp[4], walker);
-    219, 220: walk_it(n^.xp[1], walker);
-    205: begin
+    cc_call: walk_it(n^.xp[4], walker);
+    isc_fetch, isc_convert: walk_it(n^.xp[1], walker);
+    sym_disp_node: begin
       walk_it(n^.xp[6], walker);
       walk_it(n^.xp[7], walker);
     end;
-    147: begin
+    disp_node: begin
       walk_it(n^.xp[6], walker);
       walk_it(n^.xp[7], walker);
     end;
-    146: begin
+    ptr_node: begin
       walk_it(n^.xp[6], walker);
       walk_it(n^.xp[7], walker);
     end;
-    145: begin
+    dindex_node: begin
       walk_it(n^.xp[6], walker);
       walk_it(n^.xp[7], walker);
       walk_it(n^.xp[9], walker);
@@ -569,13 +517,15 @@ begin
     return;
   end;
   t := an_ptr_t(n);
-  if not (t^.kind in [137, 138, 143, 145..147, 164, 171, 175, 205]) then
+  if not (t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                      dindex_node..disp_node, cs_node, cc_call, pf_call,
+                      sym_disp_node]) then
   begin
     copy_tree := n;
     return;
   end;
   case t^.kind of
-    171: begin
+    cc_call: begin
       tmp := gspace(cc_call_len + 20);
       size := cc_call_len + 20;
       lib_$data_move(n, tmp, size);
@@ -583,31 +533,31 @@ begin
       an_ptr_t(tmp)^.xp[4] := copy_tree(an_ptr_t(n)^.xp[4]);
       copy_tree := tmp;
     end;
-    137, 143:
+    tree_node, cmp_tree_node:
       if (t^.op = 16) and (c_blk_ptr_t(il_180)^.bits.conv = 2) then begin
         f := an_ptr_t(t^.opnd[1]);
         case f^.kind of
-          110: begin
+          fortran_symbol: begin
             cls := ord(f^.xc[10]) & 15;
             if cls = 7 then
               len := f^.xw[4];
           end;
-          159: begin
+          lib_dsc: begin
             cls := an_std_lib_words_ptr_t(addr(std_lib_rtns))^[353 + t^.desc.rlen];
             if cls = 7 then
               len := char_maxlen(n);
           end;
-          108: begin
+          function_blk: begin
             g := an_ptr_t(f^.xp[24]);
             cls := ord(g^.xc[10]) & 15;
             if cls = 7 then
               len := g^.xw[4];
           end;
-          146: begin
+          ptr_node: begin
             g := an_ptr_t(f^.base);
-            if g^.kind = 146 then begin
+            if g^.kind = ptr_node then begin
               g := an_ptr_t(g^.base);
-              if g^.kind = 110 then begin
+              if g^.kind = fortran_symbol then begin
                 cls := ord(g^.xc[10]) & 15;
                 if cls = 7 then
                   len := g^.xw[4];
@@ -637,7 +587,7 @@ begin
           tmp := make_char_temp(len)
         else
           tmp := make_temp(cls);
-        top := c_top_ptr_t(add_top_node(140, 80));
+        top := c_top_ptr_t(add_top_node(assign_node, 80));
         init_aux_ftn(top^.asg_desc, cls);
         top^.asg_lhs := tmp;
         top^.asg_rhs := il_$node_ptr_t(c);
@@ -658,7 +608,7 @@ begin
         c := gspace(t^.count * 4 + 40);
         c^.kind := an_ptr_t(n)^.kind;
         if ((an_ptr_t(n)^.op = 16) or (an_ptr_t(n)^.op = 15)) and
-           (an_ptr_t(n)^.opnd[1]^.kind = 171) then
+           (an_ptr_t(n)^.opnd[1]^.kind = cc_call) then
           cc_call_len := (an_ptr_t(n)^.count - 1) * 4;
         c^.hdr := an_ptr_t(n)^.hdr;
         c^.w16 := 0;
@@ -669,9 +619,9 @@ begin
           c^.opnd[i] := copy_tree(an_ptr_t(n)^.opnd[i]);
         copy_tree := il_$node_ptr_t(c);
       end;
-    146: begin
+    ptr_node: begin
       c := gspace(32);
-      c^.kind := 146;
+      c^.kind := ptr_node;
       c^.hdr := an_ptr_t(n)^.hdr;
       c^.w16 := 0;
       c^.rf_w20 := an_ptr_t(n)^.rf_w20;
@@ -681,9 +631,9 @@ begin
       c^.sym := copy_tree(an_ptr_t(n)^.sym);
       copy_tree := il_$node_ptr_t(c);
     end;
-    145: begin
+    dindex_node: begin
       c := gspace(44);
-      c^.kind := 145;
+      c^.kind := dindex_node;
       c^.hdr := an_ptr_t(n)^.hdr;
       c^.w16 := 0;
       c^.rf_w20 := an_ptr_t(n)^.rf_w20;
@@ -697,7 +647,7 @@ begin
       c^.len := an_ptr_t(n)^.len;
       copy_tree := il_$node_ptr_t(c);
     end;
-    147, 205: begin
+    disp_node, sym_disp_node: begin
       c := gspace(36);
       c^.kind := t^.kind;
       c^.hdr := an_ptr_t(n)^.hdr;
@@ -710,17 +660,17 @@ begin
       c^.disp := an_ptr_t(n)^.disp;
       copy_tree := il_$node_ptr_t(c);
     end;
-    175: begin
+    pf_call: begin
       c := gspace(24);
-      c^.kind := 175;
+      c^.kind := pf_call;
       c^.hdr := an_ptr_t(n)^.hdr;
       c^.xp[4] := copy_tree(an_ptr_t(n)^.xp[4]);
       c^.xp[5] := copy_tree(an_ptr_t(n)^.xp[5]);
       copy_tree := il_$node_ptr_t(c);
     end;
-    164: begin
+    cs_node: begin
       c := gspace(32);
-      c^.kind := 164;
+      c^.kind := cs_node;
       c^.hdr := an_ptr_t(n)^.hdr;
       c^.w16 := 0;
       c^.xp[5] := copy_tree(an_ptr_t(n)^.xp[5]);
@@ -748,31 +698,37 @@ end;
   - the names. }
 
 function invariant_sizeof_top_level(
-    kind: integer): integer32; internal; options(val_param);
+    kind: il_$kind_t): integer32; internal; options(val_param);
 begin
-  if not (kind in [139..142, 144, 148..151, 188, 191, 214, 215, 223..225, 227, 228, 231, 233]) then
+  if not (kind in [eval_node..cbranch_node, label_node,
+                   block_entry_node..return_node, use_def_ob, reg_list_ob,
+                   case_node_range_check, case_node_no_range_check,
+                   exception_handler_entry..release_dynamic_space,
+                   insert_bit_field, bit_field_assign, spine_mark,
+                   pa_mmu_bip]) then
     invariant_sizeof_top_level := 52
   else
     case kind of
-      144: invariant_sizeof_top_level := 84;
-      148: invariant_sizeof_top_level := 52;
-      140: invariant_sizeof_top_level := 80;
-      139: invariant_sizeof_top_level := 52;
-      141: invariant_sizeof_top_level := 56;
-      142: invariant_sizeof_top_level := 64;
-      150: invariant_sizeof_top_level := 52;
-      151: invariant_sizeof_top_level := 52;
-      188: invariant_sizeof_top_level := 60;
-      191: invariant_sizeof_top_level := 336;
-      149: invariant_sizeof_top_level := 48;
-      223: invariant_sizeof_top_level := 76;
-      224: invariant_sizeof_top_level := 60;
-      225: invariant_sizeof_top_level := 52;
-      227: invariant_sizeof_top_level := 80;
-      228: invariant_sizeof_top_level := 68;
-      215, 214: invariant_sizeof_top_level := 68;
-      231: invariant_sizeof_top_level := 56;
-      233: invariant_sizeof_top_level := 56;
+      label_node: invariant_sizeof_top_level := 84;
+      block_entry_node: invariant_sizeof_top_level := 52;
+      assign_node: invariant_sizeof_top_level := 80;
+      eval_node: invariant_sizeof_top_level := 52;
+      branch_node: invariant_sizeof_top_level := 56;
+      cbranch_node: invariant_sizeof_top_level := 64;
+      nlbranch_node: invariant_sizeof_top_level := 52;
+      return_node: invariant_sizeof_top_level := 52;
+      use_def_ob: invariant_sizeof_top_level := 60;
+      reg_list_ob: invariant_sizeof_top_level := 336;
+      blk_end_node: invariant_sizeof_top_level := 48;
+      exception_handler_entry: invariant_sizeof_top_level := 76;
+      raise_exception: invariant_sizeof_top_level := 60;
+      release_dynamic_space: invariant_sizeof_top_level := 52;
+      insert_bit_field: invariant_sizeof_top_level := 80;
+      bit_field_assign: invariant_sizeof_top_level := 68;
+      case_node_no_range_check,
+          case_node_range_check: invariant_sizeof_top_level := 68;
+      spine_mark: invariant_sizeof_top_level := 56;
+      pa_mmu_bip: invariant_sizeof_top_level := 56;
       otherwise
         invariant_sizeof_top_level := 52;
     end;
@@ -792,9 +748,14 @@ end;
 
 procedure add_node_$dispose_top_level;
 begin
-  if not (n^.kind in [139..142, 144, 148..151, 188, 191, 214, 215, 223..225, 227, 228, 231, 233]) then
+  if not (n^.kind in [eval_node..cbranch_node, label_node,
+                      block_entry_node..return_node, use_def_ob, reg_list_ob,
+                      case_node_range_check, case_node_no_range_check,
+                      exception_handler_entry..release_dynamic_space,
+                      insert_bit_field, bit_field_assign, spine_mark,
+                      pa_mmu_bip]) then
     writeln('Compiler internal warning - requested node (',
-            an_kind_t(n^.kind), ') is not top-level.');
+            n^.kind, ') is not top-level.');
   pas_$dispose(n, invariant_sizeof_top_level(n^.kind) + extra);
 end;
 
@@ -816,9 +777,14 @@ var
   p: il_$node_ptr_t;                    { -12 }
   i: integer;
 begin
-  if not (kind in [139..142, 144, 148..151, 188, 191, 214, 215, 223..225, 227, 228, 231, 233]) then
+  if not (kind in [eval_node..cbranch_node, label_node,
+                   block_entry_node..return_node, use_def_ob, reg_list_ob,
+                   case_node_range_check, case_node_no_range_check,
+                   exception_handler_entry..release_dynamic_space,
+                   insert_bit_field, bit_field_assign, spine_mark,
+                   pa_mmu_bip]) then
     writeln('Compiler internal warning - requested node (',
-            an_kind_t(kind), ') is not top-level.');
+            kind, ') is not top-level.');
   pas_$new(p, invariant_sizeof_top_level(kind) + extra);
   if p <> nil then begin
     for i := 1 to 11 do
@@ -847,11 +813,12 @@ var
   r: il_$node_ptr_t;                    { -4 }
   found: boolean;
 begin
-  if blk^.kind = 172 then
+  if blk^.kind = inner_blk then
     repeat
       blk := blk^.xp[2];
-    until (blk^.kind = 108) or (blk^.kind = 107);
-  if (rtn^.kind = 107) or (rtn^.kind = 110) or (rtn^.kind = 108) then begin
+    until (blk^.kind = function_blk) or (blk^.kind = procedure_blk);
+  if (rtn^.kind = procedure_blk) or (rtn^.kind = fortran_symbol)
+      or (rtn^.kind = function_blk) then begin
     found := false;
     r := blk^.xp[64];
     while r <> nil do begin
@@ -863,7 +830,7 @@ begin
     end;
     if not found then begin
       r := gspace(12);
-      r^.kind := 160;
+      r^.kind := ref_list;
       r^.xp[1] := rtn;
       r^.xp[2] := blk^.xp[64];
       blk^.xp[64] := r;
@@ -890,7 +857,8 @@ var
   x: an_ptr_t;
 begin
   ph := (getphase(base) + getphase(sym)) - [5, 8, 9];
-  if (base^.kind = 147) and not (5 in an_ptr_t(base)^.rf_phase) then begin
+  if (base^.kind = disp_node)
+      and not (5 in an_ptr_t(base)^.rf_phase) then begin
     disp := disp + an_ptr_t(base)^.disp;
     base := an_ptr_t(base)^.base;
   end;
@@ -899,7 +867,7 @@ begin
     return;
   end;
   x := gspace(36);
-  x^.kind := 147;
+  x^.kind := disp_node;
   x^.rf_phase := ph;
   if 2 in x^.rf_phase then
     x^.rf_phase := x^.rf_phase + [1];
@@ -949,7 +917,7 @@ var
   ph: add_node_$phase_t;
   vv: an_ptr_t;
 begin
-  if base^.kind = 147 then begin
+  if base^.kind = disp_node then begin
     dn := an_ptr_t(base);
     b := dn^.base;
   end
@@ -960,7 +928,7 @@ begin
   ph := (getphase(b) + getphase(sym)) - [5, 8, 9];
   x := gspace(36);
   res := il_$node_ptr_t(x);
-  x^.kind := 205;
+  x^.kind := sym_disp_node;
   x^.rf_phase := (getphase(b) + getphase(sym)) - [5, 8, 9];
   if 2 in x^.rf_phase then
     x^.rf_phase := x^.rf_phase + [1];
@@ -972,9 +940,9 @@ begin
   x^.align := chr(0);
   x^.b23 := chr(0);
   vv := v;
-  if vv^.kind = 110 then
+  if vv^.kind = fortran_symbol then
     vv^.at_24 := vv^.at_24 + [28]
-  else if (vv^.kind = 109) and (vv^.xp[5] = il_180) then
+  else if (vv^.kind = var_name) and (vv^.xp[5] = il_180) then
     vv^.at_32 := vv^.at_32 + [28];
   if dn <> nil then
     res := add_dn(res, dn^.sym, dn^.disp);
@@ -1007,7 +975,7 @@ var
 begin
   ph := (getphase(base) + getphase(item)) - [5, 9];
   x := gspace(44);
-  x^.kind := 145;
+  x^.kind := dindex_node;
   x^.rf_phase := (getphase(base) + getphase(item)) - [5, 9];
   if 2 in ph then
     x^.rf_phase := x^.rf_phase + [1];
@@ -1022,8 +990,8 @@ begin
   x^.b23 := chr(b23);
   x^.base := base;
   x^.disp := 0;
-  if (an_ptr_t(item)^.kind = 109) and
-     (an_ptr_t(item)^.xp[7]^.kind = 131) then
+  if (an_ptr_t(item)^.kind = var_name) and
+     (an_ptr_t(item)^.xp[7]^.kind = array_type) then
     x^.sym := item
   else
     x^.sym := il_$node_ptr_t(int_type);
@@ -1035,7 +1003,7 @@ begin
   else
     res := il_$node_ptr_t(x);
   if index <> nil then
-    if index^.kind = 137 then
+    if index^.kind = tree_node then
       if (an_ptr_t(index)^.desc.rlen = 5) or
          (an_ptr_t(index)^.desc.rlen = 4) then begin
         x^.rf_phase := x^.rf_phase + [8];
@@ -1073,28 +1041,32 @@ var
   done: boolean;
 begin
   b := an_ptr_t(base);
-  if (base^.kind = 137) and (b^.op = 26) then begin
+  if (base^.kind = tree_node) and (b^.op = 26) then begin
     add_pn := add_disp_node(b^.opnd[1], item, 0, true);
     return;
   end;
   ph := (getphase(base) + getphase(item)) - [5, 8, 9];
   done := false;
   if base <> nil then
-    if base^.kind = 137 then
+    if base^.kind = tree_node then
       if ((b^.op = 13) or (b^.op = 1)) and (b^.desc.rlen = 5) then begin
         o1 := b^.opnd[1];
         o2 := b^.opnd[2];
-        if (o1^.kind in [109, 110, 137, 146, 147, 153, 154]) and
-           (o2^.kind in [77..87, 101, 109, 110, 137, 146, 147, 200]) and
+        if (o1^.kind in [var_name, fortran_symbol, tree_node, ptr_node,
+                         disp_node, sb_register, db_register]) and
+           (o2^.kind in [blogical_ob..char_ob, char16_ob, var_name,
+                         fortran_symbol, tree_node, ptr_node, disp_node,
+                         binteger_ob]) and
            (o2^.kind <> o1^.kind) then
           if (b^.op <> 13) or (b^.desc.w6 = 5) or (b^.desc.w6 = 4) then
           begin
-            if o2^.kind in [77..87, 101, 200] then begin
+            if o2^.kind in [blogical_ob..char_ob, char16_ob,
+                            binteger_ob] then begin
               x := an_ptr_t(add_dindexn(o1, item, o2, 0, 4, align, b23));
               x^.rf_phase := x^.rf_phase + [8];
               x^.len := 4;
             end
-            else if o1^.kind = 137 then begin
+            else if o1^.kind = tree_node then begin
               x := an_ptr_t(add_dindexn(o2, item, o1, 0,
                                         an_ptr_t(o1)^.desc.rlen, align,
                                         b23));
@@ -1112,10 +1084,10 @@ begin
       end;
   if not done then begin
     x := gspace(32);
-    x^.kind := 146;
+    x^.kind := ptr_node;
     ph := (getphase(base) + getphase(item)) - [5, 8, 9];
     if 1 in ph then
-      if (base^.kind <> 109) or (base^.xw[36] <> 5) then
+      if (base^.kind <> var_name) or (base^.xw[36] <> 5) then
         ph := ph - [1] + [2];
     x^.rf_phase := ph;
     x^.xl2[2] := 0;
@@ -1125,10 +1097,10 @@ begin
     x^.b23 := chr(b23);
     x^.sym := il_$node_ptr_t(int_type);
   end;
-  if (x^.kind = 145) or
-     ((x^.kind = 147) and (x^.base^.kind = 145)) then
-    if (an_ptr_t(item)^.kind = 109) and
-       (an_ptr_t(item)^.xp[7]^.kind = 131) then
+  if (x^.kind = dindex_node) or
+     ((x^.kind = disp_node) and (x^.base^.kind = dindex_node)) then
+    if (an_ptr_t(item)^.kind = var_name) and
+       (an_ptr_t(item)^.xp[7]^.kind = array_type) then
       x^.sym := item;
   add_pn := il_$node_ptr_t(x);
 end;
@@ -1209,7 +1181,7 @@ label
 var
   flag: boolean;                        { -230 }
   regs: integer;                        { -224 }
-  k1, k2: integer;                      { -216, -214 }
+  k1, k2: il_$kind_t;                   { -216, -214 }
   t208: il_$node_ptr_t;                 { -208 }
   res: il_$node_ptr_t;                  { -204 }
   v1: integer32;                        { -200 }
@@ -1258,8 +1230,8 @@ var
       flag := true;
     if flag then
       return;
-    if (cexs_stack[l].node^.kind <> 137) or
-       (cexs_stack[r].node^.kind <> 137) or (p^.op <> q^.op) then
+    if (cexs_stack[l].node^.kind <> tree_node) or
+       (cexs_stack[r].node^.kind <> tree_node) or (p^.op <> q^.op) then
       return;
     if not ((((op = 20) or (op = 10)) and ((p^.op = 19) or (p^.op = 9)))
             or ((p^.desc.w6 = p^.desc.rlen) and
@@ -1309,22 +1281,27 @@ begin { add_tn }
   if op in [1, 3, 9, 10, 19, 20, 34, 36] then begin
     x := an_ptr_t(cexs_stack[l].node);
     y := an_ptr_t(cexs_stack[r].node);
-    if (x^.kind = 137) and (21 in x^.phase) then
+    if (x^.kind = tree_node) and (21 in x^.phase) then
       flag := true
-    else if (y^.kind = 137) and (21 in y^.phase) then
+    else if (y^.kind = tree_node) and (21 in y^.phase) then
       flag := true;
     if not flag then
       if (op <> 3) or ((d.rlen = d.w6) and (d.rlen = d.w8)) then
-        if (x^.kind = 137) and (op = x^.op) then begin
+        if (x^.kind = tree_node) and (op = x^.op) then begin
           if (op <> 3) or (d = x^.desc) then
-            if x^.opnd[2]^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200] then begin
-              if y^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200] then
+            if x^.opnd[2]^.kind in [blogical_ob..complex_ob, char_string_ob,
+                                    char32_string_ob, char16_ob, set_con_ob,
+                                    rec_const_ob, dpcomplex_ob,
+                                    binteger_ob] then begin
+              if y^.kind in [blogical_ob..complex_ob, char_string_ob,
+                             char32_string_ob, char16_ob, set_con_ob,
+                             rec_const_ob, dpcomplex_ob, binteger_ob] then
               begin
                 push(x^.opnd[2]);
                 add_tn(op, d, r, cexs_23bc);
                 cexs_stack[l].node := x^.opnd[1];
               end
-              else if (y^.kind = 137) and (op = y^.op) then begin
+              else if (y^.kind = tree_node) and (op = y^.op) then begin
                 if d = y^.desc then begin
                   push(x^.opnd[1]);
                   add_tn(op, d, r, cexs_23bc);
@@ -1342,7 +1319,8 @@ begin { add_tn }
                 push(res);
               end;
             end
-            else if (y^.kind = 137) and (op = y^.op) and (d = y^.desc) then
+            else if (y^.kind = tree_node) and (op = y^.op)
+                and (d = y^.desc) then
             begin
               res := y^.opnd[2];
               cexs_stack[r].node := y^.opnd[1];
@@ -1350,7 +1328,8 @@ begin { add_tn }
               push(res);
             end;
         end
-        else if (y^.kind = 137) and (y^.op = op) and (d = y^.desc) then begin
+        else if (y^.kind = tree_node) and (y^.op = op)
+            and (d = y^.desc) then begin
           res := y^.opnd[2];
           cexs_stack[r].node := y^.opnd[1];
           add_tn(op, d, l, r);
@@ -1363,16 +1342,18 @@ begin { add_tn }
     flag := false;
     x := an_ptr_t(cexs_stack[l].node);
     y := an_ptr_t(cexs_stack[r].node);
-    if (x^.kind = 137) and (21 in x^.phase) then
+    if (x^.kind = tree_node) and (21 in x^.phase) then
       flag := true
-    else if (y^.kind = 137) and (21 in y^.phase) then
+    else if (y^.kind = tree_node) and (21 in y^.phase) then
       flag := true;
-    if not flag and (x^.kind = 137) and
-       (y^.kind in [77..89, 101, 156, 200]) then
+    if not flag and (x^.kind = tree_node) and
+       (y^.kind in [blogical_ob..dpreal_ob, char16_ob, set_con_ob,
+                    binteger_ob]) then
       if (((op = 19) or (op = 9)) and ((x^.op = 20) or (x^.op = 10))) or
          (((x^.op = 34) or (x^.op = 1)) and
           ((op = 3) or (op = 36) or (op = 27))) then
-        if x^.opnd[2]^.kind in [77..87, 101, 200] then begin
+        if x^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                                binteger_ob] then begin
           cexs_stack[l].node := x^.opnd[1];
           cexs_stack[r].node := il_$node_ptr_t(y);
           dd := d;
@@ -1392,9 +1373,13 @@ begin { add_tn }
   wl := 0;
   wr := 0;
   if op in [1..6, 9, 10, 12, 13, 19..21, 23..25, 27, 28, 34..37, 40, 44..46] then
-    if cexs_stack[r].node^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205] then
+    if cexs_stack[r].node^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                                    dindex_node..disp_node, cs_node, cc_call,
+                                    pf_call, cse_use_ob, sym_disp_node] then
       wr := cexs_stack[r].node^.xw[5];
-  if cexs_stack[l].node^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205] then
+  if cexs_stack[l].node^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                                  dindex_node..disp_node, cs_node, cc_call,
+                                  pf_call, cse_use_ob, sym_disp_node] then
     wl := cexs_stack[l].node^.xw[5];
   if (op = 15) or (op = 16) then
     regs := 6
@@ -1423,14 +1408,15 @@ begin { add_tn }
   if op = 26 then begin
     res := cexs_stack[l].node;
     x := an_ptr_t(res);
-    if (res^.kind = 137) and (x^.op = 14) and
-       (x^.opnd[2]^.kind in [77..87, 101, 200]) then
+    if (res^.kind = tree_node) and (x^.op = 14) and
+       (x^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                             binteger_ob]) then
       if an_ptr_t(x^.opnd[2])^.int_value mod 8 = 0 then begin
         cexs_stack[l].node := add_dn(x^.opnd[1], cexs_stack[l].sym,
                                      an_ptr_t(x^.opnd[2])^.int_value div 8);
         goto 20;
       end;
-    if res^.kind = 146 then begin
+    if res^.kind = ptr_node then begin
       res := x^.base;
       goto 40;
     end;
@@ -1447,8 +1433,9 @@ begin { add_tn }
   if (op = 2) or (op = 1) then begin
     x := an_ptr_t(cexs_stack[l].node);
     y := an_ptr_t(cexs_stack[r].node);
-    if (x^.kind = 137) and (x^.op = 26) and
-       (y^.kind in [80..86, 200]) and (abs(y^.int_value) <= 32700) then
+    if (x^.kind = tree_node) and (x^.op = 26) and
+       (y^.kind in [sinteger_ob..ubinteger_ob, binteger_ob])
+           and (abs(y^.int_value) <= 32700) then
     begin
       dd := x^.desc;
       cexs_23bc := cexs_23bc + 1;
@@ -1465,7 +1452,8 @@ begin { add_tn }
                                        an_ptr_t(res)^.opnd[1], v1);
       goto 40;
     end;
-    if (x^.kind = 163) and (y^.kind in [80..86, 200]) then begin
+    if (x^.kind = addr_con) and (y^.kind in [sinteger_ob..ubinteger_ob,
+                                             binteger_ob]) then begin
       v1 := y^.int_value;
       if op = 2 then
         v1 := -v1;
@@ -1477,7 +1465,8 @@ begin { add_tn }
         res := make_xdynm_ptr(x^.xp[2], v1);
       goto 40;
     end;
-    if (x^.kind = 195) and (y^.kind in [80..86, 200]) then begin
+    if (x^.kind = reloc_absolute_addr_con)
+        and (y^.kind in [sinteger_ob..ubinteger_ob, binteger_ob]) then begin
       v1 := y^.int_value;
       if op = 2 then
         v1 := -v1;
@@ -1490,15 +1479,16 @@ begin { add_tn }
   { A real constant to an integer. }
   if (op = 39) and (d.rlen <= 4) then
     with cexs_stack[l] do begin
-      if node^.kind in [77..87, 101, 200] then begin
+      if node^.kind in [blogical_ob..char_ob, char16_ob,
+                        binteger_ob] then begin
         res := node;
         goto 40;
       end;
-      if node^.kind = 137 then
+      if node^.kind = tree_node then
         if an_ptr_t(node)^.op = 41 then
           if an_ptr_t(node)^.desc.w6 = 10 then
             node := an_ptr_t(node)^.opnd[1];
-      if (node^.kind <> 89) and (node^.kind <> 88) then
+      if (node^.kind <> dpreal_ob) and (node^.kind <> real_ob) then
         goto 20;
       status := pfm_$cleanup(crec);
       if status.all <> pfm_$cleanup_set then
@@ -1507,7 +1497,7 @@ begin { add_tn }
           cgerr(19, line, node);
           error_$print_format(status, 2, '?', 'compiler', 8, '%$');
           v1 := 0;
-          res := smcontk(81, v1);
+          res := smcontk(integer_ob, v1);
           goto 40;
         end
         else
@@ -1519,23 +1509,24 @@ begin { add_tn }
       else
         v1 := trunc(node^.real_value - 2147483647.0 - 1.0) - 16#80000000;
       pfm_$rls_cleanup(crec, status);
-      res := smcontk(81, v1);
+      res := smcontk(integer_ob, v1);
       goto 40;
     end;
 
   { A complex constant to a complex. }
   if (op = 39) and ((d.rlen = 12) or (d.rlen = 8)) then
-    if (cexs_stack[l].node^.kind = 198) or
-       (cexs_stack[l].node^.kind = 90) then begin
+    if (cexs_stack[l].node^.kind = dpcomplex_ob) or
+       (cexs_stack[l].node^.kind = complex_ob) then begin
       res := cexs_stack[l].node;
       goto 40;
     end;
 
   { All constants. }
-  k2 := 81;
-  k1 := 81;
+  k2 := integer_ob;
+  k1 := integer_ob;
   for i := l to r do
-    if cexs_stack[i].node^.kind in [77..87, 101, 200] then
+    if cexs_stack[i].node^.kind in [blogical_ob..char_ob, char16_ob,
+                                    binteger_ob] then
       if i = l then begin
         v1 := cexs_stack[i].node^.int_value;
         uv1 := v1;
@@ -1560,7 +1551,7 @@ begin { add_tn }
         v1 := -v1;
     8: begin
       v1 := ~v1;
-      if cexs_stack[l].typ.base^.kind = 124 then
+      if cexs_stack[l].typ.base^.kind = bool_type then
         v1 := v1 & 255;
     end;
     3:
@@ -1675,7 +1666,7 @@ begin { add_tn }
   if k2 > k1 then
     k1 := k2;
   if (d.rlen = 4) or (v1 < -32768) or (v1 > 32767) then
-    k1 := 82;
+    k1 := linteger_ob;
   res := smcontk(k1, v1);
   goto 40;
 
@@ -1684,7 +1675,7 @@ begin { add_tn }
   if (op = 8) or (op = 7) then begin
     res := cexs_stack[l].node;
     x := an_ptr_t(res);
-    if res^.kind <> 137 then
+    if res^.kind <> tree_node then
       goto 60;
     if x^.op = op then begin
       res := x^.opnd[1];
@@ -1702,7 +1693,8 @@ begin { add_tn }
       goto 40;
     end;
     if (op = 7) and (x^.op = 1) and
-       (x^.opnd[2]^.kind in [77..87, 101, 200]) then
+       (x^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                             binteger_ob]) then
       if an_ptr_t(x^.opnd[2])^.int_value = 1 then begin
         cexs_stack[l].node := x^.opnd[1];
         add_tn(8, d, l, l);
@@ -1737,8 +1729,9 @@ begin { add_tn }
   end
   else if op = 11 then begin
     y := an_ptr_t(cexs_stack[r].node);
-    if (y^.kind = 137) and (y^.op = 14) and
-       (y^.opnd[2]^.kind in [77..87, 101, 200]) then
+    if (y^.kind = tree_node) and (y^.op = 14) and
+       (y^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                             binteger_ob]) then
       if (an_ptr_t(y^.opnd[2])^.int_value mod 8 = 0) and
          (y^.desc.w8 = 8) then begin
         d.size := 1;
@@ -1748,14 +1741,15 @@ begin { add_tn }
           cexs_stack[r].node := add_dn(cexs_stack[r].node,
                                        cexs_stack[r].sym, m);
       end
-      else if (cexs_stack[l].node^.kind in [77..87, 101, 200]) and
+      else if (cexs_stack[l].node^.kind in [blogical_ob..char_ob, char16_ob,
+                                            binteger_ob]) and
               (y^.desc.w6 <= 4) and
               (y^.desc.w8 >= cexs_stack[l].node^.int_value) then begin
         v1 := y^.desc.w6 * 8 - y^.desc.w8 + cexs_stack[l].node^.int_value -
               an_ptr_t(y^.opnd[2])^.int_value;
         with cexs_stack[l] do begin
           m := v1 mod 8;
-          node := smcontk(81, m);
+          node := smcontk(integer_ob, m);
           typ.low := m;
           typ.high := m;
         end;
@@ -1773,48 +1767,55 @@ begin { add_tn }
         v1 := 255
       else
         v1 := 0;
-      res := smcontk(81, v1);
+      res := smcontk(integer_ob, v1);
       goto 40;
     end;
     if (d.w8 = 2) or (d.w8 = 3) or (d.w8 = 5) or (d.w8 = 4) then
-      if not ((cexs_stack[l].node^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205]) and
+      if not ((cexs_stack[l].node^.kind in [tree_node, gen_tree_node,
+                                            cmp_tree_node,
+                                            dindex_node..disp_node, cs_node,
+                                            cc_call, pf_call, cse_use_ob,
+                                            sym_disp_node]) and
               (an_ptr_t(cexs_stack[l].node)^.phase * [2, 12] <> [])) then
-        if (cexs_stack[r].node^.kind in [77..87, 101, 200]) and
+        if (cexs_stack[r].node^.kind in [blogical_ob..char_ob, char16_ob,
+                                         binteger_ob]) and
            (cexs_stack[r].node^.int_value = 0) then
           case d.w8 of
             3: d.w8 := 7;
             2: d.w8 := 6;
             5: begin
               v1 := 0;
-              res := smcontk(81, v1);
+              res := smcontk(integer_ob, v1);
               goto 40;
             end;
             4: begin
               v1 := 255;
-              res := smcontk(81, v1);
+              res := smcontk(integer_ob, v1);
               goto 40;
             end;
           end
-        else if (cexs_stack[l].node^.kind in [77..87, 101, 200]) and
+        else if (cexs_stack[l].node^.kind in [blogical_ob..char_ob, char16_ob,
+                                              binteger_ob]) and
                 (cexs_stack[l].node^.int_value = 0) then
           case d.w8 of
             4: d.w8 := 7;
             5: d.w8 := 6;
             2: begin
               v1 := 0;
-              res := smcontk(81, v1);
+              res := smcontk(integer_ob, v1);
               goto 40;
             end;
             3: begin
               v1 := 255;
-              res := smcontk(81, v1);
+              res := smcontk(integer_ob, v1);
               goto 40;
             end;
           end;
     x := an_ptr_t(cexs_stack[l].node);
-    if ((d.w8 = 7) or (d.w8 = 6)) and (x^.kind = 137) and (x^.op = 9) and
-       (x^.opnd[2]^.kind in [77..87, 101, 200]) and
-       (cexs_stack[r].node^.kind in [77..87, 101, 200]) then begin
+    if ((d.w8 = 7) or (d.w8 = 6)) and (x^.kind = tree_node) and (x^.op = 9) and
+       (x^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) and
+       (cexs_stack[r].node^.kind in [blogical_ob..char_ob, char16_ob,
+                                     binteger_ob]) then begin
       m := an_ptr_t(x^.opnd[2])^.int_value;
       cv := cexs_stack[r].node^.int_value;
       if m = 0 then
@@ -1828,7 +1829,7 @@ begin { add_tn }
         m := rshft(m, 1);
         w := w + 1;
       end;
-      cexs_stack[l].node := smcontk(81, w);
+      cexs_stack[l].node := smcontk(integer_ob, w);
       if cv <> 0 then
         if d.w8 = 7 then
           d.w8 := 6
@@ -1841,10 +1842,12 @@ begin { add_tn }
       goto 60;
     end;
     if (d.w8 = 7) or (d.w8 = 6) then
-      if (cexs_stack[l].node^.kind in [77..87, 101, 200]) and
+      if (cexs_stack[l].node^.kind in [blogical_ob..char_ob, char16_ob,
+                                       binteger_ob]) and
          (cexs_stack[l].node^.int_value = 0) then begin
         y := an_ptr_t(cexs_stack[r].node);
-        if (y^.kind = 137) and (y^.op = 18) and (y^.desc.w6 = 1) then begin
+        if (y^.kind = tree_node) and (y^.op = 18)
+            and (y^.desc.w6 = 1) then begin
           res := y^.opnd[1];
           goto 40;
         end;
@@ -1853,7 +1856,7 @@ begin { add_tn }
   else if (op = 9) or (op = 10) then begin
     x := an_ptr_t(cexs_stack[l].node);
     y := an_ptr_t(cexs_stack[r].node);
-    if (x^.kind = 137) and (x^.op = 8) and (y^.kind = 137) and
+    if (x^.kind = tree_node) and (x^.op = 8) and (y^.kind = tree_node) and
        (y^.op = 8) then begin
       cexs_stack[l].node := x^.opnd[1];
       cexs_stack[r].node := y^.opnd[1];
@@ -1873,9 +1876,9 @@ begin { add_tn }
       c := 0
     else
       c := 4;
-    if (x^.kind = 137) and (x^.op = 7) then
+    if (x^.kind = tree_node) and (x^.op = 7) then
       c := c + 2;
-    if (y^.kind = 137) and (y^.op = 7) then
+    if (y^.kind = tree_node) and (y^.op = 7) then
       c := c + 1;
     if (c <> 0) and (c <> 4) then begin
       case c of
@@ -1908,7 +1911,7 @@ begin { add_tn }
   { A constant right operand. }
 60:
   res := cexs_stack[r].node;
-  if not (res^.kind in [77..87, 101, 200]) then
+  if not (res^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) then
     goto 10;
   case op of
     3:
@@ -1936,13 +1939,13 @@ begin { add_tn }
       else if d.rlen = 1 then begin
         if (res^.int_value < 256) and (res^.int_value >= -128) then
           goto 20;
-        res := smcontk(81, 0);
+        res := smcontk(integer_ob, 0);
         goto 40;
       end
       else if d.rlen = 2 then begin
         if (res^.int_value < 65536) and (res^.int_value >= -32768) then
           goto 20;
-        res := smcontk(81, 0);
+        res := smcontk(integer_ob, 0);
         goto 40;
       end
       else
@@ -1958,7 +1961,7 @@ begin { add_tn }
     2:
       if res^.int_value = 1 then begin
         x := an_ptr_t(cexs_stack[l].node);
-        if (x^.kind = 137) and (x^.op = 7) then begin
+        if (x^.kind = tree_node) and (x^.op = 7) then begin
           cexs_stack[l].node := x^.opnd[1];
           add_tn(8, d, l, l);
           cexs_23bc := l;
@@ -2006,11 +2009,12 @@ begin { add_tn }
     { The real constants. }
     for i := l to r do begin
       x := an_ptr_t(cexs_stack[i].node);
-      if (x^.kind <> 89) and (x^.kind <> 88) then
-        if (i <> r) or not (x^.kind in [77..87, 101, 200]) or
+      if (x^.kind <> dpreal_ob) and (x^.kind <> real_ob) then
+        if (i <> r) or not (x^.kind in [blogical_ob..char_ob, char16_ob,
+                                        binteger_ob]) or
            (op <> 42) then
           goto 70;
-      if x^.kind in [77..87, 101, 200] then begin
+      if x^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
         rr := x^.int_value;
         b := rr;
       end
@@ -2079,7 +2083,7 @@ begin { add_tn }
       otherwise ;
     end;
     if (op = 40) or ((op = 41) and ((d.w6 = 11) or (d.w6 = 10))) then
-      res := smcontk(81, v1)
+      res := smcontk(integer_ob, v1)
     else if d.rlen = 7 then
       res := dpcontk(a)
     else
@@ -2096,9 +2100,9 @@ begin { add_tn }
         c := 0
       else
         c := 4;
-      if (x^.kind = 137) and (x^.op = 38) then
+      if (x^.kind = tree_node) and (x^.op = 38) then
         c := c + 2;
-      if (y^.kind = 137) and (y^.op = 38) then
+      if (y^.kind = tree_node) and (y^.op = 38) then
         c := c + 1;
       if (c <> 0) and (c <> 4) then begin
         case c of
@@ -2135,13 +2139,13 @@ begin { add_tn }
         v1 := 255
       else
         v1 := 0;
-      res := smcontk(81, v1);
+      res := smcontk(integer_ob, v1);
       goto 40;
     end;
     if op = 41 then
       case d.w6 of
         9:
-          if (res^.kind = 137) and (y^.op = 36) and
+          if (res^.kind = tree_node) and (y^.op = 36) and
              (y^.opnd[1] = y^.opnd[2]) then begin
             res := y^.opnd[1];
             cexs_stack[l].node := res;
@@ -2149,25 +2153,25 @@ begin { add_tn }
             goto 20;
           end;
         6:
-          if (res^.kind = 137) and (y^.op = 41) and (y^.desc.w6 = 4) then
+          if (res^.kind = tree_node) and (y^.op = 41) and (y^.desc.w6 = 4) then
           begin
             res := y^.opnd[1];
             goto 40;
           end;
         4:
-          if (res^.kind = 137) and (y^.op = 41) and (y^.desc.w6 = 6) then
+          if (res^.kind = tree_node) and (y^.op = 41) and (y^.desc.w6 = 6) then
           begin
             res := y^.opnd[1];
             goto 40;
           end;
         7:
-          if (res^.kind = 137) and (y^.op = 41) and (y^.desc.w6 = 3) then
+          if (res^.kind = tree_node) and (y^.op = 41) and (y^.desc.w6 = 3) then
           begin
             res := y^.opnd[1];
             goto 40;
           end;
         3:
-          if (res^.kind = 137) and (y^.op = 41) and (y^.desc.w6 = 7) then
+          if (res^.kind = tree_node) and (y^.op = 41) and (y^.desc.w6 = 7) then
           begin
             res := y^.opnd[1];
             goto 40;
@@ -2175,11 +2179,12 @@ begin { add_tn }
         otherwise ;
       end
     else if (op = 36) and (cexs_stack[l].node = cexs_stack[r].node) then
-      if (res^.kind = 137) and (y^.op = 41) and (y^.desc.w6 = 9) then begin
+      if (res^.kind = tree_node) and (y^.op = 41)
+          and (y^.desc.w6 = 9) then begin
         res := y^.opnd[1];
         goto 40;
       end;
-    if (res^.kind <> 89) and (res^.kind <> 88) then
+    if (res^.kind <> dpreal_ob) and (res^.kind <> real_ob) then
       goto 10;
     b := y^.real_value;
     case op of
@@ -2203,7 +2208,7 @@ begin { add_tn }
           goto 10;
         if (bb.hi & 16#FFFFF) <> 0 then
           goto 10;
-        if res^.kind = 89 then
+        if res^.kind = dpreal_ob then
           cexs_stack[r].node := dpcontk(1.0 / b)
         else
           cexs_stack[r].node := rlcontk(1.0 / b);
@@ -2216,7 +2221,8 @@ begin { add_tn }
     { The end of the real operators. }
   end
   else if op = 51 then begin
-    if not (cexs_stack[l].node^.kind in [80..86, 200]) then
+    if not (cexs_stack[l].node^.kind in [sinteger_ob..ubinteger_ob,
+                                         binteger_ob]) then
       goto 20;
     if cexs_stack[l].node^.int_value = 0 then
       res := cexs_stack[l + 2].node
@@ -2229,13 +2235,13 @@ begin { add_tn }
       v1 := 255
     else
       v1 := 0;
-    res := smcontk(81, v1);
+    res := smcontk(integer_ob, v1);
     goto 40;
   end
   else if op = 18 then begin
     res := cexs_stack[l].node;
     x := an_ptr_t(res);
-    if res^.kind = 137 then begin
+    if res^.kind = tree_node then begin
       if x^.op = 18 then begin
         if d.w6 < d.rlen then begin
           if (d.flags.signed <> x^.desc.flags.signed) and
@@ -2262,7 +2268,8 @@ begin { add_tn }
         goto 10;
       if d.flags.signed <> x^.desc.flags.signed then
         goto 10;
-      if (x^.opnd[2]^.kind in [77..87, 101, 200]) and
+      if (x^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+          and
          (an_ptr_t(x^.opnd[2])^.int_value = 0) and (x^.desc.w8 = 8) then
       begin
         d.w6 := 1;
@@ -2285,7 +2292,7 @@ begin { add_tn }
       end;
       return;
     end;
-    if res^.kind in [77..87, 101, 200] then begin
+    if res^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
       v1 := x^.int_value;
       if d.flags.signed then begin
         if d.w6 = 1 then begin
@@ -2307,41 +2314,46 @@ begin { add_tn }
         v1 := v1 & 16#FFFF
       else if d.w6 <> 4 then
         return;
-      res := smcontk(81, v1);
+      res := smcontk(integer_ob, v1);
       goto 40;
     end;
     if (d.rlen < d.w6) and not (1 in getphase(res)) and
-       (cexs_stack[l].node^.kind <> 195) then begin
+       (cexs_stack[l].node^.kind <> reloc_absolute_addr_con) then begin
       if (18 in cargs_$options.opt_on) and (cexs_stack[l].node <> nil) then
       begin
         x := an_ptr_t(cexs_stack[l].node);
-        if (x^.kind = 146) or (x^.kind = 163) or (x^.kind = 147) then
+        if (x^.kind = ptr_node) or (x^.kind = addr_con)
+            or (x^.kind = disp_node) then
           case x^.kind of
-            147: begin
+            disp_node: begin
               y := an_ptr_t(x^.base);
-              if y^.kind = 146 then begin
+              if y^.kind = ptr_node then begin
                 x := an_ptr_t(y^.base);
-                if (x^.kind = 195) or (x^.kind = 163) then
-                  if (x^.kind <> 163) or (x^.xp[2]^.kind = 111) then begin
-                    if x^.kind <> 195 then
+                if (x^.kind = reloc_absolute_addr_con)
+                    or (x^.kind = addr_con) then
+                  if (x^.kind <> addr_con)
+                      or (x^.xp[2]^.kind = common_block_name) then begin
+                    if x^.kind <> reloc_absolute_addr_con then
                       goto 20;
-                    if x^.xp[3]^.kind = 111 then
+                    if x^.xp[3]^.kind = common_block_name then
                       goto 20;
                   end;
               end;
             end;
-            146: begin
+            ptr_node: begin
               y := an_ptr_t(x^.base);
-              if (y^.kind = 195) or (y^.kind = 163) then
-                if (y^.kind <> 163) or (y^.xp[2]^.kind = 111) then begin
-                  if y^.kind <> 195 then
+              if (y^.kind = reloc_absolute_addr_con)
+                  or (y^.kind = addr_con) then
+                if (y^.kind <> addr_con)
+                    or (y^.xp[2]^.kind = common_block_name) then begin
+                  if y^.kind <> reloc_absolute_addr_con then
                     goto 20;
-                  if y^.xp[3]^.kind = 111 then
+                  if y^.xp[3]^.kind = common_block_name then
                     goto 20;
                 end;
             end;
-            163:
-              if x^.xp[2]^.kind = 111 then
+            addr_con:
+              if x^.xp[2]^.kind = common_block_name then
                 goto 20;
           end;
       end;
@@ -2352,7 +2364,8 @@ begin { add_tn }
       goto 40;
   end
   else if op = 63 then begin
-    if not (cexs_stack[l].node^.kind in [109, 145..147, 164, 205]) then
+    if not (cexs_stack[l].node^.kind in [var_name, dindex_node..disp_node,
+                                         cs_node, sym_disp_node]) then
       return;
     d.w8 := 0;
   end;
@@ -2366,15 +2379,16 @@ begin { add_tn }
 20:
   if 2 in cargs_$options.opt_on then
     with cexs_stack[l] do
-      if node^.kind = 137 then
+      if node^.kind = tree_node then
         if (an_ptr_t(node)^.op = 3) or (an_ptr_t(node)^.op = 27) then begin
           x := an_ptr_t(an_ptr_t(node)^.opnd[1]);
           y := an_ptr_t(an_ptr_t(node)^.opnd[2]);
-          if (x^.kind = 137) and (y^.kind in [77..87, 101, 200]) then
+          if (x^.kind = tree_node) and (y^.kind in [blogical_ob..char_ob,
+              char16_ob, binteger_ob]) then
             if (x^.op = 1) or (x^.op = 18) or (x^.op = 2) then
               if (x^.op = 2) or (x^.op = 1) then
                 kfold(nil, node)
-              else if x^.opnd[1]^.kind = 137 then
+              else if x^.opnd[1]^.kind = tree_node then
                 if (an_ptr_t(x^.opnd[1])^.op = 2) or
                    (an_ptr_t(x^.opnd[1])^.op = 1) then
                   kfold(nil, node);
@@ -2385,7 +2399,7 @@ begin { add_tn }
   c := r - l + 1;
   res := gspace(c * 4 + 40);
   x := an_ptr_t(res);
-  x^.kind := 137;
+  x^.kind := tree_node;
   x^.opnd[1] := cexs_stack[l].node;
   ph := getphase(x^.opnd[1]);
   w := 2;
@@ -2419,8 +2433,8 @@ begin { add_tn }
 40:
   with cexs_stack[l] do begin
     node := res;
-    if node^.kind in [80..86, 200] then
-      if typ.base^.kind = 122 then begin
+    if node^.kind in [sinteger_ob..ubinteger_ob, binteger_ob] then
+      if typ.base^.kind = integer_type then begin
         typ.low := node^.int_value;
         typ.high := node^.int_value;
         if typ.base^.signed then begin
@@ -2462,7 +2476,7 @@ var
 begin
   dl := d;
   x := gspace(count * 4 + 40);
-  x^.kind := 137;
+  x^.kind := tree_node;
   ph := [];
   for i := 1 to count do begin
     x^.opnd[i] := ops[i];

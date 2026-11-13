@@ -226,7 +226,7 @@ var
   m: mu_$macro_ptr_t;
 begin
   if name_len > 4096 then begin
-    error1(197, spos_$null_position, idntk(76, name, 4096));
+    error1(197, spos_$null_position, idntk(id_ob, name, 4096));
     n := 4096;
   end
   else

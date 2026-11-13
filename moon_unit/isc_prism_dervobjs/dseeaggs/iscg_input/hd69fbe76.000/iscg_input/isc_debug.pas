@@ -20,7 +20,7 @@
 
   The span after isc_print_il_node's code (0x0D3A9C .. 0x0D6110) holds
   its strings and the identifier tables of its writes (il$t's at
-  0x0D4FA4, an_kind_t's, the operators' ...); a copy of several tables
+  0x0D4FA4, il_$kind_t's, the operators' ...); a copy of several tables
   also sits among its arms (tools/cc_enumnames.py), where the code of
   more than 32 KB keeps them within reach.
 
@@ -69,57 +69,6 @@ module isc_debug;
 %include 'lang2/source/isc/isc_var_externs.ins.pas';
 
 type
-  { The IL node kinds, as the image names them (the name table after
-    alignment_from_sr_info, 0x20F27A; isc_print_il_node's
-    0x0BD2D2: add_node.pas's an_kind_t). }
-  an_kind_t = (
-    end_ob, if_ob, then_ob, begin_ob, else_ob, do_ob, with_ob, in_ob,
-    of_ob, while_ob, case_ob, repeat_ob, until_ob, procedure_ob, var_ob,
-    for_ob, array_ob, record_ob, set_ob, to_ob, downto_ob, mod_ob, or_ob,
-    and_ob, not_ob, div_ob, const_ob, type_ob, function_ob, program_ob,
-    packed_ob, label_ob, goto_ob, file_ob, forward_ob, static_ob,
-    external_ob, define_ob, module_ob, val_param_ob, exit_ob, next_ob,
-    internal_ob, return_ob, otherwise_ob, cast_ob, univ_ob, implies_ob,
-    out_ob, up_to_ob, bus_ob, period_ob, becomes_ob, colon_ob, le_ob,
-    ne_ob, lt_ob, eq_ob, ge_ob, gt_ob, sub_ob, open_ob, close_ob,
-    comma_ob, semicolon_ob, star_ob, slash_ob, plus_ob, minus_ob,
-    ampersand_ob, excl_ob, arrow_ob, eom_ob, error_ob, tilde_ob,
-    badchar_ob, id_ob, blogical_ob, slogical_ob, llogical_ob,
-    sinteger_ob, integer_ob, linteger_ob, usinteger_ob, uinteger_ob,
-    ulinteger_ob, ubinteger_ob, char_ob, real_ob, dpreal_ob, complex_ob,
-    varying_ob, char_string_ob, char32_string_ob, nil_ob, starstar_ob,
-    routine_option_ob, attribute_ob, begin_critical_ob,
-    end_critical_ob, library_ob, char16_ob, const_cob, volatile_cob,
-    signed_cob, program_blk, module_blk, procedure_blk, function_blk,
-    var_name, fortran_symbol, common_block_name, fdim_info, fdata_nlist,
-    fdata_clist, equiv_stmt, const_name, label_name, type_name,
-    field_name, pfield_name, param_name, integer_type, real_type,
-    bool_type, kind_char_type, char_string_con_type, char_array_type,
-    subr_type, enum_type, ptr_type, array_type, record_type, file_type,
-    set_type, univ_ptr_type, null_set_type, tree_node, gen_tree_node,
-    eval_node, assign_node, branch_node, cbranch_node, cmp_tree_node,
-    label_node, dindex_node, ptr_node, disp_node, block_entry_node,
-    blk_end_node, nlbranch_node, return_node, alloc_temp, sb_register,
-    db_register, display_register, set_con_ob, def_const_ob, std_func,
-    lib_dsc, ref_list, state_save, lnum_entry, addr_con, cs_node,
-    cs_temp, fdata_do, entry_blk, param_list, ftn_xref, ptr_hdr,
-    cc_call, inner_blk, proc__type, func__type, pf_call, rec_const_ob,
-    offset_type, reg_assign_ob, actparam, ext_state_save, dead_temp,
-    procedure_section, data_section, inline_constant, namelist_id_ob,
-    lnref_ob, variant_ob, use_def_ob, cse_use_ob, cse_parent_ob,
-    reg_list_ob, transfer_vector, proc_reloc, external_ref,
-    reloc_absolute_addr_con, varying_type, parray_type, dpcomplex_ob,
-    m68k_unpacked, binteger_ob, routine_option_name, attribute_name,
-    physical_register_ob, argument_block_location_ob, sym_disp_node,
-    dynamic_array_type, dope_vector, at_lib_dsc, blockdata_blk,
-    kind_void_type, ap_register, namelist_constant_ob, undefined_object,
-    case_node_range_check, case_node_no_range_check, defaulted_info,
-    char16_type, char16_array_type, isc_fetch, isc_convert,
-    fdata_default_seq, exception_frame, exception_handler_entry,
-    raise_exception, release_dynamic_space, exception_register,
-    insert_bit_field, bit_field_assign, lb_register, virt_var_name,
-    spine_mark, isc_share, pa_mmu_bip, cc_func_returning_type,
-    indexed_reference, union_ob);
 
   { The tree operators (a tree node's +36; the name table at
 
@@ -186,7 +135,7 @@ type
   pin_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
   end;
 
   { iscg: begin print_il_node views }
@@ -198,7 +147,7 @@ type
   pin_addr_con_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     ref: univ_ptr;                  { +8 }
     pdisp: integer32;               { +12 }
@@ -214,7 +163,7 @@ type
   pin_argument_block_location_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     offset: integer32;              { +4 }
   end;
 
@@ -223,7 +172,7 @@ type
   pin_assign_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -252,7 +201,7 @@ type
   pin_binteger_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     value: integer32;               { +8 }
   end;
@@ -262,7 +211,7 @@ type
   pin_ubinteger_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     value: integer32;               { +8 }
   end;
@@ -272,7 +221,7 @@ type
   pin_bit_field_assign_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -289,7 +238,7 @@ type
   pin_blk_end_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -302,7 +251,7 @@ type
   pin_block_entry_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -313,7 +262,7 @@ type
   pin_blogical_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     value: integer32;               { +8 }
   end;
@@ -323,7 +272,7 @@ type
   pin_branch_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -334,7 +283,7 @@ type
   pin_case_node_range_check_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -351,7 +300,7 @@ type
   pin_case_node_no_range_check_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -368,7 +317,7 @@ type
   pin_cbranch_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -387,7 +336,7 @@ type
   pin_cc_call_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..15] of char;      { +4 }
     blkp: ^pin_procedure_blk_t;     { +16 }
   end;
@@ -397,7 +346,7 @@ type
   pin_char_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     value: integer32;               { +8 }
   end;
@@ -407,7 +356,7 @@ type
   pin_char_string_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..15] of char;      { +4 }
     len: 0..65535;                  { +16 }
   end;
@@ -417,7 +366,7 @@ type
   pin_cmp_tree_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..19] of char;      { +4 }
     size: 0..16#7FFFFFFF;           { +20 }
     x24: array [24..25] of char;    { +24 }
@@ -439,7 +388,7 @@ type
   pin_complex_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..11] of char;      { +4 }
     real: integer32;                { +12 }
     imag: integer32;                { +16 }
@@ -450,7 +399,7 @@ type
   pin_cs_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..27] of char;      { +4 }
     len_rlen: 0..65535;             { +28 }
     maxlen: integer;                { +30 }
@@ -461,7 +410,7 @@ type
   pin_cs_temp_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..15] of char;      { +4 }
     disp: integer32;                { +16 }
     vat: pin_vat_t;                 { +20 }
@@ -473,7 +422,7 @@ type
   pin_cse_parent_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     cse_parent: univ_ptr;           { +4 }
   end;
 
@@ -482,7 +431,7 @@ type
   pin_cse_use_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     phase_state: add_node_$phase_t; { +4 }
     x8: array [8..19] of char;      { +8 }
     cse_parent: univ_ptr;           { +20 }
@@ -493,7 +442,7 @@ type
   pin_dindex_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     phase_state: add_node_$phase_t; { +4 }
     x8: array [8..21] of char;      { +8 }
     f22: packed record              { +22 }
@@ -512,7 +461,7 @@ type
   pin_disp_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     phase_state: add_node_$phase_t; { +4 }
     x8: array [8..21] of char;      { +8 }
     f22: packed record              { +22 }
@@ -528,7 +477,7 @@ type
   pin_dpcomplex_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..11] of char;      { +4 }
     real1: integer32;               { +12 }
     real2: integer32;               { +16 }
@@ -543,7 +492,7 @@ type
       1: (
           b0: char;                 { +0 }
           b1: char;                 { +1 }
-          kind: an_kind_t;          { +2 }
+          kind: il_$kind_t;         { +2 }
           x4: array [4..11] of char; { +4 }
           value: double);           { +12 }
       2: (
@@ -559,7 +508,7 @@ type
   pin_entry_blk_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..107] of char;     { +4 }
     ecb_offset: integer32;          { +108 }
     x112: array [112..187] of char; { +112 }
@@ -583,7 +532,7 @@ type
   pin_eval_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -604,7 +553,7 @@ type
       1: (
           b0: char;                 { +0 }
           b1: char;                 { +1 }
-          kind: an_kind_t;          { +2 }
+          kind: il_$kind_t;         { +2 }
           x4: array [4..9] of char; { +4 }
           f10: packed record        { +10 }
             x10_7: 0..15;
@@ -636,7 +585,7 @@ type
   pin_function_blk_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..107] of char;     { +4 }
     ecb_offset: integer32;          { +108 }
     x112: array [112..187] of char; { +112 }
@@ -660,7 +609,7 @@ type
   pin_insert_bit_field_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -681,7 +630,7 @@ type
   pin_integer_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     value: integer32;               { +8 }
   end;
@@ -691,7 +640,7 @@ type
   pin_uinteger_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     value: integer32;               { +8 }
   end;
@@ -701,7 +650,7 @@ type
   pin_label_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -712,7 +661,7 @@ type
   pin_linteger_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     value: integer32;               { +8 }
   end;
@@ -722,7 +671,7 @@ type
   pin_ulinteger_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     value: integer32;               { +8 }
   end;
@@ -732,7 +681,7 @@ type
   pin_llogical_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     value: integer32;               { +8 }
   end;
@@ -742,7 +691,7 @@ type
   pin_namelist_constant_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..15] of char;      { +4 }
     len: 0..65535;                  { +16 }
   end;
@@ -752,7 +701,7 @@ type
   pin_nlbranch_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -769,7 +718,7 @@ type
   pin_physical_register_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     loc: arg_loc_t;                 { +4 }
     reg: 0..65535;                  { +6 }
   end;
@@ -779,7 +728,7 @@ type
   pin_procedure_blk_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..107] of char;     { +4 }
     ecb_offset: integer32;          { +108 }
     x112: array [112..187] of char; { +112 }
@@ -808,7 +757,7 @@ type
   pin_ptr_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     phase_state: add_node_$phase_t; { +4 }
     x8: array [8..21] of char;      { +8 }
     f22: packed record              { +22 }
@@ -822,7 +771,7 @@ type
   pin_raise_exception_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -841,7 +790,7 @@ type
       1: (
           b0: char;                 { +0 }
           b1: char;                 { +1 }
-          kind: an_kind_t;          { +2 }
+          kind: il_$kind_t;         { +2 }
           x4: array [4..11] of char; { +4 }
           value: double);           { +12 }
       2: (
@@ -857,7 +806,7 @@ type
   pin_release_dynamic_space_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -874,7 +823,7 @@ type
   pin_return_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     next: univ_ptr;                 { +8 }
     static_exception_frame: univ_ptr; { +12 }
@@ -894,7 +843,7 @@ type
   pin_set_con_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..15] of char;      { +4 }
     len: 0..65535;                  { +16 }
   end;
@@ -904,7 +853,7 @@ type
   pin_slogical_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     value: integer32;               { +8 }
   end;
@@ -914,7 +863,7 @@ type
   pin_sinteger_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     value: integer32;               { +8 }
   end;
@@ -924,7 +873,7 @@ type
   pin_usinteger_ob_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     x4: array [4..7] of char;       { +4 }
     value: integer32;               { +8 }
   end;
@@ -934,7 +883,7 @@ type
   pin_sym_disp_node_t = record
     b0: char;                       { +0 }
     b1: char;                       { +1 }
-    kind: an_kind_t;                { +2 }
+    kind: il_$kind_t;               { +2 }
     phase_state: add_node_$phase_t; { +4 }
     x8: array [8..21] of char;      { +8 }
     f22: packed record              { +22 }
@@ -952,7 +901,7 @@ type
       1: (
           b0: char;                 { +0 }
           b1: char;                 { +1 }
-          kind: an_kind_t;          { +2 }
+          kind: il_$kind_t;         { +2 }
           phase_state: add_node_$phase_t; { +4 }
           x8: array [8..9] of char; { +8 }
           f10: packed record        { +10 }
@@ -996,7 +945,7 @@ type
       1: (
           b0: char;                 { +0 }
           b1: char;                 { +1 }
-          kind: an_kind_t;          { +2 }
+          kind: il_$kind_t;         { +2 }
           x4: array [4..27] of char; { +4 }
           typ: univ_ptr;            { +28 }
           vattributes: isc_attr_set_t; { +32 }

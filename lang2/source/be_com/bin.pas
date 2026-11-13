@@ -165,7 +165,7 @@ type
   { A routine's or block's IL node as bin reads it. }
   bin_node_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     unused_4: integer32;                { +4 }
     parent: bin_node_ptr_t;             { +8 }
     unused_12: array [12..99] of char;  { +12 }
@@ -198,7 +198,7 @@ type
   bin_sym_ptr_t = ^bin_sym_t;
   bin_sym_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     l4: integer32;                      { +4 }
     unused_8: array [8..19] of char;    { +8 }
     p20: univ_ptr;                      { +20 }
@@ -701,7 +701,7 @@ procedure initialize_block(
     block: bin_node_ptr_t;
     pc: integer32); options(val_param); internal;
 begin
-  if (block^.kind = 172) or (block = cur_node) then
+  if (block^.kind = inner_blk) or (block = cur_node) then
     if block^.range = nil then begin
       block^.start_pc := pc;
       block^.range := new_code_range(block, pc);
@@ -1114,7 +1114,7 @@ begin
       sym := univ_ptr(opnd^.link);
       report := true;
       if not rtn^.f226.pushed then begin
-        if sym^.kind = 110 then begin
+        if sym^.kind = fortran_symbol then begin
           if (sym^.w26 & 256) <> 0 then begin
             owner := sym^.p40;
             report := owner = univ_ptr(rtn^.node);
@@ -1132,7 +1132,7 @@ begin
         else
           line := pos^.line;
         sym := univ_ptr(opnd^.link);
-        if sym^.kind = 110 then
+        if sym^.kind = fortran_symbol then
           x := 0
         else
           x := sym^.l4;
@@ -1477,7 +1477,8 @@ begin
         frame_limit := rtn^.l176
       else begin
         kp := node^.parent;
-        if (kp^.kind <> 108) and (kp^.kind <> 107) and (kp^.kind <> 105) then
+        if (kp^.kind <> function_blk) and (kp^.kind <> procedure_blk)
+            and (kp^.kind <> program_blk) then
           frame_limit := rtn^.l176
         else if not node^.f378.b379_7 and not node^.f378.b379_6 then
           frame_limit := 1000000

@@ -109,7 +109,7 @@ begin
   n := gspace(36);
   if n = nil then
     cgerr_no_source(9, 0);
-  n^.kind := 189;
+  n^.kind := cse_use_ob;
   r := stmt^.hdr.region;
   if r = 0 then begin
     s := stmt;
@@ -153,7 +153,7 @@ begin
   p := gspace(28);
   if p = nil then
     cgerr_no_source(9, 0);
-  p^.kind := 190;
+  p^.kind := cse_parent_ob;
   r := stmt^.hdr.region;
   if r = 0 then begin
     s := stmt;
@@ -203,19 +203,20 @@ begin
   a := t;
   if a = nil then
     return;
-  if (a^.kind = 190) or (a^.kind = 189) or (a^.kind = 137) then begin
-    if a^.kind = 190 then
+  if (a^.kind = cse_parent_ob) or (a^.kind = cse_use_ob)
+      or (a^.kind = tree_node) then begin
+    if a^.kind = cse_parent_ob then
       a := g_opt_cse_ptr_t(a)^.p_tree;
-    if a^.kind = 189 then
+    if a^.kind = cse_use_ob then
       a := g_opt_cse_ptr_t(a)^.u_tree;
     if g_opt_tree_ptr_t(a)^.uses < 2 then
       return;
     idx := g_opt_tree_ptr_t(a)^.stmt;
     if idx = 0 then
       return;
-    if g_opt_nodes_ptr_t(il_120)^[idx]^.kind <> 190 then
+    if g_opt_nodes_ptr_t(il_120)^[idx]^.kind <> cse_parent_ob then
       t := make_cse_parent(stmt, idx)
-    else if t^.kind = 189 then
+    else if t^.kind = cse_use_ob then
       a := make_cse_use(stmt, idx, x)
     else
       t := make_cse_use(stmt, idx, x);
@@ -235,7 +236,7 @@ var
 begin
   old := t;
   patch(stmt, t, x);
-  if old^.kind = 190 then
+  if old^.kind = cse_parent_ob then
     t := old;
 end;
 
@@ -258,15 +259,17 @@ var
 begin
   if t = nil then
     return;
-  if t^.kind = 189 then
+  if t^.kind = cse_use_ob then
     return;
-  if not (t^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205]) then
-    if t^.kind <> 190 then
+  if not (t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                      dindex_node..disp_node, cs_node, cc_call, pf_call,
+                      cse_use_ob, sym_disp_node]) then
+    if t^.kind <> cse_parent_ob then
       return;
-  if t^.kind = 190 then
+  if t^.kind = cse_parent_ob then
     t := g_opt_cse_ptr_t(t)^.p_tree;
   case t^.kind of
-    143, 137: begin
+    cmp_tree_node, tree_node: begin
       tr := g_opt_tree_ptr_t(t);
       if tr^.op in [2, 4..6, 11, 15, 16, 21, 35, 37] then
         for j := tr^.count downto 1 do begin
@@ -279,25 +282,25 @@ begin
           walkopr(stmt, tr^.opnd[j]);
         end;
     end;
-    146, 147, 205: begin
+    ptr_node, disp_node, sym_disp_node: begin
       saveparent_and_patch(stmt, t^.xp[6], t);
       walkopr(stmt, t^.xp[6]);
     end;
-    145: begin
+    dindex_node: begin
       saveparent_and_patch(stmt, t^.xp[6], t);
       walkopr(stmt, t^.xp[6]);
       saveparent_and_patch(stmt, t^.xp[9], t);
       walkopr(stmt, t^.xp[9]);
     end;
-    175: begin
+    pf_call: begin
       saveparent_and_patch(stmt, t^.xp[4], t);
       walkopr(stmt, t^.xp[4]);
     end;
-    171: begin
+    cc_call: begin
       saveparent_and_patch(stmt, t^.xp[4], t);
       walkopr(stmt, t^.xp[4]);
     end;
-    164: begin
+    cs_node: begin
       saveparent_and_patch(stmt, t^.xp[5], t);
       walkopr(stmt, t^.xp[5]);
       saveparent_and_patch(stmt, t^.xp[6], t);
@@ -341,14 +344,17 @@ begin
     s := b^.first_stmt;
     repeat
       case s^.kind of
-        139:
+        eval_node:
           for j := 1 to s^.eval_count do
-            if s^.eval_opnd[j]^.kind in [137, 138, 143, 145..147, 164, 171,
-                                         175, 189, 205] then begin
+            if s^.eval_opnd[j]^.kind in [tree_node, gen_tree_node,
+                                         cmp_tree_node, dindex_node..disp_node,
+                                         cs_node, cc_call,
+                                         pf_call, cse_use_ob,
+                                             sym_disp_node] then begin
               patch(s, s^.eval_opnd[j], il_$node_ptr_t(s));
               walkopr(s, s^.eval_opnd[j]);
             end;
-        140: begin
+        assign_node: begin
           patch(s, s^.asg_lhs, il_$node_ptr_t(s));
           walkopr(s, s^.asg_lhs);
           patch(s, s^.asg_rhs, il_$node_ptr_t(s));
@@ -358,11 +364,11 @@ begin
             walkopr(s, s^.asg_x);
           end;
         end;
-        142: begin
+        cbranch_node: begin
           patch(s, s^.br_cond, il_$node_ptr_t(s));
           walkopr(s, s^.br_cond);
         end;
-        151:
+        return_node:
           if s^.br_target <> nil then begin
             patch(s, s^.br_target, il_$node_ptr_t(s));
             walkopr(s, s^.br_target);
@@ -387,7 +393,9 @@ end;
 procedure moved_check(
     var t: il_$node_ptr_t);
 begin
-  if t^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205] then
+  if t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                 dindex_node..disp_node, cs_node, cc_call, pf_call, cse_use_ob,
+                 sym_disp_node] then
     if 6 in g_opt_tree_ptr_t(t)^.flags then
       t := g_opt_nodes_ptr_t(il_120)^[g_opt_tree_ptr_t(t)^.stmt];
 end;
@@ -403,9 +411,9 @@ procedure check_uplevel_and_moved_check(
     var up: boolean); internal;
 begin
   moved_check(t);
-  if (t^.kind = 109) and ((t^.xw[17] & 16#100) <> 0) then
+  if (t^.kind = var_name) and ((t^.xw[17] & 16#100) <> 0) then
     up := true
-  else if (t^.kind = 110) and ((t^.xw[13] & 16#100) <> 0) then
+  else if (t^.kind = fortran_symbol) and ((t^.xw[13] & 16#100) <> 0) then
     up := true;
 end;
 
@@ -432,36 +440,36 @@ begin
       st := g_opt_stmt_ptr_t(t);
       tr := g_opt_tree_ptr_t(t);
       case t^.kind of
-        139:
+        eval_node:
           for j := st^.eval_count downto 1 do
             moved_check(st^.eval_opnd[j]);
-        140: begin
+        assign_node: begin
           moved_check(st^.asg_lhs);
           moved_check(st^.asg_rhs);
           if st^.asg_x <> nil then
             moved_check(st^.asg_x);
         end;
-        142:
+        cbranch_node:
           moved_check(st^.br_cond);
-        151:
+        return_node:
           if st^.br_target <> nil then
             moved_check(st^.br_target);
-        137, 143:
+        tree_node, cmp_tree_node:
           for j := 1 to tr^.count do
             moved_check(tr^.opnd[j]);
-        147, 205, 146:
+        disp_node, sym_disp_node, ptr_node:
           moved_check(t^.xp[6]);
-        145: begin
+        dindex_node: begin
           moved_check(t^.xp[6]);
           moved_check(t^.xp[9]);
         end;
-        164: begin
+        cs_node: begin
           moved_check(t^.xp[5]);
           moved_check(t^.xp[6]);
         end;
-        175:
+        pf_call:
           moved_check(t^.xp[4]);
-        171:
+        cc_call:
           moved_check(t^.xp[4]);
         otherwise ;
       end;
@@ -499,8 +507,8 @@ function assert_disp_over_ptr(
 begin
   if t = nil then
     assert_disp_over_ptr := false
-  else if (t^.kind = 205) or (t^.kind = 147) then
-    assert_disp_over_ptr := t^.xp[6]^.kind = 146
+  else if (t^.kind = sym_disp_node) or (t^.kind = disp_node) then
+    assert_disp_over_ptr := t^.xp[6]^.kind = ptr_node
   else
     assert_disp_over_ptr := false;
 end;
@@ -515,7 +523,9 @@ procedure cse_$set_hoistability(
     t: il_$node_ptr_t;
     var h: g_opt_num_t); options(val_param); internal;
 begin
-  if (t^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205]) and
+  if (t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                  dindex_node..disp_node, cs_node, cc_call, pf_call,
+                  cse_use_ob, sym_disp_node]) and
      (g_opt_tree_ptr_t(t)^.stmt <> 0) then
     h := opt_loop_hoist^[g_opt_tree_ptr_t(t)^.stmt]
   else
@@ -570,13 +580,13 @@ begin
   for k := 1 to 4 do
     hoist[k] := 0;
   case t^.kind of
-    205, 147, 146:
+    sym_disp_node, disp_node, ptr_node:
       if tr^.uses <> 0 then begin
         moved_check(t^.xp[6]);
         nopnds := 1;
         opnds[1] := t^.xp[6];
         alias_$alias_desc_with_size(opnds[1], 4, descs[1].d);
-        if (t^.kind = 205) or (t^.kind = 147) then begin
+        if (t^.kind = sym_disp_node) or (t^.kind = disp_node) then begin
           descs[1].d.class := 0;
           if assert_disp_over_ptr(t) then begin
             opnds[2] := t^.xp[6]^.xp[6];
@@ -587,7 +597,7 @@ begin
         cse_$set_hoistability(t^.xp[6], hoist[1]);
         ok := not (2 in tr^.flags);
       end;
-    145: begin
+    dindex_node: begin
       moved_check(t^.xp[6]);
       moved_check(t^.xp[9]);
       nopnds := 2;
@@ -611,7 +621,7 @@ begin
         else
           rel := 0;
     end;
-    137:
+    tree_node:
       if tr^.uses <> 0 then begin
         up := false;
         if tr^.op in [2, 4..6, 11, 15, 16, 21, 35, 37] then
@@ -620,12 +630,12 @@ begin
         else
           for j := 1 to tr^.count do
             check_uplevel_and_moved_check(tr^.opnd[j], up);
-        if (tr^.op = 26) and (tr^.opnd[1]^.kind = 137) then
+        if (tr^.op = 26) and (tr^.opnd[1]^.kind = tree_node) then
           up := true;
         if tr^.op = 26 then begin
           x := tr^.opnd[1];
-          if ((x^.kind = 109) and ((x^.xw[17] & 16#1000) = 0)) or
-             ((x^.kind = 110) and ((x^.xw[13] & 16#1000) = 0)) then
+          if ((x^.kind = var_name) and ((x^.xw[17] & 16#1000) = 0)) or
+             ((x^.kind = fortran_symbol) and ((x^.xw[13] & 16#1000) = 0)) then
             up := true;
         end;
         if not up then
@@ -644,8 +654,11 @@ begin
                 end;
                 rel := 0;
                 for j := 1 to nopnds do
-                  if opnds[j]^.kind in [137, 138, 143, 145..147, 164, 171,
-                                        175, 189, 205] then begin
+                  if opnds[j]^.kind in [tree_node, gen_tree_node,
+                                        cmp_tree_node, dindex_node..disp_node,
+                                        cs_node, cc_call,
+                                        pf_call, cse_use_ob,
+                                            sym_disp_node] then begin
                     rel := j;
                     exit;
                   end;
@@ -654,8 +667,11 @@ begin
                     if (hoist[j] > hoist[rel]) and (hoist[rel] <> 0) then
                       rel := j
                     else if hoist[j] = 0 then
-                      if opnds[j]^.kind in [137, 138, 143, 145..147, 164,
-                                            171, 175, 189, 205] then
+                      if opnds[j]^.kind in [tree_node, gen_tree_node,
+                                            cmp_tree_node,
+                                            dindex_node..disp_node, cs_node,
+                                            cc_call, pf_call, cse_use_ob,
+                                                sym_disp_node] then
                         rel := j;
                 if (rel > 0) and (hoist[rel] <> 0) then
                   for i := 1 to nopnds do
@@ -688,33 +704,33 @@ begin
                 end;
               end;
       end;
-    143:
+    cmp_tree_node:
       if tr^.uses <> 0 then
         for j := 1 to tr^.count do
           moved_check(tr^.opnd[j]);
-    164:
+    cs_node:
       if tr^.uses <> 0 then begin
         moved_check(t^.xp[5]);
         moved_check(t^.xp[6]);
       end;
-    175:
+    pf_call:
       moved_check(t^.xp[4]);
-    171:
+    cc_call:
       moved_check(t^.xp[4]);
-    140: begin
+    assign_node: begin
       moved_check(st^.asg_lhs);
       moved_check(st^.asg_rhs);
       if st^.asg_x <> nil then
         moved_check(st^.asg_x);
     end;
-    139:
+    eval_node:
       for j := 1 to st^.eval_count do
         moved_check(st^.eval_opnd[j]);
-    142:
+    cbranch_node:
       moved_check(st^.br_cond);
-    148: begin
+    block_entry_node: begin
       x := st^.br_target;
-      if (x^.kind <> 167) and (x^.kind <> 172) then
+      if (x^.kind <> entry_blk) and (x^.kind <> inner_blk) then
         il_180 := x;
     end;
     otherwise ;
@@ -731,7 +747,7 @@ function assert_zombie_tree(
 begin
   if t = nil then
     assert_zombie_tree := false
-  else if (t^.kind = 143) or (t^.kind = 137) then
+  else if (t^.kind = cmp_tree_node) or (t^.kind = tree_node) then
     assert_zombie_tree := t^.uses <= 0
   else
     assert_zombie_tree := false;
@@ -764,7 +780,7 @@ begin
   y^.flags := y^.flags + [6];
   y^.stmt := b;
   x^.uses := x^.uses + y^.uses;
-  if x^.kind = 137 then
+  if x^.kind = tree_node then
     for k := 1 to x^.count do
       adjust_uc(x^.opnd[k], -1);
 end;
@@ -902,7 +918,7 @@ begin
       xt := g_opt_tree_ptr_t(x);
       xs := g_opt_stmt_ptr_t(x);
       case x^.kind of
-        137: begin
+        tree_node: begin
           if 2 in xt^.flags then
             goto 20;
           if xt^.uses <> 0 then begin
@@ -919,7 +935,7 @@ begin
             if not same then
               goto 20;
             if xt^.uses <> 0 then
-              if (t^.kind = 137) and (tt^.op = xt^.op) and
+              if (t^.kind = tree_node) and (tt^.op = xt^.op) and
                  (xt^.count = nopnds) and (xt^.size = tt^.size) and
                  (xt^.rlen = tt^.rlen) and (xt^.w26 = tt^.w26) and
                  (xt^.w28 = tt^.w28) and
@@ -939,22 +955,23 @@ begin
                 stop := true;
                 exit;
               end;
-          if (xt^.op = 17) and (t^.kind = 146) and (t^.xp[6] = x) then
+          if (xt^.op = 17) and (t^.kind = ptr_node) and (t^.xp[6] = x) then
             goto 90;
         end;
-        145, 147, 205, 146: begin
+        dindex_node, disp_node, sym_disp_node, ptr_node: begin
           if not same then
             goto 20;
           if (x^.kind = t^.kind) and (x^.xp[6] = t^.xp[6]) then
             if (x^.xp[7] = t^.xp[7]) or
-               not ((x^.kind = 146) or (x^.kind = 145)) then
-              if not (((x^.kind = 147) or (x^.kind = 145)) and
+               not ((x^.kind = ptr_node) or (x^.kind = dindex_node)) then
+              if not (((x^.kind = disp_node) or (x^.kind = dindex_node)) and
                       (x^.xl[8] <> t^.xl[8])) then
-                if not ((x^.kind = 205) and (x^.xp[8] <> t^.xp[8])) then
-                  if not (((x^.kind = 146) or (x^.kind = 145)) and
+                if not ((x^.kind = sym_disp_node)
+                        and (x^.xp[8] <> t^.xp[8])) then
+                  if not (((x^.kind = ptr_node) or (x^.kind = dindex_node)) and
                           target_properties.p_7f and
                           (x^.xc[22] <> t^.xc[22])) then
-                    if (x^.kind <> 145) or
+                    if (x^.kind <> dindex_node) or
                        ((x^.xw[21] = t^.xw[21]) and (x^.xp[9] = t^.xp[9]) and
                         (x^.xw[20] = t^.xw[20])) then begin
                       stop := true;
@@ -968,33 +985,33 @@ begin
                 goto 20;
               end;
         end;
-        140: begin
-          if t^.kind = 146 then
+        assign_node: begin
+          if t^.kind = ptr_node then
             if il_utils_$is_strength_reduction_temp(t^.xp[6]) then begin
               r := nil;
               lhs := xs^.asg_lhs;
-              if lhs^.kind = 146 then
+              if lhs^.kind = ptr_node then
                 if lhs^.xp[7] = t^.xp[7] then
                   if il_utils_$is_strength_reduction_temp(lhs^.xp[6]) then
                     r := xs^.asg_lhs^.xp[6];
               lhs := xs^.asg_lhs;
-              if lhs^.kind = 147 then
-                if lhs^.xp[6]^.kind = 146 then
+              if lhs^.kind = disp_node then
+                if lhs^.xp[6]^.kind = ptr_node then
                   if lhs^.xp[6]^.xp[7] = t^.xp[7] then
                     if il_utils_$is_strength_reduction_temp(
                            lhs^.xp[6]^.xp[6]) then
                       r := xs^.asg_lhs^.xp[6]^.xp[6];
               lhs := xs^.asg_lhs;
-              if lhs^.kind = 147 then
-                if lhs^.xp[6]^.kind = 205 then
-                  if lhs^.xp[6]^.xp[6]^.kind = 146 then
+              if lhs^.kind = disp_node then
+                if lhs^.xp[6]^.kind = sym_disp_node then
+                  if lhs^.xp[6]^.xp[6]^.kind = ptr_node then
                     if lhs^.xp[6]^.xp[6]^.xp[7] = t^.xp[7] then
                       if il_utils_$is_strength_reduction_temp(
                              lhs^.xp[6]^.xp[6]^.xp[6]) then
                         r := xs^.asg_lhs^.xp[6]^.xp[6]^.xp[6];
               lhs := xs^.asg_lhs;
-              if lhs^.kind = 205 then
-                if lhs^.xp[6]^.kind = 146 then
+              if lhs^.kind = sym_disp_node then
+                if lhs^.xp[6]^.kind = ptr_node then
                   if lhs^.xp[6]^.xp[7] = t^.xp[7] then
                     if il_utils_$is_strength_reduction_temp(
                            lhs^.xp[6]^.xp[6]) then
@@ -1020,17 +1037,20 @@ begin
               goto 20;
             end;
             if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
-              if (xs^.asg_lhs^.kind = 147) or (xs^.asg_lhs^.kind = 110) then
-                if (opnds[m]^.kind = 147) or (opnds[m]^.kind = 110) then begin
-                  if opnds[m]^.kind = 147 then
+              if (xs^.asg_lhs^.kind = disp_node)
+                  or (xs^.asg_lhs^.kind = fortran_symbol) then
+                if (opnds[m]^.kind = disp_node)
+                    or (opnds[m]^.kind = fortran_symbol) then begin
+                  if opnds[m]^.kind = disp_node then
                     p := opnds[m]^.xp[6]
                   else
                     p := opnds[m];
-                  if xs^.asg_lhs^.kind = 147 then
+                  if xs^.asg_lhs^.kind = disp_node then
                     q := xs^.asg_lhs^.xp[6]
                   else
                     q := xs^.asg_lhs;
-                  if (p^.kind = 110) and (q^.kind = 110) then
+                  if (p^.kind = fortran_symbol)
+                      and (q^.kind = fortran_symbol) then
                     if rshft(ord(p^.xc[44]) & 16#F0, 4) = 3 then
                       if rshft(ord(q^.xc[44]) & 16#F0, 4) = 3 then begin
                         r := p^.xp[7];
@@ -1046,15 +1066,16 @@ begin
                 end;
           end;
         end;
-        143: ;
-        139:
+        cmp_tree_node: ;
+        eval_node:
           if xs^.eval_count <> 0 then
             for m := 1 to xs^.eval_count do
               moved_check(xs^.eval_opnd[m])
           else begin
             mark := xs^.block;
             if mark^.flags.latch then
-              if t^.kind in [137, 145..147, 205] then begin
+              if t^.kind in [tree_node, dindex_node..disp_node,
+                             sym_disp_node] then begin
                 if dom(mark, tt^.owner^.block) then
                   if opt_loop_hoist^[i] <> 0 then begin
                     if mark^.depth <
@@ -1082,8 +1103,11 @@ begin
                           opt_loop_hoist^[i] := hoist[rel];
                       end;
                 for m := 1 to nopnds do
-                  if opnds[m]^.kind in [137, 138, 143, 145..147, 164, 171,
-                                        175, 189, 205] then
+                  if opnds[m]^.kind in [tree_node, gen_tree_node,
+                                        cmp_tree_node, dindex_node..disp_node,
+                                        cs_node, cc_call,
+                                        pf_call, cse_use_ob,
+                                            sym_disp_node] then
                     if hoist[m] = 0 then
                       opt_loop_hoist^[i] := 0;
               end;

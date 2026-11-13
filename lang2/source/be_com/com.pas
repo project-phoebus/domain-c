@@ -3773,10 +3773,10 @@ begin
   end;
   a^.h.width := a^.h.width ! 3;
   if pair then
-    ac := com_node_v_ptr_t(make_new_addr_con(2, addr(at_lib_dsc[16#B7C]), 0,
+    ac := com_node_v_ptr_t(make_new_addr_con(2, addr(at_lib_dsc_bytes[16#B7C]), 0,
                            com_node_v_ptr_t(com_rtn^.node)^.sect, false))
   else
-    ac := com_node_v_ptr_t(make_new_addr_con(2, addr(at_lib_dsc[16#B10]), 0,
+    ac := com_node_v_ptr_t(make_new_addr_con(2, addr(at_lib_dsc_bytes[16#B10]), 0,
                            com_node_v_ptr_t(com_rtn^.node)^.sect, false));
   p := a^.opnds[1].lts^.refs;
   d := utils_ins_$operands_instruction(p);

@@ -1068,7 +1068,7 @@ restart:
         return;
       end;
       if clipped then
-        error1(197, lex_line, idntk(76, name, n));
+        error1(197, lex_line, idntk(id_ob, name, n));
       b := body;
       no_params := true;
       if (b^.len > 0) and (b^.text[1] = '(') then begin

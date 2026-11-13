@@ -1466,6 +1466,8 @@ class Lifter:
                     e = self.val(v)
                     if pname == 'opc' and e[0] == 'num':
                         e = ('opc', self.opcode(e[1]))
+                    elif cls == 'other:il_$kind_t' and e[0] == 'num':
+                        e = ('ilk', self.il_kind(e[1]))
                     if e == ('num', 0) and cls in L.POINTERS:
                         e = ('nil',)
                     args.append(e)
@@ -1509,6 +1511,16 @@ class Lifter:
         if 0 <= v < len(OPCODES):
             return OPCODES[v]
         raise Unliftable('opcode %d' % v)
+
+    def il_kind(self, v):
+        """An IL node kind's name (il.ins.pas's il_$kind_t)."""
+        global IL_KINDS
+        if IL_KINDS is None:
+            import iscg_pass1
+            IL_KINDS = iscg_pass1.il_kinds(L.ROOT)
+        if 0 <= v < len(IL_KINDS):
+            return IL_KINDS[v]
+        raise Unliftable('IL node kind %d' % v)
 
     # ---- the end: temps, idioms
     def finish(self, stmts):
@@ -1600,13 +1612,14 @@ class Lifter:
                 return ('un', e[1], self.fix(e[2]))
             if k == 'addr':
                 return ('addr', self.fix(e[1]))
-            if k in ('path', 'num', 'nil', 'bool', 'str', 'opc', 'real'):
+            if k in ('path', 'num', 'nil', 'bool', 'str', 'opc', 'ilk', 'real'):
                 return e
             raise Unliftable('a value %r' % (k,))
         raise Unliftable('a value %r' % (e,))
 
 
 OPCODES = None
+IL_KINDS = None
 
 # procedures after whose call the actions read A0: the argument (by
 # position) each leaves there, and its type (isc_user_routines loads it
@@ -1652,6 +1665,8 @@ def param_size(h, p):
         return 4
     if cls in WORD_CLASSES or (cls.startswith('other:') and cls.endswith('$t')):
         return 2
+    if cls == 'other:il_$kind_t':
+        return 2  # an enumeration: a word (il.ins.pas's IL node kinds)
     return 4
 
 

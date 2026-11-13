@@ -199,33 +199,35 @@ var
 begin
   r := true;
   if n <> asn_target then
-    if (n^.kind in [137..138, 143, 145..147, 164, 171, 175, 189, 205]) and
+    if (n^.kind in [tree_node..gen_tree_node, cmp_tree_node,
+                    dindex_node..disp_node, cs_node, cc_call, pf_call,
+                    cse_use_ob, sym_disp_node]) and
         ((n^.xl[1] & 16#6000) <> 0) then
       r := true
     else
       case n^.kind of
-        190:
+        cse_parent_ob:
           r := target(n^.xp[1]);
-        175, 171:
+        pf_call, cc_call:
           if target(n^.xp[4]) then
             n^.xw[3] := n^.xw[3] ! 16#4000
           else
             r := false;
-        164: begin
+        cs_node: begin
           if target(n^.xp[5]) then
             n^.xw[3] := n^.xw[3] ! 16#4000;
           if target(n^.xp[6]) then
             n^.xw[3] := n^.xw[3] ! 16#2000;
           r := (n^.xl[1] & 16#6000) <> 0;
         end;
-        147, 146:
+        disp_node, ptr_node:
           if target(n^.xp[6]) then begin
             if n^.xw[8] = 1 then
               n^.xw[3] := n^.xw[3] ! 16#4000;
           end
           else
             r := false;
-        145: begin
+        dindex_node: begin
           r := false;
           if target(n^.xp[6]) then begin
             if n^.xw[8] = 1 then
@@ -238,12 +240,12 @@ begin
             r := true;
           end;
         end;
-        189:
+        cse_use_ob:
           if asn_target = n^.xp[5] then
             n^.xw[3] := n^.xw[3] ! 16#4000
           else
             r := false;
-        143, 137:
+        cmp_tree_node, tree_node:
           case cg_tree_ptr_t(n)^.count of
             1:
               if target(cg_tree_ptr_t(n)^.opnd[1]) then
@@ -260,7 +262,7 @@ begin
               else if ((n^.xw[3] & 16#2000) <> 0) and
                   ((n^.xw[3] & 16#4000) = 0) then begin
                 m := cg_tree_ptr_t(n)^.opnd[1];
-                if m^.kind = 137 then
+                if m^.kind = tree_node then
                   if (((cg_tree_ptr_t(n)^.op = 2) or
                        (cg_tree_ptr_t(n)^.op = 1)) and
                       ((cg_tree_ptr_t(m)^.op = 2) or
@@ -318,14 +320,16 @@ var
   w: integer;
   p: il_$node_ptr_t;
 begin
-  if n^.kind = 190 then
+  if n^.kind = cse_parent_ob then
     tleftright(n^.xp[1], keep)
-  else if n^.kind in [137..138, 143, 145..147, 164, 171, 175, 189, 205] then
+  else if n^.kind in [tree_node..gen_tree_node, cmp_tree_node,
+                      dindex_node..disp_node, cs_node, cc_call, pf_call,
+                      cse_use_ob, sym_disp_node] then
   begin
     if not keep or ((n^.xl[1] & 16#6000) <> 16#6000) then
       n^.xl[1] := n^.xl[1] & ~16#6000;
     case n^.kind of
-      143, 137:
+      cmp_tree_node, tree_node:
         case cg_tree_ptr_t(n)^.count of
           1:
             tleftright(cg_tree_ptr_t(n)^.opnd[1], (n^.xw[3] & 16#4000) <> 0);
@@ -347,17 +351,17 @@ begin
             for i := 1 to cg_tree_ptr_t(n)^.count do
               tleftright(cg_tree_ptr_t(n)^.opnd[i], false);
         end;
-      171:
+      cc_call:
         tleftright(n^.xp[4], (n^.xw[3] & 16#4000) <> 0);
-      175:
+      pf_call:
         tleftright(n^.xp[4], (n^.xw[3] & 16#4000) <> 0);
-      147, 146:
+      disp_node, ptr_node:
         tleftright(n^.xp[6], (n^.xw[3] & 16#4000) <> 0);
-      145: begin
+      dindex_node: begin
         tleftright(n^.xp[6], (n^.xw[3] & 16#4000) <> 0);
         tleftright(n^.xp[9], (n^.xw[3] & 16#2000) <> 0);
       end;
-      164: begin
+      cs_node: begin
         tleftright(n^.xp[5], (n^.xw[3] & 16#4000) <> 0);
         tleftright(n^.xp[6], (n^.xw[3] & 16#2000) <> 0);
       end;
@@ -488,18 +492,22 @@ begin
   opb := cg_null_ads;
   count1 := cnt + 1;
   n := s.right;
-  if n^.kind in [77..90, 92..93, 101, 156, 176, 198, 200] then begin
+  if n^.kind in [blogical_ob..complex_ob, char_string_ob..char32_string_ob,
+                 char16_ob, set_con_ob, rec_const_ob, dpcomplex_ob,
+                 binteger_ob] then begin
     case n^.kind of
-      87, 79, 78, 77, 85, 82, 83, 80, 84, 81, 86, 200:
+      char_ob, llogical_ob, slogical_ob, blogical_ob, ulinteger_ob,
+          linteger_ob, usinteger_ob, sinteger_ob, uinteger_ob, integer_ob,
+          ubinteger_ob, binteger_ob:
         buf.l[1] := n^.xl[2];
-      90, 89, 88: begin
+      complex_ob, dpreal_ob, real_ob: begin
         buf.l[1] := n^.xl[3];
         buf.l[2] := n^.xl[4];
       end;
-      92, 212, 156:
+      char_string_ob, namelist_constant_ob, set_con_ob:
         for k := 1 to 4 do
           buf.w[k] := n^.xw[8 + k];
-      198: begin
+      dpcomplex_ob: begin
         buf.l[1] := n^.xl[3];
         buf.l[2] := n^.xl[4];
         buf.l[3] := n^.xl[5];
@@ -531,7 +539,7 @@ begin
   end
   else begin
     if ((s.desc.rlen = 9) and (s.desc.w8 <> 0)) or
-        (s.left^.kind = 145) then begin
+        (s.left^.kind = dindex_node) then begin
       load_address(s.left, opa);
       kill_register(opa.f2);
       opa.f1 := 8;
@@ -631,9 +639,9 @@ begin
   if (s.desc.rlen = 9) and (s.desc.w8 <> 0) then begin
     pad := s.desc.w8;
     if (unit = 1) or (pad = 1) then
-      load_operand(smcontk(81, 16#20), unit, opb)
+      load_operand(smcontk(integer_ob, 16#20), unit, opb)
     else
-      load_operand(smcontk(81, 16#20202020), unit, opb);
+      load_operand(smcontk(integer_ob, 16#20202020), unit, opb);
     if odd(rem) then begin
       pad := pad - 1;
       emit(0, 1, opa, opb, 0);
@@ -857,9 +865,10 @@ begin
       size := 4;
     bits := size * 8;
     mask := genmask(off, hi, bits);
-    zero := smcontk(81, 0);
+    zero := smcontk(integer_ob, 0);
     load_modifiable(zero, 4, r);
-    if s.right^.kind in [77..87, 101, 200] then begin
+    if s.right^.kind in [blogical_ob..char_ob, char16_ob,
+                         binteger_ob] then begin
       v := s.right^.xl[2];
       if bits - hi > 0 then
         v := lshft(v, bits - hi);
@@ -995,9 +1004,9 @@ var
     m: il_$node_ptr_t;
   begin
     m := n;
-    if m^.kind = 190 then
+    if m^.kind = cse_parent_ob then
       m := m^.xp[1]
-    else if m^.kind = 189 then
+    else if m^.kind = cse_use_ob then
       m := m^.xp[5];
     cspe := m;
   end;
@@ -1006,7 +1015,7 @@ begin
   found := 31;
   r := chk_assign(s.left, s.desc.rlen);
   if (r = 31) and (cg_pass = 1) then begin
-    if s.next^.kind = 191 then begin
+    if s.next^.kind = reg_list_ob then begin
       r := getobjcache(s.left);
       if r <> 31 then
         if (cg_addr_cache[r].obj <> s.left) or
@@ -1062,17 +1071,18 @@ begin
   if (size = 5) and not (s.asnop in [0..2]) then
     size := 4;
   home := chk_assign(s.left, size);
-  if (home = 31) and (s.left^.kind = 147) then begin
+  if (home = 31) and (s.left^.kind = disp_node) then begin
     for i := 0 to 12 do
       if cg_addr_cache[i].obj = s.left^.xp[6] then begin
         p := cg_addr_cache[i].obj;
         skip := false;
         if i <= 7 then
-          if p^.kind = 146 then
-            if (p^.xp[6]^.kind = 195) or (p^.xp[6]^.kind = 163) then
+          if p^.kind = ptr_node then
+            if (p^.xp[6]^.kind = reloc_absolute_addr_con)
+                or (p^.xp[6]^.kind = addr_con) then
               if 18 in cargs_$options.opt_on then
                 if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
-                  skip := p^.xp[7]^.kind = 111;
+                  skip := p^.xp[7]^.kind = common_block_name;
         if not skip then begin
           found := i;
           exit;
@@ -1160,7 +1170,8 @@ begin
       else
         address(s.right, size, opb);
     3:
-      if s.right^.kind in [77..87, 101, 200] then begin
+      if s.right^.kind in [blogical_ob..char_ob, char16_ob,
+                           binteger_ob] then begin
         v := s.right^.xl[2];
         if v = -65536 then begin
           sz := 2;
@@ -1176,7 +1187,8 @@ begin
       else
         address(s.right, size, opb);
     4:
-      if s.right^.kind in [77..87, 101, 200] then begin
+      if s.right^.kind in [blogical_ob..char_ob, char16_ob,
+                           binteger_ob] then begin
         v := s.right^.xl[2];
         if v = 65535 then
           sz := 2
@@ -1189,7 +1201,8 @@ begin
     13, 14:
       opb := cg_null_ads;
     15, 16:
-      if (s.right^.kind in [77..87, 101, 200]) and (s.right^.xl[2] <= 8) then
+      if (s.right^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+          and (s.right^.xl[2] <= 8) then
         anyconst(s.right^.xl[2], s.desc.w8, opb)
       else
         load_operand(s.right, s.desc.w8, opb);
@@ -1198,7 +1211,8 @@ begin
   end;
   case s.asnop of
     0:
-      if (s.right^.kind in [77..87, 101, 200]) and (s.right^.xl[2] = 0) and
+      if (s.right^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+          and (s.right^.xl[2] = 0) and
           (home >= 8) and (home <= 15) then
         emit(2, sz, opa, opa, 0)
       else if (8 in cargs_$options.cpu) and
@@ -1248,7 +1262,7 @@ begin
   { The register's new contents. }
   if ((s.asnop = 11) or (s.asnop = 0)) and not (2 in getphase(s.right)) then
   begin
-    if not ((s.right^.kind = 147) and
+    if not ((s.right^.kind = disp_node) and
             (s.right^.xp[6] = cg_addr_regs[home].obj) and
             (size + s.right^.xl[8] = cg_addr_regs[home].size)) then
       setresult(home, s.right, size);
@@ -1278,11 +1292,11 @@ begin
   p := il_$node_ptr_t(opb.x);
   if p = nil then
     return;
-  if p^.kind = 147 then
+  if p^.kind = disp_node then
     p := p^.xp[6];
-  if p^.kind = 146 then
+  if p^.kind = ptr_node then
     p := p^.xp[6];
-  if (p^.kind = 110) or (p^.kind = 109) then begin
+  if (p^.kind = fortran_symbol) or (p^.kind = var_name) then begin
     h := chk_assign(p, 4);
     if opb.f1 in [1, 2] then
       if opb.f2 in [8..12] then
@@ -1316,7 +1330,8 @@ memory:
 
     { Constant masks: and, or, exclusive or. }
     3: begin
-      if not (s.right^.kind in [77..87, 101, 200]) then
+      if not (s.right^.kind in [blogical_ob..char_ob, char16_ob,
+                                binteger_ob]) then
         goto generic;
       if 4 in getphase(s.left) then
         goto generic;
@@ -1376,7 +1391,7 @@ memory:
       end
       else begin
         opa.y := opa.y + off;
-        address(smcontk(81, 0), w, opb);
+        address(smcontk(integer_ob, 0), w, opb);
         emit(0, w, opa, opb, 0);
       end;
       invalidate(opa, rlen);
@@ -1384,7 +1399,8 @@ memory:
       goto done;
     end;
     4: begin
-      if not (s.right^.kind in [77..87, 101, 200]) then
+      if not (s.right^.kind in [blogical_ob..char_ob, char16_ob,
+                                binteger_ob]) then
         goto generic;
       if 4 in getphase(s.left) then
         goto generic;
@@ -1451,7 +1467,8 @@ memory:
       goto done;
     end;
     5: begin
-      if not (s.right^.kind in [77..87, 101, 200]) then
+      if not (s.right^.kind in [blogical_ob..char_ob, char16_ob,
+                                binteger_ob]) then
         goto generic;
       bits := rlen * 8;
       m := (lshft(1, bits) - 1) & s.right^.xl[2];
@@ -1513,7 +1530,8 @@ memory:
       goto done;
     end;
     15:
-      if (s.right^.kind in [77..87, 101, 200]) and (s.right^.xl[2] = 1) then
+      if (s.right^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+          and (s.right^.xl[2] = 1) then
       begin
         address(s.left, 0, opa);
         if rlen = 2 then
@@ -1535,7 +1553,7 @@ memory:
         unlock(t);
         get_temp_register(s.left, rlen, opb);
         emit(0, rlen, opb, t, 0);
-        if s.right^.kind in [77..87, 101, 200] then
+        if s.right^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
           shift(opb, rlen, s.right^.xw[5], 3)
         else begin
           load_operand(s.right, s.desc.w8, opa);
@@ -1552,7 +1570,8 @@ memory:
         goto done;
       end;
     16:
-      if (rlen = 2) and (s.right^.kind in [77..87, 101, 200]) and
+      if (rlen = 2) and (s.right^.kind in [blogical_ob..char_ob, char16_ob,
+                                           binteger_ob]) and
           (s.right^.xl[2] = 1) then begin
         address(s.left, 0, opa);
         shift(opa, rlen, s.right^.xw[5], 2);
@@ -1564,7 +1583,7 @@ memory:
         unlock(t);
         get_temp_register(s.left, rlen, opb);
         emit(0, rlen, opb, t, 0);
-        if s.right^.kind in [77..87, 101, 200] then
+        if s.right^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
           shift(opb, rlen, s.right^.xw[5], 2)
         else begin
           load_operand(s.right, s.desc.w8, opa);
@@ -1781,7 +1800,7 @@ generic:
     lim := 1
   else
     lim := 65535;
-  if s.right^.kind in [77..87, 101, 200] then begin
+  if s.right^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
     skip := false;
     if (ord(s.right^.xc[11]) = 255) and (size = 1) then
       skip := not (4 in getphase(s.left));
@@ -1803,7 +1822,7 @@ generic:
     else
       address(s.right, size, opb);
   end
-  else if s.right^.kind in [77..87, 101, 200] then
+  else if s.right^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
     address(s.right, size, opb)
   else
     load_operand(s.right, size, opb);

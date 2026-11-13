@@ -74,7 +74,7 @@ type
 
   g_opt_stmt_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     prev: g_opt_stmt_ptr_t;             { +4 }
     next: g_opt_stmt_ptr_t;             { +8 }
     unused_12: integer32;               { +12 }
@@ -185,7 +185,7 @@ type
   g_opt_tree_ptr_t = ^g_opt_tree_t;
   g_opt_tree_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     flags: set of 0..31;                { +4 }
     unused_8: integer;                  { +8 }
     stmt: g_opt_num_t;                  { +10 }
@@ -388,7 +388,7 @@ type
   g_opt_cse_ptr_t = ^g_opt_cse_t;
   g_opt_cse_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     case integer of
       { 189 }
       1: (u_hdr: array [1..3] of integer32;  { +4..+15 }

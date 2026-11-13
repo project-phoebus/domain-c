@@ -19,8 +19,8 @@ lang/c_compiler/source/c_expr_syn.pas	s/^(\s*)eval_expr\(s \+ \[ctk_rparen\]\);/
 lang/lang/source/debug_sym_dmp.pas	s/spos_\$apply_over_(marked_)?source_files\((add_file_table_entry|write_string_for_file_table_entry|add_unit_table_entry|add_file_entry)\);/spos_\$apply_over_$1source_files(nil); { gap 21 }/
 # gap 14 (c_expr_sem): non-local gotos (an assignment instead, for the check)
 lang/c_compiler/source/c_expr_sem.pas	s/goto 99;  \{ non-local \}/cexs_23be := false; { gap 14 }/
-lang/c_compiler/source/c_expr_sem.pas	s/((?:\w+(?:\[[^\]]*\])?\.)*\w+)\^\.kind in \[77\.\.87, 101, 200\]/((($1^.kind >= 77) and ($1^.kind <= 87)) or ($1^.kind = 101) or ($1^.kind = 200)) { gap 8 }/g
-lang/c_compiler/source/c_expr_sem.pas	s/((?:\w+(?:\[[^\]]*\])?\.)*\w+)\^\.kind in \[122, 123, 129, 134, 136\]/(($1^.kind = 122) or ($1^.kind = 123) or ($1^.kind = 129) or ($1^.kind = 134) or ($1^.kind = 136)) { gap 8 }/g
+lang/c_compiler/source/c_expr_sem.pas	s/((?:\w+(?:\[[^\]]*\])?\.)*\w+)\^\.kind in \[blogical_ob\.\.char_ob, char16_ob, binteger_ob\]/((($1^.kind >= blogical_ob) and ($1^.kind <= char_ob)) or ($1^.kind = char16_ob) or ($1^.kind = binteger_ob)) { gap 8 }/g
+lang/c_compiler/source/c_expr_sem.pas	s/((?:\w+(?:\[[^\]]*\])?\.)*\w+)\^\.kind in \[integer_type, real_type, enum_type, set_type, null_set_type\]/(($1^.kind = integer_type) or ($1^.kind = real_type) or ($1^.kind = enum_type) or ($1^.kind = set_type) or ($1^.kind = null_set_type)) { gap 8 }/g
 lang/c_compiler/source/c_expr_sem.pas	s/\bop in \[18, 27, 28, 32, 37\.\.42, 51\.\.61, 65\]/((op = 18) or (op = 27) or (op = 28) or (op = 32) or ((op >= 37) and (op <= 42)) or ((op >= 51) and (op <= 61)) or (op = 65)) { gap 8 }/g
 lang/c_compiler/source/c_expr_sem.pas	s/\bop in \[18, 27, 28, 44, 65\]/((op = 18) or (op = 27) or (op = 28) or (op = 44) or (op = 65)) { gap 8 }/g
 # subtraction on left out of the check by a conditional variable that is not set)

@@ -59,7 +59,7 @@ type
   fga_node_ptr_t = ^fga_node_t;
   fga_node_t = record
     w0: integer;                        { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     w4: integer;                        { +4 }
     w6: integer;                        { +6 }
     case integer of
@@ -391,11 +391,11 @@ begin
                                     operand$bind_time_immediate]) then
       goto 99;
     n := fga_node_ptr_t(ld^.opnds[1].link);
-    if n^.kind = 163 then begin
+    if n^.kind = addr_con then begin
       count := ord(n^.b20);
       sym := n^.sym8;
     end
-    else if n^.kind = 195 then begin
+    else if n^.kind = reloc_absolute_addr_con then begin
       count := n^.w20;
       sym := n^.sym12;
     end
@@ -405,7 +405,7 @@ begin
       goto 99;
     if sym = nil then
       goto 99;
-    if sym^.kind <> 108 then
+    if sym^.kind <> function_blk then
       goto 99;
     if bb^.succs = nil then
       goto 99;
@@ -413,10 +413,10 @@ begin
       goto 99;
     if bb^.succs^.next_succ^.next_succ <> nil then
       goto 99;
-    if idntk(76, 'setjmp', 6) <> sym^.xp[74] then begin
+    if idntk(id_ob, 'setjmp', 6) <> sym^.xp[74] then begin
       if 0 in cargs_$options.flags_286 then
         goto 99;
-      if idntk(76, 'SETJMP', 6) <> sym^.xp[74] then
+      if idntk(id_ob, 'SETJMP', 6) <> sym^.xp[74] then
         goto 99;
     end;
     if value <> 0 then

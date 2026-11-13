@@ -173,16 +173,16 @@ begin
   m := fnd_name(id_main, true, false);
   if m = il_178 then
     return;
-  if m^.kind <> 109 then
+  if m^.kind <> var_name then
     return;
   b := m^.xp[7];
-  if b^.kind <> 108 then
+  if b^.kind <> function_blk then
     return;
   if rshft(b^.xw[188] & 16#180, 7) <> 0 then
     return;
   saved_type_opt := cargs_$options.type_opt;
   cargs_$options.type_opt := false;
-  name1.id := idntk(ctk_identifier, 'unix_$main', 10);
+  name1.id := idntk(id_ob, 'unix_$main', 10);
   name1.line := 31999;
   cdef_code_sect := b^.xp[47];
   cdef_data_sect := b^.xp[48];
@@ -190,14 +190,14 @@ begin
   decl.name := name1.id;
   decl.line := name1.line;
   decl.flags := [];
-  def_blk_skeleton(108, name1, 2, decl, nil, nil, false, 3, 0, nil);
-  name2.id := idntk(ctk_identifier, '<apollo_c_startup>', 18);
+  def_blk_skeleton(function_blk, name1, 2, decl, nil, nil, false, 3, 0, nil);
+  name2.id := idntk(id_ob, '<apollo_c_startup>', 18);
   name2.line := 31999;
   decl.dtype := il_178;
   decl.name := name2.id;
   decl.line := name2.line;
   decl.flags := [];
-  def_blk_skeleton(105, name2, 0, decl, nil, nil, false, 3, 0, nil);
+  def_blk_skeleton(program_blk, name2, 0, decl, nil, nil, false, 3, 0, nil);
   cdef_50 := c_blk_ptr_t(il_180);
   def_blk_params(false);
   il_d0 := 31999;
@@ -272,7 +272,7 @@ begin
     else
       len := nlen;
     if mu_$lookup_name(len, p^.body, m) and then m^.predefined then
-      error1(259, 0, idntk(ctk_identifier, p^.body, len))
+      error1(259, 0, idntk(id_ob, p^.body, len))
     else if vlen = 0 then begin
       if nlen = 0 then
         ok := mu_$def_macro(p^.length, p^.body, 1, '1', false)
@@ -282,7 +282,7 @@ begin
     else
       ok := mu_$def_macro(nlen, p^.body, vlen, p^.body[vstart], false);
     if not ok then
-      error1(10, 0, idntk(ctk_identifier, p^.body, len));
+      error1(10, 0, idntk(id_ob, p^.body, len));
   9:
   end;
   lex_text_written := false;
@@ -310,7 +310,7 @@ begin
     p := undefs[k];
     n := p^.length;
     if mu_$lookup_name(n, p^.body, m) and then m^.predefined then
-      error1(259, 0, idntk(ctk_identifier, p^.body, n))
+      error1(259, 0, idntk(id_ob, p^.body, n))
     else
       mu_$cancel_name(n, p^.body);
   end;
@@ -361,23 +361,23 @@ begin
         exit;
       n := n + 1;
     end;
-    lex_tokens[k] := idntk(k, c_rword_table[k], n);
+    lex_tokens[k] := idntk(il_$kind_t(k), c_rword_table[k], n);
   end;
   if cargs_$options.xansi then begin
-    lex_tokens[102] := idntk(102, 'const', 5);
-    lex_tokens[103] := idntk(103, 'volatile', 8);
-    lex_tokens[104] := idntk(104, 'signed', 6);
+    lex_tokens[102] := idntk(const_cob, 'const', 5);
+    lex_tokens[103] := idntk(volatile_cob, 'volatile', 8);
+    lex_tokens[104] := idntk(signed_cob, 'signed', 6);
   end;
-  lex_tokens[lex_add_assign] := idntk(ctk_assign, '+=', 2);
-  lex_tokens[lex_sub_assign] := idntk(ctk_assign, '-=', 2);
-  lex_tokens[lex_mul_assign] := idntk(ctk_assign, '*=', 2);
-  lex_tokens[lex_div_assign] := idntk(ctk_assign, '/=', 2);
-  lex_tokens[lex_mod_assign] := idntk(ctk_assign, '%=', 2);
-  lex_tokens[lex_shr_assign] := idntk(ctk_assign, '>>=', 3);
-  lex_tokens[lex_shl_assign] := idntk(ctk_assign, '<<=', 3);
-  lex_tokens[lex_and_assign] := idntk(ctk_assign, '&=', 2);
-  lex_tokens[lex_or_assign] := idntk(ctk_assign, '|=', 2);
-  lex_tokens[lex_xor_assign] := idntk(ctk_assign, '^=', 2);
+  lex_tokens[lex_add_assign] := idntk(becomes_ob, '+=', 2);
+  lex_tokens[lex_sub_assign] := idntk(becomes_ob, '-=', 2);
+  lex_tokens[lex_mul_assign] := idntk(becomes_ob, '*=', 2);
+  lex_tokens[lex_div_assign] := idntk(becomes_ob, '/=', 2);
+  lex_tokens[lex_mod_assign] := idntk(becomes_ob, '%=', 2);
+  lex_tokens[lex_shr_assign] := idntk(becomes_ob, '>>=', 3);
+  lex_tokens[lex_shl_assign] := idntk(becomes_ob, '<<=', 3);
+  lex_tokens[lex_and_assign] := idntk(becomes_ob, '&=', 2);
+  lex_tokens[lex_or_assign] := idntk(becomes_ob, '|=', 2);
+  lex_tokens[lex_xor_assign] := idntk(becomes_ob, '^=', 2);
 end;
 
 { addarg - s, made a C string, as the preprocessor's next argument (a
@@ -480,7 +480,7 @@ begin
       arg.body[j + 2] := p^.body[j];
     n := len + 3;
     if mu_$lookup_name(len, p^.body, m) and then m^.predefined then
-      error1(259, 0, idntk(ctk_identifier, p^.body, len))
+      error1(259, 0, idntk(id_ob, p^.body, len))
     else if vlen <> 0 then begin
       arg.body[n] := '=';
       n := n + 1;
@@ -523,7 +523,7 @@ begin
     for j := 1 to n do
       arg.body[j + 2] := p^.body[j];
     if mu_$lookup_name(n, p^.body, m) and then m^.predefined then
-      error1(259, 0, idntk(ctk_identifier, p^.body, n));
+      error1(259, 0, idntk(id_ob, p^.body, n));
     arg.length := n + 2;
     addarg(arg);
   end;
@@ -591,7 +591,7 @@ begin
   c_cpp_present(found_p, path_p);
   if found <> 0 then begin
     if cargs_$options.cpp_name.length > 0 then begin
-      error1(292, 0, idntk(ctk_identifier, cargs_$options.cpp_name.body,
+      error1(292, 0, idntk(id_ob, cargs_$options.cpp_name.body,
                            cargs_$options.cpp_name.length));
       lex_errors := 1;
       ok := false;
@@ -697,43 +697,43 @@ end;
 
 procedure init_basic_types; internal;
 begin
-  char_type := gspace(8);
-  char_type^.kind := 122;
-  char_type^.len := 1;
-  char_type^.signed := true;
+  char_ptype := gspace(8);
+  char_ptype^.kind := integer_type;
+  char_ptype^.len := 1;
+  char_ptype^.signed := true;
   short_type := gspace(8);
-  short_type^.kind := 122;
+  short_type^.kind := integer_type;
   short_type^.len := 2;
   short_type^.signed := true;
   runbackend_10 := short_type;
   int_type := gspace(8);
-  int_type^.kind := 122;
+  int_type^.kind := integer_type;
   int_type^.len := 4;
   int_type^.signed := true;
   runbackend_0c := int_type;
   uchar_type := gspace(8);
-  uchar_type^.kind := 122;
+  uchar_type^.kind := integer_type;
   uchar_type^.len := 1;
   uchar_type^.signed := false;
   ushort_type := gspace(8);
-  ushort_type^.kind := 122;
+  ushort_type^.kind := integer_type;
   ushort_type^.len := 2;
   ushort_type^.signed := false;
   uint_type := gspace(8);
-  uint_type^.kind := 122;
+  uint_type^.kind := integer_type;
   uint_type^.len := 4;
   uint_type^.signed := false;
   cexs_23b4 := uint_type;
   float_type := gspace(6);
-  float_type^.kind := 123;
+  float_type^.kind := real_type;
   float_type^.len := 6;
   double_type := gspace(6);
-  double_type^.kind := 123;
+  double_type^.kind := real_type;
   double_type^.len := 7;
-  void_type := gspace(4);
-  void_type^.kind := 210;
+  void_ptype := gspace(4);
+  void_ptype^.kind := void_type;
   cexs_23b8 := gspace(4);
-  cexs_23b8^.kind := 136;
+  cexs_23b8^.kind := null_set_type;
 end;
 
 { cc - the program.
@@ -811,14 +811,14 @@ begin
   cdef_data_sect := il_110;
   rword_init;
   init_exp_tbl;
-  p := c_kw_node_ptr_t(idntk(ctk_identifier, 'attribute', 9));
+  p := c_kw_node_ptr_t(idntk(id_ob, 'attribute', 9));
   kw_attribute.kind := ctk_attribute;
   kw_attribute.body := p^.body;
-  p := c_kw_node_ptr_t(idntk(ctk_identifier, 'options', 7));
+  p := c_kw_node_ptr_t(idntk(id_ob, 'options', 7));
   kw_options.kind := ctk_options;
   kw_options.body := p^.body;
-  idu_attribute := idntk(ctk_identifier, '__attribute', 11);
-  idu_options := idntk(ctk_identifier, '__options', 9);
+  idu_attribute := idntk(id_ob, '__attribute', 11);
+  idu_options := idntk(id_ob, '__options', 9);
   uobj_hp_standard := 0;
   outer_name.id := il_178;
   outer_name.line := 0;
@@ -826,7 +826,7 @@ begin
   outer_decl.name := il_178;
   outer_decl.line := 0;
   outer_decl.flags := [];
-  def_blk_skeleton(106, outer_name, 0, outer_decl, nil, nil,
+  def_blk_skeleton(module_blk, outer_name, 0, outer_decl, nil, nil,
                    false, 3, 0, nil);
   il_184 := il_180;
   cdef_outer_block := il_180;
@@ -876,63 +876,63 @@ begin
       error1(222, 0, strtk(cargs_$options.runtype.body,
                            cargs_$options.runtype.length + 1));
   init_basic_types;
-  con_zero := smcontk(ctk_int_con, 0);
-  con_minus_one := smcontk(ctk_int_con, -1);
-  id_string_constant := idntk(ctk_identifier, '<string-constant>', 17);
+  con_zero := smcontk(integer_ob, 0);
+  con_minus_one := smcontk(integer_ob, -1);
+  id_string_constant := idntk(id_ob, '<string-constant>', 17);
   csyn_5c := 0;
-  id_at := idntk(ctk_identifier, '@', 1);
+  id_at := idntk(id_ob, '@', 1);
   csyn_54 := 0;
-  id_end_of_while := idntk(ctk_identifier, 'end_of_while', 12);
+  id_end_of_while := idntk(id_ob, 'end_of_while', 12);
   cst_40c := 0;
-  id_end_of_for := idntk(ctk_identifier, 'end_of_for', 10);
+  id_end_of_for := idntk(id_ob, 'end_of_for', 10);
   cst_404 := 0;
-  id_main := idntk(ctk_identifier, 'main', 4);
+  id_main := idntk(id_ob, 'main', 4);
   csyn_4c := 0;
-  id_volatile := idntk(ctk_identifier, 'volatile', 8);
-  idu_volatile := idntk(ctk_identifier, '__volatile', 10);
-  id_read := idntk(ctk_identifier, 'read', 4);
-  idu_read := idntk(ctk_identifier, '__read', 6);
-  id_write := idntk(ctk_identifier, 'write', 5);
-  idu_write := idntk(ctk_identifier, '__write', 7);
-  id_address := idntk(ctk_identifier, 'address', 7);
-  idu_address := idntk(ctk_identifier, '__address', 9);
-  id_device := idntk(ctk_identifier, 'device', 6);
-  idu_device := idntk(ctk_identifier, '__device', 8);
-  id_bit := idntk(ctk_identifier, 'bit', 3);
-  id_byte := idntk(ctk_identifier, 'byte', 4);
-  id_word := idntk(ctk_identifier, 'word', 4);
-  id_long := idntk(ctk_identifier, 'long', 4);
-  id_quad := idntk(ctk_identifier, 'quad', 4);
-  id_size := idntk(ctk_identifier, 'size', 4);
-  id_aligned := idntk(ctk_identifier, 'aligned', 7);
-  idu_aligned := idntk(ctk_identifier, '__aligned', 9);
-  id_unaligned := idntk(ctk_identifier, 'unaligned', 9);
-  id_natural := idntk(ctk_identifier, 'natural', 7);
-  idu_natural := idntk(ctk_identifier, '__natural', 9);
-  id_physical := idntk(ctk_identifier, 'physical', 8);
-  id_processor_register := idntk(ctk_identifier, 'processor_register', 18);
-  id_fp_internal_register := idntk(ctk_identifier, 'fp_internal_register', 20);
-  id_register := idntk(ctk_identifier, 'register', 8);
-  id_immediate := idntk(ctk_identifier, 'immediate', 9);
-  id_reference := idntk(ctk_identifier, 'reference', 9);
-  id_atomic := idntk(ctk_identifier, 'atomic', 6);
-  idu_atomic := idntk(ctk_identifier, '__atomic', 8);
-  id_no_fp := idntk(ctk_identifier, 'no_fp', 5);
-  id_save_db := idntk(ctk_identifier, 'save_db', 7);
-  id_section := idntk(ctk_identifier, 'section', 7);
-  idu_section := idntk(ctk_identifier, '__section', 9);
-  id_resident_procedure := idntk(ctk_identifier, 'resident_procedure', 18);
-  cdef_id_setjmp := idntk(ctk_identifier, 'setjmp', 6);
+  id_volatile := idntk(id_ob, 'volatile', 8);
+  idu_volatile := idntk(id_ob, '__volatile', 10);
+  id_read := idntk(id_ob, 'read', 4);
+  idu_read := idntk(id_ob, '__read', 6);
+  id_write := idntk(id_ob, 'write', 5);
+  idu_write := idntk(id_ob, '__write', 7);
+  id_address := idntk(id_ob, 'address', 7);
+  idu_address := idntk(id_ob, '__address', 9);
+  id_device := idntk(id_ob, 'device', 6);
+  idu_device := idntk(id_ob, '__device', 8);
+  id_bit := idntk(id_ob, 'bit', 3);
+  id_byte := idntk(id_ob, 'byte', 4);
+  id_word := idntk(id_ob, 'word', 4);
+  id_long := idntk(id_ob, 'long', 4);
+  id_quad := idntk(id_ob, 'quad', 4);
+  id_size := idntk(id_ob, 'size', 4);
+  id_aligned := idntk(id_ob, 'aligned', 7);
+  idu_aligned := idntk(id_ob, '__aligned', 9);
+  id_unaligned := idntk(id_ob, 'unaligned', 9);
+  id_natural := idntk(id_ob, 'natural', 7);
+  idu_natural := idntk(id_ob, '__natural', 9);
+  id_physical := idntk(id_ob, 'physical', 8);
+  id_processor_register := idntk(id_ob, 'processor_register', 18);
+  id_fp_internal_register := idntk(id_ob, 'fp_internal_register', 20);
+  id_register := idntk(id_ob, 'register', 8);
+  id_immediate := idntk(id_ob, 'immediate', 9);
+  id_reference := idntk(id_ob, 'reference', 9);
+  id_atomic := idntk(id_ob, 'atomic', 6);
+  idu_atomic := idntk(id_ob, '__atomic', 8);
+  id_no_fp := idntk(id_ob, 'no_fp', 5);
+  id_save_db := idntk(id_ob, 'save_db', 7);
+  id_section := idntk(id_ob, 'section', 7);
+  idu_section := idntk(id_ob, '__section', 9);
+  id_resident_procedure := idntk(id_ob, 'resident_procedure', 18);
+  cdef_id_setjmp := idntk(id_ob, 'setjmp', 6);
   cdef_2c := 0;
-  cdef_id_pfm_cleanup := idntk(ctk_identifier, 'pfm_$cleanup', 12);
+  cdef_id_pfm_cleanup := idntk(id_ob, 'pfm_$cleanup', 12);
   cdef_1c := 0;
-  cdef_id_usetjmp := idntk(ctk_identifier, '_setjmp', 7);
+  cdef_id_usetjmp := idntk(id_ob, '_setjmp', 7);
   cdef_24 := 0;
-  cdef_id_sigsetjmp := idntk(ctk_identifier, 'sigsetjmp', 6);
+  cdef_id_sigsetjmp := idntk(id_ob, 'sigsetjmp', 6);
   cdef_14 := 0;
-  cdef_id_longjmp := idntk(ctk_identifier, 'longjmp', 6);
+  cdef_id_longjmp := idntk(id_ob, 'longjmp', 6);
   cdef_0c := 0;
-  cdef_id_ulongjmp := idntk(ctk_identifier, '_longjmp', 7);
+  cdef_id_ulongjmp := idntk(id_ob, '_longjmp', 7);
   cdef_04 := 0;
   cexs_23bc := 0;
   cst_5fa := 0;
