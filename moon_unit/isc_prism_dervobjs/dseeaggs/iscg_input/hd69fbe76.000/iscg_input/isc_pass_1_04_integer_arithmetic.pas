@@ -365,8 +365,8 @@ procedure transform_253_pass_1(var subject: isc_solution_t; il: univ_ptr;
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: integer32;
-  t3: integer;
-  t4: integer;
+  t3: 0..65535;
+  t4: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -383,7 +383,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 253;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -434,8 +434,8 @@ procedure transform_254_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -451,7 +451,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 254;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -500,8 +500,8 @@ procedure transform_255_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -517,7 +517,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 255;
       solution^.before_transform := addr(subject);
       if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
@@ -631,8 +631,8 @@ procedure transform_256_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -648,7 +648,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 256;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -697,8 +697,8 @@ procedure transform_257_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -714,7 +714,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 257;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -770,8 +770,8 @@ var
   t5: boolean;
   t6: boolean;
   t8: integer32;
-  t9: integer;
-  t10: integer;
+  t9: 0..65535;
+  t10: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -805,7 +805,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 258;
       solution^.before_transform := addr(subject);
       t8 := abs(subject.children[1]^.f76.bit_position_of_lsb - subject.children[2]^.f76.bit_position_of_lsb);
@@ -877,8 +877,8 @@ var
   t5: boolean;
   t6: boolean;
   t8: integer32;
-  t9: integer;
-  t10: integer;
+  t9: 0..65535;
+  t10: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -912,7 +912,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 259;
       solution^.before_transform := addr(subject);
       t8 := abs(subject.children[1]^.f76.bit_position_of_lsb - subject.children[2]^.f76.bit_position_of_lsb);
@@ -977,8 +977,8 @@ procedure transform_260_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -994,7 +994,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 260;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -1056,7 +1056,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 261;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[12]];
@@ -1119,7 +1119,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 262;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[12]];
@@ -1205,7 +1205,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 263;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
@@ -1246,7 +1246,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 264;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
@@ -1287,7 +1287,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 265;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
@@ -1328,7 +1328,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 266;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
@@ -1365,7 +1365,7 @@ begin
       write('Pattern 267 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$ip_reg_scaled), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg_scaled, 0, inh, il, il_none);
     solution^.which_transform := 267;
     solution^.before_transform := addr(subject);
     t2 := validate_shift_count(log_2(subject.children[2]^.literal_32_bits_value));
@@ -1458,7 +1458,7 @@ begin
       write('Pattern 268 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$ip_reg_scaled), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg_scaled, 0, inh, il, il_none);
     solution^.which_transform := 268;
     solution^.before_transform := addr(subject);
     t2 := validate_shift_count(log_2(subject.children[1]^.literal_32_bits_value));
@@ -1562,7 +1562,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 269;
       solution^.before_transform := addr(subject);
       t4 := validate_shift_count(log_2(subject.children[2]^.literal_32_bits_value));
@@ -1621,7 +1621,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 270;
       solution^.before_transform := addr(subject);
       t4 := validate_shift_count(log_2(subject.children[2]^.literal_32_bits_value));
@@ -1711,7 +1711,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 271;
       solution^.before_transform := addr(subject);
       t4 := validate_shift_count(log_2(subject.children[1]^.literal_32_bits_value));
@@ -1770,7 +1770,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 272;
       solution^.before_transform := addr(subject);
       t4 := validate_shift_count(log_2(subject.children[1]^.literal_32_bits_value));
@@ -1839,8 +1839,8 @@ procedure transform_273_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -1856,7 +1856,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 273;
       solution^.before_transform := addr(subject);
       if p2_node_ptr_t(subject.il)^.b[30] & 128 = 0 then begin
@@ -1917,8 +1917,8 @@ procedure transform_274_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -1934,7 +1934,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 274;
       solution^.before_transform := addr(subject);
       if subject.inherited_attributes^.fetch_precision = 8 then begin
@@ -2075,8 +2075,8 @@ procedure transform_275_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -2092,7 +2092,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 275;
       solution^.before_transform := addr(subject);
       if subject.inherited_attributes^.fetch_precision = 8 then begin
@@ -2245,7 +2245,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 276;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
@@ -2286,7 +2286,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 277;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
@@ -2317,8 +2317,8 @@ var
   t3: integer32;
   t4: integer32;
   t5: integer32;
-  t6: integer;
-  t7: integer;
+  t6: 0..65535;
+  t7: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -2334,7 +2334,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 278;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[12]];
@@ -2478,8 +2478,8 @@ var
   t3: integer32;
   t4: integer32;
   t5: integer32;
-  t6: integer;
-  t7: integer;
+  t6: 0..65535;
+  t7: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -2495,7 +2495,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 279;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[12]];
@@ -2649,7 +2649,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 280;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
@@ -2690,7 +2690,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 281;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
@@ -2732,7 +2732,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 282;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + 4;
@@ -2830,7 +2830,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 283;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + 4;
@@ -2927,7 +2927,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 284;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + 4;
@@ -2975,7 +2975,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 285;
       solution^.before_transform := addr(subject);
       if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
@@ -3054,7 +3054,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 286;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + 4;
@@ -3094,8 +3094,8 @@ var
   t5: integer32;
   t6: integer32;
   t7: integer32;
-  t8: integer;
-  t9: integer;
+  t8: 0..65535;
+  t9: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3113,7 +3113,7 @@ begin
         end;
       end
       else begin
-        solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+        solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
         solution^.which_transform := 287;
         solution^.before_transform := addr(subject);
         t3 := make_bit_mask_2(31, 1);
@@ -3195,7 +3195,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 288;
       solution^.before_transform := addr(subject);
       t4 := log_2(subject.children[2]^.literal_32_bits_value);
@@ -3275,7 +3275,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 289;
       solution^.before_transform := addr(subject);
       if subject.children[1]^.inherited_attributes^.fetch_precision = 8 then begin
@@ -3330,10 +3330,10 @@ procedure transform_290_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
-  t4: integer;
-  t5: integer;
+  t2: 0..65535;
+  t3: 0..65535;
+  t4: 0..65535;
+  t5: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3349,7 +3349,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 290;
       solution^.before_transform := addr(subject);
       if subject.inherited_attributes^.fetch_precision = 8 then begin
@@ -3480,8 +3480,8 @@ var
   t1: boolean;
   t2: integer32;
   t4: integer32;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3499,7 +3499,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 291;
       solution^.before_transform := addr(subject);
       t4 := log_2(subject.children[2]^.literal_32_bits_value);
@@ -3599,8 +3599,8 @@ procedure transform_292_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3616,7 +3616,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 292;
       solution^.before_transform := addr(subject);
       if subject.inherited_attributes^.fetch_precision = 8 then begin
@@ -3761,8 +3761,8 @@ procedure transform_293_pass_1(var subject: isc_solution_t; il: univ_ptr;
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: integer32;
-  t3: integer;
-  t4: integer;
+  t3: 0..65535;
+  t4: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3779,7 +3779,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 293;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -3830,8 +3830,8 @@ procedure transform_294_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3847,7 +3847,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 294;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -3896,8 +3896,8 @@ procedure transform_295_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3913,7 +3913,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 295;
       solution^.before_transform := addr(subject);
       if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
@@ -3993,8 +3993,8 @@ procedure transform_296_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4010,7 +4010,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 296;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -4059,8 +4059,8 @@ procedure transform_297_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4076,7 +4076,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 297;
       solution^.before_transform := addr(subject);
       if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
@@ -4157,8 +4157,8 @@ procedure transform_298_pass_1(var subject: isc_solution_t; il: univ_ptr;
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: integer32;
-  t3: integer;
-  t4: integer;
+  t3: 0..65535;
+  t4: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4175,7 +4175,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 298;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -4231,8 +4231,8 @@ var
   t4: integer32;
   t5: integer32;
   t6: integer32;
-  t7: integer;
-  t8: integer;
+  t7: 0..65535;
+  t8: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4250,7 +4250,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 299;
       solution^.before_transform := addr(subject);
       t4 := log_2(subject.children[2]^.literal_32_bits_value);
@@ -4374,7 +4374,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 300;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := log_2(subject.children[2]^.literal_32_bits_value);
@@ -4417,10 +4417,10 @@ var
   t4: integer32;
   t5: integer32;
   t6: integer32;
-  t7: integer;
-  t8: integer;
-  t9: integer;
-  t10: integer;
+  t7: 0..65535;
+  t8: 0..65535;
+  t9: 0..65535;
+  t10: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4438,7 +4438,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 301;
       solution^.before_transform := addr(subject);
       t3 := make_bit_mask_1(8, 0);
@@ -4603,10 +4603,10 @@ var
   t9: boolean;
   t10: boolean;
   t11: boolean;
-  t12: integer;
-  t13: integer;
-  t14: integer;
-  t15: integer;
+  t12: 0..65535;
+  t13: 0..65535;
+  t14: 0..65535;
+  t15: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4622,7 +4622,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 302;
       solution^.before_transform := addr(subject);
       t2 := make_bit_mask_1(8, 0);
@@ -4771,8 +4771,8 @@ var
   t1: boolean;
   t2: integer32;
   t4: integer32;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4790,7 +4790,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 303;
       solution^.before_transform := addr(subject);
       t4 := log_2(subject.children[2]^.literal_32_bits_value);
@@ -4895,8 +4895,8 @@ var
   t4: integer32;
   t5: integer32;
   t6: integer32;
-  t7: integer;
-  t8: integer;
+  t7: 0..65535;
+  t8: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4914,7 +4914,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 304;
       solution^.before_transform := addr(subject);
       t3 := make_bit_mask_1(8, 0);
@@ -5072,10 +5072,10 @@ var
   t9: boolean;
   t10: boolean;
   t11: boolean;
-  t12: integer;
-  t13: integer;
-  t14: integer;
-  t15: integer;
+  t12: 0..65535;
+  t13: 0..65535;
+  t14: 0..65535;
+  t15: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -5091,7 +5091,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 305;
       solution^.before_transform := addr(subject);
       t2 := make_bit_mask_1(8, 0);

@@ -911,7 +911,7 @@ begin
       write('Pattern 101 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$literal_32_bits, 0, inh, il, il_none);
     solution^.which_transform := 101;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
@@ -943,8 +943,8 @@ var
   t1: integer32;
   t3: integer32;
   t4: integer32;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -962,7 +962,7 @@ begin
         end;
       end
       else begin
-        solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+        solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
         solution^.which_transform := 102;
         solution^.before_transform := addr(subject);
         t3 := abs(p2_node_ptr_t(subject.il)^.w[14]);
@@ -1017,8 +1017,8 @@ var
   t1: integer32;
   t3: integer32;
   t4: integer32;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -1036,7 +1036,7 @@ begin
         end;
       end
       else begin
-        solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+        solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
         solution^.which_transform := 103;
         solution^.before_transform := addr(subject);
         t3 := abs(p2_node_ptr_t(subject.il)^.w[14]);
@@ -1092,8 +1092,8 @@ var
   t2: boolean;
   t4: integer32;
   t5: integer32;
-  t6: integer;
-  t7: integer;
+  t6: 0..65535;
+  t7: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -1113,7 +1113,7 @@ begin
         end;
       end
       else begin
-        solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+        solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
         solution^.which_transform := 104;
         solution^.before_transform := addr(subject);
         p1_int_fields_ptr_t(addr(solution^))^.i[0] := rshft(integer32(p2_node_ptr_t(subject.il)^.p[5]) * 8 - 1 - subject.children[1]^.literal_32_bits_value,
@@ -1195,8 +1195,8 @@ var
   t1: integer32;
   t3: integer32;
   t4: boolean;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -1213,7 +1213,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 105;
       solution^.before_transform := addr(subject);
       t3 := abs(p2_node_ptr_t(subject.il)^.w[14]);
@@ -1297,8 +1297,8 @@ var
   t2: boolean;
   t4: integer32;
   t5: boolean;
-  t6: integer;
-  t7: integer;
+  t6: 0..65535;
+  t7: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -1317,7 +1317,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 106;
       solution^.before_transform := addr(subject);
       t4 := abs(p2_node_ptr_t(subject.il)^.w[14]);
@@ -1421,8 +1421,8 @@ var
   t3: integer32;
   t4: integer32;
   t5: integer32;
-  t6: integer;
-  t7: integer;
+  t6: 0..65535;
+  t7: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -1440,7 +1440,7 @@ begin
         end;
       end
       else begin
-        solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+        solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
         solution^.which_transform := 107;
         solution^.before_transform := addr(subject);
         t3 := available_precision_function(subject.children[1]);
@@ -1510,7 +1510,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 108;
       solution^.before_transform := addr(subject);
       t2 := make_bit_mask_2(31, 1);
@@ -1559,7 +1559,7 @@ begin
     write('Pattern 109 matched the semantics.');
     writeln;
   end;
-  solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+  solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
   solution^.which_transform := 109;
   solution^.before_transform := addr(subject);
   solution^.code_bytes := subject.children[1]^.code_bytes;
@@ -1640,7 +1640,7 @@ begin
       write('Pattern 110 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 110;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes;
@@ -1724,7 +1724,7 @@ begin
       write('Pattern 111 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 111;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes;
@@ -1803,17 +1803,17 @@ var
   t2: integer32;
   t3: integer32;
   t4: integer32;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.literal_32_bits_value <> 0) or (p2_node_ptr_t(subject.il)^.w[13] <> 5) and (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not ((subject.children[2]^.literal_32_bits_value <> 0) or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 112 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 112;
     solution^.before_transform := addr(subject);
     p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[13]]);
@@ -2101,19 +2101,19 @@ var
   t4: integer32;
   t5: integer32;
   t6: integer32;
-  t7: integer;
-  t8: integer;
+  t7: 0..65535;
+  t8: 0..65535;
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> 5) and (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if (t1 = 7) or (t1 = 6) then begin
       if isc_user_routines_354 then begin
         write('Pattern 113 matched the semantics.');
         writeln;
       end;
-      solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
       solution^.which_transform := 113;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[13]];
@@ -2357,19 +2357,19 @@ var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: integer32;
   t3: integer32;
-  t4: integer;
-  t5: integer;
+  t4: 0..65535;
+  t5: 0..65535;
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> 5) and (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if (t1 = 7) or (t1 = 6) then begin
       if isc_user_routines_354 then begin
         write('Pattern 114 matched the semantics.');
         writeln;
       end;
-      solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
       solution^.which_transform := 114;
       solution^.before_transform := addr(subject);
       p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[13]]);
@@ -2379,11 +2379,11 @@ begin
       end else begin
         p2_locals_ptr_t(addr(solution^))^.w[176] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t3];
       end;
-      if p2_node_ptr_t(subject.il)^.w[13] = 1 then begin
+      if p2_node_ptr_t(subject.il)^.w[13] = rlen_byte then begin
         p2_locals_ptr_t(addr(solution^))^.p2[89] := find_well_known_literal_solution(arshft((lshft(subject.children[2]^.literal_32_bits_value,
             8) & 16#FFFF + 16#8000) & 16#FFFF - 16#8000, 8));
       end
-      else if p2_node_ptr_t(subject.il)^.w[13] = 2 then begin
+      else if p2_node_ptr_t(subject.il)^.w[13] = rlen_word then begin
         p2_locals_ptr_t(addr(solution^))^.p2[89] := find_well_known_literal_solution((subject.children[2]^.literal_32_bits_value & 16#FFFF + 16#8000) & 16#FFFF - 16#8000);
       end else begin
         p2_locals_ptr_t(addr(solution^))^.p2[89] := subject.children[2];
@@ -2592,19 +2592,19 @@ var
   t3: integer32;
   t4: integer32;
   t5: integer32;
-  t6: integer;
-  t7: integer;
+  t6: 0..65535;
+  t7: 0..65535;
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> 5) and (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if (t1 = 7) or (t1 = 6) then begin
       if isc_user_routines_354 then begin
         write('Pattern 115 matched the semantics.');
         writeln;
       end;
-      solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
       solution^.which_transform := 115;
       solution^.before_transform := addr(subject);
       p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[13]]);
@@ -2614,10 +2614,10 @@ begin
       end else begin
         p2_locals_ptr_t(addr(solution^))^.w[176] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t3];
       end;
-      if p2_node_ptr_t(subject.il)^.w[13] = 1 then begin
+      if p2_node_ptr_t(subject.il)^.w[13] = rlen_byte then begin
         p2_locals_ptr_t(addr(solution^))^.p2[89] := find_well_known_literal_solution(subject.children[2]^.literal_32_bits_value);
       end
-      else if p2_node_ptr_t(subject.il)^.w[13] = 2 then begin
+      else if p2_node_ptr_t(subject.il)^.w[13] = rlen_word then begin
         p2_locals_ptr_t(addr(solution^))^.p2[89] := find_well_known_literal_solution(subject.children[2]^.literal_32_bits_value);
       end else begin
         p2_locals_ptr_t(addr(solution^))^.p2[89] := subject.children[2];
@@ -2828,19 +2828,19 @@ var
   t3: integer32;
   t4: integer32;
   t5: integer32;
-  t6: integer;
-  t7: integer;
+  t6: 0..65535;
+  t7: 0..65535;
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> 5) and (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if (t1 <> 7) and (t1 <> 6) then begin
       if isc_user_routines_354 then begin
         write('Pattern 116 matched the semantics.');
         writeln;
       end;
-      solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
       solution^.which_transform := 116;
       solution^.before_transform := addr(subject);
       p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[13]]);
@@ -3078,19 +3078,19 @@ var
   t1: integer32;
   t3: integer32;
   t4: integer32;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
-  if (p2_node_ptr_t(subject.il)^.w[13] = 4) or (p2_node_ptr_t(subject.il)^.w[13] = 2) or (p2_node_ptr_t(subject.il)^.w[13] = 5) or (p2_node_ptr_t(subject.il)^.w[13] = 1) then begin
+  if (p2_node_ptr_t(subject.il)^.w[13] = rlen_long) or (p2_node_ptr_t(subject.il)^.w[13] = rlen_word) or (p2_node_ptr_t(subject.il)^.w[13] = rlen_addr) or (p2_node_ptr_t(subject.il)^.w[13] = rlen_byte) then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if ((t1 = 7) or (t1 = 6)) and (subject.children[1]^.f76.field_precision = subject.children[2]^.f76.field_precision) then begin
       if isc_user_routines_354 then begin
         write('Pattern 117 matched the semantics.');
         writeln;
       end;
-      solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
       solution^.which_transform := 117;
       solution^.before_transform := addr(subject);
       t3 := abs(subject.children[1]^.f76.bit_position_of_lsb - subject.children[2]^.f76.bit_position_of_lsb);
@@ -3212,19 +3212,19 @@ var
   t4: integer32;
   t5: integer32;
   t6: integer32;
-  t7: integer;
-  t8: integer;
+  t7: 0..65535;
+  t8: 0..65535;
 begin
   result := nil;
   work := nil;
-  if not (subject.children[2]^.f76.physical_register and (subject.children[2]^.kind = solution$ip_reg) and (subject.children[2]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or (p2_node_ptr_t(subject.il)^.w[13] <> 5) and (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not (subject.children[2]^.f76.physical_register and (subject.children[2]^.kind = solution$ip_reg) and (subject.children[2]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if (t1 = 7) or (t1 = 6) then begin
       if isc_user_routines_354 then begin
         write('Pattern 118 matched the semantics.');
         writeln;
       end;
-      solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
       solution^.which_transform := 118;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[13]];
@@ -3371,17 +3371,17 @@ var
   t4: integer32;
   t5: integer32;
   t6: integer32;
-  t7: integer;
-  t8: integer;
+  t7: 0..65535;
+  t8: 0..65535;
 begin
   result := nil;
   work := nil;
-  if not (subject.children[2]^.f76.physical_register and (subject.children[2]^.kind = solution$ip_reg) and (subject.children[2]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or (p2_node_ptr_t(subject.il)^.w[13] <> 5) and (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not (subject.children[2]^.f76.physical_register and (subject.children[2]^.kind = solution$ip_reg) and (subject.children[2]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 119 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 119;
     solution^.before_transform := addr(subject);
     p2_locals_ptr_t(addr(solution^))^.p2[88] := isc_solution_ptr_t(p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[13]]);
@@ -3581,8 +3581,8 @@ var
   t22: integer32;
   t23: integer32;
   t24: integer32;
-  t25: integer;
-  t26: integer;
+  t25: 0..65535;
+  t26: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -3591,7 +3591,7 @@ begin
       write('Pattern 120 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 120;
     solution^.before_transform := addr(subject);
     t2 := abs(p2_node_ptr_t(subject.il)^.w[14]);
@@ -3677,7 +3677,7 @@ begin
       end;
     end else begin
       solution^.case_value[137] := 2;
-      if p2_node_ptr_t(subject.il)^.w[13] = 9 then begin
+      if p2_node_ptr_t(subject.il)^.w[13] = rlen_cs then begin
         solution^.case_value[145] := 1;
         if subject.children[1]^.inherited_attributes^.fetch_precision = 32 then begin
           solution^.case_value[146] := 1;
@@ -3951,7 +3951,7 @@ begin
       end;
     end else begin
       solution^.case_value[200] := 2;
-      if p2_node_ptr_t(subject.il)^.w[13] = 9 then begin
+      if p2_node_ptr_t(subject.il)^.w[13] = rlen_cs then begin
         solution^.case_value[209] := 1;
         if subject.children[2]^.inherited_attributes^.fetch_precision = 32 then begin
           solution^.case_value[210] := 1;
@@ -4258,8 +4258,8 @@ var
   t6: integer32;
   t7: integer32;
   t8: integer32;
-  t9: integer;
-  t10: integer;
+  t9: 0..65535;
+  t10: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4268,7 +4268,7 @@ begin
       write('Pattern 121 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 121;
     solution^.before_transform := addr(subject);
     t2 := abs(p2_node_ptr_t(subject.il)^.w[14]);
@@ -4702,8 +4702,8 @@ var
   t2: boolean;
   t3: boolean;
   t5: integer32;
-  t6: integer;
-  t7: integer;
+  t6: 0..65535;
+  t7: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4718,7 +4718,7 @@ begin
       write('Pattern 122 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 122;
     solution^.before_transform := addr(subject);
     solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.il)^.p[5]);
@@ -4934,8 +4934,8 @@ var
   t18: integer32;
   t19: integer32;
   t20: integer32;
-  t21: integer;
-  t22: integer;
+  t21: 0..65535;
+  t22: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -4952,7 +4952,7 @@ begin
         write('Pattern 123 matched the semantics.');
         writeln;
       end;
-      solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
       solution^.which_transform := 123;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.children[5]^.literal_32_bits_value;
@@ -5301,8 +5301,8 @@ var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t2: integer32;
   t3: integer32;
-  t4: integer;
-  t5: integer;
+  t4: 0..65535;
+  t5: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -5311,7 +5311,7 @@ begin
       write('Pattern 124 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 124;
     solution^.before_transform := addr(subject);
     t2 := abs(p2_node_ptr_t(subject.il)^.w[14]);
@@ -5403,8 +5403,8 @@ var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t2: integer32;
   t3: integer32;
-  t4: integer;
-  t5: integer;
+  t4: 0..65535;
+  t5: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -5413,7 +5413,7 @@ begin
       write('Pattern 125 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 125;
     solution^.before_transform := addr(subject);
     t2 := abs(p2_node_ptr_t(subject.il)^.w[14]);
@@ -5506,8 +5506,8 @@ var
   t1: boolean;
   t3: integer32;
   t4: integer32;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -5518,7 +5518,7 @@ begin
       write('Pattern 126 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 126;
     solution^.before_transform := addr(subject);
     p1_int_fields_ptr_t(addr(solution^))^.i[0] := rshft(integer32(p2_node_ptr_t(subject.il)^.p[5]) * 8 - 1 - subject.children[1]^.literal_32_bits_value,
@@ -5637,8 +5637,8 @@ var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t2: integer32;
   t3: boolean;
-  t4: integer;
-  t5: integer;
+  t4: 0..65535;
+  t5: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -5646,7 +5646,7 @@ begin
     write('Pattern 127 matched the semantics.');
     writeln;
   end;
-  solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+  solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
   solution^.which_transform := 127;
   solution^.before_transform := addr(subject);
   t2 := abs(p2_node_ptr_t(subject.il)^.w[14]);
@@ -5767,8 +5767,8 @@ var
   t1: boolean;
   t3: integer32;
   t4: boolean;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -5779,7 +5779,7 @@ begin
       write('Pattern 128 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 128;
     solution^.before_transform := addr(subject);
     t3 := abs(p2_node_ptr_t(subject.il)^.w[14]);
@@ -5918,8 +5918,8 @@ procedure transform_129_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -5928,7 +5928,7 @@ begin
       write('Pattern 129 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 129;
     solution^.before_transform := addr(subject);
     if subject.inherited_attributes^.conditional_target <> 0 then begin
@@ -5984,17 +5984,17 @@ procedure transform_130_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 7) or (subject.children[2]^.kind <> solution$fp_reg_pair) and not subject.children[2]^.f76.literal_64_bits_value_is_zero or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_r8) or (subject.children[2]^.kind <> solution$fp_reg_pair) and not subject.children[2]^.f76.literal_64_bits_value_is_zero or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 130 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 130;
     solution^.before_transform := addr(subject);
     if not isc_user_routines_358 then begin
@@ -6058,19 +6058,19 @@ var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: integer32;
   t3: integer32;
-  t4: integer;
-  t5: integer;
+  t4: 0..65535;
+  t5: 0..65535;
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.il)^.w[13] = 8 then begin
+  if p2_node_ptr_t(subject.il)^.w[13] = rlen_c8 then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if ((t1 = 7) or (t1 = 6)) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and ((p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or not (14 in cargs_$options.flags_286)) then begin
       if isc_user_routines_354 then begin
         write('Pattern 131 matched the semantics.');
         writeln;
       end;
-      solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
       solution^.which_transform := 131;
       solution^.before_transform := addr(subject);
       t3 := abs(p2_node_ptr_t(subject.il)^.w[14]);
@@ -6131,19 +6131,19 @@ var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: integer32;
   t3: integer32;
-  t4: integer;
-  t5: integer;
+  t4: 0..65535;
+  t5: 0..65535;
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.il)^.w[13] = 12 then begin
+  if p2_node_ptr_t(subject.il)^.w[13] = rlen_c16 then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if ((t1 = 7) or (t1 = 6)) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and ((p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or not (14 in cargs_$options.flags_286)) then begin
       if isc_user_routines_354 then begin
         write('Pattern 132 matched the semantics.');
         writeln;
       end;
-      solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
       solution^.which_transform := 132;
       solution^.before_transform := addr(subject);
       t3 := abs(p2_node_ptr_t(subject.il)^.w[14]);
@@ -6206,8 +6206,8 @@ var
   t2: boolean;
   t3: boolean;
   t5: integer32;
-  t6: integer;
-  t7: integer;
+  t6: 0..65535;
+  t7: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -6217,12 +6217,12 @@ begin
       ord(opc$loadl), 1);
   t3 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = solution$address_mode) or not subject.children[3]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = solution$address_mode) or not subject.children[3]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 133 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 133;
     solution^.before_transform := addr(subject);
     t5 := abs(p2_node_ptr_t(subject.il)^.w[14]);
@@ -6425,8 +6425,8 @@ var
   t2: boolean;
   t3: boolean;
   t5: integer32;
-  t6: integer;
-  t7: integer;
+  t6: 0..65535;
+  t7: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -6436,12 +6436,12 @@ begin
       ord(opc$loadl), 1);
   t3 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = solution$address_mode) or not subject.children[3]^.f76.is_destroyable or not subject.children[4]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = solution$address_mode) or not subject.children[3]^.f76.is_destroyable or not subject.children[4]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 134 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 134;
     solution^.before_transform := addr(subject);
     t5 := abs(p2_node_ptr_t(subject.il)^.w[14]);
@@ -6671,8 +6671,8 @@ procedure transform_135_pass_1(var subject: isc_solution_t; il: univ_ptr;
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: integer32;
-  t3: integer;
-  t4: integer;
+  t3: 0..65535;
+  t4: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -6682,7 +6682,7 @@ begin
       write('Pattern 135 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 135;
     solution^.before_transform := addr(subject);
     if subject.inherited_attributes^.f38.conditional_sense then begin
@@ -6777,8 +6777,8 @@ procedure transform_136_pass_1(var subject: isc_solution_t; il: univ_ptr;
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
   t1: integer32;
-  t3: integer;
-  t4: integer;
+  t3: 0..65535;
+  t4: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -6788,7 +6788,7 @@ begin
       write('Pattern 136 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 136;
     solution^.before_transform := addr(subject);
     if subject.inherited_attributes^.f38.conditional_sense then begin
@@ -6887,8 +6887,8 @@ var
   t3: boolean;
   t4: boolean;
   t6: integer32;
-  t7: integer;
-  t8: integer;
+  t7: 0..65535;
+  t8: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -6904,7 +6904,7 @@ begin
       write('Pattern 137 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 137;
     solution^.before_transform := addr(subject);
     solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.il)^.p[5]);
@@ -7104,8 +7104,8 @@ var
   t2: boolean;
   t3: boolean;
   t4: boolean;
-  t6: integer;
-  t7: integer;
+  t6: 0..65535;
+  t7: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -7121,7 +7121,7 @@ begin
       write('Pattern 138 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 138;
     solution^.before_transform := addr(subject);
     solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.il)^.p[5]);
@@ -7222,8 +7222,8 @@ var
   t2: boolean;
   t3: boolean;
   t4: boolean;
-  t6: integer;
-  t7: integer;
+  t6: 0..65535;
+  t7: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -7239,7 +7239,7 @@ begin
       write('Pattern 139 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$flow), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$flow, 0, inh, il, il_none);
     solution^.which_transform := 139;
     solution^.before_transform := addr(subject);
     solution^.fields[0] := isc_solution_ptr_t(p2_node_ptr_t(subject.il)^.p[5]);

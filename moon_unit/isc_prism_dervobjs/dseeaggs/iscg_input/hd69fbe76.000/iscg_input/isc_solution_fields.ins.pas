@@ -78,7 +78,18 @@ type
     types are the ones dump_solution prints by (docs/questions.md 312):
     base_register and index_register solutions, false_label a label
     (label_to_string's; the LIR's labels are univ_ptr), il_kind an il$t
-    and kind a solution$t. }
+    and kind a solution$t.  The words bytes .. n_bytes_to_back_up and
+    evaluation_order are unsigned (0..65535) as code_bytes, delay and
+    memory_references are: the register maxima and results are compared
+    `bhi'/`bls' (clearly_dominates 0x2126D8 .. 0x212712, the pass-1
+    actions: rule 306 0x107BB0), n_bytes_to_back_up is zero-extended
+    (`clr.l; move.w (74,An)': rules 248 and 250, 0x14E80E, 0x14EE48),
+    pass_2 writes evaluation_order as an unsigned word (16#0A28,
+    0x18C70C), dump_solution all of them (16#0A68), and no word load of
+    them is sign-extended; which_transform stays integer: pass_2
+    sign-extends it to index the pass-2 actions (`ext.l; lsl.l #2',
+    0x18C786) and preserve_solution indexes by it as a word (0x0D9530),
+    where dump_solution prints it unsigned (docs/questions.md 321). }
   isc_solution_ptr_t = ^isc_solution_t;
   isc_solution_t = record
     object_with_name: univ_ptr;         { +0: the object (node) }
@@ -102,16 +113,16 @@ type
                                           accessors _disp and
                                           _lit_value) }
     pass_1_size: integer32;             { +52 }
-    bytes: integer;                     { +56 }
-    fp_reg_max: integer;                { +58 }
-    fp_reg_result: integer;             { +60 }
-    fp_reg_pair_max: integer;           { +62 }
-    fp_reg_pair_result: integer;        { +64 }
-    fp_reg_quad_max: integer;           { +66 }
-    fp_reg_quad_result: integer;        { +68 }
-    ip_reg_max: integer;                { +70 }
-    ip_reg_result: integer;             { +72 }
-    n_bytes_to_back_up: integer;        { +74 }
+    bytes: 0..65535;                    { +56 }
+    fp_reg_max: 0..65535;               { +58 }
+    fp_reg_result: 0..65535;            { +60 }
+    fp_reg_pair_max: 0..65535;          { +62 }
+    fp_reg_pair_result: 0..65535;       { +64 }
+    fp_reg_quad_max: 0..65535;          { +66 }
+    fp_reg_quad_result: 0..65535;       { +68 }
+    ip_reg_max: 0..65535;               { +70 }
+    ip_reg_result: 0..65535;            { +72 }
+    n_bytes_to_back_up: 0..65535;       { +74 }
     f76: packed record                  { +76 }
       bit_position_of_lsb: 0..255;      { +76 }
       field_precision: 0..255;          { +77: 32 when made }
@@ -156,7 +167,7 @@ type
     code_bytes: 0..65535;               { +92 (unsigned:
                                           choose_one_cse_solution) }
     delay: 0..65535;                    { +94 }
-    evaluation_order: integer;          { +96: 1 the children left to
+    evaluation_order: 0..65535;         { +96: 1 the children left to
                                           right, 2 right to left
                                           (pass_2); 1 when made }
     il_kind: il$t;                      { +98: new_solution's last

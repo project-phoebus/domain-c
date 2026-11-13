@@ -103,8 +103,8 @@ var
   t1: boolean;
   t2: boolean;
   t3: boolean;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -126,7 +126,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 375;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := address_mode_for_integer32_value(0);
@@ -237,7 +237,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 376;
       solution^.before_transform := addr(subject);
       if subject.children[1]^.f76.uses_the_base_register then begin
@@ -285,8 +285,8 @@ var
   t1: boolean;
   t2: boolean;
   t3: boolean;
-  t5: integer;
-  t6: integer;
+  t5: 0..65535;
+  t6: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -308,7 +308,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 377;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := address_mode_for_integer32_value(0);

@@ -150,7 +150,7 @@ begin
   t1 := side_effect_symbol_fill_in_size(isc_node_ptr_t(subject.il),
       subject.inherited_attributes^.fetch_precision);
   t2 := sz_fsym(subject.il);
-  if not ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) <> 3) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) <> 2) or (subject.inherited_attributes^.fetch_precision > 32) or not (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#20000 <> 0) or not t1 or (t2 * 8 <> subject.inherited_attributes^.fetch_precision) or not (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.il) <> 11)) then begin
+  if not ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) <> 3) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) <> 2) or (subject.inherited_attributes^.fetch_precision > 32) or not (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#20000 <> 0) or not t1 or (t2 * 8 <> subject.inherited_attributes^.fetch_precision) or not (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.il) <> solution$ip_reg)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 35 matched the semantics.');
       writeln;
@@ -162,7 +162,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 35;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -214,7 +214,7 @@ begin
   result := nil;
   work := nil;
   t1 := sz_fsym(subject.il);
-  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision <= 32) and (t1 * 8 > subject.inherited_attributes^.fetch_precision) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11) then begin
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision <= 32) and (t1 * 8 > subject.inherited_attributes^.fetch_precision) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = solution$ip_reg) then begin
     if isc_user_routines_354 then begin
       write('Pattern 36 matched the semantics.');
       writeln;
@@ -226,7 +226,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 36;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -279,7 +279,7 @@ begin
   result := nil;
   work := nil;
   t1 := sz_fsym(subject.il);
-  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision <= 32) and (t1 * 8 = subject.inherited_attributes^.fetch_precision) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11) then begin
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision <= 32) and (t1 * 8 = subject.inherited_attributes^.fetch_precision) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = solution$ip_reg) then begin
     if isc_user_routines_354 then begin
       write('Pattern 37 matched the semantics.');
       writeln;
@@ -291,7 +291,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 37;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -339,7 +339,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision = 32) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 8) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision = 32) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = solution$fp_reg) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
     if isc_user_routines_354 then begin
       write('Pattern 38 matched the semantics.');
       writeln;
@@ -351,7 +351,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 38;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -399,7 +399,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision = 64) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 9) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision = 64) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = solution$fp_reg_pair) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
     if isc_user_routines_354 then begin
       write('Pattern 39 matched the semantics.');
       writeln;
@@ -411,7 +411,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 39;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -464,7 +464,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision = 128) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 10) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and ((rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 2) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 1)) and (subject.inherited_attributes^.fetch_precision = 128) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = solution$fp_reg_quad) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
     if isc_user_routines_354 then begin
       write('Pattern 40 matched the semantics.');
       writeln;
@@ -476,7 +476,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 40;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -543,7 +543,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 41;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
@@ -606,7 +606,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 42;
       solution^.before_transform := addr(subject);
       t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[3]),
@@ -686,7 +686,7 @@ begin
   result := nil;
   work := nil;
   t1 := sz_fsym(subject.il);
-  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 5) and (p2_node_ptr_t(subject.il)^.b[44] & 2 <> 0) and (subject.inherited_attributes^.fetch_precision <= 32) and (t1 * 8 > subject.inherited_attributes^.fetch_precision) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11) then begin
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 5) and (p2_node_ptr_t(subject.il)^.b[44] & 2 <> 0) and (subject.inherited_attributes^.fetch_precision <= 32) and (t1 * 8 > subject.inherited_attributes^.fetch_precision) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = solution$ip_reg) then begin
     if isc_user_routines_354 then begin
       write('Pattern 43 matched the semantics.');
       writeln;
@@ -698,7 +698,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 43;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -749,7 +749,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 5) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11) then begin
+  if ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 3) or (rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) = 1) and (p2_node_ptr_t(subject.il)^.p[10] <> nil)) and (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) = 5) and (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = solution$ip_reg) then begin
     if isc_user_routines_354 then begin
       write('Pattern 44 matched the semantics.');
       writeln;
@@ -761,7 +761,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 44;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -819,7 +819,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 45;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
@@ -878,7 +878,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 46;
       solution^.before_transform := addr(subject);
       t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[3]),
@@ -952,7 +952,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) <> 1) or (p2_node_ptr_t(subject.il)^.p[10] <> nil) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) <> 5) or not (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.il) <> 11)) then begin
+  if not ((rshft(p2_node_ptr_t(subject.il)^.b[44] & 240, 4) <> 1) or (p2_node_ptr_t(subject.il)^.p[10] <> nil) or (rshft(p2_node_ptr_t(subject.il)^.b[11] & 240, 4) <> 5) or not (integer32(p2_node_ptr_t(subject.il)^.p[6]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.il) <> solution$ip_reg)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 47 matched the semantics.');
       writeln;
@@ -964,7 +964,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 47;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -1014,7 +1014,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 48;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
@@ -1069,7 +1069,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 49;
       solution^.before_transform := addr(subject);
       t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[14]),
@@ -1142,7 +1142,7 @@ begin
   work := nil;
   t1 := side_effect_symbol_fill_in_size(isc_node_ptr_t(subject.il),
       subject.inherited_attributes^.fetch_precision);
-  if not ((p2_node_ptr_t(subject.il)^.w[36] <> 2) or (subject.inherited_attributes^.fetch_precision > 32) or not (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#20000 <> 0) or not t1 or (subject.inherited_attributes^.fetch_precision <> integer32(p2_node_ptr_t(subject.il)^.p[9])) or not (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.il) <> 11)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[36] <> 2) or (subject.inherited_attributes^.fetch_precision > 32) or not (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#20000 <> 0) or not t1 or (subject.inherited_attributes^.fetch_precision <> integer32(p2_node_ptr_t(subject.il)^.p[9])) or not (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.il) <> solution$ip_reg)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 50 matched the semantics.');
       writeln;
@@ -1154,7 +1154,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 50;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -1203,7 +1203,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.il)^.w[36] = 2) or (p2_node_ptr_t(subject.il)^.w[36] = 1)) and (subject.inherited_attributes^.fetch_precision > 0) and (subject.inherited_attributes^.fetch_precision <= 32) and (subject.inherited_attributes^.fetch_precision < integer32(p2_node_ptr_t(subject.il)^.p[9])) and (p2_node_ptr_t(subject.il)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[36] = 2) or (p2_node_ptr_t(subject.il)^.w[36] = 1)) and (subject.inherited_attributes^.fetch_precision > 0) and (subject.inherited_attributes^.fetch_precision <= 32) and (subject.inherited_attributes^.fetch_precision < integer32(p2_node_ptr_t(subject.il)^.p[9])) and (p2_node_ptr_t(subject.il)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = solution$ip_reg) then begin
     if isc_user_routines_354 then begin
       write('Pattern 51 matched the semantics.');
       writeln;
@@ -1215,7 +1215,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 51;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -1265,7 +1265,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.il)^.w[36] = 2) or (p2_node_ptr_t(subject.il)^.w[36] = 1)) and (subject.inherited_attributes^.fetch_precision <= 32) and (subject.inherited_attributes^.fetch_precision = integer32(p2_node_ptr_t(subject.il)^.p[9])) and (p2_node_ptr_t(subject.il)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 11) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[36] = 2) or (p2_node_ptr_t(subject.il)^.w[36] = 1)) and (subject.inherited_attributes^.fetch_precision <= 32) and (subject.inherited_attributes^.fetch_precision = integer32(p2_node_ptr_t(subject.il)^.p[9])) and (p2_node_ptr_t(subject.il)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = solution$ip_reg) then begin
     if isc_user_routines_354 then begin
       write('Pattern 52 matched the semantics.');
       writeln;
@@ -1277,7 +1277,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 52;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -1325,7 +1325,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.il)^.w[36] = 2) or (p2_node_ptr_t(subject.il)^.w[36] = 1)) and (p2_node_ptr_t(subject.il)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 8) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[36] = 2) or (p2_node_ptr_t(subject.il)^.w[36] = 1)) and (p2_node_ptr_t(subject.il)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = solution$fp_reg) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
     if isc_user_routines_354 then begin
       write('Pattern 53 matched the semantics.');
       writeln;
@@ -1337,7 +1337,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 53;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -1385,7 +1385,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.il)^.w[36] = 2) or (p2_node_ptr_t(subject.il)^.w[36] = 1)) and (p2_node_ptr_t(subject.il)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = 9) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[36] = 2) or (p2_node_ptr_t(subject.il)^.w[36] = 1)) and (p2_node_ptr_t(subject.il)^.w[21] & 1024 = 0) and (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) and (solution_kind_of_symbol(subject.il) = solution$fp_reg_pair) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
     if isc_user_routines_354 then begin
       write('Pattern 54 matched the semantics.');
       writeln;
@@ -1397,7 +1397,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 54;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -1463,7 +1463,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 55;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
@@ -1524,7 +1524,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 56;
       solution^.before_transform := addr(subject);
       t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[14]),
@@ -1600,7 +1600,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[36] <> 5) or not (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.il) <> 11)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[36] <> 5) or not (integer32(p2_node_ptr_t(subject.il)^.p[8]) & 16#4000000 <> 0) or (solution_kind_of_symbol(subject.il) <> solution$ip_reg)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 57 matched the semantics.');
       writeln;
@@ -1612,7 +1612,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 57;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_$get_il_live_range(subject.il));
@@ -1673,7 +1673,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 58;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
@@ -1732,7 +1732,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 59;
       solution^.before_transform := addr(subject);
       t2 := lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[14]),
@@ -1818,7 +1818,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 60;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(lir_4090[p2_node_ptr_t(subject.il)^.w[29]]);
@@ -1878,7 +1878,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 61;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.il)^.w[29]]);
@@ -1938,7 +1938,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 62;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.il)^.w[29]]);

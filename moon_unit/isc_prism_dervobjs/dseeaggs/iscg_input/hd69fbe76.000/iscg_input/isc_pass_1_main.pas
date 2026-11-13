@@ -266,7 +266,7 @@ type
       inh: inherited_attributes_ptr_t;
       depth: integer;
       permissible: solution$set_t;
-      var il_kind: integer;
+      var il_kind: il$t;
       var number_of_children: integer32;
       var solutions: solution_list_ptr_t;
       var children: p1_children_t;
@@ -370,7 +370,7 @@ function cross_product_to_solutions_of_parent(
     il: univ_ptr;
     inh: inherited_attributes_ptr_t;
     permissible: solution$set_t;
-    il_kind: integer;
+    il_kind: il$t;
     number_of_children: integer;
     work_list: solution_list_ptr_t): solution_list_ptr_t; options(val_param);
 var
@@ -403,7 +403,7 @@ procedure isc_unrecognized_il_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -441,7 +441,7 @@ procedure isc_addr_con(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -452,7 +452,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_addr_con);
+  il_kind := il_addr_con;
   number_of_children := 1;
   if (ord(p1_node_chars_ptr_t(il)^[20]) = 0) then begin
     inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[6]);
@@ -473,7 +473,7 @@ begin
     inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[6]);
     children[1] := solution_list$new;
     solution_list$append(children[1], new_solution(isc_heap,
-        ord(solution$irrelevant), 0, inh_1, isc_node_ptr_t(il)^.xp[6], 0));
+        solution$irrelevant, 0, inh_1, isc_node_ptr_t(il)^.xp[6], il_none));
   end;
 end;
 
@@ -484,7 +484,7 @@ procedure isc_ap_register(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -493,7 +493,7 @@ procedure isc_ap_register(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_ap_register);
+  il_kind := il_ap_register;
   number_of_children := 0;
 end;
 
@@ -504,7 +504,7 @@ procedure isc_argument_block_location_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -513,7 +513,7 @@ procedure isc_argument_block_location_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_argument_block_location_ob);
+  il_kind := il_argument_block_location_ob;
   number_of_children := 0;
 end;
 
@@ -524,7 +524,7 @@ procedure isc_assign_node_add_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -535,7 +535,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_add_to_aop);
+  il_kind := il_add_to_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -584,7 +584,7 @@ procedure isc_assign_node_agg_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -596,7 +596,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_agg_aop);
+  il_kind := il_agg_aop;
   number_of_children := 2;
   if (isc_node_ptr_t(il)^.xw[26] = 9)
       and (isc_node_ptr_t(il)^.xw[28] <> 0) then begin
@@ -669,7 +669,7 @@ procedure isc_assign_node_agg_len_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -680,7 +680,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_agg_len_aop);
+  il_kind := il_agg_len_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -728,7 +728,7 @@ procedure isc_assign_node_and_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -739,7 +739,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_and_to_aop);
+  il_kind := il_and_to_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -800,7 +800,7 @@ procedure isc_assign_node_div_by_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -812,7 +812,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_div_by_aop);
+  il_kind := il_div_by_aop;
   number_of_children := 2;
   if (il_node_has_integer_value(isc_node_ptr_t(il)^.xp[17])
       and is_power_of_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[17]))
@@ -911,7 +911,7 @@ procedure isc_assign_node_eor_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -922,7 +922,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_eor_to_aop);
+  il_kind := il_eor_to_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -971,7 +971,7 @@ procedure isc_assign_node_f_add_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -982,7 +982,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_add_to_aop);
+  il_kind := il_f_add_to_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -1030,7 +1030,7 @@ procedure isc_assign_node_f_div_by_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1041,7 +1041,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_div_by_aop);
+  il_kind := il_f_div_by_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -1089,7 +1089,7 @@ procedure isc_assign_node_f_mul_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1100,7 +1100,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_mul_to_aop);
+  il_kind := il_f_mul_to_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -1148,7 +1148,7 @@ procedure isc_assign_node_f_range_check_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1159,7 +1159,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_range_check_to_aop);
+  il_kind := il_f_range_check_to_aop;
   number_of_children := 3;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -1226,7 +1226,7 @@ procedure isc_assign_node_f_sub_from_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1237,7 +1237,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_sub_from_aop);
+  il_kind := il_f_sub_from_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -1285,7 +1285,7 @@ procedure isc_assign_node_fp_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1297,7 +1297,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_fp_aop);
+  il_kind := il_fp_aop;
   number_of_children := 2;
   if (isc_node_ptr_t(il)^.xw[26] = 9)
       and (isc_node_ptr_t(il)^.xw[28] <> 0) then begin
@@ -1383,7 +1383,7 @@ procedure isc_assign_node_isc_agg_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1397,7 +1397,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_agg_aop);
+  il_kind := il_isc_agg_aop;
   number_of_children := 3;
   constant := il_node_has_integer_value(isc_node_ptr_t(il)^.xp[18]);
   if constant then
@@ -1507,7 +1507,7 @@ procedure isc_assign_node_isc_agg_zero_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1519,7 +1519,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_agg_zero_aop);
+  il_kind := il_isc_agg_zero_aop;
   number_of_children := 2;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -1560,7 +1560,7 @@ procedure isc_assign_node_isc_fill_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1571,7 +1571,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_fill_aop);
+  il_kind := il_isc_fill_aop;
   number_of_children := 3;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -1654,7 +1654,7 @@ procedure isc_assign_node_isc_mul_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1666,7 +1666,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_mul_to_aop);
+  il_kind := il_isc_mul_to_aop;
   number_of_children := 2;
   if (not (p1_node_bytes_ptr_t(il_180)^[374].b4 or (13 in cargs_$options.flags_286))
       and (14 in cargs_$options.flags_286))
@@ -1761,7 +1761,7 @@ procedure isc_assign_node_isc_slice_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1773,7 +1773,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_slice_aop);
+  il_kind := il_isc_slice_aop;
   number_of_children := 3;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -1800,7 +1800,7 @@ procedure isc_assign_node_lshft_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1811,7 +1811,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_lshft_to_aop);
+  il_kind := il_lshft_to_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -1859,7 +1859,7 @@ procedure isc_assign_node_mul_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1871,7 +1871,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_mul_to_aop);
+  il_kind := il_mul_to_aop;
   number_of_children := 2;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -1898,7 +1898,7 @@ procedure isc_assign_node_neg_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1909,7 +1909,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_neg_to_aop);
+  il_kind := il_neg_to_aop;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -1938,7 +1938,7 @@ procedure isc_assign_node_not_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1949,7 +1949,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_not_to_aop);
+  il_kind := il_not_to_aop;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -1978,7 +1978,7 @@ procedure isc_assign_node_or_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1989,7 +1989,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_or_to_aop);
+  il_kind := il_or_to_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -2038,7 +2038,7 @@ procedure isc_assign_node_pack_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2049,7 +2049,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_pack_aop);
+  il_kind := il_pack_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -2098,7 +2098,7 @@ procedure isc_assign_node_range_check_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2109,7 +2109,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_range_check_to_aop);
+  il_kind := il_range_check_to_aop;
   number_of_children := 3;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -2176,7 +2176,7 @@ procedure isc_assign_node_rshft_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2187,7 +2187,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_rshft_to_aop);
+  il_kind := il_rshft_to_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -2235,7 +2235,7 @@ procedure isc_assign_node_scalar_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2247,7 +2247,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_scalar_aop);
+  il_kind := il_scalar_aop;
   number_of_children := 2;
   if (isc_node_ptr_t(il)^.xw[26] = 9)
       and (isc_node_ptr_t(il)^.xw[28] <> 0) then begin
@@ -2320,7 +2320,7 @@ procedure isc_assign_node_set_and_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2331,7 +2331,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_set_and_to_aop);
+  il_kind := il_set_and_to_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -2379,7 +2379,7 @@ procedure isc_assign_node_set_diff_from_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2390,7 +2390,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_set_diff_from_aop);
+  il_kind := il_set_diff_from_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -2438,7 +2438,7 @@ procedure isc_assign_node_set_or_to_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2449,7 +2449,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_set_or_to_aop);
+  il_kind := il_set_or_to_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -2497,7 +2497,7 @@ procedure isc_assign_node_strcat_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2508,7 +2508,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_strcat_aop);
+  il_kind := il_strcat_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -2557,7 +2557,7 @@ procedure isc_assign_node_strcpy_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2568,7 +2568,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_strcpy_aop);
+  il_kind := il_strcpy_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -2617,7 +2617,7 @@ procedure isc_assign_node_strncat_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2628,7 +2628,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_strncat_aop);
+  il_kind := il_strncat_aop;
   number_of_children := 3;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -2696,7 +2696,7 @@ procedure isc_assign_node_strncpy_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2707,7 +2707,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_strncpy_aop);
+  il_kind := il_strncpy_aop;
   number_of_children := 3;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -2775,7 +2775,7 @@ procedure isc_assign_node_sub_from_aop(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2786,7 +2786,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_sub_from_aop);
+  il_kind := il_sub_from_aop;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -2840,7 +2840,7 @@ procedure isc_assign_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2858,7 +2858,7 @@ procedure isc_at_lib_dsc(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2870,7 +2870,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_at_lib_dsc);
+  il_kind := il_at_lib_dsc;
   number_of_children := 0;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -2904,7 +2904,7 @@ procedure isc_binteger_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2913,7 +2913,7 @@ procedure isc_binteger_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_binteger_ob);
+  il_kind := il_binteger_ob;
   number_of_children := 0;
 end;
 
@@ -2924,7 +2924,7 @@ procedure isc_ubinteger_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2933,7 +2933,7 @@ procedure isc_ubinteger_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_ubinteger_ob);
+  il_kind := il_ubinteger_ob;
   number_of_children := 0;
 end;
 
@@ -2944,7 +2944,7 @@ procedure isc_bit_field_assign(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -2956,7 +2956,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_bit_field_assign);
+  il_kind := il_bit_field_assign;
   number_of_children := 5;
   if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[13])
       and il_node_has_integer_value(isc_node_ptr_t(il)^.xp[15])
@@ -3087,7 +3087,7 @@ procedure isc_blk_end_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3099,7 +3099,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_blk_end_node);
+  il_kind := il_blk_end_node;
   number_of_children := 0;
   if p1_node_bytes_ptr_t(isc_node_ptr_t(il)^.xp[12])^[378].b1
       and ((isc_node_ptr_t(isc_node_ptr_t(il)^.xp[12])^.kind = function_blk) or (isc_node_ptr_t(isc_node_ptr_t(il)^.xp[12])^.kind = procedure_blk)) then begin
@@ -3129,7 +3129,7 @@ procedure isc_block_entry_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3138,7 +3138,7 @@ procedure isc_block_entry_node(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_block_entry_node);
+  il_kind := il_block_entry_node;
   number_of_children := 0;
 end;
 
@@ -3149,7 +3149,7 @@ procedure isc_blogical_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3158,7 +3158,7 @@ procedure isc_blogical_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_blogical_ob);
+  il_kind := il_blogical_ob;
   number_of_children := 0;
 end;
 
@@ -3169,7 +3169,7 @@ procedure isc_branch_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3180,12 +3180,12 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_branch_node);
+  il_kind := il_branch_node;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[12]);
   children[1] := solution_list$new;
   solution_list$append(children[1], new_solution(isc_heap,
-      ord(solution$irrelevant), 0, inh_1, isc_node_ptr_t(il)^.xp[12], 0));
+      solution$irrelevant, 0, inh_1, isc_node_ptr_t(il)^.xp[12], il_none));
 end;
 
 { isc_case_node_range_check - the proper_subtree il_case_node_range_check, 4 children (0x0E216C). }
@@ -3195,7 +3195,7 @@ procedure isc_case_node_range_check(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3206,12 +3206,12 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_case_node_range_check);
+  il_kind := il_case_node_range_check;
   number_of_children := 4;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   children[1] := solution_list$new;
   solution_list$append(children[1], new_solution(isc_heap,
-      ord(solution$irrelevant), 0, inh_1, isc_node_ptr_t(il)^.xp[16], 0));
+      solution$irrelevant, 0, inh_1, isc_node_ptr_t(il)^.xp[16], il_none));
   inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[14]);
   inh_2^.call_instruction_ptr := inh^.call_instruction_ptr;
   inh_2^.exception_frame := inh^.exception_frame;
@@ -3278,7 +3278,7 @@ procedure isc_case_node_no_range_check(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3289,7 +3289,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_case_node_no_range_check);
+  il_kind := il_case_node_no_range_check;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[12]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -3317,7 +3317,7 @@ procedure isc_cbranch_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3328,12 +3328,12 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_cbranch_node);
+  il_kind := il_cbranch_node;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[12]);
   children[1] := solution_list$new;
   solution_list$append(children[1], new_solution(isc_heap,
-      ord(solution$irrelevant), 0, inh_1, isc_node_ptr_t(il)^.xp[12], 0));
+      solution$irrelevant, 0, inh_1, isc_node_ptr_t(il)^.xp[12], il_none));
   inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[14]);
   inh_2^.call_instruction_ptr := inh^.call_instruction_ptr;
   inh_2^.exception_frame := inh^.exception_frame;
@@ -3363,7 +3363,7 @@ procedure isc_cc_call(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3372,7 +3372,7 @@ procedure isc_cc_call(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_cc_call);
+  il_kind := il_cc_call;
   number_of_children := 0;
 end;
 
@@ -3383,7 +3383,7 @@ procedure isc_char_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3392,7 +3392,7 @@ procedure isc_char_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_char_ob);
+  il_kind := il_char_ob;
   number_of_children := 0;
 end;
 
@@ -3403,7 +3403,7 @@ procedure isc_char_string_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3415,7 +3415,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_char_string_ob);
+  il_kind := il_char_string_ob;
   number_of_children := 0;
   if target_properties.p_be
       and (isc_node_ptr_t(il)^.xw[8] > p1_target_view_ptr_t(addr(target_properties))^.l180) then begin
@@ -3452,7 +3452,7 @@ procedure isc_cmp_tree_node_agg_compare_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3463,7 +3463,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_agg_compare_top);
+  il_kind := il_agg_compare_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -3508,7 +3508,7 @@ procedure isc_cmp_tree_node_bit_field_cmp_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3520,7 +3520,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_bit_field_cmp_top);
+  il_kind := il_bit_field_cmp_top;
   number_of_children := 5;
   if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11])
       and il_node_has_integer_value(isc_node_ptr_t(il)^.xp[13])
@@ -3645,7 +3645,7 @@ procedure isc_cmp_tree_node_bit_test_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3656,7 +3656,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_bit_test_top);
+  il_kind := il_bit_test_top;
   number_of_children := 2;
   inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
   inh_2^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -3713,7 +3713,7 @@ procedure isc_cmp_tree_node_compare_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3725,7 +3725,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_compare_top);
+  il_kind := il_compare_top;
   number_of_children := 2;
   if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
       and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
@@ -3804,7 +3804,7 @@ procedure isc_cmp_tree_node_f_compare_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3815,7 +3815,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_compare_top);
+  il_kind := il_f_compare_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -3865,7 +3865,7 @@ procedure isc_cmp_tree_node_set_compare_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3876,7 +3876,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_set_compare_top);
+  il_kind := il_set_compare_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -3928,7 +3928,7 @@ procedure isc_cmp_tree_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3946,7 +3946,7 @@ procedure isc_complex_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3955,7 +3955,7 @@ procedure isc_complex_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_complex_ob);
+  il_kind := il_complex_ob;
   number_of_children := 0;
 end;
 
@@ -3966,7 +3966,7 @@ procedure isc_cs_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -3977,7 +3977,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_cs_node);
+  il_kind := il_cs_node;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[5]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -4019,7 +4019,7 @@ procedure isc_cs_temp(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4031,7 +4031,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_cs_temp);
+  il_kind := il_cs_temp;
   number_of_children := 0;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -4058,7 +4058,7 @@ procedure isc_cse_parent_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4067,7 +4067,7 @@ procedure isc_cse_parent_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_cse_parent_ob);
+  il_kind := il_cse_parent_ob;
   number_of_children := 0;
   pass_1_cse_parent_ob(il, isc_node_ptr_t(il)^.xp[1], inh);
 end;
@@ -4079,7 +4079,7 @@ procedure isc_cse_use_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4088,7 +4088,7 @@ procedure isc_cse_use_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_cse_use_ob);
+  il_kind := il_cse_use_ob;
   number_of_children := 0;
   pass_1_cse_use_ob(il, isc_node_ptr_t(il)^.xp[5], inh);
 end;
@@ -4100,7 +4100,7 @@ procedure isc_db_register(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4109,7 +4109,7 @@ procedure isc_db_register(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_db_register);
+  il_kind := il_db_register;
   number_of_children := 0;
 end;
 
@@ -4120,7 +4120,7 @@ procedure isc_dindex_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4131,7 +4131,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_dindex_node);
+  il_kind := il_dindex_node;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[6]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -4179,7 +4179,7 @@ procedure isc_disp_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4190,7 +4190,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_disp_node);
+  il_kind := il_disp_node;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[6]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -4218,7 +4218,7 @@ procedure isc_display_register(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4227,7 +4227,7 @@ procedure isc_display_register(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_display_register);
+  il_kind := il_display_register;
   number_of_children := 0;
 end;
 
@@ -4238,7 +4238,7 @@ procedure isc_dpcomplex_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4247,7 +4247,7 @@ procedure isc_dpcomplex_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_dpcomplex_ob);
+  il_kind := il_dpcomplex_ob;
   number_of_children := 0;
 end;
 
@@ -4258,7 +4258,7 @@ procedure isc_dpreal_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4267,7 +4267,7 @@ procedure isc_dpreal_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_dpreal_ob);
+  il_kind := il_dpreal_ob;
   number_of_children := 0;
 end;
 
@@ -4293,7 +4293,7 @@ procedure isc_entry_blk(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4306,7 +4306,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_entry_blk);
+  il_kind := il_entry_blk;
   number_of_children := 0;
   bat := isc_node_ptr_t(il)^.bk_atts.bat;
   if (bat <> local_bat) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
@@ -4356,7 +4356,7 @@ procedure isc_eval_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4365,7 +4365,7 @@ procedure isc_eval_node(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_eval_node);
+  il_kind := il_eval_node;
   number_of_children := 0;
   rewrite_$check_for_case_statement(il);
   process_eval_node(il, isc_node_ptr_t(inh));
@@ -4378,7 +4378,7 @@ procedure isc_exception_handler_entry(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4387,7 +4387,7 @@ procedure isc_exception_handler_entry(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_exception_handler_entry);
+  il_kind := il_exception_handler_entry;
   number_of_children := 0;
 end;
 
@@ -4398,7 +4398,7 @@ procedure isc_exception_register(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4407,7 +4407,7 @@ procedure isc_exception_register(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_exception_register);
+  il_kind := il_exception_register;
   number_of_children := 0;
 end;
 
@@ -4433,7 +4433,7 @@ procedure isc_fortran_symbol(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4446,7 +4446,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_fortran_symbol);
+  il_kind := il_fortran_symbol;
   number_of_children := 0;
   kind := isc_node_ptr_t(il)^.fs_f44.kind;
   if kind = 6 then begin
@@ -4529,7 +4529,7 @@ procedure isc_function_blk(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4542,7 +4542,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_function_blk);
+  il_kind := il_function_blk;
   number_of_children := 0;
   bat := isc_node_ptr_t(il)^.bk_atts.bat;
   if (bat <> local_bat) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
@@ -4592,7 +4592,7 @@ procedure isc_insert_bit_field(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4603,7 +4603,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_insert_bit_field);
+  il_kind := il_insert_bit_field;
   number_of_children := 3;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[16]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -4670,7 +4670,7 @@ procedure isc_integer_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4679,7 +4679,7 @@ procedure isc_integer_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_integer_ob);
+  il_kind := il_integer_ob;
   number_of_children := 0;
 end;
 
@@ -4690,7 +4690,7 @@ procedure isc_uinteger_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4699,7 +4699,7 @@ procedure isc_uinteger_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_uinteger_ob);
+  il_kind := il_uinteger_ob;
   number_of_children := 0;
 end;
 
@@ -4710,7 +4710,7 @@ procedure isc_label_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4719,7 +4719,7 @@ procedure isc_label_node(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_label_node);
+  il_kind := il_label_node;
   number_of_children := 0;
 end;
 
@@ -4730,7 +4730,7 @@ procedure isc_lb_register(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4739,7 +4739,7 @@ procedure isc_lb_register(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_lb_register);
+  il_kind := il_lb_register;
   number_of_children := 0;
 end;
 
@@ -4750,7 +4750,7 @@ procedure isc_lib_dsc(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4762,7 +4762,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_lib_dsc);
+  il_kind := il_lib_dsc;
   number_of_children := 0;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -4796,7 +4796,7 @@ procedure isc_linteger_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4805,7 +4805,7 @@ procedure isc_linteger_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_linteger_ob);
+  il_kind := il_linteger_ob;
   number_of_children := 0;
 end;
 
@@ -4816,7 +4816,7 @@ procedure isc_ulinteger_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4825,7 +4825,7 @@ procedure isc_ulinteger_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_ulinteger_ob);
+  il_kind := il_ulinteger_ob;
   number_of_children := 0;
 end;
 
@@ -4836,7 +4836,7 @@ procedure isc_llogical_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4845,7 +4845,7 @@ procedure isc_llogical_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_llogical_ob);
+  il_kind := il_llogical_ob;
   number_of_children := 0;
 end;
 
@@ -4856,7 +4856,7 @@ procedure isc_namelist_constant_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4868,7 +4868,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_namelist_constant_ob);
+  il_kind := il_namelist_constant_ob;
   number_of_children := 0;
   if target_properties.p_be
       and (isc_node_ptr_t(il)^.xw[8] > p1_target_view_ptr_t(addr(target_properties))^.l180) then begin
@@ -4905,7 +4905,7 @@ procedure isc_nlbranch_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4917,7 +4917,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_nlbranch_node);
+  il_kind := il_nlbranch_node;
   number_of_children := 1;
   if (il_kind_function(isc_node_ptr_t(il)^.xp[12]) = 117) then begin
     if isc_user_routines_356 or isc_user_routines_354 then begin
@@ -4965,7 +4965,7 @@ procedure isc_pf_call(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -4976,7 +4976,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_pf_call);
+  il_kind := il_pf_call;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[4]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -5000,7 +5000,7 @@ procedure isc_physical_register_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5009,7 +5009,7 @@ procedure isc_physical_register_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_physical_register_ob);
+  il_kind := il_physical_register_ob;
   number_of_children := 0;
 end;
 
@@ -5035,7 +5035,7 @@ procedure isc_procedure_blk(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5048,7 +5048,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_procedure_blk);
+  il_kind := il_procedure_blk;
   number_of_children := 0;
   bat := isc_node_ptr_t(il)^.bk_atts.bat;
   if (bat <> local_bat) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
@@ -5098,7 +5098,7 @@ procedure isc_ptr_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5109,7 +5109,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_ptr_node);
+  il_kind := il_ptr_node;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[6]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -5137,7 +5137,7 @@ procedure isc_raise_exception(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5149,7 +5149,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_raise_exception);
+  il_kind := il_raise_exception;
   number_of_children := 0;
   if not lir_$use_trap_for_exception_raise(isc_node_ptr_t(il)^.xp[3],
       il) then begin
@@ -5179,7 +5179,7 @@ procedure isc_real_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5188,7 +5188,7 @@ procedure isc_real_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_real_ob);
+  il_kind := il_real_ob;
   number_of_children := 0;
 end;
 
@@ -5199,7 +5199,7 @@ procedure isc_release_dynamic_space(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5211,7 +5211,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_release_dynamic_space);
+  il_kind := il_release_dynamic_space;
   number_of_children := 1;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -5253,7 +5253,7 @@ procedure isc_return_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5265,7 +5265,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_return_node);
+  il_kind := il_return_node;
   number_of_children := 0;
   if return_value_needs_assign_node(isc_node_ptr_t(il)^.xp[12],
       isc_node_ptr_t(il_180)^.xp[24]) then begin
@@ -5309,7 +5309,7 @@ procedure isc_sb_register(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5318,7 +5318,7 @@ procedure isc_sb_register(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_sb_register);
+  il_kind := il_sb_register;
   number_of_children := 0;
 end;
 
@@ -5329,7 +5329,7 @@ procedure isc_set_con_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5341,7 +5341,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_set_con_ob);
+  il_kind := il_set_con_ob;
   number_of_children := 0;
   if target_properties.p_be
       and (isc_node_ptr_t(il)^.xw[8] > p1_target_view_ptr_t(addr(target_properties))^.l180) then begin
@@ -5378,7 +5378,7 @@ procedure isc_slogical_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5387,7 +5387,7 @@ procedure isc_slogical_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_slogical_ob);
+  il_kind := il_slogical_ob;
   number_of_children := 0;
 end;
 
@@ -5398,7 +5398,7 @@ procedure isc_sinteger_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5407,7 +5407,7 @@ procedure isc_sinteger_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_sinteger_ob);
+  il_kind := il_sinteger_ob;
   number_of_children := 0;
 end;
 
@@ -5418,7 +5418,7 @@ procedure isc_usinteger_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5427,7 +5427,7 @@ procedure isc_usinteger_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_usinteger_ob);
+  il_kind := il_usinteger_ob;
   number_of_children := 0;
 end;
 
@@ -5438,7 +5438,7 @@ procedure isc_sym_disp_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5449,7 +5449,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_sym_disp_node);
+  il_kind := il_sym_disp_node;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[6]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -5475,7 +5475,7 @@ procedure isc_tree_node_abs_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5486,7 +5486,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_abs_top);
+  il_kind := il_abs_top;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -5512,7 +5512,7 @@ procedure isc_tree_node_ada_expon_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5524,7 +5524,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_ada_expon_top);
+  il_kind := il_ada_expon_top;
   number_of_children := 2;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -5551,7 +5551,7 @@ procedure isc_tree_node_add_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5563,7 +5563,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_add_top);
+  il_kind := il_add_top;
   number_of_children := 2;
   if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
       and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
@@ -5639,7 +5639,7 @@ procedure isc_tree_node_addr_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5650,7 +5650,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_addr_top);
+  il_kind := il_addr_top;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -5678,7 +5678,7 @@ procedure isc_tree_node_agg_compare_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5689,7 +5689,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_agg_compare_top);
+  il_kind := il_agg_compare_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -5734,7 +5734,7 @@ procedure isc_tree_node_align_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5745,7 +5745,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_align_top);
+  il_kind := il_align_top;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -5770,7 +5770,7 @@ procedure isc_tree_node_allocate_dynamic_space_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5782,7 +5782,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_allocate_dynamic_space_top);
+  il_kind := il_allocate_dynamic_space_top;
   number_of_children := 1;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -5809,7 +5809,7 @@ procedure isc_tree_node_alshf_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5820,7 +5820,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_alshf_top);
+  il_kind := il_alshf_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -5865,7 +5865,7 @@ procedure isc_tree_node_and_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5877,7 +5877,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_and_top);
+  il_kind := il_and_top;
   number_of_children := 2;
   if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
       and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
@@ -5952,7 +5952,7 @@ procedure isc_tree_node_arshf_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -5963,7 +5963,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_arshf_top);
+  il_kind := il_arshf_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -6008,7 +6008,7 @@ procedure isc_tree_node_bit_field_cmp_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -6020,7 +6020,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_bit_field_cmp_top);
+  il_kind := il_bit_field_cmp_top;
   number_of_children := 5;
   if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11])
       and il_node_has_integer_value(isc_node_ptr_t(il)^.xp[13])
@@ -6145,7 +6145,7 @@ procedure isc_tree_node_bit_set_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -6156,7 +6156,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_bit_set_top);
+  il_kind := il_bit_set_top;
   number_of_children := 3;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -6195,7 +6195,7 @@ begin
       if (isc_node_ptr_t(il)^.xw[19] <> 3) then begin
         children[3] := solution_list$new;
         solution_list$append(children[3], new_solution(isc_heap,
-            ord(solution$void), 0, nil, nil, 0));
+            solution$void, 0, nil, nil, il_none));
       end
       else begin
         inh_3 := new_inherited_attributes(isc_heap,
@@ -6227,7 +6227,7 @@ procedure isc_tree_node_bit_test_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -6238,7 +6238,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_bit_test_top);
+  il_kind := il_bit_test_top;
   number_of_children := 2;
   inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
   inh_2^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -6283,7 +6283,7 @@ procedure isc_tree_node_cache_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -6292,7 +6292,7 @@ procedure isc_tree_node_cache_top(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_cache_top);
+  il_kind := il_cache_top;
   number_of_children := 0;
 end;
 
@@ -6303,7 +6303,7 @@ procedure isc_tree_node_call_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -6315,7 +6315,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_call_top);
+  il_kind := il_call_top;
   number_of_children := 1;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -6342,7 +6342,7 @@ procedure isc_tree_node_chk_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -6353,7 +6353,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_chk_top);
+  il_kind := il_chk_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -6408,7 +6408,7 @@ procedure isc_tree_node_compare_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -6420,7 +6420,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_compare_top);
+  il_kind := il_compare_top;
   number_of_children := 2;
   if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
       and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
@@ -6516,7 +6516,7 @@ procedure isc_tree_node_div_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -6529,7 +6529,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_div_top);
+  il_kind := il_div_top;
   number_of_children := 2;
   if p1_node_bytes_ptr_t(il)^[30].b6 then
     lib := std_lib_rtns[5]
@@ -6595,7 +6595,7 @@ begin
       solutions := pass_1(n, inh_1, depth, permissible);
     end;
   end
-  else if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+  else if (isc_node_ptr_t(il)^.xw[13] = rlen_long) and (isc_node_ptr_t(il)^.xw[14] = rlen_long) then begin
     if isc_user_routines_356 or isc_user_routines_354 then begin
       write('*********************');
       writeln;
@@ -6674,7 +6674,7 @@ procedure isc_tree_node_eor_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -6686,7 +6686,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_eor_top);
+  il_kind := il_eor_top;
   number_of_children := 2;
   if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
       and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
@@ -6761,7 +6761,7 @@ procedure isc_tree_node_expon_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -6773,7 +6773,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_expon_top);
+  il_kind := il_expon_top;
   number_of_children := 2;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -6800,7 +6800,7 @@ procedure isc_tree_node_extend_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -6811,7 +6811,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_extend_top);
+  il_kind := il_extend_top;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -6841,7 +6841,7 @@ procedure isc_tree_node_extract_bit_field_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -6852,7 +6852,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_extract_bit_field_top);
+  il_kind := il_extract_bit_field_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -6899,7 +6899,7 @@ procedure isc_tree_node_f_ada_expon_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -6911,7 +6911,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_ada_expon_top);
+  il_kind := il_f_ada_expon_top;
   number_of_children := 2;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -6938,7 +6938,7 @@ procedure isc_tree_node_f_add_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -6949,7 +6949,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_add_top);
+  il_kind := il_f_add_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -6996,7 +6996,7 @@ procedure isc_tree_node_f_compare_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7007,7 +7007,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_compare_top);
+  il_kind := il_f_compare_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -7070,7 +7070,7 @@ procedure isc_tree_node_f_div_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7082,7 +7082,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_div_top);
+  il_kind := il_f_div_top;
   number_of_children := 2;
   if il_node_has_float_value(isc_node_ptr_t(il)^.xp[11])
       and not p1_node_bytes_ptr_t(il)^[30].b7
@@ -7161,7 +7161,7 @@ procedure isc_tree_node_f_expon_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7173,7 +7173,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_expon_top);
+  il_kind := il_f_expon_top;
   number_of_children := 2;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -7200,7 +7200,7 @@ procedure isc_tree_node_f_extend_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7211,7 +7211,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_extend_top);
+  il_kind := il_f_extend_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -7235,8 +7235,8 @@ begin
   else begin
     if (isc_node_ptr_t(il)^.xw[19] <> 2) then begin
       children[2] := solution_list$new;
-      solution_list$append(children[2], new_solution(isc_heap,
-          ord(solution$void), 0, nil, nil, 0));
+      solution_list$append(children[2], new_solution(isc_heap, solution$void,
+          0, nil, nil, il_none));
     end
     else begin
       inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
@@ -7263,11 +7263,12 @@ end;
 
 { isc_tree_node_f_math_top - the
   proper_subtree il_f_math_top, 2 children, when the function (opmod1,
-  +26) is one the ISC computes in line (11 .. 15, or the boolean of
-  isc_readonly_tables +424 by opmod1): child 1 (+40) and child 2 (+44)
-  when there are two operands (+38), else a void solution, each at the
-  precision of rlen_bits by opmod2 (+28); otherwise the node rewritten
-  as a call (rewrite_$routine_call) and that call's solutions.
+  +26) is one the ISC computes in line (math_nint .. math_aimag, 11 ..
+  15, or the boolean of isc_readonly_tables +424 by opmod1): child 1
+  (+40) and child 2 (+44) when there are two operands (+38), else a
+  void solution, each at the precision of rlen_bits by opmod2 (+28);
+  otherwise the node rewritten as a call (rewrite_$routine_call) and
+  that call's solutions.
 
   0x0E98E2, 0x34E bytes: D1 opmod1; the tests in the order 15, 14, 11,
   then `seq' of 12 or-ed with the table's byte (`bmi'), then 13 (Rev
@@ -7281,7 +7282,7 @@ procedure isc_tree_node_f_math_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7293,12 +7294,12 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_math_top);
+  il_kind := il_f_math_top;
   number_of_children := 2;
-  if (isc_node_ptr_t(il)^.xw[13] = 15) or (isc_node_ptr_t(il)^.xw[13] = 14)
-      or (isc_node_ptr_t(il)^.xw[13] = 11) or (isc_node_ptr_t(il)^.xw[13] = 12)
+  if (isc_node_ptr_t(il)^.xw[13] = math_aimag) or (isc_node_ptr_t(il)^.xw[13] = math_conjg)
+      or (isc_node_ptr_t(il)^.xw[13] = math_nint) or (isc_node_ptr_t(il)^.xw[13] = math_max)
       or p1_readonly_bytes_ptr_t(addr(isc_readonly_tables))^[424 + isc_node_ptr_t(il)^.xw[13]].b7
-      or (isc_node_ptr_t(il)^.xw[13] = 13) then begin
+      or (isc_node_ptr_t(il)^.xw[13] = math_min) then begin
     inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
     inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
     inh_1^.exception_frame := inh^.exception_frame;
@@ -7319,7 +7320,7 @@ begin
       if (isc_node_ptr_t(il)^.xw[19] <> 2) then begin
         children[2] := solution_list$new;
         solution_list$append(children[2], new_solution(isc_heap,
-            ord(solution$void), 0, nil, nil, 0));
+            solution$void, 0, nil, nil, il_none));
       end
       else begin
         inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
@@ -7368,7 +7369,7 @@ procedure isc_tree_node_f_mul_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7379,7 +7380,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_mul_top);
+  il_kind := il_f_mul_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -7426,7 +7427,7 @@ procedure isc_tree_node_f_neg_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7437,7 +7438,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_neg_top);
+  il_kind := il_f_neg_top;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -7465,7 +7466,7 @@ procedure isc_tree_node_f_range_check_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7476,7 +7477,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_range_check_top);
+  il_kind := il_f_range_check_top;
   number_of_children := 3;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -7536,7 +7537,7 @@ procedure isc_tree_node_f_sub_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7547,7 +7548,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_sub_top);
+  il_kind := il_f_sub_top;
   number_of_children := 2;
   inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
   inh_2^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -7606,7 +7607,7 @@ procedure isc_tree_node_func_call_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7619,7 +7620,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_func_call_top);
+  il_kind := il_func_call_top;
   number_of_children := 1;
   case inh^.f38.required_arithmetic of
     1, 3: tkind := 122;
@@ -7652,7 +7653,7 @@ procedure isc_tree_node_index_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7663,7 +7664,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_index_top);
+  il_kind := il_index_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -7707,7 +7708,7 @@ procedure isc_tree_node_isc_addr_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7718,7 +7719,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_addr_top);
+  il_kind := il_isc_addr_top;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -7747,7 +7748,7 @@ procedure isc_tree_node_isc_agg_cmp_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7758,7 +7759,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_agg_cmp_top);
+  il_kind := il_isc_agg_cmp_top;
   number_of_children := 3;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -7823,7 +7824,7 @@ procedure isc_tree_node_isc_agg_lex_cmp_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7834,7 +7835,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_agg_lex_cmp_top);
+  il_kind := il_isc_agg_lex_cmp_top;
   number_of_children := 4;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -7918,7 +7919,7 @@ procedure isc_tree_node_isc_call_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7927,7 +7928,7 @@ procedure isc_tree_node_isc_call_top(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_call_top);
+  il_kind := il_isc_call_top;
   number_of_children := 0;
   pass_1_isc_call(il, 4, inh, 0);
 end;
@@ -7939,7 +7940,7 @@ procedure isc_tree_node_isc_fio_init(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7950,7 +7951,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_fio_init);
+  il_kind := il_isc_fio_init;
   number_of_children := 1;
   debug_lir_$begin_fortran_io_sequence(il);
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
@@ -7975,7 +7976,7 @@ procedure isc_tree_node_isc_func_call_hidden_temp_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -7984,7 +7985,7 @@ procedure isc_tree_node_isc_func_call_hidden_temp_top(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_func_call_hidden_temp_top);
+  il_kind := il_isc_func_call_hidden_temp_top;
   number_of_children := 0;
   pass_1_isc_call(il, 4, inh, 0);
 end;
@@ -8001,7 +8002,7 @@ procedure isc_tree_node_isc_func_call_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -8010,7 +8011,7 @@ procedure isc_tree_node_isc_func_call_top(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_func_call_top);
+  il_kind := il_isc_func_call_top;
   number_of_children := 0;
   pass_1_isc_call(il, ord(p1_node_chars_ptr_t(il)^[10]), inh, 0);
 end;
@@ -8041,7 +8042,7 @@ procedure isc_tree_node_isc_mul_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -8053,7 +8054,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_mul_top);
+  il_kind := il_isc_mul_top;
   number_of_children := 2;
   if (il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11])
       and is_power_of_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[11]))
@@ -8102,7 +8103,7 @@ begin
     end;
   end
   else begin
-    if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+    if (isc_node_ptr_t(il)^.xw[13] = rlen_long) and (isc_node_ptr_t(il)^.xw[14] = rlen_long) then begin
       if isc_user_routines_356 or isc_user_routines_354 then begin
         write('*********************');
         writeln;
@@ -8175,7 +8176,7 @@ procedure isc_tree_node_isc_signed_mod_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -8186,7 +8187,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_signed_mod_top);
+  il_kind := il_isc_signed_mod_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -8229,7 +8230,7 @@ procedure isc_tree_node_isc_signed_rem_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -8240,7 +8241,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_signed_rem_top);
+  il_kind := il_isc_signed_rem_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -8283,7 +8284,7 @@ procedure isc_tree_node_isc_unsigned_mod_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -8295,7 +8296,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_unsigned_mod_top);
+  il_kind := il_isc_unsigned_mod_top;
   number_of_children := 2;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -8332,7 +8333,7 @@ procedure isc_tree_node_isc_unsigned_rem_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -8344,7 +8345,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_unsigned_rem_top);
+  il_kind := il_isc_unsigned_rem_top;
   number_of_children := 2;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -8378,7 +8379,7 @@ procedure isc_tree_node_lshf_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -8389,7 +8390,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_lshf_top);
+  il_kind := il_lshf_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -8434,7 +8435,7 @@ procedure isc_tree_node_mark_dynamic_space_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -8446,7 +8447,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_mark_dynamic_space_top);
+  il_kind := il_mark_dynamic_space_top;
   number_of_children := 0;
   if isc_user_routines_356 or isc_user_routines_354 then begin
     write('*********************');
@@ -8473,7 +8474,7 @@ procedure isc_tree_node_max_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -8485,7 +8486,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_max_top);
+  il_kind := il_max_top;
   number_of_children := 2;
   if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
       and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
@@ -8556,7 +8557,7 @@ procedure isc_tree_node_min_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -8568,7 +8569,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_min_top);
+  il_kind := il_min_top;
   number_of_children := 2;
   if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
       and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
@@ -8661,7 +8662,7 @@ procedure isc_tree_node_mod_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -8675,7 +8676,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_mod_top);
+  il_kind := il_mod_top;
   number_of_children := 2;
   if p1_node_bytes_ptr_t(il)^[30].b6 then
     lib := std_lib_rtns[5]
@@ -8756,7 +8757,7 @@ begin
         isc_node_ptr_t(il)^.xw[13]);
     v2 := value_top_over(isc_node_ptr_t(il)^.xp[11], isc_node_ptr_t(il)^.xw[14],
         isc_node_ptr_t(il)^.xw[14]);
-    if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+    if (isc_node_ptr_t(il)^.xw[13] = rlen_long) and (isc_node_ptr_t(il)^.xw[14] = rlen_long) then begin
       if isc_user_routines_356 or isc_user_routines_354 then begin
         write('*********************');
         writeln;
@@ -8885,7 +8886,7 @@ procedure isc_tree_node_mul_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -8897,7 +8898,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_mul_top);
+  il_kind := il_mul_top;
   number_of_children := 2;
   if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
       and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
@@ -8981,7 +8982,7 @@ procedure isc_tree_node_neg_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -8992,7 +8993,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_neg_top);
+  il_kind := il_neg_top;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9020,7 +9021,7 @@ procedure isc_tree_node_nop_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9031,7 +9032,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_nop_top);
+  il_kind := il_nop_top;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9060,7 +9061,7 @@ procedure isc_tree_node_not_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9071,7 +9072,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_not_top);
+  il_kind := il_not_top;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9099,7 +9100,7 @@ procedure isc_tree_node_or_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9111,7 +9112,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_or_top);
+  il_kind := il_or_top;
   number_of_children := 2;
   if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
       and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
@@ -9186,7 +9187,7 @@ procedure isc_tree_node_physical_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9197,7 +9198,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_physical_top);
+  il_kind := il_physical_top;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9224,7 +9225,7 @@ procedure isc_tree_node_range_check_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9235,7 +9236,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_range_check_top);
+  il_kind := il_range_check_top;
   number_of_children := 3;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9295,7 +9296,7 @@ procedure isc_tree_node_rshf_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9306,7 +9307,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_rshf_top);
+  il_kind := il_rshf_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9351,7 +9352,7 @@ procedure isc_tree_node_set_and_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9362,7 +9363,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_set_and_top);
+  il_kind := il_set_and_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9407,7 +9408,7 @@ procedure isc_tree_node_set_bit_in_set_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9418,7 +9419,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_set_bit_in_set_top);
+  il_kind := il_set_bit_in_set_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9464,7 +9465,7 @@ procedure isc_tree_node_set_compare_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9475,7 +9476,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_set_compare_top);
+  il_kind := il_set_compare_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9521,7 +9522,7 @@ procedure isc_tree_node_set_diff_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9532,7 +9533,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_set_diff_top);
+  il_kind := il_set_diff_top;
   number_of_children := 2;
   inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
   inh_2^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9577,7 +9578,7 @@ procedure isc_tree_node_set_extend_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9588,7 +9589,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_set_extend_top);
+  il_kind := il_set_extend_top;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9617,7 +9618,7 @@ procedure isc_tree_node_set_or_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9628,7 +9629,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_set_or_top);
+  il_kind := il_set_or_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9673,7 +9674,7 @@ procedure isc_tree_node_set_range_in_set_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9684,7 +9685,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_set_range_in_set_top);
+  il_kind := il_set_range_in_set_top;
   number_of_children := 3;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9748,7 +9749,7 @@ procedure isc_tree_node_signed_div_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9759,7 +9760,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_signed_div_top);
+  il_kind := il_signed_div_top;
   number_of_children := 2;
   inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
   inh_2^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9808,7 +9809,7 @@ procedure isc_tree_node_signed_mod_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9819,7 +9820,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_signed_mod_top);
+  il_kind := il_signed_mod_top;
   number_of_children := 2;
   inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
   inh_2^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9868,7 +9869,7 @@ procedure isc_tree_node_sr_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9879,7 +9880,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_sr_top);
+  il_kind := il_sr_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9899,8 +9900,8 @@ begin
   else begin
     if (isc_node_ptr_t(il)^.xw[19] <> 2) then begin
       children[2] := solution_list$new;
-      solution_list$append(children[2], new_solution(isc_heap,
-          ord(solution$void), 0, nil, nil, 0));
+      solution_list$append(children[2], new_solution(isc_heap, solution$void,
+          0, nil, nil, il_none));
     end
     else begin
       inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
@@ -9929,7 +9930,7 @@ procedure isc_tree_node_strcmp_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9940,7 +9941,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_strcmp_top);
+  il_kind := il_strcmp_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -9979,7 +9980,7 @@ procedure isc_tree_node_strlen_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -9990,7 +9991,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_strlen_top);
+  il_kind := il_strlen_top;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -10014,7 +10015,7 @@ procedure isc_tree_node_strncmp_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -10025,7 +10026,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_strncmp_top);
+  il_kind := il_strncmp_top;
   number_of_children := 3;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -10083,7 +10084,7 @@ procedure isc_tree_node_sub_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -10094,7 +10095,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_sub_top);
+  il_kind := il_sub_top;
   number_of_children := 2;
   inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
   inh_2^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -10143,7 +10144,7 @@ procedure isc_tree_node_unpack_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -10154,7 +10155,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_unpack_top);
+  il_kind := il_unpack_top;
   number_of_children := 2;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -10202,7 +10203,7 @@ procedure isc_tree_node_unsigned_div_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -10213,7 +10214,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_unsigned_div_top);
+  il_kind := il_unsigned_div_top;
   number_of_children := 2;
   inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
   inh_2^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -10262,7 +10263,7 @@ procedure isc_tree_node_unsigned_mod_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -10273,7 +10274,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_unsigned_mod_top);
+  il_kind := il_unsigned_mod_top;
   number_of_children := 2;
   inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
   inh_2^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -10322,7 +10323,7 @@ procedure isc_tree_node_value_top(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -10333,7 +10334,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_value_top);
+  il_kind := il_value_top;
   number_of_children := 1;
   inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
   inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
@@ -10366,7 +10367,7 @@ procedure isc_tree_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -10384,7 +10385,7 @@ procedure isc_use_def_ob(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -10393,7 +10394,7 @@ procedure isc_use_def_ob(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_use_def_ob);
+  il_kind := il_use_def_ob;
   number_of_children := 0;
 end;
 
@@ -10404,7 +10405,7 @@ procedure isc_var_name(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -10413,7 +10414,7 @@ procedure isc_var_name(
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_var_name);
+  il_kind := il_var_name;
   number_of_children := 0;
   initialize_symbol(il);
 end;
@@ -10651,7 +10652,7 @@ end;
 
 function pass_1;
 var
-  il_kind: integer;
+  il_kind: il$t;
   number_of_children: integer32;
   solutions: solution_list_ptr_t;
   children: p1_children_t;
@@ -10699,13 +10700,13 @@ begin
       subtrees := solution_list$new;
       case number_of_children of
         0: begin
-          s := new_solution(isc_heap, ord(solution$proper_subtree), 0, inh, node, il_kind);
+          s := new_solution(isc_heap, solution$proper_subtree, 0, inh, node, il_kind);
           solution_list$append(subtrees, s);
           end;
         1: begin
           c1 := children[1]^.first;
           while c1 <> nil do begin
-            s := new_solution(isc_heap, ord(solution$proper_subtree), 1, inh, node, il_kind);
+            s := new_solution(isc_heap, solution$proper_subtree, 1, inh, node, il_kind);
             s^.children[1] := c1^.sol;
             solution_list$append(subtrees, s);
             c1 := c1^.next;
@@ -10716,7 +10717,7 @@ begin
           while c1 <> nil do begin
             c2 := children[2]^.first;
             while c2 <> nil do begin
-              s := new_solution(isc_heap, ord(solution$proper_subtree), 2, inh, node, il_kind);
+              s := new_solution(isc_heap, solution$proper_subtree, 2, inh, node, il_kind);
               s^.children[1] := c1^.sol;
               s^.children[2] := c2^.sol;
               solution_list$append(subtrees, s);
@@ -10732,7 +10733,7 @@ begin
             while c2 <> nil do begin
               c3 := children[3]^.first;
               while c3 <> nil do begin
-                s := new_solution(isc_heap, ord(solution$proper_subtree), 3, inh, node,
+                s := new_solution(isc_heap, solution$proper_subtree, 3, inh, node,
                                   il_kind);
                 s^.children[1] := c1^.sol;
                 s^.children[2] := c2^.sol;
@@ -10754,7 +10755,7 @@ begin
               while c3 <> nil do begin
                 c4 := children[4]^.first;
                 while c4 <> nil do begin
-                  s := new_solution(isc_heap, ord(solution$proper_subtree), 4, inh, node,
+                  s := new_solution(isc_heap, solution$proper_subtree, 4, inh, node,
                                     il_kind);
                   s^.children[1] := c1^.sol;
                   s^.children[2] := c2^.sol;
@@ -10781,7 +10782,7 @@ begin
                 while c4 <> nil do begin
                   c5 := children[5]^.first;
                   while c5 <> nil do begin
-                    s := new_solution(isc_heap, ord(solution$proper_subtree), 5, inh, node,
+                    s := new_solution(isc_heap, solution$proper_subtree, 5, inh, node,
                                       il_kind);
                     s^.children[1] := c1^.sol;
                     s^.children[2] := c2^.sol;

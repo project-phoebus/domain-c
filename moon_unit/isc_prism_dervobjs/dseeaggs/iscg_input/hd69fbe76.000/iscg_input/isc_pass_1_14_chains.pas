@@ -572,7 +572,7 @@ begin
       write('Pattern 378 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
     solution^.which_transform := 378;
     solution^.before_transform := addr(subject);
     solution^.fields[0] := create_solution_for_ip_reg;
@@ -685,7 +685,7 @@ begin
       write('Pattern 379 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
     solution^.which_transform := 379;
     solution^.before_transform := addr(subject);
     t3 := make_expression_temporary(122,
@@ -1006,7 +1006,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 380;
       solution^.before_transform := addr(subject);
       if subject.inherited_attributes^.fetch_precision = 32 then begin
@@ -1181,7 +1181,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 381;
       solution^.before_transform := addr(subject);
       if subject.inherited_attributes^.fetch_precision = 32 then begin
@@ -1354,7 +1354,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 382;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := 0;
@@ -1489,7 +1489,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 383;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := 0;
@@ -1756,7 +1756,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 384;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := 0;
@@ -2291,7 +2291,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 385;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.code_bytes + 8;
@@ -2380,7 +2380,7 @@ begin
       write('Pattern 386 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
     solution^.which_transform := 386;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.code_bytes + 4;
@@ -2466,7 +2466,7 @@ begin
       write('Pattern 387 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
     solution^.which_transform := 387;
     solution^.before_transform := addr(subject);
     if not isc_user_routines_358 then begin
@@ -2564,7 +2564,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 388;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.code_bytes;
@@ -2660,7 +2660,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 389;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.code_bytes;
@@ -2747,7 +2747,7 @@ begin
       write('Pattern 390 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
     solution^.which_transform := 390;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.code_bytes;
@@ -2842,7 +2842,7 @@ begin
       write('Pattern 391 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
     solution^.which_transform := 391;
     solution^.before_transform := addr(subject);
     p1_int_fields_ptr_t(addr(solution^))^.i[1] := subject.f76.field_precision;
@@ -2947,7 +2947,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 392;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.f76.bit_position_of_lsb;
@@ -3063,7 +3063,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 393;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.f76.bit_position_of_lsb;
@@ -3128,7 +3128,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 394;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.code_bytes + 4;
@@ -3225,7 +3225,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 395;
       solution^.before_transform := addr(subject);
       t2 := make_bit_mask_1(8, 0);
@@ -3359,7 +3359,7 @@ begin
       write('Pattern 396 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 396;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.code_bytes + 4;
@@ -3453,7 +3453,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 397;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(isc_solution_ptr_t(isc_user_routines_31c)^.live_range);
@@ -3508,7 +3508,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 398;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := subject.literal_32_bits_value;
@@ -3577,7 +3577,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 400;
       solution^.before_transform := addr(subject);
       if subject.f76.literal_derived_from_floating_constant then begin
@@ -3642,7 +3642,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 401;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.code_bytes;
@@ -3709,7 +3709,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
     solution^.which_transform := 403;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.code_bytes;

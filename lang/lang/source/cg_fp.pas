@@ -172,7 +172,7 @@ begin
   address(templabel, 0, lab);
   emit(32, 5, lab, cg_null_ads, 0);
   emit(18, 2, status, cg_zero_ads, 0);
-  emit(20, 5, lab, cg_null_ads, 11);
+  emit(20, 5, lab, cg_null_ads, cond_mi);
 end;
 
 { purge_fp - the stack's operations generated and the stack emptied.

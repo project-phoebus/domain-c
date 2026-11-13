@@ -149,7 +149,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 489;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes;
@@ -241,7 +241,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 490;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) then begin
@@ -345,7 +345,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 491;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes;
@@ -437,7 +437,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 492;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) then begin
@@ -526,8 +526,8 @@ procedure transform_493_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -543,7 +543,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 493;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
@@ -588,8 +588,8 @@ procedure transform_494_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -605,7 +605,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 494;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
@@ -650,8 +650,8 @@ procedure transform_495_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -667,7 +667,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 495;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 44;
@@ -712,8 +712,8 @@ procedure transform_496_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -729,7 +729,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 496;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 48;
@@ -774,8 +774,8 @@ procedure transform_497_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -791,7 +791,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 497;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 44;
@@ -836,8 +836,8 @@ procedure transform_498_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -853,7 +853,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 498;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 52;
@@ -901,7 +901,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.il)^.w[13] = 4) or (p2_node_ptr_t(subject.il)^.w[13] = 1) or (p2_node_ptr_t(subject.il)^.w[13] = 2)) and (p2_node_ptr_t(subject.il)^.w[12] = rlen_c8) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[13] = rlen_long) or (p2_node_ptr_t(subject.il)^.w[13] = rlen_byte) or (p2_node_ptr_t(subject.il)^.w[13] = rlen_word)) and (p2_node_ptr_t(subject.il)^.w[12] = rlen_c8) then begin
     if isc_user_routines_354 then begin
       write('Pattern 499 matched the semantics.');
       writeln;
@@ -913,7 +913,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 499;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
@@ -983,7 +983,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 6) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c8)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_r4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c8)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 500 matched the semantics.');
       writeln;
@@ -995,7 +995,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 500;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) then begin
@@ -1032,12 +1032,12 @@ procedure transform_501_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 6) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c8)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_r4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c8)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 501 matched the semantics.');
       writeln;
@@ -1049,7 +1049,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 501;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
@@ -1096,7 +1096,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 7) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c8)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_r8) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c8)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 502 matched the semantics.');
       writeln;
@@ -1108,7 +1108,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 502;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
@@ -1155,12 +1155,12 @@ procedure transform_503_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 7) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c8)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_r8) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c8)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 503 matched the semantics.');
       writeln;
@@ -1172,7 +1172,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 503;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
@@ -1230,7 +1230,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.il)^.w[13] = 4) or (p2_node_ptr_t(subject.il)^.w[13] = 1) or (p2_node_ptr_t(subject.il)^.w[13] = 2)) and (p2_node_ptr_t(subject.il)^.w[12] = rlen_c16) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[13] = rlen_long) or (p2_node_ptr_t(subject.il)^.w[13] = rlen_byte) or (p2_node_ptr_t(subject.il)^.w[13] = rlen_word)) and (p2_node_ptr_t(subject.il)^.w[12] = rlen_c16) then begin
     if isc_user_routines_354 then begin
       write('Pattern 504 matched the semantics.');
       writeln;
@@ -1242,7 +1242,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 504;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
@@ -1304,7 +1304,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 6) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c16)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_r4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c16)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 505 matched the semantics.');
       writeln;
@@ -1316,7 +1316,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 505;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
@@ -1357,12 +1357,12 @@ procedure transform_506_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 6) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c16)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_r4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c16)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 506 matched the semantics.');
       writeln;
@@ -1374,7 +1374,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 506;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
@@ -1431,7 +1431,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 7) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c16)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_r8) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c16)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 507 matched the semantics.');
       writeln;
@@ -1443,7 +1443,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 507;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
@@ -1474,12 +1474,12 @@ procedure transform_508_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 7) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c16)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_r8) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c16)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 508 matched the semantics.');
       writeln;
@@ -1491,7 +1491,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 508;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
@@ -1539,7 +1539,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 8) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c16)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_c8) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c16)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 509 matched the semantics.');
       writeln;
@@ -1551,7 +1551,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 509;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
@@ -1595,7 +1595,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 8) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_c8) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 510 matched the semantics.');
       writeln;
@@ -1607,7 +1607,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 510;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
@@ -1650,7 +1650,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 8) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r4)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_c8) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r4)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 511 matched the semantics.');
       writeln;
@@ -1662,7 +1662,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 511;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -1695,7 +1695,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 8) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r8)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_c8) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r8)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 512 matched the semantics.');
       writeln;
@@ -1707,7 +1707,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 512;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
@@ -1750,7 +1750,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 12) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_c16) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 513 matched the semantics.');
       writeln;
@@ -1762,7 +1762,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 513;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
@@ -1805,7 +1805,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 12) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r4)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_c16) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r4)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 514 matched the semantics.');
       writeln;
@@ -1817,7 +1817,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 514;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
@@ -1860,7 +1860,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 12) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r8)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_c16) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r8)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 515 matched the semantics.');
       writeln;
@@ -1872,7 +1872,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 515;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -1905,7 +1905,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 12) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c8)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_c16) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c8)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 516 matched the semantics.');
       writeln;
@@ -1917,7 +1917,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 516;
       solution^.before_transform := addr(subject);
       if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (14 in cargs_$options.flags_286) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) then begin
@@ -1961,7 +1961,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 15) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r4)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> math_aimag) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r4)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 517 matched the semantics.');
       writeln;
@@ -1973,7 +1973,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 517;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -2006,7 +2006,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 14) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c8)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> math_conjg) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c8)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 518 matched the semantics.');
       writeln;
@@ -2018,7 +2018,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 518;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
@@ -2052,7 +2052,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 15) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r8)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> math_aimag) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r8)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 519 matched the semantics.');
       writeln;
@@ -2064,7 +2064,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 519;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
@@ -2097,7 +2097,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 14) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c16)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> math_conjg) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_c16)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 520 matched the semantics.');
       writeln;
@@ -2109,7 +2109,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 520;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
@@ -2140,8 +2140,8 @@ procedure transform_521_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -2157,7 +2157,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 521;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 24;
@@ -2202,8 +2202,8 @@ procedure transform_522_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -2219,7 +2219,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 522;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 28;
@@ -2264,8 +2264,8 @@ procedure transform_523_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -2281,7 +2281,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 523;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 24;
@@ -2326,8 +2326,8 @@ procedure transform_524_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -2343,7 +2343,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 524;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 32;
@@ -2403,7 +2403,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 525;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + 8;
@@ -2449,7 +2449,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 526;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + 8;
@@ -2480,8 +2480,8 @@ procedure transform_527_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -2497,7 +2497,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 527;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
@@ -2542,8 +2542,8 @@ procedure transform_528_pass_1(var subject: isc_solution_t; il: univ_ptr;
     options(val_param);
 var
   solution: isc_solution_ptr_t;     { the new solution (`result') }
-  t2: integer;
-  t3: integer;
+  t2: 0..65535;
+  t3: 0..65535;
 begin
   result := nil;
   work := nil;
@@ -2559,7 +2559,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 528;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
@@ -2611,7 +2611,7 @@ begin
       write('Pattern 529 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
     solution^.which_transform := 529;
     solution^.before_transform := addr(subject);
     if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) then begin
@@ -2707,7 +2707,7 @@ begin
       write('Pattern 530 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
     solution^.which_transform := 530;
     solution^.before_transform := addr(subject);
     if (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) then begin
@@ -2810,7 +2810,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 531;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.il)^.b[11]]);
@@ -2870,7 +2870,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 532;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.il)^.b[11]]);

@@ -2847,6 +2847,24 @@ answered by this policy and needs no reply.
    readonly_tables' result_kind table holds integers.  The words would
    be the same as solution$t and il$t; retype the headings (and the
    generator's calls) to the enumerations?
+   **Done (RN6, 2026-11-12):** new_solution takes kind: solution$t and
+   il_kind: il$t; solution_kind_of_cse, solution_kind_of_symbol and
+   get_kind_of_home_solution return a solution$t (solution$none where
+   they gave 0); result_kind is an array of solution$t; the operator
+   routines' var il_kind (p1_operator_t), pass_1's local and
+   cross_product_to_solutions_of_parent's parameter are il$t.  The
+   generator writes the names (solution$ip_reg, il_add_to_aop, il_none
+   for the 0 every action passes) without ord(), and a pass-1 action's
+   compare of a kind function's result with a number is the element's
+   name (iscg_p2lang's coerce, from the heading's class); the
+   hand-written callers (isc_main, isc_to_lir, isc_user_routines) name
+   theirs too (il_integer_ob, il_real_ob, il_dpreal_ob, il_var_name for
+   78, 93, 70, 176).  dpc's code is unchanged in all 277 objects
+   (pass_1's `move.l #16#160002' too: dpc still pushes kind and
+   nchildren as one longword), the rule file is unchanged and
+   re-extraction reproduces it.  il_kind_function still returns an
+   integer: it gives the node's il_$kind_t (ord(node^.kind)), not an
+   il$t, and pass 1 compares it with 117 (label_name).
 320. Translator RN2: **backend.ins.pas's solution_t keeps integers.**
    The LIR's view of the solution (solution_t) has kind an integer
    (+108), base_register, index_register and false_label integer32:
@@ -2866,6 +2884,45 @@ answered by this policy and needs no reply.
    one answer ds_solution_t could be folded into isc_solution_t (its
    remaining differences, +86 as a word and its pointer types, are
    views).
+   **Done (RN6, 2026-11-12): unsigned, but for which_transform.**  The
+   image's ISC (cc.a88k 0x0B9F24 .. 0x21DC44) loads these words into a
+   data register 690 times and never sign-extends one; the evidence:
+   (a) the register maxima and results are compared unsigned, as the
+   unsigned code_bytes, delay and memory_references beside them:
+   clearly_dominates `cmp.w; bhi' for +64, +62, +60, +58, +70, +72
+   (0x2126D8 .. 0x212712), and the pass-1 actions' max idiom (`t2 <-
+   $1.fp_reg_max; t2 = $2.fp_reg_max; t2 u<= $2.fp_reg_max' in the
+   rule file, 144 times) `cmp.w; bhi' (rule 306 0x107BB4, rule 64
+   0x0F115A; ip_reg_max 110 such compares, fp_reg_max 18,
+   fp_reg_pair_max 13, fp_reg_quad_max 9), no signed branch on any of
+   them; (b) n_bytes_to_back_up is zero-extended for `* 8' (`clr.l D0;
+   move.w (74,A2),D0; lsl.l #3': rules 248 and 250, 0x14E80E,
+   0x14E8DC, 0x14EE48); (c) pass_2 writes evaluation_order as an
+   unsigned word (16#0A28, 0x18C70C), and dump_solution writes all of
+   bytes .. n_bytes_to_back_up, evaluation_order and which_transform
+   with 16#0A68 (0..65535, as code_bytes; 0x0D67B2 .. 0x0D7BA8).
+   bytes and fp_reg_quad_result are only copied and printed (no compare
+   or widening): typed with their neighbours.  which_transform is the
+   exception: pass_2 indexes the pass-2 actions by it with `move.w
+   (112,A2),D2; ...; ext.l D0; lsl.l #2' (0x18C770 .. 0x18C786) and
+   preserve_solution with a word index (`tst.b (-1,A5,D0.w)', 0x0D9530),
+   a signed integer's code (an unsigned word is widened `clr.l; move.w'
+   by Rev 8.89: (b), list_tree 0x080572), against dump_solution's
+   unsigned print: mixed, so it stays integer.  isc_solution_t's bytes
+   .. n_bytes_to_back_up and evaluation_order are 0..65535 now; the
+   generator's classes follow (iscg_p2lang SOL_FIELDS u16) and a
+   rule's integer temporaries that only take those words (the max
+   idiom's t2, t3 ...) are declared 0..65535 (iscg_p2lang.word_temps:
+   the rule file gives only `integer', the width).  dpc's code changes
+   in 13 units, each toward the image: 144 `bgt' to `bhi' (the max
+   idiom), clearly_dominates' six `sle' to `sls', six `ext.l' to `clr.l'
+   for n_bytes_to_back_up * 8 (isc_pass_1_15), pass_2's write 16#0A20
+   to 16#0A28 (as 0x18C70C), and ten `ext.l' to `clr.l' widening a
+   word temporary into a longword temporary the lifter keeps but no
+   code reads (rule 64's t6 and its like in isc_pass_1_01: no image
+   counterpart).  The rule file is unchanged and re-extraction
+   reproduces it.  ds_solution_t is not folded in: it still differs in
+   which_transform (0..65535 there), +86 and its pointer types.
 322. Translator RN4 (2026-11-12), the dumps' names (question 92):
    **the identifiers are the run time's, not list_tree's strings, where
    the image has a name table.**  cc.a88k's ISC printers write the tree
@@ -2945,6 +3002,38 @@ answered by this policy and needs no reply.
    +42; list_tree's views use the records; the ISC's block view
    (isc_types' bk_atts) is an il_$blk_atts_t at +374 and the
    generator's isc_<blk> template reads bat.  Questions 328..332.
+   **(d) done (RN6, 2026-11-12):** the generator names a number compared
+   with a tree's opmod1 or opmod2 (subject.il.w26, w28, or a child's
+   whose operator the pattern names) when list_tree's print_tree_exp
+   gives that opmod one use for every operator the pattern allows
+   there: a register class (rlen_byte .. rlen_c16: the extends, shifts,
+   multiplications and divisions, compares' opmod1, F_EXTEND, F_MATH's
+   opmod2) or F_MATH's function (math_nint .. math_aimag)
+   (iscg_p2lang.opmod_operand; the rule file keeps the numbers); the
+   fixed text names F_MATH's in-line functions and the rlen_long of the
+   div/mod/isc_mul rewrites.  Left numbers: a comparison's condition at
+   +28 (the ISC tests it `< 0' and indexes by `24 + abs(...)': a signed
+   number to the ISC), bit_test's (`$1.il.w28 <> 6' under rshf_top),
+   field widths (unpack, extract_bit_field), bytes, EXTEND's opmod2
+   (0, 1: no use in list_tree), and an assignment's class at +52.
+   **(e) done (RN6):** the code generator names the condition codes
+   (cond_t .. cond_le) where they are emit's x for the conditional
+   operations (19 scc, 20 bcc, 28 dbcc, 42 the 68881's fbcc, 48 its
+   fscc: opinfo's lists whose kinds 18, 19, 23, 39, 43 fnl_slct makes
+   exact by x), the cc and inst locals that feed them (cg_top's
+   cbranch_proc, cg_tree's bit_test_proc, f_compare_top, max/min,
+   F_MATH's max/min), the comparisons' desc.w8 tests, fnl_slct's ranges
+   and emit_compare's case (fpa); the math functions where desc.w6 is
+   an F_MATH tree's function (cg_tree_$needs_lib_support,
+   assert_is_f_math_op's callers, generate's F_MATH arm) and the
+   literal indices of tree_fn_rtn (14 math_conjg, 15 math_aimag);
+   tree_math, tree_fn_inst and tree_fn_rtn are indexed by
+   math_abs..math_round / math_fi_expon.  Constants, not an
+   enumeration: reverse_cc computes on the codes (odd, plus or minus
+   1), cbranch_proc and bit_test_proc negate them and take abs, emit's
+   x is a size or an operation for the other kinds, and the tables are
+   indexed by the word as it is.  dpc's code is unchanged.  See the new
+   question on what stays numeric.
 327. Translator RN4: **the assembly comparison** (every unit compiled as
    the gate compiles it, main 3679840 against the branch, dpc acea73f:
    274 of 277 objects identical).  opt_main's
@@ -3089,3 +3178,41 @@ answered by this policy and needs no reply.
    `btst #3,(378,A2)' (cc.a88k 0x24B75C, 0x24B776, 0x24B88C) but whose
    block pointer dpc now keeps in the frame rather than A2 (a register
    choice of dpc's).  list_tree's 1422 lines are question 330.
+333. Translator RN6 (2026-11-12), after 326 (e): **what stays numeric
+   in the code generator.**  The operand modifiers that are register
+   classes (desc.w6, w8: f_extend's `w6 = 4', `= 7 or 6', cg_top's and
+   cg_tree's `w6 = 12 or 8' for the extended classes, compare_proc's
+   size from w6) are numbers still: rlen_ names there?  needs_lib_
+   support's fn holds desc.w6 for F_MATH (a function, named) and for
+   F_EXTEND (a class: `fn = 4', and `(fn = 7) or (fn = 6)' tested for
+   any operator, left numeric).  max/min's routine convention test
+   (`m = 1 or 6', +377 bits 6..4) is call_pas and a value with no name
+   (6).  The condition codes and math functions outside the code
+   generator (kfold's `desc.w8 in [6, 7, 12..15]', add_node's swap_cc
+   table and `desc.w8 = 8', delay's and reg_save's tests) were left to
+   their owners; swap_cc's initializer could be written with cond_
+   names.
+334. Translator RN6: **two probable slips kept (named as conditions).**
+   compare_proc maps the sign tests of a comparison with 0 (HI, LS, LT,
+   GE to NE, EQ, MI, PL) on desc.w6, the operands' class, where the
+   condition is w8 (`move.w (26,A2),D0', cc.m68k 0x103D84; harmless:
+   w6 is not read after); f_compare_proc's switch tests FPA1's EQ, GT,
+   LT in desc.w6 (0x103F02 .. 0x103F1E) where cbranch_proc and
+   generate test them in w8.  Both are written `desc.w6 = cond_...'.
+335. Translator RN6, after 319 and 321: **the ISC's remaining numbers
+   and views.**  (a) il_kind_function returns ord(node^.kind), an
+   il_$kind_t, as an integer (not an il$t: question 314), and pass 1
+   compares it with 117 (label_name): retype it to il_$kind_t?  (b) A
+   comparison's condition at +28 stays a number in the pass-1 actions
+   (the ISC tests it `< 0' and indexes by `24 + abs(...)'); so do an
+   assignment's class at +52 (`il.w52 = 9' in declarations.isc: rlen_cs)
+   and bit_test's condition under rshf_top (`$1.il.w28 <> 6').  (c)
+   which_transform is signed in pass_2 and preserve_solution and
+   unsigned in dump_solution: were there two declarations of the
+   solution in the original (the debug printer's own, as ds_solution_t
+   is here)?  (d) The CSE accessors pass_1_cse_{parent,use}_ip_reg_max
+   .. _fp_reg_quad_result and _eval_order return integer while the
+   fields are 0..65535 now (the result is a word in D0 either way), and
+   evaluation_order_function compares its n1 and n2 signed (`ble',
+   0x2124C2) although the callers pass the unsigned maxima: retype the
+   accessors' results?

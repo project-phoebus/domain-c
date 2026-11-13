@@ -2130,7 +2130,7 @@ begin
   add_this_to_parent := nil;
   add_this_to_work_list := nil;
   if pm_check_permissible[which_transform] and
-     not (solution$t(isc_tool_generated_readonly_tables.result_kind[which_transform])
+     not (isc_tool_generated_readonly_tables.result_kind[which_transform]
           in permissible_solution_kinds) then begin
     if isc_user_routines_356 or isc_user_routines_354 then begin
       write('Dead end.');

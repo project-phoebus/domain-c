@@ -119,7 +119,7 @@ begin
   add_this_to_parent := nil;
   add_this_to_work_list := nil;
   if pm_check_permissible[which_transform] and
-     not (solution$t(isc_tool_generated_readonly_tables.result_kind[which_transform])
+     not (isc_tool_generated_readonly_tables.result_kind[which_transform]
           in permissible_solution_kinds) then begin
     if isc_user_routines_356 or isc_user_routines_354 then begin
       write('Dead end.');
@@ -622,7 +622,7 @@ P1_TYPES = '''type
       inh: inherited_attributes_ptr_t;
       depth: integer;
       permissible: solution$set_t;
-      var il_kind: integer;
+      var il_kind: il$t;
       var number_of_children: integer32;
       var solutions: solution_list_ptr_t;
       var children: p1_children_t;
@@ -726,7 +726,7 @@ function cross_product_to_solutions_of_parent(
     il: univ_ptr;
     inh: inherited_attributes_ptr_t;
     permissible: solution$set_t;
-    il_kind: integer;
+    il_kind: il$t;
     number_of_children: integer;
     work_list: solution_list_ptr_t): solution_list_ptr_t; options(val_param);
 var
@@ -759,7 +759,7 @@ procedure isc_unrecognized_il_node(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -805,7 +805,7 @@ procedure @NAME@(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -858,7 +858,7 @@ PASS_1 = '''{ pass_1 - the solutions of node under inh whose kinds are among
 
 function pass_1;
 var
-  il_kind: integer;
+  il_kind: il$t;
   number_of_children: integer32;
   solutions: solution_list_ptr_t;
   children: p1_children_t;
@@ -906,13 +906,13 @@ begin
       subtrees := solution_list$new;
       case number_of_children of
         0: begin
-          s := new_solution(isc_heap, ord(solution$proper_subtree), 0, inh, node, il_kind);
+          s := new_solution(isc_heap, solution$proper_subtree, 0, inh, node, il_kind);
           solution_list$append(subtrees, s);
           end;
         1: begin
           c1 := children[1]^.first;
           while c1 <> nil do begin
-            s := new_solution(isc_heap, ord(solution$proper_subtree), 1, inh, node, il_kind);
+            s := new_solution(isc_heap, solution$proper_subtree, 1, inh, node, il_kind);
             s^.children[1] := c1^.sol;
             solution_list$append(subtrees, s);
             c1 := c1^.next;
@@ -923,7 +923,7 @@ begin
           while c1 <> nil do begin
             c2 := children[2]^.first;
             while c2 <> nil do begin
-              s := new_solution(isc_heap, ord(solution$proper_subtree), 2, inh, node, il_kind);
+              s := new_solution(isc_heap, solution$proper_subtree, 2, inh, node, il_kind);
               s^.children[1] := c1^.sol;
               s^.children[2] := c2^.sol;
               solution_list$append(subtrees, s);
@@ -939,7 +939,7 @@ begin
             while c2 <> nil do begin
               c3 := children[3]^.first;
               while c3 <> nil do begin
-                s := new_solution(isc_heap, ord(solution$proper_subtree), 3, inh, node,
+                s := new_solution(isc_heap, solution$proper_subtree, 3, inh, node,
                                   il_kind);
                 s^.children[1] := c1^.sol;
                 s^.children[2] := c2^.sol;
@@ -961,7 +961,7 @@ begin
               while c3 <> nil do begin
                 c4 := children[4]^.first;
                 while c4 <> nil do begin
-                  s := new_solution(isc_heap, ord(solution$proper_subtree), 4, inh, node,
+                  s := new_solution(isc_heap, solution$proper_subtree, 4, inh, node,
                                     il_kind);
                   s^.children[1] := c1^.sol;
                   s^.children[2] := c2^.sol;
@@ -988,7 +988,7 @@ begin
                 while c4 <> nil do begin
                   c5 := children[5]^.first;
                   while c5 <> nil do begin
-                    s := new_solution(isc_heap, ord(solution$proper_subtree), 5, inh, node,
+                    s := new_solution(isc_heap, solution$proper_subtree, 5, inh, node,
                                       il_kind);
                     s^.children[1] := c1^.sol;
                     s^.children[2] := c2^.sol;
@@ -1053,7 +1053,7 @@ P1_HEADING = '''(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1101,18 +1101,19 @@ P1_ROUTINES['isc_tree_node_isc_func_call_top'] = _p1('isc_tree_node_isc_func_cal
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_func_call_top);
+  il_kind := il_isc_func_call_top;
   number_of_children := 0;
   pass_1_isc_call(il, ord(p1_node_chars_ptr_t(il)^[10]), inh, 0);
 end;''')
 
 P1_ROUTINES['isc_tree_node_f_math_top'] = _p1('isc_tree_node_f_math_top', '''the
   proper_subtree il_f_math_top, 2 children, when the function (opmod1,
-  +26) is one the ISC computes in line (11 .. 15, or the boolean of
-  isc_readonly_tables +424 by opmod1): child 1 (+40) and child 2 (+44)
-  when there are two operands (+38), else a void solution, each at the
-  precision of rlen_bits by opmod2 (+28); otherwise the node rewritten
-  as a call (rewrite_$routine_call) and that call's solutions.
+  +26) is one the ISC computes in line (math_nint .. math_aimag, 11 ..
+  15, or the boolean of isc_readonly_tables +424 by opmod1): child 1
+  (+40) and child 2 (+44) when there are two operands (+38), else a
+  void solution, each at the precision of rlen_bits by opmod2 (+28);
+  otherwise the node rewritten as a call (rewrite_$routine_call) and
+  that call's solutions.
 
   0x0E98E2, 0x34E bytes: D1 opmod1; the tests in the order 15, 14, 11,
   then `seq' of 12 or-ed with the table's byte (`bmi'), then 13 (Rev
@@ -1126,12 +1127,12 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_math_top);
+  il_kind := il_f_math_top;
   number_of_children := 2;
-  if (isc_node_ptr_t(il)^.xw[13] = 15) or (isc_node_ptr_t(il)^.xw[13] = 14)
-      or (isc_node_ptr_t(il)^.xw[13] = 11) or (isc_node_ptr_t(il)^.xw[13] = 12)
+  if (isc_node_ptr_t(il)^.xw[13] = math_aimag) or (isc_node_ptr_t(il)^.xw[13] = math_conjg)
+      or (isc_node_ptr_t(il)^.xw[13] = math_nint) or (isc_node_ptr_t(il)^.xw[13] = math_max)
       or p1_readonly_bytes_ptr_t(addr(isc_readonly_tables))^[424 + isc_node_ptr_t(il)^.xw[13]].b7
-      or (isc_node_ptr_t(il)^.xw[13] = 13) then begin
+      or (isc_node_ptr_t(il)^.xw[13] = math_min) then begin
     inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
     @COPY inh_1
     inh_1^.fetch_precision := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[14]];
@@ -1145,7 +1146,7 @@ begin
       if (isc_node_ptr_t(il)^.xw[19] <> 2) then begin
         children[2] := solution_list$new;
         solution_list$append(children[2], new_solution(isc_heap,
-            ord(solution$void), 0, nil, nil, 0));
+            solution$void, 0, nil, nil, il_none));
       end
       else begin
         inh_2 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[11]);
@@ -1192,7 +1193,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_func_call_top);
+  il_kind := il_func_call_top;
   number_of_children := 1;
   case inh^.f38.required_arithmetic of
     1, 3: tkind := 122;
@@ -1230,7 +1231,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_f_div_top);
+  il_kind := il_f_div_top;
   number_of_children := 2;
   if il_node_has_float_value(isc_node_ptr_t(il)^.xp[11])
       and not p1_node_bytes_ptr_t(il)^[30].b7
@@ -1302,7 +1303,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_return_node);
+  il_kind := il_return_node;
   number_of_children := 0;
   if return_value_needs_assign_node(isc_node_ptr_t(il)^.xp[12],
       isc_node_ptr_t(il_180)^.xp[24]) then begin
@@ -1353,7 +1354,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_agg_aop);
+  il_kind := il_isc_agg_aop;
   number_of_children := 3;
   constant := il_node_has_integer_value(isc_node_ptr_t(il)^.xp[18]);
   if constant then
@@ -1452,7 +1453,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_%s);
+  il_kind := il_%s;
   number_of_children := 0;
   bat := isc_node_ptr_t(il)^.bk_atts.bat;
   if (bat <> local_bat) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
@@ -1507,7 +1508,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_fortran_symbol);
+  il_kind := il_fortran_symbol;
   number_of_children := 0;
   kind := isc_node_ptr_t(il)^.fs_f44.kind;
   if kind = 6 then begin
@@ -1573,7 +1574,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_compare_top);
+  il_kind := il_compare_top;
   number_of_children := 2;
   if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
       and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
@@ -1649,7 +1650,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_mul_top);
+  il_kind := il_mul_top;
   number_of_children := 2;
   if il_node_has_integer_value(isc_node_ptr_t(il)^.xp[10])
       and not il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11]) then begin
@@ -1728,7 +1729,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_mul_top);
+  il_kind := il_isc_mul_top;
   number_of_children := 2;
   if (il_node_has_integer_value(isc_node_ptr_t(il)^.xp[11])
       and is_power_of_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[11]))
@@ -1763,7 +1764,7 @@ begin
     end;
   end
   else begin
-    if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+    if (isc_node_ptr_t(il)^.xw[13] = rlen_long) and (isc_node_ptr_t(il)^.xw[14] = rlen_long) then begin
       @TRACE
       n := mrh_$alloc(isc_preserve_heap, 52);
       isc_node_ptr_t(n)^.kind := tree_node;
@@ -1835,7 +1836,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_isc_mul_to_aop);
+  il_kind := il_isc_mul_to_aop;
   number_of_children := 2;
   if (not (p1_node_bytes_ptr_t(il_180)^[374].b4 or (13 in cargs_$options.flags_286))
       and (14 in cargs_$options.flags_286))
@@ -1921,7 +1922,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_div_by_aop);
+  il_kind := il_div_by_aop;
   number_of_children := 2;
   if (il_node_has_integer_value(isc_node_ptr_t(il)^.xp[17])
       and is_power_of_2(il_node_to_integer_value(isc_node_ptr_t(il)^.xp[17]))
@@ -2026,7 +2027,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_div_top);
+  il_kind := il_div_top;
   number_of_children := 2;
   if p1_node_bytes_ptr_t(il)^[30].b6 then
     lib := std_lib_rtns[5]
@@ -2068,7 +2069,7 @@ begin
 @TAIL6
     end;
   end
-  else if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+  else if (isc_node_ptr_t(il)^.xw[13] = rlen_long) and (isc_node_ptr_t(il)^.xw[14] = rlen_long) then begin
     @TRACE
     n := mrh_$alloc(isc_preserve_heap, 52);
     isc_node_ptr_t(n)^.kind := tree_node;
@@ -2147,7 +2148,7 @@ var
 begin
   solutions_made := false;
   no_solutions := false;
-  il_kind := ord(il_mod_top);
+  il_kind := il_mod_top;
   number_of_children := 2;
   if p1_node_bytes_ptr_t(il)^[30].b6 then
     lib := std_lib_rtns[5]
@@ -2196,7 +2197,7 @@ begin
         isc_node_ptr_t(il)^.xw[13]);
     v2 := value_top_over(isc_node_ptr_t(il)^.xp[11], isc_node_ptr_t(il)^.xw[14],
         isc_node_ptr_t(il)^.xw[14]);
-    if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+    if (isc_node_ptr_t(il)^.xw[13] = rlen_long) and (isc_node_ptr_t(il)^.xw[14] = rlen_long) then begin
       @TRACE
       q := mrh_$alloc(isc_preserve_heap, 52);
       isc_node_ptr_t(q)^.kind := tree_node;

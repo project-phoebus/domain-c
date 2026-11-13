@@ -868,7 +868,7 @@ var
     emit(18, size, sel, t, 0);
     unlock(t);
     address(deflab, 0, t);
-    emit(20, 5, t, cg_null_ads, 4);
+    emit(20, 5, t, cg_null_ads, cond_cc);
     tablab := templabel;
     address(tablab, 0, t);
     t.f1 := 6;
@@ -941,24 +941,24 @@ var
         return;
       end;
       if b.sense then
-        cc := 11
+        cc := cond_mi
       else
-        cc := 10;
+        cc := cond_pl;
       address(b.cond, 1, cg_top_e0);
       emit(18, 1, cg_top_e0, cg_zero_ads, 0);
       release(cg_top_e0);
     end
     else begin
       walker(b.cond);
-      cc := 4;
+      cc := cond_cc;
       if b.sense then begin
         if (8 in cargs_$options.cpu) and ((cg_fp_1000 = b.cond) or
             (cg_tree_ptr_t(b.cond)^.desc.w6 = 12) or
             (cg_tree_ptr_t(b.cond)^.desc.w6 = 8)) then begin
-          if (cg_tree_ptr_t(b.cond)^.desc.w8 = 7) or
-              (cg_tree_ptr_t(b.cond)^.desc.w8 = 14) or
-              (cg_tree_ptr_t(b.cond)^.desc.w8 = 13) then
-            cc := 5;
+          if (cg_tree_ptr_t(b.cond)^.desc.w8 = cond_eq) or
+              (cg_tree_ptr_t(b.cond)^.desc.w8 = cond_gt) or
+              (cg_tree_ptr_t(b.cond)^.desc.w8 = cond_lt) then
+            cc := cond_cs;
         end
         else
           cc := abs(cg_tree_ptr_t(b.cond)^.desc.w8);
@@ -967,10 +967,10 @@ var
         if (8 in cargs_$options.cpu) and ((cg_fp_1000 = b.cond) or
             (cg_tree_ptr_t(b.cond)^.desc.w6 = 12) or
             (cg_tree_ptr_t(b.cond)^.desc.w6 = 8)) then begin
-          if not ((cg_tree_ptr_t(b.cond)^.desc.w8 = 14) or
-              (cg_tree_ptr_t(b.cond)^.desc.w8 = 13) or
-              (cg_tree_ptr_t(b.cond)^.desc.w8 = 7)) then
-            cc := 5;
+          if not ((cg_tree_ptr_t(b.cond)^.desc.w8 = cond_gt) or
+              (cg_tree_ptr_t(b.cond)^.desc.w8 = cond_lt) or
+              (cg_tree_ptr_t(b.cond)^.desc.w8 = cond_eq)) then
+            cc := cond_cs;
         end
         else
           cc := reverse_cc(abs(cg_tree_ptr_t(b.cond)^.desc.w8));
@@ -980,10 +980,10 @@ var
         (cg_tree_ptr_t(b.cond)^.desc.w6 = 8)) then
       if (b.cond^.kind = tree_node) or (b.cond^.kind = cmp_tree_node) or
           (b.cond^.kind = gen_tree_node) then
-        if cc = 4 then
-          cc := 6
+        if cc = cond_cc then
+          cc := cond_ne
         else
-          cc := 7;
+          cc := cond_eq;
     address(b.target, 0, t);
     if b.target <> b.next then
       if (cg_fp_1000 = b.cond) and not (8 in cargs_$options.cpu) then

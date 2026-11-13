@@ -103,7 +103,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 340;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes;
@@ -143,7 +143,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 341;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes;
@@ -183,7 +183,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 342;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -223,7 +223,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 343;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := subject.children[1]^.code_bytes;
@@ -313,7 +313,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
     solution^.which_transform := 344;
     solution^.before_transform := addr(subject);
     solution^.fields[0] := pass_1_isc_call_addr_of_temp(isc_node_ptr_t(subject.il));
@@ -366,7 +366,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 345;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(lir_4090[p2_node_ptr_t(subject.il)^.b[11]]);
@@ -415,7 +415,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 346;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.il)^.b[11]]);
@@ -464,7 +464,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 347;
       solution^.before_transform := addr(subject);
       solution^.fields[0] := isc_solution_ptr_t(lir_3f90[p2_node_ptr_t(subject.il)^.b[11]]);
@@ -517,7 +517,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
     solution^.which_transform := 348;
     solution^.before_transform := addr(subject);
     if subject.children[1]^.f76.uses_the_base_register then begin

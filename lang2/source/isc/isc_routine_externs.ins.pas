@@ -32,14 +32,16 @@ function new_inherited_attributes(
 { NEW_SOLUTION - a new solution from heap of kind kind with nchildren
   children (bug_check above 5), made under inh, for sym (its il) of
   il_kind.  0x0D9318, 0xAA bytes: heap 8, kind a word at 12, nchildren
-  a word at 14, inh 16, sym 20, il_kind a word at 24; A0. }
+  a word at 14, inh 16, sym 20, il_kind a word at 24; A0.  kind and
+  il_kind are the record's types (docs/questions.md 319): the words are
+  stored into +108 and +98 as they come. }
 function new_solution(
     in out heap: mrh_$heap_t;
-    kind: integer;
+    kind: solution$t;
     nchildren: integer;
     inh: inherited_attributes_ptr_t;
     sym: univ_ptr;
-    il_kind: integer): isc_solution_ptr_t; options(val_param); extern;
+    il_kind: il$t): isc_solution_ptr_t; options(val_param); extern;
 
 { DUPLICATE_SOLUTION - a copy of sol from heap (nil for nil).
   0x0D93FC, 0x62 bytes: heap 8, sol 12; A0. }
@@ -404,10 +406,10 @@ function choose_one_cse_solution(
 function map_cse_use_ob_to_cse_parent_ob(
     node: isc_node_ptr_t): isc_node_ptr_t; options(val_param); extern;
 
-{ SOLUTION_KIND_OF_CSE - the kind of the CSE's chosen solution.
-  0x0BA70C. }
+{ SOLUTION_KIND_OF_CSE - the kind of the CSE's chosen solution (a word,
+  +108; docs/questions.md 319).  0x0BA70C. }
 function solution_kind_of_cse(
-    node: isc_node_ptr_t): integer; options(val_param); extern;
+    node: isc_node_ptr_t): solution$t; options(val_param); extern;
 
 { PASS_1_CSE_PARENT_OB, PASS_1_CSE_USE_OB - pass 1 of a CSE's tree,
   reached through its parent or a use.  0x0BA7B0, 0x0BB4E8. }
@@ -807,9 +809,9 @@ function bits_trusted_of_symbol(
     x: integer32): integer32; options(val_param); extern;
 
 { GET_KIND_OF_HOME_SOLUTION - 0x21217C: the kind of sym's home solution
-  (0 for none); a word. }
+  (solution$none for none); a word. }
 function get_kind_of_home_solution(
-    sym: univ_ptr): integer; options(val_param); extern;
+    sym: univ_ptr): solution$t; options(val_param); extern;
 
 { IL_NODE_HAS_FLOAT_VALUE - 0x2121AE: whether node is a real constant. }
 function il_node_has_float_value(
@@ -1152,7 +1154,7 @@ function value_top_over(
 { SOLUTION_KIND_OF_SYMBOL - 0x216E8A: the kind of sym's home solution;
   a word. }
 function solution_kind_of_symbol(
-    sym: univ_ptr): integer; options(val_param); extern;
+    sym: univ_ptr): solution$t; options(val_param); extern;
 
 
 { The printers (each writes and returns a blank): ARG_LOC_T_TO_STRING -

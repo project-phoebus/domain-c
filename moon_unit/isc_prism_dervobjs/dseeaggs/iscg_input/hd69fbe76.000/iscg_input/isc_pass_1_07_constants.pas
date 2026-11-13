@@ -115,7 +115,7 @@ begin
     write('Pattern 2 matched the semantics.');
     writeln;
   end;
-  solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
+  solution := new_solution(isc_heap, solution$literal_32_bits, 0, inh, il, il_none);
   solution^.which_transform := 2;
   solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;
@@ -149,7 +149,7 @@ begin
     write('Pattern 3 matched the semantics.');
     writeln;
   end;
-  solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
+  solution := new_solution(isc_heap, solution$literal_32_bits, 0, inh, il, il_none);
   solution^.which_transform := 3;
   solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;
@@ -185,7 +185,7 @@ begin
       write('Pattern 4 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$literal_32_bits, 0, inh, il, il_none);
     solution^.which_transform := 4;
     solution^.before_transform := addr(subject);
     t2 := integer32_from_char_string_ob(subject.il);
@@ -229,7 +229,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
     solution^.which_transform := 5;
     solution^.before_transform := addr(subject);
     if p2_node_ptr_t(subject.il)^.w[8] >= 4 then begin
@@ -286,7 +286,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
     solution^.which_transform := 6;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -339,7 +339,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
     solution^.which_transform := 7;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -386,7 +386,7 @@ begin
       write('Pattern 8 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$literal_32_bits, 0, inh, il, il_none);
     solution^.which_transform := 8;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -422,7 +422,7 @@ begin
     write('Pattern 9 matched the semantics.');
     writeln;
   end;
-  solution := new_solution(isc_heap, ord(solution$literal_64_bits), 0, inh, il, 0);
+  solution := new_solution(isc_heap, solution$literal_64_bits, 0, inh, il, il_none);
   solution^.which_transform := 9;
   solution^.before_transform := addr(subject);
   solution^.code_bytes := 0;
@@ -458,7 +458,7 @@ begin
     write('Pattern 10 matched the semantics.');
     writeln;
   end;
-  solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
+  solution := new_solution(isc_heap, solution$literal_32_bits, 0, inh, il, il_none);
   solution^.which_transform := 10;
   solution^.before_transform := addr(subject);
   f.value := il_$node_ptr_t(subject.il)^.real_value;
@@ -502,7 +502,7 @@ begin
     end;
   end
   else begin
-    solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
     solution^.which_transform := 11;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -558,7 +558,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 12;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[2] := rshft(p2_node_ptr_t(subject.il)^.w[8] + 3,

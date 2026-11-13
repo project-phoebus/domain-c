@@ -184,10 +184,10 @@ end;
   node (a use, or its parent).
 
   0x0BA70C, 0x4C bytes: node 8, mapped when its kind is 189; the kind a
-  word (+108); bug_check and 0 when there is no solution. }
+  word (+108); bug_check and solution$none when there is no solution. }
 
 function solution_kind_of_cse(
-    node: isc_node_ptr_t): integer; options(val_param);
+    node: isc_node_ptr_t): solution$t; options(val_param);
 var
   s: isc_solution_ptr_t;
 begin
@@ -196,10 +196,10 @@ begin
   s := node^.cp_chosen_solution;
   if s = nil then begin
     bug_check('ISC: solution_kind_of_cse: chosen_solution is nil, meaning cse has not yet been coded.%$');
-    solution_kind_of_cse := 0;
+    solution_kind_of_cse := solution$none;
   end
   else
-    solution_kind_of_cse := ord(s^.kind);
+    solution_kind_of_cse := s^.kind;
 end;
 
 { pass_1_cse_parent_ob - pass 1 of a CSE's tree under inh (once: tree

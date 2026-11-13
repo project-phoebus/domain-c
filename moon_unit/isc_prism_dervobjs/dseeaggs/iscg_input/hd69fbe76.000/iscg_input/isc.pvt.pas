@@ -76,7 +76,7 @@ procedure isc_pass_1_begin_compilation; extern;
 type
   isc_opcode_map_t = array [il$t] of integer;
   isc_tool_tables_t = record
-    result_kind: array [1..563] of integer;     { +0 }
+    result_kind: array [1..563] of solution$t;  { +0 }
     opcode_rr_reversed: isc_opcode_map_t;       { +1126 }
     opcode_rr: isc_opcode_map_t;                { +1482 }
     opcode_immediate: isc_opcode_map_t;         { +1838 }

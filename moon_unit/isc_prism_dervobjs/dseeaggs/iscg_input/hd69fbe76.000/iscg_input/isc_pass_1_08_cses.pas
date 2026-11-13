@@ -80,12 +80,12 @@ var
 begin
   result := nil;
   work := nil;
-  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = 14 then begin
+  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = solution$literal_32_bits then begin
     if isc_user_routines_354 then begin
       write('Pattern 87 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$literal_32_bits, 0, inh, il, il_none);
     solution^.which_transform := 87;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -116,7 +116,7 @@ var
 begin
   result := nil;
   work := nil;
-  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = 5 then begin
+  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = solution$address_mode then begin
     if isc_user_routines_354 then begin
       write('Pattern 88 matched the semantics.');
       writeln;
@@ -128,7 +128,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 88;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
@@ -175,7 +175,7 @@ begin
   result := nil;
   work := nil;
   t1 := precision_from_il_node(p2_node_ptr_t(subject.il)^.p[1]);
-  if not ((subject.inherited_attributes^.fetch_precision > 32) or (t1 <> subject.inherited_attributes^.fetch_precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.il)) <> 11)) then begin
+  if not ((subject.inherited_attributes^.fetch_precision > 32) or (t1 <> subject.inherited_attributes^.fetch_precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.il)) <> solution$ip_reg)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 89 matched the semantics.');
       writeln;
@@ -187,7 +187,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 89;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
@@ -233,7 +233,7 @@ begin
   result := nil;
   work := nil;
   t1 := precision_from_il_node(p2_node_ptr_t(subject.il)^.p[1]);
-  if not ((subject.inherited_attributes^.fetch_precision <= 0) or (subject.inherited_attributes^.fetch_precision > 32) or (t1 <= subject.inherited_attributes^.fetch_precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.il)) <> 11)) then begin
+  if not ((subject.inherited_attributes^.fetch_precision <= 0) or (subject.inherited_attributes^.fetch_precision > 32) or (t1 <= subject.inherited_attributes^.fetch_precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.il)) <> solution$ip_reg)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 90 matched the semantics.');
       writeln;
@@ -245,7 +245,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 90;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
@@ -292,7 +292,7 @@ var
 begin
   result := nil;
   work := nil;
-  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = 8 then begin
+  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = solution$fp_reg then begin
     if isc_user_routines_354 then begin
       write('Pattern 91 matched the semantics.');
       writeln;
@@ -304,7 +304,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 91;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
@@ -347,7 +347,7 @@ var
 begin
   result := nil;
   work := nil;
-  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = 9 then begin
+  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = solution$fp_reg_pair then begin
     if isc_user_routines_354 then begin
       write('Pattern 92 matched the semantics.');
       writeln;
@@ -359,7 +359,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 92;
       solution^.before_transform := addr(subject);
       if not isc_user_routines_358 then begin
@@ -407,7 +407,7 @@ var
 begin
   result := nil;
   work := nil;
-  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = 10 then begin
+  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = solution$fp_reg_quad then begin
     if isc_user_routines_354 then begin
       write('Pattern 93 matched the semantics.');
       writeln;
@@ -419,7 +419,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 93;
       solution^.before_transform := addr(subject);
       if not isc_user_routines_358 then begin
@@ -469,12 +469,12 @@ var
 begin
   result := nil;
   work := nil;
-  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = 14 then begin
+  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = solution$literal_32_bits then begin
     if isc_user_routines_354 then begin
       write('Pattern 94 matched the semantics.');
       writeln;
     end;
-    solution := new_solution(isc_heap, ord(solution$literal_32_bits), 0, inh, il, 0);
+    solution := new_solution(isc_heap, solution$literal_32_bits, 0, inh, il, il_none);
     solution^.which_transform := 94;
     solution^.before_transform := addr(subject);
     solution^.code_bytes := 0;
@@ -505,7 +505,7 @@ var
 begin
   result := nil;
   work := nil;
-  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = 5 then begin
+  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = solution$address_mode then begin
     if isc_user_routines_354 then begin
       write('Pattern 95 matched the semantics.');
       writeln;
@@ -517,7 +517,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$address_mode), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$address_mode, 0, inh, il, il_none);
       solution^.which_transform := 95;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
@@ -565,7 +565,7 @@ begin
   result := nil;
   work := nil;
   t1 := precision_from_il_node(p2_node_ptr_t(subject.il)^.p[5]);
-  if not ((subject.inherited_attributes^.fetch_precision > 32) or (t1 <> subject.inherited_attributes^.fetch_precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.il)) <> 11)) then begin
+  if not ((subject.inherited_attributes^.fetch_precision > 32) or (t1 <> subject.inherited_attributes^.fetch_precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.il)) <> solution$ip_reg)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 96 matched the semantics.');
       writeln;
@@ -577,7 +577,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg, 0, inh, il, il_none);
       solution^.which_transform := 96;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
@@ -623,7 +623,7 @@ begin
   result := nil;
   work := nil;
   t1 := precision_from_il_node(p2_node_ptr_t(subject.il)^.p[5]);
-  if not ((subject.inherited_attributes^.fetch_precision <= 0) or (subject.inherited_attributes^.fetch_precision > 32) or (t1 <= subject.inherited_attributes^.fetch_precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.il)) <> 11)) then begin
+  if not ((subject.inherited_attributes^.fetch_precision <= 0) or (subject.inherited_attributes^.fetch_precision > 32) or (t1 <= subject.inherited_attributes^.fetch_precision) or (solution_kind_of_cse(isc_node_ptr_t(subject.il)) <> solution$ip_reg)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 97 matched the semantics.');
       writeln;
@@ -635,7 +635,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$ip_reg_field), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$ip_reg_field, 0, inh, il, il_none);
       solution^.which_transform := 97;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
@@ -682,7 +682,7 @@ var
 begin
   result := nil;
   work := nil;
-  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = 8 then begin
+  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = solution$fp_reg then begin
     if isc_user_routines_354 then begin
       write('Pattern 98 matched the semantics.');
       writeln;
@@ -694,7 +694,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg, 0, inh, il, il_none);
       solution^.which_transform := 98;
       solution^.before_transform := addr(subject);
       solution^.code_bytes := 0;
@@ -737,7 +737,7 @@ var
 begin
   result := nil;
   work := nil;
-  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = 9 then begin
+  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = solution$fp_reg_pair then begin
     if isc_user_routines_354 then begin
       write('Pattern 99 matched the semantics.');
       writeln;
@@ -749,7 +749,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_pair, 0, inh, il, il_none);
       solution^.which_transform := 99;
       solution^.before_transform := addr(subject);
       if not isc_user_routines_358 then begin
@@ -797,7 +797,7 @@ var
 begin
   result := nil;
   work := nil;
-  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = 10 then begin
+  if solution_kind_of_cse(isc_node_ptr_t(subject.il)) = solution$fp_reg_quad then begin
     if isc_user_routines_354 then begin
       write('Pattern 100 matched the semantics.');
       writeln;
@@ -809,7 +809,7 @@ begin
       end;
     end
     else begin
-      solution := new_solution(isc_heap, ord(solution$fp_reg_quad), 0, inh, il, 0);
+      solution := new_solution(isc_heap, solution$fp_reg_quad, 0, inh, il, il_none);
       solution^.which_transform := 100;
       solution^.before_transform := addr(subject);
       if not isc_user_routines_358 then begin

@@ -1477,7 +1477,7 @@ HEADING = '''(
     inh: inherited_attributes_ptr_t;
     depth: integer;
     permissible: solution$set_t;
-    var il_kind: integer;
+    var il_kind: il$t;
     var number_of_children: integer32;
     var solutions: solution_list_ptr_t;
     var children: p1_children_t;
@@ -1679,7 +1679,7 @@ def emit_operator(op, unions, kinds):
     L.append('begin')
     L.append('  solutions_made := false;')
     L.append('  no_solutions := false;')
-    L.append('  il_kind := ord(il_%s);' % op['il'])
+    L.append('  il_kind := il_%s;' % op['il'])
     L.append('  number_of_children := %d;' % n)
     emit_body(L, op['body'], '  ', unions, kinds)
     L.append('end;')
@@ -1706,7 +1706,7 @@ def emit_body(L, body, ind, unions, kinds):
                     k, expr(node)), ind))
             L.append('%schildren[%d] := solution_list$new;' % (ind, k))
             L.extend(wrap_stmt('solution_list$append(children[%d], new_solution(isc_heap, '
-                               'ord(solution$%s), 0, %s, %s, 0));' % (
+                               'solution$%s, 0, %s, %s, il_none));' % (
                                    k, kind, 'nil' if node == 'nil' else 'inh_%d' % k,
                                    expr(node)), ind))
             continue

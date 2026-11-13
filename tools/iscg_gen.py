@@ -389,6 +389,10 @@ class Gen:
         self.ils = il_names()
         self.kinds = rules.kinds
         self.il_index = {n: k for k, n in enumerate(self.ils)}
+        # the operators the patterns name, for the operand modifiers'
+        # names in the actions (iscg_p2lang.opmod_operand)
+        import iscg_p2lang
+        iscg_p2lang.set_patterns(rules.transforms)
 
     def is_kind(self, name):
         isil = ('il_' + name) in self.il_index
@@ -590,7 +594,7 @@ class Gen:
         L.append('{ isc_tool_generated_readonly_tables: each rule\'s result kind, then the')
         L.append('  opcode maps by il$t (isc.pvt.pas declares the section). }')
         L.append('define isc_tool_generated_readonly_tables := [')
-        items = runs([T[r]['kind'] for r in range(1, n + 1)], lambda k: 'ord(solution$%s)' % k)
+        items = runs([T[r]['kind'] for r in range(1, n + 1)], lambda k: 'solution$%s' % k)
         L.append('    [')
         L.extend(wrap(items, '      ', end='],'))
         maps = dict(self.r.maps)

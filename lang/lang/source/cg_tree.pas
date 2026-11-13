@@ -137,7 +137,7 @@ var
     condition with its operands swapped. }
   swap_cc: extern array [0..15] of integer;
 
-  tree_math: array [0..21] of tree_math_t := [
+  tree_math: array [math_abs..math_round] of tree_math_t := [  { by function }
     [false, 115], [true, 115], [true, 117], [true, 119], [true, 127],
     [true, 129], [true, 125], [true, 121], [true, 123], [false, 115],
     [true, 145], [true, 145], [false, 115], [false, 115], [false, 115],
@@ -148,19 +148,21 @@ var
   peb_ads: codegen_$uads_t := [11, 31, 31, 0, 5, 0, 0, 0];  { +0x58 }
 
   { The 68881's instruction of a builtin math function (+0x70, by
-    desc.w6: 33 none). }
-  tree_fn_inst: array [0..23] of integer := [50, 51, 52, 53, 54, 55, 57,
-      58, 33, 59, 60, 33, 10 of 33, 2 of 0];  { +0x70 }
+    desc.w6, the function: il.ins.pas's math_; 33 none). }
+  tree_fn_inst: array [math_abs..math_fi_expon] of integer := [
+      50, 51, 52, 53, 54, 55, 57, 58, 33, 59, 60, 33, 10 of 33, 2 of 0];
+                                        { +0x70 }
 
   { emit's generic instruction of an operator (+0xA0, by op: 1 add, 2
     subtract, 3 and, 4 or, 11 and 12 the unary ones; 33 none). }
   tree_op_inst: array [0..91] of integer := [33, 1, 2, 33, 3 of 33, 11,
       12, 3, 4, 33, 7 of 33, 3, 4, 3, 33, 67 of 33, 2 of 0];  { +0xA0 }
 
-  { The FPA's routine of a builtin math function (+0x158, by desc.w6). }
-  tree_fn_rtn: array [0..23] of integer := [104, 106, 108, 110, 112, 114,
-      116, 118, 121, 125, 127, 129, 132, 137, 141, 143, 148, 5 of 148,
-      2 of 0];
+  { The FPA's routine of a builtin math function (+0x158, by desc.w6,
+    the function). }
+  tree_fn_rtn: array [math_abs..math_fi_expon] of integer := [
+      104, 106, 108, 110, 112, 114, 116, 118, 121, 125, 127, 129, 132, 137,
+      141, 143, 148, 5 of 148, 2 of 0];
                                         { +0x158 }
 
   { The operands generate's routines build (+0x1B8 .. +0x230, 24 bytes
@@ -297,7 +299,7 @@ begin
   n := cg_tree_ptr_t(t);
   rtn := 176;
   if (n^.desc.rlen = rlen_c16) or (n^.desc.rlen = rlen_c8) or
-      assert_is_f_math_op(t, 15) then
+      assert_is_f_math_op(t, math_aimag) then
     rtn := 21
   else if (n^.op = f_extend_top) and ((n^.desc.w6 = 12) or (n^.desc.w6 = 8)) then
     rtn := 21
@@ -309,14 +311,14 @@ begin
   else if 9 in cargs_$options.cpu then begin
     fn := n^.desc.w6;
     if n^.op = f_math_top then begin
-      if not ((fn = 13) or (fn = 12) or (fn = 9) or (fn = 0)) and
-          (fn in [0..21]) and tree_math[fn].ok then begin
+      if not ((fn = math_min) or (fn = math_max) or (fn = math_sqrt) or (fn = math_abs)) and
+          (fn in [math_abs..math_round]) and tree_math[fn].ok then begin
         rtn := tree_math[fn].rtn;
         if n^.desc.rlen = rlen_r8 then
-          if not ((fn = 11) or (fn = 10)) then
+          if not ((fn = math_nint) or (fn = math_trunc)) then
             rtn := rtn + 1;
       end
-      else if not (fn in [0..7, 9, 10, 12, 13]) then
+      else if not (fn in [math_abs..math_atan, math_sqrt, math_trunc, math_max, math_min]) then
         rtn := 18;
     end
     else if n^.op = f_extend_top then begin
@@ -363,15 +365,16 @@ begin
     else if n^.op = f_math_top then begin
       if 10 in cargs_$options.cpu then
         rtn := 18
-      else if (1 in cargs_$options.cpu) and (fn <> 0) then
+      else if (1 in cargs_$options.cpu) and (fn <> math_abs) then
         rtn := 18
       else if (8 in cargs_$options.cpu) and
-          not ((fn = 13) or (fn = 12) or (fn = 9) or (fn = 0)) then
+          not ((fn = math_min) or (fn = math_max) or (fn = math_sqrt) or (fn = math_abs)) then
         rtn := 18
       else if (2 in cargs_$options.cpu) and
-          not (fn in [0..4, 6, 7, 9, 10, 12, 13]) then
+          not (fn in [math_abs..math_log, math_exp, math_atan, math_sqrt, math_trunc,
+                      math_max, math_min]) then
         rtn := 18
-      else if not (fn in [0..7, 9, 10, 12, 13]) then
+      else if not (fn in [math_abs..math_atan, math_sqrt, math_trunc, math_max, math_min]) then
         rtn := 18;
     end;
   end;
@@ -503,7 +506,7 @@ begin
     emit(47, 6, a, zero, 6);
     release(zero);
     address(templabel, 0, l1);
-    emit(42, 5, l1, cg_null_ads, 12);
+    emit(42, 5, l1, cg_null_ads, cond_ge);
     emit(44, 6, a, half, 6);
     address(templabel, 0, l2);
     emit(21, 5, l2, cg_null_ads, 0);
@@ -546,7 +549,7 @@ begin
   if cg_fp_count <> 0 then
     purge_fp;
   discard(cg_tree_$needs_lib_support(n, rtn));
-  if assert_is_f_math_op(n, 8) then
+  if assert_is_f_math_op(n, math_atan2) then
     two := true
   else if t^.op = f_expon_top then
     two := true
@@ -554,7 +557,7 @@ begin
     two := false;
   if (t^.op = f_expon_top) or (t^.op = f_extend_top) then
     sz1 := t^.desc.w6
-  else if assert_is_f_math_op(n, 11) then
+  else if assert_is_f_math_op(n, math_nint) then
     sz1 := t^.desc.w8
   else
     sz1 := t^.desc.rlen;
@@ -580,7 +583,7 @@ begin
         cg_addr_locks[0] := cg_addr_locks[0] + 1;
     end;
   end;
-  if assert_is_f_math_op(n, 11) then
+  if assert_is_f_math_op(n, math_nint) then
     cg_tree_$adjust_before_round(t^.opnd[1], sz1, a)
   else
     address(t^.opnd[1], sz1, a);
@@ -598,7 +601,7 @@ begin
   end;
   unlock(a);
   gen_call(nil, std_lib_rtns[rtn]);
-  if assert_is_f_math_op(n, 11) and (t^.desc.rlen <= rlen_long) then begin
+  if assert_is_f_math_op(n, math_nint) and (t^.desc.rlen <= rlen_long) then begin
     kill_register(0);
     address_reg(16, a);
     address_reg(0, r2);
@@ -1179,7 +1182,7 @@ var
     e: il_$node_ptr_t;
   begin
     range := false;
-    cc := 6;
+    cc := cond_ne;
     inst := 17;
     sz := il_$node_ptr_t(n)^.xw[11];
     bits := il_$node_ptr_t(n)^.xw[11] * 8 - 1;
@@ -1191,7 +1194,7 @@ var
           sz := rshft(e^.xl[2] + 1, 3);
           opr := cg_zero_ads;
           inst := 18;
-          cc := 11;
+          cc := cond_mi;
         end
         else if v = 0 then begin
           anyconst(0, 1, opr);
@@ -1200,12 +1203,12 @@ var
             if r = 31 then begin
               if bits > 8 then begin
                 inst := 13;
-                cc := 5;
+                cc := cond_cs;
               end;
             end
             else if weight(r) = 16000 then begin
               inst := 13;
-              cc := 5;
+              cc := cond_cs;
             end;
           end;
         end
@@ -1221,8 +1224,8 @@ var
           emit(18, n^.desc.w6, ops, opr, 0);
           release(ops);
           address(templabel, 0, opt);
-          emit(20, 5, opt, cg_null_ads, 5);
-          cc := 2;
+          emit(20, 5, opt, cg_null_ads, cond_cs);
+          cc := cond_hi;
           range := true;
         end;
       end;
@@ -1280,8 +1283,8 @@ var
               emit(18, n^.desc.w6, ops, opt, 0);
               unlock(opt);
               address(templabel, 0, opt);
-              emit(20, 5, opt, cg_null_ads, 5);
-              cc := 2;
+              emit(20, 5, opt, cg_null_ads, cond_cs);
+              cc := cond_hi;
               range := true;
             end;
             s.y := s.y + n^.desc.size;
@@ -1303,8 +1306,8 @@ var
           kill_register(opr.f2);
           if (n^.desc.flags & 16#400) <> 0 then begin
             address(templabel, 0, opt);
-            emit(20, 5, opt, cg_null_ads, 5);
-            cc := 14;
+            emit(20, 5, opt, cg_null_ads, cond_cs);
+            cc := cond_gt;
             range := true;
           end;
           shift(opr, n^.desc.w6, 3, 2);
@@ -1312,7 +1315,7 @@ var
         load_address(n^.opnd[2], s);
         if n^.desc.w8 < 0 then begin
           emit(18, n^.desc.w6, ops, cg_zero_ads, 0);
-          cc := 2;
+          cc := cond_hi;
         end;
         if n^.opnd[1]^.kind in [blogical_ob..char_ob, char16_ob,
                                 binteger_ob] then begin
@@ -1342,7 +1345,7 @@ var
       emit(32, 5, opt, cg_null_ads, 0);
       release(opt);
     end;
-    if abs(n^.desc.w8) = 7 then
+    if abs(n^.desc.w8) = cond_eq then
       cc := reverse_cc(cc);
     if n^.desc.w8 < 0 then
       n^.desc.w8 := -cc
@@ -1691,12 +1694,12 @@ var
         kill_register(ops.f2);
         ops.f1 := 8;
       end;
-      if n^.desc.w8 = 12 then begin
+      if n^.desc.w8 = cond_ge then begin
         t := opr;
         opr := ops;
         ops := t;
       end;
-      n^.desc.w8 := 7;
+      n^.desc.w8 := cond_eq;
       get_register(nil, 4, t);
     end;
     if cnt <> 0 then begin
@@ -1725,7 +1728,7 @@ var
     if cnt <> 0 then begin
       if cnt = 1 then begin
         address(templabel, 0, lab);
-        emit(20, 5, lab, cg_null_ads, 6);
+        emit(20, 5, lab, cg_null_ads, cond_ne);
         if n^.op = agg_compare_top then
           emit(18, unit, opr, ops, 0)
         else begin
@@ -1737,13 +1740,13 @@ var
         emit(32, 5, lab, cg_null_ads, 0);
       end
       else if cnt <= 65535 then
-        emit(28, 2, lab, opt, 6)
+        emit(28, 2, lab, opt, cond_ne)
       else begin
         address(templabel, 0, lab2);
-        emit(20, 5, lab2, cg_null_ads, 6);
+        emit(20, 5, lab2, cg_null_ads, cond_ne);
         address(smcontk(integer_ob, 1), 4, t);
         emit(2, 4, opt, t, 0);
-        emit(20, 5, lab, cg_null_ads, 6);
+        emit(20, 5, lab, cg_null_ads, cond_ne);
         release(t);
         emit(32, 5, lab2, cg_null_ads, 0);
         release(lab2);
@@ -2106,7 +2109,7 @@ var
         address(smcontk(integer_ob, lshft(1, sh) - 1), 0, c);
         address(templabel, 0, lab);
         emit(18, sz, opr, cg_zero_ads, 0);
-        emit(20, 5, lab, cg_null_ads, 10);
+        emit(20, 5, lab, cg_null_ads, cond_pl);
         emit(1, sz, opr, c, 0);
         emit(32, 5, lab, cg_null_ads, 0);
         shift(opr, sz, sh, 0);
@@ -2225,7 +2228,7 @@ var
         address_reg(res, a);
         emit(18, n^.desc.rlen, a, cg_zero_ads, 0);
         address(templabel, 0, lab2);
-        emit(20, 5, lab2, cg_null_ads, 12);
+        emit(20, 5, lab2, cg_null_ads, cond_ge);
         emit(1, n^.desc.rlen, a, c, 0);
         emit(32, 5, lab2, cg_null_ads, 0);
         release(lab2);
@@ -2390,7 +2393,7 @@ var
         anyconst(bits, w, k);
         emit(18, w, bit, k, 0);
         address(templabel, 0, lab);
-        emit(20, 5, lab, cg_null_ads, 3);
+        emit(20, 5, lab, cg_null_ads, cond_ls);
         emit(0, w, bit, k, 0);
         emit(0, w, cnt, k, 0);
         emit(32, 5, lab, cg_null_ads, 0);
@@ -2405,7 +2408,7 @@ var
       if (n^.desc.flags & 16#400) <> 0 then begin
         range := true;
         address(templabel, 0, lab);
-        emit(20, 5, lab, cg_null_ads, 5);
+        emit(20, 5, lab, cg_null_ads, cond_cs);
       end;
     end;
     address(templabel, 0, lp);
@@ -2431,7 +2434,7 @@ var
     kill_register(bit.f2);
     unlock(c);
     unlock(bit);
-    emit(28, 2, lp, cnt, 1);
+    emit(28, 2, lp, cnt, cond_f);
     kill_register(cnt.f2);
     release(lp);
     unlock(cnt);
@@ -2502,7 +2505,7 @@ var
       release(v);
       if (n^.desc.flags & 16#400) <> 0 then begin
         address(templabel, 0, lab);
-        emit(20, 5, lab, cg_null_ads, 5);
+        emit(20, 5, lab, cg_null_ads, cond_cs);
         range := true;
       end;
       shift(r, w, 3, 2);
@@ -2719,10 +2722,10 @@ var
       emit(18, size, opr, ops, 0);
     if zero_check(n^.opnd[2]) then
       case n^.desc.w6 of
-        2: n^.desc.w6 := 6;
-        3: n^.desc.w6 := 7;
-        13: n^.desc.w6 := 11;
-        12: n^.desc.w6 := 10;
+        cond_hi: n^.desc.w6 := cond_ne;
+        cond_ls: n^.desc.w6 := cond_eq;
+        cond_lt: n^.desc.w6 := cond_mi;
+        cond_ge: n^.desc.w6 := cond_pl;
         otherwise ;
       end;
   end;
@@ -2803,8 +2806,8 @@ var
 
     procedure switch;
     begin
-      if (8 in cargs_$options.cpu) and ((n^.desc.w6 = 7) or
-          (n^.desc.w6 = 14) or (n^.desc.w6 = 13)) then
+      if (8 in cargs_$options.cpu) and ((n^.desc.w6 = cond_eq) or
+          (n^.desc.w6 = cond_gt) or (n^.desc.w6 = cond_lt)) then
         swapped := not swapped
       else begin
         tmp := n^.opnd[1];
@@ -3366,7 +3369,7 @@ begin
       load_result(il_$node_ptr_t(n), -1, opr);
       emit(18, n^.desc.rlen, opr, cg_zero_ads, 0);
       address(templabel, 0, opt);
-      emit(20, 5, opt, cg_null_ads, 10);
+      emit(20, 5, opt, cg_null_ads, cond_pl);
       emit(11, n^.desc.rlen, opr, cg_null_ads, 0);
       emit(32, 5, opt, cg_null_ads, 0);
       unlock(opr);
@@ -3600,7 +3603,7 @@ begin
         if 8 in cargs_$options.cpu then begin
           push_fpa_opr(n^.opnd[1], 1, n^.desc.rlen, 16);
           emit_jsr(83, n^.desc.rlen, 0);
-          emit_jsr(tree_fn_rtn[14], n^.desc.rlen, 0);
+          emit_jsr(tree_fn_rtn[math_conjg], n^.desc.rlen, 0);
           fpa_temp(il_$node_ptr_t(n), t1);
           setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
           if n^.desc.rlen >= rlen_c8 then
@@ -3610,7 +3613,7 @@ begin
           if not check_use(cg_fp_result, n^.opnd[1]) then
             stack_fp(1, n^.desc.rlen, n^.opnd[1]);
           stack_fp(83, n^.desc.rlen, nil);
-          stack_fp(tree_fn_rtn[14], n^.desc.rlen, nil);
+          stack_fp(tree_fn_rtn[math_conjg], n^.desc.rlen, nil);
           fp_temp(il_$node_ptr_t(n), t1);
         end;
       end
@@ -3651,9 +3654,9 @@ begin
       if n^.count > 1 then begin
         if 8 in cargs_$options.cpu then begin
           push_fpa_opr(n^.opnd[1], 1, n^.desc.w6, 16);
-          emit_jsr(tree_fn_rtn[15], n^.desc.rlen, 0);
+          emit_jsr(tree_fn_rtn[math_aimag], n^.desc.rlen, 0);
           push_fpa_opr(n^.opnd[2], 1, n^.desc.w6, 17);
-          emit_jsr(tree_fn_rtn[15], n^.desc.rlen, 0);
+          emit_jsr(tree_fn_rtn[math_aimag], n^.desc.rlen, 0);
           fpa_temp(il_$node_ptr_t(n), t1);
           setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
           if n^.desc.rlen >= rlen_c8 then
@@ -3661,13 +3664,13 @@ begin
         end
         else begin
           if check_use(cg_fp_result, n^.opnd[1]) then begin
-            stack_fp(tree_fn_rtn[15], n^.desc.rlen, nil);
+            stack_fp(tree_fn_rtn[math_aimag], n^.desc.rlen, nil);
             stack_fp(1, n^.desc.w6, n^.opnd[2]);
-            stack_fp(tree_fn_rtn[15], n^.desc.rlen, nil);
+            stack_fp(tree_fn_rtn[math_aimag], n^.desc.rlen, nil);
           end
           else begin
             stack_fp(1, n^.desc.w6, n^.opnd[2]);
-            stack_fp(tree_fn_rtn[15], n^.desc.rlen, nil);
+            stack_fp(tree_fn_rtn[math_aimag], n^.desc.rlen, nil);
             stack_fp(1, n^.desc.w6, n^.opnd[1]);
           end;
           fp_temp(il_$node_ptr_t(n), t1);
@@ -3973,11 +3976,11 @@ begin
       if n^.kind <> cmp_tree_node then begin
         get_register(il_$node_ptr_t(n), 1, opt);
         if 8 in cargs_$options.cpu then begin
-          if (n^.desc.w8 = 7) or (n^.desc.w8 = 14) or
-              (n^.desc.w8 = 13) then
-            emit(19, 1, opt, cg_null_ads, 5)
+          if (n^.desc.w8 = cond_eq) or (n^.desc.w8 = cond_gt) or
+              (n^.desc.w8 = cond_lt) then
+            emit(19, 1, opt, cg_null_ads, cond_cs)
           else
-            emit(19, 1, opt, cg_null_ads, 4);
+            emit(19, 1, opt, cg_null_ads, cond_cc);
         end
         else if check_use(cg_fp_1000, il_$node_ptr_t(n)) then
           emit(48, 1, opt, cg_null_ads, n^.desc.w8)
@@ -4004,22 +4007,25 @@ begin
       104; the operands' floating registers spilled first for class 7). }
     f_math_top: begin
       inl := ((4 in cargs_$options.cpu) and
-          (n^.desc.w6 in [0..7, 9, 10, 12, 13])) or
+          (n^.desc.w6 in [math_abs..math_atan, math_sqrt, math_trunc, math_max,
+                          math_min])) or
           ((2 in cargs_$options.cpu) and
-          (n^.desc.w6 in [0..4, 6, 7, 9, 10, 12, 13]));
+          (n^.desc.w6 in [math_abs..math_log, math_exp, math_atan, math_sqrt, math_trunc,
+                          math_max, math_min]));
       if not inl then
-        inl := (8 in cargs_$options.cpu) and ((n^.desc.w6 = 0) or
-            (n^.desc.w6 = 9) or (n^.desc.w6 = 13) or (n^.desc.w6 = 12));
+        inl := (8 in cargs_$options.cpu) and ((n^.desc.w6 = math_abs) or
+            (n^.desc.w6 = math_sqrt) or (n^.desc.w6 = math_min) or
+            (n^.desc.w6 = math_max));
       if inl then
-        if not ((n^.desc.w6 = 0) or (n^.desc.w6 = 9) or
-            (n^.desc.w6 = 12)) then
-          inl := not (10 in cargs_$options.cpu) or (n^.desc.w6 = 13);
+        if not ((n^.desc.w6 = math_abs) or (n^.desc.w6 = math_sqrt) or
+            (n^.desc.w6 = math_max)) then
+          inl := not (10 in cargs_$options.cpu) or (n^.desc.w6 = math_min);
       if inl then
         inl := (n^.desc.rlen = rlen_r8) or (n^.desc.rlen = rlen_r4);
       if not inl then begin
         if (9 in cargs_$options.cpu) and tree_math[n^.desc.w6].ok then
           cg_tree_$call_fast_math_lib(il_$node_ptr_t(n))
-        else if n^.desc.w6 = 15 then begin
+        else if n^.desc.w6 = math_aimag then begin
           if cargs_$options.cpu * [2, 4, 8, 9, 10] <> [] then begin
             if cg_fp_count <> 0 then
               purge_fp;
@@ -4056,7 +4062,7 @@ begin
               push_fpa_opr(n^.opnd[1], 1, 8, 16)
             else
               push_fpa_opr(n^.opnd[1], 1, 12, 16);
-            emit_jsr(tree_fn_rtn[15], n^.desc.rlen, 0);
+            emit_jsr(tree_fn_rtn[math_aimag], n^.desc.rlen, 0);
             fpa_temp(il_$node_ptr_t(n), t1);
             setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
             if n^.desc.rlen >= rlen_c8 then
@@ -4068,11 +4074,11 @@ begin
                 stack_fp(1, 8, n^.opnd[1])
               else
                 stack_fp(1, 12, n^.opnd[1]);
-            stack_fp(tree_fn_rtn[15], n^.desc.rlen, nil);
+            stack_fp(tree_fn_rtn[math_aimag], n^.desc.rlen, nil);
             fp_temp(il_$node_ptr_t(n), t1);
           end;
         end
-        else if (n^.desc.w6 = 11) and (n^.desc.rlen <= rlen_r8) and
+        else if (n^.desc.w6 = math_nint) and (n^.desc.rlen <= rlen_r8) and
             (4 in cargs_$options.cpu) and
             (cargs_$options.cpu * [5, 9, 10] = []) then begin
           sz := n^.desc.w8;
@@ -4122,7 +4128,7 @@ begin
                   n^.desc.rlen);
           if 8 in cargs_$options.cpu then begin
             fpa_fop_proc(il_$node_ptr_t(n), tree_fn_rtn[n^.desc.w6], 104);
-            if (n^.desc.w6 = 11) and (n^.desc.rlen <= rlen_long) then
+            if (n^.desc.w6 = math_nint) and (n^.desc.rlen <= rlen_long) then
               setresult(0, il_$node_ptr_t(n), n^.desc.rlen)
             else
               setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
@@ -4133,7 +4139,7 @@ begin
             if temps then
               restore_alloc_temps;
             fop_proc(il_$node_ptr_t(n), tree_fn_rtn[n^.desc.w6], 104);
-            if n^.desc.w6 = 11 then
+            if n^.desc.w6 = math_nint then
               purge_fp;
           end;
         end;
@@ -4142,7 +4148,8 @@ begin
         if cg_fp_count <> 0 then
           purge_fp;
         case n^.desc.w6 of
-          0, 1, 2, 3, 4, 5, 6, 7, 9, 10:
+          math_abs, math_sin, math_cos, math_tan, math_log, math_log10, math_exp,
+          math_atan, math_sqrt, math_trunc:
             if (9 in cargs_$options.cpu) and tree_math[n^.desc.w6].ok then
               cg_tree_$call_fast_math_lib(il_$node_ptr_t(n))
             else begin
@@ -4161,20 +4168,20 @@ begin
                 release(ops);
                 get_register(il_$node_ptr_t(n), n^.desc.rlen, opr);
               end;
-              if (n^.desc.w6 = 9) and (4 in cargs_$options.cpu) and
+              if (n^.desc.w6 = math_sqrt) and (4 in cargs_$options.cpu) and
                   (ops.f1 = 13) and (ops.f2 <> opr.f2) and
                   not (5 in cargs_$options.cpu) then begin
                 emit(0, n^.desc.rlen, opr, ops, 0);
                 ops := opr;
               end;
-              if (n^.desc.w6 = 4) and (4 in cargs_$options.cpu) and
+              if (n^.desc.w6 = math_log) and (4 in cargs_$options.cpu) and
                   not (5 in cargs_$options.cpu) then begin
                 emit(0, n^.desc.rlen, opr, ops, 0);
                 address(rlcontk(0.5), 6, opu);
                 emit(47, n^.desc.rlen, opr, opu, 6);
                 release(opu);
                 address(templabel, 0, opu);
-                emit(42, 5, opu, cg_null_ads, 12);
+                emit(42, 5, opu, cg_null_ads, cond_ge);
                 emit(tree_fn_inst[n^.desc.w6], n^.desc.rlen, opr, opr,
                     n^.desc.rlen);
                 address(templabel, 0, opt);
@@ -4194,11 +4201,11 @@ begin
                     n^.desc.rlen);
               unlock(opr);
             end;
-          12, 13: begin
-            if n^.desc.w6 = 12 then
-              inst := 12
+          math_max, math_min: begin
+            if n^.desc.w6 = math_max then
+              inst := cond_ge
             else
-              inst := 15;
+              inst := cond_le;
             n^.desc.w6 := 0;
             load_fp_result(il_$node_ptr_t(n), 2, opr);
             n^.desc.w6 := w6;
@@ -4209,7 +4216,7 @@ begin
               emit(47, n^.desc.rlen, opr, ops, 0);
             address(templabel, 0, opt);
             if 8 in cargs_$options.cpu then begin
-              emit(20, 5, opt, cg_null_ads, 4);
+              emit(20, 5, opt, cg_null_ads, cond_cc);
               emit_assign(n^.desc.rlen, opr, ops);
             end
             else begin
@@ -4322,15 +4329,15 @@ begin
       if cg_fp_count <> 0 then
         purge_fp;
       if n^.op = max_top then
-        inst := 12
+        inst := cond_ge
       else
-        inst := 15;
+        inst := cond_le;
       m := il_180^.blk_atts.call;
       if ((m = 1) or (m = 6)) and ((n^.desc.flags & 16#4000) = 0) then
-        if inst = 12 then
-          inst := 2
+        if inst = cond_ge then
+          inst := cond_hi
         else
-          inst := 3;
+          inst := cond_ls;
       load_result(il_$node_ptr_t(n), 2, opr);
       address(n^.opnd[2], n^.desc.rlen, ops);
       emit(18, n^.desc.rlen, opr, ops, 0);
@@ -4380,7 +4387,7 @@ begin
         emit(18, n^.desc.rlen, opr, ops, 0);
         release(ops);
         address(templabel, 0, opt);
-        emit(20, 5, opt, cg_null_ads, 3);
+        emit(20, 5, opt, cg_null_ads, cond_ls);
         anyconst(-1, 2, ops);
         emit(38, 2, opr, ops, 0);
         emit(32, 5, opt, cg_null_ads, 0);

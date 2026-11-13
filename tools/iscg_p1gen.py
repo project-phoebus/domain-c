@@ -298,6 +298,7 @@ def routine(r, t, headings, tables):
         if s[0] == 'for' and s[1] not in em.temps:
             em.temps[s[1]] = 'i32'
             decls.append('  %s: integer32;' % s[1])
+    L.declare_word_temps(em, list(f['chain']) + list(c.body), decls)
     ind = '  '
     # the chain is printed first: its tables come first
     pre = []
@@ -326,7 +327,7 @@ def routine(r, t, headings, tables):
             inner.append(i2 + 'end')
             inner.append(i2 + 'else begin')
             i3 = i2 + '  '
-        inner.append(i3 + 'solution := new_solution(isc_heap, ord(solution$%s), 0, inh, il, 0);'
+        inner.append(i3 + 'solution := new_solution(isc_heap, solution$%s, 0, inh, il, il_none);'
                      % t['kind'])
         inner.append(i3 + 'solution^.which_transform := %d;' % r)
         inner.append(i3 + 'solution^.before_transform := addr(subject);')

@@ -174,10 +174,10 @@ begin
   s^.kind := solution$none;
   s^.base_register := isc_solution_ptr_t(isc_user_routines_31c);
   s^.index_register := isc_solution_ptr_t(isc_user_routines_31c);
-  s^.kind := solution$t(kind);
+  s^.kind := kind;
   s^.inherited_attributes := inh;
   s^.il := sym;
-  s^.il_kind := il$t(il_kind);
+  s^.il_kind := il_kind;
   s^.f114.number_of_children := nchildren;
   new_solution := s;
 end;
@@ -582,7 +582,7 @@ begin
     end;
   end;
   if solution_list$empty(list) then begin
-    sol := new_solution(isc_heap, 21, 0, nil, nil, 0);
+    sol := new_solution(isc_heap, solution$irrelevant, 0, nil, nil, il_none);
     solution_list$append(list, sol);
   end;
   apply_pass_1_and_choose_to_list := list;
