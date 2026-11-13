@@ -953,8 +953,8 @@ var
       cc := cond_cc;
       if b.sense then begin
         if (8 in cargs_$options.cpu) and ((cg_fp_1000 = b.cond) or
-            (cg_tree_ptr_t(b.cond)^.desc.w6 = 12) or
-            (cg_tree_ptr_t(b.cond)^.desc.w6 = 8)) then begin
+            (cg_tree_ptr_t(b.cond)^.desc.w6 = rlen_c16) or
+            (cg_tree_ptr_t(b.cond)^.desc.w6 = rlen_c8)) then begin
           if (cg_tree_ptr_t(b.cond)^.desc.w8 = cond_eq) or
               (cg_tree_ptr_t(b.cond)^.desc.w8 = cond_gt) or
               (cg_tree_ptr_t(b.cond)^.desc.w8 = cond_lt) then
@@ -965,8 +965,8 @@ var
       end
       else begin
         if (8 in cargs_$options.cpu) and ((cg_fp_1000 = b.cond) or
-            (cg_tree_ptr_t(b.cond)^.desc.w6 = 12) or
-            (cg_tree_ptr_t(b.cond)^.desc.w6 = 8)) then begin
+            (cg_tree_ptr_t(b.cond)^.desc.w6 = rlen_c16) or
+            (cg_tree_ptr_t(b.cond)^.desc.w6 = rlen_c8)) then begin
           if not ((cg_tree_ptr_t(b.cond)^.desc.w8 = cond_gt) or
               (cg_tree_ptr_t(b.cond)^.desc.w8 = cond_lt) or
               (cg_tree_ptr_t(b.cond)^.desc.w8 = cond_eq)) then
@@ -976,8 +976,8 @@ var
           cc := reverse_cc(abs(cg_tree_ptr_t(b.cond)^.desc.w8));
       end;
     end;
-    if (8 in cargs_$options.cpu) and ((cg_tree_ptr_t(b.cond)^.desc.w6 = 12) or
-        (cg_tree_ptr_t(b.cond)^.desc.w6 = 8)) then
+    if (8 in cargs_$options.cpu) and ((cg_tree_ptr_t(b.cond)^.desc.w6 = rlen_c16) or
+        (cg_tree_ptr_t(b.cond)^.desc.w6 = rlen_c8)) then
       if (b.cond^.kind = tree_node) or (b.cond^.kind = cmp_tree_node) or
           (b.cond^.kind = gen_tree_node) then
         if cc = cond_cc then

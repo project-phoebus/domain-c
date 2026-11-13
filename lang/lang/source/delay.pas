@@ -1183,8 +1183,8 @@ begin
            (o^.desc.w8 = 8) and
            ((o^.desc.flags.signed = ((n^.desc.w8 >= 0) and
                                      (n^.desc.w8 <= 31) and
-                                     (n^.desc.w8 in [10..15]))) or
-            (n^.desc.w8 = 7) or (n^.desc.w8 = 6)) then
+                                     (n^.desc.w8 in [cond_pl..cond_le]))) or
+            (n^.desc.w8 = cond_eq) or (n^.desc.w8 = cond_ne)) then
           if delay(n^.opnd[1], n^.desc.w6, 1, false) = 1 then begin
             o := dl_ptr_t(n^.opnd[2]);
             if (o^.kind = tree_node) and (o^.op = unpack_top) and

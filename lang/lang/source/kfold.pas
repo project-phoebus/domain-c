@@ -516,7 +516,7 @@ begin { kfold_$general }
 
   if t^.op in [add_top..div_top, mod_top..or_top, compare_top, set_and_top..set_diff_top, lshf_top..abs_top, f_extend_top, eor_top..min_top, alshf_top..cc_logand_ptop, cc_lognot_ptop] then begin
     { The real part of a double complex constant. }
-    if (t^.op = f_extend_top) and (t^.desc.rlen = rlen_r8) and (t^.desc.w6 = 12) and
+    if (t^.op = f_extend_top) and (t^.desc.rlen = rlen_r8) and (t^.desc.w6 = rlen_c16) and
        (t^.count = 1) and (t^.opnd[1]^.kind = dpcomplex_ob) then begin
       dd := t^.opnd[1]^.dcx_re;
       res := dpcontk(dd);
@@ -805,22 +805,22 @@ begin { kfold_$general }
       end;
       compare_top: begin
         sgn := (t^.desc.w8 >= 0) and (t^.desc.w8 <= 31) and
-               (t^.desc.w8 in [6, 7, 12..15]);
+               (t^.desc.w8 in [cond_ne, cond_eq, cond_ge..cond_le]);
         v1 := dfetch(v1, t^.desc.w6, sgn);
         v2 := dfetch(v2, t^.desc.w6, sgn);
         uv1 := v1;
         uv2 := v2;
         case t^.desc.w8 of
-          7: if v1 = v2 then v1 := 255 else v1 := 0;
-          6: if v1 <> v2 then v1 := 255 else v1 := 0;
-          13: if v1 < v2 then v1 := 255 else v1 := 0;
-          14: if v1 > v2 then v1 := 255 else v1 := 0;
-          15: if v1 <= v2 then v1 := 255 else v1 := 0;
-          12: if v1 >= v2 then v1 := 255 else v1 := 0;
-          2: if uv1 > uv2 then v1 := 255 else v1 := 0;
-          3: if uv1 <= uv2 then v1 := 255 else v1 := 0;
-          4: if uv1 >= uv2 then v1 := 255 else v1 := 0;
-          5: if uv1 < uv2 then v1 := 255 else v1 := 0;
+          cond_eq: if v1 = v2 then v1 := 255 else v1 := 0;
+          cond_ne: if v1 <> v2 then v1 := 255 else v1 := 0;
+          cond_lt: if v1 < v2 then v1 := 255 else v1 := 0;
+          cond_gt: if v1 > v2 then v1 := 255 else v1 := 0;
+          cond_le: if v1 <= v2 then v1 := 255 else v1 := 0;
+          cond_ge: if v1 >= v2 then v1 := 255 else v1 := 0;
+          cond_hi: if uv1 > uv2 then v1 := 255 else v1 := 0;
+          cond_ls: if uv1 <= uv2 then v1 := 255 else v1 := 0;
+          cond_cc: if uv1 >= uv2 then v1 := 255 else v1 := 0;
+          cond_cs: if uv1 < uv2 then v1 := 255 else v1 := 0;
           otherwise ;
         end;
       end;
@@ -865,22 +865,22 @@ begin { kfold_$general }
     end;
     if t^.op = compare_top then begin
       i := t^.desc.w8;
-      if (i = 2) or (i = 3) or (i = 5) or (i = 4) then
+      if (i = cond_hi) or (i = cond_ls) or (i = cond_cs) or (i = cond_cc) then
         if (t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
             and
            (t^.opnd[2]^.int_value = 0) then begin
-          if i = 3 then
-            t^.desc.w8 := 7
-          else if i = 2 then
-            t^.desc.w8 := 6;
+          if i = cond_ls then
+            t^.desc.w8 := cond_eq
+          else if i = cond_hi then
+            t^.desc.w8 := cond_ne;
         end
         else if (t^.opnd[1]^.kind in [blogical_ob..char_ob, char16_ob,
                                       binteger_ob]) and
                 (t^.opnd[1]^.int_value = 0) then begin
-          if i = 4 then
-            t^.desc.w8 := 7
-          else if i = 5 then
-            t^.desc.w8 := 6;
+          if i = cond_cc then
+            t^.desc.w8 := cond_eq
+          else if i = cond_cs then
+            t^.desc.w8 := cond_ne;
         end;
     end;
     l := t^.opnd[t^.count];
@@ -968,7 +968,7 @@ begin { kfold_$general }
 
   { The real operators. }
   if t^.op in [f_add_top..f_neg_top, f_compare_top..f_expon_top] then begin
-    if (t^.op = f_math_top) and (t^.desc.rlen = rlen_r8) and (t^.desc.w6 = 15) and
+    if (t^.op = f_math_top) and (t^.desc.rlen = rlen_r8) and (t^.desc.w6 = math_aimag) and
        (t^.count = 1) and (t^.opnd[1]^.kind = dpcomplex_ob) then begin
       dd := t^.opnd[1]^.dcx_im;
       res := dpcontk(dd);
@@ -1018,12 +1018,12 @@ begin { kfold_$general }
       f_neg_top: a := -a;
       f_compare_top:
         case t^.desc.w8 of
-          7: if a = b then v1 := 255 else v1 := 0;
-          6: if a <> b then v1 := 255 else v1 := 0;
-          5, 13: if a < b then v1 := 255 else v1 := 0;
-          2, 14: if a > b then v1 := 255 else v1 := 0;
-          3, 15: if a <= b then v1 := 255 else v1 := 0;
-          4, 12: if a >= b then v1 := 255 else v1 := 0;
+          cond_eq: if a = b then v1 := 255 else v1 := 0;
+          cond_ne: if a <> b then v1 := 255 else v1 := 0;
+          cond_cs, cond_lt: if a < b then v1 := 255 else v1 := 0;
+          cond_hi, cond_gt: if a > b then v1 := 255 else v1 := 0;
+          cond_ls, cond_le: if a <= b then v1 := 255 else v1 := 0;
+          cond_cc, cond_ge: if a >= b then v1 := 255 else v1 := 0;
           otherwise ;
         end;
       f_math_top:
@@ -1218,7 +1218,7 @@ begin { kfold_$general }
     if t^.desc.w8 < 0 then
       t^.desc.w8 := -t^.desc.w8;
     if (t^.desc.size * 8 - 1 < e) or (e < 0) then begin
-      if t^.desc.w8 = 7 then
+      if t^.desc.w8 = cond_eq then
         res := smcontk(integer_ob, 255)
       else
         res := smcontk(integer_ob, 0);
@@ -1233,7 +1233,7 @@ begin { kfold_$general }
       m := lshft(1, e) & o^.int_value
     else
       goto 90;
-    if (m <> 0) = (t^.desc.w8 = 6) then
+    if (m <> 0) = (t^.desc.w8 = cond_ne) then
       res := smcontk(integer_ob, 255)
     else
       res := smcontk(integer_ob, 0);
