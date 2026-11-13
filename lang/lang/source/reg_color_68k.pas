@@ -478,10 +478,10 @@ var
         opt_4009c[s]^.regs := opt_4009c[s]^.regs - [c];
     q^.reg := c;
     if c in [8..15] then
-      q^.rlen := 5
-    else if q^.rlen = 5 then
+      q^.rlen := rlen_addr
+    else if q^.rlen = rlen_addr then
       if c in [0..7] then
-        q^.rlen := 4;
+        q^.rlen := rlen_long;
     walkconflicts(checkout, q^);
     for i := 1 to n do begin
       z := addr(r^[i]);
@@ -691,7 +691,7 @@ begin
             t^.xw[12] := 4
           else if t^.kind = cse_use_ob then
             t^.xp[5]^.xw[12] := 4;
-          x^.rlen := 4;
+          x^.rlen := rlen_long;
         end;
       end;
   end;

@@ -111,7 +111,7 @@ type
     unused_28: char;                    { +28 }
     site_flag: boolean;                 { +29 }
     unused_30: array [30..35] of char;  { +30 }
-    op: integer;                        { +36 }
+    op: il_$top_t;                      { +36 }
     unused_38: integer;                 { +38 }
     opnd: univ_ptr;                     { +40 }
   end;
@@ -415,14 +415,14 @@ begin
       end;
     cmp_tree_node, gen_tree_node, tree_node:
       case exs_tree_ptr_t(site)^.op of
-        48, 80, 81: begin
+        chk_top, range_check_top, f_range_check_top: begin
           site_flag := exs_tree_ptr_t(site)^.site_flag;
           site_word := exs_tree_ptr_t(site)^.site_word;
           reset_bit_vector(false);
           set_predefined(0);
           exc := il_f0[0];
         end;
-        15, 16, 30, 31, 32:
+        call_top, func_call_top, isc_call_top, isc_func_call_top, isc_func_call_hidden_temp_top:
           if not propagation_on then
             reset_bit_vector(false)
           else begin
@@ -438,23 +438,23 @@ begin
               reset_bit_vector(true);
             end;
           end;
-        1, 2, 3, 4, 6, 7, 18, 27, 28, 29, 33, 34, 35, 36, 37, 38, 39,
-        40, 41, 42, 43, 49, 50, 59, 60, 61, 62, 74, 75, 76, 77, 86,
-        87: begin
+        add_top, sub_top, mul_top, div_top, mod_top, neg_top, extend_top, lshf_top, rshf_top, abs_top, isc_mul_top, f_add_top, f_sub_top, f_mul_top, f_div_top, f_neg_top, f_extend_top,
+        f_compare_top, f_math_top, f_expon_top, expon_top, alshf_top, arshf_top, signed_div_top, unsigned_div_top, signed_mod_top, unsigned_mod_top, isc_signed_rem_top, isc_unsigned_rem_top, isc_signed_mod_top, isc_unsigned_mod_top, ada_expon_top,
+        f_ada_expon_top: begin
           reset_bit_vector(false);
           set_predefined(1);
           exc := il_f0[1];
         end;
-        82:
+        mark_dynamic_space_top:
           reset_bit_vector(false);
-        65: begin
+        allocate_dynamic_space_top: begin
           reset_bit_vector(false);
           set_predefined(2);
           exc := il_f0[2];
         end;
-        12, 78, 79, 84:
+        compare_top, isc_agg_cmp_top, isc_agg_lex_cmp_top, bit_field_cmp_top:
           set_access_fault;
-        0, 17: begin
+        nop_top, value_top: begin
           exception_info(exs_tree_ptr_t(site)^.opnd, check_storage, exc,
                          site_flag, site_word, v, nothing_raised,
                          explicit);
@@ -847,7 +847,7 @@ begin
     site := cache_site;
     if (site^.kind = cmp_tree_node) or (site^.kind = gen_tree_node)
         or (site^.kind = tree_node) then begin
-      n := exs_tree_ptr_t(site)^.op;
+      n := ord(exs_tree_ptr_t(site)^.op);
       ass_$precondition_fail(
         'EXS_$END_EXCEPTION_HANDLER_ENQUIRY -- have not processed all handlers of tree node enquiry (ord(tree_node.op)=%lsd)%$',
         n);

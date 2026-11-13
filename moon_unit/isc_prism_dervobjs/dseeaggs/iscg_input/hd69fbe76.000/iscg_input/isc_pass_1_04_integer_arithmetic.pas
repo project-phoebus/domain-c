@@ -520,7 +520,7 @@ begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
       solution^.which_transform := 255;
       solution^.before_transform := addr(subject);
-      if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
+      if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
         solution^.case_value[136] := 1;
         if isc_tool_generated_readonly_tables.opcode_rr[subject.il_kind] = 79 then begin
           solution^.case_value[137] := 1;
@@ -793,7 +793,7 @@ begin
   t6 := verify_bits(subject.children[2]^.bits_known,
       subject.children[2]^.bits_trusted,
       subject.children[2]^.f76.bit_position_of_lsb - 1, 1, 1);
-  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 <> 0) or not t1 and not t5 and not t4 and (not t3 or not t2 or (p2_node_ptr_t(subject.il)^.w[18] <> 1)) and (not t6 or not verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, subject.children[1]^.f76.bit_position_of_lsb - 1, 1, 0) or (p2_node_ptr_t(subject.il)^.w[18] <> 2)) or (subject.children[1]^.f76.field_precision <> subject.children[2]^.f76.field_precision) or (subject.children[1]^.f76.field_precision < subject.inherited_attributes^.required_precision)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 <> 0) or not t1 and not t5 and not t4 and (not t3 or not t2 or (p2_node_ptr_t(subject.il)^.w[18] <> ord(add_top))) and (not t6 or not verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, subject.children[1]^.f76.bit_position_of_lsb - 1, 1, 0) or (p2_node_ptr_t(subject.il)^.w[18] <> ord(sub_top))) or (subject.children[1]^.f76.field_precision <> subject.children[2]^.f76.field_precision) or (subject.children[1]^.f76.field_precision < subject.inherited_attributes^.required_precision)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 258 matched the semantics.');
       writeln;
@@ -900,7 +900,7 @@ begin
   t6 := verify_bits(subject.children[2]^.bits_known,
       subject.children[2]^.bits_trusted,
       subject.children[2]^.f76.bit_position_of_lsb - 1, 1, 1);
-  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 <> 0) or (subject.children[1]^.f76.bit_position_of_lsb = subject.children[2]^.f76.bit_position_of_lsb) or not t1 and not t5 and not t4 and (not t3 or not t2 or (p2_node_ptr_t(subject.il)^.w[18] <> 1)) and (not t6 or not verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, subject.children[1]^.f76.bit_position_of_lsb - 1, 1, 0) or (p2_node_ptr_t(subject.il)^.w[18] <> 2)) or (subject.children[1]^.f76.field_precision <> subject.children[2]^.f76.field_precision) or (subject.children[1]^.f76.field_precision < subject.inherited_attributes^.required_precision)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 <> 0) or (subject.children[1]^.f76.bit_position_of_lsb = subject.children[2]^.f76.bit_position_of_lsb) or not t1 and not t5 and not t4 and (not t3 or not t2 or (p2_node_ptr_t(subject.il)^.w[18] <> ord(add_top))) and (not t6 or not verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, subject.children[1]^.f76.bit_position_of_lsb - 1, 1, 0) or (p2_node_ptr_t(subject.il)^.w[18] <> ord(sub_top))) or (subject.children[1]^.f76.field_precision <> subject.children[2]^.f76.field_precision) or (subject.children[1]^.f76.field_precision < subject.inherited_attributes^.required_precision)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 259 matched the semantics.');
       writeln;
@@ -1044,7 +1044,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 <> 0) or (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 <> 0) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 261 matched the semantics.');
       writeln;
@@ -1107,7 +1107,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 262 matched the semantics.');
       writeln;
@@ -1123,7 +1123,7 @@ begin
       solution^.which_transform := 262;
       solution^.before_transform := addr(subject);
       p1_int_fields_ptr_t(addr(solution^))^.i[0] := p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[12]];
-      if p2_node_ptr_t(subject.il)^.w[12] = 1 then begin
+      if p2_node_ptr_t(subject.il)^.w[12] = rlen_byte then begin
         solution^.fields[1] := find_well_known_literal_solution(128);
       end else begin
         solution^.fields[1] := nil;
@@ -1146,10 +1146,10 @@ begin
       end else begin
         solution^.case_value[136] := 3;
       end;
-      if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
+      if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
         solution^.case_value[139] := 1;
       end
-      else if p2_node_ptr_t(subject.il)^.w[12] = 2 then begin
+      else if p2_node_ptr_t(subject.il)^.w[12] = rlen_word then begin
         solution^.case_value[139] := 2;
       end else begin
         solution^.case_value[139] := 3;
@@ -1627,7 +1627,7 @@ begin
       t4 := validate_shift_count(log_2(subject.children[2]^.literal_32_bits_value));
       solution^.fields[0] := isc_solution_ptr_t(t4);
       t5 := make_bit_mask_1(t4, 0);
-      if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
+      if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
         solution^.case_value[136] := 1;
       end else begin
         solution^.case_value[136] := 2;
@@ -1776,7 +1776,7 @@ begin
       t4 := validate_shift_count(log_2(subject.children[1]^.literal_32_bits_value));
       solution^.fields[0] := isc_solution_ptr_t(t4);
       t5 := make_bit_mask_1(t4, 0);
-      if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
+      if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
         solution^.case_value[136] := 1;
       end else begin
         solution^.case_value[136] := 2;
@@ -1863,7 +1863,7 @@ begin
         solution^.case_value[136] := 1;
       end else begin
         solution^.case_value[136] := 2;
-        if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
+        if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
           solution^.case_value[137] := 1;
         end else begin
           solution^.case_value[137] := 2;
@@ -2322,7 +2322,7 @@ var
 begin
   result := nil;
   work := nil;
-  if (p2_node_ptr_t(subject.il)^.w[12] = 4) or (p2_node_ptr_t(subject.il)^.w[12] = 1) or (p2_node_ptr_t(subject.il)^.w[12] = 2) then begin
+  if (p2_node_ptr_t(subject.il)^.w[12] = rlen_long) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_byte) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_word) then begin
     if isc_user_routines_354 then begin
       write('Pattern 278 matched the semantics.');
       writeln;
@@ -2483,7 +2483,7 @@ var
 begin
   result := nil;
   work := nil;
-  if (p2_node_ptr_t(subject.il)^.w[12] = 4) or (p2_node_ptr_t(subject.il)^.w[12] = 1) or (p2_node_ptr_t(subject.il)^.w[12] = 2) then begin
+  if (p2_node_ptr_t(subject.il)^.w[12] = rlen_long) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_byte) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_word) then begin
     if isc_user_routines_354 then begin
       write('Pattern 279 matched the semantics.');
       writeln;
@@ -2978,7 +2978,7 @@ begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
       solution^.which_transform := 285;
       solution^.before_transform := addr(subject);
-      if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
+      if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
         solution^.case_value[136] := 1;
       end else begin
         solution^.case_value[136] := 2;
@@ -3099,7 +3099,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 <> 0) or (p2_node_ptr_t(subject.il)^.w[12] <> 1) or (subject.children[1]^.children[2]^.literal_32_bits_value <> 0)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 <> 0) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) or (subject.children[1]^.children[2]^.literal_32_bits_value <> 0)) then begin
     t1 := abs(p2_node_ptr_t(subject.children[1]^.il)^.w[14]);
     if (t1 = 13) or (t1 = 12) then begin
       if isc_user_routines_354 then begin
@@ -3916,7 +3916,7 @@ begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
       solution^.which_transform := 295;
       solution^.before_transform := addr(subject);
-      if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
+      if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
         solution^.case_value[136] := 1;
       end else begin
         solution^.case_value[136] := 2;
@@ -4079,7 +4079,7 @@ begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
       solution^.which_transform := 297;
       solution^.before_transform := addr(subject);
-      if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
+      if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
         solution^.case_value[136] := 1;
       end else begin
         solution^.case_value[136] := 2;

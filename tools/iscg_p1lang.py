@@ -134,9 +134,9 @@ class Clause:
 
     def key(self):
         f = self.flags
-        return (tuple(map(repr, f['chain'])), f['guard'], f.get('mark'), f['rewrite'], f['trace'],
+        return (tuple(map(repr, L.unname(f['chain']))), f['guard'], f.get('mark'), f['rewrite'], f['trace'],
                 tuple(map(repr, self.decls)),
-                tuple(map(repr, self.body)))
+                tuple(map(repr, L.unname(self.body))))
 
 
 # --------------------------------------------------------------------------
@@ -276,7 +276,12 @@ def fmt_expr(e, prec=0):
         return '(%s)' % s if prec > 5 else s
     if k == 'bin':
         p = L.PREC[e[1]]
-        s = '%s %s %s' % (fmt_expr(e[2], p), e[1], fmt_expr(e[3], p + 1))
+        a, b = e[2], e[3]
+        if p == 3:
+            # a register class or operator compared with an IL node's word
+            # by name (iscg_p2lang.named_operand)
+            a, b = L.named_operand(a, b), L.named_operand(b, a)
+        s = '%s %s %s' % (fmt_expr(a, p), e[1], fmt_expr(b, p + 1))
         return '(%s)' % s if p < prec or (p == 3 and prec == 3) else s
     return L.fmt_expr(e, prec)
 
@@ -288,7 +293,7 @@ def fmt_path(p):
 def fmt_stmt(s, ind):
     k = s[0]
     if k == 'set':
-        return [ind + '%s <- %s;' % (fmt_expr(s[1]), fmt_expr(s[2]))]
+        return [ind + '%s <- %s;' % (fmt_expr(s[1]), fmt_expr(L.named_operand(s[2], s[1])))]
     if k == 'call':
         return [ind + ('%s(%s);' % (s[1], ', '.join(fmt_expr(a) for a in s[2]))
                        if s[2] else '%s;' % s[1])]

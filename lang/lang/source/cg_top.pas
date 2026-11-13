@@ -796,7 +796,7 @@ var
       return;
     if cg_tree_ptr_t(s)^.uses < 4 then
       return;
-    if cg_tree_ptr_t(s)^.op <> 17 then
+    if cg_tree_ptr_t(s)^.op <> value_top then
       return;
     lo := 2147483647;
     hi := -2147483647 - 1;
@@ -1778,7 +1778,7 @@ begin
               if (cg_addr_regs[r].obj^.xl[1] & 14) <> 0 then
                 if not (((cg_addr_regs[r].obj^.kind = gen_tree_node) or
                     (cg_addr_regs[r].obj^.kind = tree_node)) and
-                    (cg_tree_ptr_t(cg_addr_regs[r].obj)^.op = 17)) then
+                    (cg_tree_ptr_t(cg_addr_regs[r].obj)^.op = value_top)) then
                   cg_addr_regs[r].obj := nil;
           if cg_addr_regs[r].obj2 <> nil then
             if cg_addr_regs[r].obj2^.kind in [tree_node, gen_tree_node,
@@ -1788,7 +1788,7 @@ begin
               if (cg_addr_regs[r].obj2^.xl[1] & 22) <> 0 then
                 if not (((cg_addr_regs[r].obj2^.kind = gen_tree_node) or
                     (cg_addr_regs[r].obj2^.kind = tree_node)) and
-                    (cg_tree_ptr_t(cg_addr_regs[r].obj2)^.op = 17)) then
+                    (cg_tree_ptr_t(cg_addr_regs[r].obj2)^.op = value_top)) then
                   cg_addr_regs[r].obj2 := nil;
           if cg_addr_regs[r].obj <> nil then
             if cg_addr_regs[r].obj^.kind = var_name then
@@ -1833,14 +1833,14 @@ begin
                 (cg_stmt^.xp[2]^.xp[12]^.kind <> inner_blk) and
                 (cg_stmt^.xw[25] <> 0) and
                 (cg_stmt^.xp[13]^.kind = tree_node) and
-                (cg_tree_ptr_t(cg_stmt^.xp[13])^.op = 15) and
+                (cg_tree_ptr_t(cg_stmt^.xp[13])^.op = call_top) and
                 (cg_tree_ptr_t(cg_stmt^.xp[13])^.opnd[1]^.kind = lib_dsc) then
               emit_terminating_line_no(cg_top_138);
             for k := 1 to cg_stmt^.xw[25] do
               if cg_stmt^.xp[12 + k]^.kind <> cse_use_ob then begin
                 if cg_stmt^.xp[12 + k]^.kind = tree_node then begin
                   tree_walk(cg_stmt^.xp[12 + k]);
-                  if cg_tree_ptr_t(cg_stmt^.xp[12 + k])^.op = 26 then begin
+                  if cg_tree_ptr_t(cg_stmt^.xp[12 + k])^.op = addr_top then begin
                     size := cg_tree_ptr_t(cg_stmt^.xp[12 + k])^.desc.rlen;
                     r := chk_assign(cg_stmt^.xp[12 + k], size);
                     if r <> 31 then begin

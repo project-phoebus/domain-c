@@ -66,7 +66,7 @@ type
   ra_rtn_ptr_t = ^ra_rtn_t;
 
 var
-  desc: add_node_$desc_t := [size := 4, rlen := 5, w6 := 0, w8 := 0,
+  desc: add_node_$desc_t := [size := 4, rlen := rlen_addr, w6 := 0, w8 := 0,
                              flags := [b7 := false, signed := false,
                                        b5 := false, b4 := false,
                                        b3 := false, b2 := false,
@@ -220,7 +220,7 @@ begin
   s^.acts[1].node := nil;
   s^.acts[1].reg := 31;
   s^.acts[1].reg2 := 31;
-  s^.acts[1].rlen := 0;
+  s^.acts[1].rlen := rlen_null;
   s^.acts[1].action := 0;
   for k := 2 to n do
     s^.acts[k] := s^.acts[1];
@@ -800,7 +800,7 @@ begin
              (rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2) or
              (2 in rr^.flags) then begin
             desc.rlen := rr^.rlen;
-            rr^.node := buildtreenode(26, desc, rr^, 1);
+            rr^.node := buildtreenode(addr_top, desc, rr^, 1);
             g_opt_cse_ptr_t(rr^.node)^.u_hdr := g_opt_cse_ptr_t(rr^.node)^.u_hdr;
             for j := 1 to st^.eval_count do
               if g_opt_tree_ptr_t(rr^.node)^.opnd[1] = st^.eval_opnd[j] then

@@ -142,7 +142,7 @@ type
     left: integer;                      { +0: the first operand's class
                                           (exp_class), 0 none }
     right: integer;                     { +2: the second's }
-    tnop: integer;                      { +4: the tree operator (add_tn) }
+    tnop: il_$top_t;                    { +4: the tree operator (add_tn) }
     coerce: boolean;                    { +6: convert to a common type }
     b7: boolean;                        { +7 }
   end;
@@ -188,28 +188,72 @@ var
                                           (op_tab's left and right): 73
                                           and the type kinds allowed }
   op_tab: array [0..65] of op_t := [
-    [1, 1, 12, true, false], [1, 1, 12, true, false], [2, 2, 12, true, false],
-    [2, 2, 12, true, false], [3, 3, 12, true, false], [3, 3, 12, true, false],
-    [4, 5, 11, false, false], [0, 0, 25, false, false], [10, 10, 1, false, false],
-    [10, 10, 2, false, false], [0, 0, 0, false, false], [9, 9, 3, false, false],
-    [6, 6, 4, false, false], [0, 0, 0, false, false], [7, 7, 6, false, false],
-    [0, 0, 0, false, false], [8, 0, 57, false, false], [0, 0, 0, false, false],
-    [0, 0, 16, false, false], [0, 0, 13, false, false], [6, 0, 0, false, false],
-    [6, 0, 7, false, false], [0, 0, 0, false, false], [0, 0, 0, false, false],
-    [0, 0, 51, true, false], [8, 8, 52, false, false], [8, 8, 53, false, false],
-    [0, 0, 0, false, false], [0, 0, 0, false, false], [7, 7, 27, true, false],
-    [7, 7, 28, true, false], [7, 7, 27, true, false], [0, 0, 41, false, false],
-    [7, 7, 9, true, false], [7, 7, 10, true, false], [0, 0, 0, false, false],
-    [7, 7, 28, true, false], [0, 0, 41, false, false], [0, 0, 41, false, false],
-    [0, 0, 41, false, false], [0, 0, 41, false, false], [0, 0, 41, false, false],
-    [0, 0, 41, false, false], [7, 7, 28, true, false], [0, 0, 0, false, false],
-    [7, 7, 44, true, false], [7, 0, 8, true, false], [9, 9, 3, false, false],
-    [0, 0, 0, false, false], [10, 10, 1, false, false], [10, 10, 2, false, false],
-    [0, 0, 41, false, false], [0, 0, 41, false, false], [0, 0, 41, false, false],
-    [0, 0, 42, false, false], [0, 0, 0, false, false], [0, 0, 0, false, false],
-    [0, 0, 0, false, false], [0, 0, 0, false, false], [0, 0, 0, false, false],
-    [0, 0, 0, false, false], [0, 0, 0, false, false], [0, 0, 0, false, false],
-    [0, 0, 0, false, false], [0, 0, 0, false, false], [0, 0, 0, false, false]];
+    [1, 1, compare_top, true, false],
+    [1, 1, compare_top, true, false],
+    [2, 2, compare_top, true, false],
+    [2, 2, compare_top, true, false],
+    [3, 3, compare_top, true, false],
+    [3, 3, compare_top, true, false],
+    [4, 5, bit_test_top, false, false],
+    [0, 0, bit_set_top, false, false],
+    [10, 10, add_top, false, false],
+    [10, 10, sub_top, false, false],
+    [0, 0, nop_top, false, false],
+    [9, 9, mul_top, false, false],
+    [6, 6, div_top, false, false],
+    [0, 0, nop_top, false, false],
+    [7, 7, mod_top, false, false],
+    [0, 0, nop_top, false, false],
+    [8, 0, cc_lognot_ptop, false, false],
+    [0, 0, nop_top, false, false],
+    [0, 0, func_call_top, false, false],
+    [0, 0, index_top, false, false],
+    [6, 0, nop_top, false, false],
+    [6, 0, neg_top, false, false],
+    [0, 0, nop_top, false, false],
+    [0, 0, nop_top, false, false],
+    [0, 0, cc_c3expr_ptop, true, false],
+    [8, 8, cc_logor_ptop, false, false],
+    [8, 8, cc_logand_ptop, false, false],
+    [0, 0, nop_top, false, false],
+    [0, 0, nop_top, false, false],
+    [7, 7, lshf_top, true, false],
+    [7, 7, rshf_top, true, false],
+    [7, 7, lshf_top, true, false],
+    [0, 0, f_math_top, false, false],
+    [7, 7, and_top, true, false],
+    [7, 7, or_top, true, false],
+    [0, 0, nop_top, false, false],
+    [7, 7, rshf_top, true, false],
+    [0, 0, f_math_top, false, false],
+    [0, 0, f_math_top, false, false],
+    [0, 0, f_math_top, false, false],
+    [0, 0, f_math_top, false, false],
+    [0, 0, f_math_top, false, false],
+    [0, 0, f_math_top, false, false],
+    [7, 7, rshf_top, true, false],
+    [0, 0, nop_top, false, false],
+    [7, 7, eor_top, true, false],
+    [7, 0, not_top, true, false],
+    [9, 9, mul_top, false, false],
+    [0, 0, nop_top, false, false],
+    [10, 10, add_top, false, false],
+    [10, 10, sub_top, false, false],
+    [0, 0, f_math_top, false, false],
+    [0, 0, f_math_top, false, false],
+    [0, 0, f_math_top, false, false],
+    [0, 0, f_expon_top, false, false],
+    [0, 0, nop_top, false, false],
+    [0, 0, nop_top, false, false],
+    [0, 0, nop_top, false, false],
+    [0, 0, nop_top, false, false],
+    [0, 0, nop_top, false, false],
+    [0, 0, nop_top, false, false],
+    [0, 0, nop_top, false, false],
+    [0, 0, nop_top, false, false],
+    [0, 0, nop_top, false, false],
+    [0, 0, nop_top, false, false],
+    [0, 0, nop_top, false, false]];
                                         { +0x172: by expr_op's
                                           operator: the operands'
                                           classes, the tree operator,
@@ -408,7 +452,7 @@ begin
         init_aux(desc, typ);
         desc.w6 := size;
         desc.flags.b6 := sgn;
-        add_tn(39, desc, k, k);
+        add_tn(f_extend_top, desc, k, k);
       end;
 end;
 
@@ -442,7 +486,7 @@ var
   r: real;                              { -156 }
   status: status_$t;                    { -160 }
   p: c_type_ptr_t;                      { -164 }
-  op: integer;                          { -166 }
+  op: il_$top_t;                        { -166 }
   overflow: boolean;                    { -172 }
   sgn: boolean;                         { -176 }
   ok: boolean;                          { -180 }
@@ -470,7 +514,7 @@ begin
         desc.flags.b6 := typ.base^.signed
       else if typ.base^.kind = ptr_type then
         desc.flags.b6 := false;
-      op := 18;
+      op := extend_top;
     end;
     ok := true;
   end;
@@ -504,8 +548,8 @@ begin
       init_aux(desc, tt);
       desc.w6 := typ.size;
       desc.flags.b6 := sgn;
-      add_tn(18, desc, top, top);
-      op := 0;
+      add_tn(extend_top, desc, top, top);
+      op := nop_top;
     end;
     ok := true;
   end;
@@ -523,8 +567,8 @@ end;
 procedure pointer_and_integer_or_enum;
 begin
   with cexs_stack[top] do begin
-    if desc.rlen = 5 then
-      desc.rlen := 4;
+    if desc.rlen = rlen_addr then
+      desc.rlen := rlen_long;
     if typ.size <> t.size then
       if node^.kind in [sinteger_ob..ubinteger_ob, binteger_ob] then
         typ.size := t.size
@@ -536,7 +580,7 @@ begin
           desc.flags.b6 := typ.base^.signed
         else if typ.base^.kind = ptr_type then
           desc.flags.b6 := false;
-        op := 18;
+        op := extend_top;
       end;
     ok := true;
   end;
@@ -595,13 +639,13 @@ begin
     init_aux(desc, tt);
     desc.w6 := get_rlen(cexs_stack[top].typ);
     desc.flags.b6 := t.base^.signed;
-    add_tn(39, desc, top, top);
-    op := 18;
+    add_tn(f_extend_top, desc, top, top);
+    op := extend_top;
     init_aux(desc, t);
     desc.w6 := 4;
   end
   else begin
-    op := 39;
+    op := f_extend_top;
     desc.flags.b6 := t.base^.signed;
     desc.w6 := get_rlen(cexs_stack[top].typ);
   end;
@@ -645,7 +689,7 @@ begin
           pfm_$signal(status);
       end;
       if overflow then begin
-        op := 39;
+        op := f_extend_top;
         desc.w6 := get_rlen(typ);
         desc.flags.b6 := true;
       end
@@ -660,7 +704,7 @@ begin
     else if node^.kind = real_ob then
       node := dpcontk(node^.real_value)
     else begin
-      op := 39;
+      op := f_extend_top;
       desc.w6 := get_rlen(typ);
       desc.flags.b6 := true;
     end;
@@ -671,7 +715,7 @@ end;
 
 begin { coerce }
   cexs_23be := false;
-  op := 0;
+  op := nop_top;
   init_aux(desc, t);
   with cexs_stack[top] do begin
     if (t.base = c_type_ptr_t(il_178)) or (typ.base = c_type_ptr_t(il_178)) then
@@ -728,13 +772,13 @@ begin { coerce }
               enum_type: begin
                 cexs_23be := true;
                 float_operand(top, t.base);
-                op := 0;
+                op := nop_top;
                 typ := t;
                 ok := true;
               end;
               integer_type: begin
                 float_operand(top, t.base);
-                op := 0;
+                op := nop_top;
                 typ := t;
                 ok := true;
               end;
@@ -780,7 +824,7 @@ begin { coerce }
             end;
           otherwise ;
         end;
-      if op <> 0 then begin
+      if op <> nop_top then begin
         add_tn(op, desc, top, top);
         typ.size := t.size;
       end;
@@ -915,8 +959,8 @@ begin
         else begin
           init_aux(desc, typ);
           desc.size := 4;
-          desc.rlen := 5;
-          add_tn(26, desc, cexs_23bc, cexs_23bc);
+          desc.rlen := rlen_addr;
+          add_tn(addr_top, desc, cexs_23bc, cexs_23bc);
         end;
         if not fold then
           bits.is_addr := true;
@@ -937,7 +981,7 @@ begin
         else
           desc.w6 := 2;
         desc.size := 0;
-        desc.rlen := 5;
+        desc.rlen := rlen_addr;
         sub := n^.xp[8];
         node := n^.xp[6];
         cexs_23bc := cexs_23bc + 1;
@@ -949,9 +993,9 @@ begin
             type_exp(int_type, addr(cexs_stack[cexs_23bc].typ));
           push_con(n^.xw[20]);
           init_aux(desc2, cexs_stack[cexs_23bc - 1].typ);
-          add_tn(27, desc2, cexs_23bc - 1, cexs_23bc);
+          add_tn(lshf_top, desc2, cexs_23bc - 1, cexs_23bc);
         end;
-        add_tn(13, desc, cexs_23bc - 1, cexs_23bc);
+        add_tn(index_top, desc, cexs_23bc - 1, cexs_23bc);
         bits.is_addr := true;
       end;
     end;
@@ -981,10 +1025,10 @@ begin
         else
           desc.w6 := 2;
         desc.size := 0;
-        desc.rlen := 5;
+        desc.rlen := rlen_addr;
         cexs_23bc := cexs_23bc + 1;
         cexs_stack[cexs_23bc].node := index;
-        add_tn(13, desc, cexs_23bc - 1, cexs_23bc);
+        add_tn(index_top, desc, cexs_23bc - 1, cexs_23bc);
       end;
       if hit and
          (node^.kind in [tree_node, gen_tree_node, cmp_tree_node,
@@ -999,12 +1043,12 @@ begin
     if mode <> 1 then begin
       if (offset < -32700) or (offset > 32700) then begin
         init_aux(desc, typ);
-        desc.rlen := 5;
+        desc.rlen := rlen_addr;
         desc.w6 := 4;
         desc.size := 0;
         cexs_23bc := cexs_23bc + 1;
         cexs_stack[cexs_23bc].node := smcontk(integer_ob, offset);
-        add_tn(13, desc, cexs_23bc - 1, cexs_23bc);
+        add_tn(index_top, desc, cexs_23bc - 1, cexs_23bc);
         c_tree_ptr_t(cexs_stack[cexs_23bc].node)^.bits.post := true;
         offset := 0;
       end;
@@ -1281,7 +1325,7 @@ begin
     typ.flags.b25_5 := q5 or typ.flags.b25_5;
     typ.flags.b25_4 := q4 or typ.flags.b25_4;
     if (0 in f^.flags) or (1 in f^.flags) or
-       (getphase(f^.ftype) * [0, 1] <> []) then
+       (getphase(f^.ftype) * [phase_atm, phase_vol] <> []) then
       bits.force_disp := true;
   end;
 end;
@@ -1507,7 +1551,7 @@ begin { body_opr }
           offset := offset + o;
           select_field(f);
           n := node;
-          if (n^.kind = tree_node) and (c_tree_ptr_t(n)^.op = 16) and
+          if (n^.kind = tree_node) and (c_tree_ptr_t(n)^.op = func_call_top) and
              (offset = 0) and not bits.is_addr then
             fold := true;
           if fold then
@@ -1724,7 +1768,7 @@ var
   ft: c_type_ptr_t;                     { -248 }
   conv: integer;                        { -254 }
   x260: integer;                        { -260 }
-  tnop: integer;                        { -278 }
+  tnop: il_$top_t;                      { -278 }
   ib: integer;                          { -284 }
   ia: integer;                          { -286 }
   bas: integer;                         { -288: the result's entry }
@@ -2215,7 +2259,7 @@ begin { build_builtin_tree }
     end;
     de_ref(k);
     de_ref(k + 1);
-    tnop := 54;
+    tnop := cc_assign_ptop;
     init_aux(desc, cexs_stack[k].typ);
     if opc = 6 then begin
       desc.size := sz;
@@ -2248,28 +2292,28 @@ begin { build_builtin_tree }
       51: desc.w6 := 8;
       53: desc.w6 := 3;
       54: begin
-        tnop := 42;
+        tnop := f_expon_top;
         desc.w8 := 7;
       end;
       57: begin
-        tnop := 68;
-        desc.rlen := 4;
+        tnop := strcmp_top;
+        desc.rlen := rlen_long;
         if cargs_$options.ansi or cargs_$options.xansi then
           desc.w6 := 0
         else
           desc.w6 := 1;
       end;
       58: begin
-        tnop := 70;
-        desc.rlen := 4;
+        tnop := strncmp_top;
+        desc.rlen := rlen_long;
         if cargs_$options.ansi or cargs_$options.xansi then
           desc.w6 := 0
         else
           desc.w6 := 1;
       end;
       61: begin
-        tnop := 69;
-        desc.rlen := 4;
+        tnop := strlen_top;
+        desc.rlen := rlen_long;
       end;
       otherwise ;
     end;
@@ -2351,7 +2395,7 @@ var
 begin
   s := nil;
   if n^.kind = tree_node then begin
-    if c_tree_ptr_t(n)^.op = 26 then
+    if c_tree_ptr_t(n)^.op = addr_top then
       get_number_of_elements(c_tree_ptr_t(n)^.opnd[1], count, s, true)
     else
       count := 2147483647;
@@ -2404,7 +2448,7 @@ begin { expr_op }
               p^.ptr_attr.bits := p^.ptr_attr.bits + [0];
             type_exp(p, addr(typ));
             init_aux(desc, typ);
-            add_tn(26, desc, i, i);
+            add_tn(addr_top, desc, i, i);
           end;
         if ((cexs_stack[i].typ.base^.kind = cc_func_returning_type) or
             (cexs_stack[i].typ.base^.kind = function_blk)) and
@@ -2443,12 +2487,12 @@ begin { expr_op }
             cexs_23bc := cexs_23bc + 1;
             cexs_stack[cexs_23bc] := cexs_stack[cexs_23bc - 1];
             cexs_stack[cexs_23bc - 1] := cexs_stack[i];
-            add_tn(14, desc, cexs_23bc - 1, cexs_23bc);
+            add_tn(unpack_top, desc, cexs_23bc - 1, cexs_23bc);
             cexs_stack[i] := cexs_stack[cexs_23bc];
             cexs_23bc := cexs_23bc - 1;
           end
           else
-            add_tn(14, desc, i, cexs_23bc);
+            add_tn(unpack_top, desc, i, cexs_23bc);
         end;
 
   if op = 22 then
@@ -2556,24 +2600,24 @@ begin { expr_op }
               k := cexs_23bc
             else
               k := bas;
-            add_tn(8, desc, k, k);
-            add_tn(9, desc, bas, cexs_23bc);
+            add_tn(not_top, desc, k, k);
+            add_tn(and_top, desc, bas, cexs_23bc);
             push_con(0);
             desc.w6 := cexs_cond[0];
           end;
         2:
           if (op = 0) or (op = 1) then
-            tnop := 24
+            tnop := agg_compare_top
           else
-            tnop := 23;
+            tnop := set_compare_top;
         3: desc.rlen := desc.size;
-        4: tnop := 24;
-        5: tnop := 40;
+        4: tnop := agg_compare_top;
+        5: tnop := f_compare_top;
         otherwise ;
       end;
       desc.w8 := desc.w6;
       desc.w6 := desc.rlen;
-      desc.rlen := 1;
+      desc.rlen := rlen_byte;
       boolean_result;
     end;
 
@@ -2656,15 +2700,15 @@ begin { expr_op }
           end;
         1: begin
           do_coerce;
-          tnop := 10;
+          tnop := or_top;
         end;
         2: begin
           do_coerce;
-          tnop := 20;
+          tnop := set_or_top;
         end;
         5: begin
           do_coerce;
-          tnop := 34;
+          tnop := f_add_top;
         end;
         otherwise ;
       end;
@@ -2760,16 +2804,16 @@ begin { expr_op }
           end;
         1: begin
           do_coerce;
-          add_tn(8, desc, cexs_23bc, cexs_23bc);
-          tnop := 9;
+          add_tn(not_top, desc, cexs_23bc, cexs_23bc);
+          tnop := and_top;
         end;
         2: begin
           do_coerce;
-          tnop := 21;
+          tnop := set_diff_top;
         end;
         5: begin
           do_coerce;
-          tnop := 35;
+          tnop := f_sub_top;
         end;
         otherwise ;
       end;
@@ -2790,7 +2834,7 @@ begin { expr_op }
               cexs_stack[bas + 1].typ.base^.signed,
               cexs_stack[bas + 1].typ.size, cargs_$options.xansi);
           mult_div_mod_prep;
-          desc.rlen := 2;
+          desc.rlen := rlen_word;
           if cexs_stack[bas].typ.size = 2 then begin
             type_exp(cexs_stack[bas].typ.base, addr(it));
             it.size := 4;
@@ -2819,17 +2863,17 @@ begin { expr_op }
           if desc.flags.b6 then begin
             w := -v;
             if v > 32767 then
-              desc.rlen := 4;
+              desc.rlen := rlen_long;
           end
           else begin
             w := 0;
             if v > 65535 then
-              desc.rlen := 4
+              desc.rlen := rlen_long
             else if x310 then
               if v > 32767 then
-                desc.rlen := 4;
+                desc.rlen := rlen_long;
           end;
-          if desc.rlen = 2 then begin
+          if desc.rlen = rlen_word then begin
             adjust_length(bas, 1, 2);
             adjust_length(bas + 1, 1, 2);
           end;
@@ -2837,12 +2881,12 @@ begin { expr_op }
           desc.w8 := cexs_stack[bas + 1].typ.size;
           if power_of_two then begin
             cexs_23bc := cexs_23bc - 1;
-            desc.rlen := 4;
+            desc.rlen := rlen_long;
             adjust_length(bas, 1, desc.rlen);
             if neg then
               expr_op(21, name, 1);
             push_con(shift);
-            tnop := 27;
+            tnop := lshf_top;
             desc.w8 := 1;
           end;
           cexs_stack[bas].typ.size := desc.rlen;
@@ -2853,15 +2897,15 @@ begin { expr_op }
         end;
         1: begin
           do_coerce;
-          tnop := 9;
+          tnop := and_top;
         end;
         2: begin
           do_coerce;
-          tnop := 19;
+          tnop := set_and_top;
         end;
         5: begin
           do_coerce;
-          tnop := 36;
+          tnop := f_mul_top;
         end;
         otherwise ;
       end;
@@ -2870,7 +2914,7 @@ begin { expr_op }
     { Division. }
     12:
       if oc = 5 then begin
-        tnop := 37;
+        tnop := f_div_top;
         do_coerce;
       end
       else begin
@@ -2885,7 +2929,7 @@ begin { expr_op }
           expr_op(43, name, 2);
           if neg then
             expr_op(21, name, 1);
-          tnop := 0;
+          tnop := nop_top;
         end
         else begin
           with cexs_stack[bas] do
@@ -2900,7 +2944,7 @@ begin { expr_op }
           desc.w8 := cexs_stack[bas + 1].typ.size;
           adjust_length(bas, 1, 4);
           adjust_length(bas + 1, 1, 4);
-          desc.rlen := 4;
+          desc.rlen := rlen_long;
           desc.size := 4;
           desc.w6 := 4;
           desc.w8 := 4;
@@ -2960,7 +3004,7 @@ begin { expr_op }
 
     { Address of. }
     17: begin
-      tnop := 26;
+      tnop := addr_top;
       with cexs_stack[bas] do begin
         if node^.kind = var_name then begin
           c_sym_ptr_t(node)^.var_flags := c_sym_ptr_t(node)^.var_flags + [21];
@@ -2989,7 +3033,7 @@ begin { expr_op }
           off := 0;
           node := get_addr_con(4, il_$node_ptr_t(p), off,
                                c_blk_ptr_t(il_180)^.data_sect, false);
-          tnop := 0;
+          tnop := nop_top;
           fd.dtype := blk^.result;
           attr20_ptr_t(addr(fd.flags))^ := attr20_ptr_t(addr(blk^.attr))^;
           ft := def_func(fd, nil, blk^.bits.conv,
@@ -3157,12 +3201,12 @@ begin { expr_op }
         offset := offset - it.low * esz;
         n := cexs_stack[bas + 1].node;
         if n^.kind = tree_node then
-          if (c_tree_ptr_t(n)^.op = 2) or (c_tree_ptr_t(n)^.op = 1) then begin
+          if (c_tree_ptr_t(n)^.op = sub_top) or (c_tree_ptr_t(n)^.op = add_top) then begin
             c := c_tree_ptr_t(n)^.opnd[2];
             if (c^.kind = sinteger_ob) or (c^.kind = linteger_ob)
                 or (c^.kind = integer_ob) then begin
               v := c^.int_value;
-              if c_tree_ptr_t(n)^.op = 2 then
+              if c_tree_ptr_t(n)^.op = sub_top then
                 v := -v;
               it.low := it.low - v;
               it.high := it.high - v;
@@ -3214,7 +3258,7 @@ begin { expr_op }
           if long then
             bits.long_index := true;
         end;
-        tnop := 0;
+        tnop := nop_top;
         p := typ.base;
         if p^.kind = ptr_type then begin
           type_exp(p^.ptr_to, addr(typ));
@@ -3246,7 +3290,7 @@ begin { expr_op }
     21:
       with cexs_stack[cexs_23bc] do
         if typ.base^.kind = real_type then
-          tnop := 38
+          tnop := f_neg_top
         else if typ.base^.kind = integer_type then
           if typ.base^.signed then begin
             w := typ.high;
@@ -3313,9 +3357,9 @@ begin { expr_op }
     { Assignments (65: an initialization), postfix increments. }
     27, 28, 65: begin
       if op = 28 then
-        tnop := 55
+        tnop := cc_post_id_ptop
       else
-        tnop := 54;
+        tnop := cc_assign_ptop;
       if (op <> 65) and cexs_stack[ia].typ.flags.b25_5 then
         error1(277, cexs_stack[ia].line, cexs_stack[ia].sym);
       if cexs_stack[ia].typ.base^.kind = real_type then
@@ -3344,9 +3388,9 @@ begin { expr_op }
         if typ.base^.kind = void_type then
           error1(37, il_d0, sym)
         else if (node^.kind = tree_node) and
-                ((c_tree_ptr_t(node)^.op = 52) or
-                 (c_tree_ptr_t(node)^.op = 57) or
-                 (c_tree_ptr_t(node)^.op = 53)) then
+                ((c_tree_ptr_t(node)^.op = cc_logor_ptop) or
+                 (c_tree_ptr_t(node)^.op = cc_lognot_ptop) or
+                 (c_tree_ptr_t(node)^.op = cc_logand_ptop)) then
           sa := false
         else begin
           if (typ.base^.kind = integer_type) and not typ.base^.signed and
@@ -3372,11 +3416,11 @@ begin { expr_op }
               f := c_field_ptr_t(cexs_stack[ia].sym);
               if f^.bits.width + f^.bits.at > 16 then begin
                 k := 32;
-                desc.rlen := 4;
+                desc.rlen := rlen_long;
               end
               else begin
                 k := 16;
-                desc.rlen := 2;
+                desc.rlen := rlen_word;
               end;
               m := cexs_stack[ia].typ.size;
               cexs_stack[ia].typ.size := desc.rlen;
@@ -3389,7 +3433,7 @@ begin { expr_op }
                 v := lshft(1, f^.bits.at) - 1;
                 if (n^.int_value & v) = 0 then begin
                   x260 := 3;
-                  if desc.rlen = 2 then
+                  if desc.rlen = rlen_word then
                     w := 65535
                   else
                     w := -1;
@@ -3427,10 +3471,10 @@ begin { expr_op }
         else
           desc.w8 := cexs_stack[bas + 1].typ.size;
         if typ.base^.signed then
-          if tnop = 27 then
-            tnop := 49
+          if tnop = lshf_top then
+            tnop := alshf_top
           else
-            tnop := 50;
+            tnop := arshf_top;
         typ.low := -2147483647;
         typ.high := 2147483647;
         n := cexs_stack[bas + 1].node;
@@ -3450,16 +3494,16 @@ begin { expr_op }
         else
           desc.w8 := desc.w6;
         if typ.base^.signed and (typ.low < 0) then
-          if tnop = 27 then
-            tnop := 49
+          if tnop = lshf_top then
+            tnop := alshf_top
           else
-            tnop := 50;
+            tnop := arshf_top;
       end;
 
     { The comma. }
     44: begin
       init_aux(desc, cexs_stack[ib].typ);
-      tnop := 56;
+      tnop := cc_comma_ptop;
       cexs_stack[bas].typ := cexs_stack[ib].typ;
     end;
 
@@ -3490,9 +3534,9 @@ begin { expr_op }
   end;
 
 98:
-  if tnop <> 0 then
+  if tnop <> nop_top then
     add_tn(tnop, desc, bas, cexs_23bc);
-  if (cexs_stack[bas].node^.kind = tree_node) and (tnop = 51) then
+  if (cexs_stack[bas].node^.kind = tree_node) and (tnop = cc_c3expr_ptop) then
     cexs_stack[bas].node^.xl[1] := 0;
   cexs_23bc := bas;
   if x260 >= 0 then
@@ -3575,16 +3619,16 @@ procedure test_ne_zero;
 var
   nm: c_name_t;                         { -8 }
   desc: c_desc_t;                       { -24 }
-  op: integer;                          { -38 }
+  op: il_$top_t;                        { -38 }
   n, m, x, y, c, r: il_$node_ptr_t;
   pt: c_type_ptr_t;
 begin
   r := nil;
   n := cexs_stack[cexs_23bc].node;
-  if (n^.kind = tree_node) and (c_tree_ptr_t(n)^.op = 18) then begin
+  if (n^.kind = tree_node) and (c_tree_ptr_t(n)^.op = extend_top) then begin
     m := c_tree_ptr_t(n)^.opnd[1];
     if m^.kind = tree_node then
-      if (c_tree_ptr_t(m)^.op = 50) or (c_tree_ptr_t(m)^.op = 28) then begin
+      if (c_tree_ptr_t(m)^.op = arshf_top) or (c_tree_ptr_t(m)^.op = rshf_top) then begin
         x := c_tree_ptr_t(m)^.opnd[1];
         y := c_tree_ptr_t(m)^.opnd[2];
         if x^.kind = integer_ob then
@@ -3598,8 +3642,8 @@ begin
             if c = x then
               x := y;
             if x^.kind = tree_node then
-              if (c_tree_ptr_t(x)^.op = 12) or (c_tree_ptr_t(x)^.op = 23) or
-                 (c_tree_ptr_t(x)^.op = 40) or (c_tree_ptr_t(x)^.op = 24) then
+              if (c_tree_ptr_t(x)^.op = compare_top) or (c_tree_ptr_t(x)^.op = set_compare_top) or
+                 (c_tree_ptr_t(x)^.op = f_compare_top) or (c_tree_ptr_t(x)^.op = agg_compare_top) then
                 r := x;
           end;
       end;
@@ -3612,11 +3656,11 @@ begin
     init_aux(desc, cexs_stack[cexs_23bc].typ);
     if cexs_stack[cexs_23bc].typ.base^.kind = real_type then begin
       push_fcon(0.0);
-      op := 40;
+      op := f_compare_top;
     end
     else begin
       push_con(0);
-      op := 12;
+      op := compare_top;
     end;
     with cexs_stack[cexs_23bc - 1] do begin
       pt := typ.base;
@@ -3629,7 +3673,7 @@ begin
     end;
     desc.w6 := desc.rlen;
     desc.w8 := 6;
-    desc.rlen := 1;
+    desc.rlen := rlen_byte;
     add_tn(op, desc, cexs_23bc - 1, cexs_23bc);
     with cexs_stack[cexs_23bc] do begin
       typ.base := char_ptype;
@@ -3676,7 +3720,7 @@ begin
   end;
   if b^.result^.kind <> void_type then begin
     type_exp(b^.result, addr(tt));
-    big := get_rlen(tt) > 6;
+    big := get_rlen(tt) > rlen_r4;
     if big then
       r := b^.ret_var;
   end;

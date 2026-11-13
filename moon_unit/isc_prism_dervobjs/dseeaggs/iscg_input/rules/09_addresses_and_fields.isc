@@ -10,7 +10,7 @@ section 09 addresses_and_fields  image pass_1 a5 16#45AA38, pass_2 a5 16#480078;
 
 transform 435  ip_reg <- nop_top | value_top ($1: ip_reg)
   pass_1 image 16#120134 begin
-    condition not (not $1.is_destroyable or subject.il.w24 <> 5 and (subject.il.w24 <> 4) and (subject.il.w24 <> 1 and (subject.il.w24 <> 2)));
+    condition not (not $1.is_destroyable or subject.il.w24 <> rlen_addr and (subject.il.w24 <> rlen_long) and (subject.il.w24 <> rlen_byte and (subject.il.w24 <> rlen_word)));
     cycle_guard already_ip_reg;
     copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
   end;
@@ -31,7 +31,7 @@ end;
 
 transform 436  ip_reg <- nop_top | value_top ($1: ip_reg)
   pass_1 image 16#1206CA begin
-    condition not ($1.is_destroyable or subject.il.w24 <> 5 and (subject.il.w24 <> 4) and (subject.il.w24 <> 1 and (subject.il.w24 <> 2)));
+    condition not ($1.is_destroyable or subject.il.w24 <> rlen_addr and (subject.il.w24 <> rlen_long) and (subject.il.w24 <> rlen_byte and (subject.il.w24 <> rlen_word)));
     cycle_guard already_ip_reg;
     result.code_bytes <- $1.code_bytes + 4;
     copy memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
@@ -54,7 +54,7 @@ end;
 
 transform 437  fp_reg <- nop_top | value_top ($1: fp_reg)
   pass_1 image 16#120C32 begin
-    condition not (not $1.is_destroyable or subject.il.w24 <> 6);
+    condition not (not $1.is_destroyable or subject.il.w24 <> rlen_r4);
     cycle_guard already_fp_reg;
     copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
   end;
@@ -75,7 +75,7 @@ end;
 
 transform 438  fp_reg <- nop_top | value_top ($1: fp_reg)
   pass_1 image 16#121176 begin
-    condition not ($1.is_destroyable or subject.il.w24 <> 6 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    condition not ($1.is_destroyable or subject.il.w24 <> rlen_r4 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
     cycle_guard already_fp_reg;
     result.code_bytes <- $1.code_bytes + 4;
     result.memory_references <- $1.memory_references;
@@ -100,7 +100,7 @@ end;
 
 transform 439  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
   pass_1 image 16#1216EC begin
-    condition not (not $1.is_destroyable or subject.il.w24 <> 7);
+    condition not (not $1.is_destroyable or subject.il.w24 <> rlen_r8);
     cycle_guard already_fp_reg_pair;
     copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
   end;
@@ -121,7 +121,7 @@ end;
 
 transform 440  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
   pass_1 image 16#121C30 begin
-    condition not ($1.is_destroyable or subject.il.w24 <> 7 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    condition not ($1.is_destroyable or subject.il.w24 <> rlen_r8 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
     cycle_guard already_fp_reg_pair;
     if not isc_user_routines_358 then
       result.c136 <- 1;
@@ -3348,7 +3348,7 @@ end;
 transform 458  ip_reg <- chk_top ($1: ip_reg, $2: ip_reg)
   no_could_deadlock_child;
   pass_1 image 16#12823A begin
-    condition subject.il.w24 = 4 or subject.il.w24 = 1 or subject.il.w24 = 2;
+    condition subject.il.w24 = rlen_long or subject.il.w24 = rlen_byte or subject.il.w24 = rlen_word;
     cycle_guard already_ip_reg;
     result.l352 <- readonly_l372[subject.il.w24];
     if result.l352 = 8 then
@@ -6194,7 +6194,7 @@ end;
 transform 478  ip_reg <- range_check_top ($1: ip_reg, $2: literal_32_bits, $3: literal_32_bits)
   no_could_deadlock_child;
   pass_1 image 16#12EB54 begin
-    condition (subject.il.w24 = 4 or subject.il.w24 = 1 or subject.il.w24 = 2) and ($2.literal_32_bits_value = $3.literal_32_bits_value);
+    condition (subject.il.w24 = rlen_long or subject.il.w24 = rlen_byte or subject.il.w24 = rlen_word) and ($2.literal_32_bits_value = $3.literal_32_bits_value);
     cycle_guard already_ip_reg;
     result.l352 <- readonly_l372[subject.il.w24];
     if result.l352 = 8 then
@@ -6321,7 +6321,7 @@ end;
 transform 479  ip_reg <- range_check_top ($1: ip_reg, $2: literal_32_bits, $3: literal_32_bits)
   no_could_deadlock_child;
   pass_1 image 16#12F2A0 begin
-    condition (subject.il.w24 = 4 or subject.il.w24 = 1 or subject.il.w24 = 2) and (lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$sub, 1) and ($2.literal_32_bits_value <> $3.literal_32_bits_value));
+    condition (subject.il.w24 = rlen_long or subject.il.w24 = rlen_byte or subject.il.w24 = rlen_word) and (lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$sub, 1) and ($2.literal_32_bits_value <> $3.literal_32_bits_value));
     cycle_guard already_ip_reg;
     result.l352 <- readonly_l372[subject.il.w24];
     result.l356 <- find_well_known_literal_solution($3.literal_32_bits_value - $2.literal_32_bits_value);
@@ -6461,7 +6461,7 @@ end;
 transform 480  ip_reg <- range_check_top ($1: ip_reg, $2: [ip_reg, literal_32_bits], $3: [ip_reg, literal_32_bits])
   no_could_deadlock_child;
   pass_1 image 16#12FA90 begin
-    condition subject.il.w24 = 4 or subject.il.w24 = 1 or subject.il.w24 = 2;
+    condition subject.il.w24 = rlen_long or subject.il.w24 = rlen_byte or subject.il.w24 = rlen_word;
     cycle_guard already_ip_reg;
     result.l352 <- readonly_l372[subject.il.w24];
     if result.l352 = 8 then

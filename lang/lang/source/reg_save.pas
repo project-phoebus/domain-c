@@ -443,21 +443,21 @@ begin
   t := cg_tree_ptr_t(n);
   r := [];
   case t^.op of
-    69:
+    strlen_top:
       r := [24, 27];
-    68:
+    strcmp_top:
       if cg_misc_$strcmp_can_use_longs(n) then
         r := [24..28]
       else if t^.desc.w6 = 1 then
         r := [24, 27, 28]
       else
         r := [24, 25, 27, 28];
-    70:
+    strncmp_top:
       if t^.desc.w6 = 1 then
         r := [24, 25, 27..29]
       else
         r := [24..29];
-    3: begin
+    mul_top: begin
       r := [24, 25, 27, 28];
       if cg_tree_$is_decomposable_const_mul(n) then
         r := [24..28];
@@ -465,16 +465,16 @@ begin
         if (t^.desc.w6 <> 2) or (t^.desc.w8 <> 2) then
           r := r + [0, 8];
     end;
-    43:
+    expon_top:
       r := [0, 8];
-    4: begin
+    div_top: begin
       r := [24, 25, 27, 28];
       if not (3 in cargs_$options.cpu) then
         r := [0, 8, 24, 25, 27, 28]
       else if t^.desc.w8 <> 4 then
         r := [24..28];
     end;
-    6: begin
+    mod_top: begin
       r := [24, 25];
       delay_$divide_attributes(n, false, strategy, w18, lsize, w26, rsize,
           w34, how, w42, drtn, sh, b54, b58, w62, w66, w70);
@@ -487,7 +487,7 @@ begin
       else if how = 0 then
         r := reg_save_$killed_by_routine(drtn);
     end;
-    25: begin
+    bit_set_top: begin
       r := [24, 25];
       if t^.count > 2 then
         if not ((t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
@@ -496,55 +496,55 @@ begin
                                       binteger_ob])) then
           r := [24..26];
     end;
-    7, 8:
+    neg_top, not_top:
       r := [24];
-    47:
+    sr_top:
       if t^.count <> 1 then
         r := [24];
-    26:
+    addr_top:
       r := [27];
-    12:
+    compare_top:
       if t^.desc.w6 = 5 then
         r := [24, 27]
       else
         r := [24];
-    1, 2, 9, 10:
-      if t^.desc.rlen = 5 then
+    add_top, sub_top, and_top, or_top:
+      if t^.desc.rlen = rlen_addr then
         r := [27]
       else
         r := [24];
-    14: begin
+    unpack_top: begin
       r := [24, 25, 27, 28];
       if not (t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                                    binteger_ob]) then
         r := [24..28];
     end;
-    0, 29, 45, 46, 48, 63, 72:
+    nop_top, abs_top, max_top, min_top, chk_top, align_top, set_bit_in_set_top:
       r := [24, 25, 27, 28];
-    13: begin
+    index_top: begin
       r := [27];
-      if t^.desc.rlen = 4 then
+      if t^.desc.rlen = rlen_long then
         r := [24, 27];
     end;
-    17: begin
-      if (t^.desc.rlen = 7) or (t^.desc.rlen = 6) then
+    value_top: begin
+      if (t^.desc.rlen = rlen_r8) or (t^.desc.rlen = rlen_r4) then
         if cargs_$options.cpu * [2, 4, 8, 9, 10] <> [] then
           r := [30]
         else
           r := reg_save_$killed_by_routine(18);
       if assert_is_tree_node(t^.opnd[1]) then begin
-        if (t^.desc.rlen = 1) or (t^.desc.rlen = 4) or
-           (t^.desc.rlen = 2) then
+        if (t^.desc.rlen = rlen_byte) or (t^.desc.rlen = rlen_long) or
+           (t^.desc.rlen = rlen_word) then
           r := r + [24]
-        else if ((t^.desc.rlen = 7) or (t^.desc.rlen = 6)) and
-                (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = 5) then
+        else if ((t^.desc.rlen = rlen_r8) or (t^.desc.rlen = rlen_r4)) and
+                (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = rlen_addr) then
           r := r + [27]
-        else if t^.desc.rlen = 5 then
+        else if t^.desc.rlen = rlen_addr then
           r := r + [27]
-        else if (t^.desc.rlen = 7) or (t^.desc.rlen = 6) then
-          if (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = 1) or
-             (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = 4) or
-             (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = 2) then
+        else if (t^.desc.rlen = rlen_r8) or (t^.desc.rlen = rlen_r4) then
+          if (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = rlen_byte) or
+             (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = rlen_long) or
+             (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = rlen_word) then
             r := r + [27];
       end
       else if t^.opnd[1]^.kind in [var_name..fortran_symbol,
@@ -560,24 +560,24 @@ begin
       else
         r := r + [24, 25, 27, 28];
     end;
-    27, 28, 44, 49, 50: begin
+    lshf_top, rshf_top, eor_top, alshf_top, arshf_top: begin
       r := [24];
       if not (t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                                    binteger_ob]) then
         r := [24, 25];
     end;
-    23, 24, 73:
+    set_compare_top, agg_compare_top, set_range_in_set_top:
       r := [24..28];
-    22:
+    set_extend_top:
       r := [24, 27, 28];
-    11:
+    bit_test_top:
       if not (t^.opnd[1]^.kind in [blogical_ob..char_ob, char16_ob,
                                    binteger_ob]) then
         if 3 in cargs_$options.cpu then
           r := [24, 25]
         else
           r := [24..28];
-    15, 16: begin
+    call_top, func_call_top: begin
       if not (t^.opnd[1]^.kind in [procedure_blk..function_blk, fortran_symbol,
                                    lib_dsc, cc_call, proc__type..pf_call]) then
         if cargs_$options.xrs then
@@ -593,16 +593,16 @@ begin
         if (ord(t^.opnd[1]^.xc[378]) & 16#40) <> 0 then
           r := r + [9];
     end;
-    19, 20, 21:
+    set_and_top, set_or_top, set_diff_top:
       r := [24..29];
-    18:
+    extend_top:
       r := [24];
-    34, 35, 36:
+    f_add_top, f_sub_top, f_mul_top:
       if cg_tree_$needs_lib_support(n, rtn) then
         r := reg_save_$killed_by_routine(rtn)
       else
         r := [30];
-    37, 38:
+    f_div_top, f_neg_top:
       if cg_tree_$needs_lib_support(n, rtn) then
         r := reg_save_$killed_by_routine(rtn)
       else begin
@@ -610,7 +610,7 @@ begin
         if 8 in cargs_$options.cpu then
           r := [30, 31];
       end;
-    39:
+    f_extend_top:
       if cg_tree_$needs_lib_support(n, rtn) then
         r := reg_save_$killed_by_routine(rtn)
       else begin
@@ -618,7 +618,7 @@ begin
         if 8 in cargs_$options.cpu then
           r := [24, 25, 27, 28, 30, 31];
       end;
-    40:
+    f_compare_top:
       if cg_tree_$needs_lib_support(n, rtn) then
         r := reg_save_$killed_by_routine(rtn)
       else begin
@@ -626,10 +626,10 @@ begin
         if 8 in cargs_$options.cpu then
           r := [24..28, 30, 31];
       end;
-    41:
+    f_math_top:
       if cg_tree_$needs_lib_support(n, rtn) then begin
         r := reg_save_$killed_by_routine(rtn);
-        if (t^.desc.w6 = 11) and (t^.desc.rlen <= 4) then
+        if (t^.desc.w6 = 11) and (t^.desc.rlen <= rlen_long) then
           r := r + [0];
         if 10 in cargs_$options.cpu then
           if t^.desc.w6 in [8, 12..15] then
@@ -640,7 +640,7 @@ begin
         if 8 in cargs_$options.cpu then
           r := [24, 25, 27, 28, 30, 31];
       end;
-    42:
+    f_expon_top:
       if cg_tree_$needs_lib_support(n, rtn) then
         r := reg_save_$killed_by_routine(rtn)
       else
@@ -680,13 +680,13 @@ var
   rem: integer32;
   r: reg_save_$regs_t;
 begin
-  if (s = nil) or (s^.kind <> assign_node) or (s^.asg_op <> 6) then
+  if (s = nil) or (s^.kind <> assign_node) or (s^.asg_op <> agg_aop) then
     bug_check('reg_save\registers_consumed_by_agg_aop -- not an agg_aop assign%$');
   unit := 4;
   if s^.asg_flags.chars then
     if unaligned(s^.asg_rhs) or unaligned(s^.asg_lhs) then
       unit := 1;
-  if s^.asg_rlen = 9 then
+  if s^.asg_rlen = rlen_cs then
     size := s^.asg_size - s^.asg_w56
   else
     size := s^.asg_size;
@@ -713,7 +713,7 @@ begin
     if not cg_asn_$inline_move_is_best(n + 1, unit) then
       r := [24, 27, 28];
   end;
-  if (s^.asg_rlen = 9) and (s^.asg_w56 <> 0) then
+  if (s^.asg_rlen = rlen_cs) and (s^.asg_w56 <> 0) then
     r := r + [24, 25, 27, 28];
   registers_consumed_by_agg_aop := r;
 end;
@@ -744,19 +744,19 @@ begin
     bug_check('reg_save\registers_consumed_by_assign_operator -- not an assign node%$');
   r := [];
   case s^.asg_op of
-    28:
+    strcpy_aop:
       r := [24, 27, 28];
-    30:
+    strncpy_aop:
       r := [24, 25, 27, 28];
-    27:
+    strcat_aop:
       r := [24, 27, 28];
-    29:
+    strncat_aop:
       r := [24, 25, 27, 28];
-    7, 8, 9:
+    set_and_to_aop, set_or_to_aop, set_diff_from_aop:
       r := [24..28];
-    6:
+    agg_aop:
       r := registers_consumed_by_agg_aop(s);
-    25:
+    agg_len_aop:
       if s^.asg_rhs^.kind in [blogical_ob..complex_ob,
                               char_string_ob..char32_string_ob, char16_ob,
                               set_con_ob, rec_const_ob, dpcomplex_ob,
@@ -764,19 +764,19 @@ begin
         r := [24, 25, 27, 28]
       else
         r := [24, 27, 28];
-    19, 20, 21:
+    f_add_to_aop, f_sub_from_aop, f_mul_to_aop:
       r := [30];
-    22: begin
+    f_div_by_aop: begin
       r := [30];
       if 8 in cargs_$options.cpu then
         r := [30, 31];
     end;
-    10: begin
+    pack_aop: begin
       r := [24];
       if not (3 in cargs_$options.cpu) then
         r := [24, 25];
     end;
-    12:
+    field_aop:
       r := [24, 25];
     otherwise begin
       if not (s^.asg_rhs^.kind in [blogical_ob..complex_ob,
@@ -784,8 +784,8 @@ begin
                                    set_con_ob, rec_const_ob, dpcomplex_ob,
                                    binteger_ob]) then
         r := [24];
-      if s^.asg_rlen > 6 then
-        if s^.asg_rlen = 7 then
+      if s^.asg_rlen > rlen_r4 then
+        if s^.asg_rlen = rlen_r8 then
           r := [27, 28]
         else
           r := [24, 25, 27, 28];
@@ -807,8 +807,8 @@ function assert_tree_result_depends_on_operands(
 begin
   if assert_is_tree_node(n) then
     assert_tree_result_depends_on_operands :=
-      not ((cg_tree_ptr_t(n)^.op = 17) or (cg_tree_ptr_t(n)^.op = 16) or
-           (cg_tree_ptr_t(n)^.op = 15) or (cg_tree_ptr_t(n)^.op = 0))
+      not ((cg_tree_ptr_t(n)^.op = value_top) or (cg_tree_ptr_t(n)^.op = func_call_top) or
+           (cg_tree_ptr_t(n)^.op = call_top) or (cg_tree_ptr_t(n)^.op = nop_top))
   else
     assert_tree_result_depends_on_operands := false;
 end;

@@ -573,7 +573,7 @@ begin
           end;
         if s^.kind <> assign_node then
           next;
-        if s^.asg_op in [27..30] then
+        if s^.asg_op in [strcat_aop..strncpy_aop] then
           next;
         vi := s^.vars^[v];
         if s^.vset <> nil then
@@ -583,7 +583,7 @@ begin
                 if vi^.du <> nil then
                   if vi^.du^.next = nil then
                     if vi^.du^.stmt = opt_4009c[r] then
-                      if getphase(s^.asg_rhs) * [1, 2, 12] = [] then
+                      if getphase(s^.asg_rhs) * [phase_vol, phase_volexpr, phase_sd_eff] = [] then
                         vi^.du := nil;
         if vi^.du <> nil then
           next;
@@ -621,7 +621,7 @@ begin
           end;
           if not keep then
             if s^.asg_rhs^.kind = tree_node then
-              if g_opt_tree_ptr_t(s^.asg_rhs)^.op = 26 then
+              if g_opt_tree_ptr_t(s^.asg_rhs)^.op = addr_top then
                 keep := true;
         end;
         if keep then
@@ -633,12 +633,12 @@ begin
         s^.hdr.vnum := 0;
         adjust_uc(s^.asg_lhs, -1);
         ph := getphase(s^.asg_rhs);
-        if (ph * [1, 2, 12] <> []) or
+        if (ph * [phase_vol, phase_volexpr, phase_sd_eff] <> []) or
            (s^.hdr.first and s^.hdr.last) or s^.hdr.no_prune then begin
           { An evaluation of the right side in its place. }
           x := s^.asg_rhs;
-          if ph * [1, 2] <> [] then begin
-            x := buildtreenode(17, s^.asg_desc, x, 1);
+          if ph * [phase_vol, phase_volexpr] <> [] then begin
+            x := buildtreenode(value_top, s^.asg_desc, x, 1);
             g_opt_tree_ptr_t(x)^.owner := opt_4009c[r];
           end;
           t := gspace(56);
@@ -647,12 +647,12 @@ begin
           t^.eval_opnd[1] := x;
           lv_head_ptr_t(addr(t^.prev))^ := lv_head_ptr_t(addr(opt_4009c[r]^.prev))^;
           t^.hdr.vnum := 0;
-          if ph * [1, 2, 12] = [] then
+          if ph * [phase_vol, phase_volexpr, phase_sd_eff] = [] then
             if s^.hdr.no_prune then begin
               rr := r;
               check_cse_uses(rr);
             end;
-          if (ph * [1, 2, 12] = []) and s^.hdr.first and s^.hdr.last and
+          if (ph * [phase_vol, phase_volexpr, phase_sd_eff] = []) and s^.hdr.first and s^.hdr.last and
              not s^.hdr.no_prune then begin
             { A lone store of no effects: an evaluation of 0. }
             opt_4009c[r] := t;
@@ -810,7 +810,7 @@ begin
   if n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                  dindex_node..disp_node, cs_node, cc_call, pf_call, cse_use_ob,
                  sym_disp_node] then begin
-    if 6 in g_opt_tree_ptr_t(n)^.flags then
+    if phase_cse in g_opt_tree_ptr_t(n)^.flags then
       return;
     if g_opt_tree_ptr_t(n)^.owner <> nil then
       if g_opt_tree_ptr_t(n)^.owner <> opt_4009c[lv_cur] then
@@ -828,9 +828,9 @@ begin
   case n^.kind of
     tree_node, cmp_tree_node:
       case g_opt_tree_ptr_t(n)^.op of
-        26:
+        addr_top:
           varcheck(g_opt_tree_ptr_t(n)^.opnd[1], bb, 8);
-        13: begin
+        index_top: begin
           varcheck(g_opt_tree_ptr_t(n)^.opnd[1], bb, 33);
           varcheck(g_opt_tree_ptr_t(n)^.opnd[2], bb, 34);
         end;
@@ -1124,10 +1124,10 @@ begin
           f := 34;
           varcheck(s^.asg_rhs, bb, f);
           f := 18;
-          if s^.asg_op in [1..5, 7..9, 13..24] then
+          if s^.asg_op in [add_to_aop..eor_to_aop, set_and_to_aop..set_diff_from_aop, not_to_aop..div_by_aop] then
             f := 50;
           varcheck(s^.asg_lhs, bb, f);
-          if s^.asg_op in [1..5, 7..9, 13..24] then begin
+          if s^.asg_op in [add_to_aop..eor_to_aop, set_and_to_aop..set_diff_from_aop, not_to_aop..div_by_aop] then begin
             if (s^.asg_lhs^.kind = fortran_symbol)
                 and (s^.asg_lhs^.xw[8] <> 0) then
               varcheck(s^.asg_lhs, bb, f);

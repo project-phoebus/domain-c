@@ -80,7 +80,7 @@ transform 255  ip_reg <- add_top | sub_top ($1: ip_reg, $2: [ip_reg, literal_32_
     temp t3: integer;
     condition not (subject.il.b30 & 128 = 0 or not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opcode_rr[subject.il_kind], 1) and ($2.kind = 14));
     cycle_guard already_ip_reg;
-    if subject.il.w24 = 4 then
+    if subject.il.w24 = rlen_long then
       result.c136 <- 1;
       if opcode_rr[subject.il_kind] = 79 then
         result.c137 <- 1;
@@ -340,7 +340,7 @@ transform 258  ip_reg_field <- add_top | sub_top ($1: ip_reg_field, $2: ip_reg_f
     t4 <- verify_bits($1.bits_known, $1.bits_trusted, 0, $1.bit_position_of_lsb, 0);
     t5 <- verify_bits($2.bits_known, $2.bits_trusted, 0, $2.bit_position_of_lsb, 0);
     t6 <- verify_bits($2.bits_known, $2.bits_trusted, $2.bit_position_of_lsb - 1, 1, 1);
-    condition not (subject.il.b30 & 128 <> 0 or not t1 and (not t5 and (not t4 and (not t3 or (not t2 or subject.il.w36 <> 1)))) and (not t6 or not verify_bits($1.bits_known, $1.bits_trusted, $1.bit_position_of_lsb - 1, 1, 0) or subject.il.w36 <> 2) or ($1.field_precision <> $2.field_precision or $1.field_precision < subject.inherited_attributes.required_precision));
+    condition not (subject.il.b30 & 128 <> 0 or not t1 and (not t5 and (not t4 and (not t3 or (not t2 or subject.il.w36 <> add_top)))) and (not t6 or not verify_bits($1.bits_known, $1.bits_trusted, $1.bit_position_of_lsb - 1, 1, 0) or subject.il.w36 <> sub_top) or ($1.field_precision <> $2.field_precision or $1.field_precision < subject.inherited_attributes.required_precision));
     cycle_guard already_ip_reg_field;
     t8 <- abs($1.bit_position_of_lsb - $2.bit_position_of_lsb);
     result.l352 <- t8;
@@ -424,7 +424,7 @@ transform 259  ip_reg_field <- add_top | sub_top ($1: ip_reg_field, $2: ip_reg_f
     t4 <- verify_bits($1.bits_known, $1.bits_trusted, 0, $1.bit_position_of_lsb, 0);
     t5 <- verify_bits($2.bits_known, $2.bits_trusted, 0, $2.bit_position_of_lsb, 0);
     t6 <- verify_bits($2.bits_known, $2.bits_trusted, $2.bit_position_of_lsb - 1, 1, 1);
-    condition not (subject.il.b30 & 128 <> 0 or $1.bit_position_of_lsb = $2.bit_position_of_lsb or not t1 and (not t5 and (not t4 and (not t3 or (not t2 or subject.il.w36 <> 1)))) and (not t6 or not verify_bits($1.bits_known, $1.bits_trusted, $1.bit_position_of_lsb - 1, 1, 0) or subject.il.w36 <> 2) or ($1.field_precision <> $2.field_precision or $1.field_precision < subject.inherited_attributes.required_precision));
+    condition not (subject.il.b30 & 128 <> 0 or $1.bit_position_of_lsb = $2.bit_position_of_lsb or not t1 and (not t5 and (not t4 and (not t3 or (not t2 or subject.il.w36 <> add_top)))) and (not t6 or not verify_bits($1.bits_known, $1.bits_trusted, $1.bit_position_of_lsb - 1, 1, 0) or subject.il.w36 <> sub_top) or ($1.field_precision <> $2.field_precision or $1.field_precision < subject.inherited_attributes.required_precision));
     cycle_guard already_ip_reg_field;
     t8 <- abs($1.bit_position_of_lsb - $2.bit_position_of_lsb);
     result.l352 <- t8;
@@ -524,7 +524,7 @@ end;
 transform 261  ip_reg <- abs_top ($1: ip_reg)
   no_could_deadlock_child;
   pass_1 image 16#10B8EE begin
-    condition not (subject.il.b30 & 128 <> 0 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2));
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.w24 <> rlen_long and (subject.il.w24 <> rlen_byte) and (subject.il.w24 <> rlen_word));
     cycle_guard already_ip_reg;
     result.l352 <- readonly_l372[subject.il.w24];
     if result.l352 = 8 then
@@ -596,10 +596,10 @@ end;
 transform 262  ip_reg <- abs_top ($1: ip_reg)
   no_could_deadlock_child;
   pass_1 image 16#10BB04 begin
-    condition not (subject.il.b30 & 128 = 0 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2));
+    condition not (subject.il.b30 & 128 = 0 or subject.il.w24 <> rlen_long and (subject.il.w24 <> rlen_byte) and (subject.il.w24 <> rlen_word));
     cycle_guard already_ip_reg;
     result.l352 <- readonly_l372[subject.il.w24];
-    if subject.il.w24 = 1 then
+    if subject.il.w24 = rlen_byte then
       result.l356 <- find_well_known_literal_solution(128);
     else
       result.l356 <- nil;
@@ -621,9 +621,9 @@ transform 262  ip_reg <- abs_top ($1: ip_reg)
     else
       result.c136 <- 3;
     end;
-    if subject.il.w24 = 4 then
+    if subject.il.w24 = rlen_long then
       result.c139 <- 1;
-    elsif subject.il.w24 = 2 then
+    elsif subject.il.w24 = rlen_word then
       result.c139 <- 2;
     else
       result.c139 <- 3;
@@ -840,7 +840,7 @@ transform 270  ip_reg <- isc_mul_top ($1: ip_reg, $2: literal_32_bits)
     t4 <- validate_shift_count(log_2($2.literal_32_bits_value));
     result.l352 <- t4;
     t5 <- make_bit_mask_1(t4, 0);
-    if subject.il.w24 = 4 then
+    if subject.il.w24 = rlen_long then
       result.c136 <- 1;
     else
       result.c136 <- 2;
@@ -980,7 +980,7 @@ transform 272  ip_reg <- isc_mul_top ($1: literal_32_bits, $2: ip_reg)
     t4 <- validate_shift_count(log_2($1.literal_32_bits_value));
     result.l352 <- t4;
     t5 <- make_bit_mask_1(t4, 0);
-    if subject.il.w24 = 4 then
+    if subject.il.w24 = rlen_long then
       result.c136 <- 1;
     else
       result.c136 <- 2;
@@ -1090,7 +1090,7 @@ transform 273  fp_reg <- isc_mul_top ($1: fp_reg, $2: fp_reg)
       result.c136 <- 1;
     else
       result.c136 <- 2;
-      if subject.il.w24 = 4 then
+      if subject.il.w24 = rlen_long then
         result.c137 <- 1;
       else
         result.c137 <- 2;
@@ -1767,7 +1767,7 @@ transform 278  ip_reg <- max_top ($1: ip_reg, $2: ip_reg)
     temp t5: integer32;
     temp t6: integer;
     temp t7: integer;
-    condition subject.il.w24 = 4 or subject.il.w24 = 1 or subject.il.w24 = 2;
+    condition subject.il.w24 = rlen_long or subject.il.w24 = rlen_byte or subject.il.w24 = rlen_word;
     cycle_guard already_ip_reg;
     result.l352 <- readonly_l372[subject.il.w24];
     t2 <- make_bit_mask_1(8, 0);
@@ -2033,7 +2033,7 @@ transform 279  ip_reg <- min_top ($1: ip_reg, $2: ip_reg)
     temp t5: integer32;
     temp t6: integer;
     temp t7: integer;
-    condition subject.il.w24 = 4 or subject.il.w24 = 1 or subject.il.w24 = 2;
+    condition subject.il.w24 = rlen_long or subject.il.w24 = rlen_byte or subject.il.w24 = rlen_word;
     cycle_guard already_ip_reg;
     result.l352 <- readonly_l372[subject.il.w24];
     t2 <- make_bit_mask_1(8, 0);
@@ -2359,7 +2359,7 @@ transform 285  ip_reg <- neg_top ($1: ip_reg)
   pass_1 image 16#11047A begin
     condition subject.il.b30 & 128 <> 0;
     cycle_guard already_ip_reg;
-    if subject.il.w24 = 4 then
+    if subject.il.w24 = rlen_long then
       result.c136 <- 1;
     else
       result.c136 <- 2;
@@ -2482,7 +2482,7 @@ transform 287  ip_reg <- neg_top ($1: compare_top($1: [ip_reg, ip_reg_field], $2
     temp t7: integer32;
     temp t8: integer;
     temp t9: integer;
-    condition not (subject.il.b30 & 128 <> 0 or subject.il.w24 <> 1 or $1.$2.literal_32_bits_value <> 0);
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.w24 <> rlen_byte or $1.$2.literal_32_bits_value <> 0);
     t1 <- abs($1.il.w28);
     condition t1 = 13 or t1 = 12;
     cycle_guard already_ip_reg;
@@ -3326,7 +3326,7 @@ transform 295  ip_reg <- sub_top ($1: literal_32_bits, $2: ip_reg)
     temp t3: integer;
     condition not (subject.il.b30 & 128 = 0 or not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$rsub, 1));
     cycle_guard already_ip_reg;
-    if subject.il.w24 = 4 then
+    if subject.il.w24 = rlen_long then
       result.c136 <- 1;
     else
       result.c136 <- 2;
@@ -3471,7 +3471,7 @@ transform 297  ip_reg <- sub_top ($1: ip_reg, $2: literal_32_bits)
     temp t3: integer;
     condition not (subject.il.b30 & 128 = 0 or not lir_$can_encode_as_immediate_operand(-$2.literal_32_bits_value, opc$add, 1));
     cycle_guard already_ip_reg;
-    if subject.il.w24 = 4 then
+    if subject.il.w24 = rlen_long then
       result.c136 <- 1;
     else
       result.c136 <- 2;

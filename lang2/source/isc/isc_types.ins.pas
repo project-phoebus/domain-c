@@ -56,7 +56,7 @@ type
           tr_opmod2: integer;           { +28 }
           tr_w30: integer;              { +30 }
           tr_l32: integer32;            { +32 }
-          tr_op: integer;               { +36 }
+          tr_op: il_$top_t;             { +36 }
           tr_count: integer;            { +38 }
           tr_opnd: array [1..64] of isc_node_ptr_t);    { +40 }
       { A call tree (op 30 ISC_CALL, 31 ISC_FUNC_CALL, 32
@@ -188,7 +188,7 @@ type
       11: (as_x4: array [1..16] of integer32;       { +4 }
            as_rhs: isc_node_ptr_t;      { +68 }
            as_l72: integer32;           { +72 }
-           as_op: integer);             { +76 }
+           as_op: il_$aop_t);           { +76 }
       { A type node (translator PD2): +35 bit 7 of a kind 132 (a
         structure that local_initialize_symbol keeps in memory). }
       12: (ty_x4: array [4..34] of char;            { +4 }

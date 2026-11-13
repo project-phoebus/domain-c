@@ -160,7 +160,7 @@
   `write': dpc gap 4 (docs/dpc-gaps.md 4).  An enumerated value is
   written with its type's name table (PAS_$WRITE code 3941, width 1):
   the IL node kinds (il.ins.pas's il_$kind_t), the tree
-  and assignment operators (ur_top_t, ur_aop_t) and il$t.
+  and assignment operators (il_$top_t, il_$aop_t) and il$t.
 
   Not known from the original: the parameters' and locals' names (the
   traces give some), the types' names declared here. }
@@ -188,44 +188,6 @@ module isc_user_routines;
 %include 'lang2/source/isc/isc_var_externs.ins.pas';
 
 type
-
-  { The tree operators (a tree node's +36; the name table at
-    0x20FD9A, 90 names). }
-  ur_top_t = (
-    nop_top, add_top, sub_top, mul_top, div_top, divide_top, mod_top,
-    neg_top, not_top, and_top, or_top, bit_test_top, compare_top,
-    index_top, unpack_top, call_top, func_call_top, value_top,
-    extend_top, set_and_top, set_or_top, set_diff_top, set_extend_top,
-    set_compare_top, agg_compare_top, bit_set_top, addr_top, lshf_top,
-    rshf_top, abs_top, isc_call_top, isc_func_call_top,
-    isc_func_call_hidden_temp_top, isc_mul_top, f_add_top, f_sub_top,
-    f_mul_top, f_div_top, f_neg_top, f_extend_top, f_compare_top,
-    f_math_top, f_expon_top, expon_top, eor_top, max_top, min_top,
-    sr_top, chk_top, alshf_top, arshf_top, cc_c3expr_ptop, cc_logor_ptop,
-    cc_logand_ptop, cc_assign_ptop, cc_post_id_ptop, cc_comma_ptop,
-    cc_lognot_ptop, ref_expr_top, signed_div_top, unsigned_div_top,
-    signed_mod_top, unsigned_mod_top, align_top, isc_addr_top,
-    allocate_dynamic_space_top, cache_top, isc_fio_init, strcmp_top,
-    strlen_top, strncmp_top, isc_select, set_bit_in_set_top,
-    set_range_in_set_top, isc_signed_rem_top, isc_unsigned_rem_top,
-    isc_signed_mod_top, isc_unsigned_mod_top, isc_agg_cmp_top,
-    isc_agg_lex_cmp_top, range_check_top, f_range_check_top,
-    mark_dynamic_space_top, extract_bit_field_top, bit_field_cmp_top,
-    physical_top, ada_expon_top, f_ada_expon_top, pas_get_chk_ptop,
-    illegal_top);
-
-  { The assignment operators (an assignment's +76; the name table at
-    0x210354, 38 names). }
-  ur_aop_t = (
-    scalar_aop, add_to_aop, sub_from_aop, and_to_aop, or_to_aop,
-    eor_to_aop, agg_aop, set_and_to_aop, set_or_to_aop,
-    set_diff_from_aop, pack_aop, fp_aop, field_aop, not_to_aop,
-    neg_to_aop, lshft_to_aop, rshft_to_aop, bset_to_aop, bclr_to_aop,
-    f_add_to_aop, f_sub_from_aop, f_mul_to_aop, f_div_by_aop,
-    mul_to_aop, div_by_aop, agg_len_aop, isc_mul_to_aop, strcat_aop,
-    strcpy_aop, strncat_aop, strncpy_aop, isc_agg_aop, isc_slice_aop,
-    isc_agg_zero_aop, isc_fill_aop, range_check_to_aop,
-    f_range_check_to_aop, illegal_aop);
 
   { A FORTRAN symbol's data class (the name table il_node_to_string
     writes it with, 0x21959A). }
@@ -745,7 +707,7 @@ begin
     reduced_align := 0
   else
     case n^.tr_op of
-      27: begin
+      lshf_top: begin
         v := il_node_to_integer_value(n^.tr_opnd[2]);
         reduced_align := v;
         if isc_user_routines_356 or isc_user_routines_354 then begin
@@ -755,7 +717,7 @@ begin
           writeln;
         end;
       end;
-      3: begin
+      mul_top: begin
         v := il_node_to_integer_value(n^.tr_opnd[2]);
         reduced_align := number_of_rightmost_zeroes(v);
         if isc_user_routines_356 or isc_user_routines_354 then begin
@@ -765,7 +727,7 @@ begin
           writeln;
         end;
       end;
-      1: begin
+      add_top: begin
         v := il_node_to_integer_value(n^.tr_opnd[2]);
         reduced_align := 0;
         if isc_user_routines_356 or isc_user_routines_354 then begin
@@ -779,7 +741,7 @@ begin
         write('*******************************************************************');
         writeln;
         write('The unrecognized reduce operator is: ');
-        write(ur_top_t(n^.tr_op):1);
+        write(il_$top_t(n^.tr_op):1);
         write('.');
         writeln;
         write('*******************************************************************');
@@ -827,7 +789,7 @@ begin
           write('.');
           writeln;
           write('      op   = ');
-          write(ur_aop_t(n^.as_op):1);
+          write(il_$aop_t(n^.as_op):1);
           write('.');
           writeln;
           write('      rhs  = ');
@@ -835,7 +797,7 @@ begin
           write('.');
           writeln;
         end;
-        if (n^.as_op = 2) or (n^.as_op = 1) then begin
+        if (n^.as_op = sub_from_aop) or (n^.as_op = add_to_aop) then begin
           if il_node_has_integer_value(n^.as_rhs) then begin
             v := il_node_to_integer_value(n^.as_rhs);
             a := number_of_rightmost_zeroes(v);
@@ -861,7 +823,7 @@ begin
           write('*******************************************************************');
           writeln;
           write('The unrecognized increment operator is: ');
-          write(ur_aop_t(n^.as_op):1);
+          write(il_$aop_t(n^.as_op):1);
           write('.');
           writeln;
           write('*******************************************************************');
@@ -1978,8 +1940,8 @@ var
   r: solution$set_t;
 begin
   r := [];
-  if (node^.kind = tree_node) and (node^.tr_op in [1, 2, 7, 8, 9, 10,
-      44]) then begin
+  if (node^.kind = tree_node) and (node^.tr_op in [add_top, sub_top, neg_top, not_top, and_top, or_top,
+      eor_top]) then begin
     if not (solution$ip_reg in permissible) then
       r := [solution$ip_reg];
     if not (solution$fp_reg in permissible) then
@@ -2725,7 +2687,7 @@ begin
     isc_$get_memory_home := lr^.memory_home;
   end
   else if ((s^.kind = var_name) or (s^.kind = fortran_symbol)) and (bits >= 32)
-          and not (20 in getphase(s)) then
+          and not (phase_proc_reg in getphase(s)) then
     isc_$get_memory_home := s
   else
     isc_$get_memory_home := nil;
@@ -2774,7 +2736,7 @@ begin
       end;
     end;
     physical_register_ob, tree_node:
-      if n^.tr_op <> 31 then
+      if n^.tr_op <> isc_func_call_top then
         lr := nil
       else begin
         if n^.kind = tree_node then begin
@@ -3924,7 +3886,7 @@ var
 begin
   t := mrh_$alloc(isc_heap, 44);
   t^.kind := tree_node;
-  t^.tr_op := 17;
+  t^.tr_op := value_top;
   t^.tr_opmod1 := 0;
   t^.tr_opmod2 := 0;
   t^.tr_rlen := rlen;
@@ -4082,7 +4044,7 @@ begin
       end;
       assign_node: begin
         write('<assign_node = ');
-        write(ur_aop_t(n^.xw[38]));
+        write(il_$aop_t(n^.xw[38]));
         write('>');
       end;
       at_lib_dsc: begin
@@ -4119,7 +4081,7 @@ begin
       end;
       cmp_tree_node: begin
         write('<cmp_tree_node = ');
-        write(ur_top_t(n^.xw[18]));
+        write(il_$top_t(n^.xw[18]));
         write('>');
       end;
       common_block_name: begin
@@ -4228,7 +4190,7 @@ begin
         write('>');
       end;
       tree_node: begin
-        write(ur_top_t(n^.xw[18]):1);
+        write(il_$top_t(n^.xw[18]):1);
         write('(');
         write(')');
       end;
@@ -4404,25 +4366,25 @@ end;
 function phase_set_to_string;
 begin
   write('( ');
-  if 0 in p then write('atomic_address ');
-  if 1 in p then write('voladdr ');
-  if 2 in p then write('volexpr ');
-  if 3 in p then write('devread ');
-  if 4 in p then write('devwrite ');
-  if 5 in p then write('visited ');
-  if 6 in p then write('iscse ');
-  if 7 in p then write('align_arg_list ');
-  if 8 in p then write('indexlong ');
-  if 9 in p then write('delayed ');
-  if 10 in p then write('wasbound ');
-  if 11 in p then write('was_walked ');
-  if 12 in p then write('sideeffects ');
-  if 13 in p then write('targetright ');
-  if 14 in p then write('targetleft ');
-  if 15 in p then write('invariant ');
-  if 19 in p then write('physical_address ');
-  if 20 in p then write('processor_reg_address ');
-  if 22 in p then write('local_cse ');
+  if phase_atm in p then write('atomic_address ');
+  if phase_vol in p then write('voladdr ');
+  if phase_volexpr in p then write('volexpr ');
+  if phase_devrd in p then write('devread ');
+  if phase_devwt in p then write('devwrite ');
+  if phase_vis in p then write('visited ');
+  if phase_cse in p then write('iscse ');
+  if phase_algn_arg_lst in p then write('align_arg_list ');
+  if phase_indx_lng in p then write('indexlong ');
+  if phase_dly in p then write('delayed ');
+  if phase_bnd in p then write('wasbound ');
+  if phase_wlkd in p then write('was_walked ');
+  if phase_sd_eff in p then write('sideeffects ');
+  if phase_tgt_rt in p then write('targetright ');
+  if phase_tgt_lft in p then write('targetleft ');
+  if phase_invar in p then write('invariant ');
+  if phase_phys in p then write('physical_address ');
+  if phase_proc_reg in p then write('processor_reg_address ');
+  if phase_lcl_cse in p then write('local_cse ');
   write(')');
   phase_set_to_string := ' ';
 end;

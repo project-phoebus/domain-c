@@ -412,7 +412,7 @@ begin
     xfer^.split := false
   else if ((arg^.size + arg^.offset) & 4) = 0 then
     xfer^.split := false
-  else if arg^.f16.rlen = 7 then
+  else if arg^.f16.rlen = rlen_r8 then
     xfer^.split := true
   else if home = nil then
     xfer^.split := false

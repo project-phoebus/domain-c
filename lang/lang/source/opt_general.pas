@@ -85,7 +85,7 @@ begin
     assert_is_scrutable_tree_not_used_elsewhere := false
   else if ((t^.kind = cmp_tree_node) or (t^.kind = tree_node))
       and (t^.uses = 1) then
-    assert_is_scrutable_tree_not_used_elsewhere := t^.flags * [3, 4, 12] = []
+    assert_is_scrutable_tree_not_used_elsewhere := t^.flags * [phase_devrd, phase_devwt, phase_sd_eff] = []
   else
     assert_is_scrutable_tree_not_used_elsewhere := false;
 end;
@@ -201,8 +201,8 @@ begin
   if 4 in cargs_$options.cpu then
     if cargs_$options.cpu * [5, 9, 10] = [] then
       if t^.kind = tree_node then
-        if (t^.op = 37) or (t^.op = 36) then
-          if (t^.rlen = 7) or (t^.rlen = 6) then begin
+        if (t^.op = f_div_top) or (t^.op = f_mul_top) then
+          if (t^.rlen = rlen_r8) or (t^.rlen = rlen_r4) then begin
             c := t^.opnd[2];
             if (c^.kind = real_ob) or (c^.kind = dpreal_ob) then begin
               x.d := c^.real_value;
@@ -295,8 +295,8 @@ begin
     if (t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                     dindex_node..disp_node, cs_node, cc_call, pf_call,
                     cse_use_ob, sym_disp_node]) and
-       (6 in g_opt_tree_ptr_t(t)^.flags) then
-      while 6 in g_opt_tree_ptr_t(t)^.flags do begin
+       (phase_cse in g_opt_tree_ptr_t(t)^.flags) then
+      while phase_cse in g_opt_tree_ptr_t(t)^.flags do begin
         t := g_opt_nodes_ptr_t(il_120)^[g_opt_tree_ptr_t(t)^.stmt];
         if t^.kind = cse_parent_ob then
           exit;
@@ -330,24 +330,24 @@ begin
         if st^.asg_x <> nil then
           kfold(t, st^.asg_x);
         commit_top_$convert_aops_to__aop_to_mem(t);
-        if (st^.asg_op in [1..5, 15, 16]) and
+        if (st^.asg_op in [add_to_aop..eor_to_aop, lshft_to_aop, rshft_to_aop]) and
            (st^.asg_rhs^.kind in [blogical_ob..char_ob, char16_ob,
                                   binteger_ob]) then begin
           if st^.asg_rhs^.int_value < 0 then
             case st^.asg_op of
-              1: begin
-                st^.asg_op := 2;
+              add_to_aop: begin
+                st^.asg_op := sub_from_aop;
                 st^.asg_rhs := smcontk(integer_ob, -st^.asg_rhs^.int_value);
               end;
-              2: begin
-                st^.asg_op := 1;
+              sub_from_aop: begin
+                st^.asg_op := add_to_aop;
                 st^.asg_rhs := smcontk(integer_ob, -st^.asg_rhs^.int_value);
               end;
               otherwise ;
             end;
           p := st^.prev;
           if p^.kind = assign_node then
-            if (getphase(p^.asg_lhs) + getphase(p^.asg_rhs)) * [1, 2] = [] then
+            if (getphase(p^.asg_lhs) + getphase(p^.asg_rhs)) * [phase_vol, phase_volexpr] = [] then
               if (find_var(st^.asg_lhs) = 0) and
                  (find_var(p^.asg_lhs) = 0) then begin
                 a := st^.asg_lhs;
@@ -366,39 +366,39 @@ begin
                                  binteger_ob] then begin
                     diff := p^.asg_rlen - st^.asg_rlen;
                     if (diff = 0) or
-                       not (st^.asg_op in [1, 2, 15, 16]) then begin
+                       not (st^.asg_op in [add_to_aop, sub_from_aop, lshft_to_aop, rshft_to_aop]) then begin
                       v := c^.int_value;
                       w := st^.asg_rhs^.int_value;
                       if diff > 0 then begin
                         sh := diff * 8;
                         w := lshft(w, sh);
-                        if st^.asg_op = 3 then
+                        if st^.asg_op = and_to_aop then
                           w := w ! rshft(-1, 32 - sh);
                       end
                       else if diff < 0 then begin
                         sh := abs(diff) * 8;
                         v := lshft(v, sh);
-                        if st^.asg_op = 3 then
+                        if st^.asg_op = and_to_aop then
                           v := v ! rshft(-1, 32 - sh);
                         p^.asg_rlen := st^.asg_rlen;
                       end;
                       case p^.asg_op of
-                        1, 2, 15, 16:
+                        add_to_aop, sub_from_aop, lshft_to_aop, rshft_to_aop:
                           v := v + w;
-                        3: begin
+                        and_to_aop: begin
                           v := v & w;
                           if v = 0 then
-                            p^.asg_op := 0;
+                            p^.asg_op := scalar_aop;
                         end;
-                        4: begin
+                        or_to_aop: begin
                           v := v ! w;
                           if v = -1 then
-                            p^.asg_op := 0;
+                            p^.asg_op := scalar_aop;
                         end;
-                        5:
+                        eor_to_aop:
                           if (v = 0) or (w = 0) then begin
                             v := v ! w;
-                            p^.asg_op := 0;
+                            p^.asg_op := scalar_aop;
                           end
                           else
                             v := (v & ~w) ! (~v & w);

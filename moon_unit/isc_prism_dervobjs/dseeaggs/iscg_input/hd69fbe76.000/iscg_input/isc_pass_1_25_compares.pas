@@ -1635,7 +1635,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.il)^.w[12] = 1 then begin
+  if p2_node_ptr_t(subject.il)^.w[12] = rlen_byte then begin
     if isc_user_routines_354 then begin
       write('Pattern 110 matched the semantics.');
       writeln;
@@ -1719,7 +1719,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[12] <> 1) or (subject.children[2]^.literal_32_bits_value <> 7)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) or (subject.children[2]^.literal_32_bits_value <> 7)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 111 matched the semantics.');
       writeln;

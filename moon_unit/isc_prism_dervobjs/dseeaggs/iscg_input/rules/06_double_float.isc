@@ -10,7 +10,7 @@ section 06 double_float  image pass_1 a5 16#45A80C, pass_2 a5 16#48006C;
 
 transform 489  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
   pass_1 image 16#116E58 begin
-    condition not (not $1.is_destroyable or subject.il.w24 <> 8);
+    condition not (not $1.is_destroyable or subject.il.w24 <> rlen_c8);
     cycle_guard already_fp_reg_pair;
     copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
   end;
@@ -31,7 +31,7 @@ end;
 
 transform 490  fp_reg_pair <- nop_top | value_top ($1: fp_reg_pair)
   pass_1 image 16#1173DA begin
-    condition not ($1.is_destroyable or subject.il.w24 <> 8);
+    condition not ($1.is_destroyable or subject.il.w24 <> rlen_c8);
     cycle_guard already_fp_reg_pair;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
       result.c136 <- 1;
@@ -80,7 +80,7 @@ end;
 
 transform 491  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
   pass_1 image 16#117972 begin
-    condition not (not $1.is_destroyable or subject.il.w24 <> 12);
+    condition not (not $1.is_destroyable or subject.il.w24 <> rlen_c16);
     cycle_guard already_fp_reg_quad;
     copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
   end;
@@ -101,7 +101,7 @@ end;
 
 transform 492  fp_reg_quad <- nop_top | value_top ($1: fp_reg_quad)
   pass_1 image 16#117EB6 begin
-    condition not ($1.is_destroyable or subject.il.w24 <> 12);
+    condition not ($1.is_destroyable or subject.il.w24 <> rlen_c16);
     cycle_guard already_fp_reg_quad;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
       result.c136 <- 1;
@@ -157,7 +157,7 @@ transform 493  fp_reg_pair <- f_add_top ($1: fp_reg_pair, $2: fp_reg_pair)
   pass_1 image 16#11844E begin
     temp t2: integer;
     temp t3: integer;
-    condition subject.il.w24 = 8;
+    condition subject.il.w24 = rlen_c8;
     cycle_guard already_fp_reg_pair;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -201,7 +201,7 @@ transform 494  fp_reg_quad <- f_add_top ($1: fp_reg_quad, $2: fp_reg_quad)
   pass_1 image 16#118622 begin
     temp t2: integer;
     temp t3: integer;
-    condition subject.il.w24 = 12;
+    condition subject.il.w24 = rlen_c16;
     cycle_guard already_fp_reg_quad;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -246,7 +246,7 @@ transform 495  fp_reg_pair <- f_div_top ($1: fp_reg_pair, $2: fp_reg_pair)
   pass_1 image 16#1187F6 begin
     temp t2: integer;
     temp t3: integer;
-    condition subject.il.w24 = 8;
+    condition subject.il.w24 = rlen_c8;
     cycle_guard already_fp_reg_pair;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 44;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -308,7 +308,7 @@ transform 496  fp_reg_pair <- f_div_top ($1: fp_reg_pair, $2: fp_reg_pair)
   pass_1 image 16#1189CE begin
     temp t2: integer;
     temp t3: integer;
-    condition subject.il.w24 = 8;
+    condition subject.il.w24 = rlen_c8;
     cycle_guard already_fp_reg_pair;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 48;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -377,7 +377,7 @@ transform 497  fp_reg_quad <- f_div_top ($1: fp_reg_quad, $2: fp_reg_quad)
   pass_1 image 16#118BA6 begin
     temp t2: integer;
     temp t3: integer;
-    condition subject.il.w24 = 12;
+    condition subject.il.w24 = rlen_c16;
     cycle_guard already_fp_reg_quad;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 44;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -439,7 +439,7 @@ transform 498  fp_reg_quad <- f_div_top ($1: fp_reg_quad, $2: fp_reg_quad)
   pass_1 image 16#118D7E begin
     temp t2: integer;
     temp t3: integer;
-    condition subject.il.w24 = 12;
+    condition subject.il.w24 = rlen_c16;
     cycle_guard already_fp_reg_quad;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 52;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -504,7 +504,7 @@ end;
 
 transform 499  fp_reg_pair <- f_extend_top ($1: ip_reg, $2: void)
   pass_1 image 16#118F56 begin
-    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = 8);
+    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = rlen_c8);
     cycle_guard already_fp_reg_pair;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -608,7 +608,7 @@ end;
 
 transform 500  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: void)
   pass_1 image 16#119232 begin
-    condition not (subject.il.w26 <> 6 or subject.il.w24 <> 8);
+    condition not (subject.il.w26 <> 6 or subject.il.w24 <> rlen_c8);
     cycle_guard already_fp_reg_pair;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
       result.c136 <- 1;
@@ -648,7 +648,7 @@ transform 501  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: fp_reg)
   pass_1 image 16#11941A begin
     temp t2: integer;
     temp t3: integer;
-    condition not (subject.il.w26 <> 6 or subject.il.w24 <> 8);
+    condition not (subject.il.w26 <> 6 or subject.il.w24 <> rlen_c8);
     cycle_guard already_fp_reg_pair;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -682,7 +682,7 @@ end;
 
 transform 502  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#1195F8 begin
-    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 8);
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> rlen_c8);
     cycle_guard already_fp_reg_pair;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -738,7 +738,7 @@ transform 503  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: fp_reg_pair)
   pass_1 image 16#119840 begin
     temp t2: integer;
     temp t3: integer;
-    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 8);
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> rlen_c8);
     cycle_guard already_fp_reg_pair;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -788,7 +788,7 @@ end;
 
 transform 504  fp_reg_quad <- f_extend_top ($1: ip_reg, $2: void)
   pass_1 image 16#119A7E begin
-    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = 12);
+    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = rlen_c16);
     cycle_guard already_fp_reg_quad;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -877,7 +877,7 @@ end;
 
 transform 505  fp_reg_quad <- f_extend_top ($1: fp_reg, $2: void)
   pass_1 image 16#119D02 begin
-    condition not (subject.il.w26 <> 6 or subject.il.w24 <> 12);
+    condition not (subject.il.w26 <> 6 or subject.il.w24 <> rlen_c16);
     cycle_guard already_fp_reg_quad;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -920,7 +920,7 @@ transform 506  fp_reg_quad <- f_extend_top ($1: fp_reg, $2: fp_reg)
   pass_1 image 16#119EF0 begin
     temp t2: integer;
     temp t3: integer;
-    condition not (subject.il.w26 <> 6 or subject.il.w24 <> 12);
+    condition not (subject.il.w26 <> 6 or subject.il.w24 <> rlen_c16);
     cycle_guard already_fp_reg_quad;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -970,7 +970,7 @@ end;
 
 transform 507  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11A12E begin
-    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 12);
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> rlen_c16);
     cycle_guard already_fp_reg_quad;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
     result.memory_references <- $1.memory_references + $2.memory_references + 1;
@@ -997,7 +997,7 @@ transform 508  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: fp_reg_pair)
   pass_1 image 16#11A2B8 begin
     temp t2: integer;
     temp t3: integer;
-    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 12);
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> rlen_c16);
     cycle_guard already_fp_reg_quad;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -1031,7 +1031,7 @@ end;
 
 transform 509  fp_reg_quad <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11A496 begin
-    condition not (subject.il.w26 <> 8 or subject.il.w24 <> 12);
+    condition not (subject.il.w26 <> 8 or subject.il.w24 <> rlen_c16);
     cycle_guard already_fp_reg_quad;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -1074,7 +1074,7 @@ end;
 
 transform 510  ip_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11A686 begin
-    condition not (subject.il.w26 <> 8 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2));
+    condition not (subject.il.w26 <> 8 or subject.il.w24 <> rlen_long and (subject.il.w24 <> rlen_byte) and (subject.il.w24 <> rlen_word));
     cycle_guard already_ip_reg;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -1110,7 +1110,7 @@ end;
 
 transform 511  fp_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11A880 begin
-    condition not (subject.il.w26 <> 8 or subject.il.w24 <> 6);
+    condition not (subject.il.w26 <> 8 or subject.il.w24 <> rlen_r4);
     cycle_guard already_fp_reg;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -1125,7 +1125,7 @@ end;
 
 transform 512  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11AA02 begin
-    condition not (subject.il.w26 <> 8 or subject.il.w24 <> 7);
+    condition not (subject.il.w26 <> 8 or subject.il.w24 <> rlen_r8);
     cycle_guard already_fp_reg_pair;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -1158,7 +1158,7 @@ end;
 
 transform 513  ip_reg <- f_extend_top ($1: fp_reg_quad, $2: void)
   pass_1 image 16#11ABE8 begin
-    condition not (subject.il.w26 <> 12 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2));
+    condition not (subject.il.w26 <> 12 or subject.il.w24 <> rlen_long and (subject.il.w24 <> rlen_byte) and (subject.il.w24 <> rlen_word));
     cycle_guard already_ip_reg;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -1194,7 +1194,7 @@ end;
 
 transform 514  fp_reg <- f_extend_top ($1: fp_reg_quad, $2: void)
   pass_1 image 16#11ADE2 begin
-    condition not (subject.il.w26 <> 12 or subject.il.w24 <> 6);
+    condition not (subject.il.w26 <> 12 or subject.il.w24 <> rlen_r4);
     cycle_guard already_fp_reg;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -1227,7 +1227,7 @@ end;
 
 transform 515  fp_reg_pair <- f_extend_top ($1: fp_reg_quad, $2: void)
   pass_1 image 16#11AFC8 begin
-    condition not (subject.il.w26 <> 12 or subject.il.w24 <> 7);
+    condition not (subject.il.w26 <> 12 or subject.il.w24 <> rlen_r8);
     cycle_guard already_fp_reg_pair;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -1242,7 +1242,7 @@ end;
 
 transform 516  fp_reg_pair <- f_extend_top ($1: fp_reg_quad, $2: void)
   pass_1 image 16#11B14A begin
-    condition not (subject.il.w26 <> 12 or subject.il.w24 <> 8);
+    condition not (subject.il.w26 <> 12 or subject.il.w24 <> rlen_c8);
     cycle_guard already_fp_reg_pair;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -1285,7 +1285,7 @@ end;
 
 transform 517  fp_reg <- f_math_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11B33A begin
-    condition not (subject.il.w26 <> 15 or subject.il.w24 <> 6);
+    condition not (subject.il.w26 <> 15 or subject.il.w24 <> rlen_r4);
     cycle_guard already_fp_reg;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -1300,7 +1300,7 @@ end;
 
 transform 518  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#11B4BC begin
-    condition not (subject.il.w26 <> 14 or subject.il.w24 <> 8);
+    condition not (subject.il.w26 <> 14 or subject.il.w24 <> rlen_c8);
     cycle_guard already_fp_reg_pair;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -1327,7 +1327,7 @@ end;
 
 transform 519  fp_reg_pair <- f_math_top ($1: fp_reg_quad, $2: void)
   pass_1 image 16#11B644 begin
-    condition not (subject.il.w26 <> 15 or subject.il.w24 <> 7);
+    condition not (subject.il.w26 <> 15 or subject.il.w24 <> rlen_r8);
     cycle_guard already_fp_reg_pair;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -1342,7 +1342,7 @@ end;
 
 transform 520  fp_reg_quad <- f_math_top ($1: fp_reg_quad, $2: void)
   pass_1 image 16#11B7C6 begin
-    condition not (subject.il.w26 <> 14 or subject.il.w24 <> 12);
+    condition not (subject.il.w26 <> 14 or subject.il.w24 <> rlen_c16);
     cycle_guard already_fp_reg_quad;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -1372,7 +1372,7 @@ transform 521  fp_reg_pair <- f_mul_top ($1: fp_reg_pair, $2: fp_reg_pair)
   pass_1 image 16#11B94E begin
     temp t2: integer;
     temp t3: integer;
-    condition subject.il.w24 = 8;
+    condition subject.il.w24 = rlen_c8;
     cycle_guard already_fp_reg_pair;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 24;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -1425,7 +1425,7 @@ transform 522  fp_reg_pair <- f_mul_top ($1: fp_reg_pair, $2: fp_reg_pair)
   pass_1 image 16#11BB26 begin
     temp t2: integer;
     temp t3: integer;
-    condition subject.il.w24 = 8;
+    condition subject.il.w24 = rlen_c8;
     cycle_guard already_fp_reg_pair;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 28;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -1485,7 +1485,7 @@ transform 523  fp_reg_quad <- f_mul_top ($1: fp_reg_quad, $2: fp_reg_quad)
   pass_1 image 16#11BCFE begin
     temp t2: integer;
     temp t3: integer;
-    condition subject.il.w24 = 12;
+    condition subject.il.w24 = rlen_c16;
     cycle_guard already_fp_reg_quad;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 24;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -1538,7 +1538,7 @@ transform 524  fp_reg_quad <- f_mul_top ($1: fp_reg_quad, $2: fp_reg_quad)
   pass_1 image 16#11BED6 begin
     temp t2: integer;
     temp t3: integer;
-    condition subject.il.w24 = 12;
+    condition subject.il.w24 = rlen_c16;
     cycle_guard already_fp_reg_quad;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 32;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -1594,7 +1594,7 @@ end;
 
 transform 525  fp_reg_pair <- f_neg_top ($1: fp_reg_pair)
   pass_1 image 16#11C0AE begin
-    condition subject.il.w24 = 8;
+    condition subject.il.w24 = rlen_c8;
     cycle_guard already_fp_reg_pair;
     result.code_bytes <- $1.code_bytes + 8;
     result.memory_references <- $1.memory_references;
@@ -1621,7 +1621,7 @@ end;
 
 transform 526  fp_reg_quad <- f_neg_top ($1: fp_reg_quad)
   pass_1 image 16#11C212 begin
-    condition subject.il.w24 = 12;
+    condition subject.il.w24 = rlen_c16;
     cycle_guard already_fp_reg_quad;
     result.code_bytes <- $1.code_bytes + 8;
     result.memory_references <- $1.memory_references;
@@ -1650,7 +1650,7 @@ transform 527  fp_reg_pair <- f_sub_top ($1: fp_reg_pair, $2: fp_reg_pair)
   pass_1 image 16#11C376 begin
     temp t2: integer;
     temp t3: integer;
-    condition subject.il.w24 = 8;
+    condition subject.il.w24 = rlen_c8;
     cycle_guard already_fp_reg_pair;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -1694,7 +1694,7 @@ transform 528  fp_reg_quad <- f_sub_top ($1: fp_reg_quad, $2: fp_reg_quad)
   pass_1 image 16#11C54A begin
     temp t2: integer;
     temp t3: integer;
-    condition subject.il.w24 = 12;
+    condition subject.il.w24 = rlen_c16;
     cycle_guard already_fp_reg_quad;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 8;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -1817,7 +1817,7 @@ end;
 
 transform 531  fp_reg_pair <- isc_func_call_top
   pass_1 image 16#11D01E begin
-    condition subject.il.w24 = 8;
+    condition subject.il.w24 = rlen_c8;
     cycle_guard already_fp_reg_pair;
     result.l352 <- lir_3f90[subject.il.b11];
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then
@@ -1856,7 +1856,7 @@ end;
 
 transform 532  fp_reg_quad <- isc_func_call_top
   pass_1 image 16#11D224 begin
-    condition subject.il.w24 = 12;
+    condition subject.il.w24 = rlen_c16;
     cycle_guard already_fp_reg_quad;
     result.l352 <- lir_3f90[subject.il.b11];
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 then

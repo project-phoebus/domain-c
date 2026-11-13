@@ -1540,7 +1540,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[12] <> 1) or (subject.children[2]^.literal_32_bits_value <> 7) or (subject.children[1]^.children[2]^.literal_32_bits_value <> 0)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) or (subject.children[2]^.literal_32_bits_value <> 7) or (subject.children[1]^.children[2]^.literal_32_bits_value <> 0)) then begin
     t1 := abs(p2_node_ptr_t(subject.children[1]^.il)^.w[14]);
     if (t1 = 13) or (t1 = 12) then begin
       if isc_user_routines_354 then begin

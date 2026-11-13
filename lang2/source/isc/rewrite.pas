@@ -342,7 +342,7 @@ var
   n: rw_ptr_t;
   off: integer32;
 begin
-  if (rlen = 6) or (rlen = 7) or (rlen = 12) or (rlen = 8) then
+  if (rlen = rlen_r4) or (rlen = rlen_r8) or (rlen = rlen_c16) or (rlen = rlen_c8) then
     kind := 123
   else
     kind := 122;
@@ -606,7 +606,7 @@ begin
     c^.op := 30;
     first := 1;
   end
-  else if (node^.op = 16) and (conv^.args[1].f16.rlen = 0) then begin
+  else if (node^.op = 16) and (conv^.args[1].f16.rlen = rlen_null) then begin
     c^.op := 30;
     first := 2;
   end
@@ -621,7 +621,7 @@ begin
       node^.opnd[1] := temp;
       if temp <> nil then begin
         temp^.vr_attr := temp^.vr_attr ! 16#2000;
-        node^.phase := node^.phase + [23];
+        node^.phase := node^.phase + [phase_23];
       end;
     end
     else begin
@@ -690,13 +690,13 @@ begin
 
     { a byte or halfword passed to op 86's routine: widened }
     if (node^.kind = tree_node) and (j = 2) and (node^.op = 86)
-       and ((node^.desc.rlen = 2) or (node^.desc.rlen = 1)) then begin
+       and ((node^.desc.rlen = rlen_word) or (node^.desc.rlen = rlen_byte)) then begin
       t := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 44);
       t^.kind := tree_node;
       t^.rewritten := true;
       t^.op := 18;
       t^.count := 1;
-      t^.desc.rlen := 4;
+      t^.desc.rlen := rlen_long;
       t^.desc.w6 := node^.desc.rlen;
       t^.opnd[1] := arg;
       arg := t;
@@ -734,16 +734,16 @@ begin
       cand := isc_$is_a_register_candidate(arg^.rf_base)
     else
       cand := isc_$is_a_register_candidate(arg);
-    copy := not (20 in getphase(arg)) and not cand;
+    copy := not (phase_proc_reg in getphase(arg)) and not cand;
     if conv^.args[j].by_value then begin
       value := arg;
       if (arg^.kind = tree_node) and (j < conv^.nargs)
          and (conv^.args[j + 1].num = conv^.args[j].num)
-         and (arg^.desc.rlen = 7) then begin
+         and (arg^.desc.rlen = rlen_r8) then begin
         home := make_expression_temporary(123, 64);
         home^.vr_attr := home^.vr_attr ! 16#2000;
         size := 8;
-        rlen := 7;
+        rlen := rlen_r8;
         value := home;
         x := conv^.args[j].num + ord(is_call);
         saved := node^.opnd[x];
@@ -823,10 +823,10 @@ begin
       a^.l42 := (a^.l42 & 16#FF0000FF) ! lshft(stmt, 8);
       a^.line := line;
       a^.next := c^.opnd[2];
-      if (a^.rlen = 6) or (a^.rlen = 7) or (a^.rlen = 12)
-         or (a^.rlen = 8) then
+      if (a^.rlen = rlen_r4) or (a^.rlen = rlen_r8) or (a^.rlen = rlen_c16)
+         or (a^.rlen = rlen_c8) then
         a^.aop := 11
-      else if a^.rlen = 11 then
+      else if a^.rlen = rlen_agg then
         a^.aop := 6
       else
         a^.aop := 0;
@@ -848,10 +848,10 @@ begin
         b^.rlen := rlen;
         b^.src := home;
         b^.dst := arg;
-        if (b^.rlen = 6) or (b^.rlen = 7) or (b^.rlen = 12)
-           or (b^.rlen = 8) then
+        if (b^.rlen = rlen_r4) or (b^.rlen = rlen_r8) or (b^.rlen = rlen_c16)
+           or (b^.rlen = rlen_c8) then
           b^.aop := 11
-        else if b^.rlen = 11 then
+        else if b^.rlen = rlen_agg then
           b^.aop := 6
         else
           b^.aop := 0;
@@ -865,7 +865,7 @@ begin
     an^.rewritten := true;
     if not conv^.args[j].by_value then begin
       an^.size := 4;
-      an^.rlen := 5;
+      an^.rlen := rlen_addr;
       an^.aop := 0;
     end
     else begin
@@ -919,12 +919,12 @@ begin
       t^.op := 64;
       t^.count := 1;
       t^.desc.size := 4;
-      t^.desc.rlen := 5;
+      t^.desc.rlen := rlen_addr;
       t^.desc.w6 := conv^.args[j].f16.rlen;
       t^.desc.w8 := conv^.args[j].size;
       t^.opnd[1] := value;
       an^.size := 4;
-      an^.rlen := 5;
+      an^.rlen := rlen_addr;
       an^.aop := 0;
     end;
     if (c^.op = 32) and (j = 1) then
@@ -963,7 +963,7 @@ begin
     an^.kind := assign_node;
     an^.rewritten := true;
     an^.size := 4;
-    an^.rlen := 5;
+    an^.rlen := rlen_addr;
     an^.top := top;
     an^.l42 := (an^.l42 & 16#FF0000FF) ! lshft(stmt, 8);
     an^.line := line;
@@ -989,7 +989,7 @@ begin
       an^.kind := assign_node;
       an^.rewritten := true;
       an^.size := 4;
-      an^.rlen := 5;
+      an^.rlen := rlen_addr;
       an^.top := top;
       an^.l42 := (an^.l42 & 16#FF0000FF) ! lshft(stmt, 8);
       an^.line := line;
@@ -1119,7 +1119,7 @@ begin
   n^.uses := n^.uses + 1;
   k := n^.uses;
   if (k > 1) and (n^.kind <> cse_use_ob) then begin
-    n^.phase := n^.phase + [22];
+    n^.phase := n^.phase + [phase_lcl_cse];
     rw_hdr_ptr_t(addr(n^.phase))^.l8 := 0;
   end;
   correct_uc := k;
@@ -1587,9 +1587,9 @@ begin
     br := br^.next;
     i := i - 1;
   end;
-  if t^.desc.rlen = 0 then
+  if t^.desc.rlen = rlen_null then
     goto 1;
-  if (t^.desc.rlen < 0) or (t^.desc.rlen > 4) then
+  if (t^.desc.rlen < rlen_null) or (t^.desc.rlen > rlen_long) then
     goto 1;
   range := hi - lo;
   if range >= 1024 then
@@ -1602,11 +1602,11 @@ begin
   rw_desc := rw_long_desc;
   rw_hdr.phase := [];
   rw_hdr.l8 := 0;
-  if (t^.desc.rlen >= 0) and (t^.desc.rlen < 4) then begin
+  if (t^.desc.rlen >= rlen_null) and (t^.desc.rlen < rlen_long) then begin
     t^.op := 18;
     t^.desc.flags.signed := lo < 0;
     t^.desc.w6 := t^.desc.rlen;
-    t^.desc.rlen := 4;
+    t^.desc.rlen := rlen_long;
   end;
   if (lo > 0) and (lo < 8) then begin
     lo := 0;
@@ -1726,7 +1726,7 @@ begin
     s^.kind := case_node_range_check;
     t := make_tree_node;
     t^.uses := 2;
-    t^.phase := [22];
+    t^.phase := [phase_lcl_cse];
     t^.op := 17;
     t^.count := 1;
     t^.opnd[1] := a;
@@ -1768,7 +1768,7 @@ begin
   n^.kind := tree_node;
   n^.op := 16;
   n^.desc.size := 4;
-  n^.desc.rlen := 5;
+  n^.desc.rlen := rlen_addr;
   n^.count := 2;
   n^.opnd[1] := rw_ptr_t(addr(at_lib_dsc_bytes[16#10EC]));
   n^.opnd[2] := rw_ptr_t(smcontk(linteger_ob, size));
@@ -1824,7 +1824,7 @@ begin
     a^.kind := assign_node;
     stmt^.next := a;
     a^.size := 4;
-    a^.rlen := 5;
+    a^.rlen := rlen_addr;
     a^.prev := stmt;
     a^.aop := 0;
     a^.src := make_call_to_rws_$alloc_temp(b^.bk_dynamic);
@@ -1835,7 +1835,7 @@ begin
       a2^.kind := assign_node;
       a^.next := a2;
       a2^.size := 4;
-      a2^.rlen := 5;
+      a2^.rlen := rlen_addr;
       a2^.prev := a;
       a2^.aop := 0;
       a2^.src := x^.rf_base;
@@ -1909,7 +1909,7 @@ begin
     t^.rewritten := true;
     rw_hdr_ptr_t(addr(t^.phase))^.l8 := integer32(node);
     t^.op := 0;
-    t^.desc.rlen := 9;
+    t^.desc.rlen := rlen_cs;
     t^.desc.size := len;
     t^.opnd[1] := dst;
     p := mrh_$alloc(isc_preserve_heap, 28);
@@ -1949,7 +1949,7 @@ begin
   a^.src := k32;
   a^.x72 := kw;
   a^.aop := 34;
-  a^.rlen := 1;
+  a^.rlen := rlen_byte;
   b := mrh_$alloc(isc_preserve_heap, 80);
   b^.kind := assign_node;
   b^.rewritten := true;

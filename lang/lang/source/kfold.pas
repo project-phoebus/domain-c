@@ -121,7 +121,7 @@ type
     uses: integer;                      { +16: the use count }
     w18: integer;                       { +18 }
     desc: kf_desc_t;                    { +20 }
-    op: integer;                        { +36 }
+    op: il_$top_t;                      { +36 }
     count: integer;                     { +38 }
     opnd: array [1..64] of il_$node_ptr_t;  { +40 }
   end;
@@ -272,7 +272,7 @@ function assert_is_integer_and(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if assert_is_tree(n) then
-    assert_is_integer_and := kf_tree_ptr_t(n)^.op = 9
+    assert_is_integer_and := kf_tree_ptr_t(n)^.op = and_top
   else
     assert_is_integer_and := false;
 end;
@@ -284,8 +284,8 @@ function assert_is_left_shift(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if assert_is_tree(n) then
-    assert_is_left_shift := (kf_tree_ptr_t(n)^.op = 49) or
-                            (kf_tree_ptr_t(n)^.op = 27)
+    assert_is_left_shift := (kf_tree_ptr_t(n)^.op = alshf_top) or
+                            (kf_tree_ptr_t(n)^.op = lshf_top)
   else
     assert_is_left_shift := false;
 end;
@@ -297,10 +297,10 @@ function assert_is_shift(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if assert_is_tree(n) then
-    assert_is_shift := (kf_tree_ptr_t(n)^.op = 50) or
-                       (kf_tree_ptr_t(n)^.op = 49) or
-                       (kf_tree_ptr_t(n)^.op = 28) or
-                       (kf_tree_ptr_t(n)^.op = 27)
+    assert_is_shift := (kf_tree_ptr_t(n)^.op = arshf_top) or
+                       (kf_tree_ptr_t(n)^.op = alshf_top) or
+                       (kf_tree_ptr_t(n)^.op = rshf_top) or
+                       (kf_tree_ptr_t(n)^.op = lshf_top)
   else
     assert_is_shift := false;
 end;
@@ -494,29 +494,29 @@ begin { kfold_$general }
 
   { One-character strings to integers; a constant first operand of a
     commutative operator second. }
-  if not (t^.op in [15, 16, 17, 26, 47]) then
+  if not (t^.op in [call_top, func_call_top, value_top, addr_top, sr_top]) then
     for i := 1 to t^.count do begin
       o := t^.opnd[i];
       if (o^.kind = char_string_ob) and (o^.str_len = 1) then
         t^.opnd[i] := smcontk(integer_ob, ord(o^.str_chars[1]));
     end;
-  if t^.op in [1, 3, 9, 10, 19, 20, 34, 36, 44, 45, 46] then
+  if t^.op in [add_top, mul_top, and_top, or_top, set_and_top, set_or_top, f_add_top, f_mul_top, eor_top, max_top, min_top] then
     if t^.opnd[1]^.kind in [blogical_ob..complex_ob, char_string_ob,
                             char32_string_ob, char16_ob, set_con_ob,
                             rec_const_ob, dpcomplex_ob, binteger_ob] then begin
       s1 := t^.opnd[1];
       t^.opnd[1] := t^.opnd[2];
       t^.opnd[2] := s1;
-      if t^.op = 3 then begin
+      if t^.op = mul_top then begin
         i := t^.desc.w6;
         t^.desc.w6 := t^.desc.w8;
         t^.desc.w8 := i;
       end;
     end;
 
-  if t^.op in [1..4, 6..10, 12, 19..21, 27..29, 39, 44..46, 49..53, 57] then begin
+  if t^.op in [add_top..div_top, mod_top..or_top, compare_top, set_and_top..set_diff_top, lshf_top..abs_top, f_extend_top, eor_top..min_top, alshf_top..cc_logand_ptop, cc_lognot_ptop] then begin
     { The real part of a double complex constant. }
-    if (t^.op = 39) and (t^.desc.rlen = 7) and (t^.desc.w6 = 12) and
+    if (t^.op = f_extend_top) and (t^.desc.rlen = rlen_r8) and (t^.desc.w6 = 12) and
        (t^.count = 1) and (t^.opnd[1]^.kind = dpcomplex_ob) then begin
       dd := t^.opnd[1]^.dcx_re;
       res := dpcontk(dd);
@@ -524,25 +524,25 @@ begin { kfold_$general }
     end;
 
     { Address arithmetic: an address plus or minus a constant. }
-    if (t^.op = 2) or (t^.op = 1) then
+    if (t^.op = sub_top) or (t^.op = add_top) then
       if t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                               binteger_ob] then begin
         x := t^.opnd[1];
         y := t^.opnd[2];
-        if addr_ok and (x^.kind = tree_node) and (kf_tree_ptr_t(x)^.op = 26)
+        if addr_ok and (x^.kind = tree_node) and (kf_tree_ptr_t(x)^.op = addr_top)
             and
            (y^.kind in [sinteger_ob..ubinteger_ob, binteger_ob]) and
            (y^.int_value <= target_properties.p_5c) and
            (y^.int_value >= target_properties.p_60) then begin
           if (1 < kf_tree_ptr_t(x)^.uses) or (1 < t^.uses) then begin
             d := kf_tree_ptr_t(x)^.desc;
-            x := buildtreenode(26, d, kf_tree_ptr_t(x)^.opnd[1], 1);
+            x := buildtreenode(addr_top, d, kf_tree_ptr_t(x)^.opnd[1], 1);
             kf_tree_ptr_t(x)^.uses := 0;
             kf_tree_ptr_t(x)^.w18 := t^.w18;
             kf_hdr_ptr_t(addr(kf_tree_ptr_t(x)^.h4))^ := kf_hdr_ptr_t(addr(t^.h4))^;
           end;
           v1 := y^.int_value;
-          if t^.op = 2 then
+          if t^.op = sub_top then
             v1 := -v1;
           o := kf_tree_ptr_t(x)^.opnd[1];
           if (o^.kind = disp_node) and (kf_tree_ptr_t(o)^.uses <= 1) then begin
@@ -558,7 +558,7 @@ begin { kfold_$general }
         end;
         if x^.kind = addr_con then begin
           v1 := y^.int_value;
-          if t^.op = 2 then
+          if t^.op = sub_top then
             v1 := -v1;
           v1 := v1 + x^.xl[3];
           if x^.xc[20] = chr(0) then begin
@@ -575,35 +575,35 @@ begin { kfold_$general }
             and (y^.kind in [sinteger_ob..ubinteger_ob,
                              binteger_ob]) then begin
           v1 := y^.int_value;
-          if t^.op = 2 then
+          if t^.op = sub_top then
             v1 := -v1;
           v1 := v1 + x^.xl[4];
           res := make_abs_addr_con(x^.xw[10], x^.xp[3], v1);
           goto 80;
         end;
         if y^.int_value < 0 then begin
-          if t^.op = 1 then
-            t^.op := 2
+          if t^.op = add_top then
+            t^.op := sub_top
           else
-            t^.op := 1;
+            t^.op := add_top;
           t^.opnd[2] := smcontk(integer_ob, -y^.int_value);
         end;
       end;
 
     { (a << k) + (b << k) to (a + b) << k. }
-    if t^.op = 1 then begin
+    if t^.op = add_top then begin
       x := t^.opnd[1];
       y := t^.opnd[2];
-      if (x^.kind = tree_node) and (t^.desc.rlen >= 0) and (t^.desc.rlen <= 4)
+      if (x^.kind = tree_node) and (t^.desc.rlen >= rlen_null) and (t^.desc.rlen <= rlen_long)
           and
-         (kf_tree_ptr_t(x)^.op = 27) and (y^.kind = tree_node) and
-         (kf_tree_ptr_t(y)^.op = 27) and
+         (kf_tree_ptr_t(x)^.op = lshf_top) and (y^.kind = tree_node) and
+         (kf_tree_ptr_t(y)^.op = lshf_top) and
          (kf_tree_ptr_t(x)^.opnd[2] = kf_tree_ptr_t(y)^.opnd[2]) and
          (kf_tree_ptr_t(x)^.opnd[1] <> kf_tree_ptr_t(y)^.opnd[1]) then begin
         d := t^.desc;
         ops[1] := kf_tree_ptr_t(x)^.opnd[1];
         ops[2] := kf_tree_ptr_t(y)^.opnd[1];
-        o := buildtreenode(1, d, ops, 2);
+        o := buildtreenode(add_top, d, ops, 2);
         kf_tree_ptr_t(o)^.uses := 0;
         kf_tree_ptr_t(o)^.w18 := 0;
         kf_hdr_ptr_t(addr(kf_tree_ptr_t(o)^.h4))^ :=
@@ -611,7 +611,7 @@ begin { kfold_$general }
         d := kf_tree_ptr_t(t^.opnd[1])^.desc;
         ops[1] := o;
         ops[2] := kf_tree_ptr_t(t^.opnd[1])^.opnd[2];
-        res := buildtreenode(27, d, ops, 2);
+        res := buildtreenode(lshf_top, d, ops, 2);
         kf_tree_ptr_t(res)^.uses := 0;
         kf_tree_ptr_t(res)^.w18 := t^.w18;
         kf_hdr_ptr_t(addr(kf_tree_ptr_t(res)^.h4))^ := kf_hdr_ptr_t(addr(t^.h4))^;
@@ -631,7 +631,7 @@ begin { kfold_$general }
     end;
 
     { A conversion to an integer of a constant. }
-    if (t^.op = 39) and (t^.desc.rlen >= 0) and (t^.desc.rlen <= 4) then begin
+    if (t^.op = f_extend_top) and (t^.desc.rlen >= rlen_null) and (t^.desc.rlen <= rlen_long) then begin
       x := t^.opnd[1];
       if x^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
         res := smcontk(integer_ob, dfetch(x^.int_value, t^.desc.rlen,
@@ -665,7 +665,7 @@ begin { kfold_$general }
     end;
 
     { Between the real classes. }
-    if (t^.op = 39) and ((t^.desc.rlen = 7) or (t^.desc.rlen = 6)) and
+    if (t^.op = f_extend_top) and ((t^.desc.rlen = rlen_r8) or (t^.desc.rlen = rlen_r4)) and
        ((t^.desc.w6 = 7) or (t^.desc.w6 = 6)) and
        ((t^.opnd[1]^.kind = dpreal_ob)
         or (t^.opnd[1]^.kind = real_ob)) then begin
@@ -673,7 +673,7 @@ begin { kfold_$general }
         res := t^.opnd[1];
         goto 80;
       end;
-      if t^.desc.rlen = 6 then
+      if t^.desc.rlen = rlen_r4 then
         res := rlcontk(t^.opnd[1]^.real_value)
       else
         res := dpcontk(t^.opnd[1]^.real_value);
@@ -705,13 +705,13 @@ begin { kfold_$general }
     setres := false;
     sgn := t^.desc.flags.signed;
     case t^.op of
-      1: v1 := v1 + v2;
-      2: v1 := v1 - v2;
-      9: v1 := v1 & v2;
-      10: v1 := v1 ! v2;
-      7: v1 := -v1;
-      8: v1 := ~v1;
-      3: begin
+      add_top: v1 := v1 + v2;
+      sub_top: v1 := v1 - v2;
+      and_top: v1 := v1 & v2;
+      or_top: v1 := v1 ! v2;
+      neg_top: v1 := -v1;
+      not_top: v1 := ~v1;
+      mul_top: begin
         v1 := dfetch(v1, t^.desc.w6, sgn);
         v2 := dfetch(v2, t^.desc.w8, sgn);
         if sgn then
@@ -722,7 +722,7 @@ begin { kfold_$general }
           v1 := uv1 * uv2;
         end;
       end;
-      4, 6: begin
+      div_top, mod_top: begin
         v1 := dfetch(v1, t^.desc.w6, sgn);
         v2 := dfetch(v2, t^.desc.w8, sgn);
         if v2 = 0 then begin
@@ -732,12 +732,12 @@ begin { kfold_$general }
         if not sgn then begin
           uv1 := v1;
           uv2 := v2;
-          if t^.op = 4 then
+          if t^.op = div_top then
             v1 := uv1 div uv2
           else
             v1 := uv1 mod uv2;
         end
-        else if t^.op = 4 then
+        else if t^.op = div_top then
           v1 := v1 div v2
         else begin
           v1 := v1 mod v2;
@@ -745,39 +745,39 @@ begin { kfold_$general }
             v1 := v1 + v2;
         end;
       end;
-      44: v1 := xor(v1, v2);
-      29:
+      eor_top: v1 := xor(v1, v2);
+      abs_top:
         if v1 < 0 then
           v1 := -v1;
-      46:
+      min_top:
         if v2 <= v1 then
           v1 := v1
         else
           v1 := v2;
-      45:
+      max_top:
         if v2 >= v1 then
           v1 := v1
         else
           v1 := v2;
-      27, 49: v1 := lshft(dfetch(v1, t^.desc.rlen, setres), v2);
-      28: v1 := rshft(dfetch(v1, t^.desc.rlen, setres), v2);
-      50: v1 := arshft(dfetch(v1, t^.desc.rlen, true), v2);
-      53:
+      lshf_top, alshf_top: v1 := lshft(dfetch(v1, t^.desc.rlen, setres), v2);
+      rshf_top: v1 := rshft(dfetch(v1, t^.desc.rlen, setres), v2);
+      arshf_top: v1 := arshft(dfetch(v1, t^.desc.rlen, true), v2);
+      cc_logand_ptop:
         if (v1 = 0) or (v2 = 0) then
           v1 := 0
         else
           v1 := 1;
-      52:
+      cc_logor_ptop:
         if (v1 = 0) and (v2 = 0) then
           v1 := 0
         else
           v1 := 1;
-      57:
+      cc_lognot_ptop:
         if v1 <> 0 then
           v1 := 0
         else
           v1 := 1;
-      51:
+      cc_c3expr_ptop:
         if (t^.opnd[1]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
             and
            (t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
@@ -788,22 +788,22 @@ begin { kfold_$general }
             v1 := t^.opnd[2]^.int_value
           else
             v1 := t^.opnd[3]^.int_value;
-      39: begin
+      f_extend_top: begin
         if (t^.desc.w6 < 0) or (t^.desc.w6 > 4) then
           goto 90;
         v1 := dfetch(v1, t^.desc.w6, t^.desc.flags.signed);
         if sgn then r := v1 else if v1 < 0 then r := v1 + 4294967296.0 else r := v1;
         a := r;
-        if t^.desc.rlen = 7 then begin
+        if t^.desc.rlen = rlen_r8 then begin
           res := dpcontk(a);
           goto 80;
         end;
-        if t^.desc.rlen <> 6 then
+        if t^.desc.rlen <> rlen_r4 then
           goto 70;
         res := rlcontk(a);
         goto 80;
       end;
-      12: begin
+      compare_top: begin
         sgn := (t^.desc.w8 >= 0) and (t^.desc.w8 <= 31) and
                (t^.desc.w8 in [6, 7, 12..15]);
         v1 := dfetch(v1, t^.desc.w6, sgn);
@@ -824,17 +824,17 @@ begin { kfold_$general }
           otherwise ;
         end;
       end;
-      19: begin
+      set_and_top: begin
         setres := true;
         for i := 1 to s1^.set_len div 2 do
           words[i] := s1^.set_words[i] & s2^.set_words[i];
       end;
-      20: begin
+      set_or_top: begin
         setres := true;
         for i := 1 to s1^.set_len div 2 do
           words[i] := s1^.set_words[i] ! s2^.set_words[i];
       end;
-      21: begin
+      set_diff_top: begin
         setres := true;
         for i := 1 to s1^.set_len div 2 do
           words[i] := ~s2^.set_words[i] & s1^.set_words[i];
@@ -855,15 +855,15 @@ begin { kfold_$general }
 
     { Not all constants: identities with a constant operand. }
 70:
-    if (t^.op = 21) and (t^.opnd[2]^.kind = set_con_ob) then begin
-      t^.op := 19;
+    if (t^.op = set_diff_top) and (t^.opnd[2]^.kind = set_con_ob) then begin
+      t^.op := set_and_top;
       for i := 1 to t^.opnd[2]^.set_len div 2 do
         words[i] := ~t^.opnd[2]^.set_words[i];
       t^.opnd[2] := setcontk(words, 0, t^.opnd[2]^.set_len);
       res := il_$node_ptr_t(t);
       goto 80;
     end;
-    if t^.op = 12 then begin
+    if t^.op = compare_top then begin
       i := t^.desc.w8;
       if (i = 2) or (i = 3) or (i = 5) or (i = 4) then
         if (t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
@@ -888,13 +888,13 @@ begin { kfold_$general }
       goto 90;
     v1 := l^.int_value;
     case t^.op of
-      3: begin
+      mul_top: begin
         v1 := dfetch(v1, t^.desc.w8, t^.desc.flags.signed);
         if v1 = 1 then begin
           if t^.desc.rlen = t^.desc.w6 then
             res := t^.opnd[1]
           else begin
-            t^.op := 18;
+            t^.op := extend_top;
             t^.desc.w8 := 0;
             t^.desc.size := t^.desc.rlen;
             res := il_$node_ptr_t(t);
@@ -906,11 +906,11 @@ begin { kfold_$general }
         res := smcontk(integer_ob, 0);
         goto 80;
       end;
-      4: begin
+      div_top: begin
         v1 := dfetch(v1, t^.desc.w8, t^.desc.flags.signed);
         if v1 = 1 then begin
           if t^.desc.rlen <> t^.desc.w6 then begin
-            t^.op := 18;
+            t^.op := extend_top;
             t^.desc.w8 := 0;
             t^.desc.size := t^.desc.rlen;
             res := il_$node_ptr_t(t);
@@ -932,7 +932,7 @@ begin { kfold_$general }
         res := smcontk(integer_ob, 0);
         goto 80;
       end;
-      9: begin
+      and_top: begin
         if v1 = 0 then
           if not t^.bits.b12 then begin
             res := l;
@@ -944,7 +944,7 @@ begin { kfold_$general }
         res := t^.opnd[1];
         goto 80;
       end;
-      10: begin
+      or_top: begin
         if rshft(-1, (4 - t^.desc.rlen) * 8) = v1 then
           if not t^.bits.b12 then begin
             res := l;
@@ -955,7 +955,7 @@ begin { kfold_$general }
         res := t^.opnd[1];
         goto 80;
       end;
-      28, 27, 50, 49, 2, 44, 1: begin
+      rshf_top, lshf_top, arshf_top, alshf_top, sub_top, eor_top, add_top: begin
         if v1 <> 0 then
           goto 90;
         res := t^.opnd[1];
@@ -967,8 +967,8 @@ begin { kfold_$general }
   end;
 
   { The real operators. }
-  if t^.op in [34..38, 40..42] then begin
-    if (t^.op = 41) and (t^.desc.rlen = 7) and (t^.desc.w6 = 15) and
+  if t^.op in [f_add_top..f_neg_top, f_compare_top..f_expon_top] then begin
+    if (t^.op = f_math_top) and (t^.desc.rlen = rlen_r8) and (t^.desc.w6 = 15) and
        (t^.count = 1) and (t^.opnd[1]^.kind = dpcomplex_ob) then begin
       dd := t^.opnd[1]^.dcx_im;
       res := dpcontk(dd);
@@ -977,7 +977,7 @@ begin { kfold_$general }
     for i := 1 to t^.count do begin
       o := t^.opnd[i];
       if (o^.kind <> dpreal_ob) and (o^.kind <> real_ob) then
-        if (t^.op <> 42) or not (o^.kind in [blogical_ob..char_ob, char16_ob,
+        if (t^.op <> f_expon_top) or not (o^.kind in [blogical_ob..char_ob, char16_ob,
                                              binteger_ob]) or
            (i <> t^.count) then
           goto 60;
@@ -990,7 +990,7 @@ begin { kfold_$general }
       else
         b := o^.real_value;
     end;
-    if t^.op = 41 then
+    if t^.op = f_math_top then
       if not ((t^.desc.w6 >= 0) and (t^.desc.w6 <= 31) and
               (t^.desc.w6 in [0..7, 9..13])) then
         goto 60;
@@ -1005,18 +1005,18 @@ begin { kfold_$general }
       else
         pfm_$signal(status);
     case t^.op of
-      34: a := a + b;
-      35: a := a - b;
-      36: a := a * b;
-      37: begin
+      f_add_top: a := a + b;
+      f_sub_top: a := a - b;
+      f_mul_top: a := a * b;
+      f_div_top: begin
         if b = 0.0 then begin
           report_failure_once(n, 54);
           goto 50;
         end;
         a := a / b;
       end;
-      38: a := -a;
-      40:
+      f_neg_top: a := -a;
+      f_compare_top:
         case t^.desc.w8 of
           7: if a = b then v1 := 255 else v1 := 0;
           6: if a <> b then v1 := 255 else v1 := 0;
@@ -1026,16 +1026,16 @@ begin { kfold_$general }
           4, 12: if a >= b then v1 := 255 else v1 := 0;
           otherwise ;
         end;
-      41:
+      f_math_top:
         case t^.desc.w6 of
           0: a := abs(a);
           11: begin
-            if t^.desc.rlen >= 6 then
+            if t^.desc.rlen >= rlen_r4 then
               goto 50;
             v1 := round(a);
           end;
           10: begin
-            if t^.desc.rlen >= 6 then
+            if t^.desc.rlen >= rlen_r4 then
               goto 50;
             v1 := trunc(a);
           end;
@@ -1081,13 +1081,13 @@ begin { kfold_$general }
             a := sin(a) / r;
           end;
           6: begin
-            if (a > 88.72283905206835) and (t^.desc.rlen = 6) or
-               (a > 709.782712893384) and (t^.desc.rlen = 7) then begin
+            if (a > 88.72283905206835) and (t^.desc.rlen = rlen_r4) or
+               (a > 709.782712893384) and (t^.desc.rlen = rlen_r8) then begin
               report_failure_once(n, 56);
               goto 50;
             end;
-            if (a < -744.0) and (t^.desc.rlen = 7) or
-               (a < -103.3) and (t^.desc.rlen = 6) then begin
+            if (a < -744.0) and (t^.desc.rlen = rlen_r8) or
+               (a < -103.3) and (t^.desc.rlen = rlen_r4) then begin
               report_failure_once(n, 57);
               goto 50;
             end;
@@ -1096,7 +1096,7 @@ begin { kfold_$general }
           otherwise
             goto 50;
         end;
-      42: begin
+      f_expon_top: begin
         if a = 0.0 then begin
           if t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                                   binteger_ob] then begin
@@ -1116,13 +1116,13 @@ begin { kfold_$general }
                 report_failure_once(n, 58);
                 goto 50;
               end;
-          if (c > 88.72283905206835) and (t^.desc.rlen = 6) or
-             (c > 709.782712893384) and (t^.desc.rlen = 7) then begin
+          if (c > 88.72283905206835) and (t^.desc.rlen = rlen_r4) or
+             (c > 709.782712893384) and (t^.desc.rlen = rlen_r8) then begin
             report_failure_once(n, 56);
             goto 50;
           end;
-          if (c < -103.3) and (t^.desc.rlen = 6) or
-             (c < -744.0) and (t^.desc.rlen = 7) then begin
+          if (c < -103.3) and (t^.desc.rlen = rlen_r4) or
+             (c < -744.0) and (t^.desc.rlen = rlen_r8) then begin
             report_failure_once(n, 57);
             goto 50;
           end;
@@ -1139,10 +1139,10 @@ begin { kfold_$general }
       otherwise
         goto 50;
     end;
-    if (t^.op = 40) or
-       ((t^.op = 41) and ((t^.desc.w6 = 11) or (t^.desc.w6 = 10))) then
+    if (t^.op = f_compare_top) or
+       ((t^.op = f_math_top) and ((t^.desc.w6 = 11) or (t^.desc.w6 = 10))) then
       res := smcontk(integer_ob, v1)
-    else if t^.desc.rlen = 7 then
+    else if t^.desc.rlen = rlen_r8 then
       res := dpcontk(a)
     else
       res := rlcontk(a);
@@ -1159,12 +1159,12 @@ begin { kfold_$general }
       goto 90;
     a := l^.real_value;
     case t^.op of
-      34, 35:
+      f_add_top, f_sub_top:
         if a = 0.0 then begin
           res := t^.opnd[1];
           goto 80;
         end;
-      36:
+      f_mul_top:
         if a = 0.0 then begin
           res := l;
           goto 80;
@@ -1173,7 +1173,7 @@ begin { kfold_$general }
           res := t^.opnd[1];
           goto 80;
         end;
-      37:
+      f_div_top:
         if a = 1.0 then begin
           res := t^.opnd[1];
           goto 80;
@@ -1184,7 +1184,7 @@ begin { kfold_$general }
   end;
 
   { A bit range [lo..hi] as a mask, or-ed in. }
-  if t^.op = 25 then begin
+  if t^.op = bit_set_top then begin
     if not (t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                                  binteger_ob]) then
       goto 90;
@@ -1198,7 +1198,7 @@ begin { kfold_$general }
       hi := t^.opnd[3]^.int_value;
     end;
     t^.opnd[2] := smcontk(integer_ob, lshft(1, hi + 1) - lshft(1, v1));
-    t^.op := 10;
+    t^.op := or_top;
     t^.count := 2;
     t^.desc.rlen := t^.desc.size;
     kfold(stmt, n);
@@ -1206,7 +1206,7 @@ begin { kfold_$general }
   end;
 
   { A bit test of a constant bit number. }
-  if t^.op = 11 then begin
+  if t^.op = bit_test_top then begin
     if not (t^.opnd[1]^.kind in [blogical_ob..char_ob, char16_ob,
                                  binteger_ob]) then
       goto 90;
@@ -1241,7 +1241,7 @@ begin { kfold_$general }
   end;
 
   { An address of a dereference or of an indexed node. }
-  if t^.op = 26 then begin
+  if t^.op = addr_top then begin
     x := t^.opnd[1];
     if x^.kind = ptr_node then begin
       res := x^.xp[6];
@@ -1270,7 +1270,7 @@ begin { kfold_$general }
       ops[2] := smcontk(integer_ob, lshft(dfetch(y^.int_value, x^.xw[21],
                                                  true),
                                   x^.xw[20]) + v2);
-      res := buildtreenode(13, sum_desc, ops, 2);
+      res := buildtreenode(index_top, sum_desc, ops, 2);
       kf_tree_ptr_t(res)^.uses := 0;
     end
     else begin
@@ -1278,7 +1278,7 @@ begin { kfold_$general }
         goto 90;
       ops[1] := x^.xp[6];
       ops[2] := y;
-      res := buildtreenode(13, sum_desc, ops, 2);
+      res := buildtreenode(index_top, sum_desc, ops, 2);
       kf_tree_ptr_t(res)^.uses := 0;
     end;
     kf_tree_ptr_t(res)^.w18 := t^.w18;
@@ -1286,7 +1286,7 @@ begin { kfold_$general }
     goto 80;
   end;
 
-  if t^.op = 13 then
+  if t^.op = index_top then
     if t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                             binteger_ob] then begin
       if t^.opnd[2]^.int_value <> 0 then
@@ -1296,7 +1296,7 @@ begin { kfold_$general }
     end;
 
   { An integral conversion of a constant. }
-  if t^.op <> 18 then
+  if t^.op <> extend_top then
     goto 90;
   if not (t^.opnd[1]^.kind in [blogical_ob..char_ob, char16_ob,
                                binteger_ob]) then
@@ -1317,9 +1317,9 @@ begin { kfold_$general }
   else if t^.desc.w6 <> 4 then
     goto 90;
   case t^.desc.rlen of
-    1: if t^.desc.flags.signed then kind := binteger_ob else kind := ubinteger_ob;
-    2: if t^.desc.flags.signed then kind := sinteger_ob else kind := usinteger_ob;
-    4: if t^.desc.flags.signed then kind := linteger_ob else kind := ulinteger_ob;
+    rlen_byte: if t^.desc.flags.signed then kind := binteger_ob else kind := ubinteger_ob;
+    rlen_word: if t^.desc.flags.signed then kind := sinteger_ob else kind := usinteger_ob;
+    rlen_long: if t^.desc.flags.signed then kind := linteger_ob else kind := ulinteger_ob;
     otherwise
       if t^.desc.flags.signed then kind := integer_ob else kind := uinteger_ob;
   end;
@@ -1330,16 +1330,16 @@ begin { kfold_$general }
   if res^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
     if ((res^.kind = sinteger_ob) or (res^.kind = integer_ob)
         or (res^.kind = binteger_ob) or
-        (res^.kind = linteger_ob)) and (t^.desc.rlen = 1) and
+        (res^.kind = linteger_ob)) and (t^.desc.rlen = rlen_byte) and
        (rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 3) then
       res := strtk(res^.xc[11], 1)
     else begin
       kind := res^.kind;
       if kind = integer_ob then
         case t^.desc.rlen of
-          1: if t^.desc.flags.signed then kind := binteger_ob else kind := ubinteger_ob;
-          2: if t^.desc.flags.signed then kind := sinteger_ob else kind := usinteger_ob;
-          4: if t^.desc.flags.signed then kind := linteger_ob else kind := ulinteger_ob;
+          rlen_byte: if t^.desc.flags.signed then kind := binteger_ob else kind := ubinteger_ob;
+          rlen_word: if t^.desc.flags.signed then kind := sinteger_ob else kind := usinteger_ob;
+          rlen_long: if t^.desc.flags.signed then kind := linteger_ob else kind := ulinteger_ob;
           otherwise
             if t^.desc.flags.signed then kind := integer_ob else kind := uinteger_ob;
         end;

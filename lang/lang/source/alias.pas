@@ -415,7 +415,7 @@ var
   t: alias_$desc_t;                     { -32 }
 begin
   ok := true;
-  if getphase(n) * [3, 4] <> [] then
+  if getphase(n) * [phase_devrd, phase_devwt] <> [] then
     d.phase_34 := true;
   if (n^.kind in [tree_node, gen_tree_node, cmp_tree_node, dindex_node,
                   ptr_node, disp_node, cs_node, cc_call, pf_call, cse_use_ob,

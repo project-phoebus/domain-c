@@ -469,7 +469,7 @@ begin
   end;
   tr := c_tree_ptr_t(t);
   case tr^.op of
-    52: if sense then begin
+    cc_logor_ptop: if sense then begin
           add_cbranch(tr^.opnd[1], lab, true);
           add_cbranch(tr^.opnd[2], lab, true);
         end
@@ -477,7 +477,7 @@ begin
           add_cbranch(tr^.opnd[1], join, true);
           add_cbranch(tr^.opnd[2], lab, false);
         end;
-    53: if sense then begin
+    cc_logand_ptop: if sense then begin
           add_cbranch(tr^.opnd[1], join, false);
           add_cbranch(tr^.opnd[2], lab, true);
         end
@@ -485,20 +485,20 @@ begin
           add_cbranch(tr^.opnd[1], lab, false);
           add_cbranch(tr^.opnd[2], lab, false);
         end;
-    57: add_cbranch(tr^.opnd[1], lab, not sense);
+    cc_lognot_ptop: add_cbranch(tr^.opnd[1], lab, not sense);
     otherwise
-      if (tr^.op = 12) and (tr^.desc.w8 = 6) and
+      if (tr^.op = compare_top) and (tr^.desc.w8 = 6) and
          ((tr^.opnd[2]^.kind = sinteger_ob)
           or (tr^.opnd[2]^.kind = linteger_ob) or
           (tr^.opnd[2]^.kind = integer_ob)) and
          (tr^.opnd[2]^.int_value = 0) and
          (tr^.opnd[1]^.kind = tree_node) and
-         ((c_tree_ptr_t(tr^.opnd[1])^.op = 52) or
-          (c_tree_ptr_t(tr^.opnd[1])^.op = 57) or
-          (c_tree_ptr_t(tr^.opnd[1])^.op = 53)) then
+         ((c_tree_ptr_t(tr^.opnd[1])^.op = cc_logor_ptop) or
+          (c_tree_ptr_t(tr^.opnd[1])^.op = cc_lognot_ptop) or
+          (c_tree_ptr_t(tr^.opnd[1])^.op = cc_logand_ptop)) then
         add_cbranch(tr^.opnd[1], lab, sense)
       else begin
-        if tr^.op in [11, 12, 23, 24, 40, 78, 79, 84] then
+        if tr^.op in [bit_test_top, compare_top, set_compare_top, agg_compare_top, f_compare_top, isc_agg_cmp_top, isc_agg_lex_cmp_top, bit_field_cmp_top] then
           t^.kind := cmp_tree_node;
         t := walk_tree(t, nil, nil);
         n := gspace(64);
@@ -788,7 +788,7 @@ begin
       discard(coerce(tt, cexs_23bc, true));
     end;
   init_aux(aux, cexs_stack[cexs_23bc].typ);
-  add_tn(17, aux, cexs_23bc, cexs_23bc);
+  add_tn(value_top, aux, cexs_23bc, cexs_23bc);
   add_eval(cexs_23bc, cexs_23bc);
   c.first := il_d8;
   c.x4 := il_178;
@@ -971,7 +971,8 @@ label
 var
   t: c_tree_ptr_t;
   fn, a, v: il_$node_ptr_t;
-  i, k, op: integer;
+  i, k: integer;
+  op: il_$top_t;
   d: c_desc_t;
   opl: array [1..64] of il_$node_ptr_t;
 begin
@@ -984,7 +985,7 @@ begin
     fn^.xp[4] := walk_tree(fn^.xp[4], nil, nil);
   for i := 2 to t^.count do begin
     a := t^.opnd[i];
-    if (a^.kind = tree_node) and (c_tree_ptr_t(a)^.op = 26) then begin
+    if (a^.kind = tree_node) and (c_tree_ptr_t(a)^.op = addr_top) then begin
       v := c_tree_ptr_t(a)^.opnd[1];
       if v^.kind = var_name then begin
         c_sym_ptr_t(v)^.var_flags := c_sym_ptr_t(v)^.var_flags + [8];
@@ -1010,9 +1011,9 @@ begin
       a := t^.opnd[i];
       if k <> c_tree_ptr_t(a)^.desc.rlen then begin
         if (k = 7) or (k = 6) then
-          op := 39
+          op := f_extend_top
         else
-          op := 18;
+          op := extend_top;
         opl[1] := a;
         d.rlen := k;
         d.w6 := c_tree_ptr_t(a)^.desc.rlen;
@@ -1248,7 +1249,7 @@ begin
     n := add_top_node(return_node, 56);
     c_top_ptr_t(n)^.hdr.ret := true;
     if cdef_50^.ret_var = nil then
-      c_top_ptr_t(n)^.ret_rlen := 11
+      c_top_ptr_t(n)^.ret_rlen := rlen_agg
     else begin
       type_exp(cdef_50^.ret_var^.var_type, addr(tt));
       c_top_ptr_t(n)^.ret_rlen := get_rlen(tt);
@@ -1442,7 +1443,7 @@ var
   tt: type_exp_t;
   r: c_tree_ptr_t;
 begin
-  if a.desc.rlen = 0 then
+  if a.desc.rlen = rlen_null then
     return;
   rhs := a.opnd[2];
   lhs := a.opnd[1];
@@ -1457,7 +1458,7 @@ begin
       d.w6 := c_sym_ptr_t(rhs)^.var_sect^.int_value;
       cexs_23bc := cexs_23bc + 1;
       cexs_stack[cexs_23bc].node := a.opnd[2];
-      add_tn(18, d, cexs_23bc, cexs_23bc);
+      add_tn(extend_top, d, cexs_23bc, cexs_23bc);
       a.opnd[2] := cexs_stack[cexs_23bc].node;
       cexs_23bc := cexs_23bc - 1;
     end;
@@ -1472,7 +1473,7 @@ begin
       d.w6 := tt.size;
       cexs_23bc := cexs_23bc + 1;
       cexs_stack[cexs_23bc].node := a.opnd[2];
-      add_tn(18, d, cexs_23bc, cexs_23bc);
+      add_tn(extend_top, d, cexs_23bc, cexs_23bc);
       a.opnd[2] := cexs_stack[cexs_23bc].node;
       cexs_23bc := cexs_23bc - 1;
     end;
@@ -1490,13 +1491,13 @@ begin
       asg_x := nil;
     if (asg_op <> 10) and (asg_rhs^.kind = tree_node) then begin
       r := c_tree_ptr_t(asg_rhs);
-      if (r^.op in [1, 2, 9, 10, 44]) and (r^.opnd[1] = asg_lhs) then begin
+      if (r^.op in [add_top, sub_top, and_top, or_top, eor_top]) and (r^.opnd[1] = asg_lhs) then begin
         case r^.op of
-          1: asg_op := 1;
-          2: asg_op := 2;
-          9: asg_op := 3;
-          10: asg_op := 4;
-          44: asg_op := 5;
+          add_top: asg_op := 1;
+          sub_top: asg_op := 2;
+          and_top: asg_op := 3;
+          or_top: asg_op := 4;
+          eor_top: asg_op := 5;
         end;
         asg_rhs := r^.opnd[2];
       end;
@@ -1523,21 +1524,21 @@ function extend_boolean(
 var
   e: c_desc_t;
 begin
-  if d.rlen <> 1 then begin
+  if d.rlen <> rlen_byte then begin
     e := d;
     e.w6 := 1;
     e.flags.b6 := true;
-    if (d.rlen = 6) or (d.rlen = 7) then begin
+    if (d.rlen = rlen_r4) or (d.rlen = rlen_r8) then begin
       if cargs_$options.cpu * [0, 1] <> [] then begin
-        e.rlen := 2;
-        add_tn(18, e, top, top);
+        e.rlen := rlen_word;
+        add_tn(extend_top, e, top, top);
         e.rlen := d.rlen;
         e.w6 := 2;
       end;
-      add_tn(39, e, top, top);
+      add_tn(f_extend_top, e, top, top);
     end
     else
-      add_tn(18, e, top, top);
+      add_tn(extend_top, e, top, top);
   end;
   extend_boolean := cexs_stack[top].node;
 end;
@@ -1568,23 +1569,23 @@ begin
   pos := true;
   n := c_tree_ptr_t(t);
   o := c_tree_ptr_t(n^.opnd[1]);
-  while (o^.kind = tree_node) and then (o^.op = 12) and then
+  while (o^.kind = tree_node) and then (o^.op = compare_top) and then
         (o^.desc.w8 = 6) and then
         ((o^.opnd[2]^.kind = sinteger_ob) or (o^.opnd[2]^.kind = linteger_ob)
          or
          (o^.opnd[2]^.kind = integer_ob)) and then
         (o^.opnd[2]^.int_value = 0) and then
         (o^.opnd[1]^.kind = tree_node) and then
-        (c_tree_ptr_t(o^.opnd[1])^.op = 57) do begin
+        (c_tree_ptr_t(o^.opnd[1])^.op = cc_lognot_ptop) do begin
     pos := not pos;
     n := c_tree_ptr_t(o^.opnd[1]);
     o := c_tree_ptr_t(n^.opnd[1]);
   end;
   n^.opnd[1] := walk_tree(n^.opnd[1], parent, nil);
   a.kind := tree_node;
-  a.op := 54;
+  a.op := cc_assign_ptop;
   if (parent <> nil) and then (parent^.kind = tree_node) and then
-     (c_tree_ptr_t(parent)^.op = 54) then
+     (c_tree_ptr_t(parent)^.op = cc_assign_ptop) then
     a.w18 := c_tree_ptr_t(parent)^.w18
   else
     a.w18 := n^.w18;
@@ -1597,14 +1598,14 @@ begin
     type_exp(char_ptype, addr(typ));
     init_aux(aux, typ);
     if pos then begin
-      if (node^.kind = tree_node) and (c_tree_ptr_t(node)^.op = 12) and
+      if (node^.kind = tree_node) and (c_tree_ptr_t(node)^.op = compare_top) and
          (c_tree_ptr_t(node)^.desc.w8 = 6) then
         c_tree_ptr_t(node)^.desc.w8 := 7
       else
-        add_tn(8, aux, cexs_23bc, cexs_23bc);
+        add_tn(not_top, aux, cexs_23bc, cexs_23bc);
     end;
   end;
-  add_tn(7, aux, cexs_23bc, cexs_23bc);
+  add_tn(neg_top, aux, cexs_23bc, cexs_23bc);
   a.opnd[2] := extend_boolean(d, cexs_23bc);
   cexs_23bc := cexs_23bc - 1;
   build_assign(a);
@@ -1676,15 +1677,15 @@ begin
   tr := c_tree_ptr_t(t);
   if dest <> nil then
     eval_tree_nodes(dest);
-  if tr^.op = 52 then
+  if tr^.op = cc_logor_ptop then
     sense := true
   else
     sense := false;
   add_cbranch(tr^.opnd[1], flab, sense);
   a.kind := tree_node;
-  a.op := 54;
+  a.op := cc_assign_ptop;
   if (parent <> nil) and then (parent^.kind = tree_node) and then
-     (c_tree_ptr_t(parent)^.op = 54) then
+     (c_tree_ptr_t(parent)^.op = cc_assign_ptop) then
     a.w18 := c_tree_ptr_t(parent)^.w18
   else
     a.w18 := tr^.w18;
@@ -1692,21 +1693,21 @@ begin
   a.count := 2;
   a.opnd[1] := dest;
   skip := false;
-  if tr^.op <> 51 then begin
+  if tr^.op <> cc_c3expr_ptop then begin
     o := c_tree_ptr_t(tr^.opnd[2]);
-    if (o^.kind = tree_node) and (o^.op = 12) and (o^.desc.w8 = 6) and
+    if (o^.kind = tree_node) and (o^.op = compare_top) and (o^.desc.w8 = 6) and
        ((o^.opnd[2]^.kind = sinteger_ob) or (o^.opnd[2]^.kind = linteger_ob) or
         (o^.opnd[2]^.kind = integer_ob)) and
        (o^.opnd[2]^.int_value = 0) and
        (o^.opnd[1]^.kind = tree_node) and
-       ((c_tree_ptr_t(o^.opnd[1])^.op = 52) or
-        (c_tree_ptr_t(o^.opnd[1])^.op = 57) or
-        (c_tree_ptr_t(o^.opnd[1])^.op = 53)) then
+       ((c_tree_ptr_t(o^.opnd[1])^.op = cc_logor_ptop) or
+        (c_tree_ptr_t(o^.opnd[1])^.op = cc_lognot_ptop) or
+        (c_tree_ptr_t(o^.opnd[1])^.op = cc_logand_ptop)) then
       skip := true;
   end;
   tr^.opnd[2] := walk_tree(tr^.opnd[2], parent, nil);
   if not skip then begin
-    if tr^.op = 51 then begin
+    if tr^.op = cc_c3expr_ptop then begin
       a.opnd[2] := tr^.opnd[2];
       if not ((parent <> nil) and then (parent^.kind = tree_node) and then
               (c_tree_ptr_t(parent)^.opnd[2] = t)) then begin
@@ -1724,7 +1725,7 @@ begin
         init_aux(aux, typ);
         if not ((node^.kind = linteger_ob) or (node^.kind = integer_ob) or
                 (node^.kind = sinteger_ob)) then begin
-          add_tn(7, aux, cexs_23bc, cexs_23bc);
+          add_tn(neg_top, aux, cexs_23bc, cexs_23bc);
           a.opnd[2] := extend_boolean(d, cexs_23bc);
         end
         else if node^.int_value <> 0 then
@@ -1739,19 +1740,19 @@ begin
   add_brn(elab);
   add_ldfn(flab, 0, true, true);
   case tr^.op of
-    53: if d.rlen = 7 then
+    cc_logand_ptop: if d.rlen = rlen_r8 then
           a.opnd[2] := dpcontk(0.0)
-        else if d.rlen = 6 then
+        else if d.rlen = rlen_r4 then
           a.opnd[2] := rlcontk(0.0)
         else
           a.opnd[2] := smcontk(integer_ob, 0);
-    52: if d.rlen = 7 then
+    cc_logor_ptop: if d.rlen = rlen_r8 then
           a.opnd[2] := dpcontk(1.0)
-        else if d.rlen = 6 then
+        else if d.rlen = rlen_r4 then
           a.opnd[2] := rlcontk(1.0)
         else
           a.opnd[2] := smcontk(integer_ob, 1);
-    51: begin
+    cc_c3expr_ptop: begin
       tr^.opnd[3] := walk_tree(tr^.opnd[3], parent, nil);
       a.opnd[2] := tr^.opnd[3];
     end;
@@ -1781,10 +1782,10 @@ begin
   r := true;
   case t^.kind of
     tree_node, cmp_tree_node:
-      if not (c_tree_ptr_t(t)^.op in [12, 18, 39, 51..55, 57]) then
+      if not (c_tree_ptr_t(t)^.op in [compare_top, extend_top, f_extend_top, cc_c3expr_ptop..cc_post_id_ptop, cc_lognot_ptop]) then
         r := false
       else begin
-        if c_tree_ptr_t(t)^.op = 51 then
+        if c_tree_ptr_t(t)^.op = cc_c3expr_ptop then
           first := 2
         else
           first := 1;
@@ -1820,8 +1821,8 @@ var
 begin
   case t^.kind of
     tree_node, cmp_tree_node:
-      if (c_tree_ptr_t(t)^.op = 1) or (c_tree_ptr_t(t)^.op = 2) or
-         (c_tree_ptr_t(t)^.op = 35) or (c_tree_ptr_t(t)^.op = 34) then
+      if (c_tree_ptr_t(t)^.op = add_top) or (c_tree_ptr_t(t)^.op = sub_top) or
+         (c_tree_ptr_t(t)^.op = f_sub_top) or (c_tree_ptr_t(t)^.op = f_add_top) then
         r := c_tree_ptr_t(t)^.opnd[1]
       else
         for i := 1 to c_tree_ptr_t(t)^.count do
@@ -1927,7 +1928,7 @@ begin
       end;
       ptr_node: begin
         a := t^.xp[6];
-        if (a^.kind = tree_node) and (c_tree_ptr_t(a)^.op = 13) then begin
+        if (a^.kind = tree_node) and (c_tree_ptr_t(a)^.op = index_top) then begin
           v := c_tree_ptr_t(a)^.opnd[1];
           p := list;
           while (p <> nil) and then (v <> p^.pvar) do
@@ -2003,17 +2004,17 @@ var
     is_post_incr_candidate := false;
     if x <> nil then
       if (x^.kind = ptr_node) and (y^.kind = tree_node) and then
-         (c_tree_ptr_t(y)^.op = 55) and then
+         (c_tree_ptr_t(y)^.op = cc_post_id_ptop) and then
          (c_tree_ptr_t(y)^.opnd[1]^.kind = var_name) and then
          (c_tree_ptr_t(y)^.opnd[2]^.kind = tree_node) and then
-         (c_tree_ptr_t(c_tree_ptr_t(y)^.opnd[2])^.op = 1) then
+         (c_tree_ptr_t(c_tree_ptr_t(y)^.opnd[2])^.op = add_top) then
         if c_tree_ptr_t(c_tree_ptr_t(y)^.opnd[2])^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
           is_post_incr_candidate := true;
   end;
 
 begin
   if (up = nil) or ((t^.kind = tree_node)
-                    and (c_tree_ptr_t(t)^.op = 54)) then begin
+                    and (c_tree_ptr_t(t)^.op = cc_assign_ptop)) then begin
     post_depth := post_depth + 1;
     if post_depth > 128 then
       error_exit(0, 'compiler stack overflow; post incr/decr', 39);
@@ -2025,11 +2026,11 @@ begin
   case t^.kind of
     tree_node, cmp_tree_node:
       case r^.op of
-        54: begin
+        cc_assign_ptop: begin
           same := r^.opnd[1] = r^.opnd[2];
           self_src := false;
           a := c_tree_ptr_t(r^.opnd[2]);
-          while (a^.kind = tree_node) and ((a^.op = 18) or (a^.op = 39)) do
+          while (a^.kind = tree_node) and ((a^.op = extend_top) or (a^.op = f_extend_top)) do
             a := c_tree_ptr_t(a^.opnd[1]);
           if il_$node_ptr_t(a) = r^.opnd[1] then
             self_src := true;
@@ -2046,14 +2047,14 @@ begin
             build_assign(r^)
           else if same or (r^.opnd[1] <> r^.opnd[2]) then begin
             a := c_tree_ptr_t(r^.opnd[2]);
-            while (a^.kind = tree_node) and ((a^.op = 18) or (a^.op = 39)) do
+            while (a^.kind = tree_node) and ((a^.op = extend_top) or (a^.op = f_extend_top)) do
               a := c_tree_ptr_t(a^.opnd[1]);
             if il_$node_ptr_t(a) <> r^.opnd[1] then
               build_assign(r^);
           end;
           res := r^.opnd[1];
         end;
-        55: begin
+        cc_post_id_ptop: begin
           r^.opnd[1] := walk_tree(r^.opnd[1], parent, t);
           r^.opnd[2] := walk_tree(r^.opnd[2], parent, t);
           if r^.opnd[2] = r^.opnd[1] then begin
@@ -2068,14 +2069,14 @@ begin
             add_or_update(a^.opnd[1], incr);
             if (incr < -32700) or (incr > 32700) then begin
               init_aux(aux, tt);
-              aux.rlen := 5;
+              aux.rlen := rlen_addr;
               aux.w6 := 4;
               aux.size := 0;
               cexs_23bc := cexs_23bc + 1;
               cexs_stack[cexs_23bc].node := a^.opnd[1];
               cexs_23bc := cexs_23bc + 1;
               cexs_stack[cexs_23bc].node := smcontk(integer_ob, incr);
-              add_tn(13, aux, cexs_23bc - 1, cexs_23bc);
+              add_tn(index_top, aux, cexs_23bc - 1, cexs_23bc);
               c_tree_ptr_t(cexs_stack[cexs_23bc].node)^.bits.post := true;
               n := cexs_stack[cexs_23bc].node;
               cexs_23bc := cexs_23bc - 1;
@@ -2095,9 +2096,9 @@ begin
               node := find_post_opnd(r^.opnd[2]);
               aux := r^.desc;
               if (node^.kind = tree_node)
-                  and (c_tree_ptr_t(node)^.op = 14) then
+                  and (c_tree_ptr_t(node)^.op = unpack_top) then
                 aux.rlen := c_tree_ptr_t(node)^.desc.rlen;
-              add_tn(17, aux, cexs_23bc, cexs_23bc);
+              add_tn(value_top, aux, cexs_23bc, cexs_23bc);
               add_eval(cexs_23bc, cexs_23bc);
               res := node;
             end;
@@ -2105,19 +2106,19 @@ begin
             build_assign(r^);
           end;
         end;
-        56: begin
+        cc_comma_ptop: begin
           r^.opnd[1] := walk_tree(r^.opnd[1], parent, t);
           r^.opnd[2] := walk_tree(r^.opnd[2], parent, t);
           res := r^.opnd[2];
         end;
-        53, 52, 57, 51: begin
+        cc_logand_ptop, cc_logor_ptop, cc_lognot_ptop, cc_c3expr_ptop: begin
           if parent <> nil then begin
             if parent^.kind = tree_node then begin
               aux := c_tree_ptr_t(parent)^.desc;
               tmp := c_tree_ptr_t(parent)^.opnd[1];
             end
             else begin
-              if r^.op = 51 then
+              if r^.op = cc_c3expr_ptop then
                 aux := r^.desc
               else begin
                 type_exp(int_type, addr(tt));
@@ -2127,7 +2128,7 @@ begin
             end;
           end
           else begin
-            if r^.op = 51 then
+            if r^.op = cc_c3expr_ptop then
               tmp := nil
             else begin
               type_exp(int_type, addr(tt));
@@ -2136,29 +2137,29 @@ begin
             end;
             parent := tmp;
           end;
-          if r^.op = 57 then
+          if r^.op = cc_lognot_ptop then
             build_not_expr(tmp, aux, t, parent)
           else
             build_cond_expr(tmp, aux, t, parent);
           res := tmp;
         end;
-        16: begin
+        func_call_top: begin
           cexs_23bc := cexs_23bc + 1;
           cexs_stack[cexs_23bc].node := t;
           call_s;
           cexs_23bc := cexs_23bc - 1;
         end;
-        14:
+        unpack_top:
           if (r^.opnd[1]^.kind = tree_node) and
-             (c_tree_ptr_t(r^.opnd[1])^.op = 55) then
+             (c_tree_ptr_t(r^.opnd[1])^.op = cc_post_id_ptop) then
             res := walk_tree(r^.opnd[1], parent, t)
           else
             r^.opnd[1] := walk_tree(r^.opnd[1], parent, t);
-        12: begin
+        compare_top: begin
           r^.opnd[1] := walk_tree(r^.opnd[1], parent, t);
           r^.opnd[2] := walk_tree(r^.opnd[2], parent, t);
           if (parent <> nil) and then (parent^.kind = tree_node) and then
-             (c_tree_ptr_t(parent)^.op = 54) and then
+             (c_tree_ptr_t(parent)^.op = cc_assign_ptop) and then
              (c_tree_ptr_t(parent)^.opnd[1] = r^.opnd[1]) and then
              (r^.desc.w6 <> c_tree_ptr_t(parent)^.desc.rlen) then begin
             aux := r^.desc;
@@ -2166,17 +2167,17 @@ begin
             k := c_tree_ptr_t(parent)^.desc.rlen;
             r^.desc.w6 := k;
             if (k = 7) or (k = 6) then begin
-              r^.op := 40;
+              r^.op := f_compare_top;
               opl[1] := r^.opnd[2];
               aux.w6 := aux.rlen;
               aux.rlen := c_tree_ptr_t(parent)^.desc.rlen;
-              r^.opnd[2] := buildtreenode(39, aux, opl, 1);
+              r^.opnd[2] := buildtreenode(f_extend_top, aux, opl, 1);
               c_tree_ptr_t(r^.opnd[2])^.w16 := 0;
             end;
           end;
         end;
-        70, 68, 69: begin
-          if r^.op = 70 then begin
+        strncmp_top, strcmp_top, strlen_top: begin
+          if r^.op = strncmp_top then begin
             if r^.count = 3 then begin
               r^.opnd[1] := walk_tree(r^.opnd[1], parent, t);
               r^.opnd[2] := walk_tree(r^.opnd[2], parent, t);
@@ -2190,7 +2191,7 @@ begin
               r^.opnd[3] := il_178;
             end;
           end
-          else if r^.op = 68 then begin
+          else if r^.op = strcmp_top then begin
             if r^.count = 2 then begin
               r^.opnd[1] := walk_tree(r^.opnd[1], parent, t);
               r^.opnd[2] := walk_tree(r^.opnd[2], parent, t);
@@ -2211,7 +2212,7 @@ begin
         end;
         otherwise
           for i := 1 to r^.count do begin
-            if r^.op = 26 then begin
+            if r^.op = addr_top then begin
               n := r^.opnd[i];
               if n^.kind = var_name then
                 c_sym_ptr_t(n)^.var_flags := c_sym_ptr_t(n)^.var_flags + [12]
@@ -2247,7 +2248,7 @@ begin
     otherwise
   end;
   if (up = nil) or ((t^.kind = tree_node)
-                    and (c_tree_ptr_t(t)^.op = 54)) then begin
+                    and (c_tree_ptr_t(t)^.op = cc_assign_ptop)) then begin
     if post_tab[post_depth].total > 0 then
       fix_post_id(t);
     p := post_tab[post_depth].list;

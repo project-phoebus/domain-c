@@ -119,7 +119,7 @@ begin
     until r <> 0;
   end;
   n^.u_hdr := g_opt_cse_ptr_t(orig)^.u_hdr;
-  g_opt_tree_ptr_t(n)^.flags := g_opt_tree_ptr_t(n)^.flags + [6];
+  g_opt_tree_ptr_t(n)^.flags := g_opt_tree_ptr_t(n)^.flags + [phase_cse];
   g_opt_tree_ptr_t(n)^.stmt := idx;
   n^.u_next := nil;
   n^.u_parent := p;
@@ -271,7 +271,7 @@ begin
   case t^.kind of
     cmp_tree_node, tree_node: begin
       tr := g_opt_tree_ptr_t(t);
-      if tr^.op in [2, 4..6, 11, 15, 16, 21, 35, 37] then
+      if tr^.op in [sub_top, div_top..mod_top, bit_test_top, call_top, func_call_top, set_diff_top, f_sub_top, f_div_top] then
         for j := tr^.count downto 1 do begin
           saveparent_and_patch(stmt, tr^.opnd[j], t);
           walkopr(stmt, tr^.opnd[j]);
@@ -396,7 +396,7 @@ begin
   if t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                  dindex_node..disp_node, cs_node, cc_call, pf_call, cse_use_ob,
                  sym_disp_node] then
-    if 6 in g_opt_tree_ptr_t(t)^.flags then
+    if phase_cse in g_opt_tree_ptr_t(t)^.flags then
       t := g_opt_nodes_ptr_t(il_120)^[g_opt_tree_ptr_t(t)^.stmt];
 end;
 
@@ -595,7 +595,7 @@ begin
         end;
         rel := 1;
         cse_$set_hoistability(t^.xp[6], hoist[1]);
-        ok := not (2 in tr^.flags);
+        ok := not (phase_volexpr in tr^.flags);
       end;
     dindex_node: begin
       moved_check(t^.xp[6]);
@@ -624,23 +624,23 @@ begin
     tree_node:
       if tr^.uses <> 0 then begin
         up := false;
-        if tr^.op in [2, 4..6, 11, 15, 16, 21, 35, 37] then
+        if tr^.op in [sub_top, div_top..mod_top, bit_test_top, call_top, func_call_top, set_diff_top, f_sub_top, f_div_top] then
           for j := tr^.count downto 1 do
             check_uplevel_and_moved_check(tr^.opnd[j], up)
         else
           for j := 1 to tr^.count do
             check_uplevel_and_moved_check(tr^.opnd[j], up);
-        if (tr^.op = 26) and (tr^.opnd[1]^.kind = tree_node) then
+        if (tr^.op = addr_top) and (tr^.opnd[1]^.kind = tree_node) then
           up := true;
-        if tr^.op = 26 then begin
+        if tr^.op = addr_top then begin
           x := tr^.opnd[1];
           if ((x^.kind = var_name) and ((x^.xw[17] & 16#1000) = 0)) or
              ((x^.kind = fortran_symbol) and ((x^.xw[13] & 16#1000) = 0)) then
             up := true;
         end;
         if not up then
-          if not (2 in tr^.flags) then
-            if not (tr^.op in [11, 12, 15, 16, 23, 24, 47, 63, 66]) then
+          if not (phase_volexpr in tr^.flags) then
+            if not (tr^.op in [bit_test_top, compare_top, call_top, func_call_top, set_compare_top, agg_compare_top, sr_top, align_top, cache_top]) then
               if tr^.count <= 4 then begin
                 ok := true;
                 sz := delay_378[tr^.rlen];
@@ -682,21 +682,21 @@ begin
                                  g_opt_blocks_ptr_t(il_11c)^[hoist[j]]) then
                             rel := j;
                 case tr^.op of
-                  39:
+                  f_extend_top:
                     descs[1].d.size := delay_378[tr^.w26];
-                  6, 5, 3: begin
+                  mod_top, divide_top, mul_top: begin
                     descs[1].d.size := tr^.w26;
                     descs[2].d.size := tr^.w28;
                   end;
-                  13:
+                  index_top:
                     descs[1].d.size := 4;
-                  14:
+                  unpack_top:
                     descs[1].d.size := tr^.w26;
-                  22, 18:
+                  set_extend_top, extend_top:
                     descs[1].d.size := tr^.w26;
-                  26:
+                  addr_top:
                     descs[1].d.class := 0;
-                  25: begin
+                  bit_set_top: begin
                     descs[2].d.size := 2;
                     descs[3].d.size := 2;
                   end;
@@ -773,11 +773,11 @@ begin
     return;
   if assert_zombie_tree(x) then
     return;
-  if 6 in x^.flags then begin
+  if phase_cse in x^.flags then begin
     b := x^.stmt;
     x := g_opt_tree_ptr_t(g_opt_nodes_ptr_t(il_120)^[b]);
   end;
-  y^.flags := y^.flags + [6];
+  y^.flags := y^.flags + [phase_cse];
   y^.stmt := b;
   x^.uses := x^.uses + y^.uses;
   if x^.kind = tree_node then
@@ -919,10 +919,10 @@ begin
       xs := g_opt_stmt_ptr_t(x);
       case x^.kind of
         tree_node: begin
-          if 2 in xt^.flags then
+          if phase_volexpr in xt^.flags then
             goto 20;
           if xt^.uses <> 0 then begin
-            if (xt^.op = 15) or (xt^.op = 16) then begin
+            if (xt^.op = call_top) or (xt^.op = func_call_top) then begin
               if assert_disp_over_ptr(t) then
                 extra := 1
               else
@@ -955,7 +955,7 @@ begin
                 stop := true;
                 exit;
               end;
-          if (xt^.op = 17) and (t^.kind = ptr_node) and (t^.xp[6] = x) then
+          if (xt^.op = value_top) and (t^.kind = ptr_node) and (t^.xp[6] = x) then
             goto 90;
         end;
         dindex_node, disp_node, sym_disp_node, ptr_node: begin

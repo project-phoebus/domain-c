@@ -103,7 +103,7 @@ type
           asg_lhs: il_$node_ptr_t;      { +64 }
           asg_rhs: il_$node_ptr_t;      { +68 }
           asg_x: il_$node_ptr_t;        { +72 }
-          asg_op: integer);             { +76 }
+          asg_op: il_$aop_t);           { +76 }
       3: (br_target: ov_stmt_ptr_t;     { +48 }
           br_unused_52: integer32;      { +52 }
           br_cond: il_$node_ptr_t);     { +56 }
@@ -124,7 +124,7 @@ type
     uses: integer;                      { +16 }
     unused_18: integer;                 { +18 }
     desc: add_node_$desc_t;             { +20 }
-    op: integer;                        { +36 }
+    op: il_$top_t;                      { +36 }
     count: integer;                     { +38 }
     opnd: array [1..64] of il_$node_ptr_t;  { +40 }
   end;
@@ -238,7 +238,7 @@ begin
   d := s^.prev^.asg_desc;
   unused := start^.xp[16];
   d.size := 4;
-  d.rlen := 4;
+  d.rlen := rlen_long;
 end;
 
 { epilog - after the call was made in the loop's mark m: the call kept
@@ -271,7 +271,7 @@ var
   p: ov_stmt_ptr_t;
 begin
   if m^.kind = eval_node then begin
-    ov_tree_ptr_t(m^.eval_opnd[1])^.desc.rlen := 0;
+    ov_tree_ptr_t(m^.eval_opnd[1])^.desc.rlen := rlen_null;
     ov_tree_ptr_t(m^.eval_opnd[1])^.flags :=
       ov_tree_ptr_t(m^.eval_opnd[1])^.flags + [12];
   end;
@@ -281,7 +281,7 @@ begin
   n^.next^.next := x^.next^.next;
   x^.next^.next^.prev := n^.next;
   n := n^.next;
-  n^.asg_op := 0;
+  n^.asg_op := scalar_aop;
   if start^.kind in [blogical_ob..complex_ob, char_string_ob, char32_string_ob,
                      char16_ob, set_con_ob, rec_const_ob, dpcomplex_ob,
                      binteger_ob] then
@@ -292,7 +292,7 @@ begin
                             s^.prev^.prev^.asg_desc.rlen, false);
     ops[2] := smcontk(integer_ob, 1);
     d := s^.prev^.prev^.asg_desc;
-    c := buildtreenode(1, d, ops, 2);
+    c := buildtreenode(add_top, d, ops, 2);
     ov_tree_ptr_t(c)^.uses := 0;
     il_utils_$adjust_uc(c, 1);
   end
@@ -334,15 +334,15 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[46]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[47];
   ops[2] := body^.asg_rhs;
   ops[3] := body^.asg_lhs;
   ops[4] := delay_$splice(copy_tree(start), 4, true,
                           s^.prev^.prev^.asg_desc.rlen, false);
-  m^.eval_opnd[1] := buildtreenode(15, body^.asg_desc, ops, 4);
+  m^.eval_opnd[1] := buildtreenode(call_top, body^.asg_desc, ops, 4);
   ov_tree_ptr_t(m^.eval_opnd[1])^.uses := 0;
   il_utils_$adjust_uc(il_$node_ptr_t(m), 1);
   tmp := m;
@@ -373,15 +373,15 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[48]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[49];
   ops[2] := body^.asg_lhs;
   ops[3] := delay_$splice(copy_tree(start), 4, true,
                           s^.prev^.prev^.asg_desc.rlen, false);
   ops[4] := body^.asg_rhs;
-  m^.eval_opnd[1] := buildtreenode(15, body^.asg_desc, ops, 4);
+  m^.eval_opnd[1] := buildtreenode(call_top, body^.asg_desc, ops, 4);
   ov_tree_ptr_t(m^.eval_opnd[1])^.uses := 0;
   il_utils_$adjust_uc(il_$node_ptr_t(m), 1);
   tmp := m;
@@ -412,14 +412,14 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[52]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[53];
   ops[2] := body^.asg_lhs;
   ops[3] := delay_$splice(copy_tree(start), 4, true,
                           s^.prev^.prev^.asg_desc.rlen, false);
-  m^.eval_opnd[1] := buildtreenode(15, body^.asg_desc, ops, 3);
+  m^.eval_opnd[1] := buildtreenode(call_top, body^.asg_desc, ops, 3);
   ov_tree_ptr_t(m^.eval_opnd[1])^.uses := 0;
   il_utils_$adjust_uc(il_$node_ptr_t(m), 1);
   tmp := m;
@@ -461,15 +461,15 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   g := gspace(80);
   g^.kind := assign_node;
-  g^.asg_op := 11;
+  g^.asg_op := fp_aop;
   head_ptr_t(addr(g^.prev))^ := head_ptr_t(addr(s^.next^.next^.prev))^;
   s^.next^.next := g;
   g^.next^.prev := g;
   g^.asg_lhs := body^.asg_lhs;
   g^.asg_desc := body^.asg_desc;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[42]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[43];
   acc := body^.asg_rhs;
   o2 := ov_tree_ptr_t(acc)^.opnd[2];
@@ -491,9 +491,9 @@ begin
     acc := ov_tree_ptr_t(body^.asg_rhs)^.opnd[1];
   ops[3] := delay_$splice(copy_tree(start), 4, true,
                           s^.prev^.prev^.asg_desc.rlen, false);
-  ops2[1] := buildtreenode(16, body^.asg_desc, ops, 3);
+  ops2[1] := buildtreenode(func_call_top, body^.asg_desc, ops, 3);
   ops2[2] := acc;
-  g^.asg_rhs := buildtreenode(34, body^.asg_desc, ops2, 2);
+  g^.asg_rhs := buildtreenode(f_add_top, body^.asg_desc, ops2, 2);
   ov_tree_ptr_t(ops2[1])^.uses := 0;
   ov_tree_ptr_t(g^.asg_rhs)^.uses := 0;
   il_utils_$adjust_uc(il_$node_ptr_t(g), 1);
@@ -533,26 +533,26 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   g := gspace(80);
   g^.kind := assign_node;
-  g^.asg_op := 11;
+  g^.asg_op := fp_aop;
   head_ptr_t(addr(g^.prev))^ := head_ptr_t(addr(s^.next^.next^.prev))^;
   s^.next^.next := g;
   g^.next^.prev := g;
   g^.asg_lhs := body^.asg_lhs;
   g^.asg_desc := body^.asg_desc;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[44]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[45];
   mm := ov_tree_ptr_t(body^.asg_rhs)^.opnd[1];
   ops[2] := ov_tree_ptr_t(mm)^.opnd[1];
   ops[3] := ov_tree_ptr_t(mm)^.opnd[2];
   ops[4] := delay_$splice(copy_tree(start), 4, true,
                           s^.prev^.prev^.asg_desc.rlen, false);
-  t := buildtreenode(16, body^.asg_desc, ops, 4);
+  t := buildtreenode(func_call_top, body^.asg_desc, ops, 4);
   ov_tree_ptr_t(t)^.uses := 0;
   ops[1] := ov_tree_ptr_t(body^.asg_rhs)^.opnd[2];
   ops[2] := t;
-  g^.asg_rhs := buildtreenode(34, body^.asg_desc, ops, 2);
+  g^.asg_rhs := buildtreenode(f_add_top, body^.asg_desc, ops, 2);
   ov_tree_ptr_t(g^.asg_rhs)^.uses := 0;
   il_utils_$adjust_uc(il_$node_ptr_t(g), 1);
   g^.hdr.b5 := true;
@@ -588,13 +588,13 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then begin
+  if body^.asg_desc.rlen = rlen_r4 then begin
     if strided then
       ops[1] := std_lib_rtns[156]
     else
       ops[1] := std_lib_rtns[34];
   end
-  else if body^.asg_desc.rlen = 7 then begin
+  else if body^.asg_desc.rlen = rlen_r8 then begin
     if strided then
       ops[1] := std_lib_rtns[157]
     else
@@ -622,7 +622,7 @@ begin
     ops[9] := get_increment(body^.asg_lhs^.xp[6]);
     n := 9;
   end;
-  m^.eval_opnd[1] := buildtreenode(15, body^.asg_desc, ops, n);
+  m^.eval_opnd[1] := buildtreenode(call_top, body^.asg_desc, ops, n);
   ov_tree_ptr_t(m^.eval_opnd[1])^.uses := 0;
   il_utils_$adjust_uc(il_$node_ptr_t(m), 1);
   tmp := m;
@@ -656,9 +656,9 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[26]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[27];
   r := body^.asg_rhs;
   o1 := ov_tree_ptr_t(r)^.opnd[1];
@@ -676,7 +676,7 @@ begin
   ops[3] := delay_$splice(copy_tree(start), 4, true,
                           s^.prev^.prev^.asg_desc.rlen, false);
   ops[5] := body^.asg_lhs;
-  m^.eval_opnd[1] := buildtreenode(15, body^.asg_desc, ops, 5);
+  m^.eval_opnd[1] := buildtreenode(call_top, body^.asg_desc, ops, 5);
   ov_tree_ptr_t(m^.eval_opnd[1])^.uses := 0;
   il_utils_$adjust_uc(il_$node_ptr_t(m), 1);
   tmp := m;
@@ -710,9 +710,9 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[38]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[39];
   r := body^.asg_rhs;
   o1 := ov_tree_ptr_t(r)^.opnd[1];
@@ -730,7 +730,7 @@ begin
   ops[3] := delay_$splice(copy_tree(start), 4, true,
                           s^.prev^.prev^.asg_desc.rlen, false);
   ops[5] := body^.asg_lhs;
-  m^.eval_opnd[1] := buildtreenode(15, body^.asg_desc, ops, 5);
+  m^.eval_opnd[1] := buildtreenode(call_top, body^.asg_desc, ops, 5);
   ov_tree_ptr_t(m^.eval_opnd[1])^.uses := 0;
   il_utils_$adjust_uc(il_$node_ptr_t(m), 1);
   tmp := m;
@@ -761,16 +761,16 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[30]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[31];
   ops[2] := ov_tree_ptr_t(body^.asg_rhs)^.opnd[1];
   ops[3] := ov_tree_ptr_t(body^.asg_rhs)^.opnd[2];
   ops[4] := delay_$splice(copy_tree(start), 4, true,
                           s^.prev^.prev^.asg_desc.rlen, false);
   ops[5] := body^.asg_lhs;
-  m^.eval_opnd[1] := buildtreenode(15, body^.asg_desc, ops, 5);
+  m^.eval_opnd[1] := buildtreenode(call_top, body^.asg_desc, ops, 5);
   ov_tree_ptr_t(m^.eval_opnd[1])^.uses := 0;
   il_utils_$adjust_uc(il_$node_ptr_t(m), 1);
   tmp := m;
@@ -801,16 +801,16 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[50]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[51];
   ops[2] := ov_tree_ptr_t(body^.asg_rhs)^.opnd[1];
   ops[3] := ov_tree_ptr_t(body^.asg_rhs)^.opnd[2];
   ops[4] := delay_$splice(copy_tree(start), 4, true,
                           s^.prev^.prev^.asg_desc.rlen, false);
   ops[5] := body^.asg_lhs;
-  m^.eval_opnd[1] := buildtreenode(15, body^.asg_desc, ops, 5);
+  m^.eval_opnd[1] := buildtreenode(call_top, body^.asg_desc, ops, 5);
   ov_tree_ptr_t(m^.eval_opnd[1])^.uses := 0;
   il_utils_$adjust_uc(il_$node_ptr_t(m), 1);
   tmp := m;
@@ -855,8 +855,8 @@ begin
             r := false;
         end
         else if i^.kind = tree_node then
-          if (ov_tree_ptr_t(i)^.op = 27) or (ov_tree_ptr_t(i)^.op = 18) or
-             (ov_tree_ptr_t(i)^.op = 3) then
+          if (ov_tree_ptr_t(i)^.op = lshf_top) or (ov_tree_ptr_t(i)^.op = extend_top) or
+             (ov_tree_ptr_t(i)^.op = mul_top) then
             if ov_tree_ptr_t(i)^.opnd[1] = v then
               r := false
             else begin
@@ -867,13 +867,13 @@ begin
                   r := false;
               end
               else begin
-                if ov_tree_ptr_t(i)^.op = 27 then
+                if ov_tree_ptr_t(i)^.op = lshf_top then
                   if k = tree_node then
-                    if ov_tree_ptr_t(a)^.op = 1 then
+                    if ov_tree_ptr_t(a)^.op = add_top then
                       if ov_tree_ptr_t(a)^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
                         b := ov_tree_ptr_t(a)^.opnd[1];
                         if b^.kind = tree_node then
-                          if ov_tree_ptr_t(b)^.op = 3 then
+                          if ov_tree_ptr_t(b)^.op = mul_top then
                             if ov_tree_ptr_t(b)^.opnd[1] = v then
                               if ov_tree_ptr_t(b)^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
                                 if t^.xp[7]^.kind = fortran_symbol then begin
@@ -883,20 +883,20 @@ begin
                       end;
                 if r then begin
                   i := t^.xp[9];
-                  if ov_tree_ptr_t(i)^.op = 27 then
+                  if ov_tree_ptr_t(i)^.op = lshf_top then
                     if k = tree_node then begin
                       a := ov_tree_ptr_t(i)^.opnd[1];
-                      if ov_tree_ptr_t(a)^.op = 1 then
+                      if ov_tree_ptr_t(a)^.op = add_top then
                         if ov_tree_ptr_t(a)^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
                           b := ov_tree_ptr_t(a)^.opnd[1];
                           if b^.kind = tree_node then
-                            if ov_tree_ptr_t(b)^.op = 3 then begin
+                            if ov_tree_ptr_t(b)^.op = mul_top then begin
                               c := ov_tree_ptr_t(b)^.opnd[1];
                               if c^.kind = tree_node then begin
                                 b := ov_tree_ptr_t(b)^.opnd[2];
                                 if b^.kind = fortran_symbol then
                                   if (b^.xw[13] & 16#4000) <> 0 then
-                                    if ov_tree_ptr_t(c)^.op = 1 then
+                                    if ov_tree_ptr_t(c)^.op = add_top then
                                       if ov_tree_ptr_t(c)^.opnd[1] = v then
                                         if ov_tree_ptr_t(c)^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
                                           strided := true;
@@ -1063,9 +1063,9 @@ begin
   st := st^.next;
   if st^.kind <> assign_node then
     return;
-  if st^.asg_op <> 11 then
+  if st^.asg_op <> fp_aop then
     return;
-  if not ((st^.asg_desc.rlen = 7) or (st^.asg_desc.rlen = 6)) then
+  if not ((st^.asg_desc.rlen = rlen_r8) or (st^.asg_desc.rlen = rlen_r4)) then
     return;
   body := st;
 
@@ -1079,7 +1079,7 @@ begin
     goto 99;
   if bad_dindex(lhs, ref) then
     return;
-  if st^.asg_op <> 11 then
+  if st^.asg_op <> fp_aop then
     goto 99;
 
   { Copy, init, zero: a[i] := b[i] or a constant. }
@@ -1115,7 +1115,7 @@ begin
     return;
 
   { mult_constant: a[i] := b[i] * c or c * b[i]. }
-  if ov_tree_ptr_t(r)^.op = 36 then
+  if ov_tree_ptr_t(r)^.op = f_mul_top then
     if ov_tree_ptr_t(r)^.opnd[1]^.kind = disp_node then
       if opt_vec_$obj_is_float_const(ov_tree_ptr_t(r)^.opnd[2]) then
         if not bad_dindex(lhs, ov_tree_ptr_t(r)^.opnd[1]^.xp[6]) then
@@ -1132,7 +1132,7 @@ begin
             goto 9;
           end;
   r := st^.asg_rhs;
-  if ov_tree_ptr_t(r)^.op = 36 then
+  if ov_tree_ptr_t(r)^.op = f_mul_top then
     if ov_tree_ptr_t(r)^.opnd[2]^.kind = disp_node then
       if ov_tree_ptr_t(r)^.opnd[2]^.xp[6]^.kind = dindex_node then
         if not bad_dindex(lhs, ov_tree_ptr_t(r)^.opnd[2]^.xp[6]) then
@@ -1151,7 +1151,7 @@ begin
 
   { subvector: a[i] := b[i] - c[i]. }
   r := st^.asg_rhs;
-  if ov_tree_ptr_t(r)^.op = 35 then
+  if ov_tree_ptr_t(r)^.op = f_sub_top then
     if ov_tree_ptr_t(r)^.opnd[1]^.kind = disp_node then
       if ov_tree_ptr_t(r)^.opnd[1]^.xp[6]^.kind = dindex_node then
         if ov_tree_ptr_t(r)^.opnd[2]^.kind = disp_node then
@@ -1196,7 +1196,7 @@ begin
 
   { The additions. }
   r := st^.asg_rhs;
-  if ov_tree_ptr_t(r)^.op <> 34 then
+  if ov_tree_ptr_t(r)^.op <> f_add_top then
     return;
   { addvector: a[i] := b[i] + c[i]. }
   if ov_tree_ptr_t(r)^.opnd[1]^.kind = disp_node then
@@ -1264,9 +1264,9 @@ begin
   { mult_add: a[i] := b[i] + c * d[i] (the product turned first). }
   r := st^.asg_rhs;
   if r^.kind = tree_node then
-    if ov_tree_ptr_t(r)^.op = 34 then
+    if ov_tree_ptr_t(r)^.op = f_add_top then
       if ov_tree_ptr_t(r)^.opnd[2]^.kind = tree_node then
-        if ov_tree_ptr_t(ov_tree_ptr_t(r)^.opnd[2])^.op = 36 then begin
+        if ov_tree_ptr_t(ov_tree_ptr_t(r)^.opnd[2])^.op = f_mul_top then begin
           o := ov_tree_ptr_t(r)^.opnd[2];
           ov_tree_ptr_t(r)^.opnd[2] := ov_tree_ptr_t(r)^.opnd[1];
           ov_tree_ptr_t(st^.asg_rhs)^.opnd[1] := o;
@@ -1275,7 +1275,7 @@ begin
   a := ov_tree_ptr_t(r)^.opnd[1];
   if a^.kind <> tree_node then
     return;
-  if ov_tree_ptr_t(a)^.op <> 36 then
+  if ov_tree_ptr_t(a)^.op <> f_mul_top then
     return;
   o := ov_tree_ptr_t(r)^.opnd[2];
   k := ord(o^.kind);
@@ -1365,7 +1365,7 @@ begin
   { The reductions: acc := acc + ... (a scalar, 146 of a 110, or a
     110). }
 99:
-  if st^.asg_op <> 11 then
+  if st^.asg_op <> fp_aop then
     return;
   a := st^.asg_lhs;
   k := ord(a^.kind);
@@ -1377,7 +1377,7 @@ begin
   r := st^.asg_rhs;
   if r^.kind <> tree_node then
     return;
-  if ov_tree_ptr_t(r)^.op <> 34 then
+  if ov_tree_ptr_t(r)^.op <> f_add_top then
     return;
   o := ov_tree_ptr_t(r)^.opnd[1];
   k := ord(o^.kind);
@@ -1433,7 +1433,7 @@ begin
   { dot: b[i] * c[i] + acc. }
   if k <> 137 then
     return;
-  if ov_tree_ptr_t(o)^.op <> 36 then
+  if ov_tree_ptr_t(o)^.op <> f_mul_top then
     return;
   t2 := ov_tree_ptr_t(o)^.opnd[1];
   if t2^.kind <> disp_node then
@@ -1535,7 +1535,7 @@ begin
       if s^.kind = cbranch_node then begin
         c := ov_stmt_ptr_t(s)^.br_cond;
         if c^.kind = cmp_tree_node then
-          if ov_tree_ptr_t(c)^.op = 12 then begin
+          if ov_tree_ptr_t(c)^.op = compare_top then begin
             l := il_$node_ptr_t(ov_stmt_ptr_t(s)^.br_target);
             if l^.kind = label_node then
               if rshft(ord(l^.xc[72]) & 16#3E, 1) = 10 then begin

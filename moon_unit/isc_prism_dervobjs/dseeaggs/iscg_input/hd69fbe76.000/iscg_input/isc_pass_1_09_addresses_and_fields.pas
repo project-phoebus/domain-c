@@ -818,7 +818,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (not subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> 5) and (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2)) then begin
+  if not (not subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 435 matched the semantics.');
       writeln;
@@ -910,7 +910,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> 5) and (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2)) then begin
+  if not (subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 436 matched the semantics.');
       writeln;
@@ -1004,7 +1004,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (not subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> 6)) then begin
+  if not (not subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r4)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 437 matched the semantics.');
       writeln;
@@ -1096,7 +1096,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> 6) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not (subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r4) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 438 matched the semantics.');
       writeln;
@@ -1190,7 +1190,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (not subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> 7)) then begin
+  if not (not subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r8)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 439 matched the semantics.');
       writeln;
@@ -1282,7 +1282,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> 7) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not (subject.children[1]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r8) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 440 matched the semantics.');
       writeln;
@@ -3425,7 +3425,7 @@ var
 begin
   result := nil;
   work := nil;
-  if (p2_node_ptr_t(subject.il)^.w[12] = 4) or (p2_node_ptr_t(subject.il)^.w[12] = 1) or (p2_node_ptr_t(subject.il)^.w[12] = 2) then begin
+  if (p2_node_ptr_t(subject.il)^.w[12] = rlen_long) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_byte) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_word) then begin
     if isc_user_routines_354 then begin
       write('Pattern 458 matched the semantics.');
       writeln;
@@ -5645,7 +5645,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.il)^.w[12] = 4) or (p2_node_ptr_t(subject.il)^.w[12] = 1) or (p2_node_ptr_t(subject.il)^.w[12] = 2)) and (subject.children[2]^.literal_32_bits_value = subject.children[3]^.literal_32_bits_value) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[12] = rlen_long) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_byte) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_word)) and (subject.children[2]^.literal_32_bits_value = subject.children[3]^.literal_32_bits_value) then begin
     if isc_user_routines_354 then begin
       write('Pattern 478 matched the semantics.');
       writeln;
@@ -5779,7 +5779,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.il)^.w[12] = 4) or (p2_node_ptr_t(subject.il)^.w[12] = 1) or (p2_node_ptr_t(subject.il)^.w[12] = 2)) and lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$sub), 1) and (subject.children[2]^.literal_32_bits_value <> subject.children[3]^.literal_32_bits_value) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[12] = rlen_long) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_byte) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_word)) and lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$sub), 1) and (subject.children[2]^.literal_32_bits_value <> subject.children[3]^.literal_32_bits_value) then begin
     if isc_user_routines_354 then begin
       write('Pattern 479 matched the semantics.');
       writeln;
@@ -5919,7 +5919,7 @@ var
 begin
   result := nil;
   work := nil;
-  if (p2_node_ptr_t(subject.il)^.w[12] = 4) or (p2_node_ptr_t(subject.il)^.w[12] = 1) or (p2_node_ptr_t(subject.il)^.w[12] = 2) then begin
+  if (p2_node_ptr_t(subject.il)^.w[12] = rlen_long) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_byte) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_word) then begin
     if isc_user_routines_354 then begin
       write('Pattern 480 matched the semantics.');
       writeln;

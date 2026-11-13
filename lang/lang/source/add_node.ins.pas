@@ -26,10 +26,50 @@
   0x09FBAE, add_routine_reference 0x0A1262. }
 
 type
-  { GETPHASE's result, a node's phase (+4 of the nodes that have one):
-    callers test its elements (commit_top_node's `lsr.b #1' for 0,
-    `btst #20,D0' for 20; runbackend's normalize_il). }
-  add_node_$phase_t = set of 0..31;
+  { A phase bit, as list_tree's prtphasebits names them (the strings'
+    bytes in cc.m68k's 0x07EB20: 'ATM', 'VOL', 'VOLexpr', 'DEVrd',
+    'DEVwt', 'vis', 'cse', 'algn_arg_lst', 'indx_lng', 'dly', 'bnd',
+    'wlkd', 'sd_eff', 'tgt_rt', 'tgt_lft', 'invar', 'VOLdecl',
+    'nvr_invld', 'isc', 'phys', 'proc_reg', 'enf_paren', 'lcl_cse'),
+    with phase_ before them, in lower case; bit n is element n.  The
+    prefix is chosen here: the bare names clash (cse is opt_cse's
+    routine, invar and phys are locals of the back end's units).
+
+    Not known from the original: the type's and the elements' names
+    (the dump's are display forms of them). }
+  add_node_$phase_bit_t = (
+    phase_atm,                          { 0 }
+    phase_vol,                          { 1 }
+    phase_volexpr,                      { 2 }
+    phase_devrd,                        { 3 }
+    phase_devwt,                        { 4 }
+    phase_vis,                          { 5 }
+    phase_cse,                          { 6 }
+    phase_algn_arg_lst,                 { 7 }
+    phase_indx_lng,                     { 8 }
+    phase_dly,                          { 9 }
+    phase_bnd,                          { 10 }
+    phase_wlkd,                         { 11 }
+    phase_sd_eff,                       { 12 }
+    phase_tgt_rt,                       { 13 }
+    phase_tgt_lft,                      { 14 }
+    phase_invar,                        { 15 }
+    phase_voldecl,                      { 16 }
+    phase_nvr_invld,                    { 17 }
+    phase_isc,                          { 18 }
+    phase_phys,                         { 19 }
+    phase_proc_reg,                     { 20 }
+    phase_enf_paren,                    { 21 }
+    phase_lcl_cse,                      { 22 }
+    phase_23);                          { 23: the ISC's rewrite sets it
+                                          (rewrite.pas); no dump names it }
+
+  { GETPHASE's result, a node's phase (+4 of the nodes that have one): a
+    set of 24 elements is a longword (rounded to words), as set of 0..31
+    is.  Callers test its elements (commit_top_node's `lsr.b #1' for
+    phase_atm, `btst #20,D0' for phase_proc_reg; runbackend's
+    normalize_il). }
+  add_node_$phase_t = set of add_node_$phase_bit_t;
 
   { A tree node's descriptor (its 16 bytes at +20; c_objtype's
     c_desc_t, kfold's kf_desc_t), which add_tn and buildtreenode take
@@ -145,7 +185,7 @@ function add_pn(
   they can be, and d may be changed.  0x0A1ABC, cc.a88k 0x0A349C; 52
   call sites (c_expr_sem, c_stmt_sem). }
 procedure add_tn(
-    op: integer;
+    op: il_$top_t;
     var d: univ add_node_$desc_t;
     l: integer;
     r: integer); options(val_param); extern;
@@ -155,7 +195,7 @@ procedure add_tn(
   cc.a88k 0x0A6634; 41 call sites (c_stmt_sem, commit_top_node, kfold,
   opt_inline, opt_livevar, opt_main, ...); result in A0. }
 function buildtreenode(
-    op: integer;
+    op: il_$top_t;
     in d: univ add_node_$desc_t;
     in ops: univ add_node_$opnds_t;
     count: integer): il_$node_ptr_t; options(val_param); extern;

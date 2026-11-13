@@ -86,7 +86,7 @@ function cg_call_$is_a_nint(
 begin
   cg_call_$is_a_nint := ((n^.kind = gen_tree_node) or (n^.kind = tree_node))
       and
-      (cg_tree_ptr_t(n)^.op = 41) and (cg_tree_ptr_t(n)^.desc.w6 = 11);
+      (cg_tree_ptr_t(n)^.op = f_math_top) and (cg_tree_ptr_t(n)^.desc.w6 = 11);
 end;
 
 { cg_call_$is_proc_var_call - the designator n is called through a
@@ -364,13 +364,13 @@ var
         anyconst(arg^.xl[2], w, op1);
         emit(0, w, push, op1, 0);
       end
-      else if (arg^.kind = tree_node) and ((cg_tree_ptr_t(arg)^.op = 26) or
-          (cg_tree_ptr_t(arg)^.op = 0)) and (arg^.xw[8] = 1) then begin
+      else if (arg^.kind = tree_node) and ((cg_tree_ptr_t(arg)^.op = addr_top) or
+          (cg_tree_ptr_t(arg)^.op = nop_top)) and (arg^.xw[8] = 1) then begin
         tree_walk(cg_tree_ptr_t(arg)^.opnd[1]);
         if cg_fp_count <> 0 then
           purge_fp;
         done := false;
-        if cg_tree_ptr_t(arg)^.op = 26 then
+        if cg_tree_ptr_t(arg)^.op = addr_top then
           if cg_addr_$addr_of_cse(cg_tree_ptr_t(arg)^.opnd[1]) then begin
             cg_addr_$load_addr_of_cse(arg, op1);
             w24 := w;
@@ -646,8 +646,8 @@ begin
       { The argument pushed. }
       done := false;
       if not lib and (cls <> 6) then begin
-        if (arg^.kind = tree_node) and ((cg_tree_ptr_t(arg)^.op = 26) or
-            (cg_tree_ptr_t(arg)^.op = 0)) and (arg^.xw[8] = 1) and
+        if (arg^.kind = tree_node) and ((cg_tree_ptr_t(arg)^.op = addr_top) or
+            (cg_tree_ptr_t(arg)^.op = nop_top)) and (arg^.xw[8] = 1) and
             (cls < 6) then begin
           tree_walk(cg_tree_ptr_t(arg)^.opnd[1]);
           if cg_fp_count <> 0 then
@@ -737,7 +737,7 @@ begin
               if (r <> 31) and (v^.kind = gen_tree_node) then begin
                 nint := cg_call_$is_a_nint(v);
                 if not nint then
-                  if cg_tree_ptr_t(v)^.op = 18 then
+                  if cg_tree_ptr_t(v)^.op = extend_top then
                     if cg_tree_ptr_t(v)^.opnd[1]^.kind = gen_tree_node then
                       nint := cg_call_$is_a_nint(cg_tree_ptr_t(v)^.opnd[1]);
               end;

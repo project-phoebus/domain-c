@@ -38,21 +38,21 @@ function get_rlen(
 begin
   case t.base^.kind of
     void_type:
-      get_rlen := 0;
+      get_rlen := rlen_null;
     univ_ptr_type, ptr_type:
-      get_rlen := 5;
+      get_rlen := rlen_addr;
     real_type:
       get_rlen := t.base^.len;
     char_string_con_type, char_array_type:
-      get_rlen := 9;
+      get_rlen := rlen_cs;
     otherwise
       if t.size = 1 then
-        get_rlen := 1
+        get_rlen := rlen_byte
       else if t.size = 2 then
-        get_rlen := 2
+        get_rlen := rlen_word
       else if t.size = 4 then
-        get_rlen := 4
+        get_rlen := rlen_long
       else
-        get_rlen := 11;
+        get_rlen := rlen_agg;
   end;
 end;

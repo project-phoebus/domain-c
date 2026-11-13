@@ -307,7 +307,7 @@ begin
           for i := 1 to p^.xw[19] do begin
             on_spine := false;
             if kept_spine <> nil then
-              on_spine := il_utils_$tree_node_operand_is_spine(p^.xw[18], i);
+              on_spine := il_utils_$tree_node_operand_is_spine(il_$top_t(p^.xw[18]), i);
             if on_spine then
               il_utils_$set_uc_walk_spine(p^.xp[9 + i], kept_spine)
             else
@@ -448,10 +448,10 @@ end;
   else false. }
 
 function il_utils_$tree_node_operand_is_spine(
-    op: integer;
+    op: il_$top_t;
     i: integer): boolean;
 begin
-  if (op = 30) or (op = 32) or (op = 31) then
+  if (op = isc_call_top) or (op = isc_func_call_hidden_temp_top) or (op = isc_func_call_top) then
     il_utils_$tree_node_operand_is_spine := (i = 3) or (i = 2)
   else
     il_utils_$tree_node_operand_is_spine := false;

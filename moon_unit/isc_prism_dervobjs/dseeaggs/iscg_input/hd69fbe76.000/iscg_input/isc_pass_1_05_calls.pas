@@ -452,7 +452,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.b[10] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] = 8) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.b[10] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_c8) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 347 matched the semantics.');
       writeln;

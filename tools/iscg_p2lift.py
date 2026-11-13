@@ -1881,7 +1881,7 @@ def lift_rule(img, r):
         stmts = lf.lift()
         # the printer and the parser must agree
         text = '\n'.join(L.fmt_body(stmts))
-        if L.parse_body(text) != [s for s in stmts]:
+        if L.unname(L.parse_body(text)) != [s for s in stmts]:
             return None, 'the printed body does not read back'
         return stmts, None
     except Unliftable as e:

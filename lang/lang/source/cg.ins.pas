@@ -71,7 +71,7 @@ type
     uses: integer;                      { +16 }
     w18: integer;                       { +18 }
     desc: cg_desc_t;                    { +20 }
-    op: integer;                        { +36 }
+    op: il_$top_t;                      { +36 }
     count: integer;                     { +38: the operands }
     opnd: array [1..64] of il_$node_ptr_t;  { +40: from 1 }
   end;

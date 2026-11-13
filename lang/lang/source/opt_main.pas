@@ -780,8 +780,8 @@ begin
   if n = nil then
     assert_is_call_tree := false
   else if (n^.kind = cmp_tree_node) or (n^.kind = tree_node) then
-    assert_is_call_tree := (g_opt_tree_ptr_t(n)^.op = 16) or
-                           (g_opt_tree_ptr_t(n)^.op = 15)
+    assert_is_call_tree := (g_opt_tree_ptr_t(n)^.op = func_call_top) or
+                           (g_opt_tree_ptr_t(n)^.op = call_top)
   else
     assert_is_call_tree := false;
 end;
@@ -823,23 +823,23 @@ var
   l: il_$node_ptr_t;
 begin
   ok := false;
-  if (a^.kind = assign_node) and (a^.asg_op = 11) and
-     ((a^.asg_rlen = 7) or (a^.asg_rlen = 6)) and
+  if (a^.kind = assign_node) and (a^.asg_op = fp_aop) and
+     ((a^.asg_rlen = rlen_r8) or (a^.asg_rlen = rlen_r4)) and
      (om_complex_size[a^.asg_rlen] = size) then begin
     l := a^.asg_lhs;
     if (l^.kind = disp_node) and (l^.xl[8] = half)
         and (l^.xp[6] = s^.asg_rhs) then
-      if (b^.kind = assign_node) and (b^.asg_op = 11) and
-         ((b^.asg_rlen = 7) or (b^.asg_rlen = 6)) and
+      if (b^.kind = assign_node) and (b^.asg_op = fp_aop) and
+         ((b^.asg_rlen = rlen_r8) or (b^.asg_rlen = rlen_r4)) and
          (om_complex_size[b^.asg_rlen] = size) and
          (b^.asg_lhs = s^.asg_rhs) then
-        if (c^.kind = assign_node) and (c^.asg_op = 11) and
-           ((c^.asg_rlen = 7) or (c^.asg_rlen = 6)) and
+        if (c^.kind = assign_node) and (c^.asg_op = fp_aop) and
+           ((c^.asg_rlen = rlen_r8) or (c^.asg_rlen = rlen_r4)) and
            (om_complex_size[c^.asg_rlen] = size) and
            (c^.asg_lhs = a^.asg_rhs) then
           if assert_is_fortran_temp(c^.asg_lhs) then
-            if (d^.kind = assign_node) and (d^.asg_op = 11) and
-               ((d^.asg_rlen = 7) or (d^.asg_rlen = 6)) and
+            if (d^.kind = assign_node) and (d^.asg_op = fp_aop) and
+               ((d^.asg_rlen = rlen_r8) or (d^.asg_rlen = rlen_r4)) and
                (om_complex_size[d^.asg_rlen] = size) and
                (d^.asg_lhs = b^.asg_rhs) then
               if assert_is_fortran_temp(d^.asg_lhs) then
@@ -868,14 +868,14 @@ var
   l: il_$node_ptr_t;
 begin
   opt_main_$complex_intrinsic_decomposition := false;
-  if (a^.kind = assign_node) and (a^.asg_op = 11) and
-     ((a^.asg_rlen = 7) or (a^.asg_rlen = 6)) and
+  if (a^.kind = assign_node) and (a^.asg_op = fp_aop) and
+     ((a^.asg_rlen = rlen_r8) or (a^.asg_rlen = rlen_r4)) and
      (om_complex_size[a^.asg_rlen] = size) then begin
     l := a^.asg_lhs;
     if (l^.kind = disp_node) and (l^.xl[8] = half)
         and (l^.xp[6] = s^.asg_rhs) then
-      if (b^.kind = assign_node) and (b^.asg_op = 11) and
-         ((b^.asg_rlen = 7) or (b^.asg_rlen = 6)) and
+      if (b^.kind = assign_node) and (b^.asg_op = fp_aop) and
+         ((b^.asg_rlen = rlen_r8) or (b^.asg_rlen = rlen_r4)) and
          (om_complex_size[b^.asg_rlen] = size) and
          (b^.asg_lhs = s^.asg_rhs) then
         opt_main_$complex_intrinsic_decomposition := true;
@@ -907,7 +907,7 @@ var
   u: il_$node_ptr_t;
   k: integer;
 begin
-  if (s^.kind = assign_node) and (s^.asg_op = 6) then
+  if (s^.kind = assign_node) and (s^.asg_op = agg_aop) then
     if assert_is_fortran_temp(s^.asg_rhs) then begin
       k := ord(s^.asg_rhs^.xc[10]) & 15;
       if k = 6 then begin
@@ -1458,7 +1458,7 @@ begin
       if n^.kind in [tree_node..gen_tree_node, cmp_tree_node,
                      dindex_node..disp_node, cs_node, cc_call, pf_call,
                      cse_use_ob, sym_disp_node] then
-        n^.flags := n^.flags - [5];
+        n^.flags := n^.flags - [phase_vis];
   end;
 end;
 
@@ -1587,7 +1587,7 @@ begin
   call := false;
   if n <> nil then
     if (n^.kind = cmp_tree_node) or (n^.kind = tree_node) then
-      call := (g_opt_tree_ptr_t(n)^.op = 16) or (g_opt_tree_ptr_t(n)^.op = 15);
+      call := (g_opt_tree_ptr_t(n)^.op = func_call_top) or (g_opt_tree_ptr_t(n)^.op = call_top);
   if call then begin
     p := g_opt_tree_ptr_t(n)^.opnd[1];
     case p^.kind of
@@ -1653,7 +1653,7 @@ begin
           e := s^.last_stmt;
           if e^.kind = cbranch_node then begin
             c := g_opt_tree_ptr_t(e^.br_cond);
-            if (c^.kind = cmp_tree_node) and (c^.op = 12) then begin
+            if (c^.kind = cmp_tree_node) and (c^.op = compare_top) then begin
               neg := not e^.br_sense;
               if ((c^.w28 = 7) and neg) or (e^.br_sense and (c^.w28 = 6)) then
                 if s^.nsucc = 2 then begin
@@ -1686,7 +1686,7 @@ begin
           e := s^.last_stmt;
           if e^.kind = cbranch_node then begin
             c := g_opt_tree_ptr_t(e^.br_cond);
-            if (c^.kind = cmp_tree_node) and (c^.op = 12) then begin
+            if (c^.kind = cmp_tree_node) and (c^.op = compare_top) then begin
               neg := not e^.br_sense;
               if ((c^.w28 = 7) and neg) or (e^.br_sense and (c^.w28 = 6)) then
                 if s^.nsucc = 2 then begin
@@ -2135,7 +2135,7 @@ begin
     if (s^.kind = assign_node) and (s^.next^.kind <> assign_node) then
       assign_opt(s)
     else if (s^.kind = assign_node) and (s^.next^.kind = assign_node) then
-      if (s^.next^.asg_op <= 31) and (s^.next^.asg_op in [27..30]) then
+      if (s^.next^.asg_op <= isc_agg_aop) and (s^.next^.asg_op in [strcat_aop..strncpy_aop]) then
         assign_opt(s);
     s := s^.next;
   end;
@@ -2165,7 +2165,7 @@ begin
       n := t;
       if (n^.kind = ptr_node) and ((n^.xl[1] & 30) = 0) then begin
         a := g_opt_tree_ptr_t(n^.xp[6]);
-        if (a^.kind = tree_node) and (a^.op = 1) and (a^.rlen = 5) then begin
+        if (a^.kind = tree_node) and (a^.op = add_top) and (a^.rlen = rlen_addr) then begin
           x := a^.opnd[1];
           al := ord(n^.xc[22]);
           if al > 127 then
@@ -2250,7 +2250,7 @@ begin
       makedindex(t^.xp[6], t);
       makedindex(t^.xp[9], t);
       a := g_opt_tree_ptr_t(t^.xp[9]);
-      if (a^.kind = tree_node) and (a^.op = 27) then begin
+      if (a^.kind = tree_node) and (a^.op = lshf_top) then begin
         c := a^.opnd[2];
         if c^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
           if c^.int_value <= 3 then
@@ -2262,7 +2262,7 @@ begin
             end;
       end;
       a := g_opt_tree_ptr_t(t^.xp[9]);
-      if (a^.kind = tree_node) and (a^.op = 3) then begin
+      if (a^.kind = tree_node) and (a^.op = mul_top) then begin
         c := a^.opnd[2];
         if c^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
           if (c^.int_value = 2) or (c^.int_value = 8) or
@@ -2281,7 +2281,7 @@ begin
             end;
       end;
       a := g_opt_tree_ptr_t(t^.xp[9]);
-      if (a^.kind = tree_node) and (a^.op = 3) then begin
+      if (a^.kind = tree_node) and (a^.op = mul_top) then begin
         c := a^.opnd[2];
         if c^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
           if (c^.int_value = 2) or (c^.int_value = 8) or
@@ -2407,7 +2407,7 @@ var
   begin
     no_enforce_parens_and_ucs_eq_1 := false;
     c := g_opt_tree_ptr_t(b^.opnd[1]);
-    if not (21 in b^.flags) and not (21 in c^.flags) then begin
+    if not (phase_enf_paren in b^.flags) and not (phase_enf_paren in c^.flags) then begin
       if f then begin
         x := b^.opnd[2];
         if x^.kind = disp_node then
@@ -2432,11 +2432,11 @@ var
   procedure convert_lshf_to_mul(
       t: g_opt_tree_ptr_t); options(val_param);
   begin
-    if t^.op = 27 then begin
+    if t^.op = lshf_top then begin
       t^.opnd[2] := smcontk(integer_ob, lshft(1, t^.opnd[2]^.int_value));
       t^.w26 := class_size[t^.rlen];
       t^.w28 := t^.w26;
-      t^.op := 3;
+      t^.op := mul_top;
     end;
   end;
 
@@ -2512,11 +2512,11 @@ var
     pa: rlens_t;
     pb: rlens_t;
   begin
-    if t^.op = 27 then begin
+    if t^.op = lshf_top then begin
       a := class_size[t^.w26];
       b := class_size[t^.w28];
     end
-    else if t^.op = 3 then begin
+    else if t^.op = mul_top then begin
       a := t^.w26;
       b := t^.w28;
     end
@@ -2524,9 +2524,9 @@ var
       bug_check('opt_main:  bad call to fixup_rlen_of_mul%.');
     pa := possible_rlens_of_operand(t^.opnd[1], a, t^.dflags.signed);
     pb := possible_rlens_of_operand(t^.opnd[2], b, t^.dflags.signed);
-    if (t^.rlen = rlen) and (a in pa) and (b in pb) and (t^.op = 3) then
+    if (t^.rlen = rlen) and (a in pa) and (b in pb) and (t^.op = mul_top) then
       return;
-    if not ((rlen = 2) and (a = 2) and (b = 2)) then begin
+    if not ((rlen = rlen_word) and (a = 2) and (b = 2)) then begin
       crush_disp_2(t^.opnd[1], a);
       crush_disp_2(t^.opnd[2], b);
       convert_lshf_to_mul(t);
@@ -2550,23 +2550,23 @@ begin
       distrib_mul := r;
       return;
     end;
-  if not ((m^.op = 27) or (m^.op = 3)) then
+  if not ((m^.op = lshf_top) or (m^.op = mul_top)) then
     begin
       distrib_mul := r;
       return;
     end;
-  if m^.flags * [1..4, 21] <> [] then
+  if m^.flags * [phase_vol..phase_devwt, phase_enf_paren] <> [] then
     begin
       distrib_mul := r;
       return;
     end;
   a := g_opt_tree_ptr_t(m^.opnd[1]);
-  if (a^.kind = tree_node) and (a^.op = 18) then
+  if (a^.kind = tree_node) and (a^.op = extend_top) then
     a := g_opt_tree_ptr_t(a^.opnd[1]);
   { a sum's variable operand put second }
-  if (m^.op = 27) or (m^.op = 3) then
+  if (m^.op = lshf_top) or (m^.op = mul_top) then
     if m^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
-      if (a^.kind = tree_node) and (a^.op = 1) then begin
+      if (a^.kind = tree_node) and (a^.op = add_top) then begin
         x := a^.opnd[1];
         if (x^.kind = var_name) or (x^.kind = fortran_symbol)
             or (x^.kind = sym_disp_node) or
@@ -2578,16 +2578,16 @@ begin
       end;
   done := false;
   { (b * c' + v) * c }
-  if (m^.op = 27) or (m^.op = 3) then
+  if (m^.op = lshf_top) or (m^.op = mul_top) then
     if m^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
-      if (a^.kind = tree_node) and (a^.op = 1) then begin
+      if (a^.kind = tree_node) and (a^.op = add_top) then begin
         x := a^.opnd[2];
         b := g_opt_tree_ptr_t(a^.opnd[1]);
         if (x^.kind = var_name) or (x^.kind = fortran_symbol)
             or (x^.kind = sym_disp_node) or
            (x^.kind = disp_node) then
           if b^.kind = tree_node then
-            if (b^.op = 27) or (b^.op = 3) then
+            if (b^.op = lshf_top) or (b^.op = mul_top) then
               if b^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                                       binteger_ob] then begin
                 x := b^.opnd[1];
@@ -2600,7 +2600,7 @@ begin
                       return;
                     end;
                   b := g_opt_tree_ptr_t(a^.opnd[1]);
-                  if (m^.op = 3) and (b^.op = 27) then
+                  if (m^.op = mul_top) and (b^.op = lshf_top) then
                     convert_lshf_to_mul(b);
                   p := g_opt_tree_ptr_t(opt_str_$product_of(
                          m^.op, il_$node_ptr_t(b), m^.opnd[2], b^.rlen,
@@ -2621,20 +2621,20 @@ begin
       end;
   { ((x << k1 + y) + z << k2) << k3 }
   if not done then
-    if m^.op = 27 then
+    if m^.op = lshf_top then
       if m^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                               binteger_ob] then
-        if (a^.kind = tree_node) and (a^.op = 1) then begin
+        if (a^.kind = tree_node) and (a^.op = add_top) then begin
           c := g_opt_tree_ptr_t(a^.opnd[2]);
-          if (c^.kind = tree_node) and (c^.op = 27) then
+          if (c^.kind = tree_node) and (c^.op = lshf_top) then
             if c^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                                     binteger_ob] then
               if c^.opnd[1]^.kind in [var_name..fortran_symbol,
                                       dindex_node..disp_node] then begin
                 b := g_opt_tree_ptr_t(a^.opnd[1]);
-                if (b^.kind = tree_node) and (b^.op = 1) then begin
+                if (b^.kind = tree_node) and (b^.op = add_top) then begin
                   p := g_opt_tree_ptr_t(b^.opnd[1]);
-                  if (p^.kind = tree_node) and (p^.op = 27) then
+                  if (p^.kind = tree_node) and (p^.op = lshf_top) then
                     if p^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                                             binteger_ob] then
                       if p^.opnd[1]^.kind in [var_name..fortran_symbol,
@@ -2654,13 +2654,13 @@ begin
                                                     m^.opnd[2]^.int_value);
                           ops[1] := b^.opnd[2];
                           ops[2] := m^.opnd[2];
-                          b^.opnd[2] := buildtreenode(27, m^.size, ops, 2);
+                          b^.opnd[2] := buildtreenode(lshf_top, m^.size, ops, 2);
                           x := b^.opnd[2];
-                          if (g_opt_tree_ptr_t(x)^.rlen = 4) and
-                             (a^.rlen = 2) then begin
-                            a^.rlen := 4;
-                            if b^.rlen = 2 then
-                              b^.rlen := 4;
+                          if (g_opt_tree_ptr_t(x)^.rlen = rlen_long) and
+                             (a^.rlen = rlen_word) then begin
+                            a^.rlen := rlen_long;
+                            if b^.rlen = rlen_word then
+                              b^.rlen := rlen_long;
                           end;
                           r := il_$node_ptr_t(a);
                           done := true;
@@ -2672,10 +2672,10 @@ begin
   if not done then
     if 20 in cargs_$options.opt_on then begin
       a := g_opt_tree_ptr_t(m^.opnd[1]);
-      if m^.op = 27 then
+      if m^.op = lshf_top then
         if m^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                                 binteger_ob] then
-          if (a^.kind = tree_node) and (a^.op = 1) then begin
+          if (a^.kind = tree_node) and (a^.op = add_top) then begin
             b := g_opt_tree_ptr_t(a^.opnd[1]);
             c := g_opt_tree_ptr_t(a^.opnd[2]);
             if ((b^.kind = var_name) or (b^.kind = fortran_symbol)
@@ -2684,7 +2684,7 @@ begin
                ((c^.kind = var_name) or (c^.kind = fortran_symbol)
                 or (c^.kind = sym_disp_node) or
                 (c^.kind = disp_node)) and
-               not (21 in m^.flags) and not (21 in a^.flags) and
+               not (phase_enf_paren in m^.flags) and not (phase_enf_paren in a^.flags) and
                (m^.uses = 1) and (a^.uses = 1) then
               if (b^.kind <> disp_node) or
                  (il_$node_ptr_t(b)^.xp[6]^.kind = fortran_symbol) then
@@ -2692,7 +2692,7 @@ begin
                    (il_$node_ptr_t(c)^.xp[6]^.kind = fortran_symbol) then begin
                   ops[1] := il_$node_ptr_t(c);
                   ops[2] := m^.opnd[2];
-                  a^.opnd[2] := buildtreenode(27, m^.size, ops, 2);
+                  a^.opnd[2] := buildtreenode(lshf_top, m^.size, ops, 2);
                   m^.opnd[1] := a^.opnd[1];
                   a^.opnd[1] := t;
                   r := il_$node_ptr_t(a);
@@ -2718,7 +2718,7 @@ end;
 
 procedure convert_exponentiation(
     t: g_opt_tree_ptr_t;
-    op: integer); options(val_param); internal;
+    op: il_$top_t); options(val_param); internal;
 var
   a: il_$node_ptr_t;
   e: il_$node_ptr_t;
@@ -2740,7 +2740,7 @@ begin
       return;
   if t^.uses <> 1 then
     return;
-  if 12 in t^.flags then
+  if phase_sd_eff in t^.flags then
     return;
   e := t^.opnd[2];
   if not (e^.kind in [blogical_ob..dpreal_ob, char16_ob, binteger_ob]) then
@@ -2829,7 +2829,7 @@ begin
         if (t^.xl[1] & 30) = 0 then
           t := distrib_mul(t);
         m := g_opt_tree_ptr_t(t);
-        if m^.op = 13 then begin
+        if m^.op = index_top then begin
           x := g_opt_tree_ptr_t(m^.opnd[2]);
           if x^.kind = tree_node then
             if x^.rlen <> m^.w26 then
@@ -2837,10 +2837,10 @@ begin
         end;
         m := g_opt_tree_ptr_t(t);
         if (t^.xl[1] & 30) = 0 then
-          if m^.op = 42 then
-            convert_exponentiation(m, 36)
-          else if m^.op = 43 then
-            convert_exponentiation(m, 3);
+          if m^.op = f_expon_top then
+            convert_exponentiation(m, f_mul_top)
+          else if m^.op = expon_top then
+            convert_exponentiation(m, mul_top);
       end;
       sym_disp_node, disp_node, ptr_node:
         dwalk(t^.xp[6]);
@@ -3800,7 +3800,7 @@ var
     begin
       if size = 4 then begin
         a := g_opt_tree_ptr_t(t);
-        if (a^.kind = tree_node) and (a^.op = 18) and (a^.uses = 1) and
+        if (a^.kind = tree_node) and (a^.op = extend_top) and (a^.uses = 1) and
            (a^.dflags.signed = sgn) and (a^.w26 = 2) then begin
           size := 2;
           t := a^.opnd[1];
@@ -3815,13 +3815,13 @@ var
     if t^.kind in [tree_node..gen_tree_node, cmp_tree_node,
                    dindex_node..disp_node, cs_node, cc_call, pf_call,
                    cse_use_ob, sym_disp_node] then
-      if 5 in m^.flags then
+      if phase_vis in m^.flags then
         return;
     if t^.kind in [tree_node..gen_tree_node, cmp_tree_node,
                    dindex_node..disp_node, cs_node, cc_call, pf_call,
                    cse_use_ob, sym_disp_node] then begin
       m^.stmt := 0;
-      m^.flags := m^.flags + [5];
+      m^.flags := m^.flags + [phase_vis];
     end;
     case t^.kind of
       cmp_tree_node, tree_node: begin
@@ -3881,7 +3881,7 @@ var
               if c^.kind = cmp_tree_node then
                 c^.kind := tree_node
               else begin
-                d.rlen := 1;
+                d.rlen := rlen_byte;
                 if s^.br_sense then
                   d.w6 := 11
                 else
@@ -3890,7 +3890,7 @@ var
                 d.size := 1;
                 d.flags.signed := false;
                 ops[1] := c;
-                c := buildtreenode(17, d, ops, 1);
+                c := buildtreenode(value_top, d, ops, 1);
                 s^.br_cond := c;
                 count_interior_nodes_for_postorder_node_list(c, s);
               end;
@@ -3901,7 +3901,7 @@ var
           end
           else if (s^.kind = assign_node) and assert_is_a_variable(s^.asg_lhs)
               and
-                  (m^.op = 16) then begin
+                  (m^.op = func_call_top) then begin
             found := false;
             for j := 2 to m^.count - m^.w26 do
               if m^.opnd[j] = s^.asg_lhs then
@@ -3966,22 +3966,22 @@ var
               add_use_defs_for_call_site(e, m, m^.opnd[1], v, j);
           end;
         end;
-        if m^.op in [2, 4..6, 11, 15..16, 21, 35, 37] then
+        if m^.op in [sub_top, div_top..mod_top, bit_test_top, call_top..func_call_top, set_diff_top, f_sub_top, f_div_top] then
           for j := m^.count downto 1 do begin
             count_interior_nodes_for_postorder_node_list(m^.opnd[j], s);
             ph := getphase(m^.opnd[j]);
-            m^.flags := m^.flags + (ph - [21]);
-            if (1 in m^.flags) and (m^.op <> 26) then
-              m^.flags := m^.flags - [1] + [2];
+            m^.flags := m^.flags + (ph - [phase_enf_paren]);
+            if (phase_vol in m^.flags) and (m^.op <> addr_top) then
+              m^.flags := m^.flags - [phase_vol] + [phase_volexpr];
           end
         else begin
           if (target_properties.p_85 < chr(128)) and not opt_track_lines and
-             (m^.op = 3) then begin
+             (m^.op = mul_top) then begin
             if (m^.opnd[1]^.kind = tree_node) and
-               (g_opt_tree_ptr_t(m^.opnd[1])^.op = 18) and (m^.w26 = 4) and
+               (g_opt_tree_ptr_t(m^.opnd[1])^.op = extend_top) and (m^.w26 = 4) and
                (g_opt_tree_ptr_t(m^.opnd[1])^.w26 = 2) and
                (m^.opnd[2]^.kind = tree_node) and
-               (g_opt_tree_ptr_t(m^.opnd[2])^.op = 18) and (m^.w28 = 4) and
+               (g_opt_tree_ptr_t(m^.opnd[2])^.op = extend_top) and (m^.w28 = 4) and
                (g_opt_tree_ptr_t(m^.opnd[2])^.w26 = 2) and
                (g_opt_tree_ptr_t(m^.opnd[1])^.dflags.signed =
                 g_opt_tree_ptr_t(m^.opnd[2])^.dflags.signed) and
@@ -3993,7 +3993,7 @@ var
               m^.w26 := 2;
               m^.w28 := 2;
             end
-            else if m^.rlen = 4 then begin
+            else if m^.rlen = rlen_long then begin
               crush_undesired_extend(m^.dflags.signed, m^.opnd[1], m^.w26);
               crush_undesired_extend(m^.dflags.signed, m^.opnd[2], m^.w28);
             end;
@@ -4001,49 +4001,49 @@ var
           for j := 1 to m^.count do begin
             count_interior_nodes_for_postorder_node_list(m^.opnd[j], s);
             ph := getphase(m^.opnd[j]);
-            m^.flags := m^.flags + (ph - [6, 21]);
-            if (1 in m^.flags) and (m^.op <> 26) then
-              m^.flags := m^.flags - [1] + [2];
+            m^.flags := m^.flags + (ph - [phase_cse, phase_enf_paren]);
+            if (phase_vol in m^.flags) and (m^.op <> addr_top) then
+              m^.flags := m^.flags - [phase_vol] + [phase_volexpr];
           end;
         end;
         if assert_is_call_tree(t) then
-          m^.flags := m^.flags - [1..4];
+          m^.flags := m^.flags - [phase_vol..phase_devwt];
       end;
       disp_node, sym_disp_node: begin
         count_interior_nodes_for_postorder_node_list(t^.xp[6], s);
         ph := getphase(t^.xp[6]) + getphase(t^.xp[7]);
-        m^.flags := m^.flags + (ph - [6, 21]);
+        m^.flags := m^.flags + (ph - [phase_cse, phase_enf_paren]);
         il_126 := il_126 + 1;
       end;
       ptr_node: begin
         count_interior_nodes_for_postorder_node_list(t^.xp[6], s);
         ph := getphase(t^.xp[6]) + getphase(t^.xp[7]);
-        m^.flags := m^.flags + (ph - [6, 8, 17, 21]);
-        if 1 in m^.flags then
+        m^.flags := m^.flags + (ph - [phase_cse, phase_indx_lng, phase_nvr_invld, phase_enf_paren]);
+        if phase_vol in m^.flags then
           if not ((t^.xp[6]^.kind = var_name) and (t^.xp[6]^.xw[36] = 5)) then
-            m^.flags := m^.flags - [1] + [2];
+            m^.flags := m^.flags - [phase_vol] + [phase_volexpr];
         il_126 := il_126 + 1;
       end;
       dindex_node: begin
         count_interior_nodes_for_postorder_node_list(t^.xp[6], s);
         count_interior_nodes_for_postorder_node_list(t^.xp[9], s);
         ph := getphase(t^.xp[6]) + getphase(t^.xp[9]) + getphase(t^.xp[7]);
-        m^.flags := m^.flags + (ph - [6, 17, 21]);
-        if 20 in getphase(t^.xp[9]) then
-          m^.flags := m^.flags - [20];
+        m^.flags := m^.flags + (ph - [phase_cse, phase_nvr_invld, phase_enf_paren]);
+        if phase_proc_reg in getphase(t^.xp[9]) then
+          m^.flags := m^.flags - [phase_proc_reg];
         il_126 := il_126 + 1;
       end;
       cs_node: begin
         count_interior_nodes_for_postorder_node_list(t^.xp[5], s);
         count_interior_nodes_for_postorder_node_list(t^.xp[6], s);
         ph := getphase(t^.xp[5]) + getphase(t^.xp[6]);
-        m^.flags := m^.flags + (ph - [6, 21]);
+        m^.flags := m^.flags + (ph - [phase_cse, phase_enf_paren]);
         il_126 := il_126 + 1;
       end;
       pf_call, cc_call: begin
         count_interior_nodes_for_postorder_node_list(t^.xp[4], s);
         ph := getphase(t^.xp[4]);
-        m^.flags := m^.flags + (ph - [6, 21]);
+        m^.flags := m^.flags + (ph - [phase_cse, phase_enf_paren]);
         il_126 := il_126 + 1;
       end;
       cse_use_ob, cse_parent_ob:
@@ -4213,12 +4213,12 @@ var
     if t^.kind in [tree_node..gen_tree_node, cmp_tree_node,
                    dindex_node..disp_node, cs_node, cc_call, pf_call,
                    cse_use_ob, sym_disp_node] then
-      if not (5 in m^.flags) then
+      if not (phase_vis in m^.flags) then
         return;
     case t^.kind of
       cmp_tree_node, tree_node: begin
         e := opt_4009c[om_stmt_num];
-        if (m^.op = 16) or (m^.op = 15) then begin
+        if (m^.op = func_call_top) or (m^.op = call_top) then begin
           for j := m^.count downto 2 do begin
             x := m^.opnd[j];
             if (x^.kind = var_name) or (x^.kind = ptr_node)
@@ -4239,10 +4239,10 @@ var
           add_interior_node_to_postorder_node_list(m^.opnd[1]);
         end
         else begin
-          if (m^.rlen = 6) or (m^.rlen = 7) or (m^.rlen = 12) or
-             (m^.rlen = 8) then
+          if (m^.rlen = rlen_r4) or (m^.rlen = rlen_r8) or (m^.rlen = rlen_c16) or
+             (m^.rlen = rlen_c8) then
             e^.hdr.b4 := true;
-          if m^.op in [2, 4..6, 11, 15..16, 21, 35, 37] then
+          if m^.op in [sub_top, div_top..mod_top, bit_test_top, call_top..func_call_top, set_diff_top, f_sub_top, f_div_top] then
             for j := m^.count downto 1 do begin
               add_interior_node_to_postorder_node_list(m^.opnd[j]);
               note_variable_use(m^.opnd[j], e^.vset);
@@ -4318,8 +4318,8 @@ var
     if t^.kind in [tree_node..gen_tree_node, cmp_tree_node,
                    dindex_node..disp_node, cs_node, cc_call, pf_call,
                    cse_use_ob, sym_disp_node] then
-      if 5 in m^.flags then begin
-        m^.flags := m^.flags - [5];
+      if phase_vis in m^.flags then begin
+        m^.flags := m^.flags - [phase_vis];
         m^.owner := opt_4009c[om_stmt_num];
         if t^.kind = cse_use_ob then
           m^.stmt := t^.xp[5]^.xw[5]

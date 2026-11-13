@@ -605,7 +605,7 @@ begin
       return;
   if n^.kind = char_string_ob then
     return;
-  if 1 in getphase(n) then
+  if phase_vol in getphase(n) then
     return;
   s := cg_stmt;
   repeat
@@ -617,7 +617,7 @@ begin
       if t = n then
         register_tickle := true
       else if t^.kind = cmp_tree_node then
-        if (cg_tree_ptr_t(t)^.op = 12) or (cg_tree_ptr_t(t)^.op = 40) then begin
+        if (cg_tree_ptr_t(t)^.op = compare_top) or (cg_tree_ptr_t(t)^.op = f_compare_top) then begin
           a := n;
           if n^.kind = alloc_temp then
             a := n^.xp[4];
@@ -967,9 +967,9 @@ begin
   a.f5 := 0;
   if m^.kind <> gen_tree_node then begin
     ph := getphase(m);
-    if ph * [1, 2] <> [] then
+    if ph * [phase_vol, phase_volexpr] <> [] then
       a.f5 := a.f5 ! 1;
-    if ph * [3, 4] <> [] then
+    if ph * [phase_devrd, phase_devwt] <> [] then
       a.f5 := a.f5 ! 4;
   end;
   a.x := integer32(m);
@@ -1057,11 +1057,11 @@ begin
           if alias_$related(ad, d) then
             obj := nil;
           ph := getphase(obj);
-          if (2 in ph) and (obj^.kind <> gen_tree_node) then
+          if (phase_volexpr in ph) and (obj^.kind <> gen_tree_node) then
             obj := nil
           else if obj <> nil then
             if obj^.kind = var_name then
-              if (obj^.xw[36] <> 5) and (1 in ph) then
+              if (obj^.xw[36] <> 5) and (phase_vol in ph) then
                 obj := nil;
         end;
       if (obj2 <> nil) and (obj2 <> cg_addr_cache[r].obj) then
@@ -1072,11 +1072,11 @@ begin
           if alias_$related(ad, d) then
             obj2 := nil;
           ph := getphase(obj2);
-          if (2 in ph) and (obj2^.kind <> gen_tree_node) then
+          if (phase_volexpr in ph) and (obj2^.kind <> gen_tree_node) then
             obj2 := nil
           else if obj2 <> nil then
             if obj2^.kind = var_name then
-              if (obj2^.xw[36] <> 5) and (1 in ph) then
+              if (obj2^.xw[36] <> 5) and (phase_vol in ph) then
                 obj2 := nil;
         end;
     end;
@@ -1294,9 +1294,9 @@ begin
     len := cg_tree_ptr_t(n)^.desc.size
   else
     len := delay_378[k];
-  if cg_tree_ptr_t(n)^.op = 26 then
+  if cg_tree_ptr_t(n)^.op = addr_top then
     if cg_tree_ptr_t(n)^.opnd[1]^.kind = gen_tree_node then
-      if cg_tree_ptr_t(cg_tree_ptr_t(n)^.opnd[1])^.op = 26 then
+      if cg_tree_ptr_t(cg_tree_ptr_t(n)^.opnd[1])^.op = addr_top then
         cg_addr_$remove_temp_from_free_list(len);
   if cg_tree_ptr_t(n)^.opnd[1]^.kind <> alloc_temp then
     cg_tree_ptr_t(n)^.opnd[1] := allocate_temp(len, true, cg_tree_ptr_t(n)^.opnd[1])
@@ -1374,7 +1374,7 @@ begin
   n^.kind := gen_tree_node;
   c := cg_tree_ptr_t(n)^.opnd[1];
   if ((c^.kind = gen_tree_node) or (c^.kind = tree_node)) and
-      (cg_tree_ptr_t(c)^.op in [19..22, 72, 73]) then begin
+      (cg_tree_ptr_t(c)^.op in [set_and_top..set_extend_top, set_bit_in_set_top, set_range_in_set_top]) then begin
     if not at_backend_506 then
       cg_tree_ptr_t(n)^.opnd[1] := il_node_153
     else
@@ -1826,7 +1826,7 @@ begin
     for r := 8 to 15 do
       with cg_addr_regs[r] do
         if (size = 5) and (obj <> nil) then
-          if (obj^.kind = gen_tree_node) and (cg_tree_ptr_t(obj)^.op = 26) and
+          if (obj^.kind = gen_tree_node) and (cg_tree_ptr_t(obj)^.op = addr_top) and
               (cg_tree_ptr_t(obj)^.opnd[1] = n) and (w14 = 0) then begin
             address(obj, 5, t);
             t.f1 := 2;
@@ -1988,7 +1988,7 @@ begin
     with cg_addr_cache[r] do
       if (obj <> nil) and live then
         if (obj^.kind = gen_tree_node)
-            and (cg_tree_ptr_t(obj)^.op = 26) then begin
+            and (cg_tree_ptr_t(obj)^.op = addr_top) then begin
           o := cg_tree_ptr_t(obj)^.opnd[1];
           if o^.kind = alloc_temp then begin
             if n = o^.xp[4] then
@@ -2166,7 +2166,7 @@ begin
       end;
     tree_node, gen_tree_node, cmp_tree_node: begin
       if n^.kind <> tree_node then begin
-        if (cg_tree_ptr_t(n)^.op = 16) and (cg_tree_ptr_t(n)^.desc.rlen = 9) then begin
+        if (cg_tree_ptr_t(n)^.op = func_call_top) and (cg_tree_ptr_t(n)^.desc.rlen = rlen_cs) then begin
           address(cg_tree_ptr_t(n)^.opnd[2], 0, a);
           goto tail;
         end;
@@ -2298,11 +2298,11 @@ tail:
   if a.f2 > 7 then
     if not (a.f1 in [3, 7]) and (n^.kind <> gen_tree_node) then begin
       ph := getphase(n);
-      if 1 in ph then
+      if phase_vol in ph then
         a.f5 := a.f5 ! 1
-      else if 2 in ph then
+      else if phase_volexpr in ph then
         a.f5 := a.f5 ! 1;
-      if (3 in ph) or (4 in ph) then
+      if (phase_devrd in ph) or (phase_devwt in ph) then
         a.f5 := a.f5 ! 5;
     end;
   a.x := integer32(n);
@@ -2400,12 +2400,12 @@ begin
         v := o^.xl[2];
         if (v >= -128) and (v <= 0) then
           cst := i
-        else if (v <= 127) and (cg_tree_ptr_t(n)^.op = 1) and (v >= 9) then
+        else if (v <= 127) and (cg_tree_ptr_t(n)^.op = add_top) and (v >= 9) then
           cst := i
-        else if (v <= 127) and (cg_tree_ptr_t(n)^.op = 2) and (v >= 9) then
+        else if (v <= 127) and (cg_tree_ptr_t(n)^.op = sub_top) and (v >= 9) then
           cst := i
         else if (v <= 127) and (v > 0) and
-            (cg_tree_ptr_t(n)^.op <> 1) and (cg_tree_ptr_t(n)^.op <> 2) then
+            (cg_tree_ptr_t(n)^.op <> add_top) and (cg_tree_ptr_t(n)^.op <> sub_top) then
           cst := i;
       end;
     end;
@@ -2415,7 +2415,7 @@ chosen:
     sel := best
   else if cst <> 0 then begin
     if best <> 0 then begin
-      if (rlen <= 2) or (rlen = 5) then
+      if (rlen <= rlen_word) or (rlen = rlen_addr) then
         sel := best
       else if ((n^.xw[3] & 16#400) <> 0) and
           (peek(cg_tree_ptr_t(n)^.opnd[best], rlen) = n^.xw[5]) then
@@ -2443,9 +2443,9 @@ chosen:
   end;
   if sel < 0 then begin
     o := cg_tree_ptr_t(n)^.opnd[i];
-    if (rlen = 4) and (peek(o, 4) = 31) and (peek(o, 5) <> 31) then
+    if (rlen = rlen_long) and (peek(o, 4) = 31) and (peek(o, 5) <> 31) then
       address(o, 5, t)
-    else if (rlen = 5) and (peek(o, 5) = 31) and (peek(o, 4) <> 31) then
+    else if (rlen = rlen_addr) and (peek(o, 5) = 31) and (peek(o, 4) <> 31) then
       address(o, 4, t)
     else
       address(o, rlen, t);
@@ -2563,7 +2563,7 @@ begin
   end;
   regs := [];
   for i := lo to hi do begin
-    if cg_tree_ptr_t(n)^.op = 41 then
+    if cg_tree_ptr_t(n)^.op = f_math_top then
       c := rlen
     else
       c := fp_rlen(cg_tree_ptr_t(n)^.desc, i);
@@ -2602,7 +2602,7 @@ chosen:
     i := 1;
   end;
   if sel < 0 then begin
-    if cg_tree_ptr_t(n)^.op = 41 then
+    if cg_tree_ptr_t(n)^.op = f_math_top then
       c := rlen
     else
       c := fp_rlen(cg_tree_ptr_t(n)^.desc, i);
@@ -2616,7 +2616,7 @@ chosen:
           cg_addr_locks[r] := cg_addr_locks[r] + 1;
     get_register(n, rlen, a);
     if 8 in cargs_$options.cpu then begin
-      if cg_tree_ptr_t(n)^.op = 39 then
+      if cg_tree_ptr_t(n)^.op = f_extend_top then
         emit_assign(cg_tree_ptr_t(n)^.desc.w6, a, t)
       else
         emit_assign(rlen, a, t);

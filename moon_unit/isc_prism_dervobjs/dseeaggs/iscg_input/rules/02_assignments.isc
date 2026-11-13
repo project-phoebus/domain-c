@@ -242,7 +242,7 @@ transform 150  void <- agg_aop | fp_aop | scalar_aop ($1: ip_reg, $2: address_mo
     t8 <- make_bit_mask_1(8, 0);
     result.l356 <- nil;
     t9 <- make_bit_mask_1(16, 0);
-    if subject.il.w56 <> 0 or subject.il.w76 <> 6 or subject.il.w52 <> 9 then
+    if subject.il.w56 <> 0 or subject.il.w76 <> agg_aop or subject.il.w52 <> 9 then
       result.c136 <- 2;
       if $2.inherited_attributes.fetch_precision = 32 then
         result.c158 <- 1;
@@ -811,7 +811,7 @@ transform 151  void <- agg_aop | fp_aop | scalar_aop ($1: fp_reg, $2: address_mo
     temp t1: boolean;
     temp t3: integer32;
     t1 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
-    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 4 or ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or $2.arg_block_location and $1.physical_register and not $1.physical_register_user_declared) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    condition not (subject.il.w76 = agg_aop and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 4 or ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or $2.arg_block_location and $1.physical_register and not $1.physical_register_user_declared) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
     result.l352 <- nil;
     result.l356 <- nil;
     t3 <- make_bit_mask_1(16, 0);
@@ -1066,7 +1066,7 @@ transform 152  void <- agg_aop | fp_aop | scalar_aop ($1: fp_reg_pair, $2: addre
     temp t3: integer32;
     temp t4: integer32;
     t1 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
-    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 8 or ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or not isc_user_routines_358) or ($2.arg_block_location and $1.physical_register and not $1.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
+    condition not (subject.il.w76 = agg_aop and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 8 or ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or not isc_user_routines_358) or ($2.arg_block_location and $1.physical_register and not $1.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
     result.l352 <- nil;
     result.l356 <- nil;
     result.l360 <- nil;
@@ -1698,7 +1698,7 @@ transform 153  void <- agg_aop | fp_aop | scalar_aop ($1: fp_reg_quad, $2: addre
     temp t5: integer32;
     temp t6: integer32;
     t1 <- lir_$can_encode_as_immediate_postincrement($2.literal_32_bits_value, opc$loadl);
-    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 16 or ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or not isc_user_routines_358) or ($2.arg_block_location and $1.physical_register and not $1.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
+    condition not (subject.il.w76 = agg_aop and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 16 or ((not lir_$can_encode_as_immediate_operand($2.literal_32_bits_value, opc$loadl, 1) or (not t1 and $2.uses_the_displacement or $2.has_a_symbolic_displacement) and ($2.is_physical or $2.is_atomic)) and ($2.kind = 5) or not isc_user_routines_358) or ($2.arg_block_location and $1.physical_register and not $1.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
     result.l352 <- nil;
     result.l356 <- nil;
     result.l360 <- nil;
@@ -3051,7 +3051,7 @@ transform 154  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: [ip_
       t10 <- 0;
     end;
     t11 <- make_bit_mask_1(16, 0);
-    if subject.il.w56 <> 0 or subject.il.w76 <> 6 or subject.il.w52 <> 9 then
+    if subject.il.w56 <> 0 or subject.il.w76 <> agg_aop or subject.il.w52 <> 9 then
       result.c136 <- 2;
       if $1.inherited_attributes.fetch_precision = 32 then
         result.c158 <- 1;
@@ -3609,7 +3609,7 @@ transform 155  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: fp_r
     temp t4: integer32;
     temp t5: integer32;
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 4 or ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or $1.arg_block_location and $2.physical_register and not $2.physical_register_user_declared) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    condition not (subject.il.w76 = agg_aop and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 4 or ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or $1.arg_block_location and $2.physical_register and not $2.physical_register_user_declared) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
     if $1.is_atomic then
       result.l352 <- 16#200000;
     else
@@ -3866,7 +3866,7 @@ transform 156  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: fp_r
     temp t8: integer32;
     temp t9: integer32;
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 8 or ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or not isc_user_routines_358) or ($1.arg_block_location and $2.physical_register and not $2.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
+    condition not (subject.il.w76 = agg_aop and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 8 or ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or not isc_user_routines_358) or ($1.arg_block_location and $2.physical_register and not $2.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
     if $1.is_atomic then
       result.l352 <- 16#200000;
     else
@@ -4501,7 +4501,7 @@ transform 157  void <- agg_aop | fp_aop | scalar_aop ($1: address_mode, $2: fp_r
     temp t17: boolean;
     temp t18: boolean;
     t1 <- lir_$can_encode_as_immediate_postincrement($1.literal_32_bits_value, opc$loadl);
-    condition not (subject.il.w76 = 6 and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 16 or ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or not isc_user_routines_358) or ($1.arg_block_location and $2.physical_register and not $2.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
+    condition not (subject.il.w76 = agg_aop and (subject.il.w52 = 9) and (subject.il.w56 = 0) or subject.il.l48 <> 16 or ((not lir_$can_encode_as_immediate_operand($1.literal_32_bits_value, opc$loadl, 1) or (not t1 and $1.uses_the_displacement or $1.has_a_symbolic_displacement) and ($1.is_physical or $1.is_atomic)) and ($1.kind = 5) or not isc_user_routines_358) or ($1.arg_block_location and $2.physical_register and not $2.physical_register_user_declared or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286)));
     if $1.is_atomic then
       result.l352 <- 16#200000;
     else

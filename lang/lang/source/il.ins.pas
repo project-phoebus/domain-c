@@ -262,6 +262,334 @@ type
     indexed_reference,                { 235 }
     union_ob);                        { 236 }
 
+{ The tree operators (a tree node's word at +36), as the image names
+  them: the ISC's printers write an operator as an enumerated value, and
+  cc.a88k has the run time's name table for the type after
+  isc_print_il_node (0x0C69A4, 0x0CE4C6, 0x0D3F0C), isc_unrecognized_il_node
+  (0x0DC290), alignment_from_sr_info (0x20FD9A) and il_node_to_empty_string
+  (0x217BB4): 90 names, 0 nop_top .. 89 illegal_top (tools/cc_enumnames.py).
+  list_tree's print_tree_exp prints most of them without the suffix
+  ('ADD'), some in a display form of its own (27 lshf_top 'LSHFT', 49
+  alshf_top 'ALSHFT', 23 set_compare_top 'SET_CMP', 24 agg_compare_top
+  'AGG_CMP', 51..57 the C front end's cc_*_ptop 'p_C3EXPR' .., 58
+  ref_expr_top 'REF_EXPRp_', 65 allocate_dynamic_space_top 'ALLOC_DYNM',
+  47 sr_top 'AND-to-SR' or 'OR-to-SR'); its fallback prints
+  '<ORD(TOP)=' n '>'.  The ISC's il$t (isc_enumeration.ins.pas) names
+  them with il_ before (il_add_top).  A value is a word, as the field is.
+
+  Not known from the original: the type's name. }
+  il_$top_t = (
+    nop_top,                          { 0 }
+    add_top,                          { 1 }
+    sub_top,                          { 2 }
+    mul_top,                          { 3 }
+    div_top,                          { 4 }
+    divide_top,                       { 5 }
+    mod_top,                          { 6 }
+    neg_top,                          { 7 }
+    not_top,                          { 8 }
+    and_top,                          { 9 }
+    or_top,                           { 10 }
+    bit_test_top,                     { 11 }
+    compare_top,                      { 12 }
+    index_top,                        { 13 }
+    unpack_top,                       { 14 }
+    call_top,                         { 15 }
+    func_call_top,                    { 16 }
+    value_top,                        { 17 }
+    extend_top,                       { 18 }
+    set_and_top,                      { 19 }
+    set_or_top,                       { 20 }
+    set_diff_top,                     { 21 }
+    set_extend_top,                   { 22 }
+    set_compare_top,                  { 23 }
+    agg_compare_top,                  { 24 }
+    bit_set_top,                      { 25 }
+    addr_top,                         { 26 }
+    lshf_top,                         { 27 }
+    rshf_top,                         { 28 }
+    abs_top,                          { 29 }
+    isc_call_top,                     { 30 }
+    isc_func_call_top,                { 31 }
+    isc_func_call_hidden_temp_top,    { 32 }
+    isc_mul_top,                      { 33 }
+    f_add_top,                        { 34 }
+    f_sub_top,                        { 35 }
+    f_mul_top,                        { 36 }
+    f_div_top,                        { 37 }
+    f_neg_top,                        { 38 }
+    f_extend_top,                     { 39 }
+    f_compare_top,                    { 40 }
+    f_math_top,                       { 41 }
+    f_expon_top,                      { 42 }
+    expon_top,                        { 43 }
+    eor_top,                          { 44 }
+    max_top,                          { 45 }
+    min_top,                          { 46 }
+    sr_top,                           { 47 }
+    chk_top,                          { 48 }
+    alshf_top,                        { 49 }
+    arshf_top,                        { 50 }
+    cc_c3expr_ptop,                   { 51 }
+    cc_logor_ptop,                    { 52 }
+    cc_logand_ptop,                   { 53 }
+    cc_assign_ptop,                   { 54 }
+    cc_post_id_ptop,                  { 55 }
+    cc_comma_ptop,                    { 56 }
+    cc_lognot_ptop,                   { 57 }
+    ref_expr_top,                     { 58 }
+    signed_div_top,                   { 59 }
+    unsigned_div_top,                 { 60 }
+    signed_mod_top,                   { 61 }
+    unsigned_mod_top,                 { 62 }
+    align_top,                        { 63 }
+    isc_addr_top,                     { 64 }
+    allocate_dynamic_space_top,       { 65 }
+    cache_top,                        { 66 }
+    isc_fio_init,                     { 67 }
+    strcmp_top,                       { 68 }
+    strlen_top,                       { 69 }
+    strncmp_top,                      { 70 }
+    isc_select,                       { 71 }
+    set_bit_in_set_top,               { 72 }
+    set_range_in_set_top,             { 73 }
+    isc_signed_rem_top,               { 74 }
+    isc_unsigned_rem_top,             { 75 }
+    isc_signed_mod_top,               { 76 }
+    isc_unsigned_mod_top,             { 77 }
+    isc_agg_cmp_top,                  { 78 }
+    isc_agg_lex_cmp_top,              { 79 }
+    range_check_top,                  { 80 }
+    f_range_check_top,                { 81 }
+    mark_dynamic_space_top,           { 82 }
+    extract_bit_field_top,            { 83 }
+    bit_field_cmp_top,                { 84 }
+    physical_top,                     { 85 }
+    ada_expon_top,                    { 86 }
+    f_ada_expon_top,                  { 87 }
+    pas_get_chk_ptop,                 { 88 }
+    illegal_top);                     { 89 }
+
+{ The assignment operators (an assignment node's word at +76), as the
+  image names them: the run time's name table for the type after
+  isc_print_il_node (0x0BE472, 0x0D5EFC), isc_unrecognized_il_node
+  (0x0DC7B0) and alignment_from_sr_info (0x210354): 38 names, 0
+  scalar_aop .. 37 illegal_aop.  list_tree's print_top_node prints them
+  without the suffix ('SCALAR', 'ADD_TO', ...).
+
+  Not known from the original: the type's name. }
+  il_$aop_t = (
+    scalar_aop,                       { 0 }
+    add_to_aop,                       { 1 }
+    sub_from_aop,                     { 2 }
+    and_to_aop,                       { 3 }
+    or_to_aop,                        { 4 }
+    eor_to_aop,                       { 5 }
+    agg_aop,                          { 6 }
+    set_and_to_aop,                   { 7 }
+    set_or_to_aop,                    { 8 }
+    set_diff_from_aop,                { 9 }
+    pack_aop,                         { 10 }
+    fp_aop,                           { 11 }
+    field_aop,                        { 12 }
+    not_to_aop,                       { 13 }
+    neg_to_aop,                       { 14 }
+    lshft_to_aop,                     { 15 }
+    rshft_to_aop,                     { 16 }
+    bset_to_aop,                      { 17 }
+    bclr_to_aop,                      { 18 }
+    f_add_to_aop,                     { 19 }
+    f_sub_from_aop,                   { 20 }
+    f_mul_to_aop,                     { 21 }
+    f_div_by_aop,                     { 22 }
+    mul_to_aop,                       { 23 }
+    div_by_aop,                       { 24 }
+    agg_len_aop,                      { 25 }
+    isc_mul_to_aop,                   { 26 }
+    strcat_aop,                       { 27 }
+    strcpy_aop,                       { 28 }
+    strncat_aop,                      { 29 }
+    strncpy_aop,                      { 30 }
+    isc_agg_aop,                      { 31 }
+    isc_slice_aop,                    { 32 }
+    isc_agg_zero_aop,                 { 33 }
+    isc_fill_aop,                     { 34 }
+    range_check_to_aop,               { 35 }
+    f_range_check_to_aop,             { 36 }
+    illegal_aop);                     { 37 }
+
+{ A variable's allocation (a variable node's word at +72), as the image
+  names it: the run time's name table after isc_print_il_node (0x0C7A7C,
+  0x0D2E18, 0x0D5D6C): 12 names.  list_tree's print_variable prints the
+  same names.
+
+  Not known from the original: the type's name. }
+  il_$vat_t = (
+    local_vat,                        { 0 }
+    static_vat,                       { 1 }
+    dynm_vat,                         { 2 }
+    extern_vat,                       { 3 }
+    externdef_vat,                    { 4 }
+    param_vat,                        { 5 }
+    xdynm_vat,                        { 6 }
+    xstatic_vat,                      { 7 }
+    xextrndef_vat,                    { 8 }
+    based_vat,                        { 9 }
+    sect_vat,                         { 10 }
+    absolute_vat);                    { 11 }
+
+{ A block's allocation (bits 8..7 of a block node's word at +376), as
+  the image names it: the run time's name table after isc_print_il_node
+  (0x0C8500, 0x0D3E16): 4 names.  list_tree's print_routine_block
+  prints the same names.
+
+  Not known from the original: the type's name. }
+  il_$bat_t = (
+    local_bat,                        { 0 }
+    forward_bat,                      { 1 }
+    extern_bat,                       { 2 }
+    param_bat);                       { 3 }
+
+{ The register classes (a tree node's descriptor's word at +4,
+  add_node_$desc_t's rlen, and the operand modifiers that name a class),
+  as list_tree's print_rlen names them: 0 null (printed '??-null-??'),
+  1 byte, 2 word, 4 long, 5 addr, 6 r4, 7 r8, 8 c8, 9 cs, 10 vcs, 11
+  agg, 12 c16; 3 has no name and is not used.  Constants, not an
+  enumeration: the values have a gap, and the units keep a class in
+  integer words, index tables by it (opt_inline's class_bytes, the ISC's
+  rlen_arith) and compare it as a number.  The names are the dump's
+  with rlen_ before them, chosen here: the dump's names alone (byte,
+  word, long) would clash with the units' identifiers.
+
+  Not known from the original: the constants' names. }
+const
+  rlen_null = 0;
+  rlen_byte = 1;
+  rlen_word = 2;
+  rlen_long = 4;
+  rlen_addr = 5;
+  rlen_r4 = 6;
+  rlen_r8 = 7;
+  rlen_c8 = 8;
+  rlen_cs = 9;
+  rlen_vcs = 10;
+  rlen_agg = 11;
+  rlen_c16 = 12;
+
+{ A variable's attributes (the set at +32 of a variable node, 109), as
+  list_tree's print_variable names them ('var_$volatile ' ..
+  'var_$withrecord ', its string pool in cc.m68k: the identifiers are the
+  strings without the trailing blank): bit n is element n.  A set of 32
+  elements is a longword, as set of 0..31 is.  The other units test the
+  attributes as masks of the node's longword (il_utils' 16#20000 for
+  var_$strength_reduction) and keep their numbers.
+
+  Not known from the original: the types' names. }
+type
+  il_$var_attr_t = (
+    var_$volatile,                    { 0 }
+    var_$atomic,                      { 1 }
+    var_$physical,                    { 2 }
+    var_$dev_read,                    { 3 }
+    var_$dev_write,                   { 4 }
+    var_$processor_reg,               { 5 }
+    var_$initialized,                 { 6 }
+    var_$forloopindex,                { 7 }
+    var_$uplevel,                     { 8 }
+    var_$loop_trip_count,             { 9 }
+    var_$is_formal_parameter,         { 10 }
+    var_$unique_value,                { 11 }
+    var_$address_exposed,             { 12 }
+    var_$passed_by_reference,         { 13 }
+    var_$temporary,                   { 14 }
+    var_$register,                    { 15 }
+    var_$bss,                         { 16 }
+    var_$strength_reduction,          { 17 }
+    var_$allocated,                   { 18 }
+    var_$already_seen_this_formal,    { 19 }
+    var_$induction,                   { 20 }
+    var_$nooptimize,                  { 21 }
+    var_$force_to_memory,             { 22 }
+    var_$display_ptr,                 { 23 }
+    var_$wasbound,                    { 24 }
+    var_$isc_was_here,                { 25 }
+    var_$is_a_register_candidate,     { 26 }
+    var_$seen_in_ra,                  { 27 }
+    var_$mentioned_in_sym_disp,       { 28 }
+    var_$spilled_to_memory,           { 29 }
+    var_$local_copy,                  { 30 }
+    var_$withrecord);                 { 31 }
+  il_$var_attrs_t = set of il_$var_attr_t;
+
+{ The condition codes (a comparison's descriptor's word at +8, emit's
+  conditional branch's x), as list_tree's print_relational names them:
+  the 68000's 'T', 'F', 'HI', 'LS', 'CC', 'CS', 'NE', 'EQ', 'VC', 'VS',
+  'PL', 'MI', 'GE', 'LT', 'GT', 'LE', 0..15 (reverse_cc pairs them,
+  n xor 1).  The math functions (an F_MATH tree's descriptor's word at
+  +6: cg_tree's tree_fn_inst and tree_fn_rtn index by it), as
+  print_math names them: 'ABS' .. 'FF_EXPON', 0..24.  The calling
+  conventions (bits 6..4 of a block node's byte at +377), as
+  print_routine_block names them: call_unk .. call_ada, 0..5.
+
+  Constants: the units keep these values in integer words and index
+  tables by them.  The calling conventions' names are the dump's; the
+  condition codes and math functions have cond_ and math_ before the
+  dump's names, chosen here (the bare names are single letters or
+  Pascal's own: abs, sin, max).
+
+  Not known from the original: the constants' names but the calling
+  conventions'. }
+const
+  cond_t = 0;
+  cond_f = 1;
+  cond_hi = 2;
+  cond_ls = 3;
+  cond_cc = 4;
+  cond_cs = 5;
+  cond_ne = 6;
+  cond_eq = 7;
+  cond_vc = 8;
+  cond_vs = 9;
+  cond_pl = 10;
+  cond_mi = 11;
+  cond_ge = 12;
+  cond_lt = 13;
+  cond_gt = 14;
+  cond_le = 15;
+
+  math_abs = 0;
+  math_sin = 1;
+  math_cos = 2;
+  math_tan = 3;
+  math_log = 4;
+  math_log10 = 5;
+  math_exp = 6;
+  math_atan = 7;
+  math_atan2 = 8;
+  math_sqrt = 9;
+  math_trunc = 10;
+  math_nint = 11;
+  math_max = 12;
+  math_min = 13;
+  math_conjg = 14;
+  math_aimag = 15;
+  math_asin = 16;
+  math_acos = 17;
+  math_sinh = 18;
+  math_cosh = 19;
+  math_tanh = 20;
+  math_round = 21;
+  math_ii_expon = 22;
+  math_fi_expon = 23;
+  math_ff_expon = 24;
+
+  call_unk = 0;
+  call_pas = 1;
+  call_ftn = 2;
+  call_c = 3;
+  call_c_std = 4;
+  call_ada = 5;
+
 { The compiler's nodes.  Every node begins with a word not yet
   identified and the node's kind at +2 (il.pas initialize_module 0x07D882
   sets +2 of each node it creates; idntk sets it in each identifier
