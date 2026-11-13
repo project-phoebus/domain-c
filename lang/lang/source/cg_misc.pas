@@ -233,7 +233,7 @@ begin
     if d.base <> nil then
       case d.base^.kind of
         var_name: begin
-          if (d.base^.xw[36] = 3) or (d.base^.xw[36] = 5) then
+          if (d.base^.vr_vat = extern_vat) or (d.base^.vr_vat = param_vat) then
             r := true;
         end;
         type_name: begin

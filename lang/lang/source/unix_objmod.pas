@@ -540,7 +540,7 @@ begin
     common_block_name:
       r := p^.xw[16];
     var_name:
-      if p^.xw[36] in [1, 7] then
+      if p^.vr_vat in [static_vat, xstatic_vat] then
         r := p^.xp[5]^.xp[48]^.xw[22]
       else
         r := p^.xw[38];
@@ -1089,11 +1089,12 @@ var
     else if t^.kind = var_name then begin
       v := t;
       s := v^.xp[5]^.xp[48];
-      if (v^.xw[36] = 7) or (v^.xw[36] = 8) then begin
+      if (v^.vr_vat = xstatic_vat) or (v^.vr_vat = xextrndef_vat) then begin
         value := sum + v^.xl[14] + s^.xl[5] - s^.xl[4];
         emit_32(value);
       end
-      else if (v^.xw[36] = 1) or (v^.xw[36] = 4) then begin
+      else if (v^.vr_vat = static_vat) or
+              (v^.vr_vat = externdef_vat) then begin
         value := sum + v^.xl[14] - s^.xl[4];
         emit_32(value);
       end
@@ -1351,7 +1352,7 @@ var
     t := p^.xp[3];
     case t^.kind of
       var_name:
-        if t^.xw[36] = 3 then begin
+        if t^.vr_vat = extern_vat then begin
           if il_$node_ptr_t(il_184)^.blk_atts.call = 6 then
             blk := t^.xl[5];
           if not find_global_id(t^.xp[1], id, univ_ptr(blk)) then
@@ -1360,7 +1361,8 @@ var
                   (var_$bss in t^.vr_attr) then
             value := value + t^.xl[14];
         end
-        else if (t^.xw[36] = 7) or (t^.xw[36] = 8) then begin
+        else if (t^.vr_vat = xstatic_vat) or
+                (t^.vr_vat = xextrndef_vat) then begin
           s := t^.xp[5]^.xp[48];
           value := value + t^.xl[14] + s^.xl[5] - s^.xl[4];
           v := value;
@@ -1370,7 +1372,8 @@ var
             off := uobj_obj_pos + data_count + 10;
           store_fixup_info(s, off, v);
         end
-        else if (t^.xw[36] = 1) or (t^.xw[36] = 4) then begin
+        else if (t^.vr_vat = static_vat) or
+                (t^.vr_vat = externdef_vat) then begin
           s := t^.xp[5]^.xp[48];
           value := value + t^.xl[14] - s^.xl[4];
           v := value;
@@ -1380,7 +1383,7 @@ var
             off := uobj_obj_pos + data_count + 10;
           store_fixup_info(s, off, v);
         end
-        else if t^.xw[36] = 10 then begin
+        else if t^.vr_vat = sect_vat then begin
           value := value + t^.xl[14];
           v := value;
           if direct then
@@ -1510,7 +1513,7 @@ var
       end;
       2: begin
         t := p^.xp[2];
-        if (t^.kind = var_name) and (t^.xw[36] = 4) then begin
+        if (t^.kind = var_name) and (t^.vr_vat = externdef_vat) then begin
           value := value + t^.xl[14];
           s := t^.xp[5]^.xp[48];
           value := value - s^.xl[4];
@@ -1522,12 +1525,12 @@ var
             off := uobj_obj_pos + data_count + 10;
           store_fixup_info(p^.xp[2]^.xp[5]^.xp[48], off, v);
         end
-        else if (t^.kind = var_name) and (t^.xw[36] = 3) and
+        else if (t^.kind = var_name) and (t^.vr_vat = extern_vat) and
                 (11 in cargs_$options.flags_286) and
                 (var_$bss in t^.vr_attr) then
           value := value + t^.xl[14];
         t := p^.xp[2];
-        if (t^.kind = var_name) and (t^.xw[36] = 10) then begin
+        if (t^.kind = var_name) and (t^.vr_vat = sect_vat) then begin
           v := value;
           if direct then
             off := uobj_direct_index + uobj_direct_base
@@ -1884,11 +1887,11 @@ var
     blk := 0;
     case p^.kind of
       var_name:
-        if p^.xw[36] = 4 then begin
+        if p^.vr_vat = externdef_vat then begin
           create_global_reference := p^.xp[5]^.xp[48]^.xw[20];
           return;
         end
-        else if p^.xw[36] = 10 then begin
+        else if p^.vr_vat = sect_vat then begin
           create_global_reference := p^.xp[20]^.xw[13];
           return;
         end
@@ -2175,7 +2178,7 @@ var
                 patched := true;
               end;
             var_name:
-              if t^.xw[36] = 3 then begin
+              if t^.vr_vat = extern_vat then begin
                 if only_externals then
                   k2 := create_global_reference(t)
                 else begin
@@ -2192,7 +2195,8 @@ var
                   end;
                 end;
               end
-              else if ((t^.xw[36] = 1) or (t^.xw[36] = 4)) and
+              else if ((t^.vr_vat = static_vat) or
+                       (t^.vr_vat = externdef_vat)) and
                       not only_externals then begin
                 s := t^.xp[5]^.xp[48];
                 p := putobj(q^.vaddr, 4);
@@ -2201,7 +2205,8 @@ var
                 freeobj(p);
                 patched := true;
               end
-              else if ((t^.xw[36] = 7) or (t^.xw[36] = 8)) and
+              else if ((t^.vr_vat = xstatic_vat) or
+                       (t^.vr_vat = xextrndef_vat)) and
                       not only_externals then begin
                 s := t^.xp[5]^.xp[48];
                 p := putobj(q^.vaddr, 4);
@@ -2210,7 +2215,7 @@ var
                 freeobj(p);
                 patched := true;
               end
-              else if t^.xw[36] = 10 then begin
+              else if t^.vr_vat = sect_vat then begin
                 if not only_externals then begin
                   p := putobj(q^.vaddr, 4);
                   p^ := p^ + (get_load_addr(q^.target^.xp[20]^.xw[17]) +
@@ -2635,7 +2640,7 @@ var
             end;
           end
           else begin
-            k := t^.xw[36];
+            k := ord(t^.vr_vat);
             if (k = 1) or (k = 4) then begin
               s := t^.xp[5]^.xp[48];
               d := e^.xl[3] + t^.xl[14] - s^.xl[4];
@@ -2810,7 +2815,7 @@ var
           end;
         end
         else begin
-          k := t^.xw[36];
+          k := ord(t^.vr_vat);
           if (k = 1) or (k = 4) then begin
             s := t^.xp[5]^.xp[48];
             init_data(s^.xw[20], e^.xl[3] + t^.xl[14] - s^.xl[4]);
@@ -4244,7 +4249,7 @@ begin
   ecb_cursor := il_12c;
   while ecb_cursor <> nil do begin
     if not ((ecb_cursor^.xp[2]^.kind = var_name) and
-            (ecb_cursor^.xp[2]^.xw[36] = 3)) then
+            (ecb_cursor^.xp[2]^.vr_vat = extern_vat)) then
       cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
     ecb_cursor^.xw[6] := create_global_reference(ecb_cursor^.xp[2]);
     ecb_cursor := ecb_cursor^.xp[1];
@@ -4255,7 +4260,7 @@ begin
     if (((t^.kind = program_blk) or (t^.kind = procedure_blk)
          or (t^.kind = entry_blk) or
          (t^.kind = function_blk)) and (t^.blk_atts.bat = extern_bat)) or
-       ((t^.kind = var_name) and (t^.xw[36] = 3)) then
+       ((t^.kind = var_name) and (t^.vr_vat = extern_vat)) then
       k := create_global_reference(t);
     ecb_cursor := ecb_cursor^.xp[1];
   end;

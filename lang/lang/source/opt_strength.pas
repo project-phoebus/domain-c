@@ -2859,7 +2859,7 @@ begin
     n^.kind := var_name;
     n^.xp[5] := il_180;
     n^.xp[7] := typ;
-    n^.xw[36] := 2;
+    n^.vr_vat := dynm_vat;
     n^.vr_attr := [var_$temporary, var_$strength_reduction];
     n^.xp[13] := il_$node_ptr_t(t);
     n^.xw[39] := -1;
@@ -4020,7 +4020,7 @@ begin
     n := opt_4009c[opt_region]^.vars^[v]^.node;
     if n <> nil then
       if n^.kind = var_name then begin
-        if (n^.xw[36] = 5) or (n^.xw[37] = 0) or
+        if (n^.vr_vat = param_vat) or (n^.xw[37] = 0) or
            (n^.vr_attr * [var_$volatile, var_$uplevel, var_$address_exposed,
                           var_$nooptimize] <> []) then begin
           one := [v];

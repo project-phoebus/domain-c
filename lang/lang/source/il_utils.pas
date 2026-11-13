@@ -50,6 +50,28 @@ type
     point: il_$node_ptr_t;              { +0 }
   end;
 
+  { A node's phase (+4 of the tree and reference nodes): add_node.ins.pas's
+    add_node_$phase_t, which this unit's inserts do not open (il.ins.pas
+    comes before add_node.ins.pas in the prelude, and the unit includes
+    neither globals.ins.pas nor add_node.ins.pas); element n is phase bit
+    n (add_node_$phase_bit_t). }
+  iu_phase_t = set of 0..31;
+  iu_node_ptr_t = ^iu_node_t;
+  iu_node_t = record
+    unused_0: integer;                  { +0 }
+    kind: il_$kind_t;                   { +2 }
+    phase: iu_phase_t;                  { +4 }
+  end;
+
+const
+  { The phase bits two trees must share to be equivalent: atm, vol,
+    volexpr, devrd, devwt, indx_lng, tgt_rt, tgt_lft, voldecl,
+    nvr_invld, phys, proc_reg (16#1B611F). }
+  iu_equiv_phase = [0..4, 8, 13, 14, 16, 17, 19, 20];
+  { Those that keep a tree from being equivalent to another: atm, vol,
+    volexpr, devrd, devwt, voldecl, phys (16#9001F). }
+  iu_unique_phase = [0..4, 16, 19];
+
 var
   kept_spine: il_$node_ptr_t;           { +0 }
 
@@ -90,10 +112,11 @@ begin
     if t^.kind = procedure_blk then
       res := 3
     else if (v^.vr_attr * [var_$volatile, var_$address_exposed,
-                           var_$nooptimize] <> []) or (v^.xw[36] = 4) then
+                           var_$nooptimize] <> []) or
+            (v^.vr_vat = externdef_vat) then
       res := 2
     else begin
-      is5 := (v^.xw[36] = 5) and (t^.kind = param_name);
+      is5 := (v^.vr_vat = param_vat) and (t^.kind = param_name);
       if is5 or ((ord(info.c[25]) & 16#40) <> 0) then
         wanted := true
       else
@@ -103,9 +126,12 @@ begin
         res := 1
       else if (blk^.kind <> program_blk) and
               not blk^.blk_atts.never_entered_recursively and
-              (v^.xw[36] in [1, 3, 4, 7, 8, 10, 11]) then
+              (v^.vr_vat in [static_vat, extern_vat, externdef_vat,
+                             xstatic_vat, xextrndef_vat, sect_vat,
+                             absolute_vat]) then
         res := 1
-      else if v^.xw[36] in [1, 3, 4, 7, 8, 10, 11] then
+      else if v^.vr_vat in [static_vat, extern_vat, externdef_vat, xstatic_vat,
+                            xextrndef_vat, sect_vat, absolute_vat] then
         res := 4
       else if is5 then
         res := 6
@@ -197,7 +223,7 @@ begin
       if (v^.kind = var_name) and
          (v^.vr_attr * [var_$volatile, var_$address_exposed,
                         var_$nooptimize] = []) and
-         not ((v^.xw[36] = 5) and (v^.xp[7]^.kind = param_name)) then
+         not ((v^.vr_vat = param_vat) and (v^.xp[7]^.kind = param_name)) then
         type_exp(v, addr(info));
       case il_utl_$classify_variable(v, info, b, next) of
         1:
@@ -216,9 +242,9 @@ begin
           q := v^.xp[12];
           if (q <> il_178) and (q <> nil) then begin
             if (ord(v^.xc[44]) & 1) <> 0 then
-              q^.xc[75] := chr(16#FF);
+              q^.nlgoto := true;
             if (ord(v^.xc[44]) & 2) <> 0 then
-              q^.xc[74] := chr(16#FF);
+              q^.abnormal := true;
           end;
         end;
         12: begin
@@ -670,9 +696,10 @@ begin
       for i := 5 to 8 do
         if a^.xl[i] <> b^.xl[i] then
           return;
-      if (a^.xl[1] & 16#1B611F) <> (b^.xl[1] & 16#1B611F) then
+      if iu_node_ptr_t(a)^.phase * iu_equiv_phase <>
+         iu_node_ptr_t(b)^.phase * iu_equiv_phase then
         return;
-      if (a^.xl[1] & 16#9001F) <> 0 then
+      if iu_node_ptr_t(a)^.phase * iu_unique_phase <> [] then
         return;
       if op in [nop_top..or_top, index_top, unpack_top, value_top, extend_top,
                 lshf_top..abs_top, isc_mul_top..f_extend_top,
@@ -694,13 +721,15 @@ begin
       if (a^.xw[21] = b^.xw[21]) and (a^.xw[20] = b^.xw[20]) and
          (a^.xl[8] = b^.xl[8]) and (a^.xc[22] = b^.xc[22]) and
          (a^.xc[23] = b^.xc[23]) and
-         ((a^.xl[1] & 16#1B611F) = (b^.xl[1] & 16#1B611F)) then
+         (iu_node_ptr_t(a)^.phase * iu_equiv_phase =
+          iu_node_ptr_t(b)^.phase * iu_equiv_phase) then
         if il_utils_$trees_equivalent(a^.xp[6], b^.xp[6]) = 0 then
           if il_utils_$trees_equivalent(a^.xp[9], b^.xp[9]) = 0 then
             il_utils_$trees_equivalent := 0;
     disp_node:
       if (a^.xl[8] = b^.xl[8]) and
-         ((a^.xl[1] & 16#1B611F) = (b^.xl[1] & 16#1B611F)) then
+         (iu_node_ptr_t(a)^.phase * iu_equiv_phase =
+          iu_node_ptr_t(b)^.phase * iu_equiv_phase) then
         if il_utils_$trees_equivalent(a^.xp[6], b^.xp[6]) = 0 then
           il_utils_$trees_equivalent := 0;
     sym_disp_node:

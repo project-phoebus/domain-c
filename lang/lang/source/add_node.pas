@@ -536,7 +536,7 @@ begin
       copy_tree := tmp;
     end;
     tree_node, cmp_tree_node:
-      if (t^.op = func_call_top) and (c_blk_ptr_t(il_180)^.bits.conv = 2) then begin
+      if (t^.op = func_call_top) and (c_blk_ptr_t(il_180)^.bits.call = 2) then begin
         f := an_ptr_t(t^.opnd[1]);
         case f^.kind of
           fortran_symbol: begin
@@ -1089,7 +1089,7 @@ begin
     x^.kind := ptr_node;
     ph := (getphase(base) + getphase(item)) - [phase_vis, phase_indx_lng, phase_dly];
     if phase_vol in ph then
-      if (base^.kind <> var_name) or (base^.xw[36] <> 5) then
+      if (base^.kind <> var_name) or (base^.vr_vat <> param_vat) then
         ph := ph - [phase_vol] + [phase_volexpr];
     x^.rf_phase := ph;
     x^.xl2[2] := 0;
@@ -2426,10 +2426,10 @@ begin { add_tn }
   x^.uses := 0;
   x^.count := c;
   if (op in [f_add_top..f_math_top]) and (il_180 <> nil) then
-    c_blk_ptr_t(il_180)^.bits.b376_7 := true
+    c_blk_ptr_t(il_180)^.bits.need_fp_fcw := true
   else if (op = func_call_top) or (op = call_top) then
     if reg_save(res) * [18..23] <> [18..23] then
-      c_blk_ptr_t(il_180)^.bits.b376_7 := true;
+      c_blk_ptr_t(il_180)^.bits.need_fp_fcw := true;
 
   { The result. }
 40:

@@ -386,10 +386,11 @@ begin
     repeat
       v := r^[k].node;
       if (v^.kind = var_name) and (not (var_$allocated in v^.vr_attr)) and
-         (v^.xw[36] <> 3) and (v^.xl[14] = 0) and (v^.xw[36] <> 10) and
+         (v^.vr_vat <> extern_vat) and (v^.xl[14] = 0) and
+         (v^.vr_vat <> sect_vat) and
          not ((v^.xp[7]^.kind = function_blk)
               or (v^.xp[7]^.kind = procedure_blk)) then begin
-        v^.xw[36] := 2;
+        v^.vr_vat := dynm_vat;
         type_exp(v, addr(d));
         if 2 in r^[k].flags then
           d.size := 4;
@@ -397,7 +398,7 @@ begin
           d.size := d.size + 1;
         if d.size >= a then begin
           v^.vr_attr := v^.vr_attr + [var_$allocated];
-          if (v^.xw[36] = 1) or (v^.xw[36] = 4) then begin
+          if (v^.vr_vat = static_vat) or (v^.vr_vat = externdef_vat) then begin
             sect := il_180^.xp[48];
             if (sect^.xl[5] + d.size > 24576) and
                (rshft(32768 - sect^.xl[5], 2) < d.size) and
@@ -405,10 +406,10 @@ begin
               align(sect^.xl[6], shift, 0);
               v^.xl[14] := il_180^.xp[48]^.xl[6];
               il_180^.xp[48]^.xl[6] := il_180^.xp[48]^.xl[6] + d.size;
-              if v^.xw[36] = 1 then
-                v^.xw[36] := 7
+              if v^.vr_vat = static_vat then
+                v^.vr_vat := xstatic_vat
               else
-                v^.xw[36] := 8;
+                v^.vr_vat := xextrndef_vat;
             end
             else begin
               align(sect^.xl[5], shift, 0);
@@ -420,7 +421,7 @@ begin
                   (rshft(il_180^.xl[28] + 31000, 2) < d.size) and
                   not (3 in cargs_$options.cpu) then begin
             align(il_180^.xl[44], shift, 0);
-            v^.xw[36] := 6;
+            v^.vr_vat := xdynm_vat;
             v^.xl[14] := il_180^.xl[44];
             il_180^.xl[44] := il_180^.xl[44] + d.size;
           end
@@ -743,7 +744,7 @@ var
         return;
       if opt_var_types^[v].base = nil then
         return;
-      if t^.xw[36] = 5 then begin
+      if t^.vr_vat = param_vat then begin
         defined_var := true;
         return;
       end;

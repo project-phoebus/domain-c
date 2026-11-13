@@ -2668,14 +2668,14 @@ begin
       b := c_blk_ptr_t(s^.var_type);
       if b^.params <> nil then
         proto := true
-      else if b^.bits.x376_0 = 2 then
+      else if b^.bits.bat = 2 then
         proto := true;
     end;
   proto := proto or (protos <> nil);
   if proto then
     if s <> c_sym_ptr_t(il_178) then begin
       b := c_blk_ptr_t(s^.var_type);
-      if (b^.params = nil) and (b^.bits.x376_0 = 2) then
+      if (b^.params = nil) and (b^.bits.bat = 2) then
         proto := false;
     end;
   if kind = function_blk then begin
@@ -2723,14 +2723,14 @@ begin
     if b^.kind <> function_blk then
       goto 8;
     blk := b;
-    if b^.bits.conv <> conv then
+    if b^.bits.call <> conv then
       goto 8;
     if not check_types(b^.result, rtype, false) then
       goto 8;
     ok := true;
     if (protos <> nil) or (b^.params <> nil) then begin
       if b^.params = nil then begin
-        if b^.bits.x376_0 = 0 then
+        if b^.bits.bat = 0 then
           ok := check_oldef_proto(nm.id, protos, b^.old_parms,
                                   b^.lev.nparms)
         else
@@ -2746,9 +2746,9 @@ begin
     if ok then begin
       if cls = 2 then
         return;
-      if (b^.bits.x376_0 <> 0) or (cls <> 0) then begin
+      if (b^.bits.bat <> 0) or (cls <> 0) then begin
         b^.old_parms := parms;
-        b^.bits.x376_0 := cls;
+        b^.bits.bat := cls;
         if proto then
           b^.lev.nparms := 255
         else
@@ -2781,7 +2781,7 @@ begin
   blk^.outer := enc;
   blk^.name := nm;
   blk^.old_parms := parms;
-  blk^.bits.x376_0 := cls;
+  blk^.bits.bat := cls;
   blk^.result := rtype;
   blk^.attr := a;
   blk^.x88 := -1;
@@ -2792,8 +2792,8 @@ begin
   else
     blk^.lev.nparms := 0;
   blk^.entry_lab := il_178;
-  blk^.b378.made := true;
-  blk^.bits.conv := conv;
+  blk^.b378.sb_display := true;
+  blk^.bits.call := conv;
   blk^.x84 := -16777216;
   blk^.bits.opts := fl ! opts;
   blk^.params := protos;
@@ -2892,7 +2892,7 @@ begin
         p := p^.next;
       end;
       blk^.lev.nparms := n;
-      if blk^.bits.db_adjusted then
+      if blk^.bits.save_db then
         off := 8
       else
         off := 8;

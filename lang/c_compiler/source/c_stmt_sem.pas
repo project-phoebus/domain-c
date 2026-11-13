@@ -273,7 +273,7 @@ end;
 
 procedure add_ldfn(
     var lab: il_$node_ptr_t;
-    kind: integer;
+    kind: il_$label_class_t;
     forced: boolean;
     fold: boolean); options(val_param); internal;
 var
@@ -328,8 +328,8 @@ begin
         lab_bits.placed := false;
         lab_bits.pending := true;
         lab_bits.lkind := il_c6;
-        lab_num := il_146[il_c6];
-        il_146[il_c6] := lab_num + 1;
+        lab_num := il_146[ord(il_c6)];
+        il_146[ord(il_c6)] := lab_num + 1;
         lab_addr := -1;
         lab_64 := 0;
         lab_80 := 0;
@@ -516,7 +516,7 @@ begin
       end;
   end;
   if join <> il_178 then
-    add_ldfn(join, 17, false, true);
+    add_ldfn(join, lbl_factor, false, true);
 end;
 
 { add_cbrn - a branch to lab on the top of the expression stack (popped)
@@ -592,7 +592,7 @@ end;
 
 { def_labl - see c_externs.ins.pas: 23 when no symbol can be made, 57
   when the name is not a label, 56 when it is already placed (with its
-  line), else add_ldfn(its label, 11, true, true).
+  line), else add_ldfn(its label, lbl_user, true, true).
 
   0x05C7B4, 0xB6 bytes, link #-4. }
 
@@ -611,7 +611,7 @@ begin
     error2(56, name.line, name.id,
            smcontk(integer_ob, c_top_ptr_t(c_sym_ptr_t(s)^.lab_node)^.line))
   else
-    add_ldfn(c_sym_ptr_t(s)^.lab_node, 11, true, true);
+    add_ldfn(c_sym_ptr_t(s)^.lab_node, lbl_user, true, true);
 end;
 
 { push_lbl - a new label stack entry, all il_178.
@@ -633,7 +633,7 @@ end;
   0x05C896, 0x34 bytes, link #-4. }
 
 procedure pop_lbl(
-    kind: integer); options(val_param); internal;
+    kind: il_$label_class_t); options(val_param); internal;
 begin
   il_172 := il_172 - 1;
   add_ldfn(lbl_stack[cst_5fa].brk, kind, false, true);
@@ -661,7 +661,7 @@ procedure else_s;
 begin
   if il_c2 then
     add_brn(end_lab);
-  add_ldfn(else_lab, 0, false, true);
+  add_ldfn(else_lab, lbl_else, false, true);
   else_lab := il_178;
 end;
 
@@ -672,8 +672,8 @@ end;
 
 procedure endif_s;
 begin
-  add_ldfn(else_lab, 1, false, true);
-  add_ldfn(end_lab, 1, false, true);
+  add_ldfn(else_lab, lbl_endif, false, true);
+  add_ldfn(end_lab, lbl_endif, false, true);
 end;
 
 { case_ini - the switch's type (diagnostic 43 unless a pointer, an
@@ -855,7 +855,7 @@ begin
     il_d8 := save_last;
   end;
   il_d0 := save_line;
-  add_ldfn(lab, 15, false, false);
+  add_ldfn(lab, lbl_case_stmt, false, false);
   if is_default then
     c.has_default := true;
 end;
@@ -869,7 +869,7 @@ procedure case_e;
 begin
   if not c.has_default then
     case_default(c, true);
-  add_ldfn(lbl_stack[cst_5fa].brk, 16, false, true);
+  add_ldfn(lbl_stack[cst_5fa].brk, lbl_case_endte, false, true);
   cst_5fa := cst_5fa - 1;
 end;
 
@@ -890,7 +890,7 @@ begin
   add_be_eval;
   push_lbl;
   il_172 := il_172 + 1;
-  add_ldfn(lbl_stack[cst_5fa].cont, 3, true, true);
+  add_ldfn(lbl_stack[cst_5fa].cont, lbl_while_next, true, true);
 end;
 
 procedure while_s;
@@ -903,7 +903,7 @@ begin
   il_cc := id_end_of_while;
   il_d0 := lex_line;
   add_brn(lbl_stack[cst_5fa].cont);
-  pop_lbl(4);
+  pop_lbl(lbl_while_exit);
   add_be_eval;
 end;
 
@@ -912,7 +912,7 @@ begin
   add_be_eval;
   push_lbl;
   il_172 := il_172 + 1;
-  add_ldfn(lbl_stack[cst_5fa].top, 8, true, true);
+  add_ldfn(lbl_stack[cst_5fa].top, lbl_for_start, true, true);
 end;
 
 procedure for_s;
@@ -922,7 +922,7 @@ end;
 
 procedure for_next_lab;
 begin
-  add_ldfn(lbl_stack[cst_5fa].cont, 9, true, true);
+  add_ldfn(lbl_stack[cst_5fa].cont, lbl_for_next, true, true);
 end;
 
 procedure for_e;
@@ -930,7 +930,7 @@ begin
   il_cc := id_end_of_for;
   il_d0 := lex_line;
   add_brn(lbl_stack[cst_5fa].top);
-  pop_lbl(10);
+  pop_lbl(lbl_for_exit);
   add_be_eval;
 end;
 
@@ -938,15 +938,15 @@ procedure repeat_s;
 begin
   add_be_eval;
   push_lbl;
-  add_ldfn(lbl_stack[cst_5fa].top, 5, true, true);
+  add_ldfn(lbl_stack[cst_5fa].top, lbl_repeat_start, true, true);
   il_172 := il_172 + 1;
 end;
 
 procedure repeat_e;
 begin
-  add_ldfn(lbl_stack[cst_5fa].cont, 6, false, true);
+  add_ldfn(lbl_stack[cst_5fa].cont, lbl_repeat_next, false, true);
   add_cbrn(lbl_stack[cst_5fa].top, true);
-  pop_lbl(7);
+  pop_lbl(lbl_repeat_exit);
   add_be_eval;
 end;
 
@@ -1165,7 +1165,7 @@ var
 
 begin
   temp_count := 0;
-  add_ldfn(cdef_50^.entry_lab, 13, true, true);
+  add_ldfn(cdef_50^.entry_lab, lbl_proc, true, true);
   n := add_top_node(block_entry_node, 52);
   c_top_ptr_t(n)^.blk := il_$node_ptr_t(cdef_50);
   if 10 in cargs_$options.flags_286 then begin
@@ -1242,7 +1242,7 @@ var
   end;
 
 begin
-  add_ldfn(cdef_50^.ret_lab, 12, false, true);
+  add_ldfn(cdef_50^.ret_lab, lbl_return, false, true);
   if 10 in cargs_$options.flags_286 then
     finish_profiling;
   if il_c2 then begin
@@ -1738,7 +1738,7 @@ begin
     build_assign(a);
   end;
   add_brn(elab);
-  add_ldfn(flab, 0, true, true);
+  add_ldfn(flab, lbl_else, true, true);
   case tr^.op of
     cc_logand_ptop: if d.rlen = rlen_r8 then
           a.opnd[2] := dpcontk(0.0)
@@ -1759,7 +1759,7 @@ begin
     otherwise
   end;
   build_assign(a);
-  add_ldfn(elab, 1, true, true);
+  add_ldfn(elab, lbl_endif, true, true);
 end;
 
 { only_logical - whether t computes only logical values: operators

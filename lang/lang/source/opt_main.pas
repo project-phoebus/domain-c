@@ -1033,7 +1033,7 @@ function assert_is_abnormal_label(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if assert_is_label(n) then
-    assert_is_abnormal_label := n^.xc[74] <> chr(0)
+    assert_is_abnormal_label := n^.abnormal
   else
     assert_is_abnormal_label := false;
 end;
@@ -1063,7 +1063,7 @@ function assert_is_unsafe_abnormal_label(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if assert_is_abnormal_label(n) then
-    assert_is_unsafe_abnormal_label := n^.xc[77] = chr(0)
+    assert_is_unsafe_abnormal_label := not n^.well_behaved
   else
     assert_is_unsafe_abnormal_label := false;
 end;
@@ -1491,7 +1491,7 @@ begin
           add_predecessor(t, b);
           t^.flags.skip := false;
           l^.xc[44] := chr(ord(l^.xc[44]) & 16#FD);
-          l^.xp[12]^.xc[74] := chr(0);
+          l^.xp[12]^.abnormal := false;
         end;
       end;
       l := l^.xp[1];
@@ -2055,7 +2055,7 @@ begin
         end
         else if (t^.kind = label_node) and
                 ((il_$node_ptr_t(t)^.lab_atts.class <> lbl_user) or
-                 (il_$node_ptr_t(t)^.xc[74] <> chr(0)) or
+                 il_$node_ptr_t(t)^.abnormal or
                  (il_$node_ptr_t(t)^.xw[25] <> 0)) then begin
           s^.next := t;
           t^.prev := s;
@@ -3158,7 +3158,7 @@ begin
     create_use_def_ob(s, il_$node_ptr_t(call), at, v, 0, 0)
   else begin
     if v <> nil then begin
-      if (v^.kind = var_name) and (v^.xw[36] = 5) then
+      if (v^.kind = var_name) and (v^.vr_vat = param_vat) then
         create_use_def_ob(s, il_$node_ptr_t(call), at, v, num, 0)
       else if cls <> 3 then
         create_use_def_ob(s, il_$node_ptr_t(call), at, v, num, 1);
@@ -3225,7 +3225,7 @@ function assert_defined_on_entry(
 var
   cls: integer;
   t: il_$node_ptr_t;
-  k: integer;
+  k: il_$vat_t;
 begin
   if blk^.blk_atts.call = call_ftn then begin
     cls := rshft(ord(v^.xc[11]) & 16#F0, 4);
@@ -3253,7 +3253,7 @@ begin
       assert_defined_on_entry := false;
       return;
     end;
-    if (v^.xw[36] = 5) and (t^.kind <> param_name) then
+    if (v^.vr_vat = param_vat) and (t^.kind <> param_name) then
       return;
     if t^.kind = param_name then begin
       if t^.xw[22] <> 3 then
@@ -3263,13 +3263,14 @@ begin
                 (te.tp^.kind = ptr_type)) then
           return;
     end;
-    if (v^.xw[36] = 5) and (t^.kind = param_name) then
+    if (v^.vr_vat = param_vat) and (t^.kind = param_name) then
       if (ord(te.c[25]) & 16#40) <> 0 then
         return;
     if v^.vr_attr * [var_$initialized, var_$uplevel] <> [] then
       return;
-    k := v^.xw[36];
-    if k in [1, 3, 4, 7, 8, 10, 11] then
+    k := v^.vr_vat;
+    if k in [static_vat, extern_vat, externdef_vat, xstatic_vat, xextrndef_vat,
+             sect_vat, absolute_vat] then
       if blk^.kind <> program_blk then
         return;
     assert_defined_on_entry := t^.kind = univ_ptr_type;
@@ -3324,10 +3325,10 @@ begin
         if not opt_track_lines and (v^.kind = var_name) then
           if v^.xp[7]^.kind <> procedure_blk then begin
             type_exp(v, addr(te));
-            if ((v^.xw[36] = 5) and (v^.xp[7]^.kind = param_name)) or
+            if ((v^.vr_vat = param_vat) and (v^.xp[7]^.kind = param_name)) or
                ((ord(te.c[25]) & 16#40) <> 0) or
                (te.tp^.kind = real_type) or (te.tp^.kind = set_type) or
-               (te.tp^.kind = ptr_type) or (v^.xw[36] = 1) then
+               (te.tp^.kind = ptr_type) or (v^.vr_vat = static_vat) then
               if assert_defined_on_entry(v, te, rtn, nil) then
                 create_use_def_ob(first, nil, il_$node_ptr_t(s), v, 0, 0);
           end;
@@ -4024,7 +4025,8 @@ var
         ph := getphase(t^.xp[6]) + getphase(t^.xp[7]);
         m^.flags := m^.flags + (ph - [phase_cse, phase_indx_lng, phase_nvr_invld, phase_enf_paren]);
         if phase_vol in m^.flags then
-          if not ((t^.xp[6]^.kind = var_name) and (t^.xp[6]^.xw[36] = 5)) then
+          if not ((t^.xp[6]^.kind = var_name) and
+                  (t^.xp[6]^.vr_vat = param_vat)) then
             m^.flags := m^.flags - [phase_vol] + [phase_volexpr];
         il_126 := il_126 + 1;
       end;
@@ -4400,7 +4402,7 @@ var
                 else if p^.x48^.kind = inner_blk then
                   npred := 1;
           if (cur^.kind = label_node)
-              and (il_$node_ptr_t(cur)^.xc[74] = chr(0)) and
+              and not il_$node_ptr_t(cur)^.abnormal and
              (il_$node_ptr_t(cur)^.lab_atts.class = lbl_user) and
              (il_$node_ptr_t(cur)^.xw[25] = 0) then begin
             t := cur;
@@ -4424,8 +4426,8 @@ var
           om_block_num := om_block_num + 1;
           if il_180^.blk_atts.call = call_ftn then
             if cur^.kind = label_node then
-              if (il_$node_ptr_t(cur)^.xc[75] <> chr(0)) or
-                 (il_$node_ptr_t(cur)^.xc[74] <> chr(0)) then
+              if il_$node_ptr_t(cur)^.nlgoto or
+                 il_$node_ptr_t(cur)^.abnormal then
                 npred := npred + na;
           nblk := nblk + 1;
           if cur^.kind = label_node then
@@ -4497,7 +4499,7 @@ var
           if not opt_track_lines then
             use_def_proc(cur);
         label_node:
-          if il_$node_ptr_t(cur)^.xc[74] <> chr(0) then
+          if il_$node_ptr_t(cur)^.abnormal then
             abnormal := true;
         otherwise
           ;

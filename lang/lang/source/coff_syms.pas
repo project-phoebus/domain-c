@@ -431,7 +431,8 @@ begin
       if (r^.kind = program_blk) or (r^.kind = module_blk) then begin
         v := r^.xp[4];
         while v <> nil do begin
-          if (v^.kind = var_name) and ((v^.xw[36] = 1) or (v^.xw[36] = 7)) then
+          if (v^.kind = var_name) and ((v^.vr_vat = static_vat) or
+                                       (v^.vr_vat = xstatic_vat)) then
             count_global_sym(v);
           v := v^.xp[4];
         end;
@@ -452,12 +453,12 @@ begin
     v := r^.xp[4];
     while (v <> nil) and (n <> 0) do begin
       if (v^.kind = var_name) and
-         ((v^.xw[36] = 4) or (v^.xw[36] = 8) or
-          ((v^.xw[36] = 3) and (var_$bss in v^.vr_attr))) then begin
+         ((v^.vr_vat = externdef_vat) or (v^.vr_vat = xextrndef_vat) or
+          ((v^.vr_vat = extern_vat) and (var_$bss in v^.vr_attr))) then begin
         count_global_sym(v);
         n := n - 1;
       end
-      else if (v^.kind = var_name) and (v^.xw[36] = 10) and
+      else if (v^.kind = var_name) and (v^.vr_vat = sect_vat) and
               (il_184^.blk_atts.call = call_c) then
         v^.xw[38] := v^.xp[20]^.xw[16];
       v := v^.xp[4];
@@ -491,7 +492,8 @@ begin
   count_tvs;
   r := il_12c;
   while r <> nil do begin
-    if not ((r^.xp[2]^.kind = var_name) and (r^.xp[2]^.xw[36] = 3)) then
+    if not ((r^.xp[2]^.kind = var_name) and
+            (r^.xp[2]^.vr_vat = extern_vat)) then
       cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
     if (r^.xp[2]^.kind = var_name)
         and not (var_$bss in r^.xp[2]^.vr_attr) then
@@ -505,7 +507,7 @@ begin
         or (v^.kind = entry_blk) or
         (v^.kind = function_blk)) and (v^.blk_atts.bat = extern_bat) then
       count_global_sym(v)
-    else if (v^.kind = var_name) and (v^.xw[36] = 3) and
+    else if (v^.kind = var_name) and (v^.vr_vat = extern_vat) and
             (not (var_$bss in v^.vr_attr)) then
       count_global_sym(v)
     else if v^.kind = fortran_symbol then
@@ -519,7 +521,7 @@ begin
         count_global_sym(r);
     end
     else if r^.kind = var_name then
-      if (r^.xw[36] = 3) and (not (var_$bss in r^.vr_attr)) then
+      if (r^.vr_vat = extern_vat) and (not (var_$bss in r^.vr_attr)) then
         count_global_sym(r);
     r := r^.xp[1];
   end;
@@ -916,35 +918,35 @@ var
           put_name(modify_m2_native_external_name(addr(p)))
         else
           put_name(p^.xp[1]);
-        case p^.xw[36] of
-          1: begin
+        case p^.vr_vat of
+          static_vat: begin
             s := p^.xp[5]^.xp[48];
             map^.n_scnum := s^.xw[23];
             map^.n_value := map^.n_value + p^.xl[14] - s^.xl[4];
             map^.n_sclass := chr(3);
           end;
-          7: begin
+          xstatic_vat: begin
             s := p^.xp[5]^.xp[48];
             map^.n_scnum := s^.xw[23];
             map^.n_value := map^.n_value + p^.xl[14] + s^.xl[5] - s^.xl[4];
             map^.n_sclass := chr(3);
           end;
-          3: begin
+          extern_vat: begin
             map^.n_scnum := 0;
             if var_$bss in p^.vr_attr then begin
               type_exp(p, addr(te));
               map^.n_value := te.size;
             end;
           end;
-          4, 8: begin
+          externdef_vat, xextrndef_vat: begin
             s := p^.xp[5]^.xp[48];
             map^.n_scnum := s^.xw[23];
-            if p^.xw[36] = 4 then
+            if p^.vr_vat = externdef_vat then
               map^.n_value := map^.n_value + p^.xl[14] - s^.xl[4]
             else
               map^.n_value := map^.n_value + p^.xl[14] + s^.xl[5] - s^.xl[4];
           end;
-          10:
+          sect_vat:
             map^.n_scnum := p^.xp[20]^.xw[17];
           otherwise
             ;
@@ -1156,7 +1158,8 @@ begin
       if (r^.kind = program_blk) or (r^.kind = module_blk) then begin
         v := r^.xp[4];
         while v <> nil do begin
-          if (v^.kind = var_name) and ((v^.xw[36] = 1) or (v^.xw[36] = 7)) then
+          if (v^.kind = var_name) and ((v^.vr_vat = static_vat) or
+                                       (v^.vr_vat = xstatic_vat)) then
             put_global_sym(v, true);
           v := v^.xp[4];
         end;
@@ -1177,8 +1180,8 @@ begin
     v := r^.xp[4];
     while (v <> nil) and (n <> 0) do begin
       if (v^.kind = var_name) and
-         ((v^.xw[36] = 4) or (v^.xw[36] = 8) or
-          ((v^.xw[36] = 3) and (var_$bss in v^.vr_attr))) then begin
+         ((v^.vr_vat = externdef_vat) or (v^.vr_vat = xextrndef_vat) or
+          ((v^.vr_vat = extern_vat) and (var_$bss in v^.vr_attr))) then begin
         put_global_sym(v, true);
         n := n - 1;
       end;
@@ -1207,7 +1210,8 @@ begin
   put_tvs;
   r := il_12c;
   while r <> nil do begin
-    if not ((r^.xp[2]^.kind = var_name) and (r^.xp[2]^.xw[36] = 3)) then
+    if not ((r^.xp[2]^.kind = var_name) and
+            (r^.xp[2]^.vr_vat = extern_vat)) then
       cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
     if (r^.xp[2]^.kind = var_name)
         and not (var_$bss in r^.xp[2]^.vr_attr) then
@@ -1221,7 +1225,7 @@ begin
         or (v^.kind = entry_blk) or
         (v^.kind = function_blk)) and (v^.blk_atts.bat = extern_bat) then
       put_global_sym(v, false)
-    else if (v^.kind = var_name) and (v^.xw[36] = 3) and
+    else if (v^.kind = var_name) and (v^.vr_vat = extern_vat) and
             (not (var_$bss in v^.vr_attr)) then
       put_global_sym(v, false)
     else if v^.kind = fortran_symbol then
@@ -1239,7 +1243,7 @@ begin
             put_global_sym(v, false);
         end
         else if v^.kind = var_name then
-          if (v^.xw[36] = 3) and (not (var_$bss in v^.vr_attr)) then
+          if (v^.vr_vat = extern_vat) and (not (var_$bss in v^.vr_attr)) then
             put_global_sym(v, false);
       end;
       refs := refs^.next;

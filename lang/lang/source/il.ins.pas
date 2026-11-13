@@ -810,9 +810,13 @@ type
            tr_count: integer;                       { +38 }
            tr_opnd: array [1..64] of il_$node_ptr_t);  { +40 }
       { A variable (109 var_name): its attributes (+32, list_tree's
-        vr_attr). }
+        vr_attr) and its allocation (+72, il_$vat_t: print_variable's
+        names; the original's field is vat, lir_main's message
+        'exception has unexpected .vat'). }
       16: (vr_x4: array [1..7] of integer32;        { +4 }
-           vr_attr: il_$var_attrs_t);               { +32 }
+           vr_attr: il_$var_attrs_t;                { +32 }
+           vr_x36: array [9..17] of integer32;      { +36 }
+           vr_vat: il_$vat_t);                      { +72 }
       { A Fortran symbol (110 fortran_symbol): its attributes (+24, as
         a variable's +32: il_utils_$is_strength_reduction_temp). }
       17: (fs_x4: array [1..5] of integer32;        { +4 }
@@ -820,12 +824,29 @@ type
       { A block (105..108, 167, 172, 209): its attributes (+374). }
       18: (blk_x4: array [4..373] of char;          { +4 }
            blk_atts: il_$blk_atts_t);               { +374 }
-      { A label (144 label_node): its class's byte (+72). }
+      { A label (144 label_node): its class's byte (+72) and its
+        booleans, as list_tree's print_top_node names them (',abnormal',
+        ',abnormal(well_behaved)', ',NLGoTo', ',assigned_goto_target';
+        bytes, tested `tst.b; bmi' as booleans: cg_top's label_proc
+        0x0FE17C; opt_main's assert_is_abnormal_label moves +74 as its
+        result, 0x0DB7A0): nlgoto a nonlocal goto's target (cg_top sets
+        it); well_behaved an abnormal label the optimizer treats as safe
+        (assert_is_unsafe_abnormal_label: `not.b' of +77, 0x0DB80A). }
       19: (lab_x4: array [1..17] of integer32;      { +4 }
-           lab_atts: il_$label_atts_t);             { +72 }
+           lab_atts: il_$label_atts_t;              { +72 }
+           abnormal: boolean;                       { +74 }
+           nlgoto: boolean;                         { +75 }
+           assigned_goto_target: boolean;           { +76 }
+           well_behaved: boolean);                  { +77 }
       { A top-level node (a statement): its flags (+41, +42). }
       20: (st_x4: array [1..9] of integer32;        { +4 }
            st_flags: il_$stmt_flags_t);             { +40 }
+      { An assignment (140 assign_node, 227): its operator (+76,
+        il_$aop_t; g_opt.ins.pas's asg_op, list_tree's st_aop).  The
+        original's field is op (commit_top_node's message
+        'node^.assign_node.op <> pack_aop'). }
+      21: (asg_x4: array [1..18] of integer32;      { +4 }
+           asg_op: il_$aop_t);                      { +76 }
       9: (xp: array [1..94] of il_$node_ptr_t);     { +4 }
       10: (xp2_pad: integer;                        { +4 }
            xp2: array [1..93] of il_$node_ptr_t);   { +6 }
@@ -849,7 +870,8 @@ var
   il_c2: extern boolean;                               { +0xC2 }
   il_c3: extern boolean;                               { +0xC3 }
   il_c4: extern integer;                               { +0xC4 }
-  il_c6: extern integer;                               { +0xC6 }
+  il_c6: extern il_$label_class_t;                     { +0xC6: c_stmt_sem's
+                                                         pending label's class }
   il_c8: extern il_$node_ptr_t;                        { +0xC8: c_stmt_sem's
                                                          pending label chain
                                                          (through +48) }

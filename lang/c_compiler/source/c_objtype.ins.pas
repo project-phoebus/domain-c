@@ -631,38 +631,44 @@ type
                                           attributes's
                                           attr_compute_routine_options }
     unused_372: integer;                { +372 }
-    bits: packed record                 { +374 }
+    bits: packed record                 { +374: il.ins.pas's
+                                          il_$blk_atts_t, named as it is }
     case integer of
     1: (
-      b374_7: boolean;
-      b374_6: boolean;                  { .6: set by unary_expr's `&'
+      assigned_goto: boolean;           { .7 }
+      addr_fparam: boolean;             { .6: set by unary_expr's `&'
                                           of a variable with flag 10 }
-      b374_5: boolean;
-      b374_4: boolean;
-      b374_3: boolean;
-      b374_2: boolean;
-      b374_1: boolean;
-      b374_0: boolean;
-      b375_7: boolean;                  { +375 }
-      main_int: boolean;                { .6: main returns int (c_syntax's
-                                          body sets it before testing
-                                          the result type) }
+      resident_proc: boolean;
+      no_fp: boolean;
+      visible: boolean;
+      inline_block: boolean;
+      inlined: boolean;
+      expanded: boolean;
+      inlineable: boolean;              { +375 .7 }
+      noinline: boolean;                { .6: c_syntax's body sets it
+                                          for a main returning int,
+                                          before testing the result
+                                          type }
       b375_5_0: 0..63;
-      b376_7: boolean;                  { +376 }
-      b376_6: boolean;
-      b376_5: boolean;
-      db_adjusted: boolean;             { .4: adjust_blk_for_db was
+      need_fp_fcw: boolean;             { +376 .7 }
+      nlgoto: boolean;
+      abnorm: boolean;
+      save_db: boolean;                 { .4: adjust_blk_for_db was
                                           called for it (primary_expr) }
-      b376_3: boolean;                  { .3 }
+      local_name_only: boolean;         { .3 }
       b376_2: boolean;
       b376_1: boolean;
-      x376_0: 0..3;                     { .0 to +377.7 (c_main,
+      bat: 0..3;                        { .0 to +377.7 (c_main,
                                           c_sym_map: `andi.w #0x180'):
-                                          def_blk_skeleton's class (2 a
+                                          the allocation, il_$bat_t's
+                                          numbers (def_blk_skeleton's
+                                          class: 2 extern_bat, a
                                           declaration only) }
-      conv: 0..7;                       { +377 .6..4: the calling
-                                          context func_call_stat pushes
-                                          on csyn_60 }
+      call: 0..7;                       { +377 .6..4: the calling
+                                          convention (call_unk ..
+                                          call_ada); the context
+                                          func_call_stat pushes on
+                                          csyn_60 }
       b377_3_0: 0..15);                 { .3..0 }
     { The routine's options (def_blk_skeleton: 1, 2 by the block's
       kind, 4 for setjmp and the like, the caller's; 1024 inside
@@ -672,7 +678,7 @@ type
       opts_rest: 0..2047);
     end;
     b378: packed record                 { +378 }
-      made: boolean;                    { .7: set by def_blk_skeleton }
+      sb_display: boolean;              { .7: set by def_blk_skeleton }
       rest: 0..32767;
     end;
     unused_380: integer32;              { +380 }
@@ -832,7 +838,7 @@ type
             placed: boolean;            { .7 }
             pending: boolean;           { .6: cleared once a branch
                                           reaches it }
-            lkind: 0..31;               { .5..1: add_ldfn's kind }
+            lkind: il_$label_class_t;   { .5..1: add_ldfn's kind }
             b0: boolean;
             b73: 0..255;
           end;

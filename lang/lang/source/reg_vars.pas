@@ -708,7 +708,7 @@ var
           if t^.kind = var_name then begin
             nq^.next := rv_lr_ptr_t(t^.xp[17]);
             t^.xp[17] := il_$node_ptr_t(nq);
-            cls5 := t^.xw[36] = 5;
+            cls5 := t^.vr_vat = param_vat;
           end
           else begin
             nq^.next := rv_lr_ptr_t(t^.xp2[13]);
@@ -791,7 +791,7 @@ var
         return;
       end;
       vnum := t^.xw[37];
-      cls := t^.xw[36];
+      cls := ord(t^.vr_vat);
     end
     else begin
       if t^.xw[8] <= 0 then begin

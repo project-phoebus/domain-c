@@ -1062,7 +1062,7 @@ begin
             obj := nil
           else if obj <> nil then
             if obj^.kind = var_name then
-              if (obj^.xw[36] <> 5) and (phase_vol in ph) then
+              if (obj^.vr_vat <> param_vat) and (phase_vol in ph) then
                 obj := nil;
         end;
       if (obj2 <> nil) and (obj2 <> cg_addr_cache[r].obj) then
@@ -1077,7 +1077,7 @@ begin
             obj2 := nil
           else if obj2 <> nil then
             if obj2^.kind = var_name then
-              if (obj2^.xw[36] <> 5) and (phase_vol in ph) then
+              if (obj2^.vr_vat <> param_vat) and (phase_vol in ph) then
                 obj2 := nil;
         end;
     end;
@@ -2137,7 +2137,7 @@ begin
     var_name: begin
       a.f1 := 2;
       a.y := n^.xl[14];
-      k := n^.xw[36];
+      k := ord(n^.vr_vat);
       if k in [1, 4] then
         a.f2 := cg_data_reg
       else if k = 11 then begin
@@ -2288,7 +2288,7 @@ begin
     data_section, transfer_vector:
       a.f1 := 15;
     label_node: begin
-      if ord(n^.xc[74]) >= 128 then
+      if n^.abnormal then
         a.f5 := a.f5 ! 1;
       a.f1 := 7;
     end;

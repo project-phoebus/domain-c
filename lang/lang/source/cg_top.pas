@@ -1573,25 +1573,26 @@ var
     emit(27, 5, cg_null_ads, cg_null_ads, 0);
   end;
 
-  { label_proc - label lab: no PEB operation pending; a label reached
-    other than by a goto (+74, or +72 bit 6 clear) counted
-    (cg_top_13a); the state falling into it merged unless the previous
-    statement is a goto (150, 141); without a saved state (or +74) the
-    registers forgotten first; at the first pass the state's records
+  { label_proc - label lab: no PEB operation pending; an abnormal label
+    (or one not fwrd) counted (cg_top_13a); the state falling into it
+    merged unless the previous statement is a goto (150, 141); without
+    a saved state (or abnormal) the registers forgotten first; at the
+    first pass the state's records
     checked (edit_register); with -C 2 listed; the state taken as the
     current one (marked reached) and with -C kept at the first pass in
     a copy (+68: a 180 node, or 161 without the floating registers) or
     compared with that copy (cgerr 13 when they differ); the state
     given back to runbackend's free list (+0x8) once a label of +72
     bit 6 or the last pass is done with it; the label defined (32); a
-    nested goto's target (+75) reloads the data register from the
+    nested goto's target (nlgoto) reloads the data register from the
     frame and kills D0..A4 and marks the block (+376 bit 6); cached
     objects marked for their registers given back to them.
 
     0x0FE168, 0x44A bytes: the state reloaded from the label (+64) at
     each use; the copies as longword pairs (49, or 32 and one); the
     records compared field by field (the classes may differ when
-    neither object is set). }
+    neither object is set).  The tests of abnormal are `or else' (`tst.b
+    (74,A0); bmi', 0x0FE17C, 0x0FE1C0). }
 
   procedure label_proc(
       lab: il_$node_ptr_t); options(val_param);
@@ -1605,13 +1606,13 @@ var
     same: boolean;
   begin
     init_peb;
-    if (ord(lab^.xc[74]) >= 128) or not lab^.lab_atts.fwrd then
+    if lab^.abnormal or else not lab^.lab_atts.fwrd then
       cg_top_13a := cg_top_13a + 1;
     if lab^.xp[1] <> nil then
       if not ((lab^.xp[1]^.kind = nlbranch_node)
               or (lab^.xp[1]^.kind = branch_node)) then
         merge_state(cg_stmt);
-    if (lab^.xp[16] = nil) or (ord(lab^.xc[74]) >= 128) then begin
+    if (lab^.xp[16] = nil) or else lab^.abnormal then begin
       cg_addr_$init_regs(false);
       merge_state(cg_stmt);
     end;
@@ -1703,7 +1704,7 @@ var
     end;
     address(cg_stmt, 0, cg_top_f8);
     emit(32, 5, cg_top_f8, cg_null_ads, 0);
-    if ord(lab^.xc[75]) >= 128 then begin
+    if lab^.nlgoto then begin
       address_reg(cg_data_reg, a48);
       address_reg(14, a24);
       a24.f1 := 2;
@@ -1721,7 +1722,7 @@ var
           end;
           cg_addr_regs[i].w14 := 0;
         end;
-    if ord(cg_stmt^.xc[75]) >= 128 then
+    if cg_stmt^.nlgoto then
       il_180^.blk_atts.nlgoto := true;
   end;
 
@@ -1894,7 +1895,7 @@ begin
             else begin
               lab := cg_stmt^.xp[12]^.xp[7];
               if lab^.kind = label_node then
-                lab^.xc[75] := chr(255);
+                lab^.nlgoto := true;
               while (lab^.kind <> block_entry_node)
                   or (lab^.xp[12]^.kind = inner_blk) do
                 lab := lab^.xp[1];

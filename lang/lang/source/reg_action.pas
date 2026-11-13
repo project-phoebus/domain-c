@@ -384,7 +384,8 @@ begin
     m := 3;
   if t^.kind = cc_call then
     if c^.xp[12]^.kind = var_name then
-      if (c^.xp[12]^.xw[36] = 1) or (paramclass(c^.xp[14], abs(k) - 1) = 4) then
+      if (c^.xp[12]^.vr_vat = static_vat) or
+         (paramclass(c^.xp[14], abs(k) - 1) = 4) then
         m := 7;
   mechanism := m;
 end;
@@ -525,13 +526,13 @@ var
 
     { Whether the value must be stored back. }
     if r^.node^.kind = var_name then begin
-      if (r^.node^.xw[36] = 2) or
-         ((r^.node^.xw[36] = 1) and (il_180^.kind = program_blk)) or
-         (r^.node^.xw[36] = 5) then
+      if (r^.node^.vr_vat = dynm_vat) or
+         ((r^.node^.vr_vat = static_vat) and (il_180^.kind = program_blk)) or
+         (r^.node^.vr_vat = param_vat) then
         store := false
       else
         store := 8 in r^.flags;
-      if r^.node^.xw[36] = 1 then
+      if r^.node^.vr_vat = static_vat then
         if il_180^.kind <> program_blk then
           store := true;
     end
@@ -696,7 +697,10 @@ var
                 { A variable the routine's callers may read. }
                 cls := rshft(ord(r^.node^.xc[11]) & 16#F0, 4);
                 if (((r^.node^.kind = var_name) and
-                     (r^.node^.xw[36] in [1, 3, 4, 7, 8, 10, 11])) or
+                     (r^.node^.vr_vat in [static_vat, extern_vat,
+                                          externdef_vat, xstatic_vat,
+                                          xextrndef_vat, sect_vat,
+                                          absolute_vat])) or
                     ((r^.node^.kind = fortran_symbol) and
                      (cls in [1, 3, 4, 7, 8, 10, 11]))) and
                    (il_180^.kind <> program_blk) then

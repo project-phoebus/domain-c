@@ -1090,7 +1090,7 @@ var
     c: rd_def_ptr_t;
   begin
     if t^.kind = var_name then
-      if t^.xw[36] = 5 then
+      if t^.vr_vat = param_vat then
         if t^.xp[7]^.kind = param_name then
           if t^.xp[7]^.xw[22] in [1, 3, 4] then
             return;
@@ -1156,7 +1156,7 @@ begin
       if v = 0 then
         evalforeffect(s^.xp[6], depth - 1)
       else if t^.xp[6]^.kind = var_name then
-        if t^.xp[6]^.xw[36] = 5 then
+        if t^.xp[6]^.vr_vat = param_vat then
           if t^.xp[6]^.xp[7]^.kind = param_name then
             if t^.xp[6]^.xp[7]^.xw[22] in [1, 3, 4] then
               propagate(v);
@@ -1248,7 +1248,8 @@ begin
       end;
       a := asg_lhs;
       if (a^.kind = ptr_node) and (a^.xp[6]^.kind = var_name) and
-         (a^.xp[6]^.xw[36] = 5) and (a^.xp[6]^.xp[7]^.kind = param_name) and
+         (a^.xp[6]^.vr_vat = param_vat) and
+         (a^.xp[6]^.xp[7]^.kind = param_name) and
          (a^.xp[6]^.xp[7]^.xw[22] in [1, 3, 4]) then begin
         v := a^.xp[6]^.xw[37];
         if v <> 0 then
@@ -1343,7 +1344,7 @@ begin
                      (a^.xp[6]^.xp[6]^.kind = var_name) then
                     a := a^.xp[6];
               if (a^.kind = ptr_node) and (a^.xp[6]^.kind = var_name) and
-                 (a^.xp[6]^.xw[36] = 5) and
+                 (a^.xp[6]^.vr_vat = param_vat) and
                  (a^.xp[6]^.xp[7]^.kind = param_name) and
                  (a^.xp[6]^.xp[7]^.xw[22] in [1, 3, 4]) and
                  ((il_180^.blk_atts.call = call_pas) or
@@ -1666,11 +1667,12 @@ var
                                   if ftn_data_init(s^.x48) then
                                     next;
                             var_name:
-                              { by mask: the image loads the longword,
+                              { var_$initialized as an integer one-bit
+                                test: the image loads the longword,
                                 `move.l (32,A4),D1; btst #6,D1' (cc.m68k
-                                0x0E4540), where var_$initialized in
-                                vr_attr is a btst of the byte }
-                              if (s^.x48^.xl[8] & 16#40) <> 0 then
+                                0x0E4540), where `in' tests the byte
+                                (codegen-patterns 5.1) }
+                              if (integer32(s^.x48^.vr_attr) & 16#40) <> 0 then
                                 if ftn_data_init(s^.x48) then
                                   next;
                             otherwise
@@ -1785,7 +1787,7 @@ begin
                                   (n^.xp[7] <> nil) or
                                   (rshft(ord(n^.xc[11]) & 16#F0, 4) <> 1)
                         else if n^.kind = var_name then
-                          mark := (n^.xw[36] <> 1) or
+                          mark := (n^.vr_vat <> static_vat) or
                                   (var_$display_ptr in n^.vr_attr)
                         else
                           mark := false;
@@ -1900,7 +1902,7 @@ begin
       if conv in [3, 4] then
         if n^.xp[1] = il_180^.xp[74] then
           seen^[v] := true;
-      if n^.xw[36] = 5 then
+      if n^.vr_vat = param_vat then
         seen^[v] := true
       else if n^.xp[7]^.kind = param_name then
         if n^.xp[7]^.xw[22] <> 3 then
@@ -1924,15 +1926,16 @@ begin
                   next;
               conv := il_180^.blk_atts.call;
               if conv = 2 then
-                { by mask, as the variable's below (`move.l (24,A3),D0;
-                  btst #14,D0', 0x0E501E) }
-                if (d^.vars^[v]^.node^.xl[6] & 16#4000) <> 0 then
+                { var_$temporary as an integer one-bit test, as the
+                  variable's below (`move.l (24,A3),D0; btst #14,D0',
+                  0x0E501E) }
+                if (integer32(d^.vars^[v]^.node^.fs_attr) & 16#4000) <> 0 then
                   next;
               if conv <> 2 then
-                { by mask: `move.l (32,A4),D0; btst #14,D0' (cc.m68k
-                  0x0E5046), where var_$temporary in vr_attr loads the
-                  word at +34 }
-                if (d^.vars^[v]^.node^.xl[8] & 16#4000) <> 0 then
+                { var_$temporary as an integer one-bit test: `move.l
+                  (32,A4),D0; btst #14,D0' (cc.m68k 0x0E5046), where
+                  `in' loads the word at +34 (codegen-patterns 5.1) }
+                if (integer32(d^.vars^[v]^.node^.vr_attr) & 16#4000) <> 0 then
                   next;
               if (d^.vars^[v]^.ud = nil) and
                  ((s0^.vars^[v]^.flags & 16#80) = 0) and
@@ -1972,7 +1975,7 @@ begin
                 next;
               n := d^.vars^[v]^.node;
               if n^.kind = var_name then
-                if n^.xw[36] = 5 then
+                if n^.vr_vat = param_vat then
                   next;
               if n^.kind = var_name then
                 if n^.xp[7]^.kind = param_name then

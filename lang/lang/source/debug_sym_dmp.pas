@@ -583,11 +583,11 @@ begin
   v^.xp[5] := b;
   k := (ord(sym^.xc[11]) & 16#F0) div 16;
   if k = 3 then
-    v^.xw[36] := 10
+    v^.vr_vat := sect_vat
   else if (k = 5) and ((ord(sym^.xc[44]) & 2) <> 0) then
-    v^.xw[36] := 2
+    v^.vr_vat := dynm_vat
   else
-    v^.xw[36] := k;
+    v^.vr_vat := il_$vat_t(k);
   v^.xl[8] := sym^.xl[6];
   v^.xl[10] := 0;
   v^.xl[13] := sym^.xl2[11];
@@ -834,7 +834,7 @@ var
   s: il_$node_ptr_t;
   loc: univ_ptr;
 begin
-  if (7 in cargs_$options.flags_286) and (v^.xw[36] = 3) then begin
+  if (7 in cargs_$options.flags_286) and (v^.vr_vat = extern_vat) then begin
     if not (var_$bss in v^.vr_attr) then begin
       failed := true;
       return;
@@ -848,23 +848,24 @@ begin
   end
   else begin
     failed := false;
-    case v^.xw[36] of
-      1: begin
+    case v^.vr_vat of
+      static_vat: begin
         pds_$add_var_attr(v^.xp[16], 4);
         loc := loc_build__relative_loc(1, v^.xp[5]^.xp[48]^.xw[21],
                                        v^.xl[14], nil);
       end;
-      2: begin
+      dynm_vat: begin
         flag := false;
         if (target_properties.p_10 >= 1) and
            (target_properties.p_10 <= 3) then begin
           reg := reg_translate_at(blk^.xw[186], 0);
-          { bit 10 by mask: the image tests the longword loaded for bit
-            26, `btst #10,D0' (cc.m68k 0x0A8C92); var_$is_formal_parameter
-            in vr_attr loads the word at +34 }
+          { var_$is_formal_parameter as an integer one-bit test: the
+            image tests the longword loaded for bit 26, `btst #10,D0'
+            (cc.m68k 0x0A8C92), where `in' loads the word at +34
+            (codegen-patterns 5.1) }
           if blk^.blk_atts.b378_2 and
              (not (var_$is_a_register_candidate in v^.vr_attr)) and
-             ((v^.xl[8] & 16#400) <> 0) then
+             ((integer32(v^.vr_attr) & 16#400) <> 0) then
             flag := true;
         end
         else if (not blk^.blk_atts.must_have_own_frame) and
@@ -881,7 +882,7 @@ begin
         else
           loc := loc_build__relative_loc(2, reg, v^.xl[14], nil);
       end;
-      3: begin
+      extern_vat: begin
         zero := 0;
         pds_$add_var_attr(v^.xp[16], 4);
         con := check_for_addr_con(8, v, zero, blk^.xp[48]);
@@ -894,14 +895,14 @@ begin
         loc := loc_build__relative_loc(1, blk^.xp[48]^.xw[21], con^.xl[4],
                                        addr(indirect_cell), nil);
       end;
-      4: begin
+      externdef_vat: begin
         force_add_string(strings_28, v^.xp[1]);
         pds_$add_var_attr(v^.xp[16], 2);
         pds_$add_var_attr(v^.xp[16], 4);
         loc := loc_build__relative_loc(1, v^.xp[5]^.xp[48]^.xw[21],
                                        v^.xl[14], nil);
       end;
-      5: begin
+      param_vat: begin
         flag := false;
         if (target_properties.p_10 >= 1) and
            (target_properties.p_10 <= 3) then begin
@@ -921,7 +922,7 @@ begin
           loc := loc_build__relative_loc(2, reg, v^.xl[14],
                                          addr(indirect_cell), nil);
       end;
-      6: begin
+      xdynm_vat: begin
         if (target_properties.p_10 >= 1) and
            (target_properties.p_10 <= 3) then begin
           reg := reg_translate_at(blk^.xw[186], 0);
@@ -940,13 +941,13 @@ begin
                                          nil);
         end;
       end;
-      7: begin
+      xstatic_vat: begin
         pds_$add_var_attr(v^.xp[16], 4);
         s := v^.xp[5]^.xp[48];
         loc := loc_build__relative_loc(1, s^.xw[21], s^.xl[5] + v^.xl[14],
                                        nil);
       end;
-      8: begin
+      xextrndef_vat: begin
         force_add_string(strings_28, v^.xp[1]);
         pds_$add_var_attr(v^.xp[16], 4);
         pds_$add_var_attr(v^.xp[16], 2);
@@ -954,15 +955,15 @@ begin
         loc := loc_build__relative_loc(1, s^.xw[21], s^.xl[5] + v^.xl[14],
                                        nil);
       end;
-      9: loc := loc_build__relative_loc(4, 0, v^.xl[14], nil);
-      10: begin
+      based_vat: loc := loc_build__relative_loc(4, 0, v^.xl[14], nil);
+      sect_vat: begin
         force_add_string(strings_28, v^.xp[1]);
         pds_$add_var_attr(v^.xp[16], 2);
         pds_$add_var_attr(v^.xp[16], 4);
         loc := loc_build__relative_loc(1, v^.xp[20]^.xw[26], v^.xl[14],
                                        nil);
       end;
-      11: begin
+      absolute_vat: begin
         if (v^.xw[21] & 16#400) <> 0 then begin
           reg := reg_translate_at(rshft(v^.xl[14] & 16#7FFF0000, 16),
                                   v^.xw[29]);
@@ -1015,7 +1016,7 @@ var
   file1, line1, file2, line2: integer;
   n: integer32;
 begin
-  if v^.xw[36] = 0 then begin
+  if v^.vr_vat = local_vat then begin
     get_var_location_rep := nil;
     return;
   end;
@@ -2089,7 +2090,8 @@ begin
           goto 10;
         if (o^.xp[5] = il_178) or (o^.xp[5] = nil) then
           goto 10;
-        if (o^.xw[36] = 5) and (t^.kind = param_name) and (t^.xw[22] = 0) then
+        if (o^.vr_vat = param_vat) and (t^.kind = param_name) and
+           (t^.xw[22] = 0) then
           goto 10;
         if (t^.kind = param_name) and (t^.xp[4]^.kind = dope_vector) then
           goto 10;

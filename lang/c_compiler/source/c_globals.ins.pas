@@ -136,7 +136,7 @@ var
   cdef_50: extern c_blk_ptr_t;          { +0x50: the current block (cc
                                           and make_main_pgm set it to
                                           il_180; c_expr_syn's `&' sets
-                                          its b374_6); c_expr_sem,
+                                          its addr_fparam); c_expr_sem,
                                           c_main, c_stmt_sem, c_syntax }
   cdef_outer_block: extern il_$node_ptr_t;  { +0x54: the outermost
                                           block (cc sets it to il_180;

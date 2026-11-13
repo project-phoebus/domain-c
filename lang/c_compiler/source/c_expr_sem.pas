@@ -3022,10 +3022,10 @@ begin { expr_op }
         end
         else if p^.kind = function_blk then begin
           blk := c_blk_ptr_t(p);
-          sa := blk^.bits.db_adjusted;
-          blk^.bits.b374_3 := true;
-          blk^.bits.db_adjusted := true;
-          if not sa and (blk^.bits.x376_0 = 0) then begin
+          sa := blk^.bits.save_db;
+          blk^.bits.visible := true;
+          blk^.bits.save_db := true;
+          if not sa and (blk^.bits.bat = 0) then begin
             ft := p;
             adjust_blk_for_db(ft);
             p := ft;
@@ -3036,7 +3036,7 @@ begin { expr_op }
           tnop := nop_top;
           fd.dtype := blk^.result;
           attr20_ptr_t(addr(fd.flags))^ := attr20_ptr_t(addr(blk^.attr))^;
-          ft := def_func(fd, nil, blk^.bits.conv,
+          ft := def_func(fd, nil, blk^.bits.call,
                          rshft(int32_ptr_t(addr(blk^.bits))^, 11),
                          blk^.params, integer32(blk^.old_parms), 0);
         end
@@ -3072,7 +3072,7 @@ begin { expr_op }
           node := il_$node_ptr_t(typ.base);
           isfn := false;
           pl := c_blk_ptr_t(node)^.params;
-          conv := c_blk_ptr_t(node)^.bits.conv;
+          conv := c_blk_ptr_t(node)^.bits.call;
           rt := c_blk_ptr_t(node)^.result;
         end;
         if cargs_$options.type_opt and (pl <> nil) then begin

@@ -196,7 +196,7 @@ begin
       only_calls := false;
     assigned := false;
     if t^.kind = var_name then begin
-      cls := t^.xw[36];
+      cls := ord(t^.vr_vat);
       if (cls = 2) or ((cls = 1) and (il_180^.kind = program_blk))
           or (cls = 5) then
         assigned := false

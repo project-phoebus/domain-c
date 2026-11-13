@@ -327,13 +327,14 @@ var
          (v^.vr_attr * [var_$volatile, var_$address_exposed,
                         var_$nooptimize] = []) then begin
         type_exp(v, addr(te));
-        if ((v^.xw[36] = 5) and (v^.xp[7]^.kind = param_name))
+        if ((v^.vr_vat = param_vat) and (v^.xp[7]^.kind = param_name))
             or te.flags.ranged or
            (te.base^.kind = real_type) or (te.base^.kind = set_type) or
            (te.base^.kind = ptr_type) then begin
-          if (v^.xw[36] = 1) and (il_180^.kind = program_blk) then
+          if (v^.vr_vat = static_vat) and (il_180^.kind = program_blk) then
             var_is_ok := false
-          else if v^.xw[36] in [1, 3, 4, 7, 8] then
+          else if v^.vr_vat in [static_vat, extern_vat, externdef_vat,
+                                xstatic_vat, xextrndef_vat] then
             var_is_ok := true
           else
             var_is_ok := false;

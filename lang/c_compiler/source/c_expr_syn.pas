@@ -604,7 +604,7 @@ begin
   with cexs_stack[cexs_23bc] do begin
     t := typ.base;
     if t^.kind = function_blk then begin
-      csyn_60[csyn_202] := c_blk_ptr_t(t)^.bits.conv;
+      csyn_60[csyn_202] := c_blk_ptr_t(t)^.bits.call;
       params := c_blk_ptr_t(t)^.params;
     end
     else if t^.kind = cc_func_returning_type then begin
@@ -807,10 +807,10 @@ begin
       end
       else begin
         cb := c_blk_ptr_t(c_sym_ptr_t(fsym)^.var_type);
-        if (cb^.kind = function_blk) and cb^.bits.b376_3 and
-           not cb^.bits.db_adjusted and
+        if (cb^.kind = function_blk) and cb^.bits.local_name_only and
+           not cb^.bits.save_db and
            (cb^.data_sect <> c_blk_ptr_t(il_180)^.data_sect) then begin
-          cb^.bits.db_adjusted := true;
+          cb^.bits.save_db := true;
           adjust_blk_for_db(c_sym_ptr_t(fsym)^.var_type);
         end
         else begin
@@ -1093,7 +1093,7 @@ begin
         end;
         if (node^.kind = var_name)
             and (10 in c_sym_ptr_t(node)^.var_flags) then
-          cdef_50^.bits.b374_6 := true;
+          cdef_50^.bits.addr_fparam := true;
         if (typ.base^.kind <> cc_func_returning_type)
             and (typ.base^.kind <> function_blk) then
           if not_an_lvalue(true) then
