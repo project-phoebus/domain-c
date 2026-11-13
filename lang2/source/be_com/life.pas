@@ -95,7 +95,7 @@ var
 begin
   lr := rtn^.lrs;
   while lr <> nil do begin
-    if not lr^.f2.physical and ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) = []) then begin
+    if not lr^.f2.physical_register and ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) = []) then begin
       lts := lr^.ltss;
       while lts <> nil do begin
         op := lts^.refs;
@@ -633,7 +633,7 @@ begin
       exit;
     if rrp$life_mark in lr^.rrp then
       lr^.rrp := lr^.rrp - [rrp$life_mark]
-    else if not lr^.f2.physical and (lr <> rtn^.db_lr)
+    else if not lr^.f2.physical_register and (lr <> rtn^.db_lr)
             and (lr <> lr_ptr_t(rtn^.l112)) and (lr <> rtn^.memory_lr) then begin
       m := lr^.mate;
       if m <> nil then begin
@@ -683,7 +683,7 @@ begin
                    + (lts^.rrp * [rrp$fp_reg_even_only, rrp$fp_reg_odd_only]);
         lts := lts^.next;
       end;
-    if lr^.f2.physical or lr^.f2.b3_4 then
+    if lr^.f2.physical_register or lr^.f2.b3_4 then
       bv_$make_live_range_complex(rtn, lr);
     lr := lr^.next;
   end;

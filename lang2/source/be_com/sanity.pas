@@ -602,10 +602,10 @@ begin
       end;
       lr2 := lts^.lr;
       if (lr2^.rrp * [rrp$fp_reg, rrp$ip_reg]) = [] then
-        zero := (lr2^.f2.reg = 31) or (lr2^.f2.reg = 30)
+        zero := (lr2^.f2.physical_register_number = 31) or (lr2^.f2.physical_register_number = 30)
       else
         zero := false;
-      if lr2^.f2.physical and not lr2^.f2.serialize then
+      if lr2^.f2.physical_register and not lr2^.f2.physical_register_user_declared then
         physical := not zero
       else
         physical := false;

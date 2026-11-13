@@ -1836,7 +1836,7 @@ begin
               lr := op^.lts^.lr;
             op^.link := univ_ptr(lr^.node20);
             op^.ptr := lr;
-            reg := lr^.f2.reg;
+            reg := lr^.f2.physical_register_number;
             op^.h.num := reg;
           end;
           v := op^.value;

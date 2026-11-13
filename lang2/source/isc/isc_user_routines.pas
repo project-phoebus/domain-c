@@ -2297,10 +2297,10 @@ begin
     d := duplicate_solution(isc_heap, sol);
     d^.kind := 3;
     d^.live_range := sol^.live_range^.mate;
-    d^.f76.physical_register := d^.live_range^.f2.physical;
-    d^.f76.physical_register_is_no_modify := d^.live_range^.f2.no_modify;
-    d^.f76.physical_register_user_declared := d^.live_range^.f2.serialize;
-    d^.f76.physical_register_number := d^.live_range^.f2.reg;
+    d^.f76.physical_register := d^.live_range^.f2.physical_register;
+    d^.f76.physical_register_is_no_modify := d^.live_range^.f2.physical_register_is_no_modify;
+    d^.f76.physical_register_user_declared := d^.live_range^.f2.physical_register_user_declared;
+    d^.f76.physical_register_number := d^.live_range^.f2.physical_register_number;
   end;
   low_half_of_fp_reg_pair := d;
 end;
@@ -2345,10 +2345,10 @@ begin
   if sol^.live_range_of_imaginary_part = nil then
     sol^.live_range_of_imaginary_part := lir_$new_live_range_fp_reg_pair;
   d^.live_range := sol^.live_range_of_imaginary_part;
-  d^.f76.physical_register := d^.live_range^.f2.physical;
-  d^.f76.physical_register_is_no_modify := d^.live_range^.f2.no_modify;
-  d^.f76.physical_register_user_declared := d^.live_range^.f2.serialize;
-  d^.f76.physical_register_number := d^.live_range^.f2.reg;
+  d^.f76.physical_register := d^.live_range^.f2.physical_register;
+  d^.f76.physical_register_is_no_modify := d^.live_range^.f2.physical_register_is_no_modify;
+  d^.f76.physical_register_user_declared := d^.live_range^.f2.physical_register_user_declared;
+  d^.f76.physical_register_number := d^.live_range^.f2.physical_register_number;
   low_half_of_fp_reg_quad := d;
 end;
 
@@ -2568,10 +2568,10 @@ var
 begin
   s := new_solution(isc_heap, 8, 0, nil, nil, 0);
   s^.live_range := lir_3f90[r];
-  s^.f76.physical_register := s^.live_range^.f2.physical;
-  s^.f76.physical_register_is_no_modify := s^.live_range^.f2.no_modify;
-  s^.f76.physical_register_user_declared := s^.live_range^.f2.serialize;
-  s^.f76.physical_register_number := s^.live_range^.f2.reg;
+  s^.f76.physical_register := s^.live_range^.f2.physical_register;
+  s^.f76.physical_register_is_no_modify := s^.live_range^.f2.physical_register_is_no_modify;
+  s^.f76.physical_register_user_declared := s^.live_range^.f2.physical_register_user_declared;
+  s^.f76.physical_register_number := s^.live_range^.f2.physical_register_number;
   create_solution_for_fp_reg_physical := s;
 end;
 
@@ -2591,10 +2591,10 @@ var
 begin
   s := new_solution(isc_heap, 9, 0, nil, nil, 0);
   s^.live_range := lir_3f90[r];
-  s^.f76.physical_register := s^.live_range^.f2.physical;
-  s^.f76.physical_register_is_no_modify := s^.live_range^.f2.no_modify;
-  s^.f76.physical_register_user_declared := s^.live_range^.f2.serialize;
-  s^.f76.physical_register_number := s^.live_range^.f2.reg;
+  s^.f76.physical_register := s^.live_range^.f2.physical_register;
+  s^.f76.physical_register_is_no_modify := s^.live_range^.f2.physical_register_is_no_modify;
+  s^.f76.physical_register_user_declared := s^.live_range^.f2.physical_register_user_declared;
+  s^.f76.physical_register_number := s^.live_range^.f2.physical_register_number;
   create_solution_for_fp_reg_pair_physical := s;
 end;
 
@@ -2814,7 +2814,7 @@ begin
   if lr = nil then
     get_live_range_assigned := false
   else
-    get_live_range_assigned := lr^.f2.physical;
+    get_live_range_assigned := lr^.f2.physical_register;
 end;
 
 function get_live_range_no_modify;
@@ -2822,7 +2822,7 @@ begin
   if lr = nil then
     get_live_range_no_modify := false
   else
-    get_live_range_no_modify := lr^.f2.no_modify;
+    get_live_range_no_modify := lr^.f2.physical_register_is_no_modify;
 end;
 
 function get_live_range_register;
@@ -2830,7 +2830,7 @@ begin
   if lr = nil then
     get_live_range_register := -1
   else
-    get_live_range_register := lr^.f2.reg;
+    get_live_range_register := lr^.f2.physical_register_number;
 end;
 
 function get_live_range_serialize;
@@ -2838,7 +2838,7 @@ begin
   if lr = nil then
     get_live_range_serialize := false
   else
-    get_live_range_serialize := lr^.f2.serialize;
+    get_live_range_serialize := lr^.f2.physical_register_user_declared;
 end;
 
 { get_live_range_of_imaginary_part - the second live range (+24) of the

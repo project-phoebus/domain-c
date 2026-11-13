@@ -2677,6 +2677,11 @@ answered by this policy and needs no reply.
    are the original's physical_register_number, physical_register,
    physical_register_is_no_modify and physical_register_user_declared.
    lr_t is batch A's and read by most of the back end; rename it too?
+   **Done (RN2, 2026-11-12, the owner's ruling: Apollo's names
+   everywhere):** lr_t's f2 keeps its layout and takes the four names;
+   every user in 24 units follows, and the allocator's and SCHED's
+   views (ra_lr_t, whose +3 bit 7 was `assigned', and sc_lr_t) take
+   the same names.  dpc's assembly is unchanged.
 312. Translator RN3: **isc_solution_t's types.**  The rename kept the
    types: base_register and index_register lr_ptr_t (they hold
    solutions: question 262), false_label integer32 (isc_debug prints it

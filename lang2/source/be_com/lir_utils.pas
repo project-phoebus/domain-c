@@ -789,10 +789,10 @@ begin
   lr^.rrp := rrp$set_t(integer(lr^.rrp) ! integer(desc^.rrp));
   ra_utils_10.kind := desc^.kind;
   ra_utils_10.live_range := lr;
-  ra_utils_10.f78.physical_register := lr^.f2.physical;
-  ra_utils_10.f78.physical_register_is_no_modify := lr^.f2.no_modify;
-  ra_utils_10.f78.physical_register_user_declared := lr^.f2.serialize;
-  ra_utils_10.f78.physical_register_number := lr^.f2.reg;
+  ra_utils_10.f78.physical_register := lr^.f2.physical_register;
+  ra_utils_10.f78.physical_register_is_no_modify := lr^.f2.physical_register_is_no_modify;
+  ra_utils_10.f78.physical_register_user_declared := lr^.f2.physical_register_user_declared;
+  ra_utils_10.f78.physical_register_number := lr^.f2.physical_register_number;
   lir_$build_operand(reg, addr(ra_utils_10), desc^.form);
   reg^.lts := lts;
   if desc^.kind = 9 then begin
@@ -800,7 +800,7 @@ begin
     lts2^.rrp := rrp$set_t(integer(lts2^.rrp) ! integer(desc^.rrp2));
     lr^.rrp := rrp$set_t(integer(lr^.rrp) ! integer(desc^.rrp2));
     ra_utils_10.live_range := lr;
-    ra_utils_10.f78.physical_register_number := lr^.f2.reg;
+    ra_utils_10.f78.physical_register_number := lr^.f2.physical_register_number;
     lir_$build_operand(reg2, addr(ra_utils_10), desc^.form2);
     reg2^.lts := lts2;
     reg^.h.fp_reg_even_only := true;
@@ -1076,9 +1076,9 @@ begin
             exit;
           if (integer(lr^.rrp) & 16#C000) = 0 then
             next;
-          if lr^.f2.physical then
+          if lr^.f2.physical_register then
             next;
-          if lr^.f2.no_modify then
+          if lr^.f2.physical_register_is_no_modify then
             bug_check('LIR_UTILS_$FIX_STORE_THROUGH_LRS -- static store through is no_modify register.%$');
           node := lr^.node20;
           if node = nil then
@@ -1144,11 +1144,11 @@ begin
       next;
     if lr = lr_ptr_t(rtn^.l112) then
       next;
-    if lr^.f2.physical then
+    if lr^.f2.physical_register then
       next;
     if rrp$store_through in lr^.rrp then
       next;
-    if lr^.f2.no_modify then
+    if lr^.f2.physical_register_is_no_modify then
       bug_check('LIR_UTILS_$FIX_STORE_THROUGH_LRS -- store through is no_modify register.%$');
     lr^.rrp := lr^.rrp + [rrp$store_through];
     if lr^.mate <> nil then

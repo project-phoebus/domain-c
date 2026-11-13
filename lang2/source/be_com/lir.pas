@@ -1244,7 +1244,7 @@ begin
       bug_check('LIR_$FREE_LIFETIME_SEGMENT -- LTS %3ZWD.%2ZLD freed twice%$',
                 lts^.lr^.num, n);
     end;
-  if (lts^.lr = nil) or not lts^.lr^.f2.physical then begin
+  if (lts^.lr = nil) or not lts^.lr^.f2.physical_register then begin
     lts^.f2.freed := true;
     lts^.next := lir_41dc;
     lir_41dc := lts;
@@ -1795,29 +1795,29 @@ begin
                 sol^.f78.scale, instruction_mnemonic[lir_2f58.opc], 12);
   if action in [21, 22, 23] then
     if sol^.live_range <> nil then
-      if sol^.f78.physical_register or sol^.live_range^.f2.physical then
-        if (sol^.f78.physical_register_number <> sol^.live_range^.f2.reg)
-           or (sol^.f78.physical_register_user_declared <> sol^.live_range^.f2.serialize)
-           or (sol^.f78.physical_register <> sol^.live_range^.f2.physical)
-           or (sol^.f78.physical_register_is_no_modify <> sol^.live_range^.f2.no_modify) then begin
+      if sol^.f78.physical_register or sol^.live_range^.f2.physical_register then
+        if (sol^.f78.physical_register_number <> sol^.live_range^.f2.physical_register_number)
+           or (sol^.f78.physical_register_user_declared <> sol^.live_range^.f2.physical_register_user_declared)
+           or (sol^.f78.physical_register <> sol^.live_range^.f2.physical_register)
+           or (sol^.f78.physical_register_is_no_modify <> sol^.live_range^.f2.physical_register_is_no_modify) then begin
           writeln('* * * * Physical register attributes are different');
           if sol^.inherited_attributes <> nil then begin
             writeln('at source line ', stmt_v_ptr_t(sol^.inherited_attributes)^.line:1, '.');
           end;
           writeln('                                     sol^.    sol^.live_range^.');
           writeln('---------------------------------------------------------------');
-          writeln('physical_register                    ', sol^.f78.physical_register:5, '   ', sol^.live_range^.f2.physical:5);
-          writeln('physical_register_is_no_modify       ', sol^.f78.physical_register_is_no_modify:5, '   ', sol^.live_range^.f2.no_modify:5);
-          writeln('physical_register_user_declared      ', sol^.f78.physical_register_user_declared:5, '   ', sol^.live_range^.f2.serialize:5);
+          writeln('physical_register                    ', sol^.f78.physical_register:5, '   ', sol^.live_range^.f2.physical_register:5);
+          writeln('physical_register_is_no_modify       ', sol^.f78.physical_register_is_no_modify:5, '   ', sol^.live_range^.f2.physical_register_is_no_modify:5);
+          writeln('physical_register_user_declared      ', sol^.f78.physical_register_user_declared:5, '   ', sol^.live_range^.f2.physical_register_user_declared:5);
           v1 := sol^.f78.physical_register_number;
-          v2 := sol^.live_range^.f2.reg;
+          v2 := sol^.live_range^.f2.physical_register_number;
           writeln('physical_register_number             ', v1:5, '   ', v2:5);
           writeln('solution_kind                        ', sol^.kind);
           writeln;
-          sol^.f78.physical_register := sol^.live_range^.f2.physical;
-          sol^.f78.physical_register_is_no_modify := sol^.live_range^.f2.no_modify;
-          sol^.f78.physical_register_user_declared := sol^.live_range^.f2.serialize;
-          sol^.f78.physical_register_number := sol^.live_range^.f2.reg;
+          sol^.f78.physical_register := sol^.live_range^.f2.physical_register;
+          sol^.f78.physical_register_is_no_modify := sol^.live_range^.f2.physical_register_is_no_modify;
+          sol^.f78.physical_register_user_declared := sol^.live_range^.f2.physical_register_user_declared;
+          sol^.f78.physical_register_number := sol^.live_range^.f2.physical_register_number;
         end;
   if action in [21, 22, 23] then
     if sol^.live_range <> nil then begin
@@ -1828,10 +1828,10 @@ begin
         bug_check('LIR_$BUILD_OPERAND -- properties of LR %wd conflict with requirements of %a operand %ld%$',
                   lr^.num, instruction_mnemonic[lir_2f58.opc], 12, n);
       end;
-      if lr^.f2.physical then
-        if (sol^.f78.physical_register_number <> lr^.f2.reg)
-           or (sol^.f78.physical_register_user_declared <> lr^.f2.serialize)
-           or (sol^.f78.physical_register_is_no_modify <> lr^.f2.no_modify)
+      if lr^.f2.physical_register then
+        if (sol^.f78.physical_register_number <> lr^.f2.physical_register_number)
+           or (sol^.f78.physical_register_user_declared <> lr^.f2.physical_register_user_declared)
+           or (sol^.f78.physical_register_is_no_modify <> lr^.f2.physical_register_is_no_modify)
            or not sol^.f78.physical_register then
           bug_check('LIR_$BUILD_OPERAND -- assigned LR properties not propagated to solution%$');
     end;
@@ -1980,14 +1980,14 @@ begin
         lr := sol^.live_range
       else if sol^.live_range <> lr then
         bug_check('LIR_$BUILD_OPERAND -- multiple physical live_ranges!%$');
-      if lr^.f2.no_modify then begin
+      if lr^.f2.physical_register_is_no_modify then begin
         opnd_bytes_ptr_t(op)^.b3 := (opnd_bytes_ptr_t(op)^.b3 & 16#E0) ! build_like_kind[action].v;
-        lts := build_physical_ltss[action]^[lr^.f2.reg];
+        lts := build_physical_ltss[action]^[lr^.f2.physical_register_number];
         if lts = nil then begin
           lts := mrh_$alloc_fixed(lir_3c00);
           lts^.lr := lr;
-          build_physical_ltss[action]^[lr^.f2.reg] := lts;
-          if lr^.f2.reg = lir_41e0^.w208 then
+          build_physical_ltss[action]^[lr^.f2.physical_register_number] := lts;
+          if lr^.f2.physical_register_number = lir_41e0^.w208 then
             asm_658 := integer32(lts);
         end;
         lr^.rrp := lr^.rrp + rrp;
@@ -2010,7 +2010,7 @@ begin
             lir_2f58.l28 := lir_2f58.l28 ! 16#8000;
             goto 30;
           end;
-      if not lr^.f2.serialize then
+      if not lr^.f2.physical_register_user_declared then
         goto 30;
       rrp := rrp - [rrp$write];
       k := form.num - 1;
@@ -2418,8 +2418,8 @@ begin
     hw.h.preference := false;
   end;
   if hw.h.preference then
-    if i^.opnds[1].lts^.lr^.f2.physical then
-      if i^.opnds[2].lts^.lr^.f2.physical then
+    if i^.opnds[1].lts^.lr^.f2.physical_register then
+      if i^.opnds[2].lts^.lr^.f2.physical_register then
         hw.h.preference := false;
   if (a^.w18 & 16#40) <> 0 then begin
     d2 := hw.h.nopnds;
@@ -3534,7 +3534,7 @@ begin
       regs^.s8 := (bv_word_t(v) - sp) + [30, 31];
     end;
     lr := lir_pre_opnd_ptr_t(addr(instr^.opnds[2]))^.lr;
-    regs^.s8 := regs^.s8 - [lr^.f2.reg & 31];
+    regs^.s8 := regs^.s8 - [lr^.f2.physical_register_number & 31];
     cntf := 0;
     for r := 31 downto 0 do begin
       if r in regs^.s0 then
@@ -3686,10 +3686,10 @@ begin
   zero(addr(lir_c08), 256);
   lir_41a0 := 0;
   zero(addr(lir_f38), 16#2004);
-  lir_d88.f2.physical := true;
-  lir_d88.f2.reg := 30;
-  lir_de0.f2.physical := true;
-  lir_de0.f2.reg := 31;
+  lir_d88.f2.physical_register := true;
+  lir_d88.f2.physical_register_number := 30;
+  lir_de0.f2.physical_register := true;
+  lir_de0.f2.physical_register_number := 31;
   lir_4222 := true;
   lir_41f0 := get_basic_block;
   lir_41f0^.f14.kind := 1;
@@ -3779,16 +3779,16 @@ begin
           else
             mask := addr(lir_4204);
         end;
-        if not lr^.f2.no_modify then begin
-          lr^.f2.serialize := true;
+        if not lr^.f2.physical_register_is_no_modify then begin
+          lr^.f2.physical_register_user_declared := true;
           sol^.f78.physical_register_user_declared := true;
           mask^ := mask^ + [reg & 31];
           lir_41f4 := lir_41f4 + 1;
           lr^.node20 := q;
         end;
         if hi = 2 then
-          if not lir_3f90[reg + 1]^.f2.no_modify then begin
-            lir_3f90[reg + 1]^.f2.serialize := true;
+          if not lir_3f90[reg + 1]^.f2.physical_register_is_no_modify then begin
+            lir_3f90[reg + 1]^.f2.physical_register_user_declared := true;
             lir_3d60[reg + 1]^.f78.physical_register_user_declared := true;
             lir_3c60[reg]^.f78.physical_register_user_declared := true;
             mask^ := mask^ + [(reg + 1) & 31];
@@ -3805,19 +3805,19 @@ begin
                                                     conv^.w20);
   lr := rtn^.frame_lr;
   node^.xp[14] := lr^.node20;
-  isc_user_routines_340^.f78.physical_register_is_no_modify := lr^.f2.no_modify;
-  isc_user_routines_340^.f78.physical_register_user_declared := lr^.f2.serialize;
-  isc_user_routines_340^.f78.physical_register_number := lr^.f2.reg;
+  isc_user_routines_340^.f78.physical_register_is_no_modify := lr^.f2.physical_register_is_no_modify;
+  isc_user_routines_340^.f78.physical_register_user_declared := lr^.f2.physical_register_user_declared;
+  isc_user_routines_340^.f78.physical_register_number := lr^.f2.physical_register_number;
   lir_41b0 := lir_3e60[conv^.w20];
   lir_3e60[conv^.w20] := isc_user_routines_340;
-  if lir_4090[conv^.w16]^.f2.no_modify then
+  if lir_4090[conv^.w16]^.f2.physical_register_is_no_modify then
     lr := lir_main_$add_ip_reg_physical_lr(isc_user_routines_338, conv^.w16)
   else
     lr := lir_main_$add_live_range(isc_user_routines_338, -1);
   rtn^.db_lr := lr;
   node^.xp[13] := lr^.node20;
-  isc_user_routines_338^.f78.physical_register := lr^.f2.physical;
-  isc_user_routines_338^.f78.physical_register_is_no_modify := lr^.f2.no_modify;
+  isc_user_routines_338^.f78.physical_register := lr^.f2.physical_register;
+  isc_user_routines_338^.f78.physical_register_is_no_modify := lr^.f2.physical_register_is_no_modify;
   if conv^.b30 then
     isc_user_routines_32c^.live_range := isc_user_routines_33c^.live_range
   else

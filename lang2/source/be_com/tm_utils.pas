@@ -447,14 +447,14 @@ begin
         end;
       end
       else begin
-        reg := lr^.f2.reg;
+        reg := lr^.f2.physical_register_number;
         for j := 1 to b^.h.nopnds do begin
           op := addr(b^.opnds[j]);
           if (opnd_bytes_ptr_t(op)^.rrp & 44) <> 0 then
             if op^.h.kind in [operand$ip_reg, operand$ip_reg_physical,
                               operand$ip_reg_like,
                               operand$case_jump_base] then
-              if op^.lts^.lr^.f2.reg = reg then begin
+              if op^.lts^.lr^.f2.physical_register_number = reg then begin
                 d := 1;
                 exit;
               end;
@@ -473,14 +473,14 @@ begin
         lr := b^.opnds[3].lts^.lr;
         if b^.opc = ord(opc$loadd) then begin
           lr2 := utils_$find_mate_operand(addr(b^.opnds[3]))^.lts^.lr;
-          reg2 := lr2^.f2.reg;
+          reg2 := lr2^.f2.physical_register_number;
         end
         else begin
           lr2 := lr_ptr_t(-1);
           reg2 := -1;
         end;
       end;
-      reg := lr^.f2.reg;
+      reg := lr^.f2.physical_register_number;
       if at_backend_phase < phase$ra then begin
         for j := 1 to a^.h.nopnds do begin
           op := addr(a^.opnds[j]);
@@ -505,8 +505,8 @@ begin
                               operand$fp_reg_pair_physical,
                               operand$fp_reg_like,
                               operand$fp_reg_pair_like] then
-              if (op^.lts^.lr^.f2.reg = reg)
-                 or (op^.lts^.lr^.f2.reg = reg2) then begin
+              if (op^.lts^.lr^.f2.physical_register_number = reg)
+                 or (op^.lts^.lr^.f2.physical_register_number = reg2) then begin
                 d := 3;
                 exit;
               end;

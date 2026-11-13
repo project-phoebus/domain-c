@@ -983,7 +983,7 @@ begin
   if conv^.b27 and conv^.needs_db then begin
     rconv := rtn_ptr_t(at_backend_4fc)^.conv;
     db := rtn_ptr_t(at_backend_4fc)^.db_lr;
-    if not db^.f2.physical or (db^.f2.reg <> conv^.w16)
+    if not db^.f2.physical_register or (db^.f2.physical_register_number <> conv^.w16)
        or ((rconv^.w16 & 31) in bv_word_t(rconv^.ip76)) then begin
       an := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 80);
       an^.kind := assign_node;

@@ -906,8 +906,8 @@ begin
           if instr^.opnds[1].h.count = 0 then
             if not instr^.h.sets_cc then
               if not instr^.h.fp_ccs then
-                if instr^.opnds[1].lts^.lr^.f2.reg
-                   = instr^.opnds[2].lts^.lr^.f2.reg then begin
+                if instr^.opnds[1].lts^.lr^.f2.physical_register_number
+                   = instr^.opnds[2].lts^.lr^.f2.physical_register_number then begin
                   instr^.opc := instr^.opc + 1;
                   if instr^.opnds[1].h.kind = instr^.opnds[2].h.kind then
                     if instr^.opnds[1].h.kind in [operand$ip_reg..
@@ -929,7 +929,7 @@ begin
                     prev^.next := next
                   else
                     bb^.first := next;
-                  reg := instr^.opnds[1].lts^.lr^.f2.reg;
+                  reg := instr^.opnds[1].lts^.lr^.f2.physical_register_number;
                   if (reg & 16#C0) <> 0 then
                     bug_check('POST_$INITIALIZE -- illegal physical register number%$');
                   if instr^.opnds[1].h.kind in [operand$fp_reg,
@@ -963,7 +963,7 @@ begin
         if op^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical,
                           operand$ip_reg_like..operand$fp_reg_pair_like,
                           operand$case_jump_base] then begin
-          reg := op^.lts^.lr^.f2.reg;
+          reg := op^.lts^.lr^.f2.physical_register_number;
           if (reg & 16#C0) <> 0 then
             bug_check('POST_$INITIALIZE -- illegal physical register number%$');
           if op^.h.kind in [operand$fp_reg, operand$fp_reg_pair,

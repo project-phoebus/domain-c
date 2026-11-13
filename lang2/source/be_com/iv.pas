@@ -2713,7 +2713,7 @@ begin
              operand$exception_information] then
       operand_is_loop_invariant := true
     else if k in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
-      if o^.lts^.lr^.f2.physical then
+      if o^.lts^.lr^.f2.physical_register then
         operand_is_loop_invariant := false
       else
         operand_is_loop_invariant := lts_is_loop_invariant(o^.lts, head);
@@ -2924,7 +2924,7 @@ begin
                 operand$exception_information] then
     r := iv_utils_$create_operand_expression(o^)
   else if k in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
-    if o^.lts^.lr^.f2.physical then
+    if o^.lts^.lr^.f2.physical_register then
       r := nil
     else begin
       s := o^.lts;
@@ -3081,7 +3081,7 @@ begin
         if (inc = nil) or operand_is_loop_invariant(inc, iv_head) then
           if res^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
             t := res^.lts;
-            if not t^.lr^.f2.physical then begin
+            if not t^.lr^.f2.physical_register then begin
               l := create_induction_lts(1, t,
                                         iv_lts_ptr_t(s^.l24)^.ivar);
               propagate_induction_increment(l, iv_lts_ptr_t(s^.l24), inc,
@@ -3845,7 +3845,7 @@ var
   l: iv_lts_ptr_t;
 begin
   if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then
-    if o^.lts^.lr^.f2.physical then
+    if o^.lts^.lr^.f2.physical_register then
       return;
   x := ixr_$find_induction_expr(inst.ivar, inst.expr, 1);
   l := create_induction_lts(4, o^.lts, inst.ivar);
@@ -3871,10 +3871,10 @@ var
   a: iv_addr_ptr_t;
 begin
   if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then
-    if o^.lts^.lr^.f2.physical then
+    if o^.lts^.lr^.f2.physical_register then
       return;
   if base^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then
-    if base^.lts^.lr^.f2.physical then
+    if base^.lts^.lr^.f2.physical_register then
       return;
   a := create_induction_addr(ixr_$find_induction_expr(inst.ivar, inst.expr, 2),
                              inst.ilts, o, base);

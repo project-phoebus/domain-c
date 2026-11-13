@@ -251,10 +251,10 @@ type
   sc_lr_t = record
     rrp: rrp$set_t;                     { +0 }
     f2: packed record                   { +2 }
-      reg: 0..255;
-      physical: boolean;                { +3 .7 }
-      no_modify: boolean;               { .6 }
-      serialize: boolean;               { .5 }
+      physical_register_number: 0..255;
+      physical_register: boolean;       { +3 .7 }
+      physical_register_is_no_modify: boolean;  { .6 }
+      physical_register_user_declared: boolean; { .5 }
       b3_4, b3_3: boolean;
       locked: boolean;                  { .2 }
       b3_1, b3_0: boolean;
@@ -560,7 +560,7 @@ begin
 
   lr := sc_lr_ptr_t(rtn^.lrs);
   while lr <> nil do begin
-    if not lr^.f2.physical and
+    if not lr^.f2.physical_register and
        ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) = []) then begin
       lts := lr^.ltss;
       while lts <> nil do begin
@@ -628,13 +628,13 @@ function get_phys_lr_num(
     lr: sc_lr_ptr_t;
     out n: integer32): boolean; options(val_param, internal);
 begin
-  if not lr^.f2.physical or lr^.f2.serialize then
+  if not lr^.f2.physical_register or lr^.f2.physical_register_user_declared then
     get_phys_lr_num := false
   else begin
     if rrp$ip_reg in lr^.rrp then
-      n := lr^.f2.reg
+      n := lr^.f2.physical_register_number
     else
-      n := lr^.f2.reg + 32;
+      n := lr^.f2.physical_register_number + 32;
     get_phys_lr_num := true;
   end;
 end;
@@ -1693,13 +1693,13 @@ begin
     end;
     lts^.f2.final := true;
     lts^.w32 := 0;
-    if lr^.f2.physical and ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) = []) then
-      if lr^.f2.reg = 30 then begin
+    if lr^.f2.physical_register and ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) = []) then
+      if lr^.f2.physical_register_number = 30 then begin
         if sc_ip_cc_start <> nil then
           bug_check('SCHED_$PASS1: last_ip_cc_start already set%$');
         sc_ip_cc_start := lts;
       end
-      else if lr^.f2.reg = 31 then begin
+      else if lr^.f2.physical_register_number = 31 then begin
         if sc_fp_cc_start <> nil then
           bug_check('SCHED_$PASS1: last_fp_cc_start already set%$');
         sc_fp_cc_start := lts;
@@ -2508,9 +2508,9 @@ begin
   end;
 50:
   if dbl then
-    if a^.opnds[6].lts^.lr^.f2.physical then
+    if a^.opnds[6].lts^.lr^.f2.physical_register then
       goto 99;
-  if a^.opnds[3].lts^.lr^.f2.physical then
+  if a^.opnds[3].lts^.lr^.f2.physical_register then
     goto 99;
   if not dbl then
     if a^.opnds[3].lts^.lr^.mate <> nil then
@@ -2525,7 +2525,7 @@ begin
          not a^.opnds[k + 3].h.read then
         bug_check('SCHED_$CAN_BE_5OPIFIED: Anomalous operand for 5opification - 1%$');
     lts := a^.opnds[k].lts;
-    if lts^.f2.final or lts^.lr^.f2.physical then
+    if lts^.f2.final or lts^.lr^.f2.physical_register then
       bad := true;
     if not dbl then
       lts2 := nil
