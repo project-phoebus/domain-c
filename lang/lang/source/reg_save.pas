@@ -462,7 +462,7 @@ begin
       if cg_tree_$is_decomposable_const_mul(n) then
         r := [24..28];
       if cargs_$options.cpu * [2, 3] = [] then
-        if (t^.desc.w6 <> 2) or (t^.desc.w8 <> 2) then
+        if (t^.desc.w6 <> rlen_word) or (t^.desc.w8 <> rlen_word) then
           r := r + [0, 8];
     end;
     expon_top:
@@ -471,7 +471,7 @@ begin
       r := [24, 25, 27, 28];
       if not (3 in cargs_$options.cpu) then
         r := [0, 8, 24, 25, 27, 28]
-      else if t^.desc.w8 <> 4 then
+      else if t^.desc.w8 <> rlen_long then
         r := [24..28];
     end;
     mod_top: begin
@@ -479,7 +479,7 @@ begin
       delay_$divide_attributes(n, false, strategy, w18, lsize, w26, rsize,
           w34, how, w42, drtn, sh, b54, b58, w62, w66, w70);
       if how in [4, 8] then begin
-        if t^.desc.w8 <> 4 then
+        if t^.desc.w8 <> rlen_long then
           r := [24..26]
         else if b58 then
           r := [24..26];
@@ -504,7 +504,7 @@ begin
     addr_top:
       r := [27];
     compare_top:
-      if t^.desc.w6 = 5 then
+      if t^.desc.w6 = rlen_addr then
         r := [24, 27]
       else
         r := [24];
@@ -629,10 +629,10 @@ begin
     f_math_top:
       if cg_tree_$needs_lib_support(n, rtn) then begin
         r := reg_save_$killed_by_routine(rtn);
-        if (t^.desc.w6 = 11) and (t^.desc.rlen <= rlen_long) then
+        if (t^.desc.w6 = math_nint) and (t^.desc.rlen <= rlen_long) then
           r := r + [0];
         if 10 in cargs_$options.cpu then
-          if t^.desc.w6 in [8, 12..15] then
+          if t^.desc.w6 in [math_atan2, math_max..math_aimag] then
             r := r + [17];
       end
       else begin

@@ -176,8 +176,10 @@ var
   { +0: the condition code of a comparison whose operands add_tn
     swaps, by the code (a code of a word less, 6 and 7 equal and not
     equal kept: cc.m68k .rwdi at 0x2C2080). }
-  swap_cc: array [0..15] of integer := [0, 1, 5, 4, 3, 2, 6, 7, 8, 9,
-                                        15, 14, 15, 14, 13, 12];
+  swap_cc: array [0..15] of integer := [cond_t, cond_f, cond_cs, cond_cc,
+                                        cond_ls, cond_hi, cond_ne, cond_eq,
+                                        cond_vc, cond_vs, cond_le, cond_gt,
+                                        cond_le, cond_gt, cond_lt, cond_ge];
   { +0x20: the bytes beyond 20 of the call node (171 CC_CALL) copy_tree
     copies, set from the call tree that holds it (its operands' 4 bytes
     each after the first). }
@@ -1486,7 +1488,7 @@ begin { add_tn }
       end;
       if node^.kind = tree_node then
         if an_ptr_t(node)^.op = f_math_top then
-          if an_ptr_t(node)^.desc.w6 = 10 then
+          if an_ptr_t(node)^.desc.w6 = math_trunc then
             node := an_ptr_t(node)^.opnd[1];
       if (node^.kind <> dpreal_ob) and (node^.kind <> real_ob) then
         goto 20;
@@ -1763,14 +1765,14 @@ begin { add_tn }
   end
   else if op = compare_top then begin
     if cexs_stack[l].node = cexs_stack[r].node then begin
-      if (d.w8 >= 0) and (d.w8 <= 31) and (d.w8 in [3, 4, 7, 12, 15]) then
+      if (d.w8 >= 0) and (d.w8 <= 31) and (d.w8 in [cond_ls, cond_cc, cond_eq, cond_ge, cond_le]) then
         v1 := 255
       else
         v1 := 0;
       res := smcontk(integer_ob, v1);
       goto 40;
     end;
-    if (d.w8 = 2) or (d.w8 = 3) or (d.w8 = 5) or (d.w8 = 4) then
+    if (d.w8 = cond_hi) or (d.w8 = cond_ls) or (d.w8 = cond_cs) or (d.w8 = cond_cc) then
       if not ((cexs_stack[l].node^.kind in [tree_node, gen_tree_node,
                                             cmp_tree_node,
                                             dindex_node..disp_node, cs_node,
@@ -1781,14 +1783,14 @@ begin { add_tn }
                                          binteger_ob]) and
            (cexs_stack[r].node^.int_value = 0) then
           case d.w8 of
-            3: d.w8 := 7;
-            2: d.w8 := 6;
-            5: begin
+            cond_ls: d.w8 := cond_eq;
+            cond_hi: d.w8 := cond_ne;
+            cond_cs: begin
               v1 := 0;
               res := smcontk(integer_ob, v1);
               goto 40;
             end;
-            4: begin
+            cond_cc: begin
               v1 := 255;
               res := smcontk(integer_ob, v1);
               goto 40;
@@ -1798,21 +1800,21 @@ begin { add_tn }
                                               binteger_ob]) and
                 (cexs_stack[l].node^.int_value = 0) then
           case d.w8 of
-            4: d.w8 := 7;
-            5: d.w8 := 6;
-            2: begin
+            cond_cc: d.w8 := cond_eq;
+            cond_cs: d.w8 := cond_ne;
+            cond_hi: begin
               v1 := 0;
               res := smcontk(integer_ob, v1);
               goto 40;
             end;
-            3: begin
+            cond_ls: begin
               v1 := 255;
               res := smcontk(integer_ob, v1);
               goto 40;
             end;
           end;
     x := an_ptr_t(cexs_stack[l].node);
-    if ((d.w8 = 7) or (d.w8 = 6)) and (x^.kind = tree_node) and (x^.op = and_top) and
+    if ((d.w8 = cond_eq) or (d.w8 = cond_ne)) and (x^.kind = tree_node) and (x^.op = and_top) and
        (x^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) and
        (cexs_stack[r].node^.kind in [blogical_ob..char_ob, char16_ob,
                                      binteger_ob]) then begin
@@ -1831,17 +1833,17 @@ begin { add_tn }
       end;
       cexs_stack[l].node := smcontk(integer_ob, w);
       if cv <> 0 then
-        if d.w8 = 7 then
-          d.w8 := 6
+        if d.w8 = cond_eq then
+          d.w8 := cond_ne
         else
-          d.w8 := 7;
+          d.w8 := cond_eq;
       d.size := d.w6;
       d.w6 := 1;
       cexs_stack[r].node := x^.opnd[1];
       op := bit_test_top;
       goto 60;
     end;
-    if (d.w8 = 7) or (d.w8 = 6) then
+    if (d.w8 = cond_eq) or (d.w8 = cond_ne) then
       if (cexs_stack[l].node^.kind in [blogical_ob..char_ob, char16_ob,
                                        binteger_ob]) and
          (cexs_stack[l].node^.int_value = 0) then begin
@@ -2025,7 +2027,7 @@ begin { add_tn }
     end;
     if op = f_math_top then
       if not ((d.w6 >= 0) and (d.w6 <= 31) and
-              (d.w6 in [0..2, 4..7, 9..11])) then
+              (d.w6 in [math_abs..math_cos, math_log..math_atan, math_sqrt..math_nint])) then
         goto 70;
     status := pfm_$cleanup(crec);
     if status.all <> pfm_$cleanup_set then
@@ -2043,46 +2045,46 @@ begin { add_tn }
       f_div_top: a := a / b;
       f_compare_top:
         case d.w8 of
-          7: if a = b then v1 := 255 else v1 := 0;
-          6: if a <> b then v1 := 255 else v1 := 0;
-          5, 13: if a < b then v1 := 255 else v1 := 0;
-          2, 14: if a > b then v1 := 255 else v1 := 0;
-          3, 15: if a <= b then v1 := 255 else v1 := 0;
-          4, 12: if a >= b then v1 := 255 else v1 := 0;
+          cond_eq: if a = b then v1 := 255 else v1 := 0;
+          cond_ne: if a <> b then v1 := 255 else v1 := 0;
+          cond_cs, cond_lt: if a < b then v1 := 255 else v1 := 0;
+          cond_hi, cond_gt: if a > b then v1 := 255 else v1 := 0;
+          cond_ls, cond_le: if a <= b then v1 := 255 else v1 := 0;
+          cond_cc, cond_ge: if a >= b then v1 := 255 else v1 := 0;
           otherwise ;
         end;
       f_math_top:
         case d.w6 of
-          0: a := abs(a);
-          11: begin
+          math_abs: a := abs(a);
+          math_nint: begin
             if d.rlen >= rlen_r4 then begin
               pfm_$rls_cleanup(crec, status);
               goto 20;
             end;
             v1 := round(a);
           end;
-          10: begin
+          math_trunc: begin
             if d.rlen >= rlen_r4 then begin
               pfm_$rls_cleanup(crec, status);
               goto 20;
             end;
             v1 := trunc(a);
           end;
-          7: a := arctan(a);
-          2: a := cos(a);
-          6: a := exp(a);
-          4: a := ln(a);
-          5: begin
+          math_atan: a := arctan(a);
+          math_cos: a := cos(a);
+          math_exp: a := exp(a);
+          math_log: a := ln(a);
+          math_log10: begin
             ftn_$dlog10(rr, a);
             a := rr;
           end;
-          1: a := sin(a);
-          9: a := sqrt(a);
+          math_sin: a := sin(a);
+          math_sqrt: a := sqrt(a);
           otherwise ;
         end;
       otherwise ;
     end;
-    if (op = f_compare_top) or ((op = f_math_top) and ((d.w6 = 11) or (d.w6 = 10))) then
+    if (op = f_compare_top) or ((op = f_math_top) and ((d.w6 = math_nint) or (d.w6 = math_trunc))) then
       res := smcontk(integer_ob, v1)
     else if d.rlen = rlen_r8 then
       res := dpcontk(a)
@@ -2135,7 +2137,7 @@ begin { add_tn }
     res := cexs_stack[r].node;
     y := an_ptr_t(res);
     if (op = f_compare_top) and (cexs_stack[l].node = cexs_stack[r].node) then begin
-      if (d.w8 >= 0) and (d.w8 <= 31) and (d.w8 in [2, 5, 7, 12, 15]) then
+      if (d.w8 >= 0) and (d.w8 <= 31) and (d.w8 in [cond_hi, cond_cs, cond_eq, cond_ge, cond_le]) then
         v1 := 255
       else
         v1 := 0;
@@ -2144,34 +2146,34 @@ begin { add_tn }
     end;
     if op = f_math_top then
       case d.w6 of
-        9:
+        math_sqrt:
           if (res^.kind = tree_node) and (y^.op = f_mul_top) and
              (y^.opnd[1] = y^.opnd[2]) then begin
             res := y^.opnd[1];
             cexs_stack[l].node := res;
-            d.w6 := 0;
+            d.w6 := math_abs;
             goto 20;
           end;
-        6:
-          if (res^.kind = tree_node) and (y^.op = f_math_top) and (y^.desc.w6 = 4) then
+        math_exp:
+          if (res^.kind = tree_node) and (y^.op = f_math_top) and (y^.desc.w6 = math_log) then
           begin
             res := y^.opnd[1];
             goto 40;
           end;
-        4:
-          if (res^.kind = tree_node) and (y^.op = f_math_top) and (y^.desc.w6 = 6) then
+        math_log:
+          if (res^.kind = tree_node) and (y^.op = f_math_top) and (y^.desc.w6 = math_exp) then
           begin
             res := y^.opnd[1];
             goto 40;
           end;
-        7:
-          if (res^.kind = tree_node) and (y^.op = f_math_top) and (y^.desc.w6 = 3) then
+        math_atan:
+          if (res^.kind = tree_node) and (y^.op = f_math_top) and (y^.desc.w6 = math_tan) then
           begin
             res := y^.opnd[1];
             goto 40;
           end;
-        3:
-          if (res^.kind = tree_node) and (y^.op = f_math_top) and (y^.desc.w6 = 7) then
+        math_tan:
+          if (res^.kind = tree_node) and (y^.op = f_math_top) and (y^.desc.w6 = math_atan) then
           begin
             res := y^.opnd[1];
             goto 40;
@@ -2180,7 +2182,7 @@ begin { add_tn }
       end
     else if (op = f_mul_top) and (cexs_stack[l].node = cexs_stack[r].node) then
       if (res^.kind = tree_node) and (y^.op = f_math_top)
-          and (y^.desc.w6 = 9) then begin
+          and (y^.desc.w6 = math_sqrt) then begin
         res := y^.opnd[1];
         goto 40;
       end;

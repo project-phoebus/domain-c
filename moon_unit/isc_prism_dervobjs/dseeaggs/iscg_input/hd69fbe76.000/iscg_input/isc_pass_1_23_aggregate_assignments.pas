@@ -609,7 +609,7 @@ begin
       ord(opc$loadl), 1);
   t3 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = solution$address_mode) or not subject.children[3]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[26] <> 11) and (p2_node_ptr_t(subject.il)^.w[26] <> 5) and (p2_node_ptr_t(subject.il)^.w[26] <> 4) and (p2_node_ptr_t(subject.il)^.w[26] <> 1) and (p2_node_ptr_t(subject.il)^.w[26] <> 2)) then begin
+  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = solution$address_mode) or not subject.children[3]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[26] <> rlen_agg) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 208 matched the semantics.');
       writeln;
@@ -766,7 +766,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((subject.children[3]^.literal_32_bits_value = 0) or (p2_node_ptr_t(subject.il)^.w[26] <> 11) and (p2_node_ptr_t(subject.il)^.w[26] <> 5) and (p2_node_ptr_t(subject.il)^.w[26] <> 4) and (p2_node_ptr_t(subject.il)^.w[26] <> 1) and (p2_node_ptr_t(subject.il)^.w[26] <> 2) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode)) then begin
+  if not ((subject.children[3]^.literal_32_bits_value = 0) or (p2_node_ptr_t(subject.il)^.w[26] <> rlen_agg) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_word) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 211 matched the semantics.');
       writeln;
@@ -802,19 +802,19 @@ begin
     end;
     p1_int_fields_ptr_t(addr(solution^))^.i[4] := t3 div 8 * subject.children[3]^.literal_32_bits_value - p1_int_fields_ptr_t(addr(solution^))^.i[2] * 4 - (p1_int_fields_ptr_t(addr(solution^))^.i[3] + p1_int_fields_ptr_t(addr(solution^))^.i[3]);
     if p1_int_fields_ptr_t(addr(solution^))^.i[2] > 0 then begin
-      if p2_node_ptr_t(subject.il)^.w[26] = 1 then begin
+      if p2_node_ptr_t(subject.il)^.w[26] = rlen_byte then begin
         p1_int_fields_ptr_t(addr(solution^))^.i[1] := subject.children[2]^.literal_32_bits_value ! (subject.children[2]^.literal_32_bits_value * 256 ! (lshft(subject.children[2]^.literal_32_bits_value,
             16) ! lshft(subject.children[2]^.literal_32_bits_value,
             16) * 256));
       end
-      else if p2_node_ptr_t(subject.il)^.w[26] = 2 then begin
+      else if p2_node_ptr_t(subject.il)^.w[26] = rlen_word then begin
         p1_int_fields_ptr_t(addr(solution^))^.i[1] := subject.children[2]^.literal_32_bits_value ! subject.children[2]^.literal_32_bits_value * 256;
       end else begin
         p1_int_fields_ptr_t(addr(solution^))^.i[1] := subject.children[2]^.literal_32_bits_value;
       end;
     end
     else if p1_int_fields_ptr_t(addr(solution^))^.i[3] > 0 then begin
-      if p2_node_ptr_t(subject.il)^.w[26] = 1 then begin
+      if p2_node_ptr_t(subject.il)^.w[26] = rlen_byte then begin
         p1_int_fields_ptr_t(addr(solution^))^.i[1] := subject.children[2]^.literal_32_bits_value ! subject.children[2]^.literal_32_bits_value * 256;
       end else begin
         p1_int_fields_ptr_t(addr(solution^))^.i[1] := subject.children[2]^.literal_32_bits_value;
@@ -1000,7 +1000,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or subject.children[3]^.f76.physical_register and (subject.children[3]^.kind = solution$ip_reg) and (subject.children[3]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[3]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[26] <> 11) and (p2_node_ptr_t(subject.il)^.w[26] <> 4) and (p2_node_ptr_t(subject.il)^.w[26] <> 2) and (p2_node_ptr_t(subject.il)^.w[26] <> 5) and (p2_node_ptr_t(subject.il)^.w[26] <> 1)) then begin
+  if not ((not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or subject.children[3]^.f76.physical_register and (subject.children[3]^.kind = solution$ip_reg) and (subject.children[3]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[3]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[26] <> rlen_agg) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_word) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_byte)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 212 matched the semantics.');
       writeln;
@@ -1079,7 +1079,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[3]^.literal_32_bits_value = 0) or (subject.children[3]^.literal_32_bits_value > 4) or (p2_node_ptr_t(subject.il)^.w[26] <> 11) and (p2_node_ptr_t(subject.il)^.w[26] <> 5) and (p2_node_ptr_t(subject.il)^.w[26] <> 4) and (p2_node_ptr_t(subject.il)^.w[26] <> 1) and (p2_node_ptr_t(subject.il)^.w[26] <> 2)) then begin
+  if not ((subject.children[3]^.literal_32_bits_value = 0) or (subject.children[3]^.literal_32_bits_value > 4) or (p2_node_ptr_t(subject.il)^.w[26] <> rlen_agg) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 213 matched the semantics.');
       writeln;
@@ -1129,7 +1129,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[3]^.literal_32_bits_value = 0) or (subject.children[3]^.literal_32_bits_value > 4) or (p2_node_ptr_t(subject.il)^.w[26] <> 11) and (p2_node_ptr_t(subject.il)^.w[26] <> 5) and (p2_node_ptr_t(subject.il)^.w[26] <> 4) and (p2_node_ptr_t(subject.il)^.w[26] <> 1) and (p2_node_ptr_t(subject.il)^.w[26] <> 2)) then begin
+  if not ((subject.children[3]^.literal_32_bits_value = 0) or (subject.children[3]^.literal_32_bits_value > 4) or (p2_node_ptr_t(subject.il)^.w[26] <> rlen_agg) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[26] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 214 matched the semantics.');
       writeln;
@@ -1362,7 +1362,7 @@ begin
       ord(opc$loadl));
   t2 := lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl), 1);
-  if not ((p2_node_ptr_t(subject.il)^.w[26] <> 1) or (p2_node_ptr_t(subject.il)^.w[27] <> 0) or (p2_node_ptr_t(subject.il)^.w[28] <> 8) or (not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (subject.children[2]^.f76.bit_position_of_lsb <> 0) or (available_precision_function(subject.children[2]) < p2_node_ptr_t(subject.il)^.w[28])) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[26] <> rlen_byte) or (p2_node_ptr_t(subject.il)^.w[27] <> 0) or (p2_node_ptr_t(subject.il)^.w[28] <> 8) or (not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (subject.children[2]^.f76.bit_position_of_lsb <> 0) or (available_precision_function(subject.children[2]) < p2_node_ptr_t(subject.il)^.w[28])) then begin
     if isc_user_routines_354 then begin
       write('Pattern 219 matched the semantics.');
       writeln;
@@ -1408,7 +1408,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if ((p2_node_ptr_t(subject.il)^.w[26] = 1) or (p2_node_ptr_t(subject.il)^.w[26] = 2)) and (p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[26]] - p2_node_ptr_t(subject.il)^.w[27] - p2_node_ptr_t(subject.il)^.w[28] = subject.children[2]^.f76.bit_position_of_lsb) and (lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_the_displacement) and not subject.children[1]^.f76.has_a_symbolic_displacement or not subject.children[1]^.f76.is_physical and not subject.children[1]^.f76.is_atomic) or (subject.children[1]^.kind <> solution$address_mode)) and (subject.children[2]^.f76.field_precision >= p2_node_ptr_t(subject.il)^.w[28]) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[26] = rlen_byte) or (p2_node_ptr_t(subject.il)^.w[26] = rlen_word)) and (p1_readonly_ptr_t(addr(isc_readonly_tables))^.l[93 + p2_node_ptr_t(subject.il)^.w[26]] - p2_node_ptr_t(subject.il)^.w[27] - p2_node_ptr_t(subject.il)^.w[28] = subject.children[2]^.f76.bit_position_of_lsb) and (lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_the_displacement) and not subject.children[1]^.f76.has_a_symbolic_displacement or not subject.children[1]^.f76.is_physical and not subject.children[1]^.f76.is_atomic) or (subject.children[1]^.kind <> solution$address_mode)) and (subject.children[2]^.f76.field_precision >= p2_node_ptr_t(subject.il)^.w[28]) then begin
     if isc_user_routines_354 then begin
       write('Pattern 220 matched the semantics.');
       writeln;

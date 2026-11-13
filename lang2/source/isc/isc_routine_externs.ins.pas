@@ -1034,9 +1034,9 @@ function get_live_range_serialize(
 function get_live_range_of_imaginary_part(
     node: isc_node_ptr_t): lr_ptr_t; options(val_param); extern;
 
-{ IL_KIND_FUNCTION - 0x2144CE: node's kind; a word. }
+{ IL_KIND_FUNCTION - 0x2144CE: node's kind (il.ins.pas's il_$kind_t). }
 function il_kind_function(
-    node: isc_node_ptr_t): integer; options(val_param); extern;
+    node: isc_node_ptr_t): il_$kind_t; options(val_param); extern;
 
 { POSSIBLY_MAKE_EXPRESSION_TEMPORARY - 0x214598: a temporary of type
   kind tkind and bits for a register solution kind skind (or a wide

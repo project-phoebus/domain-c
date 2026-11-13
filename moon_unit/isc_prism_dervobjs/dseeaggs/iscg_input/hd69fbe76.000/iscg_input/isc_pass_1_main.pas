@@ -598,7 +598,7 @@ begin
   no_solutions := false;
   il_kind := il_agg_aop;
   number_of_children := 2;
-  if (isc_node_ptr_t(il)^.xw[26] = 9)
+  if (isc_node_ptr_t(il)^.xw[26] = rlen_cs)
       and (isc_node_ptr_t(il)^.xw[28] <> 0) then begin
     if isc_user_routines_356 or isc_user_routines_354 then begin
       write('*********************');
@@ -882,7 +882,7 @@ begin
     isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[27];
     isc_node_ptr_t(n1)^.xw[14] := isc_node_ptr_t(il)^.xw[28];
     p1_node_bytes_ptr_t(n1)^[30].b7 := p1_node_bytes_ptr_t(il)^[58].b7;
-    isc_node_ptr_t(n1)^.xw[12] := isc_node_ptr_t(il)^.xw[26];
+    isc_node_ptr_t(n1)^.tr_rlen := isc_node_ptr_t(il)^.xw[26];
     p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[58].b6;
     n := mrh_$alloc(isc_preserve_heap, 80);
     isc_node_ptr_t(n)^.kind := assign_node;
@@ -1299,7 +1299,7 @@ begin
   no_solutions := false;
   il_kind := il_fp_aop;
   number_of_children := 2;
-  if (isc_node_ptr_t(il)^.xw[26] = 9)
+  if (isc_node_ptr_t(il)^.xw[26] = rlen_cs)
       and (isc_node_ptr_t(il)^.xw[28] <> 0) then begin
     if isc_user_routines_356 or isc_user_routines_354 then begin
       write('*********************');
@@ -1427,7 +1427,7 @@ begin
     isc_node_ptr_t(n)^.xp[3] := isc_node_ptr_t(il)^.xp[3];
     isc_node_ptr_t(n)^.as_op := agg_aop;
     isc_node_ptr_t(n)^.xw[28] := 0;
-    isc_node_ptr_t(n)^.xw[26] := 11;
+    isc_node_ptr_t(n)^.xw[26] := rlen_agg;
     isc_node_ptr_t(n)^.xl[12] := size;
     isc_node_ptr_t(n)^.xw[10] := inh^.pos.source_line_number;
     isc_node_ptr_t(n)^.st_l42 := (isc_node_ptr_t(n)^.st_l42 & 16#FF0000FF)
@@ -1732,7 +1732,7 @@ begin
     isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[26];
     isc_node_ptr_t(n1)^.xw[14] := isc_node_ptr_t(il)^.xw[26];
     p1_node_bytes_ptr_t(n1)^[30].b7 := p1_node_bytes_ptr_t(il)^[58].b7;
-    isc_node_ptr_t(n1)^.xw[12] := isc_node_ptr_t(il)^.xw[26];
+    isc_node_ptr_t(n1)^.tr_rlen := isc_node_ptr_t(il)^.xw[26];
     p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[58].b6;
     n := mrh_$alloc(isc_preserve_heap, 80);
     isc_node_ptr_t(n)^.kind := assign_node;
@@ -2249,7 +2249,7 @@ begin
   no_solutions := false;
   il_kind := il_scalar_aop;
   number_of_children := 2;
-  if (isc_node_ptr_t(il)^.xw[26] = 9)
+  if (isc_node_ptr_t(il)^.xw[26] = rlen_cs)
       and (isc_node_ptr_t(il)^.xw[28] <> 0) then begin
     if isc_user_routines_356 or isc_user_routines_354 then begin
       write('*********************');
@@ -4919,7 +4919,7 @@ begin
   no_solutions := false;
   il_kind := il_nlbranch_node;
   number_of_children := 1;
-  if (il_kind_function(isc_node_ptr_t(il)^.xp[12]) = 117) then begin
+  if (il_kind_function(isc_node_ptr_t(il)^.xp[12]) = label_name) then begin
     if isc_user_routines_356 or isc_user_routines_354 then begin
       write('*********************');
       writeln;
@@ -5497,8 +5497,8 @@ begin
   inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_1^.required_precision := inh^.required_precision;
   inh_1^.pos := inh^.pos;
-  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
       [solution$ip_reg]);
   if solution_list$empty(children[1]) then
@@ -5583,7 +5583,7 @@ begin
     isc_node_ptr_t(n2)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
     isc_node_ptr_t(n2)^.tr_op := add_top;
     p1_node_bytes_ptr_t(n2)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
-    isc_node_ptr_t(n2)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    isc_node_ptr_t(n2)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
     inh_1 := new_inherited_attributes(isc_heap, n2);
     inh_1^ := inh^;
     inh_1^.il := n2;
@@ -5601,8 +5601,8 @@ begin
     inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_1^.required_precision := inh^.required_precision;
     inh_1^.pos := inh^.pos;
-    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
         [solution$fp_reg, solution$ip_reg, solution$ip_reg_field,
             solution$ip_reg_scaled] - not_permissible_function(il, 1,
@@ -5619,8 +5619,8 @@ begin
       inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
       inh_2^.required_precision := inh^.required_precision;
       inh_2^.pos := inh^.pos;
-      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
       children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
           [solution$fp_reg, solution$ip_reg, solution$ip_reg_field,
               solution$ip_reg_scaled,
@@ -5896,7 +5896,7 @@ begin
     isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n2)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
     isc_node_ptr_t(n2)^.tr_op := and_top;
-    isc_node_ptr_t(n2)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    isc_node_ptr_t(n2)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
     inh_1 := new_inherited_attributes(isc_heap, n2);
     inh_1^ := inh^;
     inh_1^.il := n2;
@@ -5914,8 +5914,8 @@ begin
     inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_1^.required_precision := inh^.required_precision;
     inh_1^.pos := inh^.pos;
-    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
         [solution$fp_reg, solution$ip_reg, solution$ip_reg_field,
             solution$ip_reg_scaled] - not_permissible_function(il, 1,
@@ -5932,8 +5932,8 @@ begin
       inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
       inh_2^.required_precision := inh^.required_precision;
       inh_2^.pos := inh^.pos;
-      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
       children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
           [solution$fp_reg, solution$ip_reg, solution$ip_reg_field,
               solution$ip_reg_scaled,
@@ -6364,8 +6364,8 @@ begin
   inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_1^.required_precision := inh^.required_precision;
   inh_1^.pos := inh^.pos;
-  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
       [solution$ip_reg, solution$literal_32_bits]);
   if solution_list$empty(children[1]) then
@@ -6380,8 +6380,8 @@ begin
     inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_2^.required_precision := inh^.required_precision;
     inh_2^.pos := inh^.pos;
-    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
         [solution$ip_reg, solution$literal_32_bits]);
     if solution_list$empty(children[2]) then
@@ -6561,7 +6561,7 @@ begin
       isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
       isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
       p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
-      isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+      isc_node_ptr_t(n)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
       inh_1 := new_inherited_attributes(isc_heap, n);
       inh_1^ := inh^;
       inh_1^.il := n;
@@ -6587,7 +6587,7 @@ begin
       isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
       isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
       p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
-      isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+      isc_node_ptr_t(n)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
       inh_1 := new_inherited_attributes(isc_heap, n);
       inh_1^ := inh^;
       inh_1^.il := n;
@@ -6613,7 +6613,7 @@ begin
     isc_node_ptr_t(n)^.xp[12] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n)^.xl[9] := 16#100003;
     isc_node_ptr_t(n)^.xw[13] := 0;
-    isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    isc_node_ptr_t(n)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
     p1_node_chars_ptr_t(n)^[10] := chr(4);
     p1_node_chars_ptr_t(n)^[11] := chr(0);
     inh_1 := new_inherited_attributes(isc_heap, n);
@@ -6638,7 +6638,7 @@ begin
     isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
     isc_node_ptr_t(n1)^.tr_op := extend_top;
     isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
-    isc_node_ptr_t(n1)^.xw[12] := rlen_long;
+    isc_node_ptr_t(n1)^.tr_rlen := rlen_long;
     p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
     n2 := mrh_$alloc(isc_preserve_heap, 44);
     isc_node_ptr_t(n2)^.kind := tree_node;
@@ -6646,7 +6646,7 @@ begin
     isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n2)^.tr_op := extend_top;
     isc_node_ptr_t(n2)^.xw[13] := isc_node_ptr_t(il)^.xw[14];
-    isc_node_ptr_t(n2)^.xw[12] := rlen_long;
+    isc_node_ptr_t(n2)^.tr_rlen := rlen_long;
     p1_node_bytes_ptr_t(n2)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
     n := mrh_$alloc(isc_preserve_heap, 52);
     isc_node_ptr_t(n)^.kind := tree_node;
@@ -6705,7 +6705,7 @@ begin
     isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n2)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
     isc_node_ptr_t(n2)^.tr_op := eor_top;
-    isc_node_ptr_t(n2)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    isc_node_ptr_t(n2)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
     inh_1 := new_inherited_attributes(isc_heap, n2);
     inh_1^ := inh^;
     inh_1^.il := n2;
@@ -6723,8 +6723,8 @@ begin
     inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_1^.required_precision := inh^.required_precision;
     inh_1^.pos := inh^.pos;
-    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
         [solution$fp_reg, solution$ip_reg, solution$ip_reg_field,
             solution$ip_reg_scaled] - not_permissible_function(il, 1,
@@ -6741,8 +6741,8 @@ begin
       inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
       inh_2^.required_precision := inh^.required_precision;
       inh_2^.pos := inh^.pos;
-      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
       children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
           [solution$fp_reg, solution$ip_reg, solution$ip_reg_field,
               solution$ip_reg_scaled,
@@ -6960,8 +6960,8 @@ begin
   inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_1^.required_precision := inh^.required_precision;
   inh_1^.pos := inh^.pos;
-  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
       [solution$fp_reg, solution$fp_reg_pair,
           solution$fp_reg_quad] - not_permissible_function(il, 1,
@@ -6978,8 +6978,8 @@ begin
     inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_2^.required_precision := inh^.required_precision;
     inh_2^.pos := inh^.pos;
-    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
         [solution$fp_reg, solution$fp_reg_pair,
             solution$fp_reg_quad] - not_permissible_function(il, 2,
@@ -7088,9 +7088,9 @@ begin
       and not p1_node_bytes_ptr_t(il)^[30].b7
       and not il_node_is_literal_sequence_of_zeroes(isc_node_ptr_t(il)^.xp[11])
       and ((invertible_in_sp(il_$node_ptr_t(isc_node_ptr_t(il)^.xp[11]))
-            and (isc_node_ptr_t(il)^.xw[12] = rlen_r4))
+            and (isc_node_ptr_t(il)^.tr_rlen = rlen_r4))
            or (invertible_in_dp(il_$node_ptr_t(isc_node_ptr_t(il)^.xp[11]))
-               and (isc_node_ptr_t(il)^.xw[12] = rlen_r8))) then begin
+               and (isc_node_ptr_t(il)^.tr_rlen = rlen_r8))) then begin
     if isc_user_routines_356 or isc_user_routines_354 then begin
       write('*********************');
       writeln;
@@ -7108,7 +7108,7 @@ begin
         il_$node_ptr_t(isc_node_ptr_t(il)^.xp[11])));
     isc_node_ptr_t(n)^.tr_op := f_mul_top;
     isc_node_ptr_t(n)^.xl[5] := isc_node_ptr_t(il)^.xl[5];
-    isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    isc_node_ptr_t(n)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
     inh_1 := new_inherited_attributes(isc_heap, n);
     inh_1^ := inh^;
     inh_1^.il := n;
@@ -7126,9 +7126,9 @@ begin
     inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_2^.required_precision := inh^.required_precision;
     inh_2^.pos := inh^.pos;
-    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12],
+    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen,
         isc_node_ptr_t(il)^.xl[5]);
-    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
         [solution$fp_reg, solution$fp_reg_pair, solution$fp_reg_quad]);
     if solution_list$empty(children[2]) then
@@ -7143,9 +7143,9 @@ begin
       inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
       inh_1^.required_precision := inh^.required_precision;
       inh_1^.pos := inh^.pos;
-      inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12],
+      inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen,
           isc_node_ptr_t(il)^.xl[5]);
-      inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+      inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
       children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
           [solution$fp_reg, solution$fp_reg_pair, solution$fp_reg_quad]);
       if solution_list$empty(children[1]) then
@@ -7391,8 +7391,8 @@ begin
   inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_1^.required_precision := inh^.required_precision;
   inh_1^.pos := inh^.pos;
-  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
       [solution$fp_reg, solution$fp_reg_pair,
           solution$fp_reg_quad] - not_permissible_function(il, 1,
@@ -7409,8 +7409,8 @@ begin
     inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_2^.required_precision := inh^.required_precision;
     inh_2^.pos := inh^.pos;
-    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
         [solution$fp_reg, solution$fp_reg_pair,
             solution$fp_reg_quad] - not_permissible_function(il, 2,
@@ -7449,8 +7449,8 @@ begin
   inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_1^.required_precision := inh^.required_precision;
   inh_1^.pos := inh^.pos;
-  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
       [solution$fp_reg, solution$fp_reg_pair,
           solution$fp_reg_quad] - not_permissible_function(il, 1,
@@ -7488,8 +7488,8 @@ begin
   inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_1^.required_precision := inh^.required_precision;
   inh_1^.pos := inh^.pos;
-  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
       [solution$fp_reg, solution$fp_reg_pair]);
   if solution_list$empty(children[1]) then
@@ -7504,8 +7504,8 @@ begin
     inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_2^.required_precision := inh^.required_precision;
     inh_2^.pos := inh^.pos;
-    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
         [solution$fp_reg, solution$fp_reg_pair]);
     if solution_list$empty(children[2]) then
@@ -7520,8 +7520,8 @@ begin
       inh_3^.f38.required_arithmetic := inh^.f38.required_arithmetic;
       inh_3^.required_precision := inh^.required_precision;
       inh_3^.pos := inh^.pos;
-      inh_3^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-      inh_3^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+      inh_3^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+      inh_3^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
       children[3] := pass_1(isc_node_ptr_t(il)^.xp[12], inh_3, depth + 1,
           [solution$fp_reg, solution$fp_reg_pair]);
       if solution_list$empty(children[3]) then
@@ -7559,8 +7559,8 @@ begin
   inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_2^.required_precision := inh^.required_precision;
   inh_2^.pos := inh^.pos;
-  inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-  inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+  inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
       [solution$fp_reg, solution$fp_reg_pair,
           solution$fp_reg_quad] - not_permissible_function(il, 2,
@@ -7577,8 +7577,8 @@ begin
     inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_1^.required_precision := inh^.required_precision;
     inh_1^.pos := inh^.pos;
-    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
         [solution$fp_reg, solution$fp_reg_pair,
             solution$fp_reg_quad] - not_permissible_function(il, 1,
@@ -7636,7 +7636,7 @@ begin
     writeln;
     writeln;
   end;
-  n := rewrite_$routine_call(il, possibly_make_expression_temporary(isc_node_ptr_t(il)^.xw[12],
+  n := rewrite_$routine_call(il, possibly_make_expression_temporary(isc_node_ptr_t(il)^.tr_rlen,
       tkind, inh^.required_precision), inh);
   inh_1 := new_inherited_attributes(isc_heap, n);
   inh_1^ := inh^;
@@ -8121,7 +8121,7 @@ begin
       isc_node_ptr_t(n)^.xp[12] := isc_node_ptr_t(il)^.xp[11];
       isc_node_ptr_t(n)^.xl[9] := 16#100003;
       isc_node_ptr_t(n)^.xw[13] := 0;
-      isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+      isc_node_ptr_t(n)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
     end
     else begin
       if isc_user_routines_356 or isc_user_routines_354 then begin
@@ -8139,7 +8139,7 @@ begin
       isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
       isc_node_ptr_t(n1)^.tr_op := extend_top;
       isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
-      isc_node_ptr_t(n1)^.xw[12] := rlen_long;
+      isc_node_ptr_t(n1)^.tr_rlen := rlen_long;
       p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
       n2 := mrh_$alloc(isc_preserve_heap, 44);
       isc_node_ptr_t(n2)^.kind := tree_node;
@@ -8147,7 +8147,7 @@ begin
       isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
       isc_node_ptr_t(n2)^.tr_op := extend_top;
       isc_node_ptr_t(n2)^.xw[13] := isc_node_ptr_t(il)^.xw[14];
-      isc_node_ptr_t(n2)^.xw[12] := rlen_long;
+      isc_node_ptr_t(n2)^.tr_rlen := rlen_long;
       p1_node_bytes_ptr_t(n2)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
       n := mrh_$alloc(isc_preserve_heap, 52);
       isc_node_ptr_t(n)^.kind := tree_node;
@@ -8313,10 +8313,10 @@ begin
   isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
   isc_node_ptr_t(n1)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
   isc_node_ptr_t(n1)^.tr_op := mod_top;
-  isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[12];
-  isc_node_ptr_t(n1)^.xw[14] := isc_node_ptr_t(il)^.xw[12];
+  isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.tr_rlen;
+  isc_node_ptr_t(n1)^.xw[14] := isc_node_ptr_t(il)^.tr_rlen;
   p1_node_bytes_ptr_t(n1)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
-  isc_node_ptr_t(n1)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+  isc_node_ptr_t(n1)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
   p1_node_bytes_ptr_t(n1)^[30].b6 := false;
   inh_1 := new_inherited_attributes(isc_heap, n1);
   inh_1^ := inh^;
@@ -8362,7 +8362,7 @@ begin
   isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
   isc_node_ptr_t(n1)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
   isc_node_ptr_t(n1)^.tr_op := isc_signed_rem_top;
-  isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[12];
+  isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.tr_rlen;
   p1_node_bytes_ptr_t(n1)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
   inh_1 := new_inherited_attributes(isc_heap, n1);
   inh_1^ := inh^;
@@ -8505,7 +8505,7 @@ begin
     isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n2)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
     isc_node_ptr_t(n2)^.tr_op := max_top;
-    isc_node_ptr_t(n2)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    isc_node_ptr_t(n2)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
     p1_node_bytes_ptr_t(n2)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
     inh_1 := new_inherited_attributes(isc_heap, n2);
     inh_1^ := inh^;
@@ -8524,8 +8524,8 @@ begin
     inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_1^.required_precision := inh^.required_precision;
     inh_1^.pos := inh^.pos;
-    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
         [solution$ip_reg]);
     if solution_list$empty(children[1]) then
@@ -8540,8 +8540,8 @@ begin
       inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
       inh_2^.required_precision := inh^.required_precision;
       inh_2^.pos := inh^.pos;
-      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
       children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
           [solution$ip_reg]);
       if solution_list$empty(children[2]) then
@@ -8588,7 +8588,7 @@ begin
     isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n2)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
     isc_node_ptr_t(n2)^.tr_op := min_top;
-    isc_node_ptr_t(n2)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    isc_node_ptr_t(n2)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
     p1_node_bytes_ptr_t(n2)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
     inh_1 := new_inherited_attributes(isc_heap, n2);
     inh_1^ := inh^;
@@ -8607,8 +8607,8 @@ begin
     inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_1^.required_precision := inh^.required_precision;
     inh_1^.pos := inh^.pos;
-    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
         [solution$ip_reg]);
     if solution_list$empty(children[1]) then
@@ -8623,8 +8623,8 @@ begin
       inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
       inh_2^.required_precision := inh^.required_precision;
       inh_2^.pos := inh^.pos;
-      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
       children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
           [solution$ip_reg]);
       if solution_list$empty(children[2]) then
@@ -8709,7 +8709,7 @@ begin
       isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
       isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
       p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
-      isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+      isc_node_ptr_t(n)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
       inh_1 := new_inherited_attributes(isc_heap, n);
       inh_1^ := inh^;
       inh_1^.il := n;
@@ -8735,7 +8735,7 @@ begin
       isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
       isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
       p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
-      isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+      isc_node_ptr_t(n)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
       inh_1 := new_inherited_attributes(isc_heap, n);
       inh_1^ := inh^;
       inh_1^.il := n;
@@ -8775,7 +8775,7 @@ begin
       isc_node_ptr_t(q)^.xp[12] := v2;
       isc_node_ptr_t(q)^.xl[9] := 16#100003;
       isc_node_ptr_t(q)^.xw[13] := 0;
-      isc_node_ptr_t(q)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+      isc_node_ptr_t(q)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
       p1_node_chars_ptr_t(q)^[10] := chr(4);
       p1_node_chars_ptr_t(q)^[11] := chr(0);
       m := mrh_$alloc(isc_preserve_heap, 52);
@@ -8786,7 +8786,7 @@ begin
       isc_node_ptr_t(m)^.xp[12] := v2;
       isc_node_ptr_t(m)^.xl[9] := 16#100003;
       isc_node_ptr_t(m)^.xw[13] := 0;
-      isc_node_ptr_t(m)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+      isc_node_ptr_t(m)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
       p1_node_chars_ptr_t(m)^[10] := chr(4);
       p1_node_chars_ptr_t(m)^[11] := chr(0);
       n := mrh_$alloc(isc_preserve_heap, 48);
@@ -8795,7 +8795,7 @@ begin
       isc_node_ptr_t(n)^.xp[10] := v1;
       isc_node_ptr_t(n)^.xp[11] := m;
       isc_node_ptr_t(n)^.tr_op := sub_top;
-      isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+      isc_node_ptr_t(n)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
       inh_1 := new_inherited_attributes(isc_heap, n);
       inh_1^ := inh^;
       inh_1^.il := n;
@@ -8818,7 +8818,7 @@ begin
       isc_node_ptr_t(n1)^.xp[10] := v1;
       isc_node_ptr_t(n1)^.tr_op := extend_top;
       isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
-      isc_node_ptr_t(n1)^.xw[12] := rlen_long;
+      isc_node_ptr_t(n1)^.tr_rlen := rlen_long;
       p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
       n2 := mrh_$alloc(isc_preserve_heap, 44);
       isc_node_ptr_t(n2)^.kind := tree_node;
@@ -8826,7 +8826,7 @@ begin
       isc_node_ptr_t(n2)^.xp[10] := v2;
       isc_node_ptr_t(n2)^.tr_op := extend_top;
       isc_node_ptr_t(n2)^.xw[13] := isc_node_ptr_t(il)^.xw[14];
-      isc_node_ptr_t(n2)^.xw[12] := rlen_long;
+      isc_node_ptr_t(n2)^.tr_rlen := rlen_long;
       p1_node_bytes_ptr_t(n2)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
       q := mrh_$alloc(isc_preserve_heap, 52);
       isc_node_ptr_t(q)^.kind := tree_node;
@@ -8854,7 +8854,7 @@ begin
       isc_node_ptr_t(n)^.xp[10] := n1;
       isc_node_ptr_t(n)^.xp[11] := m;
       isc_node_ptr_t(n)^.tr_op := sub_top;
-      isc_node_ptr_t(n)^.xw[12] := rlen_long;
+      isc_node_ptr_t(n)^.tr_rlen := rlen_long;
       inh_1 := new_inherited_attributes(isc_heap, n);
       inh_1^ := inh^;
       inh_1^.il := n;
@@ -8920,7 +8920,7 @@ begin
     isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
     isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
     p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
-    isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    isc_node_ptr_t(n)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
     p1_node_bytes_ptr_t(n)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
     inh_1 := new_inherited_attributes(isc_heap, n);
     inh_1^ := inh^;
@@ -8947,7 +8947,7 @@ begin
     isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
     isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
     p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
-    isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    isc_node_ptr_t(n)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
     p1_node_bytes_ptr_t(n)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
     inh_1 := new_inherited_attributes(isc_heap, n);
     inh_1^ := inh^;
@@ -9004,8 +9004,8 @@ begin
   inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_1^.required_precision := inh^.required_precision;
   inh_1^.pos := inh^.pos;
-  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
       [solution$flow, solution$fp_reg, solution$ip_reg,
           solution$ip_reg_field] - not_permissible_function(il, 1,
@@ -9043,8 +9043,8 @@ begin
   inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_1^.required_precision := inh^.required_precision;
   inh_1^.pos := inh^.pos;
-  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
       [solution$address_mode, solution$fp_reg, solution$fp_reg_pair,
           solution$fp_reg_quad,
@@ -9083,8 +9083,8 @@ begin
   inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_1^.required_precision := inh^.required_precision;
   inh_1^.pos := inh^.pos;
-  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
       [solution$fp_reg, solution$ip_reg,
           solution$ip_reg_field] - not_permissible_function(il, 1,
@@ -9131,7 +9131,7 @@ begin
     isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n2)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
     isc_node_ptr_t(n2)^.tr_op := or_top;
-    isc_node_ptr_t(n2)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
+    isc_node_ptr_t(n2)^.tr_rlen := isc_node_ptr_t(il)^.tr_rlen;
     inh_1 := new_inherited_attributes(isc_heap, n2);
     inh_1^ := inh^;
     inh_1^.il := n2;
@@ -9149,8 +9149,8 @@ begin
     inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_1^.required_precision := inh^.required_precision;
     inh_1^.pos := inh^.pos;
-    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
         [solution$fp_reg, solution$ip_reg, solution$ip_reg_field,
             solution$ip_reg_scaled] - not_permissible_function(il, 1,
@@ -9167,8 +9167,8 @@ begin
       inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
       inh_2^.required_precision := inh^.required_precision;
       inh_2^.pos := inh^.pos;
-      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
       children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
           [solution$fp_reg, solution$ip_reg, solution$ip_reg_field,
               solution$ip_reg_scaled,
@@ -9247,8 +9247,8 @@ begin
   inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_1^.required_precision := inh^.required_precision;
   inh_1^.pos := inh^.pos;
-  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
       [solution$ip_reg]);
   if solution_list$empty(children[1]) then
@@ -9263,8 +9263,8 @@ begin
     inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_2^.required_precision := inh^.required_precision;
     inh_2^.pos := inh^.pos;
-    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
         [solution$ip_reg, solution$literal_32_bits]);
     if solution_list$empty(children[2]) then
@@ -9279,8 +9279,8 @@ begin
       inh_3^.f38.required_arithmetic := inh^.f38.required_arithmetic;
       inh_3^.required_precision := inh^.required_precision;
       inh_3^.pos := inh^.pos;
-      inh_3^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-      inh_3^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+      inh_3^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+      inh_3^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
       children[3] := pass_1(isc_node_ptr_t(il)^.xp[12], inh_3, depth + 1,
           [solution$ip_reg, solution$literal_32_bits]);
       if solution_list$empty(children[3]) then
@@ -9374,8 +9374,8 @@ begin
   inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_1^.required_precision := inh^.required_precision;
   inh_1^.pos := inh^.pos;
-  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
       [solution$address_mode, solution$ip_reg] - not_permissible_function(il,
           1, permissible));
@@ -9391,8 +9391,8 @@ begin
     inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_2^.required_precision := inh^.required_precision;
     inh_2^.pos := inh^.pos;
-    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
         [solution$address_mode,
             solution$ip_reg] - not_permissible_function(il, 2, permissible));
@@ -9544,8 +9544,8 @@ begin
   inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_2^.required_precision := inh^.required_precision;
   inh_2^.pos := inh^.pos;
-  inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-  inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+  inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
       [solution$address_mode, solution$ip_reg] - not_permissible_function(il,
           2, permissible));
@@ -9561,8 +9561,8 @@ begin
     inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_1^.required_precision := inh^.required_precision;
     inh_1^.pos := inh^.pos;
-    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
         [solution$address_mode,
             solution$ip_reg] - not_permissible_function(il, 1, permissible));
@@ -9640,8 +9640,8 @@ begin
   inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_1^.required_precision := inh^.required_precision;
   inh_1^.pos := inh^.pos;
-  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
       [solution$address_mode, solution$ip_reg] - not_permissible_function(il,
           1, permissible));
@@ -9657,8 +9657,8 @@ begin
     inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_2^.required_precision := inh^.required_precision;
     inh_2^.pos := inh^.pos;
-    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+    inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
         [solution$address_mode,
             solution$ip_reg] - not_permissible_function(il, 2, permissible));
@@ -9891,8 +9891,8 @@ begin
   inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_1^.required_precision := inh^.required_precision;
   inh_1^.pos := inh^.pos;
-  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
       [solution$ip_reg, solution$literal_32_bits]);
   if solution_list$empty(children[1]) then
@@ -9913,8 +9913,8 @@ begin
       inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
       inh_2^.required_precision := inh^.required_precision;
       inh_2^.pos := inh^.pos;
-      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+      inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+      inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
       children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
           [solution$ip_reg, solution$literal_32_bits, solution$void]);
       if solution_list$empty(children[2]) then
@@ -10106,8 +10106,8 @@ begin
   inh_2^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_2^.required_precision := inh^.required_precision;
   inh_2^.pos := inh^.pos;
-  inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-  inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_2^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+  inh_2^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[2] := pass_1(isc_node_ptr_t(il)^.xp[11], inh_2, depth + 1,
       [solution$fp_reg, solution$ip_reg, solution$ip_reg_field,
           solution$ip_reg_scaled,
@@ -10125,8 +10125,8 @@ begin
     inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
     inh_1^.required_precision := inh^.required_precision;
     inh_1^.pos := inh^.pos;
-    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], -1);
-    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+    inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, -1);
+    inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
     children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
         [solution$fp_reg, solution$ip_reg, solution$ip_reg_field,
             solution$ip_reg_scaled,
@@ -10345,8 +10345,8 @@ begin
   inh_1^.f38.required_arithmetic := inh^.f38.required_arithmetic;
   inh_1^.required_precision := inh^.required_precision;
   inh_1^.pos := inh^.pos;
-  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.xw[12], isc_node_ptr_t(il)^.xl[5]);
-  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.xw[12]];
+  inh_1^.fetch_precision := isc_$precision_from_rlen_and_size(isc_node_ptr_t(il)^.tr_rlen, isc_node_ptr_t(il)^.xl[5]);
+  inh_1^.f38.required_arithmetic := p1_readonly_view_ptr_t(addr(isc_readonly_tables))^.rlen_arith[isc_node_ptr_t(il)^.tr_rlen];
   children[1] := pass_1(isc_node_ptr_t(il)^.xp[10], inh_1, depth + 1,
       [solution$fp_reg, solution$fp_reg_pair, solution$fp_reg_quad,
           solution$ip_reg] - not_permissible_function(il, 1, permissible));
