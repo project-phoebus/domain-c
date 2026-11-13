@@ -3391,6 +3391,19 @@ answered by this policy and needs no reply.
    'inner_blk ' and that node (print_object_ptr).  No other unit reads
    it; a routine block's +292..+295 are bytes (c_blk_t's b292, nparms,
    level, b295).  Left as xp[73]: what is it?
+   **Done (translator RN9, 2026-11-12):** the field is at +296, not
+   +292: the image reads `tst.l (296,A2)', `movea.l (296,A2),A1', `move.l
+   (296,A2),-(SP)' (cc.m68k 0x07FC0E, 0x07FC14, 0x07FC3E; cc.a88k
+   0x0815EE, 0x0815F4, 0x08161E), where xp[73] (xp[1] at +4) gave dpc's
+   (0x124,A0): a translation slip, the header comment's +296 being
+   right.  +296 is the block's identifier: list_tree's own block view
+   names it bk_name (print_routine_block prints a routine's name from it,
+   bk_name^.xc[18], xw[8]), as the front end's c_blk_t has the name
+   (c_name_t's id) at +296 and c_syntax makes an inner block with
+   def_blk_skeleton(inner_blk, nm, ...).  print_tree_ref now reads
+   t^.bk_name; dpc's three accesses moved to (0x128,A0), the image's
+   offset, and nothing else changed.  No dump string names it beyond
+   'inner_blk ' and 'ib' (the reading through nil is kept).
 338. Translator RN7: **the C front end's label view.**  c_objtype.ins.pas
    c_top_t's label variant names +72 lab_bits (placed .7, pending .6,
    lkind .5..1, which add_ldfn sets from il_c6, now an

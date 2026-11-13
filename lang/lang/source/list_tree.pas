@@ -1045,9 +1045,10 @@ end;
   compare chain in the labels' order; its letters end at one
   print_char (0x07FC04), its words at one print_string (0x07FC80),
   both followed by print_hex(t, 8) (0x07FD0C); the other arms end at
-  the epilogue.  Kind 172 (an inner block): 'ib' when +296 is not nil
-  or (nil) its kind is 73, else 'inner_blk ' and +296 as an object
-  (the image reads the kind through the nil pointer).
+  the epilogue.  Kind 172 (an inner block): 'ib' when its identifier
+  (bk_name, +296: `tst.l (296,A2)', 0x07FC0E) is not nil or (nil) its
+  kind is 73, else 'inner_blk ' and the identifier as an object (the
+  image reads the kind through the nil pointer).
 
   Not known from the original: the loops' form (a goto out of them is
   written). }
@@ -1129,11 +1130,11 @@ begin
       cse_use_ob: print_string('use', 3);
       exception_frame: print_char('e');
       inner_blk:
-        if (t^.xp[73] <> nil) or (t^.xp[73]^.kind = error_ob) then
+        if (t^.bk_name <> nil) or (t^.bk_name^.kind = error_ob) then
           print_string('ib', 2)
         else begin
           print_string('inner_blk ', 10);
-          print_object_ptr(t^.xp[73], true);
+          print_object_ptr(t^.bk_name, true);
           return;
         end;
       label_node: begin
